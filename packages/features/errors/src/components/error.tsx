@@ -6,25 +6,42 @@ import React, {PropsWithChildren, useEffect} from 'react';
 interface ErrorProps {
     error: Error & { digest?: string };
     reset: () => void;
+    homeHref?: string;
+    supportHref?: string;
+    telemetryEndpoint?: string;
 }
 
-export const Error = ({error, reset, children}: PropsWithChildren<ErrorProps>): React.JSX.Element => {
+export const Error = ({error, reset, children, homeHref = '/', supportHref = 'mailto:support@gameguild.gg', telemetryEndpoint}: PropsWithChildren<ErrorProps>): React.JSX.Element => {
     useEffect(() => {
-        //
-        // TODO get the path of the error.
-        //
-        // console.error(error);
-    }, [error]);
+        if (!telemetryEndpoint) {
+            console.error(error);
+            return;
+        }
+
+        void fetch(telemetryEndpoint, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                message: error.message,
+                stack: error.stack,
+                digest: error.digest,
+                path: window.location.pathname,
+                timestamp: new Date().toISOString(),
+            }),
+            keepalive: true,
+        }).catch(() => console.error(error));
+    }, [error, telemetryEndpoint]);
 
     const retry: VoidFunction = (): void => {
         reset();
     };
 
     const reload: VoidFunction = (): void => {
-        window.location.reload();
+        window.location.assign(homeHref);
     };
 
     const reportError: VoidFunction = (): void => {
+        window.location.assign(supportHref);
     };
 
     return (
@@ -36,8 +53,11 @@ export const Error = ({error, reset, children}: PropsWithChildren<ErrorProps>): 
                         <h2 className="text-2xl font-bold">Something went wrong!</h2>
                         <p className="text-lg">We apologize for the inconvenience. An unexpected error has occurred.</p>
                     </div>
-                    {/* TODO: Add error message here if is development environment*/}
-                    <div></div>
+                    {process.env.NODE_ENV === 'development' && (
+                        <pre className="my-4 max-w-2xl overflow-auto rounded-md bg-black/80 p-4 text-left text-xs text-red-100">
+                            {error.stack || error.message}
+                        </pre>
+                    )}
                     <div className="flex flex-row gap-2">
                         <div>
                             <Button onClick={retry}>Try Again</Button>

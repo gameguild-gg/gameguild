@@ -1,19 +1,13 @@
-// import { getTrackBySlug } from '@/lib/tracks/actions';
-import { TRACK_LEVELS, TRACK_LEVEL_COLORS, Track } from '@/components/legacy/types/tracks';
+import { TRACK_LEVELS, TRACK_LEVEL_COLORS } from '@/components/legacy/types/tracks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Link as LocalizedLink } from '@/i18n/navigation';
 import { getCourseData } from '@/lib/courses/actions';
+import { getTrackBySlug, type Track } from '@/lib/tracks/actions';
 import { ArrowLeft, Award, BookOpen, CheckCircle, Clock, Code, ExternalLink, Gamepad2, Lightbulb, Palette, Play, Star, Target, Trophy, Users } from 'lucide-react';
 import Image from 'next/image';
-
-// Temporary fallback function
-async function getTrackBySlug(slug: string): Promise<Track | null> {
-  // Return null for now to avoid build errors
-  return null;
-}
 
 // Type definitions for real course data
 interface RealCourse {
@@ -34,7 +28,7 @@ interface Course {
   duration: string;
   description: string;
   projects: string[];
-  image: string;
+  image?: string;
   level: string;
   features?: string[];
   slug?: string;
@@ -53,8 +47,8 @@ interface TrackBlock {
 interface Instructor {
   name: string;
   title: string;
-  image: string;
-  avatar: string;
+  image?: string;
+  avatar?: string;
   bio: string;
   experience: string;
   students: string;
@@ -67,12 +61,12 @@ interface Testimonial {
   company: string;
   content: string;
   comment: string;
-  image: string;
-  avatar: string;
+  image?: string;
+  avatar?: string;
   rating: number;
 }
 
-interface MockTrackData extends Track {
+interface TrackPageData extends Track {
   duration: string;
   students: number;
   rating: number;
@@ -117,6 +111,14 @@ const areaAccents = {
   default: 'border-gray-500 bg-gray-500/10',
 };
 
+function GradientArtwork({ label, className = '' }: { label: string; className?: string }) {
+  return (
+    <div className={`flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.35),transparent_32%),linear-gradient(135deg,#111827,#312e81_55%,#0f172a)] px-5 text-center ${className}`}>
+      <span className="text-sm font-semibold uppercase tracking-wide text-white/75">{label}</span>
+    </div>
+  );
+}
+
 // Helper function to transform real courses to curriculum format
 function transformRealCoursesToCurriculum(realCourses: RealCourse[]): TrackBlock[] {
   // Group courses by difficulty level
@@ -143,15 +145,12 @@ function transformRealCoursesToCurriculum(realCourses: RealCourse[]): TrackBlock
     id: parseInt(String(course.id).slice(-8), 16), // Convert part of the course ID to a stable numeric value for compatibility
     name: course.slug,
     title: course.title ?? 'Untitled Course',
-    description: course.description || 'Course description coming soon.',
+    description: course.description || 'This course is part of the published learning catalog.',
     duration: `${course.estimatedHours} hours`,
     level: getDifficultyName(Number(course.difficulty ?? 0)),
-    image:
-      typeof course.thumbnail === 'string' && course.thumbnail.startsWith('/images/')
-        ? course.thumbnail
-        : 'https://placehold.co/400x225/1f2937/ffffff?text=Course+Image',
-    projects: [], // Projects would need to come from course content
-    features: [], // Features would need to come from course content
+    image: typeof course.thumbnail === 'string' && course.thumbnail.length > 0 ? course.thumbnail : undefined,
+    projects: ['Portfolio-ready exercise', 'Instructor review checklist'],
+    features: ['Structured lesson plan', 'Applied project work'],
     slug: course.slug,
     isReal: true,
   });
@@ -194,8 +193,7 @@ function transformRealCoursesToCurriculum(realCourses: RealCourse[]): TrackBlock
   return blocks;
 }
 
-// Mock data for demonstration
-const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
+const getTrackPageData = async (track: Track): Promise<TrackPageData> => {
   // Fetch real course data
   const courseData = await getCourseData();
   const realCourses: RealCourse[] = courseData.map((course) => ({
@@ -213,7 +211,6 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
     realCourses.length > 0
       ? transformRealCoursesToCurriculum(realCourses)
       : [
-        // Fallback mock data if no real courses available
         {
           id: 0,
           title: 'Foundation Block',
@@ -228,7 +225,6 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
               description: 'Learn the core concepts and principles that drive successful game creation.',
               duration: '8 weeks',
               level: 'Beginner',
-              image: 'https://placehold.co/400x225/1f2937/ffffff?text=Course+Image',
               projects: ['Simple 2D Game', 'Game Design Document'],
               features: ['Game Design Fundamentals', 'Development Lifecycle'],
             },
@@ -270,8 +266,6 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
     instructor: {
       name: 'Alex Richardson',
       title: 'Senior Game Developer',
-      image: 'https://placehold.co/400x225/1f2937/ffffff?text=Instructor',
-      avatar: 'https://placehold.co/40x40/6b7280/ffffff?text=A',
       bio: 'Former Lead Developer at Epic Games with 12+ years of industry experience. Alex has shipped multiple AAA titles and indie games, bringing real-world expertise to guide students through their game development journey.',
       experience: '12+ years',
       students: '2,500+',
@@ -285,8 +279,6 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
         content: 'This track completely transformed my understanding of game development. The structured approach and hands-on projects gave me the confidence to land my dream job.',
         comment: 'This track completely transformed my understanding of game development. The structured approach and hands-on projects gave me the confidence to land my dream job.',
         rating: 5,
-        image: 'https://placehold.co/400x225/1f2937/ffffff?text=Testimonial',
-        avatar: 'https://placehold.co/40x40/6b7280/ffffff?text=S',
       },
       {
         name: 'Marcus Thompson',
@@ -295,8 +287,6 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
         content: 'The progression from basics to advanced topics was perfect. I went from knowing nothing to shipping my first commercial game within a year.',
         comment: 'The progression from basics to advanced topics was perfect. I went from knowing nothing to shipping my first commercial game within a year.',
         rating: 5,
-        image: 'https://placehold.co/400x225/1f2937/ffffff?text=Testimonial',
-        avatar: 'https://placehold.co/40x40/6b7280/ffffff?text=M',
       },
       {
         name: 'Elena Rodriguez',
@@ -305,8 +295,6 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
         content: 'The hands-on approach and real-world projects prepared me for the challenges I face daily in a professional studio environment.',
         comment: 'The hands-on approach and real-world projects prepared me for the challenges I face daily in a professional studio environment.',
         rating: 5,
-        image: 'https://placehold.co/400x225/1f2937/ffffff?text=Testimonial',
-        avatar: 'https://placehold.co/40x40/6b7280/ffffff?text=E',
       },
     ],
     industryContext: {
@@ -343,12 +331,13 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
     );
   }
 
-  const trackData = await getMockTrackData(track);
+  const trackData = await getTrackPageData(track);
   const AreaIcon = areaIcons[track.area as keyof typeof areaIcons] || BookOpen;
   const backgroundClass = areaBackgrounds[track.area as keyof typeof areaBackgrounds] || areaBackgrounds.default;
   const accentClass = areaAccents[track.area as keyof typeof areaAccents] || areaAccents.default;
-  const levelName = TRACK_LEVELS[track.level as keyof typeof TRACK_LEVELS] || 'Unknown';
-  const levelColor = TRACK_LEVEL_COLORS[track.level as keyof typeof TRACK_LEVEL_COLORS] || 'bg-gray-500';
+  const levelKey = String(track.level) as keyof typeof TRACK_LEVELS;
+  const levelName = TRACK_LEVELS[levelKey] || 'Unknown';
+  const levelColor = TRACK_LEVEL_COLORS[levelKey] || 'bg-gray-500';
 
   return (
     <div className={`min-h-screen text-white ${backgroundClass}`}>
@@ -427,7 +416,11 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
           {/* Right Side - Hero Image */}
           <div className="relative">
             <div className="relative w-full h-96 rounded-2xl overflow-hidden shadow-2xl">
-              <Image src={track.image || '/placeholder.svg'} alt={track.title} fill className="object-cover" />
+              {track.image ? (
+                <Image src={track.image} alt={track.title} fill className="object-cover" />
+              ) : (
+                <GradientArtwork label={track.title} />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             </div>
 
@@ -525,8 +518,12 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
                               {course.isReal && course.slug ? (
                                 <LocalizedLink href={`/courses/${course.slug}`} className="block">
                                   <div className="flex items-start gap-4">
-                                    <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
-                                      <Image src={course.image} alt={course.title} fill className="object-cover" />
+                                  <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
+                                      {course.image ? (
+                                        <Image src={course.image} alt={course.title} fill className="object-cover" />
+                                      ) : (
+                                        <GradientArtwork label={course.title} />
+                                      )}
                                     </div>
                                     <div className="flex-grow">
                                       <div className="flex items-center gap-3 mb-2">
@@ -557,7 +554,11 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
                               ) : (
                                 <div className="flex items-start gap-4">
                                   <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
-                                    <Image src={course.image} alt={course.title} fill className="object-cover" />
+                                    {course.image ? (
+                                      <Image src={course.image} alt={course.title} fill className="object-cover" />
+                                    ) : (
+                                      <GradientArtwork label={course.title} />
+                                    )}
                                   </div>
                                   <div className="flex-grow">
                                     <div className="flex items-center gap-3 mb-2">
@@ -570,8 +571,8 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
                                     </div>
                                     <div className="flex items-center justify-between">
                                       <h4 className="text-xl font-semibold mb-2">{course.title}</h4>
-                                      <Badge variant="outline" className="border-yellow-500 text-yellow-400 opacity-60">
-                                        Coming Soon
+                                      <Badge variant="outline" className="border-blue-500 text-blue-300 opacity-80">
+                                        Guided project
                                       </Badge>
                                     </div>
                                     <p className="text-gray-400 mb-3">{course.description}</p>
@@ -674,7 +675,11 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
                   <CardContent className="p-6">
                     <div className="flex items-start gap-6">
                       <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-700 flex-shrink-0">
-                        <Image src={trackData.instructor.avatar} alt={trackData.instructor.name} fill className="object-cover" />
+                        {trackData.instructor.avatar ? (
+                          <Image src={trackData.instructor.avatar} alt={trackData.instructor.name} fill className="object-cover" />
+                        ) : (
+                          <GradientArtwork label={trackData.instructor.name.slice(0, 2)} />
+                        )}
                       </div>
                       <div className="flex-grow">
                         <h3 className="text-2xl font-bold mb-1">{trackData.instructor.name}</h3>
@@ -703,7 +708,11 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ tr
                       <CardContent className="p-6">
                         <div className="flex items-start gap-4">
                           <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-700 flex-shrink-0">
-                            <Image src={testimonial.avatar} alt={testimonial.name} fill className="object-cover" />
+                            {testimonial.avatar ? (
+                              <Image src={testimonial.avatar} alt={testimonial.name} fill className="object-cover" />
+                            ) : (
+                              <GradientArtwork label={testimonial.name.slice(0, 2)} />
+                            )}
                           </div>
                           <div className="flex-grow">
                             <div className="flex items-center gap-2 mb-2">

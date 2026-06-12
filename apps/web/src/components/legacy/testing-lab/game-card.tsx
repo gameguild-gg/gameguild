@@ -12,7 +12,9 @@ export function GameCard({ game }: Readonly<Props>) {
   return (
     <Card className="rounded-lg overflow-hidden shadow-lg max-w-[320px] mx-auto hover:shadow-xl transition-all duration-200">
       <div className="relative">
-        <img alt="Profile picture" className="object-cover w-full" height="320" src="/assets/images/placeholder.svg" style={{ aspectRatio: '320/320', objectFit: 'cover' }} width="320" />
+        <div className="flex aspect-square w-full items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-800 px-6 text-center">
+          <span className="text-sm font-semibold uppercase tracking-wide text-white/80">{title}</span>
+        </div>
         <div className="flex justify-end">
           <Badge>{'draft'}</Badge>
         </div>

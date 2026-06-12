@@ -8,30 +8,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Calendar, DollarSign, Plus, Tag, Users, X } from 'lucide-react';
 import React from 'react';
+import { useCourseEditor } from '../../editor/context/course-editor-provider';
 
 export function SalesShowcaseSection() {
-  // TODO: Implement proper state management for sales showcase section
-  const stubState = {
-    tags: [],
-    products: [],
-    isEnrollmentOpen: false,
-    maxEnrollments: 0,
-    enrollmentDeadline: '',
-    estimatedHours: 0,
-    status: 'draft'
-  };
-  const state = stubState as any;
-
-  const addProduct = (..._args: any[]) => console.log('addProduct not implemented');
-  const removeProduct = (..._args: any[]) => console.log('removeProduct not implemented');
-  const updateProduct = (..._args: any[]) => console.log('updateProduct not implemented');
-  const setEnrollmentStatus = (..._args: any[]) => console.log('setEnrollmentStatus not implemented');
-  const setMaxEnrollments = (..._args: any[]) => console.log('setMaxEnrollments not implemented');
-  const setEnrollmentDeadline = (..._args: any[]) => console.log('setEnrollmentDeadline not implemented');
-  const setEstimatedHours = (..._args: any[]) => console.log('setEstimatedHours not implemented');
-  const addTag = (..._args: any[]) => console.log('addTag not implemented');
-  const removeTag = (..._args: any[]) => console.log('removeTag not implemented');
-  const setStatus = (..._args: any[]) => console.log('setStatus not implemented');
+  const {
+    state,
+    addProduct,
+    removeProduct,
+    setEnrollmentStatus,
+    setMaxEnrollments,
+    setEstimatedHours,
+    addTag,
+    removeTag,
+    setStatus,
+  } = useCourseEditor();
 
   const [newTag, setNewTag] = React.useState('');
   const [newProductName, setNewProductName] = React.useState('');
@@ -80,7 +70,7 @@ export function SalesShowcaseSection() {
             <Input placeholder="Product name" value={newProductName} onChange={(e) => setNewProductName(e.target.value)} />
             <div className="flex gap-2">
               <Input type="number" placeholder="Price" value={newProductPrice} onChange={(e) => setNewProductPrice(e.target.value)} />
-              <Button onClick={handleAddProduct} disabled={!newProductName || !newProductPrice}>
+              <Button aria-label="Add product" onClick={handleAddProduct} disabled={!newProductName || !newProductPrice}>
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
@@ -90,7 +80,7 @@ export function SalesShowcaseSection() {
         {/* Product List */}
         {state.products.length > 0 && (
           <div className="space-y-2">
-            {state.products.map((product: any) => (
+              {state.products.map((product) => (
               <div key={product.id} className="flex items-center justify-between p-3 bg-background border border-border rounded-lg">
                 <div className="flex items-center gap-3">
                   <div>
@@ -185,7 +175,7 @@ export function SalesShowcaseSection() {
         {/* Add Tag */}
         <div className="flex gap-2">
           <Input placeholder="Add a tag..." value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyPress={handleTagKeyPress} />
-          <Button onClick={handleAddTag} disabled={!newTag || state.tags.includes(newTag)}>
+          <Button aria-label="Add tag" onClick={handleAddTag} disabled={!newTag || state.tags.includes(newTag)}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
@@ -193,7 +183,7 @@ export function SalesShowcaseSection() {
         {/* Tag List */}
         {state.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {state.tags.map((tag: any) => (
+            {state.tags.map((tag) => (
               <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                 {tag}
                 <button onClick={() => removeTag(tag)} className="ml-1 hover:text-red-500">

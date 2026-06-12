@@ -57,25 +57,10 @@ export const CreateCourseForm = (): React.JSX.Element => {
         throw new Error('Slug is required');
       }
 
-      console.log('Submitting form with data:', {
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        slug: formData.slug.trim()
-      });
-
       const result = await createCourse({
         title: formData.title.trim(),
         description: formData.description.trim(),
         slug: formData.slug.trim(),
-      });
-
-      console.log('Form received result:', {
-        success: result.success,
-        hasData: result.success,
-        hasError: !result.success,
-        dataKeys: result.success ? Object.keys(result.data) : null,
-        error: result.success ? null : result.error,
-        fullResult: result
       });
 
       if (!result.success) {
@@ -84,7 +69,6 @@ export const CreateCourseForm = (): React.JSX.Element => {
       }
 
       const courseId = result.data.id;
-      console.log('Course created successfully, redirecting to:', `/dashboard/learning/courses/${courseId}`);
       router.push(`/dashboard/learning/courses/${courseId}` as Parameters<typeof router.push>[0]);
     } catch (err) {
       console.error('Error creating course:', err);

@@ -349,7 +349,7 @@ export default async function ProgramsPage() {
                 <div className="space-y-2">
                   <h3 className="text-2xl font-semibold">The live course catalog is temporarily unavailable</h3>
                   <p className="text-slate-300">
-                    The public storefront could not reach the learning API, so this page is intentionally hiding placeholder inventory instead of showing a misleading empty catalog.
+                    The public storefront could not reach the learning API, so this page is intentionally hiding unavailable catalog data instead of showing a misleading empty state.
                   </p>
                 </div>
                 {catalog.error ? <p className="text-sm text-amber-300">Latest error: {catalog.error}</p> : null}

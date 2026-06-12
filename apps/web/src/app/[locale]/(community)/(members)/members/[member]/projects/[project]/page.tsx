@@ -28,14 +28,20 @@ export default async function Page({
 
         <Card className="overflow-hidden border-purple-500/20 bg-slate-900/80">
           <div className="relative h-72 bg-gradient-to-br from-blue-700 to-purple-700">
-            <Image
-              src={result.project.imageUrl || '/placeholder.svg?height=288&width=960'}
-              alt={result.project.title}
-              fill
-              className="object-cover"
-              priority
-              unoptimized={Boolean(result.project.imageUrl)}
-            />
+            {result.project.imageUrl ? (
+              <Image
+                src={result.project.imageUrl}
+                alt={result.project.title}
+                fill
+                className="object-cover"
+                priority
+                unoptimized
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center px-6 text-center">
+                <span className="text-lg font-semibold uppercase tracking-wide text-white/80">{result.project.title}</span>
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
             {result.project.isPinned ? (
               <Badge className="absolute left-5 top-5 bg-yellow-600 text-yellow-50">Featured</Badge>

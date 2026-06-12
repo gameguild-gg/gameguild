@@ -16,6 +16,11 @@ import { ContentNavigationSidebar } from './content-navigation-sidebar';
 import { LessonViewer } from './lesson-viewer';
 import { ReportContentDialog } from './report-content-dialog';
 
+type ContentReportMessage = {
+  type: 'success' | 'error';
+  text: string;
+};
+
 interface ContentItem {
   id: string;
   title: string;
@@ -64,6 +69,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportMessage, setReportMessage] = useState<ContentReportMessage | null>(null);
   const [certificateEligibility, setCertificateEligibility] = useState<any>(null);
   const [showCertificateNotification, setShowCertificateNotification] = useState(false);
 
@@ -95,6 +101,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
   const handleItemSelect = (item: ContentItem) => {
     if (item.status === 'locked') return;
     setCurrentItem(item);
+    setReportMessage(null);
   };
 
   const handleItemComplete = async (itemId: string, score?: number) => {
@@ -258,12 +265,24 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
         description,
       });
 
-      console.log('Content reported successfully:', report);
-      setShowReportDialog(false);
-      // TODO: Show success notification
+      if (!report.success) {
+        setReportMessage({
+          type: 'error',
+          text: report.error || 'The report could not be submitted. Review the details and try again.',
+        });
+        return;
+      }
+
+      setReportMessage({
+        type: 'success',
+        text: report.message || 'Report submitted for moderation.',
+      });
     } catch (error) {
       console.error('Failed to report content:', error);
-      // TODO: Show error notification
+      setReportMessage({
+        type: 'error',
+        text: 'The report could not be submitted. Review the details and try again.',
+      });
     }
   };
 
@@ -413,7 +432,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                         )}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" aria-label="Content actions">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -429,6 +448,18 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                     {currentItem.description && <p className="text-gray-400">{currentItem.description}</p>}
                   </CardHeader>
                   <CardContent>
+                    {reportMessage && (
+                      <div
+                        role={reportMessage.type === 'success' ? 'status' : 'alert'}
+                        className={`mb-4 rounded-md border px-4 py-3 text-sm ${
+                          reportMessage.type === 'success'
+                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100'
+                            : 'border-red-500/40 bg-red-500/10 text-red-100'
+                        }`}
+                      >
+                        {reportMessage.text}
+                      </div>
+                    )}
                     {currentItem.type === 'lesson' ? (
                       <LessonViewer item={currentItem} onComplete={() => handleItemComplete(currentItem.id)} />
                     ) : (

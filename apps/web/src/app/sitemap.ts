@@ -1,31 +1,42 @@
 import type { MetadataRoute } from 'next';
+import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
+import { TRACK_CATALOG } from '@/lib/tracks/catalog';
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://gameguild.gg';
+const staticRoutes = ['', '/sign-in', '/sign-up', '/courses', '/tracks', '/about/roadmap', '/about/contributors', '/licenses', '/ferpa-waiver', '/academic-honesty'];
 
 export async function generateSitemaps() {
-  // TODO: Implement dynamic sitemap generation for courses, tutorials, etc.
   return [{ id: 0 }];
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date();
+  const catalog = await getPublicCourseCatalog();
+  const courseRoutes = catalog.success
+    ? catalog.data
+        .map((course) => (typeof course.slug === 'string' && course.slug.length > 0 ? course.slug : null))
+        .filter((slug): slug is string => Boolean(slug))
+        .map((slug) => ({
+          url: `${baseUrl}/courses/${slug}`,
+          lastModified: now,
+          changeFrequency: 'weekly' as const,
+          priority: 0.7,
+        }))
+    : [];
+
   return [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/sign-in`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/sign-up`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
+    ...staticRoutes.map((route) => ({
+      url: `${baseUrl}${route}`,
+      lastModified: now,
+      changeFrequency: route === '' ? ('daily' as const) : ('monthly' as const),
+      priority: route === '' ? 1 : 0.6,
+    })),
+    ...TRACK_CATALOG.map((track) => ({
+      url: `${baseUrl}/tracks/${track.slug}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    })),
+    ...courseRoutes,
   ];
 }

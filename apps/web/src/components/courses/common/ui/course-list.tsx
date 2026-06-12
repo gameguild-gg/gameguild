@@ -3,9 +3,10 @@
 import { PeriodType } from '@/components/common/filters/filter-context';
 import { CourseFilterControls } from '@/components/courses/common';
 import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty } from '@/lib/api/generated/stub-types';
 import { ProgramCategory } from '@/lib/api/generated/types.gen';
-import { Plus } from 'lucide-react';
+import { Eye, FileText, Plus, Play } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { CourseCard, CourseCardCourse } from './course-card';
 
@@ -52,6 +53,24 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, onCreate, initia
     if (value === 2 || value === '2' || value === 'advanced') return ModulesProgramsProgramDifficulty.ADVANCED;
     if (value === 3 || value === '3' || value === 'expert') return ModulesProgramsProgramDifficulty.EXPERT;
     return undefined;
+  };
+
+  const getStatusLabel = (course: Course): string => {
+    const status = normalizeStatus(course.status);
+    if (status === ModulesContentsContentStatus.DRAFT) return 'Draft';
+    if (status === ModulesContentsContentStatus.UNDER_REVIEW) return 'Under review';
+    if (status === ModulesContentsContentStatus.PUBLISHED) return 'Published';
+    if (status === ModulesContentsContentStatus.ARCHIVED) return 'Archived';
+    return 'Unknown';
+  };
+
+  const getLevelLabel = (course: Course): string => {
+    const level = normalizeLevel(course.difficulty ?? course.level);
+    if (level === ModulesProgramsProgramDifficulty.BEGINNER) return 'Beginner';
+    if (level === ModulesProgramsProgramDifficulty.INTERMEDIATE) return 'Intermediate';
+    if (level === ModulesProgramsProgramDifficulty.ADVANCED) return 'Advanced';
+    if (level === ModulesProgramsProgramDifficulty.EXPERT) return 'Expert';
+    return 'Unknown';
   };
 
   // Filter handlers
@@ -145,15 +164,72 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, onCreate, initia
         );
 
       case 'table':
-        // For now, use card view for table mode too
-        // TODO: Implement actual table view
         return (
-          <div className="space-y-3">
-            {filteredCourses.map((course) => (
-              <div key={course.id} className="w-full">
-                <CourseCard course={course} onEdit={onEdit} onView={onView} onEnroll={onEnroll} />
-              </div>
-            ))}
+          <div className="overflow-hidden rounded-xl border border-slate-700/60 bg-slate-950/40">
+            <Table aria-label="Courses">
+              <TableHeader>
+                <TableRow className="border-slate-800">
+                  <TableHead>Course</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Area</TableHead>
+                  <TableHead>Level</TableHead>
+                  <TableHead className="text-right">Hours</TableHead>
+                  <TableHead className="text-right">Enrollments</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCourses.map((course) => {
+                  const title = course.title || 'Untitled course';
+                  const status = getStatusLabel(course);
+                  const area = ((course.area as string | undefined) ?? (course.category as string | undefined) ?? 'General').toString();
+                  const level = getLevelLabel(course);
+                  const hours = course.estimatedHours ?? 0;
+                  const enrollments = course.analytics?.enrollments ?? (course.currentEnrollments as number | undefined) ?? 0;
+                  const isPublished = normalizeStatus(course.status) === ModulesContentsContentStatus.PUBLISHED;
+
+                  return (
+                    <TableRow key={course.id ?? title} className="border-slate-800">
+                      <TableCell>
+                        <div className="min-w-0">
+                          <div className="font-medium text-slate-100">{title}</div>
+                          {course.description && <div className="max-w-md truncate text-xs text-slate-400">{course.description}</div>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-200">{status}</span>
+                      </TableCell>
+                      <TableCell className="capitalize text-slate-300">{area}</TableCell>
+                      <TableCell className="text-slate-300">{level}</TableCell>
+                      <TableCell className="text-right text-slate-300">{hours}h</TableCell>
+                      <TableCell className="text-right text-slate-300">{enrollments}</TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          {onView && (
+                            <Button size="sm" variant="outline" onClick={() => onView(course)}>
+                              <Eye className="mr-1 h-4 w-4" />
+                              View
+                            </Button>
+                          )}
+                          {onEdit && (
+                            <Button size="sm" variant="outline" onClick={() => onEdit(course)}>
+                              <FileText className="mr-1 h-4 w-4" />
+                              Edit
+                            </Button>
+                          )}
+                          {onEnroll && isPublished && (
+                            <Button size="sm" onClick={() => onEnroll(course)}>
+                              <Play className="mr-1 h-4 w-4" />
+                              Enroll
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
         );
 

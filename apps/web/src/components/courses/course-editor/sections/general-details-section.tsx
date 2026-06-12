@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useCourseEditor } from '../../editor/context/course-editor-provider';
 import { RichTextEditor } from '../rich-text-editor';
 
 const CATEGORIES = ['Web Development', 'Mobile Development', 'Data Science', 'Machine Learning', 'DevOps', 'Design', 'Business', 'Marketing', 'Other'];
@@ -17,45 +18,21 @@ const DIFFICULTY_LEVELS = [
 ];
 
 export function GeneralDetailsSection() {
-  // TODO: Implement these update functions with proper state management
-  const stubState = {
-    title: '',
-    slug: '',
-    summary: '',
-    description: '',
-    category: '',
-    difficulty: 1,
-    manualSlugEdit: false,
-    errors: {}
-  };
-  const state = stubState as any;
-
-  const updateTitle = (..._args: any[]) => console.log('updateTitle not implemented');
-  const updateSlug = (..._args: any[]) => console.log('updateSlug not implemented');
-  const updateSummary = (..._args: any[]) => console.log('updateSummary not implemented');
-  const updateDescription = (..._args: any[]) => console.log('updateDescription not implemented');
-  const updateCategory = (..._args: any[]) => console.log('updateCategory not implemented');
-  const updateDifficulty = (..._args: any[]) => console.log('updateDifficulty not implemented');
+  const {
+    state,
+    updateTitle,
+    updateSlug,
+    updateSummary,
+    updateDescription,
+    updateCategory,
+    updateDifficulty,
+  } = useCourseEditor();
 
   const handleTitleChange = (value: string) => {
-    updateTitle();
-
-    // TODO: Auto-generate slug from title when proper state management is implemented
-    // Auto-generate slug from title if it hasn't been manually set
-    // if (!state.manualSlugEdit) {
-    //   const autoSlug = value
-    //     .toLowerCase()
-    //     .replace(/[^a-z0-9\s-]/g, '')
-    //     .replace(/\s+/g, '-')
-    //     .replace(/-+/g, '-')
-    //     .trim();
-    //   updateSlug(autoSlug);
-    // }
+    updateTitle(value);
   };
 
   const handleSlugChange = (value: string) => {
-    // Mark that slug has been manually edited
-    state.manualSlugEdit = true;
     updateSlug(value);
   };
 

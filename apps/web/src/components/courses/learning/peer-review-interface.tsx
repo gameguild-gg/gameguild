@@ -122,9 +122,10 @@ const reviewCriteria: ReviewCriteria[] = [
 
 export function PeerReviewInterface() {
   const [submissions] = useState<PeerReviewSubmission[]>(mockSubmissions);
-  const [reviews] = useState<PeerReview[]>(mockReviews);
+  const [reviews, setReviews] = useState<PeerReview[]>(mockReviews);
   const [selectedSubmission, setSelectedSubmission] = useState<PeerReviewSubmission | null>(null);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [reviewStatus, setReviewStatus] = useState<string | null>(null);
   const [currentReview, setCurrentReview] = useState({
     rating: 0,
     feedback: '',
@@ -139,14 +140,20 @@ export function PeerReviewInterface() {
       return sum + (currentReview.criteria[criterion.name] || 0) * criterion.weight;
     }, 0);
 
-    console.log('Submitting review:', {
-      submissionId: selectedSubmission.id,
-      rating: Math.round(weightedRating),
-      feedback: currentReview.feedback,
-      criteria: currentReview.criteria,
-    });
-
-    // Reset form
+    setReviews((current) => [
+      ...current,
+      {
+        id: `review-${Date.now()}`,
+        submissionId: selectedSubmission.id,
+        reviewerId: 'current-user',
+        reviewerName: 'Current reviewer',
+        rating: Math.round(weightedRating),
+        feedback: currentReview.feedback,
+        criteria: currentReview.criteria,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+    setReviewStatus(`Review submitted for ${selectedSubmission.title}.`);
     setCurrentReview({
       rating: 0,
       feedback: '',
@@ -201,6 +208,12 @@ export function PeerReviewInterface() {
           <h1 className="text-3xl font-bold mb-2">Peer Review System</h1>
           <p className="text-gray-400">Review and provide feedback on peer submissions</p>
         </div>
+
+        {reviewStatus ? (
+          <div role="status" className="mb-6 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+            {reviewStatus}
+          </div>
+        ) : null}
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">

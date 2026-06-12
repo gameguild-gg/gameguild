@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { TRACK_CATALOG } from './catalog';
 
 export interface Track {
   id: number | string;
@@ -39,50 +40,12 @@ export function useTrackFilters() {
   // Load tracks data
   useEffect(() => {
     const loadTracks = async () => {
-      // Mock tracks data - replace with actual API call
-      const mockTracks: Track[] = [
-        {
-          id: 1,
-          title: 'Game Programming Fundamentals',
-          description: 'Learn the core programming concepts for game development.',
-          area: 'programming',
-          level: 1,
-          tools: ['Unity', 'C#', 'Visual Studio'],
-          estimatedHours: 120,
-          coursesCount: 8,
-          slug: 'game-programming-fundamentals',
-          knowledges: ['Programming Basics', 'Object-Oriented Programming', 'Game Loop'],
-        },
-        {
-          id: 2,
-          title: 'Digital Art for Games',
-          description: 'Master digital art techniques for game assets.',
-          area: 'art',
-          level: 2,
-          tools: ['Photoshop', 'Illustrator', 'Blender'],
-          estimatedHours: 80,
-          coursesCount: 6,
-          slug: 'digital-art-for-games',
-          knowledges: ['Digital Painting', '3D Modeling', 'Texturing'],
-        },
-        {
-          id: 3,
-          title: 'Game Design Principles',
-          description: 'Understand the principles of effective game design.',
-          area: 'design',
-          level: 1,
-          tools: ['Figma', 'Miro', 'GameMaker'],
-          estimatedHours: 60,
-          coursesCount: 5,
-          slug: 'game-design-principles',
-          knowledges: ['Game Mechanics', 'Level Design', 'Player Experience'],
-        },
-      ];
+      const catalogTracks: Track[] = TRACK_CATALOG;
 
-      setTracks(mockTracks);
+      setTracks(catalogTracks);
 
       // Extract unique tools from all tracks
-      const tools = [...new Set(mockTracks.flatMap((track) => track.tools))];
+      const tools = [...new Set(catalogTracks.flatMap((track) => track.tools))];
       setAvailableTools(tools);
     };
 

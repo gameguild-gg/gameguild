@@ -7,6 +7,7 @@ import { ArrowLeft, Award, BookOpen, Calendar, DollarSign, Eye, FileText, HelpCi
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
+import { saveCourse } from '@/components/courses/editor/actions';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
@@ -122,6 +123,8 @@ export function CourseEditorSidebar() {
   const courseId = Array.isArray(courseParam) ? (courseParam[0] ?? '') : (courseParam ?? '');
   const coursesDashboardHref = '/dashboard/learning/courses' as Route;
   const { state, validate } = useCourseEditor();
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   // Initialize collapsed state based on defaultOpen
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
@@ -172,26 +175,42 @@ export function CourseEditorSidebar() {
   };
 
   const handleSave = async () => {
-    validate();
+    const validation = validate();
+    setSaveMessage(null);
 
-    if (!state.isValid) {
-      // Scroll to first error or show toast
+    if (!validation.isValid) {
       return;
     }
 
     try {
-      // TODO: Implement API call to save course
-      console.log('Saving course:', state);
+      setIsSaving(true);
+      const level: 'Beginner' | 'Intermediate' | 'Advanced' = state.difficulty >= 3 ? 'Advanced' : state.difficulty === 2 ? 'Intermediate' : 'Beginner';
+      const saved = await saveCourse({
+        id: courseId || state.slug,
+        title: state.title,
+        slug: state.slug,
+        description: state.description || state.summary,
+        area: state.category,
+        level,
+        status: state.status,
+        tags: state.tags,
+        tools: [],
+        isPublic: state.status === 'published',
+      });
+
+      setSaveMessage(saved ? 'Course saved.' : 'Course could not be saved.');
     } catch (error) {
       console.error('Failed to save course:', error);
-      // Show error toast
+      setSaveMessage('Course could not be saved.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handlePreview = () => {
-    // TODO: Open preview in new tab
-    if (state.slug) {
-      window.open(`/courses/${state.slug}`, '_blank');
+    const previewSlug = state.slug || courseId;
+    if (previewSlug) {
+      window.open(`/courses/${previewSlug}`, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -275,15 +294,21 @@ export function CourseEditorSidebar() {
 
       <SidebarFooter className="border-t border-slate-700/50 bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-800/95 backdrop-blur-xl p-4">
         <div className="space-y-3">
+          {saveMessage && (
+            <div role="status" className="rounded-lg border border-slate-700/50 bg-slate-800/40 px-3 py-2 text-xs text-slate-200">
+              {saveMessage}
+            </div>
+          )}
+
           {/* Save Button */}
           <Button
             onClick={handleSave}
-            disabled={!state.isValid}
+            disabled={isSaving}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200 h-10"
             size="sm"
           >
             <Save className="h-4 w-4 mr-2" />
-            Save Changes
+            {isSaving ? 'Saving...' : 'Save Changes'}
           </Button>
 
           {/* Preview Button */}

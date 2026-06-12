@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: { params: Promise<{ course: s
     openGraph: {
       title: course.title,
       description: course.description,
-      images: [course.thumbnail || 'https://placehold.co/1200x630/1f2937/ffffff?text=Course+Image'],
+      ...(course.thumbnail ? { images: [course.thumbnail] } : {}),
     },
   };
 }

@@ -33,14 +33,20 @@ export function ProjectCard({
       <div
         className={`relative ${imageHeight} ${featured ? 'bg-gradient-to-br from-blue-600 to-purple-600' : 'bg-gradient-to-br from-slate-700 to-slate-600'}`}
       >
-        <Image
-          src={imageUrl || `/placeholder.svg?height=${imageHeight === 'h-48' ? '192' : '128'}&width=${featured ? '400' : '300'}`}
-          alt={name}
-          className="w-full h-full object-cover"
-          width={featured ? 400 : 300}
-          height={imageHeight === 'h-48' ? 192 : 128}
-          unoptimized={Boolean(imageUrl)}
-        />
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={name}
+            className="w-full h-full object-cover"
+            width={featured ? 400 : 300}
+            height={imageHeight === 'h-48' ? 192 : 128}
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center px-6 text-center">
+            <span className="text-sm font-semibold uppercase tracking-wide text-white/80">{name}</span>
+          </div>
+        )}
         {featured && (
           <Badge className="absolute top-4 left-4 bg-yellow-600 text-yellow-100">Featured</Badge>
         )}
