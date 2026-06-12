@@ -19,9 +19,22 @@ export interface MemberSkill {
 }
 
 export interface MemberProjectSummary {
+  id?: string;
   name: string;
+  title?: string;
   description?: string;
   tech: string;
   rating: number;
   featured?: boolean;
+  url?: string;
+  imageUrl?: string;
+  isPinned?: boolean;
+  slug?: string;
+}
+
+export interface MemberProfileStats {
+  followers?: number;
+  following?: number;
+  posts?: number;
+  projects?: number;
 }

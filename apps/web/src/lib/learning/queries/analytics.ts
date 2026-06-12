@@ -1,4 +1,6 @@
 import { cache } from 'react';
+import { getCourseContent } from './course';
+import { learningApiGet } from './http';
 
 // =============================================================================
 // COURSE ANALYTICS QUERIES
@@ -127,6 +129,16 @@ export interface CourseRevenueAnalytics {
 // FETCH FUNCTIONS
 // =============================================================================
 
+function parseDurationToSeconds(value?: string | null): number {
+  if (!value) return 0;
+  const parts = value.split(':').map((part) => Number(part));
+  if (parts.length === 3 && parts.every(Number.isFinite)) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+
+  return 0;
+}
+
 /**
  * Fetch engagement analytics.
  * Cache: revalidate 300s (computed, expensive)
@@ -135,16 +147,50 @@ export const getCourseEngagementAnalytics = cache(async (
   courseId: string,
   period?: { from: string; to: string }
 ): Promise<CourseEngagementAnalytics> => {
-  void courseId;
-  void period;
+  const [metrics, content] = await Promise.all([
+    learningApiGet<{
+      dailyActiveUsers?: number;
+      weeklyActiveUsers?: number;
+      monthlyActiveUsers?: number;
+      averageSessionDuration?: string | null;
+      totalSessions?: number;
+      contentEngagement?: Record<string, number> | null;
+    }>(`/v1/courses/${courseId}/analytics/engagement`, 300),
+    getCourseContent(courseId),
+  ]);
+
+  const now = new Date();
+  const defaultPeriod = {
+    from: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6).toISOString(),
+    to: now.toISOString(),
+  };
+  const dailyUsers = metrics?.dailyActiveUsers ?? 0;
+  const contentById = new Map(content.items.map((item) => [item.id, item]));
+  const contentViews = Object.entries(metrics?.contentEngagement ?? {}).map(([contentId, views]) => ({
+    contentId,
+    contentTitle: contentById.get(contentId)?.title ?? contentId,
+    views,
+    avgWatchTime: 0,
+    completionRate: 0,
+  }));
+
   return {
     courseId,
-    period: { from: '', to: '' },
-    activeStudents: 0,
-    totalViews: 0,
-    avgSessionDuration: 0,
-    contentViews: [],
-    dailyActivity: [],
+    period: period ?? defaultPeriod,
+    activeStudents: metrics?.weeklyActiveUsers ?? dailyUsers,
+    totalViews: metrics?.totalSessions ?? 0,
+    avgSessionDuration: parseDurationToSeconds(metrics?.averageSessionDuration),
+    contentViews,
+    dailyActivity: Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(now);
+      date.setDate(now.getDate() - (6 - index));
+      return {
+        date: date.toISOString(),
+        activeUsers: index === 6 ? dailyUsers : 0,
+        contentViews: index === 6 ? metrics?.totalSessions ?? 0 : 0,
+        completions: 0,
+      };
+    }),
     peakHours: [],
   };
 });
@@ -157,18 +203,48 @@ export const getCourseCompletionAnalytics = cache(async (
   courseId: string,
   period?: { from: string; to: string }
 ): Promise<CourseCompletionAnalytics> => {
-  void courseId;
-  void period;
+  const [completion, content] = await Promise.all([
+    learningApiGet<{
+      overallCompletionRate?: number;
+      contentCompletionRates?: Record<string, number> | null;
+      completionTrends?: Array<{ date?: string; completedCount?: number; totalCount?: number; rate?: number }> | null;
+    }>(`/v1/courses/${courseId}/analytics/completion-rates`, 300),
+    getCourseContent(courseId),
+  ]);
+
+  const now = new Date();
+  const defaultPeriod = {
+    from: new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
+    to: now.toISOString(),
+  };
+  const contentById = new Map(content.items.map((item) => [item.id, item]));
+  const dropOffPoints = Object.entries(completion?.contentCompletionRates ?? {}).map(([contentId, rate]) => ({
+    contentId,
+    contentTitle: contentById.get(contentId)?.title ?? contentId,
+    startedCount: 0,
+    completedCount: 0,
+    dropOffRate: Math.max(0, 100 - rate),
+  }));
+  const totalCompleted = completion?.completionTrends?.at(-1)?.completedCount ?? 0;
+  const totalEnrolled = completion?.completionTrends?.at(-1)?.totalCount ?? 0;
+
   return {
     courseId,
-    period: { from: '', to: '' },
-    totalEnrolled: 0,
-    totalCompleted: 0,
-    completionRate: 0,
+    period: period ?? defaultPeriod,
+    totalEnrolled,
+    totalCompleted,
+    completionRate: completion?.overallCompletionRate ?? 0,
     avgCompletionTime: 0,
-    dropOffPoints: [],
-    funnel: [],
-    completionTrend: [],
+    dropOffPoints,
+    funnel: [
+      { stage: 'Enrolled', count: totalEnrolled, percentage: 100 },
+      { stage: 'Completed', count: totalCompleted, percentage: completion?.overallCompletionRate ?? 0 },
+    ],
+    completionTrend: (completion?.completionTrends ?? []).map((trend) => ({
+      date: trend.date ?? new Date().toISOString(),
+      completions: trend.completedCount ?? 0,
+      cumulative: trend.totalCount ?? 0,
+    })),
   };
 });
 
@@ -180,19 +256,42 @@ export const getCourseRevenueAnalytics = cache(async (
   courseId: string,
   period?: { from: string; to: string }
 ): Promise<CourseRevenueAnalytics> => {
-  void courseId;
-  void period;
+  const revenue = await learningApiGet<{
+    totalRevenue?: number;
+    monthlyRevenue?: number;
+    totalPurchases?: number;
+    monthlyPurchases?: number;
+    averageRevenuePerUser?: number;
+    revenueChart?: Array<{ date?: string; revenue?: number; purchases?: number }> | null;
+  }>(`/v1/courses/${courseId}/analytics/revenue`, 300);
+
+  const now = new Date();
+  const defaultPeriod = {
+    from: new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
+    to: now.toISOString(),
+  };
+  const totalRevenue = revenue?.totalRevenue ?? 0;
+  const totalTransactions = revenue?.totalPurchases ?? 0;
+
   return {
     courseId,
-    period: { from: '', to: '' },
+    period: period ?? defaultPeriod,
     currency: 'USD',
-    totalRevenue: 0,
-    totalTransactions: 0,
-    avgTransactionValue: 0,
+    totalRevenue,
+    totalTransactions,
+    avgTransactionValue: totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
     refundRate: 0,
-    revenueByTier: [],
-    revenueBySource: [],
-    revenueTrend: [],
+    revenueByTier: totalRevenue > 0
+      ? [{ tierId: `${courseId}-standard`, tierName: 'Standard access', revenue: totalRevenue, count: totalTransactions }]
+      : [],
+    revenueBySource: totalRevenue > 0
+      ? [{ source: 'direct', revenue: totalRevenue, count: totalTransactions }]
+      : [],
+    revenueTrend: (revenue?.revenueChart ?? []).map((point) => ({
+      date: point.date ?? new Date().toISOString(),
+      revenue: point.revenue ?? 0,
+      transactions: point.purchases ?? 0,
+    })),
     discountUsage: [],
   };
 });

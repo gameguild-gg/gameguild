@@ -24,6 +24,7 @@ import type {
   CourseStudents,
   LearningCoursesProgramContentType,
 } from '@/lib/learning/types';
+import { learningApiGet } from './http';
 
 // Re-export generated types for consumers
 export type { LearningCoursesProgram, LearningCoursesProgramContent, LearningCoursesProgramContentType };
@@ -97,14 +98,14 @@ export const getCourse = cache(async (courseId: string): Promise<CourseDetails |
       deliveryMode: 'on-demand',
       pricingModel: 'free',
       features: {
-        hasClasses: false,
-        hasRecordings: false,
-        hasSchedule: false,
+        hasClasses: true,
+        hasRecordings: true,
+        hasSchedule: true,
         hasOnDemandContent: true,
-        hasPricing: false,
-        hasCertificate: false,
+        hasPricing: true,
+        hasCertificate: true,
         hasAssessments: true,
-        hasDiscussions: false,
+        hasDiscussions: true,
       },
       createdAt: dto.createdAt ?? new Date().toISOString(),
       updatedAt: dto.updatedAt ?? dto.createdAt ?? new Date().toISOString(),
@@ -329,6 +330,67 @@ export interface CourseClassDetail extends CourseClass {
   };
 }
 
+interface CohortDto {
+  id: string;
+  courseId: string;
+  name: string;
+  description?: string | null;
+  startDate: string;
+  endDate: string;
+  maxCapacity: number;
+  currentEnrollmentCount: number;
+  availableSpots?: number;
+  status: 'Scheduled' | 'Active' | 'Completed' | 'Cancelled' | string;
+  isOpen: boolean;
+  canEnroll?: boolean;
+  instructorId?: string | null;
+  meetingSchedule?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
+}
+
+function mapCohortStatus(cohort: CohortDto): ClassStatus {
+  if (cohort.status === 'Cancelled') return 'cancelled';
+  if (cohort.status === 'Completed') return 'completed';
+
+  const startsAt = new Date(cohort.startDate).getTime();
+  const endsAt = new Date(cohort.endDate).getTime();
+  const now = Date.now();
+
+  if (cohort.status === 'Active' && startsAt <= now && now <= endsAt) return 'live';
+  if (cohort.status === 'Active' || cohort.status === 'Scheduled') return 'scheduled';
+  return 'rescheduled';
+}
+
+function mapCohortToClass(cohort: CohortDto): CourseClass {
+  const duration = Math.max(0, Math.round((new Date(cohort.endDate).getTime() - new Date(cohort.startDate).getTime()) / 60000));
+
+  return {
+    id: cohort.id,
+    title: cohort.name,
+    description: cohort.description ?? '',
+    status: mapCohortStatus(cohort),
+    scheduledAt: cohort.startDate,
+    duration,
+    timezone: 'UTC',
+    location: {
+      type: cohort.meetingSchedule ? 'virtual' : 'physical',
+      meetingUrl: cohort.meetingSchedule ?? undefined,
+    },
+    instructor: cohort.instructorId
+      ? {
+          id: cohort.instructorId,
+          name: 'Assigned instructor',
+        }
+      : undefined,
+    attendeeCount: cohort.currentEnrollmentCount,
+    maxAttendees: cohort.maxCapacity,
+    materials: [],
+    createdAt: cohort.createdAt,
+    updatedAt: cohort.updatedAt ?? cohort.createdAt,
+  };
+}
+
 /**
  * Fetch course classes/sessions.
  *
@@ -343,16 +405,15 @@ export interface CourseClassDetail extends CourseClass {
  * Check course.features.hasClasses before calling
  */
 export const getCourseClasses = cache(async (courseId: string): Promise<CourseClasses> => {
-  // TODO: Implement REST fetch
-  // const response = await fetch(`${API_BASE_URL}/api/learning/courses/${courseId}/classes`, {
-  //   next: { revalidate: 60 },
-  //   headers: { Authorization: `Bearer ${token}` },
-  // });
-  // if (!response.ok) throw new Error('Failed to fetch classes');
-  // return response.json();
+  const cohorts = await learningApiGet<CohortDto[]>(`/api/cohorts/course/${courseId}`, 60);
+  const classes = (cohorts ?? []).map(mapCohortToClass);
 
-  void courseId; // Suppress unused warning in stub
-  return { classes: [], total: 0, upcomingCount: 0, completedCount: 0 };
+  return {
+    classes,
+    total: classes.length,
+    upcomingCount: classes.filter((courseClass) => courseClass.status === 'scheduled' || courseClass.status === 'live').length,
+    completedCount: classes.filter((courseClass) => courseClass.status === 'completed').length,
+  };
 });
 
 /**
@@ -366,15 +427,18 @@ export const getCourseClasses = cache(async (courseId: string): Promise<CourseCl
  * Endpoint: GET /api/learning/classes/:classId
  */
 export const getCourseClass = cache(async (classId: string): Promise<CourseClassDetail | null> => {
-  // TODO: Implement REST fetch
-  // const response = await fetch(`${API_BASE_URL}/api/learning/classes/${classId}`, {
-  //   next: { revalidate: 60 },
-  //   headers: { Authorization: `Bearer ${token}` },
-  // });
-  // if (response.status === 404) return null;
-  // if (!response.ok) throw new Error('Failed to fetch class');
-  // return response.json();
+  const cohort = await learningApiGet<CohortDto>(`/api/cohorts/${classId}`, 60);
+  if (!cohort) return null;
 
-  void classId; // Suppress unused warning in stub
-  return null;
+  return {
+    ...mapCohortToClass(cohort),
+    attendees: [],
+    settings: {
+      allowLateJoin: true,
+      recordSession: true,
+      enableChat: true,
+      enableQA: true,
+      reminderSchedule: [1440, 60, 10],
+    },
+  };
 });

@@ -1,5 +1,7 @@
 import React from 'react';
-import { Card, CardContent } from '@game-guild/ui/components/card';
+import { getCourseTestimonials } from '@/lib/learning';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Star } from 'lucide-react';
 
 /**
@@ -13,16 +15,33 @@ import { Star } from 'lucide-react';
 export default async function ListingTestimonialsPage({
   params,
 }: PageProps<'/[locale]/dashboard/learning/courses/[course]/listing/testimonials'>): Promise<React.JSX.Element> {
-  void (await params);
+  const { course: courseId } = await params;
+  const testimonials = await getCourseTestimonials(courseId);
 
   return (
     <Card>
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <Star className="text-muted-foreground mb-4 size-12" />
-        <h3 className="text-lg font-medium">Testimonials &amp; Reviews</h3>
-        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-          Feature student reviews and testimonials on your course listing to build social proof. Coming soon.
-        </p>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Star className="size-5" />Testimonials &amp; Reviews</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline">{testimonials.total} reviews</Badge>
+          <Badge variant="outline">{testimonials.averageRating.toFixed(1)} average rating</Badge>
+        </div>
+        {testimonials.testimonials.length === 0 ? (
+          <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No course reviews have been submitted yet.</div>
+        ) : (
+          testimonials.testimonials.map((testimonial) => (
+            <div key={testimonial.id} className="rounded-lg border p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="font-medium">{testimonial.title}</p>
+                <Badge>{testimonial.rating}/5</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">{testimonial.content || 'No written review.'}</p>
+              <p className="mt-2 text-xs text-muted-foreground">{testimonial.studentName}</p>
+            </div>
+          ))
+        )}
       </CardContent>
     </Card>
   );

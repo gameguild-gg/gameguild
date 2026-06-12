@@ -73,13 +73,23 @@ export function ProfileTabs({
               description={featuredProject.description}
               tech={featuredProject.tech}
               rating={featuredProject.rating}
+              imageUrl={featuredProject.imageUrl}
+              url={featuredProject.url}
               featured
               imageHeight="h-48"
               colSpan="md:col-span-2 lg:col-span-2"
             />
           ) : null}
           {portfolioProjects.map((project, index) => (
-            <ProjectCard key={index} name={project.name} tech={project.tech} rating={project.rating} />
+            <ProjectCard
+              key={project.id ?? project.slug ?? index}
+              name={project.name}
+              description={project.description}
+              tech={project.tech}
+              rating={project.rating}
+              imageUrl={project.imageUrl}
+              url={project.url}
+            />
           ))}
         </div>
       </TabsContent>
