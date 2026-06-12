@@ -214,12 +214,23 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
     try {
       const result = await CourseCompletionCertificateService.generateCertificate(
         certificateEligibility.courseId,
-        'current-user-id' // In real app, get from user context
+        certificateEligibility.userId ?? '',
+        {
+          templateId: certificateEligibility.templateId,
+          enrollmentId: certificateEligibility.enrollmentId,
+        },
       );
 
       if (result.success) {
-        console.log('Certificate generated successfully!', result);
-        // TODO: Show success notification or open certificate
+        setCertificateEligibility((current: any) => ({
+          ...current,
+          certificateId: result.certificateId,
+          certificateUrl: result.certificateUrl,
+        }));
+
+        if (result.certificateUrl) {
+          window.open(result.certificateUrl, '_blank', 'noopener,noreferrer');
+        }
       } else {
         console.error('Failed to generate certificate:', result.error);
       }
@@ -229,8 +240,9 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
   };
 
   const handleViewCertificate = () => {
-    // TODO: Open certificate viewer or download
-    console.log('View certificate requested');
+    if (certificateEligibility?.certificateUrl) {
+      window.open(certificateEligibility.certificateUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const handleReportContent = async (contentId: string, reason: string, description: string) => {
