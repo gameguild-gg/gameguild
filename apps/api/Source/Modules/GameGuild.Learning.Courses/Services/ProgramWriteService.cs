@@ -587,6 +587,9 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     var contentProgress = new List<ContentProgressDto>();
 
     return new UserProgressDto(
+      programUser.Id,
+      programUser.ProgramId,
+      programUser.UserId,
       programUser.CompletionPercentage,
       programUser.LastAccessedAt,
       programUser.StartedAt,

@@ -131,6 +131,9 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
     var contentProgress = new List<ContentProgressDto>();
 
     return new UserProgressDto(
+      programUser.Id,
+      programUser.ProgramId,
+      programUser.UserId,
       programUser.CompletionPercentage,
       programUser.LastAccessedAt,
       programUser.StartedAt,

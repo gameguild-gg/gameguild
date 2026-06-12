@@ -223,6 +223,10 @@ public class CertificatesController : BaseApiController
 /// </summary>
 public sealed record CertificateDto(
     Guid Id,
+    Guid TemplateId,
+    Guid EnrollmentId,
+    Guid UserId,
+    Guid CourseId,
     string CertificateNumber,
     string RecipientName,
     string CourseName,
@@ -232,6 +236,10 @@ public sealed record CertificateDto(
 {
     public static CertificateDto FromEntity(Certificate c) => new(
         c.Id,
+        c.TemplateId,
+        c.EnrollmentId,
+        c.UserId,
+        c.CourseId,
         c.CertificateNumber,
         c.RecipientName,
         c.CourseName,
