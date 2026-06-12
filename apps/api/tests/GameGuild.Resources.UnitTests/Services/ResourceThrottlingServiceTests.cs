@@ -1,5 +1,7 @@
 using FluentAssertions;
 
+using System.Diagnostics.Metrics;
+
 using Microsoft.Extensions.Logging;
 
 using Moq;
@@ -373,6 +375,58 @@ public class ResourceThrottlingServiceTests
 
         // Assert
         result.IsAllowed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ApplyThrottlingAsync_ShouldEmitThrottlingDecisionMetric()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var measurements = new List<long>();
+        using var listener = new MeterListener();
+        listener.InstrumentPublished = (instrument, meterListener) =>
+        {
+            if (instrument.Meter.Name == ResourceThrottlingService.MeterName)
+            {
+                meterListener.EnableMeasurementEvents(instrument);
+            }
+        };
+        listener.SetMeasurementEventCallback<long>((instrument, measurement, tags, state) =>
+        {
+            if (instrument.Name == "gameguild.resources.throttling.decisions")
+            {
+                measurements.Add(measurement);
+            }
+        });
+        listener.Start();
+
+        var policy = new ResourceThrottlingPolicy
+        {
+            ResourceType = ResourceUsageType.ApiCalls,
+            Strategy = ThrottlingStrategy.HardCutoff,
+            ThrottlingThresholdPercent = 80,
+            IsActive = true
+        };
+        var quota = new ResourceQuota
+        {
+            Type = ResourceUsageType.ApiCalls,
+            CurrentUsage = 90,
+            HardLimit = 100
+        };
+
+        _policyRepositoryMock
+            .Setup(x => x.GetByTenantAndTypeAsync(tenantId, ResourceUsageType.ApiCalls, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(policy);
+        _quotaRepositoryMock
+            .Setup(x => x.GetByTenantAndTypeAsync(tenantId, ResourceUsageType.ApiCalls, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(quota);
+
+        // Act
+        await _service.ApplyThrottlingAsync(tenantId, ResourceUsageType.ApiCalls);
+        listener.RecordObservableInstruments();
+
+        // Assert
+        measurements.Should().Contain(1);
     }
 
     #endregion

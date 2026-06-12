@@ -121,11 +121,10 @@ public sealed class Web3ServiceVerificationTests
         var address = "0x1234567890abcdef1234567890abcdef12345678";
         var challenge = await _sut.GenerateChallengeAsync(address);
 
-        // Provide a properly formatted signature (0x + 130 hex chars = 132 total)
+        // Provide a properly formatted but non-recoverable signature (0x + 130 hex chars = 132 total)
         var signature = "0x" + new string('a', 130);
 
         var result = await _sut.VerifySignatureAsync(address, signature, challenge.Message);
-        // Returns false because VerifyEthereumSignature is not implemented
         result.Should().BeFalse();
     }
 

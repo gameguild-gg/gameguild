@@ -1,7 +1,9 @@
 using FluentAssertions;
+using GameGuild.Assets;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using System.Security.Cryptography;
 using Xunit;
 
 namespace GameGuild.Compliance.KYC.Tests;
@@ -335,6 +337,48 @@ public class KycServiceTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         verification.DocumentTypes.Should().Be("passport,selfie"); // Not duplicated
+    }
+
+    [Fact]
+    public async Task UploadDocumentAsync_WithStorageService_ShouldUploadDocumentAndReturnStorageUri()
+    {
+        // Arrange
+        var verification = new UserKycVerification
+        {
+            Id = Guid.NewGuid(),
+            DocumentTypes = string.Empty
+        };
+        var bytes = new byte[] { 1, 2, 3, 4 };
+        var expectedHash = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+        using var stream = new MemoryStream(bytes);
+        var storage = new Mock<IAssetStorageService>();
+
+        _repositoryMock.Setup(r => r.GetByIdAsync(verification.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(verification);
+        storage
+            .Setup(s => s.UploadAsync(
+                It.IsAny<Stream>(),
+                expectedHash,
+                "application/octet-stream",
+                false,
+                It.IsAny<CancellationToken>()))
+            .Callback<Stream, string, string, bool, CancellationToken>((uploaded, _, _, _, _) =>
+            {
+                uploaded.Position.Should().Be(0);
+            })
+            .ReturnsAsync(new StorageUploadResult("kyc-documents", "kyc/hash/file.bin", "etag", bytes.Length));
+
+        var sut = new KycService(_repositoryMock.Object, _logger, storage.Object);
+
+        // Act
+        var result = await sut.UploadDocumentAsync(verification.Id, "passport", stream, "passport.png");
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be("storage://kyc-documents/kyc/hash/file.bin");
+        verification.DocumentTypes.Should().Be("passport");
+        _repositoryMock.Verify(r => r.UpdateAsync(verification, It.IsAny<CancellationToken>()), Times.Once);
+        storage.VerifyAll();
     }
 
     #endregion

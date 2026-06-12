@@ -3,11 +3,13 @@ using Xunit;
 using GameGuild.API.Database;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace GameGuild.Tests.Authentication.Integration;
 
@@ -66,6 +68,14 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
 
                 // Add HTTP logging services (required by the pipeline)
                 services.AddHttpLogging(o => { });
+
+                var oauthDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IOAuthService));
+                if (oauthDescriptor != null)
+                {
+                    services.Remove(oauthDescriptor);
+                }
+
+                services.AddSingleton<IOAuthService, FakeOAuthService>();
             });
         });
 
@@ -387,209 +397,117 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
     [Fact]
     public async Task SocialAuth_GoogleProvider_CompleteFlow_ShouldAuthenticateUser()
     {
-        // Arrange - Mock Google OAuth response
-        var mockGoogleIdToken = "mock.google.id.token";
         var mockGoogleEmail = $"google.user.{Guid.NewGuid()}@gmail.com";
 
-        // Note: In a real scenario, we would need to mock the Google token validation
-        // For now, this demonstrates the test structure
-
-        var googleSignInRequest = new GoogleSignInRequest
+        var googleSignInRequest = new OAuthSignInRequest
         {
-            AccessToken = mockGoogleIdToken
+            AccessToken = $"google:{mockGoogleEmail}",
+            RedirectUri = "https://app.gameguild.test/auth/google/callback"
         };
 
-        // Act & Assert
-        // This would work with proper mocking of external services
-        // await FluentActions.Invoking(async () => await _authService.GoogleIdTokenSignInAsync(googleSignInRequest))
-        //     .Should().NotThrowAsync();
+        var result = await _authService.GoogleSignInAsync(googleSignInRequest);
 
-        await Task.CompletedTask; // Placeholder until actual implementation
+        result.Success.Should().BeTrue();
+        result.Email.Should().Be(mockGoogleEmail);
+        result.AccessToken.Should().NotBeNullOrEmpty();
+        result.RefreshToken.Should().NotBeNullOrEmpty();
     }
 
     [Fact]
     public async Task SocialAuth_GitHubProvider_CompleteFlow_ShouldAuthenticateUser()
     {
-        // Arrange - Mock GitHub OAuth response
-        var mockGitHubCode = "mock_github_authorization_code";
+        var mockGitHubEmail = $"github.user.{Guid.NewGuid()}@github.local";
 
-        var githubSignInRequest = new GitHubSignInRequest
+        var githubSignInRequest = new OAuthSignInRequest
         {
-            AccessToken = mockGitHubCode
+            AccessToken = $"github:{mockGitHubEmail}",
+            RedirectUri = "https://app.gameguild.test/auth/github/callback"
         };
 
-        // Act & Assert
-        // This would work with proper mocking of external GitHub OAuth
-        // await FluentActions.Invoking(async () => await _authService.SocialSignInAsync(githubSignInRequest))
-        //     .Should().NotThrowAsync();
+        var result = await _authService.GitHubSignInAsync(githubSignInRequest);
 
-        await Task.CompletedTask; // Placeholder until actual implementation
+        result.Success.Should().BeTrue();
+        result.Email.Should().Be(mockGitHubEmail);
+        result.AccessToken.Should().NotBeNullOrEmpty();
+        result.RefreshToken.Should().NotBeNullOrEmpty();
     }
 
     #endregion
 
     #region Web3 Authentication E2E Tests
-    // TODO: Create concrete Web3ChallengeRequest implementation before uncommenting
-    /*
-    [Fact(Skip = "Web3ChallengeRequest is abstract - needs concrete implementation")]
-    public async Task Web3Auth_CompleteFlow_ChallengeAndVerify_ShouldAuthenticateWallet()
-    {
-        // Arrange
-        var walletAddress = $"0x{Guid.NewGuid():N}";
 
-        // Act 1: Generate Challenge
-        var challengeRequest = new GameGuild.Identity.Authentication.DTOs.Web3ChallengeRequest
+    [Fact]
+    public async Task Web3Auth_ChallengeGeneration_ShouldReturnChallengeForWallet()
+    {
+        var walletAddress = "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD28";
+
+        var challengeResult = await _authService.GenerateWeb3ChallengeAsync(new Web3ChallengeRequest
         {
             WalletAddress = walletAddress,
             ChainId = "1"
-        };
+        });
 
-        var challengeResult = await _authService.GenerateWeb3ChallengeAsync(challengeRequest);
-
-        // Assert Challenge Generation
         challengeResult.Should().NotBeNull();
         challengeResult.Challenge.Should().NotBeNullOrEmpty();
+        challengeResult.Challenge.Should().Contain(walletAddress);
         challengeResult.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
+    }
 
-        // Act 2: Verify Signature (with mock signature)
-        var mockSignature = "0x" + string.Concat(Enumerable.Repeat("a1b2c3d4", 16));
+    [Fact]
+    public async Task Web3Auth_InvalidSignature_ShouldFailVerification()
+    {
+        var walletAddress = "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD28";
 
-        var verifyRequest = new GameGuild.Identity.Authentication.Models.Requests.Web3VerificationRequest
+        var challengeResult = await _authService.GenerateWeb3ChallengeAsync(new Web3ChallengeRequest
+        {
+            WalletAddress = walletAddress
+        });
+
+        var verifyRequest = new Web3VerificationRequest
         {
             WalletAddress = walletAddress,
             Challenge = challengeResult.Challenge,
-            Signature = mockSignature,
+            Nonce = challengeResult.Challenge,
+            Signature = "0x" + new string('a', 130),
             ChainId = "1"
         };
 
-        // Note: Actual signature verification would require Web3 library mocking
-        // This demonstrates the test flow structure
+        await FluentActions.Invoking(async () => await _authService.VerifyWeb3SignatureAsync(verifyRequest))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
     }
-    */
 
-    // TODO: Create GenerateWeb3ChallengeRequest and VerifyWeb3SignatureRequest types before uncommenting
-    /*
-    [Fact(Skip = "Web3ChallengeRequest is abstract - needs concrete implementation")]
-    public async Task Web3Auth_ExpiredChallenge_ShouldFailVerification()
-    {
-        // Arrange
-        var walletAddress = $"0x{Guid.NewGuid():N}";
-
-        var challengeRequest = new GenerateWeb3ChallengeRequest
-        {
-            WalletAddress = walletAddress
-        };
-
-        var challengeResult = await _authService.GenerateWeb3ChallengeAsync(challengeRequest);
-
-        // Simulate challenge expiration by waiting or manipulating timestamp
-        // In real test, we'd mock the time provider
-
-        var verifyRequest = new VerifyWeb3SignatureRequest
-        {
-            WalletAddress = walletAddress,
-            Challenge = "expired_challenge",
-            Signature = "0x" + string.Concat(Enumerable.Repeat("a1b2c3d4", 16))
-        };
-
-        // Act & Assert - Should fail due to expired/invalid challenge
-        // await FluentActions.Invoking(async () => await _authService.VerifyWeb3SignatureAsync(verifyRequest))
-        //     .Should().ThrowAsync<Exception>();
-    }
-    */
     #endregion
 
     #region Polymorphic Authentication E2E Tests
-    // TODO: Create PolymorphicSignInRequest type and implement PolymorphicSignInAsync before uncommenting
-    /*
-    [Fact(Skip = "PolymorphicSignInAsync API not yet implemented")]
-    public async Task PolymorphicAuth_LocalStrategy_ShouldAuthenticateCorrectly()
+
+    [Fact]
+    public async Task PolymorphicAuth_EmailCredential_ShouldAuthenticateCorrectly()
     {
-        // Arrange
         var email = $"poly.local.{Guid.NewGuid()}@test.com";
         var password = "PolyPassword123!";
 
-        // First create a local user
-        var signUpRequest = new LocalSignUpRequest
+        await _authService.LocalSignUpAsync(new LocalSignUpRequest
         {
             Email = email,
             Username = $"poly_user_{Guid.NewGuid():N}",
             Password = password
-        };
+        });
 
-        await _authService.LocalSignUpAsync(signUpRequest);
+        var userRepository = _scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var handler = new PolymorphicSignInHandler(_authService, userRepository, NullLogger<PolymorphicSignInHandler>.Instance);
 
-        // Act - Use polymorphic sign-in with local credentials
-        var polyRequest = new PolymorphicSignInRequest
+        var result = await handler.Handle(new PolymorphicSignInCommand
         {
-            Strategy = "Local",
-            Credentials = new Dictionary<string, string>
-            {
-                { "email", email },
-                { "password", password }
-            }
-        };
+            Credential = email,
+            CredentialType = CredentialType.Email,
+            Password = password
+        }, CancellationToken.None);
 
-        // TODO: Implement method - var result = await _authService.PolymorphicSignInAsync(polyRequest);
-
-        // Assert
         result.Should().NotBeNull();
+        result.Success.Should().BeTrue();
+        result.Email.Should().Be(email);
         result.AccessToken.Should().NotBeNullOrEmpty();
         result.RefreshToken.Should().NotBeNullOrEmpty();
-    }
-
-    [Fact(Skip = "PolymorphicSignInAsync API not yet implemented")]
-    public async Task PolymorphicAuth_Web3Strategy_ShouldProcessChallengeResponse()
-    {
-        // Arrange
-        var walletAddress = $"0x{Guid.NewGuid():N}";
-
-        // Act - Generate challenge via polymorphic interface
-        var polyRequest = new PolymorphicSignInRequest
-        {
-            Strategy = "Web3",
-            Credentials = new Dictionary<string, string>
-            {
-                { "walletAddress", walletAddress }
-            }
-        };
-
-        // Note: Full flow would require signature verification mocking
-        // This demonstrates the structure
-    }
-
-    [Fact(Skip = "PolymorphicSignInAsync API not yet implemented")]
-    public async Task PolymorphicAuth_CrossStrategy_UserWithMultipleAuth_ShouldLinkAccounts()
-    {
-        // Arrange - Create user with local auth
-        var email = $"cross.strategy.{Guid.NewGuid()}@test.com";
-        var password = "CrossStrategy123!";
-
-        var localSignUpRequest = new LocalSignUpRequest
-        {
-            Email = email,
-            Username = $"cross_user_{Guid.NewGuid():N}",
-            Password = password
-        };
-
-        var localResult = await _authService.LocalSignUpAsync(localSignUpRequest);
-        var userId = localResult.UserId;
-
-        // Act - Link Web3 wallet to same user (in real scenario)
-        // This would involve:
-        // 1. User signs in with local auth
-        // 2. User connects Web3 wallet
-        // 3. System links wallet to existing user account
-
-        // Assert - User should be able to sign in with either method
-        var localSignIn = new LocalSignInRequest
-        {
-            Email = email,
-            Password = password
-        };
-
-        var localSignInResult = await _authService.LocalSignInAsync(localSignIn);
-        localSignInResult.UserId.Should().Be(userId);
     }
 
     #endregion
@@ -625,7 +543,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         await FluentActions.Invoking(async () => await _authService.RefreshTokenAsync(oldTokenRefreshRequest))
             .Should().ThrowAsync<Exception>();
     }
-    */
+
     [Fact]
     public async Task TokenLifecycle_SignOut_ShouldRevokeAllUserTokens()
     {
@@ -675,5 +593,41 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         _scope?.Dispose();
         _dbContext?.Dispose();
         _client?.Dispose();
+    }
+}
+
+internal sealed class FakeOAuthService : IOAuthService
+{
+    public Task<string> GetAuthorizationUrlAsync(string provider, string redirectUri, string state, string[]? scopes = null)
+        => Task.FromResult($"{redirectUri}?provider={provider}&state={state}");
+
+    public Task<OAuthUserProfile> HandleCallbackAsync(string provider, string code, string state, string redirectUri)
+        => Task.FromResult(CreateProfile(provider, code));
+
+    public Task<OAuthUserProfile> ValidateIdTokenAsync(string provider, string idToken)
+        => Task.FromResult(CreateProfile(provider, idToken));
+
+    public Task<OAuthUserProfile> GetUserProfileAsync(string provider, string accessToken)
+        => Task.FromResult(CreateProfile(provider, accessToken));
+
+    public Task<bool> RevokeTokenAsync(string provider, string token)
+        => Task.FromResult(!string.IsNullOrWhiteSpace(provider) && !string.IsNullOrWhiteSpace(token));
+
+    private static OAuthUserProfile CreateProfile(string provider, string token)
+    {
+        var email = token.Contains(':', StringComparison.Ordinal)
+            ? token[(token.IndexOf(':', StringComparison.Ordinal) + 1)..]
+            : $"{provider}.user@example.com";
+
+        return new OAuthUserProfile
+        {
+            Provider = provider,
+            ProviderId = $"{provider}-{email}",
+            Email = email,
+            EmailVerified = true,
+            Name = $"{provider} test user",
+            Username = email.Split('@')[0],
+            AccessToken = token
+        };
     }
 }

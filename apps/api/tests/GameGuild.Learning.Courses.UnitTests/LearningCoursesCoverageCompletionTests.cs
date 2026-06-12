@@ -158,6 +158,24 @@ public sealed class LearningCoursesCoverageCompletionTests
     }
 
     [Fact]
+    public void ProgramRatingConfiguration_LinksRatingsToProgramEnrollmentFeedback()
+    {
+        var modelBuilder = new ModelBuilder(new ConventionSet());
+        new ProgramUserConfiguration().Configure(modelBuilder.Entity<ProgramUser>());
+        new ProgramRatingConfiguration().Configure(modelBuilder.Entity<ProgramRating>());
+
+        var ratingEntity = modelBuilder.Model.FindEntityType(typeof(ProgramRating))!;
+        var programUserId = ratingEntity.FindProperty("ProgramUserId");
+
+        programUserId.Should().NotBeNull();
+        programUserId!.PropertyInfo.Should().NotBeNull();
+        ratingEntity.GetForeignKeys().Should().Contain(foreignKey =>
+            foreignKey.PrincipalEntityType.ClrType == typeof(ProgramUser) &&
+            foreignKey.Properties.Count == 1 &&
+            foreignKey.Properties[0].Name == "ProgramUserId");
+    }
+
+    [Fact]
     public void Program_mapping_extensions_cover_null_and_populated_paths()
     {
         var program = new Program

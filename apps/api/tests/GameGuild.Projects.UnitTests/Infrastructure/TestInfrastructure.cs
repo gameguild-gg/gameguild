@@ -21,6 +21,7 @@ public class TestProjectsDbContext : DbContext, IApplicationDbContext
     public DbSet<ProjectFeedback> ProjectFeedbacks { get; set; } = null!;
     public DbSet<ProjectFollower> ProjectFollowers { get; set; } = null!;
     public DbSet<ProjectMetadata> ProjectMetadata { get; set; } = null!;
+    public DbSet<ProjectInvitation> ProjectInvitations { get; set; } = null!;
     public DbSet<ProjectRelease> ProjectReleases { get; set; } = null!;
     public DbSet<ProjectTeam> ProjectTeams { get; set; } = null!;
     public DbSet<ProjectVersion> ProjectVersions { get; set; } = null!;

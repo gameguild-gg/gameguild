@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using GameGuild.CQRS.Models;
 using GameGuild.Features;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 
 namespace GameGuild.Assets.UnitTests.Services;
@@ -13,6 +15,7 @@ public class AssetAccessServiceTests
     private readonly Mock<IAssetTokenService> _tokenServiceMock;
     private readonly Mock<ITenantMemberRepository> _tenantMemberRepositoryMock;
     private readonly Mock<IFeatureFlagEvaluationService> _featureServiceMock;
+    private readonly Mock<IResourcePermissionService> _resourcePermissionServiceMock;
     private readonly Mock<ILogger<AssetAccessService>> _loggerMock;
     private readonly AssetAccessOptions _options;
     private readonly AssetAccessService _service;
@@ -25,6 +28,7 @@ public class AssetAccessServiceTests
         _tokenServiceMock = new Mock<IAssetTokenService>();
         _tenantMemberRepositoryMock = new Mock<ITenantMemberRepository>();
         _featureServiceMock = new Mock<IFeatureFlagEvaluationService>();
+        _resourcePermissionServiceMock = new Mock<IResourcePermissionService>();
         _loggerMock = new Mock<ILogger<AssetAccessService>>();
         _options = new AssetAccessOptions
         {
@@ -41,7 +45,8 @@ public class AssetAccessServiceTests
             _tenantMemberRepositoryMock.Object,
             _featureServiceMock.Object,
             Options.Create(_options),
-            _loggerMock.Object);
+            _loggerMock.Object,
+            _resourcePermissionServiceMock.Object);
     }
 
     #region ValidateAccessAsync Tests
@@ -241,7 +246,46 @@ public class AssetAccessServiceTests
     {
         // Arrange
         var assetReferenceId = Guid.NewGuid();
-        var reference = CreateAssetReference(assetReferenceId, AssetAccessPolicy.Inherited);
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var parentResourceId = Guid.NewGuid();
+        var reference = CreateAssetReference(
+            assetReferenceId,
+            AssetAccessPolicy.Inherited,
+            parentResourceType: "Course",
+            parentResourceId: parentResourceId);
+
+        _referenceRepositoryMock
+            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reference);
+
+        _resourcePermissionServiceMock
+            .Setup(x => x.HasPermissionAsync(
+                It.Is<TenantId>(id => id.Value == tenantId),
+                userId,
+                "Course",
+                parentResourceId.ToString(),
+                "read",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _service.ValidateAccessAsync(assetReferenceId, userId, tenantId);
+
+        // Assert
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ValidateAccessAsync_InheritedAsset_WithParentResourceAndNoParentPermission_ReturnsDenied()
+    {
+        // Arrange
+        var assetReferenceId = Guid.NewGuid();
+        var reference = CreateAssetReference(
+            assetReferenceId,
+            AssetAccessPolicy.Inherited,
+            parentResourceType: "Course",
+            parentResourceId: Guid.NewGuid());
 
         _referenceRepositoryMock
             .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
@@ -251,7 +295,15 @@ public class AssetAccessServiceTests
         var result = await _service.ValidateAccessAsync(assetReferenceId, Guid.NewGuid(), Guid.NewGuid());
 
         // Assert
-        result.IsValid.Should().BeTrue();
+        result.IsValid.Should().BeFalse();
+        result.DeniedReason.Should().Be(AssetAccessDeniedReason.OwnershipRequired);
+        _resourcePermissionServiceMock.Verify(x => x.HasPermissionAsync(
+            It.IsAny<TenantId>(),
+            It.IsAny<Guid>(),
+            "Course",
+            reference.ParentResourceId!.Value.ToString(),
+            "read",
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -460,15 +512,20 @@ public class AssetAccessServiceTests
 
     #region Helper Methods
 
-    private static AssetReference CreateAssetReference(Guid id, AssetAccessPolicy policy, Guid? createdByUserId = null)
+    private static AssetReference CreateAssetReference(
+        Guid id,
+        AssetAccessPolicy policy,
+        Guid? createdByUserId = null,
+        string? parentResourceType = null,
+        Guid? parentResourceId = null)
     {
         var reference = new AssetReference(
             Guid.NewGuid(),
             createdByUserId ?? Guid.NewGuid(),
             "Test Asset",
             policy,
-            null,
-            null);
+            parentResourceType,
+            parentResourceId);
         
         typeof(AssetReference).GetProperty("Id")?.SetValue(reference, id);
         

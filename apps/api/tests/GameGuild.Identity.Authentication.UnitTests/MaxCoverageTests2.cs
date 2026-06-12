@@ -344,6 +344,16 @@ public class MfaControllerCovTests
     [Fact]
     public async Task InitiateSmsSetup_ReturnsResponse()
     {
+        _mfaService.Setup(s => s.InitiateSmsSetupAsync(
+            _userId, "+1234567890", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SmsMfaSetupResult
+            {
+                Success = true,
+                Message = "Verification code sent to your phone number",
+                PhoneNumberMasked = "***-***-7890",
+                ExpiresInSeconds = 300
+            });
+
         var result = await _controller.InitiateSmsSetup(
             new SmsMfaSetupRequest { PhoneNumber = "+1234567890" }, CancellationToken.None);
         result.Should().BeOfType<OkObjectResult>();
@@ -352,6 +362,10 @@ public class MfaControllerCovTests
     [Fact]
     public async Task CompleteSmsSetup_ReturnsResponse()
     {
+        _mfaService.Setup(s => s.CompleteSmsSetupAsync(
+            _userId, "123456", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MfaVerificationResult.Successful("SMS MFA setup completed successfully"));
+
         var result = await _controller.CompleteSmsSetup(
             new CompleteMfaSetupRequest { Code = "123456", SecretKey = "KEY" },
             CancellationToken.None);
@@ -368,6 +382,8 @@ public class MfaControllerCovTests
                 EnabledMethods = new[] { "totp" },
                 BackupCodesRemaining = 5
             });
+        _mfaService.Setup(s => s.IsSmsMfaAvailableAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var result = await _controller.ListMfaMethods(CancellationToken.None);
         result.Should().BeOfType<OkObjectResult>();

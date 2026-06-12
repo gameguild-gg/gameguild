@@ -18,6 +18,26 @@ namespace GameGuild.Features.UnitTests;
 public class FeaturesCoverageCompletionTests
 {
     [Theory]
+    [MemberData(nameof(FeatureFlagDependencyLinkInvalidCases))]
+    public void FeatureFlagDependencyLink_Create_WhenInputIsInvalid_ThrowsArgumentException(Guid featureFlagId, Guid dependsOnFeatureFlagId, string dependencyType, string expectedParameter)
+    {
+        var act = () => FeatureFlagDependencyLink.Create(featureFlagId, dependsOnFeatureFlagId, dependencyType);
+
+        act.Should().Throw<ArgumentException>()
+            .Where(ex => ex.ParamName == expectedParameter);
+    }
+
+    public static IEnumerable<object[]> FeatureFlagDependencyLinkInvalidCases()
+    {
+        var featureFlagId = Guid.NewGuid();
+        var dependencyId = Guid.NewGuid();
+
+        yield return [Guid.Empty, dependencyId, "requires", "featureFlagId"];
+        yield return [featureFlagId, Guid.Empty, "requires", "dependsOnFeatureFlagId"];
+        yield return [featureFlagId, featureFlagId, "requires", "dependsOnFeatureFlagId"];
+    }
+
+    [Theory]
     [MemberData(nameof(ConstructorGuardCases))]
     public void Constructors_WhenRequiredDependencyIsNull_ThrowArgumentNullException(string _, Action act)
     {
@@ -116,13 +136,35 @@ public class FeaturesCoverageCompletionTests
     }
 
     [Fact]
-    public async Task FeatureFlagQueryRepository_GetDependenciesAsync_ReturnsEmptyPlaceholder()
+    public async Task FeatureFlagQueryRepository_GetDependenciesAsync_ReturnsDirectAndInverseDependencies()
     {
-        var repository = new FeatureFlagQueryRepository(Mock.Of<IApplicationDbContext>());
+        await using var db = CreateDbContext();
+        var primary = new FeatureFlag { Id = Guid.NewGuid(), Key = "launch-pad", Name = "Launch Pad", Environment = "production" };
+        var required = new FeatureFlag { Id = Guid.NewGuid(), Key = "projects", Name = "Projects", Environment = "production" };
+        var dependent = new FeatureFlag { Id = Guid.NewGuid(), Key = "testing-lab", Name = "Testing Lab", Environment = "production" };
+        db.Set<FeatureFlag>().AddRange(primary, required, dependent);
+        db.Set<FeatureFlagDependencyLink>().AddRange(
+            FeatureFlagDependencyLink.Create(primary.Id, required.Id, "requires"),
+            FeatureFlagDependencyLink.Create(dependent.Id, primary.Id, "blocks"));
+        await db.SaveChangesAsync();
 
-        var result = await repository.GetDependenciesAsync(Guid.NewGuid(), includeInverse: true);
+        var repository = new FeatureFlagQueryRepository(db);
 
-        result.Should().BeEmpty();
+        var result = (await repository.GetDependenciesAsync(primary.Id, includeInverse: true)).ToList();
+
+        result.Should().HaveCount(2);
+        result.Should().Contain(x =>
+            x.FeatureFlagId == primary.Id &&
+            x.DependsOnFeatureFlagId == required.Id &&
+            x.DependencyType == "requires" &&
+            x.FeatureFlagKey == "launch-pad" &&
+            x.DependsOnFeatureFlagKey == "projects");
+        result.Should().Contain(x =>
+            x.FeatureFlagId == dependent.Id &&
+            x.DependsOnFeatureFlagId == primary.Id &&
+            x.DependencyType == "blocks" &&
+            x.FeatureFlagKey == "testing-lab" &&
+            x.DependsOnFeatureFlagKey == "launch-pad");
     }
 
     [Fact]
@@ -547,6 +589,7 @@ public class FeaturesCoverageCompletionTests
             modelBuilder.Entity<TenantCapability>();
             modelBuilder.Entity<CapabilityAuditLog>();
             modelBuilder.Entity<FeatureFlag>();
+            modelBuilder.Entity<FeatureFlagDependencyLink>();
             modelBuilder.Entity<FeatureFlagTarget>();
             modelBuilder.Entity<FeatureFlagUsage>();
 

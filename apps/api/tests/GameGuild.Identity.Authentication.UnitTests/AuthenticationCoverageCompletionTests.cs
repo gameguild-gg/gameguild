@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.Metrics;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
@@ -21,6 +22,7 @@ using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using Moq;
+using Nethereum.Signer;
 using Xunit;
 
 namespace GameGuild.Identity.Authentication.UnitTests;
@@ -459,8 +461,111 @@ public sealed class AuthenticationCoverageCompletionTests
             service,
             "VerifyEthereumSignature",
             "",
-            address);
+            address,
+            challenge.Message);
         emptySignatureResult.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Remaining_Authentication_Support_Service_Branches_Are_Covered()
+    {
+        var enabledSms = new LoggingSmsService(
+            NullLogger<LoggingSmsService>.Instance,
+            Options.Create(new SmsMfaOptions { Enabled = true }));
+        (await enabledSms.IsConfiguredAsync()).Should().BeTrue();
+        await enabledSms.SendVerificationCodeAsync("+1 (555) 123-4567", "123456");
+        InvokePrivateStatic<string>(typeof(LoggingSmsService), "MaskPhoneNumber", "")
+            .Should().Be("****");
+        InvokePrivateStatic<string>(typeof(LoggingSmsService), "MaskPhoneNumber", "123")
+            .Should().Be("****");
+        InvokePrivateStatic<string>(typeof(LoggingSmsService), "MaskPhoneNumber", "+15551234567")
+            .Should().Be("***-***-4567");
+
+        var disabledSms = new LoggingSmsService(
+            NullLogger<LoggingSmsService>.Instance,
+            Options.Create(new SmsMfaOptions { Enabled = false }));
+        (await disabledSms.IsConfiguredAsync()).Should().BeFalse();
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            disabledSms.SendVerificationCodeAsync("+15551234567", "123456"));
+
+        var validation = new ModelValidationService();
+        validation.TryValidate(null, out var nullModelErrors).Should().BeFalse();
+        nullModelErrors.Should().ContainKey("model");
+        validation.TryValidate(new { Email = "user@example.test" }, out var validModelErrors).Should().BeTrue();
+        validModelErrors.Should().BeEmpty();
+
+        var formatting = new ResponseFormattingService();
+        formatting.Success(new { Id = 1 }, "ok").Should().BeEquivalentTo(
+            new AuthenticationPresentationResponse(true, new { Id = 1 }, "ok", new Dictionary<string, string[]>()));
+        var errors = new Dictionary<string, string[]> { ["email"] = ["Required"] };
+        formatting.Failure("bad", errors).Errors.Should().BeSameAs(errors);
+        formatting.Failure("bad").Errors.Should().BeEmpty();
+
+        var problem = new ErrorHandlingService().CreateProblemDetails(
+            new InvalidOperationException("failed"),
+            StatusCodes.Status409Conflict);
+        problem.Title.Should().Be(nameof(InvalidOperationException));
+        problem.Detail.Should().Be("failed");
+        problem.Status.Should().Be(StatusCodes.Status409Conflict);
+
+        using var provider = new ServiceCollection().AddMetrics().BuildServiceProvider();
+        var metrics = new AuthenticationMetricsRecorder(provider.GetRequiredService<IMeterFactory>());
+        metrics.RecordPermissionEvaluation(true);
+        metrics.RecordPermissionEvaluation(false);
+        metrics.RecordPolicyEvaluation("resource", true);
+        metrics.RecordPolicyEvaluation("resource", false);
+        metrics.RecordAccessReviewReminder();
+        metrics.RecordCacheLookup(true);
+        metrics.RecordCacheLookup(false);
+
+        var mfaWithoutSms = new MfaService(
+            NullLogger<MfaService>.Instance,
+            Mock.Of<ITotpMfaService>(),
+            Mock.Of<IBackupCodeMfaService>(),
+            Mock.Of<IMfaAttemptTrackingService>());
+        (await mfaWithoutSms.IsSmsMfaAvailableAsync()).Should().BeFalse();
+
+        var sms = new Mock<ISmsService>();
+        sms.Setup(service => service.IsConfiguredAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var mfaWithSms = new MfaService(
+            NullLogger<MfaService>.Instance,
+            Mock.Of<ITotpMfaService>(),
+            Mock.Of<IBackupCodeMfaService>(),
+            Mock.Of<IMfaAttemptTrackingService>(),
+            smsService: sms.Object);
+        (await mfaWithSms.IsSmsMfaAvailableAsync()).Should().BeTrue();
+
+        InvokePrivateStatic<string?>(typeof(MfaService), "NormalizePhoneNumber", "")
+            .Should().BeNull();
+        InvokePrivateStatic<string?>(typeof(MfaService), "NormalizePhoneNumber", "123")
+            .Should().BeNull();
+        InvokePrivateStatic<string?>(typeof(MfaService), "NormalizePhoneNumber", new string('1', 16))
+            .Should().BeNull();
+        InvokePrivateStatic<string?>(typeof(MfaService), "NormalizePhoneNumber", "+1 (555) 123-4567")
+            .Should().Be("+15551234567");
+        InvokePrivateStatic<string?>(typeof(MfaService), "NormalizePhoneNumber", "555-123-4567")
+            .Should().Be("5551234567");
+        InvokePrivateStatic<string>(typeof(MfaService), "MaskPhoneNumber", "")
+            .Should().Be("****");
+        InvokePrivateStatic<string>(typeof(MfaService), "MaskPhoneNumber", "123")
+            .Should().Be("****");
+        InvokePrivateStatic<string>(typeof(MfaService), "MaskPhoneNumber", "+15551234567")
+            .Should().Be("***-***-4567");
+    }
+
+    [Fact]
+    public async Task Web3Service_WithValidSignatureFromDifferentWallet_ShouldRejectMismatch()
+    {
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var service = new Web3Service(NullLogger<Web3Service>.Instance, cache);
+        var expectedWallet = "0x1234567890abcdef1234567890abcdef12345678";
+        var challenge = await service.GenerateChallengeAsync(expectedWallet);
+        var signingKey = EthECKey.GenerateKey();
+        var signature = new EthereumMessageSigner().EncodeUTF8AndSign(challenge.Message, signingKey);
+
+        var result = await service.VerifySignatureAsync(expectedWallet, signature, challenge.Message);
+
+        result.Should().BeFalse();
     }
 
     [Fact]

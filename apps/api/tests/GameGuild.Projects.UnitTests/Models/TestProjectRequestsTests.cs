@@ -5,7 +5,7 @@ namespace GameGuild.Projects.UnitTests.Models;
 /// </summary>
 public record TestCreateProjectRequest
 {
-    public string Title { get; init; } = string.Empty;
+    public string? Title { get; init; } = string.Empty;
     public string? Description { get; init; }
     public string? ShortDescription { get; init; }
     public string? ImageUrl { get; init; }
@@ -43,7 +43,7 @@ public class TestProjectRequestValidationTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
-    public void CreateProjectRequest_Should_Validate_Title_Required(string title)
+    public void CreateProjectRequest_Should_Validate_Title_Required(string? title)
     {
         // Arrange
         var request = new TestCreateProjectRequest

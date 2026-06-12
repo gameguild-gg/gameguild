@@ -1,8 +1,10 @@
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -85,6 +87,24 @@ public class EmailVerificationServiceTests
         firstValidation.UserId.Should().Be(userId);
         firstValidation.Email.Should().Be("magic@test.com");
         secondValidation.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyMagicLinkTokenAsync_WithDistributedCache_WorksAcrossServiceInstances()
+    {
+        var distributedCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
+        using var firstMemoryCache = new MemoryCache(new MemoryCacheOptions());
+        using var secondMemoryCache = new MemoryCache(new MemoryCacheOptions());
+        var firstService = new EmailVerificationService(_loggerMock.Object, firstMemoryCache, _publisherMock.Object, distributedCache: distributedCache);
+        var secondService = new EmailVerificationService(_loggerMock.Object, secondMemoryCache, _publisherMock.Object, distributedCache: distributedCache);
+        var userId = Guid.NewGuid();
+
+        var token = await firstService.GenerateMagicLinkTokenAsync(userId, "Magic@Test.COM");
+        var result = await secondService.VerifyMagicLinkTokenAsync(token);
+
+        result.Success.Should().BeTrue();
+        result.UserId.Should().Be(userId);
+        result.Email.Should().Be("magic@test.com");
     }
 
     [Fact]

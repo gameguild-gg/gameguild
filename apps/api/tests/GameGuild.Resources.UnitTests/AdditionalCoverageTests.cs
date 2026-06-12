@@ -19,7 +19,21 @@ namespace GameGuild.Resources.UnitTests;
 
 public class GetResourceUsageTrendsHandlerTests
 {
-    private readonly GetResourceUsageTrendsHandler _handler = new();
+    private readonly Mock<IUsageRecordRepository> _usageRecordRepository = new();
+    private readonly GetResourceUsageTrendsHandler _handler;
+
+    public GetResourceUsageTrendsHandlerTests()
+    {
+        _usageRecordRepository
+            .Setup(repository => repository.GetByTypeAsync(
+                It.IsAny<ResourceUsageType>(),
+                It.IsAny<DateTime?>(),
+                It.IsAny<DateTime?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        _handler = new GetResourceUsageTrendsHandler(_usageRecordRepository.Object);
+    }
 
     [Fact]
     public async Task Handle_DailyGranularity_ReturnsDataPoints()
@@ -38,6 +52,34 @@ public class GetResourceUsageTrendsHandlerTests
         result.EndDate.Should().Be(new DateTime(2025, 1, 5));
         result.Granularity.Should().Be(TrendGranularity.Daily);
         result.DataPoints.Should().HaveCountGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task Handle_DailyGranularity_AggregatesRealRecordsByBucket()
+    {
+        var tenantOne = Guid.NewGuid();
+        var tenantTwo = Guid.NewGuid();
+        var start = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var end = start.AddDays(2);
+        var records = new[]
+        {
+            UsageRecord.CreateDaily(ResourceUsageType.Users, tenantOne, 5, start),
+            UsageRecord.CreateDaily(ResourceUsageType.Users, tenantTwo, 7, start),
+            UsageRecord.CreateDaily(ResourceUsageType.Users, tenantOne, 11, start.AddDays(1))
+        };
+
+        _usageRecordRepository
+            .Setup(repository => repository.GetByTypeAsync(ResourceUsageType.Users, start, end, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(records);
+
+        var result = await _handler.Handle(
+            new GetResourceUsageTrendsQuery(ResourceUsageType.Users, start, end, TrendGranularity.Daily),
+            CancellationToken.None);
+
+        result.DataPoints.Should().HaveCount(3);
+        result.DataPoints[0].Should().Be(new UsageTrendDataPoint(start, 12, 2));
+        result.DataPoints[1].Should().Be(new UsageTrendDataPoint(start.AddDays(1), 11, 1));
+        result.DataPoints[2].Should().Be(new UsageTrendDataPoint(start.AddDays(2), 0, 0));
     }
 
     [Fact]

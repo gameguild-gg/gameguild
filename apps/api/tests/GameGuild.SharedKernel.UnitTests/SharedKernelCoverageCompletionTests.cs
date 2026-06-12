@@ -39,6 +39,7 @@ using GameGuild.Configuration.PresentationLayer.RequestContext;
 using GameGuild.Configuration.PresentationLayer.ResponseCaching;
 using GameGuild.Configuration.PresentationLayer.ResponseCompression;
 using GameGuild.Configuration.PresentationLayer.SignalR;
+using GameGuild.Billing;
 using GameGuild.CQRS;
 using GameGuild.CQRS.Implementation;
 using GameGuild.CQRS.Publishers;
@@ -46,6 +47,70 @@ using GameGuild.Email;
 using Moq;
 
 namespace GameGuild.SharedKernel.UnitTests;
+
+public class CrossModuleContractTests
+{
+    [Fact]
+    public void Notification_And_Billing_Contracts_Expose_Record_State()
+    {
+        var tenantId = Guid.NewGuid();
+        var recipientId = Guid.NewGuid();
+        var referenceId = Guid.NewGuid();
+        var metadata = new Dictionary<string, string> { ["source"] = "coverage" };
+
+        var message = new ApplicationNotificationMessage(
+            recipientId,
+            "Title",
+            "Message",
+            "Security",
+            "High",
+            tenantId,
+            "/console/security",
+            referenceId,
+            "Session",
+            metadata);
+        message.RecipientId.Should().Be(recipientId);
+        message.Title.Should().Be("Title");
+        message.Message.Should().Be("Message");
+        message.Type.Should().Be("Security");
+        message.Priority.Should().Be("High");
+        message.TenantId.Should().Be(tenantId);
+        message.ActionUrl.Should().Be("/console/security");
+        message.ReferenceEntityId.Should().Be(referenceId);
+        message.ReferenceEntityType.Should().Be("Session");
+        message.Metadata.Should().BeSameAs(metadata);
+
+        var notificationId = Guid.NewGuid();
+        ApplicationNotificationPublishResult.Success(notificationId)
+            .Should().Be(new ApplicationNotificationPublishResult(true, notificationId, null));
+        ApplicationNotificationPublishResult.Failure("failed")
+            .Should().Be(new ApplicationNotificationPublishResult(false, null, "failed"));
+
+        var periodStart = new DateTime(2026, 6, 1);
+        var periodEnd = new DateTime(2026, 6, 30);
+        var dueDate = new DateTime(2026, 7, 10);
+        var command = new CreateCostAllocationInvoiceCommand(
+            tenantId,
+            Guid.NewGuid(),
+            129.50m,
+            periodStart,
+            periodEnd,
+            "BRL",
+            dueDate);
+        command.TenantId.Should().Be(tenantId);
+        command.Amount.Should().Be(129.50m);
+        command.PeriodStart.Should().Be(periodStart);
+        command.PeriodEnd.Should().Be(periodEnd);
+        command.Currency.Should().Be("BRL");
+        command.DueDate.Should().Be(dueDate);
+
+        var result = new CostAllocationInvoiceResult(Guid.NewGuid(), "INV-100", "issued", 129.50m, dueDate);
+        result.InvoiceNumber.Should().Be("INV-100");
+        result.Status.Should().Be("issued");
+        result.Total.Should().Be(129.50m);
+        result.DueDate.Should().Be(dueDate);
+    }
+}
 
 public class JsonValueDictionaryCoverageTests
 {

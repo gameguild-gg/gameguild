@@ -138,7 +138,7 @@ public class RecommendationContractCoverageTests
     }
 
     [Fact]
-    public void ConstructorsAndPrivateHelpers_ShouldBeCovered()
+    public async Task ConstructorsAndPrivateHelpers_ShouldBeCovered()
     {
         using var context = CreateContext();
         var engine = new Mock<IRecommendationEngine>();
@@ -158,7 +158,7 @@ public class RecommendationContractCoverageTests
         similarToCompleted.Priority.Should().Be(80);
         trendingNow.Type.Should().Be(RecommendationType.TrendingNow);
         trendingNow.Priority.Should().Be(60);
-        trendingNow.GenerateAsync(Guid.NewGuid(), null, [], 1).GetAwaiter().GetResult().Should().BeEmpty();
+        (await trendingNow.GenerateAsync(Guid.NewGuid(), null, [], 1)).Should().BeEmpty();
 
         new CourseCompletedLearningProfileHandler(context, NullLogger<CourseCompletedLearningProfileHandler>.Instance).Should().NotBeNull();
         new CourseViewedActivityHandler(context, NullLogger<CourseViewedActivityHandler>.Instance).Should().NotBeNull();

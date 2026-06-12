@@ -328,6 +328,34 @@ public class ContentPagesSmokeCoverageTests
         notFound.Result.Should().BeOfType<NotFoundResult>();
         ok.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeSameAs(metadata);
     }
+
+    [Fact]
+    public async Task ContentResourceController_GetBySlug_ShouldAwaitViewCountIncrement()
+    {
+        var resource = new ContentResource
+        {
+            Id = Guid.NewGuid(),
+            Slug = "guide",
+            Title = "Guide",
+            Status = ContentResourceStatus.Published
+        };
+        var increment = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var service = new Mock<IContentResourceService>();
+        service.Setup(current => current.GetBySlugAsync("guide", It.IsAny<CancellationToken>())).ReturnsAsync(resource);
+        service.Setup(current => current.IncrementViewCountAsync(resource.Id, It.IsAny<CancellationToken>())).Returns(increment.Task);
+        var controller = new ContentResourceController(service.Object, Mock.Of<ISender>(), Mock.Of<IActorContextAccessor>());
+
+        var resultTask = controller.GetBySlug("guide", CancellationToken.None);
+
+        await Task.Delay(25);
+        resultTask.IsCompleted.Should().BeFalse("the controller must not leave EF work running after the request returns");
+
+        increment.SetResult();
+        var result = await resultTask;
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        service.Verify(current => current.IncrementViewCountAsync(resource.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
 }
 
 public class PublishCommandHandlerCoverageTests

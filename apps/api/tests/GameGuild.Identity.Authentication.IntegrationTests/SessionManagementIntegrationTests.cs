@@ -246,199 +246,110 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
     #endregion
 
     #region Session Security Tests
-    // TODO: Implement concrete AuthenticationAttemptContext and anomaly detection handlers before uncommenting these tests
-    /*
+
     [Fact]
-    public async Task SessionSecurity_HijackingPrevention_IpAddressChange_ShouldDetectAnomaly()
+    public async Task SessionSecurity_IpAndUserAgentChange_ShouldDetectAnomaly()
     {
-        // Arrange - Create session with original IP
         var userId = Guid.NewGuid();
         await CreateTestUserAsync(userId);
 
-        var originalIp = "192.168.1.100";
-        var suspiciousIp = "10.20.30.40"; // Completely different IP
-
-        var session = new UserSession
+        await _dbContext.Set<AuthenticationAttempt>().AddAsync(new AuthenticationAttempt
         {
             Id = Guid.NewGuid(),
+            Email = $"session.security.{userId:N}@example.com",
             UserId = userId,
-            DeviceFingerprint = "test-device",
+            IpAddress = "192.168.1.100",
             UserAgent = "Chrome/Windows",
-            IpAddress = originalIp,
-            CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddHours(24),
-            IsActive = true
-        };
-
-        await _dbContext.Set<UserSession>().AddAsync(session);
-        await _dbContext.SaveChangesAsync();
-
-        // Act - Simulate request from different IP
-        var attemptContext = new AuthenticationAttemptContext
-        {
-            UserId = userId,
-            IpAddress = suspiciousIp,
-            UserAgent = "Chrome/Windows",
-            Location = new LocationInfo { Country = "US", City = "NewYork" },
-            DeviceFingerprint = "test-device",
-            Timestamp = DateTime.UtcNow
-        };
-
-        // TODO: Implement method - var anomalyResult = await _anomalyService.AnalyzeLoginAttemptAsync(attemptContext);
-
-        // Assert - Should detect IP change as anomaly
-        anomalyResult.Should().NotBeNull();
-        anomalyResult.IsAnomalous.Should().BeTrue();
-        anomalyResult.DetectedAnomalies.Should().Contain("IpAddressChange");
-    }
-
-    [Fact]
-    public async Task SessionSecurity_HijackingPrevention_UserAgentChange_ShouldDetectAnomaly()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        await CreateTestUserAsync(userId);
-
-        var originalUserAgent = "Mozilla/5.0 (Windows NT 10.0) Chrome/91.0";
-        var suspiciousUserAgent = "curl/7.68.0"; // Completely different user agent
-
-        var session = new UserSession
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            DeviceFingerprint = "test-device",
-            UserAgent = originalUserAgent,
-            IpAddress = "192.168.1.100",
-            CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddHours(24),
-            IsActive = true
-        };
-
-        await _dbContext.Set<UserSession>().AddAsync(session);
-        await _dbContext.SaveChangesAsync();
-
-        // Act - Simulate request with different user agent
-        var attemptContext = new AuthenticationAttemptContext
-        {
-            UserId = userId,
-            IpAddress = "192.168.1.100",
-            UserAgent = suspiciousUserAgent,
-            Location = new LocationInfo { Country = "US", City = "Seattle" },
-            DeviceFingerprint = "different-device",
-            Timestamp = DateTime.UtcNow
-        };
-
-        // TODO: Implement method - var anomalyResult = await _anomalyService.AnalyzeLoginAttemptAsync(attemptContext);
-
-        // Assert
-        anomalyResult.Should().NotBeNull();
-        anomalyResult.IsAnomalous.Should().BeTrue();
-        anomalyResult.DetectedAnomalies.Should().Contain("UserAgentChange");
-    }
-
-    [Fact]
-    public async Task SessionSecurity_ImpossibleTravel_ShouldDetectAndBlock()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        await CreateTestUserAsync(userId);
-
-        // First login from New York
-        var attempt1 = new AuthenticationAttempt
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            IpAddress = "192.168.1.100",
-            UserAgent = "Chrome",
-            Location = "US-NewYork",
+            Location = "US-Seattle",
+            DeviceFingerprint = "known-device",
             IsSuccessful = true,
-            AttemptedAt = DateTime.UtcNow,
-            // TODO: Implement RiskLevel enum - RiskLevel = RiskLevel.Low
-        };
-
-        await _dbContext.Set<AuthenticationAttempt>().AddAsync(attempt1);
+            AttemptedAt = DateTime.UtcNow.AddMinutes(-10),
+            ProcessingTime = TimeSpan.FromMilliseconds(120)
+        });
         await _dbContext.SaveChangesAsync();
 
-        // Act - Login attempt from London 5 minutes later (impossible travel)
-        var attemptContext = new AuthenticationAttemptContext
+        var result = await _anomalyService.AnalyzeLoginAttemptAsync(new AuthenticationAttemptContext
         {
             UserId = userId,
+            Identifier = $"session.security.{userId:N}@example.com",
             IpAddress = "10.20.30.40",
-            UserAgent = "Chrome",
-            Location = new LocationInfo { Country = "GB", City = "London" },
-            DeviceFingerprint = "device-123",
-            Timestamp = DateTime.UtcNow.AddMinutes(5)
-        };
+            UserAgent = "curl/8.0",
+            Location = new LocationInfo { Country = "US", City = "Seattle" },
+            DeviceFingerprint = "known-device",
+            Timestamp = DateTime.UtcNow
+        });
 
-        // TODO: Implement method - var anomalyResult = await _anomalyService.AnalyzeLoginAttemptAsync(attemptContext);
-
-        // Assert - Should detect impossible travel
-        anomalyResult.Should().NotBeNull();
-        anomalyResult.IsAnomalous.Should().BeTrue();
-        anomalyResult.DetectedAnomalies.Should().Contain("ImpossibleTravel");
-        // TODO: Implement RiskLevel property - anomalyResult.RiskLevel.Should().Be(RiskLevel.Critical);
+        result.IsAnomalous.Should().BeTrue();
+        result.DetectedAnomalies.Should().Contain("IpAddressChange");
+        result.DetectedAnomalies.Should().Contain("UserAgentChange");
+        result.RiskLevel.Should().BeOneOf(RiskLevel.Medium, RiskLevel.High, RiskLevel.Critical);
     }
 
     [Fact]
-    public async Task SessionSecurity_SecurityAnalysis_ShouldIdentifyRisks()
+    public async Task SessionSecurity_ImpossibleTravel_ShouldDetectAnomaly()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         await CreateTestUserAsync(userId);
 
-        // Create sessions with various risk indicators
-        var sessions = new List<UserSession>
+        await _dbContext.Set<AuthenticationAttempt>().AddAsync(new AuthenticationAttempt
         {
-            // Suspicious: Old session still active
-            new UserSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                DeviceFingerprint = "old-device",
-                UserAgent = "OldBrowser/1.0",
-                IpAddress = "192.168.1.1",
-                CreatedAt = DateTime.UtcNow.AddDays(-30),
-                LastUsedAt = DateTime.UtcNow.AddDays(-15),
-                ExpiresAt = DateTime.UtcNow.AddDays(1),
-                IsActive = true
-            },
-            // Suspicious: Many failed attempts
-            new UserSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                DeviceFingerprint = "suspicious-device",
-                UserAgent = "Chrome",
-                IpAddress = "10.20.30.40",
-                CreatedAt = DateTime.UtcNow.AddHours(-2),
-                ExpiresAt = DateTime.UtcNow.AddHours(22),
-                IsActive = true
-            },
-            // Normal session
-            new UserSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                DeviceFingerprint = "normal-device",
-                UserAgent = "Chrome/Latest",
-                IpAddress = "192.168.1.100",
-                CreatedAt = DateTime.UtcNow.AddMinutes(-30),
-                LastUsedAt = DateTime.UtcNow.AddMinutes(-1),
-                ExpiresAt = DateTime.UtcNow.AddHours(23.5),
-                IsActive = true
-            }
-        };
+            Id = Guid.NewGuid(),
+            Email = $"travel.{userId:N}@example.com",
+            UserId = userId,
+            IpAddress = "192.168.1.100",
+            UserAgent = "Chrome/Windows",
+            Location = "US-NewYork",
+            DeviceFingerprint = "travel-device",
+            IsSuccessful = true,
+            AttemptedAt = DateTime.UtcNow.AddMinutes(-5),
+            ProcessingTime = TimeSpan.FromMilliseconds(110)
+        });
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _anomalyService.AnalyzeLoginAttemptAsync(new AuthenticationAttemptContext
+        {
+            UserId = userId,
+            Identifier = $"travel.{userId:N}@example.com",
+            IpAddress = "203.0.113.10",
+            UserAgent = "Chrome/Windows",
+            Location = new LocationInfo { Country = "GB", City = "London" },
+            DeviceFingerprint = "travel-device",
+            Timestamp = DateTime.UtcNow
+        });
+
+        result.IsAnomalous.Should().BeTrue();
+        result.DetectedAnomalies.Should().Contain("ImpossibleTravel");
+        result.RiskLevel.Should().BeOneOf(RiskLevel.Medium, RiskLevel.High, RiskLevel.Critical);
+    }
+
+    [Fact]
+    public async Task SessionSecurity_SecurityAnalysis_ShouldIdentifyRiskySessionSpread()
+    {
+        var userId = Guid.NewGuid();
+        await CreateTestUserAsync(userId);
+
+        var sessions = Enumerable.Range(1, 12).Select(i => new UserSession
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            DeviceFingerprint = $"device-{i}",
+            UserAgent = $"Browser-{i}",
+            IpAddress = $"10.0.0.{i}",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-i),
+            LastUsedAt = DateTime.UtcNow.AddMinutes(-i),
+            ExpiresAt = DateTime.UtcNow.AddHours(24),
+            IsActive = true
+        });
 
         await _dbContext.Set<UserSession>().AddRangeAsync(sessions);
         await _dbContext.SaveChangesAsync();
 
-        // Act - Perform security analysis
-        // TODO: Implement method - var securityAnalysis = await _sessionService.GetSessionSecurityAnalysisAsync(userId);
+        var analysis = await _sessionService.AnalyzeSessionSecurityAsync(userId, "10.0.0.1", "Browser-1");
 
-        // Assert
-        securityAnalysis.Should().NotBeNull();
-        securityAnalysis.TotalSessions.Should().Be(3);
-        securityAnalysis.SuspiciousSessions.Should().BeGreaterThan(0);
+        analysis.ActiveSessionCount.Should().Be(12);
+        analysis.UnusualActivityDetected.Should().BeTrue();
+        analysis.RiskLevel.Should().Be(RiskLevel.High);
+        analysis.RiskFactors.Should().NotBeEmpty();
     }
 
     #endregion
@@ -448,159 +359,65 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
     [Fact]
     public async Task AnomalyDetection_BruteForceAttempt_ShouldDetectAndThrottle()
     {
-        // Arrange
         var userId = Guid.NewGuid();
+        var email = $"bruteforce.{userId:N}@example.com";
         await CreateTestUserAsync(userId);
 
-        var ipAddress = "192.168.1.100";
-
-        // Act - Simulate multiple failed login attempts
-        var failedAttempts = Enumerable.Range(1, 10).Select(i => new AuthenticationAttempt
+        var failedAttempts = Enumerable.Range(1, 5).Select(i => new AuthenticationAttempt
         {
             Id = Guid.NewGuid(),
+            Email = email,
             UserId = userId,
-            IpAddress = ipAddress,
-            UserAgent = "Chrome",
+            IpAddress = "192.168.1.100",
+            UserAgent = "Chrome/Windows",
             Location = "US-Seattle",
             IsSuccessful = false,
             FailureReason = "Invalid credentials",
             AttemptedAt = DateTime.UtcNow.AddMinutes(-i),
-            // TODO: Implement RiskLevel enum - RiskLevel = RiskLevel.Medium
-        }).ToList();
+            ProcessingTime = TimeSpan.FromMilliseconds(90)
+        });
 
         await _dbContext.Set<AuthenticationAttempt>().AddRangeAsync(failedAttempts);
         await _dbContext.SaveChangesAsync();
 
-        // Check if should throttle
-        // TODO: Implement method - var shouldThrottle = await _anomalyService.ShouldThrottleAsync(ipAddress, userId);
-
-        // Assert - Should detect brute force and throttle
-        shouldThrottle.Should().BeTrue();
+        (await _anomalyService.DetectBruteForceAsync(email)).Should().BeTrue();
     }
 
     [Fact]
     public async Task AnomalyDetection_NormalBehavior_ShouldNotFlag()
     {
-        // Arrange - User with normal login pattern
         var userId = Guid.NewGuid();
+        var email = $"normal.{userId:N}@example.com";
         await CreateTestUserAsync(userId);
 
-        // Create normal login pattern
-        var normalAttempts = Enumerable.Range(1, 5).Select(i => new AuthenticationAttempt
+        await _dbContext.Set<AuthenticationAttempt>().AddAsync(new AuthenticationAttempt
         {
             Id = Guid.NewGuid(),
+            Email = email,
             UserId = userId,
             IpAddress = "192.168.1.100",
-            UserAgent = "Chrome",
+            UserAgent = "Chrome/Windows",
             Location = "US-Seattle",
+            DeviceFingerprint = "normal-device",
             IsSuccessful = true,
-            AttemptedAt = DateTime.UtcNow.AddDays(-i),
-            // TODO: Implement RiskLevel enum - RiskLevel = RiskLevel.Low
-        }).ToList();
-
-        await _dbContext.Set<AuthenticationAttempt>().AddRangeAsync(normalAttempts);
+            AttemptedAt = DateTime.UtcNow.AddDays(-1),
+            ProcessingTime = TimeSpan.FromMilliseconds(120)
+        });
         await _dbContext.SaveChangesAsync();
 
-        // Act - Analyze normal login attempt
-        var attemptContext = new AuthenticationAttemptContext
+        var result = await _anomalyService.AnalyzeLoginAttemptAsync(new AuthenticationAttemptContext
         {
             UserId = userId,
+            Identifier = email,
             IpAddress = "192.168.1.100",
-            UserAgent = "Chrome",
+            UserAgent = "Chrome/Windows",
             Location = new LocationInfo { Country = "US", City = "Seattle" },
             DeviceFingerprint = "normal-device",
-            Timestamp = DateTime.UtcNow
-        };
+            Timestamp = DateTime.UtcNow.AddHours(14)
+        });
 
-        // TODO: Implement method - var anomalyResult = await _anomalyService.AnalyzeLoginAttemptAsync(attemptContext);
-
-        // Assert - Should not detect anomaly
-        anomalyResult.Should().NotBeNull();
-        anomalyResult.IsAnomalous.Should().BeFalse();
-        // TODO: Implement RiskLevel property - anomalyResult.RiskLevel.Should().Be(RiskLevel.Low);
-    }
-
-    [Fact]
-    public async Task AnomalyDetection_FalsePositiveRate_ShouldBeLow()
-    {
-        // Arrange - Create multiple normal user behaviors
-        var userId = Guid.NewGuid();
-        await CreateTestUserAsync(userId);
-
-        var normalBehaviors = 100;
-        var falsePositives = 0;
-
-        // Act - Simulate normal login patterns
-        for (int i = 0; i < normalBehaviors; i++)
-        {
-            var attemptContext = new AuthenticationAttemptContext
-            {
-                UserId = userId,
-                IpAddress = $"192.168.1.{100 + (i % 5)}", // Rotate through 5 IPs (normal for home/work)
-                UserAgent = "Chrome/Latest",
-                Location = new LocationInfo { Country = "US", City = "Seattle" },
-                DeviceFingerprint = $"device-{i % 3}", // Rotate through 3 devices
-                Timestamp = DateTime.UtcNow.AddHours(-i)
-            };
-
-            // TODO: Implement method - var result = await _anomalyService.AnalyzeLoginAttemptAsync(attemptContext);
-
-            if (result.IsAnomalous)
-            {
-                falsePositives++;
-            }
-
-            // Record successful attempt
-            var attempt = new AuthenticationAttempt
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                IpAddress = attemptContext.IpAddress,
-                UserAgent = attemptContext.UserAgent,
-                Location = $"{attemptContext.Location.Country}-{attemptContext.Location.City}",
-                IsSuccessful = true,
-                AttemptedAt = attemptContext.Timestamp,
-                // TODO: Implement RiskLevel enum - RiskLevel = // TODO: Implement RiskLevel property - result.RiskLevel
-            };
-
-            await _dbContext.Set<AuthenticationAttempt>().AddAsync(attempt);
-        }
-
-        await _dbContext.SaveChangesAsync();
-
-        // Assert - False positive rate should be < 5%
-        var falsePositiveRate = (double)falsePositives / normalBehaviors;
-        falsePositiveRate.Should().BeLessThan(0.05);
-    }
-
-    [Fact]
-    public async Task AnomalyDetection_SiemIntegration_ShouldLogCriticalEvents()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        await CreateTestUserAsync(userId);
-
-        // Act - Create critical security event
-        var criticalAttemptContext = new AuthenticationAttemptContext
-        {
-            UserId = userId,
-            IpAddress = "malicious.ip.address",
-            UserAgent = "SuspiciousBot/1.0",
-            Location = new LocationInfo { Country = "XX", City = "Unknown" },
-            DeviceFingerprint = "unknown-device",
-            Timestamp = DateTime.UtcNow
-        };
-
-        // Simulate suspicious activity detection
-        // TODO: Implement method - await _anomalyService.LogSuspiciousActivityAsync(userId, "Suspicious login from unknown location", criticalAttemptContext, RiskLevel.Critical);
-
-        // Assert - Critical event should be logged
-        // In real implementation, this would verify SIEM integration
-        var criticalAttempts = await _dbContext.Set<AuthenticationAttempt>()
-            .Where(a => a.UserId == userId) // TODO: Implement RiskLevel property - && a.RiskLevel == RiskLevel.Critical
-            .ToListAsync();
-
-        criticalAttempts.Should().NotBeEmpty();
+        result.IsAnomalous.Should().BeFalse();
+        result.RiskLevel.Should().Be(RiskLevel.Low);
     }
 
     #endregion
@@ -610,7 +427,6 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
     [Fact]
     public async Task SessionTimeout_ExpiredSession_ShouldNotBeActive()
     {
-        // Arrange - Create expired session
         var userId = Guid.NewGuid();
         await CreateTestUserAsync(userId);
 
@@ -622,24 +438,21 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
             UserAgent = "Chrome",
             IpAddress = "192.168.1.100",
             CreatedAt = DateTime.UtcNow.AddHours(-25),
-            ExpiresAt = DateTime.UtcNow.AddHours(-1), // Expired 1 hour ago
+            ExpiresAt = DateTime.UtcNow.AddHours(-1),
             IsActive = true
         };
 
         await _dbContext.Set<UserSession>().AddAsync(expiredSession);
         await _dbContext.SaveChangesAsync();
 
-        // Act - Get active sessions
         var activeSessions = await _sessionService.GetUserSessionsAsync(userId);
 
-        // Assert - Expired session should not be returned as active
         activeSessions.Should().BeEmpty();
     }
 
     [Fact]
     public async Task SessionRenewal_BeforeExpiry_ShouldExtendSession()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         await CreateTestUserAsync(userId);
 
@@ -661,13 +474,11 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
         await _dbContext.Set<UserSession>().AddAsync(session);
         await _dbContext.SaveChangesAsync();
 
-        // Act - Simulate activity that should renew session
         session.LastUsedAt = DateTime.UtcNow;
         session.ExpiresAt = DateTime.UtcNow.AddHours(24);
         _dbContext.Set<UserSession>().Update(session);
         await _dbContext.SaveChangesAsync();
 
-        // Assert
         var renewedSession = await _dbContext.Set<UserSession>().FindAsync(sessionId);
         renewedSession.Should().NotBeNull();
         renewedSession!.ExpiresAt.Should().BeAfter(originalExpiry);
@@ -676,7 +487,6 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
     [Fact]
     public async Task SessionTimeout_IdleSession_ShouldExpireAfterInactivity()
     {
-        // Arrange - Create session with no recent activity
         var userId = Guid.NewGuid();
         await CreateTestUserAsync(userId);
 
@@ -688,7 +498,7 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
             UserAgent = "Chrome",
             IpAddress = "192.168.1.100",
             CreatedAt = DateTime.UtcNow.AddHours(-10),
-            LastUsedAt = DateTime.UtcNow.AddHours(-2), // No activity for 2 hours
+            LastUsedAt = DateTime.UtcNow.AddHours(-2),
             ExpiresAt = DateTime.UtcNow.AddHours(14),
             IsActive = true
         };
@@ -696,46 +506,29 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
         await _dbContext.Set<UserSession>().AddAsync(idleSession);
         await _dbContext.SaveChangesAsync();
 
-        // Act - Check if session should be considered idle
         var idleThreshold = TimeSpan.FromHours(1);
-        var timeSinceLastActivity = DateTime.UtcNow - (idleSession.LastUsedAt ?? idleSession.CreatedAt);
+        var timeSinceLastActivity = DateTime.UtcNow - idleSession.LastUsedAt;
 
-        // Assert
         timeSinceLastActivity.Should().BeGreaterThan(idleThreshold);
     }
 
     [Fact]
-    public async Task SessionActivity_Timeline_ShouldTrackUserActions()
+    public async Task SessionActivity_Timeline_ShouldTrackSessionAndTrustedDeviceActions()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         await CreateTestUserAsync(userId);
 
-        // Create session with activity
-        var session = new UserSession
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            DeviceFingerprint = "test-device",
-            UserAgent = "Chrome",
-            IpAddress = "192.168.1.100",
-            CreatedAt = DateTime.UtcNow.AddHours(-2),
-            LastUsedAt = DateTime.UtcNow.AddMinutes(-5),
-            ExpiresAt = DateTime.UtcNow.AddHours(22),
-            IsActive = true
-        };
+        var session = await _sessionService.CreateSessionAsync(userId, "192.168.1.100", "Chrome/Windows", "timeline-device");
+        await _sessionService.TrustDeviceAsync(userId, "timeline-device", "Work laptop");
+        await _sessionService.TerminateSessionAsync(session.Id, SessionTerminationReason.UserLogout);
 
-        await _dbContext.Set<UserSession>().AddAsync(session);
-        await _dbContext.SaveChangesAsync();
+        var timeline = await _sessionService.GetActivityTimelineAsync(userId);
 
-        // Act - Get activity timeline
-        // TODO: Implement method - var timeline = await _sessionService.GetActivityTimelineAsync(userId);
-
-        // Assert
-        timeline.Should().NotBeNull();
         timeline.Should().NotBeEmpty();
+        timeline.Should().Contain(entry => entry.ActivityType == "SessionCreated" && entry.SessionId == session.Id);
+        timeline.Should().Contain(entry => entry.ActivityType == "DeviceTrusted" && entry.DeviceFingerprint == "timeline-device");
     }
-    */
+
     #endregion
 
     #region Helper Methods

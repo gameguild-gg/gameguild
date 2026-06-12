@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 using Fido2NetLib;
+using GameGuild.Analytics;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
 
@@ -57,6 +58,40 @@ public class MoreCtorAndDtoTests
         var handler = new LogAnalyticsEventHandler(
             NullLogger<LogAnalyticsEventHandler>.Instance);
         handler.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task LogAnalyticsEventHandler_ShouldTrackUserSignedUpEvent_WhenAnalyticsServiceIsProvided()
+    {
+        var analytics = new Mock<IAnalyticsService>();
+        var notification = new UserSignedUpNotification
+        {
+            UserId = Guid.NewGuid(),
+            Email = "new-user@example.test",
+            Username = "new-user",
+            TenantId = Guid.NewGuid()
+        };
+
+        analytics
+            .Setup(service => service.TrackEventAsync(
+                "user_signed_up",
+                It.Is<string?>(properties =>
+                    properties != null &&
+                    properties.Contains(notification.Email) &&
+                    properties.Contains(notification.Username)),
+                notification.UserId,
+                notification.TenantId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AnalyticsEventDto(Guid.NewGuid(), "user_signed_up", "{}", notification.UserId, null, DateTime.UtcNow));
+
+        var handler = (LogAnalyticsEventHandler)Activator.CreateInstance(
+            typeof(LogAnalyticsEventHandler),
+            NullLogger<LogAnalyticsEventHandler>.Instance,
+            analytics.Object)!;
+
+        await handler.Handle(notification, CancellationToken.None);
+
+        analytics.VerifyAll();
     }
 
     [Fact]

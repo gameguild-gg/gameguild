@@ -39,11 +39,11 @@
         <PackageReference Include="Moq" />
         <PackageReference Include="MockQueryable.Moq" />
         <PackageReference Include="FluentAssertions" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Gamification.Achievements\GameGuild.Gamification.Achievements.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
     </ItemGroup>
 

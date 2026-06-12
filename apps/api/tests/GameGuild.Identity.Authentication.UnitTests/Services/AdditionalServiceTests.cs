@@ -4,284 +4,19 @@ using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
+using Nethereum.Signer;
 using Xunit;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
 #region PermissionService Tests
-
-#if false
-
-/// <summary>
-/// Tests for PermissionService — all methods throw NotImplementedException (stub).
-/// </summary>
-public class PermissionServiceTests
-{
-    private readonly PermissionService _service = new();
-
-    // Layer 1: Tenant Permissions
-
-    [Fact]
-    public async Task GrantTenantPermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GrantTenantPermissionAsync(Guid.NewGuid(), Guid.NewGuid(), new[] { PermissionType.Read }));
-    }
-
-    [Fact]
-    public async Task BulkGrantTenantPermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.BulkGrantTenantPermissionAsync(new[] { Guid.NewGuid() }, Guid.NewGuid(), new[] { PermissionType.Read }));
-    }
-
-    [Fact]
-    public async Task HasTenantPermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.HasTenantPermissionAsync(Guid.NewGuid(), Guid.NewGuid(), PermissionType.Read));
-    }
-
-    [Fact]
-    public async Task GetTenantPermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetTenantPermissionsAsync(Guid.NewGuid(), Guid.NewGuid()));
-    }
-
-    [Fact]
-    public async Task GetGlobalDefaultPermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetGlobalDefaultPermissionsAsync());
-    }
-
-    [Fact]
-    public async Task SetGlobalDefaultPermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.SetGlobalDefaultPermissionsAsync(new[] { PermissionType.Read }));
-    }
-
-    [Fact]
-    public async Task GetTenantDefaultPermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetTenantDefaultPermissionsAsync(Guid.NewGuid()));
-    }
-
-    [Fact]
-    public async Task SetTenantDefaultPermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.SetTenantDefaultPermissionsAsync(Guid.NewGuid(), new[] { PermissionType.Read }));
-    }
-
-    [Fact]
-    public async Task RevokeTenantPermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.RevokeTenantPermissionAsync(Guid.NewGuid(), Guid.NewGuid(), new[] { PermissionType.Read }));
-    }
-
-    [Fact]
-    public async Task JoinTenantAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.JoinTenantAsync(Guid.NewGuid(), Guid.NewGuid()));
-    }
-
-    [Fact]
-    public async Task LeaveTenantAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.LeaveTenantAsync(Guid.NewGuid(), Guid.NewGuid()));
-    }
-
-    [Fact]
-    public async Task IsUserInTenantAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.IsUserInTenantAsync(Guid.NewGuid(), Guid.NewGuid()));
-    }
-
-    [Fact]
-    public async Task GetUserTenantsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetUserTenantsAsync(Guid.NewGuid()));
-    }
-
-    [Fact]
-    public async Task GetEffectiveTenantPermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetEffectiveTenantPermissionsAsync(Guid.NewGuid(), Guid.NewGuid()));
-    }
-
-    // Layer 2: Content-Type Permissions
-
-    [Fact]
-    public async Task GrantContentTypePermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GrantContentTypePermissionAsync(Guid.NewGuid(), Guid.NewGuid(), "Post", new[] { PermissionType.Read }));
-    }
-
-    [Fact]
-    public async Task HasContentTypePermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.HasContentTypePermissionAsync(Guid.NewGuid(), Guid.NewGuid(), "Post", PermissionType.Read));
-    }
-
-    [Fact]
-    public async Task GetContentTypePermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetContentTypePermissionsAsync(Guid.NewGuid(), Guid.NewGuid(), "Post"));
-    }
-
-    [Fact]
-    public async Task RevokeContentTypePermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.RevokeContentTypePermissionAsync(Guid.NewGuid(), Guid.NewGuid(), "Post", new[] { PermissionType.Read }));
-    }
-
-    [Fact]
-    public async Task GetEffectiveContentTypePermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetEffectiveContentTypePermissionsAsync(Guid.NewGuid(), Guid.NewGuid(), "Post"));
-    }
-
-    // Layer 3: Resource-Specific Permissions
-
-    [Fact]
-    public async Task GrantResourcePermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GrantResourcePermissionAsync<GenericResourcePermission, EntityBase>(
-                Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), new[] { PermissionType.Read }));
-    }
-
-    [Fact]
-    public async Task HasResourcePermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.HasResourcePermissionAsync<GenericResourcePermission, EntityBase>(
-                Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), PermissionType.Read));
-    }
-
-    [Fact]
-    public async Task GetResourcePermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetResourcePermissionsAsync<GenericResourcePermission, EntityBase>(
-                Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()));
-    }
-
-    [Fact]
-    public async Task BulkGrantResourcePermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.BulkGrantResourcePermissionAsync<GenericResourcePermission, EntityBase>(
-                Guid.NewGuid(), Guid.NewGuid(), new[] { Guid.NewGuid() }, new[] { PermissionType.Read }));
-    }
-
-    [Fact]
-    public async Task GetBulkResourcePermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetBulkResourcePermissionsAsync<GenericResourcePermission, EntityBase>(
-                Guid.NewGuid(), Guid.NewGuid(), new[] { Guid.NewGuid() }));
-    }
-
-    [Fact]
-    public async Task ShareResourceAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.ShareResourceAsync<GenericResourcePermission, EntityBase>(
-                Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), new[] { PermissionType.Read }));
-    }
-
-    [Fact]
-    public async Task RevokeResourceAccessAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.RevokeResourceAccessAsync<GenericResourcePermission, EntityBase>(
-                Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()));
-    }
-
-    [Fact]
-    public async Task GetEffectiveResourcePermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetEffectiveResourcePermissionsAsync<GenericResourcePermission, EntityBase>(
-                Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()));
-    }
-
-    // Permission Resolution & Hierarchy
-
-    [Fact]
-    public async Task ResolveEffectivePermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.ResolveEffectivePermissionsAsync(Guid.NewGuid(), Guid.NewGuid()));
-    }
-
-    [Fact]
-    public async Task HasPermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.HasPermissionAsync(Guid.NewGuid(), Guid.NewGuid(), PermissionType.Read));
-    }
-
-    [Fact]
-    public async Task GetPermissionSourceAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetPermissionSourceAsync(Guid.NewGuid(), Guid.NewGuid(), PermissionType.Read));
-    }
-
-    // Utility Methods
-
-    [Fact]
-    public async Task GetUsersWithPermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetUsersWithPermissionAsync(Guid.NewGuid(), PermissionType.Read));
-    }
-
-    [Fact]
-    public async Task GetResourcesWithPermissionAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetResourcesWithPermissionAsync(Guid.NewGuid(), Guid.NewGuid(), PermissionType.Read));
-    }
-
-    [Fact]
-    public async Task BulkCheckPermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.BulkCheckPermissionsAsync(new[] { Guid.NewGuid() }, Guid.NewGuid(), new[] { PermissionType.Read }));
-    }
-
-    [Fact]
-    public async Task CleanupExpiredPermissionsAsync_ShouldThrowNotImplementedException()
-    {
-        await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.CleanupExpiredPermissionsAsync());
-    }
-}
-#endif
 
 public class PermissionServiceTests
 {
@@ -461,19 +196,38 @@ public class Web3ServiceTests
     }
 
     [Fact]
-    public async Task VerifySignatureAsync_WithValidChallengeButUnimplementedVerification_ShouldReturnFalse()
+    public async Task VerifySignatureAsync_WithSignedChallenge_ShouldReturnTrue()
     {
-        // Web3 signature verification is deliberately not implemented (returns false).
-        var address = "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD28";
+        var key = EthECKey.GenerateKey();
+        var address = key.GetPublicAddress();
         var challenge = await _service.GenerateChallengeAsync(address);
+        var signature = new EthereumMessageSigner().EncodeUTF8AndSign(challenge.Message, key);
 
         var result = await _service.VerifySignatureAsync(
             address,
-            "0x" + new string('a', 130),
+            signature,
             challenge.Message);
 
-        // The service always returns false because EcRecover is not implemented
-        result.Should().BeFalse();
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task VerifySignatureAsync_WithDistributedCache_ShouldWorkAcrossServiceInstances()
+    {
+        var distributedCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
+        using var firstMemoryCache = new MemoryCache(new MemoryCacheOptions());
+        using var secondMemoryCache = new MemoryCache(new MemoryCacheOptions());
+        var firstService = new Web3Service(NullLogger<Web3Service>.Instance, firstMemoryCache, distributedCache);
+        var secondService = new Web3Service(NullLogger<Web3Service>.Instance, secondMemoryCache, distributedCache);
+        var key = EthECKey.GenerateKey();
+        var address = key.GetPublicAddress();
+
+        var challenge = await firstService.GenerateChallengeAsync(address);
+        var signature = new EthereumMessageSigner().EncodeUTF8AndSign(challenge.Message, key);
+
+        var result = await secondService.VerifySignatureAsync(address, signature, challenge.Message);
+
+        result.Should().BeTrue();
     }
 }
 
@@ -555,6 +309,33 @@ public class UserEnumerationProtectionServiceTests
         var result = await _service.ShouldThrottleAsync(identifier);
         result.ShouldThrottle.Should().BeTrue();
         result.DelayMs.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task ShouldThrottleAsync_WithDistributedCache_CountsAttemptsAcrossServiceInstances()
+    {
+        var distributedCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
+        using var firstMemoryCache = new MemoryCache(new MemoryCacheOptions());
+        using var secondMemoryCache = new MemoryCache(new MemoryCacheOptions());
+        var firstService = new UserEnumerationProtectionService(
+            NullLogger<UserEnumerationProtectionService>.Instance,
+            firstMemoryCache,
+            distributedCache);
+        var secondService = new UserEnumerationProtectionService(
+            NullLogger<UserEnumerationProtectionService>.Instance,
+            secondMemoryCache,
+            distributedCache);
+        var identifier = "distributed-enum-" + Guid.NewGuid();
+
+        for (var i = 0; i < 11; i++)
+        {
+            await firstService.RecordEnumerationAttemptAsync(identifier, "login");
+        }
+
+        var result = await secondService.ShouldThrottleAsync(identifier);
+
+        result.ShouldThrottle.Should().BeTrue();
+        result.AttemptCount.Should().Be(11);
     }
 }
 

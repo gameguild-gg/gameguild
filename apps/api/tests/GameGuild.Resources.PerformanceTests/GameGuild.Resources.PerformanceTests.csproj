@@ -21,11 +21,11 @@
         </PackageReference>
         <PackageReference Include="Moq" />
         <PackageReference Include="FluentAssertions" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
         <PackageReference Include="AutoFixture" />
         <PackageReference Include="AutoFixture.Xunit2" />
         <PackageReference Include="BenchmarkDotNet" />
         <PackageReference Include="NBomber" />
+        <PackageReference Include="MessagePack" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     </ItemGroup>

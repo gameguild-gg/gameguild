@@ -264,14 +264,45 @@ public sealed class TestingLabCoverageCompletionTests : IDisposable {
       .ReturnsAsync(permissions);
     service.Setup(s => s.HasPermissionAsync(userId, tenantId, TestingLabActions.Read, TestingLabResourceTypes.Session, resourceId))
       .ReturnsAsync(true);
+    service.Setup(s => s.GetRoleTemplatesAsync())
+      .ReturnsAsync([
+        new RoleTemplate {
+          Id = Guid.NewGuid(),
+          Name = "TestingLab Reader",
+          Description = "Read access",
+          PermissionTemplates = [new PermissionTemplate { Action = TestingLabActions.Read, ResourceType = TestingLabResourceTypes.Session }],
+        },
+      ]);
+    service.Setup(s => s.CreateRoleTemplateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IReadOnlyCollection<PermissionTemplate>>()))
+      .ReturnsAsync((string name, string description, IReadOnlyCollection<PermissionTemplate> templates) => new RoleTemplate {
+        Id = Guid.NewGuid(),
+        Name = name,
+        Description = description,
+        PermissionTemplates = templates.ToList(),
+      });
+    service.Setup(s => s.UpdateRoleTemplateAsync("role", It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<IReadOnlyCollection<PermissionTemplate>>()))
+      .ReturnsAsync((string _, string? name, string description, IReadOnlyCollection<PermissionTemplate> templates) => new RoleTemplate {
+        Id = Guid.NewGuid(),
+        Name = name ?? "TestingLab Updated",
+        Description = description,
+        PermissionTemplates = templates.ToList(),
+      });
+    service.Setup(s => s.DeleteRoleTemplateAsync("role")).ReturnsAsync(true);
+    service.Setup(s => s.DeleteRoleTemplateAsync("missing")).ReturnsAsync(false);
     var controller = CreatePermissionController(service);
 
-    (await controller.GetRoleTemplates()).Result.Should().BeOfType<BadRequestObjectResult>();
-    (await controller.CreateTestingLabRoleTemplate(new CreateTestingLabRoleRequest())).Result.Should().BeOfType<BadRequestObjectResult>();
-    (await controller.UpdateTestingLabRoleTemplate("role", new UpdateTestingLabRoleRequest())).Result.Should().BeOfType<ObjectResult>()
-      .Which.StatusCode.Should().Be(501);
-    (await controller.DeleteTestingLabRoleTemplate("role")).Should().BeOfType<ObjectResult>()
-      .Which.StatusCode.Should().Be(501);
+    (await controller.GetRoleTemplates()).Result.Should().BeOfType<OkObjectResult>();
+    (await controller.CreateTestingLabRoleTemplate(new CreateTestingLabRoleRequest {
+      Name = "TestingLab Reviewer",
+      Description = "Reviews sessions",
+      Permissions = new TestingLabPermissionsDto { CanViewSessions = true },
+    })).Result.Should().BeOfType<OkObjectResult>();
+    (await controller.UpdateTestingLabRoleTemplate("role", new UpdateTestingLabRoleRequest {
+      Name = "TestingLab Updated",
+      Description = "Updated",
+      Permissions = new TestingLabPermissionsDto { CanCreateSessions = true },
+    })).Result.Should().BeOfType<OkObjectResult>();
+    (await controller.DeleteTestingLabRoleTemplate("role")).Should().BeOfType<NoContentResult>();
     (await controller.DeleteTestingLabRoleTemplateByName("missing")).Should().BeOfType<NotFoundObjectResult>();
 
     var userPermissionsResult = await controller.GetUserTestingLabPermissions(userId, tenantId);
@@ -449,6 +480,92 @@ public sealed class TestingLabCoverageCompletionTests : IDisposable {
   }
 
   [Fact]
+  public async Task Student_Attendance_Report_Uses_Real_Registrations_And_Feedback() {
+    var service = new TestingParticipantOperationsService(_context);
+    var userId = Guid.NewGuid();
+    var noShowUserId = Guid.NewGuid();
+    var monitorUserId = Guid.NewGuid();
+    var blockFourUserId = Guid.NewGuid();
+    var participantOnlyUserId = Guid.NewGuid();
+    var requestId = Guid.NewGuid();
+    var januarySessionId = Guid.NewGuid();
+    var maySessionId = Guid.NewGuid();
+    var noShowSessionId = Guid.NewGuid();
+    var augustSessionId = Guid.NewGuid();
+    var novemberSessionId = Guid.NewGuid();
+
+    _context.Set<User>().AddRange(
+      new User { Id = userId, Email = "student@example.test", Name = "Student Tester" },
+      new User { Id = noShowUserId, Email = "noshow@example.test", Name = "No Show" },
+      new User { Id = monitorUserId, Email = "monitor@example.test", Name = "Monitor Student" },
+      new User { Id = blockFourUserId, Email = "block4@example.test", Name = "Block Four" });
+    _context.Set<TestingRequest>().Add(new TestingRequest {
+      Id = requestId,
+      Title = "Capstone Build",
+      CreatedById = userId,
+      StartDate = new DateTime(2026, 1, 1),
+      EndDate = new DateTime(2026, 12, 31),
+      Status = TestingRequestStatus.Active,
+    });
+    _context.Set<TestingSession>().AddRange(
+      CreateSession(januarySessionId, requestId, userId, new DateTime(2026, 1, 10, 9, 0, 0)),
+      CreateSession(maySessionId, requestId, userId, new DateTime(2026, 5, 10, 9, 0, 0)),
+      CreateSession(noShowSessionId, requestId, userId, new DateTime(2026, 10, 10, 9, 0, 0)),
+      CreateSession(augustSessionId, requestId, userId, new DateTime(2026, 8, 10, 9, 0, 0)),
+      CreateSession(novemberSessionId, requestId, userId, new DateTime(2026, 11, 10, 9, 0, 0)));
+    _context.Set<SessionRegistration>().AddRange(
+      new SessionRegistration { Id = Guid.NewGuid(), SessionId = januarySessionId, UserId = userId, Notes = "Team A", AttendanceStatus = AttendanceStatus.Present, CheckedInAt = new DateTime(2026, 1, 10, 9, 5, 0) },
+      new SessionRegistration { Id = Guid.NewGuid(), SessionId = maySessionId, UserId = userId, Notes = "Team A", AttendanceStatus = AttendanceStatus.Completed, CheckedInAt = new DateTime(2026, 5, 10, 9, 5, 0), CheckedOutAt = new DateTime(2026, 5, 10, 10, 0, 0) },
+      new SessionRegistration { Id = Guid.NewGuid(), SessionId = noShowSessionId, UserId = noShowUserId, Notes = "Team B", AttendanceStatus = AttendanceStatus.NoShow },
+      new SessionRegistration { Id = Guid.NewGuid(), SessionId = augustSessionId, UserId = monitorUserId, Notes = "Team C", AttendanceStatus = AttendanceStatus.Present, CheckedInAt = new DateTime(2026, 8, 10, 9, 5, 0) },
+      new SessionRegistration { Id = Guid.NewGuid(), SessionId = novemberSessionId, UserId = blockFourUserId, Notes = "Team D", AttendanceStatus = AttendanceStatus.Present, CheckedInAt = new DateTime(2026, 11, 10, 9, 5, 0) });
+    _context.Set<TestingParticipant>().AddRange(
+      new TestingParticipant { Id = Guid.NewGuid(), TestingRequestId = requestId, UserId = userId, Status = ParticipationStatus.Completed, CompletedAt = new DateTime(2026, 5, 10, 10, 0, 0) },
+      new TestingParticipant { Id = Guid.NewGuid(), TestingRequestId = requestId, UserId = participantOnlyUserId, Status = ParticipationStatus.Active, CompletedAt = new DateTime(2026, 8, 10, 10, 0, 0) });
+    _context.Set<TestingFeedback>().Add(new TestingFeedback { Id = Guid.NewGuid(), TestingRequestId = requestId, UserId = userId, SessionId = maySessionId, FeedbackFormId = Guid.NewGuid(), FeedbackData = "{}", TestingContext = TestingContext.InPerson });
+    await _context.SaveChangesAsync();
+
+    var report = await service.GetStudentAttendanceReportAsync();
+
+    var rows = report.Should().BeAssignableTo<IEnumerable<StudentAttendanceReportRow>>().Subject.ToList();
+    rows.Should().NotContain(row => row.Name == "John Developer" || row.Name == "Jane Smith");
+    var student = rows.Should().ContainSingle(row => row.Id == userId.ToString()).Subject;
+    student.Name.Should().Be("Student Tester");
+    student.Email.Should().Be("student@example.test");
+    student.Team.Should().Be("Team A");
+    student.Block1Sessions.Should().Be(1);
+    student.Block2Sessions.Should().Be(1);
+    student.TotalSessions.Should().Be(2);
+    student.GamesTested.Should().Be(1);
+    student.Status.Should().Be("onTrack");
+    rows.Should().ContainSingle(row => row.Id == noShowUserId.ToString() && row.Status == "atRisk");
+    rows.Should().ContainSingle(row => row.Id == monitorUserId.ToString() && row.Block3Sessions == 1 && row.Status == "monitor");
+    rows.Should().ContainSingle(row => row.Id == blockFourUserId.ToString() && row.Block4Sessions == 1);
+    rows.Should().ContainSingle(row =>
+      row.Id == participantOnlyUserId.ToString() &&
+      row.Name == "Unknown user" &&
+      row.Email == string.Empty &&
+      row.Team == "Capstone Build" &&
+      row.TotalSessions == 0 &&
+      row.GamesTested == 1 &&
+      row.Status == "atRisk");
+  }
+
+  private static TestingSession CreateSession(Guid id, Guid requestId, Guid managerId, DateTime startsAt) => new() {
+    Id = id,
+    TestingRequestId = requestId,
+    SessionName = $"Session {id:N}",
+    SessionDate = startsAt.Date,
+    StartTime = startsAt,
+    EndTime = startsAt.AddHours(1),
+    MaxTesters = 10,
+    LocationId = Guid.NewGuid(),
+    ManagerId = managerId,
+    ManagerUserId = managerId,
+    CreatedById = managerId,
+  };
+
+  [Fact]
   public async Task Settings_Service_Covers_Default_Create_Update_Reset_And_Tenant_Paths() {
     var service = new TestingLabSettingsService(_context);
     (await service.TestingLabSettingsExistAsync()).Should().BeFalse();
@@ -594,14 +711,14 @@ public sealed class TestingLabCoverageCompletionTests : IDisposable {
     var anonymousAccessor = ActorAccessor(null).Object;
     var id = Guid.NewGuid();
 
-    var feedbackController = new TestingFeedbackController(new FakeFeedbackOps(), actorAccessor, NullLogger<TestingFeedbackController>.Instance);
+    var feedbackController = new TestingFeedbackController(new FakeFeedbackOps(), actorAccessor);
     (await feedbackController.AddFeedback(id, new FeedbackRequest { FeedbackFormId = id, FeedbackData = "{}", TestingContext = TestingContext.Online })).Result.Should().BeOfType<OkObjectResult>();
     (await feedbackController.GetTestingRequestFeedback(id)).Result.Should().BeOfType<OkObjectResult>();
     (await feedbackController.GetFeedbackByUser(actorId)).Result.Should().BeOfType<OkObjectResult>();
     (await feedbackController.SubmitFeedback(new SubmitFeedbackDto { TestingRequestId = id, FeedbackResponses = "{}" })).Should().BeOfType<OkObjectResult>();
     (await feedbackController.ReportFeedback(id, new ReportFeedbackDto { Reason = "bad" })).Should().BeOfType<OkObjectResult>();
     (await feedbackController.RateFeedbackQuality(id, new RateFeedbackQualityDto { Quality = FeedbackQuality.High })).Should().BeOfType<OkObjectResult>();
-    var invalidFeedbackController = new TestingFeedbackController(new FakeFeedbackOps(), anonymousAccessor, NullLogger<TestingFeedbackController>.Instance);
+    var invalidFeedbackController = new TestingFeedbackController(new FakeFeedbackOps(), anonymousAccessor);
     (await invalidFeedbackController.AddFeedback(id, new FeedbackRequest())).Result.Should().BeOfType<UnauthorizedObjectResult>();
     (await invalidFeedbackController.SubmitFeedback(new SubmitFeedbackDto())).Should().BeOfType<UnauthorizedObjectResult>();
 
@@ -618,7 +735,7 @@ public sealed class TestingLabCoverageCompletionTests : IDisposable {
     participantService.Setup(s => s.GetSessionWaitlistAsync(id)).ReturnsAsync([new SessionWaitlist()]);
     participantService.Setup(s => s.GetUserTestingActivityAsync(actorId)).ReturnsAsync(new { actorId });
     participantService.Setup(s => s.GetStudentAttendanceReportAsync()).ReturnsAsync(new { ok = true });
-    var participantsController = new TestingParticipantsController(participantService.Object, actorAccessor, NullLogger<TestingParticipantsController>.Instance);
+    var participantsController = new TestingParticipantsController(participantService.Object, actorAccessor);
     (await participantsController.AddParticipant(id, actorId)).Result.Should().BeOfType<OkObjectResult>();
     (await participantsController.RemoveParticipant(id, actorId)).Should().BeOfType<NotFoundResult>();
     (await participantsController.RemoveParticipant(id, actorId)).Should().BeOfType<NoContentResult>();
@@ -634,7 +751,7 @@ public sealed class TestingLabCoverageCompletionTests : IDisposable {
     (await participantsController.GetSessionWaitlist(id)).Result.Should().BeOfType<OkObjectResult>();
     (await participantsController.GetUserTestingActivity(actorId)).Result.Should().BeOfType<OkObjectResult>();
     (await participantsController.GetStudentAttendanceReport()).Result.Should().BeOfType<OkObjectResult>();
-    var anonymousParticipantsController = new TestingParticipantsController(participantService.Object, anonymousAccessor, NullLogger<TestingParticipantsController>.Instance);
+    var anonymousParticipantsController = new TestingParticipantsController(participantService.Object, anonymousAccessor);
     (await anonymousParticipantsController.RegisterForSession(id, new SessionRegistrationRequest())).Result.Should().BeOfType<UnauthorizedObjectResult>();
     (await anonymousParticipantsController.AddToWaitlist(id, new SessionRegistrationRequest())).Result.Should().BeOfType<UnauthorizedObjectResult>();
 
@@ -692,7 +809,7 @@ public sealed class TestingLabCoverageCompletionTests : IDisposable {
     (await sessionsController.GetSessionAttendanceReport()).Result.Should().BeOfType<OkObjectResult>();
     (await sessionsController.UpdateAttendance(id, new UpdateAttendanceDto { UserId = actorId, AttendanceStatus = AttendanceStatus.Completed })).Should().BeOfType<OkObjectResult>();
 
-    var locationsController = new TestingLocationsController(new FakeLocationOps(), NullLogger<TestingLocationsController>.Instance);
+    var locationsController = new TestingLocationsController(new FakeLocationOps());
     (await locationsController.GetTestingLocations()).Result.Should().BeOfType<OkObjectResult>();
     (await locationsController.GetTestingLocation(id)).Result.Should().BeOfType<OkObjectResult>();
     (await locationsController.CreateTestingLocation(new CreateTestingLocationDto { Name = "Lab" })).Result.Should().BeOfType<CreatedAtActionResult>();
@@ -703,7 +820,7 @@ public sealed class TestingLabCoverageCompletionTests : IDisposable {
     missingLocations.Setup(s => s.GetTestingLocationByIdAsync(id)).ReturnsAsync((TestingLocation?)null);
     missingLocations.Setup(s => s.DeleteTestingLocationAsync(id)).ReturnsAsync(false);
     missingLocations.Setup(s => s.RestoreTestingLocationAsync(id)).ReturnsAsync(false);
-    var missingLocationsController = new TestingLocationsController(missingLocations.Object, NullLogger<TestingLocationsController>.Instance);
+    var missingLocationsController = new TestingLocationsController(missingLocations.Object);
     (await missingLocationsController.GetTestingLocation(id)).Result.Should().BeOfType<NotFoundResult>();
     (await missingLocationsController.UpdateTestingLocation(id, new UpdateTestingLocationDto())).Result.Should().BeOfType<NotFoundResult>();
     (await missingLocationsController.DeleteTestingLocation(id)).Should().BeOfType<NotFoundResult>();
@@ -718,7 +835,7 @@ public sealed class TestingLabCoverageCompletionTests : IDisposable {
     var settingsService = new Mock<ITestingLabSettingsService>();
     settingsService.Setup(s => s.GetTestingLabSettingsDtoAsync(tenantId)).ReturnsAsync(settingsDto);
     settingsService.Setup(s => s.TestingLabSettingsExistAsync(tenantId)).ReturnsAsync(true);
-    var settingsController = new TestingLabSettingsController(settingsService.Object, Mock.Of<ITenantService>(), actorAccessor, NullLogger<TestingLabSettingsController>.Instance);
+    var settingsController = new TestingLabSettingsController(settingsService.Object, actorAccessor, NullLogger<TestingLabSettingsController>.Instance);
     (await settingsController.GetSettings()).Result.Should().BeOfType<OkObjectResult>();
     (await settingsController.CreateOrUpdateSettings(new CreateTestingLabSettingsDto())).Result.Should().BeOfType<OkObjectResult>();
     (await settingsController.UpdateSettings(new UpdateTestingLabSettingsDto())).Result.Should().BeOfType<OkObjectResult>();
@@ -729,11 +846,11 @@ public sealed class TestingLabCoverageCompletionTests : IDisposable {
     failingSettings.Setup(s => s.CreateOrUpdateTestingLabSettingsAsync(tenantId, It.IsAny<CreateTestingLabSettingsDto>())).ThrowsAsync(new ArgumentException("bad"));
     failingSettings.Setup(s => s.UpdateTestingLabSettingsAsync(tenantId, It.IsAny<UpdateTestingLabSettingsDto>())).ThrowsAsync(new ArgumentException("bad"));
     failingSettings.Setup(s => s.ResetTestingLabSettingsAsync(tenantId)).ThrowsAsync(new ArgumentException("bad"));
-    var failingSettingsController = new TestingLabSettingsController(failingSettings.Object, Mock.Of<ITenantService>(), actorAccessor, NullLogger<TestingLabSettingsController>.Instance);
+    var failingSettingsController = new TestingLabSettingsController(failingSettings.Object, actorAccessor, NullLogger<TestingLabSettingsController>.Instance);
     (await failingSettingsController.CreateOrUpdateSettings(new CreateTestingLabSettingsDto())).Result.Should().BeOfType<BadRequestObjectResult>();
     (await failingSettingsController.UpdateSettings(new UpdateTestingLabSettingsDto())).Result.Should().BeOfType<BadRequestObjectResult>();
     (await failingSettingsController.ResetSettings()).Result.Should().BeOfType<BadRequestObjectResult>();
-    (await new TestingLabSettingsController(settingsService.Object, Mock.Of<ITenantService>(), ActorAccessor(null).Object, NullLogger<TestingLabSettingsController>.Instance).GetSettings()).Result.Should().BeOfType<UnauthorizedObjectResult>();
+    (await new TestingLabSettingsController(settingsService.Object, ActorAccessor(null).Object, NullLogger<TestingLabSettingsController>.Instance).GetSettings()).Result.Should().BeOfType<UnauthorizedObjectResult>();
 
     var requestService = new Mock<ITestingRequestService>();
     requestService.Setup(s => s.CreateAsync(It.IsAny<TestingRequest>())).ReturnsAsync((TestingRequest request) => request);
