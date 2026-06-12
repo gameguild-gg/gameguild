@@ -4,12 +4,11 @@
  * Hooks and context for using the API client in React components.
  */
 
-// Note: This file uses React 18+ features
-// The actual implementation requires React as a peer dependency
-
 import type { ApiClient } from '../../runtime/client.js';
 import type { Result } from '../../runtime/result/types.js';
 import type { ApiError } from '../../runtime/errors/types.js';
+import { useMutation as useReactMutation, useQuery as useReactQuery, useQueryClient } from '@tanstack/react-query';
+import { createContext, createElement, useContext, useEffect, useRef, type ReactNode } from 'react';
 
 // Export React Query hooks
 export * from './query-hooks.js';
@@ -113,39 +112,45 @@ export type { ApiClient, Result, ApiError };
  * ```
  */
 
-// ============================================================================
-// Context and Provider (stub - requires React)
-// ============================================================================
-
-/**
- * React context for the API client
- * @internal
- */
-export const ApiClientContext = {
-  displayName: 'ApiClientContext',
-} as const;
-
 /**
  * Props for ApiClientProvider
  */
 export interface ApiClientProviderProps {
   client: ApiClient;
-  children: unknown; // React.ReactNode when React is available
+  children: ReactNode;
 }
 
 // ============================================================================
 // Hook implementations (require React runtime)
 // ============================================================================
 
-// These are placeholder exports that will be implemented when React is available
-// as a peer dependency at runtime.
+export const ApiClientContext = createContext<ApiClient | undefined>(undefined);
+ApiClientContext.displayName = 'ApiClientContext';
+
+export function ApiClientProvider({ client, children }: ApiClientProviderProps): ReactNode {
+  return createElement(ApiClientContext.Provider, { value: client }, children);
+}
+
+function unwrapResult<T>(result: Result<T, ApiError>): T {
+  if (result.ok) {
+    return result.data;
+  }
+
+  throw result.error;
+}
 
 /**
  * Hook to access the API client from context
  * @throws If used outside of ApiClientProvider
  */
 export function useApiClient(): ApiClient {
-  throw new Error('useApiClient requires React. Make sure you have React installed as a peer dependency.');
+  const client = useContext(ApiClientContext);
+
+  if (!client) {
+    throw new Error('useApiClient must be used within an <ApiClientProvider>.');
+  }
+
+  return client;
 }
 
 /**
@@ -156,7 +161,34 @@ export function useApiClient(): ApiClient {
  * @param options - Query options
  */
 export function useQuery<T>(_queryKey: unknown[], _queryFn: () => Promise<Result<T, ApiError>>, _options?: UseQueryOptions<T>): QueryState<T> {
-  throw new Error('useQuery requires React. Make sure you have React installed as a peer dependency.');
+  const query = useReactQuery<T, ApiError>({
+    queryKey: _queryKey,
+    queryFn: async () => unwrapResult(await _queryFn()),
+    enabled: _options?.enabled,
+    refetchInterval: _options?.refetchInterval,
+    refetchOnWindowFocus: _options?.refetchOnWindowFocus,
+    retry: _options?.retry,
+  });
+
+  useEffect(() => {
+    if (query.isSuccess && query.data !== undefined) {
+      _options?.onSuccess?.(query.data);
+    }
+  }, [_options, query.data, query.isSuccess]);
+
+  useEffect(() => {
+    if (query.isError && query.error) {
+      _options?.onError?.(query.error);
+    }
+  }, [_options, query.error, query.isError]);
+
+  return {
+    data: query.data,
+    error: query.error ?? undefined,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    isSuccess: query.isSuccess,
+  };
 }
 
 /**
@@ -169,7 +201,29 @@ export function useMutation<T, TVariables>(
   _mutationFn: (variables: TVariables) => Promise<Result<T, ApiError>>,
   _options?: UseMutationOptions<T, TVariables>,
 ): MutationState<T, TVariables> {
-  throw new Error('useMutation requires React. Make sure you have React installed as a peer dependency.');
+  const mutation = useReactMutation<T, ApiError, TVariables>({
+    mutationFn: async (variables) => unwrapResult(await _mutationFn(variables)),
+    onSuccess: (data, variables) => _options?.onSuccess?.(data, variables),
+    onError: (error, variables) => _options?.onError?.(error, variables),
+    onSettled: (data, error, variables) => _options?.onSettled?.(data, error ?? undefined, variables),
+  });
+
+  return {
+    data: mutation.data,
+    error: mutation.error ?? undefined,
+    isLoading: mutation.isPending,
+    isError: mutation.isError,
+    isSuccess: mutation.isSuccess,
+    mutate: async (variables) => {
+      try {
+        const data = await mutation.mutateAsync(variables);
+        return { ok: true, data };
+      } catch (error) {
+        return { ok: false, error: error as ApiError };
+      }
+    },
+    reset: mutation.reset,
+  };
 }
 
 /**
@@ -180,6 +234,24 @@ export function useMutation<T, TVariables>(
 export function useOptimisticUpdate<T>(_queryKey: unknown[]): {
   update: (updater: (old: T | undefined) => T) => void;
   rollback: () => void;
+  get: () => T | undefined;
 } {
-  throw new Error('useOptimisticUpdate requires React. Make sure you have React installed as a peer dependency.');
+  const queryClient = useQueryClient();
+  const previousValueRef = useRef<T | undefined>(undefined);
+
+  return {
+    update: (updater) => {
+      previousValueRef.current = queryClient.getQueryData<T>(_queryKey);
+      queryClient.setQueryData<T>(_queryKey, (old) => updater(old));
+    },
+    rollback: () => {
+      if (previousValueRef.current === undefined) {
+        queryClient.removeQueries({ queryKey: _queryKey, exact: true });
+        return;
+      }
+
+      queryClient.setQueryData(_queryKey, previousValueRef.current);
+    },
+    get: () => queryClient.getQueryData<T>(_queryKey),
+  };
 }

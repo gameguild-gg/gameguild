@@ -7,11 +7,11 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
 async function loadClientModule() {
-  return import('@game-guild/client');
+  return import('../../../../../packages/infrastructure/client/dist/index.js');
 }
 
 async function loadReactModule() {
-  return import('@game-guild/client/react');
+  return import('../../../../../packages/infrastructure/client/dist/react.js');
 }
 
 async function loadNextModule() {
