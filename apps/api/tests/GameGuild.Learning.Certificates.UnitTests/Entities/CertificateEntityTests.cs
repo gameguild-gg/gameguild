@@ -150,12 +150,20 @@ public class CertificateDtoTests
     [Fact]
     public void FromEntity_ShouldMapAllProperties()
     {
-        var cert = Certificate.Issue(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+        var templateId = Guid.NewGuid();
+        var enrollmentId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var cert = Certificate.Issue(templateId, enrollmentId, userId, courseId,
             "Alice Smith", "Game Dev 101", DateTime.UtcNow.AddYears(2));
 
         var dto = CertificateDto.FromEntity(cert);
 
         dto.Id.Should().Be(cert.Id);
+        dto.TemplateId.Should().Be(templateId);
+        dto.EnrollmentId.Should().Be(enrollmentId);
+        dto.UserId.Should().Be(userId);
+        dto.CourseId.Should().Be(courseId);
         dto.CertificateNumber.Should().Be(cert.CertificateNumber);
         dto.RecipientName.Should().Be("Alice Smith");
         dto.CourseName.Should().Be("Game Dev 101");
@@ -180,10 +188,18 @@ public class CertificateDtoTests
     public void Constructor_ShouldSetAllProperties()
     {
         var id = Guid.NewGuid();
-        var dto = new CertificateDto(id, "CERT-123", "Name", "Course",
+        var templateId = Guid.NewGuid();
+        var enrollmentId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var dto = new CertificateDto(id, templateId, enrollmentId, userId, courseId, "CERT-123", "Name", "Course",
             DateTime.UtcNow, DateTime.UtcNow.AddDays(30), CertificateStatus.Active);
 
         dto.Id.Should().Be(id);
+        dto.TemplateId.Should().Be(templateId);
+        dto.EnrollmentId.Should().Be(enrollmentId);
+        dto.UserId.Should().Be(userId);
+        dto.CourseId.Should().Be(courseId);
         dto.CertificateNumber.Should().Be("CERT-123");
         dto.RecipientName.Should().Be("Name");
         dto.CourseName.Should().Be("Course");
