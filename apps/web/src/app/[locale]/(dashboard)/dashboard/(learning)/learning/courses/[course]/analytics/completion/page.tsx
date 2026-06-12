@@ -1,5 +1,8 @@
 import React from 'react';
-import { Card, CardContent } from '@game-guild/ui/components/card';
+import { getCourseAnalytics, getCourseCompletionAnalytics } from '@/lib/learning';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Progress } from '@game-guild/ui/components/progress';
 import { BarChart3 } from 'lucide-react';
 
 /**
@@ -10,17 +13,36 @@ import { BarChart3 } from 'lucide-react';
 export default async function CompletionAnalyticsPage({
   params,
 }: PageProps<'/[locale]/dashboard/learning/courses/[course]/analytics/completion'>): Promise<React.JSX.Element> {
-  void (await params);
+  const { course: courseId } = await params;
+  const [completion, analytics] = await Promise.all([getCourseCompletionAnalytics(courseId), getCourseAnalytics(courseId)]);
+  const totalEnrolled = completion.totalEnrolled || analytics.enrollments.length;
+  const totalCompleted = completion.totalCompleted || analytics.enrollments.filter((enrollment) => enrollment.completedAt).length;
+  const completionRate = totalEnrolled > 0 ? Math.round((totalCompleted / totalEnrolled) * 100) : completion.completionRate;
 
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <BarChart3 className="text-muted-foreground mb-4 size-12" />
-        <h3 className="text-lg font-medium">Completion Analytics</h3>
-        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-          Completion rates, drop-off analysis, and student progress funnels will appear here once students begin engaging with the course.
-        </p>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card><CardContent className="p-4"><p className="text-2xl font-semibold">{totalEnrolled}</p><p className="text-sm text-muted-foreground">Enrolled</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-2xl font-semibold">{totalCompleted}</p><p className="text-sm text-muted-foreground">Completed</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-2xl font-semibold">{completionRate}%</p><p className="text-sm text-muted-foreground">Completion rate</p></CardContent></Card>
+      </div>
+
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><BarChart3 className="size-5" />Completion Funnel</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <Progress value={completionRate} />
+          {completion.funnel.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No detailed funnel events have been recorded yet.</div>
+          ) : (
+            completion.funnel.map((stage) => (
+              <div key={stage.stage} className="flex items-center justify-between rounded-lg border p-4">
+                <div><p className="font-medium">{stage.stage}</p><p className="text-sm text-muted-foreground">{stage.percentage}% of learners</p></div>
+                <Badge>{stage.count}</Badge>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

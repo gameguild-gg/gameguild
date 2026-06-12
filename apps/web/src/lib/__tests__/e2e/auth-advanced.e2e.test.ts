@@ -182,7 +182,7 @@ describe(
       accessToken = ctx.accessToken;
     }, 30_000);
 
-    it('sends password change request (may fail due to JWT claim mapping)', async () => {
+    it('changes the password with the current credentials', async () => {
       const client = authedClient(accessToken);
 
       const res = await client.request<{
@@ -201,15 +201,12 @@ describe(
         requiresAuth: true,
       });
 
-      // Endpoint reads "sub" claim directly — .NET auto-maps it to
-      // ClaimTypes.NameIdentifier, so FindFirst("sub") may return null.
-      // Accept either success or a specific backend error.
-      if (res.ok) {
-        expect(res.data.success).toBe(true);
-      } else {
-        // 401 = can't extract userId from JWT, 400 = validation error
-        expect([400, 401, 500]).toContain(res.error?.status);
-      }
+      expect(res.ok, JSON.stringify(res.ok ? res.data : res.error, null, 2)).toBe(true);
+      if (!res.ok) return;
+
+      expect(res.data.success).toBe(true);
+      expect(res.data.message).toBeTruthy();
+      expect(typeof res.data.sessionsRevoked).toBe('number');
     });
 
     it('rejects password change with wrong current password', async () => {
@@ -225,8 +222,10 @@ describe(
         requiresAuth: true,
       });
 
-      // Should fail — either wrong password (400) or JWT claim issue (401/500)
       expect(res.ok).toBe(false);
+      if (!res.ok) {
+        expect(res.error?.status).toBe(400);
+      }
     });
 
     it('rejects password change with mismatched confirmation', async () => {
@@ -242,8 +241,10 @@ describe(
         requiresAuth: true,
       });
 
-      // Should fail — either confirm mismatch (400) or JWT claim issue (401/500)
       expect(res.ok).toBe(false);
+      if (!res.ok) {
+        expect(res.error?.status).toBe(400);
+      }
     });
 
     it('rejects password change without authentication', async () => {
@@ -295,14 +296,11 @@ describe(
         requiresAuth: false,
       });
 
-      // May fail with 500 if email service is not configured in dev
-      if (res.ok) {
-        expect(res.data.success).toBe(true);
-        expect(res.data.expiresInMinutes).toBeGreaterThan(0);
-      } else {
-        // 500 = email service not available in dev
-        expect([500]).toContain(res.error?.status);
-      }
+      expect(res.ok, JSON.stringify(res.ok ? res.data : res.error, null, 2)).toBe(true);
+      if (!res.ok) return;
+
+      expect(res.data.success).toBe(true);
+      expect(res.data.expiresInMinutes).toBeGreaterThan(0);
     }, 30_000);
 
     it('handles password reset request for non-existent email without leaking info', async () => {
@@ -321,13 +319,10 @@ describe(
         requiresAuth: false,
       });
 
-      // Should return success (to avoid email enumeration) or 500 if email service not configured
-      if (res.ok) {
-        expect(res.data.success).toBe(true);
-      } else {
-        // 500 when email infra not available — acceptable in dev
-        expect([500]).toContain(res.error?.status);
-      }
+      expect(res.ok, JSON.stringify(res.ok ? res.data : res.error, null, 2)).toBe(true);
+      if (!res.ok) return;
+
+      expect(res.data.success).toBe(true);
     });
 
     it('rejects password reset completion with invalid token', async () => {
@@ -358,7 +353,7 @@ describe(
 describe(
   'Email verification',
   () => {
-    it('sends verification email request (may need email infra)', async () => {
+    it('sends verification email request', async () => {
       const creds = freshCredentials();
       await signUpAndIn(creds);
 
@@ -370,12 +365,10 @@ describe(
         requiresAuth: false,
       });
 
-      // May fail with 500 if email service is not configured in dev
-      if (res.ok) {
-        expect(res.data.message).toBeTruthy();
-      } else {
-        expect([500]).toContain(res.error?.status);
-      }
+      expect(res.ok, JSON.stringify(res.ok ? res.data : res.error, null, 2)).toBe(true);
+      if (!res.ok) return;
+
+      expect(res.data.message).toBeTruthy();
     }, 30_000);
 
     it('rejects email verification with invalid token', async () => {
@@ -622,20 +615,18 @@ describe(
         requiresAuth: true,
       });
 
-      // May fail if IMediator DI is not wired or ActorContext can't resolve user
-      if (res.ok) {
-        expect(res.data.id).toBeTruthy();
-        expect(res.data.name).toBe('E2E Test Key');
-        expect(res.data.apiKey).toBeTruthy();
-        expect(res.data.keyPrefix).toBeTruthy();
-        expect(Array.isArray(res.data.scopes)).toBe(true);
-      } else {
-        // DI or claim resolution failure → 500
-        expect([400, 500]).toContain(res.error?.status);
-      }
+      expect(res.ok, JSON.stringify(res.ok ? res.data : res.error, null, 2)).toBe(true);
+      if (!res.ok) return;
+
+      expect(res.data.id).toBeTruthy();
+      expect(res.data.name).toBe('E2E Test Key');
+      expect(res.data.apiKey).toMatch(/^gg_live_[A-Za-z0-9]{32}$/);
+      expect(res.data.keyPrefix).toBe('gg_live_');
+      expect(res.data.scopes).toEqual(['read', 'write']);
+      expect(res.data.createdAt).toBeTruthy();
     });
 
-    it('lists API keys (or returns error if service unavailable)', async () => {
+    it('lists API keys', async () => {
       const client = authedClient(accessToken);
 
       const res = await client.request<
@@ -653,11 +644,11 @@ describe(
         requiresAuth: true,
       });
 
-      if (res.ok) {
-        expect(Array.isArray(res.data)).toBe(true);
-      } else {
-        expect([400, 500]).toContain(res.error?.status);
-      }
+      expect(res.ok, JSON.stringify(res.ok ? res.data : res.error, null, 2)).toBe(true);
+      if (!res.ok) return;
+
+      expect(Array.isArray(res.data)).toBe(true);
+      expect(res.data.some((key) => key.name === 'E2E Test Key')).toBe(true);
     });
 
     it('handles API key revocation flow', async () => {
@@ -674,11 +665,8 @@ describe(
         requiresAuth: true,
       });
 
-      if (!createRes.ok) {
-        // If creation fails, verify it's a known issue
-        expect([400, 500]).toContain(createRes.error?.status);
-        return;
-      }
+      expect(createRes.ok, JSON.stringify(createRes.ok ? createRes.data : createRes.error, null, 2)).toBe(true);
+      if (!createRes.ok) return;
 
       const keyId = createRes.data.id;
 
@@ -689,7 +677,9 @@ describe(
         requiresAuth: true,
       });
 
-      expect(revokeRes.ok).toBe(true);
+      expect(revokeRes.ok, JSON.stringify(revokeRes.ok ? revokeRes.data : revokeRes.error, null, 2)).toBe(true);
+      if (!revokeRes.ok) return;
+      expect(revokeRes.data.message).toMatch(/revoked/i);
 
       // Verify the key is now inactive
       const listRes = await client.request<
@@ -700,12 +690,12 @@ describe(
         requiresAuth: true,
       });
 
-      if (listRes.ok) {
-        const revokedKey = listRes.data.find((k) => k.id === keyId);
-        if (revokedKey) {
-          expect(revokedKey.isActive).toBe(false);
-        }
-      }
+      expect(listRes.ok, JSON.stringify(listRes.ok ? listRes.data : listRes.error, null, 2)).toBe(true);
+      if (!listRes.ok) return;
+
+      const revokedKey = listRes.data.find((k) => k.id === keyId);
+      expect(revokedKey).toBeDefined();
+      expect(revokedKey?.isActive).toBe(false);
     });
 
     it('rejects API key creation without auth', async () => {
@@ -937,7 +927,7 @@ describe(
 describe(
   'Password change with session revocation',
   () => {
-    it('password change with session revocation (may fail due to JWT claim mapping)', async () => {
+    it('changes password and revokes other sessions', async () => {
       const creds = freshCredentials();
       const ctx = await signUpAndIn(creds);
 
@@ -973,13 +963,11 @@ describe(
         requiresAuth: true,
       });
 
-      // Accept either success or JWT claim mapping error
-      if (res.ok) {
-        expect(res.data.success).toBe(true);
-        expect(typeof res.data.sessionsRevoked).toBe('number');
-      } else {
-        expect([400, 401, 500]).toContain(res.error?.status);
-      }
+      expect(res.ok, JSON.stringify(res.ok ? res.data : res.error, null, 2)).toBe(true);
+      if (!res.ok) return;
+
+      expect(res.data.success).toBe(true);
+      expect(typeof res.data.sessionsRevoked).toBe('number');
     }, 30_000);
   },
   { timeout: 60_000 }

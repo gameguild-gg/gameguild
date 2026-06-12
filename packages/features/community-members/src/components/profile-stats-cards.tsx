@@ -1,40 +1,49 @@
 import { Gamepad2, Heart, Star, Trophy } from 'lucide-react';
+import type { MemberProfileStats } from '../types';
 
-const STATS_CARDS = [
-  {
-    icon: Trophy,
-    value: '42',
-    label: 'Points',
-    className: 'bg-gradient-to-br from-yellow-500/25 to-transparent border-yellow-400/40',
-    iconColor: 'text-yellow-500',
-  },
-  {
-    icon: Star,
-    value: '4.7',
-    label: 'Rating',
-    className: 'bg-gradient-to-br from-purple-500/25 to-transparent border-purple-400/40',
-    iconColor: 'text-purple-400',
-  },
-  {
-    icon: Gamepad2,
-    value: '7',
-    label: 'Games',
-    className: 'bg-gradient-to-br from-sky-500/25 to-transparent border-sky-400/40',
-    iconColor: 'text-sky-400',
-  },
-  {
-    icon: Heart,
-    value: '1.2k',
-    label: 'Likes',
-    className: 'bg-gradient-to-br from-red-500/25 to-transparent border-red-400/40',
-    iconColor: 'text-red-400',
-  },
-];
+function compactNumber(value: number) {
+  return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+}
 
-export function ProfileStatsCards() {
+function getStatsCards(stats?: MemberProfileStats) {
+  return [
+    {
+      icon: Trophy,
+      value: compactNumber(stats?.followers ?? 0),
+      label: 'Followers',
+      className: 'bg-gradient-to-br from-yellow-500/25 to-transparent border-yellow-400/40',
+      iconColor: 'text-yellow-500',
+    },
+    {
+      icon: Star,
+      value: compactNumber(stats?.following ?? 0),
+      label: 'Following',
+      className: 'bg-gradient-to-br from-purple-500/25 to-transparent border-purple-400/40',
+      iconColor: 'text-purple-400',
+    },
+    {
+      icon: Gamepad2,
+      value: compactNumber(stats?.projects ?? 0),
+      label: 'Projects',
+      className: 'bg-gradient-to-br from-sky-500/25 to-transparent border-sky-400/40',
+      iconColor: 'text-sky-400',
+    },
+    {
+      icon: Heart,
+      value: compactNumber(stats?.posts ?? 0),
+      label: 'Posts',
+      className: 'bg-gradient-to-br from-red-500/25 to-transparent border-red-400/40',
+      iconColor: 'text-red-400',
+    },
+  ];
+}
+
+export function ProfileStatsCards({ stats }: { stats?: MemberProfileStats }) {
+  const cards = getStatsCards(stats);
+
   return (
     <div className="hidden md:flex gap-3">
-      {STATS_CARDS.map((stat) => {
+      {cards.map((stat) => {
         const Icon = stat.icon;
         return (
           <div

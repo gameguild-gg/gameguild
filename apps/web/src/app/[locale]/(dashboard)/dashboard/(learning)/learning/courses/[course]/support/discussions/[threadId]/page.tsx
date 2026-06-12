@@ -1,6 +1,9 @@
 import React from 'react';
-import { notFound, forbidden } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getCourse, getDiscussionThread } from '@/lib/learning';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { CheckCircle2, MessageSquare } from 'lucide-react';
 
 /**
  * Discussion Thread Detail Page
@@ -14,9 +17,8 @@ export default async function DiscussionThreadPage({
   const { course: courseId, threadId } = await params;
 
   const course = await getCourse(courseId);
-  
-  if (!course?.features.hasDiscussions) {
-    forbidden();
+  if (!course) {
+    notFound();
   }
 
   const thread = await getDiscussionThread(threadId);
@@ -25,12 +27,44 @@ export default async function DiscussionThreadPage({
     notFound();
   }
 
-  // ==========================================================================
-  // DATA: DiscussionThreadDetail
-  // title, content, authorName, pinned, locked, tags
-  // replies: [{ authorName, authorRole, content, upvotes, isAnswer }]
-  // ==========================================================================
-  void thread;
+  return (
+    <div className="grid gap-6 lg:grid-cols-3">
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><MessageSquare className="size-5" />{thread.title}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline">{course.title}</Badge>
+            {thread.locked && <Badge variant="secondary"><CheckCircle2 className="mr-1 size-3" />Resolved</Badge>}
+          </div>
+          <div className="rounded-lg border p-4">
+            <p className="mb-2 text-sm text-muted-foreground">{thread.authorName} · {new Date(thread.createdAt).toLocaleString('en-US')}</p>
+            <p className="whitespace-pre-wrap text-sm">{thread.content}</p>
+          </div>
+          <div className="space-y-3">
+            {thread.replies.map((reply) => (
+              <div key={reply.id} className="rounded-lg border p-4">
+                <div className="mb-2 flex items-center justify-between text-sm">
+                  <span className="font-medium">{reply.authorName}</span>
+                  {reply.isAnswer && <Badge variant="default">Accepted answer</Badge>}
+                </div>
+                <p className="whitespace-pre-wrap text-sm text-muted-foreground">{reply.content}</p>
+              </div>
+            ))}
+            {thread.replies.length === 0 && <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">No replies yet.</div>}
+          </div>
+        </CardContent>
+      </Card>
 
-  return <div>Discussion Thread Page - UI not implemented</div>;
+      <Card>
+        <CardHeader><CardTitle className="text-lg">Thread Activity</CardTitle></CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <div className="flex justify-between"><span className="text-muted-foreground">Replies</span><span>{thread.replyCount}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Views</span><span>{thread.viewCount}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Pinned</span><span>{thread.pinned ? 'Yes' : 'No'}</span></div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

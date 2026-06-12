@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, CardContent } from '@game-guild/ui/components/card';
+import { getCourseFaq } from '@/lib/learning';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { HelpCircle } from 'lucide-react';
 
 /**
@@ -12,16 +13,22 @@ import { HelpCircle } from 'lucide-react';
 export default async function ListingFaqPage({
   params,
 }: PageProps<'/[locale]/dashboard/learning/courses/[course]/listing/faq'>): Promise<React.JSX.Element> {
-  void (await params);
+  const { course: courseId } = await params;
+  const faq = await getCourseFaq(courseId);
 
   return (
     <Card>
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <HelpCircle className="text-muted-foreground mb-4 size-12" />
-        <h3 className="text-lg font-medium">Frequently Asked Questions</h3>
-        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-          Add and manage FAQ entries that will be displayed on your course listing page. Coming soon.
-        </p>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><HelpCircle className="size-5" />Frequently Asked Questions</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {faq.items.map((item) => (
+          <div key={item.id} className="rounded-lg border p-4">
+            <p className="font-medium">{item.question}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{item.answer}</p>
+          </div>
+        ))}
+        {faq.items.length === 0 && <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No FAQ entries are available.</div>}
       </CardContent>
     </Card>
   );

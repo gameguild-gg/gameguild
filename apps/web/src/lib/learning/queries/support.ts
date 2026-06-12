@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { learningApiGet } from './http';
 
 // =============================================================================
 // COURSE SUPPORT QUERIES
@@ -132,8 +133,30 @@ export interface DiscussionThreadDetail extends DiscussionThread {
  * Cache: revalidate 30s (highly volatile)
  */
 export const getCourseSupportTickets = cache(async (courseId: string): Promise<CourseSupportTickets> => {
-  void courseId;
-  return { tickets: [], total: 0, openCount: 0, inProgressCount: 0, resolvedCount: 0 };
+  const discussions = await getCourseDiscussions(courseId);
+  const tickets: SupportTicket[] = discussions.threads.map((thread) => ({
+    id: thread.id,
+    courseId: thread.courseId,
+    studentId: thread.authorId,
+    studentName: thread.authorName,
+    studentEmail: '',
+    subject: thread.title,
+    status: thread.locked ? 'closed' : thread.replyCount > 0 ? 'in-progress' : 'open',
+    priority: thread.pinned ? 'high' : 'normal',
+    category: 'content',
+    messageCount: thread.replyCount + 1,
+    lastMessageAt: thread.lastReplyAt ?? thread.createdAt,
+    createdAt: thread.createdAt,
+    updatedAt: thread.updatedAt,
+  }));
+
+  return {
+    tickets,
+    total: tickets.length,
+    openCount: tickets.filter((ticket) => ticket.status === 'open').length,
+    inProgressCount: tickets.filter((ticket) => ticket.status === 'in-progress').length,
+    resolvedCount: tickets.filter((ticket) => ticket.status === 'resolved' || ticket.status === 'closed').length,
+  };
 });
 
 /**
@@ -141,17 +164,105 @@ export const getCourseSupportTickets = cache(async (courseId: string): Promise<C
  * Cache: revalidate 30s
  */
 export const getSupportTicket = cache(async (ticketId: string): Promise<SupportTicketDetail | null> => {
-  void ticketId;
-  return null;
+  const thread = await getDiscussionThread(ticketId);
+  if (!thread) return null;
+
+  return {
+    id: thread.id,
+    courseId: thread.courseId,
+    studentId: thread.authorId,
+    studentName: thread.authorName,
+    studentEmail: '',
+    subject: thread.title,
+    status: thread.locked ? 'closed' : thread.replyCount > 0 ? 'in-progress' : 'open',
+    priority: thread.pinned ? 'high' : 'normal',
+    category: 'content',
+    messageCount: thread.replies.length + 1,
+    lastMessageAt: thread.lastReplyAt ?? thread.createdAt,
+    createdAt: thread.createdAt,
+    updatedAt: thread.updatedAt,
+    messages: [
+      {
+        id: `${thread.id}-root`,
+        ticketId: thread.id,
+        authorId: thread.authorId,
+        authorName: thread.authorName,
+        authorRole: 'student',
+        content: thread.content,
+        attachments: [],
+        createdAt: thread.createdAt,
+      },
+      ...thread.replies.map((reply) => ({
+        id: reply.id,
+        ticketId: thread.id,
+        authorId: reply.authorId,
+        authorName: reply.authorName,
+        authorRole: reply.authorRole === 'ta' ? 'support' as const : reply.authorRole,
+        content: reply.content,
+        attachments: [],
+        createdAt: reply.createdAt,
+      })),
+    ],
+  };
 });
+
+interface DiscussionApiDto {
+  id: string;
+  courseId: string;
+  contentId?: string | null;
+  authorId: string;
+  title: string;
+  content: string;
+  isPinned?: boolean;
+  isResolved?: boolean;
+  replyCount?: number;
+  viewCount?: number;
+  lastActivityAt?: string | null;
+  createdAt?: string;
+}
+
+interface DiscussionReplyApiDto {
+  id: string;
+  discussionId: string;
+  authorId: string;
+  parentReplyId?: string | null;
+  content: string;
+  isAcceptedAnswer?: boolean;
+  upvoteCount?: number;
+  createdAt?: string;
+}
+
+function mapDiscussion(dto: DiscussionApiDto): DiscussionThread {
+  const createdAt = dto.createdAt ?? new Date().toISOString();
+
+  return {
+    id: dto.id,
+    courseId: dto.courseId,
+    contentItemId: dto.contentId ?? undefined,
+    authorId: dto.authorId,
+    authorName: `Student ${dto.authorId.slice(0, 8)}`,
+    title: dto.title,
+    content: dto.content,
+    pinned: dto.isPinned ?? false,
+    locked: dto.isResolved ?? false,
+    replyCount: dto.replyCount ?? 0,
+    viewCount: dto.viewCount ?? 0,
+    lastReplyAt: dto.lastActivityAt ?? null,
+    tags: [],
+    createdAt,
+    updatedAt: dto.lastActivityAt ?? createdAt,
+  };
+}
 
 /**
  * Fetch course discussions (conditional: hasDiscussions).
  * Cache: revalidate 60s
  */
 export const getCourseDiscussions = cache(async (courseId: string): Promise<CourseDiscussions> => {
-  void courseId;
-  return { threads: [], total: 0, pinnedCount: 0 };
+  const discussions = await learningApiGet<DiscussionApiDto[]>(`/api/social/courses/${courseId}/discussions?skip=0&take=100&pinnedFirst=true`, 60);
+  const threads = (discussions ?? []).map(mapDiscussion);
+
+  return { threads, total: threads.length, pinnedCount: threads.filter((thread) => thread.pinned).length };
 });
 
 /**
@@ -159,6 +270,32 @@ export const getCourseDiscussions = cache(async (courseId: string): Promise<Cour
  * Cache: revalidate 60s
  */
 export const getDiscussionThread = cache(async (threadId: string): Promise<DiscussionThreadDetail | null> => {
-  void threadId;
-  return null;
+  const [discussion, replies] = await Promise.all([
+    learningApiGet<DiscussionApiDto>(`/api/social/discussions/${threadId}`, 60),
+    learningApiGet<DiscussionReplyApiDto[]>(`/api/social/discussions/${threadId}/replies?skip=0&take=100`, 60),
+  ]);
+
+  if (!discussion) return null;
+
+  const thread = mapDiscussion(discussion);
+  return {
+    ...thread,
+    replies: (replies ?? []).map((reply) => {
+      const createdAt = reply.createdAt ?? new Date().toISOString();
+
+      return {
+        id: reply.id,
+        threadId: reply.discussionId,
+        parentId: reply.parentReplyId ?? undefined,
+        authorId: reply.authorId,
+        authorName: `Member ${reply.authorId.slice(0, 8)}`,
+        authorRole: 'student',
+        content: reply.content,
+        upvotes: reply.upvoteCount ?? 0,
+        isAnswer: reply.isAcceptedAnswer ?? false,
+        createdAt,
+        updatedAt: createdAt,
+      };
+    }),
+  };
 });

@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { getCourse } from './course';
 
 // =============================================================================
 // COURSE SETTINGS QUERIES
@@ -111,8 +112,20 @@ export interface CourseIntegrationSettings {
  * Cache: revalidate 300s (stable)
  */
 export const getCourseAccessSettings = cache(async (courseId: string): Promise<CourseAccessSettings | null> => {
-  void courseId;
-  return null;
+  const course = await getCourse(courseId);
+  if (!course) return null;
+
+  return {
+    courseId,
+    visibility: course.visibility,
+    enrollmentType: course.enrollmentStatus === 'Open' ? 'open' : course.enrollmentStatus === 'Closed' ? 'closed' : 'approval',
+    maxEnrollments: course.maxEnrollments ?? undefined,
+    enrollmentEnd: course.enrollmentDeadline ?? undefined,
+    requiresVerification: false,
+    prerequisiteCourses: [],
+    completionCriteria: 'all-content',
+    updatedAt: course.updatedAt,
+  };
 });
 
 /**
@@ -120,8 +133,37 @@ export const getCourseAccessSettings = cache(async (courseId: string): Promise<C
  * Cache: revalidate 300s (stable)
  */
 export const getCourseNotificationSettings = cache(async (courseId: string): Promise<CourseNotificationSettings | null> => {
-  void courseId;
-  return null;
+  const course = await getCourse(courseId);
+  if (!course) return null;
+
+  return {
+    courseId,
+    studentNotifications: {
+      enrollmentConfirmation: true,
+      courseUpdates: true,
+      newContent: true,
+      upcomingClasses: course.features.hasClasses,
+      classReminders: course.features.hasClasses ? [1440, 60, 10] : [],
+      assignmentDue: true,
+      assessmentResults: course.features.hasAssessments,
+      certificateReady: course.features.hasCertificate,
+      discussionReplies: course.features.hasDiscussions,
+    },
+    instructorNotifications: {
+      newEnrollment: true,
+      newReview: true,
+      supportTicket: true,
+      discussionMention: true,
+      lowRating: true,
+      lowRatingThreshold: 3,
+    },
+    templates: [
+      { id: `${courseId}-enrollment`, type: 'enrollment-confirmation', subject: `Welcome to ${course.title}`, enabled: true },
+      { id: `${courseId}-certificate`, type: 'certificate-ready', subject: `Your ${course.title} certificate is ready`, enabled: course.features.hasCertificate },
+      { id: `${courseId}-discussion`, type: 'discussion-reply', subject: `New reply in ${course.title}`, enabled: course.features.hasDiscussions },
+    ],
+    updatedAt: course.updatedAt,
+  };
 });
 
 /**
@@ -129,6 +171,31 @@ export const getCourseNotificationSettings = cache(async (courseId: string): Pro
  * Cache: revalidate 300s (stable)
  */
 export const getCourseIntegrationSettings = cache(async (courseId: string): Promise<CourseIntegrationSettings | null> => {
-  void courseId;
-  return null;
+  const course = await getCourse(courseId);
+  if (!course) return null;
+
+  return {
+    courseId,
+    integrations: [
+      {
+        id: `${courseId}-video`,
+        type: 'webhook',
+        name: 'Course media pipeline',
+        enabled: Boolean(course.videoShowcaseUrl),
+        config: { videoShowcaseUrl: course.videoShowcaseUrl },
+        status: course.videoShowcaseUrl ? 'connected' : 'disconnected',
+        lastSyncAt: course.updatedAt,
+      },
+      {
+        id: `${courseId}-classes`,
+        type: 'zoom',
+        name: 'Live class provider',
+        enabled: course.features.hasClasses,
+        config: {},
+        status: course.features.hasClasses ? 'connected' : 'disconnected',
+      },
+    ],
+    webhooks: [],
+    updatedAt: course.updatedAt,
+  };
 });

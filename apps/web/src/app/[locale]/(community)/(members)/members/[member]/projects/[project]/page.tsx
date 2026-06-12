@@ -1,22 +1,75 @@
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { ArrowLeft, ExternalLink, User } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import React from 'react';
+import { getMemberProject } from '@/lib/community/queries/members';
 
 export default async function Page({
   params,
 }: PageProps<'/[locale]/members/[member]/projects/[project]'>): Promise<React.JSX.Element> {
-  const { member, project } = await params;
+  const { locale, member, project } = await params;
+  const result = await getMemberProject(member, project);
 
-  // TODO: implement real project detail page (uses authenticated client API).
+  if (!result) notFound();
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Project</h1>
-          <p className="text-muted-foreground">
-            Project <span className="font-mono">{project}</span> for member{' '}
-            <span className="font-mono">{member}</span> is under construction.
-          </p>
-        </div>
+    <main className="min-h-screen bg-slate-950 text-white">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8">
+        <Button asChild variant="ghost" className="w-fit text-slate-300 hover:text-white">
+          <Link href={`/${locale}/members/${member}`}>
+            <ArrowLeft className="mr-2 size-4" />
+            Back to {result.member.displayName}
+          </Link>
+        </Button>
+
+        <Card className="overflow-hidden border-purple-500/20 bg-slate-900/80">
+          <div className="relative h-72 bg-gradient-to-br from-blue-700 to-purple-700">
+            <Image
+              src={result.project.imageUrl || '/placeholder.svg?height=288&width=960'}
+              alt={result.project.title}
+              fill
+              className="object-cover"
+              priority
+              unoptimized={Boolean(result.project.imageUrl)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
+            {result.project.isPinned ? (
+              <Badge className="absolute left-5 top-5 bg-yellow-600 text-yellow-50">Featured</Badge>
+            ) : null}
+          </div>
+
+          <CardHeader className="gap-3">
+            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
+              <Badge className="bg-purple-500/20 text-purple-100">{result.project.tech}</Badge>
+              <span className="flex items-center gap-2">
+                <User className="size-4" />
+                {result.member.displayName}
+              </span>
+            </div>
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <CardTitle className="text-3xl text-white">{result.project.title}</CardTitle>
+              {result.project.url ? (
+                <Button asChild className="w-fit">
+                  <a href={result.project.url} target="_blank" rel="noreferrer">
+                    <ExternalLink className="mr-2 size-4" />
+                    Open project
+                  </a>
+                </Button>
+              ) : null}
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6 text-slate-300">
+            <p className="text-base leading-7">
+              {result.project.description || 'This portfolio item is published on the member profile.'}
+            </p>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </main>
   );
 }

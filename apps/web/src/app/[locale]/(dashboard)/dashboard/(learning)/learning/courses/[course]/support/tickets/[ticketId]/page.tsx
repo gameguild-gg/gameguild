@@ -1,5 +1,8 @@
 import React from 'react';
-import { Card, CardContent } from '@game-guild/ui/components/card';
+import { notFound } from 'next/navigation';
+import { getSupportTicket } from '@/lib/learning';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { MessageSquare } from 'lucide-react';
 
 /**
@@ -10,16 +13,30 @@ import { MessageSquare } from 'lucide-react';
 export default async function SupportTicketDetailPage({
   params,
 }: PageProps<'/[locale]/dashboard/learning/courses/[course]/support/tickets/[ticketId]'>): Promise<React.JSX.Element> {
-  void (await params);
+  const { ticketId } = await params;
+  const ticket = await getSupportTicket(ticketId);
+
+  if (!ticket) {
+    notFound();
+  }
 
   return (
     <Card>
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <MessageSquare className="text-muted-foreground mb-4 size-12" />
-        <h3 className="text-lg font-medium">Ticket Details</h3>
-        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-          View ticket conversation, update status, and respond to student inquiries. Coming soon.
-        </p>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><MessageSquare className="size-5" />{ticket.subject}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap gap-2">
+          <Badge>{ticket.status}</Badge>
+          <Badge variant="outline">{ticket.priority}</Badge>
+          <Badge variant="outline">{ticket.category}</Badge>
+        </div>
+        {ticket.messages.map((message) => (
+          <div key={message.id} className="rounded-lg border p-4">
+            <p className="mb-2 text-sm font-medium">{message.authorName} <span className="text-muted-foreground">· {message.authorRole}</span></p>
+            <p className="whitespace-pre-wrap text-sm text-muted-foreground">{message.content}</p>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

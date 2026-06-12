@@ -6,6 +6,7 @@ import {
   type LearningAssessmentsAssessmentType,
 } from '@game-guild/client';
 import { cache } from 'react';
+import { learningApiGet } from './http';
 
 // =============================================================================
 // API CLIENT
@@ -115,15 +116,11 @@ export const getAssessment = cache(async (assessmentId: string): Promise<Assessm
   }
 });
 
-// =============================================================================
-// CERTIFICATE STUBS (module not yet enabled)
-// =============================================================================
-
 export interface CertificateTemplate {
   id: string;
   courseId: string;
   name: string;
-  description: string;
+  description: string | null;
   status: 'draft' | 'active' | 'archived';
   issuedCount: number;
   createdAt: string;
@@ -138,14 +135,63 @@ export interface CourseCertificates {
 
 export interface CertificateTemplateDetail extends CertificateTemplate {
   previewUrl: string;
+  templateHtml: string;
+  templateStyles: string | null;
+}
+
+interface CertificateTemplateApiDto {
+  id: string;
+  courseId: string;
+  name: string;
+  description?: string | null;
+  isDefault?: boolean;
+  isActive?: boolean;
+  templateHtml?: string;
+  templateStyles?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface CertificateApiDto {
+  id: string;
+  status?: string;
+}
+
+function mapCertificateTemplate(dto: CertificateTemplateApiDto, issuedCount = 0): CertificateTemplate {
+  const createdAt = dto.createdAt ?? new Date().toISOString();
+
+  return {
+    id: dto.id,
+    courseId: dto.courseId,
+    name: dto.name,
+    description: dto.description ?? null,
+    status: dto.isActive === false ? 'archived' : 'active',
+    issuedCount,
+    createdAt,
+    updatedAt: dto.updatedAt ?? createdAt,
+  };
 }
 
 export const getCourseCertificates = cache(async (courseId: string): Promise<CourseCertificates> => {
-  void courseId;
-  return { templates: [], total: 0, issuedCount: 0 };
+  const [templates, issuedCertificates] = await Promise.all([
+    learningApiGet<CertificateTemplateApiDto[]>(`/api/certificates/templates/course/${courseId}`, 120),
+    learningApiGet<CertificateApiDto[]>(`/api/certificates/course/${courseId}`, 120),
+  ]);
+
+  const issuedCount = issuedCertificates?.length ?? 0;
+  const mapped = (templates ?? []).map((template) => mapCertificateTemplate(template, issuedCount));
+
+  return { templates: mapped, total: mapped.length, issuedCount };
 });
 
 export const getCertificateTemplate = cache(async (templateId: string): Promise<CertificateTemplateDetail | null> => {
-  void templateId;
-  return null;
+  const template = await learningApiGet<CertificateTemplateApiDto>(`/api/certificates/templates/${templateId}`, 120);
+  if (!template) return null;
+
+  return {
+    ...mapCertificateTemplate(template),
+    previewUrl: `/api/certificates/templates/${template.id}`,
+    templateHtml: template.templateHtml ?? '',
+    templateStyles: template.templateStyles ?? null,
+  };
 });

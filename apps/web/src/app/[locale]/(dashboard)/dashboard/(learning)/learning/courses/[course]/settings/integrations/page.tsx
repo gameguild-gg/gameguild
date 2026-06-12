@@ -1,5 +1,7 @@
 import React from 'react';
-import { Card, CardContent } from '@game-guild/ui/components/card';
+import { getCourseIntegrationSettings } from '@/lib/learning';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Plug } from 'lucide-react';
 
 /**
@@ -10,16 +12,29 @@ import { Plug } from 'lucide-react';
 export default async function IntegrationSettingsPage({
   params,
 }: PageProps<'/[locale]/dashboard/learning/courses/[course]/settings/integrations'>): Promise<React.JSX.Element> {
-  void (await params);
+  const { course: courseId } = await params;
+  const settings = await getCourseIntegrationSettings(courseId);
+
+  if (!settings) {
+    return <div className="text-muted-foreground p-6">Course not found.</div>;
+  }
 
   return (
     <Card>
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <Plug className="text-muted-foreground mb-4 size-12" />
-        <h3 className="text-lg font-medium">Integrations</h3>
-        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-          Connect third-party services, webhooks, and external tools to automate your course workflows. Coming soon.
-        </p>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Plug className="size-5" />Integrations</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {settings.integrations.map((integration) => (
+          <div key={integration.id} className="flex items-center justify-between rounded-lg border p-4">
+            <div>
+              <p className="font-medium">{integration.name}</p>
+              <p className="text-sm text-muted-foreground">{integration.type}</p>
+            </div>
+            <Badge variant={integration.status === 'connected' ? 'default' : 'secondary'}>{integration.status}</Badge>
+          </div>
+        ))}
+        {settings.webhooks.length === 0 && <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">No outbound course webhooks are configured.</div>}
       </CardContent>
     </Card>
   );

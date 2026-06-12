@@ -1,5 +1,8 @@
 import React from 'react';
-import { Card, CardContent } from '@game-guild/ui/components/card';
+import { getCourseSupportTickets } from '@/lib/learning';
+import { Link } from '@/i18n/navigation';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { LifeBuoy } from 'lucide-react';
 
 /**
@@ -10,17 +13,37 @@ import { LifeBuoy } from 'lucide-react';
 export default async function SupportTicketsPage({
   params,
 }: PageProps<'/[locale]/dashboard/learning/courses/[course]/support/tickets'>): Promise<React.JSX.Element> {
-  void (await params);
+  const { course: courseId } = await params;
+  const tickets = await getCourseSupportTickets(courseId);
 
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <LifeBuoy className="text-muted-foreground mb-4 size-12" />
-        <h3 className="text-lg font-medium">Support Tickets</h3>
-        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-          Manage student support requests, track ticket status, and respond to questions. Coming soon.
-        </p>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card><CardContent className="p-4"><p className="text-2xl font-semibold">{tickets.openCount}</p><p className="text-sm text-muted-foreground">Open</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-2xl font-semibold">{tickets.inProgressCount}</p><p className="text-sm text-muted-foreground">In progress</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-2xl font-semibold">{tickets.resolvedCount}</p><p className="text-sm text-muted-foreground">Resolved</p></CardContent></Card>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><LifeBuoy className="size-5" />Support Queue</CardTitle>
+          <CardDescription>Support queue derived from course discussion threads until a dedicated ticket table is needed.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {tickets.tickets.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No support items are open for this course.</div>
+          ) : (
+            tickets.tickets.map((ticket) => (
+              <Link key={ticket.id} href={`/dashboard/learning/courses/${courseId}/support/tickets/${ticket.id}`} className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50">
+                <div>
+                  <p className="font-medium">{ticket.subject}</p>
+                  <p className="text-sm text-muted-foreground">{ticket.studentName} · {ticket.messageCount} messages</p>
+                </div>
+                <Badge variant={ticket.status === 'open' ? 'default' : 'secondary'}>{ticket.status}</Badge>
+              </Link>
+            ))
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
