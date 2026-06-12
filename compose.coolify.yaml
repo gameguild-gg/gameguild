@@ -1,4 +1,4 @@
-# Coolify deployment - API and learner app (staging).
+# Coolify deployment - API, web console, and learner app (staging).
 #
 # Routing: traffic enters via Cloudflare Tunnel -> Coolify's Traefik proxy ->
 # this container on the shared Coolify network. No host ports are published;
@@ -11,7 +11,7 @@
 #
 # Recommended env vars:
 #   JWT_ISSUER, JWT_AUDIENCE,
-#   SERVICE_FQDN_API, SERVICE_FQDN_LEARNING,
+#   SERVICE_FQDN_API, SERVICE_FQDN_WEB, SERVICE_FQDN_LEARNING,
 #   API_INTERNAL_URL, API_PUBLIC_URL
 #
 # In the Coolify UI, set the service "Port Exposed" to 8080 so Traefik
@@ -79,6 +79,75 @@ services:
     networks:
       - default
       - coolify
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        GIT_HASH: ${GIT_HASH:-}
+        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-}
+        AUTH_SECRET: ${AUTH_SECRET:-}
+        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
+        API_PUBLIC_URL: ${API_PUBLIC_URL:-}
+        WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-}
+        LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:-}
+    image: game-guild-web
+    ports:
+      - '${WEB_PORT:-3000}'
+    environment:
+      - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB:-}
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - API_URL=${API_INTERNAL_URL:-http://api:8080}
+      - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:-}
+      - NEXT_PUBLIC_APP_URL=${WEB_PUBLIC_URL:-}
+      - NEXT_PUBLIC_LEARNING_APP_URL=${LEARNING_PUBLIC_URL:-}
+      - NEXTAUTH_URL=${WEB_PUBLIC_URL:-}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-}
+      - AUTH_SECRET=${AUTH_SECRET:-}
+      - AUTH_TRUST_HOST=true
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          "node -e \"fetch('http://127.0.0.1:3000/api/health').then(r=>{process.exit(r.ok?0:1)}).catch(()=>process.exit(1))\"",
+        ]
+      start_interval: 10s
+      start_period: 90s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    labels:
+      - 'com.game-guild.app=web'
+      - 'com.game-guild.tier=frontend'
+      - 'com.game-guild.environment=staging'
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=coolify'
+      - 'traefik.http.services.web.loadbalancer.server.port=3000'
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - default
+      - coolify
+    depends_on:
+      api:
+        condition: service_started
 
   learning:
     build:
