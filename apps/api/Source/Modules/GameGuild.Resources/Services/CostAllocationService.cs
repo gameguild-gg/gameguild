@@ -1,4 +1,6 @@
 using System.Text.Json;
+using GameGuild.Billing;
+using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -12,7 +14,9 @@ public class CostAllocationService(
     IUsageRecordRepository usageRepository,
     IResourceQuotaRepository quotaRepository,
     IOptions<ResourcesOptions> options,
-    ILogger<CostAllocationService> logger
+    ILogger<CostAllocationService> logger,
+    ISender? sender = null,
+    ICostCenterValidator? costCenterValidator = null
 ) : ICostAllocationService
 {
     private readonly ResourcesOptions _options = options.Value;
@@ -71,6 +75,7 @@ public class CostAllocationService(
             IsExported = false
         };
         report.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
+        report.CostCenterValidationStatus = await ValidateCostCenterAsync(tenantId, report.CostCenter, cancellationToken).ConfigureAwait(false);
 
         var savedReport = await reportRepository.AddAsync(report, cancellationToken).ConfigureAwait(false);
 
@@ -132,6 +137,7 @@ public class CostAllocationService(
 
         report.AllocationTags = JsonSerializer.Serialize(tags);
         report.CostCenter = tags.GetValueOrDefault("CostCenter");
+        report.CostCenterValidationStatus = await ValidateCostCenterAsync(report.TenantId ?? Guid.Empty, report.CostCenter, cancellationToken).ConfigureAwait(false);
         report.Project = tags.GetValueOrDefault("Project");
         report.Owner = tags.GetValueOrDefault("Owner");
         report.Touch();
@@ -143,12 +149,83 @@ public class CostAllocationService(
         return true;
     }
 
+    public async Task<CostAllocationInvoiceExportResult?> ExportReportToBillingInvoiceAsync(
+        Guid reportId,
+        Guid subscriptionId,
+        string currency = "USD",
+        DateTime? dueDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (sender is null)
+        {
+            throw new InvalidOperationException("Billing invoice export requires the CQRS sender to be registered.");
+        }
+
+        var report = await reportRepository.GetByIdAsync(reportId, cancellationToken).ConfigureAwait(false);
+        if (report is null)
+        {
+            return null;
+        }
+
+        if (report.TenantId is null)
+        {
+            throw new InvalidOperationException("Cost allocation report cannot be exported without a tenant id.");
+        }
+
+        var invoice = await sender.Send(
+            new CreateCostAllocationInvoiceCommand(
+                report.TenantId.Value,
+                subscriptionId,
+                report.TotalCost,
+                report.PeriodStart,
+                report.PeriodEnd,
+                currency,
+                dueDate),
+            cancellationToken).ConfigureAwait(false);
+
+        report.IsExported = true;
+        report.ExportedAt = SystemClock.UtcNow;
+        report.InvoiceReference = invoice.InvoiceNumber;
+        report.Touch();
+        await reportRepository.UpdateAsync(report, cancellationToken).ConfigureAwait(false);
+
+        logger.LogInformation(
+            "Exported cost allocation report {ReportId} to invoice {InvoiceNumber}",
+            reportId,
+            invoice.InvoiceNumber);
+
+        return new CostAllocationInvoiceExportResult(
+            report.Id,
+            invoice.InvoiceId,
+            invoice.InvoiceNumber,
+            invoice.Total,
+            invoice.DueDate);
+    }
+
     private decimal GetCostPerUnit(ResourceUsageType type)
     {
         var typeName = type.ToString();
         return _options.CostPerUnit.GetValueOrDefault(typeName, _options.DefaultCostPerUnit);
     }
 
-    // PLANNED: Integration with Billing module for invoice generation (depends on GameGuild.Commerce.Billing)
-    // PLANNED: Integration with Finance module for cost center validation (depends on GameGuild.Finance)
+    private async Task<string> ValidateCostCenterAsync(Guid tenantId, string? costCenter, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(costCenter))
+        {
+            return "NotProvided";
+        }
+
+        if (costCenterValidator is null)
+        {
+            return "NotValidated";
+        }
+
+        var validation = await costCenterValidator.ValidateAsync(tenantId, costCenter, cancellationToken).ConfigureAwait(false);
+        if (!validation.IsValid)
+        {
+            throw new InvalidOperationException(validation.Message ?? $"Cost center '{costCenter}' is invalid.");
+        }
+
+        return validation.Status;
+    }
 }

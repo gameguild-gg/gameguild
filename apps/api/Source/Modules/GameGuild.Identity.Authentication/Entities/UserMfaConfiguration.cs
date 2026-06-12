@@ -29,6 +29,28 @@ public class UserMfaConfiguration
     public string? BackupCodes { get; set; }
 
     /// <summary>
+    ///     Verified phone number used for SMS MFA.
+    /// </summary>
+    [MaxLength(32)]
+    public string? SmsPhoneNumber { get; set; }
+
+    /// <summary>
+    ///     Hash of the pending SMS verification code.
+    /// </summary>
+    [MaxLength(256)]
+    public string? SmsVerificationCodeHash { get; set; }
+
+    /// <summary>
+    ///     Expiration timestamp for the pending SMS verification code.
+    /// </summary>
+    public DateTime? SmsVerificationExpiresAt { get; set; }
+
+    /// <summary>
+    ///     Indicates if SMS MFA has been verified and enabled.
+    /// </summary>
+    public bool IsSmsEnabled { get; set; }
+
+    /// <summary>
     ///     When MFA was first enabled
     /// </summary>
     public DateTime? EnabledAt { get; set; }

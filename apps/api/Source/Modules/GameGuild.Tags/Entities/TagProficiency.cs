@@ -30,7 +30,5 @@ public class TagProficiency : EntityBase
     /// <summary> Whether this tag proficiency is available for use </summary>
     public bool IsActive { get; set; } = true;
 
-    // Navigation properties
-    // PLANNED: Re-enable when Certificates module is implemented (depends on GameGuild.Certificates)
-    // public virtual ICollection<CertificateTag> CertificateTags { get; set; } = new List<CertificateTag>();
+    public virtual ICollection<CertificateTag> CertificateTags { get; set; } = new List<CertificateTag>();
 }

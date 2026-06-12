@@ -23,7 +23,7 @@ public static class FeaturesModule
             var encryptionKey = configuration["Encryption:EncryptionKey"]
                 ?? configuration["FeatureFlags:EncryptionKey"];
 
-            // Validate: if key is missing or a placeholder, use a dev-only default
+            // Validate: if key is missing or still set to the template value, use a dev-only default.
             if (string.IsNullOrWhiteSpace(encryptionKey)
                 || encryptionKey.StartsWith("CHANGE_THIS", StringComparison.OrdinalIgnoreCase))
             {

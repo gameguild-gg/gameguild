@@ -167,9 +167,24 @@ public sealed class ProjectQueryHandlers
     return Result.Success<IEnumerable<Project>>(projects);
   }
 
-  public Task<Result<IEnumerable<Project>>> Handle(GetDeletedProjectsQuery request, CancellationToken cancellationToken) {
-    // Deleted projects are restricted
-    return Task.FromResult(Result.Success<IEnumerable<Project>>(Enumerable.Empty<Project>()));
+  public async Task<Result<IEnumerable<Project>>> Handle(GetDeletedProjectsQuery request, CancellationToken cancellationToken) {
+    if (!Actor.IsAuthenticated || !Actor.IsInRole("Admin")) {
+      return Result.Success<IEnumerable<Project>>(Array.Empty<Project>());
+    }
+
+    var projects = await _context.Set<Project>()
+      .AsNoTracking()
+      .Where(p => p.DeletedAt != null)
+      .Include(p => p.CreatedBy)
+      .Include(p => p.Category)
+      .OrderByDescending(p => p.DeletedAt)
+      .ThenByDescending(p => p.UpdatedAt)
+      .Skip(request.Skip)
+      .Take(request.Take)
+      .ToListAsync(cancellationToken)
+      .ConfigureAwait(false);
+
+    return Result.Success<IEnumerable<Project>>(projects);
   }
 
   public async Task<Result<IEnumerable<Project>>> Handle(SearchProjectsQuery request, CancellationToken cancellationToken) {
@@ -293,6 +308,7 @@ public sealed class ProjectQueryHandlers
       .Include(p => p.Followers)
       .Include(p => p.Feedbacks)
       .Include(p => p.Releases)
+      .Include(p => p.ProjectMetadata)
       .Include(p => p.Collaborators)
       .Include(p => p.Teams)
       .Include(p => p.JamSubmissions)
@@ -305,7 +321,7 @@ public sealed class ProjectQueryHandlers
       ProjectId = projectId,
       FollowerCount = project.Followers.Count,
       FeedbackCount = project.Feedbacks.Count,
-      TotalDownloads = 0, // PLANNED: Add TotalDownloads property to Project entity when download tracking is implemented
+      TotalDownloads = (project.ProjectMetadata?.DownloadCount ?? 0) + project.Releases.Sum(release => release.DownloadCount),
       ActiveTeamCount = project.Teams.Count,
       CollaboratorCount = project.Collaborators.Count(c => c.IsActive),
       ReleaseCount = project.Releases.Count,

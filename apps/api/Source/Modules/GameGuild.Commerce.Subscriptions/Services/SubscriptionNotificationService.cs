@@ -4,25 +4,22 @@ namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
 ///     Default implementation of subscription notification service.
-///     Logs all notifications and provides structured data for future notification integrations.
-///     
-///     Integration Points:
-///     - When GameGuild.Notifications module is implemented, replace this with a real implementation
-///     - Can integrate with email services (SendGrid, AWS SES, etc.)
-///     - Can integrate with push notification services (Firebase, OneSignal, etc.)
-///     - Can integrate with in-app notification systems
+///     Logs operational telemetry and publishes in-app billing notifications through the shared notification contract.
 /// </summary>
 public class SubscriptionNotificationService : ISubscriptionNotificationService
 {
     private readonly ILogger<SubscriptionNotificationService> _logger;
     private readonly ISubscriptionPlanService _planService;
+    private readonly IApplicationNotificationPublisher? _notificationPublisher;
 
     public SubscriptionNotificationService(
         ILogger<SubscriptionNotificationService> logger,
-        ISubscriptionPlanService planService)
+        ISubscriptionPlanService planService,
+        IApplicationNotificationPublisher? notificationPublisher = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _planService = planService ?? throw new ArgumentNullException(nameof(planService));
+        _notificationPublisher = notificationPublisher;
     }
 
     public async Task SendRenewalReminderAsync(Subscription subscription, int daysUntilRenewal, CancellationToken cancellationToken = default)
@@ -41,11 +38,14 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
             subscription.Amount.Amount,
             subscription.Amount.Currency);
 
-        // Future: Send email/push notification
-        // await _emailService.SendTemplatedEmailAsync(
-        //     template: "subscription-renewal-reminder",
-        //     to: await GetTenantEmailAsync(subscription.TenantId),
-        //     data: new { subscription, daysUntilRenewal, plan });
+        await PublishBillingNotificationAsync(
+            subscription,
+            "Subscription renewal reminder",
+            $"Your {plan} subscription renews in {daysUntilRenewal} days.",
+            "Normal",
+            cancellationToken,
+            new Dictionary<string, string> { ["event"] = "renewal-reminder", ["daysUntilRenewal"] = daysUntilRenewal.ToString() })
+            .ConfigureAwait(false);
     }
 
     public async Task SendTrialExpirationReminderAsync(Subscription subscription, int daysUntilExpiration, CancellationToken cancellationToken = default)
@@ -62,7 +62,14 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
             daysUntilExpiration,
             subscription.TrialEndDate);
 
-        // Future: Send email/push notification with CTA to add payment method
+        await PublishBillingNotificationAsync(
+            subscription,
+            "Trial expiration reminder",
+            $"Your {plan} trial expires in {daysUntilExpiration} days. Add a payment method to keep access active.",
+            "High",
+            cancellationToken,
+            new Dictionary<string, string> { ["event"] = "trial-expiration", ["daysUntilExpiration"] = daysUntilExpiration.ToString() })
+            .ConfigureAwait(false);
     }
 
     public async Task SendPaymentFailureNotificationAsync(Subscription subscription, string failureReason, int retryAttempt, CancellationToken cancellationToken = default)
@@ -81,8 +88,14 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
             subscription.Amount.Amount,
             subscription.Amount.Currency);
 
-        // Future: Send urgent email with CTA to update payment method
-        // Include retry information and potential service suspension warning
+        await PublishBillingNotificationAsync(
+            subscription,
+            "Payment failed",
+            $"Payment attempt {retryAttempt} failed for your {plan} subscription: {failureReason}.",
+            "Urgent",
+            cancellationToken,
+            new Dictionary<string, string> { ["event"] = "payment-failure", ["retryAttempt"] = retryAttempt.ToString(), ["failureReason"] = failureReason })
+            .ConfigureAwait(false);
     }
 
     public async Task SendSubscriptionActivatedNotificationAsync(Subscription subscription, CancellationToken cancellationToken = default)
@@ -101,7 +114,14 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
             subscription.Amount.Amount,
             subscription.Amount.Currency);
 
-        // Future: Send welcome/confirmation email
+        await PublishBillingNotificationAsync(
+            subscription,
+            "Subscription activated",
+            $"Your {plan} subscription is active.",
+            "Normal",
+            cancellationToken,
+            new Dictionary<string, string> { ["event"] = "activated" })
+            .ConfigureAwait(false);
     }
 
     public async Task SendSubscriptionCancelledNotificationAsync(Subscription subscription, CancellationReason cancellationReason, CancellationToken cancellationToken = default)
@@ -118,7 +138,14 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
             cancellationReason,
             subscription.CancelledAt ?? subscription.CurrentPeriodEnd);
 
-        // Future: Send cancellation confirmation with feedback survey link
+        await PublishBillingNotificationAsync(
+            subscription,
+            "Subscription cancelled",
+            $"Your {plan} subscription was cancelled. Access continues until {(subscription.CancelledAt ?? subscription.CurrentPeriodEnd):yyyy-MM-dd}.",
+            "Normal",
+            cancellationToken,
+            new Dictionary<string, string> { ["event"] = "cancelled", ["reason"] = cancellationReason.ToString() })
+            .ConfigureAwait(false);
     }
 
     public async Task SendSubscriptionSuspendedNotificationAsync(Subscription subscription, string? suspensionReason, CancellationToken cancellationToken = default)
@@ -134,7 +161,14 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
             plan,
             suspensionReason ?? "Payment failure");
 
-        // Future: Send urgent notification with steps to restore access
+        await PublishBillingNotificationAsync(
+            subscription,
+            "Subscription suspended",
+            $"Your {plan} subscription was suspended: {suspensionReason ?? "Payment failure"}.",
+            "Urgent",
+            cancellationToken,
+            new Dictionary<string, string> { ["event"] = "suspended", ["reason"] = suspensionReason ?? "Payment failure" })
+            .ConfigureAwait(false);
     }
 
     public async Task SendSubscriptionReactivatedNotificationAsync(Subscription subscription, CancellationToken cancellationToken = default)
@@ -148,7 +182,14 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
             subscription.TenantId,
             plan);
 
-        // Future: Send reactivation confirmation
+        await PublishBillingNotificationAsync(
+            subscription,
+            "Subscription reactivated",
+            $"Your {plan} subscription has been reactivated.",
+            "Normal",
+            cancellationToken,
+            new Dictionary<string, string> { ["event"] = "reactivated" })
+            .ConfigureAwait(false);
     }
 
     public async Task SendPlanUpgradeNotificationAsync(Subscription subscription, Guid oldPlanId, Guid newPlanId, CancellationToken cancellationToken = default)
@@ -167,7 +208,14 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
             subscription.Amount.Amount,
             subscription.Amount.Currency);
 
-        // Future: Send upgrade confirmation with list of new features
+        await PublishBillingNotificationAsync(
+            subscription,
+            "Plan upgraded",
+            $"Your subscription was upgraded from {oldPlan} to {newPlan}.",
+            "Normal",
+            cancellationToken,
+            new Dictionary<string, string> { ["event"] = "plan-upgraded", ["oldPlan"] = oldPlan, ["newPlan"] = newPlan })
+            .ConfigureAwait(false);
     }
 
     public async Task SendPlanDowngradeNotificationAsync(Subscription subscription, Guid oldPlanId, Guid newPlanId, DateTime effectiveDate, CancellationToken cancellationToken = default)
@@ -187,7 +235,14 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
             subscription.Amount.Amount,
             subscription.Amount.Currency);
 
-        // Future: Send downgrade confirmation with information about feature changes
+        await PublishBillingNotificationAsync(
+            subscription,
+            "Plan downgrade scheduled",
+            $"Your subscription downgrade from {oldPlan} to {newPlan} is scheduled for {effectiveDate:yyyy-MM-dd}.",
+            "Normal",
+            cancellationToken,
+            new Dictionary<string, string> { ["event"] = "plan-downgraded", ["oldPlan"] = oldPlan, ["newPlan"] = newPlan, ["effectiveDate"] = effectiveDate.ToString("O") })
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -204,6 +259,43 @@ public class SubscriptionNotificationService : ISubscriptionNotificationService
         {
             _logger.LogWarning(ex, "Failed to retrieve plan name for {PlanId}", planId);
             return $"Plan {planId}";
+        }
+    }
+
+    private async Task PublishBillingNotificationAsync(
+        Subscription subscription,
+        string title,
+        string message,
+        string priority,
+        CancellationToken cancellationToken,
+        IReadOnlyDictionary<string, string>? metadata = null)
+    {
+        if (_notificationPublisher == null)
+        {
+            return;
+        }
+
+        var result = await _notificationPublisher.PublishAsync(
+                new ApplicationNotificationMessage(
+                    subscription.CreatedByUserId,
+                    title,
+                    message,
+                    "Billing",
+                    priority,
+                    subscription.TenantId,
+                    $"/billing/subscriptions/{subscription.Id}",
+                    subscription.Id,
+                    nameof(Subscription),
+                    metadata),
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            _logger.LogWarning(
+                "Subscription notification publish failed for subscription {SubscriptionId}: {Error}",
+                subscription.Id,
+                result.ErrorMessage);
         }
     }
 }

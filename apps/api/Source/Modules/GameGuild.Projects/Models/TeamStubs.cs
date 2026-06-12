@@ -4,7 +4,7 @@ using GameGuild.Identity.Users;
 
 namespace GameGuild.Projects;
 
-/// <summary> Stub for Team entity - PLANNED: Replace with full Teams module </summary>
+/// <summary> Project collaboration team owned by the Projects module. </summary>
 [Table("Teams")]
 public class Team : EntityBase {
     [Required]
@@ -19,7 +19,7 @@ public class Team : EntityBase {
     public virtual ICollection<TeamMember> Members { get; set; } = new List<TeamMember>();
 }
 
-/// <summary> Stub for TeamMember entity - PLANNED: Replace with full Teams module </summary>
+/// <summary> User membership inside a project collaboration team. </summary>
 [Table("TeamMembers")]
 public class TeamMember : EntityBase {
     public Guid TeamId { get; set; }

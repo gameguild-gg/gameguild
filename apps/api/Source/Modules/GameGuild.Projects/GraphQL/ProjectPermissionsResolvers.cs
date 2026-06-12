@@ -1,13 +1,15 @@
 using System.Security.Claims;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
+using HotChocolate;
+using HotChocolate.Types;
 using IPermissionService = GameGuild.Identity.Authentication.IPermissionService;
 
 namespace GameGuild.Projects;
 
-// [ExtendObjectType(typeof(Project))] // PLANNED: Configure GraphQL Project type when HotChocolate schema stitching is set up for the Projects module
+[ExtendObjectType(typeof(Project))]
 public sealed class ProjectPermissionsResolvers {
-  public async Task<bool> CanEdit(/* [Service] */ IPermissionService permissionService, ClaimsPrincipal user, /* [Parent] */ Project project) {
+  public async Task<bool> CanEdit([Service] IPermissionService permissionService, ClaimsPrincipal user, [Parent] Project project) {
     ArgumentNullException.ThrowIfNull(permissionService);
     ArgumentNullException.ThrowIfNull(project);
 
@@ -20,7 +22,7 @@ public sealed class ProjectPermissionsResolvers {
     return await permissionService.HasResourcePermissionAsync<ProjectPermission, Project>(userId, tenantId, project.Id, PermissionType.Edit).ConfigureAwait(false);
   }
 
-  public async Task<bool> CanDelete(/* [Service] */ IPermissionService permissionService, ClaimsPrincipal user, /* [Parent] */ Project project) {
+  public async Task<bool> CanDelete([Service] IPermissionService permissionService, ClaimsPrincipal user, [Parent] Project project) {
     ArgumentNullException.ThrowIfNull(permissionService);
     ArgumentNullException.ThrowIfNull(project);
 

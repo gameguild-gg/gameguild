@@ -1,3 +1,4 @@
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -193,7 +194,7 @@ public class AchievementsController : BaseApiController
     /// Create a new achievement (admin only).
     /// </summary>
     [HttpPost]
-    // PLANNED: Add [RequirePermission("achievements:create")] when achievement permissions are registered in the authorization module
+    [RequirePermission(AchievementsPermission.Keys.Create)]
     public async Task<ActionResult<AchievementDto>> CreateAchievement([FromBody] CreateAchievementRequest request)
     {
         var actorContext = _actorContextAccessor.ActorContext;
@@ -230,7 +231,7 @@ public class AchievementsController : BaseApiController
     /// Update an existing achievement (admin only).
     /// </summary>
     [HttpPut("{achievementId:guid}")]
-    // PLANNED: Add [RequirePermission("achievements:update")] when achievement permissions are registered in the authorization module
+    [RequirePermission(AchievementsPermission.Keys.Update)]
     public async Task<ActionResult<AchievementDto>> UpdateAchievement(
         Guid achievementId,
         [FromBody] UpdateAchievementRequest request)
@@ -282,7 +283,7 @@ public class AchievementsController : BaseApiController
     /// Delete an achievement (admin only).
     /// </summary>
     [HttpDelete("{achievementId:guid}")]
-    // PLANNED: Add [RequirePermission("achievements:delete")] when achievement permissions are registered in the authorization module
+    [RequirePermission(AchievementsPermission.Keys.Delete)]
     public async Task<ActionResult> DeleteAchievement(Guid achievementId)
     {
         var result = await _achievementService.DeleteAchievementAsync(achievementId).ConfigureAwait(false);
@@ -301,7 +302,7 @@ public class AchievementsController : BaseApiController
     /// Award an achievement to a user (admin only, for manual awards).
     /// </summary>
     [HttpPost("{achievementId:guid}/award")]
-    // PLANNED: Add [RequirePermission("achievements:award")] when achievement permissions are registered in the authorization module
+    [RequirePermission(AchievementsPermission.Keys.Award)]
     public async Task<ActionResult<UserAchievementDto>> AwardAchievement(
         Guid achievementId,
         [FromBody] AwardAchievementRequest request)

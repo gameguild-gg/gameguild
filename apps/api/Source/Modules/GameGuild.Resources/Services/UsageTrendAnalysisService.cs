@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Resources;
@@ -5,8 +7,26 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Implementation of usage trend analysis and forecasting
 /// </summary>
-public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendRepository, IUsageRecordRepository usageRepository, ILogger<UsageTrendAnalysisService> logger) : IUsageTrendAnalysisService
+public class UsageTrendAnalysisService(
+    IResourceUsageTrendRepository trendRepository,
+    IUsageRecordRepository usageRepository,
+    ILogger<UsageTrendAnalysisService> logger,
+    IUsagePatternRecognizer? patternRecognizer = null) : IUsageTrendAnalysisService
 {
+    public const string MeterName = "GameGuild.Resources";
+
+    private static readonly Meter UsageTrendMeter = new(MeterName);
+
+    private static readonly Counter<long> UsageTrendAnomalyCounter = UsageTrendMeter.CreateCounter<long>(
+        "gameguild.resources.usage_trends.anomalies",
+        unit: "anomalies",
+        description: "Anomalies detected while analyzing resource usage trends");
+
+    private static readonly Histogram<double> UsageTrendGrowthHistogram = UsageTrendMeter.CreateHistogram<double>(
+        "gameguild.resources.usage_trends.growth_rate",
+        unit: "%",
+        description: "Growth rate observed while analyzing resource usage trends");
+
     public async Task<ResourceUsageTrend> AnalyzeTrendAsync(Guid tenantId, ResourceUsageType type, DateTime periodStart, DateTime periodEnd, CancellationToken cancellationToken = default)
     {
         var usageRecords = await usageRepository.GetByTenantAsync(tenantId, type, periodStart, periodEnd, cancellationToken).ConfigureAwait(false);
@@ -56,8 +76,10 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
             Pattern = pattern
         };
         trend.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
+        await ApplyPatternRecognitionAsync(trend, recordsList, cancellationToken).ConfigureAwait(false);
 
         var savedTrend = await trendRepository.AddAsync(trend, cancellationToken).ConfigureAwait(false);
+        RecordTrendMetrics(savedTrend);
 
         logger.LogInformation("Analyzed trend for tenant {TenantId}, type {Type}: Pattern={Pattern}, Growth={Growth:P}", tenantId, type, pattern, growthRate);
 
@@ -256,5 +278,34 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
 
         // Stable pattern
         return "Stable";
+    }
+
+    private static void RecordTrendMetrics(ResourceUsageTrend trend)
+    {
+        var tags = new TagList
+        {
+            { "resource.type", trend.Type.ToString() },
+            { "pattern", trend.Pattern }
+        };
+
+        UsageTrendGrowthHistogram.Record(Math.Round(trend.GrowthRate * 100, 2), tags);
+
+        if (trend.AnomalyCount > 0)
+        {
+            UsageTrendAnomalyCounter.Add(trend.AnomalyCount, tags);
+        }
+    }
+
+    private async Task ApplyPatternRecognitionAsync(ResourceUsageTrend trend, IReadOnlyList<UsageRecord> records, CancellationToken cancellationToken)
+    {
+        if (patternRecognizer is null)
+        {
+            return;
+        }
+
+        var recognition = await patternRecognizer.RecognizeAsync(trend, records, cancellationToken).ConfigureAwait(false);
+        trend.Pattern = recognition.Pattern;
+        trend.PatternConfidence = recognition.Confidence;
+        trend.Metadata = recognition.Metadata ?? trend.Metadata;
     }
 }

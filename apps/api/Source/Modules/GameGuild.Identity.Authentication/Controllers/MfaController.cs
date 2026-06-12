@@ -189,21 +189,23 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     [ProducesResponseType<SmsMfaSetupResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public Task<IActionResult> InitiateSmsSetup([FromBody] SmsMfaSetupRequest body, CancellationToken ct)
+    public async Task<IActionResult> InitiateSmsSetup([FromBody] SmsMfaSetupRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
+        var userId = GetCurrentUserId();
+        var result = await mfaService.InitiateSmsSetupAsync(userId, body.PhoneNumber, ct).ConfigureAwait(false);
 
-        // PLANNED: Wire to ISender with a SetupSmsMfaCommand that uses ISmsService
-        // to send verification code to body.PhoneNumber.
-        // var userId = GetCurrentUserId();
-        // await smsService.SendVerificationCodeAsync(body.PhoneNumber);
-
-        return Task.FromResult<IActionResult>(Ok(new SmsMfaSetupResponse
+        if (!result.Success)
         {
-            Message = "Verification code sent to your phone number",
-            PhoneNumberMasked = MaskPhoneNumber(body.PhoneNumber),
-            ExpiresInSeconds = 300
-        }));
+            return BadRequest(new MfaErrorResponse { Error = result.Message });
+        }
+
+        return Ok(new SmsMfaSetupResponse
+        {
+            Message = result.Message,
+            PhoneNumberMasked = result.PhoneNumberMasked ?? MaskPhoneNumber(body.PhoneNumber),
+            ExpiresInSeconds = result.ExpiresInSeconds
+        });
     }
 
     /// <summary>
@@ -218,19 +220,21 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     [ProducesResponseType<MfaSuccessResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public Task<IActionResult> CompleteSmsSetup([FromBody] CompleteMfaSetupRequest body, CancellationToken ct)
+    public async Task<IActionResult> CompleteSmsSetup([FromBody] CompleteMfaSetupRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
+        var userId = GetCurrentUserId();
+        var result = await mfaService.CompleteSmsSetupAsync(userId, body.Code, ct).ConfigureAwait(false);
 
-        // PLANNED: Wire to ISender with a CompleteSmsMfaSetupCommand that validates
-        // the SMS code and enables SMS MFA for the user.
-        // var userId = GetCurrentUserId();
-        // var result = await mfaService.CompleteSmsSetupAsync(userId, body.Code);
-
-        return Task.FromResult<IActionResult>(Ok(new MfaSuccessResponse
+        if (!result.Success)
         {
-            Message = "SMS MFA setup completed successfully"
-        }));
+            return BadRequest(new MfaErrorResponse { Error = result.Message ?? "Failed to complete SMS MFA setup" });
+        }
+
+        return Ok(new MfaSuccessResponse
+        {
+            Message = result.Message ?? "SMS MFA setup completed successfully"
+        });
     }
 
     #endregion
@@ -251,6 +255,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     {
         var userId = GetCurrentUserId();
         var configuration = await mfaService.GetMfaConfigurationAsync(userId, ct).ConfigureAwait(false);
+        var isSmsAvailable = await mfaService.IsSmsMfaAvailableAsync(ct).ConfigureAwait(false);
 
         var enabledMethods = configuration.EnabledMethods ?? [];
 
@@ -271,7 +276,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
                 Name = "SMS",
                 Description = "Receive verification codes via text message",
                 IsEnabled = enabledMethods.Contains("sms", StringComparer.OrdinalIgnoreCase),
-                IsAvailable = true, // PLANNED: Check ISmsService.IsConfiguredAsync() when SMS module is wired
+                IsAvailable = isSmsAvailable,
                 Priority = 2
             },
             new()

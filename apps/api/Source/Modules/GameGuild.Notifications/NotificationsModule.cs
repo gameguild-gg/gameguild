@@ -20,6 +20,7 @@ public static class NotificationsModule
 
         // Facade for backward compatibility
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IApplicationNotificationPublisher, ApplicationNotificationPublisher>();
 
         return services;
     }

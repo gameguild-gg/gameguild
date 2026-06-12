@@ -27,6 +27,8 @@ public interface IUsageRecordRepository
 
     Task<IEnumerable<UsageRecord>> GetByTenantAndTypeAsync(Guid tenantId, ResourceUsageType type, CancellationToken cancellationToken = default);
 
+    Task<IEnumerable<UsageRecord>> GetByTypeAsync(ResourceUsageType type, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default);
+
     Task<IEnumerable<UsageRecord>> GetByDateRangeAsync(Guid tenantId, ResourceUsageType type, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default);
 
     Task<UsageRecord> CreateAsync(UsageRecord record, CancellationToken cancellationToken = default);

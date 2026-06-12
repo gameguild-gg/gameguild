@@ -17,6 +17,9 @@ public class ProgramRating : EntityBase {
   [MaxLength(450)]
   public string UserId { get; set; } = string.Empty;
 
+  /// <summary> Enrollment row this rating/review belongs to when the reviewer is enrolled. </summary>
+  public Guid? ProgramUserId { get; set; }
+
   /// <summary> The numerical rating (1-5 scale) </summary>
   [Range(1, 5)]
   public decimal Rating { get; set; }
@@ -39,6 +42,8 @@ public class ProgramRating : EntityBase {
 
   // Navigation properties
   public virtual Program Program { get; set; } = null!;
+
+  public virtual ProgramUser? ProgramUser { get; set; }
 
   // Note: User navigation property would be added when User model is available
   // public virtual User User { get; set; } = null!;

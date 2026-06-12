@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
-// PLANNED: Reactivate this controller when access review and compliance features are ready for production
+// Legacy hidden shell; canonical access review campaign APIs are owned by GameGuild.Identity.Authorization.
 /// <summary>
 ///     API controller for Access Review Campaign management.
 ///     Handles campaign CRUD, lifecycle (start/complete), reminders, and templates.

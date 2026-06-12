@@ -94,6 +94,6 @@ public class MetricsController(ILogger<MetricsController> logger) : ControllerBa
         metrics.AppendLine("# TYPE app_info gauge");
         metrics.AppendLine($"app_info{{version=\"{version}\",runtime=\"{RuntimeInformation.FrameworkDescription}\"}} 1");
 
-        return Content(metrics.ToString(), "text/plain");
+        return Content(metrics.ToString().ReplaceLineEndings("\n"), "text/plain; version=0.0.4; charset=utf-8");
     }
 }

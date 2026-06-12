@@ -30,20 +30,14 @@ public class TestingLabPermissionController : BaseApiController {
 
   /// <summary> Get all TestingLab role templates </summary>
   [HttpGet("role-templates")]
-  public async Task<ActionResult<List<RoleTemplate>>> GetRoleTemplates() {
-    // TEMPORARILY DISABLED: RoleTemplate methods commented out due to type conflicts
-    return BadRequest("RoleTemplate functionality temporarily disabled");
-    // var roleTemplates = await _permissionService.GetRoleTemplatesAsync();
-    // var testingLabRoles = roleTemplates
-    //   .Where(rt => rt.Name.StartsWith("TestingLab", StringComparison.OrdinalIgnoreCase))
-    //   .ToList();
-    // return Ok(testingLabRoles);
-  }  /// <summary> Create a new TestingLab role template </summary>
+  public async Task<ActionResult<List<TestingLabRoleTemplate>>> GetRoleTemplates() {
+    var roleTemplates = await _permissionService.GetRoleTemplatesAsync().ConfigureAwait(false);
+    return Ok(roleTemplates.Select(MapToTestingLabRoleTemplate).ToList());
+  }
+
+  /// <summary> Create a new TestingLab role template </summary>
   [HttpPost("role-templates")]
   public async Task<ActionResult<TestingLabRoleTemplate>> CreateTestingLabRoleTemplate([FromBody] CreateTestingLabRoleRequest request) {
-    // TEMPORARILY DISABLED: RoleTemplate methods commented out due to type conflicts
-    return BadRequest("RoleTemplate functionality temporarily disabled");
-    /*
     try {
       var permissionTemplates = BuildPermissionTemplates(request.Permissions);
 
@@ -58,23 +52,45 @@ public class TestingLabPermissionController : BaseApiController {
       _logger.LogWarning(ex, "Conflict while creating role template '{RoleName}'", request.Name);
       return Conflict("A conflict occurred while creating the role template.");
     }
-    */
   }
 
   /// <summary> Update an existing TestingLab role template </summary>
   [HttpPut("role-templates/{idOrName}")]
   public async Task<ActionResult<TestingLabRoleTemplate>> UpdateTestingLabRoleTemplate(string idOrName, [FromBody] UpdateTestingLabRoleRequest request) {
-    // PLANNED: Implement when GetRoleTemplateAsync and UpdateRoleTemplateAsync are available in IPermissionService
-    await Task.CompletedTask.ConfigureAwait(false); // Remove async warning
-    return StatusCode(501, "Method not implemented - missing service methods");
+    try {
+      var permissionTemplates = BuildPermissionTemplates(request.Permissions);
+      var template = await _permissionService.UpdateRoleTemplateAsync(idOrName, request.Name, request.Description, permissionTemplates).ConfigureAwait(false);
+
+      if (template == null) { return NotFound($"Role template '{idOrName}' not found"); }
+
+      _logger.LogInformation("Admin user {UserId} updated TestingLab role template '{RoleName}'", GetCurrentUserId(), template.Name);
+
+      return Ok(MapToTestingLabRoleTemplate(template));
+    }
+    catch (InvalidOperationException ex)
+    {
+      _logger.LogWarning(ex, "Conflict while updating role template '{RoleName}'", idOrName);
+      return Conflict("A conflict occurred while updating the role template.");
+    }
   }
 
   /// <summary> Delete a TestingLab role template </summary>
   [HttpDelete("role-templates/{idOrName}")]
   public async Task<ActionResult> DeleteTestingLabRoleTemplate(string idOrName) {
-    // PLANNED: Implement when DeleteRoleTemplateAsync is available in IPermissionService
-    await Task.CompletedTask.ConfigureAwait(false); // Remove async warning
-    return StatusCode(501, "Method not implemented - missing service methods");
+    try {
+      var deleted = await _permissionService.DeleteRoleTemplateAsync(idOrName).ConfigureAwait(false);
+
+      if (!deleted) { return NotFound($"Role template '{idOrName}' not found"); }
+
+      _logger.LogInformation("Admin user {UserId} deleted TestingLab role template '{RoleName}'", GetCurrentUserId(), idOrName);
+
+      return NoContent();
+    }
+    catch (InvalidOperationException ex)
+    {
+      _logger.LogWarning(ex, "Conflict while deleting role template '{RoleName}'", idOrName);
+      return Conflict("A conflict occurred while deleting the role template.");
+    }
   }
 
   /// <summary> Delete a TestingLab role template by name (legacy compatibility for clients that don't yet have Ids) </summary>
@@ -82,9 +98,7 @@ public class TestingLabPermissionController : BaseApiController {
   public async Task<ActionResult> DeleteTestingLabRoleTemplateByName(string name) {
     try {
       _logger.LogInformation("Attempting to delete TestingLab role template by name '{Name}'", name);
-      // PLANNED: Uncomment when DeleteRoleTemplateAsync is available in IPermissionService
-      // var deleted = await _permissionService.DeleteRoleTemplateAsync(name);
-      var deleted = false; // Temporary stub
+      var deleted = await _permissionService.DeleteRoleTemplateAsync(name).ConfigureAwait(false);
 
       if (!deleted) { return NotFound($"Role template with name '{name}' not found"); }
 

@@ -16,7 +16,14 @@ internal class CacheEndpoints : IEndpoint
 
         group.MapPost("/test", TestCacheOperations).WithName("TestCacheOperations").WithSummary("Test cache operations").WithDescription("Test basic cache set/get/delete operations");
 
-        group.MapDelete("/clear/{pattern}", ClearCacheByPattern).WithName("ClearCacheByPattern").WithSummary("Clear cache by pattern").WithDescription("Clear cache entries matching the specified pattern");
+        group.MapDelete(
+                "/clear/{pattern}",
+                (string pattern, [FromServices] ICacheService cacheService, CancellationToken cancellationToken) =>
+                    CacheEndpointHandlers.ClearCacheByPattern(pattern, cacheService, cancellationToken)
+            )
+            .WithName("ClearCacheByPattern")
+            .WithSummary("Clear cache by pattern")
+            .WithDescription("Clear cache entries matching the specified pattern");
 
         group.MapGet("/stats", GetCacheStats).WithName("GetCacheStats").WithSummary("Get cache statistics").WithDescription("Returns cache usage statistics");
     }
@@ -72,25 +79,6 @@ internal class CacheEndpoints : IEndpoint
         catch (InvalidOperationException ex) { return Results.BadRequest(new { Message = "Cache operations test failed", Error = ex.Message, Timestamp = DateTimeOffset.UtcNow }); }
     }
 
-    private static Task<IResult> ClearCacheByPattern(string pattern, [FromServices] ICacheService cacheService)
-    {
-        try
-        {
-            // PLANNED: Implement pattern-based cache clearing when ICacheService exposes
-            // a RemoveByPatternAsync(string pattern) method. Requires Redis SCAN support.
-            // For now, return a not implemented response since ICacheService doesn't support pattern removal
-            var result = Results.BadRequest(new { Message = "Pattern-based cache clearing is not implemented in the current cache service", Pattern = pattern, Timestamp = DateTimeOffset.UtcNow });
-
-            return Task.FromResult(result);
-        }
-        catch (InvalidOperationException ex)
-        {
-            var result = Results.BadRequest(new { Message = "Failed to clear cache", Pattern = pattern, Error = ex.Message, Timestamp = DateTimeOffset.UtcNow });
-
-            return Task.FromResult(result);
-        }
-    }
-
     private static Task<IResult> GetCacheStats()
     {
         // This is a simplified stats implementation
@@ -109,5 +97,78 @@ internal class CacheEndpoints : IEndpoint
         );
 
         return Task.FromResult(result);
+    }
+}
+
+/// <summary>
+///     Testable handlers for cache management endpoints.
+/// </summary>
+public static class CacheEndpointHandlers
+{
+    /// <summary>
+    ///     Clears cache entries matching the supplied wildcard pattern when the configured cache provider supports it.
+    /// </summary>
+    public static async Task<IResult> ClearCacheByPattern(string pattern, ICacheService cacheService, CancellationToken cancellationToken = default)
+    {
+        if (cacheService is not IPatternCacheService patternCacheService)
+            return Results.BadRequest(
+                new
+                {
+                    Message = "The configured cache service does not support pattern-based cache clearing.",
+                    Pattern = pattern,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }
+            );
+
+        try
+        {
+            var removedCount = await patternCacheService.RemoveByPatternAsync(pattern, cancellationToken).ConfigureAwait(false);
+
+            return Results.Ok(
+                new
+                {
+                    Message = "Cache entries cleared",
+                    Pattern = pattern,
+                    RemovedCount = removedCount,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }
+            );
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(
+                new
+                {
+                    Message = "Failed to clear cache",
+                    Pattern = pattern,
+                    Error = ex.Message,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }
+            );
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(
+                new
+                {
+                    Message = "Failed to clear cache",
+                    Pattern = pattern,
+                    Error = ex.Message,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }
+            );
+        }
+        catch (NotSupportedException ex)
+        {
+            return Results.BadRequest(
+                new
+                {
+                    Message = "Failed to clear cache",
+                    Pattern = pattern,
+                    Error = ex.Message,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }
+            );
+        }
     }
 }

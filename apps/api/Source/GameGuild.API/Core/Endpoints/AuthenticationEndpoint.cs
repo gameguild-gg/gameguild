@@ -61,10 +61,6 @@ public static class AuthenticationEndpoint
 
             logger.LogInformation("User signed up successfully: {Email}, Response.Email: {ResponseEmail}, Response.UserId: {UserId}", request.Email, response.Email, response.UserId);
 
-            // TEMPORARY DEBUG: Force email to see if it's a mapping issue
-            var debugEmail = response.Email;
-            logger.LogInformation("[DEBUG ENDPOINT] response.Email is '{ResponseEmail}', using '{DebugEmail}'", response.Email, debugEmail);
-
             // Map to the API's response DTO
             return Results.Created(
                 $"/users/{response.UserId}",
@@ -78,8 +74,8 @@ public static class AuthenticationEndpoint
                     User = new AuthUserDto
                     {
                         Id = response.UserId,
-                        Email = debugEmail, // Using debug email to test
-                        Username = request.Username ?? debugEmail.Split('@')[0]
+                        Email = response.Email,
+                        Username = request.Username ?? response.Email.Split('@')[0]
                     }
                 }
             );
@@ -135,7 +131,6 @@ public static class AuthenticationEndpoint
 
     private static Task<IResult> RefreshToken(RefreshTokenRequest request, IConfiguration configuration, ILogger<Program> logger)
     {
-        // This stub endpoint is deprecated — the real refresh endpoint is POST /v1/auth/tokens:refresh
         logger.LogWarning("Deprecated /auth/refresh endpoint called — use POST /v1/auth/tokens:refresh instead");
 
         return Task.FromResult(
@@ -149,20 +144,13 @@ public static class AuthenticationEndpoint
 
     private static Task<IResult> GoogleSignIn(GoogleSignInRequest request, ILogger<Program> logger)
     {
-        // Placeholder for Google OAuth implementation
-        logger.LogInformation("Google sign-in requested");
+        logger.LogWarning("Deprecated /auth/google endpoint called without OAuth provider wiring");
 
         return Task.FromResult(
-            Results.Ok(
-                new SignInResponseDto
-                {
-                    AccessToken = "google-access-token",
-                    RefreshToken = "google-refresh-token",
-                    AccessTokenExpiresAt = SystemClock.UtcNow.AddHours(1),
-                    RefreshTokenExpiresAt = SystemClock.UtcNow.AddDays(7),
-                    ExpiresAt = SystemClock.UtcNow.AddHours(1),
-                    User = new AuthUserDto { Id = Guid.NewGuid(), Email = "google-user@example.com", Username = "googleuser" }
-                }
+            Results.Problem(
+                detail: "Use POST /v1/auth/google instead.",
+                title: "Deprecated Endpoint",
+                statusCode: StatusCodes.Status410Gone
             )
         );
     }

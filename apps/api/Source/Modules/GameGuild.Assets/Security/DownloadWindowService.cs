@@ -90,7 +90,7 @@ public enum OrderStatus
 }
 
 /// <summary>
-/// Interface for order validation (to be implemented by Commerce module).
+/// Interface for order validation used by paid asset download windows.
 /// </summary>
 public interface IOrderValidationService
 {

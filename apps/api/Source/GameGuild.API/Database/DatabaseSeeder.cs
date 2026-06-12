@@ -34,7 +34,7 @@ public static class DatabaseSeeder
         }
         else
         {
-            logger?.LogWarning("RoleManager not registered - skipping role seeding");
+            logger?.LogInformation("RoleManager not registered - skipping legacy role seeding");
         }
 
         // Seed the application user that the live /auth/sign-in endpoint authenticates against.
@@ -48,7 +48,7 @@ public static class DatabaseSeeder
         }
         else
         {
-            logger?.LogWarning("UserManager not registered - skipping admin user seeding");
+            logger?.LogInformation("UserManager not registered - skipping legacy admin user seeding");
         }
     }
 

@@ -48,13 +48,12 @@ public class ContentResourceController(
     /// <summary>Get a content resource by slug.</summary>
     [HttpGet("by-slug/{slug}")]
     [AllowAnonymous]
-    public async Task<ActionResult<ContentResourceDto>> GetBySlug(string slug)
+    public async Task<ActionResult<ContentResourceDto>> GetBySlug(string slug, CancellationToken cancellationToken)
     {
-        var resource = await resourceService.GetBySlugAsync(slug).ConfigureAwait(false);
+        var resource = await resourceService.GetBySlugAsync(slug, cancellationToken).ConfigureAwait(false);
         if (resource is null) return NotFound();
 
-        // Fire-and-forget view count increment
-        _ = resourceService.IncrementViewCountAsync(resource.Id);
+        await resourceService.IncrementViewCountAsync(resource.Id, cancellationToken).ConfigureAwait(false);
 
         return Ok(resource.ToDto());
     }

@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using JamEntity = GameGuild.GameJams.Jam;
+using JamScoreEntity = GameGuild.GameJams.JamScore;
 
 namespace GameGuild.Projects;
 
@@ -22,7 +24,7 @@ public sealed class ProjectJamSubmission : EntityBase<Guid>
     public Guid? JamId { get; set; }
 
     /// <summary> Navigation property to jam </summary>
-    public Jam? Jam { get; set; }
+    public JamEntity? Jam { get; set; }
 
     /// <summary> Date when the project was submitted to the jam </summary>
     public DateTime SubmittedAt { get; set; } = SystemClock.UtcNow;
@@ -52,5 +54,5 @@ public sealed class ProjectJamSubmission : EntityBase<Guid>
     public string? Metadata { get; set; }
 
     /// <summary> Navigation property to jam scores </summary>
-    public ICollection<JamScore> Scores { get; set; } = new List<JamScore>();
+    public ICollection<JamScoreEntity> Scores { get; set; } = new List<JamScoreEntity>();
 }

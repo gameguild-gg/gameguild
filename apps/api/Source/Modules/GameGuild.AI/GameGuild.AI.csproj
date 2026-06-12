@@ -10,9 +10,6 @@
 
     <ItemGroup>
         <PackageReference Include="Asp.Versioning.Mvc" />
-        <PackageReference Include="Microsoft.AspNetCore.Authorization" />
-        <PackageReference Include="Microsoft.AspNetCore.Http" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" />
     </ItemGroup>
 
     <ItemGroup>

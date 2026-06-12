@@ -26,6 +26,7 @@ public class CostAllocationReportConfiguration : IEntityTypeConfiguration<CostAl
         builder.Property(x => x.TotalCost).HasColumnType("decimal(18,2)").IsRequired();
         builder.Property(x => x.AllocationTags).HasMaxLength(2000);
         builder.Property(x => x.CostCenter).HasMaxLength(200);
+        builder.Property(x => x.CostCenterValidationStatus).HasMaxLength(50);
         builder.Property(x => x.Project).HasMaxLength(200);
         builder.Property(x => x.Owner).HasMaxLength(200);
         builder.Property(x => x.IsExported).IsRequired();

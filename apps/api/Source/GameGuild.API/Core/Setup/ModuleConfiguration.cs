@@ -10,7 +10,41 @@ public sealed class ModuleConfiguration
     ///     Default enabled modules for the application.
     /// </summary>
     public static readonly string[] DefaultEnabledModules =
-        ["AI", "Assessments", "Authentication", "Authorization", "Billing", "Compliance.FERPA", "ContentPages", "Courses", "Features", "GameJams", "Learning.Enrollments", "Notifications", "Payments", "Products", "Resources", "Social.Blog", "Social.Feed", "Social.Groups", "Social.Profiles", "Social.Reactions", "Subscriptions", "Tags", "Tenants", "Users"];
+    [
+        "AI",
+        "Assessments",
+        "Authentication",
+        "Authorization",
+        "Billing",
+        "Compliance.FERPA",
+        "ContentPages",
+        "Courses",
+        "Features",
+        "GameJams",
+        "Learning.Certificates",
+        "Learning.Cohorts",
+        "Learning.Enrollments",
+        "Learning.Experience.Discovery",
+        "Learning.Experience.LearningPaths",
+        "Learning.Experience.Recommendations",
+        "Learning.Experience.Social",
+        "Notifications",
+        "Payments",
+        "Products",
+        "Projects",
+        "TestingLab",
+        "LaunchPad",
+        "Resources",
+        "Social.Blog",
+        "Social.Feed",
+        "Social.Groups",
+        "Social.Profiles",
+        "Social.Reactions",
+        "Subscriptions",
+        "Tags",
+        "Tenants",
+        "Users"
+    ];
 
     /// <summary>
     ///     Gets or sets the list of enabled module names.
@@ -32,4 +66,27 @@ public sealed class ModuleConfiguration
     /// </summary>
     public static readonly string[] HandlerTypeNames =
         ["ICommandHandler", "IQueryHandler", "IRequestHandler"];
+
+    /// <summary>
+    ///     Determines whether an assembly name belongs to one of the enabled modules.
+    ///     Module aliases may use compact names such as ContentPages while assemblies use
+    ///     dotted names such as GameGuild.Content.Pages.
+    /// </summary>
+    public bool IsEnabledAssembly(string? assemblyName)
+    {
+        if (string.IsNullOrWhiteSpace(assemblyName))
+        {
+            return false;
+        }
+
+        return EnabledModules.Any(module =>
+            assemblyName.EndsWith(module, StringComparison.OrdinalIgnoreCase) ||
+            NormalizeModuleName(assemblyName).EndsWith(NormalizeModuleName(module), StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string NormalizeModuleName(string value)
+        => value
+            .Replace(".", string.Empty, StringComparison.Ordinal)
+            .Replace("-", string.Empty, StringComparison.Ordinal)
+            .Replace("_", string.Empty, StringComparison.Ordinal);
 }

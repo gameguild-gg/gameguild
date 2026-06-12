@@ -54,6 +54,12 @@ public class CostAllocationReport : EntityBase
     public string? CostCenter { get; set; }
 
     /// <summary>
+    ///     Validation status returned by the configured cost-center validator.
+    /// </summary>
+    [MaxLength(50)]
+    public string? CostCenterValidationStatus { get; set; }
+
+    /// <summary>
     ///     Project or workload identifier
     /// </summary>
     [MaxLength(200)]
