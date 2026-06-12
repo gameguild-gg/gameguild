@@ -875,9 +875,10 @@ public sealed class LearningCoursesCoverageCompletionTests
 
         db.Programs.Add(program);
         db.Users.Add(new User { Id = userId, Email = "learner@example.test", Name = "Learner" });
+        var enrollmentId = Guid.NewGuid();
         db.ProgramUsers.Add(new ProgramUser
         {
-            Id = Guid.NewGuid(),
+            Id = enrollmentId,
             ProgramId = programId,
             UserId = userId,
             IsActive = true,
@@ -909,7 +910,11 @@ public sealed class LearningCoursesCoverageCompletionTests
         (await read.IsUserInProgramAsync(programId, userId)).Should().BeTrue();
         (await read.GetProgramUsersAsync(programId, 0, 5)).Should().ContainSingle();
         (await read.GetUserProgressAsync(programId, userId)).Should().Be(25);
-        (await read.GetUserProgressDtoAsync(programId, userId)).Should().NotBeNull();
+        var progressDto = await read.GetUserProgressDtoAsync(programId, userId);
+        progressDto.Should().NotBeNull();
+        progressDto!.EnrollmentId.Should().Be(enrollmentId);
+        progressDto.CourseId.Should().Be(programId);
+        progressDto.UserId.Should().Be(userId);
         (await read.GetUserInteractionsAsync(programId, Guid.NewGuid())).Should().BeEmpty();
         (await read.GetProgramCountAsync(ContentStatus.Published, ContentVisibility.Public)).Should().Be(1);
         (await read.GetUserCountForProgramAsync(programId)).Should().Be(1);
