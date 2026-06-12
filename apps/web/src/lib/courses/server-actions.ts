@@ -87,21 +87,10 @@ export async function submitActivity(
             };
         }
 
-        // The current learner viewer is still mock-backed and uses fake content ids.
-        // Keep that path functional until the viewer is wired to real course content.
         if (!data.courseId || !isUuid(data.activityId)) {
-            console.warn('[submitActivity] Falling back to mock submission path.', {
-                courseId: data.courseId,
-                activityId: data.activityId,
-            });
-
             return {
-                success: true,
-                message: 'Activity saved locally because this learning view is still using mock course content.',
-                submission: {
-                    id: data.activityId,
-                    status: 'mock-submitted',
-                },
+                success: false,
+                message: 'This activity is not backed by publishable course content yet.',
             };
         }
 
