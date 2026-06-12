@@ -31,14 +31,18 @@ export function ProfileHeader({
 }: ProfileHeaderProps) {
   return (
     <div className="relative h-80 md:h-96 overflow-hidden">
-      <Image
-        src={bannerUrl || '/placeholder.svg?height=384&width=1200'}
-        alt="Profile Cover"
-        className="w-full h-full object-cover"
-        width={1200}
-        height={384}
-        unoptimized={Boolean(bannerUrl)}
-      />
+      {bannerUrl ? (
+        <Image
+          src={bannerUrl}
+          alt="Profile Cover"
+          className="w-full h-full object-cover"
+          width={1200}
+          height={384}
+          unoptimized
+        />
+      ) : (
+        <div className="h-full w-full bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.35),transparent_34%),linear-gradient(135deg,#0f172a,#1e1b4b_55%,#0f172a)]" />
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20" />
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -112,6 +113,7 @@ const mockEnrolledCourses: EnrolledCourse[] = [
 ];
 
 export function BrowseOwnedCoursesPage() {
+  const router = useRouter();
   const [courses] = useState<EnrolledCourse[]>(mockEnrolledCourses);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -139,18 +141,17 @@ export function BrowseOwnedCoursesPage() {
   });
 
   const handleContinueCourse = (courseId: string) => {
-    console.log(`Continue course: ${courseId}`);
-    // TODO: Navigate to course content viewer
+    const course = courses.find((item) => item.id === courseId);
+    const nextLessonPath = course?.nextLesson ? `/${course.nextLesson.id}` : '';
+    router.push(`/learning/courses/${courseId}/content${nextLessonPath}`);
   };
 
   const handleStartCourse = (courseId: string) => {
-    console.log(`Start course: ${courseId}`);
-    // TODO: Navigate to course content viewer
+    router.push(`/learning/courses/${courseId}/content`);
   };
 
   const handleViewCertificate = (courseId: string) => {
-    console.log(`View certificate for course: ${courseId}`);
-    // TODO: Open certificate viewer
+    router.push(`/learning/certificates/${courseId}`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -286,13 +287,14 @@ export function BrowseOwnedCoursesPage() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open {course.title} menu</span>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => handleContinueCourse(course.id)}>Continue Course</DropdownMenuItem>
                       {course.certificateEarned && <DropdownMenuItem onClick={() => handleViewCertificate(course.id)}>View Certificate</DropdownMenuItem>}
-                      <DropdownMenuItem>Remove from Library</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/learning/library/${course.id}/remove`)}>Remove from Library</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -391,7 +393,7 @@ export function BrowseOwnedCoursesPage() {
             <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No courses found</h3>
             <p className="text-gray-400 mb-4">{searchQuery || statusFilter !== 'all' ? 'Try adjusting your search or filters' : "You haven't enrolled in any courses yet"}</p>
-            {!searchQuery && statusFilter === 'all' && <Button>Browse Course Catalog</Button>}
+            {!searchQuery && statusFilter === 'all' && <Button onClick={() => router.push('/learning/courses')}>Browse Course Catalog</Button>}
           </div>
         )}
       </div>

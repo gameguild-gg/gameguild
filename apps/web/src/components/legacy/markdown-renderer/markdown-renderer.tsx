@@ -152,7 +152,21 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
       if (className === 'markdown-activity') {
         const type = props['data-type'];
         if (type === 'quiz' || type === 'code') {
-          return <div className="p-4 border rounded-md">Activity: {type} (not implemented)</div>;
+          const title = type === 'quiz' ? 'Knowledge check' : 'Code activity';
+          const description =
+            type === 'quiz'
+              ? 'Review the prompt below and answer it before moving to the next lesson section.'
+              : 'Use the prompt below as the exercise brief for your local editor or lab environment.';
+
+          return (
+            <section className="my-5 rounded-lg border border-blue-500/30 bg-blue-950/30 p-4">
+              <div className="mb-3">
+                <p className="text-sm font-semibold uppercase tracking-wide text-blue-300">{title}</p>
+                <p className="text-sm text-slate-300">{description}</p>
+              </div>
+              <div className="prose prose-invert max-w-none">{children}</div>
+            </section>
+          );
         }
       }
       return (

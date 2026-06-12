@@ -2,17 +2,36 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Activity, BookOpen, CheckSquare, ChevronDown, ChevronRight, Copy, Edit, Eye, EyeOff, File, FileText, Folder, FolderOpen, GripVertical, HelpCircle, MoreHorizontal, Plus, Redo, Trash2, Undo, Video } from 'lucide-react';
 import { useState } from 'react';
+import { useCourseEditor } from '../../editor/context/course-editor-provider';
 
-// Stub types for disabled backend modules
-type CourseLesson = any;
-type CourseModule = any;
+type CourseLesson = {
+  id: string;
+  title: string;
+  description: string;
+  type: LessonFormData['type'];
+  visibility: LessonFormData['visibility'];
+  status: LessonFormData['status'];
+  isRequired: boolean;
+  duration: number;
+};
+
+type CourseModule = {
+  id: string;
+  title: string;
+  description: string;
+  visibility: ModuleFormData['visibility'];
+  status: ModuleFormData['status'];
+  estimatedDuration: number;
+  isExpanded?: boolean;
+  lessons: CourseLesson[];
+};
 
 // Content type icons
 const CONTENT_TYPE_ICONS = {
@@ -75,32 +94,18 @@ const defaultLessonData: LessonFormData = {
 };
 
 export function ContentStructureSection() {
-  // TODO: Implement content structure editing with proper state management
-  // Stub state and dispatch for now
-  const stubState = {
-    content: {
-      modules: [],
-      selectedItems: []
-    },
-    undoRedo: {
-      canUndo: false,
-      canRedo: false
-    }
-  };
-  const state = stubState as any;
-  const dispatch = (..._args: any[]) => {
-    console.log('Dispatch not implemented');
-  };
-
+  const { state, dispatch } = useCourseEditor();
   const [showModuleDialog, setShowModuleDialog] = useState(false);
   const [showLessonDialog, setShowLessonDialog] = useState(false);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
   const [moduleFormData, setModuleFormData] = useState<ModuleFormData>(defaultModuleData);
   const [lessonFormData, setLessonFormData] = useState<LessonFormData>(defaultLessonData);  // Handle adding a new module
-  const handleAddModule = () => {
+  const handleSaveModule = () => {
     if (!moduleFormData.title.trim()) return;
 
-    const newModule = {
+    const moduleData = {
       title: moduleFormData.title,
       description: moduleFormData.description,
       sortOrder: state.content.modules.length,
@@ -111,48 +116,67 @@ export function ContentStructureSection() {
       estimatedDuration: moduleFormData.estimatedDuration,
     };
 
-    dispatch({ type: 'ADD_MODULE', module: newModule });
+    if (editingModuleId) {
+      dispatch({ type: 'UPDATE_MODULE', moduleId: editingModuleId, updates: moduleData });
+    } else {
+      dispatch({ type: 'ADD_MODULE', module: { ...moduleData, lessons: [], submodules: [] } });
+    }
+
     setModuleFormData(defaultModuleData);
+    setEditingModuleId(null);
     setShowModuleDialog(false);
   };
 
   // Handle adding a new lesson
-  const handleAddLesson = () => {
+  const handleSaveLesson = () => {
     if (!lessonFormData.title.trim() || !selectedModuleId) return;
 
-    const newLesson = {
+    const lessonData = {
       title: lessonFormData.title,
       description: lessonFormData.description,
       type: lessonFormData.type,
-      content: {},
       duration: lessonFormData.duration,
-      sortOrder: 0, // Will be calculated in the reducer
       status: lessonFormData.status,
       visibility: lessonFormData.visibility,
       isRequired: lessonFormData.isRequired,
-      prerequisites: [],
-      completionCriteria: {
-        type: 'view' as const,
-      },
     };
 
-    dispatch({ type: 'ADD_LESSON', moduleId: selectedModuleId, lesson: newLesson });
+    if (editingLessonId) {
+      dispatch({ type: 'UPDATE_LESSON', lessonId: editingLessonId, updates: lessonData });
+    } else {
+      dispatch({ type: 'ADD_LESSON', moduleId: selectedModuleId, lesson: lessonData });
+    }
+
     setLessonFormData(defaultLessonData);
+    setEditingLessonId(null);
     setShowLessonDialog(false);
     setSelectedModuleId(null);
   };
 
   // Handle module actions
   const handleModuleAction = (moduleId: string, action: string) => {
+    const module = state.content.modules.find((m) => m.id === moduleId);
+
     switch (action) {
       case 'edit':
-        // TODO: Open edit module dialog
+        if (module) {
+          setEditingModuleId(moduleId);
+          setModuleFormData({
+            title: module.title,
+            description: module.description,
+            visibility: module.visibility,
+            status: module.status,
+            sortOrder: module.sortOrder,
+            estimatedDuration: module.estimatedDuration,
+          });
+          setShowModuleDialog(true);
+        }
         break;
       case 'delete':
         dispatch({ type: 'REMOVE_MODULE', moduleId });
         break;
       case 'duplicate':
-        // TODO: Implement module duplication
+        dispatch({ type: 'DUPLICATE_MODULE', moduleId });
         break;
       case 'toggle-visibility':
         dispatch({
@@ -171,9 +195,26 @@ export function ContentStructureSection() {
 
   // Handle lesson actions
   const handleLessonAction = (lessonId: string, action: string) => {
+    const owningModule = state.content.modules.find((module) => module.lessons.some((lesson) => lesson.id === lessonId));
+    const lesson = owningModule?.lessons.find((item) => item.id === lessonId);
+
     switch (action) {
       case 'edit':
-        // TODO: Open lesson editor
+        if (owningModule && lesson) {
+          setSelectedModuleId(owningModule.id);
+          setEditingLessonId(lessonId);
+          setLessonFormData({
+            title: lesson.title,
+            description: lesson.description,
+            type: lesson.type,
+            visibility: lesson.visibility,
+            status: lesson.status,
+            isRequired: lesson.isRequired,
+            duration: lesson.duration,
+            sortOrder: 0,
+          });
+          setShowLessonDialog(true);
+        }
         break;
       case 'delete':
         dispatch({ type: 'REMOVE_LESSON', lessonId });
@@ -182,7 +223,6 @@ export function ContentStructureSection() {
         dispatch({ type: 'DUPLICATE_LESSON', lessonId });
         break;
       case 'toggle-visibility':
-        const lesson = state.content.modules.flatMap((m: any) => m.lessons).find((l: any) => l.id === lessonId);
         if (lesson) {
           dispatch({
             type: 'UPDATE_LESSON',
@@ -197,7 +237,7 @@ export function ContentStructureSection() {
   };
 
   // Render lesson item
-  const renderLesson = (lesson: CourseLesson, moduleId: string) => {
+  const renderLesson = (lesson: CourseLesson) => {
     const IconComponent = CONTENT_TYPE_ICONS[lesson.type as keyof typeof CONTENT_TYPE_ICONS] || FileText;
     const colorClass = CONTENT_TYPE_COLORS[lesson.type as keyof typeof CONTENT_TYPE_COLORS] || 'text-slate-400';
 
@@ -373,7 +413,7 @@ export function ContentStructureSection() {
         {isExpanded && (
           <div className="p-4 pt-0 space-y-2 bg-muted/20">
             {module.lessons && module.lessons.length > 0 ? (
-              module.lessons.map((lesson: any) => renderLesson(lesson, module.id))
+              module.lessons.map((lesson: any) => renderLesson(lesson))
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -443,7 +483,8 @@ export function ContentStructureSection() {
       <Dialog open={showModuleDialog} onOpenChange={setShowModuleDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add New Module</DialogTitle>
+            <DialogTitle>{editingModuleId ? 'Edit Module' : 'Add New Module'}</DialogTitle>
+            <DialogDescription>Define the module name, visibility, status, and expected duration.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -495,11 +536,18 @@ export function ContentStructureSection() {
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setShowModuleDialog(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditingModuleId(null);
+                  setModuleFormData(defaultModuleData);
+                  setShowModuleDialog(false);
+                }}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleAddModule} disabled={!moduleFormData.title.trim()}>
-                Add Module
+              <Button onClick={handleSaveModule} disabled={!moduleFormData.title.trim()}>
+                {editingModuleId ? 'Save Module' : 'Add Module'}
               </Button>
             </div>
           </div>
@@ -510,7 +558,8 @@ export function ContentStructureSection() {
       <Dialog open={showLessonDialog} onOpenChange={setShowLessonDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add New Lesson</DialogTitle>
+            <DialogTitle>{editingLessonId ? 'Edit Lesson' : 'Add New Lesson'}</DialogTitle>
+            <DialogDescription>Define the lesson metadata students will see in the course outline.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -595,11 +644,19 @@ export function ContentStructureSection() {
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setShowLessonDialog(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditingLessonId(null);
+                  setSelectedModuleId(null);
+                  setLessonFormData(defaultLessonData);
+                  setShowLessonDialog(false);
+                }}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleAddLesson} disabled={!lessonFormData.title.trim()}>
-                Add Lesson
+              <Button onClick={handleSaveLesson} disabled={!lessonFormData.title.trim()}>
+                {editingLessonId ? 'Save Lesson' : 'Add Lesson'}
               </Button>
             </div>
           </div>

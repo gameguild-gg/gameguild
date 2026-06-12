@@ -3,21 +3,28 @@ import { type Instrumentation } from 'next';
 export const register = () => {};
 
 export const onRequestError: Instrumentation.onRequestError = async (error, request, context): Promise<void> => {
-  // Log the error details for debugging purposes
-  console.error('Request Error:', { error, request, context });
-  //
-  // TODO: add additional error handling logic here, such as sending the error to an external logging service.
-  // or notifying the development team.
-  // error: { digest: string } & Error,
-  // await fetch('https://.../report-error', {
-  //   method: 'POST',
-  //   body: JSON.stringify({
-  //     message: error.message,
-  //     request,
-  //     context,
-  //   }),
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //   },
-  // });
+  const telemetryEndpoint = process.env.TELEMETRY_ENDPOINT;
+  const normalizedError = error instanceof Error ? error : new Error(String(error));
+  const digest = typeof error === 'object' && error !== null && 'digest' in error ? String(error.digest) : undefined;
+
+  if (!telemetryEndpoint) {
+    console.error('Request Error:', { error: normalizedError, request, context });
+    return;
+  }
+
+  await fetch(telemetryEndpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      source: 'next.request',
+      message: normalizedError.message,
+      stack: normalizedError.stack,
+      digest,
+      request,
+      context,
+      timestamp: new Date().toISOString(),
+    }),
+  }).catch(() => {
+    console.error('Request Error:', { error: normalizedError, request, context });
+  });
 };

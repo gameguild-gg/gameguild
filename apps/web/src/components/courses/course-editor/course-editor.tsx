@@ -1,6 +1,7 @@
 'use client';
 
 import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
+import { createCourse, saveCourse } from '@/components/courses/editor/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, BookOpen, DollarSign, Eye, FileText, Image, Save, Settings } from 'lucide-react';
@@ -25,30 +26,51 @@ const SECTIONS = [
 ] as const;
 
 export function CourseEditor({ slug, isCreating = false }: CourseEditorProps) {
-  const { state } = useCourseEditor();
+  const { state, validate } = useCourseEditor();
   const [activeSection, setActiveSection] = useState<string>('general');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  const level: 'Beginner' | 'Intermediate' | 'Advanced' = state.difficulty >= 3 ? 'Advanced' : state.difficulty === 2 ? 'Intermediate' : 'Beginner';
 
   const handleSave = async () => {
-    // TODO: Add validation logic
+    const validation = validate();
+    setSaveMessage(null);
+
+    if (!validation.isValid) {
+      return;
+    }
 
     try {
-      // TODO: Implement API call to save course
-      console.log('Saving course:', state);
+      setIsSaving(true);
+      const payload = {
+        id: slug ?? state.slug,
+        title: state.title,
+        slug: state.slug,
+        description: state.description || state.summary,
+        area: state.category,
+        level,
+        status: state.status,
+        tags: state.tags,
+        tools: [],
+        isPublic: state.status === 'published',
+      };
 
-      // If creating, redirect to edit page with new slug
-      if (isCreating) {
-        // router.push(`/dashboard/courses/${state.slug}/edit`);
-      }
+      const result = isCreating ? await createCourse(payload) : await saveCourse(payload);
+
+      setSaveMessage(result ? `Course ${isCreating ? 'created' : 'saved'}.` : 'Course could not be saved.');
     } catch (error) {
       console.error('Failed to save course:', error);
-      // Show error toast
+      setSaveMessage('Course could not be saved.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handlePreview = () => {
-    // TODO: Open preview in new tab
-    if (slug) {
-      window.open(`/courses/${slug}`, '_blank');
+    const previewSlug = slug ?? state.slug;
+    if (previewSlug) {
+      window.open(`/courses/${previewSlug}`, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -88,9 +110,9 @@ export function CourseEditor({ slug, isCreating = false }: CourseEditorProps) {
                 Preview
               </Button>
 
-              <Button onClick={handleSave} className="bg-gradient-to-r from-primary to-chart-2 hover:from-primary/90 hover:to-chart-2/90">
+              <Button onClick={handleSave} disabled={isSaving} className="bg-gradient-to-r from-primary to-chart-2 hover:from-primary/90 hover:to-chart-2/90">
                 <Save className="h-4 w-4 mr-2" />
-                {isCreating ? 'Create Course' : 'Save Changes'}
+                {isSaving ? 'Saving...' : isCreating ? 'Create Course' : 'Save Changes'}
               </Button>
             </div>
           </div>
@@ -108,6 +130,21 @@ export function CourseEditor({ slug, isCreating = false }: CourseEditorProps) {
                 <CardTitle className="flex items-center gap-2">📝 General Details</CardTitle>
               </CardHeader>
               <CardContent>
+                {Object.keys(state.errors).length > 0 && (
+                  <div role="alert" className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                    <p className="font-medium">Fix course details before saving.</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5">
+                      {Object.entries(state.errors).map(([field, error]) => (
+                        <li key={field}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {saveMessage && (
+                  <div role="status" className="mb-4 rounded-md border border-border bg-muted p-3 text-sm text-foreground">
+                    {saveMessage}
+                  </div>
+                )}
                 <GeneralDetailsSection />
               </CardContent>
             </Card>
@@ -145,48 +182,43 @@ export function CourseEditor({ slug, isCreating = false }: CourseEditorProps) {
               </CardContent>
             </Card>
 
-            {/* Course Preview - TODO: Implement preview with proper state management */}
-            {false && (
-              <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">👁️ Preview</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                    <div className="text-muted-foreground text-sm">No thumbnail</div>
-                  </div>
+            <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">Preview</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="aspect-video overflow-hidden rounded-lg bg-muted">
+                  {state.media.thumbnail?.url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={state.media.thumbnail.url} alt={state.media.thumbnail.alt || state.title || 'Course thumbnail'} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No thumbnail</div>
+                  )}
+                </div>
 
-                  <div>
-                    <h3 className="font-semibold text-foreground line-clamp-2">Untitled Course</h3>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">No summary provided</p>
-                  </div>
+                <div>
+                  <h3 className="line-clamp-2 font-semibold text-foreground">{state.title || 'Untitled Course'}</h3>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{state.summary || 'No summary provided'}</p>
+                </div>
 
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      0h • No category
-                    </span>
-                    <div className="flex gap-1">
-                      {Array.from({ length: 1 }, (_, i) => (
-                        <div key={i} className="w-2 h-2 bg-primary rounded-full" />
-                      ))}
-                      {Array.from({ length: 3 }, (_, i) => (
-                        <div key={i} className="w-2 h-2 bg-muted rounded-full" />
-                      ))}
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {state.estimatedHours}h - {state.category || 'No category'}
+                  </span>
+                  <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">{level}</span>
+                </div>
 
+                {state.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {[].map((tag: string) => (
-                      <span key={tag} className="px-2 py-1 bg-muted text-xs rounded">
+                    {state.tags.map((tag) => (
+                      <span key={tag} className="rounded bg-muted px-2 py-1 text-xs">
                         {tag}
                       </span>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Validation Errors - TODO: Implement validation */}
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

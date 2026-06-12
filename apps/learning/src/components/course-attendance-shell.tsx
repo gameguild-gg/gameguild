@@ -232,7 +232,7 @@ export function CourseAttendanceShell({ course }: { course: CourseAttendanceData
                                 <MarkdownRenderer content={contentMarkdown} />
                             ) : (
                                 <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/60 p-6 text-sm text-slate-300">
-                                    This content item does not have a markdown body yet. Interactive submission and assessment handling will move into this app in the next phase.
+                                    This content item has no authored body yet. Use the course outline, assessment status, and progress actions while the instructor finishes the lesson material.
                                 </div>
                             )
                         ) : (

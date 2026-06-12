@@ -3,12 +3,27 @@
 import {Button} from '@game-guild/ui/components/button';
 import React from 'react';
 
-export const NotFound = (): React.JSX.Element => {
-    const reload: VoidFunction = (): void => {
-        window.location.reload();
+export interface NotFoundProps {
+    homeHref?: string;
+    supportHref?: string;
+}
+
+export const NotFound = ({homeHref = '/', supportHref = 'mailto:support@gameguild.gg'}: NotFoundProps): React.JSX.Element => {
+    const goHome: VoidFunction = (): void => {
+        window.location.assign(homeHref);
     };
 
-    const reportError: VoidFunction = (): void => {
+    const goBack: VoidFunction = (): void => {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+
+        window.location.assign(homeHref);
+    };
+
+    const contactSupport: VoidFunction = (): void => {
+        window.location.assign(supportHref);
     };
 
     return (
@@ -18,17 +33,16 @@ export const NotFound = (): React.JSX.Element => {
                 <p className="text-lg">The page you are looking for does not exist or has been moved.</p>
             </div>
             <div>
-                {/* TODO: Add a search component here.*/}
-                <p>Try searching for what you need or return to the homepage.</p>
+                <p>Check the address, use site navigation, or return to the homepage.</p>
             </div>
             <div>
                 <div>
-                    <Button onClick={reload}>Go Home </Button>
-                    <Button onClick={reload}>Go Back</Button>
+                    <Button onClick={goHome}>Go Home</Button>
+                    <Button onClick={goBack}>Go Back</Button>
                 </div>
                 <div>
                     <p>If you believe this is an error, please contact support or try again later.</p>
-                    <Button onClick={reportError}>Contact Support</Button>
+                    <Button onClick={contactSupport}>Contact Support</Button>
                     <p>Thank you for your patience!</p>
                 </div>
             </div>

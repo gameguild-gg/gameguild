@@ -14,6 +14,7 @@ export interface MarkdownRendererProps {
 
 type MarkdownDivProps = React.HTMLAttributes<HTMLDivElement> & {
     'data-title'?: string;
+    'data-type'?: string;
 };
 
 export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
@@ -103,7 +104,18 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
                         }
 
                         if (className === 'markdown-activity') {
-                            return <div className="my-4 rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300">Interactive activity placeholders will move here in the next phase.</div>;
+                            const activityType = props['data-type'] === 'code' ? 'code' : 'quiz';
+                            const label = activityType === 'code' ? 'Code activity' : 'Knowledge check';
+                            const tone = activityType === 'code'
+                                ? 'border-violet-500/40 bg-violet-500/10'
+                                : 'border-emerald-500/40 bg-emerald-500/10';
+
+                            return (
+                                <div className={`my-4 rounded-xl border p-4 text-sm text-slate-100 ${tone}`}>
+                                    <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">{label}</div>
+                                    <div className="whitespace-pre-wrap leading-6 text-slate-100">{children}</div>
+                                </div>
+                            );
                         }
 
                         return (

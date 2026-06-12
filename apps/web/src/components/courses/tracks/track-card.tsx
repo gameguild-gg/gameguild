@@ -101,7 +101,13 @@ export function TrackCard({ track, onClick }: TrackCardProps) {
             {getLevelBadge(String(track.level))}
           </div>
           <div className="relative w-full h-48 mb-4">
-            <Image src={typeof track.image === 'string' ? track.image : '/placeholder.svg'} alt={track.title} fill className="object-cover rounded-lg" />
+            {typeof track.image === 'string' && track.image.length > 0 ? (
+              <Image src={track.image} alt={track.title} fill className="object-cover rounded-lg" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center rounded-lg bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.35),transparent_32%),linear-gradient(135deg,#111827,#312e81_55%,#0f172a)] px-5 text-center">
+                <span className="text-sm font-semibold uppercase tracking-wide text-white/75">{track.title}</span>
+              </div>
+            )}
           </div>
           <CardTitle className={`text-xl font-semibold ${areaColorClass}`}>{track.title}</CardTitle>
         </CardHeader>

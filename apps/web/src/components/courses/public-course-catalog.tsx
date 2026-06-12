@@ -72,7 +72,7 @@ function PublicCourseGrid({ courses }: { courses: Program[] }) {
                 const courseTitle = typeof course.title === 'string' && course.title.length > 0 ? course.title : 'Untitled course';
                 const courseSlug = typeof course.slug === 'string' && course.slug.length > 0 ? course.slug : null;
                 const courseDescription = typeof course.description === 'string' ? course.description : '';
-                const courseImage = typeof course.thumbnail === 'string' && course.thumbnail.length > 0 ? course.thumbnail : '/placeholder.svg';
+                const courseImage = typeof course.thumbnail === 'string' && course.thumbnail.length > 0 ? course.thumbnail : null;
                 const categoryName = getCourseCategoryName(course.category as string | number | null | undefined);
                 const levelConfig = getCourseLevelConfig(course.difficulty as string | number | null | undefined);
                 const currentEnrollments = typeof course.currentEnrollments === 'number' ? course.currentEnrollments : 0;
@@ -83,7 +83,13 @@ function PublicCourseGrid({ courses }: { courses: Program[] }) {
                 return (
                     <article key={course.id ?? courseSlug ?? index} className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/80 shadow-lg shadow-slate-950/40 transition-transform hover:-translate-y-1 hover:border-slate-500">
                         <div className="relative aspect-video overflow-hidden bg-slate-800">
-                            <Image src={courseImage} alt={courseTitle} fill className="object-cover" />
+                            {courseImage ? (
+                                <Image src={courseImage} alt={courseTitle} fill className="object-cover" />
+                            ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_18%_18%,rgba(56,189,248,0.35),transparent_32%),linear-gradient(135deg,#0f172a,#1e1b4b_55%,#020617)] px-6 text-center">
+                                    <span className="text-sm font-semibold uppercase tracking-wide text-white/75">{courseTitle}</span>
+                                </div>
+                            )}
                             <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/30 to-transparent" />
                             <div className="absolute left-4 top-4 flex flex-wrap gap-2">
                                 <Badge className={`${levelConfig.bgColor} ${levelConfig.color} border`}>{levelConfig.name}</Badge>
