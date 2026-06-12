@@ -233,18 +233,17 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
     console.log('View certificate requested');
   };
 
-  const handleReportContent = async (reason: string, description: string) => {
+  const handleReportContent = async (contentId: string, reason: string, description: string) => {
     try {
       if (!currentItem) return;
 
       const report = await ContentReportService.createReport({
-        contentId: currentItem.id,
+        contentId,
         contentTitle: currentItem.title,
         contentType: currentItem.type || 'content',
         reportType: reason,
         reason,
         description,
-        userId: 'current-user', // TODO: Get from auth context
       });
 
       console.log('Content reported successfully:', report);

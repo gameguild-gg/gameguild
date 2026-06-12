@@ -1,8 +1,18 @@
 'use server';
 
-import { Course } from '@/lib/courses';
+import { getToken } from '@/auth';
+import {
+  createServerClient,
+  GeneratedApi,
+  type LearningCoursesCreateProgram,
+  type LearningCoursesProgram,
+  type ProgramCategory,
+  type LearningCoursesUpdateProgram,
+} from '@game-guild/client';
+import { revalidatePath } from 'next/cache';
 
-// Extended Course type for editor actions with additional properties
+import type { Course } from '@/lib/courses';
+
 interface EditorCourse extends Partial<Course> {
   id: string;
   title: string;
@@ -14,136 +24,177 @@ interface EditorCourse extends Partial<Course> {
   status?: string;
   tools?: string[];
   tags?: string[];
-  instructors?: any[];
+  instructors?: unknown[];
   isPublic?: boolean;
   isFeatured?: boolean;
-  content?: any;
+  content?: unknown;
   createdAt?: string;
   updatedAt?: string;
 }
 
-/**
- * Get course by slug server action
- *
- * @param slug - The course slug to search for
- * @returns Promise<EditorCourse | null> - The course if found, null otherwise
- */
+const DEFAULT_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+
+function getApiClient() {
+  return createServerClient({
+    baseUrl: DEFAULT_API_URL.replace(/\/$/, ''),
+    auth: { getAccessToken: () => getToken() },
+  });
+}
+
+function createCourseModules() {
+  const client = getApiClient();
+
+  return {
+    programs: new GeneratedApi.LearningCoursesProgramModule(client),
+    lifecycle: new GeneratedApi.LearningCoursesProgramlifecycleModule(client),
+  };
+}
+
+function normalizeSlug(slug: string): string {
+  const normalizedSlug = slug.trim().toLowerCase();
+  if (!normalizedSlug) {
+    throw new Error('Empty slug provided');
+  }
+
+  return normalizedSlug;
+}
+
+function normalizeLevel(value: unknown): EditorCourse['level'] {
+  if (value === 2 || value === '2') return 'Advanced';
+  if (value === 1 || value === '1') return 'Intermediate';
+
+  const text = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  if (text === 'advanced' || text === 'expert') return 'Advanced';
+  if (text === 'intermediate') return 'Intermediate';
+  return 'Beginner';
+}
+
+function toVisibility(isPublic: boolean | undefined, status: string | undefined): LearningCoursesUpdateProgram['visibility'] {
+  if (isPublic === false) return 'Private';
+  if (isPublic === true) return 'Public';
+  return status?.toLowerCase() === 'published' ? 'Public' : undefined;
+}
+
+function joinList(values: string[] | undefined): string | undefined {
+  return values && values.length > 0 ? values.join(', ') : undefined;
+}
+
+function toProgramCategory(value: string | undefined): ProgramCategory | undefined {
+  const normalized = value?.replace(/[^a-zA-Z]/g, '').toLowerCase();
+  switch (normalized) {
+    case 'programming':
+      return 'Programming';
+    case 'datascience':
+      return 'DataScience';
+    case 'webdevelopment':
+      return 'WebDevelopment';
+    case 'mobiledevelopment':
+      return 'MobileDevelopment';
+    case 'gamedevelopment':
+      return 'GameDevelopment';
+    case 'ai':
+      return 'AI';
+    case 'cybersecurity':
+      return 'Cybersecurity';
+    case 'devops':
+      return 'DevOps';
+    case 'database':
+      return 'Database';
+    case 'business':
+      return 'Business';
+    case 'design':
+      return 'Design';
+    case 'marketing':
+      return 'Marketing';
+    case 'projectmanagement':
+      return 'ProjectManagement';
+    case 'personaldevelopment':
+      return 'PersonalDevelopment';
+    case 'creativearts':
+      return 'CreativeArts';
+    case 'science':
+      return 'Science';
+    case 'language':
+      return 'Language';
+    case 'other':
+      return 'Other';
+    default:
+      return value ? 'General' : undefined;
+  }
+}
+
+function mapCourse(program: LearningCoursesProgram): EditorCourse {
+  const visibility = typeof program.visibility === 'string' ? program.visibility.toLowerCase() : '';
+
+  return {
+    id: program.id ?? '',
+    title: program.title ?? '',
+    slug: program.slug ?? '',
+    description: program.description ?? '',
+    area: typeof program.category === 'string' ? program.category : undefined,
+    level: normalizeLevel(program.difficulty),
+    status: typeof program.status === 'string' ? program.status : undefined,
+    isPublic: visibility === 'public',
+    isFeatured: false,
+    tools: typeof program.skillsRequired === 'string'
+      ? program.skillsRequired.split(',').map((tool) => tool.trim()).filter(Boolean)
+      : [],
+    tags: typeof program.skillsProvided === 'string'
+      ? program.skillsProvided.split(',').map((tag) => tag.trim()).filter(Boolean)
+      : [],
+    instructors: [],
+    createdAt: typeof program.createdAt === 'string' ? program.createdAt : undefined,
+    updatedAt: typeof program.updatedAt === 'string' ? program.updatedAt : undefined,
+    content: {
+      chapters: [],
+      syllabus: '',
+      prerequisites: typeof program.skillsRequired === 'string' ? program.skillsRequired.split(',').map((item) => item.trim()).filter(Boolean) : [],
+      objectives: typeof program.skillsProvided === 'string' ? program.skillsProvided.split(',').map((item) => item.trim()).filter(Boolean) : [],
+      totalDuration: program.estimatedHours ? program.estimatedHours * 60 : 0,
+      totalLessons: 0,
+    },
+  };
+}
+
+function toUpdateCourse(course: EditorCourse): LearningCoursesUpdateProgram {
+  return {
+    title: course.title.trim(),
+    slug: course.slug.trim(),
+    description: course.description.trim(),
+    difficulty: course.level,
+    category: toProgramCategory(course.area),
+    visibility: toVisibility(course.isPublic, course.status),
+    skillsProvided: joinList(course.tags),
+    skillsRequired: joinList(course.tools),
+  };
+}
 
 export async function getCourseBySlug(slug: string): Promise<EditorCourse | null> {
   try {
-    // Validate input
     if (!slug) throw new Error('Invalid slug provided');
 
-    // Normalize slug (trim whitespace, convert to lowercase)
-    const normalizedSlug = slug.trim().toLowerCase();
+    const { programs } = createCourseModules();
+    const result = await programs.getCoursesSlug(normalizeSlug(slug));
 
-    if (!normalizedSlug) {
-      throw new Error('Empty slug provided');
-    }
-
-    // TODO: Replace with actual database query
-    // This is a placeholder implementation
-    // In a real implementation, you would:
-    // 1. Query your database for a course with the given slug
-    // 2. Transform the database result to match EnhancedCourse interface
-    // 3. Handle any database errors appropriately
-
-    console.log(`[getCourseBySlug] Fetching course with slug: ${normalizedSlug}`);
-
-    // Mock implementation - replace with actual database query
-    const mockCourse: EditorCourse = {
-      id: 'mock-course-id',
-      title: `Course for slug: ${normalizedSlug}`,
-      slug: normalizedSlug,
-      description: 'This is a mock course description for testing purposes.',
-      area: 'programming',
-      level: 'Beginner',
-      difficulty: 1,
-      status: 'published',
-      tools: ['React', 'TypeScript'],
-      tags: ['web-development', 'frontend'],
-      instructors: [],
-      isPublic: true,
-      isFeatured: false,
-      content: {
-        chapters: [
-          {
-            id: 'mock-chapter-1',
-            title: 'Introduction',
-            description: 'Getting started with the course',
-            order: 1,
-            lessons: [
-              {
-                id: 'mock-lesson-1',
-                title: 'Welcome',
-                description: 'Course overview and objectives',
-                order: 1,
-                type: 'video',
-                content: 'Mock lesson content',
-                duration: 300, // 5 minutes
-                isCompleted: false,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              },
-            ],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-        ],
-        syllabus: 'Course syllabus content',
-        prerequisites: ['Basic programming knowledge'],
-        objectives: ['Learn the fundamentals', 'Build practical projects'],
-        totalDuration: 300,
-        totalLessons: 1,
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    return mockCourse;
+    return result.ok ? mapCourse(result.data) : null;
   } catch (error) {
     console.error('[getCourseBySlug] Error:', error);
-
-    // In a real implementation, you might want to handle different types of errors differently
-    // For now, we'll return null for any error
     return null;
   }
 }
 
-/**
- * Save course server action
- *
- * @param course - The course to save
- * @returns Promise<boolean> - Success status
- */
 export async function saveCourse(course: EditorCourse): Promise<boolean> {
   try {
-    // Validate input
-    if (!course || typeof course !== 'object') {
-      throw new Error('Invalid course provided');
-    }
+    if (!course || typeof course !== 'object') throw new Error('Invalid course provided');
+    if (!course.id) throw new Error('Course ID is required');
 
-    if (!course.id) {
-      throw new Error('Course ID is required');
-    }
+    const { programs } = createCourseModules();
+    const result = await programs.putCourses(course.id, toUpdateCourse(course));
 
-    console.log(`[saveCourse] Saving course: ${course.id} - ${course.title}`);
+    if (!result.ok) return false;
 
-    // TODO: Replace with actual database save operation
-    // In a real implementation, you would:
-    // 1. Validate the course data
-    // 2. Update the course in your database
-    // 3. Handle any database errors appropriately
-    // 4. Return success/failure status
-
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    // Mock successful save
-    console.log(`[saveCourse] Successfully saved course: ${course.id}`);
+    revalidatePath(`/dashboard/learning/courses/${course.id}`);
+    revalidatePath('/dashboard/learning/courses');
     return true;
   } catch (error) {
     console.error('[saveCourse] Error:', error);
@@ -151,112 +202,48 @@ export async function saveCourse(course: EditorCourse): Promise<boolean> {
   }
 }
 
-/**
- * Auto-save course server action (lightweight save for frequent updates)
- *
- * @param course - The course to auto-save
- * @returns Promise<boolean> - Success status
- */
 export async function autoSaveCourse(course: EditorCourse): Promise<boolean> {
-  try {
-    if (!course || !course.id) {
-      return false;
-    }
-
-    console.log(`[autoSaveCourse] Auto-saving course: ${course.id}`);
-
-    // TODO: Replace with actual auto-save implementation
-    // Auto-save might be different from regular save:
-    // 1. Might save to a different table/collection
-    // 2. Might only save specific fields
-    // 3. Might have different validation rules
-
-    // Simulate faster network delay for auto-save
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    return true;
-  } catch (error) {
-    console.error('[autoSaveCourse] Error:', error);
-    return false;
-  }
+  return saveCourse(course);
 }
 
-/**
- * Create new course server action
- *
- * @param courseData - Initial course data
- * @returns Promise<EditorCourse | null> - The created course or null if failed
- */
 export async function createCourse(courseData: Partial<EditorCourse>): Promise<EditorCourse | null> {
   try {
-    console.log('[createCourse] Creating new course');
+    const title = courseData.title?.trim();
+    const slug = courseData.slug?.trim();
 
-    // TODO: Replace with actual course creation
-    // 1. Validate required fields
-    // 2. Generate slug from title
-    // 3. Insert into database
-    // 4. Return the created course
+    if (!title || title.length < 3) throw new Error('Title must be at least 3 characters');
+    if (!slug) throw new Error('Slug is required');
 
-    const newCourse: EditorCourse = {
-      id: `course-${Date.now()}`,
-      title: courseData.title || 'New Course',
-      slug: courseData.slug || 'new-course',
-      description: courseData.description || '',
-      area: courseData.area || 'programming',
-      level: courseData.level || 'Beginner',
-      difficulty: courseData.difficulty || 1,
-      status: 'draft',
-      tools: courseData.tools || [],
-      tags: courseData.tags || [],
-      instructors: courseData.instructors || [],
-      isPublic: false,
-      isFeatured: false,
-      content: {
-        chapters: [],
-        syllabus: '',
-        prerequisites: [],
-        objectives: [],
-        totalDuration: 0,
-        totalLessons: 0,
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const body: LearningCoursesCreateProgram = {
+      title,
+      slug,
+      description: courseData.description?.trim() ?? '',
     };
 
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const { programs } = createCourseModules();
+    const result = await programs.postCourses(body);
 
-    console.log(`[createCourse] Successfully created course: ${newCourse.id}`);
-    return newCourse;
+    if (!result.ok) return null;
+
+    revalidatePath('/dashboard/learning/courses');
+    return mapCourse(result.data);
   } catch (error) {
     console.error('[createCourse] Error:', error);
     return null;
   }
 }
 
-/**
- * Publish course server action
- *
- * @param courseId - The course ID to publish
- * @returns Promise<boolean> - Success status
- */
 export async function publishCourse(courseId: string): Promise<boolean> {
   try {
-    if (!courseId) {
-      throw new Error('Course ID is required');
-    }
+    if (!courseId) throw new Error('Course ID is required');
 
-    console.log(`[publishCourse] Publishing course: ${courseId}`);
+    const { lifecycle } = createCourseModules();
+    const result = await lifecycle.postCoursesPublish(courseId);
 
-    // TODO: Replace with actual publish logic
-    // 1. Validate course is ready for publishing
-    // 2. Update course status to 'published'
-    // 3. Handle any publishing workflows
+    if (!result.ok) return false;
 
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    console.log(`[publishCourse] Successfully published course: ${courseId}`);
+    revalidatePath(`/dashboard/learning/courses/${courseId}`);
+    revalidatePath('/dashboard/learning/courses');
     return true;
   } catch (error) {
     console.error('[publishCourse] Error:', error);
