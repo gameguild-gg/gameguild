@@ -2,6 +2,7 @@
 
 import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Play, Upload, X } from 'lucide-react';
 import React, { useRef } from 'react';
@@ -50,11 +51,33 @@ export function ThumbnailMediaSection() {
     }
   };
 
+  const handleThumbnailUrlChange = (value: string) => {
+    setThumbnail(value.trim() ? { url: value, alt: state.title ? `Thumbnail for ${state.title}` : 'Course thumbnail' } : undefined);
+  };
+
+  const handleVideoUrlChange = (value: string) => {
+    setShowcaseVideo(value.trim() ? { url: value, platform: 'hosted-url' } : undefined);
+  };
+
   return (
     <div className="space-y-6">
       {/* Thumbnail Section */}
       <div className="space-y-4">
         <Label className="text-sm font-medium">Course Thumbnail</Label>
+
+        <div className="space-y-2">
+          <Label htmlFor="thumbnailUrl" className="text-sm">
+            Hosted image URL
+          </Label>
+          <Input
+            id="thumbnailUrl"
+            type="url"
+            value={state.media.thumbnail?.file ? '' : state.media.thumbnail?.url ?? ''}
+            onChange={(event) => handleThumbnailUrlChange(event.target.value)}
+            placeholder="https://example.com/course-cover.jpg"
+          />
+          <p className="text-xs text-muted-foreground">Use a durable hosted image URL for public course landing pages. File upload preview is still available for local drafting.</p>
+        </div>
 
         {state.media.thumbnail ? (
           <div className="relative">
@@ -91,6 +114,20 @@ export function ThumbnailMediaSection() {
       {/* Video Section */}
       <div className="space-y-4">
         <Label className="text-sm font-medium">Showcase Video (Optional)</Label>
+
+        <div className="space-y-2">
+          <Label htmlFor="showcaseVideoUrl" className="text-sm">
+            Hosted video URL
+          </Label>
+          <Input
+            id="showcaseVideoUrl"
+            type="url"
+            value={state.media.showcaseVideo?.platform === 'direct' ? '' : state.media.showcaseVideo?.url ?? ''}
+            onChange={(event) => handleVideoUrlChange(event.target.value)}
+            placeholder="https://youtube.com/watch?v=..."
+          />
+          <p className="text-xs text-muted-foreground">Paste a YouTube, Vimeo, or hosted MP4 URL to persist the public promo video.</p>
+        </div>
 
         {state.media.showcaseVideo ? (
           <div className="relative">

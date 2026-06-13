@@ -1,64 +1,171 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Program } from '@/lib/api/generated';
+import { Link } from '@/i18n/navigation';
+import type { Program } from '@/lib/api/generated';
+import type { CourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
 import { getCourseCategoryName, getCourseLevelConfig } from '@/lib/courses/services/course.service';
-import { ArrowLeft } from 'lucide-react';
+import { getCourseShowcase, getProgramForCourse } from '@/lib/courses/public-programs';
+import { ArrowLeft, ArrowRight, BookOpen, Clock, Layers3, Play, Users } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { CourseSelfEnrollButton } from './course-self-enroll-button';
 
 interface CourseHeaderProps {
   readonly course: Program;
+  readonly viewerAccess?: CourseViewerAccess;
 }
 
-export function CourseHeader({ course }: CourseHeaderProps) {
+function getPrimaryCta(
+  courseSlug: string | null,
+  isEnrollmentOpen: boolean | null | undefined,
+  viewerAccess?: CourseViewerAccess,
+): { label: string; href?: string; kind: 'link' | 'enroll' | 'disabled' } {
+  if (viewerAccess?.state === 'has-access' && courseSlug) {
+    return { label: 'Continue learning', href: `/courses/${courseSlug}/content`, kind: 'link' };
+  }
+
+  if (viewerAccess?.state === 'no-access' && isEnrollmentOpen && courseSlug) {
+    return { label: 'Enroll now', kind: 'enroll' };
+  }
+
+  if (viewerAccess?.state === 'unavailable') {
+    return { label: 'Access temporarily unavailable', kind: 'disabled' };
+  }
+
+  return { label: 'Sign in to enroll', href: '/sign-in', kind: 'link' };
+}
+
+export function CourseHeader({ course, viewerAccess }: CourseHeaderProps) {
   const thumbnailSrc = typeof course.thumbnail === 'string' && course.thumbnail.length > 0 ? course.thumbnail : null;
   const courseTitle = typeof course.title === 'string' && course.title.length > 0 ? course.title : 'Course';
+  const courseSlug = typeof course.slug === 'string' && course.slug.length > 0 ? course.slug : null;
   const courseDescription = typeof course.description === 'string' ? course.description : '';
-  const { name: levelName, color: levelColor } = getCourseLevelConfig(course.difficulty as string | number | null | undefined);
+  const { name: levelName } = getCourseLevelConfig(course.difficulty as string | number | null | undefined);
   const categoryName = getCourseCategoryName(course.category as string | number | null | undefined);
+  const program = getProgramForCourse(courseSlug);
+  const showcase = getCourseShowcase(courseSlug);
+  const heroImage = thumbnailSrc || program?.image;
+  const isEnrollmentOpen = course.isEnrollmentOpen === true;
+  const primaryCta = getPrimaryCta(courseSlug, isEnrollmentOpen, viewerAccess);
 
   return (
-    <>
-      {/* Navigation */}
-      <div className="border-b border-gray-800">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-2 text-sm">
-            <Button asChild variant="ghost" className="text-gray-300 hover:text-white p-0">
-              <Link href="/courses">Courses</Link>
-            </Button>
-            <span className="text-gray-500">/</span>
-            <span className="text-gray-400">{courseTitle}</span>
-          </div>
-          <Button asChild variant="ghost" className="text-gray-300 hover:text-white mt-2">
-            <Link href="/courses">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Course Catalog
-            </Link>
-          </Button>
-        </div>
+    <section className="relative min-h-[780px] overflow-hidden border-b border-white/10">
+      <div className="absolute inset-0">
+        {heroImage ? (
+          <Image
+            src={heroImage}
+            alt={courseTitle}
+            fill
+            unoptimized={heroImage.endsWith('.svg')}
+            className="object-cover"
+            priority
+            loading="eager"
+            sizes="100vw"
+          />
+        ) : (
+          <div className="h-full bg-[radial-gradient(circle_at_24%_18%,rgba(56,189,248,0.24),transparent_32%),linear-gradient(135deg,#020617,#111827_52%,#1e1b4b)]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#070a12] via-[#070a12]/90 to-[#070a12]/38" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#070a12] via-transparent to-[#070a12]/25" />
       </div>
 
-      {/* Hero Section */}
-      <section className="relative">
-        <div className="aspect-video relative overflow-hidden rounded-xl bg-gray-800">
-          {thumbnailSrc ? (
-            <Image src={thumbnailSrc} alt={courseTitle} fill className="object-cover" priority />
-          ) : (
-            <div className="h-full w-full bg-[radial-gradient(circle_at_20%_15%,rgba(59,130,246,0.45),transparent_30%),linear-gradient(135deg,#111827,#1e3a8a_50%,#111827)]" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
-          <div className="absolute bottom-6 left-6 right-6">
-            <div className="flex flex-wrap gap-2 mb-4">
-              <Badge className={`border ${levelColor}`}>{levelName}</Badge>
-              <Badge variant="outline" className="border-gray-600 text-gray-300">
+      <div className="container relative mx-auto flex min-h-[780px] flex-col px-4 py-10">
+        <Button asChild variant="ghost" className="w-fit text-slate-300 hover:bg-white/10 hover:text-white">
+          <Link href="/courses">
+            <ArrowLeft />
+            Back to catalog
+          </Link>
+        </Button>
+
+        <div className="grid flex-1 gap-12 py-16 lg:grid-cols-[1fr_420px] lg:items-end">
+          <div className="flex max-w-4xl flex-col gap-8">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="border-white/20 bg-black/35 text-white backdrop-blur">
                 {categoryName}
               </Badge>
+              <Badge variant="outline" className="border-white/20 bg-black/35 text-white backdrop-blur">
+                {levelName}
+              </Badge>
+              {program ? (
+                <Badge variant="outline" className="border-white/20 bg-black/35 text-white backdrop-blur">
+                  {program.shortTitle} package
+                </Badge>
+              ) : null}
             </div>
-            <h1 className="text-4xl font-bold mb-2">{courseTitle}</h1>
-            <p className="text-xl text-gray-300 leading-relaxed">{courseDescription}</p>
+
+            <div className="flex flex-col gap-6">
+              <h1 className="text-5xl font-semibold leading-[0.98] tracking-tight md:text-7xl">{courseTitle}</h1>
+              <p className="max-w-3xl text-lg leading-8 text-slate-300 md:text-xl">{showcase?.headline || courseDescription}</p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              {primaryCta.kind === 'enroll' && courseSlug ? (
+                <CourseSelfEnrollButton
+                  courseSlug={courseSlug}
+                  buttonClassName="h-10 bg-white px-6 text-sm font-medium text-slate-950 hover:bg-slate-200 md:h-11"
+                />
+              ) : primaryCta.kind === 'link' && primaryCta.href ? (
+                <Button asChild size="lg" className="bg-white text-slate-950 hover:bg-slate-200">
+                  <Link href={primaryCta.href}>
+                    {primaryCta.label}
+                    <ArrowRight />
+                  </Link>
+                </Button>
+              ) : (
+                <Button size="lg" disabled className="bg-white/20 text-white">
+                  {primaryCta.label}
+                </Button>
+              )}
+              {course.videoShowcaseUrl ? (
+                <Button asChild size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                  <Link href={course.videoShowcaseUrl}>
+                    Watch preview
+                    <Play />
+                  </Link>
+                </Button>
+              ) : null}
+              <Button asChild size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                <Link href="#curriculum">
+                  View curriculum
+                  <Layers3 />
+                </Link>
+              </Button>
+            </div>
           </div>
+
+          <aside className="rounded-[2rem] border border-white/10 bg-white/[0.055] p-6 shadow-2xl shadow-black/30 backdrop-blur">
+            <div className="flex flex-col gap-5">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Studio brief</p>
+                <p className="mt-3 text-sm leading-6 text-slate-300">
+                  {showcase?.studioPrompt || 'A practical GameGuild course with public catalog metadata, classroom content, and a focused project outcome.'}
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                  <Clock className="mb-2 text-sky-200" />
+                  <p className="text-sm font-semibold">{course.estimatedHours ?? 0}h</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                  <BookOpen className="mb-2 text-violet-200" />
+                  <p className="text-sm font-semibold">{course.programContents?.length ?? 0}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                  <Users className="mb-2 text-emerald-200" />
+                  <p className="text-sm font-semibold">{course.currentEnrollments ?? 0}</p>
+                </div>
+              </div>
+              {course.videoShowcaseUrl ? (
+                <Button asChild variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                  <Link href={course.videoShowcaseUrl}>
+                    Watch preview
+                    <Play />
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
+          </aside>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

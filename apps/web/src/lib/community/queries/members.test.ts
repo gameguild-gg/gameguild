@@ -35,12 +35,7 @@ vi.mock('@game-guild/client', () => ({
   },
 }));
 
-const {
-  getCommunityFeed,
-  getGroups,
-  getMemberProject,
-  getPublicMemberProfile,
-} = await import('./members');
+const { getCommunityFeed, getGroups, getMemberProject, getPublicMemberProfile } = await import('./members');
 
 describe('community member queries', () => {
   beforeEach(() => {
@@ -117,9 +112,7 @@ describe('community member queries', () => {
         userId: '00000000-0000-0000-0000-000000000123',
         handle: 'ada-dev',
         displayName: 'Ada Developer',
-        portfolioItems: [
-          { id: 'project-1', title: 'Moon Runner', description: 'Arcade prototype.', url: 'https://example.com/moon' },
-        ],
+        portfolioItems: [{ id: 'project-1', title: 'Moon Runner', description: 'Arcade prototype.', url: 'https://example.com/moon' }],
         skills: [],
       },
     });
@@ -166,6 +159,22 @@ describe('community member queries', () => {
         reason: 'Recommended',
       }),
     ]);
+  });
+
+  it('feeds public courses into discovery when the viewer is signed out', async () => {
+    mocks.decodeJWT.mockResolvedValue(null);
+
+    const feed = await getCommunityFeed('discover');
+
+    expect(feed.requiresSignIn).toBe(false);
+    expect(feed.items.length).toBeGreaterThanOrEqual(3);
+    expect(feed.items[0]).toEqual(
+      expect.objectContaining({
+        contentType: 'Course',
+        href: expect.stringMatching(/^\/courses\//),
+        actionLabel: 'View course',
+      }),
+    );
   });
 
   it('loads community groups from the generated social groups API', async () => {

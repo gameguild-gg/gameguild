@@ -1,7 +1,4 @@
-import { CourseHeader } from '@/components/courses/course/course-header';
-import { CourseOverview } from '@/components/courses/course/course-overview';
-import { CourseSidebar } from '@/components/courses/course/course-sidebar';
-import { CourseTools } from '@/components/courses/course/course-tools';
+import { CourseLandingPage } from '@/components/courses/course/course-landing-page';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 import { getCourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
@@ -100,26 +97,7 @@ async function CourseContent({ slug }: { slug: string }): Promise<React.JSX.Elem
 
   const viewerAccess = course.id ? await getCourseViewerAccess(String(course.id)) : { state: 'signed-out' as const };
 
-  return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <CourseHeader course={course} />
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            <CourseOverview course={course} />
-            <CourseTools course={course} />
-          </div>
-
-          {/* Right Sidebar */}
-          <div className="lg:col-span-1">
-            <CourseSidebar course={course} viewerAccess={viewerAccess} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <CourseLandingPage course={course} viewerAccess={viewerAccess} />;
 }
 
 export default async function CourseDetailPage({ params }: CourseDetailPageProps) {

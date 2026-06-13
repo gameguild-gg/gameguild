@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { enrollInFreeCourse } from '@/lib/courses/actions/enrollment.actions';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -8,9 +9,11 @@ import { useState, useTransition } from 'react';
 
 interface CourseSelfEnrollButtonProps {
     readonly courseSlug: string;
+    readonly className?: string;
+    readonly buttonClassName?: string;
 }
 
-export function CourseSelfEnrollButton({ courseSlug }: CourseSelfEnrollButtonProps) {
+export function CourseSelfEnrollButton({ courseSlug, className, buttonClassName }: CourseSelfEnrollButtonProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
@@ -34,8 +37,8 @@ export function CourseSelfEnrollButton({ courseSlug }: CourseSelfEnrollButtonPro
     };
 
     return (
-        <div className="space-y-2">
-            <Button onClick={handleEnroll} disabled={isPending} className="bg-blue-600 text-white hover:bg-blue-500">
+        <div className={cn('space-y-2', className)}>
+            <Button onClick={handleEnroll} disabled={isPending} className={cn('bg-blue-600 text-white hover:bg-blue-500', buttonClassName)}>
                 {isPending ? (
                     <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

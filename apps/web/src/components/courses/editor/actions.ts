@@ -21,6 +21,12 @@ interface EditorCourse extends Partial<Course> {
   area?: string;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
   difficulty?: number;
+  thumbnail?: string;
+  videoShowcaseUrl?: string;
+  estimatedHours?: number;
+  maxEnrollments?: number;
+  enrollmentDeadline?: string;
+  enrollmentStatus?: string;
   status?: string;
   tools?: string[];
   tags?: string[];
@@ -123,6 +129,27 @@ function toProgramCategory(value: string | undefined): ProgramCategory | undefin
   }
 }
 
+function toEnrollmentStatus(value: string | undefined): LearningCoursesUpdateProgram['enrollmentStatus'] {
+  switch (value) {
+    case 'closed':
+      return 'Closed';
+    case 'waitlist':
+      return 'Waitlist';
+    case 'invite-only':
+      return 'InviteOnly';
+    case 'open':
+      return 'Open';
+    default:
+      return undefined;
+  }
+}
+
+function toIsoDate(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
 function mapCourse(program: LearningCoursesProgram): EditorCourse {
   const visibility = typeof program.visibility === 'string' ? program.visibility.toLowerCase() : '';
 
@@ -134,6 +161,12 @@ function mapCourse(program: LearningCoursesProgram): EditorCourse {
     area: typeof program.category === 'string' ? program.category : undefined,
     level: normalizeLevel(program.difficulty),
     status: typeof program.status === 'string' ? program.status : undefined,
+    thumbnail: program.thumbnail ?? undefined,
+    videoShowcaseUrl: program.videoShowcaseUrl ?? undefined,
+    estimatedHours: program.estimatedHours ?? undefined,
+    maxEnrollments: program.maxEnrollments ?? undefined,
+    enrollmentDeadline: typeof program.enrollmentDeadline === 'string' ? program.enrollmentDeadline : undefined,
+    enrollmentStatus: typeof program.enrollmentStatus === 'string' ? program.enrollmentStatus : undefined,
     isPublic: visibility === 'public',
     isFeatured: false,
     tools: typeof program.skillsRequired === 'string'
@@ -161,11 +194,17 @@ function toUpdateCourse(course: EditorCourse): LearningCoursesUpdateProgram {
     title: course.title.trim(),
     slug: course.slug.trim(),
     description: course.description.trim(),
+    thumbnail: course.thumbnail?.trim() || undefined,
+    videoShowcaseUrl: course.videoShowcaseUrl?.trim() || undefined,
+    estimatedHours: course.estimatedHours,
     difficulty: course.level,
     category: toProgramCategory(course.area),
     visibility: toVisibility(course.isPublic, course.status),
     skillsProvided: joinList(course.tags),
     skillsRequired: joinList(course.tools),
+    maxEnrollments: course.maxEnrollments,
+    enrollmentDeadline: toIsoDate(course.enrollmentDeadline),
+    enrollmentStatus: toEnrollmentStatus(course.enrollmentStatus),
   };
 }
 
@@ -218,6 +257,7 @@ export async function createCourse(courseData: Partial<EditorCourse>): Promise<E
       title,
       slug,
       description: courseData.description?.trim() ?? '',
+      thumbnail: courseData.thumbnail?.trim() || undefined,
     };
 
     const { programs } = createCourseModules();

@@ -2,166 +2,243 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Link } from '@/i18n/navigation';
 import type { Program } from '@/lib/api/generated';
 import { getCourseCategoryName, getCourseLevelConfig } from '@/lib/courses/services/course.service';
-import { CourseCatalog } from '@game-guild/courses';
-import { ArrowRight, BookOpen, Clock, Star, Users } from 'lucide-react';
+import { PUBLIC_PROGRAM_PACKAGES, getCourseShowcase, getProgramForCourse } from '@/lib/courses/public-programs';
+import { ArrowRight, Clock, Layers3, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import React from 'react';
 
 interface PublicCourseCatalogProps {
-    initialCourses: Program[];
+  initialCourses: Program[];
 }
 
 function normalizeFilterValue(value: string): string {
-    return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function matchesCategory(categoryName: string, filterValue: string): boolean {
-    const normalizedCategory = normalizeFilterValue(categoryName);
-
-    if (normalizedCategory === filterValue) {
-        return true;
-    }
-
-    const aliases: Record<string, string[]> = {
-        art: ['art-design', 'design', 'creative-arts'],
-        design: ['design', 'game-development', 'creative-arts'],
-        programming: ['programming', 'web-development', 'mobile-development', 'ai'],
-    };
-
-    return (aliases[filterValue] ?? []).includes(normalizedCategory);
-}
-function getCatalogState(course: Program): { label: string; className: string; caption: string } {
-    const visibility = typeof course.visibility === 'string' ? course.visibility.trim().toLowerCase() : '';
-    const isEnrollmentOpen = typeof course.isEnrollmentOpen === 'boolean' ? course.isEnrollmentOpen : false;
-
-    if (visibility !== 'public') {
-        return {
-            label: 'Preview',
-            className: 'border-blue-500 bg-blue-500/10 text-blue-300',
-            caption: 'Preview available',
-        };
-    }
-
-    if (isEnrollmentOpen) {
-        return {
-            label: 'Enrollment Open',
-            className: 'border-emerald-500 bg-emerald-500/10 text-emerald-300',
-            caption: 'Open for enrollment',
-        };
-    }
-
-    return {
-        label: 'Enrollment Closed',
-        className: 'border-amber-500 bg-amber-500/10 text-amber-300',
-        caption: 'Enrollment closed',
-    };
+function getCourseSlug(course: Program): string | null {
+  return typeof course.slug === 'string' && course.slug.length > 0 ? course.slug : null;
 }
 
-function PublicCourseGrid({ courses }: { courses: Program[] }) {
-    if (!courses.length) {
-        return <p className="rounded-xl border border-slate-700 bg-slate-900/70 p-6 text-slate-300">No published courses matched this filter yet.</p>;
-    }
+function getCourseImage(course: Program): string | null {
+  return typeof course.thumbnail === 'string' && course.thumbnail.length > 0 ? course.thumbnail : null;
+}
 
-    return (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {courses.map((course, index) => {
-                const courseTitle = typeof course.title === 'string' && course.title.length > 0 ? course.title : 'Untitled course';
-                const courseSlug = typeof course.slug === 'string' && course.slug.length > 0 ? course.slug : null;
-                const courseDescription = typeof course.description === 'string' ? course.description : '';
-                const courseImage = typeof course.thumbnail === 'string' && course.thumbnail.length > 0 ? course.thumbnail : null;
-                const categoryName = getCourseCategoryName(course.category as string | number | null | undefined);
-                const levelConfig = getCourseLevelConfig(course.difficulty as string | number | null | undefined);
-                const currentEnrollments = typeof course.currentEnrollments === 'number' ? course.currentEnrollments : 0;
-                const averageRating = typeof course.averageRating === 'number' ? course.averageRating : 0;
-                const estimatedHours = typeof course.estimatedHours === 'number' ? course.estimatedHours : null;
-                const catalogState = getCatalogState(course);
+function getCourseTitle(course: Program): string {
+  return typeof course.title === 'string' && course.title.length > 0 ? course.title : 'Untitled course';
+}
 
-                return (
-                    <article key={course.id ?? courseSlug ?? index} className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/80 shadow-lg shadow-slate-950/40 transition-transform hover:-translate-y-1 hover:border-slate-500">
-                        <div className="relative aspect-video overflow-hidden bg-slate-800">
-                            {courseImage ? (
-                                <Image src={courseImage} alt={courseTitle} fill className="object-cover" />
-                            ) : (
-                                <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_18%_18%,rgba(56,189,248,0.35),transparent_32%),linear-gradient(135deg,#0f172a,#1e1b4b_55%,#020617)] px-6 text-center">
-                                    <span className="text-sm font-semibold uppercase tracking-wide text-white/75">{courseTitle}</span>
-                                </div>
-                            )}
-                            <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/30 to-transparent" />
-                            <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-                                <Badge className={`${levelConfig.bgColor} ${levelConfig.color} border`}>{levelConfig.name}</Badge>
-                                <Badge variant="outline" className="border-slate-400/40 bg-slate-950/50 text-slate-100">{categoryName}</Badge>
-                                <Badge variant="outline" className={catalogState.className}>{catalogState.label}</Badge>
-                            </div>
-                        </div>
+function getCourseDescription(course: Program): string {
+  return typeof course.description === 'string' && course.description.length > 0
+    ? course.description
+    : 'A published GameGuild course ready for students to explore.';
+}
 
-                        <div className="flex flex-col gap-4 p-5 text-white">
-                            <div>
-                                <h3 className="text-xl font-semibold">{courseTitle}</h3>
-                                <p className="mt-2 line-clamp-3 text-sm text-slate-300">{courseDescription || 'Published course details are now loading from the live catalog.'}</p>
-                            </div>
+function courseMatchesText(course: Program, query: string): boolean {
+  const courseSlug = getCourseSlug(course);
+  const haystack = [
+    course.title,
+    course.description,
+    course.slug,
+    getCourseCategoryName(course.category as string | number | null | undefined),
+    getProgramForCourse(courseSlug)?.title,
+    getCourseShowcase(courseSlug)?.headline,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
 
-                            <div className="flex flex-wrap gap-4 text-sm text-slate-300">
-                                <span className="flex items-center gap-1.5">
-                                    <Users className="h-4 w-4 text-blue-400" />
-                                    {currentEnrollments} enrolled
-                                </span>
-                                <span className="flex items-center gap-1.5">
-                                    <Star className="h-4 w-4 text-amber-400" />
-                                    {averageRating.toFixed(1)}
-                                </span>
-                                {estimatedHours !== null && (
-                                    <span className="flex items-center gap-1.5">
-                                        <Clock className="h-4 w-4 text-emerald-400" />
-                                        {estimatedHours}h
-                                    </span>
-                                )}
-                            </div>
+  return haystack.includes(query.toLowerCase());
+}
 
-                            <div className="mt-auto flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-2 text-sm text-slate-400">
-                                    <BookOpen className="h-4 w-4" />
-                                    {catalogState.caption}
-                                </div>
-                                {courseSlug ? (
-                                    <Button asChild className="bg-blue-600 text-white hover:bg-blue-500">
-                                        <Link href={`/courses/${courseSlug}`}>
-                                            View course
-                                            <ArrowRight className="ml-2 h-4 w-4" />
-                                        </Link>
-                                    </Button>
-                                ) : null}
-                            </div>
-                        </div>
-                    </article>
-                );
-            })}
+function CourseCard({ course }: { course: Program }) {
+  const courseTitle = getCourseTitle(course);
+  const courseSlug = getCourseSlug(course);
+  const courseDescription = getCourseDescription(course);
+  const courseImage = getCourseImage(course);
+  const categoryName = getCourseCategoryName(course.category as string | number | null | undefined);
+  const level = getCourseLevelConfig(course.difficulty as string | number | null | undefined).name;
+  const estimatedHours = typeof course.estimatedHours === 'number' ? course.estimatedHours : null;
+  const program = getProgramForCourse(courseSlug);
+  const showcase = getCourseShowcase(courseSlug);
+  const outcome = showcase?.projectResult ?? courseDescription;
+
+  return (
+    <article className="group grid overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.065] md:grid-cols-[160px_1fr]">
+      <Link href={courseSlug ? `/courses/${courseSlug}` : '/courses'} className="relative min-h-[170px] overflow-hidden bg-slate-900 md:min-h-full">
+        {courseImage ? (
+          <Image
+            src={courseImage}
+            alt={courseTitle}
+            fill
+            loading="eager"
+            unoptimized={courseImage.endsWith('.svg')}
+            className="object-cover opacity-90 transition duration-500 group-hover:scale-105"
+            sizes="(min-width: 1280px) 160px, (min-width: 768px) 30vw, 100vw"
+          />
+        ) : (
+          <div className="h-full bg-[linear-gradient(135deg,#020617,#111827_52%,#1e1b4b)]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#070a12]/65 via-transparent to-transparent" />
+      </Link>
+
+      <div className="flex min-w-0 flex-col gap-4 p-5">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="secondary" className="bg-white/10 text-white">
+            {program?.shortTitle ?? categoryName}
+          </Badge>
+          <Badge variant="outline" className="border-white/15 text-slate-300">
+            {level}
+          </Badge>
+          {estimatedHours ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-0.5 text-xs text-slate-300">
+              <Clock className="size-3.5" />
+              {estimatedHours}h
+            </span>
+          ) : null}
         </div>
-    );
+
+        <div className="min-w-0">
+          <Link href={courseSlug ? `/courses/${courseSlug}` : '/courses'} className="block text-xl font-semibold leading-tight tracking-tight text-white hover:text-sky-100">
+            {courseTitle}
+          </Link>
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-400">{outcome}</p>
+        </div>
+
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-white/10 pt-4">
+          <p className="truncate text-xs uppercase tracking-[0.16em] text-slate-500">{categoryName}</p>
+          {courseSlug ? (
+            <Button asChild size="sm" variant="ghost" className="shrink-0 text-white hover:bg-white/10 hover:text-white">
+              <Link href={`/courses/${courseSlug}`}>
+                Details
+                <ArrowRight />
+              </Link>
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
 }
 
 export function PublicCourseCatalog({ initialCourses }: PublicCourseCatalogProps) {
-    const searchParams = useSearchParams();
-    const categoryFilter = searchParams?.get('category');
+  const searchParams = useSearchParams();
+  const urlCategoryFilter = searchParams?.get('category');
+  const urlProgramFilter = searchParams?.get('program');
+  const [query, setQuery] = React.useState('');
+  const [activeProgram, setActiveProgram] = React.useState(urlProgramFilter ?? 'all');
+  const [activeCategory, setActiveCategory] = React.useState(urlCategoryFilter ?? 'all');
 
-    const visibleCourses = React.useMemo(() => {
-        if (!categoryFilter) {
-            return initialCourses;
-        }
+  const categories = React.useMemo(
+    () => [
+      'all',
+      ...Array.from(
+        new Set(
+          initialCourses
+            .map((course) => getCourseCategoryName(course.category as string | number | null | undefined))
+            .filter(Boolean),
+        ),
+      ),
+    ],
+    [initialCourses],
+  );
 
-        const normalizedFilter = normalizeFilterValue(categoryFilter);
-        return initialCourses.filter((course) => matchesCategory(getCourseCategoryName(course.category as string | number | null | undefined), normalizedFilter));
-    }, [categoryFilter, initialCourses]);
+  const visibleCourses = React.useMemo(() => {
+    const normalizedCategory = normalizeFilterValue(activeCategory);
 
-    return (
-        <CourseCatalog<Program>
-            initialCourses={visibleCourses}
-            Grid={PublicCourseGrid}
-            title="Course Catalog"
-            className="container mx-auto px-4 py-8"
-        />
-    );
+    return initialCourses.filter((course) => {
+      const slug = getCourseSlug(course);
+      const program = getProgramForCourse(slug);
+      const categoryName = getCourseCategoryName(course.category as string | number | null | undefined);
+
+      if (activeProgram !== 'all' && program?.slug !== activeProgram) {
+        return false;
+      }
+
+      if (normalizedCategory !== 'all' && normalizeFilterValue(categoryName) !== normalizedCategory) {
+        return false;
+      }
+
+      if (query.trim() && !courseMatchesText(course, query.trim())) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [activeCategory, activeProgram, initialCourses, query]);
+
+  return (
+    <div className="container mx-auto flex flex-col gap-8 px-4 py-14">
+      <div className="grid gap-6 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
+        <div>
+          <h2 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">Browse courses</h2>
+          <p className="mt-4 max-w-xl text-base leading-7 text-slate-400">
+            Compact course cards, organized by package and discipline. Open a course to review its full landing page and curriculum context.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search courses, tools, or outcomes..."
+              className="h-12 rounded-2xl border-white/10 bg-white/[0.04] pl-11 text-white placeholder:text-slate-500"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant={activeProgram === 'all' ? 'default' : 'outline'} onClick={() => setActiveProgram('all')} className={activeProgram === 'all' ? 'bg-white text-slate-950 hover:bg-slate-200' : 'border-white/10 bg-transparent text-slate-200 hover:bg-white/10 hover:text-white'}>
+              All packages
+            </Button>
+            {PUBLIC_PROGRAM_PACKAGES.map((program) => (
+              <Button key={program.slug} size="sm" variant={activeProgram === program.slug ? 'default' : 'outline'} onClick={() => setActiveProgram(program.slug)} className={activeProgram === program.slug ? 'bg-white text-slate-950 hover:bg-slate-200' : 'border-white/10 bg-transparent text-slate-200 hover:bg-white/10 hover:text-white'}>
+                {program.shortTitle}
+              </Button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <Button
+                key={category}
+                size="sm"
+                variant={activeCategory === category ? 'secondary' : 'ghost'}
+                onClick={() => setActiveCategory(category)}
+                className={activeCategory === category ? 'bg-slate-200 text-slate-950 hover:bg-white' : 'text-slate-300 hover:bg-white/10 hover:text-white'}
+              >
+                {category === 'all' ? 'All disciplines' : category}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-4 border-y border-white/10 py-4 text-sm text-slate-400">
+        <span>{visibleCourses.length} matching courses</span>
+        <Link href="/programs" className="inline-flex items-center gap-2 font-medium text-slate-200 underline-offset-4 hover:text-white hover:underline">
+          Compare packages
+          <Layers3 className="size-4" />
+        </Link>
+      </div>
+
+      {visibleCourses.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.035] p-10 text-center text-slate-300">
+          <p className="text-lg font-semibold text-white">No courses matched this view.</p>
+          <p className="mt-2 text-sm">Clear filters or search for another discipline.</p>
+        </div>
+      ) : (
+        <div className="grid gap-5 xl:grid-cols-2">
+          {visibleCourses.map((course) => (
+            <CourseCard key={course.id ?? course.slug} course={course} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
