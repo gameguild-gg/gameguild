@@ -26,7 +26,7 @@ services:
     ports:
       - '${PORT:-8080}'
     environment:
-      - SERVICE_FQDN_API_8080=${SERVICE_FQDN_API:-}
+      - SERVICE_FQDN_API_8080=${SERVICE_FQDN_API_8080:-${SERVICE_FQDN_API:-}}
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Staging}
       - ASPNETCORE_HTTP_PORTS=${PORT:-8080}
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
@@ -96,7 +96,7 @@ services:
     ports:
       - '${WEB_PORT:-3000}'
     environment:
-      - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB:-}
+      - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB_3000:-${SERVICE_FQDN_WEB:-}}
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
@@ -165,7 +165,7 @@ services:
     ports:
       - '${WEBSITE_PORT:-3000}'
     environment:
-      - SERVICE_FQDN_WEBSITE_3000=${SERVICE_FQDN_WEBSITE:-}
+      - SERVICE_FQDN_WEBSITE_3000=${SERVICE_FQDN_WEBSITE_3000:-${SERVICE_FQDN_WEBSITE:-}}
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
@@ -234,7 +234,7 @@ services:
     ports:
       - '${LEARNING_PORT:-3002}'
     environment:
-      - SERVICE_FQDN_LEARNING_3002=${SERVICE_FQDN_LEARNING:-}
+      - SERVICE_FQDN_LEARNING_3002=${SERVICE_FQDN_LEARNING_3002:-${SERVICE_FQDN_LEARNING:-}}
       - NODE_ENV=production
       - PORT=3002
       - HOSTNAME=0.0.0.0
