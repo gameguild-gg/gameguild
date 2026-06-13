@@ -43,9 +43,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
 
-        // Discover all IModelConfiguration implementations from all loaded GameGuild assemblies
-        var configurations = AppDomain.CurrentDomain
-            .GetAssemblies()
+        // Discover all IModelConfiguration implementations from GameGuild assemblies.
+        // Referenced module assemblies are not guaranteed to be loaded before EF builds
+        // the model, especially in tests and design-time tooling.
+        var configurations = GetGameGuildAssemblies()
             .Where(a => a.FullName?.StartsWith("GameGuild", StringComparison.Ordinal) == true)
             .SelectMany(a =>
             {
@@ -65,5 +66,41 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         }
 
         base.OnModelCreating(modelBuilder);
+    }
+
+    private static IEnumerable<Assembly> GetGameGuildAssemblies()
+    {
+        ForceLoadGameGuildAssemblies();
+
+        return AppDomain.CurrentDomain
+            .GetAssemblies()
+            .Where(a => a.FullName?.StartsWith("GameGuild", StringComparison.Ordinal) == true);
+    }
+
+    private static void ForceLoadGameGuildAssemblies()
+    {
+        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+
+        foreach (var dll in Directory.GetFiles(baseDir, "GameGuild.*.dll", SearchOption.TopDirectoryOnly))
+        {
+            try
+            {
+                var name = AssemblyName.GetAssemblyName(dll);
+
+                if (name.Name?.Contains("Tests", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    continue;
+                }
+
+                if (AppDomain.CurrentDomain.GetAssemblies().All(a => a.FullName != name.FullName))
+                {
+                    Assembly.LoadFrom(dll);
+                }
+            }
+            catch
+            {
+                // Ignore optional module assemblies that cannot be loaded in a given runtime.
+            }
+        }
     }
 }
