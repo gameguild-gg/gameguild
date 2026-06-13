@@ -1,9 +1,9 @@
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Program } from '@/lib/api/generated';
+import type { Program } from '@/lib/api/generated';
 import type { CourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
 import { getCourseCategoryName, getCourseLevelConfig } from '@/lib/courses/services/course.service';
-import { BookOpen, Clock, Star, Users } from 'lucide-react';
+import { getProgramForCourse } from '@/lib/courses/public-programs';
+import { BookOpen, Clock, Layers3, Star, Users } from 'lucide-react';
 import CourseAccessCard from './course-access-card';
 
 interface CourseSidebarProps {
@@ -12,98 +12,77 @@ interface CourseSidebarProps {
 }
 
 export function CourseSidebar({ course, viewerAccess }: CourseSidebarProps) {
+  const courseSlug = typeof course.slug === 'string' ? course.slug : null;
   const averageRating = typeof course.averageRating === 'number' ? course.averageRating : null;
   const levelConfig = getCourseLevelConfig(course.difficulty as string | number | null | undefined);
   const categoryName = getCourseCategoryName(course.category as string | number | null | undefined);
+  const program = getProgramForCourse(courseSlug);
 
   return (
-    <div className="sticky top-8 space-y-6">
-      {/* Course Access Card */}
+    <div className="sticky top-8 flex flex-col gap-5">
       <CourseAccessCard course={course} viewerAccess={viewerAccess} />
 
-      {/* Course Stats */}
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-lg">Course Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-300">Level</span>
-              <Badge variant="secondary" className={levelConfig.bgColor}>
-                {levelConfig.name}
-              </Badge>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-gray-300">Category</span>
-              <span className="text-white">{categoryName}</span>
-            </div>
-
-            {course.estimatedHours && (
-              <div className="flex justify-between items-center">
-                <span className="text-gray-300">Duration</span>
-                <span className="text-white flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {course.estimatedHours} hours
-                </span>
-              </div>
-            )}
-
-            {course.currentEnrollments !== undefined && (
-              <div className="flex justify-between items-center">
-                <span className="text-gray-300">Enrolled</span>
-                <span className="text-white flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  {course.currentEnrollments}
-                </span>
-              </div>
-            )}
-
-            {averageRating !== null && (
-              <div className="flex justify-between items-center">
-                <span className="text-gray-300">Rating</span>
-                <span className="text-white flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  {averageRating.toFixed(1)}
-                </span>
-              </div>
-            )}
-
-            {course.isEnrollmentOpen !== undefined && (
-              <div className="flex justify-between items-center">
-                <span className="text-gray-300">Enrollment</span>
-                <Badge variant={course.isEnrollmentOpen ? "default" : "destructive"}>
-                  {course.isEnrollmentOpen ? "Open" : "Closed"}
-                </Badge>
-              </div>
-            )}
+      <section className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 text-white shadow-2xl shadow-black/20 backdrop-blur">
+        <h2 className="text-xl font-semibold">Course details</h2>
+        <div className="mt-5 flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-sm text-slate-400">Level</span>
+            <Badge variant="secondary" className="bg-white/10 text-white">
+              {levelConfig.name}
+            </Badge>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Learning Journey */}
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-lg">Learning Journey</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h4 className="font-semibold">Catalog to Classroom</h4>
-                <p className="text-sm text-gray-400">Public discovery and guided attendance</p>
-              </div>
-            </div>
-            <p className="text-sm text-gray-300">
-              Learners discover published courses in the public catalog, then move into the dedicated learning app once course access is granted.
-            </p>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-sm text-slate-400">Discipline</span>
+            <span className="text-right text-sm text-white">{categoryName}</span>
           </div>
-        </CardContent>
-      </Card>
+          {course.estimatedHours ? (
+            <div className="flex items-center justify-between gap-4">
+              <span className="flex items-center gap-2 text-sm text-slate-400">
+                <Clock />
+                Duration
+              </span>
+              <span className="text-sm text-white">{course.estimatedHours} hours</span>
+            </div>
+          ) : null}
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex items-center gap-2 text-sm text-slate-400">
+              <Users />
+              Learners
+            </span>
+            <span className="text-sm text-white">{course.currentEnrollments ?? 0}</span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex items-center gap-2 text-sm text-slate-400">
+              <BookOpen />
+              Content items
+            </span>
+            <span className="text-sm text-white">{course.programContents?.length ?? 0}</span>
+          </div>
+          {averageRating !== null ? (
+            <div className="flex items-center justify-between gap-4">
+              <span className="flex items-center gap-2 text-sm text-slate-400">
+                <Star />
+                Rating
+              </span>
+              <span className="text-sm text-white">{averageRating.toFixed(1)}</span>
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      {program ? (
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 text-white shadow-2xl shadow-black/20 backdrop-blur">
+          <div className="flex items-start gap-4">
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-3 text-sky-200">
+              <Layers3 />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold">{program.shortTitle} package</h2>
+              <p className="mt-3 text-sm leading-6 text-slate-400">{program.summary}</p>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

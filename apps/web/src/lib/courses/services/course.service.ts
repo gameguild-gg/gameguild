@@ -1,4 +1,5 @@
 import { Program, ProgramContent, ProgramContentType } from '@/lib/api/generated';
+import { PUBLIC_COURSE_SNAPSHOT, getCourseShowcase } from '@/lib/courses/public-programs';
 import { createServerClient, GeneratedApi, type ApiError } from '@game-guild/client';
 
 export interface CourseService {
@@ -20,6 +21,7 @@ export interface CourseCatalogResult {
     success: boolean;
     data: Program[];
     error?: string;
+    source?: 'api' | 'snapshot-fallback';
 }
 
 export interface CourseLevelConfig {
@@ -35,18 +37,6 @@ const DEFAULT_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL |
 
 function getApiUrl(): string {
     return DEFAULT_API_URL.replace(/\/$/, '');
-}
-
-async function fetchPublicJson<T>(path: string): Promise<T> {
-    const response = await fetch(`${getApiUrl()}${path}`, {
-        cache: 'no-store',
-    });
-
-    if (!response.ok) {
-        throw new Error(`Request failed: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json() as Promise<T>;
 }
 
 function createPublicApiClient() {
@@ -155,12 +145,170 @@ function mapProgram(dto: PublicCourseDto, programContents?: ProgramContent[]): P
     };
 }
 
+function normalizeVisibility(value: unknown): string | null {
+    if (typeof value === 'string') {
+        return value;
+    }
+
+    if (value === 0) {
+        return 'Public';
+    }
+
+    if (value === 1) {
+        return 'Private';
+    }
+
+    if (value === 2) {
+        return 'Premium';
+    }
+
+    return null;
+}
+
+function normalizeStatus(value: unknown): string | null {
+    if (typeof value === 'string') {
+        return value;
+    }
+
+    if (value === 0) {
+        return 'Draft';
+    }
+
+    if (value === 1) {
+        return 'Published';
+    }
+
+    if (value === 2) {
+        return 'Archived';
+    }
+
+    return null;
+}
+
+function normalizeEnrollmentOpen(program: Program): boolean {
+    if (typeof program.isEnrollmentOpen === 'boolean') {
+        return program.isEnrollmentOpen;
+    }
+
+    return program.enrollmentStatus === 0 || program.enrollmentStatus === 'Open';
+}
+
+function sanitizeProgramContent(content: ProgramContent): ProgramContent {
+    const children = Array.isArray(content.children) ? content.children.map(sanitizeProgramContent) : [];
+
+    return {
+        id: content.id,
+        title: content.title,
+        description: content.description ?? null,
+        body: mapContentBody(content.body),
+        parentId: content.parentId ?? null,
+        type: mapContentType(content.type),
+        estimatedMinutes: content.estimatedMinutes ?? null,
+        isRequired: content.isRequired ?? false,
+        sortOrder: content.sortOrder ?? null,
+        visibility: content.visibility ?? null,
+        children,
+    } as ProgramContent;
+}
+
+function getSnapshotString(value: unknown): string | null {
+    return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+}
+
+function createSnapshotProgramContents(program: Program): ProgramContent[] {
+    const slug = getSnapshotString(program.slug) ?? getSnapshotString(program.id) ?? 'course';
+    const title = getSnapshotString(program.title) ?? 'GameGuild course';
+    const categoryName = getCourseCategoryName(program.category as string | number | null | undefined).toLowerCase();
+    const showcase = getCourseShowcase(slug);
+    const outcomes = showcase?.outcomes.length
+        ? showcase.outcomes
+        : [
+            `Practice the core techniques behind ${categoryName}.`,
+            'Build an applied exercise with reviewable decisions.',
+            'Polish the final artifact for portfolio presentation.',
+        ];
+
+    return [
+        {
+            id: `${slug}-orientation`,
+            title: `${title} orientation`,
+            description: showcase?.studioPrompt ?? `Understand the course goals, expected workflow, and the kind of ${categoryName} project students will produce.`,
+            type: ProgramContentType.Lesson,
+            estimatedMinutes: 25,
+            isRequired: true,
+            sortOrder: 1,
+        },
+        ...outcomes.map((outcome, index) => ({
+            id: `${slug}-practice-${index + 1}`,
+            title: index === 0 ? 'Core technique lab' : index === 1 ? 'Applied production exercise' : 'Portfolio refinement sprint',
+            description: outcome.endsWith('.') ? outcome : `${outcome}.`,
+            type: index === outcomes.length - 1 ? ProgramContentType.Assignment : ProgramContentType.Lesson,
+            estimatedMinutes: index === outcomes.length - 1 ? 90 : 45,
+            isRequired: true,
+            sortOrder: index + 2,
+        })),
+        {
+            id: `${slug}-capstone`,
+            title: 'Capstone and public presentation',
+            description: showcase?.projectResult ?? `Finish a practical ${categoryName} artifact and prepare a concise explanation of the work.`,
+            type: ProgramContentType.Assignment,
+            estimatedMinutes: 120,
+            isRequired: true,
+            sortOrder: outcomes.length + 2,
+        },
+    ];
+}
+
+function sanitizeSnapshotProgram(program: Program, options: { includeContents: boolean }): Program {
+    const sanitizedContents = options.includeContents
+        ? (program.programContents?.length ? program.programContents : createSnapshotProgramContents(program)).map(sanitizeProgramContent)
+        : null;
+
+    return {
+        id: program.id,
+        title: program.title,
+        slug: program.slug ?? null,
+        description: program.description ?? null,
+        category: getCourseCategoryName(program.category as string | number | null | undefined),
+        difficulty: getCourseLevelConfig(program.difficulty as string | number | null | undefined).name,
+        estimatedHours: program.estimatedHours ?? null,
+        currentEnrollments: program.currentEnrollments ?? 0,
+        averageRating: program.averageRating ?? 0,
+        totalRatings: program.totalRatings ?? 0,
+        isEnrollmentOpen: normalizeEnrollmentOpen(program),
+        thumbnail: program.thumbnail ?? null,
+        videoShowcaseUrl: program.videoShowcaseUrl ?? null,
+        visibility: normalizeVisibility(program.visibility),
+        status: normalizeStatus(program.status),
+        maxEnrollments: program.maxEnrollments ?? null,
+        enrollmentDeadline: program.enrollmentDeadline ?? null,
+        skillsRequired: program.skillsRequired ?? null,
+        skillsProvided: program.skillsProvided ?? null,
+        programContents: sanitizedContents,
+    };
+}
+
+async function getSnapshotCourseCatalog(includeContents = false): Promise<Program[]> {
+    return PUBLIC_COURSE_SNAPSHOT.map((program) => sanitizeSnapshotProgram(program, { includeContents }));
+}
+
+async function getSnapshotCourseBySlug(slug: string): Promise<Program | null> {
+    const program = PUBLIC_COURSE_SNAPSHOT.find((candidate) => candidate.slug === slug);
+    return program ? sanitizeSnapshotProgram(program, { includeContents: true }) : null;
+}
+
 async function fetchCourseBySlugResult(slug: string): Promise<CourseLookupResult> {
     try {
         const { programs, content } = createPublicCourseModules();
         const programResult = await programs.getCoursesSlug(encodeURIComponent(slug));
 
         if (!programResult.ok) {
+            const fallbackProgram = await getSnapshotCourseBySlug(slug);
+
+            if (fallbackProgram) {
+                return { success: true, data: fallbackProgram };
+            }
+
             return {
                 success: false,
                 error: formatApiError(programResult.error),
@@ -185,6 +333,12 @@ async function fetchCourseBySlugResult(slug: string): Promise<CourseLookupResult
 
         return { success: true, data: mapProgram(program, programContents) };
     } catch (error) {
+        const fallbackProgram = await getSnapshotCourseBySlug(slug);
+
+        if (fallbackProgram) {
+            return { success: true, data: fallbackProgram };
+        }
+
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error',
@@ -199,6 +353,17 @@ async function fetchPublicCourseCatalog(): Promise<CourseCatalogResult> {
         const result = await programs.getCoursesPublic();
 
         if (!result.ok || !Array.isArray(result.data)) {
+            const fallbackCatalog = await getSnapshotCourseCatalog();
+
+            if (fallbackCatalog.length > 0) {
+                return {
+                    success: true,
+                    data: fallbackCatalog,
+                    source: 'snapshot-fallback',
+                    error: formatApiError(result.error),
+                };
+            }
+
             return {
                 success: false,
                 data: [],
@@ -206,11 +371,31 @@ async function fetchPublicCourseCatalog(): Promise<CourseCatalogResult> {
             };
         }
 
+        if (result.data.length === 0) {
+            return {
+                success: true,
+                data: await getSnapshotCourseCatalog(),
+                source: 'snapshot-fallback',
+            };
+        }
+
         return {
             success: true,
             data: result.data.map((program) => mapProgram(program)),
+            source: 'api',
         };
     } catch (error) {
+        const fallbackCatalog = await getSnapshotCourseCatalog();
+
+        if (fallbackCatalog.length > 0) {
+            return {
+                success: true,
+                data: fallbackCatalog,
+                source: 'snapshot-fallback',
+                error: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+
         return {
             success: false,
             data: [],

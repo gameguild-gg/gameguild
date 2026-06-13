@@ -4,6 +4,7 @@
 
 import { cookies } from 'next/headers';
 import { createServerClient, decodeJWT, GeneratedApi, SessionStore, resolveCookieOptions } from '@game-guild/client';
+import { getCourseShowcase, PUBLIC_COURSE_SNAPSHOT } from '@/lib/courses/public-programs';
 import type {
   IdentityUsersUser,
   IdentityUsersUserProfile,
@@ -128,6 +129,10 @@ export interface CommunityFeedItem {
   relevanceScore: number;
   isRead: boolean;
   createdAt: string;
+  summary?: string;
+  href?: string;
+  imageUrl?: string;
+  actionLabel?: string;
 }
 
 export interface CommunityFeedResult {
@@ -190,13 +195,15 @@ function mapUserToMember(user: IdentityUsersUser): MemberSummary {
 }
 
 function getInitials(displayName: string) {
-  return displayName
-    .split(/[\s_-]+/)
-    .map((part) => part[0])
-    .filter(Boolean)
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() || 'U';
+  return (
+    displayName
+      .split(/[\s_-]+/)
+      .map((part) => part[0])
+      .filter(Boolean)
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || 'U'
+  );
 }
 
 function slugify(value: string) {
@@ -273,24 +280,23 @@ function mapSocialProfileToPublicMember(profile: SocialProfilesSocialProfile): P
     avatarUrl: profile.avatarUrl ?? undefined,
     bannerUrl: profile.bannerUrl ?? undefined,
     featuredProject,
-    portfolioProjects: featuredProject
-      ? portfolio.filter((project) => project.id !== featuredProject.id || project.slug !== featuredProject.slug)
-      : portfolio,
-    technicalSkills: (profile.showSkills === false ? [] : profile.skills ?? []).map((skill) => ({
+    portfolioProjects: featuredProject ? portfolio.filter((project) => project.id !== featuredProject.id || project.slug !== featuredProject.slug) : portfolio,
+    technicalSkills: (profile.showSkills === false ? [] : (profile.skills ?? [])).map((skill) => ({
       name: skill.name ?? 'Skill',
       level: proficiencyToLevel(skill.proficiency),
     })),
     toolsSkills: [],
-    activities: profile.showActivity === false
-      ? []
-      : [
-          {
-            action: 'updated',
-            item: 'their community profile',
-            time: 'Recently',
-            type: 'profile',
-          },
-        ],
+    activities:
+      profile.showActivity === false
+        ? []
+        : [
+            {
+              action: 'updated',
+              item: 'their community profile',
+              time: 'Recently',
+              type: 'profile',
+            },
+          ],
     stats: {
       followers: profile.followerCount ?? 0,
       following: profile.followingCount ?? 0,
@@ -336,6 +342,46 @@ function mapFeedItem(item: SocialFeedFeedItem): CommunityFeedItem {
   };
 }
 
+function getCourseFeedReason(kind: CommunityFeedKind) {
+  switch (kind) {
+    case 'trending':
+      return 'Trending course';
+    case 'discover':
+      return 'Recommended course';
+    case 'following':
+    default:
+      return 'Course';
+  }
+}
+
+function getCourseFeedItems(kind: CommunityFeedKind, take = 6): CommunityFeedItem[] {
+  if (kind === 'following') {
+    return [];
+  }
+
+  return PUBLIC_COURSE_SNAPSHOT.slice(0, take).map((course, index) => {
+    const slug = String(course.slug ?? course.id ?? `course-${index + 1}`);
+    const showcase = getCourseShowcase(slug);
+    const thumbnail = typeof course.thumbnail === 'string' ? course.thumbnail : undefined;
+
+    return {
+      id: `course-${slug}`,
+      title: course.title ?? 'GameGuild course',
+      contentType: 'Course',
+      contentId: slug,
+      authorId: 'gameguild-learning',
+      reason: getCourseFeedReason(kind),
+      relevanceScore: Math.max(0, 10 - index),
+      isRead: false,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      summary: showcase?.headline ?? course.description ?? 'Explore a GameGuild course landing page.',
+      href: `/courses/${slug}`,
+      imageUrl: thumbnail,
+      actionLabel: 'View course',
+    };
+  });
+}
+
 export async function getPublicMemberProfile(member: string): Promise<PublicMemberProfile | null> {
   try {
     const client = getApiClient();
@@ -350,7 +396,10 @@ export async function getPublicMemberProfile(member: string): Promise<PublicMemb
   }
 }
 
-export async function getMemberProject(member: string, project: string): Promise<{
+export async function getMemberProject(
+  member: string,
+  project: string,
+): Promise<{
   member: PublicMemberProfile;
   project: PublicMemberProjectSummary;
 } | null> {
@@ -358,9 +407,7 @@ export async function getMemberProject(member: string, project: string): Promise
   if (!profile) return null;
 
   const normalizedProject = slugify(project);
-  const projects = [profile.featuredProject, ...profile.portfolioProjects].filter(
-    (item): item is PublicMemberProjectSummary => Boolean(item),
-  );
+  const projects = [profile.featuredProject, ...profile.portfolioProjects].filter((item): item is PublicMemberProjectSummary => Boolean(item));
   const selected = projects.find((item) => item.id === project || item.slug === normalizedProject);
 
   return selected ? { member: profile, project: selected } : null;
@@ -369,6 +416,14 @@ export async function getMemberProject(member: string, project: string): Promise
 export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take?: number; includeRead?: boolean }): Promise<CommunityFeedResult> {
   const session = await getSessionClaims();
   if (!session.userId) {
+    if (kind !== 'following') {
+      return {
+        kind,
+        requiresSignIn: false,
+        items: getCourseFeedItems(kind, options?.take ?? 6),
+      };
+    }
+
     return { kind, requiresSignIn: true, items: [] };
   }
 
@@ -381,17 +436,27 @@ export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take
       includeRead: options?.includeRead ?? true,
     });
 
-    if (!result.ok) return { kind, requiresSignIn: false, items: [] };
+    if (!result.ok) {
+      return {
+        kind,
+        requiresSignIn: false,
+        items: getCourseFeedItems(kind, options?.take ?? 6),
+      };
+    }
+
+    const items = (result.data ?? []).filter((item) => reasonMatches(kind, item.reason)).map(mapFeedItem);
 
     return {
       kind,
       requiresSignIn: false,
-      items: (result.data ?? [])
-        .filter((item) => reasonMatches(kind, item.reason))
-        .map(mapFeedItem),
+      items: items.length > 0 ? items : getCourseFeedItems(kind, options?.take ?? 6),
     };
   } catch {
-    return { kind, requiresSignIn: false, items: [] };
+    return {
+      kind,
+      requiresSignIn: false,
+      items: getCourseFeedItems(kind, options?.take ?? 6),
+    };
   }
 }
 
@@ -519,8 +584,8 @@ export async function getMember(userId: string): Promise<MemberDetail | null> {
       followingCount: socialProfile?.followingCount,
       postCount: socialProfile?.postCount,
       projectCount: socialProfile?.projectCount,
-      skills: socialProfile?.showSkills === false ? [] : socialProfile?.skills ?? [],
-      portfolioItems: socialProfile?.showPortfolio === false ? [] : socialProfile?.portfolioItems ?? [],
+      skills: socialProfile?.showSkills === false ? [] : (socialProfile?.skills ?? []),
+      portfolioItems: socialProfile?.showPortfolio === false ? [] : (socialProfile?.portfolioItems ?? []),
     };
   } catch {
     return null;
