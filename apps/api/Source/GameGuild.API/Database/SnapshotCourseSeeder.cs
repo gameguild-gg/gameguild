@@ -28,15 +28,8 @@ public static partial class SnapshotCourseSeeder
         var coursesRoot = ResolveCoursesRoot(environment.ContentRootPath);
         logger.LogInformation("Importing snapshot courses from {CoursesRoot}", coursesRoot);
 
-        if (!Directory.Exists(coursesRoot))
-        {
-            throw new DirectoryNotFoundException($"Snapshot courses root was not found: {coursesRoot}");
-        }
-
-        var definitions = Directory.GetDirectories(coursesRoot)
-            .Select(ParseCourseDefinition)
-            .OrderBy(definition => definition.Slug, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        var definitionSet = LoadCourseDefinitions(coursesRoot, logger);
+        var definitions = definitionSet.Definitions;
 
         var importedPrograms = 0;
         var importedContents = 0;
@@ -123,6 +116,11 @@ public static partial class SnapshotCourseSeeder
                     : null;
             }
 
+            if (definitionSet.IsFallback)
+            {
+                continue;
+            }
+
             foreach (var staleContent in existingContents)
             {
                 var existingSourceKey = TryGetImportedSourceKey(staleContent.Body);
@@ -151,7 +149,7 @@ public static partial class SnapshotCourseSeeder
             "Imported {ProgramCount} snapshot programs and {ContentCount} snapshot contents from {ImportSource}. DbContext now sees {PublicProgramCount} published/public programs in database {DatabaseName}.",
             definitions.Count,
             definitions.Sum(item => item.Contents.Count),
-            ImportSource,
+            definitionSet.IsFallback ? "built-in-snapshot-catalog" : ImportSource,
             publicProgramCount,
             databaseName);
 
@@ -256,6 +254,154 @@ public static partial class SnapshotCourseSeeder
             Contents: contents);
     }
 
+    private static SnapshotCourseDefinitionSet LoadCourseDefinitions(string coursesRoot, ILogger logger)
+    {
+        if (Directory.Exists(coursesRoot))
+        {
+            var definitions = Directory.GetDirectories(coursesRoot)
+                .Select(ParseCourseDefinition)
+                .OrderBy(definition => definition.Slug, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (definitions.Count > 0)
+            {
+                return new SnapshotCourseDefinitionSet(definitions, IsFallback: false);
+            }
+
+            logger.LogWarning(
+                "Snapshot courses root {CoursesRoot} contains no course directories. Falling back to the built-in course catalog.",
+                coursesRoot);
+        }
+        else
+        {
+            logger.LogWarning(
+                "Snapshot courses root {CoursesRoot} was not found. Falling back to the built-in course catalog.",
+                coursesRoot);
+        }
+
+        return new SnapshotCourseDefinitionSet(CreateBuiltInCourseDefinitions(), IsFallback: true);
+    }
+
+    private static List<SnapshotCourseDefinition> CreateBuiltInCourseDefinitions()
+    {
+        return
+        [
+            CreateBuiltInCourse(
+                "ai4games",
+                "AI for Games",
+                "Learn artificial intelligence techniques for game development, including behavioral agents, pathfinding algorithms, procedural content generation, and noise functions.",
+                "https://placehold.co/400x225/1f2937/ffffff.png?text=AI+for+Games",
+                48,
+                ProgramCategory.AI,
+                ProgramDifficulty.Intermediate),
+            CreateBuiltInCourse(
+                "ai4games2",
+                "Advanced Game AI",
+                "Learn advanced artificial intelligence techniques specifically designed for game development, including pathfinding, decision-making, and procedural content generation.",
+                "https://i.imgur.com/cooKXbw.jpeg",
+                60,
+                ProgramCategory.AI,
+                ProgramDifficulty.Advanced),
+            CreateBuiltInCourse(
+                "dataanalysis",
+                "Data Analysis",
+                "Learn the fundamentals of data analysis using Python, including data manipulation, visualization, exploratory analysis, and basic statistical methods.",
+                "https://placehold.co/400x225/1f2937/ffffff.png?text=Data+Analysis",
+                40,
+                ProgramCategory.DataScience,
+                ProgramDifficulty.Beginner),
+            CreateBuiltInCourse(
+                "databases",
+                "Databases",
+                "Design relational databases, write SQL, understand normalization, and compare relational systems with document, key-value, and graph database models.",
+                "https://i.imgur.com/D2Sfd70.jpeg",
+                48,
+                ProgramCategory.Database,
+                ProgramDifficulty.Intermediate),
+            CreateBuiltInCourse(
+                "dsa",
+                "Data Structures and Algorithms",
+                "Compare core data structures and algorithms for searching, sorting, graph traversal, and performance analysis using practical programming exercises.",
+                "https://placehold.co/400x225/1f2937/ffffff.png?text=Data+Structures+%26+Algorithms",
+                60,
+                ProgramCategory.Programming,
+                ProgramDifficulty.Advanced),
+            CreateBuiltInCourse(
+                "game-publishing",
+                "Game Publishing Mastery",
+                "Prepare games for release across major platforms with store readiness, submission workflows, release planning, and marketing operations.",
+                "https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=400&h=300&fit=crop",
+                25,
+                ProgramCategory.Business,
+                ProgramDifficulty.Advanced),
+            CreateBuiltInCourse(
+                "intro2gpro",
+                "Introduction to Game Programming",
+                "Build a practical foundation in game programming roles, workflows, technical vocabulary, and small gameplay systems.",
+                "https://placehold.co/400x225/1f2937/ffffff.png?text=Intro+to+Game+Programming",
+                45,
+                ProgramCategory.GameDevelopment,
+                ProgramDifficulty.Beginner),
+            CreateBuiltInCourse(
+                "networking",
+                "Network Programming",
+                "Design, implement, and optimize real-time networked applications and games using sockets, serialization, synchronization, and performance tuning.",
+                "https://i.imgur.com/Do3392o.jpeg",
+                60,
+                ProgramCategory.GameDevelopment,
+                ProgramDifficulty.Intermediate),
+            CreateBuiltInCourse(
+                "portfolio",
+                "Portfolio Development",
+                "Build a professional portfolio that presents projects, process, technical decisions, and outcomes clearly for employers and collaborators.",
+                "https://placehold.co/400x225/1f2937/ffffff.png?text=Portfolio+Development",
+                30,
+                ProgramCategory.Design,
+                ProgramDifficulty.Beginner),
+            CreateBuiltInCourse(
+                "python",
+                "Python Programming",
+                "Learn computing fundamentals and Python programming through number systems, Boolean logic, algorithm design, and structured implementation.",
+                "https://www.python.org/static/community_logos/python-logo-generic.svg",
+                40,
+                ProgramCategory.Programming,
+                ProgramDifficulty.Beginner),
+        ];
+    }
+
+    private static SnapshotCourseDefinition CreateBuiltInCourse(
+        string slug,
+        string title,
+        string description,
+        string thumbnail,
+        int estimatedHours,
+        ProgramCategory category,
+        ProgramDifficulty difficulty)
+    {
+        return new SnapshotCourseDefinition(
+            Slug: slug,
+            Title: title,
+            Description: description,
+            Thumbnail: thumbnail,
+            EstimatedHours: estimatedHours,
+            EnrollmentStatus: EnrollmentStatus.Open,
+            Category: category,
+            Difficulty: difficulty,
+            Contents:
+            [
+                new SnapshotContentDefinition(
+                    SourceId: "overview",
+                    ParentSourceId: null,
+                    Title: "Course overview",
+                    Description: $"Overview for {title}.",
+                    Type: ProgramContentType.Page,
+                    SortOrder: 0,
+                    IsRequired: true,
+                    EstimatedMinutes: 20,
+                    Body: description),
+            ]);
+    }
+
     private static SnapshotContentDefinition ParseContentDefinition(
         string courseDirectory,
         IReadOnlyDictionary<string, string> markdownImports,
@@ -306,6 +452,18 @@ public static partial class SnapshotCourseSeeder
 
     private static string ResolveCoursesRoot(string contentRootPath)
     {
+        var configuredRoot = Environment.GetEnvironmentVariable("SNAPSHOT_COURSES_ROOT");
+        if (!string.IsNullOrWhiteSpace(configuredRoot) && Directory.Exists(configuredRoot))
+        {
+            return configuredRoot;
+        }
+
+        const string containerSeedRoot = "/app/seed/courses";
+        if (Directory.Exists(containerSeedRoot))
+        {
+            return containerSeedRoot;
+        }
+
         var repositoryRoot = Path.GetFullPath(Path.Combine(contentRootPath, "..", "..", "..", ".."));
         var snapshotRoot = Path.Combine(repositoryRoot, "temp", "main-snapshot", "apps", "web", "src", "data", "courses");
 
@@ -784,6 +942,10 @@ internal sealed record SnapshotCourseDefinition(
     ProgramCategory Category,
     ProgramDifficulty Difficulty,
     IReadOnlyList<SnapshotContentDefinition> Contents);
+
+internal sealed record SnapshotCourseDefinitionSet(
+    IReadOnlyList<SnapshotCourseDefinition> Definitions,
+    bool IsFallback);
 
 internal sealed record SnapshotContentDefinition(
     string SourceId,
