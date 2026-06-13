@@ -126,6 +126,28 @@ else
         {
             app.Logger.LogWarning(ex, "Database seeding failed — default roles and admin user may not exist.");
         }
+
+        if (ShouldImportSnapshotCourses(app.Configuration))
+        {
+            try
+            {
+                using var scope = app.Services.CreateScope();
+                var result = await SnapshotCourseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
+                app.Logger.LogInformation(
+                    "Snapshot course startup import complete. Parsed {ParsedPrograms} programs and {ParsedContents} contents from {CoursesRoot}. Created {CreatedPrograms} new programs and {CreatedContents} new contents. DbContext sees {PublicProgramCount} published/public programs in database {DatabaseName}.",
+                    result.ParsedPrograms,
+                    result.ParsedContents,
+                    result.CoursesRoot,
+                    result.CreatedPrograms,
+                    result.CreatedContents,
+                    result.PublicProgramCount,
+                    result.DatabaseName);
+            }
+            catch (Exception ex)
+            {
+                app.Logger.LogWarning(ex, "Snapshot course startup import failed. Public fallback pages can still render, but API-backed course management may be empty.");
+            }
+        }
     }
 }
 
@@ -150,6 +172,14 @@ app.ConfigurePipeline();
 
 // Start the application and listen for incoming requests
 await app.RunAsync().ConfigureAwait(false);
+
+static bool ShouldImportSnapshotCourses(IConfiguration configuration)
+{
+    var configuredValue = configuration["SeedData:ImportSnapshotCourses"]
+        ?? Environment.GetEnvironmentVariable("SEED_SNAPSHOT_COURSES");
+
+    return bool.TryParse(configuredValue, out var enabled) && enabled;
+}
 
 // REMARK: Required for functional and integration tests to work.
 namespace GameGuild.API
