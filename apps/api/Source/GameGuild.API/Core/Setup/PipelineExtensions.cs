@@ -105,14 +105,17 @@ public static class PipelineExtensions
         // 22. Minimal API Endpoints (IEndpoint implementations, including RootRedirectEndpoint)
         app.MapEndpoints(null);
 
-        // 23. OpenAPI (native .NET 9 OpenAPI document endpoint at /openapi/v1.json)
-        app.MapOpenApi();
-
-        // 24. Swagger JSON (Swashbuckle middleware generates /swagger/{version}/swagger.json)
+        // 23. Swagger JSON (Swashbuckle middleware generates /swagger/{version}/swagger.json)
         if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
         {
             app.UseSwagger();
         }
+
+        // 24. Compatibility OpenAPI URL.
+        // The native .NET OpenAPI document generator currently over-recurses on this API surface.
+        // Keep /openapi/{document}.json stable by pointing callers to the Swashbuckle document.
+        app.MapGet("/openapi/{documentName}.json",
+            (string documentName) => Results.Redirect($"/swagger/{documentName}/swagger.json"));
 
         // 25. Swagger UI (interactive API documentation at /documentation)
         if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
