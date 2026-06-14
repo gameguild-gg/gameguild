@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   getUserFeed: vi.fn(),
   getSocialGroups: vi.fn(),
   getPublicCourseCatalog: vi.fn(),
+  getMarketingLeads: vi.fn(),
 }));
 
 vi.mock('next/headers', () => ({
@@ -33,6 +34,9 @@ vi.mock('@game-guild/client', () => ({
     SocialGroupsSocialgroupsModule: class {
       getApiSocialGroups = mocks.getSocialGroups;
     },
+    ContentMarketingleadsModule: class {
+      getMarketingLeads = mocks.getMarketingLeads;
+    },
   },
 }));
 
@@ -40,7 +44,7 @@ vi.mock('@/lib/courses/services/course.service', () => ({
   getPublicCourseCatalog: mocks.getPublicCourseCatalog,
 }));
 
-const { getCommunityFeed, getGroups, getMemberProject, getPublicMemberProfile } = await import('./members');
+const { getCommunityFeed, getGroups, getMemberProject, getPublicMemberProfile, getSupportTickets } = await import('./members');
 
 describe('community member queries', () => {
   beforeEach(() => {
@@ -65,6 +69,7 @@ describe('community member queries', () => {
         },
       ],
     });
+    mocks.getMarketingLeads.mockResolvedValue({ ok: true, data: [] });
   });
 
   it('maps a public social profile into the member page view model', async () => {
@@ -228,6 +233,53 @@ describe('community member queries', () => {
           memberCount: 14,
           createdAt: '2026-06-01T00:00:00Z',
           isPublic: true,
+        },
+      ],
+    });
+  });
+
+  it('maps support contact leads into community support tickets', async () => {
+    mocks.getMarketingLeads.mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: 'lead-1',
+          source: 'contact',
+          status: 'new',
+          name: 'Riley Producer',
+          email: 'riley@example.com',
+          topic: 'support',
+          plan: 'enterprise',
+          message: 'Production login is blocked\nWe need help before class.',
+          createdAt: '2026-06-01T10:00:00.000Z',
+          updatedAt: '2026-06-01T11:00:00.000Z',
+        },
+      ],
+    });
+
+    const result = await getSupportTickets({ limit: 10, status: 'open', priority: 'critical' });
+
+    expect(mocks.getMarketingLeads).toHaveBeenCalledWith({
+      source: 'contact',
+      topic: 'support',
+      status: 'new',
+      skip: 0,
+      take: 10,
+    });
+    expect(result).toEqual({
+      total: 1,
+      tickets: [
+        {
+          id: 'lead-1',
+          subject: 'Production login is blocked',
+          status: 'open',
+          priority: 'critical',
+          createdBy: {
+            id: 'riley@example.com',
+            username: 'riley-producer',
+          },
+          createdAt: '2026-06-01T10:00:00.000Z',
+          updatedAt: '2026-06-01T11:00:00.000Z',
         },
       ],
     });
