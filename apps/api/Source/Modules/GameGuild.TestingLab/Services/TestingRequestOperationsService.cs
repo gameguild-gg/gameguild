@@ -177,6 +177,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
             {
                 Id = Guid.NewGuid(),
                 Title = requestDto.TeamIdentifier,
+                Slug = ProjectEntity.GenerateSlug(requestDto.TeamIdentifier),
                 ShortDescription = $"Capstone project for {requestDto.TeamIdentifier}",
                 Description = $"Capstone project repository for team {requestDto.TeamIdentifier}",
                 Status = ContentStatus.Published,
@@ -195,25 +196,57 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
             projectId = existingProject.Id;
         }
 
-        var projectRelease = new ProjectReleaseEntity
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = projectId,
-            ReleaseVersion = requestDto.VersionNumber,
-            ReleaseNotes = requestDto.Description ?? "",
-            DownloadUrl = requestDto.DownloadUrl,
-            IsPrerelease = true,
-            ReleaseType = "testing",
-            ReleasedAt = SystemClock.UtcNow,
-        };
+        var projectVersion = await context.Set<GameGuild.Projects.ProjectVersion>()
+            .FirstOrDefaultAsync(version =>
+                version.ProjectId == projectId &&
+                version.VersionNumber == requestDto.VersionNumber)
+            .ConfigureAwait(false);
 
-        context.Set<GameGuild.Projects.ProjectRelease>().Add(projectRelease);
+        if (projectVersion == null)
+        {
+            projectVersion = new GameGuild.Projects.ProjectVersion
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = projectId,
+                VersionNumber = requestDto.VersionNumber,
+                ReleaseNotes = requestDto.Description,
+                Status = "testing",
+                CreatedById = userId,
+            };
+
+            context.Set<GameGuild.Projects.ProjectVersion>().Add(projectVersion);
+        }
+
+        var projectRelease = await context.Set<GameGuild.Projects.ProjectRelease>()
+            .FirstOrDefaultAsync(release =>
+                release.ProjectId == projectId &&
+                release.ReleaseVersion == requestDto.VersionNumber)
+            .ConfigureAwait(false);
+
+        if (projectRelease == null)
+        {
+            projectRelease = new ProjectReleaseEntity
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = projectId,
+                Title = $"{requestDto.TeamIdentifier} {requestDto.VersionNumber}",
+                ReleaseVersion = requestDto.VersionNumber,
+                ReleaseNotes = requestDto.Description ?? "",
+                DownloadUrl = requestDto.DownloadUrl,
+                IsPrerelease = true,
+                ReleaseType = "testing",
+                ReleasedAt = SystemClock.UtcNow,
+            };
+
+            context.Set<GameGuild.Projects.ProjectRelease>().Add(projectRelease);
+        }
+
         await context.SaveChangesAsync().ConfigureAwait(false);
 
         var testingRequest = new TestingRequest
         {
             Id = Guid.NewGuid(),
-            ProjectVersionId = Guid.NewGuid(),
+            ProjectVersionId = projectVersion.Id,
             Title = requestDto.Title,
             Description = requestDto.Description,
             DownloadUrl = requestDto.DownloadUrl,

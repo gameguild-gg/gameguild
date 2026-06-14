@@ -45,28 +45,28 @@ export interface CreateTestingSessionDto {
 }
 
 export const SessionStatusEnum = {
-  Draft: 0 as SessionStatus,
-  Scheduled: 1 as SessionStatus,
-  InProgress: 2 as SessionStatus,
-  Completed: 3 as SessionStatus,
+  Scheduled: 0 as SessionStatus,
+  Active: 1 as SessionStatus,
+  Completed: 2 as SessionStatus,
+  Cancelled: 3 as SessionStatus,
 } as const;
 
 export const LocationStatusEnum = {
-  Inactive: 0 as LocationStatus,
-  Active: 1 as LocationStatus,
-  Maintenance: 2 as LocationStatus,
+  Active: 0 as LocationStatus,
+  Maintenance: 1 as LocationStatus,
+  Inactive: 2 as LocationStatus,
 } as const;
 
 export function getSessionStatusLabel(status: SessionStatus): string {
   switch (status) {
-    case SessionStatusEnum.Draft:
-      return 'Draft';
     case SessionStatusEnum.Scheduled:
       return 'Scheduled';
-    case SessionStatusEnum.InProgress:
-      return 'In Progress';
+    case SessionStatusEnum.Active:
+      return 'Active';
     case SessionStatusEnum.Completed:
       return 'Completed';
+    case SessionStatusEnum.Cancelled:
+      return 'Cancelled';
     default:
       return 'Unknown';
   }
