@@ -8,6 +8,28 @@ interface SignInOutput {
   user?: { id: string };
 }
 
+interface CertificateTemplateOutput {
+  id: string;
+  courseId: string;
+  name: string;
+  isActive?: boolean;
+  templateHtml?: string;
+}
+
+interface CohortOutput {
+  id: string;
+  courseId: string;
+  name: string;
+  description?: string | null;
+  startDate: string;
+  endDate: string;
+  maxCapacity: number;
+  currentEnrollmentCount: number;
+  status: string;
+  isOpen: boolean;
+  meetingSchedule?: string | null;
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -83,6 +105,8 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 1. Create a course ──────────────────────────────────────────────────
   let courseId: string;
+  let certificateTemplateId: string;
+  let cohortId: string;
   const courseSlug = `e2e-course-${Date.now()}`;
 
   it('creates a new course (program)', async () => {
@@ -249,6 +273,127 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(disabledPricing.isSubscription).toBe(false);
     expect(disabledPricing.subscriptionDurationDays).toBeNull();
     expect(disabledPricing.isMonetizationEnabled).toBe(false);
+  });
+
+  // ── 6a. Manage certificate templates ───────────────────────────────────
+  it('creates, reads, and deletes a certificate template for the course', async () => {
+    const createResult = await authedClient.request<CertificateTemplateOutput>({
+      method: 'POST',
+      path: '/api/certificates/templates',
+      body: {
+        courseId,
+        name: 'E2E completion certificate',
+        templateHtml: '<section>{{recipientName}} completed {{courseName}}</section>',
+      },
+    });
+    const template = unwrap(createResult, 'Create certificate template');
+    certificateTemplateId = template.id;
+
+    expect(template.courseId).toBe(courseId);
+    expect(template.name).toBe('E2E completion certificate');
+
+    const listResult = await authedClient.request<CertificateTemplateOutput[]>({
+      method: 'GET',
+      path: `/api/certificates/templates/course/${courseId}`,
+    });
+    const templates = unwrap(listResult, 'List certificate templates');
+    expect(templates.some((item) => item.id === certificateTemplateId)).toBe(true);
+
+    const detailResult = await authedClient.request<CertificateTemplateOutput>({
+      method: 'GET',
+      path: `/api/certificates/templates/${certificateTemplateId}`,
+    });
+    const detail = unwrap(detailResult, 'Read certificate template');
+    expect(detail.templateHtml).toContain('{{recipientName}}');
+
+    const deleteResult = await authedClient.request<void>({
+      method: 'DELETE',
+      path: `/api/certificates/templates/${certificateTemplateId}`,
+    });
+    unwrap(deleteResult, 'Delete certificate template');
+
+    const afterDelete = await authedClient.request<CertificateTemplateOutput[]>({
+      method: 'GET',
+      path: `/api/certificates/templates/course/${courseId}`,
+    });
+    const remainingTemplates = unwrap(afterDelete, 'List certificate templates after delete');
+    expect(remainingTemplates.some((item) => item.id === certificateTemplateId)).toBe(false);
+  });
+
+  // ── 6b. Manage live cohorts/classes ─────────────────────────────────────
+  it('creates, updates, transitions, and deletes a live cohort for the course', async () => {
+    const startDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
+
+    const createResult = await authedClient.request<CohortOutput>({
+      method: 'POST',
+      path: '/api/cohorts',
+      body: {
+        courseId,
+        name: 'E2E live cohort',
+        description: 'A live cohort created by the E2E course suite.',
+        startDate,
+        endDate,
+        maxCapacity: 16,
+        meetingSchedule: 'https://meet.gameguild.test/e2e',
+      },
+    });
+    const cohort = unwrap(createResult, 'Create cohort');
+    cohortId = cohort.id;
+
+    expect(cohort.courseId).toBe(courseId);
+    expect(cohort.name).toBe('E2E live cohort');
+    expect(cohort.maxCapacity).toBe(16);
+    expect(cohort.status).toBe('Scheduled');
+
+    const listResult = await authedClient.request<CohortOutput[]>({
+      method: 'GET',
+      path: `/api/cohorts/course/${courseId}`,
+    });
+    const cohorts = unwrap(listResult, 'List course cohorts');
+    expect(cohorts.some((item) => item.id === cohortId)).toBe(true);
+
+    const updateResult = await authedClient.request<CohortOutput>({
+      method: 'PUT',
+      path: `/api/cohorts/${cohortId}`,
+      body: {
+        name: 'E2E updated cohort',
+        description: 'Updated live cohort schedule.',
+        startDate,
+        endDate,
+        maxCapacity: 18,
+        meetingSchedule: 'Room E2E',
+      },
+    });
+    const updated = unwrap(updateResult, 'Update cohort');
+    expect(updated.name).toBe('E2E updated cohort');
+    expect(updated.maxCapacity).toBe(18);
+    expect(updated.meetingSchedule).toBe('Room E2E');
+
+    const opened = unwrap(
+      await authedClient.request<CohortOutput>({ method: 'POST', path: `/api/cohorts/${cohortId}/open` }),
+      'Open cohort',
+    );
+    expect(opened.status).toBe('Active');
+    expect(opened.isOpen).toBe(true);
+
+    const closed = unwrap(
+      await authedClient.request<CohortOutput>({ method: 'POST', path: `/api/cohorts/${cohortId}/close` }),
+      'Close cohort',
+    );
+    expect(closed.isOpen).toBe(false);
+
+    const completed = unwrap(
+      await authedClient.request<CohortOutput>({ method: 'POST', path: `/api/cohorts/${cohortId}/complete` }),
+      'Complete cohort',
+    );
+    expect(completed.status).toBe('Completed');
+
+    const deleteResult = await authedClient.request<void>({
+      method: 'DELETE',
+      path: `/api/cohorts/${cohortId}`,
+    });
+    unwrap(deleteResult, 'Delete cohort');
   });
 
   // ── 7. List courses ─────────────────────────────────────────────────────

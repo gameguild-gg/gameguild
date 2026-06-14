@@ -43,6 +43,38 @@ function extractError(err: unknown): string {
   return e?.detail || e?.message || 'An unexpected error occurred.';
 }
 
+async function learningApiRequest<T>(path: string, init: RequestInit): Promise<ActionResult<T>> {
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+  const token = await getToken();
+  const response = await fetch(`${apiUrl}${path}`, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init.headers ?? {}),
+    },
+  });
+
+  if (!response.ok) {
+    let error = response.statusText || 'API request failed.';
+    try {
+      const body = await response.json() as { detail?: string; message?: string; description?: string; code?: string };
+      error = body.detail || body.message || body.description || body.code || error;
+    } catch {
+      // Keep the HTTP status text when the API returns an empty or non-JSON error body.
+    }
+
+    return { success: false, error };
+  }
+
+  if (response.status === 204) {
+    return { success: true, data: null as T };
+  }
+
+  const data = await response.json() as T;
+  return { success: true, data };
+}
+
 // ── Content actions ──
 
 export interface AddContentInput {
@@ -567,6 +599,228 @@ export async function deleteAssessment(courseId: string, assessmentId: string): 
     }
 
     return { success: false, error: extractError(result.error) };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+// ── Certificate template actions ──
+
+export interface CreateCertificateTemplateInput {
+  courseId: string;
+  name: string;
+  templateHtml?: string;
+}
+
+interface CertificateTemplateActionDto {
+  id: string;
+  courseId: string;
+  name: string;
+}
+
+const defaultCertificateTemplateHtml = `
+<section style="font-family: Inter, Arial, sans-serif; padding: 48px; border: 12px solid #111827; text-align: center;">
+  <p style="letter-spacing: 0.18em; text-transform: uppercase; color: #6b7280;">Certificate of Completion</p>
+  <h1 style="font-size: 42px; margin: 24px 0;">{{recipientName}}</h1>
+  <p style="font-size: 18px; color: #374151;">has successfully completed</p>
+  <h2 style="font-size: 30px; margin: 18px 0;">{{courseName}}</h2>
+  <p style="color: #6b7280;">Issued on {{issuedAt}} - Certificate {{certificateNumber}}</p>
+</section>
+`.trim();
+
+export async function createCertificateTemplate(input: CreateCertificateTemplateInput): Promise<ActionResult<{ id: string }>> {
+  const name = input.name.trim();
+  const templateHtml = input.templateHtml?.trim() || defaultCertificateTemplateHtml;
+
+  if (name.length < 3) {
+    return { success: false, error: 'Template name must be at least 3 characters.' };
+  }
+
+  if (templateHtml.length < 20) {
+    return { success: false, error: 'Template HTML must be at least 20 characters.' };
+  }
+
+  try {
+    const result = await learningApiRequest<CertificateTemplateActionDto>('/api/certificates/templates', {
+      method: 'POST',
+      body: JSON.stringify({
+        courseId: input.courseId,
+        name,
+        templateHtml,
+      }),
+    });
+
+    if (!result.success) return result;
+
+    revalidatePath(`/dashboard/learning/courses/${input.courseId}/certificates`);
+    return { success: true, data: { id: result.data.id } };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function deleteCertificateTemplate(courseId: string, templateId: string): Promise<ActionResult<null>> {
+  try {
+    const result = await learningApiRequest<null>(`/api/certificates/templates/${templateId}`, {
+      method: 'DELETE',
+    });
+
+    if (result.success) {
+      revalidatePath(`/dashboard/learning/courses/${courseId}/certificates`);
+    }
+
+    return result;
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+// ── Cohort/class actions ──
+
+export interface CreateCourseClassInput {
+  courseId: string;
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  maxCapacity: number;
+  instructorId?: string;
+  meetingSchedule?: string;
+}
+
+export interface UpdateCourseClassInput {
+  courseId: string;
+  classId: string;
+  name?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  maxCapacity?: number;
+  instructorId?: string | null;
+  meetingSchedule?: string | null;
+}
+
+export type CourseClassStatusAction = 'open' | 'close' | 'complete' | 'cancel';
+
+interface CourseClassActionDto {
+  id: string;
+  courseId: string;
+}
+
+function validateClassWindow(startDate: string | undefined, endDate: string | undefined): string | null {
+  if (!startDate || !endDate) return 'Start and end date are required.';
+
+  const startsAt = new Date(startDate).getTime();
+  const endsAt = new Date(endDate).getTime();
+
+  if (!Number.isFinite(startsAt) || !Number.isFinite(endsAt)) {
+    return 'Start and end date must be valid dates.';
+  }
+
+  if (endsAt <= startsAt) {
+    return 'End date must be after start date.';
+  }
+
+  return null;
+}
+
+export async function createCourseClass(input: CreateCourseClassInput): Promise<ActionResult<{ id: string }>> {
+  const name = input.name.trim();
+  if (name.length < 3) {
+    return { success: false, error: 'Class name must be at least 3 characters.' };
+  }
+
+  const windowError = validateClassWindow(input.startDate, input.endDate);
+  if (windowError) return { success: false, error: windowError };
+
+  if (!Number.isInteger(input.maxCapacity) || input.maxCapacity < 1) {
+    return { success: false, error: 'Capacity must be at least 1.' };
+  }
+
+  try {
+    const result = await learningApiRequest<CourseClassActionDto>('/api/cohorts', {
+      method: 'POST',
+      body: JSON.stringify({
+        courseId: input.courseId,
+        name,
+        description: input.description?.trim() || null,
+        startDate: new Date(input.startDate).toISOString(),
+        endDate: new Date(input.endDate).toISOString(),
+        maxCapacity: input.maxCapacity,
+        instructorId: input.instructorId?.trim() || null,
+        meetingSchedule: input.meetingSchedule?.trim() || null,
+      }),
+    });
+
+    if (!result.success) return result;
+
+    revalidatePath(`/dashboard/learning/courses/${input.courseId}/classes`);
+    return { success: true, data: { id: result.data.id } };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function updateCourseClass(input: UpdateCourseClassInput): Promise<ActionResult<null>> {
+  const windowError = input.startDate || input.endDate ? validateClassWindow(input.startDate, input.endDate) : null;
+  if (windowError) return { success: false, error: windowError };
+
+  if (input.maxCapacity != null && (!Number.isInteger(input.maxCapacity) || input.maxCapacity < 1)) {
+    return { success: false, error: 'Capacity must be at least 1.' };
+  }
+
+  try {
+    const result = await learningApiRequest<CourseClassActionDto>(`/api/cohorts/${input.classId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: input.name?.trim() || null,
+        description: input.description?.trim() || null,
+        startDate: input.startDate ? new Date(input.startDate).toISOString() : null,
+        endDate: input.endDate ? new Date(input.endDate).toISOString() : null,
+        maxCapacity: input.maxCapacity ?? null,
+        instructorId: input.instructorId?.trim() || null,
+        meetingSchedule: input.meetingSchedule?.trim() || null,
+      }),
+    });
+
+    if (!result.success) return { success: false, error: result.error };
+
+    revalidatePath(`/dashboard/learning/courses/${input.courseId}/classes`);
+    revalidatePath(`/dashboard/learning/courses/${input.courseId}/classes/${input.classId}`);
+    return { success: true, data: null };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function updateCourseClassStatus(courseId: string, classId: string, statusAction: CourseClassStatusAction): Promise<ActionResult<null>> {
+  try {
+    const result = await learningApiRequest<CourseClassActionDto>(`/api/cohorts/${classId}/${statusAction}`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+
+    if (!result.success) return { success: false, error: result.error };
+
+    revalidatePath(`/dashboard/learning/courses/${courseId}/classes`);
+    revalidatePath(`/dashboard/learning/courses/${courseId}/classes/${classId}`);
+    return { success: true, data: null };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function deleteCourseClass(courseId: string, classId: string): Promise<ActionResult<null>> {
+  try {
+    const result = await learningApiRequest<null>(`/api/cohorts/${classId}`, {
+      method: 'DELETE',
+    });
+
+    if (result.success) {
+      revalidatePath(`/dashboard/learning/courses/${courseId}/classes`);
+    }
+
+    return result;
   } catch (e) {
     return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
   }
