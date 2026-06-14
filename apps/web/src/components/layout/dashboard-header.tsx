@@ -2,6 +2,7 @@
 
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Link, usePathname } from '@/i18n/navigation';
+import { DashboardUserMenu, type DashboardUser } from './dashboard-user-menu';
 import { Badge } from '@game-guild/ui/components/badge';
 import {
   Breadcrumb,
@@ -64,7 +65,12 @@ function NotificationMenuItem({ item }: { item: DashboardNotificationItem }) {
   return <DropdownMenuItem>{content}</DropdownMenuItem>;
 }
 
-export function DashboardHeader({ notifications }: { notifications?: DashboardNotificationSummary }) {
+interface DashboardHeaderProps {
+  notifications?: DashboardNotificationSummary;
+  user: DashboardUser;
+}
+
+export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
   const notificationSummary = notifications ?? { items: [], unreadCount: 0 };
@@ -230,6 +236,8 @@ export function DashboardHeader({ notifications }: { notifications?: DashboardNo
             </DropdownMenuLabel>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <DashboardUserMenu user={user} />
       </div>
     </header>
   );

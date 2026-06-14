@@ -17,6 +17,16 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
   }
 
   const notifications = await getDashboardNotificationSummary(session.user.id);
+  const dashboardUser = {
+    id: session.user.id,
+    name: session.user.name?.trim() || session.user.email?.split('@')[0] || 'GameGuild user',
+    email: session.user.email ?? 'No email available',
+    image: session.user.image ?? null,
+  };
 
-  return <DashboardShell notifications={notifications}>{children}</DashboardShell>;
+  return (
+    <DashboardShell notifications={notifications} user={dashboardUser}>
+      {children}
+    </DashboardShell>
+  );
 }
