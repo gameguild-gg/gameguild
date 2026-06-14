@@ -80,6 +80,42 @@ function getMetadataFaq(course: Program): Array<{ question: string; answer: stri
   }
 }
 
+function getMetadataProjects(course: Program, fallbackImage: string): CourseProjectShowcase[] {
+  const rawMetadata = getString(course.metadata);
+  if (!rawMetadata) return [];
+
+  try {
+    const parsed = JSON.parse(rawMetadata) as unknown;
+    const landingProjects = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as { landingProjects?: unknown }).landingProjects
+      : null;
+
+    if (!Array.isArray(landingProjects)) return [];
+
+    return landingProjects
+      .map((item, index): CourseProjectShowcase | null => {
+        const title = item && typeof item === 'object' ? getString((item as { title?: unknown }).title) : null;
+        const summary = item && typeof item === 'object' ? getString((item as { summary?: unknown }).summary) : null;
+        const deliverable = item && typeof item === 'object' ? getString((item as { deliverable?: unknown }).deliverable) : null;
+
+        if (!title || !summary || !deliverable) return null;
+
+        return {
+          title,
+          summary,
+          image: getString((item as { image?: unknown }).image) ?? fallbackImage,
+          skills: normalizeList((item as { skills?: unknown }).skills),
+          deliverable,
+          moduleLabel: getString((item as { moduleLabel?: unknown }).moduleLabel) ?? `Project ${String(index + 1).padStart(2, '0')}`,
+        };
+      })
+      .filter((item): item is CourseProjectShowcase => Boolean(item))
+      .slice(0, 6);
+  } catch {
+    return [];
+  }
+}
+
 function getContentTypeName(type: number | null | undefined): string {
   switch (type) {
     case ProgramContentType.Page:
@@ -289,7 +325,10 @@ export function CourseLandingPage({ course, viewerAccess }: CourseLandingPagePro
       ? showcase.prerequisites
       : [level === 'Beginner' ? 'No advanced background required.' : `${level} comfort with the course discipline is recommended.`];
   const projectResult = showcase?.projectResult ?? `A practical ${categoryName.toLowerCase()} project that demonstrates what students learned.`;
-  const projectSlides = publishedSkills.length
+  const metadataProjects = getMetadataProjects(course, sectionVisuals.project);
+  const projectSlides = metadataProjects.length
+    ? metadataProjects
+    : publishedSkills.length
     ? makeProjectSlides(outcomes, title, projectResult, heroImage, sectionVisuals.project, sectionVisuals.program)
     : showcase?.projects?.length
       ? showcase.projects

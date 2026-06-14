@@ -3,7 +3,7 @@
 import { useParams, usePathname } from 'next/navigation';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, Award, BookOpen, Calendar, DollarSign, Eye, FileText, HelpCircle, Image, Play, Save, Search, Settings, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Award, BookOpen, Calendar, DollarSign, Eye, FileText, HelpCircle, Image, Images, Play, Save, Search, Settings, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
@@ -64,6 +64,13 @@ const COURSE_SECTION_GROUPS = [
         icon: Image,
         path: '/listing/media',
         description: 'Thumbnail, videos, images',
+      },
+      {
+        id: 'projects',
+        label: 'Project Carousel',
+        icon: Images,
+        path: '/listing/projects',
+        description: 'Landing page project proof',
       },
     ],
   },

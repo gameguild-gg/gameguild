@@ -10,7 +10,7 @@ import {
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { AlertCircle, BookOpen, Clock3, Edit, Globe, ImageIcon, Rocket, Users } from 'lucide-react';
+import { AlertCircle, BookOpen, Edit, Globe, ImageIcon, Images, Rocket, Users } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { ListingLaunchForm } from './listing-launch-form';
@@ -191,7 +191,7 @@ export default async function ListingPage({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-lg border p-4">
                 <div className="mb-2 flex items-center gap-2 text-sm font-medium">
                   <Edit className="size-4" />
@@ -210,6 +210,16 @@ export default async function ListingPage({
                 <p className="text-sm text-muted-foreground">Cover image and promo video used across catalog and landing pages.</p>
                 <Button asChild variant="outline" className="mt-4 w-full justify-start">
                   <Link href={`/dashboard/learning/courses/${courseId}/listing/media`}>Open media editor</Link>
+                </Button>
+              </div>
+              <div className="rounded-lg border p-4">
+                <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+                  <Images className="size-4" />
+                  Project carousel
+                </div>
+                <p className="text-sm text-muted-foreground">Portfolio project slides shown on the public course landing page.</p>
+                <Button asChild variant="outline" className="mt-4 w-full justify-start">
+                  <Link href={`/dashboard/learning/courses/${courseId}/listing/projects`}>Open project editor</Link>
                 </Button>
               </div>
             </div>

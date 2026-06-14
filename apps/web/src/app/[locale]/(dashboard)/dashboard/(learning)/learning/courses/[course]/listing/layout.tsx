@@ -11,6 +11,7 @@ import React from 'react';
  * - /listing (redirect → /listing/info)
  * - /listing/info - Basic course info, objectives, requirements
  * - /listing/media - Cover image, promo video, gallery
+ * - /listing/projects - Public project carousel
  * - /listing/testimonials - Student reviews & testimonials
  * - /listing/faq - Frequently asked questions
  * - /listing/pricing - Pricing tiers (conditional: hasPricing)

@@ -102,11 +102,38 @@ export interface CourseFaq {
   total: number;
 }
 
+export interface CourseLandingProject {
+  id: string;
+  courseId: string;
+  title: string;
+  summary: string;
+  image: string;
+  skills: string[];
+  deliverable: string;
+  moduleLabel: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CourseLandingProjects {
+  items: CourseLandingProject[];
+  total: number;
+}
+
 interface CourseMetadata {
   landingFaq?: Array<{
     question?: unknown;
     answer?: unknown;
     category?: unknown;
+  }>;
+  landingProjects?: Array<{
+    title?: unknown;
+    summary?: unknown;
+    image?: unknown;
+    skills?: unknown;
+    deliverable?: unknown;
+    moduleLabel?: unknown;
   }>;
 }
 
@@ -149,6 +176,63 @@ function getMetadataFaqItems(course: {
       };
     })
     .filter((item): item is CourseFaqItem => Boolean(item));
+
+  return items.length > 0 ? items : null;
+}
+
+function normalizeList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(/[,;\n]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function getMetadataProjectItems(course: {
+  id: string;
+  thumbnail: string | null;
+  createdAt: string;
+  updatedAt: string;
+  metadata?: string | null;
+}): CourseLandingProject[] | null {
+  const metadata = parseCourseMetadata(course.metadata);
+  const rawItems = Array.isArray(metadata?.landingProjects) ? metadata.landingProjects : [];
+
+  const items = rawItems
+    .map((item, index): CourseLandingProject | null => {
+      const title = typeof item.title === 'string' ? item.title.trim() : '';
+      const summary = typeof item.summary === 'string' ? item.summary.trim() : '';
+      const deliverable = typeof item.deliverable === 'string' ? item.deliverable.trim() : '';
+
+      if (!title || !summary || !deliverable) return null;
+
+      const image = typeof item.image === 'string' && item.image.trim() ? item.image.trim() : course.thumbnail ?? '';
+      const moduleLabel = typeof item.moduleLabel === 'string' && item.moduleLabel.trim()
+        ? item.moduleLabel.trim()
+        : `Project ${String(index + 1).padStart(2, '0')}`;
+
+      return {
+        id: `${course.id}-project-${index + 1}`,
+        courseId: course.id,
+        title,
+        summary,
+        image,
+        skills: normalizeList(item.skills),
+        deliverable,
+        moduleLabel,
+        order: index + 1,
+        createdAt: course.createdAt,
+        updatedAt: course.updatedAt,
+      };
+    })
+    .filter((item): item is CourseLandingProject => Boolean(item));
 
   return items.length > 0 ? items : null;
 }
@@ -369,6 +453,36 @@ export const getCourseFaqItem = cache(async (faqId: string): Promise<CourseFaqIt
 
   const faq = await getCourseFaq(courseId);
   return faq.items.find((item) => item.id === faqId) ?? null;
+});
+
+/**
+ * Fetch editable landing page project carousel items.
+ * Cache: revalidate 300s (stable)
+ */
+export const getCourseLandingProjects = cache(async (courseId: string): Promise<CourseLandingProjects> => {
+  const course = await getCourse(courseId);
+  if (!course) return { items: [], total: 0 };
+
+  const metadataProjectItems = getMetadataProjectItems(course);
+  if (metadataProjectItems) return { items: metadataProjectItems, total: metadataProjectItems.length };
+
+  const fallbackItems: CourseLandingProject[] = [
+    {
+      id: `${course.id}-project-1`,
+      courseId: course.id,
+      title: 'System sketch',
+      summary: `Map the production problem behind ${course.title}.`,
+      image: course.thumbnail ?? '',
+      skills: ['Problem framing', 'Prototype scope'],
+      deliverable: 'A concise system sketch that makes the course problem visible for review.',
+      moduleLabel: 'Project 01',
+      order: 1,
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt,
+    },
+  ];
+
+  return { items: fallbackItems, total: fallbackItems.length };
 });
 
 /**
