@@ -156,27 +156,10 @@ export default function ClientSideExample() {
 }
 ```
 
-## Test Pages
+## Integration Verification
 
-Two test pages have been created to verify the integration:
-
-### 1. Interactive Test Page
-**URL:** http://localhost:3000/test-api-client
-
-Features:
-- Test Basic Import
-- Test Next.js Integration  
-- Test Client Creation
-- Test Type Generation
-
-### 2. Real-World Demo
-**URL:** http://localhost:3000/api-example
-
-Features:
-- Automatic health check on page load
-- Manual refresh button
-- Success/error state visualization
-- Code examples
+API client verification is covered by automated tests instead of routable demo
+pages. Production builds should not expose localhost-only API test screens.
 
 ## Running Tests
 
@@ -207,9 +190,12 @@ Expected output:
    pnpm dev
    ```
 
-3. **Visit Test Pages**
-   - Interactive Tests: http://localhost:3000/test-api-client
-   - Real Demo: http://localhost:3000/api-example
+3. **Run Verification**
+   ```bash
+   cd apps/web
+   node test-integration.mjs
+   pnpm test src/lib/__tests__/api-client.integration.test.ts
+   ```
 
 ## Type Safety
 
