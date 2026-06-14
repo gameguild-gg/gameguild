@@ -15,9 +15,9 @@ export default async function CompletionAnalyticsPage({
 }: PageProps<'/[locale]/dashboard/learning/courses/[course]/analytics/completion'>): Promise<React.JSX.Element> {
   const { course: courseId } = await params;
   const [completion, analytics] = await Promise.all([getCourseCompletionAnalytics(courseId), getCourseAnalytics(courseId)]);
-  const totalEnrolled = completion.totalEnrolled || analytics.enrollments.length;
-  const totalCompleted = completion.totalCompleted || analytics.enrollments.filter((enrollment) => enrollment.completedAt).length;
-  const completionRate = totalEnrolled > 0 ? Math.round((totalCompleted / totalEnrolled) * 100) : completion.completionRate;
+  const totalEnrolled = completion.totalEnrolled || analytics.totalUsers;
+  const totalCompleted = completion.totalCompleted || analytics.completedUsers;
+  const completionRate = totalEnrolled > 0 ? Math.round((totalCompleted / totalEnrolled) * 100) : Math.round(analytics.completionRate || completion.completionRate);
 
   return (
     <div className="flex flex-col gap-6">

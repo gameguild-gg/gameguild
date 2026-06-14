@@ -65,9 +65,9 @@ export default async function EngagementAnalyticsPage({
     getCourseAnalytics(courseId),
   ]);
 
-  const totalEnrolled = analytics.enrollments.length;
-  const completedCount = analytics.enrollments.filter((e) => e.completedAt).length;
-  const completionRate = totalEnrolled > 0 ? Math.round((completedCount / totalEnrolled) * 100) : 0;
+  const totalEnrolled = analytics.totalUsers;
+  const completedCount = analytics.completedUsers;
+  const completionRate = Math.round(analytics.completionRate);
 
   const formatDuration = (seconds: number) => {
     if (seconds === 0) return '—';

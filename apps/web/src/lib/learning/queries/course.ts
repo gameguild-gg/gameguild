@@ -46,6 +46,21 @@ function createCourseModules() {
   };
 }
 
+function emptyCourseAnalytics(): CourseAnalytics {
+  return {
+    totalUsers: 0,
+    activeUsers: 0,
+    completedUsers: 0,
+    completionRate: 0,
+    averageCompletionTime: null,
+    totalViews: 0,
+    lastActivity: null,
+    enrollments: [],
+    ratings: [],
+    revenue: [],
+  };
+}
+
 // Map ContentStatus string union to simplified frontend status
 function mapStatus(s: ContentStatus | undefined): 'draft' | 'published' | 'archived' {
   if (s === 'Published') return 'published';
@@ -120,7 +135,7 @@ export const getCourse = cache(async (courseId: string): Promise<CourseDetails |
  * Fetch course analytics data from the API.
  */
 export const getCourseAnalytics = cache(async (courseId: string): Promise<CourseAnalytics> => {
-  const empty: CourseAnalytics = { enrollments: [], ratings: [], revenue: [] };
+  const empty = emptyCourseAnalytics();
   try {
     const { programs } = createCourseModules();
     const result = await programs.getCoursesAnalytics(courseId);
@@ -128,21 +143,23 @@ export const getCourseAnalytics = cache(async (courseId: string): Promise<Course
     if (!result.ok) return empty;
 
     const dto = result.data;
-    // Synthesize enrollment-like entries from aggregate counts
-    const enrollments: CourseAnalytics['enrollments'] = [];
-    const totalUsers = dto.totalUsers ?? 0;
-    const completedUsers = dto.completedUsers ?? 0;
-    const completionRate = dto.completionRate ?? 0;
-    for (let i = 0; i < totalUsers; i++) {
-      enrollments.push({
-        id: `e${i}`,
-        enrolledAt: new Date().toISOString(),
-        completedAt: i < completedUsers ? new Date().toISOString() : null,
-        progress: i < completedUsers ? 100 : Math.round((completionRate / 100) * 100),
-      });
-    }
+    const totalUsers = Math.max(0, dto.totalUsers ?? 0);
+    const completedUsers = Math.max(0, dto.completedUsers ?? 0);
+    const completionRate =
+      dto.completionRate ?? (totalUsers > 0 ? (completedUsers / totalUsers) * 100 : 0);
 
-    return { enrollments, ratings: [], revenue: [] };
+    return {
+      totalUsers,
+      activeUsers: Math.max(0, dto.activeUsers ?? 0),
+      completedUsers,
+      completionRate: Math.max(0, Math.min(100, completionRate)),
+      averageCompletionTime: dto.averageCompletionTime ?? null,
+      totalViews: Math.max(0, dto.totalViews ?? 0),
+      lastActivity: dto.lastActivity ?? null,
+      enrollments: [],
+      ratings: [],
+      revenue: [],
+    };
   } catch {
     return empty;
   }

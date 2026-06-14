@@ -113,10 +113,10 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
     notFound();
   }
 
-  const totalEnrollments = analytics.enrollments.length;
-  const completedCount = analytics.enrollments.filter((e) => e.completedAt).length;
-  const completionRate = totalEnrollments > 0 ? Math.round((completedCount / totalEnrollments) * 100) : 0;
-  const avgRating = analytics.ratings.length > 0 ? (analytics.ratings.reduce((acc, r) => acc + r.score, 0) / analytics.ratings.length).toFixed(1) : null;
+  const totalEnrollments = analytics.totalUsers || course.currentEnrollments;
+  const completedCount = analytics.completedUsers;
+  const completionRate = Math.round(analytics.completionRate);
+  const avgRating = course.totalRatings > 0 ? course.averageRating.toFixed(1) : null;
 
   const launchSummary = deriveCourseLaunchSummary(course, content);
   const modulesCount = launchSummary.structure.modules;
@@ -308,7 +308,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
                     <Star className="size-5 text-yellow-500" />
                     <div>
                       <p className="text-lg font-bold">{avgRating}</p>
-                      <p className="text-xs text-muted-foreground">{analytics.ratings.length} reviews</p>
+                      <p className="text-xs text-muted-foreground">{course.totalRatings} reviews</p>
                     </div>
                   </div>
                 ) : (
