@@ -74,7 +74,7 @@ public class ProjectsController : BaseApiController {
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return Ok(projects);
+    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
   }
 
   /// <summary> Get project by ID </summary>
@@ -85,9 +85,10 @@ public class ProjectsController : BaseApiController {
 
     var project = await _mediator.Send(query).ConfigureAwait(false);
 
-    if (project == null) { return NotFound(); }
+    if (project.IsFailure) return ToActionResult(project);
+    if (project.Value == null) { return NotFound(); }
 
-    return Ok(project);
+    return Ok(project.Value);
   }
 
   /// <summary> Get project by slug </summary>
@@ -98,9 +99,10 @@ public class ProjectsController : BaseApiController {
 
     var project = await _mediator.Send(query).ConfigureAwait(false);
 
-    if (project == null) { return NotFound(); }
+    if (project.IsFailure) return ToActionResult(project);
+    if (project.Value == null) { return NotFound(); }
 
-    return Ok(project);
+    return Ok(project.Value);
   }
 
   /// <summary> Create a new project </summary>
@@ -216,7 +218,7 @@ public class ProjectsController : BaseApiController {
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return Ok(projects);
+    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
   }
 
   /// <summary> Get popular projects </summary>
@@ -227,7 +229,7 @@ public class ProjectsController : BaseApiController {
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return Ok(projects);
+    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
   }
 
   /// <summary> Get recent projects </summary>
@@ -238,7 +240,7 @@ public class ProjectsController : BaseApiController {
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return Ok(projects);
+    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
   }
 
   /// <summary> Get featured projects </summary>
@@ -249,7 +251,7 @@ public class ProjectsController : BaseApiController {
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return Ok(projects);
+    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
   }
 
   /// <summary> Get project statistics </summary>
@@ -260,7 +262,7 @@ public class ProjectsController : BaseApiController {
 
     var statistics = await _mediator.Send(query).ConfigureAwait(false);
 
-    return Ok(statistics);
+    return statistics.IsSuccess ? Ok(statistics.Value) : ToActionResult(statistics);
   }
 
   /// <summary> Get projects by category </summary>
@@ -271,7 +273,7 @@ public class ProjectsController : BaseApiController {
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return Ok(projects);
+    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
   }
 
   /// <summary> Get projects by creator </summary>
@@ -282,7 +284,7 @@ public class ProjectsController : BaseApiController {
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return Ok(projects);
+    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
   }
 
   /// <summary> Get available role templates for projects </summary>
