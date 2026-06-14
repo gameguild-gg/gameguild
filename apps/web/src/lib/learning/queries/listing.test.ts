@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CourseDetails } from '@/lib/learning/types';
 import { getCourse } from './course';
-import { getCourseFaq } from './listing';
+import { getCourseFaq, getCourseLandingProjects } from './listing';
 
 vi.mock('./course', () => ({
   getCourse: vi.fn(),
@@ -80,6 +80,40 @@ describe('course listing queries', () => {
         question: 'Will the storefront use it?',
         answer: 'Yes, edited metadata wins over generated defaults.',
         order: 2,
+      }),
+    ]);
+  });
+
+  it('uses dashboard-edited project carousel items stored in course metadata', async () => {
+    vi.mocked(getCourse).mockResolvedValue({
+      ...baseCourse,
+      metadata: JSON.stringify({
+        landingProjects: [
+          {
+            title: 'Boss behavior sandbox',
+            summary: 'Students build a readable boss encounter with inspectable AI states.',
+            image: 'https://example.com/boss-sandbox.jpg',
+            skills: ['State debugging', 'Combat pacing'],
+            deliverable: 'A playable boss encounter with annotated decision logic.',
+            moduleLabel: 'Project A',
+          },
+        ],
+      }),
+    } as CourseDetails & { metadata: string });
+
+    const projects = await getCourseLandingProjects('course-1');
+
+    expect(projects.total).toBe(1);
+    expect(projects.items).toEqual([
+      expect.objectContaining({
+        id: 'course-1-project-1',
+        title: 'Boss behavior sandbox',
+        summary: 'Students build a readable boss encounter with inspectable AI states.',
+        image: 'https://example.com/boss-sandbox.jpg',
+        skills: ['State debugging', 'Combat pacing'],
+        deliverable: 'A playable boss encounter with annotated decision logic.',
+        moduleLabel: 'Project A',
+        order: 1,
       }),
     ]);
   });

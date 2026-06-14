@@ -301,6 +301,15 @@ interface LandingFaqInput {
   category?: string;
 }
 
+interface LandingProjectInput {
+  title: string;
+  summary: string;
+  image?: string;
+  skills?: string | string[];
+  deliverable: string;
+  moduleLabel?: string;
+}
+
 function parseMetadata(raw: string | null | undefined): Record<string, unknown> {
   if (!raw) return {};
 
@@ -310,6 +319,21 @@ function parseMetadata(raw: string | null | undefined): Record<string, unknown> 
   } catch {
     return {};
   }
+}
+
+function normalizeStringList(value: string | string[] | undefined): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => item.trim()).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(/[,;\n]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
 }
 
 export async function updateCourseFaq(courseId: string, items: LandingFaqInput[]): Promise<ActionResult<null>> {
@@ -328,6 +352,35 @@ export async function updateCourseFaq(courseId: string, items: LandingFaqInput[]
 
     const metadata = parseMetadata(course.metadata);
     metadata.landingFaq = sanitizedItems;
+
+    return updateCourse({
+      courseId,
+      metadata: JSON.stringify(metadata),
+    });
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function updateCourseLandingProjects(courseId: string, items: LandingProjectInput[]): Promise<ActionResult<null>> {
+  const sanitizedItems = items
+    .map((item, index) => ({
+      title: item.title.trim(),
+      summary: item.summary.trim(),
+      image: item.image?.trim() || null,
+      skills: normalizeStringList(item.skills),
+      deliverable: item.deliverable.trim(),
+      moduleLabel: item.moduleLabel?.trim() || `Project ${String(index + 1).padStart(2, '0')}`,
+    }))
+    .filter((item) => item.title.length > 0 && item.summary.length > 0 && item.deliverable.length > 0)
+    .slice(0, 6);
+
+  try {
+    const course = await fetchCourse(courseId);
+    if (!course) return { success: false, error: 'Course not found.' };
+
+    const metadata = parseMetadata(course.metadata);
+    metadata.landingProjects = sanitizedItems;
 
     return updateCourse({
       courseId,
@@ -438,7 +491,7 @@ export async function updateAssessment(input: UpdateAssessmentInput): Promise<Ac
       availableUntil: fields.availableUntil ?? null,
       contentId: fields.contentId ?? null,
       clearContentId: fields.clearContentId ?? false,
-    } as any;
+    };
 
     const { assessments } = createCourseModules();
     const result = await assessments.putAssessments(assessmentId, body);

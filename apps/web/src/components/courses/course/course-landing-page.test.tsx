@@ -16,13 +16,13 @@ type MockImageProps = ImgHTMLAttributes<HTMLImageElement> & {
 
 vi.mock('next/image', () => ({
   default: (props: MockImageProps) => {
-    const imageProps = { ...props };
+    const { alt, ...imageProps } = props;
     delete imageProps.fill;
     delete imageProps.unoptimized;
     delete imageProps.priority;
 
     // eslint-disable-next-line @next/next/no-img-element
-    return <img {...imageProps} />;
+    return <img alt={alt} {...imageProps} />;
   },
 }));
 
@@ -135,5 +135,37 @@ describe('CourseLandingPage', () => {
 
     expect(screen.getByText('Is the FAQ editable from the dashboard?')).toBeInTheDocument();
     expect(screen.getByText('Yes, this public FAQ is metadata-backed.')).toBeInTheDocument();
+  });
+
+  it('uses dashboard-edited project metadata before static showcase projects', () => {
+    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
+
+    expect(course).toBeDefined();
+
+    render(
+      <CourseLandingPage
+        course={{
+          ...course!,
+          metadata: JSON.stringify({
+            landingProjects: [
+              {
+                title: 'Boss behavior sandbox',
+                summary: 'Students build a readable boss encounter with inspectable AI states.',
+                image: 'https://example.com/boss-sandbox.jpg',
+                skills: ['State debugging', 'Combat pacing'],
+                deliverable: 'A playable boss encounter with annotated decision logic.',
+                moduleLabel: 'Project A',
+              },
+            ],
+          }),
+        }}
+        viewerAccess={{ state: 'signed-out' }}
+      />,
+    );
+
+    const projectGallery = screen.getByRole('region', { name: /project gallery/i });
+    expect(within(projectGallery).getByRole('heading', { name: /Boss behavior sandbox/i })).toBeInTheDocument();
+    expect(within(projectGallery).getByText('A playable boss encounter with annotated decision logic.')).toBeInTheDocument();
+    expect(within(projectGallery).getByText('State debugging')).toBeInTheDocument();
   });
 });
