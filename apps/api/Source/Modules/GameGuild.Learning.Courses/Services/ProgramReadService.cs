@@ -257,7 +257,7 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
 
     if (program == null) return null;
 
-    return new PricingDto(0, "USD", false, null, false);
+    return ProgramPricingMetadata.Read(program);
   }
 
   public async Task<IEnumerable<Guid>> GetLinkedProductsAsync(Guid programId)

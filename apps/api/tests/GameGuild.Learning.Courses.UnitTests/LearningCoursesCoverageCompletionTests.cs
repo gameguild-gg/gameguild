@@ -883,6 +883,34 @@ public sealed class LearningCoursesCoverageCompletionTests
     }
 
     [Fact]
+    public async Task Program_pricing_is_persisted_through_metadata()
+    {
+        await using var db = new CoursesTestDbContext(CreateOptions());
+        var programId = Guid.NewGuid();
+        db.Programs.Add(new Program
+        {
+            Id = programId,
+            Title = "Pricing Course",
+            Slug = "pricing-course",
+        });
+        await db.SaveChangesAsync();
+
+        var write = new ProgramWriteService(db);
+        var read = new ProgramReadService(db);
+
+        (await write.EnableMonetizationAsync(programId, new MonetizationDto(199.99m, "USD", true, 365))).Should().NotBeNull();
+        var enabled = await read.GetProgramPricingAsync(programId);
+        enabled.Should().BeEquivalentTo(new PricingDto(199.99m, "USD", true, 365, true));
+
+        var updated = await write.UpdateProgramPricingAsync(programId, new UpdatePricingDto(249.50m, "EUR", false, null));
+        updated.Should().BeEquivalentTo(new PricingDto(249.50m, "EUR", false, null, true));
+
+        (await write.DisableMonetizationAsync(programId)).Should().NotBeNull();
+        var disabled = await read.GetProgramPricingAsync(programId);
+        disabled.Should().BeEquivalentTo(new PricingDto(249.50m, "EUR", false, null, false));
+    }
+
+    [Fact]
     public void Program_dtos_expose_metadata_for_dashboard_landing_page_editing()
     {
         typeof(ProgramDto).GetProperty("Metadata").Should().NotBeNull();

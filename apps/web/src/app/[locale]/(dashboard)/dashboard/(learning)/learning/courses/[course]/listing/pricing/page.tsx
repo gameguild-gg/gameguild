@@ -1,8 +1,8 @@
 import React from 'react';
 import { getCourse, getCoursePricing } from '@/lib/learning';
-import { Badge } from '@game-guild/ui/components/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CreditCard, Receipt } from 'lucide-react';
+import { PricingEditorForm } from './pricing-editor-form';
 
 /**
  * Listing Pricing Page
@@ -30,28 +30,8 @@ export default async function ListingPricingPage({
           <CardTitle className="flex items-center gap-2"><CreditCard className="size-5" />Pricing</CardTitle>
           <CardDescription>{course.title} storefront monetization and public price display.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {pricing.tiers.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">This course is currently free or monetization is disabled.</div>
-          ) : (
-            pricing.tiers.map((tier) => (
-              <div key={tier.id} className="rounded-lg border p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-medium">{tier.name}</p>
-                    <p className="text-sm text-muted-foreground">{tier.description}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-semibold">{tier.currency} {tier.price}</p>
-                    <Badge variant="outline">{tier.interval ?? 'one-time'}</Badge>
-                  </div>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {tier.features.map((feature) => <Badge key={feature} variant="secondary">{feature}</Badge>)}
-                </div>
-              </div>
-            ))
-          )}
+        <CardContent>
+          <PricingEditorForm courseId={courseId} pricing={pricing} />
         </CardContent>
       </Card>
 
