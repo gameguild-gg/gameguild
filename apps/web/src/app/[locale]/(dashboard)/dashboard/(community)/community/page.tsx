@@ -5,6 +5,7 @@ import { Users, UserPlus, MessageSquare, ShieldAlert } from 'lucide-react';
 
 export default async function Page(): Promise<React.JSX.Element> {
   const stats = await getCommunityStats();
+  const activeRate = stats.totalMembers > 0 ? Math.round((stats.activeMembers / stats.totalMembers) * 100) : 0;
 
   const kpis = [
     { label: 'Total Members', value: stats.totalMembers, icon: Users, description: 'Registered community members' },
@@ -41,19 +42,48 @@ export default async function Page(): Promise<React.JSX.Element> {
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest community interactions</CardDescription>
+            <CardDescription>Live moderation and participation signals</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">No recent activity to display.</p>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <span className="text-sm text-muted-foreground">Open support requests</span>
+              <span className="text-sm font-semibold">{stats.openTickets}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <span className="text-sm text-muted-foreground">Published posts and discussions</span>
+              <span className="text-sm font-semibold">{stats.totalPosts}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <span className="text-sm text-muted-foreground">Active groups</span>
+              <span className="text-sm font-semibold">{stats.totalGroups}</span>
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Growth Trend</CardTitle>
-            <CardDescription>Member registration over time</CardDescription>
+            <CardDescription>Current member base health</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">No data available yet.</p>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="mb-2 flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Active member rate</span>
+                <span className="font-semibold">{activeRate}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-muted">
+                <div className="h-2 rounded-full bg-primary" style={{ width: `${activeRate}%` }} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">New this month</p>
+                <p className="text-lg font-semibold">{stats.newMembersThisMonth}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Total members</p>
+                <p className="text-lg font-semibold">{stats.totalMembers}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
