@@ -248,7 +248,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
                       <TableCell className="text-center">{course.completionPercent !== null ? `${course.completionPercent}%` : '—'}</TableCell>
                       <TableCell className="text-center">{course.avgRating ?? '—'}</TableCell>
                       <TableCell>
-                        <CourseTableActions courseId={course.id} locale={locale} />
+                        <CourseTableActions courseId={course.id} courseTitle={course.title} locale={locale} />
                       </TableCell>
                     </TableRow>
                   ))}

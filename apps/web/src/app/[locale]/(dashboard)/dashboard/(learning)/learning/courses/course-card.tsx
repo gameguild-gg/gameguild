@@ -5,7 +5,7 @@ import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
-import { Archive, BookOpen, Edit, Eye, MoreHorizontal, Star, Trash2, Users } from 'lucide-react';
+import { BookOpen, Edit, Eye, MoreHorizontal, Star, Users } from 'lucide-react';
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -48,35 +48,29 @@ export function CourseCard({ course, locale }: CourseCardProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="size-8">
+                <span className="sr-only">Open {course.title} actions</span>
                 <MoreHorizontal className="size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Edit className="mr-2 size-4" />
-                Edit Course
+              <DropdownMenuItem asChild>
+                <Link href={`/dashboard/learning/courses/${course.id}`}>
+                  <Edit className="mr-2 size-4" />
+                  Edit Course
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Eye className="mr-2 size-4" />
-                Preview
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {course.status === 'published' && (
-                <DropdownMenuItem>
-                  <Archive className="mr-2 size-4" />
-                  Archive
-                </DropdownMenuItem>
-              )}
-              {course.status === 'draft' && (
-                <DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/dashboard/learning/courses/${course.id}/preview`}>
                   <Eye className="mr-2 size-4" />
-                  Publish
-                </DropdownMenuItem>
-              )}
+                  Preview
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
-                <Trash2 className="mr-2 size-4" />
-                Delete
+              <DropdownMenuItem asChild>
+                <Link href={`/dashboard/learning/courses/${course.id}/overview`}>
+                  <BookOpen className="mr-2 size-4" />
+                  Manage lifecycle
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -105,12 +99,13 @@ export function CourseCard({ course, locale }: CourseCardProps) {
   );
 }
 
-export function CourseTableActions({ courseId, locale }: { courseId: string; locale: string }) {
+export function CourseTableActions({ courseId, courseTitle, locale }: { courseId: string; courseTitle: string; locale: string }) {
   void locale;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="size-8">
+          <span className="sr-only">Open {courseTitle} actions</span>
           <MoreHorizontal className="size-4" />
         </Button>
       </DropdownMenuTrigger>
@@ -121,14 +116,18 @@ export function CourseTableActions({ courseId, locale }: { courseId: string; loc
             Edit
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Eye className="mr-2 size-4" />
-          Preview
+        <DropdownMenuItem asChild>
+          <Link href={`/dashboard/learning/courses/${courseId}/preview`}>
+            <Eye className="mr-2 size-4" />
+            Preview
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-destructive">
-          <Trash2 className="mr-2 size-4" />
-          Delete
+        <DropdownMenuItem asChild>
+          <Link href={`/dashboard/learning/courses/${courseId}/overview`}>
+            <BookOpen className="mr-2 size-4" />
+            Manage lifecycle
+          </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
