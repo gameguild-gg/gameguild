@@ -1,6 +1,6 @@
 'use client';
 
-import { CourseLevel } from '@/components/legacy/types/courses';
+import type { CourseLevel } from '@/lib/courses/catalog-types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

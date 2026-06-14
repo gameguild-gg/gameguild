@@ -1,10 +1,10 @@
-export interface Course {
+export interface CatalogCourse {
   id: string;
   title: string;
   description: string;
   area: CourseArea;
   level: CourseLevel;
-  tools?: string[]; // Made optional to handle cases where tools might be undefined
+  tools?: string[];
   progress?: number;
   image: string;
   slug: string;
@@ -18,7 +18,7 @@ export interface ToolsByArea {
 }
 
 export interface CourseData {
-  courses: Course[];
+  courses: CatalogCourse[];
   toolsByArea: ToolsByArea;
 }
 
