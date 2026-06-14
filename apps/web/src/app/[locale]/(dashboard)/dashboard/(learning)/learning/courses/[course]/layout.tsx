@@ -34,6 +34,7 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
       courseTitle={course.title}
       courseDescription={course.description}
       courseStatus={course.status}
+      courseSlug={course.slug}
       features={course.features}
     >
       {children}

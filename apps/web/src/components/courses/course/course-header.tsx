@@ -7,6 +7,7 @@ import { getCourseCategoryName, getCourseLevelConfig } from '@/lib/courses/servi
 import { getCourseShowcase, getProgramForCourse } from '@/lib/courses/public-programs';
 import { ArrowLeft, ArrowRight, BookOpen, Clock, Layers3, Play, Users } from 'lucide-react';
 import Image from 'next/image';
+import { shouldUseUnoptimizedCourseImage } from './course-image';
 import { CourseSelfEnrollButton } from './course-self-enroll-button';
 
 interface CourseHeaderProps {
@@ -55,7 +56,7 @@ export function CourseHeader({ course, viewerAccess }: CourseHeaderProps) {
             src={heroImage}
             alt={courseTitle}
             fill
-            unoptimized={heroImage.endsWith('.svg')}
+            unoptimized={shouldUseUnoptimizedCourseImage(heroImage)}
             className="object-cover"
             priority
             loading="eager"
