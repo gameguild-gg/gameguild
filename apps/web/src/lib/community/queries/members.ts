@@ -149,6 +149,26 @@ interface UsersPagedResult {
   hasNextPage?: boolean;
 }
 
+function isDateInCurrentMonth(value?: string | null, now = new Date()) {
+  if (!value) return false;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+
+  return date.getUTCFullYear() === now.getUTCFullYear() && date.getUTCMonth() === now.getUTCMonth();
+}
+
+function isRecentlyActive(user: IdentityUsersUser, now = new Date()) {
+  if (user.isActive === false) return false;
+  if (!user.lastSeenAt) return user.isActive === true;
+
+  const lastSeenAt = new Date(user.lastSeenAt).getTime();
+  if (Number.isNaN(lastSeenAt)) return user.isActive === true;
+
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  return now.getTime() - lastSeenAt <= thirtyDaysMs;
+}
+
 async function getSessionClaims(): Promise<{ accessToken: string | null; userId: string | null }> {
   const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '';
   if (!secret) return { accessToken: null, userId: null };
@@ -541,24 +561,39 @@ export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take
 export async function getCommunityStats(): Promise<CommunityStats> {
   try {
     const client = getApiClient();
-    const result = await client.request<UsersPagedResult>({
-      method: 'GET',
-      path: '/v1/users',
-      params: { limit: 1 },
-      requiresAuth: true,
-    });
+    const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+    const marketingLeads = new GeneratedApi.ContentMarketingleadsModule(client);
+    const blogPosts = new GeneratedApi.SocialBlogPostsModule(client);
+    const now = new Date();
 
-    if (result.ok) {
-      const totalMembers = result.data.totalCount ?? 0;
-      return {
-        totalMembers,
-        activeMembers: totalMembers, // API doesn't split by active yet
-        newMembersThisMonth: 0,
-        totalGroups: 0,
-        openTickets: 0,
-        totalPosts: 0,
-      };
-    }
+    const [usersResult, groupsResult, supportResult, postsResult] = await Promise.all([
+      client.request<UsersPagedResult>({
+        method: 'GET',
+        path: '/v1/users',
+        params: { limit: 500 },
+        requiresAuth: true,
+      }),
+      socialGroups.getApiSocialGroups({ skip: 0, take: 500 }),
+      marketingLeads.getMarketingLeads({
+        source: 'contact',
+        topic: 'support',
+        status: 'new',
+        skip: 0,
+        take: 500,
+      }),
+      blogPosts.getApiSocialBlog({ skip: 0, take: 500 }),
+    ]);
+
+    const users = usersResult.ok ? usersResult.data.items ?? [] : [];
+
+    return {
+      totalMembers: usersResult.ok ? usersResult.data.totalCount ?? users.length : 0,
+      activeMembers: users.filter((user) => isRecentlyActive(user, now)).length,
+      newMembersThisMonth: users.filter((user) => isDateInCurrentMonth(user.createdAt, now)).length,
+      totalGroups: groupsResult.ok ? (groupsResult.data ?? []).length : 0,
+      openTickets: supportResult.ok ? (supportResult.data ?? []).length : 0,
+      totalPosts: postsResult.ok ? (postsResult.data ?? []).length : 0,
+    };
   } catch {
     // Fall through to defaults
   }
