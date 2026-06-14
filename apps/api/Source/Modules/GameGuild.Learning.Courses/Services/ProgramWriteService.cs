@@ -494,6 +494,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (program == null) return null;
 
+    ProgramPricingMetadata.Enable(program, monetizationDto);
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -506,6 +507,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (program == null) return null;
 
+    ProgramPricingMetadata.Disable(program);
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -518,7 +520,11 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (program == null) return null;
 
-    return new PricingDto(0, "USD", false, null, false);
+    var pricing = ProgramPricingMetadata.Update(program, pricingDto);
+    program.Touch();
+    await context.SaveChangesAsync().ConfigureAwait(false);
+
+    return pricing;
   }
 
   // ── Product Integration ─────────────────────────────────────────────

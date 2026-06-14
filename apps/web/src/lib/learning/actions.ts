@@ -8,6 +8,7 @@ import {
   type LearningAssessmentsAssessmentType,
   type LearningAssessmentsCreateAssessmentInput,
   type LearningAssessmentsUpdateAssessmentInput,
+  type LearningCoursesMonetization,
   type LearningCoursesCloneProgram,
   type LearningCoursesCreateProgram,
   type LearningCoursesCreateProgramContent,
@@ -386,6 +387,54 @@ export async function updateCourseLandingProjects(courseId: string, items: Landi
       courseId,
       metadata: JSON.stringify(metadata),
     });
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export interface UpdateCoursePricingInput {
+  courseId: string;
+  isMonetizationEnabled: boolean;
+  price: number;
+  currency: string;
+  isSubscription: boolean;
+  subscriptionDurationDays?: number | null;
+}
+
+export async function updateCoursePricing(input: UpdateCoursePricingInput): Promise<ActionResult<null>> {
+  try {
+    const { programs } = createCourseModules();
+
+    if (!input.isMonetizationEnabled) {
+      const result = await programs.postCoursesDisableMonetization(input.courseId);
+
+      if (result.ok) {
+        revalidatePath(`/dashboard/learning/courses/${input.courseId}/listing/pricing`);
+        revalidatePath(`/dashboard/learning/courses/${input.courseId}/listing`);
+        return { success: true, data: null };
+      }
+
+      return { success: false, error: extractError(result.error) };
+    }
+
+    if (!Number.isFinite(input.price) || input.price < 0) {
+      return { success: false, error: 'Price must be zero or greater.' };
+    }
+
+    const result = await programs.postCoursesMonetize(input.courseId, {
+      price: input.price,
+      currency: input.currency.trim().toUpperCase() || 'USD',
+      isSubscription: input.isSubscription,
+      subscriptionDurationDays: input.isSubscription ? input.subscriptionDurationDays ?? null : null,
+    } satisfies LearningCoursesMonetization);
+
+    if (result.ok) {
+      revalidatePath(`/dashboard/learning/courses/${input.courseId}/listing/pricing`);
+      revalidatePath(`/dashboard/learning/courses/${input.courseId}/listing`);
+      return { success: true, data: null };
+    }
+
+    return { success: false, error: extractError(result.error) };
   } catch (e) {
     return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
   }
