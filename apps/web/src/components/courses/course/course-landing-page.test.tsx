@@ -16,13 +16,12 @@ type MockImageProps = ImgHTMLAttributes<HTMLImageElement> & {
 
 vi.mock('next/image', () => ({
   default: (props: MockImageProps) => {
-    const { alt, ...imageProps } = props;
+    const { alt, unoptimized, ...imageProps } = props;
     delete imageProps.fill;
-    delete imageProps.unoptimized;
     delete imageProps.priority;
 
     // eslint-disable-next-line @next/next/no-img-element
-    return <img alt={alt} {...imageProps} />;
+    return <img alt={alt} data-unoptimized={unoptimized ? 'true' : 'false'} {...imageProps} />;
   },
 }));
 
@@ -112,6 +111,25 @@ describe('CourseLandingPage', () => {
     );
 
     expect(screen.getByText('Instructor-edited hero copy for the public storefront.')).toBeInTheDocument();
+  });
+
+  it('renders editor-provided external thumbnail URLs without Next image optimization', () => {
+    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
+
+    expect(course).toBeDefined();
+
+    render(
+      <CourseLandingPage
+        course={{
+          ...course!,
+          title: 'External Thumbnail Course',
+          thumbnail: 'https://example.com/editor-cover.png',
+        }}
+        viewerAccess={{ state: 'signed-out' }}
+      />,
+    );
+
+    expect(screen.getByAltText('External Thumbnail Course')).toHaveAttribute('data-unoptimized', 'true');
   });
 
   it('uses dashboard-edited FAQ metadata before static showcase FAQ', () => {

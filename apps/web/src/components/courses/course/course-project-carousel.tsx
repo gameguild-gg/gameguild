@@ -6,6 +6,7 @@ import type { CourseProjectShowcase } from '@/lib/courses/public-programs';
 import { ArrowLeft, ArrowRight, CheckCircle2, Layers3 } from 'lucide-react';
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
+import { shouldUseUnoptimizedCourseImage } from './course-image';
 
 interface CourseProjectCarouselProps {
   readonly courseTitle: string;
@@ -39,7 +40,14 @@ export function CourseProjectCarousel({ courseTitle, projects }: CourseProjectCa
               <article key={project.title} className="min-w-full">
                 <div className="grid min-h-[560px] lg:grid-cols-[0.9fr_1.1fr]">
                   <div className="relative min-h-[280px] overflow-hidden lg:min-h-full">
-                    <Image src={project.image} alt={`${project.title} project preview`} fill className="object-cover" sizes="(min-width: 1024px) 42vw, 100vw" />
+                    <Image
+                      src={project.image}
+                      alt={`${project.title} project preview`}
+                      fill
+                      unoptimized={shouldUseUnoptimizedCourseImage(project.image)}
+                      className="object-cover"
+                      sizes="(min-width: 1024px) 42vw, 100vw"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#05070d]/82 via-[#05070d]/8 to-transparent" />
                     <div className="absolute left-5 top-5 rounded-full border border-white/15 bg-black/35 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white backdrop-blur">
                       {project.moduleLabel}

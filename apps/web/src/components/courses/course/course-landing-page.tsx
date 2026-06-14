@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { CourseHeader } from './course-header';
+import { shouldUseUnoptimizedCourseImage } from './course-image';
 import { CourseProjectCarousel } from './course-project-carousel';
 import { CourseSelfEnrollButton } from './course-self-enroll-button';
 
@@ -398,7 +399,7 @@ export function CourseLandingPage({ course, viewerAccess }: CourseLandingPagePro
                     alt=""
                     fill
                     aria-hidden="true"
-                    unoptimized={sectionVisuals.intro.endsWith('.svg')}
+                    unoptimized={shouldUseUnoptimizedCourseImage(sectionVisuals.intro)}
                     className="object-cover"
                     sizes="(min-width: 1024px) 56vw, 100vw"
                   />
@@ -607,7 +608,14 @@ export function CourseLandingPage({ course, viewerAccess }: CourseLandingPagePro
               <section className="mx-auto w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#080d18]">
                 <div className="grid lg:grid-cols-[0.92fr_1.08fr]">
                   <div className="relative min-h-[360px]">
-                    <Image src={sectionVisuals.program} alt={program.title} fill className="object-cover" sizes="(min-width: 1024px) 42vw, 100vw" />
+                    <Image
+                      src={sectionVisuals.program}
+                      alt={program.title}
+                      fill
+                      unoptimized={shouldUseUnoptimizedCourseImage(sectionVisuals.program)}
+                      className="object-cover"
+                      sizes="(min-width: 1024px) 42vw, 100vw"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#05070d]/75 via-[#05070d]/10 to-transparent" />
                     <div className="absolute bottom-7 left-7 right-7">
                       <Badge variant="outline" className="border-white/15 bg-black/30 text-white backdrop-blur">

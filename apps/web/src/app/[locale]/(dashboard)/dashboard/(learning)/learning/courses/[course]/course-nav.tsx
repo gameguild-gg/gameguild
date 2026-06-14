@@ -25,13 +25,15 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useState, type ReactNode } from 'react';
 
 interface CourseNavProps {
   courseTitle: string;
   courseDescription: string;
   courseStatus: 'draft' | 'published' | 'archived';
+  courseSlug: string | null;
   features: CourseFeatures;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 interface NavItem {
@@ -69,13 +71,25 @@ function buildNavItems(features: CourseFeatures): NavItem[] {
   ].filter((item) => item.enabled);
 }
 
-export function CourseNav({ courseTitle, courseDescription, courseStatus, features, children }: CourseNavProps) {
+export function CourseNav({ courseTitle, courseDescription, courseStatus, courseSlug, features, children }: CourseNavProps) {
   const params = useParams();
   const pathname = usePathname() ?? '';
   const courseId = params.course as string;
   const basePath = `/dashboard/learning/courses/${courseId}`;
+  const publicCourseHref = courseSlug?.trim() ? `/courses/${courseSlug.trim()}` : null;
+  const previewHref = `${basePath}/preview`;
+  const [shareLabel, setShareLabel] = useState('Share');
 
   const navItems = buildNavItems(features);
+
+  async function copyPublicCourseUrl() {
+    if (!publicCourseHref || !navigator.clipboard?.writeText) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(`${window.location.origin}${publicCourseHref}`);
+    setShareLabel('Copied');
+  }
 
   // Match the active segment after the courseId
   const activeSegment = (() => {
@@ -107,13 +121,15 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, featur
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Eye className="mr-2 size-4" />
-            Preview
+          <Button variant="outline" size="sm" asChild>
+            <Link href={previewHref}>
+              <Eye className="mr-2 size-4" />
+              Preview
+            </Link>
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" type="button" disabled={!publicCourseHref} onClick={copyPublicCourseUrl}>
             <Share2 className="mr-2 size-4" />
-            Share
+            {shareLabel}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
