@@ -8,8 +8,8 @@ The `@game-guild/client` package has been **successfully integrated** into the N
 - ✅ All 6 integration tests passing
 - ✅ Full TypeScript support (155KB type definitions)
 - ✅ Next.js-specific utilities (Server Components, cookies, NextAuth)
-- ✅ Interactive test pages for verification
-- ✅ Real-world demo with health check
+- ✅ Automated verification instead of production-routable demo pages
+- ✅ Health and integration checks covered by tests
 
 ---
 
@@ -20,19 +20,11 @@ The `@game-guild/client` package has been **successfully integrated** into the N
 - Ran `pnpm install` - dependency linked successfully
 - Verified all build outputs (ESM/CJS/DTS)
 
-### 2. Test Pages Created ✅
+### 2. Production Route Cleanup ✅
 
-**Interactive Test Page:** `/test-api-client`
-- Tests basic imports
-- Tests Next.js integration utilities
-- Tests client creation with config
-- Tests type generation
-
-**Real-World Demo:** `/api-example`  
-- Live health check against API
-- Auto-refresh functionality
-- Success/error state visualization
-- Code examples and troubleshooting
+The temporary API-client demo routes were removed from the production route
+surface. Import, Next.js integration, client creation, and type-generation
+checks now live in automated tests.
 
 ### 3. Integration Tests ✅
 
@@ -157,10 +149,10 @@ cd apps/web
 pnpm dev
 ```
 
-### 2. Visit Test Pages
+### 2. Run Automated Verification
 
-- **Interactive Tests:** http://localhost:3000/test-api-client
-- **Real Demo:** http://localhost:3000/api-example
+The former routable API-client demo pages were removed from the production app.
+Use the committed test suites for verification instead.
 
 ### 3. Run Integration Tests
 
@@ -277,20 +269,11 @@ export async function POST(request: Request) {
 1. **`apps/web/package.json`**
    - Added `@game-guild/client` workspace dependency
 
-2. **`apps/web/src/app/test-api-client/page.tsx`** (207 lines)
-   - Interactive test UI with 4 test buttons
-   - Real-time results and error display
-
-3. **`apps/web/src/app/api-example/page.tsx`** (182 lines)
-   - Real-world health check demo
-   - Auto-refresh functionality
-   - Code examples
-
-4. **`apps/web/test-integration.mjs`** (117 lines)
+2. **`apps/web/test-integration.mjs`** (117 lines)
    - 6 comprehensive integration tests
    - All passing ✅
 
-5. **`apps/web/vitest.config.ts`**
+3. **`apps/web/vitest.config.ts`**
    - Vitest configuration for future tests
 
 6. **`apps/web/API_CLIENT_INTEGRATION.md`**
@@ -377,10 +360,6 @@ export async function POST(request: Request) {
 ## 🎉 INTEGRATION COMPLETE
 
 The API client is now **fully integrated** into the web application and **ready for production use**. All tests are passing, documentation is complete, and the package provides type-safe, tested API access for the entire Next.js application.
-
-**Access test pages at:**
-- http://localhost:3000/test-api-client
-- http://localhost:3000/api-example
 
 **Run tests:**
 ```bash
