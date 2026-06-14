@@ -3830,6 +3830,7 @@ export interface LearningCoursesProgram {
   creatorId?: string | null;
   title?: string | null;
   description?: string | null;
+  metadata?: string | null;
   visibility?: ContentVisibility;
   slug?: string | null;
   status?: ContentStatus;
@@ -3960,6 +3961,7 @@ export interface LearningCoursesUpdateProgramContent {
 export interface LearningCoursesUpdateProgram {
   title?: string | null;
   description?: string | null;
+  metadata?: string | null;
   slug?: string | null;
   thumbnail?: string | null;
   videoShowcaseUrl?: string | null;
@@ -9686,6 +9688,7 @@ LearningCoursesProgramSchema = z.object({
   creatorId: z.string().uuid().nullable().optional(),
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  metadata: z.string().nullable().optional(),
   visibility: z.lazy(() => ContentVisibilitySchema).optional(),
   slug: z.string().nullable().optional(),
   status: z.lazy(() => ContentStatusSchema).optional(),
@@ -9837,6 +9840,7 @@ LearningCoursesUpdateProgramContentSchema = z.object({
 LearningCoursesUpdateProgramSchema = z.object({
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  metadata: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
   thumbnail: z.string().nullable().optional(),
   videoShowcaseUrl: z.string().nullable().optional(),

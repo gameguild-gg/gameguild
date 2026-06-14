@@ -113,4 +113,27 @@ describe('CourseLandingPage', () => {
 
     expect(screen.getByText('Instructor-edited hero copy for the public storefront.')).toBeInTheDocument();
   });
+
+  it('uses dashboard-edited FAQ metadata before static showcase FAQ', () => {
+    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
+
+    expect(course).toBeDefined();
+
+    render(
+      <CourseLandingPage
+        course={{
+          ...course!,
+          metadata: JSON.stringify({
+            landingFaq: [
+              { question: 'Is the FAQ editable from the dashboard?', answer: 'Yes, this public FAQ is metadata-backed.' },
+            ],
+          }),
+        }}
+        viewerAccess={{ state: 'signed-out' }}
+      />,
+    );
+
+    expect(screen.getByText('Is the FAQ editable from the dashboard?')).toBeInTheDocument();
+    expect(screen.getByText('Yes, this public FAQ is metadata-backed.')).toBeInTheDocument();
+  });
 });

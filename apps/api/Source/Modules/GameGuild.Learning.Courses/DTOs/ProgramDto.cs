@@ -10,6 +10,7 @@ public sealed record ProgramDto
     public Guid? CreatorId { get; init; }
     public string Title { get; init; } = string.Empty;
     public string? Description { get; init; }
+    public string? Metadata { get; init; }
     public ContentVisibility Visibility { get; init; }
     public string? Slug { get; init; }
     public ContentStatus Status { get; init; }

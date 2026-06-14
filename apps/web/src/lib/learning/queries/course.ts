@@ -78,6 +78,7 @@ export const getCourse = cache(async (courseId: string): Promise<CourseDetails |
       id: dto.id!,
       title: dto.title ?? '',
       description: dto.description ?? '',
+      metadata: dto.metadata ?? null,
       slug: dto.slug ?? '',
       status: mapStatus(dto.status),
       visibility: mapVisibility(dto.visibility),

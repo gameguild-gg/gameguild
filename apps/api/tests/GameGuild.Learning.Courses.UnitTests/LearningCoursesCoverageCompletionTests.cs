@@ -883,6 +883,22 @@ public sealed class LearningCoursesCoverageCompletionTests
     }
 
     [Fact]
+    public void Program_dtos_expose_metadata_for_dashboard_landing_page_editing()
+    {
+        typeof(ProgramDto).GetProperty("Metadata").Should().NotBeNull();
+        typeof(UpdateProgramDto).GetProperty("Metadata").Should().NotBeNull();
+
+        var dto = new Program
+        {
+            Id = Guid.NewGuid(),
+            Title = "Metadata course",
+            Metadata = """{"landingFaq":[{"question":"Q","answer":"A"}]}""",
+        }.ToDto();
+
+        dto.GetType().GetProperty("Metadata")!.GetValue(dto).Should().Be("""{"landingFaq":[{"question":"Q","answer":"A"}]}""");
+    }
+
+    [Fact]
     public async Task Read_write_and_lifecycle_services_cover_in_memory_paths()
     {
         await using var db = new CoursesTestDbContext(CreateOptions());

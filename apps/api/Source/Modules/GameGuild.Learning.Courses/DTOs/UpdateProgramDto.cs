@@ -3,6 +3,7 @@ namespace GameGuild.Learning.Courses;
 public sealed record UpdateProgramDto {
   public string? Title { get; init; }
   public string? Description { get; init; }
+  public string? Metadata { get; init; }
   public string? Slug { get; init; }
   public string? Thumbnail { get; init; }
   public string? VideoShowcaseUrl { get; init; }
