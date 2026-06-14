@@ -84,6 +84,13 @@ export interface CourseDetails {
  * Course analytics raw data
  */
 export interface CourseAnalytics {
+  totalUsers: number;
+  activeUsers: number;
+  completedUsers: number;
+  completionRate: number;
+  averageCompletionTime: string | null;
+  totalViews: number;
+  lastActivity: string | null;
   enrollments: Array<{
     id: string;
     enrolledAt: string;
