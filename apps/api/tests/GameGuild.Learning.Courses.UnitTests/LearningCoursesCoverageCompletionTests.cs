@@ -850,6 +850,39 @@ public sealed class LearningCoursesCoverageCompletionTests
     }
 
     [Fact]
+    public async Task Program_write_service_persists_dashboard_editable_skills_through_metadata()
+    {
+        var options = CreateOptions();
+        var programId = Guid.NewGuid();
+
+        await using (var db = new CoursesTestDbContext(options))
+        {
+            db.Programs.Add(new Program
+            {
+                Id = programId,
+                Title = "Editable storefront",
+                Slug = "editable-storefront",
+            });
+            await db.SaveChangesAsync();
+
+            var write = new ProgramWriteService(db);
+            await write.UpdateProgramAsync(programId, new UpdateProgramDto
+            {
+                SkillsRequired = "portfolio basics, critique",
+                SkillsProvided = "production planning, release pitch",
+            });
+        }
+
+        await using (var db = new CoursesTestDbContext(options))
+        {
+            var reloaded = await db.Programs.SingleAsync(p => p.Id == programId);
+
+            reloaded.SkillsRequired.Should().Be("portfolio basics, critique");
+            reloaded.SkillsProvided.Should().Be("production planning, release pitch");
+        }
+    }
+
+    [Fact]
     public async Task Read_write_and_lifecycle_services_cover_in_memory_paths()
     {
         await using var db = new CoursesTestDbContext(CreateOptions());
@@ -1262,7 +1295,9 @@ public sealed class LearningCoursesCoverageCompletionTests
         {
             modelBuilder.Entity<Program>()
                 .Ignore(p => p.ProgramRatings)
-                .Ignore(p => p.ProgramWishlists);
+                .Ignore(p => p.ProgramWishlists)
+                .Ignore(p => p.SkillsRequired)
+                .Ignore(p => p.SkillsProvided);
             modelBuilder.Entity<ProgramContent>();
             modelBuilder.Entity<User>()
                 .Ignore(u => u.Profile)

@@ -250,25 +250,31 @@ export function CourseLandingPage({ course, viewerAccess }: CourseLandingPagePro
   const previewMinutes = getTopLevelMinutes(contentPreview);
   const publishedSkills = normalizeList(course.skillsProvided);
   const requiredSkills = normalizeList(course.skillsRequired);
-  const outcomes = showcase?.outcomes.length
-    ? showcase.outcomes
-    : publishedSkills.length
-      ? publishedSkills
+  const outcomes = publishedSkills.length
+    ? publishedSkills
+    : showcase?.outcomes.length
+      ? showcase.outcomes
       : [
           `Understand the core craft behind ${categoryName.toLowerCase()}.`,
           'Build practical work that can be reviewed and improved.',
           'Turn course practice into a public portfolio artifact.',
         ];
-  const prerequisites = showcase?.prerequisites.length
-    ? showcase.prerequisites
-    : requiredSkills.length
-      ? requiredSkills
+  const prerequisites = requiredSkills.length
+    ? requiredSkills
+    : showcase?.prerequisites.length
+      ? showcase.prerequisites
       : [level === 'Beginner' ? 'No advanced background required.' : `${level} comfort with the course discipline is recommended.`];
   const projectResult = showcase?.projectResult ?? `A practical ${categoryName.toLowerCase()} project that demonstrates what students learned.`;
-  const projectSlides = showcase?.projects?.length
-    ? showcase.projects
-    : makeProjectSlides(outcomes, title, projectResult, heroImage, sectionVisuals.project, sectionVisuals.program);
-  const journeyRows = showcase?.journey?.length ? showcase.journey : makeJourneyRows(contentPreview, outcomes, title);
+  const projectSlides = publishedSkills.length
+    ? makeProjectSlides(outcomes, title, projectResult, heroImage, sectionVisuals.project, sectionVisuals.program)
+    : showcase?.projects?.length
+      ? showcase.projects
+      : makeProjectSlides(outcomes, title, projectResult, heroImage, sectionVisuals.project, sectionVisuals.program);
+  const journeyRows = contentPreview.length > 0 || publishedSkills.length
+    ? makeJourneyRows(contentPreview, outcomes, title)
+    : showcase?.journey?.length
+      ? showcase.journey
+      : makeJourneyRows(contentPreview, outcomes, title);
   const viewerCta = getViewerCta(course, viewerAccess);
   const finalArtifactLabel = title.toLowerCase().includes('ai') ? 'AI prototype' : 'Portfolio piece';
   const faq = showcase?.faq ?? [

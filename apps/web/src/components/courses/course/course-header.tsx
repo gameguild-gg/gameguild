@@ -38,7 +38,7 @@ export function CourseHeader({ course, viewerAccess }: CourseHeaderProps) {
   const thumbnailSrc = typeof course.thumbnail === 'string' && course.thumbnail.length > 0 ? course.thumbnail : null;
   const courseTitle = typeof course.title === 'string' && course.title.length > 0 ? course.title : 'Course';
   const courseSlug = typeof course.slug === 'string' && course.slug.length > 0 ? course.slug : null;
-  const courseDescription = typeof course.description === 'string' ? course.description : '';
+  const courseDescription = typeof course.description === 'string' ? course.description.trim() : '';
   const { name: levelName } = getCourseLevelConfig(course.difficulty as string | number | null | undefined);
   const categoryName = getCourseCategoryName(course.category as string | number | null | undefined);
   const program = getProgramForCourse(courseSlug);
@@ -94,7 +94,7 @@ export function CourseHeader({ course, viewerAccess }: CourseHeaderProps) {
 
             <div className="flex flex-col gap-6">
               <h1 className="text-5xl font-semibold leading-[0.98] tracking-tight md:text-7xl">{courseTitle}</h1>
-              <p className="max-w-3xl text-lg leading-8 text-slate-300 md:text-xl">{showcase?.headline || courseDescription}</p>
+              <p className="max-w-3xl text-lg leading-8 text-slate-300 md:text-xl">{courseDescription || showcase?.headline}</p>
             </div>
 
             <div className="flex flex-wrap gap-3">

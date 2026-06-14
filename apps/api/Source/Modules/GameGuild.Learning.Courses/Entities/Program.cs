@@ -22,6 +22,9 @@ namespace GameGuild.Learning.Courses;
 [Index(nameof(TenantId))]
 [Index(nameof(CreatorId))]
 public class Program : EntityBase {
+    private const string SkillsRequiredMetadataKey = "skillsRequired";
+    private const string SkillsProvidedMetadataKey = "skillsProvided";
+
     /// <summary>
     /// The user ID of the program creator/owner
     /// </summary>
@@ -105,16 +108,26 @@ public class Program : EntityBase {
     public ProgramDifficulty Difficulty { get; set; } = ProgramDifficulty.Beginner;
 
     /// <summary>
-    /// Skills required to take this program (comma-separated or JSON)
+    /// Skills required to take this program (comma-separated or JSON).
+    /// Stored in Metadata because the production EF model ignores this convenience property.
     /// </summary>
-    [MaxLength(2000)]
-    public string? SkillsRequired { get; set; }
+    [NotMapped]
+    public string? SkillsRequired
+    {
+        get => GetMetadataString(SkillsRequiredMetadataKey);
+        set => SetMetadataString(SkillsRequiredMetadataKey, value);
+    }
 
     /// <summary>
-    /// Skills provided upon completing this program (comma-separated or JSON)
+    /// Skills provided upon completing this program (comma-separated or JSON).
+    /// Stored in Metadata because the production EF model ignores this convenience property.
     /// </summary>
-    [MaxLength(2000)]
-    public string? SkillsProvided { get; set; }
+    [NotMapped]
+    public string? SkillsProvided
+    {
+        get => GetMetadataString(SkillsProvidedMetadataKey);
+        set => SetMetadataString(SkillsProvidedMetadataKey, value);
+    }
 
     // Navigation Properties
     /// <summary>
@@ -252,6 +265,38 @@ public class Program : EntityBase {
         var dict = GetMetadataDict();
         dict[key] = value;
         Metadata = System.Text.Json.JsonSerializer.Serialize(dict);
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    private string? GetMetadataString(string key) {
+        var dict = GetMetadataDict();
+
+        if (!dict.TryGetValue(key, out var value) || value is null)
+            return null;
+
+        if (value is System.Text.Json.JsonElement jsonElement) {
+            return jsonElement.ValueKind switch {
+                System.Text.Json.JsonValueKind.String => jsonElement.GetString(),
+                System.Text.Json.JsonValueKind.Null => null,
+                System.Text.Json.JsonValueKind.Undefined => null,
+                _ => jsonElement.ToString(),
+            };
+        }
+
+        return value.ToString();
+    }
+
+    private void SetMetadataString(string key, string? value) {
+        var dict = GetMetadataDict();
+
+        if (string.IsNullOrWhiteSpace(value)) {
+            dict.Remove(key);
+        }
+        else {
+            dict[key] = value.Trim();
+        }
+
+        Metadata = dict.Count == 0 ? null : System.Text.Json.JsonSerializer.Serialize(dict);
         UpdatedAt = SystemClock.UtcNow;
     }
 
