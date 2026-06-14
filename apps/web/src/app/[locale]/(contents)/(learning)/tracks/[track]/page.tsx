@@ -1,4 +1,4 @@
-import { TRACK_LEVELS, TRACK_LEVEL_COLORS } from '@/components/legacy/types/tracks';
+import { TRACK_LEVELS, TRACK_LEVEL_COLORS } from '@/lib/tracks/levels';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

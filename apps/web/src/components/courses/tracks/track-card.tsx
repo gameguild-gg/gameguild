@@ -1,6 +1,6 @@
 'use client';
 
-import { TRACK_LEVEL_COLORS, TRACK_LEVELS } from '@/components/legacy/types/tracks';
+import { TRACK_LEVEL_COLORS, TRACK_LEVELS } from '@/lib/tracks/levels';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';

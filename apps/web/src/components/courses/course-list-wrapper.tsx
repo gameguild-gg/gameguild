@@ -1,11 +1,11 @@
 'use client';
 
-import type { Course as LegacyCourse } from '@/components/legacy/types/courses';
+import type { CatalogCourse } from '@/lib/courses/catalog-types';
 import type { Course } from '@/lib/courses/types';
 import { useEffect, useMemo, useState } from 'react';
 import CourseList from './course-list';
 
-export default function CourseListWrapper({ courses }: { courses: LegacyCourse[] }) {
+export default function CourseListWrapper({ courses }: { courses: CatalogCourse[] }) {
   // Ensure courses is an array and filter out invalid entries using useMemo to prevent re-renders
   const validCourses = useMemo(() =>
     Array.isArray(courses) ? courses.filter(course => course && course.id && course.area) : []
