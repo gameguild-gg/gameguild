@@ -13,7 +13,6 @@ export default async function CoursesPage() {
   const courseCount = courses.length;
   const openEnrollmentCount = courses.filter((course) => course.isEnrollmentOpen).length;
   const totalEstimatedHours = courses.reduce((total, course) => total + (course.estimatedHours ?? 0), 0);
-  const isSnapshotFallback = catalog.source === 'snapshot-fallback';
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#070a12] text-white">
@@ -62,11 +61,6 @@ export default async function CoursesPage() {
               </div>
             </div>
 
-            {isSnapshotFallback ? (
-              <p className="max-w-2xl text-sm leading-6 text-slate-400">
-                The live public API catalog is currently empty, so this page is showing the imported GameGuild course snapshot while the staging seed catches up.
-              </p>
-            ) : null}
           </div>
 
           <CourseHighlightCarousel courses={courses} />

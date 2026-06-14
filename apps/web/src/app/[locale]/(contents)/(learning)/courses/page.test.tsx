@@ -114,16 +114,17 @@ describe('CoursesPage', () => {
     expect(publicCourseCatalogMock).toHaveBeenCalledWith(courseFixtures);
   });
 
-  it('discloses when the page is using the imported snapshot fallback', async () => {
+  it('renders an empty live catalog without falling back to imported snapshots', async () => {
     getPublicCourseCatalogMock.mockResolvedValue({
       success: true,
-      source: 'snapshot-fallback',
-      data: courseFixtures,
+      source: 'api',
+      data: [],
     });
 
     render(await CoursesPage());
 
-    expect(screen.getByText(/showing the imported GameGuild course snapshot/i)).toBeInTheDocument();
-    expect(publicCourseCatalogMock).toHaveBeenCalledWith(courseFixtures);
+    expect(hasStat('0', 'Courses')).toBeInTheDocument();
+    expect(screen.queryByText(/showing the imported GameGuild course snapshot/i)).not.toBeInTheDocument();
+    expect(publicCourseCatalogMock).toHaveBeenCalledWith([]);
   });
 });
