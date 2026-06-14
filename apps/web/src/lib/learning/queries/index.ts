@@ -10,3 +10,4 @@ export * from './support';
 export * from './analytics';
 export * from './settings';
 export * from './assessments';
+export * from './content-library';
