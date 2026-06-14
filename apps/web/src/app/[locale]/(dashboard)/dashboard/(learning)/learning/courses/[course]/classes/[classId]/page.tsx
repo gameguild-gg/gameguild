@@ -20,7 +20,7 @@ import { ClassDetailActions } from './class-detail-actions';
  * - Then fetches specific class detail
  *
  * UI Responsibility:
- * - Class detail summary with status, schedule, capacity, attendees, and session settings
+ * - Class detail summary with status, schedule, capacity, and cohort enrollments
  * - Course validation and class-level not-found handling
  */
 export default async function ClassDetailPage({
@@ -82,8 +82,28 @@ export default async function ClassDetailPage({
       <div className="space-y-6">
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Users className="size-4" />Attendees</CardTitle></CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            {classDetail.attendees.length === 0 ? 'No attendee records have been captured yet.' : `${classDetail.attendees.length} attendee records`}
+          <CardContent className="space-y-3">
+            {classDetail.attendees.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No cohort enrollments are attached to this class yet.</p>
+            ) : (
+              classDetail.attendees.map((attendee) => (
+                <div key={attendee.id} className="rounded-lg border p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{attendee.userId}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {attendee.enrolledAt ? `Enrolled ${new Date(attendee.enrolledAt).toLocaleDateString('en-US')}` : 'Enrollment date not provided'}
+                      </p>
+                    </div>
+                    <Badge variant="outline">{attendee.status}</Badge>
+                  </div>
+                  <div className="mt-3 h-2 rounded-full bg-muted">
+                    <div className="h-2 rounded-full bg-primary" style={{ width: `${attendee.progress}%` }} />
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{attendee.progress}% progress</p>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
         <ClassDetailActions courseId={courseId} classDetail={classDetail} />

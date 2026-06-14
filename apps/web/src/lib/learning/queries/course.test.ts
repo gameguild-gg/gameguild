@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   getCoursesAnalytics: vi.fn(),
+  getApiLearningEnrollmentsCourses: vi.fn(),
   getToken: vi.fn(),
+  learningApiGet: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
@@ -17,16 +19,25 @@ vi.mock('@game-guild/client', () => ({
       getCoursesAnalytics = mocks.getCoursesAnalytics;
     },
     LearningCoursesProgramcontentModule: class {},
+    LearningEnrollmentsModule: class {
+      getApiLearningEnrollmentsCourses = mocks.getApiLearningEnrollmentsCourses;
+    },
   },
 }));
 
-import { getCourseAnalytics } from './course';
+vi.mock('./http', () => ({
+  learningApiGet: mocks.learningApiGet,
+}));
+
+import { getCourseAnalytics, getCourseClass } from './course';
 
 describe('course analytics query', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     mocks.createServerClient.mockReturnValue({});
     mocks.getToken.mockResolvedValue('access-token');
+    mocks.learningApiGet.mockReset();
+    mocks.getApiLearningEnrollmentsCourses.mockReset();
   });
 
   it('maps aggregate API analytics without inventing detail rows', async () => {
@@ -93,5 +104,70 @@ describe('course analytics query', () => {
       ratings: [],
       revenue: [],
     });
+  });
+
+  it('loads class attendees from cohort enrollments without default session settings', async () => {
+    mocks.learningApiGet.mockResolvedValue({
+      id: 'class-enrollment-detail',
+      courseId: 'course-with-cohorts',
+      name: 'Portfolio critique',
+      description: 'Live review session',
+      startDate: '2026-06-20T13:00:00.000Z',
+      endDate: '2026-06-20T14:30:00.000Z',
+      maxCapacity: 24,
+      currentEnrollmentCount: 2,
+      status: 'Scheduled',
+      isOpen: true,
+      instructorId: 'instructor-1',
+      meetingSchedule: 'https://meet.example/class',
+      createdAt: '2026-06-01T10:00:00.000Z',
+    });
+    mocks.getApiLearningEnrollmentsCourses.mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: 'enrollment-1',
+          userId: 'student-1',
+          cohortId: 'class-enrollment-detail',
+          status: 'Active',
+          progress: 45.6,
+          enrolledAt: '2026-06-02T10:00:00.000Z',
+          completedAt: null,
+          lastActivityAt: '2026-06-10T10:00:00.000Z',
+        },
+        {
+          id: 'enrollment-2',
+          userId: 'student-2',
+          cohortId: 'another-class',
+          status: 'Completed',
+          progress: 100,
+          enrolledAt: '2026-06-03T10:00:00.000Z',
+          completedAt: '2026-06-10T10:00:00.000Z',
+        },
+      ],
+    });
+
+    const classDetail = await getCourseClass('class-enrollment-detail');
+
+    expect(mocks.learningApiGet).toHaveBeenCalledWith('/api/cohorts/class-enrollment-detail', 60);
+    expect(mocks.getApiLearningEnrollmentsCourses).toHaveBeenCalledWith('course-with-cohorts');
+    expect(classDetail).toMatchObject({
+      id: 'class-enrollment-detail',
+      title: 'Portfolio critique',
+      attendeeCount: 2,
+      attendees: [
+        {
+          id: 'enrollment-1',
+          userId: 'student-1',
+          status: 'active',
+          progress: 46,
+          enrolledAt: '2026-06-02T10:00:00.000Z',
+          completedAt: null,
+          lastActivityAt: '2026-06-10T10:00:00.000Z',
+        },
+      ],
+    });
+    expect(classDetail).not.toHaveProperty('settings');
+    expect(classDetail?.instructor).toBeUndefined();
   });
 });
