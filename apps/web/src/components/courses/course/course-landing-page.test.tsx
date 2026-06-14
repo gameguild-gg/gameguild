@@ -73,4 +73,44 @@ describe('CourseLandingPage', () => {
 
     expect(within(projectGallery).getByRole('button', { name: /Decision scoring encounter/i })).toHaveAttribute('aria-current', 'true');
   });
+
+  it('prefers dashboard-editable skills over static showcase outcomes', () => {
+    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
+
+    expect(course).toBeDefined();
+
+    render(
+      <CourseLandingPage
+        course={{
+          ...course!,
+          skillsProvided: 'Tune combat director pacing, Package readable AI telemetry',
+          skillsRequired: 'Behavior tree fundamentals, Debugging AI state',
+        }}
+        viewerAccess={{ state: 'signed-out' }}
+      />,
+    );
+
+    expect(screen.getByText('Tune combat director pacing')).toBeInTheDocument();
+    expect(screen.getByText('Package readable AI telemetry')).toBeInTheDocument();
+    expect(screen.getByText('Behavior tree fundamentals')).toBeInTheDocument();
+    expect(screen.getByText('Debugging AI state')).toBeInTheDocument();
+  });
+
+  it('uses an edited course description for the hero copy before static showcase text', () => {
+    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
+
+    expect(course).toBeDefined();
+
+    render(
+      <CourseLandingPage
+        course={{
+          ...course!,
+          description: 'Instructor-edited hero copy for the public storefront.',
+        }}
+        viewerAccess={{ state: 'signed-out' }}
+      />,
+    );
+
+    expect(screen.getByText('Instructor-edited hero copy for the public storefront.')).toBeInTheDocument();
+  });
 });
