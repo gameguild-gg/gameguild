@@ -1,7 +1,7 @@
 'use server';
 
-import { getAllPrograms } from '@/data/courses/mock-data';
 import { Program } from '@/lib/api/generated';
+import { courseService } from '@/lib/courses/services/course.service';
 
 export interface Course {
   id: number;
@@ -43,7 +43,7 @@ export interface CourseLesson {
 }
 
 export async function getCourses(): Promise<Program[]> {
-  return getAllPrograms();
+  return courseService.getCourses();
 }
 
 export async function getCourseData(): Promise<Program[]> {
@@ -51,6 +51,6 @@ export async function getCourseData(): Promise<Program[]> {
 }
 
 export async function getCourseBySlug(slug: string): Promise<Program | null> {
-  const programs = await getCourses();
-  return programs.find(program => program.slug === slug) || null;
+  const result = await courseService.getCourseBySlug(slug);
+  return result.success ? result.data ?? null : null;
 }
