@@ -121,6 +121,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (updateDto.Title != null) program.Title = updateDto.Title;
     if (updateDto.Description != null) program.Description = updateDto.Description;
+    if (updateDto.Metadata != null) program.Metadata = updateDto.Metadata;
     if (updateDto.Slug != null) program.Slug = updateDto.Slug;
     if (updateDto.Thumbnail != null) program.Thumbnail = updateDto.Thumbnail;
     if (updateDto.VideoShowcaseUrl != null) program.VideoShowcaseUrl = updateDto.VideoShowcaseUrl;

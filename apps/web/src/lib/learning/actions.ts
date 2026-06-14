@@ -194,6 +194,7 @@ export interface UpdateCourseInput {
   courseId: string;
   title?: string;
   description?: string;
+  metadata?: string | null;
   slug?: string;
   thumbnail?: string;
   videoShowcaseUrl?: string;
@@ -289,6 +290,49 @@ export async function deleteCourse(courseId: string): Promise<ActionResult<null>
     }
 
     return { success: false, error: extractError(result.error) };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+interface LandingFaqInput {
+  question: string;
+  answer: string;
+  category?: string;
+}
+
+function parseMetadata(raw: string | null | undefined): Record<string, unknown> {
+  if (!raw) return {};
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
+  } catch {
+    return {};
+  }
+}
+
+export async function updateCourseFaq(courseId: string, items: LandingFaqInput[]): Promise<ActionResult<null>> {
+  const sanitizedItems = items
+    .map((item) => ({
+      question: item.question.trim(),
+      answer: item.answer.trim(),
+      category: item.category?.trim() || 'Course details',
+    }))
+    .filter((item) => item.question.length > 0 && item.answer.length > 0)
+    .slice(0, 12);
+
+  try {
+    const course = await fetchCourse(courseId);
+    if (!course) return { success: false, error: 'Course not found.' };
+
+    const metadata = parseMetadata(course.metadata);
+    metadata.landingFaq = sanitizedItems;
+
+    return updateCourse({
+      courseId,
+      metadata: JSON.stringify(metadata),
+    });
   } catch (e) {
     return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
   }

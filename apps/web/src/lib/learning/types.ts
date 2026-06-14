@@ -55,6 +55,7 @@ export interface CourseDetails {
   id: string;
   title: string;
   description: string;
+  metadata: string | null;
   slug: string;
   status: 'draft' | 'published' | 'archived';
   visibility: 'public' | 'private' | 'unlisted';

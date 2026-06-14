@@ -1,5 +1,6 @@
 import React from 'react';
 import { getCourseFaq } from '@/lib/learning';
+import { FaqEditorForm } from './faq-editor-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { HelpCircle } from 'lucide-react';
 
@@ -21,14 +22,8 @@ export default async function ListingFaqPage({
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><HelpCircle className="size-5" />Frequently Asked Questions</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {faq.items.map((item) => (
-          <div key={item.id} className="rounded-lg border p-4">
-            <p className="font-medium">{item.question}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{item.answer}</p>
-          </div>
-        ))}
-        {faq.items.length === 0 && <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No FAQ entries are available.</div>}
+      <CardContent>
+        <FaqEditorForm courseId={courseId} items={faq.items} />
       </CardContent>
     </Card>
   );

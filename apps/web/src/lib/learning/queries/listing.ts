@@ -102,6 +102,57 @@ export interface CourseFaq {
   total: number;
 }
 
+interface CourseMetadata {
+  landingFaq?: Array<{
+    question?: unknown;
+    answer?: unknown;
+    category?: unknown;
+  }>;
+}
+
+function parseCourseMetadata(raw: string | null | undefined): CourseMetadata | null {
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as CourseMetadata : null;
+  } catch {
+    return null;
+  }
+}
+
+function getMetadataFaqItems(course: {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  metadata?: string | null;
+}): CourseFaqItem[] | null {
+  const metadata = parseCourseMetadata(course.metadata);
+  const rawItems = Array.isArray(metadata?.landingFaq) ? metadata.landingFaq : [];
+
+  const items = rawItems
+    .map((item, index): CourseFaqItem | null => {
+      const question = typeof item.question === 'string' ? item.question.trim() : '';
+      const answer = typeof item.answer === 'string' ? item.answer.trim() : '';
+
+      if (!question || !answer) return null;
+
+      return {
+        id: `${course.id}-faq-${index + 1}`,
+        courseId: course.id,
+        question,
+        answer,
+        order: index + 1,
+        category: typeof item.category === 'string' && item.category.trim() ? item.category.trim() : 'Course details',
+        createdAt: course.createdAt,
+        updatedAt: course.updatedAt,
+      };
+    })
+    .filter((item): item is CourseFaqItem => Boolean(item));
+
+  return items.length > 0 ? items : null;
+}
+
 /**
  * Pricing tier
  */
@@ -277,6 +328,9 @@ export const getCourseTestimonial = cache(async (testimonialId: string): Promise
 export const getCourseFaq = cache(async (courseId: string): Promise<CourseFaq> => {
   const course = await getCourse(courseId);
   if (!course) return { items: [], total: 0 };
+
+  const metadataFaqItems = getMetadataFaqItems(course);
+  if (metadataFaqItems) return { items: metadataFaqItems, total: metadataFaqItems.length };
 
   const createdAt = course.createdAt;
   const items: CourseFaqItem[] = [

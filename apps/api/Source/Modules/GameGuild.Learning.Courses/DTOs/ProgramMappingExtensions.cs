@@ -14,6 +14,7 @@ public static class ProgramMappingExtensions
             CreatorId = program.CreatorId,
             Title = program.Title,
             Description = program.Description,
+            Metadata = program.Metadata,
             Visibility = program.Visibility,
             Slug = program.Slug,
             Status = program.Status,

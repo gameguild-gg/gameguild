@@ -56,6 +56,30 @@ function normalizeList(value: unknown): string[] {
   return [];
 }
 
+function getMetadataFaq(course: Program): Array<{ question: string; answer: string }> {
+  const rawMetadata = getString(course.metadata);
+  if (!rawMetadata) return [];
+
+  try {
+    const parsed = JSON.parse(rawMetadata) as unknown;
+    const landingFaq = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as { landingFaq?: unknown }).landingFaq
+      : null;
+
+    if (!Array.isArray(landingFaq)) return [];
+
+    return landingFaq
+      .map((item) => {
+        const question = item && typeof item === 'object' ? getString((item as { question?: unknown }).question) : null;
+        const answer = item && typeof item === 'object' ? getString((item as { answer?: unknown }).answer) : null;
+        return question && answer ? { question, answer } : null;
+      })
+      .filter((item): item is { question: string; answer: string } => Boolean(item));
+  } catch {
+    return [];
+  }
+}
+
 function getContentTypeName(type: number | null | undefined): string {
   switch (type) {
     case ProgramContentType.Page:
@@ -277,7 +301,8 @@ export function CourseLandingPage({ course, viewerAccess }: CourseLandingPagePro
       : makeJourneyRows(contentPreview, outcomes, title);
   const viewerCta = getViewerCta(course, viewerAccess);
   const finalArtifactLabel = title.toLowerCase().includes('ai') ? 'AI prototype' : 'Portfolio piece';
-  const faq = showcase?.faq ?? [
+  const metadataFaq = getMetadataFaq(course);
+  const faq = metadataFaq.length > 0 ? metadataFaq : showcase?.faq ?? [
     {
       question: 'Can I take this as a standalone course?',
       answer: 'Yes. Program packages clarify the recommended path, but each course has its own landing page and enrollment state.',
