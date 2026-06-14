@@ -4,6 +4,7 @@ import {
   GeneratedApi,
   type ContentStatus,
   type ContentVisibility,
+  type LearningEnrollmentsEnrollment,
   type LearningCoursesProgram,
   type LearningCoursesProgramContent
 } from '@game-guild/client';
@@ -43,6 +44,7 @@ function createCourseModules() {
   return {
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
     content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
+    enrollments: new GeneratedApi.LearningEnrollmentsModule(client),
   };
 }
 
@@ -334,18 +336,12 @@ export interface CourseClassDetail extends CourseClass {
   attendees: Array<{
     id: string;
     userId: string;
-    userName: string;
-    status: 'registered' | 'attended' | 'absent' | 'excused';
-    joinedAt?: string;
-    leftAt?: string;
+    status: 'active' | 'paused' | 'completed' | 'dropped' | 'expired';
+    progress: number;
+    enrolledAt: string;
+    completedAt: string | null;
+    lastActivityAt: string | null;
   }>;
-  settings: {
-    allowLateJoin: boolean;
-    recordSession: boolean;
-    enableChat: boolean;
-    enableQA: boolean;
-    reminderSchedule: number[]; // minutes before class to send reminders
-  };
 }
 
 interface CohortDto {
@@ -395,17 +391,31 @@ function mapCohortToClass(cohort: CohortDto): CourseClass {
       type: cohort.meetingSchedule ? 'virtual' : 'physical',
       meetingUrl: cohort.meetingSchedule ?? undefined,
     },
-    instructor: cohort.instructorId
-      ? {
-          id: cohort.instructorId,
-          name: 'Assigned instructor',
-        }
-      : undefined,
     attendeeCount: cohort.currentEnrollmentCount,
     maxAttendees: cohort.maxCapacity,
     materials: [],
     createdAt: cohort.createdAt,
     updatedAt: cohort.updatedAt ?? cohort.createdAt,
+  };
+}
+
+function mapEnrollmentStatus(status: LearningEnrollmentsEnrollment['status']): CourseClassDetail['attendees'][number]['status'] {
+  if (status === 'Paused') return 'paused';
+  if (status === 'Completed') return 'completed';
+  if (status === 'Dropped') return 'dropped';
+  if (status === 'Expired') return 'expired';
+  return 'active';
+}
+
+function mapEnrollmentToClassAttendee(enrollment: LearningEnrollmentsEnrollment, index: number): CourseClassDetail['attendees'][number] {
+  return {
+    id: enrollment.id ?? `enrollment-${index}`,
+    userId: enrollment.userId ?? 'unknown-user',
+    status: mapEnrollmentStatus(enrollment.status),
+    progress: Math.max(0, Math.min(100, Math.round(enrollment.progress ?? 0))),
+    enrolledAt: enrollment.enrolledAt ?? '',
+    completedAt: enrollment.completedAt ?? null,
+    lastActivityAt: enrollment.lastActivityAt ?? null,
   };
 }
 
@@ -438,7 +448,7 @@ export const getCourseClasses = cache(async (courseId: string): Promise<CourseCl
  * Fetch single class detail for viewing/editing.
  *
  * @param classId - The class ID from route params
- * @returns Full class data including attendees and settings
+ * @returns Full class data including cohort enrollment records
  *
  * Fetch Type: REST
  * Cache: revalidate 60s, deduplicated via React cache()
@@ -448,15 +458,16 @@ export const getCourseClass = cache(async (classId: string): Promise<CourseClass
   const cohort = await learningApiGet<CohortDto>(`/api/cohorts/${classId}`, 60);
   if (!cohort) return null;
 
+  const { enrollments } = createCourseModules();
+  const enrollmentResult = await enrollments.getApiLearningEnrollmentsCourses(cohort.courseId);
+  const attendees = enrollmentResult.ok
+    ? (enrollmentResult.data ?? [])
+        .filter((enrollment) => enrollment.cohortId === cohort.id)
+        .map(mapEnrollmentToClassAttendee)
+    : [];
+
   return {
     ...mapCohortToClass(cohort),
-    attendees: [],
-    settings: {
-      allowLateJoin: true,
-      recordSession: true,
-      enableChat: true,
-      enableQA: true,
-      reminderSchedule: [1440, 60, 10],
-    },
+    attendees,
   };
 });
