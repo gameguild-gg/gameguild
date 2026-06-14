@@ -36,12 +36,39 @@ import { Separator } from '@game-guild/ui/components/separator';
 import { SidebarTrigger } from '@game-guild/ui/components/sidebar';
 import { Bell, Command, Search } from 'lucide-react';
 import * as React from 'react';
+import type { DashboardNotificationItem, DashboardNotificationSummary } from '@/lib/dashboard-notifications';
 
 const ITEMS_TO_DISPLAY = 3;
 
-export function DashboardHeader() {
+function NotificationMenuItem({ item }: { item: DashboardNotificationItem }) {
+  const content = (
+    <div className="flex w-full flex-col gap-1">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm font-medium">{item.title}</p>
+        {!item.isRead && <span className="mt-1 size-2 rounded-full bg-primary" aria-label="Unread" />}
+      </div>
+      <p className="line-clamp-2 text-xs text-muted-foreground">{item.message}</p>
+      <p className="text-xs text-muted-foreground">{item.createdLabel}</p>
+      {item.actionText && <p className="text-xs font-medium text-primary">{item.actionText}</p>}
+    </div>
+  );
+
+  if (item.actionUrl?.startsWith('/')) {
+    return (
+      <DropdownMenuItem asChild>
+        <Link href={item.actionUrl}>{content}</Link>
+      </DropdownMenuItem>
+    );
+  }
+
+  return <DropdownMenuItem>{content}</DropdownMenuItem>;
+}
+
+export function DashboardHeader({ notifications }: { notifications?: DashboardNotificationSummary }) {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
+  const notificationSummary = notifications ?? { items: [], unreadCount: 0 };
+  const unreadLabel = notificationSummary.unreadCount > 99 ? '99+' : String(notificationSummary.unreadCount);
 
   // Generate breadcrumbs from pathname
   const generateBreadcrumbs = () => {
@@ -176,9 +203,11 @@ export function DashboardHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="size-5" />
-              <Badge variant="destructive" className="absolute -right-1 -top-1 size-5 rounded-full p-0 text-xs">
-                3
-              </Badge>
+              {notificationSummary.unreadCount > 0 && (
+                <Badge variant="destructive" className="absolute -right-1 -top-1 h-5 min-w-5 rounded-full px-1 text-xs">
+                  {unreadLabel}
+                </Badge>
+              )}
               <span className="sr-only">Notifications</span>
             </Button>
           </DropdownMenuTrigger>
@@ -186,34 +215,19 @@ export function DashboardHeader() {
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <div className="max-h-[300px] overflow-y-auto">
-              <DropdownMenuItem>
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">New project submitted</p>
-                  <p className="text-xs text-muted-foreground">A new game project was submitted for review</p>
-                  <p className="text-xs text-muted-foreground">2 minutes ago</p>
+              {notificationSummary.items.length > 0 ? (
+                notificationSummary.items.map((item) => <NotificationMenuItem key={item.id} item={item} />)
+              ) : (
+                <div className="px-3 py-6 text-center">
+                  <p className="text-sm font-medium">No notifications</p>
+                  <p className="mt-1 text-xs text-muted-foreground">New account updates will appear here.</p>
                 </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">Achievement unlocked</p>
-                  <p className="text-xs text-muted-foreground">You earned the &quot;First Commit&quot; badge</p>
-                  <p className="text-xs text-muted-foreground">1 hour ago</p>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">Team invitation</p>
-                  <p className="text-xs text-muted-foreground">You were invited to join &quot;Indie Devs&quot;</p>
-                  <p className="text-xs text-muted-foreground">3 hours ago</p>
-                </div>
-              </DropdownMenuItem>
+              )}
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/notifications" className="w-full text-center">
-                View all notifications
-              </Link>
-            </DropdownMenuItem>
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+              Showing latest account notifications
+            </DropdownMenuLabel>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
