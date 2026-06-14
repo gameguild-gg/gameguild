@@ -13,6 +13,7 @@
 import type { Course as CourseType } from '@/lib/courses';
 import { autoSaveCourse, createCourse, getCourseBySlug, publishCourse, saveCourse } from './actions';
 import { CourseEditorProvider, useCourseEditor } from './context/course-editor-provider';
+import { courseEditorReducer, createEmptyCourse, createInitialCourseEditorState, validateCourse } from './context/course-editor-reducer';
 import type { CourseChapter as CourseChapterType, CourseEditorAction, CourseEditorConfig, CourseEditorContextValue, CourseEditorState, CourseValidationError as CourseValidationErrorType } from './types';
 
 // Types
@@ -29,21 +30,13 @@ export { CourseEditorActionType, courseEditorValidationRules, defaultCourseEdito
 // Context Provider and Hooks
 export { CourseEditorProvider, useCourseEditor } from './context/course-editor-provider';
 
-// Reducer and Utilities (commented out - not yet implemented)
-// export { courseEditorReducer, createEmptyCourse, createInitialCourseEditorState, validateCourse } from './context/course-editor-reducer';
-
-// Stub exports for reducer utilities
-export const courseEditorReducer = (state: any, action: any) => state;
-export const createEmptyCourse = () => ({});
-export const createInitialCourseEditorState = (initialState?: any) => ({});
-export const validateCourse = (course: any) => [];
+// Reducer and Utilities
+export { courseEditorReducer, createEmptyCourse, createInitialCourseEditorState, validateCourse } from './context/course-editor-reducer';
 
 // Server Actions
 export { autoSaveCourse, createCourse, getCourseBySlug, publishCourse, saveCourse } from './actions';
 
 // Enhanced Course Types (re-export for convenience)
-// Module path not found, using stub
-// export type { Course } from '../../../lib/courses/course-enhanced.types';
 export type { Course } from '@/lib/courses';
 
 /**
