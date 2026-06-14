@@ -30,6 +30,10 @@ const {
   createCourseClass,
   updateCourseClass,
   updateCourseClassStatus,
+  createCourseDiscussion,
+  createDiscussionReply,
+  updateDiscussionPin,
+  resolveDiscussion,
 } = await import('./actions');
 
 describe('learning server actions', () => {
@@ -185,5 +189,97 @@ describe('learning server actions', () => {
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/classes');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/classes/class-1');
+  });
+
+  it('creates course discussions through the Learning Social API', async () => {
+    mocks.fetch.mockResolvedValue(
+      new Response(JSON.stringify({ id: 'thread-1', courseId: 'course-1' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const result = await createCourseDiscussion({
+      courseId: 'course-1',
+      title: 'Milestone review question',
+      content: 'Can I submit a revised prototype after review?',
+    });
+
+    expect(result).toEqual({ success: true, data: { id: 'thread-1' } });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/social/discussions', {
+      method: 'POST',
+      body: JSON.stringify({
+        courseId: 'course-1',
+        title: 'Milestone review question',
+        content: 'Can I submit a revised prototype after review?',
+        contentId: null,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/support/discussions');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/support/discussions/thread-1');
+  });
+
+  it('posts discussion replies and refreshes support routes', async () => {
+    mocks.fetch.mockResolvedValue(
+      new Response(JSON.stringify({ id: 'reply-1', discussionId: 'thread-1' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const result = await createDiscussionReply({
+      courseId: 'course-1',
+      discussionId: 'thread-1',
+      content: 'Yes, submit the revision before the checkpoint closes.',
+    });
+
+    expect(result).toEqual({ success: true, data: { id: 'reply-1' } });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/social/discussions/thread-1/replies', {
+      method: 'POST',
+      body: JSON.stringify({
+        discussionId: 'thread-1',
+        content: 'Yes, submit the revision before the checkpoint closes.',
+        parentReplyId: null,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/support/tickets/thread-1');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/support/discussions/thread-1');
+  });
+
+  it('pins and resolves discussion threads through social moderation endpoints', async () => {
+    const okResponse = () =>
+      new Response(JSON.stringify({ id: 'thread-1', courseId: 'course-1' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    mocks.fetch.mockResolvedValueOnce(okResponse()).mockResolvedValueOnce(okResponse());
+
+    expect(await updateDiscussionPin('course-1', 'thread-1', true)).toEqual({ success: true, data: null });
+    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:5295/api/social/discussions/thread-1/pin', {
+      method: 'POST',
+      body: JSON.stringify({}),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+
+    expect(await resolveDiscussion('course-1', 'thread-1')).toEqual({ success: true, data: null });
+    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:5295/api/social/discussions/thread-1/resolve', {
+      method: 'POST',
+      body: JSON.stringify({}),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
   });
 });

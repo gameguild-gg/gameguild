@@ -826,6 +826,185 @@ export async function deleteCourseClass(courseId: string, classId: string): Prom
   }
 }
 
+// ── Course support/discussion actions ──
+
+export interface CreateCourseDiscussionInput {
+  courseId: string;
+  title: string;
+  content: string;
+  contentId?: string | null;
+}
+
+export interface CreateDiscussionReplyInput {
+  courseId: string;
+  discussionId: string;
+  content: string;
+  parentReplyId?: string | null;
+}
+
+interface DiscussionActionDto {
+  id: string;
+  courseId: string;
+  isPinned?: boolean;
+  isResolved?: boolean;
+}
+
+interface DiscussionReplyActionDto {
+  id: string;
+  discussionId: string;
+  isAcceptedAnswer?: boolean;
+  upvoteCount?: number;
+}
+
+function revalidateCourseSupport(courseId: string, discussionId?: string) {
+  revalidatePath(`/dashboard/learning/courses/${courseId}/support`);
+  revalidatePath(`/dashboard/learning/courses/${courseId}/support/tickets`);
+  revalidatePath(`/dashboard/learning/courses/${courseId}/support/discussions`);
+
+  if (discussionId) {
+    revalidatePath(`/dashboard/learning/courses/${courseId}/support/tickets/${discussionId}`);
+    revalidatePath(`/dashboard/learning/courses/${courseId}/support/discussions/${discussionId}`);
+  }
+}
+
+export async function createCourseDiscussion(input: CreateCourseDiscussionInput): Promise<ActionResult<{ id: string }>> {
+  const title = input.title.trim();
+  const content = input.content.trim();
+
+  if (title.length < 5) {
+    return { success: false, error: 'Discussion title must be at least 5 characters.' };
+  }
+
+  if (content.length < 10) {
+    return { success: false, error: 'Discussion content must be at least 10 characters.' };
+  }
+
+  try {
+    const result = await learningApiRequest<DiscussionActionDto>('/api/social/discussions', {
+      method: 'POST',
+      body: JSON.stringify({
+        courseId: input.courseId,
+        title,
+        content,
+        contentId: input.contentId?.trim() || null,
+      }),
+    });
+
+    if (!result.success) return result;
+
+    revalidateCourseSupport(input.courseId, result.data.id);
+    return { success: true, data: { id: result.data.id } };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function createDiscussionReply(input: CreateDiscussionReplyInput): Promise<ActionResult<{ id: string }>> {
+  const content = input.content.trim();
+
+  if (content.length < 2) {
+    return { success: false, error: 'Reply content is required.' };
+  }
+
+  try {
+    const result = await learningApiRequest<DiscussionReplyActionDto>(`/api/social/discussions/${input.discussionId}/replies`, {
+      method: 'POST',
+      body: JSON.stringify({
+        discussionId: input.discussionId,
+        content,
+        parentReplyId: input.parentReplyId?.trim() || null,
+      }),
+    });
+
+    if (!result.success) return result;
+
+    revalidateCourseSupport(input.courseId, input.discussionId);
+    return { success: true, data: { id: result.data.id } };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function updateDiscussionPin(courseId: string, discussionId: string, pinned: boolean): Promise<ActionResult<null>> {
+  try {
+    const result = await learningApiRequest<DiscussionActionDto>(`/api/social/discussions/${discussionId}/${pinned ? 'pin' : 'unpin'}`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+
+    if (!result.success) return { success: false, error: result.error };
+
+    revalidateCourseSupport(courseId, discussionId);
+    return { success: true, data: null };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function resolveDiscussion(courseId: string, discussionId: string): Promise<ActionResult<null>> {
+  try {
+    const result = await learningApiRequest<DiscussionActionDto>(`/api/social/discussions/${discussionId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+
+    if (!result.success) return { success: false, error: result.error };
+
+    revalidateCourseSupport(courseId, discussionId);
+    return { success: true, data: null };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function deleteDiscussion(courseId: string, discussionId: string): Promise<ActionResult<null>> {
+  try {
+    const result = await learningApiRequest<null>(`/api/social/discussions/${discussionId}`, {
+      method: 'DELETE',
+    });
+
+    if (result.success) {
+      revalidateCourseSupport(courseId, discussionId);
+    }
+
+    return result;
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function acceptDiscussionReply(courseId: string, discussionId: string, replyId: string): Promise<ActionResult<null>> {
+  try {
+    const result = await learningApiRequest<DiscussionReplyActionDto>(`/api/social/replies/${replyId}/accept`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+
+    if (!result.success) return { success: false, error: result.error };
+
+    revalidateCourseSupport(courseId, discussionId);
+    return { success: true, data: null };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function upvoteDiscussionReply(courseId: string, discussionId: string, replyId: string): Promise<ActionResult<null>> {
+  try {
+    const result = await learningApiRequest<DiscussionReplyActionDto>(`/api/social/replies/${replyId}/upvote`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+
+    if (!result.success) return { success: false, error: result.error };
+
+    revalidateCourseSupport(courseId, discussionId);
+    return { success: true, data: null };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
 // =============================================================================
 // SERVER-SIDE DATA FETCHING ACTIONS
 // =============================================================================

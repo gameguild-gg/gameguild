@@ -4,6 +4,7 @@ import { getCourse, getDiscussionThread } from '@/lib/learning';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CheckCircle2, MessageSquare } from 'lucide-react';
+import { ThreadActionPanel } from '../../thread-action-panel';
 
 /**
  * Discussion Thread Detail Page
@@ -65,6 +66,13 @@ export default async function DiscussionThreadPage({
           <div className="flex justify-between"><span className="text-muted-foreground">Pinned</span><span>{thread.pinned ? 'Yes' : 'No'}</span></div>
         </CardContent>
       </Card>
+      <ThreadActionPanel
+        courseId={courseId}
+        threadId={thread.id}
+        pinned={thread.pinned}
+        resolved={thread.locked}
+        replies={thread.replies}
+      />
     </div>
   );
 }
