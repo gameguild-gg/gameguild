@@ -466,23 +466,7 @@ export const getCourseLandingProjects = cache(async (courseId: string): Promise<
   const metadataProjectItems = getMetadataProjectItems(course);
   if (metadataProjectItems) return { items: metadataProjectItems, total: metadataProjectItems.length };
 
-  const fallbackItems: CourseLandingProject[] = [
-    {
-      id: `${course.id}-project-1`,
-      courseId: course.id,
-      title: 'System sketch',
-      summary: `Map the production problem behind ${course.title}.`,
-      image: course.thumbnail ?? '',
-      skills: ['Problem framing', 'Prototype scope'],
-      deliverable: 'A concise system sketch that makes the course problem visible for review.',
-      moduleLabel: 'Project 01',
-      order: 1,
-      createdAt: course.createdAt,
-      updatedAt: course.updatedAt,
-    },
-  ];
-
-  return { items: fallbackItems, total: fallbackItems.length };
+  return { items: [], total: 0 };
 });
 
 /**
