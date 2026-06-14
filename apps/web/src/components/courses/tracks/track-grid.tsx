@@ -3,6 +3,7 @@
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 
+import { getTrackProgramHref } from '@/lib/tracks/catalog';
 import { useFilteredTracks } from '@/lib/tracks/use-tracks';
 import { TrackCard } from './track-card';
 
@@ -21,7 +22,7 @@ export function TrackGrid() {
           key={track.id}
           track={track}
           onClick={() => {
-            router.push(`/tracks/${track.slug}` as Route);
+            router.push(getTrackProgramHref(track.slug) as Route);
           }}
         />
       ))}
