@@ -85,7 +85,7 @@ public class ProjectsController : BaseApiController {
 
     var project = await _mediator.Send(query).ConfigureAwait(false);
 
-    if (project.IsFailure) return ToActionResult(project);
+    if (project.IsFailure) return ToActionResult(Result.Failure<Project>(project.Error));
     if (project.Value == null) { return NotFound(); }
 
     return Ok(project.Value);
@@ -99,7 +99,7 @@ public class ProjectsController : BaseApiController {
 
     var project = await _mediator.Send(query).ConfigureAwait(false);
 
-    if (project.IsFailure) return ToActionResult(project);
+    if (project.IsFailure) return ToActionResult(Result.Failure<Project>(project.Error));
     if (project.Value == null) { return NotFound(); }
 
     return Ok(project.Value);
