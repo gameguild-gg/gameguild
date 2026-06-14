@@ -26,6 +26,7 @@ import {
   Gamepad2,
   HeadphonesIcon,
   LayoutDashboard,
+  Rocket,
   UserCog,
   Users,
   type LucideIcon,
@@ -96,6 +97,16 @@ const navigationData: NavGroup[] = [
         title: 'Resources',
         url: '/dashboard/learning/resources',
         icon: FolderOpen,
+      },
+    ],
+  },
+  {
+    label: 'Launch',
+    items: [
+      {
+        title: 'Launch Pad',
+        url: '/dashboard/launch-pad',
+        icon: Rocket,
       },
     ],
   },
