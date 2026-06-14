@@ -117,4 +117,12 @@ describe('course listing queries', () => {
       }),
     ]);
   });
+
+  it('does not invent project carousel items when metadata has not been configured', async () => {
+    vi.mocked(getCourse).mockResolvedValue(baseCourse);
+
+    const projects = await getCourseLandingProjects('course-1');
+
+    expect(projects).toEqual({ items: [], total: 0 });
+  });
 });
