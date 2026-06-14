@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ModulesProgramsProgramDifficulty as CourseLevel } from '@/lib/api/generated/stub-types';
+import { CourseLevelValue, type CourseLevel } from '@/components/courses/common/course-taxonomy';
 import { ChevronDown, Crown, Skull, Star, Zap } from 'lucide-react';
 
 interface CourseLevelFilterProps {
@@ -11,22 +11,22 @@ interface CourseLevelFilterProps {
 }
 
 const levelItems: { value: CourseLevel; label: string }[] = [
-  { value: CourseLevel.BEGINNER, label: 'Beginner' },
-  { value: CourseLevel.INTERMEDIATE, label: 'Intermediate' },
-  { value: CourseLevel.ADVANCED, label: 'Advanced' },
-  { value: CourseLevel.EXPERT, label: 'Expert' },
+  { value: CourseLevelValue.BEGINNER, label: 'Beginner' },
+  { value: CourseLevelValue.INTERMEDIATE, label: 'Intermediate' },
+  { value: CourseLevelValue.ADVANCED, label: 'Advanced' },
+  { value: CourseLevelValue.EXPERT, label: 'Expert' },
 ];
 
 export function CourseLevelFilter({ selectedLevels, onToggleLevel }: CourseLevelFilterProps) {
   const getLevelIcon = (level: CourseLevel | 'all') => {
     switch (level) {
-      case CourseLevel.BEGINNER:
+      case CourseLevelValue.BEGINNER:
         return <Star className="h-4 w-4 text-green-400" />;
-      case CourseLevel.INTERMEDIATE:
+      case CourseLevelValue.INTERMEDIATE:
         return <Zap className="h-4 w-4 text-yellow-400" />;
-      case CourseLevel.ADVANCED:
+      case CourseLevelValue.ADVANCED:
         return <Crown className="h-4 w-4 text-orange-400" />;
-      case CourseLevel.EXPERT:
+      case CourseLevelValue.EXPERT:
         return <Skull className="h-4 w-4 text-red-400" />;
       default:
         return <Star className="h-4 w-4 text-slate-400" />;

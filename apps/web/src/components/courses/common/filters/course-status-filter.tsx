@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ModulesContentsContentStatus as CourseStatus } from '@/lib/api/generated/stub-types';
+import { CourseStatusValue, type CourseStatus } from '@/components/courses/common/course-taxonomy';
 import { Archive, ChevronDown, Eye, FileText } from 'lucide-react';
 
 interface CourseStatusFilterProps {
@@ -11,19 +11,22 @@ interface CourseStatusFilterProps {
 }
 
 const statusItems: { value: CourseStatus; label: string }[] = [
-  { value: CourseStatus.DRAFT, label: 'Draft' },
-  { value: CourseStatus.PUBLISHED, label: 'Published' },
-  { value: CourseStatus.ARCHIVED, label: 'Archived' },
+  { value: CourseStatusValue.DRAFT, label: 'Draft' },
+  { value: CourseStatusValue.REVIEW, label: 'Under review' },
+  { value: CourseStatusValue.PUBLISHED, label: 'Published' },
+  { value: CourseStatusValue.ARCHIVED, label: 'Archived' },
 ];
 
 export function CourseStatusFilter({ selectedStatuses, onToggleStatus }: CourseStatusFilterProps) {
   const getStatusIcon = (status: CourseStatus | 'all') => {
     switch (status) {
-      case CourseStatus.DRAFT:
+      case CourseStatusValue.DRAFT:
         return <FileText className="h-4 w-4 text-yellow-400" />;
-      case CourseStatus.PUBLISHED:
+      case CourseStatusValue.REVIEW:
+        return <FileText className="h-4 w-4 text-blue-400" />;
+      case CourseStatusValue.PUBLISHED:
         return <Eye className="h-4 w-4 text-green-400" />;
-      case CourseStatus.ARCHIVED:
+      case CourseStatusValue.ARCHIVED:
         return <Archive className="h-4 w-4 text-red-400" />;
       default:
         return <FileText className="h-4 w-4 text-slate-400" />;

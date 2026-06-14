@@ -2,9 +2,9 @@
 
 import { PeriodType } from '@/components/common/filters/filter-context';
 import { CourseFilterControls } from '@/components/courses/common';
+import { CourseLevelValue, CourseStatusValue, type CourseLevel, type CourseStatus } from '@/components/courses/common/course-taxonomy';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty } from '@/lib/api/generated/stub-types';
 import { ProgramCategory } from '@/lib/api/generated/types.gen';
 import { Eye, FileText, Plus, Play } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
@@ -12,9 +12,7 @@ import { CourseCard, CourseCardCourse } from './course-card';
 
 // Type aliases to maintain existing naming
 type Course = CourseCardCourse;
-type CourseStatus = ModulesContentsContentStatus;
 type CourseArea = ProgramCategory;
-type CourseLevel = ModulesProgramsProgramDifficulty;
 
 interface CourseListProps {
   courses: Course[];
@@ -38,38 +36,38 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, onCreate, initia
   const normalizeStatus = (status: Course['status']): CourseStatus | undefined => {
     if (status === undefined || status === null) return undefined;
     const value = typeof status === 'number' ? status : String(status).toLowerCase();
-    if (value === 0 || value === '0' || value === 'draft') return ModulesContentsContentStatus.DRAFT;
-    if (value === 1 || value === '1' || value === 'under-review' || value === 'review') return ModulesContentsContentStatus.UNDER_REVIEW;
-    if (value === 2 || value === '2' || value === 'published') return ModulesContentsContentStatus.PUBLISHED;
-    if (value === 3 || value === '3' || value === 'archived') return ModulesContentsContentStatus.ARCHIVED;
+    if (value === 0 || value === '0' || value === 'draft') return CourseStatusValue.DRAFT;
+    if (value === 1 || value === '1' || value === 'under-review' || value === 'review') return CourseStatusValue.REVIEW;
+    if (value === 2 || value === '2' || value === 'published') return CourseStatusValue.PUBLISHED;
+    if (value === 3 || value === '3' || value === 'archived') return CourseStatusValue.ARCHIVED;
     return undefined;
   };
 
   const normalizeLevel = (level: Course['difficulty'] | Course['level']): CourseLevel | undefined => {
     if (level === undefined || level === null) return undefined;
     const value = typeof level === 'number' ? level : String(level).toLowerCase();
-    if (value === 0 || value === '0' || value === 'beginner') return ModulesProgramsProgramDifficulty.BEGINNER;
-    if (value === 1 || value === '1' || value === 'intermediate') return ModulesProgramsProgramDifficulty.INTERMEDIATE;
-    if (value === 2 || value === '2' || value === 'advanced') return ModulesProgramsProgramDifficulty.ADVANCED;
-    if (value === 3 || value === '3' || value === 'expert') return ModulesProgramsProgramDifficulty.EXPERT;
+    if (value === 0 || value === '0' || value === 'beginner') return CourseLevelValue.BEGINNER;
+    if (value === 1 || value === '1' || value === 'intermediate') return CourseLevelValue.INTERMEDIATE;
+    if (value === 2 || value === '2' || value === 'advanced') return CourseLevelValue.ADVANCED;
+    if (value === 3 || value === '3' || value === 'expert') return CourseLevelValue.EXPERT;
     return undefined;
   };
 
   const getStatusLabel = (course: Course): string => {
     const status = normalizeStatus(course.status);
-    if (status === ModulesContentsContentStatus.DRAFT) return 'Draft';
-    if (status === ModulesContentsContentStatus.UNDER_REVIEW) return 'Under review';
-    if (status === ModulesContentsContentStatus.PUBLISHED) return 'Published';
-    if (status === ModulesContentsContentStatus.ARCHIVED) return 'Archived';
+    if (status === CourseStatusValue.DRAFT) return 'Draft';
+    if (status === CourseStatusValue.REVIEW) return 'Under review';
+    if (status === CourseStatusValue.PUBLISHED) return 'Published';
+    if (status === CourseStatusValue.ARCHIVED) return 'Archived';
     return 'Unknown';
   };
 
   const getLevelLabel = (course: Course): string => {
     const level = normalizeLevel(course.difficulty ?? course.level);
-    if (level === ModulesProgramsProgramDifficulty.BEGINNER) return 'Beginner';
-    if (level === ModulesProgramsProgramDifficulty.INTERMEDIATE) return 'Intermediate';
-    if (level === ModulesProgramsProgramDifficulty.ADVANCED) return 'Advanced';
-    if (level === ModulesProgramsProgramDifficulty.EXPERT) return 'Expert';
+    if (level === CourseLevelValue.BEGINNER) return 'Beginner';
+    if (level === CourseLevelValue.INTERMEDIATE) return 'Intermediate';
+    if (level === CourseLevelValue.ADVANCED) return 'Advanced';
+    if (level === CourseLevelValue.EXPERT) return 'Expert';
     return 'Unknown';
   };
 
@@ -186,7 +184,7 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, onCreate, initia
                   const level = getLevelLabel(course);
                   const hours = course.estimatedHours ?? 0;
                   const enrollments = course.analytics?.enrollments ?? (course.currentEnrollments as number | undefined) ?? 0;
-                  const isPublished = normalizeStatus(course.status) === ModulesContentsContentStatus.PUBLISHED;
+                  const isPublished = normalizeStatus(course.status) === CourseStatusValue.PUBLISHED;
 
                   return (
                     <TableRow key={course.id ?? title} className="border-slate-800">

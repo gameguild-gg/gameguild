@@ -3,17 +3,15 @@
 import { PeriodType } from '@/components/common/filters/filter-context';
 import { PeriodSelector } from '@/components/common/filters/period-selector';
 import { ViewModeToggle } from '@/components/common/filters/view-mode-toggle';
+import type { CourseLevel, CourseStatus } from '@/components/courses/common/course-taxonomy';
 import { ProgramCategory } from '@/lib/api/generated';
-import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty } from '@/lib/api/generated/stub-types';
 import { CourseAreaFilter } from './course-area-filter';
 import { CourseLevelFilter } from './course-level-filter';
 import { CourseSearchBar } from './course-search-bar';
 import { CourseStatusFilter } from './course-status-filter';
 
 // Type aliases to maintain existing naming
-type CourseStatus = ModulesContentsContentStatus;
 type CourseArea = ProgramCategory;
-type CourseLevel = ModulesProgramsProgramDifficulty;
 
 interface CourseFilterControlsProps {
   searchTerm: string;
