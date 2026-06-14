@@ -23,6 +23,7 @@ import {
   ChevronRight,
   FileText,
   FolderOpen,
+  Gamepad2,
   HeadphonesIcon,
   LayoutDashboard,
   UserCog,
@@ -30,10 +31,6 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import * as React from 'react';
-import { TenantSwitcher, type Tenant } from './tenant-switcher';
-
-// Sample tenants data
-const sampleTenants: Tenant[] = [];
 
 // Types for navigation structure
 interface NavSubItem {
@@ -286,7 +283,21 @@ export function DashboardSidebar(props: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TenantSwitcher tenants={sampleTenants} />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="lg">
+              <Link href="/dashboard">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <Gamepad2 className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">GameGuild</span>
+                  <span className="truncate text-xs text-sidebar-foreground/70">Creator dashboard</span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className="gap-0">
         <NavGroups groups={navigationData} />
