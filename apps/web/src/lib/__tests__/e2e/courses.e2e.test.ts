@@ -143,7 +143,115 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(course.thumbnail).toBe('https://example.com/thumb-v2.png');
   });
 
-  // ── 5. List courses ─────────────────────────────────────────────────────
+  // ── 5. Update storefront metadata ───────────────────────────────────────
+  it('persists storefront FAQ, project carousel, and skill metadata', async () => {
+    const landingFaq = [
+      {
+        question: 'What do students build?',
+        answer: 'A polished combat prototype and a public release pitch.',
+      },
+      {
+        question: 'Is critique included?',
+        answer: 'Yes. Every milestone includes instructor and peer critique.',
+      },
+    ];
+    const landingProjects = [
+      {
+        title: 'Boss AI prototype',
+        description: 'A readable encounter loop with telemetry-driven tuning.',
+        imageUrl: 'https://cdn.gameguild.gg/e2e/boss-ai.webp',
+        tag: 'AI',
+      },
+      {
+        title: 'Steam-ready pitch',
+        description: 'A storefront capsule, trailer outline, and launch checklist.',
+        imageUrl: 'https://cdn.gameguild.gg/e2e/launch-pitch.webp',
+        tag: 'Launch',
+      },
+    ];
+
+    const metadata = JSON.stringify({ landingFaq, landingProjects });
+    const result = await programs.putCourses(courseId, {
+      metadata,
+      skillsRequired: 'portfolio fundamentals, peer critique',
+      skillsProvided: 'boss AI systems, Steam launch planning',
+    });
+    const course = unwrap(result, 'Update storefront metadata');
+    const responseMetadata = JSON.parse(course.metadata ?? '{}');
+
+    expect(responseMetadata.landingFaq).toEqual(landingFaq);
+    expect(responseMetadata.landingProjects).toEqual(landingProjects);
+    expect(responseMetadata.skillsRequired).toBe('portfolio fundamentals, peer critique');
+    expect(responseMetadata.skillsProvided).toBe('boss AI systems, Steam launch planning');
+    expect(course.skillsRequired).toBe('portfolio fundamentals, peer critique');
+    expect(course.skillsProvided).toBe('boss AI systems, Steam launch planning');
+
+    const readResult = await programs.getCourses1(courseId);
+    const persistedCourse = unwrap(readResult, 'Read storefront metadata');
+    const persistedMetadata = JSON.parse(persistedCourse.metadata ?? '{}');
+
+    expect(persistedMetadata.landingFaq).toEqual(landingFaq);
+    expect(persistedMetadata.landingProjects).toEqual(landingProjects);
+    expect(persistedCourse.skillsRequired).toBe('portfolio fundamentals, peer critique');
+    expect(persistedCourse.skillsProvided).toBe('boss AI systems, Steam launch planning');
+  });
+
+  // ── 6. Manage monetization and pricing ──────────────────────────────────
+  it('enables, updates, and disables course monetization pricing', async () => {
+    const monetizedCourse = unwrap(
+      await programs.postCoursesMonetize(courseId, {
+        price: 199.99,
+        currency: 'USD',
+        isSubscription: true,
+        subscriptionDurationDays: 365,
+      }),
+      'Enable course monetization',
+    );
+    expect(monetizedCourse.id).toBe(courseId);
+
+    const enabledPricing = unwrap(
+      await programs.getCoursesPricing(courseId),
+      'Get enabled course pricing',
+    );
+    expect(enabledPricing.price).toBe(199.99);
+    expect(enabledPricing.currency).toBe('USD');
+    expect(enabledPricing.isSubscription).toBe(true);
+    expect(enabledPricing.subscriptionDurationDays).toBe(365);
+    expect(enabledPricing.isMonetizationEnabled).toBe(true);
+
+    const updatedPricing = unwrap(
+      await programs.putCoursesPricing(courseId, {
+        price: 249.5,
+        currency: 'EUR',
+        isSubscription: false,
+        subscriptionDurationDays: null,
+      }),
+      'Update course pricing',
+    );
+    expect(updatedPricing.price).toBe(249.5);
+    expect(updatedPricing.currency).toBe('EUR');
+    expect(updatedPricing.isSubscription).toBe(false);
+    expect(updatedPricing.subscriptionDurationDays).toBeNull();
+    expect(updatedPricing.isMonetizationEnabled).toBe(true);
+
+    const disabledCourse = unwrap(
+      await programs.postCoursesDisableMonetization(courseId),
+      'Disable course monetization',
+    );
+    expect(disabledCourse.id).toBe(courseId);
+
+    const disabledPricing = unwrap(
+      await programs.getCoursesPricing(courseId),
+      'Get disabled course pricing',
+    );
+    expect(disabledPricing.price).toBe(249.5);
+    expect(disabledPricing.currency).toBe('EUR');
+    expect(disabledPricing.isSubscription).toBe(false);
+    expect(disabledPricing.subscriptionDurationDays).toBeNull();
+    expect(disabledPricing.isMonetizationEnabled).toBe(false);
+  });
+
+  // ── 7. List courses ─────────────────────────────────────────────────────
   it('lists courses and the new course appears', async () => {
     const result = await programs.getCourses({ take: 100 });
 
@@ -155,7 +263,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(found!.title).toBe('E2E Course — Advanced Game Dev (updated)');
   });
 
-  // ── 6. Get course with content (initially empty) ────────────────────────
+  // ── 8. Get course with content (initially empty) ────────────────────────
   it('gets course with content (empty at this point)', async () => {
     try {
       const result = await programs.getCoursesWithContent(courseId);
