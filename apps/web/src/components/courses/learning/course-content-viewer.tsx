@@ -14,6 +14,7 @@ import { ActivityComponent } from './activity-component';
 import { CertificateNotification } from './certificate-notification';
 import { ContentNavigationSidebar } from './content-navigation-sidebar';
 import { LessonViewer } from './lesson-viewer';
+import { PeerReviewInterface } from './peer-review-interface';
 import { ReportContentDialog } from './report-content-dialog';
 
 type ContentReportMessage = {
@@ -462,6 +463,8 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                     )}
                     {currentItem.type === 'lesson' ? (
                       <LessonViewer item={currentItem} onComplete={() => handleItemComplete(currentItem.id)} />
+                    ) : currentItem.type === 'peer-review' ? (
+                      <PeerReviewInterface item={currentItem} courseId={courseData.id} onComplete={(score?: number) => handleItemComplete(currentItem.id, score)} />
                     ) : (
                       <ActivityComponent item={currentItem} courseId={courseData.id} onComplete={(score?: number) => handleItemComplete(currentItem.id, score)} />
                     )}

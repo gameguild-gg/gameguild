@@ -5,11 +5,17 @@ import type { CourseAttendanceData, CourseAttendanceItem } from '@/lib/courses';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { CheckCircle2, Clock3, Lock, PlayCircle } from 'lucide-react';
+import { Textarea } from '@game-guild/ui/components/textarea';
+import { CheckCircle2, Clock3, Lock, PlayCircle, Send, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import MarkdownRenderer from './markdown-renderer';
+
+interface PeerReviewCriterion {
+    name: string;
+    description?: string;
+}
 
 function getStatusLabel(status: CourseAttendanceItem['status']) {
     switch (status) {
@@ -61,15 +67,116 @@ function contentToMarkdown(content: unknown): string | null {
     return null;
 }
 
+function parseObjectContent(content: unknown): Record<string, unknown> | null {
+    if (content && typeof content === 'object' && !Array.isArray(content)) {
+        return content as Record<string, unknown>;
+    }
+
+    if (typeof content === 'string' && content.trim()) {
+        try {
+            const parsed = JSON.parse(content) as unknown;
+
+            return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+                ? parsed as Record<string, unknown>
+                : null;
+        } catch {
+            return null;
+        }
+    }
+
+    return null;
+}
+
+function normalizePeerReviewCriterion(value: unknown, index: number): PeerReviewCriterion {
+    if (typeof value === 'string' && value.trim()) {
+        return { name: value.trim() };
+    }
+
+    if (value && typeof value === 'object') {
+        const record = value as Record<string, unknown>;
+        const name = typeof record.name === 'string' && record.name.trim()
+            ? record.name.trim()
+            : typeof record.title === 'string' && record.title.trim()
+                ? record.title.trim()
+                : `Criterion ${index + 1}`;
+        const description = typeof record.description === 'string' && record.description.trim()
+            ? record.description.trim()
+            : undefined;
+
+        return { name, description };
+    }
+
+    return { name: `Criterion ${index + 1}` };
+}
+
+function getPeerReviewContent(item: CourseAttendanceItem): { prompt: string; criteria: PeerReviewCriterion[] } {
+    const content = item.content;
+    const record = parseObjectContent(content);
+
+    if (record) {
+        const prompt =
+            (typeof record.prompt === 'string' && record.prompt.trim()) ||
+            (typeof record.instructions === 'string' && record.instructions.trim()) ||
+            (typeof record.content === 'string' && record.content.trim()) ||
+            item.description ||
+            'Review the peer submission, rate the criteria, and leave actionable feedback.';
+        const criteriaSource = Array.isArray(record.criteria) ? record.criteria : [];
+        const criteria = criteriaSource.map(normalizePeerReviewCriterion).filter((criterion) => criterion.name.trim().length > 0);
+
+        return {
+            prompt,
+            criteria: criteria.length > 0
+                ? criteria
+                : [
+                    { name: 'clarity', description: 'Is the work easy to understand?' },
+                    { name: 'usefulness', description: 'Will the feedback help the creator improve?' },
+                    { name: 'production readiness', description: 'Is the submission ready for portfolio or launch review?' },
+                ],
+        };
+    }
+
+    if (typeof content === 'string' && content.trim()) {
+        return {
+            prompt: content.trim(),
+            criteria: [
+                { name: 'clarity', description: 'Is the work easy to understand?' },
+                { name: 'usefulness', description: 'Will the feedback help the creator improve?' },
+                { name: 'production readiness', description: 'Is the submission ready for portfolio or launch review?' },
+            ],
+        };
+    }
+
+    return {
+        prompt: item.description || 'Review the peer submission, rate the criteria, and leave actionable feedback.',
+        criteria: [
+            { name: 'clarity', description: 'Is the work easy to understand?' },
+            { name: 'usefulness', description: 'Will the feedback help the creator improve?' },
+            { name: 'production readiness', description: 'Is the submission ready for portfolio or launch review?' },
+        ],
+    };
+}
+
 export function CourseAttendanceShell({ course }: { course: CourseAttendanceData }) {
     const router = useRouter();
     const [selectedItemId, setSelectedItemId] = useState<string | null>(course.currentItem?.id ?? course.modules[0]?.items[0]?.id ?? null);
     const [isMutating, setIsMutating] = useState(false);
     const [actionError, setActionError] = useState<string | null>(null);
+    const [peerRatings, setPeerRatings] = useState<Record<string, number>>({});
+    const [peerFeedback, setPeerFeedback] = useState('');
 
     const selectedItem = course.modules.flatMap((module) => module.items).find((item) => item.id === selectedItemId) ?? null;
     const contentMarkdown = selectedItem ? contentToMarkdown(selectedItem.content) : null;
+    const peerReviewContent = selectedItem?.type === 'peer-review' ? getPeerReviewContent(selectedItem) : null;
+    const allPeerCriteriaRated = peerReviewContent ? peerReviewContent.criteria.every((criterion) => (peerRatings[criterion.name] ?? 0) > 0) : false;
+    const canSubmitPeerReview = Boolean(selectedItem && peerReviewContent && allPeerCriteriaRated && peerFeedback.trim().length > 0 && !isMutating);
     const hoursRemaining = course.remainingMinutes > 0 ? (course.remainingMinutes / 60).toFixed(1) : '0.0';
+
+    function handleSelectItem(itemId: string) {
+        setSelectedItemId(itemId);
+        setActionError(null);
+        setPeerRatings({});
+        setPeerFeedback('');
+    }
 
     async function handleBeginSelectedItem() {
         if (!selectedItem || selectedItem.status !== 'available') {
@@ -93,6 +200,31 @@ export function CourseAttendanceShell({ course }: { course: CourseAttendanceData
 
     async function handleCompleteSelectedItem() {
         if (!selectedItem || selectedItem.status === 'locked' || selectedItem.status === 'completed') {
+            return;
+        }
+
+        setIsMutating(true);
+        setActionError(null);
+
+        const result = await completeCourseContent(course.id, selectedItem.id);
+
+        setIsMutating(false);
+
+        if (!result.success) {
+            setActionError(result.error);
+            return;
+        }
+
+        router.refresh();
+    }
+
+    async function handleSubmitPeerReview() {
+        if (!selectedItem || selectedItem.type !== 'peer-review' || selectedItem.status === 'locked' || selectedItem.status === 'completed') {
+            return;
+        }
+
+        if (!canSubmitPeerReview) {
+            setActionError('Rate every criterion and write feedback before submitting.');
             return;
         }
 
@@ -156,7 +288,7 @@ export function CourseAttendanceShell({ course }: { course: CourseAttendanceData
                                                 key={item.id}
                                                 type="button"
                                                 disabled={disabled}
-                                                onClick={() => setSelectedItemId(item.id)}
+                                                onClick={() => handleSelectItem(item.id)}
                                                 className={`flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition ${isActive ? 'border-sky-500/50 bg-sky-500/10' : 'border-slate-800 bg-slate-900 hover:border-slate-700'} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
                                             >
                                                 <span className="mt-0.5 text-slate-300">
@@ -205,15 +337,17 @@ export function CourseAttendanceShell({ course }: { course: CourseAttendanceData
                                         </Button>
                                     ) : null}
                                     {selectedItem.status !== 'locked' && selectedItem.status !== 'completed' ? (
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={handleCompleteSelectedItem}
-                                            disabled={isMutating}
-                                            className="border-emerald-500/40 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20"
-                                        >
-                                            {isMutating ? 'Updating progress...' : 'Mark completed'}
-                                        </Button>
+                                        selectedItem.type === 'peer-review' ? null : (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={handleCompleteSelectedItem}
+                                                disabled={isMutating}
+                                                className="border-emerald-500/40 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20"
+                                            >
+                                                {isMutating ? 'Updating progress...' : 'Mark completed'}
+                                            </Button>
+                                        )
                                     ) : null}
                                 </div>
                                 {actionError ? <p className="text-sm text-rose-300">{actionError}</p> : null}
@@ -227,6 +361,80 @@ export function CourseAttendanceShell({ course }: { course: CourseAttendanceData
                             selectedItem.status === 'locked' ? (
                                 <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/60 p-6 text-sm text-slate-300">
                                     Complete the unlocked item before this lesson becomes available.
+                                </div>
+                            ) : selectedItem.type === 'peer-review' && peerReviewContent ? (
+                                <div className="space-y-6">
+                                    <div className="rounded-2xl border border-sky-500/30 bg-sky-500/10 p-5">
+                                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">Peer review brief</p>
+                                        <h2 className="mt-3 text-xl font-semibold text-white">{selectedItem.title}</h2>
+                                        <p className="mt-3 text-sm leading-6 text-slate-200">{peerReviewContent.prompt}</p>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {peerReviewContent.criteria.map((criterion) => {
+                                            const rating = peerRatings[criterion.name] ?? 0;
+
+                                            return (
+                                                <div key={criterion.name} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                                        <div>
+                                                            <p className="text-sm font-medium capitalize text-white">{criterion.name}</p>
+                                                            {criterion.description ? <p className="mt-1 text-xs text-slate-400">{criterion.description}</p> : null}
+                                                        </div>
+                                                        <span className="text-xs font-medium text-slate-400">{rating > 0 ? `${rating}/5` : 'Not rated'}</span>
+                                                    </div>
+                                                    <div className="mt-4 flex flex-wrap gap-2" aria-label={`Rate ${criterion.name}`}>
+                                                        {[1, 2, 3, 4, 5].map((value) => (
+                                                            <button
+                                                                key={value}
+                                                                type="button"
+                                                                aria-label={`Rate ${criterion.name} ${value}`}
+                                                                aria-pressed={rating === value}
+                                                                onClick={() => {
+                                                                    setPeerRatings((current) => ({ ...current, [criterion.name]: value }));
+                                                                    setActionError(null);
+                                                                }}
+                                                                className={`inline-flex size-9 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 ${
+                                                                    value <= rating
+                                                                        ? 'border-amber-300/70 bg-amber-300/15 text-amber-200'
+                                                                        : 'border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-500 hover:text-slate-200'
+                                                                }`}
+                                                            >
+                                                                <Star className="size-4" fill={value <= rating ? 'currentColor' : 'none'} />
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label htmlFor="peer-review-feedback" className="text-sm font-medium text-white">
+                                            Written feedback
+                                        </label>
+                                        <Textarea
+                                            id="peer-review-feedback"
+                                            value={peerFeedback}
+                                            onChange={(event) => {
+                                                setPeerFeedback(event.target.value);
+                                                setActionError(null);
+                                            }}
+                                            rows={6}
+                                            className="border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500"
+                                            placeholder="Explain what is working, what should improve, and one concrete next step for the creator."
+                                        />
+                                    </div>
+
+                                    <Button
+                                        type="button"
+                                        onClick={handleSubmitPeerReview}
+                                        disabled={!canSubmitPeerReview}
+                                        className="bg-sky-600 text-white hover:bg-sky-500 disabled:opacity-50"
+                                    >
+                                        <Send className="size-4" />
+                                        {isMutating ? 'Submitting peer review...' : 'Submit peer review'}
+                                    </Button>
                                 </div>
                             ) : contentMarkdown ? (
                                 <MarkdownRenderer content={contentMarkdown} />
