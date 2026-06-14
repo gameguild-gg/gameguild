@@ -30,6 +30,27 @@ interface CohortOutput {
   meetingSchedule?: string | null;
 }
 
+interface DiscussionOutput {
+  id: string;
+  courseId: string;
+  authorId: string;
+  title: string;
+  content: string;
+  isPinned: boolean;
+  isResolved: boolean;
+  replyCount: number;
+  viewCount: number;
+}
+
+interface DiscussionReplyOutput {
+  id: string;
+  discussionId: string;
+  authorId: string;
+  content: string;
+  isAcceptedAnswer: boolean;
+  upvoteCount: number;
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -52,6 +73,27 @@ const createCourseModules = (client: ReturnType<typeof createClient>) => ({
   lifecycle: new GeneratedApi.LearningCoursesProgramlifecycleModule(client),
 });
 
+const enableCapability = async (
+  client: ReturnType<typeof createClient>,
+  tenantId: string,
+  capability: string,
+) => {
+  unwrap(
+    await client.request<void>({
+      method: 'POST',
+      path: `/v1/tenants/${tenantId}/capabilities`,
+      body: {
+        capability,
+        isEnabled: true,
+        source: 'override:e2e',
+        reason: `Enable ${capability} for course E2E coverage`,
+        expiresAt: null,
+      },
+    }),
+    `Enable ${capability}`,
+  );
+};
+
 // ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
@@ -59,6 +101,9 @@ const createCourseModules = (client: ReturnType<typeof createClient>) => ({
 describe('Courses E2E — full CRUD + lifecycle + content', () => {
   let accessToken: string;
   let userId: string;
+  let email: string;
+  let password: string;
+  let tenantId: string | undefined = TENANT_ID;
   let authedClient: ReturnType<typeof createClient>;
   let programs: ReturnType<typeof createCourseModules>['programs'];
   let content: ReturnType<typeof createCourseModules>['content'];
@@ -73,13 +118,15 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     });
 
     const tag = unique();
+    email = `course_e2e_${tag}@example.com`;
+    password = 'Str0ng!Passw0rd123!';
     const signUpResult = await client.request<SignInOutput>({
       method: 'POST',
       path: '/v1/auth/sign-up',
       body: {
         username: `course_e2e_${tag}`,
-        email: `course_e2e_${tag}@example.com`,
-        password: 'Str0ng!Passw0rd123!',
+        email,
+        password,
         ...(TENANT_ID ? { tenantId: TENANT_ID } : {}),
       },
       requiresAuth: false,
@@ -93,12 +140,52 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
         ? rawId
         : (data.user?.id ?? '');
 
+    if (!TENANT_ID) {
+      const tenantClient = createClient({
+        baseUrl: BASE_URL,
+        timeout: 15_000,
+        devtools: { enabled: false },
+        auth: { getAccessToken: async () => accessToken },
+      });
+
+      const tenantResult = await tenantClient.request<{ id: string }>({
+        method: 'POST',
+        path: '/v1/tenants',
+        body: {
+          name: `Courses E2E Tenant ${tag}`,
+          slug: `courses-e2e-${tag.replace(/_/g, '-')}`,
+          adminEmail: email,
+          description: 'Tenant created for course and social learning E2E coverage',
+        },
+        requiresAuth: true,
+      });
+
+      tenantId = unwrap(tenantResult, 'Create courses E2E tenant').id;
+      const signInResult = await client.request<SignInOutput>({
+        method: 'POST',
+        path: '/v1/auth/sign-in',
+        body: {
+          email,
+          password,
+          tenantId,
+        },
+        requiresAuth: false,
+      });
+
+      accessToken = unwrap(signInResult, 'Courses tenant-owner sign-in').accessToken;
+    }
+
     authedClient = createClient({
       baseUrl: BASE_URL,
       timeout: 15_000,
       devtools: { enabled: false },
       auth: { getAccessToken: async () => accessToken },
+      tenant: { getTenantId: async () => tenantId },
     });
+
+    if (tenantId) {
+      await enableCapability(authedClient, tenantId, 'lxp.social');
+    }
 
     ({ programs, content, lifecycle } = createCourseModules(authedClient));
   }, 30_000);
@@ -107,6 +194,8 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
   let courseId: string;
   let certificateTemplateId: string;
   let cohortId: string;
+  let discussionId: string;
+  let discussionReplyId: string;
   const courseSlug = `e2e-course-${Date.now()}`;
 
   it('creates a new course (program)', async () => {
@@ -394,6 +483,98 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
       path: `/api/cohorts/${cohortId}`,
     });
     unwrap(deleteResult, 'Delete cohort');
+  });
+
+  // ── 6c. Manage course discussion support ───────────────────────────────
+  it('creates, moderates, replies to, and deletes a course discussion', async () => {
+    const createResult = await authedClient.request<DiscussionOutput>({
+      method: 'POST',
+      path: '/api/social/discussions',
+      body: {
+        courseId,
+        title: 'E2E milestone support question',
+        content: 'Can I submit a revised build after instructor feedback?',
+      },
+    });
+    const discussion = unwrap(createResult, 'Create course discussion');
+    discussionId = discussion.id;
+
+    expect(discussion.courseId).toBe(courseId);
+    expect(discussion.title).toBe('E2E milestone support question');
+    expect(discussion.isPinned).toBe(false);
+    expect(discussion.isResolved).toBe(false);
+
+    const listResult = await authedClient.request<DiscussionOutput[]>({
+      method: 'GET',
+      path: `/api/social/courses/${courseId}/discussions?skip=0&take=100&pinnedFirst=true`,
+      requiresAuth: false,
+    });
+    const discussions = unwrap(listResult, 'List course discussions');
+    expect(discussions.some((item) => item.id === discussionId)).toBe(true);
+
+    const pinned = unwrap(
+      await authedClient.request<DiscussionOutput>({ method: 'POST', path: `/api/social/discussions/${discussionId}/pin` }),
+      'Pin course discussion',
+    );
+    expect(pinned.isPinned).toBe(true);
+
+    const unpinned = unwrap(
+      await authedClient.request<DiscussionOutput>({ method: 'POST', path: `/api/social/discussions/${discussionId}/unpin` }),
+      'Unpin course discussion',
+    );
+    expect(unpinned.isPinned).toBe(false);
+
+    const replyResult = await authedClient.request<DiscussionReplyOutput>({
+      method: 'POST',
+      path: `/api/social/discussions/${discussionId}/replies`,
+      body: {
+        discussionId,
+        content: 'Yes. Upload the revision before the checkpoint deadline.',
+      },
+    });
+    const reply = unwrap(replyResult, 'Create discussion reply');
+    discussionReplyId = reply.id;
+
+    expect(reply.discussionId).toBe(discussionId);
+    expect(reply.content).toContain('checkpoint deadline');
+
+    const repliesResult = await authedClient.request<DiscussionReplyOutput[]>({
+      method: 'GET',
+      path: `/api/social/discussions/${discussionId}/replies?skip=0&take=100`,
+      requiresAuth: false,
+    });
+    const replies = unwrap(repliesResult, 'List discussion replies');
+    expect(replies.some((item) => item.id === discussionReplyId)).toBe(true);
+
+    const upvoted = unwrap(
+      await authedClient.request<DiscussionReplyOutput>({ method: 'POST', path: `/api/social/replies/${discussionReplyId}/upvote` }),
+      'Upvote discussion reply',
+    );
+    expect(upvoted.upvoteCount).toBeGreaterThanOrEqual(1);
+
+    const accepted = unwrap(
+      await authedClient.request<DiscussionReplyOutput>({ method: 'POST', path: `/api/social/replies/${discussionReplyId}/accept` }),
+      'Accept discussion reply',
+    );
+    expect(accepted.isAcceptedAnswer).toBe(true);
+
+    const resolved = unwrap(
+      await authedClient.request<DiscussionOutput>({ method: 'POST', path: `/api/social/discussions/${discussionId}/resolve` }),
+      'Resolve course discussion',
+    );
+    expect(resolved.isResolved).toBe(true);
+
+    unwrap(
+      await authedClient.request<void>({ method: 'DELETE', path: `/api/social/discussions/${discussionId}` }),
+      'Delete course discussion',
+    );
+
+    const deleted = await authedClient.request<DiscussionOutput>({
+      method: 'GET',
+      path: `/api/social/discussions/${discussionId}`,
+      requiresAuth: false,
+    });
+    expect(deleted.ok).toBe(false);
   });
 
   // ── 7. List courses ─────────────────────────────────────────────────────
