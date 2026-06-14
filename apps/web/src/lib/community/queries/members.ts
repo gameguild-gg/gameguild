@@ -343,6 +343,75 @@ function mapFeedItem(item: SocialFeedFeedItem): CommunityFeedItem {
   };
 }
 
+function normalizeLeadStatus(status?: string | null): SupportTicket['status'] {
+  switch (status?.trim().toLowerCase()) {
+    case 'reviewed':
+      return 'in-progress';
+    case 'archived':
+      return 'closed';
+    case 'new':
+    default:
+      return 'open';
+  }
+}
+
+function statusToLeadStatus(status?: string): string | undefined {
+  switch (status) {
+    case 'open':
+      return 'new';
+    case 'in-progress':
+    case 'resolved':
+      return 'reviewed';
+    case 'closed':
+      return 'archived';
+    default:
+      return undefined;
+  }
+}
+
+function inferTicketPriority(lead: GeneratedApi.ContentPagesMarketingLead): SupportTicket['priority'] {
+  const message = `${lead.plan ?? ''} ${lead.message ?? ''}`.toLowerCase();
+
+  if (/\b(critical|urgent|outage|security|blocked|broken|down)\b/.test(message)) {
+    return 'critical';
+  }
+
+  if (/\b(enterprise|billing|payment|production|deadline|cannot access)\b/.test(message)) {
+    return 'high';
+  }
+
+  if (message.trim().length === 0) {
+    return 'low';
+  }
+
+  return 'medium';
+}
+
+function leadUsername(lead: GeneratedApi.ContentPagesMarketingLead) {
+  if (lead.name?.trim()) return slugify(lead.name);
+  return lead.email?.split('@')[0] ?? 'unknown';
+}
+
+function mapLeadToSupportTicket(lead: GeneratedApi.ContentPagesMarketingLead): SupportTicket {
+  const createdAt = lead.createdAt ?? new Date(0).toISOString();
+  const subject = lead.message?.trim()
+    ? lead.message.trim().split(/\r?\n/)[0]!.slice(0, 120)
+    : `${lead.topic ?? 'Support'} request from ${lead.email ?? 'unknown contact'}`;
+
+  return {
+    id: lead.id ?? `${lead.email ?? 'support'}-${createdAt}`,
+    subject,
+    status: normalizeLeadStatus(lead.status),
+    priority: inferTicketPriority(lead),
+    createdBy: {
+      id: lead.email ?? lead.id ?? 'unknown',
+      username: leadUsername(lead),
+    },
+    createdAt,
+    updatedAt: lead.updatedAt ?? createdAt,
+  };
+}
+
 function getCourseFeedReason(kind: CommunityFeedKind) {
   switch (kind) {
     case 'trending':
@@ -630,8 +699,28 @@ export async function getSupportTickets(options?: {
   status?: string;
   priority?: string;
 }): Promise<{ tickets: SupportTicket[]; total: number }> {
-  void options;
-  return { tickets: [], total: 0 };
+  try {
+    const limit = options?.limit ?? 20;
+    const client = getApiClient();
+    const marketingLeads = new GeneratedApi.ContentMarketingleadsModule(client);
+    const result = await marketingLeads.getMarketingLeads({
+      source: 'contact',
+      topic: 'support',
+      status: statusToLeadStatus(options?.status),
+      skip: Math.max(0, ((options?.page ?? 1) - 1) * limit),
+      take: limit,
+    });
+
+    if (!result.ok) return { tickets: [], total: 0 };
+
+    const tickets = (result.data ?? [])
+      .map(mapLeadToSupportTicket)
+      .filter((ticket) => !options?.priority || ticket.priority === options.priority);
+
+    return { tickets, total: tickets.length };
+  } catch {
+    return { tickets: [], total: 0 };
+  }
 }
 
 function mapSocialGroup(group: SocialGroupsSocialGroup): MemberGroup {
