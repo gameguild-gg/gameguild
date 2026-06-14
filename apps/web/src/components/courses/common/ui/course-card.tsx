@@ -3,20 +3,35 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import type { Program } from '@/lib/api/generated/types.gen';
+import type { GeneratedApi } from '@game-guild/client';
 import { Archive, BookOpen, Clock, Eye, FileText, Play, Star, Users } from 'lucide-react';
 
-// Local stub type for Course since backend Program type is disabled
+type LearningCourse = GeneratedApi.LearningCoursesProgram;
+type CourseProgramContent = GeneratedApi.LearningCoursesProgramContent | { id?: string | number; title?: string | null };
+
 type CourseAnalytics = {
   enrollments?: number;
   averageRating?: number;
 };
 
-type Course = Partial<Program> & {
+type Course = Omit<
+  Partial<LearningCourse>,
+  'id' | 'title' | 'slug' | 'description' | 'status' | 'difficulty' | 'category' | 'estimatedHours' | 'currentEnrollments' | 'averageRating' | 'totalRatings'
+> & {
+  id?: string | number;
+  title?: string | null;
+  slug?: string | null;
+  description?: string | null;
   area?: string;
   status?: 'draft' | 'published' | 'archived' | string | number | null;
   level?: number | null;
   difficulty?: string | number | null;
+  category?: string | number | null;
+  estimatedHours?: number | null;
+  currentEnrollments?: number | null;
+  averageRating?: number | null;
+  totalRatings?: number | null;
+  programContents?: CourseProgramContent[] | null;
   analytics?: CourseAnalytics;
   tools?: string[];
   content?: unknown[];
@@ -31,13 +46,35 @@ interface CourseCardProps {
   onEnroll?: (course: Course) => void;
 }
 
+function normalizeStatusValue(status: Course['status']): string {
+  if (typeof status === 'number') {
+    if (status === 0) return 'draft';
+    if (status === 1) return 'review';
+    if (status === 2) return 'published';
+    if (status === 3) return 'archived';
+  }
+
+  const normalized = typeof status === 'string' ? status.trim().toLowerCase() : '';
+  if (normalized === 'underreview' || normalized === 'under-review' || normalized === 'review') return 'review';
+  if (normalized === 'published') return 'published';
+  if (normalized === 'archived') return 'archived';
+  return 'draft';
+}
+
+function normalizeDifficultyLevel(course: Course): number {
+  if (typeof course.level === 'number') return course.level;
+  if (typeof course.difficulty === 'number') return course.difficulty + 1;
+
+  const normalized = typeof course.difficulty === 'string' ? course.difficulty.trim().toLowerCase() : '';
+  if (normalized === 'intermediate') return 2;
+  if (normalized === 'advanced') return 3;
+  if (normalized === 'expert') return 4;
+  return 1;
+}
+
 export function CourseCard({ course, onEdit, onView, onEnroll }: CourseCardProps) {
-  const normalizedStatus = (course.status as any)?.toString?.() || 'draft';
-  const normalizedLevel = (() => {
-    if (typeof course.level === 'number') return course.level;
-    if (typeof course.difficulty === 'number') return course.difficulty + 1;
-    return 1;
-  })();
+  const normalizedStatus = normalizeStatusValue(course.status);
+  const normalizedLevel = normalizeDifficultyLevel(course);
   const normalizedArea = (course.area as any) ?? (course.category as any);
   const lessonsCount = (course.content ?? course.programContents)?.length || 0;
   const analyticsEnrollments = course.analytics?.enrollments ?? (course.currentEnrollments as any) ?? 0;
@@ -94,7 +131,7 @@ export function CourseCard({ course, onEdit, onView, onEnroll }: CourseCardProps
       case 3:
         return 'Advanced';
       case 4:
-        return 'Arcane';
+        return 'Expert';
       default:
         return 'Unknown';
     }
