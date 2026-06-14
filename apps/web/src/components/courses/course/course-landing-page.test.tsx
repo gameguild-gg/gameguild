@@ -3,7 +3,6 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ImgHTMLAttributes, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { PUBLIC_COURSE_SNAPSHOT } from '@/lib/courses/public-programs';
 import { CourseLandingPage } from './course-landing-page';
 
 type MockImageProps = ImgHTMLAttributes<HTMLImageElement> & {
@@ -37,13 +36,27 @@ vi.mock('./course-self-enroll-button', () => ({
   CourseSelfEnrollButton: ({ courseSlug }: { courseSlug: string }) => <button type="button">Enroll in {courseSlug}</button>,
 }));
 
+const advancedAiCourse = {
+  id: 'ai4games2-program-1',
+  title: 'Advanced Game AI',
+  description:
+    'Master advanced AI techniques for game development, including finite state machines, behavior trees, utility AI, minimax search, Monte Carlo methods, and production AI patterns.',
+  slug: 'ai4games2',
+  thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1400&h=900&fit=crop',
+  estimatedHours: 60,
+  category: 'GameDevelopment',
+  difficulty: 'Intermediate',
+  isEnrollmentOpen: true,
+  visibility: 'Public',
+  status: 'Published',
+  programContents: null,
+};
+
 describe('CourseLandingPage', () => {
   it('renders a project gallery and checkpoint-based course journey for advanced AI', () => {
-    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
+    const course = advancedAiCourse;
 
-    expect(course).toBeDefined();
-
-    render(<CourseLandingPage course={course!} viewerAccess={{ state: 'signed-out' }} />);
+    render(<CourseLandingPage course={course} viewerAccess={{ state: 'signed-out' }} />);
 
     const projectGallery = screen.getByRole('region', { name: /project gallery/i });
     expect(within(projectGallery).getByRole('heading', { name: /Influence-map arena/i })).toBeInTheDocument();
@@ -59,11 +72,9 @@ describe('CourseLandingPage', () => {
 
   it('lets students move through the project gallery', async () => {
     const user = userEvent.setup();
-    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
+    const course = advancedAiCourse;
 
-    expect(course).toBeDefined();
-
-    render(<CourseLandingPage course={course!} viewerAccess={{ state: 'signed-out' }} />);
+    render(<CourseLandingPage course={course} viewerAccess={{ state: 'signed-out' }} />);
 
     const projectGallery = screen.getByRole('region', { name: /project gallery/i });
     expect(within(projectGallery).getByRole('button', { name: /Influence-map arena/i })).toHaveAttribute('aria-current', 'true');
@@ -74,14 +85,12 @@ describe('CourseLandingPage', () => {
   });
 
   it('prefers dashboard-editable skills over static showcase outcomes', () => {
-    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
-
-    expect(course).toBeDefined();
+    const course = advancedAiCourse;
 
     render(
       <CourseLandingPage
         course={{
-          ...course!,
+          ...course,
           skillsProvided: 'Tune combat director pacing, Package readable AI telemetry',
           skillsRequired: 'Behavior tree fundamentals, Debugging AI state',
         }}
@@ -96,14 +105,12 @@ describe('CourseLandingPage', () => {
   });
 
   it('uses an edited course description for the hero copy before static showcase text', () => {
-    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
-
-    expect(course).toBeDefined();
+    const course = advancedAiCourse;
 
     render(
       <CourseLandingPage
         course={{
-          ...course!,
+          ...course,
           description: 'Instructor-edited hero copy for the public storefront.',
         }}
         viewerAccess={{ state: 'signed-out' }}
@@ -114,14 +121,12 @@ describe('CourseLandingPage', () => {
   });
 
   it('renders editor-provided external thumbnail URLs without Next image optimization', () => {
-    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
-
-    expect(course).toBeDefined();
+    const course = advancedAiCourse;
 
     render(
       <CourseLandingPage
         course={{
-          ...course!,
+          ...course,
           title: 'External Thumbnail Course',
           thumbnail: 'https://example.com/editor-cover.png',
         }}
@@ -133,14 +138,12 @@ describe('CourseLandingPage', () => {
   });
 
   it('uses dashboard-edited FAQ metadata before static showcase FAQ', () => {
-    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
-
-    expect(course).toBeDefined();
+    const course = advancedAiCourse;
 
     render(
       <CourseLandingPage
         course={{
-          ...course!,
+          ...course,
           metadata: JSON.stringify({
             landingFaq: [
               { question: 'Is the FAQ editable from the dashboard?', answer: 'Yes, this public FAQ is metadata-backed.' },
@@ -156,14 +159,12 @@ describe('CourseLandingPage', () => {
   });
 
   it('uses dashboard-edited project metadata before static showcase projects', () => {
-    const course = PUBLIC_COURSE_SNAPSHOT.find((item) => item.slug === 'ai4games2');
-
-    expect(course).toBeDefined();
+    const course = advancedAiCourse;
 
     render(
       <CourseLandingPage
         course={{
-          ...course!,
+          ...course,
           metadata: JSON.stringify({
             landingProjects: [
               {
