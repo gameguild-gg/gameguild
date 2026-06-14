@@ -953,6 +953,7 @@ public sealed class LearningCoursesCoverageCompletionTests
         db.Programs.Add(program);
         db.Users.Add(new User { Id = userId, Email = "learner@example.test", Name = "Learner" });
         var enrollmentId = Guid.NewGuid();
+        var lastActivityAt = SystemClock.UtcNow;
         db.ProgramUsers.Add(new ProgramUser
         {
             Id = enrollmentId,
@@ -961,6 +962,20 @@ public sealed class LearningCoursesCoverageCompletionTests
             IsActive = true,
             JoinedAt = SystemClock.UtcNow,
             CompletionPercentage = 25,
+        });
+        db.ContentInteractions.Add(new ContentInteraction
+        {
+            Id = Guid.NewGuid(),
+            ProgramUserId = enrollmentId,
+            UserId = userId,
+            ContentId = contentId,
+            IsCompleted = true,
+            ProgressPercentage = 100,
+            StartedAt = lastActivityAt.AddMinutes(-50),
+            CompletedAt = lastActivityAt.AddMinutes(-5),
+            FirstAccessedAt = lastActivityAt.AddMinutes(-50),
+            LastAccessedAt = lastActivityAt,
+            TimeSpentMinutes = 45,
         });
         await db.SaveChangesAsync();
 
@@ -997,9 +1012,26 @@ public sealed class LearningCoursesCoverageCompletionTests
         (await read.GetUserCountForProgramAsync(programId)).Should().Be(1);
         (await read.GetAverageCompletionRateAsync(programId)).Should().Be(25);
         (await read.GetProgramStatisticsAsync(programId))["completionRate"].Should().Be(0m);
-        (await read.GetProgramAnalyticsAsync(programId)).Should().NotBeNull();
-        (await read.GetCompletionRatesAsync(programId)).Should().NotBeNull();
-        (await read.GetEngagementMetricsAsync(programId)).Should().NotBeNull();
+        var analytics = await read.GetProgramAnalyticsAsync(programId);
+        analytics.Should().NotBeNull();
+        analytics!.TotalUsers.Should().Be(1);
+        analytics.ActiveUsers.Should().Be(1);
+        analytics.TotalViews.Should().Be(1);
+        analytics.AdditionalMetrics["totalTimeSpentMinutes"].Should().Be(45);
+
+        var completionRates = await read.GetCompletionRatesAsync(programId);
+        completionRates.Should().NotBeNull();
+        completionRates!.OverallCompletionRate.Should().Be(0);
+        completionRates.ContentCompletionRates[contentId].Should().Be(100);
+
+        var engagementMetrics = await read.GetEngagementMetricsAsync(programId);
+        engagementMetrics.Should().NotBeNull();
+        engagementMetrics!.DailyActiveUsers.Should().Be(1);
+        engagementMetrics.WeeklyActiveUsers.Should().Be(1);
+        engagementMetrics.MonthlyActiveUsers.Should().Be(1);
+        engagementMetrics.TotalSessions.Should().Be(1);
+        engagementMetrics.AverageSessionDuration.Should().Be(TimeSpan.FromMinutes(45));
+        engagementMetrics.ContentEngagement[contentId.ToString()].Should().Be(1);
         (await read.GetRevenueAnalyticsAsync(programId)).Should().NotBeNull();
         (await read.GetProgramPricingAsync(programId)).Should().NotBeNull();
         (await read.GetLinkedProductsAsync(programId)).Should().BeEmpty();

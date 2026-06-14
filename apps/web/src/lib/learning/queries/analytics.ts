@@ -164,7 +164,6 @@ export const getCourseEngagementAnalytics = cache(async (
     from: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6).toISOString(),
     to: now.toISOString(),
   };
-  const dailyUsers = metrics?.dailyActiveUsers ?? 0;
   const contentById = new Map(content.items.map((item) => [item.id, item]));
   const contentViews = Object.entries(metrics?.contentEngagement ?? {}).map(([contentId, views]) => ({
     contentId,
@@ -177,20 +176,11 @@ export const getCourseEngagementAnalytics = cache(async (
   return {
     courseId,
     period: period ?? defaultPeriod,
-    activeStudents: metrics?.weeklyActiveUsers ?? dailyUsers,
+    activeStudents: metrics?.weeklyActiveUsers ?? metrics?.dailyActiveUsers ?? 0,
     totalViews: metrics?.totalSessions ?? 0,
     avgSessionDuration: parseDurationToSeconds(metrics?.averageSessionDuration),
     contentViews,
-    dailyActivity: Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(now);
-      date.setDate(now.getDate() - (6 - index));
-      return {
-        date: date.toISOString(),
-        activeUsers: index === 6 ? dailyUsers : 0,
-        contentViews: index === 6 ? metrics?.totalSessions ?? 0 : 0,
-        completions: 0,
-      };
-    }),
+    dailyActivity: [],
     peakHours: [],
   };
 });
@@ -240,11 +230,13 @@ export const getCourseCompletionAnalytics = cache(async (
       { stage: 'Enrolled', count: totalEnrolled, percentage: 100 },
       { stage: 'Completed', count: totalCompleted, percentage: completion?.overallCompletionRate ?? 0 },
     ],
-    completionTrend: (completion?.completionTrends ?? []).map((trend) => ({
-      date: trend.date ?? new Date().toISOString(),
-      completions: trend.completedCount ?? 0,
-      cumulative: trend.totalCount ?? 0,
-    })),
+    completionTrend: (completion?.completionTrends ?? [])
+      .filter((trend): trend is { date: string; completedCount?: number; totalCount?: number; rate?: number } => Boolean(trend.date))
+      .map((trend) => ({
+        date: trend.date,
+        completions: trend.completedCount ?? 0,
+        cumulative: trend.totalCount ?? 0,
+      })),
   };
 });
 
@@ -281,17 +273,15 @@ export const getCourseRevenueAnalytics = cache(async (
     totalTransactions,
     avgTransactionValue: totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
     refundRate: 0,
-    revenueByTier: totalRevenue > 0
-      ? [{ tierId: `${courseId}-standard`, tierName: 'Standard access', revenue: totalRevenue, count: totalTransactions }]
-      : [],
-    revenueBySource: totalRevenue > 0
-      ? [{ source: 'direct', revenue: totalRevenue, count: totalTransactions }]
-      : [],
-    revenueTrend: (revenue?.revenueChart ?? []).map((point) => ({
-      date: point.date ?? new Date().toISOString(),
-      revenue: point.revenue ?? 0,
-      transactions: point.purchases ?? 0,
-    })),
+    revenueByTier: [],
+    revenueBySource: [],
+    revenueTrend: (revenue?.revenueChart ?? [])
+      .filter((point): point is { date: string; revenue?: number; purchases?: number } => Boolean(point.date))
+      .map((point) => ({
+        date: point.date,
+        revenue: point.revenue ?? 0,
+        transactions: point.purchases ?? 0,
+      })),
     discountUsage: [],
   };
 });

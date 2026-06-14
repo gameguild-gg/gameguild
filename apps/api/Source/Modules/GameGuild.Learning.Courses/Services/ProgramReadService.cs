@@ -8,6 +8,17 @@ namespace GameGuild.Learning.Courses;
 /// </summary>
 public class ProgramReadService(IApplicationDbContext context) : IProgramReadService
 {
+  private static decimal Percentage(int numerator, int denominator) => denominator <= 0 ? 0m : Math.Round((decimal)numerator / denominator * 100m, 2);
+
+  private static TimeSpan AverageDuration(IEnumerable<TimeSpan> durations)
+  {
+    var validDurations = durations.Where(duration => duration > TimeSpan.Zero).ToList();
+
+    return validDurations.Count == 0
+      ? TimeSpan.Zero
+      : new TimeSpan(Convert.ToInt64(validDurations.Average(duration => duration.Ticks)));
+  }
+
   // ── Single-entity Lookups ───────────────────────────────────────────
 
   public async Task<Program?> GetProgramByIdAsync(Guid id) { return await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id); }
@@ -188,19 +199,64 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
 
     if (program == null) return null;
 
-    var userCount = await context.Set<ProgramUser>().CountAsync(pu => pu.ProgramId == id && pu.DeletedAt == null);
+    var programUsers = await context.Set<ProgramUser>()
+      .Where(pu => pu.ProgramId == id && pu.DeletedAt == null)
+      .Select(pu => new
+      {
+        pu.Id,
+        pu.IsActive,
+        pu.JoinedAt,
+        pu.StartedAt,
+        pu.CompletedAt,
+        pu.CompletionPercentage,
+      })
+      .ToListAsync()
+      .ConfigureAwait(false);
+
+    var contentIds = await context.Set<ProgramContent>()
+      .Where(pc => pc.ProgramId == id && pc.DeletedAt == null)
+      .Select(pc => pc.Id)
+      .ToListAsync()
+      .ConfigureAwait(false);
+
+    var interactions = await context.Set<ContentInteraction>()
+      .Where(ci => ci.DeletedAt == null && contentIds.Contains(ci.ContentId))
+      .Select(ci => new
+      {
+        ci.LastAccessedAt,
+        ci.TimeSpentMinutes,
+      })
+      .ToListAsync()
+      .ConfigureAwait(false);
+
+    var totalUsers = programUsers.Count;
+    var activeUsers = programUsers.Count(pu => pu.IsActive);
+    var completedUsers = programUsers.Count(pu => pu.CompletedAt.HasValue);
+    var averageCompletionTime = AverageDuration(programUsers
+      .Where(pu => pu.CompletedAt.HasValue)
+      .Select(pu => pu.CompletedAt!.Value - (pu.StartedAt ?? pu.JoinedAt)));
+    var lastActivity = interactions
+      .Select(interaction => interaction.LastAccessedAt)
+      .Concat(programUsers.Select(pu => pu.CompletedAt))
+      .Where(activityAt => activityAt.HasValue)
+      .Max();
 
     return new ProgramAnalyticsDto(
       id,
       program.Title,
-      userCount,
-      userCount,
-      0,
-      0,
-      TimeSpan.Zero,
-      0,
-      SystemClock.UtcNow,
-      new Dictionary<string, object>()
+      totalUsers,
+      activeUsers,
+      completedUsers,
+      Percentage(completedUsers, totalUsers),
+      averageCompletionTime,
+      interactions.Count,
+      lastActivity,
+      new Dictionary<string, object>
+      {
+        ["averageProgress"] = totalUsers == 0 ? 0m : Math.Round(programUsers.Average(pu => pu.CompletionPercentage), 2),
+        ["contentItems"] = contentIds.Count,
+        ["totalTimeSpentMinutes"] = interactions.Sum(interaction => interaction.TimeSpentMinutes ?? 0),
+      }
     );
   }
 
@@ -210,7 +266,42 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
 
     if (program == null) return null;
 
-    return new CompletionRatesDto(id, 0, new Dictionary<Guid, decimal>(), []);
+    var programUsers = await context.Set<ProgramUser>()
+      .Where(pu => pu.ProgramId == id && pu.DeletedAt == null)
+      .Select(pu => new { pu.UserId, pu.CompletedAt })
+      .ToListAsync()
+      .ConfigureAwait(false);
+    var contentItems = await context.Set<ProgramContent>()
+      .Where(pc => pc.ProgramId == id && pc.DeletedAt == null)
+      .Select(pc => pc.Id)
+      .ToListAsync()
+      .ConfigureAwait(false);
+    var interactions = await context.Set<ContentInteraction>()
+      .Where(ci => ci.DeletedAt == null && contentItems.Contains(ci.ContentId))
+      .Select(ci => new { ci.ContentId, ci.UserId, ci.IsCompleted })
+      .ToListAsync()
+      .ConfigureAwait(false);
+
+    var enrolledUserIds = programUsers.Select(pu => pu.UserId).ToHashSet();
+    var contentCompletionRates = contentItems.ToDictionary(
+      contentId => contentId,
+      contentId => Percentage(
+        interactions.Count(interaction => interaction.ContentId == contentId && interaction.IsCompleted && enrolledUserIds.Contains(interaction.UserId)),
+        programUsers.Count));
+
+    var trends = new List<CompletionTrendDto>();
+    var cumulativeCompleted = 0;
+    foreach (var completionGroup in programUsers.Where(pu => pu.CompletedAt.HasValue).GroupBy(pu => pu.CompletedAt!.Value.Date).OrderBy(group => group.Key))
+    {
+      cumulativeCompleted += completionGroup.Count();
+      trends.Add(new CompletionTrendDto(completionGroup.Key, cumulativeCompleted, programUsers.Count, Percentage(cumulativeCompleted, programUsers.Count)));
+    }
+
+    return new CompletionRatesDto(
+      id,
+      Percentage(programUsers.Count(pu => pu.CompletedAt.HasValue), programUsers.Count),
+      contentCompletionRates,
+      trends);
   }
 
   public async Task<EngagementMetricsDto?> GetEngagementMetricsAsync(Guid id)
@@ -219,15 +310,69 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
 
     if (program == null) return null;
 
+    var enrolledUserIds = await context.Set<ProgramUser>()
+      .Where(pu => pu.ProgramId == id && pu.DeletedAt == null && pu.IsActive)
+      .Select(pu => pu.UserId)
+      .ToListAsync()
+      .ConfigureAwait(false);
+    var contentIds = await context.Set<ProgramContent>()
+      .Where(pc => pc.ProgramId == id && pc.DeletedAt == null)
+      .Select(pc => pc.Id)
+      .ToListAsync()
+      .ConfigureAwait(false);
+    var interactions = await context.Set<ContentInteraction>()
+      .Where(ci => ci.DeletedAt == null && contentIds.Contains(ci.ContentId))
+      .Select(ci => new
+      {
+        ci.UserId,
+        ci.ContentId,
+        ci.TimeSpentMinutes,
+        ci.StartedAt,
+        ci.CompletedAt,
+        ci.FirstAccessedAt,
+        ci.LastAccessedAt,
+      })
+      .ToListAsync()
+      .ConfigureAwait(false);
+    var enrolledUserSet = enrolledUserIds.ToHashSet();
+    var enrolledInteractions = interactions
+      .Where(interaction => enrolledUserSet.Contains(interaction.UserId))
+      .ToList();
+    var now = SystemClock.UtcNow;
+    var today = now.Date;
+    var weekStart = today.AddDays(-6);
+    var monthStart = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+    var activityRows = enrolledInteractions
+      .Select(interaction => new
+      {
+        interaction.UserId,
+        interaction.ContentId,
+        ActivityAt = interaction.LastAccessedAt ?? interaction.FirstAccessedAt ?? interaction.StartedAt ?? interaction.CompletedAt,
+        Duration = interaction.TimeSpentMinutes is > 0
+          ? TimeSpan.FromMinutes(interaction.TimeSpentMinutes.Value)
+          : interaction.StartedAt.HasValue && interaction.CompletedAt.HasValue
+            ? interaction.CompletedAt.Value - interaction.StartedAt.Value
+            : TimeSpan.Zero,
+      })
+      .Where(activity => activity.ActivityAt.HasValue)
+      .ToList();
+    var monthlyActiveUsers = activityRows
+      .Where(activity => activity.ActivityAt!.Value >= monthStart)
+      .Select(activity => activity.UserId)
+      .Distinct()
+      .Count();
+
     return new EngagementMetricsDto(
       id,
-      0,
-      0,
-      0,
-      TimeSpan.Zero,
-      0,
-      0,
-      new Dictionary<string, int>()
+      activityRows.Where(activity => activity.ActivityAt!.Value >= today).Select(activity => activity.UserId).Distinct().Count(),
+      activityRows.Where(activity => activity.ActivityAt!.Value >= weekStart).Select(activity => activity.UserId).Distinct().Count(),
+      monthlyActiveUsers,
+      AverageDuration(activityRows.Select(activity => activity.Duration)),
+      enrolledInteractions.Count,
+      monthlyActiveUsers == 0
+        ? 0m
+        : Percentage(activityRows.Where(activity => activity.ActivityAt!.Value >= weekStart).Select(activity => activity.UserId).Distinct().Count(), monthlyActiveUsers),
+      enrolledInteractions.GroupBy(interaction => interaction.ContentId.ToString()).ToDictionary(group => group.Key, group => group.Count())
     );
   }
 
