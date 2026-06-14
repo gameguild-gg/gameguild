@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { BookOpen, Calendar, CheckCircle, ChevronRight, Clock, Filter, MoreHorizontal, Play, Search, Star, Trophy } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-interface EnrolledCourse {
+export interface EnrolledCourse {
   id: string;
   title: string;
   description: string;
@@ -33,88 +33,12 @@ interface EnrolledCourse {
   };
 }
 
-const mockEnrolledCourses: EnrolledCourse[] = [
-  {
-    id: 'course-1',
-    title: 'Game Development Fundamentals',
-    description: 'Learn the core concepts of game development including design principles, programming basics, and project management.',
-    instructor: 'Sarah Johnson',
-    thumbnail: '/images/courses/game-dev-fundamentals.jpg',
-    progress: 75,
-    totalLessons: 20,
-    completedLessons: 15,
-    estimatedTime: 3,
-    difficulty: 'Beginner',
-    category: 'Game Development',
-    enrolledAt: '2024-01-15',
-    lastAccessed: '2024-01-20',
-    status: 'in-progress',
-    rating: 4.8,
-    nextLesson: {
-      id: 'lesson-16',
-      title: 'Advanced Game Mechanics',
-    },
-  },
-  {
-    id: 'course-2',
-    title: 'Unity 3D Essentials',
-    description: 'Master Unity 3D engine from basics to advanced features for creating stunning 3D games.',
-    instructor: 'Mike Chen',
-    thumbnail: '/images/courses/unity-3d.jpg',
-    progress: 100,
-    totalLessons: 25,
-    completedLessons: 25,
-    estimatedTime: 0,
-    difficulty: 'Intermediate',
-    category: 'Game Engines',
-    enrolledAt: '2023-12-01',
-    lastAccessed: '2024-01-18',
-    status: 'completed',
-    certificateEarned: true,
-    rating: 4.9,
-  },
-  {
-    id: 'course-3',
-    title: 'Mobile Game Development with Flutter',
-    description: 'Build cross-platform mobile games using Flutter and Dart programming language.',
-    instructor: 'Emily Rodriguez',
-    thumbnail: '/images/courses/flutter-games.jpg',
-    progress: 30,
-    totalLessons: 18,
-    completedLessons: 5,
-    estimatedTime: 8,
-    difficulty: 'Intermediate',
-    category: 'Mobile Development',
-    enrolledAt: '2024-01-10',
-    lastAccessed: '2024-01-19',
-    status: 'in-progress',
-    rating: 4.7,
-    nextLesson: {
-      id: 'lesson-6',
-      title: 'Game Physics in Flutter',
-    },
-  },
-  {
-    id: 'course-4',
-    title: 'Advanced C# for Game Programming',
-    description: 'Deep dive into advanced C# programming concepts specifically for game development.',
-    instructor: 'David Kim',
-    thumbnail: '/images/courses/csharp-advanced.jpg',
-    progress: 0,
-    totalLessons: 30,
-    completedLessons: 0,
-    estimatedTime: 15,
-    difficulty: 'Advanced',
-    category: 'Programming',
-    enrolledAt: '2024-01-22',
-    status: 'not-started',
-    rating: 4.6,
-  },
-];
+interface BrowseOwnedCoursesPageProps {
+  courses?: EnrolledCourse[];
+}
 
-export function BrowseOwnedCoursesPage() {
+export function BrowseOwnedCoursesPage({ courses = [] }: BrowseOwnedCoursesPageProps) {
   const router = useRouter();
-  const [courses] = useState<EnrolledCourse[]>(mockEnrolledCourses);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('recent');
@@ -143,15 +67,15 @@ export function BrowseOwnedCoursesPage() {
   const handleContinueCourse = (courseId: string) => {
     const course = courses.find((item) => item.id === courseId);
     const nextLessonPath = course?.nextLesson ? `/${course.nextLesson.id}` : '';
-    router.push(`/learning/courses/${courseId}/content${nextLessonPath}`);
+    router.push(`/dashboard/learning/courses/${courseId}/content${nextLessonPath}`);
   };
 
   const handleStartCourse = (courseId: string) => {
-    router.push(`/learning/courses/${courseId}/content`);
+    router.push(`/dashboard/learning/courses/${courseId}/content`);
   };
 
   const handleViewCertificate = (courseId: string) => {
-    router.push(`/learning/certificates/${courseId}`);
+    router.push(`/dashboard/learning/courses/${courseId}/certificates`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -294,7 +218,7 @@ export function BrowseOwnedCoursesPage() {
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => handleContinueCourse(course.id)}>Continue Course</DropdownMenuItem>
                       {course.certificateEarned && <DropdownMenuItem onClick={() => handleViewCertificate(course.id)}>View Certificate</DropdownMenuItem>}
-                      <DropdownMenuItem onClick={() => router.push(`/learning/library/${course.id}/remove`)}>Remove from Library</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/dashboard/learning/courses/${course.id}/students`)}>View enrollment</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -393,7 +317,7 @@ export function BrowseOwnedCoursesPage() {
             <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No courses found</h3>
             <p className="text-gray-400 mb-4">{searchQuery || statusFilter !== 'all' ? 'Try adjusting your search or filters' : "You haven't enrolled in any courses yet"}</p>
-            {!searchQuery && statusFilter === 'all' && <Button onClick={() => router.push('/learning/courses')}>Browse Course Catalog</Button>}
+            {!searchQuery && statusFilter === 'all' && <Button onClick={() => router.push('/courses')}>Browse Course Catalog</Button>}
           </div>
         )}
       </div>
