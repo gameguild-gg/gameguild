@@ -54,3 +54,14 @@ export const TRACK_CATALOG: TrackCatalogItem[] = [
 export function getTrackCatalogItem(slug: string): TrackCatalogItem | null {
   return TRACK_CATALOG.find((track) => track.slug === slug) ?? null;
 }
+
+const TRACK_PROGRAM_SLUGS: Record<string, string> = {
+  'game-programming-fundamentals': 'game-programming-foundations',
+  'digital-art-for-games': 'portfolio-and-career',
+  'game-design-principles': 'data-for-games',
+};
+
+export function getTrackProgramHref(slug: string): string {
+  const programSlug = TRACK_PROGRAM_SLUGS[slug];
+  return programSlug ? `/programs/${programSlug}` : '/programs';
+}

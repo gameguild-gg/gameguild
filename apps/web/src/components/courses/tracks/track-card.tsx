@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getTrackProgramHref } from '@/lib/tracks/catalog';
 import type { Track } from '@/lib/tracks/use-tracks';
 import { Book, Code, Paintbrush } from 'lucide-react';
 import type { Route } from 'next';
@@ -64,7 +65,7 @@ export function TrackCard({ track, onClick }: TrackCardProps) {
     if (onClick) {
       onClick();
     } else {
-      router.push(`/tracks/${track.slug}` as Route);
+      router.push(getTrackProgramHref(track.slug) as Route);
     }
   };
 
