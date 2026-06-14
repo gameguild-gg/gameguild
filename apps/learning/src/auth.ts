@@ -4,6 +4,11 @@ import { cache } from 'react';
 
 const result = GameGuildAuth({
     providers: [CredentialsProvider()],
+    apiUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295',
+    secret:
+        process.env.AUTH_SECRET ||
+        process.env.NEXTAUTH_SECRET ||
+        (process.env.NODE_ENV === 'development' ? 'game-guild-learning-local-development-secret' : undefined),
     debug: process.env.NODE_ENV === 'development',
 });
 
