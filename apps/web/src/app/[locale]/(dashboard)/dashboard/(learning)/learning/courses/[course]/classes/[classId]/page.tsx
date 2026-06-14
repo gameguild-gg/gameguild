@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { getCourse, getCourseClass } from '@/lib/learning';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { CalendarClock, Settings, Users } from 'lucide-react';
+import { CalendarClock, Users, Video } from 'lucide-react';
+import { ClassDetailActions } from './class-detail-actions';
 
 /**
  * L6a: Single Class Detail/Editor Page
@@ -66,6 +67,15 @@ export default async function ClassDetailPage({
               <p className="font-medium">{classDetail.attendeeCount}/{classDetail.maxAttendees ?? 'Unlimited'}</p>
             </div>
           </div>
+          {classDetail.location?.meetingUrl ? (
+            <div className="rounded-lg border p-4">
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Video className="size-4" />
+                Meeting URL or room
+              </p>
+              <p className="break-all font-medium">{classDetail.location.meetingUrl}</p>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -76,14 +86,7 @@ export default async function ClassDetailPage({
             {classDetail.attendees.length === 0 ? 'No attendee records have been captured yet.' : `${classDetail.attendees.length} attendee records`}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Settings className="size-4" />Session Settings</CardTitle></CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>Recording: {classDetail.settings.recordSession ? 'Enabled' : 'Disabled'}</p>
-            <p>Chat: {classDetail.settings.enableChat ? 'Enabled' : 'Disabled'}</p>
-            <p>Reminders: {classDetail.settings.reminderSchedule.join(', ')} minutes before</p>
-          </CardContent>
-        </Card>
+        <ClassDetailActions courseId={courseId} classDetail={classDetail} />
       </div>
     </div>
   );

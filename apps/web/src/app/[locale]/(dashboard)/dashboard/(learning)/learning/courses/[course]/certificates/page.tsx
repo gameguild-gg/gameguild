@@ -1,10 +1,9 @@
 import React from 'react';
 import { getCourseCertificates } from '@/lib/learning';
-import { Link } from '@/i18n/navigation';
-import { Badge } from '@game-guild/ui/components/badge';
+import { Card, CardContent } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Award, FileCheck2, Plus } from 'lucide-react';
+import { CertificateTemplateManager } from './certificate-template-manager';
 
 /**
  * Certificates List Page
@@ -54,38 +53,7 @@ export default async function CertificatesPage({
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Certificate Templates</CardTitle>
-          <CardDescription>Templates define the certificate design used when learners complete the course.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {certificates.templates.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-8 text-center">
-              <Award className="mx-auto mb-3 size-8 text-muted-foreground" />
-              <p className="font-medium">No certificate templates yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">Create the first template through the certificate template API.</p>
-            </div>
-          ) : (
-            certificates.templates.map((template) => (
-              <Link
-                key={template.id}
-                href={`/dashboard/learning/courses/${courseId}/certificates/${template.id}`}
-                className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
-              >
-                <div>
-                  <p className="font-medium">{template.name}</p>
-                  <p className="text-sm text-muted-foreground">{template.description ?? 'No description'}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={template.status === 'active' ? 'default' : 'secondary'}>{template.status}</Badge>
-                  <Badge variant="outline">{template.issuedCount} issued</Badge>
-                </div>
-              </Link>
-            ))
-          )}
-        </CardContent>
-      </Card>
+      <CertificateTemplateManager courseId={courseId} templates={certificates.templates} />
     </div>
   );
 }

@@ -1,0 +1,189 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  getToken: vi.fn(),
+  revalidatePath: vi.fn(),
+  fetch: vi.fn(),
+}));
+
+vi.mock('@/auth', () => ({
+  getToken: mocks.getToken,
+}));
+
+vi.mock('next/cache', () => ({
+  revalidatePath: mocks.revalidatePath,
+}));
+
+vi.mock('@game-guild/client', () => ({
+  createServerClient: vi.fn(),
+  GeneratedApi: {
+    LearningAssessmentsModule: class {},
+    LearningCoursesProgramModule: class {},
+    LearningCoursesProgramcontentModule: class {},
+    LearningCoursesProgramlifecycleModule: class {},
+  },
+}));
+
+const {
+  createCertificateTemplate,
+  deleteCertificateTemplate,
+  createCourseClass,
+  updateCourseClass,
+  updateCourseClassStatus,
+} = await import('./actions');
+
+describe('learning server actions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getToken.mockResolvedValue('access-token');
+    vi.stubGlobal('fetch', mocks.fetch);
+  });
+
+  it('creates certificate templates through the Learning.Certificates API', async () => {
+    mocks.fetch.mockResolvedValue(
+      new Response(JSON.stringify({ id: 'template-1', courseId: 'course-1', name: 'Completion' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const result = await createCertificateTemplate({
+      courseId: 'course-1',
+      name: 'Completion',
+      templateHtml: '<section>{{recipientName}}</section>',
+    });
+
+    expect(result).toEqual({ success: true, data: { id: 'template-1' } });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/certificates/templates', {
+      method: 'POST',
+      body: JSON.stringify({
+        courseId: 'course-1',
+        name: 'Completion',
+        templateHtml: '<section>{{recipientName}}</section>',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/certificates');
+  });
+
+  it('deletes certificate templates and refreshes the certificate page', async () => {
+    mocks.fetch.mockResolvedValue(new Response(null, { status: 204 }));
+
+    const result = await deleteCertificateTemplate('course-1', 'template-1');
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/certificates/templates/template-1', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/certificates');
+  });
+
+  it('creates course classes through the Learning.Cohorts API', async () => {
+    mocks.fetch.mockResolvedValue(
+      new Response(JSON.stringify({ id: 'class-1', courseId: 'course-1' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const result = await createCourseClass({
+      courseId: 'course-1',
+      name: 'Production Cohort',
+      description: 'Live feedback sessions.',
+      startDate: '2026-07-01T13:00',
+      endDate: '2026-07-01T15:00',
+      maxCapacity: 20,
+      meetingSchedule: 'https://meet.example/session',
+    });
+
+    expect(result).toEqual({ success: true, data: { id: 'class-1' } });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/cohorts', {
+      method: 'POST',
+      body: JSON.stringify({
+        courseId: 'course-1',
+        name: 'Production Cohort',
+        description: 'Live feedback sessions.',
+        startDate: new Date('2026-07-01T13:00').toISOString(),
+        endDate: new Date('2026-07-01T15:00').toISOString(),
+        maxCapacity: 20,
+        instructorId: null,
+        meetingSchedule: 'https://meet.example/session',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/classes');
+  });
+
+  it('updates course class details through the cohort update endpoint', async () => {
+    mocks.fetch.mockResolvedValue(
+      new Response(JSON.stringify({ id: 'class-1', courseId: 'course-1' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const result = await updateCourseClass({
+      courseId: 'course-1',
+      classId: 'class-1',
+      name: 'Updated Cohort',
+      description: 'Updated schedule.',
+      startDate: '2026-07-02T13:00',
+      endDate: '2026-07-02T16:00',
+      maxCapacity: 18,
+      meetingSchedule: 'Room 302',
+    });
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/cohorts/class-1', {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: 'Updated Cohort',
+        description: 'Updated schedule.',
+        startDate: new Date('2026-07-02T13:00').toISOString(),
+        endDate: new Date('2026-07-02T16:00').toISOString(),
+        maxCapacity: 18,
+        instructorId: null,
+        meetingSchedule: 'Room 302',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/classes');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/classes/class-1');
+  });
+
+  it('updates class lifecycle status through the cohort status endpoint', async () => {
+    mocks.fetch.mockResolvedValue(
+      new Response(JSON.stringify({ id: 'class-1', courseId: 'course-1' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const result = await updateCourseClassStatus('course-1', 'class-1', 'open');
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/cohorts/class-1/open', {
+      method: 'POST',
+      body: JSON.stringify({}),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/classes');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/classes/class-1');
+  });
+});
