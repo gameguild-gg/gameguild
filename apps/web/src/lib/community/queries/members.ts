@@ -4,7 +4,8 @@
 
 import { cookies } from 'next/headers';
 import { createServerClient, decodeJWT, GeneratedApi, SessionStore, resolveCookieOptions } from '@game-guild/client';
-import { getCourseShowcase, PUBLIC_COURSE_SNAPSHOT } from '@/lib/courses/public-programs';
+import { getCourseShowcase } from '@/lib/courses/public-programs';
+import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import type {
   IdentityUsersUser,
   IdentityUsersUserProfile,
@@ -354,12 +355,17 @@ function getCourseFeedReason(kind: CommunityFeedKind) {
   }
 }
 
-function getCourseFeedItems(kind: CommunityFeedKind, take = 6): CommunityFeedItem[] {
+async function getCourseFeedItems(kind: CommunityFeedKind, take = 6): Promise<CommunityFeedItem[]> {
   if (kind === 'following') {
     return [];
   }
 
-  return PUBLIC_COURSE_SNAPSHOT.slice(0, take).map((course, index) => {
+  const catalog = await getPublicCourseCatalog();
+  if (!catalog.success || catalog.data.length === 0) {
+    return [];
+  }
+
+  return catalog.data.slice(0, take).map((course, index) => {
     const slug = String(course.slug ?? course.id ?? `course-${index + 1}`);
     const showcase = getCourseShowcase(slug);
     const thumbnail = typeof course.thumbnail === 'string' ? course.thumbnail : undefined;
@@ -420,7 +426,7 @@ export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take
       return {
         kind,
         requiresSignIn: false,
-        items: getCourseFeedItems(kind, options?.take ?? 6),
+        items: await getCourseFeedItems(kind, options?.take ?? 6),
       };
     }
 
@@ -440,7 +446,7 @@ export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take
       return {
         kind,
         requiresSignIn: false,
-        items: getCourseFeedItems(kind, options?.take ?? 6),
+        items: await getCourseFeedItems(kind, options?.take ?? 6),
       };
     }
 
@@ -449,13 +455,13 @@ export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take
     return {
       kind,
       requiresSignIn: false,
-      items: items.length > 0 ? items : getCourseFeedItems(kind, options?.take ?? 6),
+      items: items.length > 0 ? items : await getCourseFeedItems(kind, options?.take ?? 6),
     };
   } catch {
     return {
       kind,
       requiresSignIn: false,
-      items: getCourseFeedItems(kind, options?.take ?? 6),
+      items: await getCourseFeedItems(kind, options?.take ?? 6),
     };
   }
 }

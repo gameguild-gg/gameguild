@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   getProfileByHandle: vi.fn(),
   getUserFeed: vi.fn(),
   getSocialGroups: vi.fn(),
+  getPublicCourseCatalog: vi.fn(),
 }));
 
 vi.mock('next/headers', () => ({
@@ -35,6 +36,10 @@ vi.mock('@game-guild/client', () => ({
   },
 }));
 
+vi.mock('@/lib/courses/services/course.service', () => ({
+  getPublicCourseCatalog: mocks.getPublicCourseCatalog,
+}));
+
 const { getCommunityFeed, getGroups, getMemberProject, getPublicMemberProfile } = await import('./members');
 
 describe('community member queries', () => {
@@ -46,6 +51,19 @@ describe('community member queries', () => {
     mocks.decodeJWT.mockResolvedValue({
       accessToken: 'access-token',
       sub: '00000000-0000-0000-0000-000000000111',
+    });
+    mocks.getPublicCourseCatalog.mockResolvedValue({
+      success: true,
+      source: 'api',
+      data: [
+        {
+          id: 'course-1',
+          title: 'Live AI Gameplay Course',
+          slug: 'live-ai-gameplay-course',
+          description: 'Live API-backed course.',
+          thumbnail: 'https://example.com/course.jpg',
+        },
+      ],
     });
   });
 
@@ -161,20 +179,21 @@ describe('community member queries', () => {
     ]);
   });
 
-  it('feeds public courses into discovery when the viewer is signed out', async () => {
+  it('feeds live public courses into discovery when the viewer is signed out', async () => {
     mocks.decodeJWT.mockResolvedValue(null);
 
     const feed = await getCommunityFeed('discover');
 
     expect(feed.requiresSignIn).toBe(false);
-    expect(feed.items.length).toBeGreaterThanOrEqual(3);
-    expect(feed.items[0]).toEqual(
+    expect(mocks.getPublicCourseCatalog).toHaveBeenCalled();
+    expect(feed.items).toEqual([
       expect.objectContaining({
+        title: 'Live AI Gameplay Course',
         contentType: 'Course',
-        href: expect.stringMatching(/^\/courses\//),
+        href: '/courses/live-ai-gameplay-course',
         actionLabel: 'View course',
       }),
-    );
+    ]);
   });
 
   it('loads community groups from the generated social groups API', async () => {
