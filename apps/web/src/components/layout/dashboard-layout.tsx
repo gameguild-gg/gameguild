@@ -7,5 +7,16 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  return <DashboardShell>{children}</DashboardShell>;
+  return (
+    <DashboardShell
+      user={{
+        id: 'local-preview-user',
+        name: 'GameGuild user',
+        email: 'user@gameguild.gg',
+        image: null,
+      }}
+    >
+      {children}
+    </DashboardShell>
+  );
 }
