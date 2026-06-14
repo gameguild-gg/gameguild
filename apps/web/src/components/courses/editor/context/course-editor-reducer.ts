@@ -1,767 +1,498 @@
-// import {
-//   EnhancedCourse,
-//   CourseChapter,
-//   CourseLesson,
-//   CourseArea,
-//   CourseLevel
-// } from '@/lib/courses/course-enhanced.types';
-// import {
-//   CourseEditorState,
-//   CourseEditorAction,
-//   CourseEditorActionType,
-//   CourseValidationError,
-//   CourseEditorConfig,
-//   CourseEditorHistoryEntry,
-//   CourseEditorMode,
-//   CourseEditorTab,
-//   CourseEditorSaveStatus,
-//   defaultCourseEditorState,
-//   courseEditorValidationRules
-// } from '../types';
-//
-// /**
-//  * Simple utility to generate unique IDs
-//  */
-// const generateId = (): string => {
-//   return Math.random().toString(36).substr(2, 9);
-// };
-//
-// /**
-//  * Simple deep clone utility
-//  */
-// const deepClone = <T>(obj: T): T => {
-//   return JSON.parse(JSON.stringify(obj));
-// };
-//
-// /**
-//  * Validate course data
-//  */
-// export const validateCourse = (course: EnhancedCourse): CourseValidationError[] => {
-//   const errors: CourseValidationError[] = [];
-//
-//   // Title validation
-//   if (!course.title) {
-//     errors.push({
-//       field: 'title',
-//       message: 'Course title is required',
-//       type: 'required',
-//     });
-//   } else if (course.title.length < courseEditorValidationRules.title.minLength) {
-//     errors.push({
-//       field: 'title',
-//       message: `Title must be at least ${ courseEditorValidationRules.title.minLength } characters`,
-//       type: 'length',
-//     });
-//   } else if (course.title.length > courseEditorValidationRules.title.maxLength) {
-//     errors.push({
-//       field: 'title',
-//       message: `Title must be no more than ${ courseEditorValidationRules.title.maxLength } characters`,
-//       type: 'length',
-//     });
-//   }
-//
-//   // Description validation
-//   if (!course.description) {
-//     errors.push({
-//       field: 'description',
-//       message: 'Course description is required',
-//       type: 'required',
-//     });
-//   } else if (course.description.length < courseEditorValidationRules.description.minLength) {
-//     errors.push({
-//       field: 'description',
-//       message: `Description must be at least ${ courseEditorValidationRules.description.minLength } characters`,
-//       type: 'length',
-//     });
-//   } else if (course.description.length > courseEditorValidationRules.description.maxLength) {
-//     errors.push({
-//       field: 'description',
-//       message: `Description must be no more than ${ courseEditorValidationRules.description.maxLength } characters`,
-//       type: 'length',
-//     });
-//   }
-//
-//   // Area validation
-//   if (!course.area) {
-//     errors.push({
-//       field: 'area',
-//       message: 'Course area is required',
-//       type: 'required',
-//     });
-//   }
-//
-//   // Level validation
-//   if (!course.level) {
-//     errors.push({
-//       field: 'level',
-//       message: 'Course level is required',
-//       type: 'required',
-//     });
-//   }
-//
-//   // Tools validation
-//   if (!course.tools || course.tools.length === 0) {
-//     errors.push({
-//       field: 'tools',
-//       message: 'At least one tool is required',
-//       type: 'required',
-//     });
-//   }
-//
-//   return errors;
-// };
-//
-// /**
-//  * Create history entry for tracking changes
-//  */
-// const createHistoryEntry = (course: EnhancedCourse, action: string, description: string): CourseEditorHistoryEntry => ({
-//   id: generateId(),
-//   timestamp: new Date(),
-//   action,
-//   course: deepClone(course),
-//   description,
-// });
-//
-// /**
-//  * Update course content helper
-//  */
-// const updateCourseContent = (course: EnhancedCourse, updates: Partial<EnhancedCourseContent>): EnhancedCourse => {
-//   const updatedCourse = { ...course };
-//
-//   if (!updatedCourse.content) {
-//     updatedCourse.content = {
-//       chapters: [],
-//       syllabus: '',
-//       prerequisites: [],
-//       objectives: [],
-//       totalDuration: 0,
-//       totalLessons: 0,
-//     };
-//   }
-//
-//   updatedCourse.content = {
-//     ...updatedCourse.content,
-//     ...updates,
-//   };
-//
-//   // Recalculate totals if chapters were updated
-//   if (updates.chapters) {
-//     const totalLessons = updates.chapters.reduce((total, chapter) => total + chapter.lessons.length, 0);
-//     const totalDuration = updates.chapters.reduce((total, chapter) => {
-//       return total + chapter.lessons.reduce((chapterTotal, lesson) => chapterTotal + (lesson.duration || 0), 0);
-//     }, 0);
-//
-//     updatedCourse.content.totalLessons = totalLessons;
-//     updatedCourse.content.totalDuration = totalDuration;
-//   }
-//
-//   return updatedCourse;
-// };
-//
-// /**
-//  * Find chapter by ID
-//  */
-// const findChapterById = (chapters: CourseChapter[], chapterId: string): CourseChapter | undefined => {
-//   return chapters.find(chapter => chapter.id === chapterId);
-// };
-//
-// /**
-//  * Find lesson by ID within a chapter
-//  */
-// const findLessonById = (chapter: CourseChapter, lessonId: string): CourseLesson | undefined => {
-//   return chapter.lessons.find(lesson => lesson.id === lessonId);
-// };
-//
-// /**
-//  * Check if course has unsaved changes
-//  */
-// const hasUnsavedChanges = (current: EnhancedCourse | null, original: EnhancedCourse | null): boolean => {
-//   if (!current || !original) return current !== original;
-//
-//   // Simple comparison - in production, you might want a more sophisticated deep comparison
-//   return JSON.stringify(current) !== JSON.stringify(original);
-// };
-//
-// /**
-//  * Course Editor Reducer
-//  */
-// export const courseEditorReducer = (state: CourseEditorState, action: CourseEditorAction): CourseEditorState => {
-//   switch (action.type) {
-//     case CourseEditorActionType.SET_LOADING: {
-//       return {
-//         ...state,
-//         isLoading: action.payload,
-//         error: action.payload ? null : state.error,
-//       };
-//     }
-//
-//     case CourseEditorActionType.SET_ERROR: {
-//       return {
-//         ...state,
-//         error: action.payload,
-//         isLoading: false,
-//       };
-//     }
-//
-//     case CourseEditorActionType.CLEAR_ERROR: {
-//       return {
-//         ...state,
-//         error: null,
-//       };
-//     }
-//
-//     case CourseEditorActionType.SET_COURSE: {
-//       const course = action.payload;
-//       const validationErrors = validateCourse(course);
-//
-//       return {
-//         ...state,
-//         course: deepClone(course),
-//         originalCourse: deepClone(course),
-//         validationErrors,
-//         isValid: validationErrors.length === 0,
-//         hasUnsavedChanges: false,
-//         isLoading: false,
-//         error: null,
-//         mode: 'edit',
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.CLEAR_COURSE: {
-//       return {
-//         ...state,
-//         course: null,
-//         originalCourse: null,
-//         validationErrors: [],
-//         isValid: true,
-//         hasUnsavedChanges: false,
-//         history: [],
-//         historyIndex: -1,
-//         canUndo: false,
-//         canRedo: false,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.UPDATE_COURSE_FIELD: {
-//       if (!state.course) return state;
-//
-//       const { field, value } = action.payload;
-//       const updatedCourse = {
-//         ...state.course,
-//         [field]: value,
-//       };
-//
-//       const validationErrors = validateCourse(updatedCourse);
-//       const unsavedChanges = hasUnsavedChanges(updatedCourse, state.originalCourse);
-//
-//       return {
-//         ...state,
-//         course: updatedCourse,
-//         validationErrors,
-//         isValid: validationErrors.length === 0,
-//         hasUnsavedChanges: unsavedChanges,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.UPDATE_COURSE_CONTENT: {
-//       if (!state.course) return state;
-//
-//       const updatedCourse = updateCourseContent(state.course, action.payload);
-//       const validationErrors = validateCourse(updatedCourse);
-//       const unsavedChanges = hasUnsavedChanges(updatedCourse, state.originalCourse);
-//
-//       return {
-//         ...state,
-//         course: updatedCourse,
-//         validationErrors,
-//         isValid: validationErrors.length === 0,
-//         hasUnsavedChanges: unsavedChanges,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.UPDATE_COURSE_METADATA: {
-//       if (!state.course) return state;
-//
-//       const updatedCourse = {
-//         ...state.course,
-//         ...action.payload,
-//       };
-//
-//       const validationErrors = validateCourse(updatedCourse);
-//       const unsavedChanges = hasUnsavedChanges(updatedCourse, state.originalCourse);
-//
-//       return {
-//         ...state,
-//         course: updatedCourse,
-//         validationErrors,
-//         isValid: validationErrors.length === 0,
-//         hasUnsavedChanges: unsavedChanges,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.ADD_CHAPTER: {
-//       if (!state.course) return state;
-//
-//       const newChapter: CourseChapter = {
-//         ...action.payload,
-//         id: generateId(),
-//         order: (state.course.content?.chapters?.length || 0) + 1,
-//         lessons: [],
-//         createdAt: new Date().toISOString(),
-//         updatedAt: new Date().toISOString(),
-//       };
-//
-//       const chapters = [ ...(state.course.content?.chapters || []), newChapter ];
-//       const updatedCourse = updateCourseContent(state.course, { chapters });
-//
-//       // Add to history
-//       const historyEntry = createHistoryEntry(
-//         state.course,
-//         'ADD_CHAPTER',
-//         `Added chapter "${ newChapter.title }"`,
-//       );
-//
-//       const newHistory = [ ...state.history.slice(0, state.historyIndex + 1), historyEntry ];
-//
-//       return {
-//         ...state,
-//         course: updatedCourse,
-//         hasUnsavedChanges: true,
-//         history: newHistory.slice(-state.config.maxHistorySteps),
-//         historyIndex: Math.min(newHistory.length - 1, state.config.maxHistorySteps - 1),
-//         canUndo: true,
-//         canRedo: false,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.UPDATE_CHAPTER: {
-//       if (!state.course?.content?.chapters) return state;
-//
-//       const { chapterId, chapter } = action.payload;
-//       const chapters = state.course.content.chapters.map(ch =>
-//         ch.id === chapterId
-//           ? { ...ch, ...chapter, updatedAt: new Date().toISOString() }
-//           : ch,
-//       );
-//
-//       const updatedCourse = updateCourseContent(state.course, { chapters });
-//
-//       return {
-//         ...state,
-//         course: updatedCourse,
-//         hasUnsavedChanges: true,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.DELETE_CHAPTER: {
-//       if (!state.course?.content?.chapters) return state;
-//
-//       const chapterId = action.payload;
-//       const chapterToDelete = findChapterById(state.course.content.chapters, chapterId);
-//
-//       if (!chapterToDelete) return state;
-//
-//       const chapters = state.course.content.chapters
-//         .filter(ch => ch.id !== chapterId)
-//         .map((ch, index) => ({ ...ch, order: index + 1 }));
-//
-//       const updatedCourse = updateCourseContent(state.course, { chapters });
-//
-//       // Add to history
-//       const historyEntry = createHistoryEntry(
-//         state.course,
-//         'DELETE_CHAPTER',
-//         `Deleted chapter "${ chapterToDelete.title }"`,
-//       );
-//
-//       const newHistory = [ ...state.history.slice(0, state.historyIndex + 1), historyEntry ];
-//
-//       return {
-//         ...state,
-//         course: updatedCourse,
-//         hasUnsavedChanges: true,
-//         history: newHistory.slice(-state.config.maxHistorySteps),
-//         historyIndex: Math.min(newHistory.length - 1, state.config.maxHistorySteps - 1),
-//         canUndo: true,
-//         canRedo: false,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.REORDER_CHAPTERS: {
-//       if (!state.course?.content?.chapters) return state;
-//
-//       const chapterIds = action.payload;
-//       const chapters = chapterIds
-//         .map(id => state.course!.content!.chapters!.find(ch => ch.id === id))
-//         .filter(Boolean) as CourseChapter[]
-//         .map((ch, index) => ({ ...ch, order: index + 1 }));
-//
-//       const updatedCourse = updateCourseContent(state.course, { chapters });
-//
-//       return {
-//         ...state,
-//         course: updatedCourse,
-//         hasUnsavedChanges: true,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.ADD_LESSON: {
-//       if (!state.course?.content?.chapters) return state;
-//
-//       const { chapterId, lesson } = action.payload;
-//       const chapters = state.course.content.chapters.map(chapter => {
-//         if (chapter.id === chapterId) {
-//           const newLesson: CourseLesson = {
-//             ...lesson,
-//             id: generateId(),
-//             order: chapter.lessons.length + 1,
-//             createdAt: new Date().toISOString(),
-//             updatedAt: new Date().toISOString(),
-//           };
-//
-//           return {
-//             ...chapter,
-//             lessons: [ ...chapter.lessons, newLesson ],
-//             updatedAt: new Date().toISOString(),
-//           };
-//         }
-//         return chapter;
-//       });
-//
-//       const updatedCourse = updateCourseContent(state.course, { chapters });
-//
-//       // Add to history
-//       const historyEntry = createHistoryEntry(
-//         state.course,
-//         'ADD_LESSON',
-//         `Added lesson "${ lesson.title }" to chapter`,
-//       );
-//
-//       const newHistory = [ ...state.history.slice(0, state.historyIndex + 1), historyEntry ];
-//
-//       return {
-//         ...state,
-//         course: updatedCourse,
-//         hasUnsavedChanges: true,
-//         history: newHistory.slice(-state.config.maxHistorySteps),
-//         historyIndex: Math.min(newHistory.length - 1, state.config.maxHistorySteps - 1),
-//         canUndo: true,
-//         canRedo: false,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.UPDATE_LESSON: {
-//       if (!state.course?.content?.chapters) return state;
-//
-//       const { chapterId, lessonId, lesson } = action.payload;
-//       const chapters = state.course.content.chapters.map(chapter => {
-//         if (chapter.id === chapterId) {
-//           return {
-//             ...chapter,
-//             lessons: chapter.lessons.map(l =>
-//               l.id === lessonId
-//                 ? { ...l, ...lesson, updatedAt: new Date().toISOString() }
-//                 : l,
-//             ),
-//             updatedAt: new Date().toISOString(),
-//           };
-//         }
-//         return chapter;
-//       });
-//
-//       const updatedCourse = updateCourseContent(state.course, { chapters });
-//
-//       return {
-//         ...state,
-//         course: updatedCourse,
-//         hasUnsavedChanges: true,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.DELETE_LESSON: {
-//       if (!state.course?.content?.chapters) return state;
-//
-//       const { chapterId, lessonId } = action.payload;
-//       let lessonToDelete: CourseLesson | undefined;
-//
-//       const chapters = state.course.content.chapters.map(chapter => {
-//         if (chapter.id === chapterId) {
-//           lessonToDelete = findLessonById(chapter, lessonId);
-//           return {
-//             ...chapter,
-//             lessons: chapter.lessons
-//             .filter(l => l.id !== lessonId)
-//             .map((l, index) => ({ ...l, order: index + 1 })),
-//             updatedAt: new Date().toISOString(),
-//           };
-//         }
-//         return chapter;
-//       });
-//
-//       const updatedCourse = updateCourseContent(state.course, { chapters });
-//
-//       // Add to history
-//       const historyEntry = createHistoryEntry(
-//         state.course,
-//         'DELETE_LESSON',
-//         `Deleted lesson "${ lessonToDelete?.title || 'Unknown' }"`,
-//       );
-//
-//       const newHistory = [ ...state.history.slice(0, state.historyIndex + 1), historyEntry ];
-//
-//       return {
-//         ...state,
-//         course: updatedCourse,
-//         hasUnsavedChanges: true,
-//         history: newHistory.slice(-state.config.maxHistorySteps),
-//         historyIndex: Math.min(newHistory.length - 1, state.config.maxHistorySteps - 1),
-//         canUndo: true,
-//         canRedo: false,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.REORDER_LESSONS: {
-//       if (!state.course?.content?.chapters) return state;
-//
-//       const { chapterId, lessonIds } = action.payload;
-//       const chapters = state.course.content.chapters.map(chapter => {
-//         if (chapter.id === chapterId) {
-//           const lessons = lessonIds
-//             .map(id => chapter.lessons.find(l => l.id === id))
-//             .filter(Boolean) as CourseLesson[]
-//             .map((l, index) => ({ ...l, order: index + 1 }));
-//
-//           return {
-//             ...chapter,
-//             lessons,
-//             updatedAt: new Date().toISOString(),
-//           };
-//         }
-//         return chapter;
-//       });
-//
-//       const updatedCourse = updateCourseContent(state.course, { chapters });
-//
-//       return {
-//         ...state,
-//         course: updatedCourse,
-//         hasUnsavedChanges: true,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.SET_SAVING: {
-//       return {
-//         ...state,
-//         isSaving: action.payload,
-//       };
-//     }
-//
-//     case CourseEditorActionType.SET_SAVE_STATUS: {
-//       return {
-//         ...state,
-//         saveStatus: action.payload,
-//         isSaving: action.payload === 'saving',
-//       };
-//     }
-//
-//     case CourseEditorActionType.SET_LAST_SAVED: {
-//       return {
-//         ...state,
-//         lastSaved: action.payload,
-//         hasUnsavedChanges: false,
-//         saveStatus: 'saved',
-//       };
-//     }
-//
-//     case CourseEditorActionType.SET_VALIDATION_ERRORS: {
-//       return {
-//         ...state,
-//         validationErrors: action.payload,
-//         isValid: action.payload.length === 0,
-//       };
-//     }
-//
-//     case CourseEditorActionType.CLEAR_VALIDATION_ERRORS: {
-//       return {
-//         ...state,
-//         validationErrors: [],
-//         isValid: true,
-//       };
-//     }
-//
-//     case CourseEditorActionType.SET_EDITOR_MODE: {
-//       return {
-//         ...state,
-//         mode: action.payload,
-//       };
-//     }
-//
-//     case CourseEditorActionType.SET_ACTIVE_TAB: {
-//       return {
-//         ...state,
-//         activeTab: action.payload,
-//       };
-//     }
-//
-//     case CourseEditorActionType.SET_PREVIEW_MODE: {
-//       return {
-//         ...state,
-//         previewMode: action.payload,
-//       };
-//     }
-//
-//     case CourseEditorActionType.ADD_TO_HISTORY: {
-//       const newHistory = [ ...state.history.slice(0, state.historyIndex + 1), action.payload ];
-//       const trimmedHistory = newHistory.slice(-state.config.maxHistorySteps);
-//
-//       return {
-//         ...state,
-//         history: trimmedHistory,
-//         historyIndex: trimmedHistory.length - 1,
-//         canUndo: true,
-//         canRedo: false,
-//       };
-//     }
-//
-//     case CourseEditorActionType.UNDO: {
-//       if (!state.canUndo || state.historyIndex < 0) return state;
-//
-//       const previousEntry = state.history[state.historyIndex];
-//       if (!previousEntry) return state;
-//
-//       const newIndex = state.historyIndex - 1;
-//
-//       return {
-//         ...state,
-//         course: deepClone(previousEntry.course),
-//         historyIndex: newIndex,
-//         canUndo: newIndex >= 0,
-//         canRedo: true,
-//         hasUnsavedChanges: true,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.REDO: {
-//       if (!state.canRedo || state.historyIndex >= state.history.length - 1) return state;
-//
-//       const nextIndex = state.historyIndex + 1;
-//       const nextEntry = state.history[nextIndex];
-//       if (!nextEntry) return state;
-//
-//       return {
-//         ...state,
-//         course: deepClone(nextEntry.course),
-//         historyIndex: nextIndex,
-//         canUndo: true,
-//         canRedo: nextIndex < state.history.length - 1,
-//         hasUnsavedChanges: true,
-//         lastUpdated: new Date(),
-//       };
-//     }
-//
-//     case CourseEditorActionType.CLEAR_HISTORY: {
-//       return {
-//         ...state,
-//         history: [],
-//         historyIndex: -1,
-//         canUndo: false,
-//         canRedo: false,
-//       };
-//     }
-//
-//     case CourseEditorActionType.ENABLE_AUTO_SAVE: {
-//       return {
-//         ...state,
-//         config: {
-//           ...state.config,
-//           autoSave: true,
-//         },
-//       };
-//     }
-//
-//     case CourseEditorActionType.DISABLE_AUTO_SAVE: {
-//       return {
-//         ...state,
-//         config: {
-//           ...state.config,
-//           autoSave: false,
-//         },
-//       };
-//     }
-//
-//     case CourseEditorActionType.SET_AUTO_SAVE_INTERVAL: {
-//       return {
-//         ...state,
-//         config: {
-//           ...state.config,
-//           autoSaveInterval: action.payload,
-//         },
-//       };
-//     }
-//
-//     case CourseEditorActionType.RESET_EDITOR: {
-//       return {
-//         ...defaultCourseEditorState,
-//         config: state.config, // Preserve configuration
-//       };
-//     }
-//
-//     default: {
-//       console.warn(`Unhandled course editor action type: ${ (action as { type: string }).type }`);
-//       return state;
-//     }
-//   }
-// };
-//
-// /**
-//  * Initialize course editor state with optional overrides
-//  */
-// export const createInitialCourseEditorState = (initialState: Partial<CourseEditorState>): CourseEditorState => {
-//   return {
-//     ...defaultCourseEditorState,
-//     ...initialState,
-//     lastUpdated: new Date(),
-//   };
-// };
-//
-// /**
-//  * Utility function to create a new empty course
-//  */
-// export const createEmptyCourse = (): EnhancedCourse => ({
-//   id: generateId(),
-//   title: '',
-//   description: '',
-//   area: 'programming',
-//   level: 1,
-//   difficulty: 1,
-//   status: 'draft',
-//   tools: [],
-//   tags: [],
-//   instructors: [],
-//   isPublic: false,
-//   isFeatured: false,
-//   content: {
-//     chapters: [],
-//     syllabus: '',
-//     prerequisites: [],
-//     objectives: [],
-//     totalDuration: 0,
-//     totalLessons: 0,
-//   },
-//   createdAt: new Date().toISOString(),
-//   updatedAt: new Date().toISOString(),
-// });
+import type { Course } from '@/lib/courses';
+import {
+  CourseEditorActionType,
+  courseEditorValidationRules,
+  defaultCourseEditorState,
+  type CourseChapter,
+  type CourseEditorAction,
+  type CourseEditorHistoryEntry,
+  type CourseEditorState,
+  type CourseLesson,
+  type CourseValidationError,
+  type EnhancedCourseContent,
+} from '../types';
+
+type EditableCourse = Course & {
+  content?: EnhancedCourseContent;
+};
+
+let fallbackIdSequence = 0;
+
+function createId(prefix: string): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+
+  fallbackIdSequence += 1;
+  return `${prefix}-${Date.now()}-${fallbackIdSequence}`;
+}
+
+function cloneCourse<T>(course: T): T {
+  return JSON.parse(JSON.stringify(course)) as T;
+}
+
+function normalizeDate(date = new Date()): string {
+  return date.toISOString();
+}
+
+function getCourseContent(course: Course): EnhancedCourseContent {
+  const editable = course as EditableCourse;
+
+  return {
+    chapters: editable.content?.chapters ?? [],
+    syllabus: editable.content?.syllabus ?? '',
+    prerequisites: editable.content?.prerequisites ?? [],
+    objectives: editable.content?.objectives ?? [],
+    totalDuration: editable.content?.totalDuration ?? 0,
+    totalLessons: editable.content?.totalLessons ?? 0,
+    completionRate: editable.content?.completionRate,
+  };
+}
+
+function summarizeContent(chapters: CourseChapter[]) {
+  return {
+    totalLessons: chapters.reduce((total, chapter) => total + chapter.lessons.length, 0),
+    totalDuration: chapters.reduce(
+      (total, chapter) =>
+        total + chapter.lessons.reduce((chapterTotal, lesson) => chapterTotal + (lesson.duration ?? 0), 0),
+      0,
+    ),
+  };
+}
+
+function updateCourseContent(course: Course, updates: Partial<EnhancedCourseContent>): Course {
+  const currentContent = getCourseContent(course);
+  const chapters = updates.chapters ?? currentContent.chapters;
+  const totals = summarizeContent(chapters);
+
+  return {
+    ...course,
+    content: {
+      ...currentContent,
+      ...updates,
+      chapters,
+      totalDuration: totals.totalDuration,
+      totalLessons: totals.totalLessons,
+    },
+  } as Course;
+}
+
+function hasUnsavedChanges(current: Course | null, original: Course | null): boolean {
+  if (!current || !original) return current !== original;
+  return JSON.stringify(current) !== JSON.stringify(original);
+}
+
+function createHistoryEntry(course: Course, action: string, description: string): CourseEditorHistoryEntry {
+  return {
+    id: createId('history'),
+    timestamp: new Date(),
+    action,
+    course: cloneCourse(course),
+    description,
+  };
+}
+
+function withHistory(
+  state: CourseEditorState,
+  courseBeforeChange: Course,
+  action: string,
+  description: string,
+): Pick<CourseEditorState, 'history' | 'historyIndex' | 'canUndo' | 'canRedo'> {
+  if (!state.config.enableHistory) {
+    return {
+      history: state.history,
+      historyIndex: state.historyIndex,
+      canUndo: state.canUndo,
+      canRedo: state.canRedo,
+    };
+  }
+
+  const entry = createHistoryEntry(courseBeforeChange, action, description);
+  const nextHistory = [...state.history.slice(0, state.historyIndex + 1), entry].slice(-state.config.maxHistorySteps);
+
+  return {
+    history: nextHistory,
+    historyIndex: nextHistory.length - 1,
+    canUndo: nextHistory.length > 0,
+    canRedo: false,
+  };
+}
+
+export function validateCourse(course: Course): CourseValidationError[] {
+  const errors: CourseValidationError[] = [];
+  const title = course.title?.trim() ?? '';
+  const description = course.description?.trim() ?? '';
+  const category = course.category?.trim() ?? '';
+  const slug = course.slug?.trim() ?? '';
+
+  if (!title) {
+    errors.push({ field: 'title', message: 'Course title is required', type: 'required' });
+  } else if (title.length < courseEditorValidationRules.title.minLength) {
+    errors.push({
+      field: 'title',
+      message: `Title must be at least ${courseEditorValidationRules.title.minLength} characters`,
+      type: 'length',
+    });
+  } else if (title.length > courseEditorValidationRules.title.maxLength) {
+    errors.push({
+      field: 'title',
+      message: `Title must be no more than ${courseEditorValidationRules.title.maxLength} characters`,
+      type: 'length',
+    });
+  }
+
+  if (!description) {
+    errors.push({ field: 'description', message: 'Course description is required', type: 'required' });
+  } else if (description.length < courseEditorValidationRules.description.minLength) {
+    errors.push({
+      field: 'description',
+      message: `Description must be at least ${courseEditorValidationRules.description.minLength} characters`,
+      type: 'length',
+    });
+  } else if (description.length > courseEditorValidationRules.description.maxLength) {
+    errors.push({
+      field: 'description',
+      message: `Description must be no more than ${courseEditorValidationRules.description.maxLength} characters`,
+      type: 'length',
+    });
+  }
+
+  if (!category) {
+    errors.push({ field: 'category', message: 'Course category is required', type: 'required' });
+  }
+
+  if (!slug) {
+    errors.push({ field: 'slug', message: 'Course slug is required', type: 'required' });
+  }
+
+  if (!['Beginner', 'Intermediate', 'Advanced'].includes(course.level)) {
+    errors.push({ field: 'level', message: 'Course level is invalid', type: 'invalid' });
+  }
+
+  if (!course.instructor?.name?.trim()) {
+    errors.push({ field: 'instructor.name', message: 'Instructor name is required', type: 'required' });
+  }
+
+  return errors;
+}
+
+export function createInitialCourseEditorState(initialState: Partial<CourseEditorState> = {}): CourseEditorState {
+  return {
+    ...defaultCourseEditorState,
+    ...initialState,
+    config: {
+      ...defaultCourseEditorState.config,
+      ...initialState.config,
+    },
+    lastUpdated: new Date(),
+  };
+}
+
+export function createEmptyCourse(): Course {
+  return {
+    id: createId('course'),
+    title: '',
+    description: '',
+    category: '',
+    level: 'Beginner',
+    duration: '0h',
+    enrolledStudents: 0,
+    rating: 0,
+    price: 0,
+    image: '',
+    slug: '',
+    instructor: {
+      name: '',
+      avatar: '',
+    },
+    isEnrolled: false,
+    progress: 0,
+    certification: false,
+  };
+}
+
+function updateStateCourse(state: CourseEditorState, course: Course): CourseEditorState {
+  const validationErrors = validateCourse(course);
+
+  return {
+    ...state,
+    course,
+    validationErrors,
+    isValid: validationErrors.length === 0,
+    hasUnsavedChanges: hasUnsavedChanges(course, state.originalCourse),
+    lastUpdated: new Date(),
+  };
+}
+
+export function courseEditorReducer(state: CourseEditorState, action: CourseEditorAction): CourseEditorState {
+  switch (action.type) {
+    case CourseEditorActionType.SET_LOADING:
+      return { ...state, isLoading: action.payload, error: action.payload ? null : state.error };
+
+    case CourseEditorActionType.SET_ERROR:
+      return { ...state, error: action.payload, isLoading: false, saveStatus: action.payload ? 'error' : state.saveStatus };
+
+    case CourseEditorActionType.CLEAR_ERROR:
+      return { ...state, error: null };
+
+    case CourseEditorActionType.SET_COURSE: {
+      const course = cloneCourse(action.payload);
+      const validationErrors = validateCourse(course);
+
+      return {
+        ...state,
+        course,
+        originalCourse: cloneCourse(course),
+        validationErrors,
+        isValid: validationErrors.length === 0,
+        hasUnsavedChanges: false,
+        isLoading: false,
+        error: null,
+        mode: 'edit',
+        lastUpdated: new Date(),
+      };
+    }
+
+    case CourseEditorActionType.CLEAR_COURSE:
+      return {
+        ...state,
+        course: null,
+        originalCourse: null,
+        validationErrors: [],
+        isValid: true,
+        hasUnsavedChanges: false,
+        history: [],
+        historyIndex: -1,
+        canUndo: false,
+        canRedo: false,
+        lastUpdated: new Date(),
+      };
+
+    case CourseEditorActionType.UPDATE_COURSE_FIELD:
+      if (!state.course) return state;
+      return updateStateCourse(state, { ...state.course, [action.payload.field]: action.payload.value });
+
+    case CourseEditorActionType.UPDATE_COURSE_METADATA:
+      if (!state.course) return state;
+      return updateStateCourse(state, { ...state.course, ...action.payload });
+
+    case CourseEditorActionType.UPDATE_COURSE_CONTENT:
+      if (!state.course) return state;
+      return updateStateCourse(state, updateCourseContent(state.course, action.payload));
+
+    case CourseEditorActionType.ADD_CHAPTER: {
+      if (!state.course) return state;
+      const content = getCourseContent(state.course);
+      const now = normalizeDate();
+      const chapter: CourseChapter = {
+        ...action.payload,
+        id: action.payload.id || createId('chapter'),
+        order: content.chapters.length + 1,
+        lessons: action.payload.lessons ?? [],
+        createdAt: action.payload.createdAt ?? now,
+        updatedAt: now,
+      };
+      const course = updateCourseContent(state.course, { chapters: [...content.chapters, chapter] });
+      return {
+        ...updateStateCourse(state, course),
+        ...withHistory(state, state.course, 'ADD_CHAPTER', `Added chapter "${chapter.title}"`),
+      };
+    }
+
+    case CourseEditorActionType.UPDATE_CHAPTER: {
+      if (!state.course) return state;
+      const content = getCourseContent(state.course);
+      const chapters = content.chapters.map((chapter) =>
+        chapter.id === action.payload.chapterId
+          ? { ...chapter, ...action.payload.chapter, updatedAt: normalizeDate() }
+          : chapter,
+      );
+      return updateStateCourse(state, updateCourseContent(state.course, { chapters }));
+    }
+
+    case CourseEditorActionType.DELETE_CHAPTER: {
+      if (!state.course) return state;
+      const content = getCourseContent(state.course);
+      const chapter = content.chapters.find((item) => item.id === action.payload);
+      if (!chapter) return state;
+      const chapters = content.chapters
+        .filter((item) => item.id !== action.payload)
+        .map((item, index) => ({ ...item, order: index + 1 }));
+      const course = updateCourseContent(state.course, { chapters });
+      return {
+        ...updateStateCourse(state, course),
+        ...withHistory(state, state.course, 'DELETE_CHAPTER', `Deleted chapter "${chapter.title}"`),
+      };
+    }
+
+    case CourseEditorActionType.REORDER_CHAPTERS: {
+      if (!state.course) return state;
+      const content = getCourseContent(state.course);
+      const byId = new Map(content.chapters.map((chapter) => [chapter.id, chapter]));
+      const chapters = action.payload
+        .map((id) => byId.get(id))
+        .filter((chapter): chapter is CourseChapter => Boolean(chapter))
+        .map((chapter, index) => ({ ...chapter, order: index + 1 }));
+      return updateStateCourse(state, updateCourseContent(state.course, { chapters }));
+    }
+
+    case CourseEditorActionType.ADD_LESSON: {
+      if (!state.course) return state;
+      const content = getCourseContent(state.course);
+      const now = normalizeDate();
+      const chapters = content.chapters.map((chapter) => {
+        if (chapter.id !== action.payload.chapterId) return chapter;
+
+        const lesson: CourseLesson = {
+          ...action.payload.lesson,
+          id: action.payload.lesson.id || createId('lesson'),
+          order: chapter.lessons.length + 1,
+          createdAt: action.payload.lesson.createdAt ?? now,
+          updatedAt: now,
+        };
+
+        return { ...chapter, lessons: [...chapter.lessons, lesson], updatedAt: now };
+      });
+      const course = updateCourseContent(state.course, { chapters });
+      return {
+        ...updateStateCourse(state, course),
+        ...withHistory(state, state.course, 'ADD_LESSON', `Added lesson "${action.payload.lesson.title}"`),
+      };
+    }
+
+    case CourseEditorActionType.UPDATE_LESSON: {
+      if (!state.course) return state;
+      const content = getCourseContent(state.course);
+      const chapters = content.chapters.map((chapter) => {
+        if (chapter.id !== action.payload.chapterId) return chapter;
+        return {
+          ...chapter,
+          lessons: chapter.lessons.map((lesson) =>
+            lesson.id === action.payload.lessonId
+              ? { ...lesson, ...action.payload.lesson, updatedAt: normalizeDate() }
+              : lesson,
+          ),
+          updatedAt: normalizeDate(),
+        };
+      });
+      return updateStateCourse(state, updateCourseContent(state.course, { chapters }));
+    }
+
+    case CourseEditorActionType.DELETE_LESSON: {
+      if (!state.course) return state;
+      const content = getCourseContent(state.course);
+      const chapters = content.chapters.map((chapter) => {
+        if (chapter.id !== action.payload.chapterId) return chapter;
+        return {
+          ...chapter,
+          lessons: chapter.lessons
+            .filter((lesson) => lesson.id !== action.payload.lessonId)
+            .map((lesson, index) => ({ ...lesson, order: index + 1 })),
+          updatedAt: normalizeDate(),
+        };
+      });
+      return updateStateCourse(state, updateCourseContent(state.course, { chapters }));
+    }
+
+    case CourseEditorActionType.REORDER_LESSONS: {
+      if (!state.course) return state;
+      const content = getCourseContent(state.course);
+      const chapters = content.chapters.map((chapter) => {
+        if (chapter.id !== action.payload.chapterId) return chapter;
+        const byId = new Map(chapter.lessons.map((lesson) => [lesson.id, lesson]));
+        return {
+          ...chapter,
+          lessons: action.payload.lessonIds
+            .map((id) => byId.get(id))
+            .filter((lesson): lesson is CourseLesson => Boolean(lesson))
+            .map((lesson, index) => ({ ...lesson, order: index + 1 })),
+          updatedAt: normalizeDate(),
+        };
+      });
+      return updateStateCourse(state, updateCourseContent(state.course, { chapters }));
+    }
+
+    case CourseEditorActionType.SET_SAVING:
+      return { ...state, isSaving: action.payload };
+
+    case CourseEditorActionType.SET_SAVE_STATUS:
+      return { ...state, saveStatus: action.payload, isSaving: action.payload === 'saving' };
+
+    case CourseEditorActionType.SET_LAST_SAVED:
+      return { ...state, lastSaved: action.payload, hasUnsavedChanges: false, saveStatus: 'saved' };
+
+    case CourseEditorActionType.SET_VALIDATION_ERRORS:
+      return { ...state, validationErrors: action.payload, isValid: action.payload.length === 0 };
+
+    case CourseEditorActionType.CLEAR_VALIDATION_ERRORS:
+      return { ...state, validationErrors: [], isValid: true };
+
+    case CourseEditorActionType.SET_EDITOR_MODE:
+      return { ...state, mode: action.payload };
+
+    case CourseEditorActionType.SET_ACTIVE_TAB:
+      return { ...state, activeTab: action.payload };
+
+    case CourseEditorActionType.SET_PREVIEW_MODE:
+      return { ...state, previewMode: action.payload };
+
+    case CourseEditorActionType.ADD_TO_HISTORY:
+      return {
+        ...state,
+        history: [...state.history.slice(0, state.historyIndex + 1), action.payload].slice(-state.config.maxHistorySteps),
+        historyIndex: Math.min(state.historyIndex + 1, state.config.maxHistorySteps - 1),
+        canUndo: true,
+        canRedo: false,
+      };
+
+    case CourseEditorActionType.UNDO: {
+      if (!state.canUndo || state.historyIndex < 0) return state;
+      const entry = state.history[state.historyIndex];
+      if (!entry) return state;
+      const historyIndex = state.historyIndex - 1;
+      return {
+        ...state,
+        course: cloneCourse(entry.course),
+        historyIndex,
+        canUndo: historyIndex >= 0,
+        canRedo: true,
+        hasUnsavedChanges: true,
+        lastUpdated: new Date(),
+      };
+    }
+
+    case CourseEditorActionType.REDO: {
+      if (!state.canRedo || state.historyIndex >= state.history.length - 1) return state;
+      const historyIndex = state.historyIndex + 1;
+      const entry = state.history[historyIndex];
+      if (!entry) return state;
+      return {
+        ...state,
+        course: cloneCourse(entry.course),
+        historyIndex,
+        canUndo: true,
+        canRedo: historyIndex < state.history.length - 1,
+        hasUnsavedChanges: true,
+        lastUpdated: new Date(),
+      };
+    }
+
+    case CourseEditorActionType.CLEAR_HISTORY:
+      return { ...state, history: [], historyIndex: -1, canUndo: false, canRedo: false };
+
+    case CourseEditorActionType.ENABLE_AUTO_SAVE:
+      return { ...state, config: { ...state.config, autoSave: true } };
+
+    case CourseEditorActionType.DISABLE_AUTO_SAVE:
+      return { ...state, config: { ...state.config, autoSave: false } };
+
+    case CourseEditorActionType.SET_AUTO_SAVE_INTERVAL:
+      return { ...state, config: { ...state.config, autoSaveInterval: action.payload } };
+
+    case CourseEditorActionType.RESET_EDITOR:
+      return { ...defaultCourseEditorState, config: state.config, lastUpdated: new Date() };
+
+    default:
+      return state;
+  }
+}
