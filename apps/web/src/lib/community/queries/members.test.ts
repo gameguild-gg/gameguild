@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   cookies: vi.fn(),
@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   getSocialGroups: vi.fn(),
   getPublicCourseCatalog: vi.fn(),
   getMarketingLeads: vi.fn(),
+  getBlogPosts: vi.fn(),
+  clientRequest: vi.fn(),
 }));
 
 vi.mock('next/headers', () => ({
@@ -37,6 +39,9 @@ vi.mock('@game-guild/client', () => ({
     ContentMarketingleadsModule: class {
       getMarketingLeads = mocks.getMarketingLeads;
     },
+    SocialBlogPostsModule: class {
+      getApiSocialBlog = mocks.getBlogPosts;
+    },
   },
 }));
 
@@ -44,14 +49,15 @@ vi.mock('@/lib/courses/services/course.service', () => ({
   getPublicCourseCatalog: mocks.getPublicCourseCatalog,
 }));
 
-const { getCommunityFeed, getGroups, getMemberProject, getPublicMemberProfile, getSupportTickets } = await import('./members');
+const { getCommunityFeed, getCommunityStats, getGroups, getMemberProject, getPublicMemberProfile, getSupportTickets } = await import('./members');
 
 describe('community member queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers();
     process.env.AUTH_SECRET = 'test-secret';
     mocks.cookies.mockResolvedValue({ get: vi.fn(() => ({ value: 'session-cookie' })) });
-    mocks.createServerClient.mockReturnValue({});
+    mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
     mocks.decodeJWT.mockResolvedValue({
       accessToken: 'access-token',
       sub: '00000000-0000-0000-0000-000000000111',
@@ -70,6 +76,12 @@ describe('community member queries', () => {
       ],
     });
     mocks.getMarketingLeads.mockResolvedValue({ ok: true, data: [] });
+    mocks.getBlogPosts.mockResolvedValue({ ok: true, data: [] });
+    mocks.clientRequest.mockResolvedValue({ ok: true, data: { items: [], totalCount: 0 } });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('maps a public social profile into the member page view model', async () => {
@@ -235,6 +247,78 @@ describe('community member queries', () => {
           isPublic: true,
         },
       ],
+    });
+  });
+
+  it('builds community stats from live users, groups, support leads, and blog posts', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-14T12:00:00.000Z'));
+    mocks.clientRequest.mockResolvedValue({
+      ok: true,
+      data: {
+        totalCount: 4,
+        items: [
+          {
+            id: 'user-active',
+            email: 'active@example.com',
+            isActive: true,
+            createdAt: '2026-06-01T00:00:00.000Z',
+            lastSeenAt: '2026-06-13T12:00:00.000Z',
+          },
+          {
+            id: 'user-old',
+            email: 'old@example.com',
+            isActive: true,
+            createdAt: '2026-05-01T00:00:00.000Z',
+            lastSeenAt: '2026-04-01T00:00:00.000Z',
+          },
+          {
+            id: 'user-disabled',
+            email: 'disabled@example.com',
+            isActive: false,
+            createdAt: '2026-06-02T00:00:00.000Z',
+            lastSeenAt: '2026-06-13T12:00:00.000Z',
+          },
+        ],
+      },
+    });
+    mocks.getSocialGroups.mockResolvedValue({
+      ok: true,
+      data: [{ id: 'group-1' }, { id: 'group-2' }],
+    });
+    mocks.getMarketingLeads.mockResolvedValue({
+      ok: true,
+      data: [{ id: 'ticket-1' }, { id: 'ticket-2' }, { id: 'ticket-3' }],
+    });
+    mocks.getBlogPosts.mockResolvedValue({
+      ok: true,
+      data: [{ id: 'post-1' }],
+    });
+
+    const stats = await getCommunityStats();
+
+    expect(mocks.clientRequest).toHaveBeenCalledWith({
+      method: 'GET',
+      path: '/v1/users',
+      params: { limit: 500 },
+      requiresAuth: true,
+    });
+    expect(mocks.getSocialGroups).toHaveBeenCalledWith({ skip: 0, take: 500 });
+    expect(mocks.getMarketingLeads).toHaveBeenCalledWith({
+      source: 'contact',
+      topic: 'support',
+      status: 'new',
+      skip: 0,
+      take: 500,
+    });
+    expect(mocks.getBlogPosts).toHaveBeenCalledWith({ skip: 0, take: 500 });
+    expect(stats).toEqual({
+      totalMembers: 4,
+      activeMembers: 1,
+      newMembersThisMonth: 2,
+      totalGroups: 2,
+      openTickets: 3,
+      totalPosts: 1,
     });
   });
 
