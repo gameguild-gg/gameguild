@@ -2,7 +2,7 @@ import { Link } from '@/i18n/navigation';
 import { getCourses } from '@/lib/learning';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent } from '@game-guild/ui/components/card';
-import { ArrowLeft, BookOpen, Plus } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, BookOpen, Plus, RefreshCw } from 'lucide-react';
 import React from 'react';
 import { CourseList } from './course-list';
 
@@ -37,14 +37,32 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
         </Button>
       </div>
 
-      {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
-          <p className="font-medium">API Error</p>
-          <p>{error}</p>
-        </div>
-      )}
+      {error ? (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex gap-4">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                <AlertTriangle className="size-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Courses could not be loaded</h2>
+                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                  The learning API did not return the course catalog. This is not an empty course library.
+                </p>
+                <p className="mt-3 rounded-md bg-background/60 px-3 py-2 text-sm text-destructive">{error}</p>
+              </div>
+            </div>
+            <Button asChild variant="outline" className="shrink-0">
+              <Link href="/dashboard/learning/courses">
+                <RefreshCw className="mr-2 size-4" />
+                Retry
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
-      {courses.length === 0 ? (
+      {!error && courses.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <BookOpen className="mb-4 size-12 text-muted-foreground" />
@@ -52,9 +70,11 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
             <p className="text-sm text-muted-foreground">Create your first course to start teaching.</p>
           </CardContent>
         </Card>
-      ) : (
+      ) : null}
+
+      {courses.length > 0 ? (
         <CourseList courses={courses} locale={locale} />
-      )}
+      ) : null}
     </div>
   );
 }
