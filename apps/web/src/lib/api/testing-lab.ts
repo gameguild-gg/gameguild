@@ -7,8 +7,8 @@ function getApiBaseUrl(): string {
 export async function getTestingLocations(skip = 0, take = 50): Promise<TestingLocation[]> {
   const apiBaseUrl = getApiBaseUrl();
   const endpoint = apiBaseUrl
-    ? `${apiBaseUrl}/testing/locations?skip=${skip}&take=${take}`
-    : `/testing/locations?skip=${skip}&take=${take}`;
+    ? `${apiBaseUrl}/v1/testing/locations?skip=${skip}&take=${take}`
+    : `/v1/testing/locations?skip=${skip}&take=${take}`;
 
   try {
     const response = await fetch(endpoint, {

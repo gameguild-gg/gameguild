@@ -22,6 +22,7 @@ import {
   BookOpen,
   ChevronRight,
   FileText,
+  FlaskConical,
   FolderOpen,
   Gamepad2,
   HeadphonesIcon,
@@ -103,6 +104,11 @@ const navigationData: NavGroup[] = [
   {
     label: 'Launch',
     items: [
+      {
+        title: 'Testing Lab',
+        url: '/dashboard/testing-lab',
+        icon: FlaskConical,
+      },
       {
         title: 'Launch Pad',
         url: '/dashboard/launch-pad',

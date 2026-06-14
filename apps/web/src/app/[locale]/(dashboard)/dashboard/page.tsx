@@ -1,6 +1,6 @@
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Activity, BookOpen, GraduationCap, Rocket, Users } from 'lucide-react';
+import { Activity, BookOpen, FlaskConical, GraduationCap, Rocket, Users } from 'lucide-react';
 import React from 'react';
 
 export default async function Page(): Promise<React.JSX.Element> {
@@ -40,6 +40,13 @@ export default async function Page(): Promise<React.JSX.Element> {
       href: '/dashboard/launch-pad',
       stats: 'Track readiness & channels',
     },
+    {
+      title: 'Testing Lab',
+      description: 'Run moderated project tests',
+      icon: FlaskConical,
+      href: '/dashboard/testing-lab',
+      stats: 'Manage sessions & feedback',
+    },
   ] as const;
 
   return (
@@ -49,7 +56,7 @@ export default async function Page(): Promise<React.JSX.Element> {
         <p className="text-muted-foreground">Welcome to the Game Guild management dashboard.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {sections.map((section) => (
           <Link key={section.title} href={section.href}>
             <Card className="transition-colors hover:bg-muted/50">

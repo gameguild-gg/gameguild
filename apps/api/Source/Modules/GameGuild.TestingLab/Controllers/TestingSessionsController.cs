@@ -50,13 +50,15 @@ public class TestingSessionsController(
     // POST: testing/sessions
     [HttpPost("sessions")]
     [RequireResourcePermission<PermissionType, TestingSession>(PermissionType.Create)]
-    public async Task<ActionResult<TestingSession>> CreateTestingSession(TestingSession session)
+    public async Task<ActionResult<TestingSession>> CreateTestingSession(CreateTestingSessionDto sessionDto)
     {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
         var userId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        session.CreatedById = userId.Value;
+        var session = sessionDto.ToTestingSession(userId.Value);
         var createdSession = await sessionService.CreateTestingSessionAsync(session).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetTestingSession), new { id = createdSession.Id }, createdSession);

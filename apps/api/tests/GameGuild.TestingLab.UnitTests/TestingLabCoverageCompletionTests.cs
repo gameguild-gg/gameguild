@@ -793,7 +793,7 @@ public sealed class TestingLabCoverageCompletionTests : IDisposable {
     (await sessionsController.GetTestingSessions()).Result.Should().BeOfType<OkObjectResult>();
     (await sessionsController.GetTestingSession(id)).Result.Should().BeOfType<OkObjectResult>();
     (await sessionsController.GetTestingSessionWithDetails(id)).Result.Should().BeOfType<OkObjectResult>();
-    (await sessionsController.CreateTestingSession(new TestingSession())).Result.Should().BeOfType<CreatedAtActionResult>();
+    (await sessionsController.CreateTestingSession(new CreateTestingSessionDto { TestingRequestId = id, LocationId = id, SessionName = "Session", ManagerUserId = actorId })).Result.Should().BeOfType<CreatedAtActionResult>();
     (await sessionsController.UpdateTestingSession(id, new TestingSession { Id = Guid.NewGuid() })).Result.Should().BeOfType<BadRequestObjectResult>();
     (await sessionsController.UpdateTestingSession(id, new TestingSession { Id = id })).Result.Should().BeOfType<OkObjectResult>();
     (await sessionsController.DeleteTestingSession(id)).Should().BeOfType<NoContentResult>();
