@@ -35,6 +35,18 @@
     "node": ">=20.0.0",
     "pnpm": ">=10.0.0"
   },
+  "pnpm": {
+    "overrides": {
+      "@babel/plugin-transform-modules-systemjs": "7.29.7",
+      "@tootallnate/once": "2.0.1",
+      "dompurify": "3.4.10",
+      "icu-minify": "4.9.2",
+      "next": "16.2.9",
+      "postcss": "8.5.15",
+      "prismjs": "1.30.0",
+      "ws": "8.20.1"
+    }
+  },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.0",
     "@changesets/cli": "^2.27.0",
