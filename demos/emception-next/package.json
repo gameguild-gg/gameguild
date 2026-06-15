@@ -21,7 +21,7 @@
     "clsx": "^2.1.1",
     "emception": "*",
     "monaco-editor": "^0.55.1",
-    "next": "16.2.4",
+    "next": "16.2.9",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-resizable-panels": "^3.0.6"
