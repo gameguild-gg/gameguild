@@ -1,8 +1,12 @@
 # Coolify deployment - API, public website, web console, and learner app (staging).
 #
 # Routing: traffic enters via Cloudflare Tunnel -> Coolify's Traefik proxy ->
-# this container on the shared Coolify network. No host ports are published;
-# Coolify generates the router labels from the domain configured in the UI.
+# this container on the shared Coolify network. Services may use the same
+# internal container ports as other Coolify resources; they are routed by
+# service/domain, not by globally unique container ports. Avoid hand-written
+# generic Traefik service labels such as `api`, `web`, or `website` because
+# those names are provider-wide and can collide with other Coolify apps.
+# Coolify generates isolated router/service labels from SERVICE_FQDN_* vars.
 #
 # Required env vars (set in Coolify -> Resource -> Environment Variables):
 #   POSTGRES_HOST, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD,
@@ -66,9 +70,6 @@ services:
       - 'com.game-guild.app=api'
       - 'com.game-guild.tier=backend'
       - 'com.game-guild.environment=staging'
-      - 'traefik.enable=true'
-      - 'traefik.docker.network=coolify'
-      - 'traefik.http.services.api.loadbalancer.server.port=8080'
     deploy:
       resources:
         limits:
@@ -132,9 +133,6 @@ services:
       - 'com.game-guild.app=web'
       - 'com.game-guild.tier=frontend'
       - 'com.game-guild.environment=staging'
-      - 'traefik.enable=true'
-      - 'traefik.docker.network=coolify'
-      - 'traefik.http.services.web.loadbalancer.server.port=3000'
     deploy:
       resources:
         limits:
@@ -201,9 +199,6 @@ services:
       - 'com.game-guild.app=website'
       - 'com.game-guild.tier=frontend'
       - 'com.game-guild.environment=staging'
-      - 'traefik.enable=true'
-      - 'traefik.docker.network=coolify'
-      - 'traefik.http.services.website.loadbalancer.server.port=3000'
     deploy:
       resources:
         limits:
@@ -269,9 +264,6 @@ services:
       - 'com.game-guild.app=learning'
       - 'com.game-guild.tier=frontend'
       - 'com.game-guild.environment=staging'
-      - 'traefik.enable=true'
-      - 'traefik.docker.network=coolify'
-      - 'traefik.http.services.learning.loadbalancer.server.port=3002'
     deploy:
       resources:
         limits:
