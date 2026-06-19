@@ -25,6 +25,7 @@
     "sync:list": "syncpack list",
     "sync:lint": "syncpack lint",
     "sync:fix": "syncpack fix-mismatches",
+    "smoke": "node scripts/devops/smoke-check.mjs",
     "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo pnpm-lock.yaml",
     "changeset": "changeset",
     "version": "changeset version",
