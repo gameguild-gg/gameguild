@@ -8,6 +8,12 @@ Run the smoke gate after starting local services or after a Coolify redeploy:
 pnpm smoke
 ```
 
+For the public staging domains:
+
+```bash
+pnpm smoke:live
+```
+
 The script verifies:
 
 - API `/live`, `/health`, and documentation.
@@ -22,7 +28,7 @@ Default local URLs:
 | Web | `http://localhost:3005` |
 | Learning | `http://localhost:3006` |
 
-For a deployed environment, override the defaults with:
+For a deployed environment other than the default staging domains, override the defaults with:
 
 ```bash
 GAMEGUILD_API_URL=https://game-guild-api.example.com \

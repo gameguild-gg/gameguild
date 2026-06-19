@@ -1,9 +1,24 @@
 #!/usr/bin/env node
 
+const liveMode = process.argv.includes('--live');
+const timeoutMs = Number.parseInt(process.env.SMOKE_TIMEOUT_MS ?? '20000', 10);
+
+const defaults = liveMode
+  ? {
+      api: 'https://game-guild-api.matheusmartins.com',
+      web: 'https://game-guild-website.matheusmartins.com',
+      learning: 'https://game-guild-learning.matheusmartins.com',
+    }
+  : {
+      api: 'http://localhost:5296',
+      web: 'http://localhost:3005',
+      learning: 'http://localhost:3006',
+    };
+
 const config = {
-  api: process.env.GAMEGUILD_API_URL ?? process.env.API_URL ?? 'http://localhost:5296',
-  web: process.env.GAMEGUILD_WEB_URL ?? process.env.WEB_URL ?? 'http://localhost:3005',
-  learning: process.env.GAMEGUILD_LEARNING_URL ?? process.env.LEARNING_URL ?? 'http://localhost:3006',
+  api: process.env.GAMEGUILD_API_URL ?? process.env.API_URL ?? defaults.api,
+  web: process.env.GAMEGUILD_WEB_URL ?? process.env.WEB_URL ?? defaults.web,
+  learning: process.env.GAMEGUILD_LEARNING_URL ?? process.env.LEARNING_URL ?? defaults.learning,
 };
 
 const checks = [
@@ -28,7 +43,13 @@ async function runCheck([name, base, path]) {
   const started = Date.now();
 
   try {
-    const response = await fetch(url, { redirect: 'follow' });
+    const response = await fetch(url, {
+      redirect: 'follow',
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: {
+        'User-Agent': 'gameguild-smoke/1.0',
+      },
+    });
     const elapsed = Date.now() - started;
     const ok = response.status >= 200 && response.status < 400;
 
