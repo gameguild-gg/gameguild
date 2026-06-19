@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "dev": "turbo run dev",
-    "dev:api": "dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:5295",
+    "dev:api": "dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:5296",
     "dev:learning": "pnpm --filter @game-guild/learning run dev",
     "dev:web": "pnpm --filter @game-guild/web run dev",
     "build": "turbo run build",

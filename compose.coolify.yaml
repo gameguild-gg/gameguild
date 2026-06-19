@@ -28,11 +28,11 @@ services:
       dockerfile: Dockerfile
     image: game-guild-api
     ports:
-      - '${PORT:-8080}'
+      - '8080'
     environment:
       - SERVICE_FQDN_API_8080=${SERVICE_FQDN_API_8080:-${SERVICE_FQDN_API:-}}
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Staging}
-      - ASPNETCORE_HTTP_PORTS=${PORT:-8080}
+      - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
       - DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys
       - SeedData__ImportSnapshotCourses=${SEED_SNAPSHOT_COURSES:-true}
@@ -54,7 +54,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:${PORT:-8080}/live || exit 1']
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8080/live || exit 1']
       start_interval: 5s
       start_period: 180s
       interval: 30s
@@ -96,7 +96,7 @@ services:
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:-}
     image: game-guild-web
     ports:
-      - '${WEB_PORT:-3000}'
+      - '3000'
     environment:
       - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB_3000:-${SERVICE_FQDN_WEB:-}}
       - NODE_ENV=production
@@ -162,7 +162,7 @@ services:
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-}
     image: game-guild-learning
     ports:
-      - '${LEARNING_PORT:-3002}'
+      - '3002'
     environment:
       - SERVICE_FQDN_LEARNING_3002=${SERVICE_FQDN_LEARNING_3002:-${SERVICE_FQDN_LEARNING:-}}
       - NODE_ENV=production
