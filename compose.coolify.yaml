@@ -40,15 +40,15 @@ services:
       - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
       - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
       # JWT configuration consumed by the API and auth services
-      - Jwt__SecretKey=${JWT_SECRET_KEY}
+      - Jwt__SecretKey=${JWT_SECRET_KEY:?set JWT_SECRET_KEY}
       - Jwt__Issuer=${JWT_ISSUER:-GameGuild}
       - Jwt__Audience=${JWT_AUDIENCE:-GameGuild.Users}
-      - Authentication__JwtSecretKey=${JWT_SECRET_KEY}
+      - Authentication__JwtSecretKey=${JWT_SECRET_KEY:?set JWT_SECRET_KEY}
       - Authentication__JwtIssuer=${JWT_ISSUER:-GameGuild}
       - Authentication__JwtAudience=${JWT_AUDIENCE:-GameGuild.Users}
       - Authentication__JwtExpiration=${JWT_EXPIRATION:-24:00:00}
-      - Encryption__Key=${ENCRYPTION_KEY}
-      - Encryption__EncryptionKey=${ENCRYPTION_KEY}
+      - Encryption__Key=${ENCRYPTION_KEY:?set ENCRYPTION_KEY}
+      - Encryption__EncryptionKey=${ENCRYPTION_KEY:?set ENCRYPTION_KEY}
     volumes:
       - dataprotection-keys-v2:/app/.aspnet/DataProtection-Keys
     security_opt:
@@ -88,8 +88,8 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         GIT_HASH: ${GIT_HASH:-}
-        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-}
-        AUTH_SECRET: ${AUTH_SECRET:-}
+        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-${AUTH_SECRET:?set AUTH_SECRET or NEXTAUTH_SECRET}}
+        AUTH_SECRET: ${AUTH_SECRET:-${NEXTAUTH_SECRET:?set AUTH_SECRET or NEXTAUTH_SECRET}}
         API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
         API_PUBLIC_URL: ${API_PUBLIC_URL:-}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-}
@@ -107,8 +107,8 @@ services:
       - NEXT_PUBLIC_APP_URL=${WEB_PUBLIC_URL:-}
       - NEXT_PUBLIC_LEARNING_APP_URL=${LEARNING_PUBLIC_URL:-}
       - NEXTAUTH_URL=${WEB_PUBLIC_URL:-}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-}
-      - AUTH_SECRET=${AUTH_SECRET:-}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-${AUTH_SECRET:?set AUTH_SECRET or NEXTAUTH_SECRET}}
+      - AUTH_SECRET=${AUTH_SECRET:-${NEXTAUTH_SECRET:?set AUTH_SECRET or NEXTAUTH_SECRET}}
       - AUTH_TRUST_HOST=true
     security_opt:
       - no-new-privileges:true
@@ -154,8 +154,8 @@ services:
       dockerfile: apps/learning/Dockerfile
       args:
         GIT_HASH: ${GIT_HASH:-}
-        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-}
-        AUTH_SECRET: ${AUTH_SECRET:-}
+        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-${AUTH_SECRET:?set AUTH_SECRET or NEXTAUTH_SECRET}}
+        AUTH_SECRET: ${AUTH_SECRET:-${NEXTAUTH_SECRET:?set AUTH_SECRET or NEXTAUTH_SECRET}}
         API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
         API_PUBLIC_URL: ${API_PUBLIC_URL:-}
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:-}
@@ -171,8 +171,8 @@ services:
       - API_URL=${API_INTERNAL_URL:-http://api:8080}
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:-}
       - NEXTAUTH_URL=${LEARNING_PUBLIC_URL:-}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-}
-      - AUTH_SECRET=${AUTH_SECRET:-}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-${AUTH_SECRET:?set AUTH_SECRET or NEXTAUTH_SECRET}}
+      - AUTH_SECRET=${AUTH_SECRET:-${NEXTAUTH_SECRET:?set AUTH_SECRET or NEXTAUTH_SECRET}}
       - AUTH_TRUST_HOST=true
       - NEXT_PUBLIC_WEB_URL=${WEB_PUBLIC_URL:-}
     security_opt:
