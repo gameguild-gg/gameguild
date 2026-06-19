@@ -6,430 +6,189 @@ networks:
     driver: bridge
     internal: false
 
-  internal:
-    name: game-guild-internal-network
-    driver: bridge
-    internal: true
+  database:
+    name: web-development-public
+    external: true
 
 services:
   api:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
-    container_name: api
     image: game-guild-api
-    restart: always
-    ports:
-      - "${API_PORT:-5000}:5295"
+    container_name: game-guild-api
     environment:
-      # Database Configuration
-      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING:-Host=postgres;Port=5432;Database=postgres;Username=postgres;Password=postgres;}
-      - DATABASE__HOST=${DATABASE__HOST:-postgres}
-      - DATABASE__PORT=${DATABASE__PORT:-5432}
-      - DATABASE__DATABASE=${DATABASE__DATABASE:-postgres}
-      - DATABASE__USERNAME=${DATABASE__USERNAME:-postgres}
-      - DATABASE__PASSWORD=${DATABASE__PASSWORD:-postgres}
-      # Application Environment
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
-      - ASPNETCORE_URLS=http://+:5295
-      # JWT Configuration
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-game-guild-production-jwt-secret-key-must-be-at-least-32-characters-long-and-secure}
-      - JWT_ISSUER=${JWT_ISSUER:-GameGuild.API}
-      - JWT_AUDIENCE=${JWT_AUDIENCE:-GameGuild.Users}
-      # OAuth Configuration
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      # Documentation
-      - DOCUMENTATION_ENABLED=${DOCUMENTATION_ENABLED:-true}
-      # Cloudflare Dynamic DNS Configuration
-      - CLOUDFLARE_DYNAMIC_DNS__ENABLED=${CLOUDFLARE_DYNAMIC_DNS__ENABLED:-false}
-      - CLOUDFLARE_DYNAMIC_DNS__API_TOKEN=${CLOUDFLARE_DYNAMIC_DNS__API_TOKEN:-}
-      - CLOUDFLARE_DYNAMIC_DNS__ZONE_ID=${CLOUDFLARE_DYNAMIC_DNS__ZONE_ID:-}
-      - CLOUDFLARE_DYNAMIC_DNS__INTERVAL_MINUTES=${CLOUDFLARE_DYNAMIC_DNS__INTERVAL_MINUTES:-5}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TYPE:-A}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__NAME:-coolify}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TTL:-300}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__PROXIED:-true}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TYPE:-A}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__NAME:-dev}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TTL:-300}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__PROXIED:-true}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TYPE:-A}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__NAME:-dev-api}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TTL:-300}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__PROXIED:-true}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TYPE:-A}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__NAME:-minio}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TTL:-300}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__PROXIED:-true}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TYPE:-A}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__NAME:-console-minio}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TTL:-300}
-      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__PROXIED:-true}
-      # CORS Configuration
-      - CORS__ALLOWED_ORIGINS__0=${CORS__ALLOWED_ORIGINS__0:-https://web.game-guild.gg}
-      - CORS__ALLOWED_ORIGINS__1=${CORS__ALLOWED_ORIGINS__1:-https://www.game-guild.gg}
-      - CORS__ALLOWED_ORIGINS__2=${CORS__ALLOWED_ORIGINS__2:-https://game-guild.gg}
-      - CORS__ALLOW_CREDENTIALS=${CORS__ALLOW_CREDENTIALS:-true}
-      # Redis Configuration
-      - REDIS_CONNECTION_STRING=${REDIS_CONNECTION_STRING:-redis:6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      # Health Checks Configuration
-      - HealthChecks__EnableRedisCheck=${ENABLE_REDIS_HEALTH_CHECK:-true}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    links:
-      - postgres
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://$(hostname):5295/health || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-  academy:
-    build:
-      context: .
-      dockerfile: ./apps/academy/Dockerfile
-    image: game-guild-academy
-    container_name: game-guild-academy
-    environment:
-      - NODE_ENV=${NODE_ENV:-production}
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+      - DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys
+      - ConnectionStrings__DefaultConnection=Host=${POSTGRES_CONTAINER_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-gameguild};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Include Error Detail=true;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
+      - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_CONTAINER_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-gameguild};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Include Error Detail=true;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
+      - Jwt__SecretKey=${JWT_SECRET_KEY:-development-secret-key-at-least-32-characters-long-for-local-testing}
+      - Jwt__Issuer=${JWT_ISSUER:-GameGuild}
+      - Jwt__Audience=${JWT_AUDIENCE:-GameGuild.Users}
+      - Authentication__JwtSecretKey=${JWT_SECRET_KEY:-development-secret-key-at-least-32-characters-long-for-local-testing}
+      - Authentication__JwtIssuer=${JWT_ISSUER:-GameGuild}
+      - Authentication__JwtAudience=${JWT_AUDIENCE:-GameGuild.Users}
+      - Authentication__JwtExpiration=${JWT_EXPIRATION:-24:00:00}
+      - Encryption__Key=${ENCRYPTION_KEY:-development-encryption-key-at-least-32-characters-long}
+      - Encryption__EncryptionKey=${ENCRYPTION_KEY:-development-encryption-key-at-least-32-characters-long}
+      - Redis__Enabled=${REDIS_ENABLED:-true}
+      - Redis__ConnectionString=${REDIS_CONNECTION_STRING:-redis:6379}
+      - Redis__InstanceName=${REDIS_INSTANCE_NAME:-gg:}
+      - Assets__Storage__BucketName=${S3_BUCKET:-gameguild-assets}
+      - Assets__Storage__ServiceUrl=${S3_CONTAINER_SERVICE_URL:-http://garage:3900}
+      - Assets__Storage__AccessKey=${S3_ACCESS_KEY:-GK111111111111111111111111}
+      - Assets__Storage__SecretKey=${S3_SECRET_KEY:-2222222222222222222222222222222222222222222222222222222222222222}
+      - Assets__Storage__Region=${S3_REGION:-garage}
+      - Assets__Storage__ForcePathStyle=true
+      - SeedData__ImportSnapshotCourses=${SEED_SNAPSHOT_COURSES:-true}
+    volumes:
+      - dataprotection-keys:/app/.aspnet/DataProtection-Keys
     security_opt:
       - no-new-privileges:true
     ports:
-      - ${ACADEMY_PORT:-6000}:3000
+      - "${API_PORT:-5296}:8080"
     networks:
       public:
         aliases:
-          - academy
-      internal:
+          - api
+      database:
         aliases:
-          - academy
+          - api
     healthcheck:
-      start_interval: ${HEALTHCHECK_START_INTERVAL:-45s}
-      start_period: ${HEALTHCHECK_START_PERIOD:-60s}
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/live || exit 1"]
+      start_interval: ${HEALTHCHECK_START_INTERVAL:-5s}
+      start_period: ${HEALTHCHECK_START_PERIOD:-90s}
       interval: ${HEALTHCHECK_INTERVAL:-30s}
       timeout: ${HEALTHCHECK_TIMEOUT:-10s}
-      retries: ${HEALTHCHECK_RETRIES:-3}
-      test: [ 'CMD-SHELL', 'curl -f http://localhost:3000/api/health || exit 1' ]
+      retries: ${HEALTHCHECK_RETRIES:-5}
     restart: unless-stopped
     logging:
-      driver: 'json-file'
+      driver: "json-file"
       options:
-        max-size: '10m'
-        max-file: '3'
+        max-size: "10m"
+        max-file: "3"
     labels:
-      - 'gg.game-guild.app=academy'
-      - 'gg.game-guild.tier=frontend'
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-
-  blog:
-    build:
-      context: .
-      dockerfile: ./apps/blog/Dockerfile
-    image: game-guild-blog
-    container_name: game-guild-blog
-    environment:
-      - NODE_ENV=${NODE_ENV:-production}
-    security_opt:
-      - no-new-privileges:true
-    ports:
-      - ${BLOG_PORT:-5000}:3000
-    networks:
-      public:
-        aliases:
-          - blog
-      internal:
-        aliases:
-          - blog
-    healthcheck:
-      start_interval: ${HEALTHCHECK_START_INTERVAL:-45s}
-      start_period: ${HEALTHCHECK_START_PERIOD:-60s}
-      interval: ${HEALTHCHECK_INTERVAL:-30s}
-      timeout: ${HEALTHCHECK_TIMEOUT:-10s}
-      retries: ${HEALTHCHECK_RETRIES:-3}
-      test: [ 'CMD-SHELL', 'curl -f http://localhost:3000/api/health || exit 1' ]
-    restart: unless-stopped
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
-    labels:
-      - 'gg.game-guild.app=blog'
-      - 'gg.game-guild.tier=frontend'
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-
-  # console:
-  #   build:
-  #     context: .
-  #     dockerfile: ./apps/console/Dockerfile
-  #   image: game-guild-console
-  #   container_name: game-guild-console
-  #   environment:
-  #     - NODE_ENV=${NODE_ENV:-production}
-  #   security_opt:
-  #     - no-new-privileges:true
-  #   ports:
-  #     - ${CONSOLE_PORT:-4000}:3000
-  #   networks:
-  #     public:
-  #       aliases:
-  #         - console
-  #     internal:
-  #       aliases:
-  #         - console
-  #   healthcheck:
-  #     start_interval: ${HEALTHCHECK_START_INTERVAL:-45s}
-  #     start_period: ${HEALTHCHECK_START_PERIOD:-60s}
-  #     interval: ${HEALTHCHECK_INTERVAL:-30s}
-  #     timeout: ${HEALTHCHECK_TIMEOUT:-10s}
-  #     retries: ${HEALTHCHECK_RETRIES:-3}
-  #     test: [ 'CMD-SHELL', 'curl -f http://localhost:3000/api/health || exit 1' ]
-  #   restart: unless-stopped
-  #   logging:
-  #     driver: 'json-file'
-  #     options:
-  #       max-size: '10m'
-  #       max-file: '3'
-  #   labels:
-  #     - 'gg.game-guild.app=console'
-  #     - 'gg.game-guild.tier=frontend'
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: '0.5'
-  #         memory: 512M
-  #       reservations:
-  #         cpus: '0.25'
-  #         memory: 256M
-
-  website:
-    build:
-      context: .
-      dockerfile: ./apps/website/Dockerfile
-    image: game-guild-website
-    container_name: game-guild-website
-    environment:
-      - NODE_ENV=${NODE_ENV:-production}
-    security_opt:
-      - no-new-privileges:true
-    ports:
-      - ${WEBSITE_PORT:-3000}:3000
-    networks:
-      public:
-        aliases:
-          - website
-      internal:
-        aliases:
-          - website
-    healthcheck:
-      start_interval: ${HEALTHCHECK_START_INTERVAL:-45s}
-      start_period: ${HEALTHCHECK_START_PERIOD:-60s}
-      interval: ${HEALTHCHECK_INTERVAL:-30s}
-      timeout: ${HEALTHCHECK_TIMEOUT:-10s}
-      retries: ${HEALTHCHECK_RETRIES:-3}
-      test: [ 'CMD-SHELL', 'curl -f http://localhost:3000/api/health || exit 1' ]
-    restart: unless-stopped
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
-    labels:
-      - 'gg.game-guild.app=website'
-      - 'gg.game-guild.tier=frontend'
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
+      - "com.game-guild.app=api"
+      - "com.game-guild.tier=backend"
 
   web:
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/web/Dockerfile
       args:
-        # Build-time variables (bundled into client-side code)
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5295}
-        - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
+        GIT_HASH: ${GIT_HASH:-}
+        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
+        AUTH_SECRET: ${AUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
+        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
+        API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:5296}
+        WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3005}
+        LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:-http://localhost:3006}
     image: game-guild-web
-    container_name: web
-    restart: always
-    ports:
-      - "${WEB_PORT:-3000}:3000"
+    container_name: game-guild-web
     environment:
-      # Next.js Configuration
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5295}
-      - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
-      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
-      # NextAuth Configuration
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-nextauth-production-secret-key-change-this-for-production-use}
-      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
-      - AUTH_TRUST_HOST=${AUTH_TRUST_HOST:-true}
-      # Node.js Environment
-      - NODE_ENV=${NODE_ENV:-production}
-    depends_on:
-      api:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://$(hostname):3000 || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
-  postgres:
-    image: postgres:16.8-alpine
-    container_name: game-guild-postgres
-    environment:
-      # PostgreSQL Configuration
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-public}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      # Timezone Configuration
-      TZ: ${POSTGRES_TIMEZONE:-UTC}
-      PGTZ: ${POSTGRES_TIMEZONE:-UTC}
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - API_URL=${API_INTERNAL_URL:-http://api:8080}
+      - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:-http://localhost:5296}
+      - NEXT_PUBLIC_APP_URL=${WEB_PUBLIC_URL:-http://localhost:3005}
+      - NEXT_PUBLIC_LEARNING_APP_URL=${LEARNING_PUBLIC_URL:-http://localhost:3006}
+      - NEXTAUTH_URL=${WEB_PUBLIC_URL:-http://localhost:3005}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
+      - AUTH_SECRET=${AUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
+      - AUTH_TRUST_HOST=true
     security_opt:
       - no-new-privileges:true
     ports:
-      - ${POSTGRES_PORT:-5432}:5432
-    volumes:
-      - postgres:/var/lib/postgresql/data
-      - ./scripts/database/postgres:/docker-entrypoint-initdb.d
+      - "${WEB_PORT:-3005}:3000"
     networks:
       public:
         aliases:
-          - console
-      internal:
-        aliases:
-          - console
+          - web
     healthcheck:
-      start_interval: ${HEALTHCHECK_START_INTERVAL:-45s}
-      start_period: ${HEALTHCHECK_START_PERIOD:-60s}
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      start_interval: ${HEALTHCHECK_START_INTERVAL:-10s}
+      start_period: ${HEALTHCHECK_START_PERIOD:-90s}
       interval: ${HEALTHCHECK_INTERVAL:-30s}
       timeout: ${HEALTHCHECK_TIMEOUT:-10s}
-      retries: ${HEALTHCHECK_RETRIES:-3}
-      test: [ 'CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}' ]
+      retries: ${HEALTHCHECK_RETRIES:-5}
     restart: unless-stopped
     logging:
-      driver: 'json-file'
+      driver: "json-file"
       options:
-        max-size: '10m'
-        max-file: '3'
+        max-size: "10m"
+        max-file: "3"
     labels:
-      - 'gg.game-guild.app=postgres'
-      - 'gg.game-guild.tier=database'
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
-
-  adminer:
-    image: adminer:latest
-    container_name: adminer
-    restart: always
-    ports:
-      - "8080:8080"
-    environment:
-      ADMINER_DEFAULT_SERVER: postgres
-    networks:
-      - public
-      - internal
+      - "com.game-guild.app=web"
+      - "com.game-guild.tier=frontend"
     depends_on:
-      postgres:
-        condition: service_healthy
+      api:
+        condition: service_started
 
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    restart: always
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+  learning:
+    build:
+      context: .
+      dockerfile: apps/learning/Dockerfile
+      args:
+        GIT_HASH: ${GIT_HASH:-}
+        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
+        AUTH_SECRET: ${AUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
+        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
+        API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:5296}
+        LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:-http://localhost:3006}
+        WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3005}
+    image: game-guild-learning
+    container_name: game-guild-learning
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-    command: >
-      sh -c "
-        if [ -n \"$$REDIS_PASSWORD\" ]; then
-          redis-server --requirepass $$REDIS_PASSWORD --appendonly yes --appendfsync everysec
-        else
-          redis-server --appendonly yes --appendfsync everysec
-        fi
-      "
-    volumes:
-      - redis:/data
+      - NODE_ENV=production
+      - PORT=3002
+      - HOSTNAME=0.0.0.0
+      - API_URL=${API_INTERNAL_URL:-http://api:8080}
+      - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:-http://localhost:5296}
+      - NEXT_PUBLIC_WEB_URL=${WEB_PUBLIC_URL:-http://localhost:3005}
+      - NEXTAUTH_URL=${LEARNING_PUBLIC_URL:-http://localhost:3006}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
+      - AUTH_SECRET=${AUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
+      - AUTH_TRUST_HOST=true
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "${LEARNING_PORT:-3006}:3002"
+    networks:
+      public:
+        aliases:
+          - learning
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
-#  minio:
-#    image: minio/minio
-#    container_name: minio
-#    restart: always
-#    ports:
-#      - "9000:9000"
-#      - "9090:9090"
-#    environment:
-#      MINIO_ROOT_USER: minio-user
-#      MINIO_ROOT_PASSWORD: minio-password
-#      MINIO_UPDATE: off
-#    entrypoint: >
-#      /bin/sh -c '
-#        isAlive() { curl -sf http://127.0.0.1:9000/minio/health/live; }    # check if Minio is alive
-#        minio $0 "$@" --quiet & echo $! > /tmp/minio.pid                   # start Minio in the background
-#        while ! isAlive; do sleep 0.1; done                                # wait until Minio is alive
-#        mc alias set minio http://127.0.0.1:9000 minio-user minio-password # setup Minio client
-#        mc mb minio/game-guild || true                                      # create a test bucket
-#        mc anonymous set public minio/game-guild                            # make the test bucket public
-#        mc admin accesskey create minio/ --access-key minio --secret-key minio-password # create access token
-#        kill -s INT $(cat /tmp/minio.pid) && rm /tmp/minio.pid             # stop Minio
-#        while isAlive; do sleep 0.1; done                                  # wait until Minio is stopped
-#        exec minio $0 "$@"                                                 # start Minio in the foreground
-#      '
-#    command: server /data --json --console-address ":9090"
-#    volumes:
-#      - minio-data:/data
-#    healthcheck:
-#      test: [ 'CMD', 'curl', '-f', 'http://127.0.0.1:9000/minio/health/live' ]
-#      interval: 10s
-#      start_period: 10s
-#    #      start_interval: 1s
-#    security_opt: [ 'no-new-privileges:true' ]
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3002/sign-in').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      start_interval: ${HEALTHCHECK_START_INTERVAL:-10s}
+      start_period: ${HEALTHCHECK_START_PERIOD:-90s}
+      interval: ${HEALTHCHECK_INTERVAL:-30s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-10s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.game-guild.app=learning"
+      - "com.game-guild.tier=frontend"
+    depends_on:
+      api:
+        condition: service_started
 
 volumes:
-  #  minio-data:
-  #    driver: local
-  postgres:
-    name: postgres
-    driver: local
-  redis:
-    name: redis
+  dataprotection-keys:
+    name: game-guild-dataprotection-keys
     driver: local
