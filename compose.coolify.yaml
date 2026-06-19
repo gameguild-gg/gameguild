@@ -18,6 +18,12 @@
 #   SERVICE_FQDN_API, SERVICE_FQDN_WEB, SERVICE_FQDN_LEARNING,
 #   API_INTERNAL_URL, API_PUBLIC_URL
 #
+# Compatibility:
+#   Older Coolify resources may still expose the public web app domain through
+#   SERVICE_FQDN_WEBSITE or SERVICE_FQDN_WEBSITE_3000. The web service maps
+#   those names into SERVICE_FQDN_WEB_3000 so the existing
+#   game-guild-website.* domain keeps routing after the service rename.
+#
 # In the Coolify UI, set the service "Port Exposed" to 8080 so Traefik
 # targets the API port configured below.
 
@@ -92,21 +98,21 @@ services:
         AUTH_SECRET: ${AUTH_SECRET:-${NEXTAUTH_SECRET:?set AUTH_SECRET or NEXTAUTH_SECRET}}
         API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
         API_PUBLIC_URL: ${API_PUBLIC_URL:-}
-        WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-}
+        WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-${SERVICE_FQDN_WEB_3000:-${SERVICE_FQDN_WEB:-${SERVICE_FQDN_WEBSITE_3000:-${SERVICE_FQDN_WEBSITE:-}}}}}
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:-}
     image: game-guild-web
     ports:
       - '3000'
     environment:
-      - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB_3000:-${SERVICE_FQDN_WEB:-}}
+      - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB_3000:-${SERVICE_FQDN_WEB:-${SERVICE_FQDN_WEBSITE_3000:-${SERVICE_FQDN_WEBSITE:-}}}}
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
       - API_URL=${API_INTERNAL_URL:-http://api:8080}
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:-}
-      - NEXT_PUBLIC_APP_URL=${WEB_PUBLIC_URL:-}
+      - NEXT_PUBLIC_APP_URL=${WEB_PUBLIC_URL:-${SERVICE_FQDN_WEB_3000:-${SERVICE_FQDN_WEB:-${SERVICE_FQDN_WEBSITE_3000:-${SERVICE_FQDN_WEBSITE:-}}}}}
       - NEXT_PUBLIC_LEARNING_APP_URL=${LEARNING_PUBLIC_URL:-}
-      - NEXTAUTH_URL=${WEB_PUBLIC_URL:-}
+      - NEXTAUTH_URL=${WEB_PUBLIC_URL:-${SERVICE_FQDN_WEB_3000:-${SERVICE_FQDN_WEB:-${SERVICE_FQDN_WEBSITE_3000:-${SERVICE_FQDN_WEBSITE:-}}}}}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-${AUTH_SECRET:?set AUTH_SECRET or NEXTAUTH_SECRET}}
       - AUTH_SECRET=${AUTH_SECRET:-${NEXTAUTH_SECRET:?set AUTH_SECRET or NEXTAUTH_SECRET}}
       - AUTH_TRUST_HOST=true
