@@ -10,16 +10,26 @@ vi.mock('@/i18n', () => ({
   ),
 }));
 
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ href, children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 import LicensesPage from './[locale]/(legal)/licenses/page';
 import FerpaWaiverPage from './[locale]/(legal)/ferpa-waiver/page';
 import AcademicHonestyPage from './[locale]/(legal)/academic-honesty/page';
 import RoadmapPage from './[locale]/(institutional)/about/(project)/roadmap/page';
 import ContributorsPage from './[locale]/(institutional)/about/(project)/contributors/page';
-import HomePage from './[locale]/page';
+import HomeLayout from './[locale]/(site)/layout';
+import HomePage from './[locale]/(site)/page';
 
 describe('static legal and project pages', () => {
   it('renders the public home page with a website header and footer', async () => {
-    render(await HomePage({} as PageProps<'/[locale]'>));
+    const homeContent = await HomePage({ params: Promise.resolve({ locale: 'en-US' }) } as PageProps<'/[locale]'>);
+    render(await HomeLayout({ children: homeContent }));
 
     const banner = screen.getByRole('banner');
     const mainNavigation = within(banner).getByRole('navigation', { name: /main navigation/i });
