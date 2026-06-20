@@ -15,7 +15,6 @@ RUN pnpm install --frozen-lockfile --prefer-offline
 
 FROM deps AS builder
 ARG GIT_HASH
-ARG NEXTAUTH_SECRET
 ARG AUTH_SECRET
 ARG API_INTERNAL_URL
 ARG API_PUBLIC_URL
@@ -33,10 +32,7 @@ ENV NEXT_PUBLIC_WEB_URL=${WEB_PUBLIC_URL}
 
 COPY . .
 
-RUN export AUTH_SECRET="${AUTH_SECRET:-$NEXTAUTH_SECRET}" \
-    NEXTAUTH_SECRET="${NEXTAUTH_SECRET:-$AUTH_SECRET}" \
-    && if [ -z "$AUTH_SECRET" ]; then echo "AUTH_SECRET or NEXTAUTH_SECRET build arg is required" >&2; exit 1; fi \
-    && export AUTH_SECRET NEXTAUTH_SECRET \
+RUN if [ -z "$AUTH_SECRET" ]; then echo "AUTH_SECRET build arg is required" >&2; exit 1; fi \
     && pnpm --filter @game-guild/client build \
     && pnpm --filter @game-guild/learning build
 
@@ -59,4 +55,4 @@ COPY --from=builder --chown=nextjs:nodejs /repo/apps/learning/.next/static ./app
 USER nextjs
 EXPOSE ${APP_PORT}
 
-CMD ["sh", "-c", "export AUTH_SECRET=\"${AUTH_SECRET:-$NEXTAUTH_SECRET}\" NEXTAUTH_SECRET=\"${NEXTAUTH_SECRET:-$AUTH_SECRET}\"; exec node apps/learning/server.js"]
+CMD ["node", "apps/learning/server.js"]
