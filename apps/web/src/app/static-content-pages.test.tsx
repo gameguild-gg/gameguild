@@ -1,13 +1,42 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
+import type { AnchorHTMLAttributes, ReactNode } from 'react';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/i18n', () => ({
+  Link: ({ href, children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 
 import LicensesPage from './[locale]/(legal)/licenses/page';
 import FerpaWaiverPage from './[locale]/(legal)/ferpa-waiver/page';
 import AcademicHonestyPage from './[locale]/(legal)/academic-honesty/page';
 import RoadmapPage from './[locale]/(institutional)/about/(project)/roadmap/page';
 import ContributorsPage from './[locale]/(institutional)/about/(project)/contributors/page';
+import HomePage from './[locale]/page';
 
 describe('static legal and project pages', () => {
+  it('renders the public home page with a website header and footer', async () => {
+    render(await HomePage({} as PageProps<'/[locale]'>));
+
+    const banner = screen.getByRole('banner');
+    const mainNavigation = within(banner).getByRole('navigation', { name: /main navigation/i });
+    expect(banner).toBeInTheDocument();
+    expect(within(banner).getByRole('link', { name: /gameguild home/i })).toBeInTheDocument();
+    expect(within(mainNavigation).getByRole('link', { name: /^courses$/i })).toBeInTheDocument();
+    expect(within(mainNavigation).getByRole('link', { name: /^testing lab$/i })).toBeInTheDocument();
+    expect(within(mainNavigation).getByRole('link', { name: /^institutional$/i })).toBeInTheDocument();
+    expect(within(banner).getByRole('link', { name: /^sign in$/i })).toBeInTheDocument();
+
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /learn, build & connect/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /everything you need to succeed/i })).toBeInTheDocument();
+    expect(screen.getByText(/community-driven learning and development/i)).toBeInTheDocument();
+    expect(screen.queryByText(/temporary public home/i)).not.toBeInTheDocument();
+  });
+
   it('renders real license guidance instead of a reconstruction placeholder', async () => {
     render(await LicensesPage());
 
