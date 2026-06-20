@@ -1,9 +1,6 @@
 # syntax=docker/dockerfile:1.6
 
-ARG NODE_VERSION=20-alpine
-ARG APP_PORT=3002
-
-FROM node:${NODE_VERSION} AS deps
+FROM node:20-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
 WORKDIR /repo
 
@@ -36,12 +33,11 @@ RUN if [ -z "$AUTH_SECRET" ]; then echo "AUTH_SECRET build arg is required" >&2;
     && pnpm --filter @game-guild/client build \
     && pnpm --filter @game-guild/learning build
 
-FROM node:${NODE_VERSION} AS runner
-ARG APP_PORT
+FROM node:20-alpine AS runner
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=${APP_PORT}
+ENV PORT=3002
 ENV HOSTNAME=0.0.0.0
 
 WORKDIR /app
@@ -53,6 +49,6 @@ COPY --from=builder --chown=nextjs:nodejs /repo/apps/learning/.next/standalone .
 COPY --from=builder --chown=nextjs:nodejs /repo/apps/learning/.next/static ./apps/learning/.next/static
 
 USER nextjs
-EXPOSE ${APP_PORT}
+EXPOSE 3002
 
 CMD ["node", "apps/learning/server.js"]
