@@ -1,5 +1,5 @@
 import { Link } from '@/i18n/navigation';
-import { FlaskConical, Github, GraduationCap, Rocket, Sparkles, Users } from 'lucide-react';
+import { FlaskConical, Github, GraduationCap, Rocket, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { PublicDesktopNav, PublicMobileNav } from './public-website-nav';
 
@@ -98,41 +98,29 @@ export function PublicWebsiteHeader() {
 export function PublicWebsiteFooter() {
   return (
     <footer className="border-t border-white/10 bg-slate-950 text-white">
-      <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div
           data-testid="footer-primary-grid"
-          className="grid gap-10 border-b border-white/10 pb-10 sm:grid-cols-2 lg:grid-cols-[1.35fr_repeat(4,1fr)]"
+          className="grid gap-8 border-b border-white/10 pb-8 sm:grid-cols-2 lg:grid-cols-[1.25fr_repeat(4,minmax(0,1fr))]"
         >
-          <div className="space-y-5">
+          <div className="space-y-4">
             <div className="flex items-center gap-3">
               <BrandMark />
               <span className="text-lg font-semibold text-white">GameGuild</span>
             </div>
-            <p className="text-sm leading-6 text-slate-400">
-              A thriving game development community dedicated to education, collaboration, and innovation. Join us as
-              we grow together and shape the future of gaming.
+            <p className="max-w-sm text-sm leading-6 text-slate-400">
+              Learn, test, and launch games with an open community of developers, artists, and mentors.
             </p>
-            <div data-testid="footer-community-summary" className="flex flex-col gap-2 text-sm text-slate-300">
-              <span className="inline-flex items-center gap-2">
-                <Users className="size-4 text-sky-300" aria-hidden="true" />
-                Community-driven learning and development
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <Sparkles className="size-4 text-sky-300" aria-hidden="true" />
-                Open source and collaborative
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium">
               <Link
                 href="/sign-up"
-                className="inline-flex items-center rounded-full bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
+                className="text-sky-300 transition hover:text-sky-200"
               >
-                Join community
+                Join GameGuild
               </Link>
               <a
                 href="https://github.com/gameguild-gg/gameguild"
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white"
+                className="inline-flex items-center gap-2 text-slate-300 transition hover:text-white"
               >
                 <Github className="size-4" aria-hidden="true" />
                 GitHub
@@ -158,7 +146,7 @@ export function PublicWebsiteFooter() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-5 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>© 2026 GameGuild. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">
             <Link href="/licenses" className="transition hover:text-slate-300">
