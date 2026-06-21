@@ -10,6 +10,7 @@ const publicRoutes = [
   ['Courses', '/courses'],
   ['Programs', '/programs'],
   ['Testing Lab', '/testing-lab'],
+  ['Launch Pad', '/launch-pad'],
   ['Projects', '/projects'],
   ['Community', '/community'],
   ['Jobs', '/jobs'],
