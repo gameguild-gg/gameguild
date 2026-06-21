@@ -2,9 +2,10 @@ import { CourseHighlightCarousel } from '@/components/courses/course-highlight-c
 import { PublicCourseCatalog } from '@/components/courses/public-course-catalog';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
+import { publicPlaytests, publicProjects } from '@/lib/community/public-community';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import { PUBLIC_PROGRAM_PACKAGES } from '@/lib/courses/public-programs';
-import { ArrowRight, Layers3 } from 'lucide-react';
+import { ArrowRight, FlaskConical, Layers3 } from 'lucide-react';
 import Image from 'next/image';
 
 export default async function CoursesPage() {
@@ -108,6 +109,46 @@ export default async function CoursesPage() {
 
       <section id="catalog" className="scroll-mt-16 bg-[#070a12]">
         <PublicCourseCatalog initialCourses={courses} />
+      </section>
+
+      <section className="bg-[#070a12] py-16">
+        <div className="container mx-auto grid gap-8 px-4 lg:grid-cols-[0.8fr_1.2fr]">
+          <div className="max-w-xl">
+            <h2 className="text-4xl font-semibold tracking-tight">From course work to public proof</h2>
+            <p className="mt-4 text-base leading-7 text-slate-400">
+              Courses connect into community outcomes: projects enter the showcase, testing sessions produce feedback,
+              and launch-ready work becomes portfolio evidence.
+            </p>
+            <Button asChild variant="outline" className="mt-6 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+              <Link href="/projects">
+                View student projects
+                <ArrowRight />
+              </Link>
+            </Button>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-6">
+              <FlaskConical className="mb-5 text-sky-200" />
+              <h3 className="text-xl font-semibold">Testing Lab handoff</h3>
+              <p className="mt-3 text-sm leading-6 text-slate-400">
+                {publicPlaytests[0]?.title ?? 'Playtest sessions'} gives students a structured next step after lessons,
+                assignments, and prototype milestones.
+              </p>
+            </div>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-6">
+              <h3 className="text-xl font-semibold">Featured project outcomes</h3>
+              <div className="mt-5 space-y-3">
+                {publicProjects.slice(0, 3).map((project) => (
+                  <Link key={project.slug} href={`/projects/${project.slug}`} className="group flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-300 transition hover:border-white/20 hover:text-white">
+                    <span>{project.title}</span>
+                    <ArrowRight className="opacity-60 transition group-hover:translate-x-1 group-hover:opacity-100" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
   );

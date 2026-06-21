@@ -37,7 +37,7 @@ describe('static legal and project pages', () => {
     expect(within(banner).getByRole('link', { name: /gameguild home/i })).toBeInTheDocument();
     expect(within(mainNavigation).getByRole('link', { name: /^courses$/i })).toBeInTheDocument();
     expect(within(mainNavigation).getByRole('link', { name: /^testing lab$/i })).toBeInTheDocument();
-    expect(within(mainNavigation).getByRole('link', { name: /^institutional$/i })).toBeInTheDocument();
+    expect(within(mainNavigation).getByRole('link', { name: /^about$/i })).toBeInTheDocument();
     expect(within(banner).getByRole('link', { name: /^sign in$/i })).toBeInTheDocument();
 
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();

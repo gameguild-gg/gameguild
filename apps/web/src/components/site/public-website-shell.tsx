@@ -5,8 +5,11 @@ import type { ReactNode } from 'react';
 const primaryNav = [
   { label: 'Courses', href: '/courses' },
   { label: 'Programs', href: '/programs' },
-  { label: 'Testing Lab', href: '/dashboard/testing-lab' },
-  { label: 'Institutional', href: '/about' },
+  { label: 'Projects', href: '/projects' },
+  { label: 'Testing Lab', href: '/testing-lab' },
+  { label: 'Community', href: '/community' },
+  { label: 'Jobs', href: '/jobs' },
+  { label: 'About', href: '/about' },
 ] as const;
 
 const footerSections = [
@@ -15,8 +18,8 @@ const footerSections = [
     links: [
       { label: 'Courses', href: '/courses' },
       { label: 'Programs', href: '/programs' },
-      { label: 'Testing Lab', href: '/dashboard/testing-lab' },
-      { label: 'Launch Pad', href: '/dashboard/launch-pad' },
+      { label: 'Projects', href: '/projects' },
+      { label: 'Testing Lab', href: '/testing-lab' },
     ],
   },
   {
@@ -29,12 +32,12 @@ const footerSections = [
     ],
   },
   {
-    title: 'Resources',
+    title: 'Community',
     links: [
+      { label: 'Community hub', href: '/community' },
       { label: 'Feed', href: '/feed' },
       { label: 'Projects', href: '/projects' },
       { label: 'Jobs', href: '/jobs' },
-      { label: 'Support', href: '/dashboard/community/members/support' },
     ],
   },
   {

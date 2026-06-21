@@ -1,6 +1,7 @@
 import { publicWebsiteHighlights } from '@/components/site/public-website-shell';
 import { Link } from '@/i18n/navigation';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { publicActivities, publicMembers, publicPlaytests, publicProjects } from '@/lib/community/public-community';
+import { ArrowRight, CalendarDays, MessageSquare, Sparkles, Users } from 'lucide-react';
 import React from 'react';
 
 export default async function Page({ params }: PageProps<'/[locale]'>): Promise<React.JSX.Element> {
@@ -97,6 +98,99 @@ export default async function Page({ params }: PageProps<'/[locale]'>): Promise<
                 </article>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-slate-950">
+        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+          <div className="max-w-xl space-y-4">
+            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Featured community projects</h2>
+            <p className="text-base leading-7 text-slate-400">
+              GameGuild is built around visible work. Browse student projects, join playtests, and see how course
+              outcomes become public portfolio evidence.
+            </p>
+            <Link
+              href="/projects"
+              className="inline-flex items-center rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+            >
+              View project showcase
+              <ArrowRight className="ml-2 size-4" aria-hidden="true" />
+            </Link>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {publicProjects.map((project) => (
+              <Link
+                key={project.slug}
+                href={`/projects/${project.slug}`}
+                className="group overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 transition hover:-translate-y-1 hover:border-white/20"
+              >
+                <div className={`h-32 bg-gradient-to-br ${project.accent}`} />
+                <div className="space-y-4 p-5">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">{project.status}</p>
+                    <h3 className="mt-2 text-lg font-semibold text-white">{project.title}</h3>
+                  </div>
+                  <p className="line-clamp-3 text-sm leading-6 text-slate-400">{project.summary}</p>
+                  <span className="inline-flex items-center text-sm font-semibold text-sky-200">
+                    View project
+                    <ArrowRight className="ml-2 size-4 transition group-hover:translate-x-1" aria-hidden="true" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-white/10 bg-white/[0.03]">
+        <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-16 sm:px-6 lg:grid-cols-3 lg:px-8">
+          <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6">
+            <div className="mb-5 flex items-center gap-3 text-sky-200">
+              <Users className="size-5" aria-hidden="true" />
+              <h2 className="text-xl font-semibold text-white">Active members</h2>
+            </div>
+            <div className="space-y-4">
+              {publicMembers.map((member) => (
+                <div key={member.handle} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="font-semibold text-white">{member.name}</p>
+                  <p className="text-sm text-slate-400">{member.role} - {member.focus}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6">
+            <div className="mb-5 flex items-center gap-3 text-sky-200">
+              <CalendarDays className="size-5" aria-hidden="true" />
+              <h2 className="text-xl font-semibold text-white">Upcoming playtests</h2>
+            </div>
+            <div className="space-y-4">
+              {publicPlaytests.map((playtest) => (
+                <Link key={playtest.title} href={playtest.href} className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20">
+                  <p className="font-semibold text-white">{playtest.title}</p>
+                  <p className="text-sm text-slate-400">{playtest.date} - {playtest.seats}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6">
+            <div className="mb-5 flex items-center gap-3 text-sky-200">
+              <MessageSquare className="size-5" aria-hidden="true" />
+              <h2 className="text-xl font-semibold text-white">Community activity</h2>
+            </div>
+            <div className="space-y-4">
+              {publicActivities.map((activity) => (
+                <Link key={`${activity.actor}-${activity.target}`} href={activity.href} className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20">
+                  <p className="text-sm leading-6 text-slate-300">
+                    <span className="font-semibold text-white">{activity.actor}</span> {activity.action}{' '}
+                    <span className="font-semibold text-sky-200">{activity.target}</span>
+                  </p>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
