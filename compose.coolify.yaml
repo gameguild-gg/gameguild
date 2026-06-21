@@ -50,7 +50,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8080/live || exit 1']
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8080/ready || exit 1']
       start_interval: 5s
       start_period: 180s
       interval: 30s
