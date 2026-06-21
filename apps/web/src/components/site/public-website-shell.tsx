@@ -47,15 +47,6 @@ const footerSections = [
       { label: 'Contact', href: '/contact' },
     ],
   },
-  {
-    title: 'Legal',
-    links: [
-      { label: 'Licenses', href: '/licenses' },
-      { label: 'Terms', href: '/terms-of-service' },
-      { label: 'Privacy', href: '/polices/privacy' },
-      { label: 'Cookies', href: '/polices/cookies' },
-    ],
-  },
 ] as const;
 
 function BrandMark() {
@@ -137,7 +128,7 @@ export function PublicWebsiteFooter() {
           </div>
         </div>
 
-        <div className="grid gap-8 pt-10 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-8 pt-10 sm:grid-cols-2 lg:grid-cols-4">
           {footerSections.map((section) => (
             <div key={section.title} className="space-y-3">
               <h2 className="text-sm font-semibold text-white">{section.title}</h2>
