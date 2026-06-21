@@ -99,8 +99,11 @@ export function PublicWebsiteFooter() {
   return (
     <footer className="border-t border-white/10 bg-slate-950 text-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6 border-b border-white/10 pb-10 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-xl space-y-5">
+        <div
+          data-testid="footer-primary-grid"
+          className="grid gap-10 border-b border-white/10 pb-10 sm:grid-cols-2 lg:grid-cols-[1.35fr_repeat(4,1fr)]"
+        >
+          <div className="space-y-5">
             <div className="flex items-center gap-3">
               <BrandMark />
               <span className="text-lg font-semibold text-white">GameGuild</span>
@@ -119,26 +122,24 @@ export function PublicWebsiteFooter() {
                 Open source and collaborative
               </span>
             </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/sign-up"
+                className="inline-flex items-center rounded-full bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
+              >
+                Join community
+              </Link>
+              <a
+                href="https://github.com/gameguild-gg/gameguild"
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white"
+              >
+                <Github className="size-4" aria-hidden="true" />
+                GitHub
+              </a>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/sign-up"
-              className="inline-flex items-center rounded-full bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
-            >
-              Join community
-            </Link>
-            <a
-              href="https://github.com/gameguild-gg/gameguild"
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white"
-            >
-              <Github className="size-4" aria-hidden="true" />
-              GitHub
-            </a>
-          </div>
-        </div>
-
-        <div className="grid gap-8 pt-10 sm:grid-cols-2 lg:grid-cols-4">
           {footerSections.map((section) => (
             <div key={section.title} className="space-y-3">
               <h2 className="text-sm font-semibold text-white">{section.title}</h2>

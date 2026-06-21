@@ -48,6 +48,7 @@ describe('PublicWebsiteFooter routes', () => {
 
     expect(screen.queryByRole('heading', { name: 'Legal' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Cookies' })).toBeNull();
+    expect(screen.getByTestId('footer-primary-grid')).toHaveClass('lg:grid-cols-[1.35fr_repeat(4,1fr)]');
     expect(screen.getByTestId('footer-community-summary')).toHaveClass('flex-col');
     expect(screen.getByText(/A thriving game development community dedicated to education/i)).toBeInTheDocument();
     expect(screen.getByText('Community-driven learning and development')).toBeInTheDocument();
