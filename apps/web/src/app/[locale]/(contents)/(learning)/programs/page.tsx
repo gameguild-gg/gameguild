@@ -1,9 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
+import { publicProjects } from '@/lib/community/public-community';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import { PUBLIC_PROGRAM_PACKAGES, getCoursesForProgram } from '@/lib/courses/public-programs';
-import { ArrowRight, BookOpen, CheckCircle2, Clock, GraduationCap, Target } from 'lucide-react';
+import { ArrowRight, BookOpen, CheckCircle2, Clock, FlaskConical, GraduationCap, Target } from 'lucide-react';
 import Image from 'next/image';
 
 export default async function ProgramsPage() {
@@ -56,6 +57,37 @@ export default async function ProgramsPage() {
                     <p className="line-clamp-3 text-sm leading-6 text-slate-300">{program.summary}</p>
                   </div>
                 </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-white/10 bg-white/[0.03]">
+        <div className="container mx-auto grid gap-8 px-4 py-14 lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="max-w-xl">
+            <h2 className="text-4xl font-semibold tracking-tight">Programs lead into projects, testing, and launch.</h2>
+            <p className="mt-4 text-base leading-7 text-slate-400">
+              Each package is designed around a visible outcome. Students can move from curriculum into the project
+              showcase and Testing Lab without guessing what to build next.
+            </p>
+            <Button asChild variant="outline" className="mt-6 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+              <Link href="/testing-lab">
+                Open Testing Lab
+                <FlaskConical />
+              </Link>
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {publicProjects.map((project) => (
+              <Link key={project.slug} href={`/projects/${project.slug}`} className="group rounded-3xl border border-white/10 bg-slate-950/70 p-5 transition hover:-translate-y-1 hover:border-white/20">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">{project.coursePath}</p>
+                <h3 className="mt-3 text-xl font-semibold text-white">{project.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-400">{project.summary}</p>
+                <span className="mt-5 inline-flex items-center text-sm font-semibold text-sky-200">
+                  View outcome
+                  <ArrowRight className="ml-2 size-4 transition group-hover:translate-x-1" aria-hidden="true" />
+                </span>
               </Link>
             ))}
           </div>
