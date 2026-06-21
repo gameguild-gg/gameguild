@@ -34,7 +34,6 @@ const footerRoutes = [
   { href: '/licenses', page: '[locale]/(legal)/licenses/page.tsx' },
   { href: '/terms-of-service', page: '[locale]/(legal)/terms-of-service/page.tsx' },
   { href: '/polices/privacy', page: '[locale]/(legal)/polices/privacy/page.tsx' },
-  { href: '/polices/cookies', page: '[locale]/(legal)/polices/cookies/page.tsx' },
 ] as const;
 
 describe('PublicWebsiteFooter routes', () => {
@@ -46,5 +45,8 @@ describe('PublicWebsiteFooter routes', () => {
       expect(links.length, `Expected footer link for ${route.href}`).toBeGreaterThan(0);
       expect(fs.existsSync(path.join(appRoot, route.page)), `Expected route file for ${route.href}`).toBe(true);
     }
+
+    expect(screen.queryByRole('heading', { name: 'Legal' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Cookies' })).toBeNull();
   });
 });
