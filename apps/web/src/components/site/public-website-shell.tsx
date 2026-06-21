@@ -3,16 +3,30 @@ import { FlaskConical, Github, GraduationCap, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 const primaryNav = [
-  { label: 'Community', href: '/community' },
-  { label: 'Programs', href: '/programs' },
   { label: 'Courses', href: '/courses' },
-  { label: 'Projects', href: '/projects' },
+  { label: 'Programs', href: '/programs' },
   { label: 'Testing Lab', href: '/testing-lab' },
+  { label: 'Projects', href: '/projects' },
+  { label: 'Community', href: '/community' },
   { label: 'Jobs', href: '/jobs' },
   { label: 'About', href: '/about' },
 ] as const;
 
 const footerSections = [
+  {
+    title: 'Learn',
+    links: [
+      { label: 'Courses', href: '/courses' },
+      { label: 'Programs', href: '/programs' },
+    ],
+  },
+  {
+    title: 'Build & test',
+    links: [
+      { label: 'Testing Lab', href: '/testing-lab' },
+      { label: 'Project showcase', href: '/projects' },
+    ],
+  },
   {
     title: 'Community',
     links: [
@@ -22,21 +36,7 @@ const footerSections = [
     ],
   },
   {
-    title: 'Learn',
-    links: [
-      { label: 'Programs', href: '/programs' },
-      { label: 'Courses', href: '/courses' },
-    ],
-  },
-  {
-    title: 'Build & test',
-    links: [
-      { label: 'Project showcase', href: '/projects' },
-      { label: 'Testing Lab', href: '/testing-lab' },
-    ],
-  },
-  {
-    title: 'About',
+    title: 'Company',
     links: [
       { label: 'About GameGuild', href: '/about' },
       { label: 'Roadmap', href: '/about/roadmap' },
