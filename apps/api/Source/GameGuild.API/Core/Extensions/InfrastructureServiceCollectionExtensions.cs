@@ -8,10 +8,13 @@ using GameGuild.Configuration.PresentationLayer.ModelValidation;
 using GameGuild.Configuration.PresentationLayer.RequestContext;
 using GameGuild.Configuration.PresentationLayer.ResponseCompression;
 using GameGuild.Configuration.PresentationLayer.SignalR;
+using GameGuild.API.Database;
 using GameGuild.Features;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenFeature;
 using HttpLoggingOptions = GameGuild.Configuration.PresentationLayer.HttpLogging.HttpLoggingOptions;
@@ -162,7 +165,10 @@ public static class InfrastructureServiceCollectionExtensions
             HealthChecksOptions.CreateDefault);
         options.Validate();
 
-        services.AddHealthChecks();
+        services.AddHealthChecks()
+            .AddCheck<DatabaseReadinessHealthCheck>(
+                "database",
+                tags: ["ready", "dependency"]);
 
         return services;
     }
@@ -194,5 +200,45 @@ public static class InfrastructureServiceCollectionExtensions
         // GraphQL services can be configured by the application layer if enabled.
 
         return services;
+    }
+}
+
+internal sealed class DatabaseReadinessHealthCheck(ApplicationDbContext dbContext)
+    : IHealthCheck
+{
+    public async Task<HealthCheckResult> CheckHealthAsync(
+        HealthCheckContext context,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (!await dbContext.Database.CanConnectAsync(cancellationToken).ConfigureAwait(false))
+            {
+                return HealthCheckResult.Unhealthy("Application database is unreachable.");
+            }
+
+            var appliedMigrationCount = dbContext.Database.IsRelational()
+                ? (await dbContext.Database.GetAppliedMigrationsAsync(cancellationToken).ConfigureAwait(false)).Count()
+                : 0;
+
+            var pendingMigrationCount = dbContext.Database.IsRelational()
+                ? (await dbContext.Database.GetPendingMigrationsAsync(cancellationToken).ConfigureAwait(false)).Count()
+                : 0;
+
+            var data = new Dictionary<string, object>
+            {
+                ["database"] = dbContext.Database.GetDbConnection().Database,
+                ["appliedMigrations"] = appliedMigrationCount,
+                ["pendingMigrations"] = pendingMigrationCount,
+            };
+
+            return pendingMigrationCount == 0
+                ? HealthCheckResult.Healthy("Application database is reachable and migrations are current.", data)
+                : HealthCheckResult.Degraded("Application database has pending migrations.", data: data);
+        }
+        catch (Exception ex)
+        {
+            return HealthCheckResult.Unhealthy("Application database health check failed.", ex);
+        }
     }
 }
