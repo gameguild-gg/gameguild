@@ -15,6 +15,12 @@
 # Recommended env vars:
 #   JWT_ISSUER, JWT_AUDIENCE, API_INTERNAL_URL
 #
+# Optional migration env vars:
+#   POSTGRES_MIGRATION_CONNECTION
+#     Full PostgreSQL connection string for a DDL-capable migration role.
+#     When set, startup migrations use this connection and then grant runtime
+#     DML privileges to POSTGRES_USER. Runtime traffic still uses POSTGRES_USER.
+#
 # Coolify owns SERVICE_FQDN_* / SERVICE_URL_* variables and service routing.
 # The application containers should consume explicit public URLs only.
 
@@ -35,6 +41,9 @@ services:
       # Shared Coolify Postgres
       - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
       - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
+      - ConnectionStrings__MigrationConnection=${POSTGRES_MIGRATION_CONNECTION:-}
+      - Database__GrantRuntimeRoleAfterMigrations=${DATABASE_GRANT_RUNTIME_ROLE_AFTER_MIGRATIONS:-true}
+      - Database__FailStartupOnGrantFailure=${DATABASE_FAIL_STARTUP_ON_GRANT_FAILURE:-true}
       # JWT configuration consumed by the API and auth services
       - Jwt__SecretKey=${JWT_SECRET_KEY:?set JWT_SECRET_KEY}
       - Jwt__Issuer=${JWT_ISSUER:-GameGuild}

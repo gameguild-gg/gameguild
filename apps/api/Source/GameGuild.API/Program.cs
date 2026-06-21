@@ -3,6 +3,7 @@ using GameGuild.API.Database;
 using GameGuild.API.Setup;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 // ===========================================================================================
 // GameGuild API - Entry Point
@@ -179,7 +180,11 @@ static async Task<bool> TryApplyDatabaseMigrationsAsync(WebApplication app)
         try
         {
             using var scope = app.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
+            var migrationConnectionString = GetMigrationConnectionString(app.Configuration);
+            var ownsMigrationContext = !string.IsNullOrWhiteSpace(migrationConnectionString);
+            await using var db = ownsMigrationContext
+                ? CreateMigrationDbContext(migrationConnectionString!)
+                : scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
 
             if (!db.Database.IsRelational())
             {
@@ -208,6 +213,12 @@ static async Task<bool> TryApplyDatabaseMigrationsAsync(WebApplication app)
                 .ConfigureAwait(false);
 
             app.Logger.LogInformation("Database migrations applied successfully.");
+
+            if (ownsMigrationContext)
+            {
+                await GrantRuntimeRolePrivilegesAsync(app, db).ConfigureAwait(false);
+            }
+
             return true;
         }
         catch (Exception ex) when (attempt < maxAttempts)
@@ -242,6 +253,93 @@ static async Task<bool> TryApplyDatabaseMigrationsAsync(WebApplication app)
     }
 
     return false;
+}
+
+static string? GetMigrationConnectionString(IConfiguration configuration)
+{
+    return configuration.GetConnectionString("MigrationConnection")
+        ?? configuration["ConnectionStrings:MigrationConnection"]
+        ?? configuration["Database:MigrationConnectionString"];
+}
+
+static GameGuild.API.Database.ApplicationDbContext CreateMigrationDbContext(string connectionString)
+{
+    var optionsBuilder = new DbContextOptionsBuilder<GameGuild.API.Database.ApplicationDbContext>();
+    optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.MigrationsAssembly(typeof(GameGuild.API.Database.ApplicationDbContext).Assembly.FullName);
+        npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorCodesToAdd: null);
+        npgsqlOptions.CommandTimeout(120);
+    });
+    optionsBuilder.ConfigureWarnings(w =>
+        w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+    return new GameGuild.API.Database.ApplicationDbContext(optionsBuilder.Options);
+}
+
+static async Task GrantRuntimeRolePrivilegesAsync(WebApplication app, DbContext migrationDb)
+{
+    var grantRuntimeRole = app.Configuration.GetValue<bool?>("Database:GrantRuntimeRoleAfterMigrations") ?? true;
+    if (!grantRuntimeRole)
+    {
+        return;
+    }
+
+    var runtimeConnectionString = app.Configuration.GetConnectionString("DefaultConnection")
+        ?? app.Configuration["ConnectionStrings:DefaultConnection"];
+
+    if (string.IsNullOrWhiteSpace(runtimeConnectionString))
+    {
+        return;
+    }
+
+    string? runtimeUser;
+    try
+    {
+        runtimeUser = new NpgsqlConnectionStringBuilder(runtimeConnectionString).Username;
+    }
+    catch (ArgumentException)
+    {
+        return;
+    }
+
+    if (string.IsNullOrWhiteSpace(runtimeUser))
+    {
+        return;
+    }
+
+    var quotedRuntimeUser = QuotePostgresIdentifier(runtimeUser);
+    var sql = $"""
+        GRANT USAGE ON SCHEMA public TO {quotedRuntimeUser};
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {quotedRuntimeUser};
+        GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO {quotedRuntimeUser};
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {quotedRuntimeUser};
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO {quotedRuntimeUser};
+        """;
+
+    try
+    {
+        await migrationDb.Database.ExecuteSqlRawAsync(sql, app.Lifetime.ApplicationStopping).ConfigureAwait(false);
+        app.Logger.LogInformation("Granted runtime database privileges to configured application role after migrations.");
+    }
+    catch (Exception ex)
+    {
+        var failStartupOnGrantFailure = app.Configuration.GetValue<bool?>("Database:FailStartupOnGrantFailure")
+            ?? !app.Environment.IsDevelopment();
+
+        if (failStartupOnGrantFailure)
+        {
+            app.Logger.LogCritical(ex, "Failed to grant runtime database privileges after migrations.");
+            throw;
+        }
+
+        app.Logger.LogWarning(ex, "Failed to grant runtime database privileges after migrations.");
+    }
+}
+
+static string QuotePostgresIdentifier(string identifier)
+{
+    return $"\"{identifier.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
 }
 
 // REMARK: Required for functional and integration tests to work.
