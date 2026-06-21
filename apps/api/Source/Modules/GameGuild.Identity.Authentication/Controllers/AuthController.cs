@@ -50,7 +50,7 @@ public sealed class AuthController(ISender sender) : BaseApiController
         try
         {
             SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
-            return CreatedAtAction(nameof(LocalSignUp), result);
+            return StatusCode(StatusCodes.Status201Created, result);
         }
         catch (InvalidOperationException ex) when (string.Equals(ex.Message, "User already exists", StringComparison.Ordinal))
         {

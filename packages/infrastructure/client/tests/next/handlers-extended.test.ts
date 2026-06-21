@@ -594,7 +594,11 @@ describe('Handlers — signOut with session token', () => {
     // Check that token revocation was attempted
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringContaining('tokens:revoke'),
-      expect.any(Object)
+      expect.objectContaining({
+        body: JSON.stringify({ token: 'refresh-token' }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      }),
     );
   });
 });

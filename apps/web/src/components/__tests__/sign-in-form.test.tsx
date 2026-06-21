@@ -48,16 +48,12 @@ describe('SignInForm', () => {
   it('renders the login form with all required elements', () => {
     renderWithUser(<SignInForm />);
 
-    expect(screen.getByText('Welcome back')).toBeInTheDocument();
+    expect(screen.getByText('Welcome back to GameGuild')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /login$/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /login with apple/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /login with google/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /login with apple/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /login with google/i })).not.toBeInTheDocument();
   });
 
   it('renders navigation links', () => {
@@ -68,14 +64,8 @@ describe('SignInForm', () => {
       'href',
       '/forgot-password'
     );
-    expect(screen.getByText('Terms of Service')).toHaveAttribute(
-      'href',
-      '/terms'
-    );
-    expect(screen.getByText('Privacy Policy')).toHaveAttribute(
-      'href',
-      '/privacy'
-    );
+    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/terms-of-service');
+    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/polices/privacy');
   });
 
   /* ---------- Client-side validation ---------- */
@@ -83,7 +73,7 @@ describe('SignInForm', () => {
   it('shows error when email is empty on submit', async () => {
     const { user } = renderWithUser(<SignInForm />);
 
-    await user.click(screen.getByRole('button', { name: /login$/i }));
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
 
     expect(screen.getByText('Email is required.')).toBeInTheDocument();
     expect(mockAuth.signIn).not.toHaveBeenCalled();
@@ -93,7 +83,7 @@ describe('SignInForm', () => {
     const { user } = renderWithUser(<SignInForm />);
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
-    await user.click(screen.getByRole('button', { name: /login$/i }));
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
 
     expect(screen.getByText('Password is required.')).toBeInTheDocument();
     expect(mockAuth.signIn).not.toHaveBeenCalled();
@@ -103,7 +93,7 @@ describe('SignInForm', () => {
     const { user } = renderWithUser(<SignInForm />);
 
     // Trigger email error
-    await user.click(screen.getByRole('button', { name: /login$/i }));
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
     expect(screen.getByText('Email is required.')).toBeInTheDocument();
 
     // Start typing clears error
@@ -118,38 +108,12 @@ describe('SignInForm', () => {
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.type(screen.getByLabelText('Password'), 'password123');
-    await user.click(screen.getByRole('button', { name: /login$/i }));
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
 
     expect(mockAuth.clearError).toHaveBeenCalled();
     expect(mockAuth.signIn).toHaveBeenCalledWith('credentials', {
       email: 'test@example.com',
       password: 'password123',
-      redirectTo: '/dashboard',
-    });
-  });
-
-  /* ---------- OAuth ---------- */
-
-  it('calls signIn with apple provider when Apple button is clicked', async () => {
-    const { user } = renderWithUser(<SignInForm />);
-
-    await user.click(
-      screen.getByRole('button', { name: /login with apple/i })
-    );
-
-    expect(mockAuth.signIn).toHaveBeenCalledWith('apple', {
-      redirectTo: '/dashboard',
-    });
-  });
-
-  it('calls signIn with google provider when Google button is clicked', async () => {
-    const { user } = renderWithUser(<SignInForm />);
-
-    await user.click(
-      screen.getByRole('button', { name: /login with google/i })
-    );
-
-    expect(mockAuth.signIn).toHaveBeenCalledWith('google', {
       redirectTo: '/dashboard',
     });
   });
@@ -163,12 +127,6 @@ describe('SignInForm', () => {
     expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled();
     expect(screen.getByLabelText('Email')).toBeDisabled();
     expect(screen.getByLabelText('Password')).toBeDisabled();
-    expect(
-      screen.getByRole('button', { name: /login with apple/i })
-    ).toBeDisabled();
-    expect(
-      screen.getByRole('button', { name: /login with google/i })
-    ).toBeDisabled();
   });
 
   /* ---------- Error display ---------- */
@@ -187,7 +145,7 @@ describe('SignInForm', () => {
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.type(screen.getByLabelText('Password'), 'pass');
-    await user.click(screen.getByRole('button', { name: /login$/i }));
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
 
     expect(mockAuth.clearError).toHaveBeenCalled();
   });
@@ -197,7 +155,7 @@ describe('SignInForm', () => {
   it('sets aria-invalid on email field when validation fails', async () => {
     const { user } = renderWithUser(<SignInForm />);
 
-    await user.click(screen.getByRole('button', { name: /login$/i }));
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
 
     expect(screen.getByLabelText('Email')).toHaveAttribute(
       'aria-invalid',
@@ -209,7 +167,7 @@ describe('SignInForm', () => {
     const { user } = renderWithUser(<SignInForm />);
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
-    await user.click(screen.getByRole('button', { name: /login$/i }));
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
 
     expect(screen.getByLabelText('Password')).toHaveAttribute(
       'aria-invalid',
@@ -229,7 +187,7 @@ describe('SignInForm', () => {
     await user.type(screen.getByLabelText('Password'), 'password123');
 
     // Should not throw
-    await user.click(screen.getByRole('button', { name: /login$/i }));
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
   });
 
   /* ---------- className forwarding ---------- */

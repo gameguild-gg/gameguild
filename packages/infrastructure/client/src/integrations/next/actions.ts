@@ -319,7 +319,7 @@ export function createSignOutAction(config: ResolvedAuthConfig) {
             await fetch(`${config.apiUrl}/v1/auth/tokens:revoke`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ refreshToken: token.refreshToken }),
+              body: JSON.stringify({ token: token.refreshToken }),
             }).catch(() => {});
           }
         } catch {
