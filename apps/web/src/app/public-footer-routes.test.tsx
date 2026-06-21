@@ -48,9 +48,13 @@ describe('PublicWebsiteFooter routes', () => {
 
     expect(screen.queryByRole('heading', { name: 'Legal' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Cookies' })).toBeNull();
-    expect(screen.getByText('Learn. Build. Ship together.')).toBeInTheDocument();
-    expect(screen.getByText(/A practical game development community for courses/i)).toBeInTheDocument();
+    expect(screen.getByTestId('footer-cta')).toBeInTheDocument();
+    expect(screen.getByText('Ready to build with GameGuild?')).toBeInTheDocument();
+    expect(screen.getByText(/Join practical courses, community playtests/i)).toBeInTheDocument();
+    expect(screen.getByText(/A game development community for learning/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Join community' })).toHaveAttribute('href', '/sign-up');
+    expect(screen.getByRole('link', { name: 'Browse projects' })).toHaveAttribute('href', '/projects');
+    expect(screen.queryByText('Learn. Build. Ship together.')).toBeNull();
     expect(screen.queryByText(/A thriving game development community dedicated to education/i)).toBeNull();
     expect(screen.queryByText('Community-driven learning and development')).toBeNull();
     expect(screen.queryByText('Open source and collaborative')).toBeNull();
