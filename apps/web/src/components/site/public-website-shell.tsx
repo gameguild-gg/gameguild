@@ -109,7 +109,7 @@ export function PublicWebsiteFooter() {
               A thriving game development community dedicated to education, collaboration, and innovation. Join us as
               we grow together and shape the future of gaming.
             </p>
-            <div className="grid gap-2 text-sm text-slate-300 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <div data-testid="footer-community-summary" className="flex flex-col gap-2 text-sm text-slate-300">
               <span className="inline-flex items-center gap-2">
                 <Users className="size-4 text-sky-300" aria-hidden="true" />
                 Community-driven learning and development
