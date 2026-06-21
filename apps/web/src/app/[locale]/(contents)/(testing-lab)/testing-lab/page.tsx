@@ -1,6 +1,7 @@
 import { Link } from '@/i18n/navigation';
 import { publicPlaytests, publicProjects } from '@/lib/community/public-community';
 import { ArrowRight, BarChart3, ClipboardList, FlaskConical, Target } from 'lucide-react';
+import Image from 'next/image';
 import React from 'react';
 
 const testingSteps = [
@@ -80,16 +81,28 @@ export default async function TestingLabPage(): Promise<React.JSX.Element> {
             <Link
               key={project.slug}
               href={`/projects/${project.slug}`}
-              className="group rounded-3xl border border-white/10 bg-slate-900/70 p-5 transition hover:-translate-y-1 hover:border-white/20"
+              className="group overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 transition hover:-translate-y-1 hover:border-white/20"
             >
-              <ClipboardList className="mb-5 size-6 text-sky-200" aria-hidden="true" />
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">{project.status}</p>
-              <h3 className="mt-3 text-xl font-semibold text-white">{project.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-400">{project.feedbackGoal}</p>
-              <span className="mt-5 inline-flex items-center text-sm font-semibold text-sky-200">
-                Open project
-                <ArrowRight className="ml-2 size-4 transition group-hover:translate-x-1" aria-hidden="true" />
-              </span>
+              <div className="relative h-40 overflow-hidden">
+                <Image
+                  src={project.previewImage}
+                  alt={`${project.title} testing preview`}
+                  fill
+                  className="object-cover opacity-90 transition duration-500 group-hover:scale-105"
+                  sizes="(min-width: 1024px) 33vw, 100vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+              </div>
+              <div className="p-5">
+                <ClipboardList className="mb-5 size-6 text-sky-200" aria-hidden="true" />
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">{project.status}</p>
+                <h3 className="mt-3 text-xl font-semibold text-white">{project.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-400">{project.feedbackGoal}</p>
+                <span className="mt-5 inline-flex items-center text-sm font-semibold text-sky-200">
+                  Open project
+                  <ArrowRight className="ml-2 size-4 transition group-hover:translate-x-1" aria-hidden="true" />
+                </span>
+              </div>
             </Link>
           ))}
         </div>

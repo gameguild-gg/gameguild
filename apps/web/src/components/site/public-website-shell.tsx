@@ -1,6 +1,7 @@
 import { Link } from '@/i18n/navigation';
 import { FlaskConical, Github, GraduationCap, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { PublicDesktopNav, PublicMobileNav } from './public-website-nav';
 
 const primaryNav = [
   { label: 'Courses', href: '/courses' },
@@ -72,17 +73,7 @@ export function PublicWebsiteHeader() {
           <span className="truncate text-base font-semibold tracking-tight text-white">GameGuild</span>
         </Link>
 
-        <nav aria-label="Main navigation" className="hidden items-center rounded-full border border-white/10 bg-white/[0.03] p-1 lg:flex">
-          {primaryNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <PublicDesktopNav items={primaryNav} />
 
         <div className="flex items-center gap-2">
           <a
@@ -100,26 +91,13 @@ export function PublicWebsiteHeader() {
           </Link>
           <Link
             href="/sign-up"
-            className="inline-flex items-center rounded-full bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
+            className="hidden items-center rounded-full bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-200 sm:inline-flex"
           >
             Join community
           </Link>
+          <PublicMobileNav items={primaryNav} />
         </div>
       </div>
-
-      <nav aria-label="Mobile navigation" className="border-t border-white/10 px-4 pb-3 lg:hidden">
-        <div className="mx-auto flex w-full max-w-7xl gap-1 overflow-x-auto">
-          {primaryNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="shrink-0 rounded-full px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </nav>
     </header>
   );
 }

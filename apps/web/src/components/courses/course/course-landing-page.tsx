@@ -326,6 +326,10 @@ export function CourseLandingPage({ course, viewerAccess }: CourseLandingPagePro
       ? showcase.prerequisites
       : [level === 'Beginner' ? 'No advanced background required.' : `${level} comfort with the course discipline is recommended.`];
   const projectResult = showcase?.projectResult ?? `A practical ${categoryName.toLowerCase()} project that demonstrates what students learned.`;
+  const buildHeadline = showcase?.headline ?? `Build a ${categoryName.toLowerCase()} project that proves what you can do.`;
+  const buildDescription =
+    showcase?.studioPrompt ??
+    `This course is structured like a studio sequence: study the pattern, build the prototype, stress the work, and turn the final result into portfolio evidence.`;
   const metadataProjects = getMetadataProjects(course, sectionVisuals.project);
   const projectSlides = metadataProjects.length
     ? metadataProjects
@@ -366,12 +370,9 @@ export function CourseLandingPage({ course, viewerAccess }: CourseLandingPagePro
               <div className="max-w-xl">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200/80">What you will build</p>
                 <h2 className="mt-5 text-[2rem] font-semibold leading-[1.12] tracking-tight md:text-5xl xl:text-6xl">
-                  Build tactical AI that feels intentional, not scripted.
+                  {buildHeadline}
                 </h2>
-                <p className="mt-6 text-base leading-8 text-slate-300">
-                  This course is structured like a studio sequence: study the pattern, build the prototype, stress the decision model, and turn the final result
-                  into portfolio evidence.
-                </p>
+                <p className="mt-6 text-base leading-8 text-slate-300">{buildDescription}</p>
 
                 <div className="mt-9 grid gap-5">
                   {[

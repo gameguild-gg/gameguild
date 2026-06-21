@@ -1,6 +1,7 @@
 import { Link } from '@/i18n/navigation';
 import { getPublicProject, publicProjects } from '@/lib/community/public-community';
 import { ArrowRight, CheckCircle2, ClipboardList, FlaskConical, UserRound } from 'lucide-react';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import React from 'react';
 
@@ -26,8 +27,14 @@ export default async function Page({ params }: { readonly params: Promise<{ proj
 
   return (
     <main className="bg-slate-950 text-white">
-      <section className={`border-b border-white/10 bg-gradient-to-br ${project.accent}`}>
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:px-8">
+      <section className="relative border-b border-white/10">
+        <div className="absolute inset-0">
+          <Image src={project.previewImage} alt={`${project.title} project preview`} fill priority className="object-cover" sizes="100vw" />
+          <div className={`absolute inset-0 bg-gradient-to-br ${project.accent}`} />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/88 to-slate-950/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/20" />
+        </div>
+        <div className="relative mx-auto grid w-full max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:px-8">
           <div className="max-w-3xl space-y-6">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-100">{project.status}</p>
             <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">{project.title}</h1>

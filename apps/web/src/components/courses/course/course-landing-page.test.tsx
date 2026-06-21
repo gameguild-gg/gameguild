@@ -120,6 +120,24 @@ describe('CourseLandingPage', () => {
     expect(screen.getByText('Instructor-edited hero copy for the public storefront.')).toBeInTheDocument();
   });
 
+  it('does not show AI-specific build copy on non-AI courses', () => {
+    render(
+      <CourseLandingPage
+        course={{
+          ...advancedAiCourse,
+          title: 'Portfolio Presentation',
+          slug: 'portfolio',
+          category: 'Portfolio',
+          description: 'Turn a project into a clear professional case study.',
+        }}
+        viewerAccess={{ state: 'signed-out' }}
+      />,
+    );
+
+    expect(screen.queryByText(/build tactical ai/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /turn projects into a portfolio story/i })).toBeInTheDocument();
+  });
+
   it('renders editor-provided external thumbnail URLs without Next image optimization', () => {
     const course = advancedAiCourse;
 

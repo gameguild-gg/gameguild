@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -20,6 +21,14 @@ vi.mock('@/lib/testing-lab', () => ({
   normalizeTestingLocationStatus: mocks.normalizeTestingLocationStatus,
   normalizeTestingRequestStatus: mocks.normalizeTestingRequestStatus,
   normalizeTestingSessionStatus: mocks.normalizeTestingSessionStatus,
+}));
+
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ children, href, ...rest }: { children: ReactNode; href: string }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 
 import TestingLabPage from './page';
@@ -72,6 +81,9 @@ describe('testing lab dashboard page', () => {
     render(await TestingLabPage());
 
     expect(screen.getByRole('heading', { name: 'Testing Lab' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /public lab/i })).toHaveAttribute('href', '/testing-lab');
+    expect(screen.getByRole('link', { name: /project showcase/i })).toHaveAttribute('href', '/projects');
+    expect(screen.getByRole('heading', { name: /operational workflow/i })).toBeInTheDocument();
     expect(screen.getByText('Combat prototype playtest')).toBeInTheDocument();
     expect(screen.getByText('Friday feedback lab')).toBeInTheDocument();
     expect(screen.getByText('Remote lab')).toBeInTheDocument();

@@ -83,7 +83,9 @@ export function SignupForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="border-white/10 bg-slate-900/85 text-white shadow-2xl shadow-sky-950/30 backdrop-blur">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Create your GameGuild account</CardTitle>
+          <CardTitle className="text-2xl">
+            <h1>Create your GameGuild account</h1>
+          </CardTitle>
           <CardDescription className="text-slate-300">
             Join the community to learn, share projects, and collect useful feedback.
           </CardDescription>

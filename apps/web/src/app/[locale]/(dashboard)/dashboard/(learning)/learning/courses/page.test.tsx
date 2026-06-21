@@ -46,8 +46,9 @@ describe('dashboard learning courses page', () => {
 
     render(await CoursesPage({ params: Promise.resolve({ locale: 'en-US' }) } as never));
 
-    expect(screen.getByText(/no courses yet/i)).toBeInTheDocument();
-    expect(screen.getByText(/create your first course to start teaching/i)).toBeInTheDocument();
+    expect(screen.getByText(/no courses in the live catalog/i)).toBeInTheDocument();
+    expect(screen.getByText(/the public storefront reads from the same course source/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open storefront/i })).toHaveAttribute('href', '/courses');
     expect(screen.queryByRole('heading', { name: /courses could not be loaded/i })).not.toBeInTheDocument();
   });
 });
