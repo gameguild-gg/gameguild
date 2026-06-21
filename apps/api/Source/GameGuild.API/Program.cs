@@ -100,20 +100,7 @@ if (!databaseReachable)
 }
 else
 {
-    try
-    {
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
-        if (db.Database.IsRelational())
-        {
-            await db.Database.MigrateAsync().ConfigureAwait(false);
-        }
-    }
-    catch (Exception ex)
-    {
-        databaseReachable = false;
-        app.Logger.LogWarning(ex, "Database migration failed — API will start without a database. Swagger/OpenAPI will still be available.");
-    }
+    databaseReachable = await TryApplyDatabaseMigrationsAsync(app).ConfigureAwait(false);
 
     if (databaseReachable)
     {
@@ -179,6 +166,82 @@ static bool ShouldImportSnapshotCourses(IConfiguration configuration)
         ?? Environment.GetEnvironmentVariable("SEED_SNAPSHOT_COURSES");
 
     return bool.TryParse(configuredValue, out var enabled) && enabled;
+}
+
+static async Task<bool> TryApplyDatabaseMigrationsAsync(WebApplication app)
+{
+    const int maxAttempts = 5;
+    var failStartupOnMigrationFailure = app.Configuration.GetValue<bool?>("Database:FailStartupOnMigrationFailure")
+        ?? !app.Environment.IsDevelopment();
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++)
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<GameGuild.API.Database.ApplicationDbContext>();
+
+            if (!db.Database.IsRelational())
+            {
+                return true;
+            }
+
+            var pendingMigrations = (await db.Database
+                    .GetPendingMigrationsAsync(app.Lifetime.ApplicationStopping)
+                    .ConfigureAwait(false))
+                .ToArray();
+
+            if (pendingMigrations.Length == 0)
+            {
+                app.Logger.LogInformation("Database schema is current.");
+                return true;
+            }
+
+            app.Logger.LogInformation(
+                "Applying {PendingMigrationCount} pending database migrations. Attempt {Attempt}/{MaxAttempts}.",
+                pendingMigrations.Length,
+                attempt,
+                maxAttempts);
+
+            await db.Database
+                .MigrateAsync(app.Lifetime.ApplicationStopping)
+                .ConfigureAwait(false);
+
+            app.Logger.LogInformation("Database migrations applied successfully.");
+            return true;
+        }
+        catch (Exception ex) when (attempt < maxAttempts)
+        {
+            var retryDelay = TimeSpan.FromSeconds(Math.Min(30, attempt * 2));
+            app.Logger.LogWarning(
+                ex,
+                "Database migration attempt {Attempt}/{MaxAttempts} failed. Retrying in {RetryDelaySeconds}s.",
+                attempt,
+                maxAttempts,
+                retryDelay.TotalSeconds);
+
+            await Task.Delay(retryDelay, app.Lifetime.ApplicationStopping).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            if (failStartupOnMigrationFailure)
+            {
+                app.Logger.LogCritical(
+                    ex,
+                    "Database migrations failed after {MaxAttempts} attempts. Refusing to start because this environment requires a ready schema.",
+                    maxAttempts);
+                throw;
+            }
+
+            app.Logger.LogWarning(
+                ex,
+                "Database migrations failed after {MaxAttempts} attempts. API will start without database-backed readiness.",
+                maxAttempts);
+            return false;
+        }
+    }
+
+    return false;
 }
 
 // REMARK: Required for functional and integration tests to work.
