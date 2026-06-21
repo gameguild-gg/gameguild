@@ -22,6 +22,7 @@ vi.mock('@/i18n', () => ({
 import { PublicWebsiteHeader } from '@/components/site/public-website-shell';
 import CommunityPage from './[locale]/(community)/community/page';
 import JobsPage from './[locale]/(contents)/(jobs)/jobs/page';
+import LaunchPadPage from './[locale]/(contents)/(launch-pad)/launch-pad/page';
 import ProjectsPage from './[locale]/(contents)/(projects)/projects/page';
 import ProjectDetailPage from './[locale]/(contents)/(projects)/projects/[project]/page';
 import TestingLabPage from './[locale]/(contents)/(testing-lab)/testing-lab/page';
@@ -36,6 +37,7 @@ describe('public community website UX', () => {
       'Courses',
       'Programs',
       'Testing Lab',
+      'Launch Pad',
       'Projects',
       'Community',
       'Jobs',
@@ -84,6 +86,15 @@ describe('public community website UX', () => {
     expect(screen.getAllByText(/submit a build/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/define test goals/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/feedback report/i).length).toBeGreaterThan(0);
+  });
+
+  it('renders the public launch pad entry for release-ready projects', async () => {
+    render(await LaunchPadPage());
+
+    expect(screen.getByRole('heading', { name: /launch pad/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /from project to public release/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /readiness signals/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open launch pad/i })).toBeInTheDocument();
   });
 
   it('replaces the jobs placeholder with a community opportunities page', async () => {

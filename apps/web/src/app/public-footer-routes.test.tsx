@@ -26,6 +26,7 @@ const footerRoutes = [
   { href: '/courses', page: '[locale]/(contents)/(learning)/courses/page.tsx' },
   { href: '/projects', page: '[locale]/(contents)/(projects)/projects/page.tsx' },
   { href: '/testing-lab', page: '[locale]/(contents)/(testing-lab)/testing-lab/page.tsx' },
+  { href: '/launch-pad', page: '[locale]/(contents)/(launch-pad)/launch-pad/page.tsx' },
   { href: '/about', page: '[locale]/(institutional)/about/page.tsx' },
   { href: '/about/roadmap', page: '[locale]/(institutional)/about/(project)/roadmap/page.tsx' },
   { href: '/about/contributors', page: '[locale]/(institutional)/about/(project)/contributors/page.tsx' },

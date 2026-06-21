@@ -1,5 +1,5 @@
 import { Link } from '@/i18n/navigation';
-import { FlaskConical, Github, GraduationCap, Users } from 'lucide-react';
+import { FlaskConical, Github, GraduationCap, Rocket, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { PublicDesktopNav, PublicMobileNav } from './public-website-nav';
 
@@ -7,6 +7,7 @@ const primaryNav = [
   { label: 'Courses', href: '/courses' },
   { label: 'Programs', href: '/programs' },
   { label: 'Testing Lab', href: '/testing-lab' },
+  { label: 'Launch Pad', href: '/launch-pad' },
   { label: 'Projects', href: '/projects' },
   { label: 'Community', href: '/community' },
   { label: 'Jobs', href: '/jobs' },
@@ -25,6 +26,7 @@ const footerSections = [
     title: 'Build & test',
     links: [
       { label: 'Testing Lab', href: '/testing-lab' },
+      { label: 'Launch Pad', href: '/launch-pad' },
       { label: 'Project showcase', href: '/projects' },
     ],
   },
@@ -193,6 +195,11 @@ export const publicWebsiteHighlights = [
     title: 'Testing Lab',
     description: 'A focused review space where creators can validate builds, gather feedback, and improve playable work.',
     icon: FlaskConical,
+  },
+  {
+    title: 'Launch Pad',
+    description: 'Release planning, store-page critique, and launch-readiness checklists for student projects.',
+    icon: Rocket,
   },
   {
     title: 'Community Studio',
