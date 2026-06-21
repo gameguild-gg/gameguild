@@ -3,45 +3,49 @@ import { FlaskConical, Github, GraduationCap, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 const primaryNav = [
-  { label: 'Courses', href: '/courses' },
+  { label: 'Community', href: '/community' },
   { label: 'Programs', href: '/programs' },
+  { label: 'Courses', href: '/courses' },
   { label: 'Projects', href: '/projects' },
   { label: 'Testing Lab', href: '/testing-lab' },
-  { label: 'Community', href: '/community' },
   { label: 'Jobs', href: '/jobs' },
   { label: 'About', href: '/about' },
 ] as const;
 
 const footerSections = [
   {
-    title: 'Platform',
+    title: 'Community',
     links: [
-      { label: 'Courses', href: '/courses' },
+      { label: 'Community hub', href: '/community' },
+      { label: 'Feed', href: '/feed' },
+      { label: 'Jobs', href: '/jobs' },
+    ],
+  },
+  {
+    title: 'Learn',
+    links: [
       { label: 'Programs', href: '/programs' },
-      { label: 'Projects', href: '/projects' },
+      { label: 'Courses', href: '/courses' },
+    ],
+  },
+  {
+    title: 'Build & test',
+    links: [
+      { label: 'Project showcase', href: '/projects' },
       { label: 'Testing Lab', href: '/testing-lab' },
     ],
   },
   {
-    title: 'Company',
+    title: 'About',
     links: [
-      { label: 'About', href: '/about' },
+      { label: 'About GameGuild', href: '/about' },
       { label: 'Roadmap', href: '/about/roadmap' },
       { label: 'Contributors', href: '/about/contributors' },
       { label: 'Contact', href: '/contact' },
     ],
   },
   {
-    title: 'Community',
-    links: [
-      { label: 'Community hub', href: '/community' },
-      { label: 'Feed', href: '/feed' },
-      { label: 'Projects', href: '/projects' },
-      { label: 'Jobs', href: '/jobs' },
-    ],
-  },
-  {
-    title: 'Institutional',
+    title: 'Legal',
     links: [
       { label: 'Licenses', href: '/licenses' },
       { label: 'Terms', href: '/terms-of-service' },
@@ -61,19 +65,19 @@ function BrandMark() {
 
 export function PublicWebsiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/85 text-white backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/90 text-white backdrop-blur-xl">
       <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" aria-label="GameGuild home" className="flex min-w-0 items-center gap-3">
           <BrandMark />
           <span className="truncate text-base font-semibold tracking-tight text-white">GameGuild</span>
         </Link>
 
-        <nav aria-label="Main navigation" className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Main navigation" className="hidden items-center rounded-full border border-white/10 bg-white/[0.03] p-1 lg:flex">
           {primaryNav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-full px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+              className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
             >
               {item.label}
             </Link>
@@ -83,21 +87,27 @@ export function PublicWebsiteHeader() {
         <div className="flex items-center gap-2">
           <a
             href="https://github.com/gameguild-gg/gameguild"
-            className="hidden rounded-full border border-white/10 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white sm:inline-flex sm:items-center sm:gap-2"
+            className="hidden rounded-full border border-white/10 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white xl:inline-flex xl:items-center xl:gap-2"
           >
             <Github className="size-4" aria-hidden="true" />
             GitHub
           </a>
           <Link
             href="/sign-in"
-            className="inline-flex items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-100"
+            className="hidden rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white sm:inline-flex"
           >
             Sign in
+          </Link>
+          <Link
+            href="/sign-up"
+            className="inline-flex items-center rounded-full bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
+          >
+            Join community
           </Link>
         </div>
       </div>
 
-      <nav aria-label="Mobile navigation" className="border-t border-white/10 px-4 pb-3 md:hidden">
+      <nav aria-label="Mobile navigation" className="border-t border-white/10 px-4 pb-3 lg:hidden">
         <div className="mx-auto flex w-full max-w-7xl gap-1 overflow-x-auto">
           {primaryNav.map((item) => (
             <Link
@@ -117,22 +127,37 @@ export function PublicWebsiteHeader() {
 export function PublicWebsiteFooter() {
   return (
     <footer className="border-t border-white/10 bg-slate-950 text-white">
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_2fr] lg:px-8">
-        <div className="max-w-md space-y-5">
-          <div className="flex items-center gap-3">
-            <BrandMark />
-            <span className="text-lg font-semibold text-white">GameGuild</span>
+      <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-6 border-b border-white/10 pb-10 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-xl space-y-5">
+            <div className="flex items-center gap-3">
+              <BrandMark />
+              <span className="text-lg font-semibold text-white">GameGuild</span>
+            </div>
+            <p className="text-sm leading-6 text-slate-400">
+              A game development community where creators learn together, show real work, test playable builds, and
+              prepare projects for launch.
+            </p>
           </div>
-          <p className="text-sm leading-6 text-slate-400">
-            A focused game development community for learning, feedback, collaboration, and launch-ready project work.
-          </p>
-          <div className="space-y-2 text-sm text-slate-300">
-            <p>Community-driven learning and development</p>
-            <p>Open source and collaborative</p>
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/sign-up"
+              className="inline-flex items-center rounded-full bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
+            >
+              Join community
+            </Link>
+            <a
+              href="https://github.com/gameguild-gg/gameguild"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white"
+            >
+              <Github className="size-4" aria-hidden="true" />
+              GitHub
+            </a>
           </div>
         </div>
 
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 pt-10 sm:grid-cols-2 lg:grid-cols-5">
           {footerSections.map((section) => (
             <div key={section.title} className="space-y-3">
               <h2 className="text-sm font-semibold text-white">{section.title}</h2>

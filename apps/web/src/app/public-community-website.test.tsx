@@ -31,9 +31,15 @@ describe('public community website UX', () => {
     render(<PublicWebsiteHeader />);
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
-    for (const label of ['Courses', 'Programs', 'Projects', 'Testing Lab', 'Community', 'Jobs', 'About']) {
-      expect(within(nav).getByRole('link', { name: label })).toBeInTheDocument();
-    }
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual([
+      'Community',
+      'Programs',
+      'Courses',
+      'Projects',
+      'Testing Lab',
+      'Jobs',
+      'About',
+    ]);
   });
 
   it('turns the home page into a community gateway', async () => {

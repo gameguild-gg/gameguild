@@ -17,17 +17,18 @@ import { PublicWebsiteFooter } from '@/components/site/public-website-shell';
 const appRoot = __dirname;
 
 const footerRoutes = [
-  { href: '/courses', page: '[locale]/(contents)/(learning)/courses/page.tsx' },
+  { href: '/sign-up', page: '[locale]/(auth)/sign-up/page.tsx' },
+  { href: '/community', page: '[locale]/(community)/community/page.tsx' },
+  { href: '/feed', page: '[locale]/(community)/(feed)/feed/page.tsx' },
+  { href: '/jobs', page: '[locale]/(contents)/(jobs)/jobs/page.tsx' },
   { href: '/programs', page: '[locale]/(contents)/(learning)/programs/page.tsx' },
+  { href: '/courses', page: '[locale]/(contents)/(learning)/courses/page.tsx' },
   { href: '/projects', page: '[locale]/(contents)/(projects)/projects/page.tsx' },
   { href: '/testing-lab', page: '[locale]/(contents)/(testing-lab)/testing-lab/page.tsx' },
   { href: '/about', page: '[locale]/(institutional)/about/page.tsx' },
   { href: '/about/roadmap', page: '[locale]/(institutional)/about/(project)/roadmap/page.tsx' },
   { href: '/about/contributors', page: '[locale]/(institutional)/about/(project)/contributors/page.tsx' },
   { href: '/contact', page: '[locale]/(institutional)/contact/page.tsx' },
-  { href: '/community', page: '[locale]/(community)/community/page.tsx' },
-  { href: '/feed', page: '[locale]/(community)/(feed)/feed/page.tsx' },
-  { href: '/jobs', page: '[locale]/(contents)/(jobs)/jobs/page.tsx' },
   { href: '/licenses', page: '[locale]/(legal)/licenses/page.tsx' },
   { href: '/terms-of-service', page: '[locale]/(legal)/terms-of-service/page.tsx' },
   { href: '/polices/privacy', page: '[locale]/(legal)/polices/privacy/page.tsx' },
