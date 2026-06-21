@@ -27,16 +27,16 @@ import TestingLabPage from './[locale]/(contents)/(testing-lab)/testing-lab/page
 import HomePage from './[locale]/(site)/page';
 
 describe('public community website UX', () => {
-  it('exposes the community-first information architecture in the header', () => {
+  it('exposes the learning-to-community information architecture in the header', () => {
     render(<PublicWebsiteHeader />);
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
     expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual([
-      'Community',
-      'Programs',
       'Courses',
-      'Projects',
+      'Programs',
       'Testing Lab',
+      'Projects',
+      'Community',
       'Jobs',
       'About',
     ]);
