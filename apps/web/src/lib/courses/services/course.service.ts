@@ -33,6 +33,7 @@ type PublicCourseDto = GeneratedApi.LearningCoursesProgram;
 type PublicCourseContentDto = GeneratedApi.LearningCoursesProgramContent;
 
 const DEFAULT_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+const PUBLIC_COURSE_API_TIMEOUT_MS = Number(process.env.PUBLIC_COURSE_API_TIMEOUT_MS ?? 10_000);
 
 function getApiUrl(): string {
     return DEFAULT_API_URL.replace(/\/$/, '');
@@ -41,6 +42,7 @@ function getApiUrl(): string {
 function createPublicApiClient() {
     return createServerClient({
         baseUrl: getApiUrl(),
+        timeout: Number.isFinite(PUBLIC_COURSE_API_TIMEOUT_MS) ? PUBLIC_COURSE_API_TIMEOUT_MS : 10_000,
     });
 }
 

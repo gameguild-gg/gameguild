@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from '@/i18n/navigation';
 import { submitTestingBuild } from '@/lib/testing-lab/actions';
 import {
   countAvailableTesterSlots,
@@ -16,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
-import { CalendarDays, FlaskConical, MapPin, ShieldAlert, Users } from 'lucide-react';
+import { ArrowRight, CalendarDays, ClipboardCheck, FlaskConical, MapPin, ShieldAlert, Users } from 'lucide-react';
 
 function formatDate(value?: string | null): string {
   if (!value) return 'Not scheduled';
@@ -92,9 +93,25 @@ export default async function TestingLabPage(): Promise<React.JSX.Element> {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Testing Lab</h1>
-        <p className="text-muted-foreground">Manage build submissions, moderated testing sessions, locations, and tester capacity.</p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Testing Lab</h1>
+          <p className="text-muted-foreground">Manage build submissions, moderated testing sessions, locations, and tester capacity.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/testing-lab">
+              Public lab
+              <ArrowRight className="ml-2 size-4" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/projects">
+              Project showcase
+              <ArrowRight className="ml-2 size-4" />
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {data.accessIssues.length > 0 ? (
@@ -147,6 +164,32 @@ export default async function TestingLabPage(): Promise<React.JSX.Element> {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <h2>Operational workflow</h2>
+          </CardTitle>
+          <CardDescription>Testing Lab work moves from build intake to tester scheduling, then into feedback summaries.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          {[
+            ['1', 'Intake', 'Submit the build, target audience, download link, and tester instructions.'],
+            ['2', 'Schedule', 'Assign capped tester slots, session windows, and remote or physical locations.'],
+            ['3', 'Report', 'Collect comparable notes and turn the patterns into next actions for the team.'],
+          ].map(([step, title, body]) => (
+            <div key={step} className="rounded-lg border bg-muted/25 p-4">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="flex size-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                  {step}
+                </span>
+                <h2 className="font-semibold">{title}</h2>
+              </div>
+              <p className="text-sm leading-6 text-muted-foreground">{body}</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <section className="space-y-4">
@@ -203,8 +246,15 @@ export default async function TestingLabPage(): Promise<React.JSX.Element> {
 
         <Card className="h-fit">
           <CardHeader>
-            <CardTitle>Submit build</CardTitle>
-            <CardDescription>Create a lightweight Testing Lab request from a team build.</CardDescription>
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <ClipboardCheck className="size-5" />
+              </div>
+              <div>
+                <CardTitle>Submit build</CardTitle>
+                <CardDescription>Create a lightweight Testing Lab request from a team build.</CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <form action={submitTestingBuild} className="space-y-4">

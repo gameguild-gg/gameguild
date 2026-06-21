@@ -9,6 +9,7 @@ export interface PublicProject {
   tags: string[];
   coursePath: string;
   accent: string;
+  previewImage: string;
   buildType: string;
   feedbackGoal: string;
   metrics: Array<{ label: string; value: string }>;
@@ -51,6 +52,7 @@ export const publicProjects: PublicProject[] = [
     tags: ['Traversal', 'Prototype', 'Unity', 'Portfolio'],
     coursePath: 'Game Programming Foundations',
     accent: 'from-sky-400/30 via-cyan-300/10 to-slate-950',
+    previewImage: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1400&h=900&fit=crop',
     buildType: 'WebGL prototype',
     feedbackGoal: 'Validate movement readability and route pacing before adding progression systems.',
     metrics: [
@@ -75,6 +77,7 @@ export const publicProjects: PublicProject[] = [
     tags: ['AI', 'Tactics', 'Unreal', 'Systems'],
     coursePath: 'Game AI & Systems Programming',
     accent: 'from-violet-400/30 via-fuchsia-300/10 to-slate-950',
+    previewImage: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1400&h=900&fit=crop',
     buildType: 'Windows build',
     feedbackGoal: 'Measure whether enemy behavior reads as intentional under pressure.',
     metrics: [
@@ -99,6 +102,7 @@ export const publicProjects: PublicProject[] = [
     tags: ['Economy', 'UI', 'Production', 'Case study'],
     coursePath: 'Portfolio & Professional Presentation',
     accent: 'from-amber-300/30 via-orange-300/10 to-slate-950',
+    previewImage: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=1400&h=900&fit=crop',
     buildType: 'Video walkthrough',
     feedbackGoal: 'Polish the story around design tradeoffs and production constraints.',
     metrics: [

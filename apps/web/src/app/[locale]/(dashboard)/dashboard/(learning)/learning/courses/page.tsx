@@ -2,7 +2,7 @@ import { Link } from '@/i18n/navigation';
 import { getCourses } from '@/lib/learning';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent } from '@game-guild/ui/components/card';
-import { AlertTriangle, ArrowLeft, BookOpen, Plus, RefreshCw } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, BarChart3, BookOpen, Eye, Plus, RefreshCw } from 'lucide-react';
 import React from 'react';
 import { CourseList } from './course-list';
 
@@ -10,10 +10,12 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
   const { locale } = await params;
 
   const { courses, error } = await getCourses();
+  const publishedCourses = courses.filter((course) => course.status === 'published').length;
+  const publicCourses = courses.filter((course) => course.visibility === 'public').length;
+  const totalEnrollments = courses.reduce((total, course) => total + course.enrolledCount, 0);
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
@@ -29,12 +31,59 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
             <p className="text-muted-foreground">Manage your courses and track performance.</p>
           </div>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/learning/courses/new">
-            <Plus className="mr-2 size-4" />
-            Create Course
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/courses">
+              <Eye className="mr-2 size-4" />
+              Storefront preview
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/dashboard/learning/courses/new">
+              <Plus className="mr-2 size-4" />
+              Create Course
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardContent className="flex items-center justify-between gap-4 p-5">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Courses</p>
+              <p className="text-2xl font-semibold">{courses.length}</p>
+            </div>
+            <BookOpen className="size-5 text-muted-foreground" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center justify-between gap-4 p-5">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Published</p>
+              <p className="text-2xl font-semibold">{publishedCourses}</p>
+            </div>
+            <Eye className="size-5 text-muted-foreground" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center justify-between gap-4 p-5">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Public catalog</p>
+              <p className="text-2xl font-semibold">{publicCourses}</p>
+            </div>
+            <Eye className="size-5 text-muted-foreground" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center justify-between gap-4 p-5">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Enrollments</p>
+              <p className="text-2xl font-semibold">{totalEnrollments}</p>
+            </div>
+            <BarChart3 className="size-5 text-muted-foreground" />
+          </CardContent>
+        </Card>
       </div>
 
       {error ? (
@@ -64,10 +113,30 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
 
       {!error && courses.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <BookOpen className="mb-4 size-12 text-muted-foreground" />
-            <h3 className="text-lg font-semibold">No courses yet</h3>
-            <p className="text-sm text-muted-foreground">Create your first course to start teaching.</p>
+          <CardContent className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted">
+              <BookOpen className="size-7 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">No courses in the live catalog</h3>
+              <p className="mt-1 max-w-md text-sm text-muted-foreground">
+                Create or seed courses here. The public storefront reads from the same course source, so published changes can be previewed immediately.
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button asChild>
+                <Link href="/dashboard/learning/courses/new">
+                  <Plus className="mr-2 size-4" />
+                  Create Course
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/courses">
+                  <Eye className="mr-2 size-4" />
+                  Open storefront
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : null}

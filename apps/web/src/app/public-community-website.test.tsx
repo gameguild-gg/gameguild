@@ -8,6 +8,7 @@ vi.mock('@/i18n/navigation', () => ({
       {children}
     </a>
   ),
+  usePathname: () => '/',
 }));
 
 vi.mock('@/i18n', () => ({
@@ -56,6 +57,7 @@ describe('public community website UX', () => {
     render(await ProjectsPage());
 
     expect(screen.getByRole('heading', { name: /project showcase/i })).toBeInTheDocument();
+    expect(screen.getByAltText(/skybound courier project preview/i)).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /view project/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /submit to testing lab/i })).toBeInTheDocument();
   });
@@ -64,6 +66,7 @@ describe('public community website UX', () => {
     render(await ProjectDetailPage({ params: Promise.resolve({ project: 'skybound-courier' }) }));
 
     expect(screen.getByRole('heading', { name: /skybound courier/i })).toBeInTheDocument();
+    expect(screen.getByAltText(/skybound courier project preview/i)).toBeInTheDocument();
     expect(screen.getAllByText(/creator/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/playtest/i).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /join this playtest/i })).toBeInTheDocument();

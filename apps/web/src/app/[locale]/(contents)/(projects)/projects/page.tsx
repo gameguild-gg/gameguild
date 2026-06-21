@@ -1,6 +1,7 @@
 import { Link } from '@/i18n/navigation';
 import { publicProjects } from '@/lib/community/public-community';
 import { ArrowRight, FlaskConical, Search, Tags } from 'lucide-react';
+import Image from 'next/image';
 import React from 'react';
 
 export default async function Page(): Promise<React.JSX.Element> {
@@ -73,7 +74,19 @@ export default async function Page(): Promise<React.JSX.Element> {
         <div className="grid gap-5 lg:grid-cols-3">
           {publicProjects.map((project) => (
             <article key={project.slug} className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70">
-              <div className={`h-48 bg-gradient-to-br ${project.accent}`} />
+              <Link href={`/projects/${project.slug}`} className="group block">
+                <div className="relative h-48 overflow-hidden">
+                  <Image
+                    src={project.previewImage}
+                    alt={`${project.title} project preview`}
+                    fill
+                    className="object-cover opacity-90 transition duration-500 group-hover:scale-105"
+                    sizes="(min-width: 1024px) 33vw, 100vw"
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-t ${project.accent}`} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent" />
+                </div>
+              </Link>
               <div className="space-y-5 p-6">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">{project.status}</p>

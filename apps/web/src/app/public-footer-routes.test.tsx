@@ -10,6 +10,7 @@ vi.mock('@/i18n/navigation', () => ({
       {children}
     </a>
   ),
+  usePathname: () => '/',
 }));
 
 import { PublicWebsiteFooter } from '@/components/site/public-website-shell';

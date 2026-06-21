@@ -16,6 +16,7 @@ vi.mock('@/i18n/navigation', () => ({
       {children}
     </a>
   ),
+  usePathname: () => '/',
 }));
 
 import InstitutionalLayout from './[locale]/(institutional)/layout';
