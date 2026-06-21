@@ -98,29 +98,33 @@ export function PublicWebsiteHeader() {
 export function PublicWebsiteFooter() {
   return (
     <footer className="border-t border-white/10 bg-slate-950 text-white">
-      <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div
           data-testid="footer-primary-grid"
-          className="grid gap-8 border-b border-white/10 pb-8 sm:grid-cols-2 lg:grid-cols-[1.25fr_repeat(4,minmax(0,1fr))]"
+          className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.65fr)] lg:items-start"
         >
-          <div className="space-y-4">
+          <div className="max-w-xl space-y-5">
             <div className="flex items-center gap-3">
               <BrandMark />
               <span className="text-lg font-semibold text-white">GameGuild</span>
             </div>
-            <p className="max-w-sm text-sm leading-6 text-slate-400">
-              Learn, test, and launch games with an open community of developers, artists, and mentors.
+            <p className="text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">
+              Learn. Build. Ship together.
             </p>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium">
+            <p className="max-w-md text-sm leading-6 text-slate-400">
+              A practical game development community for courses, playable testing, launch support, and the people who
+              help each other finish real projects.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 text-sm font-semibold">
               <Link
                 href="/sign-up"
-                className="text-sky-300 transition hover:text-sky-200"
+                className="inline-flex items-center rounded-full bg-sky-300 px-4 py-2 text-slate-950 transition hover:bg-sky-200"
               >
-                Join GameGuild
+                Join community
               </Link>
               <a
                 href="https://github.com/gameguild-gg/gameguild"
-                className="inline-flex items-center gap-2 text-slate-300 transition hover:text-white"
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-slate-200 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
               >
                 <Github className="size-4" aria-hidden="true" />
                 GitHub
@@ -128,25 +132,25 @@ export function PublicWebsiteFooter() {
             </div>
           </div>
 
-          {footerSections.map((section) => (
-            <div key={section.title} className="space-y-3">
-              <h2 className="text-sm font-semibold text-white">{section.title}</h2>
-              <ul className="space-y-2">
-                {section.links.map((link) => (
-                  <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-slate-400 transition hover:text-white">
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <nav aria-label="Footer" className="grid gap-x-8 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
+            {footerSections.map((section) => (
+              <div key={section.title} className="space-y-3">
+                <h2 className="text-sm font-semibold text-white">{section.title}</h2>
+                <ul className="space-y-2">
+                  {section.links.map((link) => (
+                    <li key={link.href}>
+                      <Link href={link.href} className="text-sm text-slate-400 transition hover:text-white">
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
         </div>
-      </div>
 
-      <div className="border-t border-white/10">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-5 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 GameGuild. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">
             <Link href="/licenses" className="transition hover:text-slate-300">
