@@ -45,7 +45,7 @@ ENV ASPNETCORE_HTTP_PORTS=8080 \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://127.0.0.1:8080/live || exit 1
+    CMD curl -f http://127.0.0.1:8080/ready || exit 1
 
 # Entry point
 ENTRYPOINT ["dotnet", "GameGuild.API.dll"]
