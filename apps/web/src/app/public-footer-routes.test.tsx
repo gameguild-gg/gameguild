@@ -48,10 +48,10 @@ describe('PublicWebsiteFooter routes', () => {
 
     expect(screen.queryByRole('heading', { name: 'Legal' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Cookies' })).toBeNull();
-    expect(screen.getByTestId('footer-primary-grid')).toHaveClass('lg:grid-cols-[1.35fr_repeat(4,1fr)]');
-    expect(screen.getByTestId('footer-community-summary')).toHaveClass('flex-col');
-    expect(screen.getByText(/A thriving game development community dedicated to education/i)).toBeInTheDocument();
-    expect(screen.getByText('Community-driven learning and development')).toBeInTheDocument();
-    expect(screen.getByText('Open source and collaborative')).toBeInTheDocument();
+    expect(screen.getByText('Learn, test, and launch games with an open community of developers, artists, and mentors.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Join GameGuild' })).toHaveAttribute('href', '/sign-up');
+    expect(screen.queryByText(/A thriving game development community dedicated to education/i)).toBeNull();
+    expect(screen.queryByText('Community-driven learning and development')).toBeNull();
+    expect(screen.queryByText('Open source and collaborative')).toBeNull();
   });
 });
