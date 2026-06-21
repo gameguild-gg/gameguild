@@ -1,5 +1,5 @@
 import { Link } from '@/i18n/navigation';
-import { FlaskConical, Github, GraduationCap, Rocket, Users } from 'lucide-react';
+import { FlaskConical, Github, GraduationCap, Rocket, Sparkles, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { PublicDesktopNav, PublicMobileNav } from './public-website-nav';
 
@@ -106,9 +106,19 @@ export function PublicWebsiteFooter() {
               <span className="text-lg font-semibold text-white">GameGuild</span>
             </div>
             <p className="text-sm leading-6 text-slate-400">
-              A game development community where creators learn together, show real work, test playable builds, and
-              prepare projects for launch.
+              A thriving game development community dedicated to education, collaboration, and innovation. Join us as
+              we grow together and shape the future of gaming.
             </p>
+            <div className="grid gap-2 text-sm text-slate-300 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <span className="inline-flex items-center gap-2">
+                <Users className="size-4 text-sky-300" aria-hidden="true" />
+                Community-driven learning and development
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Sparkles className="size-4 text-sky-300" aria-hidden="true" />
+                Open source and collaborative
+              </span>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-3">

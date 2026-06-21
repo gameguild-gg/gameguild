@@ -48,5 +48,8 @@ describe('PublicWebsiteFooter routes', () => {
 
     expect(screen.queryByRole('heading', { name: 'Legal' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Cookies' })).toBeNull();
+    expect(screen.getByText(/A thriving game development community dedicated to education/i)).toBeInTheDocument();
+    expect(screen.getByText('Community-driven learning and development')).toBeInTheDocument();
+    expect(screen.getByText('Open source and collaborative')).toBeInTheDocument();
   });
 });
