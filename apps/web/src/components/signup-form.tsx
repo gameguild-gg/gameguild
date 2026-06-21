@@ -81,11 +81,11 @@ export function SignupForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="border-white/10 bg-slate-900/85 text-white shadow-2xl shadow-sky-950/30 backdrop-blur">
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Create your account</CardTitle>
-          <CardDescription>
-            Enter your email below to create your account
+          <CardTitle className="text-2xl">Create your GameGuild account</CardTitle>
+          <CardDescription className="text-slate-300">
+            Join the community to learn, share projects, and collect useful feedback.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -101,6 +101,7 @@ export function SignupForm({
                   autoComplete="name"
                   required
                   disabled={isLoading}
+                  className="border-white/10 bg-white/5 text-white placeholder:text-slate-500"
                   aria-invalid={!!fieldErrors.name}
                   onChange={() => clearFieldError("name")}
                 />
@@ -118,6 +119,7 @@ export function SignupForm({
                   autoComplete="email"
                   required
                   disabled={isLoading}
+                  className="border-white/10 bg-white/5 text-white placeholder:text-slate-500"
                   aria-invalid={!!fieldErrors.email}
                   onChange={() => clearFieldError("email")}
                 />
@@ -136,6 +138,7 @@ export function SignupForm({
                       autoComplete="new-password"
                       required
                       disabled={isLoading}
+                      className="border-white/10 bg-white/5 text-white"
                       aria-invalid={!!fieldErrors.password}
                       onChange={() => clearFieldError("password")}
                     />
@@ -154,6 +157,7 @@ export function SignupForm({
                       autoComplete="new-password"
                       required
                       disabled={isLoading}
+                      className="border-white/10 bg-white/5 text-white"
                       aria-invalid={!!fieldErrors["confirm-password"]}
                       onChange={() => clearFieldError("confirm-password")}
                     />
@@ -162,7 +166,7 @@ export function SignupForm({
                     )}
                   </Field>
                 </Field>
-                <FieldDescription>
+                <FieldDescription className="text-slate-400">
                   Must be at least 8 characters long.
                 </FieldDescription>
               </Field>
@@ -171,19 +175,19 @@ export function SignupForm({
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
-                <FieldDescription className="text-center">
+                <FieldDescription className="text-center text-slate-300">
                   Already have an account?{" "}
-                  <Link href="/sign-in">Sign in</Link>
+                  <Link href="/sign-in" className="text-sky-200 underline-offset-4 hover:underline">Sign in</Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>
           </form>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center">
+      <FieldDescription className="px-6 text-center text-slate-400">
         By clicking continue, you agree to our{" "}
-        <Link href="/terms">Terms of Service</Link> and{" "}
-        <Link href="/privacy">Privacy Policy</Link>.
+        <Link href="/terms-of-service" className="text-sky-200 underline-offset-4 hover:underline">Terms of Service</Link> and{" "}
+        <Link href="/polices/privacy" className="text-sky-200 underline-offset-4 hover:underline">Privacy Policy</Link>.
       </FieldDescription>
     </div>
   )

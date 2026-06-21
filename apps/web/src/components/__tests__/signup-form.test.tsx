@@ -47,7 +47,7 @@ describe('SignupForm', () => {
   it('renders the signup form with all required elements', () => {
     renderWithUser(<SignupForm />);
 
-    expect(screen.getByText('Create your account')).toBeInTheDocument();
+    expect(screen.getByText('Create your GameGuild account')).toBeInTheDocument();
     expect(screen.getByLabelText('Full Name')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
@@ -61,14 +61,8 @@ describe('SignupForm', () => {
     renderWithUser(<SignupForm />);
 
     expect(screen.getByText('Sign in')).toHaveAttribute('href', '/sign-in');
-    expect(screen.getByText('Terms of Service')).toHaveAttribute(
-      'href',
-      '/terms'
-    );
-    expect(screen.getByText('Privacy Policy')).toHaveAttribute(
-      'href',
-      '/privacy'
-    );
+    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/terms-of-service');
+    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/polices/privacy');
   });
 
   /* ---------- Client-side validation ---------- */

@@ -416,6 +416,14 @@ describe('createSignOutAction — extended', () => {
     await expect(signOut({ redirect: false })).resolves.not.toThrow();
     // Cookie should have been set to empty (deletion)
     expect(adapter.set).toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('tokens:revoke'),
+      expect.objectContaining({
+        body: JSON.stringify({ token: 'refresh-token' }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      }),
+    );
   });
 
   it('should redirect after signout by default', async () => {

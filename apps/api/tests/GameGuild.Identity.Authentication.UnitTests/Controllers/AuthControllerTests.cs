@@ -11,6 +11,39 @@ namespace GameGuild.Identity.Authentication.UnitTests.Controllers;
 public class AuthControllerTests
 {
     [Fact]
+    public async Task LocalSignUp_ShouldReturnCreatedBody_WhenSenderSucceeds()
+    {
+        var response = new SignInResponse
+        {
+            Success = true,
+            Message = "Sign-up successful",
+            AccessToken = "access-token",
+            RefreshToken = "refresh-token",
+            UserId = Guid.NewGuid(),
+            Email = "new@example.com",
+            SessionId = Guid.NewGuid()
+        };
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(It.IsAny<LocalSignUpCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        var controller = new AuthController(sender.Object);
+
+        var result = await controller.LocalSignUp(new LocalSignUpRequest
+        {
+            Email = "new@example.com",
+            Password = "Password123!",
+            Username = "newuser"
+        }, CancellationToken.None);
+
+        result.Should().NotBeOfType<CreatedAtActionResult>();
+        var created = result.Should().BeOfType<ObjectResult>().Subject;
+        created.StatusCode.Should().Be(StatusCodes.Status201Created);
+        created.Value.Should().BeSameAs(response);
+    }
+
+    [Fact]
     public async Task RefreshToken_ShouldReturnUnauthorized_WhenSenderThrowsUnauthorizedAccessException()
     {
         var sender = new Mock<ISender>();
