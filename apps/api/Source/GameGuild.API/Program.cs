@@ -285,8 +285,7 @@ static async Task GrantRuntimeRolePrivilegesAsync(WebApplication app, DbContext 
         return;
     }
 
-    var runtimeConnectionString = app.Configuration.GetConnectionString("DefaultConnection")
-        ?? app.Configuration["ConnectionStrings:DefaultConnection"];
+    var runtimeConnectionString = PostgresConnectionString.Resolve(app.Configuration);
 
     if (string.IsNullOrWhiteSpace(runtimeConnectionString))
     {
@@ -296,7 +295,7 @@ static async Task GrantRuntimeRolePrivilegesAsync(WebApplication app, DbContext 
     string? runtimeUser;
     try
     {
-        runtimeUser = new NpgsqlConnectionStringBuilder(PostgresConnectionString.Normalize(runtimeConnectionString) ?? runtimeConnectionString).Username;
+        runtimeUser = new NpgsqlConnectionStringBuilder(runtimeConnectionString).Username;
     }
     catch (ArgumentException)
     {
