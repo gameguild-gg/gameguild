@@ -1,4 +1,3 @@
-using System.Net.Sockets;
 using Npgsql;
 
 namespace GameGuild.API.Database;
@@ -32,45 +31,32 @@ public sealed class DatabaseConnectivityProbe(IConfiguration configuration)
             return false;
         }
 
-        var hosts = connectionStringBuilder.Host
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        if (hosts.Length == 0)
+        if (string.IsNullOrWhiteSpace(connectionStringBuilder.Host) || connectionStringBuilder.Port <= 0)
         {
             return false;
         }
 
-        foreach (var host in hosts)
-        {
-            if (!await CanConnectAsync(host, connectionStringBuilder.Port, cancellationToken).ConfigureAwait(false))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static async Task<bool> CanConnectAsync(string host, int port, CancellationToken cancellationToken)
-    {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutCts.CancelAfter(ProbeTimeout);
 
         try
         {
-            using var tcpClient = new TcpClient();
-            await tcpClient.ConnectAsync(host, port, timeoutCts.Token).ConfigureAwait(false);
+            connectionStringBuilder.Timeout = Math.Max(1, (int)Math.Ceiling(ProbeTimeout.TotalSeconds));
+            connectionStringBuilder.CommandTimeout = Math.Max(1, (int)Math.Ceiling(ProbeTimeout.TotalSeconds));
+
+            await using var connection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
+            await connection.OpenAsync(timeoutCts.Token).ConfigureAwait(false);
             return true;
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             return false;
         }
-        catch (SocketException)
+        catch (NpgsqlException)
         {
             return false;
         }
-        catch (InvalidOperationException)
+        catch (ArgumentException)
         {
             return false;
         }
