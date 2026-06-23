@@ -329,10 +329,11 @@ public static class InfrastructureLayerExtensions
     {
         databaseOptions ??= DatabaseOptions.CreateDefault();
 
-        var connectionString = configuration.GetConnectionString(databaseOptions.ConnectionStringName)
+        var configuredConnectionString = configuration.GetConnectionString(databaseOptions.ConnectionStringName)
                                ?? throw new InvalidOperationException(
                                    $"Connection string '{databaseOptions.ConnectionStringName}' not found. " +
                                    $"Add 'ConnectionStrings:{databaseOptions.ConnectionStringName}' to appsettings.json.");
+        var connectionString = PostgresConnectionString.Normalize(configuredConnectionString) ?? configuredConnectionString;
 
         services.AddDbContext<ApplicationDbContext>(options =>
         {

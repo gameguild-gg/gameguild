@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using GameGuild.Identity.Tenants;
 
 namespace GameGuild.API.Database;
 
@@ -38,7 +39,8 @@ public static class DatabaseSeeder
         }
 
         // Seed the application user that the live /auth/sign-in endpoint authenticates against.
-        await SeedApplicationAdminUserAsync(dbContext, logger, configuration).ConfigureAwait(false);
+        var adminUser = await SeedApplicationAdminUserAsync(dbContext, logger, configuration).ConfigureAwait(false);
+        await SeedPlatformTenantAsync(dbContext, adminUser, logger, configuration).ConfigureAwait(false);
 
         // Seed legacy ASP.NET Identity admin user if UserManager is available.
         // This is kept for compatibility with older identity surfaces.
@@ -76,7 +78,7 @@ public static class DatabaseSeeder
         }
     }
 
-    private static async Task SeedApplicationAdminUserAsync(ApplicationDbContext dbContext, ILogger? logger, IConfiguration? configuration = null)
+    private static async Task<AppUser> SeedApplicationAdminUserAsync(ApplicationDbContext dbContext, ILogger? logger, IConfiguration? configuration = null)
     {
         const string adminEmail = "admin@game-guild.com";
         const string adminName = "Game Guild Admin";
@@ -101,7 +103,7 @@ public static class DatabaseSeeder
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
             logger?.LogInformation("  Created application admin user: {Email}", adminEmail);
-            return;
+            return adminUser;
         }
 
         var updated = false;
@@ -147,6 +149,120 @@ public static class DatabaseSeeder
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
             logger?.LogInformation("  Updated application admin user: {Email}", adminEmail);
         }
+
+        return adminUser;
+    }
+
+    private static async Task SeedPlatformTenantAsync(
+        ApplicationDbContext dbContext,
+        AppUser adminUser,
+        ILogger? logger,
+        IConfiguration? configuration = null)
+    {
+        const string defaultTenantName = "GameGuild Platform";
+        const string defaultTenantSlug = "gameguild-platform";
+        const string defaultTenantDescription = "Default platform tenant for GameGuild administration.";
+
+        var tenantName = configuration?["Seed:DefaultTenantName"] ?? defaultTenantName;
+        var tenantSlug = configuration?["Seed:DefaultTenantSlug"] ?? defaultTenantSlug;
+        var tenantDescription = configuration?["Seed:DefaultTenantDescription"] ?? defaultTenantDescription;
+        var tenantRole = configuration?["Seed:AdminTenantRole"] ?? TenantRole.Owner.Value;
+
+        var tenants = dbContext.Set<Tenant>();
+        var tenant = await tenants
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(item => item.Slug == tenantSlug || item.IsDefault)
+            .ConfigureAwait(false);
+
+        if (tenant is null)
+        {
+            tenant = new Tenant
+            {
+                Id = Guid.NewGuid(),
+                Name = tenantName,
+                Slug = tenantSlug,
+                Description = tenantDescription,
+                AdminEmail = adminUser.Email,
+                IsActive = true,
+                IsDefault = true
+            };
+            tenants.Add(tenant);
+            logger?.LogInformation("  Created default platform tenant: {TenantSlug}", tenantSlug);
+        }
+        else
+        {
+            tenant.Name = string.IsNullOrWhiteSpace(tenant.Name) ? tenantName : tenant.Name;
+            tenant.Slug = string.IsNullOrWhiteSpace(tenant.Slug) ? tenantSlug : tenant.Slug;
+            tenant.Description = string.IsNullOrWhiteSpace(tenant.Description) ? tenantDescription : tenant.Description;
+            tenant.AdminEmail = string.IsNullOrWhiteSpace(tenant.AdminEmail) ? adminUser.Email : tenant.AdminEmail;
+            tenant.IsActive = true;
+            tenant.IsArchived = false;
+            tenant.ArchivedAt = null;
+            tenant.IsDefault = true;
+        }
+
+        var otherDefaultTenants = await tenants
+            .IgnoreQueryFilters()
+            .Where(item => item.Id != tenant.Id && item.IsDefault)
+            .ToListAsync()
+            .ConfigureAwait(false);
+
+        foreach (var otherTenant in otherDefaultTenants)
+        {
+            otherTenant.IsDefault = false;
+        }
+
+        var tenantMembers = dbContext.Set<TenantMember>();
+        var membership = await tenantMembers
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(item => item.TenantId == tenant.Id && item.UserId == adminUser.Id)
+            .ConfigureAwait(false);
+
+        if (membership is null)
+        {
+            tenantMembers.Add(new TenantMember
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenant.Id,
+                UserId = adminUser.Id,
+                Role = tenantRole,
+                IsActive = true,
+                JoinedAt = SystemClock.UtcNow,
+                Metadata = """{"bootstrap":true,"scope":"platform"}"""
+            });
+            logger?.LogInformation("  Created platform tenant owner membership for: {Email}", adminUser.Email);
+        }
+        else
+        {
+            membership.Role = string.IsNullOrWhiteSpace(membership.Role) ? tenantRole : membership.Role;
+            membership.Activate();
+        }
+
+        if (!await dbContext.Set<TenantSettings>()
+                .IgnoreQueryFilters()
+                .AnyAsync(item => item.TenantId == tenant.Id)
+                .ConfigureAwait(false))
+        {
+            dbContext.Set<TenantSettings>().Add(TenantSettings.CreateDefault(tenant.Id));
+        }
+
+        if (!await dbContext.Set<TenantStatistics>()
+                .IgnoreQueryFilters()
+                .AnyAsync(item => item.TenantId == tenant.Id)
+                .ConfigureAwait(false))
+        {
+            dbContext.Set<TenantStatistics>().Add(new TenantStatistics
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenant.Id,
+                StatisticDate = SystemClock.UtcNow.Date,
+                TotalMembers = 1,
+                ActiveMembers = 1,
+                NewMembers = 1
+            });
+        }
+
+        await dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
     private static async Task SeedLegacyIdentityAdminUserAsync(UserManager<LegacyIdentityUser> userManager, ILogger? logger, IConfiguration? configuration = null)
