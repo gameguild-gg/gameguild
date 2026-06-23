@@ -2,6 +2,7 @@
 
 const liveMode = process.argv.includes('--live');
 const timeoutMs = Number.parseInt(process.env.SMOKE_TIMEOUT_MS ?? '20000', 10);
+const retryCount = Number.parseInt(process.env.SMOKE_RETRIES ?? (liveMode ? '2' : '0'), 10);
 
 const defaults = liveMode
   ? {
@@ -26,20 +27,24 @@ const checks = [
   ['api health', config.api, '/health'],
   ['api documentation', config.api, '/documentation/index.html'],
   ['web health', config.web, '/api/health'],
+  ['web auth csrf', config.web, '/api/auth/csrf'],
   ['web root', config.web, '/'],
+  ['web favicon', config.web, '/favicon.svg'],
+  ['web manifest', config.web, '/manifest.webmanifest'],
   ['course catalog', config.web, '/courses'],
   ['programs', config.web, '/programs'],
   ['learning dashboard', config.web, '/dashboard/learning/courses'],
   ['learning root', config.learning, '/'],
   ['learning sign in', config.learning, '/sign-in'],
+  ['learning favicon', config.learning, '/favicon.svg'],
+  ['learning manifest', config.learning, '/manifest.webmanifest'],
 ];
 
 function joinUrl(base, path) {
   return new URL(path, base.endsWith('/') ? base : `${base}/`).toString();
 }
 
-async function runCheck([name, base, path]) {
-  const url = joinUrl(base, path);
+async function tryFetch(url) {
   const started = Date.now();
 
   try {
@@ -54,7 +59,6 @@ async function runCheck([name, base, path]) {
     const ok = response.status >= 200 && response.status < 400;
 
     return {
-      name,
       url,
       status: response.status,
       elapsed,
@@ -62,7 +66,6 @@ async function runCheck([name, base, path]) {
     };
   } catch (error) {
     return {
-      name,
       url,
       status: 'ERR',
       elapsed: Date.now() - started,
@@ -72,14 +75,41 @@ async function runCheck([name, base, path]) {
   }
 }
 
+async function runCheck([name, base, path]) {
+  const url = joinUrl(base, path);
+  let lastResult;
+
+  for (let attempt = 0; attempt <= retryCount; attempt += 1) {
+    const result = await tryFetch(url);
+    lastResult = result;
+
+    if (result.ok || attempt === retryCount) {
+      return {
+        ...result,
+        name,
+        attempts: attempt + 1,
+      };
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+  }
+
+  return {
+    ...lastResult,
+    name,
+    attempts: retryCount + 1,
+  };
+}
+
 const results = await Promise.all(checks.map(runCheck));
 const nameWidth = Math.max(...results.map((result) => result.name.length));
 
 for (const result of results) {
   const marker = result.ok ? 'PASS' : 'FAIL';
   const status = String(result.status).padEnd(3, ' ');
+  const attempts = result.attempts > 1 ? ` attempts=${result.attempts}` : '';
   const message = result.error ? ` ${result.error}` : '';
-  console.log(`${marker} ${result.name.padEnd(nameWidth, ' ')} ${status} ${result.elapsed}ms ${result.url}${message}`);
+  console.log(`${marker} ${result.name.padEnd(nameWidth, ' ')} ${status} ${result.elapsed}ms ${result.url}${attempts}${message}`);
 }
 
 const failed = results.filter((result) => !result.ok);

@@ -28,8 +28,12 @@ public static class PostgresConnectionString
             return connectionString;
         }
 
-        if (!Uri.TryCreate(connectionString, UriKind.Absolute, out var uri) ||
-            !IsPostgresUri(uri))
+        if (!Uri.TryCreate(connectionString, UriKind.Absolute, out var uri))
+        {
+            return NormalizeKeywordConnectionString(connectionString);
+        }
+
+        if (!IsPostgresUri(uri))
         {
             return connectionString;
         }
@@ -56,6 +60,23 @@ public static class PostgresConnectionString
         ApplyQueryParameters(uri, builder);
 
         return builder.ConnectionString;
+    }
+
+    private static string NormalizeKeywordConnectionString(string connectionString)
+    {
+        try
+        {
+            var builder = new NpgsqlConnectionStringBuilder(connectionString)
+            {
+                GssEncryptionMode = GssEncryptionMode.Disable
+            };
+
+            return builder.ConnectionString;
+        }
+        catch (ArgumentException)
+        {
+            return connectionString;
+        }
     }
 
     private static string? BuildFromPostgresParts(IConfiguration configuration)
