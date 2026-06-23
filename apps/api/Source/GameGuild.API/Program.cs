@@ -255,15 +255,17 @@ static async Task<bool> TryApplyDatabaseMigrationsAsync(WebApplication app)
 
 static string? GetMigrationConnectionString(IConfiguration configuration)
 {
-    return configuration.GetConnectionString("MigrationConnection")
+    var connectionString = configuration.GetConnectionString("MigrationConnection")
         ?? configuration["ConnectionStrings:MigrationConnection"]
         ?? configuration["Database:MigrationConnectionString"];
+
+    return PostgresConnectionString.Normalize(connectionString);
 }
 
 static GameGuild.API.Database.ApplicationDbContext CreateMigrationDbContext(string connectionString)
 {
     var optionsBuilder = new DbContextOptionsBuilder<GameGuild.API.Database.ApplicationDbContext>();
-    optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
+    optionsBuilder.UseNpgsql(PostgresConnectionString.Normalize(connectionString) ?? connectionString, npgsqlOptions =>
     {
         npgsqlOptions.MigrationsAssembly(typeof(GameGuild.API.Database.ApplicationDbContext).Assembly.FullName);
         npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorCodesToAdd: null);
@@ -294,7 +296,7 @@ static async Task GrantRuntimeRolePrivilegesAsync(WebApplication app, DbContext 
     string? runtimeUser;
     try
     {
-        runtimeUser = new NpgsqlConnectionStringBuilder(runtimeConnectionString).Username;
+        runtimeUser = new NpgsqlConnectionStringBuilder(PostgresConnectionString.Normalize(runtimeConnectionString) ?? runtimeConnectionString).Username;
     }
     catch (ArgumentException)
     {
