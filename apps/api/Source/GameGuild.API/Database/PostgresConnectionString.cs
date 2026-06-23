@@ -1,9 +1,26 @@
 using Npgsql;
+using Microsoft.Extensions.Configuration;
 
 namespace GameGuild.API.Database;
 
 public static class PostgresConnectionString
 {
+    public static string? Resolve(IConfiguration configuration, string connectionName = "DefaultConnection")
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        var postgresPartsConnectionString = BuildFromPostgresParts(configuration);
+        if (!string.IsNullOrWhiteSpace(postgresPartsConnectionString))
+        {
+            return postgresPartsConnectionString;
+        }
+
+        var configuredConnectionString = configuration.GetConnectionString(connectionName)
+            ?? configuration[$"ConnectionStrings:{connectionName}"];
+
+        return Normalize(configuredConnectionString);
+    }
+
     public static string? Normalize(string? connectionString)
     {
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -38,6 +55,54 @@ public static class PostgresConnectionString
         ApplyQueryParameters(uri, builder);
 
         return builder.ConnectionString;
+    }
+
+    private static string? BuildFromPostgresParts(IConfiguration configuration)
+    {
+        var host = configuration["POSTGRES_HOST"];
+        var database = configuration["POSTGRES_DB"];
+        var username = configuration["POSTGRES_USER"];
+        var password = configuration["POSTGRES_PASSWORD"];
+
+        if (string.IsNullOrWhiteSpace(host) ||
+            string.IsNullOrWhiteSpace(database) ||
+            string.IsNullOrWhiteSpace(username) ||
+            string.IsNullOrWhiteSpace(password))
+        {
+            return null;
+        }
+
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = host.Trim(),
+            Port = TryParsePort(configuration["POSTGRES_PORT"]) ?? 5432,
+            Database = database.Trim(),
+            Username = username.Trim(),
+            Password = password,
+            IncludeErrorDetail = bool.TryParse(configuration["POSTGRES_INCLUDE_ERROR_DETAIL"], out var includeErrorDetail) && includeErrorDetail,
+            MaxPoolSize = TryParseInt(configuration["POSTGRES_MAX_POOL_SIZE"]) ?? 100,
+            MinPoolSize = TryParseInt(configuration["POSTGRES_MIN_POOL_SIZE"]) ?? 5,
+            ConnectionIdleLifetime = TryParseInt(configuration["POSTGRES_CONNECTION_IDLE_LIFETIME"]) ?? 300
+        };
+
+        var sslMode = configuration["POSTGRES_SSLMODE"];
+        if (!string.IsNullOrWhiteSpace(sslMode) &&
+            Enum.TryParse<SslMode>(sslMode.Replace("-", string.Empty, StringComparison.Ordinal), true, out var parsedSslMode))
+        {
+            builder.SslMode = parsedSslMode;
+        }
+
+        return builder.ConnectionString;
+    }
+
+    private static int? TryParsePort(string? value)
+    {
+        return int.TryParse(value, out var port) && port > 0 ? port : null;
+    }
+
+    private static int? TryParseInt(string? value)
+    {
+        return int.TryParse(value, out var parsed) && parsed >= 0 ? parsed : null;
     }
 
     private static bool IsPostgresUri(Uri uri)

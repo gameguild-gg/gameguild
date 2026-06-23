@@ -8,8 +8,7 @@ public sealed class DatabaseConnectivityProbe(IConfiguration configuration)
 
     public async Task<bool> IsReachableAsync(CancellationToken cancellationToken = default)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? configuration["ConnectionStrings:DefaultConnection"];
+        var connectionString = PostgresConnectionString.Resolve(configuration);
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
@@ -19,8 +18,7 @@ public sealed class DatabaseConnectivityProbe(IConfiguration configuration)
         NpgsqlConnectionStringBuilder connectionStringBuilder;
         try
         {
-            connectionStringBuilder = new NpgsqlConnectionStringBuilder(
-                PostgresConnectionString.Normalize(connectionString) ?? connectionString);
+            connectionStringBuilder = new NpgsqlConnectionStringBuilder(connectionString);
         }
         catch (ArgumentException)
         {

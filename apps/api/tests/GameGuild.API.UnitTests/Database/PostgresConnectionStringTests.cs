@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.API.Database;
+using Microsoft.Extensions.Configuration;
 using Npgsql;
 
 namespace GameGuild.API.UnitTests.Database;
@@ -25,6 +26,48 @@ public sealed class PostgresConnectionStringTests
         builder.Database.Should().Be("game_guild");
         builder.Username.Should().Be("game_guild");
         builder.Password.Should().Be("secret");
+    }
+
+    [Fact]
+    public void Resolve_ShouldBuildConnectionStringFromPostgresPartsBeforeConfiguredConnectionString()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:DefaultConnection"] = "not-a-valid-connection-string",
+                ["POSTGRES_HOST"] = "db.internal",
+                ["POSTGRES_PORT"] = "6543",
+                ["POSTGRES_DB"] = "game_guild",
+                ["POSTGRES_USER"] = "game_guild",
+                ["POSTGRES_PASSWORD"] = "secret",
+                ["POSTGRES_SSLMODE"] = "require"
+            })
+            .Build();
+
+        var resolved = PostgresConnectionString.Resolve(configuration);
+
+        var builder = new NpgsqlConnectionStringBuilder(resolved);
+        builder.Host.Should().Be("db.internal");
+        builder.Port.Should().Be(6543);
+        builder.Database.Should().Be("game_guild");
+        builder.Username.Should().Be("game_guild");
+        builder.Password.Should().Be("secret");
+        builder.SslMode.Should().Be(SslMode.Require);
+    }
+
+    [Fact]
+    public void Resolve_ShouldFallbackToConfiguredConnectionStringWhenPostgresPartsAreIncomplete()
+    {
+        const string connectionString = "Host=localhost;Database=game_guild;Username=game_guild;Password=secret";
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:DefaultConnection"] = connectionString,
+                ["POSTGRES_HOST"] = "db.internal"
+            })
+            .Build();
+
+        PostgresConnectionString.Resolve(configuration).Should().Be(connectionString);
     }
 
     [Fact]
