@@ -26,6 +26,7 @@ public sealed class PostgresConnectionStringTests
         builder.Database.Should().Be("game_guild");
         builder.Username.Should().Be("game_guild");
         builder.Password.Should().Be("secret");
+        builder.GssEncryptionMode.Should().Be(GssEncryptionMode.Disable);
     }
 
     [Fact]
@@ -53,6 +54,7 @@ public sealed class PostgresConnectionStringTests
         builder.Username.Should().Be("game_guild");
         builder.Password.Should().Be("secret");
         builder.SslMode.Should().Be(SslMode.Require);
+        builder.GssEncryptionMode.Should().Be(GssEncryptionMode.Disable);
     }
 
     [Fact]
@@ -80,5 +82,6 @@ public sealed class PostgresConnectionStringTests
         builder.Username.Should().Be("game guild");
         builder.Password.Should().Be("p@ss");
         builder.SslMode.Should().Be(SslMode.Require);
+        builder.GssEncryptionMode.Should().Be(GssEncryptionMode.Disable);
     }
 }

@@ -38,7 +38,8 @@ public static class PostgresConnectionString
         {
             Host = uri.Host,
             Port = uri.IsDefaultPort ? 5432 : uri.Port,
-            Database = Uri.UnescapeDataString(uri.AbsolutePath.TrimStart('/'))
+            Database = Uri.UnescapeDataString(uri.AbsolutePath.TrimStart('/')),
+            GssEncryptionMode = GssEncryptionMode.Disable
         };
 
         if (!string.IsNullOrWhiteSpace(uri.UserInfo))
@@ -79,6 +80,7 @@ public static class PostgresConnectionString
             Database = database.Trim(),
             Username = username.Trim(),
             Password = password,
+            GssEncryptionMode = GssEncryptionMode.Disable,
             IncludeErrorDetail = bool.TryParse(configuration["POSTGRES_INCLUDE_ERROR_DETAIL"], out var includeErrorDetail) && includeErrorDetail,
             MaxPoolSize = TryParseInt(configuration["POSTGRES_MAX_POOL_SIZE"]) ?? 100,
             MinPoolSize = TryParseInt(configuration["POSTGRES_MIN_POOL_SIZE"]) ?? 5,
