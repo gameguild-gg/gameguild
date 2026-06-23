@@ -96,45 +96,43 @@ var databaseReachable = await databaseConnectivityProbe.IsReachableAsync().Confi
 // Apply pending EF Core migrations automatically before starting the service
 if (!databaseReachable)
 {
-    app.Logger.LogInformation(
-        "Database host is unreachable. Starting API without migrations or seeding; database-backed jobs and endpoints will wait until connectivity is restored.");
+    app.Logger.LogWarning(
+        "Initial database probe failed. Continuing into the migration retry loop so transient database startup delays do not leave the schema unapplied.");
 }
-else
-{
-    databaseReachable = await TryApplyDatabaseMigrationsAsync(app).ConfigureAwait(false);
 
-    if (databaseReachable)
+databaseReachable = await TryApplyDatabaseMigrationsAsync(app).ConfigureAwait(false);
+
+if (databaseReachable)
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        await DatabaseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Database seeding failed — default roles and admin user may not exist.");
+    }
+
+    if (ShouldImportSnapshotCourses(app.Configuration))
     {
         try
         {
             using var scope = app.Services.CreateScope();
-            await DatabaseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
+            var result = await SnapshotCourseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
+            app.Logger.LogInformation(
+                "Snapshot course startup import complete. Parsed {ParsedPrograms} programs and {ParsedContents} contents from {CoursesRoot}. Created {CreatedPrograms} new programs and {CreatedContents} new contents. DbContext sees {PublicProgramCount} published/public programs in database {DatabaseName}.",
+                result.ParsedPrograms,
+                result.ParsedContents,
+                result.CoursesRoot,
+                result.CreatedPrograms,
+                result.CreatedContents,
+                result.PublicProgramCount,
+                result.DatabaseName);
         }
         catch (Exception ex)
         {
-            app.Logger.LogWarning(ex, "Database seeding failed — default roles and admin user may not exist.");
-        }
-
-        if (ShouldImportSnapshotCourses(app.Configuration))
-        {
-            try
-            {
-                using var scope = app.Services.CreateScope();
-                var result = await SnapshotCourseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
-                app.Logger.LogInformation(
-                    "Snapshot course startup import complete. Parsed {ParsedPrograms} programs and {ParsedContents} contents from {CoursesRoot}. Created {CreatedPrograms} new programs and {CreatedContents} new contents. DbContext sees {PublicProgramCount} published/public programs in database {DatabaseName}.",
-                    result.ParsedPrograms,
-                    result.ParsedContents,
-                    result.CoursesRoot,
-                    result.CreatedPrograms,
-                    result.CreatedContents,
-                    result.PublicProgramCount,
-                    result.DatabaseName);
-            }
-            catch (Exception ex)
-            {
-                app.Logger.LogWarning(ex, "Snapshot course startup import failed. Public fallback pages can still render, but API-backed course management may be empty.");
-            }
+            app.Logger.LogWarning(ex, "Snapshot course startup import failed. Public fallback pages can still render, but API-backed course management may be empty.");
         }
     }
 }
