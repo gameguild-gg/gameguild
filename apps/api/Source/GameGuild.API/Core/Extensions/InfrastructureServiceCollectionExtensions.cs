@@ -64,6 +64,15 @@ public static class InfrastructureServiceCollectionExtensions
                     context.ProblemDetails.Instance = context.HttpContext.Request.Path;
                     context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
 
+                    if (context.Exception is not null && IsDatabaseSchemaNotReadyException(context.Exception))
+                    {
+                        context.HttpContext.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                        context.ProblemDetails.Type = "https://gameguild.gg/problems/database-schema-not-ready";
+                        context.ProblemDetails.Title = "Database Schema Not Ready";
+                        context.ProblemDetails.Status = StatusCodes.Status503ServiceUnavailable;
+                        context.ProblemDetails.Detail = "Database schema is not ready. Apply pending migrations before retrying.";
+                    }
+
                     if (options.IncludeExceptionDetails && context.Exception != null)
                     {
                         context.ProblemDetails.Extensions["exception"] = context.Exception.ToString();
@@ -73,6 +82,28 @@ public static class InfrastructureServiceCollectionExtensions
         );
 
         return services;
+    }
+
+    public static bool IsDatabaseSchemaNotReadyException(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            var sqlState = current.GetType().GetProperty("SqlState")?.GetValue(current) as string;
+            if (string.Equals(sqlState, "42P01", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            if (current.Message.Contains("relation", StringComparison.OrdinalIgnoreCase) &&
+                current.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static IServiceCollection SetupLocalization(this IServiceCollection services, IConfiguration configuration,
