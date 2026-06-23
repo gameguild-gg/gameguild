@@ -19,7 +19,8 @@ public sealed class DatabaseConnectivityProbe(IConfiguration configuration)
         NpgsqlConnectionStringBuilder connectionStringBuilder;
         try
         {
-            connectionStringBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+            connectionStringBuilder = new NpgsqlConnectionStringBuilder(
+                PostgresConnectionString.Normalize(connectionString) ?? connectionString);
         }
         catch (ArgumentException)
         {

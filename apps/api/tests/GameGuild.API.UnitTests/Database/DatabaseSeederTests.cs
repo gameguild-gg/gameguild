@@ -1,5 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Database;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,9 +31,55 @@ public sealed class DatabaseSeederTests
 
         await using var provider = services.BuildServiceProvider();
 
-        await DatabaseSeeder.SeedAsync(provider).ConfigureAwait(false);
+        await DatabaseSeeder.SeedAsync(provider);
 
         logger.Messages.Where(message => message.Level >= LogLevel.Warning).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SeedAsync_Should_Create_Default_Tenant_And_Admin_Owner_Membership()
+    {
+        var services = CreateSeederServices("UnitTestAdmin123!");
+        await using var provider = services.BuildServiceProvider();
+
+        await DatabaseSeeder.SeedAsync(provider);
+        await DatabaseSeeder.SeedAsync(provider);
+
+        var dbContext = provider.GetRequiredService<ApplicationDbContext>();
+        var adminUser = await dbContext.Set<User>().SingleAsync(user => user.Email == "admin@game-guild.com");
+        var tenant = await dbContext.Set<Tenant>().SingleAsync(tenant => tenant.IsDefault);
+        var membership = await dbContext.Set<TenantMember>()
+            .SingleAsync(member => member.UserId == adminUser.Id && member.TenantId == tenant.Id);
+
+        tenant.Slug.Should().Be("gameguild-platform");
+        tenant.IsActive.Should().BeTrue();
+        membership.Role.Should().Be(TenantRole.Owner.Value);
+        membership.IsActive.Should().BeTrue();
+
+        var settingsCount = await dbContext.Set<TenantSettings>()
+            .CountAsync(settings => settings.TenantId == tenant.Id);
+        var statisticsCount = await dbContext.Set<TenantStatistics>()
+            .CountAsync(statistics => statistics.TenantId == tenant.Id);
+
+        settingsCount.Should().Be(1);
+        statisticsCount.Should().Be(1);
+    }
+
+    private static ServiceCollection CreateSeederServices(string adminPassword)
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Seed:AdminPassword"] = adminPassword
+            })
+            .Build();
+
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddSingleton<ILogger<ApplicationDbContext>, CapturingLogger<ApplicationDbContext>>();
+        services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+
+        return services;
     }
 
     private sealed class CapturingLogger<T> : ILogger<T>
