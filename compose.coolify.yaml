@@ -22,7 +22,9 @@
 #     DML privileges to POSTGRES_USER. Runtime traffic still uses POSTGRES_USER.
 #
 # Coolify owns SERVICE_FQDN_* / SERVICE_URL_* variables and service routing.
-# The application containers should consume explicit public URLs only.
+# The application containers consume explicit public URLs. Optional
+# SERVICE_FQDN_* environment echoes below are Coolify routing hints only; they
+# are not required manual environment variables.
 
 services:
   api:
@@ -33,6 +35,7 @@ services:
     ports:
       - '8080'
     environment:
+      - SERVICE_FQDN_API_8080=${SERVICE_FQDN_API_8080:-${SERVICE_FQDN_API:-}}
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Staging}
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
@@ -103,6 +106,7 @@ services:
     ports:
       - '3000'
     environment:
+      - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB_3000:-${SERVICE_FQDN_WEB:-}}
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
@@ -166,6 +170,7 @@ services:
     ports:
       - '3002'
     environment:
+      - SERVICE_FQDN_LEARNING_3002=${SERVICE_FQDN_LEARNING_3002:-${SERVICE_FQDN_LEARNING:-}}
       - NODE_ENV=production
       - PORT=3002
       - HOSTNAME=0.0.0.0
