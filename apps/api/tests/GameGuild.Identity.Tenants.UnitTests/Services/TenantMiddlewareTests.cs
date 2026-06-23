@@ -265,6 +265,36 @@ public class TenantMiddlewareTests
         context.Items[HttpContextKeys.CurrentTenant].Should().Be(tenant);
     }
 
+    [Fact]
+    public async Task InvokeAsync_WhenTenantDomainTableIsMissing_ShouldReturnServiceUnavailable()
+    {
+        _tenantDomainsRepositoryMock
+            .Setup(x => x.GetByDomainAsync("tenant.example.com", It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new MissingRelationException("42P01: relation \"TenantDomains\" does not exist"));
+
+        var context = CreateHttpContext();
+        context.Request.Path = "/api/test";
+        context.Request.Host = new HostString("tenant.example.com");
+        context.Response.Body = new MemoryStream();
+
+        var nextCalled = false;
+        RequestDelegate next = _ =>
+        {
+            nextCalled = true;
+            return Task.CompletedTask;
+        };
+        var middleware = new TenantMiddleware(next, _loggerMock.Object);
+
+        await middleware.InvokeAsync(context, _mediator, _tenantDomainsRepositoryMock.Object, _tenantMemberRepositoryMock.Object);
+
+        nextCalled.Should().BeFalse();
+        context.Response.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
+        context.Response.Body.Position = 0;
+        using var reader = new StreamReader(context.Response.Body);
+        var body = await reader.ReadToEndAsync();
+        body.Should().Contain("DatabaseSchemaNotReady");
+    }
+
     private static DefaultHttpContext CreateHttpContext()
     {
         var context = new DefaultHttpContext();
@@ -288,5 +318,10 @@ public class TenantMiddlewareTests
         var result = app.UseTenantResolution();
 
         result.Should().BeSameAs(app);
+    }
+
+    private sealed class MissingRelationException(string message) : Exception(message)
+    {
+        public string SqlState => "42P01";
     }
 }

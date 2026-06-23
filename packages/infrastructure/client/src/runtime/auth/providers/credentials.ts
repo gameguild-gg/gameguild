@@ -20,7 +20,12 @@
  */
 
 import type { CredentialsProviderConfig, ProviderResult, SessionUser } from '../types.js';
-import { CredentialsSignInError, MfaRequiredError, AccountLockedError } from '../errors.js';
+import {
+  AccountLockedError,
+  AuthServiceUnavailableError,
+  CredentialsSignInError,
+  MfaRequiredError,
+} from '../errors.js';
 
 /**
  * Options for the credentials provider
@@ -85,11 +90,19 @@ export function CredentialsProvider(
       const body: Record<string, unknown> = { email, password };
       if (tenantId) body.tenantId = tenantId;
 
-      const response = await fetch(`${apiUrl}${signInPath}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      let response: Response;
+      try {
+        response = await fetch(`${apiUrl}${signInPath}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      } catch (error) {
+        throw new AuthServiceUnavailableError(
+          'Authentication service is unreachable. Please check the API deployment.',
+          error instanceof Error ? error : undefined
+        );
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -97,6 +110,10 @@ export function CredentialsProvider(
           (errorData as Record<string, unknown>).message as string ||
           (errorData as Record<string, unknown>).detail as string ||
           'Invalid credentials';
+
+        if (response.status >= 500) {
+          throw new AuthServiceUnavailableError();
+        }
 
         if (response.status === 423) {
           throw new AccountLockedError(message);
