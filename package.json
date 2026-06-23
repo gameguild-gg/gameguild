@@ -27,6 +27,7 @@
     "sync:fix": "syncpack fix-mismatches",
     "smoke": "node scripts/devops/smoke-check.mjs",
     "smoke:live": "node scripts/devops/smoke-check.mjs --live",
+    "parity:prod": "node scripts/devops/production-parity-check.mjs",
     "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo pnpm-lock.yaml",
     "changeset": "changeset",
     "version": "changeset version",
