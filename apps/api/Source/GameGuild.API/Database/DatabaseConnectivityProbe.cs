@@ -31,11 +31,6 @@ public sealed class DatabaseConnectivityProbe(IConfiguration configuration)
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(connectionStringBuilder.Host) || connectionStringBuilder.Port <= 0)
-        {
-            return false;
-        }
-
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutCts.CancelAfter(ProbeTimeout);
 
