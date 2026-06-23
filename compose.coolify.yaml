@@ -43,7 +43,8 @@ services:
       - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
       - ConnectionStrings__MigrationConnection=${POSTGRES_MIGRATION_CONNECTION:-}
       - Database__GrantRuntimeRoleAfterMigrations=${DATABASE_GRANT_RUNTIME_ROLE_AFTER_MIGRATIONS:-true}
-      - Database__FailStartupOnGrantFailure=${DATABASE_FAIL_STARTUP_ON_GRANT_FAILURE:-true}
+      - Database__FailStartupOnMigrationFailure=${DATABASE_FAIL_STARTUP_ON_MIGRATION_FAILURE:-false}
+      - Database__FailStartupOnGrantFailure=${DATABASE_FAIL_STARTUP_ON_GRANT_FAILURE:-false}
       # JWT configuration consumed by the API and auth services
       - Jwt__SecretKey=${JWT_SECRET_KEY:?set JWT_SECRET_KEY}
       - Jwt__Issuer=${JWT_ISSUER:-GameGuild}
@@ -59,7 +60,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8080/ready || exit 1']
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8080/live || exit 1']
       start_interval: 5s
       start_period: 180s
       interval: 30s
