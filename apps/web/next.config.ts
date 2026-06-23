@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     authInterrupts: true,
+    cpus: 1,
   },
   webpack: (config) => {
     config.module.rules.push({

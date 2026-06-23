@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
     },
     experimental: {
         authInterrupts: true,
+        cpus: 1,
     },
     async redirects() {
         const webUrl = process.env.NEXT_PUBLIC_WEB_URL || process.env.WEB_PUBLIC_URL;

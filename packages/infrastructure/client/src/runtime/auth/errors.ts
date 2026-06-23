@@ -62,6 +62,19 @@ export class AccountLockedError extends AuthError {
 }
 
 /**
+ * Authentication backend is unavailable or unhealthy.
+ */
+export class AuthServiceUnavailableError extends AuthError {
+  constructor(
+    message = 'Authentication is temporarily unavailable. Please try again after the API is healthy.',
+    cause?: Error
+  ) {
+    super(message, { type: 'AuthServiceUnavailable', status: 503, cause });
+    this.name = 'AuthServiceUnavailableError';
+  }
+}
+
+/**
  * MFA is required for this sign-in
  */
 export class MfaRequiredError extends AuthError {

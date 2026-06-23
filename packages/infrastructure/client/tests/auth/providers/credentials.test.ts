@@ -4,7 +4,12 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CredentialsProvider } from '../../../src/runtime/auth/providers/credentials.js';
-import { CredentialsSignInError, AccountLockedError, MfaRequiredError } from '../../../src/runtime/auth/errors.js';
+import {
+  AccountLockedError,
+  AuthServiceUnavailableError,
+  CredentialsSignInError,
+  MfaRequiredError,
+} from '../../../src/runtime/auth/errors.js';
 
 describe('CredentialsProvider', () => {
   let originalFetch: typeof globalThis.fetch;
@@ -202,7 +207,31 @@ describe('CredentialsProvider', () => {
 
     await expect(
       provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
-    ).rejects.toThrow(CredentialsSignInError);
+    ).rejects.toThrow(AuthServiceUnavailableError);
+  });
+
+  it('should throw service unavailable on backend 500 instead of credentials error', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ title: 'An error occurred while processing your request.' }),
+    });
+
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+
+    await expect(
+      provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
+    ).rejects.toThrow(AuthServiceUnavailableError);
+  });
+
+  it('should throw service unavailable when the auth API cannot be reached', async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('connection refused'));
+
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+
+    await expect(
+      provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
+    ).rejects.toThrow(AuthServiceUnavailableError);
   });
 
   it('should use __apiUrl from credentials as fallback', async () => {
