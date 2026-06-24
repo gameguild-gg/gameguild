@@ -99,7 +99,7 @@ services:
       args:
         GIT_HASH: ${GIT_HASH:-}
         AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
-        API_INTERNAL_URL: http://gameguild-api-internal:8080
+        API_INTERNAL_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
@@ -110,7 +110,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
-      - API_URL=http://gameguild-api-internal:8080
+      - API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
       - NEXT_PUBLIC_APP_URL=${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
       - NEXT_PUBLIC_LEARNING_APP_URL=${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
@@ -162,7 +162,7 @@ services:
       args:
         GIT_HASH: ${GIT_HASH:-}
         AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
-        API_INTERNAL_URL: http://gameguild-api-internal:8080
+        API_INTERNAL_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
@@ -173,7 +173,7 @@ services:
       - NODE_ENV=production
       - PORT=3002
       - HOSTNAME=0.0.0.0
-      - API_URL=http://gameguild-api-internal:8080
+      - API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
       - NEXTAUTH_URL=${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
       - AUTH_SECRET=${AUTH_SECRET:?set AUTH_SECRET}
