@@ -1,3 +1,5 @@
+import { getCourse } from '@/lib/learning';
+import { getCourseRouteParam } from '@/lib/learning/course-route';
 import { redirect } from 'next/navigation';
 
 /**
@@ -7,6 +9,9 @@ import { redirect } from 'next/navigation';
 export default async function SupportPage({
   params,
 }: PageProps<'/[locale]/dashboard/learning/courses/[course]/support'>): Promise<never> {
-  const { locale, course: courseId } = await params;
-  redirect(`/${locale}/dashboard/learning/courses/${courseId}/support/tickets`);
+  const { locale, course: courseIdentifier } = await params;
+  const course = await getCourse(courseIdentifier);
+  const courseRouteParam = course ? getCourseRouteParam(course) : courseIdentifier;
+
+  redirect(`/${locale}/dashboard/learning/courses/${encodeURIComponent(courseRouteParam)}/support/tickets`);
 }

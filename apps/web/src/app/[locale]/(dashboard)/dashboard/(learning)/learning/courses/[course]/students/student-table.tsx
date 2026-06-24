@@ -1,17 +1,20 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState, useTransition } from 'react';
+import { manualEnrollStudent } from '@/lib/learning/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
 import { Progress } from '@game-guild/ui/components/progress';
 import { Avatar, AvatarFallback } from '@game-guild/ui/components/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Checkbox } from '@game-guild/ui/components/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
-import { Download, Eye, Mail, MoreHorizontal, Search, TrendingUp, UserMinus, Users } from 'lucide-react';
+import { Download, Eye, Loader2, Mail, MoreHorizontal, Search, TrendingUp, UserMinus, UserPlus, Users } from 'lucide-react';
 
 interface Student {
   id: string;
@@ -46,10 +49,37 @@ function StatusBadge({ student }: { student: Student }) {
   return <Badge variant={c.variant}>{c.label}</Badge>;
 }
 
-export function StudentTable({ students, total }: { students: Student[]; total: number }) {
+export function StudentTable({ courseId, students, total }: { courseId: string; students: Student[]; total: number }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isPending, startTransition] = useTransition();
+  const [manualEnrollOpen, setManualEnrollOpen] = useState(false);
+  const [manualUserId, setManualUserId] = useState('');
+  const [manualCohortId, setManualCohortId] = useState('');
+  const [manualEnrollError, setManualEnrollError] = useState<string | null>(null);
+
+  const submitManualEnrollment = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setManualEnrollError(null);
+
+    startTransition(async () => {
+      const result = await manualEnrollStudent({
+        courseId,
+        userId: manualUserId,
+        cohortId: manualCohortId || null,
+      });
+
+      if (result.success) {
+        setManualEnrollOpen(false);
+        setManualUserId('');
+        setManualCohortId('');
+        return;
+      }
+
+      setManualEnrollError(result.error);
+    });
+  };
 
   const filtered = useMemo(() => {
     let result = students;
@@ -95,10 +125,62 @@ export function StudentTable({ students, total }: { students: Student[]; total: 
               {total > 0 ? `${total} students enrolled` : 'No students enrolled yet'}
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm">
-            <Download className="mr-2 size-4" />
-            Export
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Dialog open={manualEnrollOpen} onOpenChange={setManualEnrollOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <UserPlus className="mr-2 size-4" />
+                  Enroll student
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <form onSubmit={submitManualEnrollment} className="space-y-5">
+                  <DialogHeader>
+                    <DialogTitle>Enroll student manually</DialogTitle>
+                    <DialogDescription>
+                    Add an existing GameGuild user to this course by email, username, or canonical user ID.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                    <Label htmlFor="manual-user-id">Student</Label>
+                      <Input
+                        id="manual-user-id"
+                        value={manualUserId}
+                        onChange={(event) => setManualUserId(event.target.value)}
+                      placeholder="student@example.com, username, or user ID"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="manual-cohort-id">Cohort ID</Label>
+                      <Input
+                        id="manual-cohort-id"
+                        value={manualCohortId}
+                        onChange={(event) => setManualCohortId(event.target.value)}
+                        placeholder="Optional"
+                      />
+                      <p className="text-xs text-muted-foreground">Leave blank to enroll the student directly in the course.</p>
+                    </div>
+                    {manualEnrollError && <p className="text-sm text-destructive">{manualEnrollError}</p>}
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setManualEnrollOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isPending || !manualUserId.trim()}>
+                      {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+                      Enroll student
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" size="sm">
+              <Download className="mr-2 size-4" />
+              Export
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

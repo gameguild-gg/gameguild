@@ -1,6 +1,7 @@
 'use server';
 
 import { getToken } from '@/auth';
+import { getCourseRouteParam } from '@/lib/learning/course-route';
 import type { LearningCoursesProgramContentType } from '@/lib/learning/types';
 import {
   createServerClient,
@@ -31,10 +32,12 @@ function createCourseModules() {
   const client = getApiClient();
 
   return {
+    client,
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
     content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
     lifecycle: new GeneratedApi.LearningCoursesProgramlifecycleModule(client),
     assessments: new GeneratedApi.LearningAssessmentsModule(client),
+    enrollments: new GeneratedApi.LearningEnrollmentsModule(client),
   };
 }
 
@@ -191,7 +194,7 @@ export interface CreateCourseInput {
   slug: string;
 }
 
-export async function createCourse(input: CreateCourseInput): Promise<ActionResult<{ id: string; slug: string }>> {
+export async function createCourse(input: CreateCourseInput): Promise<ActionResult<{ id: string; slug: string; routeParam: string }>> {
   const { title, description, slug } = input;
 
   if (!title || title.trim().length < 3) {
@@ -213,8 +216,22 @@ export async function createCourse(input: CreateCourseInput): Promise<ActionResu
     } satisfies LearningCoursesCreateProgram);
 
     if (result.ok) {
+      const id = result.data.id!;
+      const createdSlug = result.data.slug?.trim() || slug.trim();
+
       revalidatePath('/dashboard/learning/courses');
-      return { success: true, data: { id: result.data.id!, slug: result.data.slug?.trim() || slug.trim() } };
+      return {
+        success: true,
+        data: {
+          id,
+          slug: createdSlug,
+          routeParam: getCourseRouteParam({
+            id,
+            slug: createdSlug,
+            creatorId: result.data.creatorId ?? null,
+          }),
+        },
+      };
     }
 
     return { success: false, error: extractError(result.error) };
@@ -320,6 +337,100 @@ export async function deleteCourse(courseId: string): Promise<ActionResult<null>
     if (result.ok) {
       revalidatePath('/dashboard/learning/courses');
       return { success: true, data: null };
+    }
+
+    return { success: false, error: extractError(result.error) };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export interface ManualEnrollStudentInput {
+  courseId: string;
+  userId: string;
+  cohortId?: string | null;
+}
+
+interface UserSearchResponse {
+  items?: Array<{
+    id?: string | null;
+    email?: string | null;
+    username?: string | null;
+    name?: string | null;
+  }> | null;
+}
+
+function isGuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
+}
+
+async function resolveEnrollmentUserId(reference: string): Promise<ActionResult<{ userId: string }>> {
+  const value = reference.trim();
+  if (isGuid(value)) {
+    return { success: true, data: { userId: value } };
+  }
+
+  const { client } = createCourseModules();
+  const query = value.includes('@')
+    ? { email: value, limit: 5 }
+    : { q: value, limit: 5 };
+
+  const result = await client.request({
+    method: 'GET',
+    path: '/v1/users',
+    params: query,
+    requiresAuth: true,
+  }) as { ok: true; data: UserSearchResponse } | { ok: false; error?: { detail?: string; message?: string } };
+
+  if (!result.ok) {
+    return { success: false, error: result.error?.detail || result.error?.message || 'Could not search users.' };
+  }
+
+  const normalized = value.toLowerCase();
+  const matches = result.data.items ?? [];
+  const match = matches.find((user) =>
+    user.email?.toLowerCase() === normalized ||
+    user.username?.toLowerCase() === normalized ||
+    user.name?.toLowerCase() === normalized,
+  ) ?? matches[0];
+
+  if (!match?.id) {
+    return { success: false, error: 'No user matched that email, username, or user ID.' };
+  }
+
+  return { success: true, data: { userId: match.id } };
+}
+
+export async function manualEnrollStudent(input: ManualEnrollStudentInput): Promise<ActionResult<{ id: string | null }>> {
+  const courseId = input.courseId.trim();
+  const userReference = input.userId.trim();
+  const cohortId = input.cohortId?.trim() || null;
+
+  if (!courseId) {
+    return { success: false, error: 'Course is required.' };
+  }
+
+  if (!userReference) {
+    return { success: false, error: 'Student email, username, or user ID is required.' };
+  }
+
+  try {
+    const resolvedUser = await resolveEnrollmentUserId(userReference);
+    if (!resolvedUser.success) {
+      return resolvedUser;
+    }
+
+    const { enrollments } = createCourseModules();
+    const result = await enrollments.postApiLearningEnrollments({
+      courseId,
+      userId: resolvedUser.data.userId,
+      cohortId,
+    });
+
+    if (result.ok) {
+      revalidatePath(`/dashboard/learning/courses/${courseId}/students`);
+      revalidatePath(`/dashboard/learning/courses/${courseId}`);
+      return { success: true, data: { id: result.data.id ?? null } };
     }
 
     return { success: false, error: extractError(result.error) };

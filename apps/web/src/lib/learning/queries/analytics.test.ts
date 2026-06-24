@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('./course', () => ({
   getCourseContent: mocks.getCourseContent,
+  resolveCourseId: vi.fn(async (courseId: string) => courseId),
 }));
 
 vi.mock('./http', () => ({

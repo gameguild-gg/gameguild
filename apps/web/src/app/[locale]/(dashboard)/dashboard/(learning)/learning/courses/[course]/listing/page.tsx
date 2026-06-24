@@ -1,4 +1,5 @@
 import { Link } from '@/i18n/navigation';
+import { buildDashboardCoursePath, getCourseRouteParam } from '@/lib/learning/course-route';
 import { getCourse, getCourseContent } from '@/lib/learning';
 import {
   deriveCourseLaunchSummary,
@@ -96,7 +97,7 @@ function formatDateTime(value: string | null): string {
 export default async function ListingPage({
   params,
 }: PageProps<'/[locale]/dashboard/learning/courses/[course]/listing'>): Promise<React.JSX.Element> {
-  const { course: courseId } = await params;
+  const { locale, course: courseId } = await params;
 
   const [course, content] = await Promise.all([getCourse(courseId), getCourseContent(courseId)]);
 
@@ -105,6 +106,7 @@ export default async function ListingPage({
   }
 
   const summary = deriveCourseLaunchSummary(course, content);
+  const courseRouteParam = getCourseRouteParam(course);
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
@@ -199,7 +201,7 @@ export default async function ListingPage({
                 </div>
                 <p className="text-sm text-muted-foreground">Title, slug, description, category, difficulty, and outcomes.</p>
                 <Button asChild variant="outline" className="mt-4 w-full justify-start">
-                  <Link href={`/dashboard/learning/courses/${courseId}/listing/info`}>Open identity editor</Link>
+                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/info')} locale={locale}>Open identity editor</Link>
                 </Button>
               </div>
               <div className="rounded-lg border p-4">
@@ -209,7 +211,7 @@ export default async function ListingPage({
                 </div>
                 <p className="text-sm text-muted-foreground">Cover image and promo video used across catalog and landing pages.</p>
                 <Button asChild variant="outline" className="mt-4 w-full justify-start">
-                  <Link href={`/dashboard/learning/courses/${courseId}/listing/media`}>Open media editor</Link>
+                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/media')} locale={locale}>Open media editor</Link>
                 </Button>
               </div>
               <div className="rounded-lg border p-4">
@@ -219,7 +221,7 @@ export default async function ListingPage({
                 </div>
                 <p className="text-sm text-muted-foreground">Portfolio project slides shown on the public course landing page.</p>
                 <Button asChild variant="outline" className="mt-4 w-full justify-start">
-                  <Link href={`/dashboard/learning/courses/${courseId}/listing/projects`}>Open project editor</Link>
+                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/projects')} locale={locale}>Open project editor</Link>
                 </Button>
               </div>
             </div>

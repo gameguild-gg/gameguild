@@ -32,12 +32,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@game-guild/ui/components/dropdown-menu';
-import { Input } from '@game-guild/ui/components/input';
 import { Separator } from '@game-guild/ui/components/separator';
 import { SidebarTrigger } from '@game-guild/ui/components/sidebar';
 import { Bell, Command, Search } from 'lucide-react';
 import * as React from 'react';
 import type { DashboardNotificationItem, DashboardNotificationSummary } from '@/lib/dashboard-notifications';
+import { openDashboardCommandPalette } from './dashboard-command-palette';
 
 const ITEMS_TO_DISPLAY = 3;
 
@@ -192,13 +192,18 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
       </div>
       <div className="flex items-center gap-2">
         {/* Search */}
-        <div className="relative ml-auto w-full max-w-sm">
+        <button
+          type="button"
+          onClick={openDashboardCommandPalette}
+          className="relative ml-auto flex h-10 w-full max-w-sm items-center rounded-md border bg-background px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/50"
+          aria-label="Search dashboard"
+        >
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input type="search" placeholder="Search... (Ctrl+K)" className="pl-10 pr-4" />
+          <span className="min-w-0 flex-1 truncate pl-7 pr-16">Search dashboard...</span>
           <kbd className="pointer-events-none absolute right-3 top-1/2 hidden h-5 -translate-y-1/2 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
             <Command className="size-3" />
           </kbd>
-        </div>
+        </button>
       </div>
       <div className="flex items-center gap-4">
         {/* Theme Toggle */}
