@@ -2,6 +2,14 @@ import { render, screen, within } from '@testing-library/react';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
+const { authMock } = vi.hoisted(() => ({
+  authMock: vi.fn(),
+}));
+
+vi.mock('@/auth', () => ({
+  auth: authMock,
+}));
+
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
     <a href={href} {...props}>
@@ -29,8 +37,10 @@ import TestingLabPage from './[locale]/(contents)/(testing-lab)/testing-lab/page
 import HomePage from './[locale]/(site)/page';
 
 describe('public community website UX', () => {
-  it('exposes the learning-to-community information architecture in the header', () => {
-    render(<PublicWebsiteHeader />);
+  it('exposes the learning-to-community information architecture in the header', async () => {
+    authMock.mockResolvedValueOnce(null);
+
+    render(await PublicWebsiteHeader());
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
     expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual([
@@ -43,6 +53,25 @@ describe('public community website UX', () => {
       'Jobs',
       'About',
     ]);
+  });
+
+  it('shows the authenticated member profile instead of sign-in calls to action', async () => {
+    authMock.mockResolvedValueOnce({
+      user: {
+        id: 'user-1',
+        name: 'Ada Lovelace',
+        email: 'ada@gameguild.gg',
+        image: null,
+      },
+      expires: '2026-12-31T00:00:00.000Z',
+    });
+
+    render(await PublicWebsiteHeader());
+
+    expect(screen.queryByRole('link', { name: /^sign in$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /join community/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /ada lovelace profile/i })).toHaveAttribute('href', '/dashboard');
+    expect(screen.getByText('AL')).toBeInTheDocument();
   });
 
   it('turns the home page into a community gateway', async () => {

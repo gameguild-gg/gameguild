@@ -71,6 +71,68 @@ public class AssessmentsController : BaseApiController
     }
 
     /// <summary>
+    /// Get weighted assessment groups for a course.
+    /// </summary>
+    [HttpGet("course/{courseId:guid}/groups")]
+    public async Task<ActionResult<IEnumerable<AssessmentGroupDto>>> GetCourseAssessmentGroups(Guid courseId)
+    {
+        var groups = await _assessmentService.GetCourseAssessmentGroupsAsync(courseId).ConfigureAwait(false);
+        return Ok(groups.Select(AssessmentGroupDto.FromEntity));
+    }
+
+    /// <summary>
+    /// Create a weighted assessment group.
+    /// </summary>
+    [HttpPost("groups")]
+    public async Task<ActionResult<AssessmentGroupDto>> CreateAssessmentGroup([FromBody] CreateAssessmentGroupRequest request)
+    {
+        var result = await _assessmentService.CreateAssessmentGroupAsync(request).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result.Error);
+        }
+
+        return CreatedAtAction(
+            nameof(GetCourseAssessmentGroups),
+            new { courseId = result.Value.CourseId },
+            AssessmentGroupDto.FromEntity(result.Value));
+    }
+
+    /// <summary>
+    /// Update a weighted assessment group.
+    /// </summary>
+    [HttpPut("groups/{id:guid}")]
+    public async Task<ActionResult<AssessmentGroupDto>> UpdateAssessmentGroup(Guid id, [FromBody] UpdateAssessmentGroupRequest request)
+    {
+        var result = await _assessmentService.UpdateAssessmentGroupAsync(id, request).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
+                : BadRequest(result.Error);
+        }
+
+        return Ok(AssessmentGroupDto.FromEntity(result.Value));
+    }
+
+    /// <summary>
+    /// Delete a weighted assessment group.
+    /// </summary>
+    [HttpDelete("groups/{id:guid}")]
+    public async Task<ActionResult> DeleteAssessmentGroup(Guid id)
+    {
+        var result = await _assessmentService.DeleteAssessmentGroupAsync(id).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
+                : BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
     /// Update an assessment
     /// </summary>
     [HttpPut("{id:guid}")]
@@ -81,6 +143,23 @@ public class AssessmentsController : BaseApiController
         {
             return result.Error.Type == ErrorType.NotFound 
                 ? NotFound(result.Error) 
+                : BadRequest(result.Error);
+        }
+
+        return Ok(AssessmentDto.FromEntity(result.Value));
+    }
+
+    /// <summary>
+    /// Assign an assessment to a weighted group or clear the assignment.
+    /// </summary>
+    [HttpPut("{id:guid}/group")]
+    public async Task<ActionResult<AssessmentDto>> AssignAssessmentToGroup(Guid id, [FromBody] AssignAssessmentGroupRequest request)
+    {
+        var result = await _assessmentService.AssignAssessmentToGroupAsync(id, request).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
                 : BadRequest(result.Error);
         }
 
@@ -237,6 +316,10 @@ public sealed record AssessmentDto(
     int Order,
     DateTime? AvailableFrom,
     DateTime? AvailableUntil,
+    Guid? AssessmentGroupId,
+    string? AssessmentGroupName,
+    decimal? AssessmentGroupWeightPercent,
+    int? AssessmentGroupOrder,
     bool IsAvailable)
 {
     public static AssessmentDto FromEntity(Assessment entity) => new(
@@ -254,7 +337,28 @@ public sealed record AssessmentDto(
         entity.Order,
         entity.AvailableFrom,
         entity.AvailableUntil,
+        entity.AssessmentGroupId,
+        entity.AssessmentGroup?.Name,
+        entity.AssessmentGroup?.WeightPercent,
+        entity.AssessmentGroup?.Order,
         entity.IsAvailable());
+}
+
+public sealed record AssessmentGroupDto(
+    Guid Id,
+    Guid CourseId,
+    string Name,
+    string? Description,
+    decimal WeightPercent,
+    int Order)
+{
+    public static AssessmentGroupDto FromEntity(AssessmentGroup entity) => new(
+        entity.Id,
+        entity.CourseId,
+        entity.Name,
+        entity.Description,
+        entity.WeightPercent,
+        entity.Order);
 }
 
 public sealed record AssessmentSubmissionDto(

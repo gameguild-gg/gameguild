@@ -62,6 +62,14 @@ public class ControllerAndModuleTests
     }
 
     [Fact]
+    public void AssessmentService_ShouldExposeGroupManagement()
+    {
+        typeof(IAssessmentService).GetMethod("GetCourseAssessmentGroupsAsync").Should().NotBeNull();
+        typeof(IAssessmentService).GetMethod("CreateAssessmentGroupAsync").Should().NotBeNull();
+        typeof(IAssessmentService).GetMethod("AssignAssessmentToGroupAsync").Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task DeleteAssessment_Success_Returns204()
     {
         _svc.Setup(s => s.DeleteAssessmentAsync(It.IsAny<Guid>())).ReturnsAsync(Result.Success());
@@ -140,6 +148,7 @@ public class ControllerAndModuleTests
 
         model.FindEntityType(typeof(Assessment))!.GetTableName().Should().Be("Assessments");
         model.FindEntityType(typeof(AssessmentSubmission))!.GetTableName().Should().Be("AssessmentSubmissions");
+        model.GetEntityTypes().Select(e => e.GetTableName()).Should().Contain("AssessmentGroups");
     }
 
     [Fact]

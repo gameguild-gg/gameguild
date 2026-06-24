@@ -8,6 +8,8 @@ public class Assessment : EntityBase
 {
     public Guid CourseId { get; private set; }
     public Guid? ContentId { get; private set; } // Optional: linked to specific content
+    public Guid? AssessmentGroupId { get; private set; }
+    public AssessmentGroup? AssessmentGroup { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public AssessmentType Type { get; private set; }
@@ -28,12 +30,14 @@ public class Assessment : EntityBase
         AssessmentType type,
         int maxScore,
         int passingScore,
-        bool isRequired = true)
+        bool isRequired = true,
+        Guid? assessmentGroupId = null)
     {
         return new Assessment
         {
             Id = Guid.NewGuid(),
             CourseId = courseId,
+            AssessmentGroupId = assessmentGroupId,
             Title = title,
             Type = type,
             MaxScore = maxScore,
@@ -76,6 +80,12 @@ public class Assessment : EntityBase
         UpdatedAt = SystemClock.UtcNow;
     }
 
+    public void AssignToGroup(Guid? assessmentGroupId)
+    {
+        AssessmentGroupId = assessmentGroupId;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
     public void Update(
         string? title,
         string? description,
@@ -87,7 +97,9 @@ public class Assessment : EntityBase
         DateTime? availableFrom,
         DateTime? availableUntil,
         Guid? contentId = null,
-        bool clearContentId = false)
+        bool clearContentId = false,
+        Guid? assessmentGroupId = null,
+        bool clearAssessmentGroupId = false)
     {
         if (title != null) Title = title;
         Description = description;
@@ -100,7 +112,93 @@ public class Assessment : EntityBase
         AvailableUntil = availableUntil;
         if (clearContentId) ContentId = null;
         else if (contentId.HasValue) ContentId = contentId.Value;
+        if (clearAssessmentGroupId) AssessmentGroupId = null;
+        else if (assessmentGroupId.HasValue) AssessmentGroupId = assessmentGroupId.Value;
         UpdatedAt = SystemClock.UtcNow;
+    }
+}
+
+/// <summary>
+/// Groups graded activities into weighted gradebook buckets for a course.
+/// </summary>
+public class AssessmentGroup : EntityBase
+{
+    public Guid CourseId { get; private set; }
+    public string Name { get; private set; } = string.Empty;
+    public string? Description { get; private set; }
+    public decimal WeightPercent { get; private set; }
+    public int Order { get; private set; }
+
+    private AssessmentGroup() { } // EF Core
+
+    public static AssessmentGroup Create(
+        Guid courseId,
+        string name,
+        decimal weightPercent,
+        int order = 0,
+        string? description = null)
+    {
+        ValidateName(name);
+        ValidateWeight(weightPercent);
+
+        return new AssessmentGroup
+        {
+            Id = Guid.NewGuid(),
+            CourseId = courseId,
+            Name = name.Trim(),
+            Description = NormalizeDescription(description),
+            WeightPercent = weightPercent,
+            Order = order
+        };
+    }
+
+    public void Update(string? name, string? description, decimal? weightPercent, int? order)
+    {
+        if (name != null)
+        {
+            ValidateName(name);
+            Name = name.Trim();
+        }
+
+        if (description != null)
+        {
+            Description = NormalizeDescription(description);
+        }
+
+        if (weightPercent.HasValue)
+        {
+            ValidateWeight(weightPercent.Value);
+            WeightPercent = weightPercent.Value;
+        }
+
+        if (order.HasValue)
+        {
+            Order = order.Value;
+        }
+
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    private static void ValidateName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Assessment group name is required.", nameof(name));
+        }
+    }
+
+    private static void ValidateWeight(decimal weightPercent)
+    {
+        if (weightPercent < 0 || weightPercent > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(weightPercent), "Weight percent must be between 0 and 100.");
+        }
+    }
+
+    private static string? NormalizeDescription(string? description)
+    {
+        var normalized = description?.Trim();
+        return string.IsNullOrEmpty(normalized) ? null : normalized;
     }
 }
 

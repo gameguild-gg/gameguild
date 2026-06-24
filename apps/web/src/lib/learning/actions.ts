@@ -606,6 +606,7 @@ export interface CreateAssessmentInput {
   title: string;
   description?: string;
   type: LearningAssessmentsAssessmentType;
+  assessmentGroupId?: string | null;
   maxScore?: number;
   passingScore?: number;
   timeLimitMinutes?: number;
@@ -623,11 +624,12 @@ export async function createAssessment(input: CreateAssessmentInput): Promise<Ac
   }
 
   try {
-    const body: LearningAssessmentsCreateAssessmentInput = {
+    const body: LearningAssessmentsCreateAssessmentInput & { assessmentGroupId?: string | null } = {
       courseId,
       title: title.trim(),
       description: rest.description?.trim() ?? null,
       type: rest.type,
+      assessmentGroupId: rest.assessmentGroupId ?? null,
       maxScore: rest.maxScore ?? 100,
       passingScore: rest.passingScore ?? 70,
       timeLimitMinutes: rest.timeLimitMinutes ?? null,
@@ -651,6 +653,52 @@ export async function createAssessment(input: CreateAssessmentInput): Promise<Ac
   }
 }
 
+export interface CreateAssessmentGroupInput {
+  courseId: string;
+  name: string;
+  weightPercent: number;
+  order?: number;
+  description?: string;
+}
+
+interface AssessmentGroupActionDto {
+  id: string;
+  courseId: string;
+}
+
+export async function createAssessmentGroup(input: CreateAssessmentGroupInput): Promise<ActionResult<{ id: string }>> {
+  const name = input.name.trim();
+
+  if (name.length < 1) {
+    return { success: false, error: 'Group name is required.' };
+  }
+
+  if (!Number.isFinite(input.weightPercent) || input.weightPercent < 0 || input.weightPercent > 100) {
+    return { success: false, error: 'Weight must be between 0 and 100.' };
+  }
+
+  try {
+    const result = await learningApiRequest<AssessmentGroupActionDto>('/v1/assessments/groups', {
+      method: 'POST',
+      body: JSON.stringify({
+        courseId: input.courseId,
+        name,
+        weightPercent: input.weightPercent,
+        order: input.order ?? 0,
+        description: input.description?.trim() || null,
+      }),
+    });
+
+    if (!result.success) return result;
+
+    revalidatePath(`/dashboard/learning/courses/${input.courseId}`);
+    revalidatePath(`/dashboard/learning/courses/${input.courseId}/assessments`);
+    return { success: true, data: { id: result.data.id } };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
 export interface UpdateAssessmentInput {
   courseId: string;
   assessmentId: string;
@@ -665,13 +713,18 @@ export interface UpdateAssessmentInput {
   availableUntil?: string | null;
   contentId?: string | null;
   clearContentId?: boolean;
+  assessmentGroupId?: string | null;
+  clearAssessmentGroupId?: boolean;
 }
 
 export async function updateAssessment(input: UpdateAssessmentInput): Promise<ActionResult<null>> {
   const { courseId, assessmentId, ...fields } = input;
 
   try {
-    const body: LearningAssessmentsUpdateAssessmentInput = {
+    const body: LearningAssessmentsUpdateAssessmentInput & {
+      assessmentGroupId?: string | null;
+      clearAssessmentGroupId?: boolean;
+    } = {
       title: fields.title?.trim() ?? null,
       description: fields.description?.trim() ?? null,
       maxScore: fields.maxScore ?? null,
@@ -683,6 +736,8 @@ export async function updateAssessment(input: UpdateAssessmentInput): Promise<Ac
       availableUntil: fields.availableUntil ?? null,
       contentId: fields.contentId ?? null,
       clearContentId: fields.clearContentId ?? false,
+      assessmentGroupId: fields.assessmentGroupId ?? null,
+      clearAssessmentGroupId: fields.clearAssessmentGroupId ?? false,
     };
 
     const { assessments } = createCourseModules();

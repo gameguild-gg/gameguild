@@ -17,6 +17,22 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(2000);
             entity.HasIndex(e => e.CourseId);
+            entity.HasIndex(e => e.AssessmentGroupId);
+            entity.HasOne(e => e.AssessmentGroup)
+                .WithMany()
+                .HasForeignKey(e => e.AssessmentGroupId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<AssessmentGroup>(entity =>
+        {
+            entity.ToTable("AssessmentGroups");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(160).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.WeightPercent).HasPrecision(5, 2);
+            entity.HasIndex(e => e.CourseId);
+            entity.HasIndex(e => new { e.CourseId, e.Order });
         });
 
         modelBuilder.Entity<AssessmentSubmission>(entity =>

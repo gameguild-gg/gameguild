@@ -33,6 +33,31 @@ public interface IAssessmentService
     /// </summary>
     Task<Result> DeleteAssessmentAsync(Guid id);
 
+    /// <summary>
+    /// Gets all weighted assessment groups for a course.
+    /// </summary>
+    Task<IEnumerable<AssessmentGroup>> GetCourseAssessmentGroupsAsync(Guid courseId);
+
+    /// <summary>
+    /// Creates a weighted assessment group for a course.
+    /// </summary>
+    Task<Result<AssessmentGroup>> CreateAssessmentGroupAsync(CreateAssessmentGroupRequest request);
+
+    /// <summary>
+    /// Updates a weighted assessment group.
+    /// </summary>
+    Task<Result<AssessmentGroup>> UpdateAssessmentGroupAsync(Guid id, UpdateAssessmentGroupRequest request);
+
+    /// <summary>
+    /// Deletes a weighted assessment group and unassigns its assessments.
+    /// </summary>
+    Task<Result> DeleteAssessmentGroupAsync(Guid id);
+
+    /// <summary>
+    /// Assigns an assessment to a weighted group or clears the assignment.
+    /// </summary>
+    Task<Result<Assessment>> AssignAssessmentToGroupAsync(Guid assessmentId, AssignAssessmentGroupRequest request);
+
     // ===== SUBMISSION MANAGEMENT =====
 
     /// <summary>
@@ -90,7 +115,8 @@ public sealed record CreateAssessmentRequest(
     int? MaxAttempts = null,
     bool IsRequired = true,
     DateTime? AvailableFrom = null,
-    DateTime? AvailableUntil = null
+    DateTime? AvailableUntil = null,
+    Guid? AssessmentGroupId = null
 );
 
 /// <summary>
@@ -107,7 +133,38 @@ public sealed record UpdateAssessmentRequest(
     DateTime? AvailableFrom = null,
     DateTime? AvailableUntil = null,
     Guid? ContentId = null,
-    bool ClearContentId = false
+    bool ClearContentId = false,
+    Guid? AssessmentGroupId = null,
+    bool ClearAssessmentGroupId = false
+);
+
+/// <summary>
+/// Request to create a weighted assessment group.
+/// </summary>
+public sealed record CreateAssessmentGroupRequest(
+    Guid CourseId,
+    string Name,
+    decimal WeightPercent,
+    int Order = 0,
+    string? Description = null
+);
+
+/// <summary>
+/// Request to update a weighted assessment group.
+/// </summary>
+public sealed record UpdateAssessmentGroupRequest(
+    string? Name = null,
+    string? Description = null,
+    decimal? WeightPercent = null,
+    int? Order = null
+);
+
+/// <summary>
+/// Request to assign or clear an assessment group.
+/// </summary>
+public sealed record AssignAssessmentGroupRequest(
+    Guid? AssessmentGroupId = null,
+    bool ClearAssessmentGroup = false
 );
 
 /// <summary>
