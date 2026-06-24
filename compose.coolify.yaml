@@ -78,6 +78,11 @@ services:
       - 'com.game-guild.app=api'
       - 'com.game-guild.tier=backend'
       - 'com.game-guild.environment=staging'
+      # Coolify generates separate HTTP/HTTPS routers when the API compose
+      # domain includes the internal port. Bind each router to its generated
+      # service explicitly so Traefik does not drop the API host as ambiguous.
+      - 'traefik.http.routers.http-0-cj7m56a6yhvzo4cpbbjtzw8e-api.service=http-0-cj7m56a6yhvzo4cpbbjtzw8e-api'
+      - 'traefik.http.routers.https-0-cj7m56a6yhvzo4cpbbjtzw8e-api.service=https-0-cj7m56a6yhvzo4cpbbjtzw8e-api'
     deploy:
       resources:
         limits:
