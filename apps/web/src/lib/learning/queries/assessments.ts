@@ -7,6 +7,7 @@ import {
 } from '@game-guild/client';
 import { cache } from 'react';
 import { learningApiGet } from './http';
+import { resolveCourseId } from './course';
 
 // =============================================================================
 // API CLIENT
@@ -86,8 +87,9 @@ function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
  */
 export const getCourseAssessments = cache(async (courseId: string): Promise<CourseAssessments> => {
   try {
+    const resolvedCourseId = await resolveCourseId(courseId);
     const assessmentsModule = createAssessmentsModule();
-    const result = await assessmentsModule.getAssessmentsCourse(courseId);
+    const result = await assessmentsModule.getAssessmentsCourse(resolvedCourseId);
     if (!result.ok) {
       console.error('Failed to fetch assessments:', result.error);
       return { assessments: [], total: 0 };
@@ -173,9 +175,10 @@ function mapCertificateTemplate(dto: CertificateTemplateApiDto, issuedCount = 0)
 }
 
 export const getCourseCertificates = cache(async (courseId: string): Promise<CourseCertificates> => {
+  const resolvedCourseId = await resolveCourseId(courseId);
   const [templates, issuedCertificates] = await Promise.all([
-    learningApiGet<CertificateTemplateApiDto[]>(`/api/certificates/templates/course/${courseId}`, 120),
-    learningApiGet<CertificateApiDto[]>(`/api/certificates/course/${courseId}`, 120),
+    learningApiGet<CertificateTemplateApiDto[]>(`/api/certificates/templates/course/${resolvedCourseId}`, 120),
+    learningApiGet<CertificateApiDto[]>(`/api/certificates/course/${resolvedCourseId}`, 120),
   ]);
 
   const issuedCount = issuedCertificates?.length ?? 0;

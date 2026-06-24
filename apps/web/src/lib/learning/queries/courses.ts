@@ -3,6 +3,7 @@
 // =============================================================================
 
 import { getToken } from '@/auth';
+import { getCourseRouteParam } from '@/lib/learning/course-route';
 import { createServerClient, GeneratedApi } from '@game-guild/client';
 
 /**
@@ -10,6 +11,8 @@ import { createServerClient, GeneratedApi } from '@game-guild/client';
  */
 export interface CourseListItem {
   id: string;
+  slug: string;
+  routeParam: string;
   title: string;
   thumbnail: string | null;
   status: 'draft' | 'published' | 'archived';
@@ -132,9 +135,13 @@ export async function getCourses(): Promise<{
       const courses = await Promise.all(
         result.data.map(async (program) => {
           const metrics = await getCourseMetrics(programs, program);
+          const id = String(program.id ?? '');
+          const slug = typeof program.slug === 'string' ? program.slug.trim() : '';
 
           return {
-            id: String(program.id ?? ''),
+            id,
+            slug,
+            routeParam: getCourseRouteParam({ id, slug }),
             title: program.title ?? 'Untitled course',
             thumbnail: typeof program.thumbnail === 'string' ? program.thumbnail : null,
             status: mapStatus(program.status),

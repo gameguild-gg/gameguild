@@ -1,4 +1,5 @@
 import { Link } from '@/i18n/navigation';
+import { buildDashboardCoursePath, getCourseRouteParam } from '@/lib/learning/course-route';
 import { getCourse, getCourseAnalytics, getCourseContent } from '@/lib/learning';
 import {
   deriveCourseLaunchSummary,
@@ -105,13 +106,17 @@ const readinessStateMeta: Record<CourseReadinessState, { label: string; descript
 };
 
 export default async function Page({ params }: PageProps<'/[locale]/dashboard/learning/courses/[course]/overview'>): Promise<React.JSX.Element> {
-  const { locale, course: courseId } = await params;
+  const { locale, course: courseIdentifier } = await params;
 
-  const [course, analytics, content] = await Promise.all([getCourse(courseId), getCourseAnalytics(courseId), getCourseContent(courseId)]);
+  const course = await getCourse(courseIdentifier);
 
   if (!course) {
     notFound();
   }
+
+  const courseId = course.id;
+  const courseRouteParam = getCourseRouteParam(course);
+  const [analytics, content] = await Promise.all([getCourseAnalytics(courseId), getCourseContent(courseId)]);
 
   const totalEnrollments = analytics.totalUsers || course.currentEnrollments;
   const completedCount = analytics.completedUsers;
@@ -128,10 +133,10 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
     ...check,
     href:
       check.key === 'thumbnail'
-        ? (`/dashboard/learning/courses/${courseId}/listing/media` as const)
+        ? buildDashboardCoursePath(courseRouteParam, 'listing/media')
         : check.key === 'module' || check.key === 'lesson'
-          ? (`/dashboard/learning/courses/${courseId}/content` as const)
-          : (`/dashboard/learning/courses/${courseId}/listing/info` as const),
+          ? buildDashboardCoursePath(courseRouteParam, 'content')
+          : buildDashboardCoursePath(courseRouteParam, 'listing/info'),
     icon:
       check.key === 'thumbnail'
         ? Image
@@ -278,6 +283,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
                     <Link
                       key={check.label}
                       href={check.href}
+                      locale={locale}
                       className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
                     >
                       {check.done ? (
@@ -354,25 +360,25 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
             </CardHeader>
             <CardContent className="space-y-2">
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={`/dashboard/learning/courses/${courseId}/listing`}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'listing')} locale={locale}>
                   <Edit className="mr-2 size-4" />
                   Open Listing Controls
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={`/dashboard/learning/courses/${courseId}/content`}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'content')} locale={locale}>
                   <BookOpen className="mr-2 size-4" />
                   Manage Content
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={`/dashboard/learning/courses/${courseId}/students`}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'students')} locale={locale}>
                   <Users className="mr-2 size-4" />
                   Manage Students
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={`/dashboard/learning/courses/${courseId}/settings`}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'settings')} locale={locale}>
                   <Settings className="mr-2 size-4" />
                   Course Settings
                 </Link>
