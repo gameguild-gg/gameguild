@@ -51,6 +51,18 @@ interface DiscussionReplyOutput {
   upvoteCount: number;
 }
 
+interface CourseCheckoutOutput {
+  courseId: string;
+  productId: string;
+  entitlementId: string;
+  enrollmentIds: string[];
+  alreadyHadAccess: boolean;
+  amount: number;
+  currency: string;
+  learningUrl: string;
+  paymentProviderReference?: string | null;
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -196,6 +208,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
   let cohortId: string;
   let discussionId: string;
   let discussionReplyId: string;
+  let paidProductId: string;
   const courseSlug = `e2e-course-${Date.now()}`;
 
   it('creates a new course (program)', async () => {
@@ -786,6 +799,87 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
     const course = unwrap(result, 'Publish course');
     expect(course.status).toBe('Published');
+  });
+
+  it('requires paid checkout before a prospect can access the classroom', async () => {
+    paidProductId = unwrap(
+      await programs.postCoursesCreateProduct(courseId, {
+        name: 'E2E paid course access',
+        description: 'Unlocks the E2E published course for a prospect learner.',
+        basePrice: 49,
+        currency: 'USD',
+      }),
+      'Create paid course product',
+    );
+
+    const linkedProducts = unwrap(await programs.getCoursesProducts(courseId), 'List course products');
+    expect(linkedProducts).toContain(paidProductId);
+
+    const publicClient = createClient({
+      baseUrl: BASE_URL,
+      timeout: 15_000,
+      devtools: { enabled: false },
+    });
+    const prospectTag = unique();
+    const prospectEmail = `course_checkout_${prospectTag}@example.com`;
+    const prospectPassword = 'Str0ng!Passw0rd123!';
+    const signUp = unwrap(
+      await publicClient.request<SignInOutput>({
+        method: 'POST',
+        path: '/v1/auth/sign-up',
+        body: {
+          username: `course_checkout_${prospectTag}`,
+          email: prospectEmail,
+          password: prospectPassword,
+          ...(tenantId ? { tenantId } : {}),
+        },
+        requiresAuth: false,
+      }),
+      'Prospect sign-up for paid course checkout',
+    );
+    const prospectToken = signUp.accessToken;
+    const prospectClient = createClient({
+      baseUrl: BASE_URL,
+      timeout: 15_000,
+      devtools: { enabled: false },
+      auth: { getAccessToken: async () => prospectToken },
+      tenant: { getTenantId: async () => tenantId },
+    });
+    const prospectPrograms = new GeneratedApi.LearningCoursesProgramModule(prospectClient);
+
+    const blockedFreeEnroll = await prospectPrograms.postCoursesSelfEnroll(courseId);
+    expect(blockedFreeEnroll.ok).toBe(false);
+    if (!blockedFreeEnroll.ok) {
+      expect(blockedFreeEnroll.error?.status).toBe(402);
+    }
+
+    const checkout = unwrap(
+      await prospectClient.request<CourseCheckoutOutput>({
+        method: 'POST',
+        path: `/v1/courses/${courseId}/checkout/complete`,
+        body: {
+          productId: paidProductId,
+          paymentProviderReference: `course-e2e-${prospectTag}`,
+          paymentMethod: 'test_card',
+        },
+        requiresAuth: true,
+      }),
+      'Complete paid course checkout',
+    );
+
+    expect(checkout.courseId).toBe(courseId);
+    expect(checkout.productId).toBe(paidProductId);
+    expect(checkout.entitlementId).toBeTruthy();
+    expect(checkout.amount).toBe(49);
+    expect(checkout.currency).toBe('USD');
+    expect(checkout.learningUrl).toBe(`/courses/${courseSlug}/content`);
+
+    const progress = unwrap(
+      await prospectPrograms.getCoursesMeProgress(courseId),
+      'Prospect classroom progress after checkout',
+    );
+    expect(progress.courseId).toBe(courseId);
+    expect(progress.userId).toBe(signUp.userId || signUp.user?.id);
   });
 
   // ── 19. Filter: published courses ──────────────────────────────────────

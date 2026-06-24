@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 import type { Program, ProgramContent } from '@/lib/api/generated';
 import { ProgramContentType } from '@/lib/api/generated';
+import type { Product } from '@/lib/courses/actions/enrollment.actions';
 import type { CourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
 import { getCourseCategoryName, getCourseLevelConfig } from '@/lib/courses/services/course.service';
 import {
@@ -28,6 +29,7 @@ import {
   Target,
 } from 'lucide-react';
 import Image from 'next/image';
+import { CourseCheckoutButton } from './course-checkout-button';
 import { CourseHeader } from './course-header';
 import { shouldUseUnoptimizedCourseImage } from './course-image';
 import { CourseProjectCarousel } from './course-project-carousel';
@@ -36,6 +38,7 @@ import { CourseSelfEnrollButton } from './course-self-enroll-button';
 interface CourseLandingPageProps {
   readonly course: Program;
   readonly viewerAccess: CourseViewerAccess;
+  readonly products?: Product[];
 }
 
 function getString(value: unknown): string | null {
@@ -205,13 +208,21 @@ function getCourseSectionVisuals(slug: string | null, heroImage: string, program
 function getViewerCta(
   course: Program,
   viewerAccess: CourseViewerAccess,
-): { label: string; href?: string; kind: 'continue' | 'sign-in' | 'enroll' | 'closed' | 'unavailable' } {
+  hasProducts: boolean,
+): { label: string; href?: string; kind: 'continue' | 'sign-in' | 'checkout' | 'enroll' | 'closed' | 'unavailable' } {
+  const courseSlug = getString(course.slug);
+  const signInHref = courseSlug ? `/sign-in?redirectTo=${encodeURIComponent(`/courses/${courseSlug}`)}` : '/sign-in';
+
   if (viewerAccess.state === 'has-access' && course.slug) {
     return { label: 'Continue learning', href: `/courses/${course.slug}/content`, kind: 'continue' };
   }
 
   if (viewerAccess.state === 'signed-out') {
-    return { label: 'Sign in to enroll', href: '/sign-in', kind: 'sign-in' };
+    return { label: 'Sign in to enroll', href: signInHref, kind: 'sign-in' };
+  }
+
+  if (viewerAccess.state === 'no-access' && course.isEnrollmentOpen && course.slug && hasProducts) {
+    return { label: 'Checkout', kind: 'checkout' };
   }
 
   if (viewerAccess.state === 'no-access' && course.isEnrollmentOpen && course.slug) {
@@ -297,7 +308,7 @@ function makeJourneyRows(contentPreview: ProgramContent[], outcomes: string[], t
   ].slice(0, 6);
 }
 
-export function CourseLandingPage({ course, viewerAccess }: CourseLandingPageProps) {
+export function CourseLandingPage({ course, viewerAccess, products = [] }: CourseLandingPageProps) {
   const slug = getString(course.slug);
   const title = getCourseTitle(course);
   const heroImage = getCourseImage(course);
@@ -343,7 +354,7 @@ export function CourseLandingPage({ course, viewerAccess }: CourseLandingPagePro
     : showcase?.journey?.length
       ? showcase.journey
       : makeJourneyRows(contentPreview, outcomes, title);
-  const viewerCta = getViewerCta(course, viewerAccess);
+  const viewerCta = getViewerCta(course, viewerAccess, products.length > 0);
   const finalArtifactLabel = title.toLowerCase().includes('ai') ? 'AI prototype' : 'Portfolio piece';
   const metadataFaq = getMetadataFaq(course);
   const faq = metadataFaq.length > 0 ? metadataFaq : showcase?.faq ?? [
@@ -359,7 +370,7 @@ export function CourseLandingPage({ course, viewerAccess }: CourseLandingPagePro
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#05070d] text-white">
-      <CourseHeader course={course} viewerAccess={viewerAccess} />
+      <CourseHeader course={course} viewerAccess={viewerAccess} products={products} />
 
       <section className="relative">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_0%,rgba(56,189,248,0.12),transparent_36%),linear-gradient(180deg,#05070d_0%,#070a12_48%,#04060b_100%)]" />
@@ -538,13 +549,17 @@ export function CourseLandingPage({ course, viewerAccess }: CourseLandingPagePro
                         ? 'Sign in to verify access, enroll when available, and continue in the learning app.'
                         : viewerAccess.state === 'no-access'
                           ? course.isEnrollmentOpen
-                            ? 'Enrollment is open for your account. Start the course when you are ready.'
+                            ? products.length > 0
+                              ? 'Choose a course product, complete checkout, and your classroom access will activate immediately.'
+                              : 'Enrollment is open for your account. Start the course when you are ready.'
                             : 'You are signed in, but enrollment is currently closed for this course.'
                           : 'Access verification is temporarily unavailable. Public course details are still visible.'}
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-                  {viewerCta.kind === 'enroll' && course.slug ? (
+                  {viewerCta.kind === 'checkout' && course.slug ? (
+                    <CourseCheckoutButton courseSlug={course.slug} products={products} />
+                  ) : viewerCta.kind === 'enroll' && course.slug ? (
                     <CourseSelfEnrollButton courseSlug={course.slug} />
                   ) : viewerCta.href ? (
                     <Button asChild size="lg" className="bg-white text-slate-950 hover:bg-slate-200">

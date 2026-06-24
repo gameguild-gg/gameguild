@@ -139,7 +139,21 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
 
     if (programUser == null) return null;
 
-    var contentProgress = new List<ContentProgressDto>();
+    var contentProgress = await context.Set<ContentInteraction>()
+      .Include(ci => ci.Content)
+      .Where(ci => ci.ProgramUserId == programUser.Id && ci.DeletedAt == null)
+      .OrderBy(ci => ci.Content.SortOrder)
+      .ThenBy(ci => ci.Content.Title)
+      .Select(ci => new ContentProgressDto(
+        ci.ContentId,
+        ci.Content.Title,
+        ci.Status,
+        ci.CompletionPercentage,
+        ci.FirstAccessedAt,
+        ci.LastAccessedAt,
+        ci.CompletedAt))
+      .ToListAsync()
+      .ConfigureAwait(false);
 
     return new UserProgressDto(
       programUser.Id,
@@ -407,10 +421,18 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
 
   public async Task<IEnumerable<Guid>> GetLinkedProductsAsync(Guid programId)
   {
-    var program = await GetProgramByIdAsync(programId).ConfigureAwait(false);
+    var programExists = await context.Set<Program>()
+      .Where(p => p.DeletedAt == null)
+      .AnyAsync(p => p.Id == programId)
+      .ConfigureAwait(false);
 
-    if (program == null) return new List<Guid>();
+    if (!programExists) return [];
 
-    return new List<Guid>();
+    return await context.Set<ProductProgram>()
+      .Where(pp => pp.DeletedAt == null && pp.ProgramId == programId)
+      .OrderBy(pp => pp.SortOrder)
+      .Select(pp => pp.ProductId)
+      .ToListAsync()
+      .ConfigureAwait(false);
   }
 }

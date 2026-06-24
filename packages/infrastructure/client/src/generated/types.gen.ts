@@ -3995,6 +3995,9 @@ export interface LearningCoursesUpdateTimeSpentInput {
 }
 
 export interface LearningCoursesUserProgress {
+  enrollmentId?: string;
+  courseId?: string;
+  userId?: string;
   completionPercentage?: number;
   lastAccessedAt?: string | null;
   startedAt?: string | null;
@@ -9878,6 +9881,9 @@ LearningCoursesUpdateTimeSpentInputSchema = z.object({
 
 /** Zod schema for LearningCoursesUserProgress */
 LearningCoursesUserProgressSchema = z.object({
+  enrollmentId: z.string().uuid().optional(),
+  courseId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
   completionPercentage: z.number().optional(),
   lastAccessedAt: z.string().datetime().nullable().optional(),
   startedAt: z.string().datetime().nullable().optional(),

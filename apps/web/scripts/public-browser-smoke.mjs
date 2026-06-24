@@ -61,6 +61,12 @@ async function assertRouteRenders(page, label, route) {
   await assertNoErrorOverlay(page, label);
 }
 
+async function waitForClientHydration(page) {
+  await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => undefined);
+  await page.locator('script[src*="/_next/static"]').first().waitFor({ timeout: 20_000 }).catch(() => undefined);
+  await page.waitForTimeout(750);
+}
+
 async function assertSignedInDashboard(page, label) {
   await page.waitForURL('**/dashboard**', { timeout: 20_000 });
   await assertNoErrorOverlay(page, label);
@@ -73,6 +79,7 @@ async function runRealAuthFlow(page) {
   const password = 'Str0ng!Passw0rd123!';
 
   await page.goto(routeUrl('/sign-up'), { waitUntil: 'domcontentloaded' });
+  await waitForClientHydration(page);
   await page.getByLabel('Full Name').fill('Browser Smoke User');
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
@@ -88,6 +95,7 @@ async function runRealAuthFlow(page) {
 
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(password);
+  await waitForClientHydration(page);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await assertSignedInDashboard(page, 'Sign-in redirect');
 
@@ -130,6 +138,7 @@ async function main() {
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(routeUrl('/'), { waitUntil: 'domcontentloaded' });
+    await waitForClientHydration(page);
     await page.getByRole('button', { name: 'Open public navigation' }).click();
     await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Testing Lab' }).click();
     await page.waitForURL('**/testing-lab');

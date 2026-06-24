@@ -1,4 +1,5 @@
 using System.Reflection;
+using GameGuild.API.Integration;
 using GameGuild.API.Setup;
 using GameGuild.Commerce;
 using GameGuild.Commerce.Billing;
@@ -7,13 +8,32 @@ using GameGuild.Features;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.API.UnitTests.Core;
 
 public sealed class InfrastructureConventionScanTests
 {
+    [Fact]
+    public void MonthlyStatementDispatchBackgroundService_Should_Resolve_From_CompositionRoot_Dependencies()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+        services.Configure<SubscriptionNotificationLinkOptions>(_ => { });
+        services.AddSingleton<IMonthlyStatementLinkBuilder, MonthlyStatementLinkBuilder>();
+        services.AddHostedService<MonthlyStatementDispatchBackgroundService>();
+
+        using var provider = services.BuildServiceProvider(validateScopes: true);
+
+        provider.GetServices<IHostedService>()
+            .Should()
+            .ContainSingle(service => service is MonthlyStatementDispatchBackgroundService);
+    }
+
     [Fact]
     public void AddRepositories_Should_Not_Warn_For_ExplicitlyRegistered_Service_Implementations()
     {

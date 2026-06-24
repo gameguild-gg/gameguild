@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Commerce.Products;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GameGuild.Learning.Courses;
 
@@ -41,4 +43,26 @@ public class ProductProgram : EntityBase
     /// </summary>
     [ForeignKey(nameof(ProgramId))]
     public virtual Program? Program { get; set; }
+}
+
+public class ProductProgramConfiguration : IEntityTypeConfiguration<ProductProgram>
+{
+    public void Configure(EntityTypeBuilder<ProductProgram> builder)
+    {
+        builder.HasKey(pp => pp.Id);
+
+        builder.HasIndex(pp => new { pp.ProductId, pp.ProgramId }).IsUnique();
+        builder.HasIndex(pp => pp.ProductId);
+        builder.HasIndex(pp => pp.ProgramId);
+
+        builder.HasOne(pp => pp.Program)
+            .WithMany()
+            .HasForeignKey(pp => pp.ProgramId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne<Product>()
+            .WithMany()
+            .HasForeignKey(pp => pp.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
 }
