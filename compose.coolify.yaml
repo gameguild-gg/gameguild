@@ -103,10 +103,10 @@ services:
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
     image: game-guild-web
     ports:
-      - '3002'
+      - '3000'
     environment:
       - NODE_ENV=production
-      - PORT=3002
+      - PORT=3000
       - HOSTNAME=0.0.0.0
       - API_URL=${API_INTERNAL_URL:-http://api:8080}
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
@@ -166,10 +166,10 @@ services:
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
     image: game-guild-learning
     ports:
-      - '3000'
+      - '3002'
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=3002
       - HOSTNAME=0.0.0.0
       - API_URL=${API_INTERNAL_URL:-http://api:8080}
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}

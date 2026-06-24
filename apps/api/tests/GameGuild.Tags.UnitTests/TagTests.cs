@@ -65,9 +65,6 @@ public class TagProficiencyTests
         tp.Color.Should().BeNull();
         tp.Icon.Should().BeNull();
         tp.IsActive.Should().BeTrue();
-        var certificateTagsProperty = typeof(TagProficiency).GetProperty("CertificateTags");
-        certificateTagsProperty.Should().NotBeNull();
-        certificateTagsProperty!.GetValue(tp).Should().BeAssignableTo<IEnumerable<object>>().Which.Should().BeEmpty();
     }
 
     [Fact]
@@ -91,25 +88,6 @@ public class TagProficiencyTests
         tp.Color.Should().Be("#00FF00");
         tp.Icon.Should().Be("expert-icon");
         tp.IsActive.Should().BeFalse();
-    }
-
-    [Fact]
-    public void CertificateTag_ShouldRepresentCertificateToProficiencyLink()
-    {
-        var type = typeof(TagProficiency).Assembly.GetType("GameGuild.Tags.CertificateTag");
-        type.Should().NotBeNull();
-
-        var certificateId = Guid.NewGuid();
-        var proficiencyId = Guid.NewGuid();
-        var certificateTag = Activator.CreateInstance(type!)!;
-
-        type!.GetProperty("CertificateId")!.SetValue(certificateTag, certificateId);
-        type.GetProperty("TagProficiencyId")!.SetValue(certificateTag, proficiencyId);
-        type.GetProperty("Source")!.SetValue(certificateTag, "certificate-earned");
-
-        type.GetProperty("CertificateId")!.GetValue(certificateTag).Should().Be(certificateId);
-        type.GetProperty("TagProficiencyId")!.GetValue(certificateTag).Should().Be(proficiencyId);
-        type.GetProperty("Source")!.GetValue(certificateTag).Should().Be("certificate-earned");
     }
 }
 

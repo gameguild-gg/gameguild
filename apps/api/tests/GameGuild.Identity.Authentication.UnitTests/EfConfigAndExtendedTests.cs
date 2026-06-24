@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Compliance.KYC;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
@@ -132,17 +131,6 @@ public class EfConfigAndExtendedTests
         var cfg = new UserMfaConfigurationConfiguration();
         cfg.Configure(mb.Entity<UserMfaConfiguration>());
         mb.Model.FindEntityType(typeof(UserMfaConfiguration)).Should().NotBeNull();
-    }
-
-    [Fact]
-    public void AuthenticationModelConfiguration_IncludesApiKeyEntity()
-    {
-        var mb = CreateModelBuilder();
-        var cfg = new AuthenticationModelConfiguration();
-
-        cfg.Configure(mb);
-
-        mb.Model.FindEntityType(typeof(ApiKey)).Should().NotBeNull();
     }
 
     // ── Enum Coverage ───────────────────────────────────────────────────

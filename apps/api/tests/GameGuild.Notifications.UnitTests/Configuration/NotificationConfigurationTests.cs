@@ -12,7 +12,7 @@ public class NotificationConfigurationTests
         var entityType = context.Model.FindEntityType(typeof(Notification));
 
         entityType.Should().NotBeNull();
-        entityType!.GetDeclaredQueryFilters().Should().NotBeEmpty();
+        entityType!.GetQueryFilter().Should().NotBeNull();
         entityType.FindProperty(nameof(Notification.Title))!.GetMaxLength().Should().Be(200);
         entityType.FindProperty(nameof(Notification.Type))!.GetMaxLength().Should().Be(50);
         entityType.FindProperty(nameof(Notification.Channel))!.GetMaxLength().Should().Be(50);
@@ -28,7 +28,7 @@ public class NotificationConfigurationTests
         var entityType = context.Model.FindEntityType(typeof(NotificationTemplate));
 
         entityType.Should().NotBeNull();
-        entityType!.GetDeclaredQueryFilters().Should().NotBeEmpty();
+        entityType!.GetQueryFilter().Should().NotBeNull();
         entityType.FindProperty(nameof(NotificationTemplate.Code))!.GetMaxLength().Should().Be(100);
         entityType.FindProperty(nameof(NotificationTemplate.Name))!.GetMaxLength().Should().Be(200);
         entityType.FindProperty(nameof(NotificationTemplate.MessageTemplate))!.GetMaxLength().Should().Be(4000);
@@ -42,7 +42,7 @@ public class NotificationConfigurationTests
         var entityType = context.Model.FindEntityType(typeof(NotificationPreference));
 
         entityType.Should().NotBeNull();
-        entityType!.GetDeclaredQueryFilters().Should().NotBeEmpty();
+        entityType!.GetQueryFilter().Should().NotBeNull();
         entityType.FindProperty(nameof(NotificationPreference.Timezone))!.GetMaxLength().Should().Be(50);
         entityType.FindProperty(nameof(NotificationPreference.MutedTypes))!.GetMaxLength().Should().Be(500);
     }

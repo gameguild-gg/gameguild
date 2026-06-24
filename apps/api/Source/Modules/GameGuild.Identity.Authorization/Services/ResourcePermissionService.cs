@@ -13,18 +13,15 @@ public class ResourcePermissionService : IResourcePermissionService
     private readonly IApplicationDbContext _dbContext;
     private readonly ILogger<ResourcePermissionService> _logger;
     private readonly IPermissionAnalyticsService? _analyticsService;
-    private readonly IResourceShareUserLookup _userLookup;
 
     public ResourcePermissionService(
         IApplicationDbContext dbContext,
         ILogger<ResourcePermissionService> logger,
-        IPermissionAnalyticsService? analyticsService = null,
-        IResourceShareUserLookup? userLookup = null)
+        IPermissionAnalyticsService? analyticsService = null)
     {
         _dbContext = dbContext;
         _logger = logger;
         _analyticsService = analyticsService;
-        _userLookup = userLookup ?? new NullResourceShareUserLookup();
     }
 
     public async Task<ShareResult> ShareResourceAsync(
@@ -37,51 +34,8 @@ public class ResourcePermissionService : IResourcePermissionService
     {
         try
         {
-            var existingUser = await _userLookup.FindByEmailAsync(tenantId, request.Email, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (existingUser != null)
-            {
-                var existingPermission = await _dbContext.Set<ResourceUserPermission>()
-                    .FirstOrDefaultAsync(p =>
-                        p.TenantId == tenantId &&
-                        p.ResourceType == resourceType &&
-                        p.ResourceId == resourceId &&
-                        p.UserId == existingUser.UserId &&
-                        p.RevokedAt == null,
-                        cancellationToken);
-
-                if (existingPermission == null)
-                {
-                    _dbContext.Set<ResourceUserPermission>().Add(new ResourceUserPermission
-                    {
-                        TenantId = tenantId,
-                        UserId = existingUser.UserId,
-                        ResourceType = resourceType,
-                        ResourceId = resourceId,
-                        Permissions = request.Permissions,
-                        GrantedByUserId = sharedByUserId,
-                        GrantedByUserName = existingUser.DisplayName,
-                        ExpiresAt = request.ExpiresAt
-                    });
-                }
-                else
-                {
-                    existingPermission.Permissions = request.Permissions;
-                    existingPermission.ExpiresAt = request.ExpiresAt;
-                    existingPermission.GrantedByUserId = sharedByUserId;
-                    existingPermission.GrantedByUserName = existingUser.DisplayName;
-                }
-
-                await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-                _logger.LogInformation(
-                    "Granted resource permissions to existing user {UserId} for {ResourceType}/{ResourceId}",
-                    existingUser.UserId, resourceType, resourceId);
-
-                return ShareResult.SuccessWithUser(existingUser.UserId, existingUser.Email);
-            }
-
+            // Check if user exists by email (would need to be implemented via user service)
+            // For now, create an invitation
             var invitation = new ResourceInvitation
             {
                 TenantId = tenantId,
@@ -221,27 +175,21 @@ public class ResourcePermissionService : IResourcePermissionService
                 i.Status == InvitationStatus.Pending)
             .ToListAsync(cancellationToken);
 
-        var users = new List<ResourceAccessDto>();
-        foreach (var permission in permissions.Where(p => p.IsActive))
-        {
-            var user = await _userLookup.FindByIdAsync(tenantId, permission.UserId, cancellationToken)
-                .ConfigureAwait(false);
-
-            users.Add(new ResourceAccessDto(
-                permission.UserId,
-                user?.DisplayName ?? permission.GrantedByUserName ?? "Unknown",
-                user?.Email ?? string.Empty,
-                permission.Permissions,
-                permission.GrantedAt,
-                permission.ExpiresAt,
-                permission.IsOwner));
-        }
-
         return new ResourceUsersResponse
         {
             ResourceType = resourceType,
             ResourceId = resourceId,
-            Users = users,
+            Users = permissions
+                .Where(p => p.IsActive)
+                .Select(p => new ResourceAccessDto(
+                    p.UserId,
+                    p.GrantedByUserName ?? "Unknown",
+                    string.Empty, // Would need user lookup
+                    p.Permissions,
+                    p.GrantedAt,
+                    p.ExpiresAt,
+                    false))
+                .ToList(),
             PendingInvitations = invitations
                 .Where(i => i.IsPending)
                 .Select(i => new PendingInvitationDto(

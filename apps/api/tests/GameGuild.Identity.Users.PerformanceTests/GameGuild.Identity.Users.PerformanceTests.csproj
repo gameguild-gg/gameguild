@@ -21,7 +21,6 @@
         </PackageReference>
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="NBomber" />
-        <PackageReference Include="MessagePack" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
         <PackageReference Include="AutoFixture" />
         <PackageReference Include="BenchmarkDotNet" />

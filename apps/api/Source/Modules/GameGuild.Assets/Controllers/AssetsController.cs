@@ -71,6 +71,63 @@ public class AssetsController(
             result);
     }
 
+    /// <summary>
+    /// Upload multiple assets in one request.
+    /// </summary>
+    [HttpPost("bulk-upload")]
+    [RequestSizeLimit(250 * 1024 * 1024)] // 250 MB total request
+    [ProducesResponseType(typeof(BulkUploadAssetsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> BulkUpload(
+        [FromForm] List<IFormFile> files,
+        [FromQuery] AssetAccessPolicy accessPolicy = AssetAccessPolicy.Private,
+        [FromQuery] string? parentResourceType = null,
+        [FromQuery] Guid? parentResourceId = null,
+        CancellationToken ct = default)
+    {
+        if (!Actor.SubjectIdAsGuid.HasValue || !Actor.TenantId.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        if (files is null || files.Count == 0 || files.All(file => file.Length == 0))
+        {
+            return BadRequest(new ProblemDetails { Title = "At least one file is required" });
+        }
+
+        var openedStreams = new List<Stream>();
+        try
+        {
+            var inputs = new List<BulkUploadAssetInput>();
+            foreach (var file in files.Where(file => file.Length > 0))
+            {
+                var stream = file.OpenReadStream();
+                openedStreams.Add(stream);
+                inputs.Add(new BulkUploadAssetInput(stream, file.FileName, file.ContentType, file.FileName));
+            }
+
+            var result = await sender.Send(
+                new BulkUploadAssetsCommand(
+                    inputs,
+                    Actor.SubjectIdAsGuid.Value,
+                    Actor.TenantId.Value,
+                    accessPolicy,
+                    parentResourceType,
+                    parentResourceId),
+                ct).ConfigureAwait(false);
+
+            return Ok(result);
+        }
+        finally
+        {
+            foreach (var stream in openedStreams)
+            {
+                await stream.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+    }
+
     #region Chunked Upload Endpoints
 
     /// <summary>
@@ -249,6 +306,32 @@ public class AssetsController(
     }
 
     /// <summary>
+    /// Get the inline preview contract for a document or media asset.
+    /// </summary>
+    [HttpGet("{id:guid}/preview")]
+    [ProducesResponseType(typeof(AssetPreviewResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPreview(
+        Guid id,
+        [FromQuery] bool includeExtractedText = false,
+        [FromQuery] int thumbnailWidth = 320,
+        [FromQuery] int thumbnailHeight = 240,
+        CancellationToken ct = default)
+    {
+        var result = await sender.Send(
+            new GetAssetPreviewQuery(
+                id,
+                Actor.SubjectIdAsGuid,
+                Actor.TenantId,
+                thumbnailWidth,
+                thumbnailHeight,
+                includeExtractedText),
+            ct).ConfigureAwait(false);
+
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    /// <summary>
     /// Extract text from an asset when the MIME type supports direct parsing or OCR.
     /// </summary>
     [HttpGet("{id:guid}/extracted-text")]
@@ -346,6 +429,31 @@ public class AssetsController(
         {
             return BadRequest(new ProblemDetails { Title = "Unable to generate access URL" });
         }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Generate secure access URLs for multiple assets.
+    /// </summary>
+    [HttpPost("bulk-download")]
+    [ProducesResponseType(typeof(BulkAssetAccessUrlsResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> BulkDownload(
+        [FromBody] BulkAssetAccessUrlRequest request,
+        CancellationToken ct = default)
+    {
+        if (request.AssetIds.Count == 0)
+        {
+            return BadRequest(new ProblemDetails { Title = "At least one asset ID is required" });
+        }
+
+        var result = await sender.Send(
+            new BulkGenerateAssetAccessUrlsQuery(
+                request.AssetIds,
+                Actor.SubjectIdAsGuid,
+                Actor.TenantId,
+                request.DirectStorageUrl),
+            ct).ConfigureAwait(false);
 
         return Ok(result);
     }
@@ -491,6 +599,34 @@ public class AssetsController(
     }
 
     /// <summary>
+    /// Delete multiple asset references in one request.
+    /// </summary>
+    [HttpPost("bulk-delete")]
+    [ProducesResponseType(typeof(BulkDeleteAssetsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> BulkDelete(
+        [FromBody] BulkDeleteAssetsRequest request,
+        CancellationToken ct = default)
+    {
+        if (!Actor.SubjectIdAsGuid.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        if (request.AssetIds.Count == 0)
+        {
+            return BadRequest(new ProblemDetails { Title = "At least one asset ID is required" });
+        }
+
+        var result = await sender.Send(
+            new BulkDeleteAssetsCommand(request.AssetIds, Actor.SubjectIdAsGuid.Value),
+            ct).ConfigureAwait(false);
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Report an asset for moderation.
     /// </summary>
     [HttpPost("{id:guid}:report")]
@@ -581,6 +717,35 @@ public class AssetsController(
         return Ok(result);
     }
 
+    /// <summary>
+    /// Search document and media assets by metadata, parent, MIME type, and storage key.
+    /// </summary>
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(AssetSearchResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Search(
+        [FromQuery(Name = "q")] string? query = null,
+        [FromQuery] AssetKind? kind = null,
+        [FromQuery] string? parentType = null,
+        [FromQuery] Guid? parentId = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken ct = default)
+    {
+        var result = await sender.Send(
+            new SearchAssetsQuery(
+                query,
+                Actor.SubjectIdAsGuid,
+                Actor.TenantId,
+                kind,
+                parentType,
+                parentId,
+                skip,
+                take),
+            ct).ConfigureAwait(false);
+
+        return Ok(result);
+    }
+
 }
 
 public sealed record UpdateAssetRequest(
@@ -590,6 +755,13 @@ public sealed record UpdateAssetRequest(
 public sealed record ReportAssetRequest(
     ReportReason Reason,
     string? Description = null);
+
+public sealed record BulkAssetAccessUrlRequest(
+    IReadOnlyList<Guid> AssetIds,
+    bool DirectStorageUrl = false);
+
+public sealed record BulkDeleteAssetsRequest(
+    IReadOnlyList<Guid> AssetIds);
 
 public sealed record ExtractedAssetTextResponse(
     Guid AssetReferenceId,

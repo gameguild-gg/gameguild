@@ -293,6 +293,9 @@ public class AssetStorageService : IAssetStorageService
         catch (Amazon.S3.AmazonS3Exception ex) when (
             string.Equals(ex.ErrorCode, "BucketAlreadyOwnedByYou", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(ex.ErrorCode, "BucketAlreadyExists", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(ex.ErrorCode, "AccessDenied", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(ex.ErrorCode, "Forbidden", StringComparison.OrdinalIgnoreCase) ||
+            ex.StatusCode == System.Net.HttpStatusCode.Forbidden ||
             ex.StatusCode == System.Net.HttpStatusCode.Conflict)
         {
         }

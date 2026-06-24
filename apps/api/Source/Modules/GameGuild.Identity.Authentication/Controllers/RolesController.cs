@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
+// PLANNED: Reactivate this controller when role management features are ready for production
 /// <summary>
 ///     Controller for role management endpoints
 /// </summary>
@@ -14,6 +15,7 @@ namespace GameGuild.Identity.Authentication;
 [Route("v{version:apiVersion}/roles")]
 [Microsoft.AspNetCore.Http.Tags("auth/roles")]
 [Produces("application/json")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class RolesController(ILogger<RolesController> logger, ISender sender) : BaseApiController
 {
     /// <summary>

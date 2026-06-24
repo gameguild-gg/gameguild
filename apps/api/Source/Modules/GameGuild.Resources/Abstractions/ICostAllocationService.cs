@@ -41,20 +41,6 @@ public interface ICostAllocationService
     /// </summary>
     Task<bool> UpdateAllocationTagsAsync(Guid reportId, Dictionary<string, string> tags, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    ///     Export a cost allocation report into the Billing module as an issued invoice.
-    /// </summary>
-    Task<CostAllocationInvoiceExportResult?> ExportReportToBillingInvoiceAsync(
-        Guid reportId,
-        Guid subscriptionId,
-        string currency = "USD",
-        DateTime? dueDate = null,
-        CancellationToken cancellationToken = default);
+    // PLANNED: Integration with Billing module for invoice generation (depends on GameGuild.Commerce.Billing)
+    // PLANNED: Integration with Finance module for cost center validation (depends on GameGuild.Finance)
 }
-
-public sealed record CostAllocationInvoiceExportResult(
-    Guid ReportId,
-    Guid InvoiceId,
-    string InvoiceNumber,
-    decimal TotalCost,
-    DateTime? DueDate);

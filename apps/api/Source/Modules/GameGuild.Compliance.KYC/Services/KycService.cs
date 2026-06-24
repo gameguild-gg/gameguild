@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using GameGuild.Assets;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Compliance.KYC;
@@ -8,16 +6,11 @@ public class KycService : IKycService
 {
     private readonly IKycRepository _repository;
     private readonly ILogger<KycService> _logger;
-    private readonly IAssetStorageService? _storageService;
 
-    public KycService(
-        IKycRepository repository,
-        ILogger<KycService> logger,
-        IAssetStorageService? storageService = null)
+    public KycService(IKycRepository repository, ILogger<KycService> logger)
     {
         _repository = repository;
         _logger = logger;
-        _storageService = storageService;
     }
 
     public async Task<Result<UserKycVerification>> SubmitVerificationAsync(
@@ -189,9 +182,8 @@ public class KycService : IKycService
                 return Result.Failure<string>(Error.NotFound("KYC.NotFound", "Verification not found"));
             }
 
-            var documentUrl = _storageService == null
-                ? $"kyc-documents/{verificationId}/{fileName}"
-                : await UploadDocumentToStorageAsync(documentStream, cancellationToken).ConfigureAwait(false);
+            // PLANNED: Implement actual document storage (S3, Azure Blob, etc.) (depends on GameGuild.Storage)
+            var documentUrl = $"kyc-documents/{verificationId}/{fileName}";
 
             // Update verification with document type
             if (string.IsNullOrEmpty(verification.DocumentTypes))
@@ -213,29 +205,6 @@ public class KycService : IKycService
             _logger.LogError(ex, "Failed to upload document for verification {VerificationId}", verificationId);
             return Result.Failure<string>(Error.Failure("KYC.UploadFailed", $"Failed to upload document: {ex.Message}"));
         }
-    }
-
-    private async Task<string> UploadDocumentToStorageAsync(
-        Stream documentStream,
-        CancellationToken cancellationToken)
-    {
-        using var bufferedDocument = new MemoryStream();
-        await documentStream.CopyToAsync(bufferedDocument, cancellationToken).ConfigureAwait(false);
-
-        bufferedDocument.Position = 0;
-        var contentHash = Convert
-            .ToHexString(await SHA256.HashDataAsync(bufferedDocument, cancellationToken).ConfigureAwait(false))
-            .ToLowerInvariant();
-
-        bufferedDocument.Position = 0;
-        var result = await _storageService!.UploadAsync(
-            bufferedDocument,
-            contentHash,
-            "application/octet-stream",
-            false,
-            cancellationToken).ConfigureAwait(false);
-
-        return $"storage://{result.BucketName}/{result.ObjectKey}";
     }
 
     public async Task<Result<bool>> ProcessProviderWebhookAsync(

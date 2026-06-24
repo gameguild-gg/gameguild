@@ -105,7 +105,6 @@ public static class DependencyInjection
         services.AddScoped<IResourceQuotaMaintenance>(sp => sp.GetRequiredService<IResourceQuotaService>());
 
         services.AddScoped<IUsageService, UsageService>();
-        services.AddScoped<IResourceThrottlingEnforcementSink, LocalResourceThrottlingEnforcementSink>();
         services.AddScoped<IResourceThrottlingService, ResourceThrottlingService>();
         if (configuration.GetValue<bool>("Redis:Enabled"))
         {
@@ -117,11 +116,8 @@ public static class DependencyInjection
         }
 
         services.AddScoped<IUsageRetentionService, UsageRetentionService>();
-        services.AddScoped<IUsageRetentionArchiveSink, LocalUsageRetentionArchiveSink>();
-        services.AddScoped<IUsagePatternRecognizer, HeuristicUsagePatternRecognizer>();
         services.AddScoped<IUsageTrendAnalysisService, UsageTrendAnalysisService>();
         services.AddScoped<ISlaImpactAnalysisService, SlaImpactAnalysisService>();
-        services.AddScoped<ICostCenterValidator, ConfiguredCostCenterValidator>();
         services.AddScoped<ICostAllocationService, CostAllocationService>();
 
         // SLA Incident Escalation Services

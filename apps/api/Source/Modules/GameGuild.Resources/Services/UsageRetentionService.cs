@@ -6,11 +6,7 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Implementation of usage data retention and archival
 /// </summary>
-public class UsageRetentionService(
-    IUsageRetentionPolicyRepository policyRepository,
-    IUsageRecordRepository usageRepository,
-    ILogger<UsageRetentionService> logger,
-    IUsageRetentionArchiveSink? archiveSink = null) : IUsageRetentionService
+public class UsageRetentionService(IUsageRetentionPolicyRepository policyRepository, IUsageRecordRepository usageRepository, ILogger<UsageRetentionService> logger) : IUsageRetentionService
 {
     public async Task<UsageRetentionPolicy> SetPolicyAsync(
         Guid? tenantId,
@@ -82,7 +78,6 @@ public class UsageRetentionService(
             // Archive old records
             var archiveThreshold = policy.GetArchiveThresholdDate();
             result.RecordsArchived = await usageRepository.ArchiveOlderThanAsync(archiveThreshold, cancellationToken).ConfigureAwait(false);
-            result.ArchiveReference = await CreateArchiveManifestAsync(policy.TenantId, policy.ResourceType, archiveThreshold, result.RecordsArchived, cancellationToken).ConfigureAwait(false);
 
             // Delete very old records
             var deleteThreshold = policy.GetDeletionThresholdDate();
@@ -163,10 +158,7 @@ public class UsageRetentionService(
     {
         var threshold = olderThan ?? SystemClock.UtcNow.AddDays(-90);
 
-        var archived = await usageRepository.ArchiveOlderThanAsync(threshold, cancellationToken).ConfigureAwait(false);
-        await CreateArchiveManifestAsync(tenantId, type, threshold, archived, cancellationToken).ConfigureAwait(false);
-
-        return archived;
+        return await usageRepository.ArchiveOlderThanAsync(threshold, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<int> DeleteArchivedRecordsAsync(DateTime olderThan, CancellationToken cancellationToken = default)
@@ -197,17 +189,5 @@ public class UsageRetentionService(
             ArchivedStorageBytes = archivedStorageBytes,
             OldestRecordDate = oldestDate
         };
-    }
-
-    private async Task<string?> CreateArchiveManifestAsync(Guid? tenantId, ResourceUsageType? type, DateTime olderThan, int archivedCount, CancellationToken cancellationToken)
-    {
-        if (archiveSink is null || archivedCount <= 0)
-        {
-            return null;
-        }
-
-        var manifest = await archiveSink.ArchiveAsync(tenantId, type, olderThan, archivedCount, cancellationToken).ConfigureAwait(false);
-
-        return $"{manifest.StorageReference}|{manifest.BackupReference}";
     }
 }

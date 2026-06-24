@@ -114,14 +114,24 @@ public static class AssetsModuleExtensions
         services.AddScoped<IRequestHandler<GenerateAccessUrlCommand, GenerateAccessUrlResponse?>, GenerateAccessUrlHandler>();
         services.AddScoped<IRequestHandler<UpdateAssetCommand, UpdateAssetResponse?>, UpdateAssetHandler>();
         services.AddScoped<IRequestHandler<DeleteAssetCommand, DeleteAssetResponse>, DeleteAssetHandler>();
+        services.AddScoped<IRequestHandler<BulkDeleteAssetsCommand, BulkDeleteAssetsResponse>, BulkDeleteAssetsHandler>();
+        services.AddScoped<IRequestHandler<BulkUploadAssetsCommand, BulkUploadAssetsResponse>, BulkUploadAssetsHandler>();
         services.AddScoped<IRequestHandler<ReportAssetCommand, ReportAssetResponse?>, ReportAssetHandler>();
         services.AddScoped<IRequestHandler<ReviewReportCommand, ReviewReportResponse?>, ReviewReportHandler>();
+        services.AddScoped<IRequestHandler<RunAssetRetentionCommand, AssetRetentionRunResponse>, RunAssetRetentionHandler>();
+        services.AddScoped<IRequestHandler<SetAssetLegalHoldCommand, AssetLegalHoldResponse?>, SetAssetLegalHoldHandler>();
 
         services.AddScoped<IRequestHandler<GetAssetQuery, AssetDto?>, GetAssetHandler>();
+        services.AddScoped<IRequestHandler<GetAssetPreviewQuery, AssetPreviewResponse?>, GetAssetPreviewHandler>();
         services.AddScoped<IRequestHandler<GetAssetsByParentQuery, IReadOnlyList<AssetDto>>, GetAssetsByParentHandler>();
         services.AddScoped<IRequestHandler<GetUserAssetsQuery, IReadOnlyList<AssetDto>>, GetUserAssetsHandler>();
         services.AddScoped<IRequestHandler<GetModerationQueueQuery, IReadOnlyList<ReportDto>>, GetModerationQueueHandler>();
         services.AddScoped<IRequestHandler<GetAssetReportsQuery, IReadOnlyList<ReportDto>>, GetAssetReportsHandler>();
+        services.AddScoped<IRequestHandler<BulkGenerateAssetAccessUrlsQuery, BulkAssetAccessUrlsResponse>, BulkGenerateAssetAccessUrlsHandler>();
+        services.AddScoped<IRequestHandler<SearchAssetsQuery, AssetSearchResponse>, SearchAssetsHandler>();
+        services.AddScoped<IRequestHandler<GetAssetRetentionReportQuery, AssetRetentionReportResponse>, GetAssetRetentionReportHandler>();
+        services.AddScoped<IRequestHandler<GetAssetStatisticsQuery, AssetStatisticsResponse>, GetAssetStatisticsHandler>();
+        services.AddScoped<IRequestHandler<ExportAssetStatisticsQuery, AssetStatisticsExportResponse>, ExportAssetStatisticsHandler>();
 
         return services;
     }

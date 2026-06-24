@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -10,10 +9,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Service to protect against user enumeration attacks by ensuring consistent timing and responses
 /// </summary>
-public class UserEnumerationProtectionService(
-    ILogger<UserEnumerationProtectionService> logger,
-    IMemoryCache memoryCache,
-    IDistributedCache? distributedCache = null) : IUserEnumerationProtectionService
+public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionService> logger, IMemoryCache memoryCache) : IUserEnumerationProtectionService
 {
     // Consistent error message to prevent user enumeration
     private const string ConsistentErrorMessage = "Invalid credentials. Please check your email and password.";
@@ -81,7 +77,13 @@ public class UserEnumerationProtectionService(
 
     public async Task<ThrottleDecision> ShouldThrottleAsync(string identifier)
     {
-        var attemptCount = await GetAttemptCountAsync(identifier).ConfigureAwait(false);
+        var cacheKey = AttemptKeyPrefix + identifier;
+
+        var attemptCount = memoryCache.GetOrCreate(cacheKey, entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(TimeWindowMinutes);
+            return 0;
+        });
 
         var shouldThrottle = attemptCount >= MaxAttemptsPerWindow;
         var delayMs = shouldThrottle ? Math.Min(attemptCount * 500, 5000) : 0;
@@ -91,18 +93,31 @@ public class UserEnumerationProtectionService(
             logger.LogWarning("Throttling enumeration attempts for identifier {Identifier}: {AttemptCount} attempts in {TimeWindow} min window",
                 identifier, attemptCount, TimeWindowMinutes);
         }
+
+        await Task.CompletedTask.ConfigureAwait(false);
+
         return new ThrottleDecision { ShouldThrottle = shouldThrottle, DelayMs = delayMs, AttemptCount = attemptCount, TimeWindowMinutes = TimeWindowMinutes };
     }
 
     public async Task RecordEnumerationAttemptAsync(string identifier, string attemptType)
     {
-        var currentCount = await GetAttemptCountAsync(identifier).ConfigureAwait(false);
-        var nextCount = currentCount + 1;
+        var cacheKey = AttemptKeyPrefix + identifier;
 
-        await StoreAttemptCountAsync(identifier, nextCount).ConfigureAwait(false);
+        var currentCount = memoryCache.GetOrCreate(cacheKey, entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(TimeWindowMinutes);
+            return 0;
+        });
+
+        memoryCache.Set(cacheKey, currentCount + 1, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(TimeWindowMinutes)
+        });
 
         logger.LogWarning("Potential enumeration attempt detected — Identifier: {Identifier}, Type: {AttemptType}, Count: {Count}",
-            identifier, attemptType, nextCount);
+            identifier, attemptType, currentCount + 1);
+
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     public async Task SimulateAuthenticationDelayAsync(string email, bool userExists)
@@ -206,62 +221,5 @@ public class UserEnumerationProtectionService(
         var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(email.ToLowerInvariant()));
 
         return Convert.ToHexString(hash)[..16]; // First 16 chars for brevity
-    }
-
-    private async Task<int> GetAttemptCountAsync(string identifier)
-    {
-        var cacheKey = AttemptKeyPrefix + identifier;
-
-        if (memoryCache.TryGetValue(cacheKey, out int attemptCount))
-        {
-            return attemptCount;
-        }
-
-        if (distributedCache is null)
-        {
-            return 0;
-        }
-
-        var bytes = await distributedCache.GetAsync(cacheKey).ConfigureAwait(false);
-        if (bytes is null || bytes.Length == 0)
-        {
-            return 0;
-        }
-
-        var raw = Encoding.UTF8.GetString(bytes);
-        if (!int.TryParse(raw, out attemptCount))
-        {
-            return 0;
-        }
-
-        memoryCache.Set(cacheKey, attemptCount, new MemoryCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(TimeWindowMinutes)
-        });
-
-        return attemptCount;
-    }
-
-    private async Task StoreAttemptCountAsync(string identifier, int attemptCount)
-    {
-        var cacheKey = AttemptKeyPrefix + identifier;
-
-        memoryCache.Set(cacheKey, attemptCount, new MemoryCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(TimeWindowMinutes)
-        });
-
-        if (distributedCache is null)
-        {
-            return;
-        }
-
-        await distributedCache.SetAsync(
-            cacheKey,
-            Encoding.UTF8.GetBytes(attemptCount.ToString()),
-            new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(TimeWindowMinutes)
-            }).ConfigureAwait(false);
     }
 }

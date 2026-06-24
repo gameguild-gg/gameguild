@@ -13,7 +13,5 @@ public class RetentionExecutionResult
 
     public long BytesFreed { get; set; }
 
-    public string? ArchiveReference { get; set; }
-
     public DateTime ExecutedAt { get; set; } = SystemClock.UtcNow;
 }

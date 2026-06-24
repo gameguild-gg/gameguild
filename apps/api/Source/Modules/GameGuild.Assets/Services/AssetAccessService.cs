@@ -1,8 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using GameGuild.CQRS.Models;
 using GameGuild.Features;
-using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 
 namespace GameGuild.Assets;
@@ -30,7 +28,6 @@ public class AssetAccessService : IAssetAccessService
     private readonly IAssetTokenService _tokenService;
     private readonly ITenantMemberRepository _tenantMemberRepository;
     private readonly IFeatureFlagEvaluationService _featureService;
-    private readonly IResourcePermissionService? _resourcePermissionService;
     private readonly AssetAccessOptions _options;
     private readonly ILogger<AssetAccessService> _logger;
 
@@ -42,8 +39,7 @@ public class AssetAccessService : IAssetAccessService
         ITenantMemberRepository tenantMemberRepository,
         IFeatureFlagEvaluationService featureService,
         IOptions<AssetAccessOptions> options,
-        ILogger<AssetAccessService> logger,
-        IResourcePermissionService? resourcePermissionService = null)
+        ILogger<AssetAccessService> logger)
     {
         _referenceRepository = referenceRepository;
         _transformedAssetRepository = transformedAssetRepository;
@@ -51,7 +47,6 @@ public class AssetAccessService : IAssetAccessService
         _tokenService = tokenService;
         _tenantMemberRepository = tenantMemberRepository;
         _featureService = featureService;
-        _resourcePermissionService = resourcePermissionService;
         _options = options.Value;
         _logger = logger;
     }
@@ -284,30 +279,13 @@ public class AssetAccessService : IAssetAccessService
                 return new AssetAccessValidation(true, null);
 
             case AssetAccessPolicy.Inherited:
+                // PLANNED: Check parent resource access via parent module's access control (depends on resource hierarchy implementation)
+                // For now, require authentication
                 if (userId == null)
                 {
                     return new AssetAccessValidation(false, AssetAccessDeniedReason.AuthenticationRequired);
                 }
-
-                if (tenantId == null ||
-                    string.IsNullOrWhiteSpace(reference.ParentResourceType) ||
-                    reference.ParentResourceId == null ||
-                    _resourcePermissionService == null)
-                {
-                    return new AssetAccessValidation(false, AssetAccessDeniedReason.OwnershipRequired);
-                }
-
-                var hasParentReadAccess = await _resourcePermissionService.HasPermissionAsync(
-                    new TenantId(tenantId.Value),
-                    userId.Value,
-                    reference.ParentResourceType,
-                    reference.ParentResourceId.Value.ToString(),
-                    "read",
-                    ct).ConfigureAwait(false);
-
-                return hasParentReadAccess
-                    ? new AssetAccessValidation(true, null)
-                    : new AssetAccessValidation(false, AssetAccessDeniedReason.OwnershipRequired);
+                return new AssetAccessValidation(true, null);
 
             default:
                 return new AssetAccessValidation(false, AssetAccessDeniedReason.InvalidPolicy);

@@ -187,25 +187,17 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     [EndpointSummary("Setup SMS MFA")]
     [EndpointDescription("Initiates SMS-based MFA setup by sending a verification code to the provided phone number.")]
     [ProducesResponseType<SmsMfaSetupResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<MfaErrorResponse>(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> InitiateSmsSetup([FromBody] SmsMfaSetupRequest body, CancellationToken ct)
+    public Task<IActionResult> InitiateSmsSetup([FromBody] SmsMfaSetupRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var userId = GetCurrentUserId();
-        var result = await mfaService.InitiateSmsSetupAsync(userId, body.PhoneNumber, ct).ConfigureAwait(false);
 
-        if (!result.Success)
+        return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status503ServiceUnavailable, new MfaErrorResponse
         {
-            return BadRequest(new MfaErrorResponse { Error = result.Message });
-        }
-
-        return Ok(new SmsMfaSetupResponse
-        {
-            Message = result.Message,
-            PhoneNumberMasked = result.PhoneNumberMasked ?? MaskPhoneNumber(body.PhoneNumber),
-            ExpiresInSeconds = result.ExpiresInSeconds
-        });
+            Error = "SMS MFA is not configured. Use authenticator-app TOTP or backup codes, or configure an SMS provider before enabling SMS MFA."
+        }));
     }
 
     /// <summary>
@@ -218,23 +210,17 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     [EndpointSummary("Complete SMS MFA setup")]
     [EndpointDescription("Completes SMS MFA setup by verifying the code sent to the user's phone.")]
     [ProducesResponseType<MfaSuccessResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<MfaErrorResponse>(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> CompleteSmsSetup([FromBody] CompleteMfaSetupRequest body, CancellationToken ct)
+    public Task<IActionResult> CompleteSmsSetup([FromBody] CompleteMfaSetupRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var userId = GetCurrentUserId();
-        var result = await mfaService.CompleteSmsSetupAsync(userId, body.Code, ct).ConfigureAwait(false);
 
-        if (!result.Success)
+        return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status503ServiceUnavailable, new MfaErrorResponse
         {
-            return BadRequest(new MfaErrorResponse { Error = result.Message ?? "Failed to complete SMS MFA setup" });
-        }
-
-        return Ok(new MfaSuccessResponse
-        {
-            Message = result.Message ?? "SMS MFA setup completed successfully"
-        });
+            Error = "SMS MFA is not configured. Use authenticator-app TOTP or backup codes, or configure an SMS provider before completing SMS MFA."
+        }));
     }
 
     #endregion
@@ -255,7 +241,6 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     {
         var userId = GetCurrentUserId();
         var configuration = await mfaService.GetMfaConfigurationAsync(userId, ct).ConfigureAwait(false);
-        var isSmsAvailable = await mfaService.IsSmsMfaAvailableAsync(ct).ConfigureAwait(false);
 
         var enabledMethods = configuration.EnabledMethods ?? [];
 
@@ -276,7 +261,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
                 Name = "SMS",
                 Description = "Receive verification codes via text message",
                 IsEnabled = enabledMethods.Contains("sms", StringComparer.OrdinalIgnoreCase),
-                IsAvailable = isSmsAvailable,
+                IsAvailable = false,
                 Priority = 2
             },
             new()

@@ -86,21 +86,11 @@ public class TenantMiddleware(
             return;
         }
 
-        Tenant? tenant;
-        string resolutionSource;
-        try
-        {
-            (tenant, resolutionSource) = await ResolveTenantAsync(
-                context,
-                mediator,
-                tenantDomainsRepository,
-                context.RequestAborted).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (IsDatabaseSchemaNotReady(ex))
-        {
-            await WriteDatabaseSchemaNotReadyResponseAsync(context, ex).ConfigureAwait(false);
-            return;
-        }
+        var (tenant, resolutionSource) = await ResolveTenantAsync(
+            context,
+            mediator,
+            tenantDomainsRepository,
+            context.RequestAborted).ConfigureAwait(false);
 
         if (tenant is not null)
         {
@@ -108,20 +98,11 @@ public class TenantMiddleware(
             var userId = GetAuthenticatedUserId(context);
             if (userId.HasValue)
             {
-                bool isMember;
-                try
-                {
-                    isMember = await ValidateTenantMembershipAsync(
-                        userId.Value,
-                        tenant.Id,
-                        tenantMemberRepository,
-                        context.RequestAborted).ConfigureAwait(false);
-                }
-                catch (Exception ex) when (IsDatabaseSchemaNotReady(ex))
-                {
-                    await WriteDatabaseSchemaNotReadyResponseAsync(context, ex).ConfigureAwait(false);
-                    return;
-                }
+                var isMember = await ValidateTenantMembershipAsync(
+                    userId.Value,
+                    tenant.Id,
+                    tenantMemberRepository,
+                    context.RequestAborted).ConfigureAwait(false);
 
                 if (!isMember)
                 {
@@ -293,10 +274,6 @@ public class TenantMiddleware(
             // User must have an active membership
             return membership is not null && membership.IsActive;
         }
-        catch (Exception ex) when (IsDatabaseSchemaNotReady(ex))
-        {
-            throw;
-        }
         catch (Exception ex)
         {
             // FAIL-CLOSED: If membership check fails, deny access
@@ -307,40 +284,6 @@ public class TenantMiddleware(
                 tenantId);
             return false;
         }
-    }
-
-    private async Task WriteDatabaseSchemaNotReadyResponseAsync(HttpContext context, Exception exception)
-    {
-        logger.LogWarning(
-            exception,
-            "Tenant resolution could not run because the database schema is not ready. Pending migrations must be applied before serving tenant-aware requests.");
-
-        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-        await context.Response.WriteAsJsonAsync(new
-        {
-            error = "DatabaseSchemaNotReady",
-            message = "Database schema is not ready. Apply pending migrations before signing in."
-        }, context.RequestAborted).ConfigureAwait(false);
-    }
-
-    private static bool IsDatabaseSchemaNotReady(Exception exception)
-    {
-        for (var current = exception; current is not null; current = current.InnerException)
-        {
-            var sqlState = current.GetType().GetProperty("SqlState")?.GetValue(current) as string;
-            if (string.Equals(sqlState, "42P01", StringComparison.Ordinal))
-            {
-                return true;
-            }
-
-            if (current.Message.Contains("relation", StringComparison.OrdinalIgnoreCase) &&
-                current.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
 

@@ -1,5 +1,5 @@
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace GameGuild.Identity.Authorization;
 
@@ -72,10 +72,18 @@ public class SoDService(
 
         foreach (var rule in rules)
         {
-            var hasConflict = await CheckRuleViolationWithPermissionsAsync(rule, userId, tenantId, cancellationToken).ConfigureAwait(false);
+            var hasConflict = await HasRuleViolationAsync(rule, userId, tenantId, cancellationToken).ConfigureAwait(false);
 
             if (hasConflict)
             {
+                var existing = await _violationRepository.GetByUserAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
+                var activeViolation = existing.FirstOrDefault(v => v.RuleId == rule.Id && v.Status == SoDViolationStatus.Active);
+                if (activeViolation != null)
+                {
+                    violations.Add(activeViolation);
+                    continue;
+                }
+
                 var violation = new SoDViolation
                 {
                     RuleId = rule.Id,
@@ -86,6 +94,8 @@ public class SoDService(
                     ViolationDetails = $"{rule.Name}: {rule.Description}"
                 };
                 violations.Add(violation);
+                rule.RecordViolation();
+                await _ruleRepository.UpdateAsync(rule, cancellationToken).ConfigureAwait(false);
                 await _violationRepository.CreateAsync(violation, cancellationToken).ConfigureAwait(false);
             }
         }
@@ -164,71 +174,22 @@ public class SoDService(
     {
         _logger.LogInformation("Scanning for SoD violations in tenant {TenantId}", tenantId);
 
-        if (!tenantId.HasValue || _tenantPermissionRepository is null)
-            return 0;
-
-        var rules = await _ruleRepository.GetActiveRulesAsync(tenantId, cancellationToken).ConfigureAwait(false);
-        if (rules.Count == 0)
-            return 0;
-
-        var tenantPermissions = await _tenantPermissionRepository.GetByTenantAsync(tenantId.Value, cancellationToken).ConfigureAwait(false);
-        var userIds = tenantPermissions
-            .Where(permission => permission.UserId.HasValue)
-            .Where(permission => permission.IsActive)
-            .Where(permission => !permission.IsExpired())
-            .Select(permission => permission.UserId!.Value)
-            .Distinct()
-            .ToArray();
-
-        var detectedCount = 0;
-
-        foreach (var rule in rules)
+        if (_tenantPermissionRepository == null)
         {
-            foreach (var userId in userIds)
-            {
-                if (!await CheckRuleViolationWithPermissionsAsync(rule, userId, tenantId, cancellationToken).ConfigureAwait(false))
-                    continue;
-
-                var violation = new SoDViolation
-                {
-                    RuleId = rule.Id,
-                    UserId = userId,
-                    TenantId = tenantId,
-                    ConflictingItems = rule.ConflictingPermissions,
-                    Status = SoDViolationStatus.Active,
-                    ViolationDetails = $"{rule.Name}: {rule.Description}"
-                };
-
-                await _violationRepository.CreateAsync(violation, cancellationToken).ConfigureAwait(false);
-                rule.RecordViolation();
-                await _ruleRepository.UpdateAsync(rule, cancellationToken).ConfigureAwait(false);
-                detectedCount++;
-            }
+            _logger.LogWarning("Cannot scan SoD violations because ITenantPermissionRepository is not registered");
+            return 0;
         }
 
-        return detectedCount;
-    }
+        var candidateUsers = await GetCandidateUserIdsAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        var violationCount = 0;
 
-    private async Task<bool> CheckRuleViolationWithPermissionsAsync(
-        SoDRule rule,
-        Guid userId,
-        Guid? tenantId,
-        CancellationToken cancellationToken
-    )
-    {
-        if (_permissionQueryService is null)
-            return await CheckRuleViolationAsync(rule, userId, tenantId, cancellationToken).ConfigureAwait(false);
+        foreach (var userId in candidateUsers)
+        {
+            var detected = await DetectViolationsAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
+            violationCount += detected.Count;
+        }
 
-        var conflictingPermissions = ParseConflictingPermissions(rule.ConflictingPermissions);
-        if (conflictingPermissions.Count < 2)
-            return false;
-
-        var effectivePermissions = await _permissionQueryService
-            .GetEffectivePermissionsAsync(userId, tenantId, cancellationToken)
-            .ConfigureAwait(false);
-
-        return conflictingPermissions
-            .All(permission => effectivePermissions.Contains(permission, StringComparer.OrdinalIgnoreCase));
+        return violationCount;
     }
 
     private static Task<bool> CheckRuleViolationAsync(
@@ -245,25 +206,89 @@ public class SoDService(
         return Task.FromResult(false);
     }
 
-    private static IReadOnlyList<string> ParseConflictingPermissions(string? raw)
+    private async Task<bool> HasRuleViolationAsync(
+        SoDRule rule,
+        Guid userId,
+        Guid? tenantId,
+        CancellationToken cancellationToken
+    )
+    {
+        if (_permissionQueryService == null)
+        {
+            _logger.LogWarning("Cannot evaluate SoD rule {RuleId} because IPermissionQueryService is not registered", rule.Id);
+            return false;
+        }
+
+        var effectivePermissions = await _permissionQueryService
+            .GetEffectivePermissionsAsync(userId, tenantId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return HasPermissionConflict(rule, effectivePermissions);
+    }
+
+    private async Task<IReadOnlyCollection<Guid>> GetCandidateUserIdsAsync(Guid? tenantId, CancellationToken cancellationToken)
+    {
+        if (tenantId.HasValue)
+        {
+            return (await _tenantPermissionRepository!
+                    .GetByTenantAsync(tenantId.Value, cancellationToken)
+                    .ConfigureAwait(false))
+                .Where(permission => permission.UserId.HasValue && permission.IsActive && !permission.IsExpired())
+                .Select(permission => permission.UserId!.Value)
+                .Distinct()
+                .ToArray();
+        }
+
+        var tenantIds = (await _ruleRepository.GetActiveRulesAsync(null, cancellationToken).ConfigureAwait(false))
+            .Where(rule => rule.TenantId != null)
+            .Select(rule => rule.TenantId!.Value.Value)
+            .Distinct()
+            .ToArray();
+
+        var users = new HashSet<Guid>();
+        foreach (var ruleTenantId in tenantIds)
+        {
+            var permissions = await _tenantPermissionRepository!
+                .GetByTenantAsync(ruleTenantId, cancellationToken)
+                .ConfigureAwait(false);
+
+            foreach (var permission in permissions.Where(p => p.UserId.HasValue && p.IsActive && !p.IsExpired()))
+            {
+                users.Add(permission.UserId!.Value);
+            }
+        }
+
+        return users.ToArray();
+    }
+
+    private static bool HasPermissionConflict(SoDRule rule, IEnumerable<string> effectivePermissions)
+    {
+        var conflictingPermissions = ParseConflictingPermissions(rule.ConflictingPermissions);
+        if (conflictingPermissions.Length < 2)
+        {
+            return false;
+        }
+
+        var granted = new HashSet<string>(effectivePermissions, StringComparer.OrdinalIgnoreCase);
+        return conflictingPermissions.Count(granted.Contains) >= 2;
+    }
+
+    private static string[] ParseConflictingPermissions(string? raw)
     {
         if (string.IsNullOrWhiteSpace(raw))
+        {
             return [];
+        }
 
         try
         {
-            var permissions = JsonSerializer.Deserialize<string[]>(raw);
-            return permissions?
-                .Where(permission => !string.IsNullOrWhiteSpace(permission))
-                .Select(permission => permission.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray() ?? [];
+            return JsonSerializer.Deserialize<string[]>(raw) is { Length: > 0 } parsed
+                ? parsed.Where(permission => !string.IsNullOrWhiteSpace(permission)).Select(permission => permission.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray()
+                : [];
         }
         catch (JsonException)
         {
-            return raw
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Where(permission => !string.IsNullOrWhiteSpace(permission))
+            return raw.Split([',', ';', '\n', '\r', '|'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
         }

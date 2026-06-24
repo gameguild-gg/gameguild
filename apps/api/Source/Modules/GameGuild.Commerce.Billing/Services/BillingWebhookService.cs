@@ -42,7 +42,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
     {
         try
         {
-            _logger.LogInformation("Handling subscription created webhook for tenant {TenantId}, subscription {SubscriptionId}",
+            _logger.LogInformation("Handling subscription created webhook for tenant {TenantId}, subscription {SubscriptionId}", 
                 payload.TenantId, payload.ExternalSubscriptionId);
 
             // Create subscription via the lifecycle service
@@ -79,7 +79,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
     {
         try
         {
-            _logger.LogInformation("Handling subscription updated webhook for tenant {TenantId}, subscription {SubscriptionId}",
+            _logger.LogInformation("Handling subscription updated webhook for tenant {TenantId}, subscription {SubscriptionId}", 
                 payload.TenantId, payload.ExternalSubscriptionId);
 
             // Find subscription by external ID
@@ -88,7 +88,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
 
             if (subscription == null)
             {
-                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}",
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
                     payload.ExternalSubscriptionId);
                 return;
             }
@@ -116,7 +116,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
     {
         try
         {
-            _logger.LogInformation("Handling subscription canceled webhook for tenant {TenantId}, subscription {SubscriptionId}",
+            _logger.LogInformation("Handling subscription canceled webhook for tenant {TenantId}, subscription {SubscriptionId}", 
                 payload.TenantId, payload.ExternalSubscriptionId);
 
             // Find subscription by external ID
@@ -125,7 +125,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
 
             if (subscription == null)
             {
-                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}",
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
                     payload.ExternalSubscriptionId);
                 return;
             }
@@ -154,7 +154,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
     {
         try
         {
-            _logger.LogInformation("Handling payment succeeded webhook for tenant {TenantId}, payment {PaymentId}",
+            _logger.LogInformation("Handling payment succeeded webhook for tenant {TenantId}, payment {PaymentId}", 
                 payload.TenantId, payload.PaymentId);
 
             // Find subscription by external ID
@@ -163,7 +163,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
 
             if (subscription == null)
             {
-                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}",
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
                     payload.ExternalSubscriptionId);
                 return;
             }
@@ -192,7 +192,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
     {
         try
         {
-            _logger.LogInformation("Handling payment failed webhook for tenant {TenantId}, payment {PaymentId}",
+            _logger.LogInformation("Handling payment failed webhook for tenant {TenantId}, payment {PaymentId}", 
                 payload.TenantId, payload.PaymentId);
 
             // Find subscription by external ID
@@ -201,7 +201,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
 
             if (subscription == null)
             {
-                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}",
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
                     payload.ExternalSubscriptionId);
                 return;
             }

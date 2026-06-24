@@ -186,33 +186,11 @@ public class FeatureFlagQueryRepository : IFeatureFlagQueryRepository
         return PagedResult<FeatureFlagEvaluationHistory>.FromPage(items, totalCount, page, pageSize);
     }
 
-    public async Task<IEnumerable<FeatureFlagDependency>> GetDependenciesAsync(Guid featureFlagId, bool includeInverse, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<FeatureFlagDependency>> GetDependenciesAsync(Guid featureFlagId, bool includeInverse, CancellationToken cancellationToken = default)
     {
-        var query = _context.Set<FeatureFlagDependencyLink>()
-            .AsNoTracking()
-            .Include(d => d.FeatureFlag)
-            .Include(d => d.DependsOnFeatureFlag)
-            .Where(d => d.DeletedAt == null && d.FeatureFlag.DeletedAt == null && d.DependsOnFeatureFlag.DeletedAt == null);
-
-        query = includeInverse
-            ? query.Where(d => d.FeatureFlagId == featureFlagId || d.DependsOnFeatureFlagId == featureFlagId)
-            : query.Where(d => d.FeatureFlagId == featureFlagId);
-
-        return await query
-            .OrderBy(d => d.FeatureFlag.Key)
-            .ThenBy(d => d.DependsOnFeatureFlag.Key)
-            .Select(d => new FeatureFlagDependency
-            {
-                Id = d.Id,
-                FeatureFlagId = d.FeatureFlagId,
-                DependsOnFeatureFlagId = d.DependsOnFeatureFlagId,
-                DependencyType = d.DependencyType,
-                FeatureFlagKey = d.FeatureFlag.Key,
-                DependsOnFeatureFlagKey = d.DependsOnFeatureFlag.Key,
-                CreatedAt = d.CreatedAt,
-            })
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+        // PLANNED: FeatureFlagDependency is not yet a tracked entity in DbContext.
+        // Will implement when dependency tracking feature is added.
+        return Task.FromResult(Enumerable.Empty<FeatureFlagDependency>());
     }
 
     public async Task<IEnumerable<FeatureFlagConfig>> GetConfigsAsync(string environment, string? tenantId, IEnumerable<string>? featureKeys, DateTime? modifiedSince, CancellationToken cancellationToken = default)
