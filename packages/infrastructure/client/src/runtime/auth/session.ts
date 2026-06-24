@@ -15,6 +15,8 @@ import { TokenRefreshError } from './errors.js';
 /** Threshold before access token expiry to trigger refresh (30 seconds) */
 const REFRESH_THRESHOLD_MS = 30_000;
 
+const inFlightRefreshes = new Map<string, Promise<JWTPayload>>();
+
 /**
  * Create a JWT payload from a provider result (after sign-in/sign-up).
  *
@@ -105,6 +107,22 @@ export async function refreshAccessToken(token: JWTPayload, config: ResolvedAuth
     throw new TokenRefreshError('No refresh token available');
   }
 
+  const existingRefresh = inFlightRefreshes.get(token.refreshToken);
+  if (existingRefresh) {
+    return existingRefresh;
+  }
+
+  const refreshPromise = executeRefreshAccessToken(token, config);
+  inFlightRefreshes.set(token.refreshToken, refreshPromise);
+
+  try {
+    return await refreshPromise;
+  } finally {
+    inFlightRefreshes.delete(token.refreshToken);
+  }
+}
+
+async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuthConfig): Promise<JWTPayload> {
   const refreshUrl = `${config.apiUrl}/v1/auth/tokens:refresh`;
 
   try {

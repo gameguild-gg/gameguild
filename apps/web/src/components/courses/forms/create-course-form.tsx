@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { createCourse } from '@/lib/learning/actions';
+import { getCourseRouteParam } from '@/lib/learning/course-route';
+import { useRouter } from '@/i18n/navigation';
 import { AlertCircle, ArrowLeft, Loader2, Save } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import speakingurl from 'speakingurl';
 
@@ -68,8 +69,8 @@ export const CreateCourseForm = (): React.JSX.Element => {
         throw new Error(result.error);
       }
 
-      const courseId = result.data.id;
-      router.push(`/dashboard/learning/courses/${courseId}` as Parameters<typeof router.push>[0]);
+      const courseRouteParam = result.data.routeParam || getCourseRouteParam(result.data);
+      router.push(`/dashboard/learning/courses/${courseRouteParam}` as Parameters<typeof router.push>[0]);
     } catch (err) {
       console.error('Error creating course:', err);
 

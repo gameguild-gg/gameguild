@@ -20,6 +20,18 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en-US',
+}));
+
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ children, href, locale: _locale, ...rest }: { children: React.ReactNode; href: string; locale?: string }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
+
 // Must import AFTER mocks
 const { SignInForm } = await import('@/components/sign-in-form');
 

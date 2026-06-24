@@ -105,7 +105,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/dashboard/learning/courses" locale={locale}>
+            <Link href="/dashboard/learning/courses" locale={locale} prefetch={false}>
               <ArrowLeft className="size-5" />
             </Link>
           </Button>
@@ -122,7 +122,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href={previewHref} locale={locale}>
+            <Link href={previewHref} locale={locale} prefetch={false}>
               <Eye className="mr-2 size-4" />
               Preview
             </Link>
@@ -139,20 +139,20 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={buildDashboardCoursePath(courseRouteParam, 'listing')} locale={locale}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'listing')} locale={locale} prefetch={false}>
                   <Edit className="mr-2 size-4" />
                   Edit Listing
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={buildDashboardCoursePath(courseRouteParam, 'settings')} locale={locale}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'settings')} locale={locale} prefetch={false}>
                   <Settings className="mr-2 size-4" />
                   Settings
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive" asChild>
-                <Link href={buildDashboardCoursePath(courseRouteParam, 'settings/danger')} locale={locale}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'settings/danger')} locale={locale} prefetch={false}>
                   <Trash2 className="mr-2 size-4" />
                   Delete Course
                 </Link>
@@ -173,6 +173,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
                 key={item.segment}
                 href={buildDashboardCoursePath(courseRouteParam, item.segment)}
                 locale={locale}
+                prefetch={false}
                 className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                   }`}
               >
@@ -193,6 +194,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
                   key={item.segment}
                   href={buildDashboardCoursePath(courseRouteParam, item.segment)}
                   locale={locale}
+                  prefetch={false}
                   className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >

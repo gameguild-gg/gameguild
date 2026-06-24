@@ -121,7 +121,18 @@ export function SalesShowcaseSection() {
             <Label htmlFor="maxEnrollments" className="text-sm">
               Maximum Enrollments (Optional)
             </Label>
-            <Input id="maxEnrollments" type="number" placeholder="Leave empty for unlimited" value={state.enrollment.maxEnrollments || ''} onChange={(e) => setMaxEnrollments(e.target.value ? parseInt(e.target.value) : undefined)} />
+            <Input
+              id="maxEnrollments"
+              type="number"
+              min="0"
+              placeholder="0 for unlimited"
+              value={state.enrollment.maxEnrollments ?? ''}
+              onChange={(e) => {
+                const parsed = Number.parseInt(e.target.value, 10);
+                setMaxEnrollments(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
+              }}
+            />
+            <p className="text-xs text-muted-foreground">Use 0 or leave empty for unlimited seats.</p>
           </div>
 
           {/* Current Enrollments Display */}

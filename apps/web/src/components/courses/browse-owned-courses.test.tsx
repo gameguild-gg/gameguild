@@ -6,7 +6,7 @@ import { BrowseOwnedCoursesPage, type EnrolledCourse } from './browse-owned-cour
 
 const push = vi.fn();
 
-vi.mock('next/navigation', () => ({
+vi.mock('@/i18n/navigation', () => ({
   useRouter: () => ({ push }),
 }));
 

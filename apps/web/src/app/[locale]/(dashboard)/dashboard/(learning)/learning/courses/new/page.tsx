@@ -2,6 +2,7 @@
 
 import { Link, useRouter } from '@/i18n/navigation';
 import { createCourse, updateCourse } from '@/lib/learning/actions';
+import { getCourseRouteParam } from '@/lib/learning/course-route';
 import {
   CONTENT_VISIBILITIES,
   ENROLLMENT_STATUSES,
@@ -28,6 +29,13 @@ function slugify(text: string): string {
 }
 
 const STEPS = ['Basics', 'Details', 'Settings'] as const;
+
+function parseEnrollmentCap(value: string): number | null {
+  if (!value.trim()) return null;
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
 
 export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashboard/learning/courses/new'>) {
   const router = useRouter();
@@ -99,7 +107,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
       }
 
       const courseId = createResult.data.id;
-      const courseRouteParam = createResult.data.slug || courseId;
+      const courseRouteParam = createResult.data.routeParam || getCourseRouteParam({ id: courseId, slug: createResult.data.slug });
 
       // Step 2: Update with extended fields
       const updateResult = await updateCourse({
@@ -111,7 +119,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
         estimatedHours: estimatedHours ? parseInt(estimatedHours, 10) : undefined,
         thumbnail: thumbnail || undefined,
         videoShowcaseUrl: videoShowcaseUrl || undefined,
-        maxEnrollments: maxEnrollments ? parseInt(maxEnrollments, 10) : undefined,
+        maxEnrollments: parseEnrollmentCap(maxEnrollments),
         skillsRequired: skillsRequired.trim() || undefined,
         skillsProvided: skillsProvided.trim() || undefined,
       });
@@ -330,11 +338,12 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
                 <Input
                   id="maxEnrollments"
                   type="number"
-                  min="1"
-                  placeholder="Leave empty for unlimited"
+                  min="0"
+                  placeholder="0 for unlimited"
                   value={maxEnrollments}
                   onChange={(e) => setMaxEnrollments(e.target.value)}
                 />
+                <p className="text-muted-foreground text-xs">Use 0 or leave blank for unlimited seats.</p>
               </div>
 
               <div className="flex flex-col gap-2">

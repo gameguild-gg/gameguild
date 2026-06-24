@@ -25,6 +25,7 @@ import type {
   CourseStudents,
   LearningCoursesProgramContentType,
 } from '@/lib/learning/types';
+import { getCourseLookupSlug, slugifyRoutePart } from '@/lib/learning/course-route';
 import { learningApiGet } from './http';
 
 // Re-export generated types for consumers
@@ -81,9 +82,48 @@ function isGuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
 }
 
-function mapProgramDtoToCourseDetails(dto: LearningCoursesProgram): CourseDetails {
+type UserLookupResult =
+  | { ok: true; data: { name?: string | null; email?: string | null } }
+  | { ok: false; error?: unknown };
+
+type UserLookupModule = {
+  getUsers1(userId: string): Promise<UserLookupResult>;
+};
+
+function createUsersModule(): UserLookupModule | null {
+  const UsersModule = (GeneratedApi as unknown as {
+    UsersModule?: new (client: ReturnType<typeof getApiClient>) => UserLookupModule;
+  }).UsersModule;
+
+  return UsersModule ? new UsersModule(getApiClient()) : null;
+}
+
+async function resolveCreatorHandle(creatorId: string | null | undefined): Promise<string | null> {
+  if (!creatorId) return null;
+
+  const fallback = slugifyRoutePart(creatorId).slice(0, 12) || null;
+  const users = createUsersModule();
+  if (!users) return fallback;
+
+  try {
+    const result = await users.getUsers1(creatorId);
+    if (!result.ok) return fallback;
+
+    return (
+      slugifyRoutePart(result.data.name ?? '') ||
+      slugifyRoutePart(result.data.email?.split('@')[0] ?? '') ||
+      fallback
+    );
+  } catch {
+    return fallback;
+  }
+}
+
+function mapProgramDtoToCourseDetails(dto: LearningCoursesProgram, creatorHandle: string | null = null): CourseDetails {
   return {
     id: dto.id!,
+    creatorId: dto.creatorId ?? null,
+    creatorHandle,
     title: dto.title ?? '',
     description: dto.description ?? '',
     metadata: dto.metadata ?? null,
@@ -132,7 +172,7 @@ async function fetchCourseBySlug(slug: string): Promise<CourseDetails | null> {
 
     if (!result.ok) return null;
 
-    return mapProgramDtoToCourseDetails(result.data);
+    return mapProgramDtoToCourseDetails(result.data, await resolveCreatorHandle(result.data.creatorId));
   } catch {
     return null;
   }
@@ -149,7 +189,7 @@ async function fetchCourseById(courseId: string): Promise<CourseDetails | null> 
       return null;
     }
 
-    return mapProgramDtoToCourseDetails(result.data);
+    return mapProgramDtoToCourseDetails(result.data, await resolveCreatorHandle(result.data.creatorId));
   } catch {
     return null;
   }
@@ -166,7 +206,8 @@ export const getCourse = cache(async (courseIdentifier: string): Promise<CourseD
     return fetchCourseById(identifier);
   }
 
-  return (await fetchCourseBySlug(identifier)) ?? fetchCourseById(identifier);
+  const slug = getCourseLookupSlug(identifier);
+  return (await fetchCourseBySlug(slug)) ?? fetchCourseById(identifier);
 });
 
 export const resolveCourseId = cache(async (courseIdentifier: string): Promise<string> => {

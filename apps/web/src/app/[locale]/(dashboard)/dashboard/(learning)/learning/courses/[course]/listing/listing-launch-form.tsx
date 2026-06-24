@@ -43,6 +43,11 @@ function toIsoDateTime(value: string): string | null {
   return date.toISOString();
 }
 
+function parseEnrollmentCap(value: string): number | null {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
 export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -64,7 +69,7 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
         visibility: visibility === 'public' ? 'Public' : 'Private',
         enrollmentStatus,
         enrollmentDeadline: toIsoDateTime(enrollmentDeadline),
-        maxEnrollments: maxEnrollments ? parseInt(maxEnrollments, 10) : null,
+        maxEnrollments: parseEnrollmentCap(maxEnrollments),
       });
 
       if (!result.success) {
@@ -133,12 +138,12 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
             <Input
               id="maxEnrollments"
               type="number"
-              min="1"
+              min="0"
               value={maxEnrollments}
               onChange={(event) => setMaxEnrollments(event.target.value)}
-              placeholder="Unlimited"
+              placeholder="0 for unlimited"
             />
-            <p className="text-xs text-muted-foreground">Leave blank for unlimited seats.</p>
+            <p className="text-xs text-muted-foreground">Use 0 or leave blank for unlimited seats.</p>
           </div>
 
           {error ? (

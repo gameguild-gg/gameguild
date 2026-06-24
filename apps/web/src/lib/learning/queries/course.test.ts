@@ -76,6 +76,31 @@ describe('course analytics query', () => {
     });
   });
 
+  it('resolves slug-by-author dashboard params through the clean API slug', async () => {
+    mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
+    mocks.clientRequest.mockResolvedValue({
+      ok: true,
+      data: {
+        id: '18691da8-245e-4d9e-b729-83c9023ba062',
+        title: 'AI for Boss Encounters',
+        description: 'Build readable encounter AI.',
+        slug: 'ai-for-boss-encounters',
+        status: 'Published',
+        visibility: 'Public',
+        createdAt: '2026-06-01T00:00:00.000Z',
+      },
+    });
+
+    const course = await getCourse('ai-for-boss-encounters-by-ada-lovelace');
+
+    expect(mocks.clientRequest).toHaveBeenCalledWith({
+      method: 'GET',
+      path: '/v1/courses/slug/ai-for-boss-encounters',
+      requiresAuth: true,
+    });
+    expect(course?.slug).toBe('ai-for-boss-encounters');
+  });
+
   it('keeps legacy UUID route params working through the course ID endpoint', async () => {
     mocks.getCourses1.mockResolvedValue({
       ok: true,

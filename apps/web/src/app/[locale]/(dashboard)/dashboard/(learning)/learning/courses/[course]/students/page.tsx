@@ -77,7 +77,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
         </Card>
       </div>
 
-      <StudentTable students={enriched} total={total} />
+      <StudentTable courseId={course.id} students={enriched} total={total} />
     </div>
   );
 }

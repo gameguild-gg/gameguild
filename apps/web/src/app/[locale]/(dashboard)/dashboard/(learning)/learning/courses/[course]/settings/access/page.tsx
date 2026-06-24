@@ -17,6 +17,11 @@ import {
   formatEnumLabel,
 } from '@/lib/learning/enums';
 
+function parseEnrollmentCap(value: string): number | null {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
 export default function AccessSettingsPage({ params }: { params: Promise<{ locale: string; course: string }> }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -62,8 +67,8 @@ export default function AccessSettingsPage({ params }: { params: Promise<{ local
         courseId,
         visibility,
         enrollmentStatus,
-        maxEnrollments: maxEnrollments ? parseInt(maxEnrollments, 10) : undefined,
-        enrollmentDeadline: enrollmentDeadline || undefined,
+        maxEnrollments: parseEnrollmentCap(maxEnrollments),
+        enrollmentDeadline: enrollmentDeadline || null,
       });
       if (result.success) {
         setSuccess(true);
@@ -145,12 +150,12 @@ export default function AccessSettingsPage({ params }: { params: Promise<{ local
             <Input
               id="maxEnrollments"
               type="number"
-              min="1"
-              placeholder="Unlimited"
+              min="0"
+              placeholder="0 for unlimited"
               value={maxEnrollments}
               onChange={(e) => setMaxEnrollments(e.target.value)}
             />
-            <p className="text-muted-foreground text-xs">Leave empty for unlimited enrollments.</p>
+            <p className="text-muted-foreground text-xs">Use 0 or leave empty for unlimited enrollments.</p>
           </div>
 
           <div className="flex flex-col gap-2">

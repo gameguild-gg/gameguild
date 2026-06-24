@@ -13,6 +13,8 @@ vi.mock('./http', () => ({
 
 const baseCourse: CourseDetails = {
   id: 'course-1',
+  creatorId: 'creator-1',
+  creatorHandle: 'instructor-one',
   title: 'Dashboard Editable Course',
   description: 'Course description',
   metadata: null,

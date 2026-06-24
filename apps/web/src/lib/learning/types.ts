@@ -53,6 +53,8 @@ export interface CourseFeatures {
  */
 export interface CourseDetails {
   id: string;
+  creatorId: string | null;
+  creatorHandle: string | null;
   title: string;
   description: string;
   metadata: string | null;

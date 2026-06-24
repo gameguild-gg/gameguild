@@ -2,6 +2,7 @@
 
 import { DashboardSidebar } from './dashboard-sidebar';
 import { DashboardHeader } from './dashboard-header';
+import { DashboardCommandPalette } from './dashboard-command-palette';
 import { cn } from '@game-guild/ui/lib/utils';
 import { SidebarInset, SidebarProvider } from '@game-guild/ui/components/sidebar';
 import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications';
@@ -19,6 +20,7 @@ export function DashboardShell({ children, notifications, user }: DashboardShell
       <SidebarProvider>
         <DashboardSidebar />
         <SidebarInset>
+          <DashboardCommandPalette />
           {/* Main Content */}
           <div className="flex flex-1 flex-col overflow-hidden">
             {/* Navbar */}

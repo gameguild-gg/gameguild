@@ -3,7 +3,7 @@
 // =============================================================================
 
 import { getToken } from '@/auth';
-import { getCourseRouteParam } from '@/lib/learning/course-route';
+import { getCourseRouteParam, slugifyRoutePart } from '@/lib/learning/course-route';
 import { createServerClient, GeneratedApi } from '@game-guild/client';
 
 /**
@@ -13,6 +13,8 @@ export interface CourseListItem {
   id: string;
   slug: string;
   routeParam: string;
+  creatorId: string | null;
+  creatorHandle: string | null;
   title: string;
   thumbnail: string | null;
   status: 'draft' | 'published' | 'archived';
@@ -34,6 +36,58 @@ function getApiClient() {
 
 function createCourseProgramsModule() {
   return new GeneratedApi.LearningCoursesProgramModule(getApiClient());
+}
+
+type UserLookupResult =
+  | { ok: true; data: { name?: string | null; email?: string | null } }
+  | { ok: false; error?: unknown };
+
+type UserLookupModule = {
+  getUsers1(userId: string): Promise<UserLookupResult>;
+};
+
+function createUsersModule(): UserLookupModule | null {
+  const UsersModule = (GeneratedApi as unknown as {
+    UsersModule?: new (client: ReturnType<typeof getApiClient>) => UserLookupModule;
+  }).UsersModule;
+
+  return UsersModule ? new UsersModule(getApiClient()) : null;
+}
+
+async function getCreatorHandles(programs: ProgramDto[]): Promise<Map<string, string>> {
+  const users = createUsersModule();
+  const creatorIds = [...new Set(programs.map((program) => program.creatorId).filter((id): id is string => Boolean(id)))];
+  const handles = new Map<string, string>();
+
+  await Promise.all(
+    creatorIds.map(async (creatorId) => {
+      const fallback = slugifyRoutePart(creatorId).slice(0, 12) || 'gameguild';
+
+      if (!users) {
+        handles.set(creatorId, fallback);
+        return;
+      }
+
+      try {
+        const result = await users.getUsers1(creatorId);
+        if (!result.ok) {
+          handles.set(creatorId, fallback);
+          return;
+        }
+
+        handles.set(
+          creatorId,
+          slugifyRoutePart(result.data.name ?? '') ||
+          slugifyRoutePart(result.data.email?.split('@')[0] ?? '') ||
+          fallback,
+        );
+      } catch {
+        handles.set(creatorId, fallback);
+      }
+    }),
+  );
+
+  return handles;
 }
 
 function mapAverageRating(program: ProgramDto): string | null {
@@ -132,16 +186,21 @@ export async function getCourses(): Promise<{
     const result = await programs.getCourses({ take: 50 });
 
     if (result.ok && Array.isArray(result.data)) {
+      const creatorHandles = await getCreatorHandles(result.data);
       const courses = await Promise.all(
         result.data.map(async (program) => {
           const metrics = await getCourseMetrics(programs, program);
           const id = String(program.id ?? '');
           const slug = typeof program.slug === 'string' ? program.slug.trim() : '';
+          const creatorId = program.creatorId ?? null;
+          const creatorHandle = creatorId ? creatorHandles.get(creatorId) ?? null : null;
 
           return {
             id,
             slug,
-            routeParam: getCourseRouteParam({ id, slug }),
+            creatorId,
+            creatorHandle,
+            routeParam: getCourseRouteParam({ id, slug, creatorId, creatorHandle }),
             title: program.title ?? 'Untitled course',
             thumbnail: typeof program.thumbnail === 'string' ? program.thumbnail : null,
             status: mapStatus(program.status),

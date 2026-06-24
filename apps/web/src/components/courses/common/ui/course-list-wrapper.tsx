@@ -1,7 +1,8 @@
 'use client';
 
 import type { Program } from '@/lib/api/generated/types.gen';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
+import { getCourseRouteParam } from '@/lib/learning/course-route';
 import type { CourseCardCourse } from './course-card';
 import { CourseList } from './course-list';
 
@@ -12,7 +13,11 @@ interface CourseListWrapperProps {
 export const CourseListWrapper = ({ courses }: CourseListWrapperProps): React.JSX.Element => {
   const router = useRouter();
 
-  const getCourseIdentifier = (course: CourseCardCourse) => String(course.slug ?? course.id ?? '');
+  const getCourseIdentifier = (course: CourseCardCourse) => getCourseRouteParam({
+    id: course.id == null ? null : String(course.id),
+    slug: course.slug == null ? null : String(course.slug),
+    creatorId: typeof course.creatorId === 'string' ? course.creatorId : null,
+  });
 
   const navigateToCourse = (course: CourseCardCourse, suffix = '') => {
     const identifier = getCourseIdentifier(course);
