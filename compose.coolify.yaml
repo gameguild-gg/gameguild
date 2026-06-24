@@ -81,6 +81,7 @@ services:
       # Coolify creates the Host router from docker_compose_domains. Pin the
       # backend port explicitly so Traefik does not ignore the non-3000 API
       # service when this stack is deployed as a multi-service application.
+      - 'traefik.http.routers.http-0-${COOLIFY_RESOURCE_UUID:-cj7m56a6yhvzo4cpbbjtzw8e}-api.service=game-guild-api'
       - 'traefik.http.services.game-guild-api.loadbalancer.server.port=8080'
     deploy:
       resources:
