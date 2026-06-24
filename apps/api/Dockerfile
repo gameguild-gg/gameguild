@@ -32,11 +32,11 @@ COPY --from=build --chown=appuser:appuser /app/publish .
 # Switch to non-root user
 USER appuser
 
-# Expose port
-EXPOSE 8080
+# Expose the same internal port Coolify uses for routed application services.
+EXPOSE 3000
 
 # Set environment variables
-ENV ASPNETCORE_HTTP_PORTS=8080 \
+ENV ASPNETCORE_HTTP_PORTS=3000 \
     ASPNETCORE_ENVIRONMENT=Production \
     DOTNET_RUNNING_IN_CONTAINER=true \
     DOTNET_USE_POLLING_FILE_WATCHER=true \
@@ -45,32 +45,7 @@ ENV ASPNETCORE_HTTP_PORTS=8080 \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://127.0.0.1:8080/live || exit 1
+    CMD curl -f http://127.0.0.1:3000/live || exit 1
 
 # Entry point
 ENTRYPOINT ["dotnet", "GameGuild.API.dll"]
-
-#
-#FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-#USER $APP_UID
-#WORKDIR /app
-#EXPOSE 8080
-#EXPOSE 8081
-#
-#FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-#ARG BUILD_CONFIGURATION=Release
-#WORKDIR /src
-#COPY ["cms.csproj", "./"]
-#RUN dotnet restore "cms.csproj"
-#COPY . .
-#WORKDIR "/src/"
-#RUN dotnet build "./cms.csproj" -c $BUILD_CONFIGURATION -o /app/build
-#
-#FROM build AS publish
-#ARG BUILD_CONFIGURATION=Release
-#RUN dotnet publish "./cms.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-#
-#FROM base AS final
-#WORKDIR /app
-#COPY --from=publish /app/publish .
-#ENTRYPOINT ["dotnet", "GameGuild.CMS.dll"]

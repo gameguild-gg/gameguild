@@ -33,10 +33,10 @@ services:
       dockerfile: Dockerfile
     image: game-guild-api
     ports:
-      - '8080'
+      - '3000'
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Staging}
-      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTP_PORTS=3000
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
       - DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys
       - SeedData__ImportSnapshotCourses=${SEED_SNAPSHOT_COURSES:-true}
@@ -62,7 +62,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8080/live || exit 1']
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:3000/live || exit 1']
       start_interval: 5s
       start_period: 180s
       interval: 30s
@@ -81,8 +81,7 @@ services:
       # Coolify creates the Host router from docker_compose_domains. Pin the
       # backend port explicitly so Traefik does not ignore the non-3000 API
       # service when this stack is deployed as a multi-service application.
-      - 'traefik.http.routers.http-0-cj7m56a6yhvzo4cpbbjtzw8e-api.service=game-guild-api'
-      - 'traefik.http.services.game-guild-api.loadbalancer.server.port=8080'
+      - 'traefik.http.services.game-guild-api.loadbalancer.server.port=3000'
     deploy:
       resources:
         limits:
@@ -104,7 +103,7 @@ services:
       args:
         GIT_HASH: ${GIT_HASH:-}
         AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
-        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
+        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:3000}
         API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
@@ -115,7 +114,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
-      - API_URL=${API_INTERNAL_URL:-http://api:8080}
+      - API_URL=${API_INTERNAL_URL:-http://api:3000}
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
       - NEXT_PUBLIC_APP_URL=${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
       - NEXT_PUBLIC_LEARNING_APP_URL=${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
@@ -168,7 +167,7 @@ services:
       args:
         GIT_HASH: ${GIT_HASH:-}
         AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
-        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
+        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:3000}
         API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
@@ -179,7 +178,7 @@ services:
       - NODE_ENV=production
       - PORT=3002
       - HOSTNAME=0.0.0.0
-      - API_URL=${API_INTERNAL_URL:-http://api:8080}
+      - API_URL=${API_INTERNAL_URL:-http://api:3000}
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
       - NEXTAUTH_URL=${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
       - AUTH_SECRET=${AUTH_SECRET:?set AUTH_SECRET}
