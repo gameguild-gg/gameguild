@@ -130,6 +130,7 @@ services:
         max-size: '10m'
         max-file: '3'
     labels:
+      - 'traefik.docker.network=coolify'
       - 'com.game-guild.app=api-gateway'
       - 'com.game-guild.tier=edge'
       - 'com.game-guild.environment=staging'
