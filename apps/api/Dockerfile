@@ -14,8 +14,8 @@ RUN dotnet publish "Source/GameGuild.API/GameGuild.API.csproj" -c Release -o /ap
 # Stage 2: Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 
-# Install curl for health checks and create non-root user
-RUN apk add --no-cache curl \
+# Install runtime dependencies for health checks and PostgreSQL/Npgsql auth.
+RUN apk add --no-cache curl krb5-libs \
     && addgroup -g 1001 -S appuser \
     && adduser -S appuser -G appuser -u 1001
 
