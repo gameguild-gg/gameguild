@@ -93,14 +93,14 @@ services:
   api-gateway:
     image: nginx:1.27-alpine
     ports:
-      - '3000'
+      - '80'
     command:
       - /bin/sh
       - -c
       - |
         cat > /etc/nginx/conf.d/default.conf <<'NGINX'
         server {
-          listen 3000;
+          listen 80;
           server_name _;
 
           location / {
@@ -117,7 +117,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/live >/dev/null || exit 1']
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/live >/dev/null || exit 1']
       start_interval: 5s
       start_period: 90s
       interval: 30s
