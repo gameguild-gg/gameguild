@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { resolveCourseId } from './course';
 import { learningApiGet } from './http';
 
 // =============================================================================
@@ -259,7 +260,8 @@ function mapDiscussion(dto: DiscussionApiDto): DiscussionThread {
  * Cache: revalidate 60s
  */
 export const getCourseDiscussions = cache(async (courseId: string): Promise<CourseDiscussions> => {
-  const discussions = await learningApiGet<DiscussionApiDto[]>(`/api/social/courses/${courseId}/discussions?skip=0&take=100&pinnedFirst=true`, 60);
+  const resolvedCourseId = await resolveCourseId(courseId);
+  const discussions = await learningApiGet<DiscussionApiDto[]>(`/api/social/courses/${resolvedCourseId}/discussions?skip=0&take=100&pinnedFirst=true`, 60);
   const threads = (discussions ?? []).map(mapDiscussion);
 
   return { threads, total: threads.length, pinnedCount: threads.filter((thread) => thread.pinned).length };

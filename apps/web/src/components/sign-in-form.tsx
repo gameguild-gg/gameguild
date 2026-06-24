@@ -1,7 +1,8 @@
 "use client"
 
 import { type FormEvent, useState } from "react"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
+import { useLocale } from "next-intl"
 import { useAuth } from "@game-guild/client/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@game-guild/ui/components/button"
@@ -28,6 +29,7 @@ export function SignInForm({
 }: React.ComponentProps<"div"> & { redirectTo?: string }) {
   const { signIn, isLoading, error, clearError } = useAuth()
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const locale = useLocale()
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -98,6 +100,7 @@ export function SignInForm({
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <Link
                     href="/forgot-password"
+                    locale={locale}
                     className="ml-auto text-sm text-sky-200 underline-offset-4 hover:underline"
                     tabIndex={-1}
                   >
@@ -133,6 +136,7 @@ export function SignInForm({
                   Don&apos;t have an account?{" "}
                   <Link
                     href={redirectTo ? `/sign-up?redirectTo=${encodeURIComponent(redirectTo)}` : "/sign-up"}
+                    locale={locale}
                     className="text-sky-200 underline-offset-4 hover:underline"
                   >
                     Sign up
@@ -145,8 +149,8 @@ export function SignInForm({
       </Card>
       <FieldDescription className="px-6 text-center text-slate-400">
         By clicking continue, you agree to our{" "}
-        <Link href="/terms-of-service" className="text-sky-200 underline-offset-4 hover:underline">Terms of Service</Link> and{" "}
-        <Link href="/polices/privacy" className="text-sky-200 underline-offset-4 hover:underline">Privacy Policy</Link>.
+        <Link href="/terms-of-service" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Terms of Service</Link> and{" "}
+        <Link href="/polices/privacy" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Privacy Policy</Link>.
       </FieldDescription>
     </div>
   )

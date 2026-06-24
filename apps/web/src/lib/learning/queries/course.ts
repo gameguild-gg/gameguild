@@ -42,6 +42,7 @@ function createCourseModules() {
   const client = getApiClient();
 
   return {
+    client,
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
     content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
     enrollments: new GeneratedApi.LearningEnrollmentsModule(client),
@@ -76,10 +77,68 @@ function mapVisibility(v: ContentVisibility | undefined): 'public' | 'private' |
   return 'private';
 }
 
-/**
- * Fetch course details from the API.
- */
-export const getCourse = cache(async (courseId: string): Promise<CourseDetails | null> => {
+function isGuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
+}
+
+function mapProgramDtoToCourseDetails(dto: LearningCoursesProgram): CourseDetails {
+  return {
+    id: dto.id!,
+    title: dto.title ?? '',
+    description: dto.description ?? '',
+    metadata: dto.metadata ?? null,
+    slug: dto.slug ?? '',
+    status: mapStatus(dto.status),
+    visibility: mapVisibility(dto.visibility),
+    thumbnail: dto.thumbnail ?? null,
+    videoShowcaseUrl: dto.videoShowcaseUrl ?? null,
+    estimatedHours: dto.estimatedHours ?? null,
+    category: dto.category ?? 'GeneralEducation',
+    difficulty: dto.difficulty ?? 'Beginner',
+    skillsRequired: dto.skillsRequired ?? null,
+    skillsProvided: dto.skillsProvided ?? null,
+    enrollmentStatus: dto.enrollmentStatus ?? 'Open',
+    maxEnrollments: dto.maxEnrollments ?? null,
+    enrollmentDeadline: dto.enrollmentDeadline ?? null,
+    currentEnrollments: dto.currentEnrollments ?? 0,
+    averageRating: dto.averageRating ?? 0,
+    totalRatings: dto.totalRatings ?? 0,
+    isEnrollmentOpen: dto.isEnrollmentOpen ?? true,
+    deliveryMode: 'on-demand',
+    pricingModel: 'free',
+    features: {
+      hasClasses: true,
+      hasRecordings: true,
+      hasSchedule: true,
+      hasOnDemandContent: true,
+      hasPricing: true,
+      hasCertificate: true,
+      hasAssessments: true,
+      hasDiscussions: true,
+    },
+    createdAt: dto.createdAt ?? new Date().toISOString(),
+    updatedAt: dto.updatedAt ?? dto.createdAt ?? new Date().toISOString(),
+  };
+}
+
+async function fetchCourseBySlug(slug: string): Promise<CourseDetails | null> {
+  try {
+    const { client } = createCourseModules();
+    const result = await client.request({
+      method: 'GET',
+      path: `/v1/courses/slug/${encodeURIComponent(slug)}`,
+      requiresAuth: true,
+    }) as { ok: true; data: LearningCoursesProgram } | { ok: false; error?: { status?: number; code?: string; message?: string; detail?: string } };
+
+    if (!result.ok) return null;
+
+    return mapProgramDtoToCourseDetails(result.data);
+  } catch {
+    return null;
+  }
+}
+
+async function fetchCourseById(courseId: string): Promise<CourseDetails | null> {
   try {
     const { programs } = createCourseModules();
     const result = await programs.getCourses1(courseId);
@@ -90,47 +149,31 @@ export const getCourse = cache(async (courseId: string): Promise<CourseDetails |
       return null;
     }
 
-    const dto = result.data;
-    return {
-      id: dto.id!,
-      title: dto.title ?? '',
-      description: dto.description ?? '',
-      metadata: dto.metadata ?? null,
-      slug: dto.slug ?? '',
-      status: mapStatus(dto.status),
-      visibility: mapVisibility(dto.visibility),
-      thumbnail: dto.thumbnail ?? null,
-      videoShowcaseUrl: dto.videoShowcaseUrl ?? null,
-      estimatedHours: dto.estimatedHours ?? null,
-      category: dto.category ?? 'GeneralEducation',
-      difficulty: dto.difficulty ?? 'Beginner',
-      skillsRequired: dto.skillsRequired ?? null,
-      skillsProvided: dto.skillsProvided ?? null,
-      enrollmentStatus: dto.enrollmentStatus ?? 'Open',
-      maxEnrollments: dto.maxEnrollments ?? null,
-      enrollmentDeadline: dto.enrollmentDeadline ?? null,
-      currentEnrollments: dto.currentEnrollments ?? 0,
-      averageRating: dto.averageRating ?? 0,
-      totalRatings: dto.totalRatings ?? 0,
-      isEnrollmentOpen: dto.isEnrollmentOpen ?? true,
-      deliveryMode: 'on-demand',
-      pricingModel: 'free',
-      features: {
-        hasClasses: true,
-        hasRecordings: true,
-        hasSchedule: true,
-        hasOnDemandContent: true,
-        hasPricing: true,
-        hasCertificate: true,
-        hasAssessments: true,
-        hasDiscussions: true,
-      },
-      createdAt: dto.createdAt ?? new Date().toISOString(),
-      updatedAt: dto.updatedAt ?? dto.createdAt ?? new Date().toISOString(),
-    };
+    return mapProgramDtoToCourseDetails(result.data);
   } catch {
     return null;
   }
+}
+
+/**
+ * Fetch course details from the API by canonical ID or dashboard slug.
+ */
+export const getCourse = cache(async (courseIdentifier: string): Promise<CourseDetails | null> => {
+  const identifier = courseIdentifier.trim();
+  if (!identifier) return null;
+
+  if (isGuid(identifier)) {
+    return fetchCourseById(identifier);
+  }
+
+  return (await fetchCourseBySlug(identifier)) ?? fetchCourseById(identifier);
+});
+
+export const resolveCourseId = cache(async (courseIdentifier: string): Promise<string> => {
+  if (isGuid(courseIdentifier)) return courseIdentifier;
+
+  const course = await getCourse(courseIdentifier);
+  return course?.id ?? courseIdentifier;
 });
 
 /**
@@ -139,8 +182,9 @@ export const getCourse = cache(async (courseId: string): Promise<CourseDetails |
 export const getCourseAnalytics = cache(async (courseId: string): Promise<CourseAnalytics> => {
   const empty = emptyCourseAnalytics();
   try {
+    const resolvedCourseId = await resolveCourseId(courseId);
     const { programs } = createCourseModules();
-    const result = await programs.getCoursesAnalytics(courseId);
+    const result = await programs.getCoursesAnalytics(resolvedCourseId);
 
     if (!result.ok) return empty;
 
@@ -191,8 +235,9 @@ function mapContentDto(dto: LearningCoursesProgramContent): ContentItem {
  */
 export const getCourseContent = cache(async (courseId: string): Promise<CourseContent> => {
   try {
+    const resolvedCourseId = await resolveCourseId(courseId);
     const { content } = createCourseModules();
-    const result = await content.getCoursesContent(courseId);
+    const result = await content.getCoursesContent(resolvedCourseId);
 
     if (!result.ok) return { items: [], total: 0 };
 
@@ -218,8 +263,9 @@ export const getCourseContent = cache(async (courseId: string): Promise<CourseCo
  */
 export const getContentItem = cache(async (courseId: string, contentId: string): Promise<ContentItemDetail | null> => {
   try {
+    const resolvedCourseId = await resolveCourseId(courseId);
     const { content } = createCourseModules();
-    const result = await content.getCoursesContent1(courseId, contentId);
+    const result = await content.getCoursesContent1(resolvedCourseId, contentId);
 
     if (!result.ok) return null;
 
@@ -243,8 +289,9 @@ export const getContentItem = cache(async (courseId: string, contentId: string):
  */
 export const getCourseStudents = cache(async (courseId: string): Promise<CourseStudents> => {
   try {
+    const resolvedCourseId = await resolveCourseId(courseId);
     const { programs } = createCourseModules();
-    const result = await programs.getCoursesUsers(courseId, { take: 200 });
+    const result = await programs.getCoursesUsers(resolvedCourseId, { take: 200 });
 
     if (!result.ok) return { students: [], total: 0 };
 
@@ -433,7 +480,8 @@ function mapEnrollmentToClassAttendee(enrollment: LearningEnrollmentsEnrollment,
  * Check course.features.hasClasses before calling
  */
 export const getCourseClasses = cache(async (courseId: string): Promise<CourseClasses> => {
-  const cohorts = await learningApiGet<CohortDto[]>(`/api/cohorts/course/${courseId}`, 60);
+  const resolvedCourseId = await resolveCourseId(courseId);
+  const cohorts = await learningApiGet<CohortDto[]>(`/api/cohorts/course/${resolvedCourseId}`, 60);
   const classes = (cohorts ?? []).map(mapCohortToClass);
 
   return {

@@ -1,6 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n/navigation';
+import { buildDashboardCoursePath } from '@/lib/learning/course-route';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@game-guild/ui/components/card';
@@ -23,6 +24,8 @@ function getStatusBadge(status: string) {
 interface CourseCardProps {
   course: {
     id: string;
+    slug?: string;
+    routeParam?: string;
     title: string;
     status: string;
     visibility: string;
@@ -34,10 +37,13 @@ interface CourseCardProps {
 }
 
 export function CourseCard({ course, locale }: CourseCardProps) {
-  void locale;
+  const coursePath = buildDashboardCoursePath(course.routeParam ?? course);
+  const previewPath = buildDashboardCoursePath(course.routeParam ?? course, 'preview');
+  const overviewPath = buildDashboardCoursePath(course.routeParam ?? course, 'overview');
+
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-lg">
-      <Link href={`/dashboard/learning/courses/${course.id}`} className="relative aspect-video bg-muted">
+      <Link href={coursePath} locale={locale} className="relative aspect-video bg-muted">
         <div className="absolute inset-0 flex items-center justify-center">
           <BookOpen className="size-12 text-muted-foreground" />
         </div>
@@ -54,20 +60,20 @@ export function CourseCard({ course, locale }: CourseCardProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={`/dashboard/learning/courses/${course.id}`}>
+                <Link href={coursePath} locale={locale}>
                   <Edit className="mr-2 size-4" />
                   Edit Course
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={`/dashboard/learning/courses/${course.id}/preview`}>
+                <Link href={previewPath} locale={locale}>
                   <Eye className="mr-2 size-4" />
                   Preview
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href={`/dashboard/learning/courses/${course.id}/overview`}>
+                <Link href={overviewPath} locale={locale}>
                   <BookOpen className="mr-2 size-4" />
                   Manage lifecycle
                 </Link>
@@ -76,7 +82,7 @@ export function CourseCard({ course, locale }: CourseCardProps) {
           </DropdownMenu>
         </div>
         <CardTitle className="line-clamp-2 text-lg">
-          <Link href={`/dashboard/learning/courses/${course.id}`}>{course.title}</Link>
+          <Link href={coursePath} locale={locale}>{course.title}</Link>
         </CardTitle>
         <CardDescription className="line-clamp-1">{course.visibility}</CardDescription>
       </CardHeader>
@@ -99,8 +105,11 @@ export function CourseCard({ course, locale }: CourseCardProps) {
   );
 }
 
-export function CourseTableActions({ courseId, courseTitle, locale }: { courseId: string; courseTitle: string; locale: string }) {
-  void locale;
+export function CourseTableActions({ courseRouteParam, courseTitle, locale }: { courseRouteParam: string; courseTitle: string; locale: string }) {
+  const coursePath = buildDashboardCoursePath(courseRouteParam);
+  const previewPath = buildDashboardCoursePath(courseRouteParam, 'preview');
+  const overviewPath = buildDashboardCoursePath(courseRouteParam, 'overview');
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -111,20 +120,20 @@ export function CourseTableActions({ courseId, courseTitle, locale }: { courseId
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <Link href={`/dashboard/learning/courses/${courseId}`}>
+          <Link href={coursePath} locale={locale}>
             <Edit className="mr-2 size-4" />
             Edit
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={`/dashboard/learning/courses/${courseId}/preview`}>
+          <Link href={previewPath} locale={locale}>
             <Eye className="mr-2 size-4" />
             Preview
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={`/dashboard/learning/courses/${courseId}/overview`}>
+          <Link href={overviewPath} locale={locale}>
             <BookOpen className="mr-2 size-4" />
             Manage lifecycle
           </Link>

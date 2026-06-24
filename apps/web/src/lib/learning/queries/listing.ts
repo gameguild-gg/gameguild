@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { getCourse } from './course';
+import { getCourse, resolveCourseId } from './course';
 import { learningApiGet } from './http';
 
 // =============================================================================
@@ -380,7 +380,8 @@ function mapReviewToTestimonial(dto: CourseReviewApiDto): CourseTestimonial {
  * Cache: revalidate 120s (moderate changes)
  */
 export const getCourseTestimonials = cache(async (courseId: string): Promise<CourseTestimonials> => {
-  const reviews = await learningApiGet<CourseReviewApiDto[]>(`/api/social/courses/${courseId}/reviews?skip=0&take=100&approvedOnly=false`, 120);
+  const resolvedCourseId = await resolveCourseId(courseId);
+  const reviews = await learningApiGet<CourseReviewApiDto[]>(`/api/social/courses/${resolvedCourseId}/reviews?skip=0&take=100&approvedOnly=false`, 120);
   const testimonials = (reviews ?? []).map(mapReviewToTestimonial);
   const ratingDistribution: Record<1 | 2 | 3 | 4 | 5, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
@@ -474,13 +475,14 @@ export const getCourseLandingProjects = cache(async (courseId: string): Promise<
  * Cache: revalidate 120s
  */
 export const getCoursePricing = cache(async (courseId: string): Promise<CoursePricing> => {
+  const resolvedCourseId = await resolveCourseId(courseId);
   const pricing = await learningApiGet<{
     price?: number;
     currency?: string | null;
     isSubscription?: boolean;
     subscriptionDurationDays?: number | null;
     isMonetizationEnabled?: boolean;
-  }>(`/v1/courses/${courseId}/pricing`, 120);
+  }>(`/v1/courses/${resolvedCourseId}/pricing`, 120);
 
   if (!pricing?.isMonetizationEnabled) {
     return {
@@ -500,8 +502,8 @@ export const getCoursePricing = cache(async (courseId: string): Promise<CoursePr
   return {
     tiers: [
       {
-        id: `${courseId}-standard`,
-        courseId,
+        id: `${resolvedCourseId}-standard`,
+        courseId: resolvedCourseId,
         name: 'Standard access',
         description: 'Primary course access configured on the course pricing endpoint.',
         price: pricing.price ?? 0,
