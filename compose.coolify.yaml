@@ -103,6 +103,12 @@ services:
           listen 80;
           server_name _;
 
+          location = /gateway-health {
+            access_log off;
+            add_header Content-Type text/plain;
+            return 200 'ok';
+          }
+
           location / {
             proxy_pass http://api:8080;
             proxy_http_version 1.1;
@@ -117,7 +123,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/live >/dev/null || exit 1']
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/gateway-health >/dev/null || exit 1']
       start_interval: 5s
       start_period: 90s
       interval: 30s
