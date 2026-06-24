@@ -11,6 +11,7 @@ vi.mock('@/auth', () => ({
 import {
   countAvailableTesterSlots,
   getTestingLabDashboard,
+  getTestingProjectOptions,
   normalizeTestingLocationStatus,
   normalizeTestingRequestStatus,
   normalizeTestingSessionStatus,
@@ -68,6 +69,23 @@ describe('testing lab queries', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:5295/v1/testing/public/sessions?take=20',
       expect.objectContaining({ headers: { Accept: 'application/json' }, next: { revalidate: 30 } }),
+    );
+  });
+
+  it('loads Testing Lab project options from the Projects API', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => [{ id: 'project-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' }],
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const projects = await getTestingProjectOptions();
+
+    expect(projects).toEqual([{ id: 'project-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' }]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:5295/v1/projects?take=50&sortBy=UpdatedAt&sortDirection=DESC',
+      expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer testing-token' }) }),
     );
   });
 });
