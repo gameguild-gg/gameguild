@@ -43,7 +43,7 @@ export function CourseCard({ course, locale }: CourseCardProps) {
 
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-lg">
-      <Link href={coursePath} locale={locale} className="relative aspect-video bg-muted">
+      <Link href={coursePath} locale={locale} prefetch={false} className="relative aspect-video bg-muted">
         <div className="absolute inset-0 flex items-center justify-center">
           <BookOpen className="size-12 text-muted-foreground" />
         </div>
@@ -60,20 +60,20 @@ export function CourseCard({ course, locale }: CourseCardProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={coursePath} locale={locale}>
+                <Link href={coursePath} locale={locale} prefetch={false}>
                   <Edit className="mr-2 size-4" />
                   Edit Course
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={previewPath} locale={locale}>
+                <Link href={previewPath} locale={locale} prefetch={false}>
                   <Eye className="mr-2 size-4" />
                   Preview
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href={overviewPath} locale={locale}>
+                <Link href={overviewPath} locale={locale} prefetch={false}>
                   <BookOpen className="mr-2 size-4" />
                   Manage lifecycle
                 </Link>
@@ -82,7 +82,7 @@ export function CourseCard({ course, locale }: CourseCardProps) {
           </DropdownMenu>
         </div>
         <CardTitle className="line-clamp-2 text-lg">
-          <Link href={coursePath} locale={locale}>{course.title}</Link>
+          <Link href={coursePath} locale={locale} prefetch={false}>{course.title}</Link>
         </CardTitle>
         <CardDescription className="line-clamp-1">{course.visibility}</CardDescription>
       </CardHeader>
@@ -120,20 +120,20 @@ export function CourseTableActions({ courseRouteParam, courseTitle, locale }: { 
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <Link href={coursePath} locale={locale}>
+          <Link href={coursePath} locale={locale} prefetch={false}>
             <Edit className="mr-2 size-4" />
             Edit
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={previewPath} locale={locale}>
+          <Link href={previewPath} locale={locale} prefetch={false}>
             <Eye className="mr-2 size-4" />
             Preview
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={overviewPath} locale={locale}>
+          <Link href={overviewPath} locale={locale} prefetch={false}>
             <BookOpen className="mr-2 size-4" />
             Manage lifecycle
           </Link>

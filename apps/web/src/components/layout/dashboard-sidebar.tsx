@@ -35,7 +35,7 @@ import {
 import * as React from 'react';
 
 // Types for navigation structure
-interface NavSubItem {
+export interface DashboardNavSubItem {
   title: string;
   url: string;
   icon: LucideIcon;
@@ -43,29 +43,29 @@ interface NavSubItem {
   badge?: string;
 }
 
-interface NavItem {
+export interface DashboardNavItem {
   title: string;
   url?: string;
   icon?: LucideIcon;
-  items: NavSubItem[];
+  items: DashboardNavSubItem[];
 }
 
-interface NavGroupItem {
+export interface DashboardNavGroupItem {
   title: string;
   url?: string;
   icon?: LucideIcon;
-  items?: NavSubItem[];
-  subGroups?: NavItem[];
+  items?: DashboardNavSubItem[];
+  subGroups?: DashboardNavItem[];
 }
 
-interface NavGroup {
+export interface DashboardNavGroup {
   label: string;
-  items: NavGroupItem[];
+  items: DashboardNavGroupItem[];
 }
 
 // Game Guild Dashboard navigation structure
 // Routes map to: /[locale]/(dashboard)/dashboard/...
-const navigationData: NavGroup[] = [
+export const dashboardNavigationData: DashboardNavGroup[] = [
   {
     label: 'Overview',
     items: [
@@ -168,7 +168,35 @@ const navigationData: NavGroup[] = [
   },
 ];
 
-function NavGroups({ groups }: { groups: NavGroup[] }) {
+export function flattenDashboardNavigationItems(groups: DashboardNavGroup[] = dashboardNavigationData): DashboardNavSubItem[] {
+  const items: DashboardNavSubItem[] = [];
+
+  for (const group of groups) {
+    for (const item of group.items) {
+      if (item.url && item.icon) {
+        items.push({ title: item.title, url: item.url, icon: item.icon });
+      }
+
+      if (item.items?.length) {
+        items.push(...item.items);
+      }
+
+      if (item.subGroups?.length) {
+        for (const subGroup of item.subGroups) {
+          if (subGroup.url && subGroup.icon) {
+            items.push({ title: subGroup.title, url: subGroup.url, icon: subGroup.icon });
+          }
+
+          items.push(...subGroup.items);
+        }
+      }
+    }
+  }
+
+  return items;
+}
+
+function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
   const pathname = usePathname();
   const [openItems, setOpenItems] = React.useState<Set<string>>(new Set());
 
@@ -327,7 +355,7 @@ export function DashboardSidebar(props: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className="gap-0">
-        <NavGroups groups={navigationData} />
+        <NavGroups groups={dashboardNavigationData} />
       </SidebarContent>
       <SidebarFooter />
       <SidebarRail />

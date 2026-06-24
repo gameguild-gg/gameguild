@@ -21,6 +21,8 @@ vi.mock('@/lib/learning/actions', () => ({
 
 const courseFixture: CourseDetails = {
   id: 'course-1',
+  creatorId: 'creator-1',
+  creatorHandle: 'instructor-one',
   title: 'AI for Boss Encounters',
   description: 'Build production-ready enemy behavior for portfolio projects.',
   metadata: null,

@@ -12,11 +12,11 @@ import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@game-guild/ui/components/collapsible';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronRight, ClipboardList, Clock, Copy, Edit, FileText, GripVertical, HelpCircle, LinkIcon, Loader2, MessageSquare, MoreHorizontal, Plus, Trash2, Unlink } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@game-guild/ui/components/tooltip';
+import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronRight, ClipboardList, Clock, Copy, Edit, FileText, GripVertical, HelpCircle, LinkIcon, Loader2, MessageSquare, Plus, Trash2, Unlink } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useState, useTransition } from 'react';
 
@@ -72,6 +72,44 @@ function SortableItem({ id, children }: {
     transition,
   };
   return <>{children({ ref: setNodeRef, style, listeners, isDragging })}</>;
+}
+
+function ContentActionButton({
+  label,
+  icon: Icon,
+  onClick,
+  disabled,
+  destructive = false,
+  className = 'size-8',
+}: {
+  label: string;
+  icon: React.ElementType;
+  onClick: () => void;
+  disabled?: boolean;
+  destructive?: boolean;
+  className?: string;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={`${className} ${destructive ? 'text-destructive hover:text-destructive' : ''}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onClick();
+          }}
+          disabled={disabled}
+          aria-label={label}
+        >
+          <Icon className="size-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
 }
 
 export function ContentTree({ courseId, modules, allItems, assessments, virtualModuleIds = [] }: ContentTreeProps) {
@@ -432,42 +470,14 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
                               <Badge variant={statusVariant[module.status] ?? 'outline'}>{module.status}</Badge>
                               <span className="text-xs text-muted-foreground">{children.length} items</span>
                               {!moduleIsVirtual && (
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="size-8">
-                                      <MoreHorizontal className="size-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => openEditModuleDialog(module)}>
-                                      <Edit className="mr-2 size-4" />
-                                      Edit Module
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDuplicate(module)} disabled={isPending}>
-                                      <Copy className="mr-2 size-4" />
-                                      Duplicate Module
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => openAddSubmoduleDialog(module.id)}>
-                                      <Plus className="mr-2 size-4" />
-                                      Add Submodule
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => handleMoveModule(module.id, 'up')} disabled={isPending || index === 0}>
-                                      <ArrowUp className="mr-2 size-4" />
-                                      Move Up
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleMoveModule(module.id, 'down')} disabled={isPending || index === modules.length - 1}>
-                                      <ArrowDown className="mr-2 size-4" />
-                                      Move Down
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ id: module.id, title: module.title, isModule: true })}>
-                                      <Trash2 className="mr-2 size-4" />
-                                      Delete Module
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                <div className="flex items-center gap-1">
+                                  <ContentActionButton label="Edit module" icon={Edit} onClick={() => openEditModuleDialog(module)} />
+                                  <ContentActionButton label="Duplicate module" icon={Copy} onClick={() => handleDuplicate(module)} disabled={isPending} />
+                                  <ContentActionButton label="Add submodule" icon={Plus} onClick={() => openAddSubmoduleDialog(module.id)} />
+                                  <ContentActionButton label="Move module up" icon={ArrowUp} onClick={() => handleMoveModule(module.id, 'up')} disabled={isPending || index === 0} />
+                                  <ContentActionButton label="Move module down" icon={ArrowDown} onClick={() => handleMoveModule(module.id, 'down')} disabled={isPending || index === modules.length - 1} />
+                                  <ContentActionButton label="Delete module" icon={Trash2} onClick={() => setDeleteTarget({ id: module.id, title: module.title, isModule: true })} destructive />
+                                </div>
                               )}
                             </div>
                           </CardHeader>
@@ -523,49 +533,18 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
                                                       {item.duration}m
                                                     </span>
                                                   )}
-                                                  <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                      <Button variant="ghost" size="icon" className="size-7 opacity-0 transition-opacity group-hover:opacity-100">
-                                                        <MoreHorizontal className="size-4" />
-                                                      </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                      <DropdownMenuItem onClick={() => navigateToContentItem(item.id)}>
-                                                        <Edit className="mr-2 size-4" />
-                                                        Edit {config.label}
-                                                      </DropdownMenuItem>
-                                                      <DropdownMenuItem onClick={() => handleDuplicate(item)} disabled={isPending}>
-                                                        <Copy className="mr-2 size-4" />
-                                                        Duplicate
-                                                      </DropdownMenuItem>
-                                                      <DropdownMenuSeparator />
-                                                      {linkedAssessment ? (
-                                                        <DropdownMenuItem onClick={() => handleDetachAssessment(linkedAssessment.id)} disabled={isPending}>
-                                                          <Unlink className="mr-2 size-4" />
-                                                          Detach Assessment
-                                                        </DropdownMenuItem>
-                                                      ) : (
-                                                        <DropdownMenuItem onClick={() => setAssessmentPickerTarget(item.id)} disabled={assessments.length === 0}>
-                                                          <LinkIcon className="mr-2 size-4" />
-                                                          Attach Assessment
-                                                        </DropdownMenuItem>
-                                                      )}
-                                                      <DropdownMenuSeparator />
-                                                      <DropdownMenuItem onClick={() => handleMoveLesson(module.id, item.id, 'up')} disabled={isPending || itemIndex === 0}>
-                                                        <ArrowUp className="mr-2 size-4" />
-                                                        Move Up
-                                                      </DropdownMenuItem>
-                                                      <DropdownMenuItem onClick={() => handleMoveLesson(module.id, item.id, 'down')} disabled={isPending || itemIndex === children.length - 1}>
-                                                        <ArrowDown className="mr-2 size-4" />
-                                                        Move Down
-                                                      </DropdownMenuItem>
-                                                      <DropdownMenuSeparator />
-                                                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ id: item.id, title: item.title, isModule: false })}>
-                                                        <Trash2 className="mr-2 size-4" />
-                                                        Delete
-                                                      </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                  </DropdownMenu>
+                                                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                                                    <ContentActionButton label={`Edit ${config.label}`} icon={Edit} onClick={() => navigateToContentItem(item.id)} className="size-7" />
+                                                    <ContentActionButton label="Duplicate" icon={Copy} onClick={() => handleDuplicate(item)} disabled={isPending} className="size-7" />
+                                                    {linkedAssessment ? (
+                                                      <ContentActionButton label="Detach assessment" icon={Unlink} onClick={() => handleDetachAssessment(linkedAssessment.id)} disabled={isPending} className="size-7" />
+                                                    ) : (
+                                                      <ContentActionButton label="Attach assessment" icon={LinkIcon} onClick={() => setAssessmentPickerTarget(item.id)} disabled={assessments.length === 0} className="size-7" />
+                                                    )}
+                                                    <ContentActionButton label="Move up" icon={ArrowUp} onClick={() => handleMoveLesson(module.id, item.id, 'up')} disabled={isPending || itemIndex === 0} className="size-7" />
+                                                    <ContentActionButton label="Move down" icon={ArrowDown} onClick={() => handleMoveLesson(module.id, item.id, 'down')} disabled={isPending || itemIndex === children.length - 1} className="size-7" />
+                                                    <ContentActionButton label="Delete" icon={Trash2} onClick={() => setDeleteTarget({ id: item.id, title: item.title, isModule: false })} destructive className="size-7" />
+                                                  </div>
                                                 </div>
                                                 {isSubmodule && (
                                                   <div className="ml-8 border-l pl-4 pb-2">
@@ -582,23 +561,10 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
                                                           </div>
                                                           <Badge variant="outline" className="text-xs">{subConfig.label}</Badge>
                                                           <Badge variant={statusVariant[sub.status] ?? 'outline'} className="text-xs">{sub.status}</Badge>
-                                                          <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                              <Button variant="ghost" size="icon" className="size-6 opacity-0 transition-opacity group-hover:opacity-100">
-                                                                <MoreHorizontal className="size-3" />
-                                                              </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                              <DropdownMenuItem onClick={() => navigateToContentItem(sub.id)}>
-                                                                <Edit className="mr-2 size-4" />
-                                                                Edit
-                                                              </DropdownMenuItem>
-                                                              <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ id: sub.id, title: sub.title, isModule: false })}>
-                                                                <Trash2 className="mr-2 size-4" />
-                                                                Delete
-                                                              </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                          </DropdownMenu>
+                                                          <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                                                            <ContentActionButton label="Edit" icon={Edit} onClick={() => navigateToContentItem(sub.id)} className="size-6" />
+                                                            <ContentActionButton label="Delete" icon={Trash2} onClick={() => setDeleteTarget({ id: sub.id, title: sub.title, isModule: false })} destructive className="size-6" />
+                                                          </div>
                                                         </div>
                                                       );
                                                     })}
