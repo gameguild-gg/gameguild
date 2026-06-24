@@ -75,13 +75,6 @@ services:
         max-size: '10m'
         max-file: '3'
     labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.middlewares.gzip.compress=true'
-      - 'traefik.http.routers.game-guild-api-cj7m56a6yhvzo4cpbbjtzw8e.entryPoints=http'
-      - 'traefik.http.routers.game-guild-api-cj7m56a6yhvzo4cpbbjtzw8e.middlewares=gzip'
-      - 'traefik.http.routers.game-guild-api-cj7m56a6yhvzo4cpbbjtzw8e.rule=Host(`game-guild-api.matheusmartins.com`) && PathPrefix(`/`)'
-      - 'traefik.http.routers.game-guild-api-cj7m56a6yhvzo4cpbbjtzw8e.service=game-guild-api-cj7m56a6yhvzo4cpbbjtzw8e'
-      - 'traefik.http.services.game-guild-api-cj7m56a6yhvzo4cpbbjtzw8e.loadbalancer.server.port=8080'
       - 'com.game-guild.app=api'
       - 'com.game-guild.tier=backend'
       - 'com.game-guild.environment=staging'
