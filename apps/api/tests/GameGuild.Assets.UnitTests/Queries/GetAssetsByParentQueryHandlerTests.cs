@@ -168,10 +168,9 @@ public class GetAssetsByParentQueryHandlerTests
         result.Should().NotBeNull();
         result.Should().HaveCount(1);
         result[0].Content.Should().NotBeNull();
-        var content = result[0].Content!;
-        content.Id.Should().Be(contentId);
-        content.MimeType.Should().Be("image/png");
-        content.SizeBytes.Should().Be(1024);
+        result[0].Content!.Id.Should().Be(contentId);
+        result[0].Content.MimeType.Should().Be("image/png");
+        result[0].Content.SizeBytes.Should().Be(1024);
     }
 
     [Fact]

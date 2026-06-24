@@ -34,6 +34,7 @@
         <PackageReference Include="coverlet.msbuild" />
         <PackageReference Include="Moq" />
         <PackageReference Include="FluentAssertions" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     </ItemGroup>
 

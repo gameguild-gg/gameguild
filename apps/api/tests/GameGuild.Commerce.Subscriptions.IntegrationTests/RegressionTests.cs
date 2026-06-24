@@ -17,7 +17,7 @@ namespace GameGuild.Commerce.Subscriptions.IntegrationTests;
 /// <summary>
 ///     E.3 Regression Tests: Previously Stubbed Paths
 ///     From: COMMERCE_MODULES_CODE_SMELL_CORRECTNESS_REPORT.md Section E.3
-///     These tests verify that completed subscription code paths keep working correctly.
+///     These tests verify that previously stubbed code paths now work correctly.
 /// </summary>
 public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
 {
@@ -71,7 +71,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
 
     /// <summary>
     /// E.3 Test: ProcessRenewal_CreatesPayment_And_AdvancesBillingPeriod
-    /// Verifies that ProcessRenewal creates payment and advances billing.
+    /// Verifies that the previously stubbed ProcessRenewal now creates payment and advances billing
     /// </summary>
     [Fact]
     public async Task ProcessRenewal_CreatesPayment_And_AdvancesBillingPeriod()
@@ -83,7 +83,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
         // Act
         var response = await _client.PostAsync($"/api/v1/subscriptions/{subscriptionId}:renew", null);
 
-        // Assert - renewal succeeds and produces the expected billing changes.
+        // Assert - Should succeed (previously threw NotImplementedException)
         response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Created, HttpStatusCode.Accepted, HttpStatusCode.NoContent);
     }
 
@@ -112,7 +112,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
 
     /// <summary>
     /// E.3 Test: CalculatePricing_AppliesDiscountCodes_Correctly
-    /// Verifies that CalculatePricing applies discounts.
+    /// Verifies that the previously stubbed CalculatePricing now applies discounts
     /// </summary>
     [Fact]
     public async Task CalculatePricing_AppliesDiscountCodes_Correctly()
@@ -129,7 +129,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
         // Act
         var response = await _client.PostAsJsonAsync("/api/v1/subscriptions/calculate-pricing", request);
 
-        // Assert - pricing calculation reflects the configured discount.
+        // Assert - Should return pricing calculation (previously threw NotImplementedException)
         response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.NotFound); // NotFound if endpoint doesn't exist yet
     }
 
@@ -226,7 +226,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
         // Act
         var result = subscription.ProcessRenewal(newAmount, idempotencyKey);
 
-        // Assert - transition succeeds.
+        // Assert - Previously threw NotImplementedException
         result.Success.Should().BeTrue();
         subscription.BillingCycleCount.Should().Be(initialCycleCount + 1);
     }
@@ -245,7 +245,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
         // Act
         var result = subscription.RecordPayment(29.99m, "USD", paymentDate, idempotencyKey);
 
-        // Assert - status calculation succeeds.
+        // Assert - Previously threw NotImplementedException
         result.IsSuccess.Should().BeTrue();
         subscription.LastPaymentAt.Should().Be(paymentDate);
     }
@@ -262,7 +262,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
         // Act
         order.MarkAsFulfilled();
 
-        // Assert - analytics calculation succeeds.
+        // Assert - Previously threw NotImplementedException or was stubbed
         order.Status.Should().Be(OrderStatus.Fulfilled);
         order.FulfilledAt.Should().NotBeNull();
     }

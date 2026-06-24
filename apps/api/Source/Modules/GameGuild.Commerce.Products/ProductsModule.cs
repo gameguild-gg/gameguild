@@ -164,6 +164,36 @@ public static class ProductsModule
             entity.Property(e => e.MaxTotalDiscountAmount).HasPrecision(10, 2);
         });
 
+        modelBuilder.Entity<SupportTicket>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.TenantId, e.Status });
+            entity.HasIndex(e => new { e.TenantId, e.CustomerId });
+            entity.HasIndex(e => new { e.TenantId, e.Priority });
+            entity.Property(e => e.CustomerName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.ReporterName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.ReporterEmail).HasMaxLength(320);
+            entity.Property(e => e.Subject).IsRequired().HasMaxLength(180);
+            entity.Property(e => e.Category).HasMaxLength(80);
+            entity.Property(e => e.AssignedToName).HasMaxLength(150);
+            entity.Property(e => e.ResolutionSummary).HasMaxLength(1000);
+            entity.Property(e => e.LastMessagePreview).HasMaxLength(240);
+
+            entity.HasMany(e => e.Messages)
+                .WithOne(e => e.Ticket)
+                .HasForeignKey(e => e.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SupportTicketMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.TenantId, e.TicketId });
+            entity.Property(e => e.AuthorName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.AuthorEmail).HasMaxLength(320);
+            entity.Property(e => e.Body).IsRequired().HasMaxLength(4000);
+        });
+
         // Note: Order and OrderLineItem configurations are now in GameGuild.Commerce.Orders module
     }
 }

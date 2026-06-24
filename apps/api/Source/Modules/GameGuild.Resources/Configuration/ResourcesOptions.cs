@@ -43,11 +43,6 @@ public class ResourcesOptions : ModuleOptions
     /// </summary>
     public decimal DefaultCostPerUnit { get; set; } = 0.01m;
 
-    /// <summary>
-    ///     Optional allow-list for Finance cost-center codes. Empty means any non-empty code is accepted.
-    /// </summary>
-    public string[ ] AllowedCostCenters { get; set; } = [];
-
     public override void Validate()
     {
         base.Validate();
@@ -61,7 +56,5 @@ public class ResourcesOptions : ModuleOptions
         if (CostPerUnit == null || CostPerUnit.Count == 0) throw new InvalidOperationException("CostPerUnit configuration cannot be empty");
 
         if (DefaultCostPerUnit < 0) throw new InvalidOperationException("DefaultCostPerUnit must be non-negative");
-
-        if (AllowedCostCenters.Any(string.IsNullOrWhiteSpace)) throw new InvalidOperationException("AllowedCostCenters cannot contain empty values");
     }
 }

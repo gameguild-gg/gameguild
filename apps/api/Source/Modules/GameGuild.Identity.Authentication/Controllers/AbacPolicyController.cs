@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
-// Legacy hidden shell; canonical ABAC policy management is owned by GameGuild.Identity.Authorization.
+// PLANNED: Reactivate this controller when ABAC policy management is ready for production
 /// <summary>
 ///     API controller for Attribute-Based Access Control (ABAC) policy management
 ///     Provides comprehensive CRUD operations and policy evaluation capabilities

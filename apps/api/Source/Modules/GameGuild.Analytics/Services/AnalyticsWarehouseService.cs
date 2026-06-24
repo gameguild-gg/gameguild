@@ -22,7 +22,8 @@ public interface IAnalyticsDataWarehouseService
 
 public sealed class AnalyticsDataWarehouseService(
     IApplicationDbContext db,
-    IOptions<AnalyticsWarehouseOptions> options) : IAnalyticsDataWarehouseService
+    IOptions<AnalyticsWarehouseOptions> options,
+    IEnumerable<IAnalyticsWarehouseFactSource>? factSources = null) : IAnalyticsDataWarehouseService
 {
     public static readonly ActivitySource ActivitySource = new("GameGuild.Analytics.Warehouse", "1.0.0");
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -44,7 +45,12 @@ public sealed class AnalyticsDataWarehouseService(
         var startUtc = asOfUtc.Date.AddDays(-lookbackDays + 1);
         var tenantId = request.TenantId;
         var runId = Guid.NewGuid();
+        var context = new AnalyticsWarehouseFactSourceContext(runId, tenantId, startUtc, asOfUtc);
         var events = new List<AnalyticsEvent>();
+        foreach (var source in factSources ?? [])
+        {
+            events.AddRange(await source.BuildFactsAsync(context, ct).ConfigureAwait(false));
+        }
 
         await db.Set<AnalyticsEvent>().AddRangeAsync(events, ct).ConfigureAwait(false);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
@@ -116,6 +122,17 @@ public sealed class AnalyticsDataWarehouseService(
 
         return csv.ToString();
     }
+
+    public static AnalyticsEvent CreateWarehouseFact(
+        string factName,
+        Guid runId,
+        Guid? tenantId,
+        DateTime timestamp,
+        string metric,
+        int count,
+        decimal amountUsd,
+        IReadOnlyDictionary<string, string?> dimensions)
+        => BuildFact(factName, runId, tenantId, timestamp, metric, count, amountUsd, dimensions);
 
     private static AnalyticsEvent BuildFact(
         string factName,
@@ -228,3 +245,16 @@ internal sealed record AnalyticsWarehousePayload(
     int Count,
     decimal AmountUsd,
     IReadOnlyDictionary<string, string?> Dimensions);
+
+public sealed record AnalyticsWarehouseFactSourceContext(
+    Guid RunId,
+    Guid? TenantId,
+    DateTime StartUtc,
+    DateTime AsOfUtc);
+
+public interface IAnalyticsWarehouseFactSource
+{
+    Task<IReadOnlyList<AnalyticsEvent>> BuildFactsAsync(
+        AnalyticsWarehouseFactSourceContext context,
+        CancellationToken ct = default);
+}

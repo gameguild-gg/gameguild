@@ -35,4 +35,7 @@ public interface IUsageTrendAnalysisService
     ///     Calculate growth rate for a resource type
     /// </summary>
     Task<decimal> CalculateGrowthRateAsync(Guid tenantId, ResourceUsageType type, int periodDays = 30, CancellationToken cancellationToken = default);
+
+    // PLANNED: Integration with ML/AI module for advanced pattern recognition (depends on GameGuild.ML)
+    // PLANNED: Integration with Monitoring module for real-time alerts (depends on GameGuild.Monitoring)
 }

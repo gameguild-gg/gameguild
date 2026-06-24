@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
-// Legacy hidden shell; canonical access review item APIs are owned by GameGuild.Identity.Authorization.
+// PLANNED: Reactivate this controller when access review and compliance features are ready for production
 /// <summary>
 ///     API controller for Access Review Items and Periodic Reviews.
 ///     Handles individual review item decisions, bulk reviews, and periodic review schedules.

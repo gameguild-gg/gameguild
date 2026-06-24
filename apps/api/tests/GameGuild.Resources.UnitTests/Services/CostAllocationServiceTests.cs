@@ -1,6 +1,4 @@
 using FluentAssertions;
-using GameGuild.Billing;
-using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -46,74 +44,6 @@ public class CostAllocationServiceTests
             _optionsMock.Object,
             _loggerMock.Object
         );
-    }
-
-    [Fact]
-    public void CostAllocationServiceContract_ExposesBillingInvoiceExport()
-    {
-        var method = typeof(ICostAllocationService).GetMethod("ExportReportToBillingInvoiceAsync");
-
-        method.Should().NotBeNull();
-        method!.GetParameters().Select(parameter => parameter.Name).Should().Contain([
-            "reportId",
-            "subscriptionId",
-            "currency",
-            "dueDate",
-            "cancellationToken"
-        ]);
-    }
-
-    [Fact]
-    public async Task ExportReportToBillingInvoiceAsync_CreatesBillingInvoice_AndMarksReportExported()
-    {
-        var reportId = Guid.NewGuid();
-        var tenantId = Guid.NewGuid();
-        var subscriptionId = Guid.NewGuid();
-        var invoiceId = Guid.NewGuid();
-        var dueDate = DateTime.UtcNow.AddDays(14);
-        var report = new CostAllocationReport
-        {
-            Id = reportId,
-            PeriodStart = DateTime.UtcNow.AddDays(-30),
-            PeriodEnd = DateTime.UtcNow,
-            TotalCost = 125.75m,
-            IsExported = false
-        };
-        report.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
-
-        _reportRepositoryMock
-            .Setup(repository => repository.GetByIdAsync(reportId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(report);
-
-        var sender = new Mock<ISender>();
-        sender
-            .Setup(s => s.Send(
-                It.Is<CreateCostAllocationInvoiceCommand>(command =>
-                    command.TenantId == tenantId &&
-                    command.SubscriptionId == subscriptionId &&
-                    command.Amount == report.TotalCost &&
-                    command.PeriodStart == report.PeriodStart &&
-                    command.PeriodEnd == report.PeriodEnd &&
-                    command.Currency == "USD" &&
-                    command.DueDate == dueDate),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CostAllocationInvoiceResult(invoiceId, "INV-RESOURCE-1", "Open", report.TotalCost, dueDate));
-
-        var service = new CostAllocationService(
-            _reportRepositoryMock.Object,
-            _usageRepositoryMock.Object,
-            _quotaRepositoryMock.Object,
-            _optionsMock.Object,
-            _loggerMock.Object,
-            sender.Object);
-
-        var result = await service.ExportReportToBillingInvoiceAsync(reportId, subscriptionId, "USD", dueDate);
-
-        result.Should().Be(new CostAllocationInvoiceExportResult(reportId, invoiceId, "INV-RESOURCE-1", report.TotalCost, dueDate));
-        report.IsExported.Should().BeTrue();
-        report.InvoiceReference.Should().Be("INV-RESOURCE-1");
-        report.ExportedAt.Should().NotBeNull();
-        _reportRepositoryMock.Verify(repository => repository.UpdateAsync(report, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

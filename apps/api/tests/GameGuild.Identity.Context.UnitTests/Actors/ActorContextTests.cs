@@ -179,25 +179,6 @@ public class ActorContextTests
     }
 
     [Fact]
-    public void IsTenantAdmin_Should_Return_True_For_Owner_Without_SystemAdmin()
-    {
-        var context = new ActorContext
-        {
-            ActorKind = ActorKind.User,
-            SubjectId = "user",
-            TenantId = Guid.NewGuid(),
-            Roles = new HashSet<string> { "Owner" },
-            Permissions = new HashSet<string>(),
-            TypedAttributes = ActorAttributes.Empty,
-            AuthScheme = "Bearer",
-            IsAuthenticated = true
-        };
-
-        context.IsTenantAdmin.Should().BeTrue();
-        context.IsSystemAdmin.Should().BeFalse();
-    }
-
-    [Fact]
     public void IsSystemAdmin_And_IsTenantAdmin_Should_Return_True_For_Admin_Role()
     {
         var context = new ActorContext

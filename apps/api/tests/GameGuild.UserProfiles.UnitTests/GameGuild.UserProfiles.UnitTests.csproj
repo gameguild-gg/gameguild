@@ -17,13 +17,12 @@
         <CollectCoverage>false</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
         <CoverletOutput>./TestResults/coverage.xml</CoverletOutput>
-        <!-- Retired user profiles test project. Canonical user coverage is enforced by GameGuild.Identity.Users.UnitTests. -->
-        <Threshold>0</Threshold>
+        <Threshold>80</Threshold>
         <ThresholdType>line,branch,method</ThresholdType>
         <ThresholdStat>total</ThresholdStat>
         <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
         <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
-        <Include>[GameGuild.LegacyCoveragePlaceholder]*</Include>
+        <Include>[GameGuild.Identity.Users]*</Include>
     </PropertyGroup>
 
     <ItemGroup>
@@ -40,6 +39,7 @@
         <PackageReference Include="coverlet.msbuild" />
         <PackageReference Include="Moq" />
         <PackageReference Include="FluentAssertions" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
         <PackageReference Include="AutoFixture" />
         <PackageReference Include="AutoFixture.Xunit2" />
     </ItemGroup>

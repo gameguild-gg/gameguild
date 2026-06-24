@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Resources;
@@ -7,36 +5,8 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Implementation of resource throttling policy management
 /// </summary>
-public class ResourceThrottlingService(
-    IResourceThrottlingPolicyRepository policyRepository,
-    IResourceQuotaRepository quotaRepository,
-    ILogger<ResourceThrottlingService> logger,
-    IResourceThrottlingEnforcementSink? enforcementSink = null) : IResourceThrottlingService
+public class ResourceThrottlingService(IResourceThrottlingPolicyRepository policyRepository, IResourceQuotaRepository quotaRepository, ILogger<ResourceThrottlingService> logger) : IResourceThrottlingService
 {
-    public const string MeterName = "GameGuild.Resources";
-
-    private static readonly Meter ThrottlingMeter = new(MeterName);
-
-    private static readonly Counter<long> ThrottlingDecisionCounter = ThrottlingMeter.CreateCounter<long>(
-        "gameguild.resources.throttling.decisions",
-        unit: "decisions",
-        description: "Resource throttling decisions evaluated by policy");
-
-    private static readonly Counter<long> ThrottlingBlockedCounter = ThrottlingMeter.CreateCounter<long>(
-        "gameguild.resources.throttling.blocked",
-        unit: "requests",
-        description: "Resource requests blocked by throttling policy");
-
-    private static readonly Histogram<double> ThrottlingDelayHistogram = ThrottlingMeter.CreateHistogram<double>(
-        "gameguild.resources.throttling.delay",
-        unit: "ms",
-        description: "Delay applied to resource requests by throttling policy");
-
-    private static readonly Histogram<double> ThrottlingUsageHistogram = ThrottlingMeter.CreateHistogram<double>(
-        "gameguild.resources.throttling.usage",
-        unit: "%",
-        description: "Resource usage percentage observed during throttling decisions");
-
     public async Task<ResourceThrottlingPolicy> SetPolicyAsync(
         Guid tenantId,
         ResourceUsageType type,
@@ -95,15 +65,10 @@ public class ResourceThrottlingService(
     {
         var policy = await GetPolicyAsync(tenantId, type, cancellationToken).ConfigureAwait(false);
 
-        if (policy is not { IsActive: true })
-        {
-            RecordThrottlingMetrics(type, ThrottlingStrategy.None, isAllowed: true, delayMs: 0, currentUsage);
-            return (false, 0);
-        }
+        if (policy is not { IsActive: true }) return (false, 0);
 
         var shouldBlock = policy.ShouldBlock(currentUsage);
         var delayMs = policy.CalculateDelayMs(currentUsage);
-        RecordThrottlingMetrics(type, policy.Strategy, !shouldBlock, delayMs, currentUsage);
 
         return (shouldBlock, delayMs);
     }
@@ -112,12 +77,7 @@ public class ResourceThrottlingService(
     {
         var policy = await GetPolicyAsync(tenantId, type, cancellationToken).ConfigureAwait(false);
 
-        if (policy is not { IsActive: true })
-        {
-            var inactiveResult = new ThrottlingResult { IsAllowed = true, DelayMs = 0, Reason = "No throttling policy active", AppliedStrategy = ThrottlingStrategy.None };
-            RecordThrottlingMetrics(type, inactiveResult.AppliedStrategy, inactiveResult.IsAllowed, inactiveResult.DelayMs, currentUsage: 0);
-            return inactiveResult;
-        }
+        if (policy is not { IsActive: true }) { return new ThrottlingResult { IsAllowed = true, DelayMs = 0, Reason = "No throttling policy active", AppliedStrategy = ThrottlingStrategy.None }; }
 
         // Get current usage from quota
         var quota = await quotaRepository.GetByTenantAndTypeAsync(tenantId, type, cancellationToken).ConfigureAwait(false);
@@ -142,9 +102,6 @@ public class ResourceThrottlingService(
         }
         else { result.Reason = "Within normal operating limits"; }
 
-        RecordThrottlingMetrics(type, result.AppliedStrategy, result.IsAllowed, result.DelayMs, currentUsage);
-        await ApplyEnforcementAsync(tenantId, type, requestedAmount, result, cancellationToken).ConfigureAwait(false);
-
         return result;
     }
 
@@ -153,42 +110,6 @@ public class ResourceThrottlingService(
         return await policyRepository.GetActivePoliciesAsync(type, cancellationToken).ConfigureAwait(false);
     }
 
-    private static void RecordThrottlingMetrics(ResourceUsageType type, ThrottlingStrategy strategy, bool isAllowed, int delayMs, double currentUsage)
-    {
-        var tags = new TagList
-        {
-            { "resource.type", type.ToString() },
-            { "strategy", strategy.ToString() },
-            { "allowed", isAllowed.ToString().ToLowerInvariant() }
-        };
-
-        ThrottlingDecisionCounter.Add(1, tags);
-
-        if (!isAllowed)
-        {
-            ThrottlingBlockedCounter.Add(1, tags);
-        }
-
-        if (delayMs is > 0 and < int.MaxValue)
-        {
-            ThrottlingDelayHistogram.Record(delayMs, tags);
-        }
-
-        if (currentUsage > 0)
-        {
-            ThrottlingUsageHistogram.Record(Math.Round(currentUsage, 2), tags);
-        }
-    }
-
-    private async Task ApplyEnforcementAsync(Guid tenantId, ResourceUsageType type, long requestedAmount, ThrottlingResult result, CancellationToken cancellationToken)
-    {
-        if (enforcementSink is null)
-        {
-            return;
-        }
-
-        var enforcement = await enforcementSink.ApplyAsync(tenantId, type, requestedAmount, result, cancellationToken).ConfigureAwait(false);
-        result.EnforcementReference = enforcement.EnforcementReference;
-        result.EnforcedAt = enforcement.EnforcedAt;
-    }
+    // PLANNED: Integration with API Gateway for rate limiting enforcement (depends on API Gateway module)
+    // PLANNED: Integration with Monitoring module for throttling metrics (depends on GameGuild.Monitoring)
 }

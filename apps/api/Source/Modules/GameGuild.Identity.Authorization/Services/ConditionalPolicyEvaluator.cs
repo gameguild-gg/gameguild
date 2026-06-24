@@ -64,11 +64,6 @@ public class ConditionalPolicyEvaluator(
     ILogger<ConditionalPolicyEvaluator> logger
 ) : IConditionalPolicyEvaluator
 {
-    private static readonly JsonSerializerOptions ConditionJsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
     public async Task<ConditionalPolicyResult> EvaluateAsync(
         ConditionalPolicyContext context,
         CancellationToken ct = default)
@@ -177,7 +172,7 @@ public class ConditionalPolicyEvaluator(
     {
         try
         {
-            var conditions = JsonSerializer.Deserialize<TimeConditions>(timeConditionsJson, ConditionJsonOptions);
+            var conditions = JsonSerializer.Deserialize<TimeConditions>(timeConditionsJson);
             if (conditions == null) return true;
 
             var now = SystemClock.UtcNow;
@@ -223,7 +218,7 @@ public class ConditionalPolicyEvaluator(
     {
         try
         {
-            var conditions = JsonSerializer.Deserialize<EnvironmentConditions>(conditionsJson, ConditionJsonOptions);
+            var conditions = JsonSerializer.Deserialize<EnvironmentConditions>(conditionsJson);
             if (conditions == null) return true;
 
             // Check MFA requirement
@@ -255,7 +250,7 @@ public class ConditionalPolicyEvaluator(
     {
         try
         {
-            var conditions = JsonSerializer.Deserialize<LocationConditions>(conditionsJson, ConditionJsonOptions);
+            var conditions = JsonSerializer.Deserialize<LocationConditions>(conditionsJson);
             if (conditions == null) return true;
 
             // Check allowed countries
@@ -269,17 +264,14 @@ public class ConditionalPolicyEvaluator(
             // Check blocked countries
             if (conditions.BlockedCountries?.Length > 0)
             {
-                if (string.IsNullOrEmpty(context.GeoCountry) ||
-                    !conditions.BlockedCountries.Contains(context.GeoCountry, StringComparer.OrdinalIgnoreCase))
+                if (!string.IsNullOrEmpty(context.GeoCountry) &&
+                    conditions.BlockedCountries.Contains(context.GeoCountry, StringComparer.OrdinalIgnoreCase))
                     return false;
             }
 
             // Check IP ranges
-            if (conditions.AllowedIpRanges?.Length > 0)
+            if (conditions.AllowedIpRanges?.Length > 0 && !string.IsNullOrEmpty(context.IpAddress))
             {
-                if (string.IsNullOrEmpty(context.IpAddress))
-                    return false;
-
                 var ipAllowed = false;
                 foreach (var range in conditions.AllowedIpRanges)
                 {
@@ -348,7 +340,7 @@ public class ConditionalPolicyEvaluator(
     {
         try
         {
-            var conditions = JsonSerializer.Deserialize<DeviceConditions>(conditionsJson, ConditionJsonOptions);
+            var conditions = JsonSerializer.Deserialize<DeviceConditions>(conditionsJson);
             if (conditions == null) return true;
 
             // Check required device fingerprints
@@ -360,14 +352,13 @@ public class ConditionalPolicyEvaluator(
             }
 
             // Check blocked user agents
-            if (conditions.BlockedUserAgents?.Length > 0)
+            if (conditions.BlockedUserAgents?.Length > 0 && !string.IsNullOrEmpty(context.UserAgent))
             {
-                if (string.IsNullOrEmpty(context.UserAgent))
-                    return false;
-
-                if (!conditions.BlockedUserAgents.Any(pattern =>
-                        context.UserAgent.Contains(pattern, StringComparison.OrdinalIgnoreCase)))
-                    return false;
+                foreach (var pattern in conditions.BlockedUserAgents)
+                {
+                    if (context.UserAgent.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+                        return false;
+                }
             }
 
             return true;

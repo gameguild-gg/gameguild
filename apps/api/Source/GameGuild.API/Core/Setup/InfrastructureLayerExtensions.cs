@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using GameGuild.AI;
 using GameGuild.API.Context;
-using GameGuild.API.Core.Services;
 using GameGuild.API.Database;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
@@ -182,7 +181,6 @@ public static class InfrastructureLayerExtensions
         // 07. Advanced Permission Services (JIT elevation, delegation, SoD, access reviews, delegated admin)
         stepStopwatch.Restart();
         services.AddAdvancedPermissionServices();
-        services.AddScoped<IResourceShareUserLookup, ApplicationResourceShareUserLookup>();
         logger.LogInformation("Advanced Permission Services registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 08. Rule-based Authorization
@@ -204,11 +202,6 @@ public static class InfrastructureLayerExtensions
         stepStopwatch.Restart();
         services.AddResourcesInfrastructure(configuration);
         logger.LogInformation("Resources Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10a.0. Tags Module (taxonomy, tag relationships, proficiency tags)
-        stepStopwatch.Restart();
-        services.AddTagsModule();
-        logger.LogInformation("Tags Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10a.1. AI Module (provider adapters, prompt templates, tenant quotas/history)
         stepStopwatch.Restart();

@@ -16,12 +16,20 @@ public class DomainEventTests
     [Fact]
     public void DomainEvent_ShouldSetOccurredAt()
     {
-        var before = DateTimeOffset.UtcNow;
-        var evt = new ConcreteDomainEvent();
-        var after = DateTimeOffset.UtcNow;
+        var occurredAt = new DateTimeOffset(2026, 6, 11, 12, 30, 0, TimeSpan.Zero);
 
-        evt.OccurredAt.Should().BeOnOrAfter(before);
-        evt.OccurredAt.Should().BeOnOrBefore(after);
+        try
+        {
+            SystemClock.SetProvider(new FakeTimeProvider(occurredAt));
+
+            var evt = new ConcreteDomainEvent();
+
+            evt.OccurredAt.Should().Be(occurredAt);
+        }
+        finally
+        {
+            SystemClock.Reset();
+        }
     }
 
     [Fact]
@@ -54,6 +62,11 @@ public class DomainEventTests
     }
 
     private class ConcreteDomainEvent : DomainEvent { }
+
+    private sealed class FakeTimeProvider(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
 }
 
 public class TenantIdTests

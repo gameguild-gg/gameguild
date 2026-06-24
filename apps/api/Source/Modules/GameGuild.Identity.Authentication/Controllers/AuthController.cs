@@ -1,7 +1,6 @@
 using Asp.Versioning;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.CQRS;
-using GameGuild.Identity.Authorization.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -47,20 +46,9 @@ public sealed class AuthController(ISender sender) : BaseApiController
             TenantId = body.TenantId
         };
 
-        try
-        {
-            SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
-            return StatusCode(StatusCodes.Status201Created, result);
-        }
-        catch (InvalidOperationException ex) when (string.Equals(ex.Message, "User already exists", StringComparison.Ordinal))
-        {
-            return Conflict(new ProblemDetails
-            {
-                Status = StatusCodes.Status409Conflict,
-                Title = "Conflict",
-                Detail = ex.Message
-            });
-        }
+        SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        return CreatedAtAction(nameof(LocalSignUp), result);
     }
 
     #endregion
@@ -437,15 +425,16 @@ public sealed class AuthController(ISender sender) : BaseApiController
     {
         ArgumentNullException.ThrowIfNull(body);
 
-        var userId = ClaimsExtractor.GetUserIdAsGuid(User);
-        if (!userId.HasValue)
+        // Get user ID from claims
+        var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst("user_id")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
         {
             return Unauthorized("Invalid user context");
         }
 
         var command = new ChangePasswordCommand
         {
-            UserId = userId.Value,
+            UserId = userId,
             CurrentPassword = body.CurrentPassword,
             NewPassword = body.NewPassword,
             ConfirmPassword = body.ConfirmPassword,
