@@ -99,68 +99,13 @@ builder.Services.AddSingleton<IMonthlyStatementLinkBuilder, MonthlyStatementLink
 // Build the configured web application
 var app = builder.Build();
 
-var databaseConnectivityProbe = app.Services.GetRequiredService<DatabaseConnectivityProbe>();
-var databaseReachable = await databaseConnectivityProbe.IsReachableAsync().ConfigureAwait(false);
-
-// Apply pending EF Core migrations automatically before starting the service
-if (!databaseReachable)
-{
-    app.Logger.LogWarning(
-        "Initial database probe failed. Continuing into the migration retry loop so transient database startup delays do not leave the schema unapplied.");
-}
-
-databaseReachable = await TryApplyDatabaseMigrationsAsync(app).ConfigureAwait(false);
-
-if (databaseReachable)
-{
-    try
-    {
-        using var scope = app.Services.CreateScope();
-        await DatabaseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogWarning(ex, "Database seeding failed — default roles and admin user may not exist.");
-    }
-
-    if (ShouldImportSnapshotCourses(app.Configuration))
-    {
-        try
-        {
-            using var scope = app.Services.CreateScope();
-            var result = await SnapshotCourseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
-            app.Logger.LogInformation(
-                "Snapshot course startup import complete. Parsed {ParsedPrograms} programs and {ParsedContents} contents from {CoursesRoot}. Created {CreatedPrograms} new programs and {CreatedContents} new contents. DbContext sees {PublicProgramCount} published/public programs in database {DatabaseName}.",
-                result.ParsedPrograms,
-                result.ParsedContents,
-                result.CoursesRoot,
-                result.CreatedPrograms,
-                result.CreatedContents,
-                result.PublicProgramCount,
-                result.DatabaseName);
-        }
-        catch (Exception ex)
-        {
-            app.Logger.LogWarning(ex, "Snapshot course startup import failed. Public fallback pages can still render, but API-backed course management may be empty.");
-        }
-    }
-}
-
 if (importSnapshotCourses)
 {
-    using var scope = app.Services.CreateScope();
-    var result = await SnapshotCourseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
-    app.Logger.LogInformation(
-        "Snapshot course import complete. Parsed {ParsedPrograms} programs and {ParsedContents} contents from {CoursesRoot}. Created {CreatedPrograms} new programs and {CreatedContents} new contents. DbContext sees {PublicProgramCount} published/public programs in database {DatabaseName}.",
-        result.ParsedPrograms,
-        result.ParsedContents,
-        result.CoursesRoot,
-        result.CreatedPrograms,
-        result.CreatedContents,
-        result.PublicProgramCount,
-        result.DatabaseName);
+    await ImportSnapshotCoursesAsync(app, "Snapshot course import complete").ConfigureAwait(false);
     return;
 }
+
+StartDatabaseInitialization(app);
 
 // Configure the HTTP request pipeline (middleware, routing, endpoints)
 app.ConfigurePipeline();
@@ -174,6 +119,81 @@ static bool ShouldImportSnapshotCourses(IConfiguration configuration)
         ?? Environment.GetEnvironmentVariable("SEED_SNAPSHOT_COURSES");
 
     return bool.TryParse(configuredValue, out var enabled) && enabled;
+}
+
+static void StartDatabaseInitialization(WebApplication app)
+{
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await RunDatabaseInitializationAsync(app).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                app.Logger.LogCritical(ex, "Database startup initialization failed after the HTTP listener started.");
+            }
+        });
+    });
+}
+
+static async Task RunDatabaseInitializationAsync(WebApplication app)
+{
+    var databaseConnectivityProbe = app.Services.GetRequiredService<DatabaseConnectivityProbe>();
+    var databaseReachable = await databaseConnectivityProbe.IsReachableAsync().ConfigureAwait(false);
+
+    if (!databaseReachable)
+    {
+        app.Logger.LogWarning(
+            "Initial database probe failed. Continuing into the migration retry loop so transient database startup delays do not leave the schema unapplied.");
+    }
+
+    databaseReachable = await TryApplyDatabaseMigrationsAsync(app).ConfigureAwait(false);
+
+    if (!databaseReachable)
+    {
+        return;
+    }
+
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        await DatabaseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Database seeding failed — default roles and admin user may not exist.");
+    }
+
+    if (ShouldImportSnapshotCourses(app.Configuration))
+    {
+        await ImportSnapshotCoursesAsync(app, "Snapshot course startup import complete").ConfigureAwait(false);
+    }
+}
+
+static async Task ImportSnapshotCoursesAsync(WebApplication app, string message)
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var result = await SnapshotCourseSeeder.SeedAsync(scope.ServiceProvider).ConfigureAwait(false);
+        app.Logger.LogInformation(
+            "{Message}. Parsed {ParsedPrograms} programs and {ParsedContents} contents from {CoursesRoot}. Created {CreatedPrograms} new programs and {CreatedContents} contents. DbContext sees {PublicProgramCount} published/public programs in database {DatabaseName}.",
+            message,
+            result.ParsedPrograms,
+            result.ParsedContents,
+            result.CoursesRoot,
+            result.CreatedPrograms,
+            result.CreatedContents,
+            result.PublicProgramCount,
+            result.DatabaseName);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "{Message} failed. Public fallback pages can still render, but API-backed course management may be empty.", message);
+    }
 }
 
 static async Task<bool> TryApplyDatabaseMigrationsAsync(WebApplication app)
