@@ -3,6 +3,7 @@ using System;
 using GameGuild.API.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameGuild.API.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260621184357_AddProductProgramLinks")]
+    partial class AddProductProgramLinks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -8652,88 +8655,6 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("content_interactions");
                 });
 
-            modelBuilder.Entity("GameGuild.Learning.Courses.ContentProgress", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Attempts")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("CompletionStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("ContentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("FirstAccessedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("LastAccessedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal?>("MaxScore")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
-                    b.Property<Guid>("ProgramEnrollmentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ProgressData")
-                        .HasColumnType("jsonb");
-
-                    b.Property<decimal>("ProgressPercentage")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
-                    b.Property<decimal?>("Score")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("TimeSpentSeconds")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompletedAt");
-
-                    b.HasIndex("CompletionStatus");
-
-                    b.HasIndex("ContentId");
-
-                    b.HasIndex("ProgramEnrollmentId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "ContentId")
-                        .IsUnique();
-
-                    b.ToTable("content_progress", (string)null);
-                });
-
             modelBuilder.Entity("GameGuild.Learning.Courses.CoursePrerequisite", b =>
                 {
                     b.Property<Guid>("Id")
@@ -9015,86 +8936,6 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("Type");
 
                     b.ToTable("program_contents");
-                });
-
-            modelBuilder.Entity("GameGuild.Learning.Courses.ProgramEnrollment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("CertificateIssued")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("CertificateIssuedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("CompletionStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("EnrolledAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("EnrollmentSource")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("EnrollmentStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("FinalGrade")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<Guid>("ProgramId")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("ProgressPercentage")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompletedAt");
-
-                    b.HasIndex("EnrolledAt");
-
-                    b.HasIndex("EnrollmentStatus");
-
-                    b.HasIndex("ProgramId");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "ProgramId")
-                        .IsUnique();
-
-                    b.ToTable("program_enrollments", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Learning.Courses.ProgramRating", b =>
@@ -13551,33 +13392,6 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GameGuild.Learning.Courses.ContentProgress", b =>
-                {
-                    b.HasOne("GameGuild.Learning.Courses.ProgramContent", "Content")
-                        .WithMany()
-                        .HasForeignKey("ContentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Learning.Courses.ProgramEnrollment", "ProgramEnrollment")
-                        .WithMany()
-                        .HasForeignKey("ProgramEnrollmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Identity.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Content");
-
-                    b.Navigation("ProgramEnrollment");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("GameGuild.Learning.Courses.CoursePrerequisite", b =>
                 {
                     b.HasOne("GameGuild.Learning.Courses.Program", "Course")
@@ -13630,25 +13444,6 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("Parent");
 
                     b.Navigation("Program");
-                });
-
-            modelBuilder.Entity("GameGuild.Learning.Courses.ProgramEnrollment", b =>
-                {
-                    b.HasOne("GameGuild.Learning.Courses.Program", "Program")
-                        .WithMany()
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Identity.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Program");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GameGuild.Learning.Courses.ProgramRating", b =>

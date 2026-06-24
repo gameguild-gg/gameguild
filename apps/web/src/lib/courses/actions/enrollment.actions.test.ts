@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
     getCoursesProducts: vi.fn(),
     postCoursesSelfEnroll: vi.fn(),
     getProducts: vi.fn(),
+    request: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
@@ -29,14 +30,14 @@ vi.mock('@game-guild/client', () => ({
     },
 }));
 
-import { createPaymentIntent, enrollInFreeCourse, getProductsContainingCourse } from './enrollment.actions';
+import { completeCourseCheckout, enrollInFreeCourse, getProductsContainingCourse } from './enrollment.actions';
 
 describe('enrollInFreeCourse', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mocks.auth.mockResolvedValue({ user: { id: 'user-1' } });
         mocks.getToken.mockResolvedValue('access-token');
-        mocks.createServerClient.mockReturnValue({});
+        mocks.createServerClient.mockReturnValue({ request: mocks.request });
         mocks.getCoursesSlug.mockResolvedValue({
             ok: true,
             data: {
@@ -110,7 +111,7 @@ describe('enrollInFreeCourse', () => {
 describe('getProductsContainingCourse', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mocks.createServerClient.mockReturnValue({});
+        mocks.createServerClient.mockReturnValue({ request: mocks.request });
         mocks.getCoursesSlug.mockResolvedValue({
             ok: true,
             data: {
@@ -201,20 +202,74 @@ describe('getProductsContainingCourse', () => {
     });
 });
 
-describe('createPaymentIntent', () => {
+describe('completeCourseCheckout', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mocks.createServerClient.mockReturnValue({});
+        mocks.auth.mockResolvedValue({ user: { id: 'user-1' } });
+        mocks.getToken.mockResolvedValue('access-token');
+        mocks.createServerClient.mockReturnValue({ request: mocks.request });
+        mocks.getCoursesSlug.mockResolvedValue({
+            ok: true,
+            data: {
+                id: 'course-1',
+                isEnrollmentOpen: true,
+            },
+        });
     });
 
-    it('reports that product checkout is unavailable in the current generated payments contract', async () => {
+    it('completes course checkout through the authenticated API client', async () => {
         const fetchSpy = vi.spyOn(global, 'fetch');
+        mocks.request.mockResolvedValue({
+            ok: true,
+            data: {
+                learningUrl: '/courses/intro-to-game-dev/content',
+                amount: 49,
+                currency: 'USD',
+                entitlementId: 'entitlement-1',
+                alreadyHadAccess: false,
+            },
+        });
 
-        await expect(createPaymentIntent('product-1')).rejects.toThrow(
-            'Product checkout is not available in the current payments API contract for product product-1.'
-        );
+        const result = await completeCourseCheckout('intro-to-game-dev', 'product-1');
+
+        expect(result).toEqual({
+            success: true,
+            message: 'Checkout complete. Your course access is active.',
+            learningUrl: '/courses/intro-to-game-dev/content',
+            amount: 49,
+            currency: 'USD',
+            entitlementId: 'entitlement-1',
+            alreadyHadAccess: false,
+        });
+        expect(mocks.request).toHaveBeenCalledWith({
+            method: 'POST',
+            path: '/v1/courses/course-1/checkout/complete',
+            body: {
+                productId: 'product-1',
+                paymentProviderReference: 'gameguild-checkout-course-1-product-1',
+                paymentMethod: 'test_card',
+            },
+        });
         expect(fetchSpy).not.toHaveBeenCalled();
 
         fetchSpy.mockRestore();
+    });
+
+    it('returns checkout API errors without enrolling locally', async () => {
+        mocks.request.mockResolvedValue({
+            ok: false,
+            error: {
+                status: 400,
+                detail: 'The selected product does not grant access to this course.',
+            },
+        });
+
+        const result = await completeCourseCheckout('intro-to-game-dev', 'wrong-product');
+
+        expect(result).toEqual({
+            success: false,
+            message: '[400] The selected product does not grant access to this course.',
+        });
+        expect(mocks.postCoursesSelfEnroll).not.toHaveBeenCalled();
     });
 });

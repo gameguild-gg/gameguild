@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -212,6 +213,17 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
       {
         Title = "Enrollment closed",
         Detail = "This course is not currently open for self-enrollment."
+      });
+    }
+
+    var linkedProducts = await programService.GetLinkedProductsAsync(id).ConfigureAwait(false);
+    var pricing = await programService.GetProgramPricingAsync(id).ConfigureAwait(false);
+    if (linkedProducts.Any() || pricing is { IsMonetizationEnabled: true, Price: > 0 })
+    {
+      return StatusCode(StatusCodes.Status402PaymentRequired, new ProblemDetails
+      {
+        Title = "Payment required",
+        Detail = "This course requires checkout before enrollment."
       });
     }
 
@@ -496,7 +508,7 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
 
     if (productId == null) return NotFound();
 
-    return Ok(new { ProductId = productId });
+    return Ok(productId.Value);
   }
 
   /// <summary> Link a program to an existing product (resource-level edit permission) </summary>
@@ -525,9 +537,16 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
 
   /// <summary> Get all products linked to a program (resource-level read permission) </summary>
   [HttpGet("{id}/products")]
-  [RequireResourcePermission<PermissionType, Program>(PermissionType.Read)]
+  [AllowAnonymous]
   public async Task<ActionResult<IEnumerable<Guid>>> GetLinkedProducts(Guid id)
   {
+    var program = await programService.GetProgramByIdAsync(id).ConfigureAwait(false);
+
+    if (program == null || program.Status != ContentStatus.Published || program.Visibility != ContentVisibility.Public)
+    {
+      return NotFound();
+    }
+
     var productIds = await programService.GetLinkedProductsAsync(id).ConfigureAwait(false);
 
     return Ok(productIds);

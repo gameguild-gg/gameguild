@@ -1,3 +1,4 @@
+using GameGuild.Commerce.Products;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Learning.Courses;
@@ -465,7 +466,56 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (programUser == null) return false;
 
+    var contentExists = await context.Set<ProgramContent>()
+      .AnyAsync(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)
+      .ConfigureAwait(false);
+
+    if (!contentExists) return false;
+
+    var now = SystemClock.UtcNow;
+    var interaction = await context.Set<ContentInteraction>()
+      .FirstOrDefaultAsync(ci => ci.ProgramUserId == programUser.Id && ci.ContentId == contentId && ci.DeletedAt == null)
+      .ConfigureAwait(false);
+
+    if (interaction == null)
+    {
+      interaction = new ContentInteraction
+      {
+        ProgramUserId = programUser.Id,
+        UserId = userId,
+        ContentId = contentId,
+        Status = ProgressStatus.Completed,
+        FirstAccessedAt = now,
+        LastAccessedAt = now,
+        StartedAt = now,
+        CompletedAt = now,
+        CompletionPercentage = 100,
+        IsCompleted = true,
+        AttemptCount = 1,
+      };
+
+      context.Set<ContentInteraction>().Add(interaction);
+    }
+    else
+    {
+      interaction.UserId = userId;
+      interaction.Status = ProgressStatus.Completed;
+      interaction.FirstAccessedAt ??= now;
+      interaction.LastAccessedAt = now;
+      interaction.StartedAt ??= now;
+      interaction.CompletedAt ??= now;
+      interaction.CompletionPercentage = 100;
+      interaction.IsCompleted = true;
+      interaction.AttemptCount = Math.Max(1, interaction.AttemptCount);
+      interaction.Touch();
+    }
+
+    programUser.LastAccessedAt = now;
+    programUser.Touch();
+
+    await context.SaveChangesAsync().ConfigureAwait(false);
     await RecalculateUserProgressAsync(programUser.Id).ConfigureAwait(false);
+    await context.SaveChangesAsync().ConfigureAwait(false);
 
     return true;
   }
@@ -535,7 +585,45 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (program == null) return null;
 
-    return Guid.NewGuid();
+    var name = string.IsNullOrWhiteSpace(productDto.Name) ? program.Title : productDto.Name.Trim();
+    var description = string.IsNullOrWhiteSpace(productDto.Description) ? program.Description : productDto.Description.Trim();
+    var product = Product.Create(
+      name,
+      ProductType.Course,
+      description,
+      program.Description,
+      program.Thumbnail,
+      program.CreatorId,
+      tenantId: program.TenantId);
+
+    var (pricing, initialVersion) = ProductPricing.CreateWithVersion(
+      product.Id,
+      "Course access",
+      productDto.BasePrice,
+      productDto.Currency,
+      salePrice: null,
+      saleStartDate: null,
+      saleEndDate: null,
+      isDefault: true,
+      createdByUserId: program.CreatorId,
+      tenantId: program.TenantId);
+
+    context.Set<Product>().Add(product);
+    context.Set<ProductPricing>().Add(pricing);
+    context.Set<ProductPricingVersion>().Add(initialVersion);
+
+    var sortOrder = await GetNextProductProgramSortOrderAsync(product.Id).ConfigureAwait(false);
+    context.Set<ProductProgram>().Add(new ProductProgram
+    {
+      ProductId = product.Id,
+      ProgramId = program.Id,
+      SortOrder = sortOrder,
+      TenantId = program.TenantId,
+    });
+
+    await context.SaveChangesAsync().ConfigureAwait(false);
+
+    return product.Id;
   }
 
   public async Task<bool> LinkProgramToProductAsync(Guid programId, Guid productId)
@@ -544,14 +632,45 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (program == null) return false;
 
+    var productExists = await context.Set<Product>()
+      .Where(p => p.DeletedAt == null)
+      .AnyAsync(p => p.Id == productId)
+      .ConfigureAwait(false);
+
+    if (!productExists) return false;
+
+    var existingLink = await context.Set<ProductProgram>()
+      .Where(pp => pp.DeletedAt == null)
+      .FirstOrDefaultAsync(pp => pp.ProgramId == programId && pp.ProductId == productId)
+      .ConfigureAwait(false);
+
+    if (existingLink != null) return true;
+
+    var sortOrder = await GetNextProductProgramSortOrderAsync(productId).ConfigureAwait(false);
+    context.Set<ProductProgram>().Add(new ProductProgram
+    {
+      ProductId = productId,
+      ProgramId = programId,
+      SortOrder = sortOrder,
+      TenantId = program.TenantId,
+    });
+
+    await context.SaveChangesAsync().ConfigureAwait(false);
+
     return true;
   }
 
   public async Task<bool> UnlinkProgramFromProductAsync(Guid programId, Guid productId)
   {
-    var program = await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == programId).ConfigureAwait(false);
+    var link = await context.Set<ProductProgram>()
+      .Where(pp => pp.DeletedAt == null)
+      .FirstOrDefaultAsync(pp => pp.ProgramId == programId && pp.ProductId == productId)
+      .ConfigureAwait(false);
 
-    if (program == null) return false;
+    if (link == null) return false;
+
+    context.Set<ProductProgram>().Remove(link);
+    await context.SaveChangesAsync().ConfigureAwait(false);
 
     return true;
   }
@@ -559,6 +678,16 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
   // ── Private Helpers ─────────────────────────────────────────────────
 
   private static string GenerateSlug(string title) { return title.ToLowerInvariant().Replace(" ", "-").Replace("'", "").Replace("\"", ""); }
+
+  private async Task<int> GetNextProductProgramSortOrderAsync(Guid productId)
+  {
+    var currentMax = await context.Set<ProductProgram>()
+      .Where(pp => pp.DeletedAt == null && pp.ProductId == productId)
+      .MaxAsync(pp => (int?)pp.SortOrder)
+      .ConfigureAwait(false);
+
+    return (currentMax ?? -1) + 1;
+  }
 
   private async Task RecalculateUserProgressAsync(Guid programUserId)
   {
@@ -591,7 +720,21 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (programUser == null) return null;
 
-    var contentProgress = new List<ContentProgressDto>();
+    var contentProgress = await context.Set<ContentInteraction>()
+      .Include(ci => ci.Content)
+      .Where(ci => ci.ProgramUserId == programUser.Id && ci.DeletedAt == null)
+      .OrderBy(ci => ci.Content.SortOrder)
+      .ThenBy(ci => ci.Content.Title)
+      .Select(ci => new ContentProgressDto(
+        ci.ContentId,
+        ci.Content.Title,
+        ci.Status,
+        ci.CompletionPercentage,
+        ci.FirstAccessedAt,
+        ci.LastAccessedAt,
+        ci.CompletedAt))
+      .ToListAsync()
+      .ConfigureAwait(false);
 
     return new UserProgressDto(
       programUser.Id,

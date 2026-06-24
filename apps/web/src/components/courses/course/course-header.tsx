@@ -2,26 +2,40 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 import type { Program } from '@/lib/api/generated';
+import type { Product } from '@/lib/courses/actions/enrollment.actions';
 import type { CourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
 import { getCourseCategoryName, getCourseLevelConfig } from '@/lib/courses/services/course.service';
 import { getCourseShowcase, getProgramForCourse } from '@/lib/courses/public-programs';
 import { ArrowLeft, ArrowRight, BookOpen, Clock, Layers3, Play, Users } from 'lucide-react';
 import Image from 'next/image';
+import { CourseCheckoutButton } from './course-checkout-button';
 import { shouldUseUnoptimizedCourseImage } from './course-image';
 import { CourseSelfEnrollButton } from './course-self-enroll-button';
 
 interface CourseHeaderProps {
   readonly course: Program;
   readonly viewerAccess?: CourseViewerAccess;
+  readonly products?: Product[];
 }
 
 function getPrimaryCta(
   courseSlug: string | null,
   isEnrollmentOpen: boolean | null | undefined,
+  hasProducts: boolean,
   viewerAccess?: CourseViewerAccess,
-): { label: string; href?: string; kind: 'link' | 'enroll' | 'disabled' } {
+): { label: string; href?: string; kind: 'link' | 'checkout' | 'enroll' | 'disabled' } {
+  const signInHref = courseSlug ? `/sign-in?redirectTo=${encodeURIComponent(`/courses/${courseSlug}`)}` : '/sign-in';
+
   if (viewerAccess?.state === 'has-access' && courseSlug) {
     return { label: 'Continue learning', href: `/courses/${courseSlug}/content`, kind: 'link' };
+  }
+
+  if (viewerAccess?.state === 'signed-out') {
+    return { label: 'Sign in to enroll', href: signInHref, kind: 'link' };
+  }
+
+  if (viewerAccess?.state === 'no-access' && isEnrollmentOpen && courseSlug && hasProducts) {
+    return { label: 'Checkout', kind: 'checkout' };
   }
 
   if (viewerAccess?.state === 'no-access' && isEnrollmentOpen && courseSlug) {
@@ -32,10 +46,10 @@ function getPrimaryCta(
     return { label: 'Access temporarily unavailable', kind: 'disabled' };
   }
 
-  return { label: 'Sign in to enroll', href: '/sign-in', kind: 'link' };
+  return { label: 'Sign in to enroll', href: signInHref, kind: 'link' };
 }
 
-export function CourseHeader({ course, viewerAccess }: CourseHeaderProps) {
+export function CourseHeader({ course, viewerAccess, products = [] }: CourseHeaderProps) {
   const thumbnailSrc = typeof course.thumbnail === 'string' && course.thumbnail.length > 0 ? course.thumbnail : null;
   const courseTitle = typeof course.title === 'string' && course.title.length > 0 ? course.title : 'Course';
   const courseSlug = typeof course.slug === 'string' && course.slug.length > 0 ? course.slug : null;
@@ -46,7 +60,7 @@ export function CourseHeader({ course, viewerAccess }: CourseHeaderProps) {
   const showcase = getCourseShowcase(courseSlug);
   const heroImage = thumbnailSrc || program?.image;
   const isEnrollmentOpen = course.isEnrollmentOpen === true;
-  const primaryCta = getPrimaryCta(courseSlug, isEnrollmentOpen, viewerAccess);
+  const primaryCta = getPrimaryCta(courseSlug, isEnrollmentOpen, products.length > 0, viewerAccess);
 
   return (
     <section className="relative min-h-[780px] overflow-hidden border-b border-white/10">
@@ -99,7 +113,13 @@ export function CourseHeader({ course, viewerAccess }: CourseHeaderProps) {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              {primaryCta.kind === 'enroll' && courseSlug ? (
+              {primaryCta.kind === 'checkout' && courseSlug ? (
+                <CourseCheckoutButton
+                  courseSlug={courseSlug}
+                  products={products}
+                  buttonClassName="h-10 px-6 text-sm font-medium md:h-11"
+                />
+              ) : primaryCta.kind === 'enroll' && courseSlug ? (
                 <CourseSelfEnrollButton
                   courseSlug={courseSlug}
                   buttonClassName="h-10 bg-white px-6 text-sm font-medium text-slate-950 hover:bg-slate-200 md:h-11"

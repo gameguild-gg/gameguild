@@ -1,6 +1,7 @@
 import { CourseLandingPage } from '@/components/courses/course/course-landing-page';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
+import { getProductsContainingCourse } from '@/lib/courses/actions/enrollment.actions';
 import { getCourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
 import { getCourseBySlug } from '@/lib/courses/services/course.service';
 import { AlertTriangle, Loader2 } from 'lucide-react';
@@ -95,9 +96,12 @@ async function CourseContent({ slug }: { slug: string }): Promise<React.JSX.Elem
     notFound();
   }
 
-  const viewerAccess = course.id ? await getCourseViewerAccess(String(course.id)) : { state: 'signed-out' as const };
+  const [viewerAccess, products] = await Promise.all([
+    course.id ? getCourseViewerAccess(String(course.id)) : Promise.resolve({ state: 'signed-out' as const }),
+    getProductsContainingCourse(slug),
+  ]);
 
-  return <CourseLandingPage course={course} viewerAccess={viewerAccess} />;
+  return <CourseLandingPage course={course} viewerAccess={viewerAccess} products={products} />;
 }
 
 export default async function CourseDetailPage({ params }: CourseDetailPageProps) {

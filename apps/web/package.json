@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:browser:public": "node scripts/public-browser-smoke.mjs",
+    "test:browser:learning-checkout": "node scripts/learning-checkout-browser-e2e.mjs",
     "test:watch": "vitest",
     "test:e2e": "vitest run -c vitest.e2e.config.ts"
   },

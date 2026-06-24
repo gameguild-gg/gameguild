@@ -23,8 +23,9 @@ import { Input } from "@game-guild/ui/components/input"
 
 export function SignInForm({
   className,
+  redirectTo = "/dashboard",
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & { redirectTo?: string }) {
   const { signIn, isLoading, error, clearError } = useAuth()
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
@@ -50,7 +51,7 @@ export function SignInForm({
       await signIn("credentials", {
         email,
         password,
-        redirectTo: "/dashboard",
+        redirectTo,
       })
     } catch {
       // error state is set by useAuth
@@ -130,7 +131,12 @@ export function SignInForm({
                 </Button>
                 <FieldDescription className="text-center text-slate-300">
                   Don&apos;t have an account?{" "}
-                  <Link href="/sign-up" className="text-sky-200 underline-offset-4 hover:underline">Sign up</Link>
+                  <Link
+                    href={redirectTo ? `/sign-up?redirectTo=${encodeURIComponent(redirectTo)}` : "/sign-up"}
+                    className="text-sky-200 underline-offset-4 hover:underline"
+                  >
+                    Sign up
+                  </Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>

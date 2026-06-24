@@ -34,6 +34,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
     var program = await GetRequiredProgramAsync(id).ConfigureAwait(false);
 
     program.Status = ContentStatus.Published;
+    program.Visibility = ContentVisibility.Public;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -56,6 +57,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
     var program = await GetRequiredProgramAsync(id).ConfigureAwait(false);
 
     program.Status = ContentStatus.Archived;
+    program.Visibility = ContentVisibility.Private;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -76,6 +78,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
     var program = await GetRequiredProgramAsync(id).ConfigureAwait(false);
 
     program.Status = ContentStatus.Published;
+    program.Visibility = ContentVisibility.Public;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -98,6 +101,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
     var program = await GetRequiredProgramAsync(id).ConfigureAwait(false);
 
     program.Status = ContentStatus.Published;
+    program.Visibility = ContentVisibility.Public;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -108,6 +112,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
     var program = await GetRequiredProgramAsync(id).ConfigureAwait(false);
 
     program.Status = ContentStatus.Draft;
+    program.Visibility = ContentVisibility.Private;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -144,6 +149,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
     if (program == null) return null;
 
     program.Status = ContentStatus.Published;
+    program.Visibility = ContentVisibility.Public;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -156,6 +162,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
     if (program == null) return null;
 
     program.Status = ContentStatus.Draft;
+    program.Visibility = ContentVisibility.Private;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -168,6 +175,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
     if (program == null) return null;
 
     program.Status = ContentStatus.Draft;
+    program.Visibility = ContentVisibility.Private;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -180,6 +188,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
     if (program == null) return null;
 
     program.Status = ContentStatus.Archived;
+    program.Visibility = ContentVisibility.Private;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -204,6 +213,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
     if (program == null) return null;
 
     program.Status = ContentStatus.Published;
+    program.Visibility = ContentVisibility.Public;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 

@@ -36,6 +36,12 @@ vi.mock('./course-self-enroll-button', () => ({
   CourseSelfEnrollButton: ({ courseSlug }: { courseSlug: string }) => <button type="button">Enroll in {courseSlug}</button>,
 }));
 
+vi.mock('./course-checkout-button', () => ({
+  CourseCheckoutButton: ({ courseSlug, products }: { courseSlug: string; products: Array<{ name: string }> }) => (
+    <button type="button">Checkout {courseSlug} with {products[0]?.name}</button>
+  ),
+}));
+
 const advancedAiCourse = {
   id: 'ai4games2-program-1',
   title: 'Advanced Game AI',
@@ -204,5 +210,25 @@ describe('CourseLandingPage', () => {
     expect(within(projectGallery).getByRole('heading', { name: /Boss behavior sandbox/i })).toBeInTheDocument();
     expect(within(projectGallery).getByText('A playable boss encounter with annotated decision logic.')).toBeInTheDocument();
     expect(within(projectGallery).getByText('State debugging')).toBeInTheDocument();
+  });
+
+  it('renders checkout CTA instead of free enrollment when products are linked', () => {
+    render(
+      <CourseLandingPage
+        course={advancedAiCourse}
+        viewerAccess={{ state: 'no-access' }}
+        products={[
+          {
+            id: 'product-1',
+            name: 'Advanced AI Course Access',
+            price: 49,
+            currency: 'USD',
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getAllByText('Checkout ai4games2 with Advanced AI Course Access')).toHaveLength(2);
+    expect(screen.queryByText('Enroll in ai4games2')).not.toBeInTheDocument();
   });
 });

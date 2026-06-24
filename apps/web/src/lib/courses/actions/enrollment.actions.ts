@@ -26,18 +26,20 @@ export interface Product {
     courses?: string[];
 }
 
-export interface PaymentIntentResult {
-    success?: boolean;
-    clientSecret: string;
-    paymentIntentId: string;
-    paymentUrl?: string;
-    message?: string;
-}
-
 export interface EnrollmentResult {
     success: boolean;
     message: string;
     enrollmentId?: string;
+}
+
+export interface CourseCheckoutResult {
+    success: boolean;
+    message: string;
+    learningUrl?: string;
+    amount?: number;
+    currency?: string;
+    entitlementId?: string;
+    alreadyHadAccess?: boolean;
 }
 
 type PublicCourseDto = GeneratedApi.LearningCoursesProgram;
@@ -69,12 +71,16 @@ function createPublicProgramsModule() {
 }
 
 function createAuthenticatedProgramsModule(accessToken: string) {
-    const client = createServerClient({
+    const client = createAuthenticatedClient(accessToken);
+
+    return new GeneratedApi.LearningCoursesProgramModule(client);
+}
+
+function createAuthenticatedClient(accessToken: string) {
+    return createServerClient({
         baseUrl: getApiUrl(),
         auth: { getAccessToken: async () => accessToken },
     });
-
-    return new GeneratedApi.LearningCoursesProgramModule(client);
 }
 
 function createPublicProductsModule() {
@@ -274,10 +280,68 @@ export async function enrollInFreeCourse(courseSlug: string): Promise<Enrollment
     }
 }
 
-export async function createPaymentIntent(productId: string): Promise<PaymentIntentResult> {
+export async function completeCourseCheckout(courseSlug: string, productId: string): Promise<CourseCheckoutResult> {
     try {
-        throw new Error(`Product checkout is not available in the current payments API contract for product ${productId}.`);
+        const accessToken = await getAuthenticatedAccessToken();
+        if (!accessToken) {
+            return {
+                success: false,
+                message: 'You must be signed in to complete checkout.',
+            };
+        }
+
+        const { course, error: courseError } = await resolvePublishedCourseBySlug(courseSlug);
+        if (!course?.id) {
+            return {
+                success: false,
+                message: courseError || 'Course not found.',
+            };
+        }
+
+        if (!course.isEnrollmentOpen) {
+            return {
+                success: false,
+                message: 'This course is not currently open for checkout.',
+            };
+        }
+
+        const client = createAuthenticatedClient(accessToken);
+        const result = await client.request<{
+            learningUrl?: string;
+            amount?: number;
+            currency?: string;
+            entitlementId?: string;
+            alreadyHadAccess?: boolean;
+        }>({
+            method: 'POST',
+            path: `/v1/courses/${course.id}/checkout/complete`,
+            body: {
+                productId,
+                paymentProviderReference: `gameguild-checkout-${course.id}-${productId}`,
+                paymentMethod: 'test_card',
+            },
+        });
+
+        if (!result.ok) {
+            return {
+                success: false,
+                message: formatApiError(result.error),
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Checkout complete. Your course access is active.',
+            learningUrl: result.data.learningUrl,
+            amount: result.data.amount,
+            currency: result.data.currency,
+            entitlementId: result.data.entitlementId,
+            alreadyHadAccess: result.data.alreadyHadAccess,
+        };
     } catch (error) {
-        throw new Error(error instanceof Error ? error.message : 'Failed to create payment intent.');
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : 'Failed to complete checkout.',
+        };
     }
 }

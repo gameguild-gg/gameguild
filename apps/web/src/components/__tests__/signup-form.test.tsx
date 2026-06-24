@@ -60,7 +60,7 @@ describe('SignupForm', () => {
   it('renders navigation links', () => {
     renderWithUser(<SignupForm />);
 
-    expect(screen.getByText('Sign in')).toHaveAttribute('href', '/sign-in');
+    expect(screen.getByText('Sign in')).toHaveAttribute('href', '/sign-in?redirectTo=%2Fdashboard');
     expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/terms-of-service');
     expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/polices/privacy');
   });
