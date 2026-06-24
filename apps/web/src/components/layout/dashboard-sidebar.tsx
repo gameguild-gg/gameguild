@@ -120,6 +120,11 @@ const navigationData: NavGroup[] = [
     label: 'Platform Management',
     items: [
       {
+        title: 'Users & roles',
+        url: '/dashboard/community/members/users',
+        icon: UserCog,
+      },
+      {
         title: 'Learning',
         icon: BookOpen,
         subGroups: [

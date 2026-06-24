@@ -170,7 +170,7 @@ public static class DatabaseSeeder
         var tenantName = configuration?["Seed:DefaultTenantName"] ?? defaultTenantName;
         var tenantSlug = configuration?["Seed:DefaultTenantSlug"] ?? defaultTenantSlug;
         var tenantDescription = configuration?["Seed:DefaultTenantDescription"] ?? defaultTenantDescription;
-        var tenantRole = configuration?["Seed:AdminTenantRole"] ?? TenantRole.Owner.Value;
+        var tenantRole = configuration?["Seed:AdminTenantRole"] ?? "SystemAdmin";
 
         var tenants = dbContext.Set<Tenant>();
         var tenant = await tenants
@@ -234,11 +234,15 @@ public static class DatabaseSeeder
                 JoinedAt = SystemClock.UtcNow,
                 Metadata = """{"bootstrap":true,"scope":"platform"}"""
             });
-            logger?.LogInformation("  Created platform tenant owner membership for: {Email}", adminUser.Email);
+            logger?.LogInformation("  Created platform tenant admin membership for: {Email}", adminUser.Email);
         }
         else
         {
-            membership.Role = string.IsNullOrWhiteSpace(membership.Role) ? tenantRole : membership.Role;
+            if (string.IsNullOrWhiteSpace(membership.Role) ||
+                string.Equals(membership.Role, TenantRole.Owner.Value, StringComparison.OrdinalIgnoreCase))
+            {
+                membership.Role = tenantRole;
+            }
             membership.Activate();
         }
 

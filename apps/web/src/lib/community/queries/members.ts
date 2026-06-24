@@ -2,11 +2,13 @@
 // COMMUNITY MEMBER QUERIES
 // =============================================================================
 
-import { cookies } from 'next/headers';
-import { createServerClient, decodeJWT, GeneratedApi, SessionStore, resolveCookieOptions } from '@game-guild/client';
+import { auth, getToken } from '@/auth';
+import { createServerClient, GeneratedApi } from '@game-guild/client';
 import { getCourseShowcase } from '@/lib/courses/public-programs';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import type {
+  IdentityTenantsGetUserMembershipsOutput,
+  IdentityTenantsUserMembership,
   IdentityUsersUser,
   IdentityUsersUserProfile,
   SocialFeedFeedItem,
@@ -57,6 +59,46 @@ export interface CommunityStats {
   totalGroups: number;
   openTickets: number;
   totalPosts: number;
+}
+
+export const COMMUNITY_ACCESS_ROLES = [
+  {
+    value: 'Member',
+    label: 'Member',
+    description: 'Can access the community and learning surfaces.',
+  },
+  {
+    value: 'Moderator',
+    label: 'Moderator',
+    description: 'Can moderate member activity and support queues.',
+  },
+  {
+    value: 'TenantAdmin',
+    label: 'Platform admin',
+    description: 'Can manage users, content, and tenant operations.',
+  },
+  {
+    value: 'SystemAdmin',
+    label: 'Super admin',
+    description: 'Full platform-management authority.',
+  },
+] as const;
+
+export interface MemberAccessRow {
+  member: MemberSummary;
+  memberships: IdentityTenantsUserMembership[];
+  primaryMembership: IdentityTenantsUserMembership | null;
+  role: string;
+  isSuperAdmin: boolean;
+  isCurrentUser: boolean;
+  membershipLoadError?: string | null;
+}
+
+export interface MemberAccessDirectory {
+  members: MemberAccessRow[];
+  total: number;
+  currentUserId: string | null;
+  error?: string | null;
 }
 
 export interface MemberDetail extends MemberSummary {
@@ -169,29 +211,16 @@ function isRecentlyActive(user: IdentityUsersUser, now = new Date()) {
   return now.getTime() - lastSeenAt <= thirtyDaysMs;
 }
 
-async function getSessionClaims(): Promise<{ accessToken: string | null; userId: string | null }> {
-  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '';
-  if (!secret) return { accessToken: null, userId: null };
-
-  const cookieStore = await cookies();
-  const isSecure = process.env.NEXTAUTH_URL?.startsWith('https') ?? false;
-  const cookieOptions = resolveCookieOptions({ name: '__gg' }, isSecure);
-  const sessionStore = new SessionStore(cookieOptions);
-
-  const encrypted = sessionStore.read((name) => cookieStore.get(name)?.value);
-  if (!encrypted) return { accessToken: null, userId: null };
-
-  const payload = await decodeJWT({ token: encrypted, secret });
-  const claims = payload as { accessToken?: string; sub?: string; userId?: string; nameid?: string } | null;
-
-  return {
-    accessToken: claims?.accessToken ?? null,
-    userId: claims?.sub ?? claims?.userId ?? claims?.nameid ?? null,
-  };
+async function getAccessToken(): Promise<string | null> {
+  return getToken();
 }
 
-async function getAccessToken(): Promise<string | null> {
-  return (await getSessionClaims()).accessToken;
+async function getSessionClaims(): Promise<{ userId: string | null }> {
+  const session = await auth().catch(() => null);
+
+  return {
+    userId: session?.user?.id ?? null,
+  };
 }
 
 function getApiClient() {
@@ -213,6 +242,56 @@ function mapUserToMember(user: IdentityUsersUser): MemberSummary {
     joinedAt: user.createdAt ?? new Date().toISOString(),
     lastActiveAt: user.lastSeenAt ?? user.updatedAt ?? user.createdAt ?? new Date().toISOString(),
   };
+}
+
+function mapSessionToMember(
+  sessionUser: { id?: string | null; email?: string | null; name?: string | null } | null | undefined,
+): MemberSummary | null {
+  if (!sessionUser?.id) return null;
+
+  const now = new Date().toISOString();
+
+  return mapUserToMember({
+    id: sessionUser.id,
+    email: sessionUser.email ?? '',
+    name: sessionUser.name ?? sessionUser.email?.split('@')[0] ?? 'GameGuild member',
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+    lastSeenAt: now,
+  });
+}
+
+function isSuperAdminRole(role?: string | null) {
+  return role === 'SystemAdmin' || role === 'Admin';
+}
+
+function selectPrimaryMembership(memberships: IdentityTenantsUserMembership[]) {
+  return (
+    memberships.find((membership) => membership.isActive && isSuperAdminRole(membership.role)) ??
+    memberships.find((membership) => membership.isActive && membership.role === 'TenantAdmin') ??
+    memberships.find((membership) => membership.isActive) ??
+    memberships[0] ??
+    null
+  );
+}
+
+async function getUserMemberships(
+  client: ReturnType<typeof getApiClient>,
+  userId: string,
+): Promise<{ memberships: IdentityTenantsUserMembership[]; error?: string | null }> {
+  const result = await client.request<IdentityTenantsGetUserMembershipsOutput>({
+    method: 'GET',
+    path: `/v1/users/${userId}/memberships`,
+    params: { includeInactive: true },
+    requiresAuth: true,
+  });
+
+  if (!result.ok) {
+    return { memberships: [], error: result.error.message };
+  }
+
+  return { memberships: result.data?.memberships ?? [], error: null };
 }
 
 function getInitials(displayName: string) {
@@ -566,7 +645,8 @@ export async function getCommunityStats(): Promise<CommunityStats> {
     const blogPosts = new GeneratedApi.SocialBlogPostsModule(client);
     const now = new Date();
 
-    const [usersResult, groupsResult, supportResult, postsResult] = await Promise.all([
+    const [session, usersResult, groupsResult, supportResult, postsResult] = await Promise.all([
+      auth().catch(() => null),
       client.request<UsersPagedResult>({
         method: 'GET',
         path: '/v1/users',
@@ -584,28 +664,30 @@ export async function getCommunityStats(): Promise<CommunityStats> {
       blogPosts.getApiSocialBlog({ skip: 0, take: 500 }),
     ]);
 
+    const fallbackMemberCount = session?.user?.id ? 1 : 0;
     const users = usersResult.ok ? usersResult.data.items ?? [] : [];
 
     return {
-      totalMembers: usersResult.ok ? usersResult.data.totalCount ?? users.length : 0,
-      activeMembers: users.filter((user) => isRecentlyActive(user, now)).length,
+      totalMembers: usersResult.ok ? usersResult.data.totalCount ?? users.length : fallbackMemberCount,
+      activeMembers: usersResult.ok ? users.filter((user) => isRecentlyActive(user, now)).length : fallbackMemberCount,
       newMembersThisMonth: users.filter((user) => isDateInCurrentMonth(user.createdAt, now)).length,
       totalGroups: groupsResult.ok ? (groupsResult.data ?? []).length : 0,
       openTickets: supportResult.ok ? (supportResult.data ?? []).length : 0,
       totalPosts: postsResult.ok ? (postsResult.data ?? []).length : 0,
     };
   } catch {
-    // Fall through to defaults
-  }
+    const session = await auth().catch(() => null);
+    const fallbackMemberCount = session?.user?.id ? 1 : 0;
 
-  return {
-    totalMembers: 0,
-    activeMembers: 0,
-    newMembersThisMonth: 0,
-    totalGroups: 0,
-    openTickets: 0,
-    totalPosts: 0,
-  };
+    return {
+      totalMembers: fallbackMemberCount,
+      activeMembers: fallbackMemberCount,
+      newMembersThisMonth: 0,
+      totalGroups: 0,
+      openTickets: 0,
+      totalPosts: 0,
+    };
+  }
 }
 
 /**
@@ -620,16 +702,19 @@ export async function getMembers(options?: {
 }): Promise<{ members: MemberSummary[]; total: number }> {
   try {
     const client = getApiClient();
-    const result = await client.request<UsersPagedResult>({
-      method: 'GET',
-      path: '/v1/users',
-      params: {
-        limit: options?.limit ?? 20,
-        q: options?.search || undefined,
-        status: options?.status || undefined,
-      },
-      requiresAuth: true,
-    });
+    const [session, result] = await Promise.all([
+      auth().catch(() => null),
+      client.request<UsersPagedResult>({
+        method: 'GET',
+        path: '/v1/users',
+        params: {
+          limit: options?.limit ?? 20,
+          q: options?.search || undefined,
+          status: options?.status || undefined,
+        },
+        requiresAuth: true,
+      }),
+    ]);
 
     if (result.ok) {
       const users = result.data.items ?? [];
@@ -638,11 +723,111 @@ export async function getMembers(options?: {
         total: result.data.totalCount ?? users.length,
       };
     }
+
+    const sessionMember = mapSessionToMember(session?.user);
+    if (sessionMember) {
+      return { members: [sessionMember], total: 1 };
+    }
   } catch {
-    // Fall through to empty result
+    const session = await auth().catch(() => null);
+    const sessionMember = mapSessionToMember(session?.user);
+    if (sessionMember) {
+      return { members: [sessionMember], total: 1 };
+    }
   }
 
   return { members: [], total: 0 };
+}
+
+export async function getMemberAccessDirectory(options?: {
+  limit?: number;
+  search?: string;
+  status?: string;
+}): Promise<MemberAccessDirectory> {
+  try {
+    const client = getApiClient();
+    const session = await auth().catch(() => null);
+    const result = await client.request<UsersPagedResult>({
+      method: 'GET',
+      path: '/v1/users',
+      params: {
+        limit: options?.limit ?? 50,
+        q: options?.search || undefined,
+        status: options?.status || undefined,
+      },
+      requiresAuth: true,
+    });
+
+    if (!result.ok) {
+      const sessionMember = mapSessionToMember(session?.user);
+      return {
+        members: sessionMember
+          ? [
+              {
+                member: sessionMember,
+                memberships: [],
+                primaryMembership: null,
+                role: 'Member',
+                isSuperAdmin: false,
+                isCurrentUser: true,
+                membershipLoadError: result.error.message,
+              },
+            ]
+          : [],
+        total: sessionMember ? 1 : 0,
+        currentUserId: session?.user?.id ?? null,
+        error: result.error.message,
+      };
+    }
+
+    const users = result.data.items ?? [];
+    const rows = await Promise.all(
+      users.map(async (user) => {
+        const member = mapUserToMember(user);
+        const membershipResult = member.id ? await getUserMemberships(client, member.id) : { memberships: [], error: 'User id is missing.' };
+        const primaryMembership = selectPrimaryMembership(membershipResult.memberships);
+        const role = primaryMembership?.role ?? member.role;
+
+        return {
+          member,
+          memberships: membershipResult.memberships,
+          primaryMembership,
+          role,
+          isSuperAdmin: isSuperAdminRole(role),
+          isCurrentUser: member.id === session?.user?.id,
+          membershipLoadError: membershipResult.error ?? null,
+        } satisfies MemberAccessRow;
+      }),
+    );
+
+    return {
+      members: rows,
+      total: result.data.totalCount ?? users.length,
+      currentUserId: session?.user?.id ?? null,
+      error: null,
+    };
+  } catch (error) {
+    const session = await auth().catch(() => null);
+    const sessionMember = mapSessionToMember(session?.user);
+    return {
+      members: sessionMember
+        ? [
+            {
+              member: sessionMember,
+              memberships: [],
+              primaryMembership: null,
+              role: 'Member',
+              isSuperAdmin: false,
+              isCurrentUser: true,
+              membershipLoadError: error instanceof Error ? error.message : 'Users could not be loaded.',
+            },
+          ]
+        : [],
+      total: sessionMember ? 1 : 0,
+      currentUserId: session?.user?.id ?? null,
+      error: error instanceof Error ? error.message : 'Users could not be loaded.',
+    };
+  }
 }
 
 /**
