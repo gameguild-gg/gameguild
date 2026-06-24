@@ -89,6 +89,21 @@ public class UsersControllerTests
         action.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(result);
     }
 
+    [Theory]
+    [InlineData("Owner")]
+    [InlineData("TenantAdmin")]
+    public async Task GetUsers_ShouldAllowTenantAdministratorsWithoutExplicitUsersReadPermission(string role)
+    {
+        var result = PagedResult<UserDto>.FromPage(new[] { CreateUserDto() }, totalCount: 1, pageNumber: 1, pageSize: 25);
+        _actorContextAccessor.Setup(x => x.ActorContext).Returns(CreateActorContext(roles: new[] { role }));
+        _sender.Setup(sender => sender.Send(It.Is<GetUsersQuery>(query => query.Limit == 25), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
+
+        var action = await _controller.GetUsers(limit: 25, ct: CancellationToken.None);
+
+        action.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(result);
+    }
+
     [Fact]
     public async Task GetUsers_ShouldForbidActorWithoutUsersReadPermission()
     {

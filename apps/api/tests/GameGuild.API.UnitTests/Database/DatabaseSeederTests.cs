@@ -40,7 +40,7 @@ public sealed class DatabaseSeederTests
     }
 
     [Fact]
-    public async Task SeedAsync_Should_Create_Default_Tenant_And_Admin_Owner_Membership()
+    public async Task SeedAsync_Should_Create_Default_Tenant_And_Admin_SuperAdmin_Membership()
     {
         var services = CreateSeederServices("UnitTestAdmin123!");
         await using var provider = services.BuildServiceProvider();
@@ -56,7 +56,7 @@ public sealed class DatabaseSeederTests
 
         tenant.Slug.Should().Be("gameguild-platform");
         tenant.IsActive.Should().BeTrue();
-        membership.Role.Should().Be(TenantRole.Owner.Value);
+        membership.Role.Should().Be("SystemAdmin");
         membership.IsActive.Should().BeTrue();
 
         var settingsCount = await dbContext.Set<TenantSettings>()

@@ -163,6 +163,7 @@ public sealed class DbAuthorizationPolicyProvider : IAuthorizationPolicyProvider
         {
             builder.RequireAssertion(context =>
                 HasAdminRole(context.User) ||
+                HasRole(context.User, "Owner") ||
                 HasRole(context.User, "TenantAdmin") ||
                 HasPermission(context.User, "tenant:admin"));
         }
