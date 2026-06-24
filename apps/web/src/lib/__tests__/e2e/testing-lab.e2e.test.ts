@@ -14,6 +14,18 @@ interface TestingRequestOutput {
   status: number | string;
   maxTesters?: number | null;
   currentTesterCount?: number | null;
+  projectVersion?: {
+    id: string;
+    projectId: string;
+    versionNumber?: string | null;
+    project?: { id: string; title?: string | null; slug?: string | null } | null;
+  } | null;
+}
+
+interface ProjectOutput {
+  id: string;
+  title: string;
+  slug?: string | null;
 }
 
 interface TestingLocationOutput {
@@ -48,6 +60,7 @@ describe('Testing Lab E2E — build submission and session scheduling', () => {
   let password: string;
   let tenantId: string | undefined = TENANT_ID;
   let authedClient: ReturnType<typeof createClient>;
+  let project: ProjectOutput;
   let testingRequest: TestingRequestOutput;
   let location: TestingLocationOutput;
   let session: TestingSessionOutput;
@@ -124,6 +137,33 @@ describe('Testing Lab E2E — build submission and session scheduling', () => {
     });
   }, 60_000);
 
+  it('creates a real project before requesting Testing Lab coverage', async () => {
+    const tag = unique();
+    project = unwrap(
+      await authedClient.request<ProjectOutput>({
+        method: 'POST',
+        path: '/v1/projects',
+        body: {
+          title: `Testing Lab E2E Project ${tag}`,
+          description: 'Project created before submitting a Testing Lab build.',
+          shortDescription: 'Testing Lab project-backed submission',
+          imageUrl: 'https://example.com/testing-lab-project.jpg',
+          websiteUrl: 'https://example.com/testing-lab-project',
+          downloadUrl: 'https://example.com/downloads/testing-lab-project.zip',
+          type: 0,
+          visibility: 4,
+          status: 2,
+          tags: ['testing-lab', 'e2e'],
+        },
+        requiresAuth: true,
+      }),
+      'Create Testing Lab project',
+    );
+
+    expect(project.id).toBeTruthy();
+    expect(project.title).toContain('Testing Lab E2E Project');
+  });
+
   it('submits a simple testing build', async () => {
     const tag = unique();
     const start = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -144,7 +184,8 @@ describe('Testing Lab E2E — build submission and session scheduling', () => {
           maxTesters: 8,
           startDate: start.toISOString(),
           endDate: end.toISOString(),
-          teamIdentifier: `testing-lab-team-${tag}`,
+          projectId: project.id,
+          teamIdentifier: project.title,
         },
         requiresAuth: true,
       }),
@@ -153,6 +194,7 @@ describe('Testing Lab E2E — build submission and session scheduling', () => {
 
     expect(testingRequest.id).toBeTruthy();
     expect(testingRequest.title).toContain('Testing Lab E2E Build');
+    expect(testingRequest.projectVersion?.projectId).toBe(project.id);
     expect(statusName(testingRequest.status, ['Draft', 'Open', 'Active', 'InProgress', 'Paused', 'Completed', 'Cancelled'])).toBe('Draft');
   });
 

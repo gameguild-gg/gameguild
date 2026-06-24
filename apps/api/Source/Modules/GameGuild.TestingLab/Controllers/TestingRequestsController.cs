@@ -152,7 +152,16 @@ public class TestingRequestsController(
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        var request = await requestService.CreateSimpleTestingRequestAsync(requestDto, userId.Value).ConfigureAwait(false);
+        TestingRequest request;
+        try
+        {
+            request = await requestService.CreateSimpleTestingRequestAsync(requestDto, userId.Value).ConfigureAwait(false);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Testing Lab submission rejected for user {UserId}", userId);
+            return BadRequest(ex.Message);
+        }
 
         return CreatedAtAction(nameof(GetTestingRequest), new { id = request.Id }, request);
     }

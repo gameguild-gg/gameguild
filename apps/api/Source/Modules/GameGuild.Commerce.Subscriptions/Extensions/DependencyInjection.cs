@@ -39,6 +39,7 @@ public static class DependencyInjection
 
         // Register Plan Pricing Resolver for cross-module pricing lookups (Payments module integration)
         services.AddScoped<IPlanPricingResolver, SubscriptionPlanPricingResolver>();
+        services.AddScoped<IPaymentSubscriptionSyncService, PaymentSubscriptionSyncService>();
 
         // Register Command Handlers (only existing ones)
         services.AddScoped<ICommandHandler<ActivateSubscriptionCommand>, ActivateSubscriptionCommandHandler>();

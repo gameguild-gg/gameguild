@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   countAvailableTesterSlots: vi.fn(),
   getTestingLabDashboard: vi.fn(),
+  getTestingProjectOptions: vi.fn(),
   normalizeTestingLocationStatus: vi.fn(),
   normalizeTestingRequestStatus: vi.fn(),
   normalizeTestingSessionStatus: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock('@/lib/testing-lab/actions', () => ({
 vi.mock('@/lib/testing-lab', () => ({
   countAvailableTesterSlots: mocks.countAvailableTesterSlots,
   getTestingLabDashboard: mocks.getTestingLabDashboard,
+  getTestingProjectOptions: mocks.getTestingProjectOptions,
   normalizeTestingLocationStatus: mocks.normalizeTestingLocationStatus,
   normalizeTestingRequestStatus: mocks.normalizeTestingRequestStatus,
   normalizeTestingSessionStatus: mocks.normalizeTestingSessionStatus,
@@ -52,6 +54,16 @@ describe('testing lab dashboard page', () => {
           currentTesterCount: 4,
           startDate: '2026-07-01T12:00:00.000Z',
           endDate: '2026-07-14T12:00:00.000Z',
+          projectVersion: {
+            id: 'version-1',
+            projectId: 'project-1',
+            versionNumber: '0.3.0',
+            project: {
+              id: 'project-1',
+              title: 'Arena Tactics',
+              slug: 'arena-tactics',
+            },
+          },
         },
       ],
       sessions: [
@@ -77,6 +89,14 @@ describe('testing lab dashboard page', () => {
       ],
       publicSessions: [{ id: 'session-1', sessionName: 'Friday feedback lab', status: 'Scheduled' }],
     });
+    mocks.getTestingProjectOptions.mockResolvedValue([
+      {
+        id: 'project-1',
+        title: 'Arena Tactics',
+        slug: 'arena-tactics',
+        status: 'Published',
+      },
+    ]);
 
     render(await TestingLabPage());
 
@@ -85,11 +105,13 @@ describe('testing lab dashboard page', () => {
     expect(screen.getByRole('link', { name: /project showcase/i })).toHaveAttribute('href', '/projects');
     expect(screen.getByRole('heading', { name: /operational workflow/i })).toBeInTheDocument();
     expect(screen.getByText('Combat prototype playtest')).toBeInTheDocument();
+    expect(screen.getByText(/Arena Tactics · 0\.3\.0/)).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Arena Tactics/ })).toBeInTheDocument();
     expect(screen.getByText('Friday feedback lab')).toBeInTheDocument();
     expect(screen.getByText('Remote lab')).toBeInTheDocument();
     expect(screen.getByText('8')).toBeInTheDocument();
     expect(screen.getByLabelText('Title')).toBeRequired();
-    expect(screen.getByLabelText('Team identifier')).toBeRequired();
+    expect(screen.getByRole('radio', { name: /Arena Tactics/ })).toBeRequired();
     expect(screen.getByLabelText('Version')).toBeRequired();
     expect(screen.getByRole('button', { name: 'Submit to Testing Lab' })).toBeEnabled();
   });

@@ -4,6 +4,7 @@ import { submitTestingBuild } from '@/lib/testing-lab/actions';
 import {
   countAvailableTesterSlots,
   getTestingLabDashboard,
+  getTestingProjectOptions,
   normalizeTestingLocationStatus,
   normalizeTestingRequestStatus,
   normalizeTestingSessionStatus,
@@ -28,6 +29,8 @@ function RequestCard({ request }: { request: TestingRequestSummary }) {
   const status = normalizeTestingRequestStatus(request.status);
   const maxTesters = request.maxTesters ?? null;
   const currentTesters = request.currentTesterCount ?? 0;
+  const projectTitle = request.projectVersion?.project?.title ?? request.projectVersion?.project?.name ?? request.projectVersion?.project?.slug ?? null;
+  const versionNumber = request.projectVersion?.versionNumber ?? null;
 
   return (
     <Card>
@@ -36,6 +39,11 @@ function RequestCard({ request }: { request: TestingRequestSummary }) {
           <div>
             <CardTitle>{request.title}</CardTitle>
             <CardDescription>{request.description ?? 'No description provided.'}</CardDescription>
+            {projectTitle ? (
+              <p className="mt-2 text-xs font-medium text-muted-foreground">
+                {projectTitle}{versionNumber ? ` · ${versionNumber}` : ''}
+              </p>
+            ) : null}
           </div>
           <Badge variant={status === 'Active' || status === 'Open' ? 'default' : 'outline'}>{status}</Badge>
         </div>
@@ -86,7 +94,7 @@ function SessionRow({ session }: { session: TestingSessionSummary }) {
 }
 
 export default async function TestingLabPage(): Promise<React.JSX.Element> {
-  const data = await getTestingLabDashboard();
+  const [data, projects] = await Promise.all([getTestingLabDashboard(), getTestingProjectOptions()]);
   const openRequests = data.requests.filter((request) => ['Open', 'Active', 'InProgress'].includes(normalizeTestingRequestStatus(request.status)));
   const scheduledSessions = data.sessions.filter((session) => normalizeTestingSessionStatus(session.status) === 'Scheduled');
   const availableSlots = countAvailableTesterSlots(data.requests);
@@ -263,8 +271,22 @@ export default async function TestingLabPage(): Promise<React.JSX.Element> {
                 <Input id="testing-title" name="title" required placeholder="Vertical slice feedback pass" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="testing-team">Team identifier</Label>
-                <Input id="testing-team" name="teamIdentifier" required placeholder="capstone-team-01" />
+                <Label>Project</Label>
+                <div className="grid gap-2">
+                  {projects.length === 0 ? (
+                    <p className="rounded-lg border p-3 text-sm text-muted-foreground">Create a project first, then submit a build for testing.</p>
+                  ) : (
+                    projects.slice(0, 6).map((project, index) => (
+                      <label key={project.id} className="flex cursor-pointer items-center gap-3 rounded-lg border p-3">
+                        <input type="radio" name="projectId" value={project.id} defaultChecked={index === 0} required className="size-4" />
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-medium">{project.title}</span>
+                          <span className="block truncate text-xs text-muted-foreground">{project.slug ?? project.id}</span>
+                        </span>
+                      </label>
+                    ))
+                  )}
+                </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -302,7 +324,7 @@ export default async function TestingLabPage(): Promise<React.JSX.Element> {
                 <Label htmlFor="testing-feedback">Feedback questions</Label>
                 <Textarea id="testing-feedback" name="feedbackFormContent" rows={4} placeholder="What confused you? What felt polished? Where did you stop?" />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={projects.length === 0}>
                 Submit to Testing Lab
               </Button>
             </form>

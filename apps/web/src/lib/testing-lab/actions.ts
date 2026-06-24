@@ -8,9 +8,10 @@ export async function submitTestingBuild(formData: FormData): Promise<void> {
   if (!token) return;
 
   const title = String(formData.get('title') ?? '').trim();
+  const projectId = String(formData.get('projectId') ?? '').trim();
   const teamIdentifier = String(formData.get('teamIdentifier') ?? '').trim();
   const versionNumber = String(formData.get('versionNumber') ?? '').trim();
-  if (!title || !teamIdentifier || !versionNumber) return;
+  if (!title || !projectId || !versionNumber) return;
 
   const description = String(formData.get('description') ?? '').trim();
   const downloadUrl = String(formData.get('downloadUrl') ?? '').trim();
@@ -29,6 +30,7 @@ export async function submitTestingBuild(formData: FormData): Promise<void> {
     },
     body: JSON.stringify({
       title,
+      projectId,
       teamIdentifier,
       versionNumber,
       description: description || null,
