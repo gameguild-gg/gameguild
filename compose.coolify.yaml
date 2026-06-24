@@ -1,4 +1,4 @@
-# Coolify deployment - API, web app, and learner app (staging).
+# Coolify deployment - API, public API gateway, web app, and learner app (staging).
 #
 # Routing: traffic enters via Cloudflare Tunnel -> Coolify's Traefik proxy ->
 # this container on the shared Coolify network. Services may use the same
@@ -89,6 +89,64 @@ services:
     networks:
       - default
       - coolify
+
+  api-gateway:
+    image: nginx:1.27-alpine
+    ports:
+      - '3000'
+    command:
+      - /bin/sh
+      - -c
+      - |
+        cat > /etc/nginx/conf.d/default.conf <<'NGINX'
+        server {
+          listen 3000;
+          server_name _;
+
+          location / {
+            proxy_pass http://api:8080;
+            proxy_http_version 1.1;
+            proxy_set_header Host $$host;
+            proxy_set_header X-Real-IP $$remote_addr;
+            proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $$scheme;
+          }
+        }
+        NGINX
+        nginx -g 'daemon off;'
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/live >/dev/null || exit 1']
+      start_interval: 5s
+      start_period: 90s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    labels:
+      - 'com.game-guild.app=api-gateway'
+      - 'com.game-guild.tier=edge'
+      - 'com.game-guild.environment=staging'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
+    networks:
+      - default
+      - coolify
+    depends_on:
+      api:
+        condition: service_started
 
   web:
     build:
