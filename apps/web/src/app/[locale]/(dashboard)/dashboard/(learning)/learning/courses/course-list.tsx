@@ -1,6 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n/navigation';
+import { buildDashboardCoursePath } from '@/lib/learning/course-route';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
@@ -13,6 +14,8 @@ import { CourseCard, CourseTableActions } from './course-card';
 
 interface EnrichedCourse {
   id: string;
+  slug?: string;
+  routeParam?: string;
   title: string;
   status: string;
   visibility: string;
@@ -236,7 +239,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
                   {filtered.map((course) => (
                     <TableRow key={course.id} className="cursor-pointer">
                       <TableCell>
-                        <Link href={`/dashboard/learning/courses/${course.id}`} className="flex items-center gap-3">
+                        <Link href={buildDashboardCoursePath(course.routeParam ?? course)} locale={locale} className="flex items-center gap-3">
                           <div className="flex size-10 shrink-0 items-center justify-center rounded bg-muted">
                             <BookOpen className="size-5 text-muted-foreground" />
                           </div>
@@ -248,7 +251,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
                       <TableCell className="text-center">{course.completionPercent !== null ? `${course.completionPercent}%` : '—'}</TableCell>
                       <TableCell className="text-center">{course.avgRating ?? '—'}</TableCell>
                       <TableCell>
-                        <CourseTableActions courseId={course.id} courseTitle={course.title} locale={locale} />
+                        <CourseTableActions courseRouteParam={course.routeParam ?? course.id} courseTitle={course.title} locale={locale} />
                       </TableCell>
                     </TableRow>
                   ))}

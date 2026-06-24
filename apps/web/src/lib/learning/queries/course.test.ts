@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
+  clientRequest: vi.fn(),
+  getCourses1: vi.fn(),
   getCoursesAnalytics: vi.fn(),
   getApiLearningEnrollmentsCourses: vi.fn(),
   getToken: vi.fn(),
@@ -16,6 +18,7 @@ vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
     LearningCoursesProgramModule: class {
+      getCourses1 = mocks.getCourses1;
       getCoursesAnalytics = mocks.getCoursesAnalytics;
     },
     LearningCoursesProgramcontentModule: class {},
@@ -29,15 +32,85 @@ vi.mock('./http', () => ({
   learningApiGet: mocks.learningApiGet,
 }));
 
-import { getCourseAnalytics, getCourseClass } from './course';
+import { getCourse, getCourseAnalytics, getCourseClass, resolveCourseId } from './course';
 
 describe('course analytics query', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     mocks.createServerClient.mockReturnValue({});
+    mocks.clientRequest.mockReset();
+    mocks.getCourses1.mockReset();
     mocks.getToken.mockResolvedValue('access-token');
     mocks.learningApiGet.mockReset();
     mocks.getApiLearningEnrollmentsCourses.mockReset();
+  });
+
+  it('resolves dashboard course slugs through the authenticated slug endpoint', async () => {
+    mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
+    mocks.clientRequest.mockResolvedValue({
+      ok: true,
+      data: {
+        id: '08691da8-245e-4d9e-b729-83c9023ba061',
+        title: 'AI for Boss Encounters',
+        description: 'Build readable encounter AI.',
+        slug: 'ai-for-boss-encounters',
+        status: 'Published',
+        visibility: 'Public',
+        createdAt: '2026-06-01T00:00:00.000Z',
+      },
+    });
+
+    const course = await getCourse('ai-for-boss-encounters');
+
+    expect(mocks.clientRequest).toHaveBeenCalledWith({
+      method: 'GET',
+      path: '/v1/courses/slug/ai-for-boss-encounters',
+      requiresAuth: true,
+    });
+    expect(course).toMatchObject({
+      id: '08691da8-245e-4d9e-b729-83c9023ba061',
+      slug: 'ai-for-boss-encounters',
+      title: 'AI for Boss Encounters',
+      status: 'published',
+      visibility: 'public',
+    });
+  });
+
+  it('keeps legacy UUID route params working through the course ID endpoint', async () => {
+    mocks.getCourses1.mockResolvedValue({
+      ok: true,
+      data: {
+        id: '08691da8-245e-4d9e-b729-83c9023ba061',
+        title: 'AI for Boss Encounters',
+        description: 'Build readable encounter AI.',
+        slug: 'ai-for-boss-encounters',
+        status: 'Published',
+        visibility: 'Public',
+        createdAt: '2026-06-01T00:00:00.000Z',
+      },
+    });
+
+    const course = await getCourse('08691da8-245e-4d9e-b729-83c9023ba061');
+
+    expect(mocks.getCourses1).toHaveBeenCalledWith('08691da8-245e-4d9e-b729-83c9023ba061');
+    expect(mocks.clientRequest).not.toHaveBeenCalled();
+    expect(course?.slug).toBe('ai-for-boss-encounters');
+  });
+
+  it('returns the canonical API course ID for a dashboard slug', async () => {
+    mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
+    mocks.clientRequest.mockResolvedValue({
+      ok: true,
+      data: {
+        id: '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+        title: 'Creature Design Production',
+        slug: 'creature-design-production',
+        status: 'Draft',
+        visibility: 'Private',
+      },
+    });
+
+    await expect(resolveCourseId('creature-design-production')).resolves.toBe('1caa16bb-6810-4e53-bb0d-91f0d5702333');
   });
 
   it('maps aggregate API analytics without inventing detail rows', async () => {

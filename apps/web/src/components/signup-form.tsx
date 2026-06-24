@@ -1,7 +1,8 @@
 "use client"
 
 import { type FormEvent, useState } from "react"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
+import { useLocale } from "next-intl"
 import { useAuth } from "@game-guild/client/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@game-guild/ui/components/button"
@@ -28,6 +29,7 @@ export function SignupForm({
 }: React.ComponentProps<"div"> & { redirectTo?: string }) {
   const { signUp, isLoading, error, clearError } = useAuth()
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const locale = useLocale()
 
   function clearFieldError(field: string) {
     setFieldErrors((prev) => {
@@ -182,6 +184,7 @@ export function SignupForm({
                   Already have an account?{" "}
                   <Link
                     href={redirectTo ? `/sign-in?redirectTo=${encodeURIComponent(redirectTo)}` : "/sign-in"}
+                    locale={locale}
                     className="text-sky-200 underline-offset-4 hover:underline"
                   >
                     Sign in
@@ -194,8 +197,8 @@ export function SignupForm({
       </Card>
       <FieldDescription className="px-6 text-center text-slate-400">
         By clicking continue, you agree to our{" "}
-        <Link href="/terms-of-service" className="text-sky-200 underline-offset-4 hover:underline">Terms of Service</Link> and{" "}
-        <Link href="/polices/privacy" className="text-sky-200 underline-offset-4 hover:underline">Privacy Policy</Link>.
+        <Link href="/terms-of-service" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Terms of Service</Link> and{" "}
+        <Link href="/polices/privacy" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Privacy Policy</Link>.
       </FieldDescription>
     </div>
   )

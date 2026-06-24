@@ -6,8 +6,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { CourseCard, CourseTableActions } from './course-card';
 
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ children, href, ...rest }: { children: ReactNode; href: string }) => (
-    <a href={href} {...rest}>
+  Link: ({ children, href, locale, ...rest }: { children: ReactNode; href: string; locale?: string }) => (
+    <a href={href} data-locale={locale} {...rest}>
       {children}
     </a>
   ),
@@ -15,6 +15,8 @@ vi.mock('@/i18n/navigation', () => ({
 
 const course = {
   id: 'course-123',
+  slug: 'combat-design-foundations',
+  routeParam: 'combat-design-foundations',
   title: 'Combat Design Foundations',
   status: 'draft',
   visibility: 'public',
@@ -30,29 +32,27 @@ describe('CourseCard actions', () => {
     await userEvent.click(screen.getByRole('button', { name: /open combat design foundations actions/i }));
 
     const menu = screen.getByRole('menu');
-    expect(within(menu).getByRole('menuitem', { name: /edit course/i })).toHaveAttribute(
-      'href',
-      '/dashboard/learning/courses/course-123',
-    );
-    expect(within(menu).getByRole('menuitem', { name: /^preview$/i })).toHaveAttribute(
-      'href',
-      '/dashboard/learning/courses/course-123/preview',
-    );
+    const editLink = within(menu).getByRole('menuitem', { name: /edit course/i });
+    const previewLink = within(menu).getByRole('menuitem', { name: /^preview$/i });
+
+    expect(editLink).toHaveAttribute('href', '/dashboard/learning/courses/combat-design-foundations');
+    expect(editLink).toHaveAttribute('data-locale', 'en-US');
+    expect(previewLink).toHaveAttribute('href', '/dashboard/learning/courses/combat-design-foundations/preview');
+    expect(previewLink).toHaveAttribute('data-locale', 'en-US');
   });
 
   it('exposes accessible edit and preview links from the table row menu', async () => {
-    render(<CourseTableActions courseId="course-123" courseTitle="Combat Design Foundations" locale="en-US" />);
+    render(<CourseTableActions courseRouteParam="combat-design-foundations" courseTitle="Combat Design Foundations" locale="en-US" />);
 
     await userEvent.click(screen.getByRole('button', { name: /open combat design foundations actions/i }));
 
     const menu = screen.getByRole('menu');
-    expect(within(menu).getByRole('menuitem', { name: /^edit$/i })).toHaveAttribute(
-      'href',
-      '/dashboard/learning/courses/course-123',
-    );
-    expect(within(menu).getByRole('menuitem', { name: /^preview$/i })).toHaveAttribute(
-      'href',
-      '/dashboard/learning/courses/course-123/preview',
-    );
+    const editLink = within(menu).getByRole('menuitem', { name: /^edit$/i });
+    const previewLink = within(menu).getByRole('menuitem', { name: /^preview$/i });
+
+    expect(editLink).toHaveAttribute('href', '/dashboard/learning/courses/combat-design-foundations');
+    expect(editLink).toHaveAttribute('data-locale', 'en-US');
+    expect(previewLink).toHaveAttribute('href', '/dashboard/learning/courses/combat-design-foundations/preview');
+    expect(previewLink).toHaveAttribute('data-locale', 'en-US');
   });
 });

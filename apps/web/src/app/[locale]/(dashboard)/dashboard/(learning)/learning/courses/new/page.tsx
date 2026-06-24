@@ -99,6 +99,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
       }
 
       const courseId = createResult.data.id;
+      const courseRouteParam = createResult.data.slug || courseId;
 
       // Step 2: Update with extended fields
       const updateResult = await updateCourse({
@@ -119,7 +120,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
         console.warn('[CreateCourse] Update failed after creation:', updateResult.error);
       }
 
-      router.push(`/dashboard/learning/courses/${courseId}`);
+      router.push(`/dashboard/learning/courses/${courseRouteParam}`);
     });
   }
 

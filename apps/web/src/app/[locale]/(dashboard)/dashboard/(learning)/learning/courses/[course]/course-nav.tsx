@@ -1,6 +1,7 @@
 'use client';
 
 import { Link, usePathname } from '@/i18n/navigation';
+import { buildDashboardCoursePath } from '@/lib/learning/course-route';
 import type { CourseFeatures } from '@/lib/learning/types';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
@@ -24,7 +25,6 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react';
-import { useParams } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 
 interface CourseNavProps {
@@ -32,6 +32,8 @@ interface CourseNavProps {
   courseDescription: string;
   courseStatus: 'draft' | 'published' | 'archived';
   courseSlug: string | null;
+  courseRouteParam: string;
+  locale: string;
   features: CourseFeatures;
   children: ReactNode;
 }
@@ -71,13 +73,10 @@ function buildNavItems(features: CourseFeatures): NavItem[] {
   ].filter((item) => item.enabled);
 }
 
-export function CourseNav({ courseTitle, courseDescription, courseStatus, courseSlug, features, children }: CourseNavProps) {
-  const params = useParams();
+export function CourseNav({ courseTitle, courseDescription, courseStatus, courseSlug, courseRouteParam, locale, features, children }: CourseNavProps) {
   const pathname = usePathname() ?? '';
-  const courseId = params.course as string;
-  const basePath = `/dashboard/learning/courses/${courseId}`;
   const publicCourseHref = courseSlug?.trim() ? `/courses/${courseSlug.trim()}` : null;
-  const previewHref = `${basePath}/preview`;
+  const previewHref = buildDashboardCoursePath(courseRouteParam, 'preview');
   const [shareLabel, setShareLabel] = useState('Share');
 
   const navItems = buildNavItems(features);
@@ -91,12 +90,13 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
     setShareLabel('Copied');
   }
 
-  // Match the active segment after the courseId
+  // Match the active segment after the dynamic course route param.
   const activeSegment = (() => {
-    const idx = pathname.indexOf(`/courses/${courseId}/`);
+    const marker = '/dashboard/learning/courses/';
+    const idx = pathname.indexOf(marker);
     if (idx === -1) return '';
-    const tail = pathname.slice(idx + `/courses/${courseId}/`.length);
-    return tail.split('/')[0] ?? '';
+    const tail = pathname.slice(idx + marker.length);
+    return tail.split('/')[1] ?? '';
   })();
 
   return (
@@ -105,7 +105,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/dashboard/learning/courses">
+            <Link href="/dashboard/learning/courses" locale={locale}>
               <ArrowLeft className="size-5" />
             </Link>
           </Button>
@@ -122,7 +122,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href={previewHref}>
+            <Link href={previewHref} locale={locale}>
               <Eye className="mr-2 size-4" />
               Preview
             </Link>
@@ -139,20 +139,20 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={`${basePath}/listing`}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'listing')} locale={locale}>
                   <Edit className="mr-2 size-4" />
                   Edit Listing
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={`${basePath}/settings`}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'settings')} locale={locale}>
                   <Settings className="mr-2 size-4" />
                   Settings
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive" asChild>
-                <Link href={`${basePath}/settings/danger`}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'settings/danger')} locale={locale}>
                   <Trash2 className="mr-2 size-4" />
                   Delete Course
                 </Link>
@@ -171,7 +171,8 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
             return (
               <Link
                 key={item.segment}
-                href={`${basePath}/${item.segment}`}
+                href={buildDashboardCoursePath(courseRouteParam, item.segment)}
+                locale={locale}
                 className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                   }`}
               >
@@ -190,7 +191,8 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
               return (
                 <Link
                   key={item.segment}
-                  href={`${basePath}/${item.segment}`}
+                  href={buildDashboardCoursePath(courseRouteParam, item.segment)}
+                  locale={locale}
                   className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >

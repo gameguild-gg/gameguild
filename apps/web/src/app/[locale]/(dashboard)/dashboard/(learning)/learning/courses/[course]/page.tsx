@@ -1,3 +1,5 @@
+import { getCourseRouteParam } from '@/lib/learning/course-route';
+import { getCourse } from '@/lib/learning';
 import { redirect } from 'next/navigation';
 
 /**
@@ -7,6 +9,9 @@ import { redirect } from 'next/navigation';
  * with analytics, metrics, and course summary.
  */
 export default async function Page({ params }: PageProps<'/[locale]/dashboard/learning/courses/[course]'>): Promise<never> {
-  const { locale, course: courseId } = await params;
-  redirect(`/${locale}/dashboard/learning/courses/${courseId}/overview`);
+  const { locale, course: courseIdentifier } = await params;
+  const course = await getCourse(courseIdentifier);
+  const courseRouteParam = course ? getCourseRouteParam(course) : courseIdentifier;
+
+  redirect(`/${locale}/dashboard/learning/courses/${encodeURIComponent(courseRouteParam)}/overview`);
 }

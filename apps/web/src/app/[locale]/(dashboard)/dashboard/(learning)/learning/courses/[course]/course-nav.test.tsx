@@ -5,16 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CourseNav } from './course-nav';
 
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ children, href, ...rest }: { children: ReactNode; href: string }) => (
-    <a href={href} {...rest}>
+  Link: ({ children, href, locale, ...rest }: { children: ReactNode; href: string; locale?: string }) => (
+    <a href={href} data-locale={locale} {...rest}>
       {children}
     </a>
   ),
-  usePathname: () => '/dashboard/learning/courses/course-123/listing',
-}));
-
-vi.mock('next/navigation', () => ({
-  useParams: () => ({ course: 'course-123' }),
+  usePathname: () => '/en-US/dashboard/learning/courses/ai-for-boss-encounters/listing',
 }));
 
 const enabledFeatures = {
@@ -46,13 +42,17 @@ describe('CourseNav', () => {
         courseDescription="Build readable encounter AI."
         courseStatus="published"
         courseSlug="ai-for-boss-encounters"
+        courseRouteParam="ai-for-boss-encounters"
+        locale="en-US"
         features={enabledFeatures}
       >
         <div>Course editor content</div>
       </CourseNav>,
     );
 
-    expect(screen.getByRole('link', { name: /preview/i })).toHaveAttribute('href', '/dashboard/learning/courses/course-123/preview');
+    const previewLink = screen.getByRole('link', { name: /preview/i });
+    expect(previewLink).toHaveAttribute('href', '/dashboard/learning/courses/ai-for-boss-encounters/preview');
+    expect(previewLink).toHaveAttribute('data-locale', 'en-US');
   });
 
   it('copies the public storefront course URL from the share action', async () => {
@@ -62,6 +62,8 @@ describe('CourseNav', () => {
         courseDescription="Build readable encounter AI."
         courseStatus="published"
         courseSlug="ai-for-boss-encounters"
+        courseRouteParam="ai-for-boss-encounters"
+        locale="en-US"
         features={enabledFeatures}
       >
         <div>Course editor content</div>
@@ -81,13 +83,15 @@ describe('CourseNav', () => {
         courseDescription="Draft course."
         courseStatus="draft"
         courseSlug=""
+        courseRouteParam="untitled-draft"
+        locale="en-US"
         features={enabledFeatures}
       >
         <div>Course editor content</div>
       </CourseNav>,
     );
 
-    expect(screen.getByRole('link', { name: /preview/i })).toHaveAttribute('href', '/dashboard/learning/courses/course-123/preview');
+    expect(screen.getByRole('link', { name: /preview/i })).toHaveAttribute('href', '/dashboard/learning/courses/untitled-draft/preview');
     expect(screen.getByRole('button', { name: /share/i })).toBeDisabled();
   });
 });

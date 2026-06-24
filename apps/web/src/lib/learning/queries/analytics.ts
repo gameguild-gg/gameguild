@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { getCourseContent } from './course';
+import { getCourseContent, resolveCourseId } from './course';
 import { learningApiGet } from './http';
 
 // =============================================================================
@@ -147,6 +147,7 @@ export const getCourseEngagementAnalytics = cache(async (
   courseId: string,
   period?: { from: string; to: string }
 ): Promise<CourseEngagementAnalytics> => {
+  const resolvedCourseId = await resolveCourseId(courseId);
   const [metrics, content] = await Promise.all([
     learningApiGet<{
       dailyActiveUsers?: number;
@@ -155,8 +156,8 @@ export const getCourseEngagementAnalytics = cache(async (
       averageSessionDuration?: string | null;
       totalSessions?: number;
       contentEngagement?: Record<string, number> | null;
-    }>(`/v1/courses/${courseId}/analytics/engagement`, 300),
-    getCourseContent(courseId),
+    }>(`/v1/courses/${resolvedCourseId}/analytics/engagement`, 300),
+    getCourseContent(resolvedCourseId),
   ]);
 
   const now = new Date();
@@ -174,7 +175,7 @@ export const getCourseEngagementAnalytics = cache(async (
   }));
 
   return {
-    courseId,
+    courseId: resolvedCourseId,
     period: period ?? defaultPeriod,
     activeStudents: metrics?.weeklyActiveUsers ?? metrics?.dailyActiveUsers ?? 0,
     totalViews: metrics?.totalSessions ?? 0,
@@ -193,13 +194,14 @@ export const getCourseCompletionAnalytics = cache(async (
   courseId: string,
   period?: { from: string; to: string }
 ): Promise<CourseCompletionAnalytics> => {
+  const resolvedCourseId = await resolveCourseId(courseId);
   const [completion, content] = await Promise.all([
     learningApiGet<{
       overallCompletionRate?: number;
       contentCompletionRates?: Record<string, number> | null;
       completionTrends?: Array<{ date?: string; completedCount?: number; totalCount?: number; rate?: number }> | null;
-    }>(`/v1/courses/${courseId}/analytics/completion-rates`, 300),
-    getCourseContent(courseId),
+    }>(`/v1/courses/${resolvedCourseId}/analytics/completion-rates`, 300),
+    getCourseContent(resolvedCourseId),
   ]);
 
   const now = new Date();
@@ -219,7 +221,7 @@ export const getCourseCompletionAnalytics = cache(async (
   const totalEnrolled = completion?.completionTrends?.at(-1)?.totalCount ?? 0;
 
   return {
-    courseId,
+    courseId: resolvedCourseId,
     period: period ?? defaultPeriod,
     totalEnrolled,
     totalCompleted,
@@ -248,6 +250,7 @@ export const getCourseRevenueAnalytics = cache(async (
   courseId: string,
   period?: { from: string; to: string }
 ): Promise<CourseRevenueAnalytics> => {
+  const resolvedCourseId = await resolveCourseId(courseId);
   const revenue = await learningApiGet<{
     totalRevenue?: number;
     monthlyRevenue?: number;
@@ -255,7 +258,7 @@ export const getCourseRevenueAnalytics = cache(async (
     monthlyPurchases?: number;
     averageRevenuePerUser?: number;
     revenueChart?: Array<{ date?: string; revenue?: number; purchases?: number }> | null;
-  }>(`/v1/courses/${courseId}/analytics/revenue`, 300);
+  }>(`/v1/courses/${resolvedCourseId}/analytics/revenue`, 300);
 
   const now = new Date();
   const defaultPeriod = {
@@ -266,7 +269,7 @@ export const getCourseRevenueAnalytics = cache(async (
   const totalTransactions = revenue?.totalPurchases ?? 0;
 
   return {
-    courseId,
+    courseId: resolvedCourseId,
     period: period ?? defaultPeriod,
     currency: 'USD',
     totalRevenue,

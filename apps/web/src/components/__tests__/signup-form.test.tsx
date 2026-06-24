@@ -16,19 +16,25 @@ vi.mock('@game-guild/client/react', () => ({
   useAuth: () => mockAuth,
 }));
 
-vi.mock('next/link', () => ({
-  default: ({
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({
     children,
     href,
+    locale,
     ...rest
   }: {
     children: React.ReactNode;
     href: string;
+    locale?: string;
   }) => (
-    <a href={href} {...rest}>
+    <a href={locale ? `/${locale}${href}` : href} data-locale={locale} {...rest}>
       {children}
     </a>
   ),
+}));
+
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en-US',
 }));
 
 const { SignupForm } = await import('@/components/signup-form');
@@ -60,9 +66,9 @@ describe('SignupForm', () => {
   it('renders navigation links', () => {
     renderWithUser(<SignupForm />);
 
-    expect(screen.getByText('Sign in')).toHaveAttribute('href', '/sign-in?redirectTo=%2Fdashboard');
-    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/terms-of-service');
-    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/polices/privacy');
+    expect(screen.getByText('Sign in')).toHaveAttribute('href', '/en-US/sign-in?redirectTo=%2Fdashboard');
+    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/en-US/terms-of-service');
+    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/en-US/polices/privacy');
   });
 
   /* ---------- Client-side validation ---------- */

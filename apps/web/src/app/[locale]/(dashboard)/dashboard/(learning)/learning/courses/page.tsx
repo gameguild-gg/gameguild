@@ -19,7 +19,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/dashboard/learning">
+            <Link href="/dashboard/learning" locale={locale}>
               <ArrowLeft className="size-5" />
             </Link>
           </Button>
@@ -33,13 +33,13 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
-            <Link href="/courses">
+            <Link href="/courses" locale={locale}>
               <Eye className="mr-2 size-4" />
               Storefront preview
             </Link>
           </Button>
           <Button asChild>
-            <Link href="/dashboard/learning/courses/new">
+            <Link href="/dashboard/learning/courses/new" locale={locale}>
               <Plus className="mr-2 size-4" />
               Create Course
             </Link>
@@ -102,7 +102,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
               </div>
             </div>
             <Button asChild variant="outline" className="shrink-0">
-              <Link href="/dashboard/learning/courses">
+              <Link href="/dashboard/learning/courses" locale={locale}>
                 <RefreshCw className="mr-2 size-4" />
                 Retry
               </Link>
@@ -125,13 +125,13 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
             </div>
             <div className="flex flex-wrap justify-center gap-2">
               <Button asChild>
-                <Link href="/dashboard/learning/courses/new">
+                <Link href="/dashboard/learning/courses/new" locale={locale}>
                   <Plus className="mr-2 size-4" />
                   Create Course
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href="/courses">
+                <Link href="/courses" locale={locale}>
                   <Eye className="mr-2 size-4" />
                   Open storefront
                 </Link>

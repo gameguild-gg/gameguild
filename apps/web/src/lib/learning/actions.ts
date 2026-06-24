@@ -191,7 +191,7 @@ export interface CreateCourseInput {
   slug: string;
 }
 
-export async function createCourse(input: CreateCourseInput): Promise<ActionResult<{ id: string }>> {
+export async function createCourse(input: CreateCourseInput): Promise<ActionResult<{ id: string; slug: string }>> {
   const { title, description, slug } = input;
 
   if (!title || title.trim().length < 3) {
@@ -214,7 +214,7 @@ export async function createCourse(input: CreateCourseInput): Promise<ActionResu
 
     if (result.ok) {
       revalidatePath('/dashboard/learning/courses');
-      return { success: true, data: { id: result.data.id! } };
+      return { success: true, data: { id: result.data.id!, slug: result.data.slug?.trim() || slug.trim() } };
     }
 
     return { success: false, error: extractError(result.error) };
