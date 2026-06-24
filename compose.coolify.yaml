@@ -78,6 +78,10 @@ services:
       - 'com.game-guild.app=api'
       - 'com.game-guild.tier=backend'
       - 'com.game-guild.environment=staging'
+      # Coolify creates the Host router from docker_compose_domains. Pin the
+      # backend port explicitly so Traefik does not ignore the non-3000 API
+      # service when this stack is deployed as a multi-service application.
+      - 'traefik.http.services.game-guild-api.loadbalancer.server.port=8080'
     deploy:
       resources:
         limits:
@@ -99,7 +103,7 @@ services:
       args:
         GIT_HASH: ${GIT_HASH:-}
         AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
-        API_INTERNAL_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
+        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
         API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
@@ -110,7 +114,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
-      - API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
+      - API_URL=${API_INTERNAL_URL:-http://api:8080}
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
       - NEXT_PUBLIC_APP_URL=${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
       - NEXT_PUBLIC_LEARNING_APP_URL=${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
@@ -140,6 +144,7 @@ services:
       - 'com.game-guild.app=web'
       - 'com.game-guild.tier=frontend'
       - 'com.game-guild.environment=staging'
+      - 'traefik.http.services.game-guild-web.loadbalancer.server.port=3000'
     deploy:
       resources:
         limits:
@@ -162,7 +167,7 @@ services:
       args:
         GIT_HASH: ${GIT_HASH:-}
         AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
-        API_INTERNAL_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
+        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
         API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
@@ -173,7 +178,7 @@ services:
       - NODE_ENV=production
       - PORT=3002
       - HOSTNAME=0.0.0.0
-      - API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
+      - API_URL=${API_INTERNAL_URL:-http://api:8080}
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
       - NEXTAUTH_URL=${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
       - AUTH_SECRET=${AUTH_SECRET:?set AUTH_SECRET}
@@ -202,6 +207,7 @@ services:
       - 'com.game-guild.app=learning'
       - 'com.game-guild.tier=frontend'
       - 'com.game-guild.environment=staging'
+      - 'traefik.http.services.game-guild-learning.loadbalancer.server.port=3002'
     deploy:
       resources:
         limits:
