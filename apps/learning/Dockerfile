@@ -39,7 +39,7 @@ FROM node:20-alpine AS runner
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3002
+ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 WORKDIR /app
@@ -51,6 +51,6 @@ COPY --from=builder --chown=nextjs:nodejs /repo/apps/learning/.next/standalone .
 COPY --from=builder --chown=nextjs:nodejs /repo/apps/learning/.next/static ./apps/learning/.next/static
 
 USER nextjs
-EXPOSE 3002
+EXPOSE 3000
 
 CMD ["node", "apps/learning/server.js"]
