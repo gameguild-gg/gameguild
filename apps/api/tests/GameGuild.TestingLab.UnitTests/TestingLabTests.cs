@@ -1,5 +1,8 @@
 using FluentAssertions;
+using GameGuild.Projects;
 using GameGuild.TestingLab;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Xunit;
 
 namespace GameGuild.TestingLab.UnitTests;
@@ -486,6 +489,92 @@ public class TestingLabEnumTests
     public void InstructionType_ShouldHave3Values()
     {
         Enum.GetValues<InstructionType>().Should().HaveCount(3);
+    }
+}
+
+#endregion
+
+#region TestingRequestOperationsService Tests
+
+public class TestingRequestOperationsServiceTests
+{
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_WithoutExistingProject_ShouldThrow()
+    {
+        await using var context = CreateContext();
+        var service = new TestingRequestOperationsService(context);
+
+        var dto = CreateRequestDto(projectId: Guid.NewGuid());
+
+        var act = () => service.CreateSimpleTestingRequestAsync(dto, Guid.NewGuid());
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Testing Lab submissions must be linked to an existing project.");
+    }
+
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_WithExistingProject_ShouldCreateProjectBackedRequest()
+    {
+        await using var context = CreateContext();
+        var service = new TestingRequestOperationsService(context);
+        var userId = Guid.NewGuid();
+        var project = new Project
+        {
+            Id = Guid.NewGuid(),
+            Title = "Project-backed Lab Build",
+            Slug = "project-backed-lab-build",
+            Status = ContentStatus.Published,
+            Visibility = ContentVisibility.Public,
+            CreatedById = userId,
+        };
+        context.Set<Project>().Add(project);
+        await context.SaveChangesAsync();
+
+        var dto = CreateRequestDto(project.Id);
+
+        var request = await service.CreateSimpleTestingRequestAsync(dto, userId);
+
+        request.ProjectVersionId.Should().NotBeNull();
+        request.ProjectVersion!.ProjectId.Should().Be(project.Id);
+        request.ProjectVersion.Project.Should().BeSameAs(project);
+        request.ProjectVersion.VersionNumber.Should().Be(dto.VersionNumber);
+        context.Set<ProjectRelease>().Should().ContainSingle(release =>
+            release.ProjectId == project.Id &&
+            release.ReleaseVersion == dto.VersionNumber &&
+            release.Title == $"{project.Title} {dto.VersionNumber}");
+    }
+
+    private static TestingLabServiceDbContext CreateContext()
+        => new(new DbContextOptionsBuilder<TestingLabServiceDbContext>()
+            .UseInMemoryDatabase($"testing-lab-service-{Guid.NewGuid():N}")
+            .Options);
+
+    private static CreateSimpleTestingRequestDto CreateRequestDto(Guid projectId) => new()
+    {
+        ProjectId = projectId,
+        Title = "Build feedback pass",
+        Description = "Validate onboarding and first-session clarity.",
+        VersionNumber = "0.2.0",
+        DownloadUrl = "https://example.com/build.zip",
+        InstructionsType = InstructionType.Text,
+        InstructionsContent = "Install the build and complete the tutorial.",
+        FeedbackFormContent = "What blocked you?",
+        MaxTesters = 8,
+    };
+
+    private sealed class TestingLabServiceDbContext(DbContextOptions<TestingLabServiceDbContext> options)
+        : DbContext(options), IApplicationDbContext
+    {
+        public DbSet<Project> Projects => Set<Project>();
+
+        public DbSet<ProjectVersion> ProjectVersions => Set<ProjectVersion>();
+
+        public DbSet<ProjectRelease> ProjectReleases => Set<ProjectRelease>();
+
+        public DbSet<TestingRequest> TestingRequests => Set<TestingRequest>();
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+            => throw new NotSupportedException("Transactions are not required for this service regression.");
     }
 }
 
