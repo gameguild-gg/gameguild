@@ -63,17 +63,6 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
         return await UsageRecords.Where(r => r.TenantId!.Value == tenantId && r.Type == type).OrderByDescending(r => r.PeriodStart).ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<UsageRecord>> GetByTypeAsync(ResourceUsageType type, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
-    {
-        var query = UsageRecords.Where(r => r.Type == type);
-
-        if (fromDate.HasValue) query = query.Where(r => r.PeriodStart >= fromDate.Value);
-
-        if (toDate.HasValue) query = query.Where(r => r.PeriodStart <= toDate.Value);
-
-        return await query.OrderBy(r => r.PeriodStart).ToListAsync(cancellationToken).ConfigureAwait(false);
-    }
-
     public async Task<IEnumerable<UsageRecord>> GetByDateRangeAsync(Guid tenantId, ResourceUsageType type, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
         return await UsageRecords.Where(r => r.TenantId!.Value == tenantId && r.Type == type && r.PeriodStart >= fromDate && r.PeriodStart <= toDate)

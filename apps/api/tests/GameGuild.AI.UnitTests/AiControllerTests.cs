@@ -11,6 +11,24 @@ namespace GameGuild.AI.UnitTests;
 public sealed class AiControllerTests
 {
     [Fact]
+    public void TypedGenerationEndpoints_ShouldExposeContractAliases()
+    {
+        typeof(AiController).GetMethod(nameof(AiController.GenerateEmail))!
+            .GetCustomAttributes(typeof(HttpPostAttribute), false)
+            .Cast<HttpPostAttribute>()
+            .Select(attribute => attribute.Template)
+            .Should()
+            .Contain(["generate-content/email", "email"]);
+
+        typeof(AiController).GetMethod(nameof(AiController.GenerateReport))!
+            .GetCustomAttributes(typeof(HttpPostAttribute), false)
+            .Cast<HttpPostAttribute>()
+            .Select(attribute => attribute.Template)
+            .Should()
+            .Contain(["generate-content/report", "report"]);
+    }
+
+    [Fact]
     public async Task GenerateEmail_ShouldRouteToEmailPromptWithDefaultTokenLimit()
     {
         var orchestrator = new Mock<IAiOrchestrator>();
@@ -41,7 +59,7 @@ public sealed class AiControllerTests
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         ok.Value.Should().Be(expected);
         capturedRequest.Should().NotBeNull();
-        capturedRequest!.SystemPrompt.Should().Contain("game platform");
+        capturedRequest!.SystemPrompt.Should().Contain("business emails");
         capturedRequest.Prompt.Should().Contain("Create an email.");
         capturedRequest.Prompt.Should().Contain("Tour follow-up");
         capturedRequest.MaxTokens.Should().Be(700);

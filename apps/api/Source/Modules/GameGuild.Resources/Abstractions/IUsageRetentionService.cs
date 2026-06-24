@@ -45,4 +45,7 @@ public interface IUsageRetentionService
     ///     Get retention statistics
     /// </summary>
     Task<RetentionStats> GetRetentionStatsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default);
+
+    // PLANNED: Integration with Storage module for cold storage management (depends on GameGuild.Storage)
+    // PLANNED: Integration with Backup module for data archival (depends on GameGuild.Backup)
 }

@@ -39,11 +39,6 @@ public static class DependencyInjection
 
         // Register Plan Pricing Resolver for cross-module pricing lookups (Payments module integration)
         services.AddScoped<IPlanPricingResolver, SubscriptionPlanPricingResolver>();
-        services.AddScoped<IPaymentSubscriptionSyncService, PaymentSubscriptionSyncService>();
-        services.AddSingleton<IMonthlyStatementLinkBuilder, MonthlyStatementLinkBuilder>();
-        services.AddScoped<IMonthlyStatementDataProvider, MonthlyStatementDataProvider>();
-        services.AddScoped<IMonthlyStatementAttachmentBuilder, MonthlyStatementAttachmentBuilder>();
-        services.AddScoped<IMonthlyStatementMailSender, LoggingMonthlyStatementMailSender>();
 
         // Register Command Handlers (only existing ones)
         services.AddScoped<ICommandHandler<ActivateSubscriptionCommand>, ActivateSubscriptionCommandHandler>();
@@ -97,6 +92,9 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<DowngradeSubscriptionPlanCommand, SubscriptionDowngradeResult>, DowngradeSubscriptionPlanCommandHandler>();
         services.AddScoped<IRequestHandler<DowngradeSubscriptionPlanCommand, SubscriptionDowngradeResult>>(sp => sp.GetRequiredService<ICommandHandler<DowngradeSubscriptionPlanCommand, SubscriptionDowngradeResult>>());
 
+        services.AddScoped<ICommandHandler<ResendSubscriptionNotificationCommand, SubscriptionNotificationDto>, ResendSubscriptionNotificationCommandHandler>();
+        services.AddScoped<IRequestHandler<ResendSubscriptionNotificationCommand, SubscriptionNotificationDto>>(sp => sp.GetRequiredService<ICommandHandler<ResendSubscriptionNotificationCommand, SubscriptionNotificationDto>>());
+
         // Register Query Handlers (only existing ones)
         services.AddScoped<IRequestHandler<GetActiveSubscriptionPlansQuery, IEnumerable<SubscriptionPlan>>, GetActiveSubscriptionPlansQueryHandler>();
 
@@ -111,6 +109,12 @@ public static class DependencyInjection
 
         services.AddScoped<IQueryHandler<GetTenantSubscriptionsQuery, IEnumerable<Subscription>>, GetTenantSubscriptionsQueryHandler>();
         services.AddScoped<IRequestHandler<GetTenantSubscriptionsQuery, IEnumerable<Subscription>>>(sp => sp.GetRequiredService<IQueryHandler<GetTenantSubscriptionsQuery, IEnumerable<Subscription>>>());
+
+        services.AddScoped<IQueryHandler<GetSubscriptionNotificationsQuery, PagedResult<SubscriptionNotificationDto>>, GetSubscriptionNotificationsQueryHandler>();
+        services.AddScoped<IRequestHandler<GetSubscriptionNotificationsQuery, PagedResult<SubscriptionNotificationDto>>>(sp => sp.GetRequiredService<IQueryHandler<GetSubscriptionNotificationsQuery, PagedResult<SubscriptionNotificationDto>>>());
+
+        services.AddScoped<IQueryHandler<GetSubscriptionChurnReportQuery, SubscriptionChurnReportDto>, GetSubscriptionChurnReportQueryHandler>();
+        services.AddScoped<IRequestHandler<GetSubscriptionChurnReportQuery, SubscriptionChurnReportDto>>(sp => sp.GetRequiredService<IQueryHandler<GetSubscriptionChurnReportQuery, SubscriptionChurnReportDto>>());
 
         // Register FluentValidation Validators (only existing ones)
         services.AddScoped<FluentValidation.IValidator<ActivateSubscriptionCommand>, ActivateSubscriptionCommandValidator>();

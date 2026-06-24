@@ -13,8 +13,4 @@ public class ThrottlingResult
     public string? Reason { get; set; }
 
     public ThrottlingStrategy AppliedStrategy { get; set; }
-
-    public string? EnforcementReference { get; set; }
-
-    public DateTime? EnforcedAt { get; set; }
 }

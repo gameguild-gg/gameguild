@@ -19,8 +19,7 @@ namespace GameGuild.Resources.Handlers;
 ///     Default behavior: Log warning for all exceeded events, error for repeated violations.
 /// </remarks>
 public sealed class QuotaExceededAlertHandler(
-    ILogger<QuotaExceededAlertHandler> logger,
-    IApplicationNotificationPublisher? notificationPublisher = null
+    ILogger<QuotaExceededAlertHandler> logger
 ) : INotificationHandler<QuotaExceededEvent>
 {
     /// <summary>
@@ -136,51 +135,13 @@ public sealed class QuotaExceededAlertHandler(
             ["resource_type"] = notification.ResourceType.ToString()
         });
 
-        await PublishInAppNotificationAsync(notification, usagePercentage, isRepeatedViolation, cancellationToken)
-            .ConfigureAwait(false);
-    }
+        // PLANNED: In-app notification delivery via GameGuild.Notifications
+        // (blocked by circular dependency: Notifications → Identity.Users → Resources → Notifications).
+        // Resolution: extract a shared INotificationPublisher abstraction into SharedKernel,
+        // or move QuotaExceededAlertHandler into a dedicated orchestration module.
+        // Current alerts are delivered via structured logging + OpenTelemetry metrics (Datadog/Prometheus).
 
-    private async Task PublishInAppNotificationAsync(
-        QuotaExceededEvent notification,
-        double usagePercentage,
-        bool isRepeatedViolation,
-        CancellationToken cancellationToken)
-    {
-        if (notificationPublisher is null || !notification.ActorId.HasValue)
-            return;
-
-        var priority = isRepeatedViolation ? "Urgent" : "High";
-        var resourceType = notification.ResourceType.ToString();
-        var result = await notificationPublisher.PublishAsync(
-                new ApplicationNotificationMessage(
-                    notification.ActorId.Value,
-                    $"{resourceType} quota exceeded",
-                    $"Current usage is {notification.CurrentUsage}/{notification.HardLimit} ({usagePercentage:F1}%). Requested amount: {notification.RequestedAmount}.",
-                    "ResourceQuotaExceeded",
-                    priority,
-                    notification.TenantId,
-                    "/resources/quotas",
-                    null,
-                    "ResourceQuota",
-                    new Dictionary<string, string>
-                    {
-                        ["resourceType"] = resourceType,
-                        ["currentUsage"] = notification.CurrentUsage.ToString(),
-                        ["requestedAmount"] = notification.RequestedAmount.ToString(),
-                        ["hardLimit"] = notification.HardLimit.ToString(),
-                        ["source"] = notification.Source ?? "unknown",
-                    }),
-                cancellationToken)
-            .ConfigureAwait(false);
-
-        if (result is { IsSuccess: true })
-            return;
-
-        logger.LogWarning(
-            "Quota notification delivery failed for tenant {TenantId}, actor {ActorId}: {Error}",
-            notification.TenantId,
-            notification.ActorId,
-            result?.ErrorMessage ?? "Notification publisher returned no result.");
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <summary>

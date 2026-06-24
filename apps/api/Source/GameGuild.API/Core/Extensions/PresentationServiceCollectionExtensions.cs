@@ -187,11 +187,6 @@ public static class PresentationServiceCollectionExtensions
 
         controllerStopwatch.Restart();
         services.AddControllers()
-            .AddApplicationPart(typeof(TagsController).Assembly); // Tags module
-        LogControllersFromAssembly(typeof(TagsController).Assembly, logger, controllerStopwatch);
-
-        controllerStopwatch.Restart();
-        services.AddControllers()
             .AddApplicationPart(typeof(BlogPostsController).Assembly); // Social Blog module
         LogControllersFromAssembly(typeof(BlogPostsController).Assembly, logger, controllerStopwatch);
 

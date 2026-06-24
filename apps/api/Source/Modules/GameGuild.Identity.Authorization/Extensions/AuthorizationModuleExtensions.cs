@@ -282,7 +282,6 @@ public static class AuthorizationModuleExtensions
         services.AddScoped<IPermissionAnalyticsService, PermissionAnalyticsService>();
 
         // Resource Permissions
-        services.AddScoped<IResourceShareUserLookup, NullResourceShareUserLookup>();
         services.AddScoped<IResourcePermissionService, ResourcePermissionService>();
 
         // Advanced repositories

@@ -80,6 +80,7 @@ public sealed class AiController(
             cancellationToken).ConfigureAwait(false);
 
     [HttpPost("generate-content/email")]
+    [HttpPost("email")]
     [ProducesResponseType<AiCompletionResponse>(StatusCodes.Status200OK)]
     public async Task<ActionResult<AiCompletionResponse>> GenerateEmail(
         [FromBody] AiGeneratedContentDraftRequest request,
@@ -96,6 +97,7 @@ public sealed class AiController(
             cancellationToken).ConfigureAwait(false);
 
     [HttpPost("generate-content/report")]
+    [HttpPost("report")]
     [ProducesResponseType<AiCompletionResponse>(StatusCodes.Status200OK)]
     public async Task<ActionResult<AiCompletionResponse>> GenerateReport(
         [FromBody] AiGeneratedContentDraftRequest request,
@@ -271,10 +273,10 @@ public sealed class AiController(
     private static string BuildGeneratedContentSystemPrompt(AiGeneratedContentKind kind)
         => kind switch
         {
-            AiGeneratedContentKind.Email => "You write concise, compliant game platform and learning community emails. Return only the finished email.",
-            AiGeneratedContentKind.Report => "You write executive game platform, learning, and community operations reports with clear sections and concrete next actions.",
-            AiGeneratedContentKind.ListingDescription => "You write policy-compliant course, project, product, or marketplace listing descriptions. Avoid discriminatory language and unverifiable claims.",
-            _ => "You write concise business content for game platform and learning community operations."
+            AiGeneratedContentKind.Email => "You write concise, compliant real-estate business emails. Return only the finished email.",
+            AiGeneratedContentKind.Report => "You write executive real-estate operations reports with clear sections and concrete next actions.",
+            AiGeneratedContentKind.ListingDescription => "You write fair-housing-compliant property listing descriptions. Avoid discriminatory language and unverifiable claims.",
+            _ => "You write concise business content for real-estate operations."
         };
 
     private static string BuildGeneratedContentPrompt(
@@ -292,7 +294,7 @@ public sealed class AiController(
             _ => "business content"
         };
 
-        var normalizedAudience = string.IsNullOrWhiteSpace(audience) ? "the relevant players, learners, creators, or operators" : audience.Trim();
+        var normalizedAudience = string.IsNullOrWhiteSpace(audience) ? "the relevant real-estate stakeholders" : audience.Trim();
         var normalizedTone = string.IsNullOrWhiteSpace(tone) ? "professional and direct" : tone.Trim();
 
         return $"""

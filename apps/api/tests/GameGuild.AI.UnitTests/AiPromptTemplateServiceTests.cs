@@ -21,7 +21,7 @@ public class AiPromptTemplateServiceTests
             new CreateAiPromptTemplateRequest(
                 "Listing Email!",
                 "Listing Email",
-                "Hello {{contactName}}, review {{projectTitle}}.",
+                "Hello {{contactName}}, tour {{propertyTitle}}.",
                 Category: "Sales",
                 SystemPrompt: "Use a {{tone}} tone."),
             CancellationToken.None);
@@ -37,13 +37,13 @@ public class AiPromptTemplateServiceTests
             new Dictionary<string, string?>
             {
                 ["contactName"] = "Morgan",
-                ["projectTitle"] = "Pine Quest",
+                ["propertyTitle"] = "Pine House",
                 ["tone"] = "warm"
             },
             CancellationToken.None);
 
         rendered.IsSuccess.Should().BeTrue();
-        rendered.Value.Prompt.Should().Be("Hello Morgan, review Pine Quest.");
+        rendered.Value.Prompt.Should().Be("Hello Morgan, tour Pine House.");
         rendered.Value.SystemPrompt.Should().Be("Use a warm tone.");
     }
 

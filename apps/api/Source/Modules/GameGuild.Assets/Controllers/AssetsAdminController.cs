@@ -21,6 +21,30 @@ public class AssetsAdminController(
     private ActorContext Actor => actorContextAccessor.ActorContext;
 
     /// <summary>
+    /// Get asset/document statistics for document center dashboards.
+    /// </summary>
+    [HttpGet("statistics")]
+    [ProducesResponseType(typeof(AssetStatisticsResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStatistics(CancellationToken ct = default)
+    {
+        var result = await sender.Send(new GetAssetStatisticsQuery(), ct).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Export asset/document statistics as CSV or PDF.
+    /// </summary>
+    [HttpGet("statistics:export")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportStatistics(
+        [FromQuery] string format = "csv",
+        CancellationToken ct = default)
+    {
+        var result = await sender.Send(new ExportAssetStatisticsQuery(format), ct).ConfigureAwait(false);
+        return File(result.Content, result.ContentType, result.FileName);
+    }
+
+    /// <summary>
     /// Get moderation queue.
     /// </summary>
     [HttpGet("moderation-queue")]
@@ -200,6 +224,23 @@ public class AssetsAdminController(
     #region Garbage Collection & Maintenance
 
     /// <summary>
+    /// Get the current retention candidate report.
+    /// </summary>
+    [HttpGet("retention")]
+    [ProducesResponseType(typeof(AssetRetentionReportResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetRetentionReport(
+        [FromQuery] int gracePeriodHours = 24,
+        [FromQuery] int limit = 100,
+        CancellationToken ct = default)
+    {
+        var result = await sender.Send(
+            new GetAssetRetentionReportQuery(gracePeriodHours, limit),
+            ct).ConfigureAwait(false);
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Trigger manual garbage collection.
     /// </summary>
     /// <remarks>
@@ -207,50 +248,19 @@ public class AssetsAdminController(
     /// Only deletes content that has been marked for deletion and past the grace period.
     /// </remarks>
     [HttpPost(":run-gc")]
+    [HttpPost("retention:run")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> TriggerGarbageCollection(
-        [FromServices] IAssetContentRepository contentRepository,
-        [FromServices] IAssetStorageService storageService,
-        [FromServices] ITransformedAssetRepository transformedRepository,
         [FromQuery] int gracePeriodHours = 24,
         [FromQuery] int limit = 100,
+        [FromQuery] bool dryRun = false,
         CancellationToken ct = default)
     {
-        var candidates = await contentRepository.GetGarbageCollectionCandidatesAsync(
-            TimeSpan.FromHours(gracePeriodHours),
-            limit,
+        var result = await sender.Send(
+            new RunAssetRetentionCommand(gracePeriodHours, limit, dryRun),
             ct).ConfigureAwait(false);
 
-        var deleted = 0;
-        var failed = 0;
-
-        foreach (var content in candidates)
-        {
-            try
-            {
-                // Delete transformed versions first
-                await transformedRepository.DeleteBySourceAsync(content.Id, ct).ConfigureAwait(false);
-
-                // Delete from storage
-                await storageService.DeleteAsync(content.BucketName, content.ObjectKey, ct).ConfigureAwait(false);
-
-                // Delete record
-                await contentRepository.DeleteAsync(content.Id, ct).ConfigureAwait(false);
-
-                deleted++;
-            }
-            catch
-            {
-                failed++;
-            }
-        }
-
-        return Ok(new
-        {
-            candidatesFound = candidates.Count,
-            deleted,
-            failed
-        });
+        return Ok(result);
     }
 
     /// <summary>
@@ -266,24 +276,13 @@ public class AssetsAdminController(
     public async Task<IActionResult> MarkAsNonDeletable(
         Guid contentId,
         [FromBody] MarkNonDeletableRequest? request,
-        [FromServices] IAssetContentRepository contentRepository,
         CancellationToken ct = default)
     {
-        var content = await contentRepository.GetByIdAsync(contentId, ct).ConfigureAwait(false);
-        if (content == null)
-        {
-            return NotFound();
-        }
+        var result = await sender.Send(
+            new SetAssetLegalHoldCommand(contentId, Enabled: true, request?.Reason),
+            ct).ConfigureAwait(false);
 
-        content.MarkAsNonDeletable(request?.Reason);
-        await contentRepository.UpdateAsync(content, ct).ConfigureAwait(false);
-
-        return Ok(new
-        {
-            content.Id,
-            content.IsDeletable,
-            Reason = request?.Reason
-        });
+        return result is null ? NotFound() : Ok(result);
     }
 
     /// <summary>
@@ -294,19 +293,13 @@ public class AssetsAdminController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RemoveNonDeletable(
         Guid contentId,
-        [FromServices] IAssetContentRepository contentRepository,
         CancellationToken ct = default)
     {
-        var content = await contentRepository.GetByIdAsync(contentId, ct).ConfigureAwait(false);
-        if (content == null)
-        {
-            return NotFound();
-        }
+        var result = await sender.Send(
+            new SetAssetLegalHoldCommand(contentId, Enabled: false),
+            ct).ConfigureAwait(false);
 
-        content.MarkAsDeletable();
-        await contentRepository.UpdateAsync(content, ct).ConfigureAwait(false);
-
-        return Ok(new { content.Id, content.IsDeletable });
+        return result is null ? NotFound() : Ok(result);
     }
 
     #endregion

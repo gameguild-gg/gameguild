@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
-// Legacy hidden shell; canonical access review analytics APIs are owned by GameGuild.Identity.Authorization.
+// PLANNED: Reactivate this controller when access review and compliance features are ready for production
 /// <summary>
 ///     API controller for Access Review Analytics, Revocation, and Compliance.
 ///     Handles access revocation workflows, revocation history, analytics, and compliance reporting.

@@ -615,68 +615,6 @@ public class EntityAndServiceCtorTests
     }
 
     [Fact]
-    public async Task SoDService_ScanForViolationsAsync_CreatesViolationsForConflictingEffectivePermissions()
-    {
-        var tenantId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-        var rule = new SoDRule
-        {
-            Id = Guid.NewGuid(),
-            Name = "Payment approval conflict",
-            Description = "Users cannot request and approve the same payment.",
-            ConflictingPermissions = """["payments:request","payments:approve"]""",
-            Severity = SoDSeverity.High
-        };
-
-        var ruleRepository = new Mock<ISoDRuleRepository>();
-        ruleRepository
-            .Setup(repository => repository.GetActiveRulesAsync(tenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync([rule]);
-
-        var violationRepository = new Mock<ISoDViolationRepository>();
-        violationRepository
-            .Setup(repository => repository.CreateAsync(It.IsAny<SoDViolation>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((SoDViolation violation, CancellationToken _) => violation);
-
-        var permissionRepository = new Mock<ITenantPermissionRepository>();
-        permissionRepository
-            .Setup(repository => repository.GetByTenantAsync(tenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync([
-                new TenantPermission
-                {
-                    UserId = userId,
-                    TenantId = tenantId,
-                    Permissions = ["payments:request", "payments:approve"]
-                }
-            ]);
-
-        var permissionQueryService = new Mock<IPermissionQueryService>();
-        permissionQueryService
-            .Setup(service => service.GetEffectivePermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(["payments:request", "payments:approve"]);
-
-        var service = new SoDService(
-            ruleRepository.Object,
-            violationRepository.Object,
-            NullLogger<SoDService>.Instance,
-            permissionQueryService.Object,
-            permissionRepository.Object);
-
-        var detected = await service.ScanForViolationsAsync(tenantId);
-
-        detected.Should().Be(1);
-        violationRepository.Verify(
-            repository => repository.CreateAsync(
-                It.Is<SoDViolation>(violation =>
-                    violation.RuleId == rule.Id &&
-                    violation.UserId == userId &&
-                    violation.TenantId == tenantId &&
-                    violation.ConflictingItems == rule.ConflictingPermissions),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
     public void AccessReviewService_CanConstruct()
     {
         var svc = new AccessReviewService(

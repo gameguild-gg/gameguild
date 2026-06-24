@@ -270,11 +270,9 @@ public class LocalAuthService(
 
     public async Task<SignInResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Processing refresh token request");
-
         if (string.IsNullOrWhiteSpace(request.RefreshToken))
         {
-            logger.LogWarning("Refresh token is null or empty");
+            logger.LogWarning("Refresh token request rejected because the token was missing.");
 
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
