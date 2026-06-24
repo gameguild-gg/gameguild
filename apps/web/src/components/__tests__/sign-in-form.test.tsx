@@ -59,7 +59,7 @@ describe('SignInForm', () => {
   it('renders navigation links', () => {
     renderWithUser(<SignInForm />);
 
-    expect(screen.getByText('Sign up')).toHaveAttribute('href', '/sign-up');
+    expect(screen.getByText('Sign up')).toHaveAttribute('href', '/sign-up?redirectTo=%2Fdashboard');
     expect(screen.getByText('Forgot your password?')).toHaveAttribute(
       'href',
       '/forgot-password'
