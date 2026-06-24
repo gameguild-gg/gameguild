@@ -68,7 +68,7 @@ public sealed class UsersController(ISender sender, IActorContextAccessor actorC
     )
     {
         var actor = actorContextAccessor.ActorContext;
-        if (!actor.IsSystemAdmin &&
+        if (!actor.IsTenantAdmin &&
             !actor.HasPermission(UsersPermission.Keys.Read) &&
             !actor.HasPermission(UsersPermission.Keys.Manage))
         {

@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  cookies: vi.fn(),
+  auth: vi.fn(),
+  getToken: vi.fn(),
   createServerClient: vi.fn(),
-  decodeJWT: vi.fn(),
   getProfileByHandle: vi.fn(),
   getUserFeed: vi.fn(),
   getSocialGroups: vi.fn(),
@@ -13,19 +13,13 @@ const mocks = vi.hoisted(() => ({
   clientRequest: vi.fn(),
 }));
 
-vi.mock('next/headers', () => ({
-  cookies: mocks.cookies,
+vi.mock('@/auth', () => ({
+  auth: mocks.auth,
+  getToken: mocks.getToken,
 }));
 
 vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
-  decodeJWT: mocks.decodeJWT,
-  resolveCookieOptions: vi.fn(() => ({ name: '__gg' })),
-  SessionStore: class {
-    read() {
-      return 'encrypted-session';
-    }
-  },
   GeneratedApi: {
     SocialProfilesModule: class {
       getApiSocialProfiles = mocks.getProfileByHandle;
@@ -49,19 +43,22 @@ vi.mock('@/lib/courses/services/course.service', () => ({
   getPublicCourseCatalog: mocks.getPublicCourseCatalog,
 }));
 
-const { getCommunityFeed, getCommunityStats, getGroups, getMemberProject, getPublicMemberProfile, getSupportTickets } = await import('./members');
+const { getCommunityFeed, getCommunityStats, getGroups, getMemberAccessDirectory, getMemberProject, getMembers, getPublicMemberProfile, getSupportTickets } = await import('./members');
 
 describe('community member queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useRealTimers();
     process.env.AUTH_SECRET = 'test-secret';
-    mocks.cookies.mockResolvedValue({ get: vi.fn(() => ({ value: 'session-cookie' })) });
-    mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
-    mocks.decodeJWT.mockResolvedValue({
-      accessToken: 'access-token',
-      sub: '00000000-0000-0000-0000-000000000111',
+    mocks.auth.mockResolvedValue({
+      user: {
+        id: '00000000-0000-0000-0000-000000000111',
+        email: 'member@example.com',
+        name: 'Signed In Member',
+      },
     });
+    mocks.getToken.mockResolvedValue('access-token');
+    mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
     mocks.getPublicCourseCatalog.mockResolvedValue({
       success: true,
       source: 'api',
@@ -197,7 +194,7 @@ describe('community member queries', () => {
   });
 
   it('feeds live public courses into discovery when the viewer is signed out', async () => {
-    mocks.decodeJWT.mockResolvedValue(null);
+    mocks.auth.mockResolvedValue(null);
 
     const feed = await getCommunityFeed('discover');
 
@@ -319,6 +316,113 @@ describe('community member queries', () => {
       totalGroups: 2,
       openTickets: 3,
       totalPosts: 1,
+    });
+  });
+
+  it('keeps the signed-in member in stats when the user directory cannot be listed', async () => {
+    mocks.clientRequest.mockResolvedValue({
+      ok: false,
+      error: { message: 'Forbidden' },
+    });
+    mocks.getSocialGroups.mockResolvedValue({ ok: true, data: [] });
+    mocks.getMarketingLeads.mockResolvedValue({ ok: true, data: [] });
+    mocks.getBlogPosts.mockResolvedValue({ ok: true, data: [] });
+
+    const stats = await getCommunityStats();
+
+    expect(stats.totalMembers).toBe(1);
+    expect(stats.activeMembers).toBe(1);
+  });
+
+  it('keeps the signed-in member in stats when another community endpoint throws', async () => {
+    mocks.clientRequest.mockResolvedValue({
+      ok: false,
+      error: { message: 'Forbidden' },
+    });
+    mocks.getSocialGroups.mockRejectedValue(new Error('Groups unavailable'));
+
+    const stats = await getCommunityStats();
+
+    expect(stats.totalMembers).toBe(1);
+    expect(stats.activeMembers).toBe(1);
+    expect(stats.totalGroups).toBe(0);
+  });
+
+  it('falls back to the signed-in member when getMembers cannot list the directory', async () => {
+    mocks.clientRequest.mockResolvedValue({
+      ok: false,
+      error: { message: 'Forbidden' },
+    });
+
+    const result = await getMembers({ limit: 50 });
+
+    expect(result.total).toBe(1);
+    expect(result.members[0]).toMatchObject({
+      id: '00000000-0000-0000-0000-000000000111',
+      email: 'member@example.com',
+      displayName: 'Signed In Member',
+      status: 'active',
+    });
+  });
+
+  it('falls back to the signed-in member when getMembers throws', async () => {
+    mocks.clientRequest.mockRejectedValue(new Error('Users unavailable'));
+
+    const result = await getMembers({ limit: 50 });
+
+    expect(result.total).toBe(1);
+    expect(result.members[0]?.id).toBe('00000000-0000-0000-0000-000000000111');
+  });
+
+  it('builds role-management rows with memberships and super-admin state', async () => {
+    mocks.clientRequest.mockImplementation(async ({ path }: { path: string }) => {
+      if (path === '/v1/users') {
+        return {
+          ok: true,
+          data: {
+            totalCount: 1,
+            items: [
+              {
+                id: '00000000-0000-0000-0000-000000000111',
+                email: 'member@example.com',
+                name: 'Signed In Member',
+                isActive: true,
+                createdAt: '2026-06-01T00:00:00.000Z',
+              },
+            ],
+          },
+        };
+      }
+
+      if (path === '/v1/users/00000000-0000-0000-0000-000000000111/memberships') {
+        return {
+          ok: true,
+          data: {
+            memberships: [
+              {
+                tenantId: '10000000-0000-0000-0000-000000000000',
+                tenantName: 'GameGuild Platform',
+                role: 'SystemAdmin',
+                isActive: true,
+              },
+            ],
+          },
+        };
+      }
+
+      throw new Error(`Unexpected path ${path}`);
+    });
+
+    const directory = await getMemberAccessDirectory({ limit: 50 });
+
+    expect(directory.total).toBe(1);
+    expect(directory.members[0]).toMatchObject({
+      role: 'SystemAdmin',
+      isSuperAdmin: true,
+      isCurrentUser: true,
+      primaryMembership: {
+        tenantName: 'GameGuild Platform',
+      },
     });
   });
 
