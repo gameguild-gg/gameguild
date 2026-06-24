@@ -20,6 +20,8 @@ const config = {
   api: process.env.GAMEGUILD_API_URL ?? process.env.API_URL ?? defaults.api,
   web: process.env.GAMEGUILD_WEB_URL ?? process.env.WEB_URL ?? defaults.web,
   learning: process.env.GAMEGUILD_LEARNING_URL ?? process.env.LEARNING_URL ?? defaults.learning,
+  adminEmail: process.env.GAMEGUILD_SMOKE_ADMIN_EMAIL ?? 'admin@game-guild.com',
+  adminPassword: process.env.GAMEGUILD_SMOKE_ADMIN_PASSWORD ?? 'Admin123!',
 };
 
 const checks = [
@@ -101,7 +103,135 @@ async function runCheck([name, base, path]) {
   };
 }
 
-const results = await Promise.all(checks.map(runCheck));
+async function readJson(response) {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+function getCookieHeader(response) {
+  const setCookies =
+    typeof response.headers.getSetCookie === 'function'
+      ? response.headers.getSetCookie()
+      : [response.headers.get('set-cookie')].filter(Boolean);
+
+  return setCookies
+    .map((cookie) => cookie.split(';')[0])
+    .filter(Boolean)
+    .join('; ');
+}
+
+async function runApiAuthCheck() {
+  const started = Date.now();
+  const url = joinUrl(config.api, '/v1/auth/sign-in');
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'gameguild-smoke/1.0',
+      },
+      body: JSON.stringify({
+        email: config.adminEmail,
+        password: config.adminPassword,
+      }),
+    });
+    const body = await readJson(response);
+
+    return {
+      name: 'api admin auth',
+      url,
+      status: response.status,
+      elapsed: Date.now() - started,
+      ok: response.ok && body?.success === true,
+      attempts: 1,
+    };
+  } catch (error) {
+    return {
+      name: 'api admin auth',
+      url,
+      status: 'ERR',
+      elapsed: Date.now() - started,
+      ok: false,
+      attempts: 1,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+async function runWebAuthBridgeCheck() {
+  const started = Date.now();
+  const csrfUrl = joinUrl(config.web, '/api/auth/csrf');
+  const signInUrl = joinUrl(config.web, '/api/auth/signin/credentials');
+
+  try {
+    const csrfResponse = await fetch(csrfUrl, {
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: {
+        'User-Agent': 'gameguild-smoke/1.0',
+      },
+    });
+    const csrfBody = await readJson(csrfResponse);
+    const cookie = getCookieHeader(csrfResponse);
+
+    if (!csrfResponse.ok || !csrfBody?.csrfToken || !cookie) {
+      return {
+        name: 'web auth bridge',
+        url: signInUrl,
+        status: csrfResponse.status,
+        elapsed: Date.now() - started,
+        ok: false,
+        attempts: 1,
+        error: 'CSRF bootstrap failed',
+      };
+    }
+
+    const response = await fetch(signInUrl, {
+      method: 'POST',
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookie,
+        'User-Agent': 'gameguild-smoke/1.0',
+      },
+      body: JSON.stringify({
+        email: config.adminEmail,
+        password: config.adminPassword,
+        csrfToken: csrfBody.csrfToken,
+        redirect: false,
+      }),
+    });
+
+    return {
+      name: 'web auth bridge',
+      url: signInUrl,
+      status: response.status,
+      elapsed: Date.now() - started,
+      ok: response.ok,
+      attempts: 1,
+    };
+  } catch (error) {
+    return {
+      name: 'web auth bridge',
+      url: signInUrl,
+      status: 'ERR',
+      elapsed: Date.now() - started,
+      ok: false,
+      attempts: 1,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+const results = [
+  ...(await Promise.all(checks.map(runCheck))),
+  await runApiAuthCheck(),
+  await runWebAuthBridgeCheck(),
+];
 const nameWidth = Math.max(...results.map((result) => result.name.length));
 
 for (const result of results) {
