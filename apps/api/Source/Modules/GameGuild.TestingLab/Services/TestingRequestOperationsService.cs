@@ -15,6 +15,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
         return await context.Set<TestingRequest>()
             .Where(tr => tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
+            .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
             .OrderByDescending(tr => tr.CreatedAt)
             .ToListAsync();
@@ -25,6 +26,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
         return await context.Set<TestingRequest>()
             .Where(tr => tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
+            .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
             .OrderByDescending(tr => tr.CreatedAt)
             .Skip(skip)
@@ -37,6 +39,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
         return await context.Set<TestingRequest>()
             .Where(tr => tr.Id == id && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
+            .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
             .FirstOrDefaultAsync();
     }
@@ -46,6 +49,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
         return await context.Set<TestingRequest>()
             .Where(tr => tr.Id == id && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
+            .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
             .FirstOrDefaultAsync();
     }
@@ -115,6 +119,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
         return await context.Set<TestingRequest>()
             .Where(tr => tr.ProjectVersionId == projectVersionId && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
+            .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
             .OrderByDescending(tr => tr.CreatedAt)
             .ToListAsync();
@@ -125,6 +130,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
         return await context.Set<TestingRequest>()
             .Where(tr => tr.CreatedById == creatorId && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
+            .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
             .OrderByDescending(tr => tr.CreatedAt)
             .ToListAsync();
@@ -135,6 +141,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
         return await context.Set<TestingRequest>()
             .Where(tr => tr.Status == status && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
+            .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
             .OrderByDescending(tr => tr.CreatedAt)
             .ToListAsync();
@@ -149,6 +156,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
                 (tr.Title.ToLower().Contains(lowerSearchTerm) ||
                  tr.Description != null && tr.Description.ToLower().Contains(lowerSearchTerm)))
             .Include(tr => tr.ProjectVersion)
+            .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
             .OrderByDescending(tr => tr.CreatedAt)
             .ToListAsync();
@@ -167,34 +175,18 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingRequest> CreateSimpleTestingRequestAsync(CreateSimpleTestingRequestDto requestDto, Guid userId)
     {
-        var existingProject = await context.Set<GameGuild.Projects.Project>().FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier && p.DeletedAt == null);
-
-        Guid projectId;
+        var existingProject = requestDto.ProjectId.HasValue
+            ? await context.Set<ProjectEntity>()
+                .FirstOrDefaultAsync(p => p.Id == requestDto.ProjectId.Value && p.DeletedAt == null)
+                .ConfigureAwait(false)
+            : await context.Set<ProjectEntity>()
+                .FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier && p.DeletedAt == null)
+                .ConfigureAwait(false);
 
         if (existingProject == null)
-        {
-            var newProject = new ProjectEntity
-            {
-                Id = Guid.NewGuid(),
-                Title = requestDto.TeamIdentifier,
-                Slug = ProjectEntity.GenerateSlug(requestDto.TeamIdentifier),
-                ShortDescription = $"Capstone project for {requestDto.TeamIdentifier}",
-                Description = $"Capstone project repository for team {requestDto.TeamIdentifier}",
-                Status = ContentStatus.Published,
-                Visibility = ContentVisibility.Public,
-                DevelopmentStatus = GameGuild.Projects.DevelopmentStatus.InDevelopment,
-                Type = GameGuild.Projects.ProjectType.Game,
-                CreatedById = userId,
-            };
+            throw new InvalidOperationException("Testing Lab submissions must be linked to an existing project.");
 
-            context.Set<GameGuild.Projects.Project>().Add(newProject);
-            await context.SaveChangesAsync().ConfigureAwait(false);
-            projectId = newProject.Id;
-        }
-        else
-        {
-            projectId = existingProject.Id;
-        }
+        var projectId = existingProject.Id;
 
         var projectVersion = await context.Set<GameGuild.Projects.ProjectVersion>()
             .FirstOrDefaultAsync(version =>
@@ -229,7 +221,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
             {
                 Id = Guid.NewGuid(),
                 ProjectId = projectId,
-                Title = $"{requestDto.TeamIdentifier} {requestDto.VersionNumber}",
+                Title = $"{existingProject.Title} {requestDto.VersionNumber}",
                 ReleaseVersion = requestDto.VersionNumber,
                 ReleaseNotes = requestDto.Description ?? "",
                 DownloadUrl = requestDto.DownloadUrl,

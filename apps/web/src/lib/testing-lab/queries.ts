@@ -5,6 +5,22 @@ export type TestingRequestStatus = 'Draft' | 'Open' | 'Active' | 'InProgress' | 
 export type TestingSessionStatus = 'Scheduled' | 'Active' | 'Completed' | 'Cancelled' | number;
 export type TestingLocationStatus = 'Active' | 'Maintenance' | 'Inactive' | number;
 
+export interface TestingProjectSummary {
+  id: string;
+  title?: string | null;
+  name?: string | null;
+  slug?: string | null;
+  status?: string | number | null;
+}
+
+export interface TestingProjectVersionSummary {
+  id: string;
+  projectId: string;
+  versionNumber?: string | null;
+  status?: string | null;
+  project?: TestingProjectSummary | null;
+}
+
 export interface TestingRequestSummary {
   id: string;
   title: string;
@@ -17,6 +33,8 @@ export interface TestingRequestSummary {
   startDate?: string | null;
   endDate?: string | null;
   status: TestingRequestStatus;
+  projectVersionId?: string | null;
+  projectVersion?: TestingProjectVersionSummary | null;
 }
 
 export interface TestingLocationSummary {
@@ -54,6 +72,13 @@ export interface TestingLabDashboardData {
   locations: TestingLocationSummary[];
   publicSessions: TestingSessionSummary[];
   accessIssues: string[];
+}
+
+export interface TestingProjectOption {
+  id: string;
+  title: string;
+  slug?: string | null;
+  status?: string | number | null;
 }
 
 interface ApiReadResult<T> {
@@ -98,6 +123,17 @@ export const getTestingLabDashboard = cache(async (): Promise<TestingLabDashboar
     publicSessions: publicSessions.data ?? [],
     accessIssues: [requests.issue, sessions.issue, locations.issue, publicSessions.issue].filter(Boolean) as string[],
   };
+});
+
+export const getTestingProjectOptions = cache(async (): Promise<TestingProjectOption[]> => {
+  const projects = await testingLabApiGet<TestingProjectSummary[]>('/v1/projects?take=50&sortBy=UpdatedAt&sortDirection=DESC');
+
+  return (projects.data ?? []).map((project) => ({
+    id: project.id,
+    title: project.title ?? project.name ?? project.slug ?? project.id,
+    slug: project.slug,
+    status: project.status,
+  }));
 });
 
 export function normalizeTestingRequestStatus(status: TestingRequestStatus): string {
