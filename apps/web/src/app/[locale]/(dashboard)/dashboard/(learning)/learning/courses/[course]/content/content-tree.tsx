@@ -533,7 +533,7 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
                                                       {item.duration}m
                                                     </span>
                                                   )}
-                                                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                                                  <div className="flex items-center gap-1">
                                                     <ContentActionButton label={`Edit ${config.label}`} icon={Edit} onClick={() => navigateToContentItem(item.id)} className="size-7" />
                                                     <ContentActionButton label="Duplicate" icon={Copy} onClick={() => handleDuplicate(item)} disabled={isPending} className="size-7" />
                                                     {linkedAssessment ? (
@@ -561,7 +561,7 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
                                                           </div>
                                                           <Badge variant="outline" className="text-xs">{subConfig.label}</Badge>
                                                           <Badge variant={statusVariant[sub.status] ?? 'outline'} className="text-xs">{sub.status}</Badge>
-                                                          <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                                                          <div className="flex items-center gap-1">
                                                             <ContentActionButton label="Edit" icon={Edit} onClick={() => navigateToContentItem(sub.id)} className="size-6" />
                                                             <ContentActionButton label="Delete" icon={Trash2} onClick={() => setDeleteTarget({ id: sub.id, title: sub.title, isModule: false })} destructive className="size-6" />
                                                           </div>
