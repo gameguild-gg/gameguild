@@ -1,7 +1,8 @@
+import { auth } from '@/auth';
 import { Link } from '@/i18n/navigation';
 import { FlaskConical, Github, GraduationCap, Rocket, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { PublicDesktopNav, PublicMobileNav } from './public-website-nav';
+import { PublicDesktopNav, PublicMobileNav, type PublicWebsiteUser } from './public-website-nav';
 
 const primaryNav = [
   { label: 'Courses', href: '/courses' },
@@ -57,7 +58,39 @@ function BrandMark() {
   );
 }
 
-export function PublicWebsiteHeader() {
+function getInitials(value: string) {
+  const parts = value
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length === 0) return 'GG';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+async function getHeaderUser(): Promise<PublicWebsiteUser | null> {
+  try {
+    const session = await auth();
+    const user = session?.user;
+    if (!user?.email && !user?.name) return null;
+
+    const displayName = user.name?.trim() || user.email?.trim() || 'GameGuild member';
+
+    return {
+      name: displayName,
+      email: user.email?.trim() || null,
+      image: user.image?.trim() || null,
+      initials: getInitials(displayName),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function PublicWebsiteHeader() {
+  const user = await getHeaderUser();
+
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/90 text-white backdrop-blur-xl">
       <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
@@ -76,19 +109,39 @@ export function PublicWebsiteHeader() {
             <Github className="size-4" aria-hidden="true" />
             GitHub
           </a>
-          <Link
-            href="/sign-in"
-            className="hidden rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white sm:inline-flex"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/sign-up"
-            className="hidden items-center rounded-full bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-200 sm:inline-flex"
-          >
-            Join community
-          </Link>
-          <PublicMobileNav items={primaryNav} />
+          {user ? (
+            <Link
+              href="/dashboard"
+              aria-label={`${user.name} profile`}
+              className="hidden min-w-0 items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] py-1.5 pr-3 pl-1.5 text-sm font-semibold text-white transition hover:border-sky-300/40 hover:bg-sky-300/10 sm:inline-flex"
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sky-300 text-xs font-bold text-slate-950">
+                {user.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.image} alt="" className="size-full object-cover" />
+                ) : (
+                  user.initials
+                )}
+              </span>
+              <span className="hidden max-w-36 truncate lg:inline">{user.name}</span>
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/sign-in"
+                className="hidden rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white sm:inline-flex"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/sign-up"
+                className="hidden items-center rounded-full bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-200 sm:inline-flex"
+              >
+                Join community
+              </Link>
+            </>
+          )}
+          <PublicMobileNav items={primaryNav} user={user} />
         </div>
       </div>
     </header>

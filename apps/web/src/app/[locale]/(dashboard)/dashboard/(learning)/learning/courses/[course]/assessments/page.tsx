@@ -1,5 +1,5 @@
 import React from 'react';
-import { getCourseAssessments, getCourseContent } from '@/lib/learning';
+import { getCourseAssessmentGroups, getCourseAssessments, getCourseContent } from '@/lib/learning';
 import { AssessmentsList } from './assessments-list';
 
 /**
@@ -13,10 +13,19 @@ export default async function AssessmentsPage({
 }: PageProps<'/[locale]/dashboard/learning/courses/[course]/assessments'>): Promise<React.JSX.Element> {
   const { course: courseId } = await params;
 
-  const [{ assessments, total }, content] = await Promise.all([
+  const [{ assessments, total }, content, assessmentGroups] = await Promise.all([
     getCourseAssessments(courseId),
     getCourseContent(courseId),
+    getCourseAssessmentGroups(courseId),
   ]);
 
-  return <AssessmentsList courseId={courseId} assessments={assessments} total={total} contentItems={content.items} />;
+  return (
+    <AssessmentsList
+      courseId={courseId}
+      assessments={assessments}
+      total={total}
+      contentItems={content.items}
+      assessmentGroups={assessmentGroups}
+    />
+  );
 }

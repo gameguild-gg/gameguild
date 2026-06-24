@@ -35,6 +35,10 @@ export interface Assessment {
   id: string;
   courseId: string;
   contentId: string | null;
+  assessmentGroupId: string | null;
+  assessmentGroupName: string | null;
+  assessmentGroupWeightPercent: number | null;
+  assessmentGroupOrder: number | null;
   title: string;
   description: string | null;
   type: AssessmentType;
@@ -54,15 +58,37 @@ export interface CourseAssessments {
   total: number;
 }
 
+export interface AssessmentGroup {
+  id: string;
+  courseId: string;
+  name: string;
+  description: string | null;
+  weightPercent: number;
+  order: number;
+}
+
+type AssessmentGroupFields = {
+  assessmentGroupId?: string | null;
+  assessmentGroupName?: string | null;
+  assessmentGroupWeightPercent?: number | null;
+  assessmentGroupOrder?: number | null;
+};
+
 // =============================================================================
 // MAPPERS
 // =============================================================================
 
 function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
+  const groupFields = dto as LearningAssessmentsAssessment & AssessmentGroupFields;
+
   return {
     id: dto.id ?? '',
     courseId: dto.courseId ?? '',
     contentId: dto.contentId ?? null,
+    assessmentGroupId: groupFields.assessmentGroupId ?? null,
+    assessmentGroupName: groupFields.assessmentGroupName ?? null,
+    assessmentGroupWeightPercent: groupFields.assessmentGroupWeightPercent ?? null,
+    assessmentGroupOrder: groupFields.assessmentGroupOrder ?? null,
     title: dto.title ?? '',
     description: dto.description ?? null,
     type: dto.type ?? 'Quiz',
@@ -75,6 +101,17 @@ function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
     availableFrom: dto.availableFrom ?? null,
     availableUntil: dto.availableUntil ?? null,
     isAvailable: dto.isAvailable ?? true,
+  };
+}
+
+function mapAssessmentGroup(dto: Partial<AssessmentGroup>): AssessmentGroup {
+  return {
+    id: dto.id ?? '',
+    courseId: dto.courseId ?? '',
+    name: dto.name ?? '',
+    description: dto.description ?? null,
+    weightPercent: dto.weightPercent ?? 0,
+    order: dto.order ?? 0,
   };
 }
 
@@ -99,6 +136,17 @@ export const getCourseAssessments = cache(async (courseId: string): Promise<Cour
   } catch (err) {
     console.error('Error fetching course assessments:', err);
     return { assessments: [], total: 0 };
+  }
+});
+
+export const getCourseAssessmentGroups = cache(async (courseId: string): Promise<AssessmentGroup[]> => {
+  try {
+    const resolvedCourseId = await resolveCourseId(courseId);
+    const groups = await learningApiGet<AssessmentGroup[]>(`/v1/assessments/course/${resolvedCourseId}/groups`, 60);
+    return (groups ?? []).map(mapAssessmentGroup);
+  } catch (err) {
+    console.error('Error fetching course assessment groups:', err);
+    return [];
   }
 });
 

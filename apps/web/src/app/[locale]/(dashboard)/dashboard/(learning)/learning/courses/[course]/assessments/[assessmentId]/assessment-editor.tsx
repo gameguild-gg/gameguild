@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@game-guild/ui/components/switch';
 import { Separator } from '@game-guild/ui/components/separator';
 import { ArrowLeft, Clock, Loader2, Save, Trash2 } from 'lucide-react';
-import type { Assessment, AssessmentType } from '@/lib/learning/queries/assessments';
+import type { Assessment, AssessmentGroup, AssessmentType } from '@/lib/learning/queries/assessments';
 import { updateAssessment, deleteAssessment } from '@/lib/learning/actions';
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
@@ -27,9 +27,14 @@ const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
 interface AssessmentEditorProps {
   courseId: string;
   assessment: Assessment;
+  assessmentGroups?: AssessmentGroup[];
 }
 
-export function AssessmentEditor({ courseId, assessment }: AssessmentEditorProps) {
+function formatWeight(weightPercent: number) {
+  return `${Number.isInteger(weightPercent) ? weightPercent : weightPercent.toFixed(1)}% of Total`;
+}
+
+export function AssessmentEditor({ courseId, assessment, assessmentGroups = [] }: AssessmentEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -45,6 +50,7 @@ export function AssessmentEditor({ courseId, assessment }: AssessmentEditorProps
     assessment.maxAttempts != null ? String(assessment.maxAttempts) : '',
   );
   const [isRequired, setIsRequired] = useState(assessment.isRequired);
+  const [assessmentGroupId, setAssessmentGroupId] = useState(assessment.assessmentGroupId ?? 'none');
   const [availableFrom, setAvailableFrom] = useState(
     assessment.availableFrom ? assessment.availableFrom.slice(0, 16) : '',
   );
@@ -76,6 +82,8 @@ export function AssessmentEditor({ courseId, assessment }: AssessmentEditorProps
         isRequired,
         availableFrom: availableFrom || null,
         availableUntil: availableUntil || null,
+        assessmentGroupId: assessmentGroupId === 'none' ? null : assessmentGroupId,
+        clearAssessmentGroupId: assessmentGroupId === 'none',
       });
 
       if (result.success) {
@@ -244,6 +252,28 @@ export function AssessmentEditor({ courseId, assessment }: AssessmentEditorProps
                 </Select>
                 <p className="text-muted-foreground text-xs">
                   Type cannot be changed after creation.
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <Label htmlFor="grade-group">Grade group</Label>
+                <Select value={assessmentGroupId} onValueChange={setAssessmentGroupId}>
+                  <SelectTrigger id="grade-group">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No group</SelectItem>
+                    {assessmentGroups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.name} ({formatWeight(group.weightPercent)})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-muted-foreground text-xs">
+                  Choose the weighted block this activity contributes to.
                 </p>
               </div>
 

@@ -34,6 +34,23 @@ public class AssessmentEntityTests
     }
 
     [Fact]
+    public void Assessment_ShouldExposeWeightedGroupAssignment()
+    {
+        typeof(Assessment).GetProperty("AssessmentGroupId").Should().NotBeNull();
+    }
+
+    [Fact]
+    public void AssessmentGroup_ShouldExposeCourseWeightAndOrder()
+    {
+        var type = typeof(Assessment).Assembly.GetType("GameGuild.Learning.Assessments.AssessmentGroup");
+
+        type.Should().NotBeNull();
+        type!.GetProperty("CourseId").Should().NotBeNull();
+        type.GetProperty("WeightPercent").Should().NotBeNull();
+        type.GetProperty("Order").Should().NotBeNull();
+    }
+
+    [Fact]
     public void IsAvailable_WhenNoDateRestrictions_ShouldReturnTrue()
     {
         var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100, 50);
@@ -235,7 +252,7 @@ public class AssessmentDtoTests
         var courseId = Guid.NewGuid();
         var dto = new AssessmentDto(id, courseId, null, "Quiz", "Desc",
             AssessmentType.Quiz, 50, 30, 15, 3, false, 1,
-            DateTime.UtcNow, DateTime.UtcNow.AddDays(7), true);
+            DateTime.UtcNow, DateTime.UtcNow.AddDays(7), null, null, null, null, true);
 
         dto.Id.Should().Be(id);
         dto.CourseId.Should().Be(courseId);
@@ -247,6 +264,15 @@ public class AssessmentDtoTests
         dto.IsRequired.Should().BeFalse();
         dto.Order.Should().Be(1);
         dto.IsAvailable.Should().BeTrue();
+    }
+
+    [Fact]
+    public void AssessmentDto_ShouldExposeGroupMetadata()
+    {
+        typeof(AssessmentDto).GetProperty("AssessmentGroupId").Should().NotBeNull();
+        typeof(AssessmentDto).GetProperty("AssessmentGroupName").Should().NotBeNull();
+        typeof(AssessmentDto).GetProperty("AssessmentGroupWeightPercent").Should().NotBeNull();
+        typeof(AssessmentDto).GetProperty("AssessmentGroupOrder").Should().NotBeNull();
     }
 }
 
@@ -329,6 +355,17 @@ public class AssessmentRequestRecordTests
         request.IsRequired.Should().BeTrue();
         request.AvailableFrom.Should().BeNull();
         request.AvailableUntil.Should().BeNull();
+    }
+
+    [Fact]
+    public void CreateAssessmentGroupRequest_ShouldExposeWeightedGroupFields()
+    {
+        var type = typeof(CreateAssessmentRequest).Assembly.GetType("GameGuild.Learning.Assessments.CreateAssessmentGroupRequest");
+
+        type.Should().NotBeNull();
+        type!.GetProperty("CourseId").Should().NotBeNull();
+        type.GetProperty("Name").Should().NotBeNull();
+        type.GetProperty("WeightPercent").Should().NotBeNull();
     }
 
     [Fact]
