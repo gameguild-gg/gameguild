@@ -29,13 +29,20 @@ public class AssessmentService : IAssessmentService
                 request.Type,
                 request.MaxScore,
                 request.PassingScore,
-                request.IsRequired);
+                request.IsRequired,
+                request.AssessmentGroupId);
 
             // Set optional properties using internal setters
             assessment.SetDescription(request.Description);
             assessment.SetTimeLimit(request.TimeLimitMinutes);
             assessment.SetMaxAttempts(request.MaxAttempts);
             assessment.SetAvailability(request.AvailableFrom, request.AvailableUntil);
+
+            var groupValidation = await EnsureGroupMatchesCourseAsync(request.AssessmentGroupId, request.CourseId).ConfigureAwait(false);
+            if (!groupValidation.IsSuccess)
+            {
+                return Result.Failure<Assessment>(groupValidation.Error);
+            }
 
             _context.Set<Assessment>().Add(assessment);
             await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -54,14 +61,17 @@ public class AssessmentService : IAssessmentService
     public async Task<Assessment?> GetAssessmentByIdAsync(Guid id)
     {
         return await _context.Set<Assessment>()
+            .Include(a => a.AssessmentGroup)
             .FirstOrDefaultAsync(a => a.Id == id).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Assessment>> GetCourseAssessmentsAsync(Guid courseId)
     {
         return await _context.Set<Assessment>()
+            .Include(a => a.AssessmentGroup)
             .Where(a => a.CourseId == courseId)
-            .OrderBy(a => a.Order)
+            .OrderBy(a => a.AssessmentGroup == null ? int.MaxValue : a.AssessmentGroup.Order)
+            .ThenBy(a => a.Order)
             .ToListAsync().ConfigureAwait(false);
     }
 
@@ -86,7 +96,15 @@ public class AssessmentService : IAssessmentService
                 request.AvailableFrom,
                 request.AvailableUntil,
                 request.ContentId,
-                request.ClearContentId);
+                request.ClearContentId,
+                request.AssessmentGroupId,
+                request.ClearAssessmentGroupId);
+
+            var groupValidation = await EnsureGroupMatchesCourseAsync(assessment.AssessmentGroupId, assessment.CourseId).ConfigureAwait(false);
+            if (!groupValidation.IsSuccess)
+            {
+                return Result.Failure<Assessment>(groupValidation.Error);
+            }
 
             _context.Set<Assessment>().Update(assessment);
             await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -125,6 +143,166 @@ public class AssessmentService : IAssessmentService
             _logger.LogError(ex, "Error deleting assessment {AssessmentId}", id);
             return Result.Failure(Error.Failure("DeleteAssessment", "Failed to delete assessment"));
         }
+    }
+
+    public async Task<IEnumerable<AssessmentGroup>> GetCourseAssessmentGroupsAsync(Guid courseId)
+    {
+        return await _context.Set<AssessmentGroup>()
+            .Where(g => g.CourseId == courseId && g.DeletedAt == null)
+            .OrderBy(g => g.Order)
+            .ThenBy(g => g.Name)
+            .ToListAsync().ConfigureAwait(false);
+    }
+
+    public async Task<Result<AssessmentGroup>> CreateAssessmentGroupAsync(CreateAssessmentGroupRequest request)
+    {
+        try
+        {
+            var group = AssessmentGroup.Create(
+                request.CourseId,
+                request.Name,
+                request.WeightPercent,
+                request.Order,
+                request.Description);
+
+            _context.Set<AssessmentGroup>().Add(group);
+            await _context.SaveChangesAsync().ConfigureAwait(false);
+
+            _logger.LogInformation("Assessment group created: {AssessmentGroupId} for course {CourseId}", group.Id, request.CourseId);
+
+            return Result.Success(group);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure<AssessmentGroup>(Error.Validation("AssessmentGroup.Invalid", ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating assessment group for course {CourseId}", request.CourseId);
+            return Result.Failure<AssessmentGroup>(Error.Failure("CreateAssessmentGroup", "Failed to create assessment group"));
+        }
+    }
+
+    public async Task<Result<AssessmentGroup>> UpdateAssessmentGroupAsync(Guid id, UpdateAssessmentGroupRequest request)
+    {
+        try
+        {
+            var group = await _context.Set<AssessmentGroup>().FirstOrDefaultAsync(g => g.Id == id && g.DeletedAt == null).ConfigureAwait(false);
+            if (group == null)
+            {
+                return Result.Failure<AssessmentGroup>(Error.NotFound("AssessmentGroup", "Assessment group not found"));
+            }
+
+            group.Update(request.Name, request.Description, request.WeightPercent, request.Order);
+            _context.Set<AssessmentGroup>().Update(group);
+            await _context.SaveChangesAsync().ConfigureAwait(false);
+
+            _logger.LogInformation("Assessment group updated: {AssessmentGroupId}", id);
+
+            return Result.Success(group);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure<AssessmentGroup>(Error.Validation("AssessmentGroup.Invalid", ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating assessment group {AssessmentGroupId}", id);
+            return Result.Failure<AssessmentGroup>(Error.Failure("UpdateAssessmentGroup", "Failed to update assessment group"));
+        }
+    }
+
+    public async Task<Result> DeleteAssessmentGroupAsync(Guid id)
+    {
+        try
+        {
+            var group = await _context.Set<AssessmentGroup>().FirstOrDefaultAsync(g => g.Id == id && g.DeletedAt == null).ConfigureAwait(false);
+            if (group == null)
+            {
+                return Result.Failure(Error.NotFound("AssessmentGroup", "Assessment group not found"));
+            }
+
+            var groupedAssessments = await _context.Set<Assessment>()
+                .Where(a => a.AssessmentGroupId == id)
+                .ToListAsync().ConfigureAwait(false);
+
+            foreach (var assessment in groupedAssessments)
+            {
+                assessment.AssignToGroup(null);
+            }
+
+            group.SoftDelete();
+            _context.Set<Assessment>().UpdateRange(groupedAssessments);
+            _context.Set<AssessmentGroup>().Update(group);
+            await _context.SaveChangesAsync().ConfigureAwait(false);
+
+            _logger.LogInformation("Assessment group deleted: {AssessmentGroupId}", id);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting assessment group {AssessmentGroupId}", id);
+            return Result.Failure(Error.Failure("DeleteAssessmentGroup", "Failed to delete assessment group"));
+        }
+    }
+
+    public async Task<Result<Assessment>> AssignAssessmentToGroupAsync(Guid assessmentId, AssignAssessmentGroupRequest request)
+    {
+        try
+        {
+            var assessment = await GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+            if (assessment == null)
+            {
+                return Result.Failure<Assessment>(Error.NotFound("Assessment", "Assessment not found"));
+            }
+
+            if (!request.ClearAssessmentGroup && !request.AssessmentGroupId.HasValue)
+            {
+                return Result.Failure<Assessment>(Error.Validation("AssessmentGroup.Required", "Assessment group is required unless the assignment is being cleared."));
+            }
+
+            var nextGroupId = request.ClearAssessmentGroup ? null : request.AssessmentGroupId;
+            var groupValidation = await EnsureGroupMatchesCourseAsync(nextGroupId, assessment.CourseId).ConfigureAwait(false);
+            if (!groupValidation.IsSuccess)
+            {
+                return Result.Failure<Assessment>(groupValidation.Error);
+            }
+
+            assessment.AssignToGroup(nextGroupId);
+            _context.Set<Assessment>().Update(assessment);
+            await _context.SaveChangesAsync().ConfigureAwait(false);
+
+            _logger.LogInformation("Assessment {AssessmentId} assigned to group {AssessmentGroupId}", assessment.Id, nextGroupId);
+
+            return Result.Success(assessment);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error assigning assessment {AssessmentId} to group", assessmentId);
+            return Result.Failure<Assessment>(Error.Failure("AssignAssessmentGroup", "Failed to assign assessment group"));
+        }
+    }
+
+    private async Task<Result> EnsureGroupMatchesCourseAsync(Guid? groupId, Guid courseId)
+    {
+        if (!groupId.HasValue)
+        {
+            return Result.Success();
+        }
+
+        var group = await _context.Set<AssessmentGroup>()
+            .FirstOrDefaultAsync(g => g.Id == groupId.Value && g.DeletedAt == null)
+            .ConfigureAwait(false);
+
+        if (group == null)
+        {
+            return Result.Failure(Error.NotFound("AssessmentGroup", "Assessment group not found"));
+        }
+
+        return group.CourseId == courseId
+            ? Result.Success()
+            : Result.Failure(Error.Validation("AssessmentGroup.CourseMismatch", "Assessment group belongs to another course"));
     }
 
     // ===== SUBMISSION MANAGEMENT =====
