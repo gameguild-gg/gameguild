@@ -77,46 +77,6 @@ const navigationData: NavGroup[] = [
     ],
   },
   {
-    label: 'Learning',
-    items: [
-      {
-        title: 'Overview',
-        url: '/dashboard/learning',
-        icon: LayoutDashboard,
-      },
-      {
-        title: 'Courses',
-        url: '/dashboard/learning/courses',
-        icon: BookOpen,
-      },
-      {
-        title: 'Tutorials',
-        url: '/dashboard/learning/tutorials',
-        icon: FileText,
-      },
-      {
-        title: 'Resources',
-        url: '/dashboard/learning/resources',
-        icon: FolderOpen,
-      },
-    ],
-  },
-  {
-    label: 'Launch',
-    items: [
-      {
-        title: 'Testing Lab',
-        url: '/dashboard/testing-lab',
-        icon: FlaskConical,
-      },
-      {
-        title: 'Launch Pad',
-        url: '/dashboard/launch-pad',
-        icon: Rocket,
-      },
-    ],
-  },
-  {
     label: 'Community Management',
     items: [
       {
@@ -153,6 +113,51 @@ const navigationData: NavGroup[] = [
             items: [],
           },
         ],
+      },
+    ],
+  },
+  {
+    label: 'Platform Management',
+    items: [
+      {
+        title: 'Learning',
+        icon: BookOpen,
+        subGroups: [
+          {
+            title: 'Overview',
+            url: '/dashboard/learning',
+            icon: LayoutDashboard,
+            items: [],
+          },
+          {
+            title: 'Courses',
+            url: '/dashboard/learning/courses',
+            icon: BookOpen,
+            items: [],
+          },
+          {
+            title: 'Tutorials',
+            url: '/dashboard/learning/tutorials',
+            icon: FileText,
+            items: [],
+          },
+          {
+            title: 'Resources',
+            url: '/dashboard/learning/resources',
+            icon: FolderOpen,
+            items: [],
+          },
+        ],
+      },
+      {
+        title: 'Testing Lab',
+        url: '/dashboard/testing-lab',
+        icon: FlaskConical,
+      },
+      {
+        title: 'Launch Pad',
+        url: '/dashboard/launch-pad',
+        icon: Rocket,
       },
     ],
   },
