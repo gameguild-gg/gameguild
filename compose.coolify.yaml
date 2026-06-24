@@ -78,10 +78,6 @@ services:
       - 'com.game-guild.app=api'
       - 'com.game-guild.tier=backend'
       - 'com.game-guild.environment=staging'
-      # Coolify creates the Host router from docker_compose_domains. Pin the
-      # backend port explicitly so Traefik does not ignore the non-3000 API
-      # service when this stack is deployed as a multi-service application.
-      - 'traefik.http.services.game-guild-api.loadbalancer.server.port=3000'
     deploy:
       resources:
         limits:
@@ -144,7 +140,6 @@ services:
       - 'com.game-guild.app=web'
       - 'com.game-guild.tier=frontend'
       - 'com.game-guild.environment=staging'
-      - 'traefik.http.services.game-guild-web.loadbalancer.server.port=3000'
     deploy:
       resources:
         limits:
@@ -207,7 +202,6 @@ services:
       - 'com.game-guild.app=learning'
       - 'com.game-guild.tier=frontend'
       - 'com.game-guild.environment=staging'
-      - 'traefik.http.services.game-guild-learning.loadbalancer.server.port=3002'
     deploy:
       resources:
         limits:
