@@ -54,7 +54,7 @@ const statusActions: Array<{ value: CourseClassStatusAction; label: string }> = 
 export function CourseClassesManager({ courseId, courseTitle, classes }: CourseClassesManagerProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const initialWindow = useMemo(getInitialWindow, []);
+  const initialWindow = useMemo(() => getInitialWindow(), []);
   const [items, setItems] = useState(classes);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -148,25 +148,25 @@ export function CourseClassesManager({ courseId, courseTitle, classes }: CourseC
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <Card>
-        <CardHeader>
+    <div className="grid min-w-0 max-w-full gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle className="flex items-center gap-2">
             <CalendarClock className="size-5" />
             Course Schedule
           </CardTitle>
-          <CardDescription>{courseTitle} cohort sessions and live delivery schedule.</CardDescription>
+          <CardDescription className="break-words">{courseTitle} cohort sessions and live delivery schedule.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="min-w-0 space-y-3">
           {items.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No cohorts or live sessions are scheduled for this course.</div>
+            <div className="min-w-0 rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No cohorts or live sessions are scheduled for this course.</div>
           ) : (
             items.map((courseClass) => (
-              <div key={courseClass.id} className="space-y-3 rounded-lg border p-4">
-                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div key={courseClass.id} className="min-w-0 space-y-3 rounded-lg border p-4">
+                <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <Link href={`/dashboard/learning/courses/${courseId}/classes/${courseClass.id}`} className="min-w-0 flex-1 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{courseClass.title}</p>
+                      <p className="break-words font-medium">{courseClass.title}</p>
                       <Badge variant="outline">{courseClass.status}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{new Date(courseClass.scheduledAt).toLocaleString('en-US')} - {courseClass.duration} min</p>
@@ -211,15 +211,15 @@ export function CourseClassesManager({ courseId, courseTitle, classes }: CourseC
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Plus className="size-4" />
             Schedule class
           </CardTitle>
-          <CardDescription>Create a cohort/live session through the Learning.Cohorts API.</CardDescription>
+          <CardDescription className="break-words">Create a cohort/live session through the Learning.Cohorts API.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="min-w-0 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="class-name">Name</Label>
             <Input id="class-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="June production cohort" disabled={isPending} />

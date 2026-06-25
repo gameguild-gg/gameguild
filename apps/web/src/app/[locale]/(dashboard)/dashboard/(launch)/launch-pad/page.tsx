@@ -26,15 +26,15 @@ function PlanCard({ plan }: { plan: LaunchPlan }) {
   const canPublish = status === 'Ready';
 
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader className="space-y-3">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <CardTitle className="flex items-center gap-2">
+        <div className="flex min-w-0 items-start justify-between gap-4">
+          <div className="min-w-0">
+            <CardTitle className="flex min-w-0 items-center gap-2 break-words">
               <Rocket className="size-5" />
               {plan.name}
             </CardTitle>
-            <CardDescription>{plan.project?.title ?? plan.project?.name ?? plan.projectId}</CardDescription>
+            <CardDescription className="break-words">{plan.project?.title ?? plan.project?.name ?? plan.projectId}</CardDescription>
           </div>
           <Badge variant={status === 'Launched' ? 'default' : 'outline'}>{status}</Badge>
         </div>
@@ -108,14 +108,14 @@ export default async function LaunchPadPage(): Promise<React.JSX.Element> {
   const [plans, projects] = await Promise.all([getLaunchPadDashboard(), getLaunchProjectOptions()]);
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex min-w-0 max-w-full flex-col gap-6 p-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Launch Pad</h1>
         <p className="text-muted-foreground">Prepare project launches with checklist, channel, and readiness tracking.</p>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <section className="space-y-4">
+      <div className="grid min-w-0 max-w-full gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(300px,420px)]">
+        <section className="min-w-0 space-y-4">
           {plans.length === 0 ? (
             <Card>
               <CardHeader>
@@ -128,12 +128,12 @@ export default async function LaunchPadPage(): Promise<React.JSX.Element> {
           )}
         </section>
 
-        <Card className="h-fit">
-          <CardHeader>
+        <Card className="h-fit min-w-0">
+          <CardHeader className="min-w-0">
             <CardTitle>Create launch plan</CardTitle>
-            <CardDescription>Connect a project to its launch checklist and channels.</CardDescription>
+            <CardDescription className="break-words">Connect a project to its launch checklist and channels.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
             <form action={createLaunchPlan} className="space-y-5">
               <div className="space-y-2">
                 <Label>Project</Label>

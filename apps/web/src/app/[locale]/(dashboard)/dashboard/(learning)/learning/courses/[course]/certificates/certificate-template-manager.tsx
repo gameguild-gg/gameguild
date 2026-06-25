@@ -83,25 +83,25 @@ export function CertificateTemplateManager({ courseId, templates }: CertificateT
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <Card>
-        <CardHeader>
+    <div className="grid min-w-0 max-w-full gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle>Certificate Templates</CardTitle>
-          <CardDescription>Templates define the credential design used when learners complete the course.</CardDescription>
+          <CardDescription className="break-words">Templates define the credential design used when learners complete the course.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="min-w-0 space-y-3">
           {items.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-8 text-center">
+            <div className="min-w-0 rounded-lg border border-dashed p-8 text-center">
               <Award className="mx-auto mb-3 size-8 text-muted-foreground" />
               <p className="font-medium">No certificate templates yet</p>
               <p className="mt-1 text-sm text-muted-foreground">Create the first template to enable course completion credentials.</p>
             </div>
           ) : (
             items.map((template) => (
-              <div key={template.id} className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center md:justify-between">
+              <div key={template.id} className="flex min-w-0 flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center md:justify-between">
                 <Link href={`/dashboard/learning/courses/${courseId}/certificates/${template.id}`} className="min-w-0 flex-1 space-y-1">
-                  <p className="font-medium">{template.name}</p>
-                  <p className="text-sm text-muted-foreground">{template.description ?? 'No description'}</p>
+                  <p className="break-words font-medium">{template.name}</p>
+                  <p className="break-words text-sm text-muted-foreground">{template.description ?? 'No description'}</p>
                 </Link>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={template.status === 'active' ? 'default' : 'secondary'}>{template.status}</Badge>
@@ -123,19 +123,20 @@ export function CertificateTemplateManager({ courseId, templates }: CertificateT
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Plus className="size-4" />
             New template
           </CardTitle>
-          <CardDescription>Create a live certificate template through the Learning.Certificates API.</CardDescription>
+          <CardDescription className="break-words">Create a live certificate template through the Learning.Certificates API.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="min-w-0 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="certificate-template-name">Name</Label>
             <Input
               id="certificate-template-name"
+              className="min-w-0"
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Default completion certificate"
@@ -146,6 +147,7 @@ export function CertificateTemplateManager({ courseId, templates }: CertificateT
             <Label htmlFor="certificate-template-html">HTML</Label>
             <Textarea
               id="certificate-template-html"
+              className="min-w-0 max-w-full resize-y overflow-auto font-mono text-sm"
               value={templateHtml}
               onChange={(event) => setTemplateHtml(event.target.value)}
               rows={10}
