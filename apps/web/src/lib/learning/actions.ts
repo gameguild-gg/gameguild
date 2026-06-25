@@ -2,11 +2,11 @@
 
 import { getToken } from '@/auth';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
+import type { AssessmentType } from '@/lib/learning/queries/assessments';
 import type { LearningCoursesProgramContentType } from '@/lib/learning/types';
 import {
   createServerClient,
   GeneratedApi,
-  type LearningAssessmentsAssessmentType,
   type LearningAssessmentsCreateAssessmentInput,
   type LearningAssessmentsUpdateAssessmentInput,
   type LearningCoursesMonetization,
@@ -623,7 +623,7 @@ export interface CreateAssessmentInput {
   courseId: string;
   title: string;
   description?: string;
-  type: LearningAssessmentsAssessmentType;
+  type: AssessmentType;
   assessmentGroupId?: string | null;
   maxScore?: number;
   passingScore?: number;

@@ -24,6 +24,11 @@ public interface IAssessmentService
     Task<IEnumerable<Assessment>> GetCourseAssessmentsAsync(Guid courseId);
 
     /// <summary>
+    /// Gets score distribution and weighted group performance for a course.
+    /// </summary>
+    Task<CourseAssessmentAnalyticsDto> GetCourseAssessmentAnalyticsAsync(Guid courseId);
+
+    /// <summary>
     /// Updates an existing assessment
     /// </summary>
     Task<Result<Assessment>> UpdateAssessmentAsync(Guid id, UpdateAssessmentRequest request);
@@ -174,4 +179,34 @@ public sealed record GradeSubmissionRequest(
     int Score,
     Guid? GradedBy = null,
     string? Feedback = null
+);
+
+public sealed record AssessmentScoreBucketDto(
+    string Label,
+    int MinPercent,
+    int MaxPercent,
+    int Count
+);
+
+public sealed record AssessmentGroupAnalyticsDto(
+    Guid? GroupId,
+    string GroupName,
+    decimal? WeightPercent,
+    int AssessmentCount,
+    int GradedCount,
+    int UngradedCount,
+    decimal AveragePercent,
+    decimal PassRate,
+    IReadOnlyCollection<AssessmentScoreBucketDto> Distribution
+);
+
+public sealed record CourseAssessmentAnalyticsDto(
+    Guid CourseId,
+    int AssessmentCount,
+    int GradedCount,
+    int UngradedCount,
+    decimal AveragePercent,
+    decimal PassRate,
+    IReadOnlyCollection<AssessmentScoreBucketDto> Distribution,
+    IReadOnlyCollection<AssessmentGroupAnalyticsDto> Groups
 );

@@ -16,8 +16,6 @@ function toTitleCase(value: string | null | undefined): string | null {
 
 function mapContentType(type: ContentItem['type']): ProgramContentType {
   switch (type) {
-    case 'Page':
-      return ProgramContentType.Page;
     case 'Assignment':
       return ProgramContentType.Assignment;
     case 'Questionnaire':
@@ -26,12 +24,12 @@ function mapContentType(type: ContentItem['type']): ProgramContentType {
       return ProgramContentType.Discussion;
     case 'Code':
       return ProgramContentType.Code;
-    case 'Challenge':
-      return ProgramContentType.Challenge;
     case 'Reflection':
       return ProgramContentType.Reflection;
     case 'Survey':
       return ProgramContentType.Survey;
+    case 'Project':
+      return ProgramContentType.Project;
     case 'Lesson':
     default:
       return ProgramContentType.Lesson;

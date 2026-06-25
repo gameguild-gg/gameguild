@@ -60,6 +60,12 @@ function mapStatus(item: LearningCoursesProgramContent): 'draft' | 'published' {
   return mapVisibility(item.visibility) === 'public' ? 'published' : 'draft';
 }
 
+function normalizeContentType(type: string | null | undefined): string {
+  if (type === 'Page') return 'Lesson';
+  if (type === 'Challenge') return 'Assignment';
+  return type ?? 'Lesson';
+}
+
 export const getLearningContentLibrary = cache(async (): Promise<{
   items: LearningContentLibraryItem[];
   error: string | null;
@@ -96,7 +102,7 @@ export const getLearningContentLibrary = cache(async (): Promise<{
               courseSlug: course.slug ?? '',
               title: item.title ?? 'Untitled content',
               description: item.description ?? null,
-              type: item.type ?? 'Lesson',
+              type: normalizeContentType(item.type),
               visibility: mapVisibility(item.visibility),
               status: mapStatus(item),
               durationMinutes: item.estimatedMinutes ?? null,

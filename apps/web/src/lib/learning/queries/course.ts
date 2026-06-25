@@ -78,6 +78,14 @@ function mapVisibility(v: ContentVisibility | undefined): 'public' | 'private' |
   return 'private';
 }
 
+type LegacyProgramContentType = LearningCoursesProgramContentType | 'Page' | 'Challenge';
+
+function normalizeProgramContentType(type: LegacyProgramContentType | undefined): LearningCoursesProgramContentType {
+  if (type === 'Page') return 'Lesson';
+  if (type === 'Challenge') return 'Assignment';
+  return type ?? 'Lesson';
+}
+
 function isGuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
 }
@@ -260,7 +268,7 @@ function mapContentDto(dto: LearningCoursesProgramContent): ContentItem {
     id: dto.id!,
     parentId: dto.parentId ?? null,
     order: dto.sortOrder ?? 0,
-    type: dto.type ?? 'Lesson',
+    type: normalizeProgramContentType(dto.type as LegacyProgramContentType | undefined),
     title: dto.title ?? '',
     description: dto.description ?? null,
     status: dto.visibility === 'Public' ? 'published' : 'draft',

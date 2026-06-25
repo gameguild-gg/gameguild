@@ -2,7 +2,7 @@
 
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { createAssessment, createAssessmentGroup } from '@/lib/learning/actions';
-import type { Assessment, AssessmentGroup, AssessmentType } from '@/lib/learning/queries/assessments';
+import type { Assessment, AssessmentGroup, AssessmentType, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
 import type { ContentItem } from '@/lib/learning/types';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
@@ -19,12 +19,11 @@ import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Switch } from '@game-guild/ui/components/switch';
-import { ChevronDown, ClipboardList, FileText, GripVertical, LinkIcon, Loader2, Plus, Target, Trophy } from 'lucide-react';
+import { AlertTriangle, BarChart3, ChevronDown, ClipboardList, GripVertical, LinkIcon, Loader2, Plus, Target, Trophy } from 'lucide-react';
 import React, { useState, useTransition } from 'react';
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: 'Quiz', label: 'Quiz' },
-  { value: 'Exam', label: 'Exam' },
   { value: 'Assignment', label: 'Assignment' },
   { value: 'Project', label: 'Project' },
   { value: 'PeerReview', label: 'Peer Review' },
@@ -35,8 +34,6 @@ function typeIcon(type: AssessmentType) {
   switch (type) {
     case 'Quiz':
       return <ClipboardList className="size-4" />;
-    case 'Exam':
-      return <FileText className="size-4" />;
     case 'Project':
       return <Trophy className="size-4" />;
     default:
@@ -48,8 +45,6 @@ function typeBadgeVariant(type: AssessmentType): 'default' | 'secondary' | 'outl
   switch (type) {
     case 'Quiz':
       return 'secondary';
-    case 'Exam':
-      return 'default';
     default:
       return 'outline';
   }
@@ -61,6 +56,7 @@ interface AssessmentsListProps {
   total: number;
   contentItems?: ContentItem[];
   assessmentGroups?: AssessmentGroup[];
+  analytics?: CourseAssessmentAnalytics | null;
 }
 
 interface AssessmentGroupView {
@@ -74,7 +70,11 @@ interface AssessmentGroupView {
 
 function formatWeight(weightPercent: number | null) {
   if (weightPercent == null) return 'Ungraded';
-  return `${Number.isInteger(weightPercent) ? weightPercent : weightPercent.toFixed(1)}% of Total`;
+  return `${formatPercent(weightPercent)} of Total`;
+}
+
+function formatPercent(value: number) {
+  return `${Number.isInteger(value) ? value : value.toFixed(1)}%`;
 }
 
 function buildGroupedAssessments(assessments: Assessment[], assessmentGroups: AssessmentGroup[]): AssessmentGroupView[] {
@@ -116,12 +116,101 @@ function buildGroupedAssessments(assessments: Assessment[], assessmentGroups: As
     }));
 }
 
+function AssessmentAnalyticsPanel({ analytics }: { analytics: CourseAssessmentAnalytics }) {
+  const maxBucketCount = Math.max(1, ...analytics.distribution.map((bucket) => bucket.count));
+
+  return (
+    <Card>
+      <CardContent className="space-y-5 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="flex items-center gap-2 text-base font-semibold">
+              <BarChart3 className="size-4" aria-hidden="true" />
+              Score distribution
+            </h3>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Assessment outcomes by score bucket and weighted grade group.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-right text-sm">
+            <div>
+              <p className="text-muted-foreground text-xs">Average</p>
+              <p className="font-semibold">{formatPercent(analytics.averagePercent)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs">Pass rate</p>
+              <p className="font-semibold">{formatPercent(analytics.passRate)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs">Grading</p>
+              <p className="font-semibold">{analytics.gradedCount} graded</p>
+            </div>
+          </div>
+        </div>
+
+        {analytics.gradedCount === 0 ? (
+          <div className="rounded-lg border border-dashed p-5 text-center">
+            <p className="text-sm font-medium">No graded scores yet</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Score distribution appears after submissions are graded.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-5">
+            {analytics.distribution.map((bucket) => (
+              <div key={bucket.label} className="rounded-lg border bg-muted/20 p-3">
+                <div className="mb-2 flex items-center justify-between text-xs">
+                  <span className="font-medium">{bucket.label}</span>
+                  <span className="text-muted-foreground">{bucket.count}</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${Math.max(6, (bucket.count / maxBucketCount) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {analytics.groups.map((group) => (
+            <div key={group.groupId ?? group.groupName} className="rounded-lg border p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold">{group.groupName}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {group.gradedCount} graded · {group.ungradedCount} ungraded
+                  </p>
+                </div>
+                <Badge variant="outline">{group.weightPercent == null ? 'Ungraded' : formatPercent(group.weightPercent)}</Badge>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-muted-foreground text-xs">Average</p>
+                  <p className="font-semibold">{formatPercent(group.averagePercent)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Pass rate</p>
+                  <p className="font-semibold">{formatPercent(group.passRate)}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function AssessmentsList({
   courseId,
   assessments,
   total,
   contentItems = [],
   assessmentGroups = [],
+  analytics = null,
 }: AssessmentsListProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -155,6 +244,11 @@ export function AssessmentsList({
     () => buildGroupedAssessments(assessments, assessmentGroups),
     [assessments, assessmentGroups],
   );
+  const weightTotal = React.useMemo(
+    () => assessmentGroups.reduce((sum, group) => sum + group.weightPercent, 0),
+    [assessmentGroups],
+  );
+  const hasWeightWarning = assessmentGroups.length > 0 && Math.round(weightTotal * 100) / 100 !== 100;
 
   function handleCreate() {
     if (!newTitle.trim()) {
@@ -241,6 +335,20 @@ export function AssessmentsList({
         </div>
       </div>
 
+      {hasWeightWarning && (
+        <Card className="border-amber-500/50 bg-amber-500/10">
+          <CardContent className="flex items-start gap-3 p-4">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-semibold">Grade weights total {formatPercent(weightTotal)}.</p>
+              <p className="text-muted-foreground text-sm">Adjust groups until they equal 100%.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {analytics && <AssessmentAnalyticsPanel analytics={analytics} />}
+
       {/* Empty state */}
       {assessments.length === 0 && assessmentGroups.length === 0 && (
         <Card>
@@ -248,7 +356,7 @@ export function AssessmentsList({
             <ClipboardList className="text-muted-foreground mb-4 size-12" />
             <h3 className="text-lg font-medium">No assessments yet</h3>
             <p className="text-muted-foreground mt-1 text-sm">
-              Create quizzes, exams, and assignments to evaluate student learning.
+              Create quizzes, assignments, projects, and reviews to evaluate student learning.
             </p>
             <Button className="mt-4" size="sm" onClick={() => setShowCreate(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -383,7 +491,7 @@ export function AssessmentsList({
           <DialogHeader>
             <DialogTitle>Create Assessment</DialogTitle>
             <DialogDescription>
-              Add a new quiz, exam, assignment, or project to this course.
+              Add a new quiz, assignment, or project to this course.
             </DialogDescription>
           </DialogHeader>
 
@@ -394,7 +502,7 @@ export function AssessmentsList({
                 id="assessment-title"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="e.g. Midterm Exam"
+                placeholder="e.g. Midterm quiz"
               />
             </div>
 

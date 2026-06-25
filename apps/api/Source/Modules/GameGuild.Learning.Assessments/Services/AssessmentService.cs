@@ -69,10 +69,63 @@ public class AssessmentService : IAssessmentService
     {
         return await _context.Set<Assessment>()
             .Include(a => a.AssessmentGroup)
-            .Where(a => a.CourseId == courseId)
+            .Where(a => a.CourseId == courseId && a.DeletedAt == null)
             .OrderBy(a => a.AssessmentGroup == null ? int.MaxValue : a.AssessmentGroup.Order)
             .ThenBy(a => a.Order)
             .ToListAsync().ConfigureAwait(false);
+    }
+
+    public async Task<CourseAssessmentAnalyticsDto> GetCourseAssessmentAnalyticsAsync(Guid courseId)
+    {
+        var assessments = await _context.Set<Assessment>()
+            .Include(a => a.AssessmentGroup)
+            .Where(a => a.CourseId == courseId && a.DeletedAt == null)
+            .ToListAsync().ConfigureAwait(false);
+
+        var assessmentIds = assessments.Select(a => a.Id).ToArray();
+        var submissions = assessmentIds.Length == 0
+            ? new List<AssessmentSubmission>()
+            : await _context.Set<AssessmentSubmission>()
+                .Where(s => assessmentIds.Contains(s.AssessmentId) && s.DeletedAt == null)
+                .ToListAsync().ConfigureAwait(false);
+
+        var scored = BuildScoreFacts(assessments, submissions);
+        var groups = assessments
+            .GroupBy(a => new
+            {
+                GroupId = a.AssessmentGroupId,
+                GroupName = a.AssessmentGroup?.Name ?? "Ungrouped",
+                a.AssessmentGroup?.WeightPercent,
+                GroupOrder = a.AssessmentGroup?.Order ?? int.MaxValue
+            })
+            .OrderBy(g => g.Key.GroupOrder)
+            .ThenBy(g => g.Key.GroupName)
+            .Select(g =>
+            {
+                var groupAssessmentIds = g.Select(a => a.Id).ToHashSet();
+                var groupScored = scored.Where(f => groupAssessmentIds.Contains(f.AssessmentId)).ToList();
+                return new AssessmentGroupAnalyticsDto(
+                    g.Key.GroupId,
+                    g.Key.GroupName,
+                    g.Key.WeightPercent,
+                    g.Count(),
+                    groupScored.Count,
+                    g.Count(a => !groupScored.Any(f => f.AssessmentId == a.Id)),
+                    AveragePercent(groupScored),
+                    PassRate(groupScored),
+                    BuildDistribution(groupScored));
+            })
+            .ToArray();
+
+        return new CourseAssessmentAnalyticsDto(
+            courseId,
+            assessments.Count,
+            scored.Count,
+            assessments.Count(a => !scored.Any(f => f.AssessmentId == a.Id)),
+            AveragePercent(scored),
+            PassRate(scored),
+            BuildDistribution(scored),
+            groups);
     }
 
     public async Task<Result<Assessment>> UpdateAssessmentAsync(Guid id, UpdateAssessmentRequest request)
@@ -304,6 +357,69 @@ public class AssessmentService : IAssessmentService
             ? Result.Success()
             : Result.Failure(Error.Validation("AssessmentGroup.CourseMismatch", "Assessment group belongs to another course"));
     }
+
+    private static List<AssessmentScoreFact> BuildScoreFacts(
+        IReadOnlyCollection<Assessment> assessments,
+        IReadOnlyCollection<AssessmentSubmission> submissions)
+    {
+        var assessmentsById = assessments.ToDictionary(a => a.Id);
+        return submissions
+            .Where(s => s.Score.HasValue && assessmentsById.ContainsKey(s.AssessmentId))
+            .Select(s =>
+            {
+                var assessment = assessmentsById[s.AssessmentId];
+                var percent = assessment.MaxScore <= 0
+                    ? 0
+                    : Math.Clamp((decimal)s.Score!.Value / assessment.MaxScore * 100m, 0m, 100m);
+
+                return new AssessmentScoreFact(
+                    assessment.Id,
+                    percent,
+                    s.Passed ?? percent >= PassingPercent(assessment));
+            })
+            .ToList();
+    }
+
+    private static decimal PassingPercent(Assessment assessment)
+    {
+        return assessment.MaxScore <= 0
+            ? 0
+            : Math.Clamp((decimal)assessment.PassingScore / assessment.MaxScore * 100m, 0m, 100m);
+    }
+
+    private static decimal AveragePercent(IReadOnlyCollection<AssessmentScoreFact> facts)
+    {
+        return facts.Count == 0 ? 0 : Math.Round(facts.Average(f => f.Percent), 2);
+    }
+
+    private static decimal PassRate(IReadOnlyCollection<AssessmentScoreFact> facts)
+    {
+        return facts.Count == 0 ? 0 : Math.Round((decimal)facts.Count(f => f.Passed) / facts.Count * 100m, 2);
+    }
+
+    private static IReadOnlyCollection<AssessmentScoreBucketDto> BuildDistribution(IReadOnlyCollection<AssessmentScoreFact> facts)
+    {
+        return new[]
+        {
+            BuildBucket("0-59", 0, 59, facts),
+            BuildBucket("60-69", 60, 69, facts),
+            BuildBucket("70-79", 70, 79, facts),
+            BuildBucket("80-89", 80, 89, facts),
+            BuildBucket("90-100", 90, 100, facts)
+        };
+    }
+
+    private static AssessmentScoreBucketDto BuildBucket(
+        string label,
+        int minPercent,
+        int maxPercent,
+        IReadOnlyCollection<AssessmentScoreFact> facts)
+    {
+        var count = facts.Count(f => f.Percent >= minPercent && f.Percent <= maxPercent);
+        return new AssessmentScoreBucketDto(label, minPercent, maxPercent, count);
+    }
+
+    private sealed record AssessmentScoreFact(Guid AssessmentId, decimal Percent, bool Passed);
 
     // ===== SUBMISSION MANAGEMENT =====
 

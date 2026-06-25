@@ -35,7 +35,7 @@ describe('LearningTutorialsPage', () => {
           courseSlug: 'gameplay-prototyping',
           title: 'Prototype combat loop',
           description: 'Step-by-step tutorial.',
-          type: 'Challenge',
+          type: 'Code',
           visibility: 'public',
           status: 'published',
           durationMinutes: 90,

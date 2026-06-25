@@ -17,7 +17,6 @@ import { updateAssessment, deleteAssessment } from '@/lib/learning/actions';
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: 'Quiz', label: 'Quiz' },
-  { value: 'Exam', label: 'Exam' },
   { value: 'Assignment', label: 'Assignment' },
   { value: 'Project', label: 'Project' },
   { value: 'PeerReview', label: 'Peer Review' },

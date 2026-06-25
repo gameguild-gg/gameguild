@@ -22,6 +22,11 @@ interface ContentItemEditorProps {
   courseTitle: string;
 }
 
+function formatContentTypeLabel(type: ContentItemDetail['type']) {
+  if (type === 'Questionnaire') return 'Quiz';
+  return type;
+}
+
 export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -74,6 +79,8 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
     router.back();
   }
 
+  const contentTypeLabel = formatContentTypeLabel(item.type);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -86,7 +93,7 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
           <p className="text-muted-foreground text-sm">{courseTitle}</p>
           <h1 className="text-2xl font-bold">{item.title}</h1>
         </div>
-        <Badge variant="secondary">{item.type}</Badge>
+        <Badge variant="secondary">{contentTypeLabel}</Badge>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -94,7 +101,7 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Content</CardTitle>
+              <CardTitle>Lesson content</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -113,7 +120,7 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Brief description of this content item"
+                  placeholder="Brief description for enrolled students"
                   rows={3}
                 />
               </div>
@@ -123,7 +130,7 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
               <div className="space-y-2">
                 <Label htmlFor="body">Body</Label>
                 <p className="text-muted-foreground text-xs">
-                  Content body in plain text or HTML. A rich text editor will be added in a future update.
+                  Lesson body in plain text or HTML. Course marketing copy belongs in Listing.
                 </p>
                 <Textarea
                   id="body"
@@ -142,11 +149,11 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Settings</CardTitle>
+              <CardTitle>Lesson publication</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="visibility">Visibility</Label>
+                <Label htmlFor="visibility">Lesson visibility</Label>
                 <Select value={visibility} onValueChange={setVisibility}>
                   <SelectTrigger id="visibility">
                     <SelectValue />
@@ -159,6 +166,9 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-muted-foreground text-xs">
+                  Controls enrolled-student access only. Public course landing-page visibility is managed in Listing.
+                </p>
               </div>
 
               <div className="flex items-center justify-between">
@@ -222,7 +232,7 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
               <CardTitle>Info</CardTitle>
             </CardHeader>
             <CardContent className="text-muted-foreground space-y-1 text-sm">
-              <p>Type: {item.type}</p>
+              <p>Type: {contentTypeLabel}</p>
               <p>Status: {item.status}</p>
               <p>Created: {new Date(item.createdAt).toLocaleDateString()}</p>
               <p>Updated: {new Date(item.updatedAt).toLocaleDateString()}</p>

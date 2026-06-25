@@ -183,11 +183,10 @@ function mapProgressItemType(type: LearningCoursesProgramContent['type']): Cours
         case 'Discussion':
             return 'peer-review';
         case 'Code':
-        case 'Challenge':
+        case 'Project':
         case 'Reflection':
         case 'Survey':
             return 'activity';
-        case 'Page':
         case 'Lesson':
         default:
             return 'lesson';
@@ -311,11 +310,10 @@ function mapLearningActivityType(type: LearningCoursesProgramContent['type']): C
             return 'quiz';
         case 'Discussion':
             return 'discussion';
-        case 'Challenge':
+        case 'Project':
         case 'Reflection':
         case 'Survey':
         case 'Lesson':
-        case 'Page':
         default:
             return 'text';
     }
@@ -330,11 +328,10 @@ function mapLearningItemType(type: LearningCoursesProgramContent['type']): Cours
         case 'Discussion':
             return 'peer-review';
         case 'Code':
-        case 'Challenge':
+        case 'Project':
         case 'Reflection':
         case 'Survey':
             return 'activity';
-        case 'Page':
         case 'Lesson':
         default:
             return 'lesson';

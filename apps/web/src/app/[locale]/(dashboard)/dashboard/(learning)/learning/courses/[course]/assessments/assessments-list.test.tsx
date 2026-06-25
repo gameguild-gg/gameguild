@@ -1,9 +1,10 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { AssessmentsList } from './assessments-list';
-import type { Assessment } from '@/lib/learning/queries/assessments';
+import type { Assessment, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
 
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
@@ -17,6 +18,7 @@ vi.mock('@/i18n/navigation', () => ({
 
 vi.mock('@/lib/learning/actions', () => ({
   createAssessment: vi.fn(),
+  createAssessmentGroup: vi.fn(),
 }));
 
 const groupedAssessments = [
@@ -64,6 +66,65 @@ const groupedAssessments = [
   },
 ] as unknown as Assessment[];
 
+const assessmentGroups = [
+  {
+    id: 'group-quizzes',
+    courseId: 'course-1',
+    name: 'Weekly quizzes',
+    description: null,
+    weightPercent: 30,
+    order: 1,
+  },
+  {
+    id: 'group-project',
+    courseId: 'course-1',
+    name: 'Final project',
+    description: null,
+    weightPercent: 40,
+    order: 2,
+  },
+];
+
+const analytics = {
+  courseId: 'course-1',
+  assessmentCount: 2,
+  gradedCount: 2,
+  ungradedCount: 0,
+  averagePercent: 65,
+  passRate: 50,
+  distribution: [
+    { label: '0-59', minPercent: 0, maxPercent: 59, count: 1 },
+    { label: '60-69', minPercent: 60, maxPercent: 69, count: 0 },
+    { label: '70-79', minPercent: 70, maxPercent: 79, count: 0 },
+    { label: '80-89', minPercent: 80, maxPercent: 89, count: 1 },
+    { label: '90-100', minPercent: 90, maxPercent: 100, count: 0 },
+  ],
+  groups: [
+    {
+      groupId: 'group-quizzes',
+      groupName: 'Weekly quizzes',
+      weightPercent: 30,
+      assessmentCount: 1,
+      gradedCount: 1,
+      ungradedCount: 0,
+      averagePercent: 80,
+      passRate: 100,
+      distribution: [{ label: '80-89', minPercent: 80, maxPercent: 89, count: 1 }],
+    },
+    {
+      groupId: 'group-project',
+      groupName: 'Final project',
+      weightPercent: 40,
+      assessmentCount: 1,
+      gradedCount: 1,
+      ungradedCount: 0,
+      averagePercent: 50,
+      passRate: 0,
+      distribution: [{ label: '0-59', minPercent: 0, maxPercent: 59, count: 1 }],
+    },
+  ],
+} satisfies CourseAssessmentAnalytics;
+
 describe('AssessmentsList weighted groups', () => {
   it('renders graded activities inside weighted assessment groups', () => {
     render(
@@ -71,6 +132,7 @@ describe('AssessmentsList weighted groups', () => {
         courseId="course-1"
         assessments={groupedAssessments}
         total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
       />,
     );
 
@@ -83,5 +145,55 @@ describe('AssessmentsList weighted groups', () => {
     expect(within(projectGroup).getByRole('heading', { name: /final project/i })).toBeInTheDocument();
     expect(within(projectGroup).getByText('40% of Total')).toBeInTheDocument();
     expect(within(projectGroup).getByRole('link', { name: /final project proposal/i })).toBeInTheDocument();
+  });
+
+  it('warns when weighted groups do not total 100 percent', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    expect(screen.getByText(/grade weights total 70%/i)).toBeInTheDocument();
+    expect(screen.getByText(/adjust groups until they equal 100%/i)).toBeInTheDocument();
+  });
+
+  it('renders assessment score analytics in the assessment hub', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+        analytics={analytics}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: /score distribution/i })).toBeInTheDocument();
+    expect(screen.getByText('65%')).toBeInTheDocument();
+    expect(screen.getAllByText('50%').length).toBeGreaterThan(0);
+    expect(screen.getByText(/2 graded/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/weekly quizzes/i).length).toBeGreaterThan(0);
+  });
+
+  it('does not offer Exam as a professor-facing assessment type', async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /add assessment/i }));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.queryByText(/\bExam\b/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/quiz, assignment, or project/i)).toBeInTheDocument();
   });
 });

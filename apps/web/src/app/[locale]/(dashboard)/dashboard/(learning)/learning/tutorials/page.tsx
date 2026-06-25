@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game
 import { ArrowLeft, BookOpenCheck, ExternalLink, FileText, Plus, Timer } from 'lucide-react';
 import React from 'react';
 
-const tutorialTypes = new Set(['Lesson', 'Page', 'Code', 'Challenge', 'Reflection']);
+const tutorialTypes = new Set(['Lesson', 'Code', 'Reflection']);
 
 function formatDuration(minutes: number | null) {
   if (!minutes) {
@@ -120,7 +120,7 @@ export default async function Page(): Promise<React.JSX.Element> {
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <FileText className="mb-4 size-12 text-muted-foreground" />
             <h3 className="text-lg font-semibold">No tutorial content found</h3>
-            <p className="max-w-md text-sm text-muted-foreground">Create course lessons, pages, code exercises, or challenges and they will appear here for curation.</p>
+            <p className="max-w-md text-sm text-muted-foreground">Create course lessons, code exercises, or reflections and they will appear here for curation.</p>
             <Button asChild className="mt-5">
               <Link href="/dashboard/learning/courses/new">Create course</Link>
             </Button>
