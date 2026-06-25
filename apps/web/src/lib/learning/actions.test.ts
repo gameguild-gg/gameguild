@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   getToken: vi.fn(),
   revalidatePath: vi.fn(),
   fetch: vi.fn(),
+  resolveCourseId: vi.fn(),
+  deleteCoursesContent: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
@@ -19,14 +21,22 @@ vi.mock('@game-guild/client', () => ({
   GeneratedApi: {
     LearningAssessmentsModule: class {},
     LearningCoursesProgramModule: class {},
-    LearningCoursesProgramcontentModule: class {},
+    LearningCoursesProgramcontentModule: class {
+      deleteCoursesContent = mocks.deleteCoursesContent;
+    },
     LearningCoursesProgramlifecycleModule: class {},
+    LearningEnrollmentsModule: class {},
   },
+}));
+
+vi.mock('@/lib/learning/queries/course', () => ({
+  resolveCourseId: mocks.resolveCourseId,
 }));
 
 const {
   createCertificateTemplate,
   deleteCertificateTemplate,
+  deleteContent,
   createCourseClass,
   updateCourseClass,
   updateCourseClassStatus,
@@ -40,7 +50,24 @@ describe('learning server actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getToken.mockResolvedValue('access-token');
+    mocks.resolveCourseId.mockImplementation(async (courseId: string) => courseId);
+    mocks.deleteCoursesContent.mockResolvedValue({ ok: true, data: undefined });
     vi.stubGlobal('fetch', mocks.fetch);
+  });
+
+  it('resolves dashboard course slugs before deleting course content', async () => {
+    mocks.resolveCourseId.mockResolvedValue('1caa16bb-6810-4e53-bb0d-91f0d5702333');
+
+    const result = await deleteContent('creature-design-by-admin', '9ec3b854-89ca-4757-83fb-cfc823da1a5e');
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.resolveCourseId).toHaveBeenCalledWith('creature-design-by-admin');
+    expect(mocks.deleteCoursesContent).toHaveBeenCalledWith(
+      '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+      '9ec3b854-89ca-4757-83fb-cfc823da1a5e',
+    );
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333');
   });
 
   it('creates certificate templates through the Learning.Certificates API', async () => {

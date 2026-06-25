@@ -63,18 +63,37 @@ public class ProgramContentService(IApplicationDbContext context) : IProgramCont
   }
 
   public async Task<bool> DeleteContentAsync(Guid id) {
-    var content = await context.Set<ProgramContent>().Include(pc => pc.Children).FirstOrDefaultAsync(pc => pc.Id == id && pc.DeletedAt == null);
+    var content = await context.Set<ProgramContent>().FirstOrDefaultAsync(pc => pc.Id == id && pc.DeletedAt == null);
 
     if (content == null) return false;
 
-    // Soft delete the content and all its children
-    content.SoftDelete();
-
-    foreach (var child in content.Children.Where(c => c.DeletedAt == null)) child.SoftDelete();
+    var contents = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == content.ProgramId && pc.DeletedAt == null).ToListAsync();
+    SoftDeleteContentTree(id, contents);
 
     await context.SaveChangesAsync().ConfigureAwait(false);
 
     return true;
+  }
+
+  private static void SoftDeleteContentTree(Guid rootId, IEnumerable<ProgramContent> contents) {
+    var contentById = contents.ToDictionary(content => content.Id);
+    var childrenByParentId = contents
+      .Where(content => content.ParentId.HasValue)
+      .GroupBy(content => content.ParentId!.Value)
+      .ToDictionary(group => group.Key, group => group.ToList());
+    var pending = new Stack<Guid>();
+    var visited = new HashSet<Guid>();
+
+    pending.Push(rootId);
+    while (pending.Count > 0) {
+      var contentId = pending.Pop();
+      if (!visited.Add(contentId) || !contentById.TryGetValue(contentId, out var content)) continue;
+
+      content.SoftDelete();
+
+      if (!childrenByParentId.TryGetValue(contentId, out var children)) continue;
+      foreach (var child in children) pending.Push(child.Id);
+    }
   }
 
   public async Task<bool> ReorderContentAsync(Guid programId, List<(Guid contentId, int sortOrder)> newOrder) {
