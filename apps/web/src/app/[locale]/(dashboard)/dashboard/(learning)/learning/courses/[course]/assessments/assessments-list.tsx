@@ -1,7 +1,7 @@
 'use client';
 
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
-import { createAssessment, createAssessmentGroup } from '@/lib/learning/actions';
+import { createAssessment, createAssessmentGroup, deleteAssessmentGroup, updateAssessmentGroup } from '@/lib/learning/actions';
 import type { Assessment, AssessmentGroup, AssessmentType, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
 import type { ContentItem } from '@/lib/learning/types';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -19,7 +19,7 @@ import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Switch } from '@game-guild/ui/components/switch';
-import { AlertTriangle, BarChart3, ChevronDown, ClipboardList, GripVertical, LinkIcon, Loader2, Plus, Target, Trophy } from 'lucide-react';
+import { AlertTriangle, BarChart3, ChevronDown, ClipboardList, GripVertical, LinkIcon, Loader2, Pencil, Plus, Target, Trash2, Trophy } from 'lucide-react';
 import React, { useState, useTransition } from 'react';
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
@@ -230,6 +230,13 @@ export function AssessmentsList({
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupWeight, setNewGroupWeight] = useState('20');
   const [groupError, setGroupError] = useState<string | null>(null);
+  const [editingGroup, setEditingGroup] = useState<AssessmentGroup | null>(null);
+  const [editGroupName, setEditGroupName] = useState('');
+  const [editGroupDescription, setEditGroupDescription] = useState('');
+  const [editGroupWeight, setEditGroupWeight] = useState('');
+  const [editGroupError, setEditGroupError] = useState<string | null>(null);
+  const [deletingGroup, setDeletingGroup] = useState<AssessmentGroup | null>(null);
+  const [deleteGroupError, setDeleteGroupError] = useState<string | null>(null);
 
   // Build content item lookup for linked assessment indicators
   const contentMap = React.useMemo(() => {
@@ -315,6 +322,91 @@ export function AssessmentsList({
     });
   }
 
+  function openEditGroup(group: AssessmentGroupView) {
+    if (group.id === 'ungrouped' || group.weightPercent == null) return;
+
+    const source = assessmentGroups.find((item) => item.id === group.id) ?? {
+      id: group.id,
+      courseId,
+      name: group.name,
+      description: group.description,
+      weightPercent: group.weightPercent,
+      order: group.order,
+    };
+
+    setEditingGroup(source);
+    setEditGroupName(source.name);
+    setEditGroupDescription(source.description ?? '');
+    setEditGroupWeight(String(source.weightPercent));
+    setEditGroupError(null);
+  }
+
+  function handleUpdateGroup() {
+    if (!editingGroup) return;
+
+    if (!editGroupName.trim()) {
+      setEditGroupError('Group name is required.');
+      return;
+    }
+
+    const weight = Number(editGroupWeight);
+    if (!Number.isFinite(weight) || weight < 0 || weight > 100) {
+      setEditGroupError('Weight must be between 0 and 100.');
+      return;
+    }
+
+    setEditGroupError(null);
+    startGroupTransition(async () => {
+      const result = await updateAssessmentGroup({
+        courseId,
+        groupId: editingGroup.id,
+        name: editGroupName.trim(),
+        description: editGroupDescription.trim() || null,
+        weightPercent: weight,
+        order: editingGroup.order,
+      });
+
+      if (result.success) {
+        setEditingGroup(null);
+        router.refresh();
+      } else {
+        setEditGroupError(result.error);
+      }
+    });
+  }
+
+  function openDeleteGroup(group: AssessmentGroupView) {
+    if (group.id === 'ungrouped' || group.weightPercent == null) return;
+
+    const source = assessmentGroups.find((item) => item.id === group.id) ?? {
+      id: group.id,
+      courseId,
+      name: group.name,
+      description: group.description,
+      weightPercent: group.weightPercent,
+      order: group.order,
+    };
+
+    setDeletingGroup(source);
+    setDeleteGroupError(null);
+  }
+
+  function handleDeleteGroup() {
+    if (!deletingGroup) return;
+
+    setDeleteGroupError(null);
+    startGroupTransition(async () => {
+      const result = await deleteAssessmentGroup(courseId, deletingGroup.id);
+
+      if (result.success) {
+        setDeletingGroup(null);
+        router.refresh();
+      } else {
+        setDeleteGroupError(result.error);
+      }
+    });
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -381,6 +473,30 @@ export function AssessmentsList({
                 <Badge variant="outline" className="shrink-0 rounded-full bg-background">
                   {formatWeight(group.weightPercent)}
                 </Badge>
+                {group.id !== 'ungrouped' && (
+                  <>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="size-8 p-0"
+                      aria-label={`Edit group ${group.name}`}
+                      onClick={() => openEditGroup(group)}
+                    >
+                      <Pencil className="size-4" aria-hidden="true" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="size-8 p-0 text-destructive hover:text-destructive"
+                      aria-label={`Delete group ${group.name}`}
+                      onClick={() => openDeleteGroup(group)}
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    </Button>
+                  </>
+                )}
                 <Button
                   type="button"
                   size="sm"
@@ -480,6 +596,84 @@ export function AssessmentsList({
             <Button onClick={handleCreateGroup} disabled={isGroupPending}>
               {isGroupPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Group
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Assessment Group Dialog */}
+      <Dialog open={Boolean(editingGroup)} onOpenChange={(open) => !open && setEditingGroup(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Assessment Group</DialogTitle>
+            <DialogDescription>
+              Update the weighted grading block used to calculate course outcomes.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="edit-assessment-group-name">Group name</Label>
+              <Input
+                id="edit-assessment-group-name"
+                value={editGroupName}
+                onChange={(e) => setEditGroupName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-assessment-group-description">Description</Label>
+              <Input
+                id="edit-assessment-group-description"
+                value={editGroupDescription}
+                onChange={(e) => setEditGroupDescription(e.target.value)}
+                placeholder="Optional grading guidance"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-assessment-group-weight">Weight percent</Label>
+              <Input
+                id="edit-assessment-group-weight"
+                type="number"
+                min={0}
+                max={100}
+                value={editGroupWeight}
+                onChange={(e) => setEditGroupWeight(e.target.value)}
+              />
+            </div>
+            {editGroupError && <p className="text-destructive text-sm">{editGroupError}</p>}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingGroup(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateGroup} disabled={isGroupPending}>
+              {isGroupPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Group
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Assessment Group Dialog */}
+      <Dialog open={Boolean(deletingGroup)} onOpenChange={(open) => !open && setDeletingGroup(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Assessment Group</DialogTitle>
+            <DialogDescription>
+              This removes "{deletingGroup?.name}" and will move existing assessments to ungrouped work.
+            </DialogDescription>
+          </DialogHeader>
+
+          {deleteGroupError && <p className="text-destructive text-sm">{deleteGroupError}</p>}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingGroup(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteGroup} disabled={isGroupPending}>
+              {isGroupPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete Group
             </Button>
           </DialogFooter>
         </DialogContent>
