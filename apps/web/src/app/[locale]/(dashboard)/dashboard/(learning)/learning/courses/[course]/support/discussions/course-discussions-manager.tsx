@@ -122,25 +122,25 @@ export function CourseDiscussionsManager({ courseId, courseTitle, threads }: Cou
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-      <Card>
-        <CardHeader>
+    <div className="grid min-w-0 max-w-full gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="size-5" />
             Course Discussions
           </CardTitle>
-          <CardDescription>{courseTitle} learner questions and discussion threads.</CardDescription>
+          <CardDescription className="break-words">{courseTitle} learner questions and discussion threads.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="min-w-0 space-y-3">
           {items.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No discussions have been started for this course.</div>
+            <div className="min-w-0 rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No discussions have been started for this course.</div>
           ) : (
             items.map((thread) => (
-              <div key={thread.id} className="space-y-3 rounded-lg border p-4">
-                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div key={thread.id} className="min-w-0 space-y-3 rounded-lg border p-4">
+                <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <Link href={`/dashboard/learning/courses/${courseId}/support/discussions/${thread.id}`} className="min-w-0 flex-1 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{thread.title}</p>
+                      <p className="break-words font-medium">{thread.title}</p>
                       {thread.pinned ? <Badge variant="outline"><Pin className="mr-1 size-3" />Pinned</Badge> : null}
                       {thread.locked ? <Badge variant="secondary"><CheckCircle2 className="mr-1 size-3" />Resolved</Badge> : null}
                     </div>
@@ -171,15 +171,15 @@ export function CourseDiscussionsManager({ courseId, courseTitle, threads }: Cou
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Plus className="size-4" />
             Start discussion
           </CardTitle>
-          <CardDescription>Open a learner-facing thread for questions, blockers, or feedback.</CardDescription>
+          <CardDescription className="break-words">Open a learner-facing thread for questions, blockers, or feedback.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="min-w-0 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="discussion-title">Title</Label>
             <Input id="discussion-title" value={title} onChange={(event) => setTitle(event.target.value)} disabled={isPending} placeholder="Question about milestone review" />
