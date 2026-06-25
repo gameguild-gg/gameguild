@@ -814,6 +814,45 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(groups.reduce((total, group) => total + Number(group.weightPercent), 0)).toBe(100);
   });
 
+  it('updates weighted assessment group metadata before activities are assigned', async () => {
+    const updateResult = await authedClient.request<AssessmentGroupOutput>({
+      method: 'PUT',
+      path: `/v1/assessments/groups/${quizzesGroupId}`,
+      body: {
+        name: 'Weekly Quizzes',
+        weightPercent: 35,
+        order: 1,
+        description: 'Weekly checks and short applied quizzes.',
+      },
+    });
+    const updatedGroup = unwrap(updateResult, 'Update quizzes assessment group');
+
+    expect(updatedGroup.name).toBe('Weekly Quizzes');
+    expect(updatedGroup.weightPercent).toBe(35);
+    expect(updatedGroup.description).toBe('Weekly checks and short applied quizzes.');
+
+    const rebalanceResult = await authedClient.request<AssessmentGroupOutput>({
+      method: 'PUT',
+      path: `/v1/assessments/groups/${finalProjectGroupId}`,
+      body: {
+        name: 'Final Project',
+        weightPercent: 65,
+        order: 2,
+        description: 'Portfolio-ready milestone and final submission.',
+      },
+    });
+    const rebalancedGroup = unwrap(rebalanceResult, 'Rebalance final project group');
+    expect(rebalancedGroup.weightPercent).toBe(65);
+
+    const listResult = await authedClient.request<AssessmentGroupOutput[]>({
+      method: 'GET',
+      path: `/v1/assessments/course/${courseId}/groups`,
+    });
+    const groups = unwrap(listResult, 'List updated assessment groups');
+    expect(groups.map((group) => group.name)).toEqual(expect.arrayContaining(['Weekly Quizzes', 'Final Project']));
+    expect(groups.reduce((total, group) => total + Number(group.weightPercent), 0)).toBe(100);
+  });
+
   it('creates professor-facing quiz and project assessments without legacy exam type', async () => {
     const quizResult = await authedClient.request<AssessmentOutput>({
       method: 'POST',
@@ -850,6 +889,43 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(quiz.type).toBe('Quiz');
     expect(project.type).toBe('Project');
     expect([quiz.type, project.type]).not.toContain('Exam');
+  });
+
+  it('deletes unused weighted groups without removing existing assessments', async () => {
+    const labGroupResult = await authedClient.request<AssessmentGroupOutput>({
+      method: 'POST',
+      path: '/v1/assessments/groups',
+      body: {
+        courseId,
+        name: 'Lab Practice',
+        weightPercent: 0,
+        order: 99,
+        description: 'Temporary unassigned group used by the professor while planning.',
+      },
+    });
+    const labGroup = unwrap(labGroupResult, 'Create temporary lab assessment group');
+
+    const deleteResult = await authedClient.request<void>({
+      method: 'DELETE',
+      path: `/v1/assessments/groups/${labGroup.id}`,
+    });
+    expect(deleteResult.ok).toBe(true);
+
+    const listResult = await authedClient.request<AssessmentGroupOutput[]>({
+      method: 'GET',
+      path: `/v1/assessments/course/${courseId}/groups`,
+    });
+    const groups = unwrap(listResult, 'List assessment groups after delete');
+    expect(groups.map((group) => group.id)).not.toContain(labGroup.id);
+
+    const assessmentsResult = await authedClient.request<AssessmentOutput[]>({
+      method: 'GET',
+      path: `/v1/assessments/course/${courseId}`,
+    });
+    const assessments = unwrap(assessmentsResult, 'List assessments after deleting unused group');
+    expect(assessments.map((assessment) => assessment.id)).toEqual(
+      expect.arrayContaining([quizAssessmentId, projectAssessmentId]),
+    );
   });
 
   it('attaches the quiz to a lesson and keeps all graded work visible in the assessment hub', async () => {
@@ -895,7 +971,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
       expect.arrayContaining(['0-59', '60-69', '70-79', '80-89', '90-100']),
     );
     expect(analytics.groups.map((group) => group.groupName)).toEqual(
-      expect.arrayContaining(['Quizzes', 'Final Project']),
+      expect.arrayContaining(['Weekly Quizzes', 'Final Project']),
     );
   });
 
