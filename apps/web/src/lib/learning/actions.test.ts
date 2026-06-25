@@ -42,7 +42,9 @@ const {
   updateCourseClassStatus,
   createCourseDiscussion,
   createDiscussionReply,
+  deleteAssessmentGroup,
   updateDiscussionPin,
+  updateAssessmentGroup,
   resolveDiscussion,
 } = await import('./actions');
 
@@ -308,5 +310,69 @@ describe('learning server actions', () => {
         Authorization: 'Bearer access-token',
       },
     });
+  });
+
+  it('updates assessment groups through the weighted grading endpoint', async () => {
+    mocks.fetch.mockResolvedValue(
+      new Response(JSON.stringify({ id: 'group-1', courseId: 'course-1' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const result = await updateAssessmentGroup({
+      courseId: 'course-1',
+      groupId: 'group-1',
+      name: 'Weekly quizzes',
+      description: 'Weekly knowledge checks.',
+      weightPercent: 25,
+      order: 2,
+    });
+
+    expect(result).toEqual({ success: true, data: { id: 'group-1' } });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/assessments/groups/group-1', {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: 'Weekly quizzes',
+        description: 'Weekly knowledge checks.',
+        weightPercent: 25,
+        order: 2,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/assessments');
+  });
+
+  it('rejects invalid assessment group weights before calling the API', async () => {
+    const result = await updateAssessmentGroup({
+      courseId: 'course-1',
+      groupId: 'group-1',
+      name: 'Weekly quizzes',
+      weightPercent: 120,
+    });
+
+    expect(result).toEqual({ success: false, error: 'Weight must be between 0 and 100.' });
+    expect(mocks.fetch).not.toHaveBeenCalled();
+  });
+
+  it('deletes assessment groups and refreshes the assessment hub', async () => {
+    mocks.fetch.mockResolvedValue(new Response(null, { status: 204 }));
+
+    const result = await deleteAssessmentGroup('course-1', 'group-1');
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/assessments/groups/group-1', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/assessments');
   });
 });

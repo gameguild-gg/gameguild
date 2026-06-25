@@ -1,9 +1,10 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssessmentsList } from './assessments-list';
+import { deleteAssessmentGroup, updateAssessmentGroup } from '@/lib/learning/actions';
 import type { Assessment, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
 
 vi.mock('@/i18n/navigation', () => ({
@@ -19,6 +20,8 @@ vi.mock('@/i18n/navigation', () => ({
 vi.mock('@/lib/learning/actions', () => ({
   createAssessment: vi.fn(),
   createAssessmentGroup: vi.fn(),
+  deleteAssessmentGroup: vi.fn(),
+  updateAssessmentGroup: vi.fn(),
 }));
 
 const groupedAssessments = [
@@ -126,6 +129,12 @@ const analytics = {
 } satisfies CourseAssessmentAnalytics;
 
 describe('AssessmentsList weighted groups', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(updateAssessmentGroup).mockResolvedValue({ success: true, data: { id: 'group-quizzes' } });
+    vi.mocked(deleteAssessmentGroup).mockResolvedValue({ success: true, data: null });
+  });
+
   it('renders graded activities inside weighted assessment groups', () => {
     render(
       <AssessmentsList
@@ -195,5 +204,53 @@ describe('AssessmentsList weighted groups', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.queryByText(/\bExam\b/i)).not.toBeInTheDocument();
     expect(screen.getByText(/quiz, assignment, or project/i)).toBeInTheDocument();
+  });
+
+  it('lets professors edit a weighted assessment group without leaving the assessment hub', async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /edit group weekly quizzes/i }));
+    await user.clear(screen.getByLabelText(/weight percent/i));
+    await user.type(screen.getByLabelText(/weight percent/i), '35');
+    await user.click(screen.getByRole('button', { name: /save group/i }));
+
+    await waitFor(() => {
+      expect(updateAssessmentGroup).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        groupId: 'group-quizzes',
+        name: 'Weekly quizzes',
+        description: null,
+        weightPercent: 35,
+        order: 1,
+      });
+    });
+  });
+
+  it('lets professors delete a weighted group and move its assessments back to ungrouped work', async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /delete group final project/i }));
+    expect(screen.getByRole('dialog')).toHaveTextContent(/move existing assessments to ungrouped work/i);
+    await user.click(screen.getByRole('button', { name: /delete group/i }));
+
+    await waitFor(() => {
+      expect(deleteAssessmentGroup).toHaveBeenCalledWith('course-1', 'group-project');
+    });
   });
 });

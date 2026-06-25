@@ -679,20 +679,38 @@ export interface CreateAssessmentGroupInput {
   description?: string;
 }
 
+export interface UpdateAssessmentGroupInput {
+  courseId: string;
+  groupId: string;
+  name: string;
+  weightPercent: number;
+  order?: number;
+  description?: string | null;
+}
+
 interface AssessmentGroupActionDto {
   id: string;
   courseId: string;
 }
 
+function validateAssessmentGroup(name: string, weightPercent: number): string | null {
+  if (name.trim().length < 1) {
+    return 'Group name is required.';
+  }
+
+  if (!Number.isFinite(weightPercent) || weightPercent < 0 || weightPercent > 100) {
+    return 'Weight must be between 0 and 100.';
+  }
+
+  return null;
+}
+
 export async function createAssessmentGroup(input: CreateAssessmentGroupInput): Promise<ActionResult<{ id: string }>> {
   const name = input.name.trim();
 
-  if (name.length < 1) {
-    return { success: false, error: 'Group name is required.' };
-  }
-
-  if (!Number.isFinite(input.weightPercent) || input.weightPercent < 0 || input.weightPercent > 100) {
-    return { success: false, error: 'Weight must be between 0 and 100.' };
+  const validationError = validateAssessmentGroup(name, input.weightPercent);
+  if (validationError) {
+    return { success: false, error: validationError };
   }
 
   try {
@@ -712,6 +730,59 @@ export async function createAssessmentGroup(input: CreateAssessmentGroupInput): 
     revalidatePath(`/dashboard/learning/courses/${input.courseId}`);
     revalidatePath(`/dashboard/learning/courses/${input.courseId}/assessments`);
     return { success: true, data: { id: result.data.id } };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function updateAssessmentGroup(input: UpdateAssessmentGroupInput): Promise<ActionResult<{ id: string }>> {
+  const name = input.name.trim();
+
+  const validationError = validateAssessmentGroup(name, input.weightPercent);
+  if (validationError) {
+    return { success: false, error: validationError };
+  }
+
+  if (!input.groupId.trim()) {
+    return { success: false, error: 'Group id is required.' };
+  }
+
+  try {
+    const result = await learningApiRequest<AssessmentGroupActionDto>(`/v1/assessments/groups/${input.groupId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        name,
+        description: input.description?.trim() || null,
+        weightPercent: input.weightPercent,
+        order: input.order ?? 0,
+      }),
+    });
+
+    if (!result.success) return result;
+
+    revalidatePath(`/dashboard/learning/courses/${input.courseId}`);
+    revalidatePath(`/dashboard/learning/courses/${input.courseId}/assessments`);
+    return { success: true, data: { id: result.data.id } };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function deleteAssessmentGroup(courseId: string, groupId: string): Promise<ActionResult<null>> {
+  if (!groupId.trim()) {
+    return { success: false, error: 'Group id is required.' };
+  }
+
+  try {
+    const result = await learningApiRequest<null>(`/v1/assessments/groups/${groupId}`, {
+      method: 'DELETE',
+    });
+
+    if (!result.success) return result;
+
+    revalidatePath(`/dashboard/learning/courses/${courseId}`);
+    revalidatePath(`/dashboard/learning/courses/${courseId}/assessments`);
+    return { success: true, data: null };
   } catch (e) {
     return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
   }
