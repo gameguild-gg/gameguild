@@ -28,6 +28,20 @@ function getApiClient() {
   });
 }
 
+async function resolveCourseMutationId(courseId: string): Promise<string> {
+  const { resolveCourseId } = await import('@/lib/learning/queries/course');
+  return resolveCourseId(courseId);
+}
+
+function revalidateCoursePath(courseId: string, resolvedCourseId: string, segment = '') {
+  const suffix = segment ? `/${segment.replace(/^\/+/, '')}` : '';
+
+  revalidatePath(`/dashboard/learning/courses/${courseId}${suffix}`);
+  if (resolvedCourseId !== courseId) {
+    revalidatePath(`/dashboard/learning/courses/${resolvedCourseId}${suffix}`);
+  }
+}
+
 function createCourseModules() {
   const client = getApiClient();
 
@@ -97,8 +111,9 @@ export async function addContent(input: AddContentInput): Promise<ActionResult<{
   }
 
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const contentBody: LearningCoursesCreateProgramContent = {
-      programId: courseId,
+      programId: resolvedCourseId,
       title: title.trim(),
       description: (description ?? '').trim(),
       type,
@@ -109,10 +124,10 @@ export async function addContent(input: AddContentInput): Promise<ActionResult<{
     };
 
     const { content } = createCourseModules();
-    const result = await content.postCoursesContent(courseId, contentBody);
+    const result = await content.postCoursesContent(resolvedCourseId, contentBody);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
+      revalidateCoursePath(courseId, resolvedCourseId);
       return { success: true, data: { id: result.data.id! } };
     }
 
@@ -124,11 +139,12 @@ export async function addContent(input: AddContentInput): Promise<ActionResult<{
 
 export async function deleteContent(courseId: string, contentId: string): Promise<ActionResult<null>> {
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { content } = createCourseModules();
-    const result = await content.deleteCoursesContent(courseId, contentId);
+    const result = await content.deleteCoursesContent(resolvedCourseId, contentId);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
+      revalidateCoursePath(courseId, resolvedCourseId);
       return { success: true, data: null };
     }
 
@@ -155,12 +171,13 @@ export async function updateContent(input: UpdateContentInput): Promise<ActionRe
   const { courseId, contentId, ...fields } = input;
 
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { content } = createCourseModules();
     const body = { id: contentId, ...fields } as LearningCoursesUpdateProgramContent;
-    const result = await content.putCoursesContent(courseId, contentId, body);
+    const result = await content.putCoursesContent(resolvedCourseId, contentId, body);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
+      revalidateCoursePath(courseId, resolvedCourseId);
       return { success: true, data: null };
     }
 
@@ -172,11 +189,12 @@ export async function updateContent(input: UpdateContentInput): Promise<ActionRe
 
 export async function reorderContent(courseId: string, contentIds: string[]): Promise<ActionResult<null>> {
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { programs } = createCourseModules();
-    const result = await programs.postCoursesContentReorder1(courseId, { contentIds });
+    const result = await programs.postCoursesContentReorder1(resolvedCourseId, { contentIds });
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
+      revalidateCoursePath(courseId, resolvedCourseId);
       return { success: true, data: null };
     }
 
