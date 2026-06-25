@@ -168,11 +168,10 @@ function mapItemType(type: LearningCoursesProgramContent['type']): CourseAttenda
         case 'Discussion':
             return 'peer-review';
         case 'Code':
-        case 'Challenge':
+        case 'Project':
         case 'Reflection':
         case 'Survey':
             return 'activity';
-        case 'Page':
         case 'Lesson':
         default:
             return 'lesson';
