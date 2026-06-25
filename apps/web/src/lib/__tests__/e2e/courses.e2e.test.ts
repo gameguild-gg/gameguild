@@ -63,6 +63,49 @@ interface CourseCheckoutOutput {
   paymentProviderReference?: string | null;
 }
 
+interface AssessmentGroupOutput {
+  id: string;
+  courseId: string;
+  name: string;
+  weightPercent: number;
+  order: number;
+  description?: string | null;
+}
+
+interface AssessmentOutput {
+  id: string;
+  courseId: string;
+  contentId?: string | null;
+  assessmentGroupId?: string | null;
+  assessmentGroupName?: string | null;
+  assessmentGroupWeightPercent?: number | null;
+  title: string;
+  description?: string | null;
+  type: 'Quiz' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
+  maxScore: number;
+  passingScore: number;
+  isRequired: boolean;
+}
+
+interface CourseAssessmentAnalyticsOutput {
+  courseId: string;
+  assessmentCount: number;
+  gradedCount: number;
+  ungradedCount: number;
+  averagePercent: number;
+  passRate: number;
+  distribution: Array<{ label: string; minPercent: number; maxPercent: number; count: number }>;
+  groups: Array<{
+    groupId?: string | null;
+    groupName: string;
+    weightPercent?: number | null;
+    assessmentCount: number;
+    gradedCount: number;
+    ungradedCount: number;
+    distribution: Array<{ label: string; minPercent: number; maxPercent: number; count: number }>;
+  }>;
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -622,6 +665,10 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
   // ── 7. Add content to the course ────────────────────────────────────────
   let lessonContentId: string;
   let assignmentContentId: string;
+  let quizzesGroupId: string;
+  let finalProjectGroupId: string;
+  let quizAssessmentId: string;
+  let projectAssessmentId: string;
 
   it('adds a lesson content item to the course', async () => {
     const result = await content.postCoursesContent(courseId, {
@@ -723,6 +770,133 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     });
 
     expect(result.ok).toBe(true);
+  });
+
+  // ── 12a. Professor grading setup: weighted groups + assessments ─────────
+  it('creates weighted assessment groups for the course', async () => {
+    const quizzesResult = await authedClient.request<AssessmentGroupOutput>({
+      method: 'POST',
+      path: '/v1/assessments/groups',
+      body: {
+        courseId,
+        name: 'Quizzes',
+        weightPercent: 40,
+        order: 1,
+        description: 'Short checks for comprehension throughout the course.',
+      },
+    });
+    const quizzesGroup = unwrap(quizzesResult, 'Create quizzes assessment group');
+    quizzesGroupId = quizzesGroup.id;
+
+    const finalProjectResult = await authedClient.request<AssessmentGroupOutput>({
+      method: 'POST',
+      path: '/v1/assessments/groups',
+      body: {
+        courseId,
+        name: 'Final Project',
+        weightPercent: 60,
+        order: 2,
+        description: 'Portfolio-ready milestone and final submission.',
+      },
+    });
+    const finalProjectGroup = unwrap(finalProjectResult, 'Create final project assessment group');
+    finalProjectGroupId = finalProjectGroup.id;
+
+    expect(quizzesGroup.weightPercent).toBe(40);
+    expect(finalProjectGroup.weightPercent).toBe(60);
+
+    const listResult = await authedClient.request<AssessmentGroupOutput[]>({
+      method: 'GET',
+      path: `/v1/assessments/course/${courseId}/groups`,
+    });
+    const groups = unwrap(listResult, 'List assessment groups');
+    expect(groups.map((group) => group.name)).toEqual(expect.arrayContaining(['Quizzes', 'Final Project']));
+    expect(groups.reduce((total, group) => total + Number(group.weightPercent), 0)).toBe(100);
+  });
+
+  it('creates professor-facing quiz and project assessments without legacy exam type', async () => {
+    const quizResult = await authedClient.request<AssessmentOutput>({
+      method: 'POST',
+      path: '/v1/assessments',
+      body: {
+        courseId,
+        title: 'Week 01 Quiz',
+        description: 'Checks core vocabulary and early course expectations.',
+        type: 'Quiz',
+        maxScore: 10,
+        passingScore: 7,
+        assessmentGroupId: quizzesGroupId,
+      },
+    });
+    const quiz = unwrap(quizResult, 'Create quiz assessment');
+    quizAssessmentId = quiz.id;
+
+    const projectResult = await authedClient.request<AssessmentOutput>({
+      method: 'POST',
+      path: '/v1/assessments',
+      body: {
+        courseId,
+        title: 'Final Playable Prototype',
+        description: 'A project assessment for the portfolio milestone.',
+        type: 'Project',
+        maxScore: 100,
+        passingScore: 70,
+        assessmentGroupId: finalProjectGroupId,
+      },
+    });
+    const project = unwrap(projectResult, 'Create project assessment');
+    projectAssessmentId = project.id;
+
+    expect(quiz.type).toBe('Quiz');
+    expect(project.type).toBe('Project');
+    expect([quiz.type, project.type]).not.toContain('Exam');
+  });
+
+  it('attaches the quiz to a lesson and keeps all graded work visible in the assessment hub', async () => {
+    const updateResult = await authedClient.request<AssessmentOutput>({
+      method: 'PUT',
+      path: `/v1/assessments/${quizAssessmentId}`,
+      body: {
+        contentId: lessonContentId,
+        assessmentGroupId: quizzesGroupId,
+      },
+    });
+    const linkedQuiz = unwrap(updateResult, 'Attach quiz to lesson');
+
+    expect(linkedQuiz.contentId).toBe(lessonContentId);
+    expect(linkedQuiz.assessmentGroupId).toBe(quizzesGroupId);
+
+    const listResult = await authedClient.request<AssessmentOutput[]>({
+      method: 'GET',
+      path: `/v1/assessments/course/${courseId}`,
+    });
+    const assessments = unwrap(listResult, 'List course assessments');
+
+    expect(assessments.map((assessment) => assessment.id)).toEqual(
+      expect.arrayContaining([quizAssessmentId, projectAssessmentId]),
+    );
+    expect(assessments.find((assessment) => assessment.id === quizAssessmentId)?.contentId).toBe(
+      lessonContentId,
+    );
+    expect(assessments.find((assessment) => assessment.id === projectAssessmentId)?.contentId).toBeFalsy();
+  });
+
+  it('returns assessment analytics by weighted group', async () => {
+    const result = await authedClient.request<CourseAssessmentAnalyticsOutput>({
+      method: 'GET',
+      path: `/v1/assessments/course/${courseId}/analytics`,
+    });
+    const analytics = unwrap(result, 'Get course assessment analytics');
+
+    expect(analytics.courseId).toBe(courseId);
+    expect(analytics.assessmentCount).toBeGreaterThanOrEqual(2);
+    expect(analytics.ungradedCount).toBeGreaterThanOrEqual(2);
+    expect(analytics.distribution.map((bucket) => bucket.label)).toEqual(
+      expect.arrayContaining(['0-59', '60-69', '70-79', '80-89', '90-100']),
+    );
+    expect(analytics.groups.map((group) => group.groupName)).toEqual(
+      expect.arrayContaining(['Quizzes', 'Final Project']),
+    );
   });
 
   // ── 13. Add a user to the course (enroll) ───────────────────────────────

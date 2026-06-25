@@ -2,7 +2,7 @@
 namespace GameGuild.Learning.Assessments;
 
 /// <summary>
-/// Represents an assessment (quiz, exam, assignment) within a course
+/// Represents an assessment (quiz, assignment, project, or peer/self review) within a course.
 /// </summary>
 public class Assessment : EntityBase
 {
@@ -39,7 +39,7 @@ public class Assessment : EntityBase
             CourseId = courseId,
             AssessmentGroupId = assessmentGroupId,
             Title = title,
-            Type = type,
+            Type = NormalizeType(type),
             MaxScore = maxScore,
             PassingScore = passingScore,
             IsRequired = isRequired,
@@ -115,6 +115,11 @@ public class Assessment : EntityBase
         if (clearAssessmentGroupId) AssessmentGroupId = null;
         else if (assessmentGroupId.HasValue) AssessmentGroupId = assessmentGroupId.Value;
         UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public static AssessmentType NormalizeType(AssessmentType type)
+    {
+        return type == AssessmentType.Exam ? AssessmentType.Quiz : type;
     }
 }
 
@@ -257,12 +262,13 @@ public class AssessmentSubmission : EntityBase
 
 public enum AssessmentType
 {
-    Quiz,
-    Exam,
-    Assignment,
-    Project,
-    PeerReview,
-    SelfAssessment
+    Quiz = 0,
+    // Legacy persisted slot. Public professor UI normalizes this to Quiz.
+    Exam = 1,
+    Assignment = 2,
+    Project = 3,
+    PeerReview = 4,
+    SelfAssessment = 5
 }
 
 public enum SubmissionStatus

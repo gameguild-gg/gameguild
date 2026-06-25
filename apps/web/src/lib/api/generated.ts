@@ -1,15 +1,14 @@
 export enum ProgramContentType {
     Lesson = 0,
-    Page = 1,
     Assignment = 2,
     Questionnaire = 3,
     Discussion = 4,
     Code = 5,
-    Challenge = 6,
     Reflection = 7,
     Survey = 8,
-    PAGE = 1,
-    REVEAL = 1,
+    Project = 9,
+    PAGE = 0,
+    REVEAL = 0,
 }
 
 export enum ProgramCategory {

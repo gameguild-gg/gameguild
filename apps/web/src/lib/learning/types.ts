@@ -7,14 +7,13 @@
 
 export type LearningCoursesProgramContentType =
   | 'Lesson'
-  | 'Page'
   | 'Assignment'
   | 'Questionnaire'
   | 'Discussion'
   | 'Code'
-  | 'Challenge'
   | 'Reflection'
-  | 'Survey';
+  | 'Survey'
+  | 'Project';
 
 /**
  * Course delivery mode - determines available features and routes
