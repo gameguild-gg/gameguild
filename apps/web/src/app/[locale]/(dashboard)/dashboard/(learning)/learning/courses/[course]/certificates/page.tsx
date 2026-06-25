@@ -19,33 +19,33 @@ export default async function CertificatesPage({
   const certificates = await getCourseCertificates(courseId);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
+    <div className="flex min-w-0 max-w-full flex-col gap-6">
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Card className="min-w-0">
+          <CardContent className="flex min-w-0 items-center gap-3 p-4">
             <Award className="size-5 text-primary" />
-            <div>
+            <div className="min-w-0">
               <p className="text-2xl font-semibold">{certificates.total}</p>
               <p className="text-sm text-muted-foreground">Templates</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
+        <Card className="min-w-0">
+          <CardContent className="flex min-w-0 items-center gap-3 p-4">
             <FileCheck2 className="size-5 text-emerald-600" />
-            <div>
+            <div className="min-w-0">
               <p className="text-2xl font-semibold">{certificates.issuedCount}</p>
               <p className="text-sm text-muted-foreground">Issued certificates</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="flex items-center justify-between gap-3 p-4">
-            <div>
+        <Card className="min-w-0 sm:col-span-2 xl:col-span-1">
+          <CardContent className="flex min-w-0 flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
+            <div className="min-w-0">
               <p className="text-sm font-medium">Template API</p>
-              <p className="text-sm text-muted-foreground">Connected to Learning.Certificates</p>
+              <p className="break-words text-sm text-muted-foreground">Connected to Learning.Certificates</p>
             </div>
-            <Button size="sm" variant="outline">
+            <Button size="sm" variant="outline" className="w-full shrink-0 sm:w-auto">
               <Plus className="mr-2 size-4" />
               New template
             </Button>

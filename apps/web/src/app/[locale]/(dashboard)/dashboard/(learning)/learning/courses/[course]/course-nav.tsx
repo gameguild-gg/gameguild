@@ -100,10 +100,10 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
   })();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-w-0 max-w-full flex-col gap-6 overflow-x-hidden">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex min-w-0 max-w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/dashboard/learning/courses" locale={locale} prefetch={false}>
               <ArrowLeft className="size-5" />
@@ -113,14 +113,14 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
             <BookOpen className="size-6 text-white" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="truncate text-2xl font-bold tracking-tight">{courseTitle}</h1>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <h1 className="min-w-0 break-words text-2xl font-bold tracking-tight">{courseTitle}</h1>
               {getStatusBadge(courseStatus)}
             </div>
-            <p className="truncate text-sm text-muted-foreground">{courseDescription}</p>
+            <p className="max-w-prose break-words text-sm text-muted-foreground">{courseDescription}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <Button variant="outline" size="sm" asChild>
             <Link href={previewHref} locale={locale} prefetch={false}>
               <Eye className="mr-2 size-4" />
@@ -163,7 +163,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
       </div>
 
       {/* Nav Tabs + Content */}
-      <div className="flex flex-1 gap-6">
+      <div className="flex min-w-0 flex-1 gap-6">
         {/* Sidebar Nav */}
         <nav className="hidden w-48 shrink-0 flex-col gap-1 lg:flex">
           {navItems.map((item) => {
@@ -185,8 +185,8 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
         </nav>
 
         {/* Mobile tabs - scrollable */}
-        <div className="flex w-full flex-col gap-6 lg:hidden">
-          <div className="flex gap-1 overflow-x-auto border-b pb-2">
+        <div className="flex min-w-0 w-full flex-col gap-6 lg:hidden">
+          <div className="flex min-w-0 max-w-full gap-1 overflow-x-auto border-b pb-2">
             {navItems.map((item) => {
               const isActive = activeSegment === item.segment;
               return (
@@ -204,11 +204,11 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
               );
             })}
           </div>
-          <div className="flex-1">{children}</div>
+          <div className="min-w-0 flex-1">{children}</div>
         </div>
 
         {/* Desktop Content */}
-        <div className="hidden min-w-0 flex-1 flex-col lg:flex">{children}</div>
+        <div className="hidden min-w-0 max-w-full flex-1 flex-col lg:flex">{children}</div>
       </div>
     </div>
   );

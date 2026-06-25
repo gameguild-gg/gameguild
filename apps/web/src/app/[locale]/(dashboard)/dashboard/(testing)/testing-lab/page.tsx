@@ -33,14 +33,14 @@ function RequestCard({ request }: { request: TestingRequestSummary }) {
   const versionNumber = request.projectVersion?.versionNumber ?? null;
 
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader className="space-y-2">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardTitle>{request.title}</CardTitle>
-            <CardDescription>{request.description ?? 'No description provided.'}</CardDescription>
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0">
+            <CardTitle className="break-words">{request.title}</CardTitle>
+            <CardDescription className="break-words">{request.description ?? 'No description provided.'}</CardDescription>
             {projectTitle ? (
-              <p className="mt-2 text-xs font-medium text-muted-foreground">
+              <p className="mt-2 break-words text-xs font-medium text-muted-foreground">
                 {projectTitle}{versionNumber ? ` · ${versionNumber}` : ''}
               </p>
             ) : null}
@@ -100,7 +100,7 @@ export default async function TestingLabPage(): Promise<React.JSX.Element> {
   const availableSlots = countAvailableTesterSlots(data.requests);
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex min-w-0 max-w-full flex-col gap-6 p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Testing Lab</h1>
@@ -199,8 +199,8 @@ export default async function TestingLabPage(): Promise<React.JSX.Element> {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <section className="space-y-4">
+      <div className="grid min-w-0 max-w-full gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(300px,420px)]">
+        <section className="min-w-0 space-y-4">
           {data.requests.length === 0 ? (
             <Card>
               <CardHeader>
@@ -252,19 +252,19 @@ export default async function TestingLabPage(): Promise<React.JSX.Element> {
           </Card>
         </section>
 
-        <Card className="h-fit">
-          <CardHeader>
-            <div className="flex items-center gap-3">
+        <Card className="h-fit min-w-0">
+          <CardHeader className="min-w-0">
+            <div className="flex min-w-0 items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <ClipboardCheck className="size-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <CardTitle>Submit build</CardTitle>
-                <CardDescription>Create a lightweight Testing Lab request from a team build.</CardDescription>
+                <CardDescription className="break-words">Create a lightweight Testing Lab request from a team build.</CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
             <form action={submitTestingBuild} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="testing-title">Title</Label>
