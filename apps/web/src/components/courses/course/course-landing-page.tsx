@@ -122,22 +122,20 @@ function getMetadataProjects(course: Program, fallbackImage: string): CourseProj
 
 function getContentTypeName(type: number | null | undefined): string {
   switch (type) {
-    case ProgramContentType.Page:
-      return 'Lesson page';
     case ProgramContentType.Assignment:
       return 'Assignment';
     case ProgramContentType.Questionnaire:
-      return 'Questionnaire';
+      return 'Quiz';
     case ProgramContentType.Discussion:
       return 'Discussion';
     case ProgramContentType.Code:
       return 'Code lab';
-    case ProgramContentType.Challenge:
-      return 'Challenge';
     case ProgramContentType.Reflection:
       return 'Reflection';
     case ProgramContentType.Survey:
       return 'Survey';
+    case ProgramContentType.Project:
+      return 'Project';
     case ProgramContentType.Lesson:
     default:
       return 'Lesson';
@@ -148,12 +146,11 @@ function getContentIcon(type: number | null | undefined) {
   switch (type) {
     case ProgramContentType.Assignment:
     case ProgramContentType.Code:
-    case ProgramContentType.Challenge:
+    case ProgramContentType.Project:
       return Code2;
     case ProgramContentType.Discussion:
     case ProgramContentType.Questionnaire:
       return MessageSquare;
-    case ProgramContentType.Page:
     case ProgramContentType.Reflection:
     case ProgramContentType.Survey:
     case ProgramContentType.Lesson:

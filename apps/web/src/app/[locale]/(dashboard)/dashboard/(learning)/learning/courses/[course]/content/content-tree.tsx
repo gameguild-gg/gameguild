@@ -16,7 +16,7 @@ import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@game-guild/ui/components/tooltip';
-import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronRight, ClipboardList, Clock, Copy, Edit, FileText, GripVertical, HelpCircle, LinkIcon, Loader2, MessageSquare, Plus, Trash2, Unlink } from 'lucide-react';
+import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronRight, ClipboardList, Clock, Code2, Copy, Edit, FileText, Flag, GripVertical, HelpCircle, LinkIcon, Loader2, MessageSquare, Plus, Trash2, Unlink } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useState, useTransition } from 'react';
 
@@ -30,14 +30,13 @@ interface ContentTreeProps {
 
 const typeConfig: Record<LearningCoursesProgramContentType, { icon: React.ElementType; label: string }> = {
   Lesson: { icon: FileText, label: 'Lesson' },
-  Page: { icon: FileText, label: 'Page' },
   Assignment: { icon: FileText, label: 'Assignment' },
   Questionnaire: { icon: HelpCircle, label: 'Quiz' },
   Discussion: { icon: MessageSquare, label: 'Discussion' },
-  Code: { icon: FileText, label: 'Code' },
-  Challenge: { icon: HelpCircle, label: 'Challenge' },
+  Code: { icon: Code2, label: 'Code' },
   Reflection: { icon: BookOpen, label: 'Reflection' },
   Survey: { icon: HelpCircle, label: 'Survey' },
+  Project: { icon: Flag, label: 'Project' },
 };
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
@@ -49,12 +48,13 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
 // Lesson types available when adding a new lesson (backend ProgramContentType values)
 const lessonTypes: Array<{ value: LearningCoursesProgramContentType; label: string }> = [
   { value: 'Lesson', label: 'Lesson' },
-  { value: 'Page', label: 'Page' },
-  { value: 'Assignment', label: 'Assignment' },
   { value: 'Questionnaire', label: 'Quiz' },
+  { value: 'Assignment', label: 'Assignment' },
+  { value: 'Project', label: 'Project' },
   { value: 'Discussion', label: 'Discussion' },
   { value: 'Code', label: 'Code' },
-  { value: 'Challenge', label: 'Challenge' },
+  { value: 'Reflection', label: 'Reflection' },
+  { value: 'Survey', label: 'Survey' },
 ];
 
 function SortableItem({ id, children }: {
@@ -639,7 +639,7 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Lesson</DialogTitle>
-            <DialogDescription>Add a new content item to this module.</DialogDescription>
+            <DialogDescription>Add a lesson or course activity to this module.</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-2">

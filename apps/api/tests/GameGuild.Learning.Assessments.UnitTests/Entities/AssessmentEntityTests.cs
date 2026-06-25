@@ -1,4 +1,7 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace GameGuild.Learning.Assessments.Tests;
@@ -9,7 +12,7 @@ namespace GameGuild.Learning.Assessments.Tests;
 public class AssessmentEntityTests
 {
     [Fact]
-    public void Create_ShouldSetDefaultValues()
+    public void Create_ShouldNormalizeLegacyExamToQuizAndSetDefaultValues()
     {
         var courseId = Guid.NewGuid();
         var assessment = Assessment.Create(courseId, "Midterm Exam", AssessmentType.Exam, 100, 70);
@@ -17,7 +20,7 @@ public class AssessmentEntityTests
         assessment.Id.Should().NotBeEmpty();
         assessment.CourseId.Should().Be(courseId);
         assessment.Title.Should().Be("Midterm Exam");
-        assessment.Type.Should().Be(AssessmentType.Exam);
+        assessment.Type.Should().Be(AssessmentType.Quiz);
         assessment.MaxScore.Should().Be(100);
         assessment.PassingScore.Should().Be(70);
         assessment.IsRequired.Should().BeTrue();
@@ -48,6 +51,16 @@ public class AssessmentEntityTests
         type!.GetProperty("CourseId").Should().NotBeNull();
         type.GetProperty("WeightPercent").Should().NotBeNull();
         type.GetProperty("Order").Should().NotBeNull();
+    }
+
+    [Fact]
+    public void AssessmentType_ShouldKeepExplicitPersistedValues()
+    {
+        ((int)AssessmentType.Quiz).Should().Be(0);
+        ((int)AssessmentType.Assignment).Should().Be(2);
+        ((int)AssessmentType.Project).Should().Be(3);
+        ((int)AssessmentType.PeerReview).Should().Be(4);
+        ((int)AssessmentType.SelfAssessment).Should().Be(5);
     }
 
     [Fact]
@@ -236,7 +249,7 @@ public class AssessmentDtoTests
         dto.CourseId.Should().Be(assessment.CourseId);
         dto.Title.Should().Be("Final Exam");
         dto.Description.Should().Be("Comprehensive exam");
-        dto.Type.Should().Be(AssessmentType.Exam);
+        dto.Type.Should().Be(AssessmentType.Quiz);
         dto.MaxScore.Should().Be(100);
         dto.PassingScore.Should().Be(70);
         dto.TimeLimitMinutes.Should().Be(120);
@@ -273,6 +286,85 @@ public class AssessmentDtoTests
         typeof(AssessmentDto).GetProperty("AssessmentGroupName").Should().NotBeNull();
         typeof(AssessmentDto).GetProperty("AssessmentGroupWeightPercent").Should().NotBeNull();
         typeof(AssessmentDto).GetProperty("AssessmentGroupOrder").Should().NotBeNull();
+    }
+
+    [Fact]
+    public void AssessmentAnalyticsDtos_ShouldExposeScoreDistributionContract()
+    {
+        typeof(CourseAssessmentAnalyticsDto).GetProperty("CourseId").Should().NotBeNull();
+        typeof(CourseAssessmentAnalyticsDto).GetProperty("Distribution").Should().NotBeNull();
+        typeof(CourseAssessmentAnalyticsDto).GetProperty("Groups").Should().NotBeNull();
+        typeof(AssessmentGroupAnalyticsDto).GetProperty("AveragePercent").Should().NotBeNull();
+        typeof(AssessmentScoreBucketDto).GetProperty("Count").Should().NotBeNull();
+    }
+}
+
+public sealed class AssessmentServiceAnalyticsTests
+{
+    [Fact]
+    public async Task GetCourseAssessmentAnalyticsAsync_ReturnsOverallAndGroupScoreDistribution()
+    {
+        await using var db = CreateContext();
+        var courseId = Guid.NewGuid();
+        var quizGroup = AssessmentGroup.Create(courseId, "Quizzes", 20, 1);
+        var projectGroup = AssessmentGroup.Create(courseId, "Final Project", 30, 2);
+        var quiz = Assessment.Create(courseId, "Intro quiz", AssessmentType.Quiz, 10, 6, assessmentGroupId: quizGroup.Id);
+        var project = Assessment.Create(courseId, "Final build", AssessmentType.Project, 100, 70, assessmentGroupId: projectGroup.Id);
+        var attendance = Assessment.Create(courseId, "Attendance", AssessmentType.Assignment, 10, 6);
+        var ignoredOtherCourse = Assessment.Create(Guid.NewGuid(), "Other", AssessmentType.Quiz, 10, 6);
+
+        var quizSubmission = AssessmentSubmission.Start(quiz.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
+        quizSubmission.Submit();
+        quizSubmission.Grade(8, quiz.PassingScore);
+        var projectSubmission = AssessmentSubmission.Start(project.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
+        projectSubmission.Submit();
+        projectSubmission.Grade(50, project.PassingScore);
+        var ignoredSubmission = AssessmentSubmission.Start(ignoredOtherCourse.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
+        ignoredSubmission.Submit();
+        ignoredSubmission.Grade(10, ignoredOtherCourse.PassingScore);
+
+        db.Set<AssessmentGroup>().AddRange(quizGroup, projectGroup);
+        db.Set<Assessment>().AddRange(quiz, project, attendance, ignoredOtherCourse);
+        db.Set<AssessmentSubmission>().AddRange(quizSubmission, projectSubmission, ignoredSubmission);
+        await db.SaveChangesAsync();
+
+        var service = new AssessmentService(db, NullLogger<AssessmentService>.Instance);
+
+        var analytics = await service.GetCourseAssessmentAnalyticsAsync(courseId);
+
+        analytics.CourseId.Should().Be(courseId);
+        analytics.AssessmentCount.Should().Be(3);
+        analytics.GradedCount.Should().Be(2);
+        analytics.UngradedCount.Should().Be(1);
+        analytics.AveragePercent.Should().Be(65);
+        analytics.PassRate.Should().Be(50);
+        analytics.Distribution.Single(bucket => bucket.Label == "80-89").Count.Should().Be(1);
+        analytics.Distribution.Single(bucket => bucket.Label == "0-59").Count.Should().Be(1);
+        analytics.Groups.Single(group => group.GroupName == "Quizzes").AveragePercent.Should().Be(80);
+        analytics.Groups.Single(group => group.GroupName == "Final Project").PassRate.Should().Be(0);
+        analytics.Groups.Single(group => group.GroupName == "Ungrouped").AssessmentCount.Should().Be(1);
+    }
+
+    private static TestAssessmentDbContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<TestAssessmentDbContext>()
+            .UseInMemoryDatabase($"AssessmentAnalytics_{Guid.NewGuid()}")
+            .Options;
+        return new TestAssessmentDbContext(options);
+    }
+
+    private sealed class TestAssessmentDbContext(DbContextOptions<TestAssessmentDbContext> options)
+        : DbContext(options), IApplicationDbContext
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            new AssessmentsModelConfiguration().Configure(modelBuilder);
+        }
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException("Transactions are not required for assessment analytics tests.");
+        }
     }
 }
 

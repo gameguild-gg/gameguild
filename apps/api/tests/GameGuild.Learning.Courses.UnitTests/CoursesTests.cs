@@ -781,6 +781,40 @@ public class CoursesEnumTests
     {
         Enum.GetValues<PrerequisiteType>().Should().HaveCount(3);
     }
+
+    [Fact]
+    public void ProgramContentType_ShouldKeepExplicitPersistedValues()
+    {
+        ((int)ProgramContentType.Lesson).Should().Be(0);
+        ((int)ProgramContentType.Page).Should().Be(1);
+        ((int)ProgramContentType.Assignment).Should().Be(2);
+        ((int)ProgramContentType.Questionnaire).Should().Be(3);
+        ((int)ProgramContentType.Discussion).Should().Be(4);
+        ((int)ProgramContentType.Code).Should().Be(5);
+        ((int)ProgramContentType.Challenge).Should().Be(6);
+        ((int)ProgramContentType.Reflection).Should().Be(7);
+        ((int)ProgramContentType.Survey).Should().Be(8);
+        ((int)ProgramContentType.Project).Should().Be(9);
+    }
+
+    [Theory]
+    [InlineData(ProgramContentType.Page, ProgramContentType.Lesson)]
+    [InlineData(ProgramContentType.Challenge, ProgramContentType.Assignment)]
+    [InlineData(ProgramContentType.Project, ProgramContentType.Project)]
+    public void ProgramContentDto_ShouldNormalizeProfessorFacingTypes(ProgramContentType storedType, ProgramContentType expectedType)
+    {
+        var content = new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = Guid.NewGuid(),
+            Title = "Stored content",
+            Type = storedType
+        };
+
+        var dto = content.ToDto();
+
+        dto.Type.Should().Be(expectedType);
+    }
 }
 
 #endregion

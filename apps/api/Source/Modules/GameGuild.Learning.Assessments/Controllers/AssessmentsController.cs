@@ -81,6 +81,16 @@ public class AssessmentsController : BaseApiController
     }
 
     /// <summary>
+    /// Get assessment score distribution and weighted group performance for a course.
+    /// </summary>
+    [HttpGet("course/{courseId:guid}/analytics")]
+    public async Task<ActionResult<CourseAssessmentAnalyticsDto>> GetCourseAssessmentAnalytics(Guid courseId)
+    {
+        var analytics = await _assessmentService.GetCourseAssessmentAnalyticsAsync(courseId).ConfigureAwait(false);
+        return Ok(analytics);
+    }
+
+    /// <summary>
     /// Create a weighted assessment group.
     /// </summary>
     [HttpPost("groups")]
@@ -328,7 +338,7 @@ public sealed record AssessmentDto(
         entity.ContentId,
         entity.Title,
         entity.Description,
-        entity.Type,
+        Assessment.NormalizeType(entity.Type),
         entity.MaxScore,
         entity.PassingScore,
         entity.TimeLimitMinutes,

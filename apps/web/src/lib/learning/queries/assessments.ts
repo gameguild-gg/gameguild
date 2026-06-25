@@ -3,7 +3,6 @@ import {
   createServerClient,
   GeneratedApi,
   type LearningAssessmentsAssessment,
-  type LearningAssessmentsAssessmentType,
 } from '@game-guild/client';
 import { cache } from 'react';
 import { learningApiGet } from './http';
@@ -29,7 +28,7 @@ function createAssessmentsModule() {
 // TYPES (re-exported for convenience)
 // =============================================================================
 
-export type AssessmentType = LearningAssessmentsAssessmentType;
+export type AssessmentType = 'Quiz' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
 
 export interface Assessment {
   id: string;
@@ -67,6 +66,36 @@ export interface AssessmentGroup {
   order: number;
 }
 
+export interface AssessmentScoreBucket {
+  label: string;
+  minPercent: number;
+  maxPercent: number;
+  count: number;
+}
+
+export interface AssessmentGroupAnalytics {
+  groupId: string | null;
+  groupName: string;
+  weightPercent: number | null;
+  assessmentCount: number;
+  gradedCount: number;
+  ungradedCount: number;
+  averagePercent: number;
+  passRate: number;
+  distribution: AssessmentScoreBucket[];
+}
+
+export interface CourseAssessmentAnalytics {
+  courseId: string;
+  assessmentCount: number;
+  gradedCount: number;
+  ungradedCount: number;
+  averagePercent: number;
+  passRate: number;
+  distribution: AssessmentScoreBucket[];
+  groups: AssessmentGroupAnalytics[];
+}
+
 type AssessmentGroupFields = {
   assessmentGroupId?: string | null;
   assessmentGroupName?: string | null;
@@ -91,7 +120,7 @@ function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
     assessmentGroupOrder: groupFields.assessmentGroupOrder ?? null,
     title: dto.title ?? '',
     description: dto.description ?? null,
-    type: dto.type ?? 'Quiz',
+    type: normalizeAssessmentType(dto.type),
     maxScore: dto.maxScore ?? 100,
     passingScore: dto.passingScore ?? 70,
     timeLimitMinutes: dto.timeLimitMinutes ?? null,
@@ -102,6 +131,21 @@ function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
     availableUntil: dto.availableUntil ?? null,
     isAvailable: dto.isAvailable ?? true,
   };
+}
+
+function normalizeAssessmentType(type: string | null | undefined): AssessmentType {
+  if (type === 'Exam') return 'Quiz';
+  if (
+    type === 'Quiz' ||
+    type === 'Assignment' ||
+    type === 'Project' ||
+    type === 'PeerReview' ||
+    type === 'SelfAssessment'
+  ) {
+    return type;
+  }
+
+  return 'Quiz';
 }
 
 function mapAssessmentGroup(dto: Partial<AssessmentGroup>): AssessmentGroup {
@@ -147,6 +191,16 @@ export const getCourseAssessmentGroups = cache(async (courseId: string): Promise
   } catch (err) {
     console.error('Error fetching course assessment groups:', err);
     return [];
+  }
+});
+
+export const getCourseAssessmentAnalytics = cache(async (courseId: string): Promise<CourseAssessmentAnalytics | null> => {
+  try {
+    const resolvedCourseId = await resolveCourseId(courseId);
+    return await learningApiGet<CourseAssessmentAnalytics>(`/v1/assessments/course/${resolvedCourseId}/analytics`, 60);
+  } catch (err) {
+    console.error('Error fetching course assessment analytics:', err);
+    return null;
   }
 });
 

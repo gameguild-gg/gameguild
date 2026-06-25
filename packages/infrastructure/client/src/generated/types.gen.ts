@@ -3480,7 +3480,7 @@ export interface LearningAssessmentsAssessmentSubmission {
   status?: LearningAssessmentsSubmissionStatus;
 }
 
-export type LearningAssessmentsAssessmentType = 'Quiz' | 'Exam' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
+export type LearningAssessmentsAssessmentType = 'Quiz' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
 
 export interface LearningAssessmentsCanAttemptOutput {
   canAttempt?: boolean;
@@ -3622,14 +3622,13 @@ export interface LearningCoursesContentStats {
   optionalContent?: number;
   contentByType?: {
     Lesson?: number;
-    Page?: number;
     Assignment?: number;
     Questionnaire?: number;
     Discussion?: number;
     Code?: number;
-    Challenge?: number;
     Reflection?: number;
     Survey?: number;
+    Project?: number;
   } | null;
   contentByVisibility?: { Public?: number; Internal?: number; Private?: number; Restricted?: number } | null;
   topLevelContent?: number;
@@ -3814,14 +3813,13 @@ export interface LearningCoursesProgramContent {
 
 export type LearningCoursesProgramContentType =
   | 'Lesson'
-  | 'Page'
   | 'Assignment'
   | 'Questionnaire'
   | 'Discussion'
   | 'Code'
-  | 'Challenge'
   | 'Reflection'
-  | 'Survey';
+  | 'Survey'
+  | 'Project';
 
 export type LearningCoursesProgramDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
@@ -9291,7 +9289,7 @@ LearningAssessmentsAssessmentSubmissionSchema = z.object({
 });
 
 /** Zod schema for LearningAssessmentsAssessmentType */
-LearningAssessmentsAssessmentTypeSchema = z.enum(['Quiz', 'Exam', 'Assignment', 'Project', 'PeerReview', 'SelfAssessment']);
+LearningAssessmentsAssessmentTypeSchema = z.enum(['Quiz', 'Assignment', 'Project', 'PeerReview', 'SelfAssessment']);
 
 /** Zod schema for LearningAssessmentsCanAttemptOutput */
 LearningAssessmentsCanAttemptOutputSchema = z.object({
@@ -9453,14 +9451,13 @@ LearningCoursesContentStatsSchema = z.object({
   contentByType: z
     .object({
       Lesson: z.number().int(),
-      Page: z.number().int(),
       Assignment: z.number().int(),
       Questionnaire: z.number().int(),
       Discussion: z.number().int(),
       Code: z.number().int(),
-      Challenge: z.number().int(),
       Reflection: z.number().int(),
       Survey: z.number().int(),
+      Project: z.number().int(),
     })
     .nullable()
     .optional(),
@@ -9680,7 +9677,7 @@ LearningCoursesProgramContentSchema = z.object({
 });
 
 /** Zod schema for LearningCoursesProgramContentType */
-LearningCoursesProgramContentTypeSchema = z.enum(['Lesson', 'Page', 'Assignment', 'Questionnaire', 'Discussion', 'Code', 'Challenge', 'Reflection', 'Survey']);
+LearningCoursesProgramContentTypeSchema = z.enum(['Lesson', 'Assignment', 'Questionnaire', 'Discussion', 'Code', 'Reflection', 'Survey', 'Project']);
 
 /** Zod schema for LearningCoursesProgramDifficulty */
 LearningCoursesProgramDifficultySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);

@@ -8,6 +8,14 @@ namespace GameGuild.Learning.Courses;
 /// <summary> Extension methods for mapping between ProgramContent entities and DTOs </summary>
 public static class ProgramContentMappingExtensions
 {
+  public static ProgramContentType NormalizeProfessorFacingType(ProgramContentType type) =>
+    type switch
+    {
+      ProgramContentType.Page => ProgramContentType.Lesson,
+      ProgramContentType.Challenge => ProgramContentType.Assignment,
+      _ => type,
+    };
+
   /// <summary> Maps ProgramContent entity to DTO </summary>
   public static ProgramContentDto ToDto(this ProgramContent content)
   {
@@ -18,7 +26,7 @@ public static class ProgramContentMappingExtensions
       ParentId = content.ParentId,
       Title = content.Title,
       Description = content.Description ?? string.Empty,
-      Type = content.Type,
+      Type = NormalizeProfessorFacingType(content.Type),
       Body = ParseBody(content.Body),
       SortOrder = content.SortOrder,
       IsRequired = content.IsRequired,
@@ -94,7 +102,7 @@ public static class ProgramContentMappingExtensions
       ParentId = dto.ParentId,
       Title = dto.Title,
       Description = dto.Description,
-      Type = dto.Type,
+      Type = NormalizeProfessorFacingType(dto.Type),
       Body = dto.Body,
       SortOrder = dto.SortOrder,
       IsRequired = dto.IsRequired,
@@ -110,7 +118,7 @@ public static class ProgramContentMappingExtensions
   {
     if (dto.Title != null) content.Title = dto.Title;
     if (dto.Description != null) content.Description = dto.Description;
-    if (dto.Type != null) content.Type = dto.Type.Value;
+    if (dto.Type != null) content.Type = NormalizeProfessorFacingType(dto.Type.Value);
     if (dto.Body != null) content.Body = dto.Body;
     if (dto.SortOrder != null) content.SortOrder = dto.SortOrder.Value;
     if (dto.IsRequired != null) content.IsRequired = dto.IsRequired.Value;

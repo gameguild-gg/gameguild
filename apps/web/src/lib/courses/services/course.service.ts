@@ -69,12 +69,12 @@ function formatApiError(error: ApiError | undefined): string {
 
 function mapContentType(type: string | number | null | undefined): ProgramContentType {
     if (typeof type === 'number') {
+        if (type === 1) return ProgramContentType.Lesson;
+        if (type === 6) return ProgramContentType.Assignment;
         return type as ProgramContentType;
     }
 
     switch (type) {
-        case 'Page':
-            return ProgramContentType.Page;
         case 'Assignment':
             return ProgramContentType.Assignment;
         case 'Questionnaire':
@@ -83,12 +83,12 @@ function mapContentType(type: string | number | null | undefined): ProgramConten
             return ProgramContentType.Discussion;
         case 'Code':
             return ProgramContentType.Code;
-        case 'Challenge':
-            return ProgramContentType.Challenge;
         case 'Reflection':
             return ProgramContentType.Reflection;
         case 'Survey':
             return ProgramContentType.Survey;
+        case 'Project':
+            return ProgramContentType.Project;
         case 'Lesson':
         default:
             return ProgramContentType.Lesson;

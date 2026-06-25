@@ -4,7 +4,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { ProgramContent } from '@/lib/api/generated/types.gen';
 import { cn } from '@/lib/utils';
-import { BarChart3, ClipboardList, Code, FileText, Folder, FolderOpen, HelpCircle, MessageSquare, Trophy } from 'lucide-react';
+import { BarChart3, ClipboardList, Code, FileText, Flag, Folder, FolderOpen, HelpCircle, MessageSquare } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -42,14 +42,14 @@ function formatDuration(totalMinutes: number): string {
 
 function getContentIcon(type: number | null | undefined): typeof FileText {
   switch (type) {
-    case 0: return FileText; // Page
-    case 1: return ClipboardList; // Assignment
-    case 2: return HelpCircle; // Questionnaire
-    case 3: return MessageSquare; // Discussion
-    case 4: return Code; // Code
-    case 5: return Trophy; // Challenge
-    case 6: return BarChart3; // Reflection
-    case 7: return HelpCircle; // Survey
+    case 0: return FileText; // Lesson
+    case 2: return ClipboardList; // Assignment
+    case 3: return HelpCircle; // Quiz
+    case 4: return MessageSquare; // Discussion
+    case 5: return Code; // Code
+    case 7: return BarChart3; // Reflection
+    case 8: return HelpCircle; // Survey
+    case 9: return Flag; // Project
     case null:
     case undefined:
     default: return FileText;

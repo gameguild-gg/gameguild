@@ -70,6 +70,33 @@ public class ControllerAndModuleTests
     }
 
     [Fact]
+    public void AssessmentService_ShouldExposeCourseAnalytics()
+    {
+        typeof(IAssessmentService).GetMethod("GetCourseAssessmentAnalyticsAsync").Should().NotBeNull();
+        typeof(AssessmentsController).GetMethod("GetCourseAssessmentAnalytics").Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetCourseAssessmentAnalytics_ReturnsOk()
+    {
+        var courseId = Guid.NewGuid();
+        var analytics = new CourseAssessmentAnalyticsDto(
+            courseId,
+            AssessmentCount: 1,
+            GradedCount: 1,
+            UngradedCount: 0,
+            AveragePercent: 80,
+            PassRate: 100,
+            Distribution: Array.Empty<AssessmentScoreBucketDto>(),
+            Groups: Array.Empty<AssessmentGroupAnalyticsDto>());
+        _svc.Setup(s => s.GetCourseAssessmentAnalyticsAsync(courseId)).ReturnsAsync(analytics);
+
+        var r = await CreateController().GetCourseAssessmentAnalytics(courseId);
+
+        r.Result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
     public async Task DeleteAssessment_Success_Returns204()
     {
         _svc.Setup(s => s.DeleteAssessmentAsync(It.IsAny<Guid>())).ReturnsAsync(Result.Success());
