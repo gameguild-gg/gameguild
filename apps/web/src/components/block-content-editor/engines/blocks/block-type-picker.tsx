@@ -18,9 +18,9 @@ import { QUIZ_TEMPLATES, type QuizTypeTemplate } from "@/components/block-conten
 const BLOCK_CATEGORIES: { label: string; types: BlockCellType[] }[] = [
   { label: "Content", types: ["rich-text", "markdown", "html"] },
   { label: "Media", types: ["image", "video", "audio", "gallery"] },
-  { label: "Interactive", types: ["quiz", "code-studio", "button"] },
+  { label: "Interactive", types: ["quiz", "code-studio"] },
   { label: "Data & Diagrams", types: ["mermaid", "vega-lite"] },
-  { label: "Structure", types: ["divider", "admonition", "project"] },
+  { label: "Structure", types: ["project"] },
 ]
 
 // ============================================================================

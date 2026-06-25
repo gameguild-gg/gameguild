@@ -199,36 +199,6 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
       data: { text: "", level: 1, style: "default" },
     }),
   },
-  "divider": {
-    icon: Minus,
-    label: "Divider",
-    description: "Visual divider",
-    createEmpty: (id) => ({
-      id,
-      type: "divider",
-      data: { style: "simple", thickness: "thin", spacing: "md", colorPalette: "blue", isNew: true },
-    }),
-  },
-  "button": {
-    icon: MousePointerClick,
-    label: "Button",
-    description: "Clickable button",
-    createEmpty: (id) => ({
-      id,
-      type: "button",
-      data: { text: "Button", url: "", actionType: "url", variant: "solid", size: "md", showIcon: false, iconVariant: 0, iconPosition: "left", iconSize: "md", colorPalette: "blue", fontFamily: "sans", fontSize: "md", isNew: true },
-    }),
-  },
-  "admonition": {
-    icon: AlertTriangle,
-    label: "Admonition",
-    description: "Info/warning callout",
-    createEmpty: (id) => ({
-      id,
-      type: "admonition",
-      data: { title: "", content: "", type: "note", design: "default", isNew: true },
-    }),
-  },
   "project": {
     icon: FolderOpen,
     label: "Project",

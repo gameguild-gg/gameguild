@@ -26,9 +26,6 @@ export const EMBEDDABLE_BLOCK_TYPES = [
   "code-studio",
   "mermaid",
   "vega-lite",
-  "admonition",
-  "divider",
-  "button",
   "html",
   "markdown",
 ] as const

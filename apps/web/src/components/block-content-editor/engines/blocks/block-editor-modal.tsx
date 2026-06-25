@@ -10,10 +10,7 @@ import type { Block } from "@/components/block-content-editor/lib/storage/editor
 import type { BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { BLOCK_REGISTRY } from "./block-component-registry"
 import {
-  AdmonitionEditor,
-  ButtonEditor,
   CodeStudioEditor,
-  DividerEditor,
   HTMLEditor,
   MarkdownEditor,
   MermaidEditor,
@@ -374,22 +371,6 @@ export function BlockEditorModal({ open, onOpenChange, block, blockType, onSave 
         galleryCaption={currentData.caption || ""}
       />
     )
-  }
-
-  // Divider, Button, Admonition — render their own full-screen overlay
-  if (blockType === "divider") {
-    if (!open) return null
-    return <DividerEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
-  }
-
-  if (blockType === "button") {
-    if (!open) return null
-    return <ButtonEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
-  }
-
-  if (blockType === "admonition") {
-    if (!open) return null
-    return <AdmonitionEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // HTML — renders its own full-screen overlay

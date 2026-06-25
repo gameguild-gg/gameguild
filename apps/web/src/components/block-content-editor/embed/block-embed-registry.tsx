@@ -19,9 +19,6 @@ import { PreviewImage } from "../plugins/preview-components/preview-image"
 import { PreviewVideo } from "../plugins/preview-components/preview-video"
 import { PreviewAudio } from "../plugins/preview-components/preview-audio"
 import { PreviewGallery } from "../plugins/preview-components/preview-gallery"
-import { PreviewAdmonition } from "../plugins/preview-components/preview-admonition"
-import { PreviewDivider } from "../plugins/preview-components/preview-divider"
-import { PreviewButton } from "../plugins/preview-components/preview-button"
 import { PreviewHTML } from "../plugins/preview-components/preview-html"
 
 import type { Block } from "../lib/storage/editor/block-structure"
@@ -31,9 +28,6 @@ import type { SerializedImageNode } from "../nodes/image-node"
 import type { SerializedVideoNode } from "../nodes/video-node"
 import type { SerializedAudioNode } from "../nodes/audio-node"
 import type { SerializedGalleryNode } from "../nodes/gallery-node"
-import type { SerializedAdmonitionNode } from "../nodes/admonition-node"
-import type { SerializedDividerNode } from "../nodes/divider-node"
-import type { SerializedButtonNode } from "../nodes/button-node"
 import type { SerializedVegaLiteNode } from "../nodes/vega-lite-node"
 import type { SerializedHTMLNode } from "../nodes/html-node"
 import type { SerializedMarkdownNode } from "../nodes/markdown-node"
@@ -102,18 +96,6 @@ function PreviewGalleryAdapter({ block }: EmbedPreviewProps<"gallery">) {
   return <PreviewGallery node={toSerialized(block) as SerializedGalleryNode} />
 }
 
-function PreviewAdmonitionAdapter({ block }: EmbedPreviewProps<"admonition">) {
-  return <PreviewAdmonition node={toSerialized(block) as SerializedAdmonitionNode} />
-}
-
-function PreviewDividerAdapter({ block }: EmbedPreviewProps<"divider">) {
-  return <PreviewDivider node={toSerialized(block) as SerializedDividerNode} />
-}
-
-function PreviewButtonAdapter({ block }: EmbedPreviewProps<"button">) {
-  return <PreviewButton node={toSerialized(block) as SerializedButtonNode} />
-}
-
 function PreviewCodeStudioAdapter({ block }: EmbedPreviewProps<"code-studio">) {
   return <LazyPreviewCodeStudio data={block.data} isPreview />
 }
@@ -146,9 +128,6 @@ export const EMBEDDABLE_BLOCK_CONFIG: EmbeddableBlockConfig = {
   "code-studio": { Preview: PreviewCodeStudioAdapter },
   "mermaid": { Preview: PreviewMermaidAdapter },
   "vega-lite": { Preview: PreviewVegaLiteAdapter },
-  "admonition": { Preview: PreviewAdmonitionAdapter },
-  "divider": { Preview: PreviewDividerAdapter },
-  "button": { Preview: PreviewButtonAdapter },
   "html": { Preview: PreviewHTMLAdapter },
   "markdown": { Preview: PreviewMarkdownAdapter },
 }

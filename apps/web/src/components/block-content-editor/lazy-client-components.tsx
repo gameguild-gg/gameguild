@@ -163,30 +163,6 @@ export const VegaLiteEditor = dynamic(
   },
 )
 
-export const DividerEditor = dynamic(
-  () => import("@/components/block-content-editor/extras/divider/divider-editor").then((mod) => ({ default: mod.DividerEditor })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading divider editor..." compact={true} />,
-  },
-)
-
-export const ButtonEditor = dynamic(
-  () => import("@/components/block-content-editor/extras/button/button-editor").then((mod) => ({ default: mod.ButtonEditor })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading button editor..." compact={true} />,
-  },
-)
-
-export const AdmonitionEditor = dynamic(
-  () => import("@/components/block-content-editor/extras/admonition/admonition-editor").then((mod) => ({ default: mod.AdmonitionEditor })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading admonition editor..." compact={true} />,
-  },
-)
-
 export const UnifiedMediaEditor = dynamic(
   () => import("@/components/block-content-editor/extras/media/unified-media-editor").then((mod) => ({ default: mod.UnifiedMediaEditor })),
   {
