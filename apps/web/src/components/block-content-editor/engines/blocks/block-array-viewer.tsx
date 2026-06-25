@@ -27,10 +27,7 @@ import { PreviewHTML } from "@/components/block-content-editor/plugins/preview-c
 import { PreviewVideo } from "@/components/block-content-editor/plugins/preview-components/preview-video"
 import { PreviewAudio } from "@/components/block-content-editor/plugins/preview-components/preview-audio"
 import { PreviewHeader } from "@/components/block-content-editor/plugins/preview-components/preview-header"
-import { PreviewDivider } from "@/components/block-content-editor/plugins/preview-components/preview-divider"
 import { PreviewSource } from "@/components/block-content-editor/plugins/preview-components/preview-source"
-import { PreviewAdmonition } from "@/components/block-content-editor/plugins/preview-components/preview-admonition"
-import { PreviewButton } from "@/components/block-content-editor/plugins/preview-components/preview-button"
 import { PreviewMermaid } from "@/components/block-content-editor/plugins/preview-components/preview-mermaid"
 import { PreviewVegaLite } from "@/components/block-content-editor/plugins/preview-components/preview-vega-lite"
 import { PreviewCodeStudio } from "@/components/block-content-editor/plugins/preview-components/preview-code-studio"
@@ -73,12 +70,6 @@ export function BlockContentRenderer({ block }: BlockContentRendererProps) {
       return <PreviewRichText node={blockToPreviewNode(block)} />
     case "header":
       return <PreviewHeader node={blockToPreviewNode(block)} />
-    case "divider":
-      return <PreviewDivider node={blockToPreviewNode(block)} />
-    case "button":
-      return <PreviewButton node={blockToPreviewNode(block)} />
-    case "admonition":
-      return <PreviewAdmonition node={blockToPreviewNode(block)} />
     case "project":
       return <PreviewProject node={blockToPreviewNode(block)} />
     default:

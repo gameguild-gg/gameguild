@@ -128,7 +128,7 @@
     "lexical": "^0.38.2",
     "lucide-react": "^0.525.0",
     "mathlive": "^0.109.1",
-    "mermaid": "^11",
+    "mermaid": "^11.15.0",
     "monaco-editor": "^0.55.1",
     "newrelic": "latest",
     "next": "^16.2.4",

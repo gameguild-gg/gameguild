@@ -13,10 +13,7 @@
  * by `nextBlockId(blocks)` and never recycled. Project IDs remain UUIDs.
  */
 
-import type { AdmonitionData } from "../../../nodes/admonition-node"
 import type { AudioData } from "../../../nodes/audio-node"
-import type { ButtonData } from "../../../nodes/button-node"
-import type { DividerData } from "../../../nodes/divider-node"
 import type { GalleryData } from "../../../nodes/gallery-node"
 import type { HeaderData } from "../../../nodes/header-node"
 import type { HTMLData } from "../../../nodes/html-node"
@@ -50,9 +47,6 @@ export const BLOCK_CELL_TYPES = [
   "html",
   "rich-text",
   "header",
-  "divider",
-  "button",
-  "admonition",
   "project",
 ] as const
 
@@ -77,9 +71,6 @@ export interface BlockDataMap {
   "html": HTMLData
   "rich-text": RichTextData
   "header": HeaderData
-  "divider": DividerData
-  "button": ButtonData
-  "admonition": AdmonitionData
   "project": ProjectNodeData
 }
 
