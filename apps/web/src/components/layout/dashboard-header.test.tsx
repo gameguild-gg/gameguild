@@ -74,4 +74,24 @@ describe('DashboardHeader', () => {
     });
     expect(mocks.push).toHaveBeenCalledWith('/sign-in');
   });
+
+  it('keeps dashboard search responsive across desktop and mobile header layouts', () => {
+    render(
+      <DashboardHeader
+        user={{
+          id: 'user-123',
+          name: 'Ada Lovelace',
+          email: 'ada@gameguild.gg',
+          image: null,
+        }}
+        notifications={{ items: [], unreadCount: 0 }}
+      />,
+    );
+
+    const searchButtons = screen.getAllByRole('button', { name: 'Search dashboard' });
+    expect(searchButtons).toHaveLength(2);
+    expect(searchButtons[0]).toHaveClass('max-w-sm');
+    expect(searchButtons[0]).toHaveClass('lg:max-w-md');
+    expect(searchButtons[1]).toHaveClass('sm:hidden');
+  });
 });

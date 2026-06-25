@@ -108,13 +108,13 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
   const breadcrumbs = generateBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4">
-      <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-40 flex h-16 min-w-0 shrink-0 items-center gap-2 border-b px-3 sm:px-4">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         <SidebarTrigger />
         {breadcrumbs.length > 0 && (
           <>
-            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
-            <Breadcrumb>
+            <Separator orientation="vertical" className="mr-2 hidden data-[orientation=vertical]:h-4 sm:block" />
+            <Breadcrumb className="hidden min-w-0 sm:block">
               <BreadcrumbList>
                 <BreadcrumbItem>
                   {breadcrumbs[0]?.href ? (
@@ -190,12 +190,12 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
           </>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="hidden min-w-[12rem] flex-1 items-center justify-center sm:flex">
         {/* Search */}
         <button
           type="button"
           onClick={openDashboardCommandPalette}
-          className="relative ml-auto flex h-10 w-full max-w-sm items-center rounded-md border bg-background px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/50"
+          className="relative flex h-10 w-full max-w-sm items-center rounded-md border bg-background px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/50 lg:max-w-md"
           aria-label="Search dashboard"
         >
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -205,7 +205,18 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
           </kbd>
         </button>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="sm:hidden"
+          onClick={openDashboardCommandPalette}
+          aria-label="Search dashboard"
+        >
+          <Search className="size-5" />
+        </Button>
+
         {/* Theme Toggle */}
         <ThemeToggle />
 

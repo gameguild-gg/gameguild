@@ -52,13 +52,13 @@ export default async function Page(): Promise<React.JSX.Element> {
   ] as const;
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div>
+    <div className="flex min-w-0 flex-col gap-6">
+      <div className="min-w-0">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">Welcome to the Game Guild management dashboard.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Members</CardTitle>
@@ -91,10 +91,10 @@ export default async function Page(): Promise<React.JSX.Element> {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {sections.map((section) => (
           <Link key={section.title} href={section.href}>
-            <Card className="transition-colors hover:bg-muted/50">
+            <Card className="h-full transition-colors hover:bg-muted/50">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">{section.title}</CardTitle>
                 <section.icon className="size-4 text-muted-foreground" />

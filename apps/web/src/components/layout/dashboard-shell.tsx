@@ -16,18 +16,18 @@ interface DashboardShellProps {
 
 export function DashboardShell({ children, notifications, user }: DashboardShellProps) {
   return (
-    <div className="flex flex-1 h-screen overflow-hidden">
+    <div className="flex h-svh min-w-0 flex-1 overflow-hidden">
       <SidebarProvider>
         <DashboardSidebar />
-        <SidebarInset>
+        <SidebarInset className="min-w-0 overflow-hidden">
           <DashboardCommandPalette />
           {/* Main Content */}
-          <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
             {/* Navbar */}
             <DashboardHeader notifications={notifications} user={user} />
 
             {/* Page Content */}
-            <main className={cn('flex-1 overflow-y-auto bg-muted/30 p-6 transition-all duration-300')}>
+            <main className={cn('min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-muted/30 p-4 transition-all duration-300 sm:p-6')}>
               {children}
             </main>
           </div>
