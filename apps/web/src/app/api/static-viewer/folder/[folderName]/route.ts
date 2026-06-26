@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { promises as fs } from "fs"
 import path from "path"
+import { elapsedMs, getRequestId, logWebRequest } from "@/lib/server/request-logging"
 
 // Base directory containing static project folders (each shaped like `projeto-*` with index.json + data.block-content-editor)
 const PROJECTS_BASE_DIR = path.join(process.cwd(), "src", "data", "test-blocks")
@@ -28,20 +29,39 @@ interface RawIndexJson {
 }
 
 export const GET = async (
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ folderName: string }> },
 ): Promise<NextResponse> => {
+  const startedAt = performance.now()
+  const requestId = getRequestId(req.headers)
+  const requestPath = new URL(req.url).pathname
+
+  const json = (body: unknown, status: number, error?: unknown): NextResponse => {
+    const response = NextResponse.json(body, { status })
+    response.headers.set("x-request-id", requestId)
+    logWebRequest({
+      event: status >= 500 ? "web.route.error" : "web.route.complete",
+      method: req.method,
+      path: requestPath,
+      status,
+      durationMs: elapsedMs(startedAt),
+      requestId,
+      ...(error ? { error } : {}),
+    })
+    return response
+  }
+
   try {
     const { folderName } = await context.params
 
     if (!folderName || !FOLDER_NAME_PATTERN.test(folderName)) {
-      return NextResponse.json({ error: "Invalid folder name" }, { status: 400 })
+      return json({ error: "Invalid folder name" }, 400)
     }
 
     const projectDir = path.resolve(PROJECTS_BASE_DIR, folderName)
     // Defense-in-depth against path traversal: ensure resolved path stays inside base dir
     if (!projectDir.startsWith(PROJECTS_BASE_DIR + path.sep)) {
-      return NextResponse.json({ error: "Invalid folder path" }, { status: 400 })
+      return json({ error: "Invalid folder path" }, 400)
     }
 
     const indexPath = path.join(projectDir, INDEX_FILENAME)
@@ -74,14 +94,11 @@ export const GET = async (
       preferences: parsed.preferences,
     }
 
-    return NextResponse.json({ project }, { status: 200 })
+    return json({ project }, 200)
   } catch (error: any) {
     if (error?.code === "ENOENT") {
-      return NextResponse.json({ error: "Project folder or required file not found" }, { status: 404 })
+      return json({ error: "Project folder or required file not found" }, 404, error)
     }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 },
-    )
+    return json({ error: error instanceof Error ? error.message : "Unknown error" }, 500, error)
   }
 }
