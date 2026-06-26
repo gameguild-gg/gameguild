@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ES2022",
+    "lib": ["ES2022", "dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -20,7 +20,10 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@game-guild/ui/*": ["../../packages/infrastructure/ui/src/*"]
+      "@game-guild/dotnet-wasm": ["../../packages/infrastructure/wasm/dotnet/src/index.ts"],
+      "@game-guild/ui/*": ["../../packages/infrastructure/ui/src/*"],
+      "next": ["./node_modules/next"],
+      "next/*": ["./node_modules/next/*"]
     }
   },
   "include": [

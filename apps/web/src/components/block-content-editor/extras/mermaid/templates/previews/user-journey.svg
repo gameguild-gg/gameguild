@@ -1,0 +1,36 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .placeholder-bg { fill: #f0f4f8; }
+      .placeholder-text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; fill: #64748b; }
+      .placeholder-title { font-size: 18px; font-weight: 600; fill: #1e293b; }
+      .step-rect { fill: #3b82f6; opacity: 0.8; }
+      .step-text { font-size: 11px; fill: white; }
+    </style>
+  </defs>
+  <rect class="placeholder-bg" width="400" height="300"/>
+  <text x="200" y="20" text-anchor="middle" class="placeholder-title">User Journey</text>
+  
+  <!-- Journey path -->
+  <rect class="step-rect" x="20" y="80" width="60" height="40" rx="4"/>
+  <text x="50" y="105" text-anchor="middle" class="step-text">Start</text>
+  
+  <line x1="80" y1="100" x2="120" y2="100" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <rect class="step-rect" x="120" y="80" width="60" height="40" rx="4"/>
+  <text x="150" y="105" text-anchor="middle" class="step-text">Task 1</text>
+  
+  <line x1="180" y1="100" x2="220" y2="100" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <rect class="step-rect" x="220" y="80" width="60" height="40" rx="4"/>
+  <text x="250" y="105" text-anchor="middle" class="step-text">Task 2</text>
+  
+  <line x1="280" y1="100" x2="320" y2="100" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <rect class="step-rect" x="320" y="80" width="60" height="40" rx="4"/>
+  <text x="350" y="105" text-anchor="middle" class="step-text">End</text>
+  
+  <!-- Satisfaction curve -->
+  <path d="M 20 200 Q 100 150, 180 180 Q 260 210, 380 170" stroke="#10b981" stroke-width="2" fill="none"/>
+  <text x="200" y="240" text-anchor="middle" class="placeholder-text">Satisfaction over time</text>
+</svg>
