@@ -1,7 +1,7 @@
 "use client"
 
+import { lazy, type ComponentType } from "react"
 import { useEffect, useRef } from "react"
-import dynamic from "next/dynamic"
 import type { editor } from "monaco-editor"
 import type { EditorProps, Monaco, OnMount } from "@monaco-editor/react"
 import type {
@@ -18,21 +18,19 @@ import {
   type MonacoOptions,
 } from "./build-monaco-options"
 import { useMonacoThemeBinding } from "./use-monaco-theme-binding"
+import { ClientOnlyLazy } from "../client-only-lazy"
 
-// `@monaco-editor/react` ships only as a client component. Wrap it in a
-// dynamic import so the shared base can be imported from anywhere
-// without forcing the parent into a client boundary explicitly.
-const MonacoReactEditor = dynamic(
-  () => import("@monaco-editor/react").then((m) => m.default),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-full text-sm text-gray-500">
-        Loading editor…
-      </div>
-    ),
-  },
+const monacoFallback = (
+  <div className="flex h-full items-center justify-center text-sm text-gray-500">
+    Loading editor…
+  </div>
 )
+
+// `@monaco-editor/react` is browser-only. Keep it behind a client-only
+// lazy boundary without relying on Next's private loadable context.
+const MonacoReactEditor = lazy(async () => ({
+  default: (await import("@monaco-editor/react")).default as ComponentType<EditorProps>,
+}))
 
 export interface BaseMonacoEditorProps {
   /** Controlled value. Mutually exclusive with `defaultValue`. */
@@ -152,23 +150,28 @@ export function BaseMonacoEditor({
   }, [prefs.renderLineHighlight])
 
   const mergedOptions = buildMonacoOptions(prefs, { readOnly, ...extraOptions })
+  const editorProps: EditorProps = {
+    height,
+    language,
+    value,
+    defaultValue,
+    path,
+    keepCurrentModel,
+    onChange,
+    beforeMount: handleBeforeMount,
+    onMount: handleMount,
+    theme: currentTheme,
+    loading: "",
+    options: mergedOptions,
+  }
 
   return (
     <MonacoErrorBoundary>
-      <MonacoReactEditor
+      <ClientOnlyLazy
         key={editorKey}
-        height={height}
-        language={language}
-        value={value}
-        defaultValue={defaultValue}
-        path={path}
-        keepCurrentModel={keepCurrentModel}
-        onChange={onChange}
-        beforeMount={handleBeforeMount}
-        onMount={handleMount}
-        theme={currentTheme}
-        loading=""
-        options={mergedOptions}
+        component={MonacoReactEditor}
+        props={editorProps}
+        fallback={monacoFallback}
       />
     </MonacoErrorBoundary>
   )

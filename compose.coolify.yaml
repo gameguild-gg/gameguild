@@ -94,6 +94,8 @@ services:
       coolify: {}
 
   web:
+    x-coolify-healthcheck-enabled: true
+    x-coolify-healthcheck-path: /api/health
     build:
       context: .
       dockerfile: apps/web/Dockerfile

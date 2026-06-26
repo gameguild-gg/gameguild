@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
+import { elapsedMs, getErrorMessage, getRequestId, logWebRequest } from '@/lib/server/request-logging';
 
-export const GET = async (): Promise<NextResponse> => {
+export const GET = async (request: Request): Promise<NextResponse> => {
+  const startedAt = performance.now();
+  const requestId = getRequestId(request.headers);
+
   try {
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -11,15 +15,38 @@ export const GET = async (): Promise<NextResponse> => {
       },
       { status: 200 },
     );
+    response.headers.set('x-request-id', requestId);
+    logWebRequest({
+      event: 'web.route.complete',
+      method: request.method,
+      path: new URL(request.url).pathname,
+      status: 200,
+      durationMs: elapsedMs(startedAt),
+      requestId,
+    });
+
+    return response;
   } catch (error) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
         service: 'web',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: getErrorMessage(error) ?? 'Unknown error',
       },
       { status: 503 },
     );
+    response.headers.set('x-request-id', requestId);
+    logWebRequest({
+      event: 'web.route.error',
+      method: request.method,
+      path: new URL(request.url).pathname,
+      status: 503,
+      durationMs: elapsedMs(startedAt),
+      requestId,
+      error,
+    });
+
+    return response;
   }
 };

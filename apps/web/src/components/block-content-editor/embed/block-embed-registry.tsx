@@ -12,7 +12,7 @@
  * `../nodes/` (except `nodes/base/serialized-*` types).
  */
 
-import dynamic from "next/dynamic"
+import { lazy } from "react"
 import { Loader2 } from "lucide-react"
 
 import { PreviewImage } from "../plugins/preview-components/preview-image"
@@ -36,6 +36,7 @@ import type {
   EmbedPreviewProps,
   EmbeddableBlockConfig,
 } from "./types"
+import { ClientOnlyLazy } from "../lib/client-only-lazy"
 
 // ---------------------------------------------------------------------------
 // Lazy previews for heavy bundles
@@ -50,27 +51,23 @@ function PreviewSkeleton({ label }: { label: string }) {
   )
 }
 
-const LazyPreviewCodeStudio = dynamic<{ data: CodeStudioData; isPreview: true }>(
-  () => import("../lazy-client-components").then((m) => ({ default: m.CodeStudioEditor })),
-  { ssr: false, loading: () => <PreviewSkeleton label="code studio" /> },
-)
+const LazyPreviewCodeStudio = lazy(async () => ({
+  default: (await import("../lazy-client-components")).CodeStudioEditor,
+}))
 
-const LazyPreviewMermaid = dynamic<{ data: MermaidData }>(
-  () => import("../plugins/preview-components/preview-mermaid").then((m) => ({ default: m.PreviewMermaid })),
-  { ssr: false, loading: () => <PreviewSkeleton label="diagrama" /> },
-)
+const LazyPreviewMermaid = lazy(async () => ({
+  default: (await import("../plugins/preview-components/preview-mermaid")).PreviewMermaid,
+}))
 
-const LazyPreviewVegaLite = dynamic<{ node: SerializedVegaLiteNode }>(
-  () => import("../plugins/preview-components/preview-vega-lite").then((m) => ({ default: m.PreviewVegaLite })),
-  { ssr: false, loading: () => <PreviewSkeleton label="gráfico" /> },
-)
+const LazyPreviewVegaLite = lazy(async () => ({
+  default: (await import("../plugins/preview-components/preview-vega-lite")).PreviewVegaLite,
+}))
 
 // Markdown is loaded lazily to avoid a static import cycle:
 // preview-markdown → markdown-renderer → this registry.
-const LazyPreviewMarkdown = dynamic<{ node: SerializedMarkdownNode }>(
-  () => import("../plugins/preview-components/preview-markdown").then((m) => ({ default: m.PreviewMarkdown })),
-  { ssr: false, loading: () => <PreviewSkeleton label="markdown" /> },
-)
+const LazyPreviewMarkdown = lazy(async () => ({
+  default: (await import("../plugins/preview-components/preview-markdown")).PreviewMarkdown,
+}))
 
 // ---------------------------------------------------------------------------
 // Adapters: Block envelope → preview component props
@@ -97,15 +94,33 @@ function PreviewGalleryAdapter({ block }: EmbedPreviewProps<"gallery">) {
 }
 
 function PreviewCodeStudioAdapter({ block }: EmbedPreviewProps<"code-studio">) {
-  return <LazyPreviewCodeStudio data={block.data} isPreview />
+  return (
+    <ClientOnlyLazy
+      component={LazyPreviewCodeStudio}
+      props={{ data: block.data, isPreview: true }}
+      fallback={<PreviewSkeleton label="code studio" />}
+    />
+  )
 }
 
 function PreviewMermaidAdapter({ block }: EmbedPreviewProps<"mermaid">) {
-  return <LazyPreviewMermaid data={block.data} />
+  return (
+    <ClientOnlyLazy
+      component={LazyPreviewMermaid}
+      props={{ data: block.data }}
+      fallback={<PreviewSkeleton label="diagrama" />}
+    />
+  )
 }
 
 function PreviewVegaLiteAdapter({ block }: EmbedPreviewProps<"vega-lite">) {
-  return <LazyPreviewVegaLite node={toSerialized(block) as SerializedVegaLiteNode} />
+  return (
+    <ClientOnlyLazy
+      component={LazyPreviewVegaLite}
+      props={{ node: toSerialized(block) as SerializedVegaLiteNode }}
+      fallback={<PreviewSkeleton label="gráfico" />}
+    />
+  )
 }
 
 function PreviewHTMLAdapter({ block }: EmbedPreviewProps<"html">) {
@@ -113,7 +128,13 @@ function PreviewHTMLAdapter({ block }: EmbedPreviewProps<"html">) {
 }
 
 function PreviewMarkdownAdapter({ block }: EmbedPreviewProps<"markdown">) {
-  return <LazyPreviewMarkdown node={toSerialized(block) as SerializedMarkdownNode} />
+  return (
+    <ClientOnlyLazy
+      component={LazyPreviewMarkdown}
+      props={{ node: toSerialized(block) as SerializedMarkdownNode }}
+      fallback={<PreviewSkeleton label="markdown" />}
+    />
+  )
 }
 
 // ---------------------------------------------------------------------------

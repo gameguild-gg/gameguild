@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { promises as fs } from "fs"
 import path from "path"
+import { elapsedMs, getRequestId, logWebRequest } from "@/lib/server/request-logging"
 
 // Base directory containing static block-content-editor data files.
 const FILES_BASE_DIR = path.join(process.cwd(), "src", "data")
@@ -9,39 +10,55 @@ const FILES_BASE_DIR = path.join(process.cwd(), "src", "data")
 const SEGMENT_PATTERN = /^[a-zA-Z0-9._-]+$/
 
 export const GET = async (
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ path: string[] }> },
 ): Promise<NextResponse> => {
+  const startedAt = performance.now()
+  const requestId = getRequestId(req.headers)
+  const requestPath = new URL(req.url).pathname
+
+  const json = (body: unknown, status: number, error?: unknown): NextResponse => {
+    const response = NextResponse.json(body, { status })
+    response.headers.set("x-request-id", requestId)
+    logWebRequest({
+      event: status >= 500 ? "web.route.error" : "web.route.complete",
+      method: req.method,
+      path: requestPath,
+      status,
+      durationMs: elapsedMs(startedAt),
+      requestId,
+      ...(error ? { error } : {}),
+    })
+    return response
+  }
+
   try {
     const { path: segments } = await context.params
 
     if (!Array.isArray(segments) || segments.length === 0) {
-      return NextResponse.json({ error: "Missing file path" }, { status: 400 })
+      return json({ error: "Missing file path" }, 400)
     }
     if (!segments.every((s) => SEGMENT_PATTERN.test(s))) {
-      return NextResponse.json({ error: "Invalid path segment" }, { status: 400 })
+      return json({ error: "Invalid path segment" }, 400)
     }
 
     const filePath = path.resolve(FILES_BASE_DIR, ...segments)
     if (!filePath.startsWith(FILES_BASE_DIR + path.sep)) {
-      return NextResponse.json({ error: "Invalid file path" }, { status: 400 })
+      return json({ error: "Invalid file path" }, 400)
     }
 
     const raw = await fs.readFile(filePath, "utf8")
     // Validate it's a JSON-shaped block-content-editor file
     JSON.parse(raw)
 
-    return NextResponse.json({ data: raw }, { status: 200 })
+    return json({ data: raw }, 200)
   } catch (error: any) {
     if (error?.code === "ENOENT") {
-      return NextResponse.json({ error: "File not found" }, { status: 404 })
+      return json({ error: "File not found" }, 404, error)
     }
     if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "File is not valid JSON" }, { status: 422 })
+      return json({ error: "File is not valid JSON" }, 422, error)
     }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 },
-    )
+    return json({ error: error instanceof Error ? error.message : "Unknown error" }, 500, error)
   }
 }

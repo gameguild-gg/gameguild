@@ -10,8 +10,8 @@
 import "@excalidraw/excalidraw/index.css"
 
 import * as React from "react"
+import { lazy } from "react"
 import { useEffect, useRef, useState } from "react"
-import dynamic from "next/dynamic"
 import { useTheme } from "next-themes"
 import type {
   AppState,
@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import { ClientOnlyLazy } from "../../lib/client-only-lazy"
 
 /**
  * Selector that covers internal overlays/popovers of Excalidraw
@@ -42,10 +43,9 @@ function isInsideExcalidrawInternal(target: EventTarget | null): boolean {
   return target.closest(EXCALIDRAW_INTERNAL_SELECTOR) !== null
 }
 
-const Excalidraw = dynamic(
-  async () => (await import("@excalidraw/excalidraw")).Excalidraw,
-  { ssr: false },
-)
+const Excalidraw = lazy(async () => ({
+  default: (await import("@excalidraw/excalidraw")).Excalidraw,
+}))
 
 export type ExcalidrawInitialElements = ExcalidrawInitialDataState["elements"]
 
@@ -173,39 +173,47 @@ export default function ExcalidrawModal({
           }
         `}</style>
         <div ref={canvasContainerRef} className={cn("flex-1 min-h-0")}>
-          <Excalidraw
-            excalidrawAPI={setExcalidrawAPI}
-            theme={excalidrawTheme}
-            initialData={{
-              appState: {
-                ...(initialAppState || { isLoading: false }),
-                theme: (initialAppState?.theme ?? excalidrawTheme) as AppState["theme"],
-                // Defaults "rich" based on the example "With Additional
-                // properties" from the official documentation:
-                // https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/excalidraw-element-skeleton
-                // Apply only to new elements created in this session;
-                // does not overwrite already saved elements.
-                currentItemStrokeWidth: initialAppState?.currentItemStrokeWidth ?? 2,
-                currentItemStrokeStyle: initialAppState?.currentItemStrokeStyle ?? "solid",
-                currentItemFillStyle: initialAppState?.currentItemFillStyle ?? "solid",
-                currentItemRoughness: initialAppState?.currentItemRoughness ?? 1,
-                currentItemRoundness: initialAppState?.currentItemRoundness ?? "round",
-                currentItemFontSize: initialAppState?.currentItemFontSize ?? 20,
-                currentItemStrokeColor: initialAppState?.currentItemStrokeColor ?? "#1971c2",
-                currentItemBackgroundColor:
-                  initialAppState?.currentItemBackgroundColor ?? "#a5d8ff",
-                currentItemStartArrowhead:
-                  initialAppState?.currentItemStartArrowhead ?? null,
-                currentItemEndArrowhead:
-                  initialAppState?.currentItemEndArrowhead ?? "triangle",
+          <ClientOnlyLazy
+            component={Excalidraw}
+            props={{
+              excalidrawAPI: setExcalidrawAPI,
+              theme: excalidrawTheme,
+              initialData: {
+                appState: {
+                  ...(initialAppState || { isLoading: false }),
+                  theme: (initialAppState?.theme ?? excalidrawTheme) as AppState["theme"],
+                  // Defaults "rich" based on the example "With Additional
+                  // properties" from the official documentation:
+                  // https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/excalidraw-element-skeleton
+                  // Apply only to new elements created in this session;
+                  // does not overwrite already saved elements.
+                  currentItemStrokeWidth: initialAppState?.currentItemStrokeWidth ?? 2,
+                  currentItemStrokeStyle: initialAppState?.currentItemStrokeStyle ?? "solid",
+                  currentItemFillStyle: initialAppState?.currentItemFillStyle ?? "solid",
+                  currentItemRoughness: initialAppState?.currentItemRoughness ?? 1,
+                  currentItemRoundness: initialAppState?.currentItemRoundness ?? "round",
+                  currentItemFontSize: initialAppState?.currentItemFontSize ?? 20,
+                  currentItemStrokeColor: initialAppState?.currentItemStrokeColor ?? "#1971c2",
+                  currentItemBackgroundColor:
+                    initialAppState?.currentItemBackgroundColor ?? "#a5d8ff",
+                  currentItemStartArrowhead:
+                    initialAppState?.currentItemStartArrowhead ?? null,
+                  currentItemEndArrowhead:
+                    initialAppState?.currentItemEndArrowhead ?? "triangle",
+                },
+                elements: initialElements,
+                files: initialFiles,
               },
-              elements: initialElements,
-              files: initialFiles,
+              onChange: (els, _ap, fls) => {
+                setElements(els)
+                setFiles(fls)
+              },
             }}
-            onChange={(els, _ap, fls) => {
-              setElements(els)
-              setFiles(fls)
-            }}
+            fallback={
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Loading canvas…
+              </div>
+            }
           />
         </div>
         <DialogFooter className="px-4 pb-4">
