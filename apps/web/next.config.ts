@@ -165,6 +165,9 @@ const nextConfig: NextConfig = {
         __dirname,
         "../../packages/infrastructure/wasm/dotnet/src/index.ts"
       ),
+      "next/dist/server/route-modules/app-page/vendored/contexts/loadable": require.resolve(
+        "next/dist/server/route-modules/pages/vendored/contexts/loadable.js"
+      ),
       "vscode-jsonrpc": resolvePackageDir("vscode-jsonrpc"),
       "vscode-languageserver-protocol": resolvePackageDir("vscode-languageserver-protocol"),
       "vscode-languageserver-types": resolvePackageDir("vscode-languageserver-types"),
