@@ -3,7 +3,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 import path from "node:path";
 
 const nextConfig: NextConfig = {
-  reactCompiler: false,
+  reactCompiler: true,
   output: "standalone",
   transpilePackages: [
     "@game-guild/ui",
