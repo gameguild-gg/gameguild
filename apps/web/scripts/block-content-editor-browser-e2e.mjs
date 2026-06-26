@@ -95,6 +95,16 @@ async function runProjectCreateFlow(page) {
   await projectCard.click();
   await page.waitForURL(/\/block-content-editor\/studio#/, { timeout: 20_000 });
   await assertNoErrorSurface(page, 'Created project studio');
+
+  await page.getByRole('menuitem', { name: 'File' }).click();
+  await page.getByRole('menuitem', { name: /^Save$/ }).click();
+  await page.waitForTimeout(500);
+
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 45_000 });
+  await assertNoErrorSurface(page, 'Reloaded project studio');
+  await page.goto(urlFor('/en-US/block-content-editor'), { waitUntil: 'domcontentloaded', timeout: 45_000 });
+  await assertNoErrorSurface(page, 'Project manager after studio reload');
+  await waitForBodyText(page, new RegExp(projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), 'Project manager after studio reload');
 }
 
 async function main() {
