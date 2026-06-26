@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { routing } from '@/i18n';
 import { getTrackProgramHref } from '@/lib/tracks/catalog';
+import { elapsedMs, getRequestId, logWebRequest } from '@/lib/server/request-logging';
 
 function isPublicAssetPath(pathname: string): boolean {
   return (
@@ -47,21 +48,40 @@ function getTrackRedirectPath(pathname: string): string | null {
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
+  const startedAt = performance.now();
+  const requestId = getRequestId(request.headers);
+  let response: NextResponse;
+  let proxyAction = 'next';
   const trackRedirectPath = getTrackRedirectPath(request.nextUrl.pathname);
 
   if (trackRedirectPath) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = trackRedirectPath;
     redirectUrl.search = '';
-    return NextResponse.redirect(redirectUrl, 308);
+    response = NextResponse.redirect(redirectUrl, 308);
+    proxyAction = 'redirect';
+  } else {
+    const defaultLocaleRewrite = rewriteDefaultLocalePath(request);
+    if (defaultLocaleRewrite) {
+      response = defaultLocaleRewrite;
+      proxyAction = 'rewrite';
+    } else {
+      response = NextResponse.next();
+    }
   }
 
-  const defaultLocaleRewrite = rewriteDefaultLocalePath(request);
-  if (defaultLocaleRewrite) {
-    return defaultLocaleRewrite;
-  }
+  response.headers.set('x-request-id', requestId);
+  logWebRequest({
+    event: 'web.proxy.complete',
+    method: request.method,
+    path: request.nextUrl.pathname,
+    status: response.status,
+    durationMs: elapsedMs(startedAt),
+    requestId,
+    ...(proxyAction !== 'next' ? { action: proxyAction, level: 'info' } : {}),
+  });
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

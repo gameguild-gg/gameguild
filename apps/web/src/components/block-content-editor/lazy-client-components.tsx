@@ -1,9 +1,18 @@
 "use client"
 
-import dynamic from "next/dynamic"
+import { lazy, type ComponentProps } from "react"
 import { Loader2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { CodeStudioData } from "@/components/block-content-editor/extras/code-studio/types"
+import { ClientOnlyLazy } from "@/components/block-content-editor/lib/client-only-lazy"
+import type { ModeSelectionDialog as ModeSelectionDialogComponent } from "@/components/block-content-editor/extras/code-studio/mode-selection-dialog"
+import type { HTMLEditor as HTMLEditorComponent } from "@/components/block-content-editor/extras/html/html-editor"
+import type { MarkdownEditor as MarkdownEditorComponent } from "@/components/block-content-editor/extras/markdown/markdown-editor"
+import type { UnifiedMediaEditor as UnifiedMediaEditorComponent } from "@/components/block-content-editor/extras/media/unified-media-editor"
+import type { MermaidEditor as MermaidEditorComponent } from "@/components/block-content-editor/extras/mermaid/mermaid-editor"
+import type { QuizSettingsDialog as QuizSettingsDialogComponent } from "@/components/block-content-editor/extras/quiz/quiz-settings-dialog"
+import type { RichTextEditor as RichTextEditorComponent } from "@/components/block-content-editor/extras/rich-text/rich-text-editor"
+import type { VegaLiteEditor as VegaLiteEditorComponent } from "@/components/block-content-editor/extras/vega-lite/vega-lite-editor"
 
 // Browser-only editor surfaces used by nodes and engine modals.
 // Lexical node classes themselves must stay synchronously importable.
@@ -17,6 +26,15 @@ interface CodeStudioEditorProps {
   onEdit?: () => void
   projectId?: string
 }
+
+type QuizSettingsDialogProps = ComponentProps<typeof QuizSettingsDialogComponent>
+type ModeSelectionDialogProps = ComponentProps<typeof ModeSelectionDialogComponent>
+type MarkdownEditorProps = ComponentProps<typeof MarkdownEditorComponent>
+type MermaidEditorProps = ComponentProps<typeof MermaidEditorComponent>
+type VegaLiteEditorProps = ComponentProps<typeof VegaLiteEditorComponent>
+type UnifiedMediaEditorProps = ComponentProps<typeof UnifiedMediaEditorComponent>
+type HTMLEditorProps = ComponentProps<typeof HTMLEditorComponent>
+type RichTextEditorProps = ComponentProps<typeof RichTextEditorComponent>
 
 function EditorOverlaySkeleton({ title, compact = false }: { title: string; compact?: boolean }) {
   // z-[100] sits above Radix Dialog overlays (which default to z-50),
@@ -99,90 +117,82 @@ function CodeStudioPreviewSkeleton() {
   )
 }
 
-const LazyCodeStudioEditor = dynamic<CodeStudioEditorProps>(
-  () => import("@/components/block-content-editor/extras/code-studio/code-studio-editor").then((mod) => mod.CodeStudioEditor),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading code studio..." />,
-  },
-)
+const LazyCodeStudioEditor = lazy(async () => ({
+  default: (await import("@/components/block-content-editor/extras/code-studio/code-studio-editor")).CodeStudioEditor,
+}))
 
-const LazyCodeStudioPreview = dynamic<CodeStudioEditorProps>(
-  () => import("@/components/block-content-editor/extras/code-studio/code-studio-editor").then((mod) => mod.CodeStudioEditor),
-  {
-    ssr: false,
-    loading: () => <CodeStudioPreviewSkeleton />,
-  },
-)
+const LazyCodeStudioPreview = lazy(async () => ({
+  default: (await import("@/components/block-content-editor/extras/code-studio/code-studio-editor")).CodeStudioEditor,
+}))
+
+const LazyQuizSettingsDialog = lazy(async () => ({
+  default: (await import("@/components/block-content-editor/extras/quiz/quiz-settings-dialog")).QuizSettingsDialog,
+}))
+
+const LazyModeSelectionDialog = lazy(async () => ({
+  default: (await import("@/components/block-content-editor/extras/code-studio/mode-selection-dialog")).ModeSelectionDialog,
+}))
+
+const LazyMarkdownEditor = lazy(async () => ({
+  default: (await import("@/components/block-content-editor/extras/markdown/markdown-editor")).MarkdownEditor,
+}))
+
+const LazyMermaidEditor = lazy(async () => ({
+  default: (await import("@/components/block-content-editor/extras/mermaid/mermaid-editor")).MermaidEditor,
+}))
+
+const LazyVegaLiteEditor = lazy(async () => ({
+  default: (await import("@/components/block-content-editor/extras/vega-lite/vega-lite-editor")).VegaLiteEditor,
+}))
+
+const LazyUnifiedMediaEditor = lazy(async () => ({
+  default: (await import("@/components/block-content-editor/extras/media/unified-media-editor")).UnifiedMediaEditor,
+}))
+
+const LazyHTMLEditor = lazy(async () => ({
+  default: (await import("@/components/block-content-editor/extras/html/html-editor")).HTMLEditor,
+}))
+
+const LazyRichTextEditor = lazy(async () => ({
+  default: (await import("@/components/block-content-editor/extras/rich-text/rich-text-editor")).RichTextEditor,
+}))
 
 export function CodeStudioEditor(props: CodeStudioEditorProps) {
   if (props.isPreview) {
-    return <LazyCodeStudioPreview {...props} />
+    return <ClientOnlyLazy component={LazyCodeStudioPreview} props={props} fallback={<CodeStudioPreviewSkeleton />} />
   }
 
-  return <LazyCodeStudioEditor {...props} />
+  return <ClientOnlyLazy component={LazyCodeStudioEditor} props={props} fallback={<EditorOverlaySkeleton title="Loading code studio..." />} />
 }
 
-export const QuizSettingsDialog = dynamic(
-  () => import("@/components/block-content-editor/extras/quiz/quiz-settings-dialog").then((mod) => ({ default: mod.QuizSettingsDialog })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading quiz editor..." compact={true} />,
-  },
-)
+export function QuizSettingsDialog(props: QuizSettingsDialogProps) {
+  return <ClientOnlyLazy component={LazyQuizSettingsDialog} props={props} fallback={<EditorOverlaySkeleton title="Loading quiz editor..." compact={true} />} />
+}
 
-export const ModeSelectionDialog = dynamic(
-  () => import("@/components/block-content-editor/extras/code-studio/mode-selection-dialog").then((mod) => ({ default: mod.ModeSelectionDialog })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading mode selector..." compact={true} />,
-  },
-)
+export function ModeSelectionDialog(props: ModeSelectionDialogProps) {
+  return <ClientOnlyLazy component={LazyModeSelectionDialog} props={props} fallback={<EditorOverlaySkeleton title="Loading mode selector..." compact={true} />} />
+}
 
-export const MarkdownEditor = dynamic(
-  () => import("@/components/block-content-editor/extras/markdown/markdown-editor").then((mod) => ({ default: mod.MarkdownEditor })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading markdown editor..." />,
-  },
-)
+export function MarkdownEditor(props: MarkdownEditorProps) {
+  return <ClientOnlyLazy component={LazyMarkdownEditor} props={props} fallback={<EditorOverlaySkeleton title="Loading markdown editor..." />} />
+}
 
-export const MermaidEditor = dynamic(
-  () => import("@/components/block-content-editor/extras/mermaid/mermaid-editor").then((mod) => ({ default: mod.MermaidEditor })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading diagram editor..." />,
-  },
-)
+export function MermaidEditor(props: MermaidEditorProps) {
+  return <ClientOnlyLazy component={LazyMermaidEditor} props={props} fallback={<EditorOverlaySkeleton title="Loading diagram editor..." />} />
+}
 
-export const VegaLiteEditor = dynamic(
-  () => import("@/components/block-content-editor/extras/vega-lite/vega-lite-editor").then((mod) => ({ default: mod.VegaLiteEditor })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading chart editor..." />,
-  },
-)
+export function VegaLiteEditor(props: VegaLiteEditorProps) {
+  return <ClientOnlyLazy component={LazyVegaLiteEditor} props={props} fallback={<EditorOverlaySkeleton title="Loading chart editor..." />} />
+}
 
-export const UnifiedMediaEditor = dynamic(
-  () => import("@/components/block-content-editor/extras/media/unified-media-editor").then((mod) => ({ default: mod.UnifiedMediaEditor })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading media editor..." />,
-  },
-)
+export function UnifiedMediaEditor(props: UnifiedMediaEditorProps) {
+  return <ClientOnlyLazy component={LazyUnifiedMediaEditor} props={props} fallback={<EditorOverlaySkeleton title="Loading media editor..." />} />
+}
 
-export const HTMLEditor = dynamic(
-  () => import("@/components/block-content-editor/extras/html/html-editor").then((mod) => ({ default: mod.HTMLEditor })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading HTML editor..." />,
-  },
-)
+export function HTMLEditor(props: HTMLEditorProps) {
+  return <ClientOnlyLazy component={LazyHTMLEditor} props={props} fallback={<EditorOverlaySkeleton title="Loading HTML editor..." />} />
+}
 
-export const RichTextEditor = dynamic(
-  () => import("@/components/block-content-editor/extras/rich-text/rich-text-editor").then((mod) => ({ default: mod.RichTextEditor })),
-  {
-    ssr: false,
-    loading: () => <EditorOverlaySkeleton title="Loading rich text editor..." />,
-  },
-)
+export function RichTextEditor(props: RichTextEditorProps) {
+  return <ClientOnlyLazy component={LazyRichTextEditor} props={props} fallback={<EditorOverlaySkeleton title="Loading rich text editor..." />} />
+}
