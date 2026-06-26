@@ -31,12 +31,11 @@ describe('web runtime hardening', () => {
     expect(readRepoFile('apps/web/Dockerfile')).toContain('NODE_OPTIONS=--max-old-space-size=4096');
   });
 
-  it('uses lightweight container readiness and enables real Coolify app health checks', () => {
+  it('uses lightweight container readiness and keeps the web health endpoint available', () => {
     const compose = readRepoFile('compose.coolify.yaml');
 
     expect(compose).toContain("fetch('http://127.0.0.1:3000/manifest.webmanifest')");
-    expect(compose).toContain('x-coolify-healthcheck-enabled: true');
-    expect(compose).toContain('x-coolify-healthcheck-path: /api/health');
+    expect(readRepoFile('apps/web/src/app/api/health/route.ts')).toContain("status: 'healthy'");
   });
 
   it('logs web requests and route handler failures with structured runtime events', () => {
