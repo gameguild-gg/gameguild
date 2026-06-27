@@ -40,6 +40,16 @@ const nextConfig: NextConfig = {
     authInterrupts: true,
     cpus: 1,
   },
+  turbopack: {
+    resolveAlias: {
+      module: {
+        browser: "./src/lib/browser-node-module-stub.ts",
+      },
+      "node:module": {
+        browser: "./src/lib/browser-node-module-stub.ts",
+      },
+    },
+  },
   async rewrites() {
     return [
       {
