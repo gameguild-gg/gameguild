@@ -1,17 +1,5 @@
 import type { SupportedLanguage } from '../types'
 import type { CodeRunner, RunnerResult, RunnerOptions } from './types'
-import { JavaScriptRunner } from './javascript-runner'
-import { TypeScriptRunner } from './typescript-runner'
-import { PythonRunner } from './python-runner'
-import { PythonWasiRunner } from './python-wasi-runner'
-import { LuaRunner } from './lua-runner'
-import { CppRunner } from './cpp-runner'
-import { CRunner } from './c-runner'
-import { PhpRunner } from './php-runner'
-import { SqlRunner } from './sql-runner'
-import { RubyRunner } from './ruby-runner'
-import { WatRunner } from './wat-runner'
-import { DotNetRunner } from './dotnet-runner'
 
 /**
  * Runner Selection Configuration
@@ -98,55 +86,81 @@ export class UnifiedCodeRunner {
     let runner = this.runners.get(language)
     
     if (!runner) {
-      runner = this.createRunner(language)
+      runner = await this.createRunner(language)
       this.runners.set(language, runner)
     }
 
     return runner
   }
 
-  private createRunner(language: SupportedLanguage): CodeRunner {
+  private async createRunner(language: SupportedLanguage): Promise<CodeRunner> {
     switch (language) {
-      case 'javascript':
+      case 'javascript': {
+        const { JavaScriptRunner } = await import('./javascript-runner')
         return new JavaScriptRunner(this.options)
+      }
       
-      case 'typescript':
+      case 'typescript': {
+        const { TypeScriptRunner } = await import('./typescript-runner')
         return new TypeScriptRunner(this.options)
+      }
       
       case 'python':
         // Select Python runner based on configuration
         switch (RUNNER_SELECTION.PYTHON_RUNNER) {
-          case 1:
+          case 1: {
+            const { PythonRunner } = await import('./python-runner')
             return new PythonRunner(this.options) // Pyodide
-          case 2:
+          }
+          case 2: {
+            const { PythonWasiRunner } = await import('./python-wasi-runner')
             return new PythonWasiRunner(this.options) // WASI
-          default:
+          }
+          default: {
+            const { PythonRunner } = await import('./python-runner')
             return new PythonRunner(this.options)
+          }
         }
       
-      case 'lua':
+      case 'lua': {
+        const { LuaRunner } = await import('./lua-runner')
         return new LuaRunner(this.options)
+      }
       
-      case 'cpp':
+      case 'cpp': {
+        const { CppRunner } = await import('./cpp-runner')
         return new CppRunner(this.options)
+      }
       
-      case 'c':
+      case 'c': {
+        const { CRunner } = await import('./c-runner')
         return new CRunner(this.options)
+      }
       
-      case 'php':
+      case 'php': {
+        const { PhpRunner } = await import('./php-runner')
         return new PhpRunner(this.options)
+      }
       
-      case 'sql':
+      case 'sql': {
+        const { SqlRunner } = await import('./sql-runner')
         return new SqlRunner(this.options)
+      }
       
-      case 'ruby':
+      case 'ruby': {
+        const { RubyRunner } = await import('./ruby-runner')
         return new RubyRunner(this.options)
+      }
       
-      case 'webassembly':
+      case 'webassembly': {
+        const { WatRunner } = await import('./wat-runner')
         return new WatRunner(this.options)
+      }
       
-      case 'csharp':
+      case 'csharp': {
+        const { DotNetRunner } = await import('./dotnet-runner')
         return new DotNetRunner(this.options)
+      }
       
       case 'rust':
       case 'forth':
@@ -163,17 +177,5 @@ export class UnifiedCodeRunner {
   }
 }
 
-export * from './types'
-export { JavaScriptRunner } from './javascript-runner'
-export { TypeScriptRunner } from './typescript-runner'
-export { PythonRunner } from './python-runner'
-export { PythonWasiRunner } from './python-wasi-runner'
-export { LuaRunner } from './lua-runner'
-export { CppRunner } from './cpp-runner'
-export { CRunner } from './c-runner'
-export { PhpRunner } from './php-runner'
-export { SqlRunner } from './sql-runner'
-export { RubyRunner } from './ruby-runner'
-export { WatRunner } from './wat-runner'
-export { DotNetRunner, preloadDotNetCompiler, disposeDotNetCompiler } from './dotnet-runner'
+export type * from './types'
 export { setDownloadNotificationCallback, clearWasmCache } from './wasm-loader'
