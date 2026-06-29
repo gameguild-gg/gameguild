@@ -71,7 +71,8 @@ import { InsertTableDialog } from "../table"
 import { INSERT_STICKY_COMMAND } from "../sticky"
 import { INSERT_ADMONITION_LEXICAL_COMMAND } from "../admonition"
 import { INSERT_BUTTON_LEXICAL_COMMAND } from "../button"
-import { AlertCircle as AdmonitionIcon, MousePointerClick as ButtonIcon } from "lucide-react"
+import { INSERT_MERMAID_LEXICAL_COMMAND } from "../mermaid"
+import { AlertCircle as AdmonitionIcon, MousePointerClick as ButtonIcon, GitBranch as MermaidIcon } from "lucide-react"
 
 type DialogRender = (opts: { activeEditor: LexicalEditor; onClose: () => void }) => React.ReactNode
 
@@ -269,6 +270,11 @@ function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
       Icon: ButtonIcon,
       keywords: ["button", "link", "action", "cta", "download"],
       onSelect: () => editor.dispatchCommand(INSERT_BUTTON_LEXICAL_COMMAND, undefined),
+    }),
+    new ComponentPickerOption("Mermaid Diagram", {
+      Icon: MermaidIcon,
+      keywords: ["mermaid", "diagram", "flowchart", "chart", "graph", "sequence", "gantt", "class"],
+      onSelect: () => editor.dispatchCommand(INSERT_MERMAID_LEXICAL_COMMAND, undefined),
     }),
   ]
 }

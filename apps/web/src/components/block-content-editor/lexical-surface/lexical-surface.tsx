@@ -51,6 +51,7 @@ import { StickyPlugin } from "./sticky"
 import { AdmonitionPlugin } from "./admonition"
 import { ButtonPlugin } from "./button"
 import { DividerPlugin } from "./divider"
+import { MermaidPlugin } from "./mermaid"
 import {
   FloatingLinkEditorPlugin,
   FloatingTextFormatToolbarPlugin,
@@ -104,6 +105,8 @@ export type LexicalSurfaceFeatures = {
   button?: boolean
   /** Configurable section divider. Default: true */
   divider?: boolean
+  /** Mermaid diagrams. Default: true */
+  mermaid?: boolean
   /** Lexical built-ins. Defaults: true */
   history?: boolean
   list?: boolean
@@ -154,6 +157,7 @@ const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
   admonition: true,
   button: true,
   divider: true,
+  mermaid: true,
   history: true,
   list: true,
   link: true,
@@ -324,6 +328,7 @@ function EditorBody({
         {features.admonition && <AdmonitionPlugin />}
         {features.button && <ButtonPlugin />}
         {features.divider && <DividerPlugin />}
+        {features.mermaid && <MermaidPlugin />}
         {features.blockEmbed && <BlockEmbedPlugin />}
         {features.blockInsertMenu && <BlockInsertMenuPlugin />}
         {anchorElem && features.floatingTextFormat && (
