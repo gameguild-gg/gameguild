@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@game-guild/typescript-config/react.library.tsconfig.json",
+  "display": "Auth Components",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@game-guild/auth-components": [
+        "./src/index.ts"
+      ],
+      "@game-guild/auth-components/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "./src"
+  ],
+  "files": [],
+  "references": [],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
