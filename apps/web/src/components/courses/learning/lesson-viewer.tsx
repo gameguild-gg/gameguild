@@ -1,6 +1,6 @@
 'use client';
 
-import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
+import { MarkdownRenderer } from '@game-guild/content-rendering';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

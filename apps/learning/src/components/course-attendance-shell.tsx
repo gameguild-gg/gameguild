@@ -10,7 +10,7 @@ import { CheckCircle2, Clock3, Lock, PlayCircle, Send, Star } from 'lucide-react
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import MarkdownRenderer from './markdown-renderer';
+import { MarkdownRenderer } from '@game-guild/content-rendering';
 
 interface PeerReviewCriterion {
     name: string;
