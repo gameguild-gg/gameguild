@@ -7,7 +7,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   transpilePackages: [
     "@game-guild/ui",
+    "@game-guild/auth-components",
+    "@game-guild/block-content-editor",
     "@game-guild/community-members",
+    "@game-guild/content-rendering",
     "@game-guild/courses",
     "@game-guild/dotnet-wasm",
     "mermaid",

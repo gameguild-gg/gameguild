@@ -1,0 +1,31 @@
+{
+  "name": "@game-guild/auth-components",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Reusable auth form components for GameGuild apps",
+  "license": "UNLICENSED",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./components/*": "./src/components/*.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@game-guild/ui": "workspace:^",
+    "lucide-react": "^0.525.0",
+    "next": "16.2.9",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@game-guild/eslint-config": "workspace:*",
+    "@game-guild/prettier-config": "workspace:*",
+    "@game-guild/typescript-config": "workspace:*",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}

@@ -5,6 +5,9 @@
     "description": "UI components for the courses (learning) feature",
     "license": "UNLICENSED",
     "private": true,
+    "scripts": {
+        "typecheck": "tsc --noEmit --pretty false"
+    },
     "exports": {
         ".": "./src/index.ts",
         "./components/*": "./src/components/*.tsx",
