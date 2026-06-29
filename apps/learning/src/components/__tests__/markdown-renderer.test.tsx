@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import MarkdownRenderer from '../markdown-renderer';
+import { MarkdownRenderer } from '@game-guild/content-rendering';
 
 describe('MarkdownRenderer activities', () => {
   it('renders interactive quiz and code activities as usable learning blocks', () => {
