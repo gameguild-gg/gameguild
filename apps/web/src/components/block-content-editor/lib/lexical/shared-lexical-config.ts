@@ -28,6 +28,7 @@ import { StickyNode } from "../../lexical-surface/sticky"
 import { AdmonitionLexicalNode } from "../../lexical-surface/admonition"
 import { ButtonLexicalNode } from "../../lexical-surface/button"
 import { DividerLexicalNode } from "../../lexical-surface/divider"
+import { MermaidLexicalNode } from "../../lexical-surface/mermaid"
 
 /**
  * Full node set supported by our Lexical instances. Adding a node here
@@ -71,6 +72,7 @@ export const SHARED_LEXICAL_NODES = [
   AdmonitionLexicalNode,
   ButtonLexicalNode,
   DividerLexicalNode,
+  MermaidLexicalNode,
 ]
 
 /**
