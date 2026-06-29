@@ -30,6 +30,7 @@ import { ButtonLexicalNode } from "../../lexical-surface/button"
 import { DividerLexicalNode } from "../../lexical-surface/divider"
 import { MermaidLexicalNode } from "../../lexical-surface/mermaid"
 import { VegaLiteLexicalNode } from "../../lexical-surface/vega-lite"
+import { MediaLexicalNode } from "../../lexical-surface/media"
 
 /**
  * Full node set supported by our Lexical instances. Adding a node here
@@ -75,6 +76,7 @@ export const SHARED_LEXICAL_NODES = [
   DividerLexicalNode,
   MermaidLexicalNode,
   VegaLiteLexicalNode,
+  MediaLexicalNode,
 ]
 
 /**

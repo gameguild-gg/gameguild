@@ -73,7 +73,8 @@ import { INSERT_ADMONITION_LEXICAL_COMMAND } from "../admonition"
 import { INSERT_BUTTON_LEXICAL_COMMAND } from "../button"
 import { INSERT_MERMAID_LEXICAL_COMMAND } from "../mermaid"
 import { INSERT_VEGA_LITE_LEXICAL_COMMAND } from "../vega-lite"
-import { AlertCircle as AdmonitionIcon, MousePointerClick as ButtonIcon, GitBranch as MermaidIcon, BarChart3 as VegaIcon } from "lucide-react"
+import { INSERT_MEDIA_LEXICAL_COMMAND } from "../media"
+import { AlertCircle as AdmonitionIcon, MousePointerClick as ButtonIcon, GitBranch as MermaidIcon, BarChart3 as VegaIcon, Film as MediaIcon } from "lucide-react"
 
 type DialogRender = (opts: { activeEditor: LexicalEditor; onClose: () => void }) => React.ReactNode
 
@@ -281,6 +282,11 @@ function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
       Icon: VegaIcon,
       keywords: ["vega", "vega-lite", "chart", "graph", "plot", "visualization", "bar", "line", "scatter"],
       onSelect: () => editor.dispatchCommand(INSERT_VEGA_LITE_LEXICAL_COMMAND, undefined),
+    }),
+    new ComponentPickerOption("Media Block", {
+      Icon: MediaIcon,
+      keywords: ["media", "image", "video", "audio", "gallery", "photo", "music", "mp4", "mp3"],
+      onSelect: () => editor.dispatchCommand(INSERT_MEDIA_LEXICAL_COMMAND, { mediaType: "image" }),
     }),
   ]
 }

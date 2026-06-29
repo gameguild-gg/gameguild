@@ -53,6 +53,7 @@ import { ButtonPlugin } from "./button"
 import { DividerPlugin } from "./divider"
 import { MermaidPlugin } from "./mermaid"
 import { VegaLitePlugin } from "./vega-lite"
+import { MediaPlugin } from "./media"
 import {
   FloatingLinkEditorPlugin,
   FloatingTextFormatToolbarPlugin,
@@ -110,6 +111,8 @@ export type LexicalSurfaceFeatures = {
   mermaid?: boolean
   /** Vega-Lite charts. Default: true */
   vegaLite?: boolean
+  /** Media block (Image, Video, Audio, Gallery). Default: true */
+  media?: boolean
   /** Lexical built-ins. Defaults: true */
   history?: boolean
   list?: boolean
@@ -162,6 +165,7 @@ const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
   divider: true,
   mermaid: true,
   vegaLite: true,
+  media: true,
   history: true,
   list: true,
   link: true,
@@ -334,6 +338,7 @@ function EditorBody({
         {features.divider && <DividerPlugin />}
         {features.mermaid && <MermaidPlugin />}
         {features.vegaLite && <VegaLitePlugin />}
+        {features.media && <MediaPlugin />}
         {features.blockEmbed && <BlockEmbedPlugin />}
         {features.blockInsertMenu && <BlockInsertMenuPlugin />}
         {anchorElem && features.floatingTextFormat && (

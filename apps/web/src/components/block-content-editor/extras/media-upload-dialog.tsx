@@ -287,10 +287,15 @@ export function MediaUploadDialog({
   }
 
   const handleCompressionConfirm = async (settings: CompressionSettings) => {
-    if (!currentCompressionFile) return
+    const fileToCompress = currentCompressionFile
+    if (!fileToCompress) return
 
-    const fileId = pendingUploads.find((upload) => upload.file === currentCompressionFile)?.id
+    const fileId = pendingUploads.find((upload) => upload.file === fileToCompress)?.id
     if (!fileId) return
+
+    // Clear compression state synchronously to prevent race conditions / stale states
+    setCurrentCompressionFile(null)
+    setCompressionSettingsOpen(false)
 
     // Set upload as compressing
     setPendingUploads((prev) =>
@@ -298,7 +303,7 @@ export function MediaUploadDialog({
     )
 
     try {
-      const result = await WebPConverter.convertToWebP(currentCompressionFile, settings)
+      const result = await WebPConverter.convertToWebP(fileToCompress, settings)
 
       if (result.success && result.dataUrl) {
         setPendingUploads((prev) =>
@@ -354,8 +359,6 @@ export function MediaUploadDialog({
         prev.map((upload) => (upload.id === fileId ? { ...upload, isCompressing: false } : upload)),
       )
     }
-
-    setCurrentCompressionFile(null)
   }
 
   const handleUrlAdd = () => {
@@ -567,7 +570,15 @@ export function MediaUploadDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-6xl h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent
+          className="sm:max-w-6xl h-[85vh] overflow-hidden flex flex-col"
+          onPointerDownOutside={(e) => {
+            e.preventDefault()
+          }}
+          onInteractOutside={(e) => {
+            e.preventDefault()
+          }}
+        >
           <DialogHeader className="pb-2 border-b shrink-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
@@ -1087,7 +1098,10 @@ export function MediaUploadDialog({
       {currentCompressionFile && (
         <CompressionSettingsDialog
           isOpen={compressionSettingsOpen}
-          onClose={() => setCompressionSettingsOpen(false)}
+          onClose={() => {
+            setCompressionSettingsOpen(false)
+            setCurrentCompressionFile(null)
+          }}
           file={currentCompressionFile}
           onConfirm={handleCompressionConfirm}
           onCancel={() => {
