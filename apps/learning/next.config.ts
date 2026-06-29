@@ -3,7 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
     reactCompiler: true,
     output: "standalone",
-    transpilePackages: ["@game-guild/ui"],
+    transpilePackages: [
+        "@game-guild/ui",
+        "@game-guild/auth-components",
+        "@game-guild/content-rendering",
+        "@game-guild/courses",
+    ],
     images: {
         remotePatterns: [
             {

@@ -1,0 +1,37 @@
+{
+  "name": "@game-guild/content-rendering",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Reusable content and markdown rendering components for GameGuild apps",
+  "license": "UNLICENSED",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./components/*": "./src/components/*.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@game-guild/ui": "workspace:^",
+    "katex": "^0.16.22",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^15.6.1",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
+  },
+  "devDependencies": {
+    "@game-guild/eslint-config": "workspace:*",
+    "@game-guild/prettier-config": "workspace:*",
+    "@game-guild/typescript-config": "workspace:*",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "typescript": "^5"
+  }
+}
