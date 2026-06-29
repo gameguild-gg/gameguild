@@ -144,8 +144,9 @@ import { INSERT_STICKY_COMMAND } from "../sticky"
 import { INSERT_ADMONITION_LEXICAL_COMMAND } from "../admonition"
 import { INSERT_BUTTON_LEXICAL_COMMAND } from "../button"
 import { INSERT_MERMAID_LEXICAL_COMMAND } from "../mermaid"
+import { INSERT_VEGA_LITE_LEXICAL_COMMAND } from "../vega-lite"
 import { EmojiPickerPanel } from "../emoji"
-import { Sigma as EquationIcon, Pencil as ExcalidrawIcon, Smile as EmojiIcon, Table as TableIcon, Columns as ColumnsIcon, PanelTopOpen as CollapsibleIcon, AlertCircle as AdmonitionToolbarIcon, MousePointerClick as ButtonToolbarIcon, GitBranch as MermaidToolbarIcon } from "lucide-react"
+import { Sigma as EquationIcon, Pencil as ExcalidrawIcon, Smile as EmojiIcon, Table as TableIcon, Columns as ColumnsIcon, PanelTopOpen as CollapsibleIcon, AlertCircle as AdmonitionToolbarIcon, MousePointerClick as ButtonToolbarIcon, GitBranch as MermaidToolbarIcon, BarChart3 as VegaToolbarIcon } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -1424,6 +1425,11 @@ export default function ToolbarPlugin({
             onClick={() => dispatchToolbarCommand(INSERT_MERMAID_LEXICAL_COMMAND)}
           >
             <MermaidToolbarIcon className="w-4 h-4" /> Mermaid Diagram
+          </DropDownItem>
+          <DropDownItem
+            onClick={() => dispatchToolbarCommand(INSERT_VEGA_LITE_LEXICAL_COMMAND)}
+          >
+            <VegaToolbarIcon className="w-4 h-4" /> Vega-Lite Chart
           </DropDownItem>
         </DropDown>
       )}
