@@ -518,10 +518,41 @@ export function MediaLexicalComponent({
                 {/* Video/Audio Options */}
                 {mediaType !== "image" && (
                   <>
-                    <DropdownMenuItem onSelect={() => { setUploadTargetIndex(null); setUploadOpen(true); }}>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Replace {mediaType === "video" ? "Video" : "Audio"}
-                    </DropdownMenuItem>
+                    <div className="px-2 py-1.5 text-xs" onKeyDown={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-between mb-1 text-gray-500 dark:text-gray-400">
+                        <span>Source URL</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="text"
+                          value={inputUrl}
+                          onChange={(e) => setInputUrl(e.target.value)}
+                          onBlur={() => handleUrlSubmit(inputUrl)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleUrlSubmit(inputUrl)
+                            }
+                            e.stopPropagation()
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          className="flex-1 min-w-0 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded px-1.5 py-1 focus:ring-1 focus:ring-blue-500 focus:outline-none text-gray-900 dark:text-gray-100"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setUploadTargetIndex(null)
+                            setUploadOpen(true)
+                          }}
+                          className="p-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+                          title={`Upload ${mediaType}`}
+                        >
+                          <Upload className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
                     <DropdownMenuSeparator />
                   </>
                 )}
@@ -947,29 +978,7 @@ export function MediaLexicalComponent({
                   </div>
                 )}
 
-                {/* Direct Video Settings (editable) */}
-                {isEditable && (
-                  <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs">
-                    <span className="text-muted-foreground">URL:</span>
-                    <input
-                      type="text"
-                      value={inputUrl}
-                      onChange={(e) => setInputUrl(e.target.value)}
-                      onBlur={() => handleUrlSubmit(inputUrl)}
-                      className="flex-1 bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-gray-900 dark:text-gray-100"
-                    />
-                    <button
-                      onClick={() => {
-                        setUploadTargetIndex(null)
-                        setUploadOpen(true)
-                      }}
-                      className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-800"
-                      title="Upload video"
-                    >
-                      <Upload className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
+
 
                 {/* Video Caption */}
                 {showCaption && (
@@ -1075,29 +1084,7 @@ export function MediaLexicalComponent({
                   </div>
                 )}
 
-                {/* Direct Audio Settings (editable) */}
-                {isEditable && (
-                  <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs">
-                    <span className="text-muted-foreground">URL:</span>
-                    <input
-                      type="text"
-                      value={inputUrl}
-                      onChange={(e) => setInputUrl(e.target.value)}
-                      onBlur={() => handleUrlSubmit(inputUrl)}
-                      className="flex-1 bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-gray-900 dark:text-gray-100"
-                    />
-                    <button
-                      onClick={() => {
-                        setUploadTargetIndex(null)
-                        setUploadOpen(true)
-                      }}
-                      className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-800"
-                      title="Upload audio"
-                    >
-                      <Upload className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
+
 
                 {/* Audio Caption */}
                 {showCaption && (
