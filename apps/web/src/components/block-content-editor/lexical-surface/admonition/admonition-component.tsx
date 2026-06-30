@@ -109,6 +109,7 @@ export function AdmonitionLexicalComponent({
   const handleWrapperMouseDown = useCallback((e: React.MouseEvent) => {
     if (!isEditable) return
     const target = e.target as HTMLElement
+    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return
     if (target.closest("button") || target.closest("[data-radix-popper-content-wrapper]")) return
     const rootElement = editor.getRootElement()
     if (rootElement) rootElement.blur()
@@ -191,7 +192,7 @@ export function AdmonitionLexicalComponent({
                 <ChevronDown className="h-3.5 w-3.5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-56" onCloseAutoFocus={(e) => e.preventDefault()}>
               {/* Type submenu */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
