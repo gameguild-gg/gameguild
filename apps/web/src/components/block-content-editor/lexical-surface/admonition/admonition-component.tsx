@@ -200,7 +200,13 @@ export function AdmonitionLexicalComponent({
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="max-h-[320px] overflow-y-auto">
                   {TYPE_LIST.map(({ id, label, Icon }) => (
-                    <DropdownMenuItem key={id} onSelect={() => updateField((n) => n.setAdmonitionType(id))}>
+                    <DropdownMenuItem
+                      key={id}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        updateField((n) => n.setAdmonitionType(id))
+                      }}
+                    >
                       <Icon className="w-4 h-4 mr-2" />
                       {label}
                       {admonitionType === id && <Check className="ml-auto w-4 h-4" />}
@@ -217,7 +223,13 @@ export function AdmonitionLexicalComponent({
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {DESIGN_LIST.map(({ id, label }) => (
-                    <DropdownMenuItem key={id} onSelect={() => updateField((n) => n.setDesign(id))}>
+                    <DropdownMenuItem
+                      key={id}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        updateField((n) => n.setDesign(id))
+                      }}
+                    >
                       {label}
                       {design === id && <Check className="ml-auto w-4 h-4" />}
                     </DropdownMenuItem>
@@ -240,7 +252,12 @@ export function AdmonitionLexicalComponent({
                     onChange={(c) => { if (typeof c === "string") updateField((n) => n.setCustomBorderColor(c)) }}
                   />
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => updateField((n) => n.setCustomBorderColor(""))}>
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault()
+                      updateField((n) => n.setCustomBorderColor(""))
+                    }}
+                  >
                     Use default color
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
@@ -261,7 +278,12 @@ export function AdmonitionLexicalComponent({
                     onChange={(c) => { if (typeof c === "string") updateField((n) => n.setCustomTextColor(c)) }}
                   />
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => updateField((n) => n.setCustomTextColor(""))}>
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault()
+                      updateField((n) => n.setCustomTextColor(""))
+                    }}
+                  >
                     Use default color
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>

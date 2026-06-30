@@ -274,7 +274,13 @@ export function ButtonLexicalComponent({
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {ACTION_TYPES.map(({ id, label, Icon }) => (
-                    <DropdownMenuItem key={id} onSelect={() => updateField((n) => n.setActionType(id))}>
+                    <DropdownMenuItem
+                      key={id}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        updateField((n) => n.setActionType(id))
+                      }}
+                    >
                       <Icon className="w-4 h-4 mr-2" /> {label}
                       {actionType === id && <Check className="ml-auto w-4 h-4" />}
                     </DropdownMenuItem>
@@ -287,7 +293,13 @@ export function ButtonLexicalComponent({
                 <DropdownMenuSubTrigger>Variant: {VARIANT_LIST.find((v) => v.id === variant)?.label}</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {VARIANT_LIST.map(({ id, label }) => (
-                    <DropdownMenuItem key={id} onSelect={() => updateField((n) => n.setVariant(id))}>
+                    <DropdownMenuItem
+                      key={id}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        updateField((n) => n.setVariant(id))
+                      }}
+                    >
                       {label}
                       {variant === id && <Check className="ml-auto w-4 h-4" />}
                     </DropdownMenuItem>
@@ -300,7 +312,13 @@ export function ButtonLexicalComponent({
                 <DropdownMenuSubTrigger>Size: {SIZE_LIST.find((s) => s.id === btnSize)?.label}</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {SIZE_LIST.map(({ id, label }) => (
-                    <DropdownMenuItem key={id} onSelect={() => updateField((n) => n.setBtnSize(id))}>
+                    <DropdownMenuItem
+                      key={id}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        updateField((n) => n.setBtnSize(id))
+                      }}
+                    >
                       {label}
                       {btnSize === id && <Check className="ml-auto w-4 h-4" />}
                     </DropdownMenuItem>
@@ -545,7 +563,12 @@ export function ButtonLexicalComponent({
               <DropdownMenuSeparator />
 
               {/* Show icon toggle */}
-              <DropdownMenuItem onSelect={() => updateField((n) => n.setShowIcon(!showIcon))}>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault()
+                  updateField((n) => n.setShowIcon(!showIcon))
+                }}
+              >
                 {showIcon ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
                 {showIcon ? "Hide Icon" : "Show Icon"}
               </DropdownMenuItem>
@@ -556,7 +579,13 @@ export function ButtonLexicalComponent({
                   <DropdownMenuSubTrigger>Icon Position: {ICON_POS_LIST.find((p) => p.id === iconPosition)?.label}</DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     {ICON_POS_LIST.map(({ id, label }) => (
-                      <DropdownMenuItem key={id} onSelect={() => updateField((n) => n.setIconPosition(id))}>
+                      <DropdownMenuItem
+                        key={id}
+                        onSelect={(e) => {
+                          e.preventDefault()
+                          updateField((n) => n.setIconPosition(id))
+                        }}
+                      >
                         {label}
                         {iconPosition === id && <Check className="ml-auto w-4 h-4" />}
                       </DropdownMenuItem>
@@ -567,7 +596,12 @@ export function ButtonLexicalComponent({
 
               {/* Icon variant cycling */}
               {showIcon && (
-                <DropdownMenuItem onSelect={() => updateField((n) => n.setIconVariant(((iconVariant + 1) % 3) as 0 | 1 | 2))}>
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    updateField((n) => n.setIconVariant(((iconVariant + 1) % 3) as 0 | 1 | 2))
+                  }}
+                >
                   Next Icon Style ({iconVariant + 1}/3)
                 </DropdownMenuItem>
               )}

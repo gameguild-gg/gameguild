@@ -448,7 +448,13 @@ export function StickyComponent({
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {STYLES_LIST.map(({ id, label, Icon: StyleIcon }) => (
-                    <DropdownMenuItem key={id} onSelect={() => handleStyleChange(id)}>
+                    <DropdownMenuItem
+                      key={id}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        handleStyleChange(id)
+                      }}
+                    >
                       <StyleIcon className="w-4 h-4 mr-2" />
                       {label}
                       {style === id && <Check className="ml-auto w-4 h-4" />}
@@ -457,7 +463,12 @@ export function StickyComponent({
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
-              <DropdownMenuItem onSelect={handleSizeToggle}>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault()
+                  handleSizeToggle()
+                }}
+              >
                 {size === "wide" ? <Minimize2 className="w-4 h-4 mr-2 text-gray-500" /> : <Maximize2 className="w-4 h-4 mr-2 text-gray-500" />}
                 {size === "wide" ? "Compact Size" : "Wide Size"}
               </DropdownMenuItem>
