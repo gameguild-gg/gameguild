@@ -171,7 +171,13 @@ export function DividerLexicalComponent({
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {STYLE_LIST.map(({ id, label }) => (
-                    <DropdownMenuItem key={id} onSelect={() => updateField((n) => n.setStyle(id))}>
+                    <DropdownMenuItem
+                      key={id}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        updateField((n) => n.setStyle(id))
+                      }}
+                    >
                       {label}
                       {style === id && <Check className="ml-auto w-4 h-4" />}
                     </DropdownMenuItem>
@@ -187,7 +193,13 @@ export function DividerLexicalComponent({
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {THICKNESS_LIST.map(({ id, label }) => (
-                    <DropdownMenuItem key={id} onSelect={() => updateField((n) => n.setThickness(id))}>
+                    <DropdownMenuItem
+                      key={id}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        updateField((n) => n.setThickness(id))
+                      }}
+                    >
                       {label}
                       {thickness === id && <Check className="ml-auto w-4 h-4" />}
                     </DropdownMenuItem>
@@ -203,7 +215,13 @@ export function DividerLexicalComponent({
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {SPACING_LIST.map(({ id, label }) => (
-                    <DropdownMenuItem key={id} onSelect={() => updateField((n) => n.setSpacing(id))}>
+                    <DropdownMenuItem
+                      key={id}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        updateField((n) => n.setSpacing(id))
+                      }}
+                    >
                       {label}
                       {spacing === id && <Check className="ml-auto w-4 h-4" />}
                     </DropdownMenuItem>
