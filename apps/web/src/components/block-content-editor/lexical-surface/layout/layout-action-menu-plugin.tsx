@@ -284,7 +284,7 @@ export function LayoutActionMenuPlugin({
                 <ChevronDown className="h-3.5 w-3.5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuContent align="end" className="w-64" onCloseAutoFocus={(e) => e.preventDefault()}>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Columns layout</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>

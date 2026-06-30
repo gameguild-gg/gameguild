@@ -186,6 +186,7 @@ export function StickyComponent({
     (e: React.MouseEvent) => {
       if (!isEditable) return
       const target = e.target as HTMLElement
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return
       if (target.closest("button") || target.closest("[data-radix-popper-content-wrapper]")) return
       // Don't steal focus when drag handle is being used
       if (target.closest("[data-sticky-drag]")) return
@@ -441,7 +442,7 @@ export function StickyComponent({
                 <ChevronDown className="h-3.5 w-3.5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuContent align="start" className="w-48" onCloseAutoFocus={(e) => e.preventDefault()}>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <Palette className="w-4 h-4 mr-2 text-gray-500" /> Style

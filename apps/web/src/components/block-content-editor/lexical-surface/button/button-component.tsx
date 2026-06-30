@@ -129,6 +129,7 @@ export function ButtonLexicalComponent({
   const handleWrapperMouseDown = useCallback((e: React.MouseEvent) => {
     if (!isEditable) return
     const target = e.target as HTMLElement
+    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return
     if (target.closest("button[aria-label]") || target.closest("[data-radix-popper-content-wrapper]")) return
     const rootElement = editor.getRootElement()
     if (rootElement) rootElement.blur()
@@ -265,7 +266,7 @@ export function ButtonLexicalComponent({
                 <ChevronDown className="h-3.5 w-3.5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuContent align="end" className="w-52" onCloseAutoFocus={(e) => e.preventDefault()}>
               {/* Action Type */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
