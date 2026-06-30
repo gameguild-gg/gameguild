@@ -61,7 +61,7 @@ export function EditorField() {
     const documentMountKey = `${project.projectId ?? "new"}-${block.id}`
 
     return (
-      <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm rounded-lg flex flex-col min-h-full">
+      <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm rounded-lg flex flex-col min-h-full [--lexical-toolbar-offset:64px]">
         <LexicalSurface
           namespace="DocumentEditor"
           mountKey={documentMountKey}

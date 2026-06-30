@@ -1200,7 +1200,7 @@ export default function ToolbarPlugin({
       className={cn(
         "flex flex-wrap items-center gap-0.5 p-1 rounded-t",
         "border-b border-gray-200 dark:border-gray-700",
-        "bg-white dark:bg-gray-900 sticky top-0 z-10",
+        "bg-white dark:bg-gray-900 sticky top-[var(--lexical-toolbar-offset,0px)] z-10",
       )}
       role="toolbar"
       aria-label="Editor toolbar"
