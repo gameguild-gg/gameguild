@@ -870,6 +870,8 @@ export function MediaLexicalComponent({
                       className="absolute inset-0 w-full h-full"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
+                      // @ts-expect-error credentialless is not yet in React's iframe types
+                      credentialless="true"
                     />
                   </div>
                 ) : (
@@ -1012,6 +1014,8 @@ export function MediaLexicalComponent({
                       className="w-full"
                       allow="autoplay; clipboard-write; encrypted-media; fullscreen"
                       loading="lazy"
+                      // @ts-expect-error credentialless is not yet in React's iframe types
+                      credentialless="true"
                     />
                   </div>
                 ) : (

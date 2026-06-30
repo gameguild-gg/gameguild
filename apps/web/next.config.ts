@@ -73,14 +73,14 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/block-content-editor/:path*",
+        source: "/block-content-editor/:path((?!doc-editor|quiz-editor).*)",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
           { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
       {
-        source: "/:locale/block-content-editor/:path*",
+        source: "/:locale/block-content-editor/:path((?!doc-editor|quiz-editor).*)",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
           { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },

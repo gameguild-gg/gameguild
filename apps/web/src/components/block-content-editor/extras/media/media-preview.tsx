@@ -307,6 +307,8 @@ export function MediaPreview({ data }: MediaPreviewProps) {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               onLoad={() => setIsLoading(false)}
+              // @ts-expect-error credentialless is not yet in React's iframe types
+              credentialless="true"
             />
           </div>
           {data.caption && (
@@ -450,6 +452,8 @@ export function MediaPreview({ data }: MediaPreviewProps) {
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy"
             onLoad={() => setIsLoading(false)}
+            // @ts-expect-error credentialless is not yet in React's iframe types
+            credentialless="true"
           />
           {data.caption && (
             <div className="mt-2 text-sm text-muted-foreground text-center">{data.caption}</div>

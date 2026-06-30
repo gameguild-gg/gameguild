@@ -37,6 +37,8 @@ function YouTubeComponent({ className, format, nodeKey, videoID }: YouTubeCompon
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         title="YouTube video"
+        // @ts-expect-error credentialless is not yet in React's iframe types
+        credentialless="true"
       />
     </BlockWithAlignableContents>
   )
@@ -87,6 +89,7 @@ export class YouTubeNode extends DecoratorBlockNode {
     )
     element.setAttribute("allowfullscreen", "true")
     element.setAttribute("title", "YouTube video")
+    element.setAttribute("credentialless", "true")
     return { element }
   }
 
