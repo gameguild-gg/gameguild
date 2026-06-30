@@ -31,6 +31,8 @@ function FigmaComponent({ className, format, nodeKey, documentID }: FigmaCompone
         height="315"
         src={`https://www.figma.com/embed?embed_host=lexical&url=https://www.figma.com/file/${documentID}`}
         allowFullScreen
+        // @ts-expect-error credentialless is not yet in React's iframe types
+        credentialless="true"
       />
     </BlockWithAlignableContents>
   )
