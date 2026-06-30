@@ -293,19 +293,35 @@ export function TableActionMenuPlugin({
                 onChange={(next) => setBackgroundColor(next)}
               />
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => setBackgroundColor(null)}>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault()
+                  setBackgroundColor(null)
+                }}
+              >
                 Clear background
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-          <DropdownMenuItem onSelect={toggleRowStriping}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              toggleRowStriping()
+            }}
+          >
             {state.rowStriping ? "Remove row striping" : "Toggle row striping"}
           </DropdownMenuItem>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>Vertical align</DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               {(["top", "middle", "bottom"] as const).map((a) => (
-                <DropdownMenuItem key={a} onSelect={() => setVerticalAlign(a)}>
+                <DropdownMenuItem
+                  key={a}
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    setVerticalAlign(a)
+                  }}
+                >
                   {a.charAt(0).toUpperCase() + a.slice(1)}
                   {state.verticalAlign === a && (
                     <span className="ml-auto text-blue-600">✓</span>
@@ -314,45 +330,95 @@ export function TableActionMenuPlugin({
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-          <DropdownMenuItem onSelect={toggleFirstRowFreeze}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              toggleFirstRowFreeze()
+            }}
+          >
             {state.frozenRows > 0
               ? "Unfreeze first row"
               : "Toggle first row freeze"}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={toggleFirstColumnFreeze}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              toggleFirstColumnFreeze()
+            }}
+          >
             {state.frozenColumns > 0
               ? "Unfreeze first column"
               : "Toggle first column freeze"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => run(() => $insertTableRowAtSelection(false))}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              run(() => $insertTableRowAtSelection(false))
+            }}
+          >
             Insert row above
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => run(() => $insertTableRowAtSelection(true))}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              run(() => $insertTableRowAtSelection(true))
+            }}
+          >
             Insert row below
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => run(() => $insertTableColumnAtSelection(false))}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              run(() => $insertTableColumnAtSelection(false))
+            }}
+          >
             Insert column left
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => run(() => $insertTableColumnAtSelection(true))}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              run(() => $insertTableColumnAtSelection(true))
+            }}
+          >
             Insert column right
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => run(() => $deleteTableColumnAtSelection())}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              run(() => $deleteTableColumnAtSelection())
+            }}
+          >
             Delete column
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => run(() => $deleteTableRowAtSelection())}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              run(() => $deleteTableRowAtSelection())
+            }}
+          >
             Delete row
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={deleteTable} className="text-red-600 focus:text-red-600">
             Delete table
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={toggleRowHeader}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              toggleRowHeader()
+            }}
+          >
             {state.hasRowHeader ? "Remove row header" : "Add row header"}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={toggleColumnHeader}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              toggleColumnHeader()
+            }}
+          >
             {state.hasColumnHeader ? "Remove column header" : "Add column header"}
           </DropdownMenuItem>
         </DropdownMenuContent>
