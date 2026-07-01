@@ -1,6 +1,8 @@
 "use client"
 /**
  * Main editor field component, used in both the doc editor and block editor.
+ * Always renders in container scroll mode — the internal content area scrolls
+ * independently while the toolbar/chrome stays fixed.
  */
 import { useCallback, useEffect, useRef, useState } from "react"
 import { BlockArrayEditor } from "@/components/block-content-editor/engines/blocks/block-array-editor"
@@ -8,8 +10,16 @@ import { BLOCK_REGISTRY } from "@/components/block-content-editor/engines/blocks
 import { nextBlockId } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { useEditor } from "./editor-provider"
 import { LexicalSurface } from "@/components/block-content-editor/lexical-surface"
+import { cn } from "@/lib/utils"
 
-export function EditorField() {
+export interface EditorFieldProps {
+  /** Optional additional className for the outermost container. */
+  className?: string
+  /** Maximum height for the container. Defaults to 100%. */
+  maxHeight?: string | number
+}
+
+export function EditorField({ className, maxHeight }: EditorFieldProps = {}) {
   const { project, history, effectiveFieldConfig: fieldConfig } = useEditor()
   const [blocksDragging, setBlocksDragging] = useState(false)
   const [scaledHeight, setScaledHeight] = useState<number | null>(null)
@@ -61,7 +71,15 @@ export function EditorField() {
     const documentMountKey = `${project.projectId ?? "new"}-${block.id}`
 
     return (
-      <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm rounded-lg flex flex-col min-h-full [--lexical-toolbar-offset:64px]">
+      <div
+        className={cn(
+          "w-full flex flex-col min-h-0 overflow-hidden",
+          "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm rounded-lg",
+          "flex-1 h-full",
+          className
+        )}
+        style={{ maxHeight: maxHeight ?? undefined, height: "100%" }}
+      >
         <LexicalSurface
           namespace="DocumentEditor"
           mountKey={documentMountKey}
@@ -73,30 +91,39 @@ export function EditorField() {
             project.setBlocks(next)
           }}
           placeholder="Start writing your document..."
-          className="flex-1 flex flex-col"
+          className="flex-1 flex flex-col min-h-0"
           contentClassName="min-h-[600px] max-w-none px-8 py-10"
+          contentScrollable
         />
       </div>
     )
   }
 
   return (
-    <div ref={wrapperRef} style={blocksDragging ? { height: scaledHeight ?? undefined } : undefined}>
-      <div
-        ref={fieldRef}
-        className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 transition-transform duration-300 ease-in-out"
-        style={blocksDragging ? { transform: "scale(0.5)", transformOrigin: "top center" } : undefined}
-      >
-        <BlockArrayEditor
-          blocks={project.blocks}
-          onChange={project.setBlocks}
-          readOnly={history.isViewingHistory}
-          allowedBlockTypes={fieldConfig.allowedBlockTypes}
-          defaultPickerTab={hideBlocks || isQuizMode ? "templates" : "blocks"}
-          hideBlockTypesTab={hideBlocks}
-          singleBlockMode={fieldConfig.singleBlockMode}
-          onDragStateChange={handleDragStateChange}
-        />
+    <div
+      className={cn(
+        "w-full flex flex-col min-h-0 overflow-hidden",
+        className
+      )}
+      style={{ maxHeight: maxHeight ?? undefined, height: "100%" }}
+    >
+      <div ref={wrapperRef} className="flex-1 min-h-0 overflow-y-auto" style={blocksDragging ? { height: scaledHeight ?? undefined } : undefined}>
+        <div
+          ref={fieldRef}
+          className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 transition-transform duration-300 ease-in-out"
+          style={blocksDragging ? { transform: "scale(0.5)", transformOrigin: "top center" } : undefined}
+        >
+          <BlockArrayEditor
+            blocks={project.blocks}
+            onChange={project.setBlocks}
+            readOnly={history.isViewingHistory}
+            allowedBlockTypes={fieldConfig.allowedBlockTypes}
+            defaultPickerTab={hideBlocks || isQuizMode ? "templates" : "blocks"}
+            hideBlockTypesTab={hideBlocks}
+            singleBlockMode={fieldConfig.singleBlockMode}
+            onDragStateChange={handleDragStateChange}
+          />
+        </div>
       </div>
     </div>
   )

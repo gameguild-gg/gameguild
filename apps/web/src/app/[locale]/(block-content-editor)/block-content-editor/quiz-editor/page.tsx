@@ -21,7 +21,7 @@ export default function QuizEditorPage() {
   return (
     <EditorProvider fieldConfig={fieldConfig} toolbarConfig={toolbarConfig}>
       <StudioLayout header={<EditorToolbar />}>
-        <EditorField />
+        <EditorField maxHeight="calc(100dvh - 64px)" />
       </StudioLayout>
       <EditorDialogs />
     </EditorProvider>

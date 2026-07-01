@@ -138,6 +138,10 @@ export interface LexicalSurfaceProps {
   mountKey?: string | number
   /** Slot rendered right after `<LexicalComposer>` opens (e.g. custom header). */
   headerSlot?: React.ReactNode
+  /** Optional wrapper function to customize how the toolbar is styled/rendered. */
+  toolbarWrapper?: (toolbar: React.ReactNode) => React.ReactNode
+  /** Enable internal content scroll container (useful for container scroll mode). */
+  contentScrollable?: boolean
 }
 
 const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
@@ -205,6 +209,8 @@ function EditorBody({
   contentStyle,
   className,
   headerSlot,
+  toolbarWrapper,
+  contentScrollable,
 }: {
   features: Required<LexicalSurfaceFeatures>
   onChange?: (state: SerializedEditorState, editor: LexicalEditor) => void
@@ -214,6 +220,8 @@ function EditorBody({
   contentStyle?: React.CSSProperties
   className?: string
   headerSlot?: React.ReactNode
+  toolbarWrapper?: (toolbar: React.ReactNode) => React.ReactNode
+  contentScrollable?: boolean
 }) {
   const [editor] = useLexicalComposerContext()
   const [activeEditor, setActiveEditor] = useState<LexicalEditor>(editor)
@@ -235,24 +243,28 @@ function EditorBody({
 
   return (
     <>
-      {features.toolbar && (
-        <ToolbarPlugin
-          editor={editor}
-          activeEditor={activeEditor}
-          setActiveEditor={setActiveEditor}
-          setIsLinkEditMode={setIsLinkEditMode}
-          features={{
-            blockEmbed: features.blockEmbed,
-            blockInsertMenu: features.blockInsertMenu,
-            pageLayout: features.pageLayout,
-          }}
-        />
-      )}
+      {features.toolbar && (() => {
+        const toolbarNode = (
+          <ToolbarPlugin
+            editor={editor}
+            activeEditor={activeEditor}
+            setActiveEditor={setActiveEditor}
+            setIsLinkEditMode={setIsLinkEditMode}
+            features={{
+              blockEmbed: features.blockEmbed,
+              blockInsertMenu: features.blockInsertMenu,
+              pageLayout: features.pageLayout,
+            }}
+          />
+        )
+        return toolbarWrapper ? toolbarWrapper(toolbarNode) : toolbarNode
+      })()}
       {headerSlot}
       <div
         className={cn(
           "relative",
           features.pageLayout && "bg-gray-100 dark:bg-gray-950 py-6",
+          contentScrollable && "flex-1 overflow-y-auto min-h-0 scroll-container",
           className,
         )}
         ref={setAnchorElem}
@@ -375,6 +387,8 @@ export function LexicalSurface({
   contentStyle,
   mountKey,
   headerSlot,
+  toolbarWrapper,
+  contentScrollable,
 }: LexicalSurfaceProps) {
   const resolvedFeatures = useMemo(() => resolveFeatures(features, readOnly), [features, readOnly])
   // Re-mount when caller passes a new `mountKey` (e.g. external state reset).
@@ -417,6 +431,8 @@ export function LexicalSurface({
           contentStyle={contentStyle}
           className={className}
           headerSlot={headerSlot}
+          toolbarWrapper={toolbarWrapper}
+          contentScrollable={contentScrollable}
         />
       </ToolbarContextProvider>
     </LexicalComposer>
