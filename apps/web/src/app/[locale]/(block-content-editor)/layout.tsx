@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { TopMenu } from "@/components/block-content-editor/top-menu";
+import { RouteLayoutContent } from "./route-layout-content";
 import React from 'react';
 
 export const metadata: Metadata = {
@@ -32,9 +32,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <div>
-      <TopMenu />
-      <div className="flex flex-col flex-1 mt-20">{children}</div>
-    </div>
+    <RouteLayoutContent>
+      {children}
+    </RouteLayoutContent>
   )
 }
