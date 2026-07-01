@@ -24,7 +24,7 @@ export default function DocEditorPage() {
   return (
     <EditorProvider fieldConfig={fieldConfig} toolbarConfig={toolbarConfig}>
       <StudioLayout header={<EditorToolbar />}>
-        <EditorField />
+        <EditorField maxHeight="calc(100dvh - 16px)" />
       </StudioLayout>
       <EditorDialogs />
     </EditorProvider>

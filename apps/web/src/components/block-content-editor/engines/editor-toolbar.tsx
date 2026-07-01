@@ -7,10 +7,9 @@ import {
   MenubarMenu,
   MenubarSeparator,
   MenubarTrigger,
-  MenubarShortcut,
 } from "@/components/ui/menubar"
 import { Badge } from "@/components/ui/badge"
-import { Blocks, History, RotateCcw } from "lucide-react"
+import { Blocks, History, RotateCcw, Sun, Moon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SaveAsDialog } from "@/components/block-content-editor/extras/editor/save-as-dialog"
 import { OpenProjectDialog } from "@/components/block-content-editor/extras/editor/open-project-dialog"
@@ -21,22 +20,40 @@ import { ProjectStorageInfo } from "@/components/block-content-editor/extras/edi
 import { ProjectTypeIndicator } from "@/components/block-content-editor/extras/editor/project-type-indicator"
 import { syncConfig } from "@/components/block-content-editor/lib/sync/editor/sync-config"
 import { useEditor } from "./editor-provider"
+import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 
 export function EditorToolbar() {
   const { project, history, preview, toolbarConfig: tc, ui, fieldConfig } = useEditor()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark")
+  }
+
+  const isDark = theme === "dark"
 
   return (
-    <div className="flex flex-col w-full border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
-      <div className="flex items-center justify-between px-2 py-1">
-        <div className="flex items-center gap-2">
+    <>
+      {/* Top Navigation Bar / Panels */}
+      <div className="fixed top-3 z-50 flex items-center 2xl:justify-between justify-center 2xl:pointer-events-none pointer-events-auto 2xl:bg-transparent bg-white/90 2xl:dark:bg-transparent dark:bg-gray-900/90 2xl:backdrop-blur-none backdrop-blur-md 2xl:border-none border border-gray-200 dark:border-gray-800 2xl:shadow-none shadow-lg 2xl:rounded-none rounded-full 2xl:p-0 px-3 h-11 2xl:h-auto 2xl:left-4 2xl:right-4 left-1/2 -translate-x-1/2 2xl:translate-x-0 max-w-[95vw] w-max 2xl:w-auto gap-2">
+        {/* Left Menu Panel */}
+        <div className="flex items-center gap-2 pointer-events-auto bg-transparent 2xl:bg-white/90 2xl:dark:bg-gray-900/90 2xl:backdrop-blur-md border-none 2xl:border 2xl:border-gray-200 2xl:dark:border-gray-800 shadow-none 2xl:shadow-lg rounded-none 2xl:rounded-full p-0 2xl:px-3 h-auto 2xl:h-11">
           {/* Logo */}
-          <div className="p-1 bg-blue-50 dark:bg-blue-900/30 rounded">
-            <Blocks className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <div className="p-1 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+            <Blocks className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
           </div>
 
-          <Menubar className="border-none shadow-none bg-transparent h-8">
+          <Menubar className="border-none shadow-none bg-transparent h-8 p-0">
             <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">File</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer text-xs font-semibold py-1 px-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                File
+              </MenubarTrigger>
               <MenubarContent>
                 {tc.showOpen !== false && (
                   <MenubarItem onClick={() => ui.setOpenDialogOpen(true)}>
@@ -72,7 +89,9 @@ export function EditorToolbar() {
             </MenubarMenu>
 
             <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">View</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer text-xs font-semibold py-1 px-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                View
+              </MenubarTrigger>
               <MenubarContent>
                 {tc.showPreview !== false && (
                   <MenubarItem onClick={preview.openPreview} disabled={!project.projectId}>
@@ -94,7 +113,9 @@ export function EditorToolbar() {
             </MenubarMenu>
 
             <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">Settings</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer text-xs font-semibold py-1 px-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                Settings
+              </MenubarTrigger>
               <MenubarContent>
                 {tc.showAutoSave !== false && (
                   <MenubarItem onClick={(e) => {
@@ -108,10 +129,10 @@ export function EditorToolbar() {
             </MenubarMenu>
           </Menubar>
 
-          <div className="h-4 w-px bg-gray-300 dark:bg-gray-700 mx-2"></div>
+          <div className="w-px h-4 bg-gray-200 dark:bg-gray-800 mx-1"></div>
 
           {/* Project Title inline */}
-          <div className="flex items-center gap-2 text-sm max-w-[200px] sm:max-w-xs overflow-hidden">
+          <div className="flex items-center gap-2 text-xs max-w-[120px] sm:max-w-[200px] overflow-hidden">
             {project.projectId && tc.showProjectTitle !== false ? (
               <div className="min-w-0 flex-1 truncate">
                 <EditableProjectTitle
@@ -128,63 +149,85 @@ export function EditorToolbar() {
                 />
               </div>
             ) : (
-              <span className="text-gray-500 dark:text-gray-400 italic text-xs">Untitled</span>
+              <span className="text-gray-500 dark:text-gray-400 italic text-[11px]">Untitled</span>
             )}
           </div>
         </div>
 
-        {/* Right side indicators */}
-        <div className="flex items-center gap-3 text-xs">
-          {project.projectId && tc.showTypeIndicator !== false && (
-            <ProjectTypeIndicator type={project.preferences?.global?.projectType} />
+        {/* Mid Separator (Visible only on mobile in combined panel) */}
+        <div className="2xl:hidden w-px h-5 bg-gray-200 dark:bg-gray-800 mx-1"></div>
+
+        {/* Right Menu Panel */}
+        <div className="flex items-center gap-3 pointer-events-auto bg-transparent 2xl:bg-white/90 2xl:dark:bg-gray-900/90 2xl:backdrop-blur-md border-none 2xl:border 2xl:border-gray-200 2xl:dark:border-gray-800 shadow-none 2xl:shadow-lg rounded-none 2xl:rounded-full p-0 2xl:px-3 h-auto 2xl:h-11">
+          <div className="flex items-center gap-2.5 text-[11px]">
+            {project.projectId && tc.showTypeIndicator !== false && (
+              <div className="hidden sm:inline-flex">
+                <ProjectTypeIndicator type={project.preferences?.global?.projectType} />
+              </div>
+            )}
+            {project.projectId && tc.showStorageInfo !== false && (
+              <div className="hidden sm:inline-flex">
+                <ProjectStorageInfo storageType={project.storageType} />
+              </div>
+            )}
+            {tc.showSizeIndicator !== false && (
+              <ProjectSizeIndicator
+                currentProjectSize={project.projectSize}
+                currentProjectAssetsSize={project.assetsSize}
+                formatSize={ui.formatSize}
+                getSizeIndicatorColor={ui.getSizeIndicatorColor}
+                onClick={() => ui.setShowSizeDetails(true)}
+              />
+            )}
+            {tc.showSyncStatus !== false && project.syncStats && (
+              <SyncStatusIndicator
+                syncStats={project.syncStats}
+                isSyncEnabled={syncConfig.isEnabled()}
+                onClick={() => ui.setShowSyncStatus(!ui.showSyncStatus)}
+              />
+            )}
+          </div>
+
+          <div className="w-px h-4 bg-gray-200 dark:bg-gray-800"></div>
+
+          {mounted && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="rounded-full w-8 h-8 p-0 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="w-4 h-4 text-yellow-500" /> : <Moon className="w-4 h-4 text-gray-600" />}
+            </Button>
           )}
-          {project.projectId && tc.showStorageInfo !== false && (
-            <ProjectStorageInfo storageType={project.storageType} />
-          )}
-          {tc.showSizeIndicator !== false && (
-            <ProjectSizeIndicator
-              currentProjectSize={project.projectSize}
-              currentProjectAssetsSize={project.assetsSize}
-              formatSize={ui.formatSize}
-              getSizeIndicatorColor={ui.getSizeIndicatorColor}
-              onClick={() => ui.setShowSizeDetails(true)}
-            />
-          )}
-          {tc.showSyncStatus !== false && project.syncStats && (
-            <SyncStatusIndicator
-              syncStats={project.syncStats}
-              isSyncEnabled={syncConfig.isEnabled()}
-              onClick={() => ui.setShowSyncStatus(!ui.showSyncStatus)}
-            />
-          )}
+          {!mounted && <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" />}
         </div>
       </div>
 
-      {/* History Viewing Banner */}
+      {/* Floating History Viewing Banner */}
       {history.isViewingHistory && (
-        <div className="flex items-center justify-between px-3 py-1 bg-amber-50 border-t border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
-          <div className="flex items-center gap-2">
-            <History className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
-              Viewing historical version
-            </span>
-            {history.currentViewingSha && (
-              <Badge variant="outline" className="font-mono text-xs">
-                {history.currentViewingSha.substring(0, 7)}
-              </Badge>
-            )}
-            <span className="text-xs text-amber-600 dark:text-amber-400">
-              (Read-only)
-            </span>
-          </div>
+        <div className="fixed top-[64px] left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-1.5 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 shadow-lg rounded-full text-xs animate-bounce-subtle">
+          <History className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+          <span className="font-medium text-amber-800 dark:text-amber-200">
+            Viewing history version
+          </span>
+          {history.currentViewingSha && (
+            <Badge variant="outline" className="font-mono text-[10px] px-1 py-0 h-4 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300">
+              {history.currentViewingSha.substring(0, 7)}
+            </Badge>
+          )}
+          <span className="text-[10px] text-amber-600 dark:text-amber-400">
+            (Read-only)
+          </span>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={history.returnToHead}
-            className="gap-2 bg-white h-7 text-xs dark:bg-gray-800 border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+            className="h-6 px-2 text-[10px] text-amber-900 dark:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-900/40 rounded-full font-bold flex items-center gap-1"
           >
-            <RotateCcw className="h-3 w-3" />
-            Return to Latest
+            <RotateCcw className="h-2.5 w-2.5" />
+            Return
           </Button>
         </div>
       )}
@@ -221,6 +264,6 @@ export function EditorToolbar() {
           allowedProjectTypes={fieldConfig.allowedProjectTypes}
         />
       )}
-    </div>
+    </>
   )
 }
