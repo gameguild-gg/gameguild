@@ -26,7 +26,8 @@ export function ViewerField() {
             readOnly={true}
             onChange={() => { }}
             className="flex-1 flex flex-col"
-            contentClassName="min-h-[600px] max-w-none px-8 py-10"
+            // Keep neutral to preserve fixed page geometry from PagesPlugin.
+            contentClassName="max-w-none"
           />
         </div>
       )
