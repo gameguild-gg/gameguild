@@ -10,27 +10,14 @@ import type { LucideIcon } from "lucide-react"
 import {
   HelpCircle,
   Code,
-  Image,
-  Video,
-  Music,
-  GalleryHorizontalEnd,
-  Youtube,
-  Music2,
-  GitGraph,
-  BarChart3,
   Presentation,
   BookOpen,
   FileText,
   FileCode,
   Heading,
-  Minus,
-  MousePointerClick,
-  AlertTriangle,
-  Table2,
   FolderOpen,
 } from "lucide-react"
 import type { Block, BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
-import { BLOCK_CELL_TYPES } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { QuizEntryType, createDefaultSettings } from "@/components/block-content-editor/extras/quiz"
 import { createDefaultHTMLData } from "@/components/block-content-editor/extras/html/html-utils"
 
@@ -77,66 +64,6 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
       id,
       type: "code-studio",
       data: { id: crypto.randomUUID(), files: [], folders: [], openTabs: [], mode: "execution", language: "javascript", readonly: false, showLineNumbers: true, fontSize: 14, theme: "system", shikiTheme: "github", testCases: {} },
-    }),
-  },
-  "image": {
-    icon: Image,
-    label: "Image",
-    description: "Image with caption",
-    createEmpty: (id) => ({
-      id,
-      type: "image",
-      data: { src: "", alt: "", caption: "", size: 100, isNew: true },
-    }),
-  },
-  "video": {
-    icon: Video,
-    label: "Video",
-    description: "Video player",
-    createEmpty: (id) => ({
-      id,
-      type: "video",
-      data: { src: "", alt: "", caption: "", size: 100, isNew: true },
-    }),
-  },
-  "audio": {
-    icon: Music,
-    label: "Audio",
-    description: "Audio player",
-    createEmpty: (id) => ({
-      id,
-      type: "audio",
-      data: { src: "", caption: "", size: 100, isNew: true },
-    }),
-  },
-  "gallery": {
-    icon: GalleryHorizontalEnd,
-    label: "Gallery",
-    description: "Image gallery",
-    createEmpty: (id) => ({
-      id,
-      type: "gallery",
-      data: { images: [], layout: "2", caption: "", defaultDisplayMode: "crop", isNew: true },
-    }),
-  },
-  "mermaid": {
-    icon: GitGraph,
-    label: "Mermaid",
-    description: "Mermaid diagram",
-    createEmpty: (id) => ({
-      id,
-      type: "mermaid",
-      data: { code: "", type: "flowchart", direction: "TD", theme: "default", themeMode: "system" },
-    }),
-  },
-  "vega-lite": {
-    icon: BarChart3,
-    label: "Vega-Lite",
-    description: "Data visualization chart",
-    createEmpty: (id) => ({
-      id,
-      type: "vega-lite",
-      data: { spec: "", title: "", caption: "", theme: "default", themeMode: "system" },
     }),
   },
   "presentation": {

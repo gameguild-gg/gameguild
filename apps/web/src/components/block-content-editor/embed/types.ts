@@ -19,13 +19,7 @@ import type {
  * surface a new type in every embed UI at once.
  */
 export const EMBEDDABLE_BLOCK_TYPES = [
-  "image",
-  "video",
-  "audio",
-  "gallery",
   "code-studio",
-  "mermaid",
-  "vega-lite",
   "html",
   "markdown",
 ] as const
