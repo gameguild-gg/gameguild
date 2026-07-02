@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react"
 import type { Monaco } from "@monaco-editor/react"
-import * as monacoEditor from "monaco-editor"
-import { loader } from "@monaco-editor/react"
 import { shikiToMonaco } from "@shikijs/monaco"
 import { createHighlighter, type Highlighter } from "shiki"
 import { SHIKI_LANGS } from "@/components/block-content-editor/extras/code-studio/types"
+
+type MonacoEditorModule = typeof import("monaco-editor")
+type MonacoEditorRuntime = MonacoEditorModule extends { default: infer T } ? T : MonacoEditorModule
 
 /**
  * Accepts either the `Monaco` namespace from `@monaco-editor/react`
@@ -15,7 +16,44 @@ import { SHIKI_LANGS } from "@/components/block-content-editor/extras/code-studi
  * (used by vega-lite which mounts Monaco manually). Both are structurally
  * compatible with `shikiToMonaco`.
  */
-type MonacoNamespace = Monaco | typeof monacoEditor
+type MonacoNamespace = Monaco | MonacoEditorRuntime
+
+let monacoLoaderConfigured = false
+let monacoLoaderConfigPromise: Promise<void> | null = null
+
+function resolveMonacoNamespace(module: MonacoEditorModule): MonacoEditorRuntime {
+  const maybeDefault = (module as { default?: MonacoEditorRuntime }).default
+  return maybeDefault ?? (module as unknown as MonacoEditorRuntime)
+}
+
+async function ensureMonacoLoaderConfigured(monaco?: MonacoNamespace): Promise<void> {
+  if (monacoLoaderConfigured) return
+  if (typeof window === "undefined") return
+
+  if (monaco) {
+    const { loader } = await import("@monaco-editor/react")
+    loader.config({ monaco: monaco as Monaco })
+    monacoLoaderConfigured = true
+    return
+  }
+
+  if (!monacoLoaderConfigPromise) {
+    monacoLoaderConfigPromise = Promise.all([
+      import("@monaco-editor/react"),
+      import("monaco-editor"),
+    ])
+      .then(([monacoReact, monacoModule]) => {
+        monacoReact.loader.config({ monaco: resolveMonacoNamespace(monacoModule) as Monaco })
+        monacoLoaderConfigured = true
+      })
+      .catch((error) => {
+        monacoLoaderConfigPromise = null
+        throw error
+      })
+  }
+
+  await monacoLoaderConfigPromise
+}
 
 // `@monaco-editor/react` defaults to loading monaco-editor from a CDN, so
 // without this it would run a *different* Monaco instance than the one
@@ -25,9 +63,7 @@ type MonacoNamespace = Monaco | typeof monacoEditor
 // rendering with a broken half-applied theme as soon as Shiki binds to
 // one of the two instances. Pinning the loader to our local npm package
 // guarantees every Monaco surface in the app shares a single instance.
-if (typeof window !== "undefined") {
-  loader.config({ monaco: monacoEditor })
-}
+void ensureMonacoLoaderConfigured()
 
 // Singleton highlighter + one-time monaco binding, shared across every
 // Monaco-using editor (code-studio, html, markdown, mermaid, vega-lite).
@@ -108,6 +144,7 @@ export async function getShikiHighlighter(): Promise<Highlighter> {
 export async function ensureShikiLoaded(monaco: MonacoNamespace): Promise<void> {
   if (appliedToMonaco) return
   try {
+    await ensureMonacoLoaderConfigured(monaco)
     const hl = await getShikiHighlighter()
     shikiToMonaco(hl, monaco as Monaco)
     appliedToMonaco = true
