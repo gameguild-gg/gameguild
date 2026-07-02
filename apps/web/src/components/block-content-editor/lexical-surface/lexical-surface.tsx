@@ -60,7 +60,7 @@ import {
 } from "./floating"
 import { ComponentPickerPlugin } from "./picker"
 import { DraggableBlockPlugin } from "./draggable"
-import { pageSettingsToStyle, isPagedLayout, pageMarginPx } from "./page"
+import { pageSettingsToStyle, isPagedLayout, PagesPlugin } from "./page"
 
 export type LexicalSurfaceFeatures = {
   /** Top toolbar (block format, font, color, alignment, …). Default: true */
@@ -228,9 +228,11 @@ function EditorBody({
   const [isLinkEditMode, setIsLinkEditMode] = useState(false)
   const [anchorElem, setAnchorElem] = useState<HTMLElement | null>(null)
   const { pageSettings } = useToolbarState()
-  const pageStyle = features.pageLayout ? pageSettingsToStyle(pageSettings) : undefined
   const paged = features.pageLayout && isPagedLayout(pageSettings)
-  const marginPx = paged ? pageMarginPx(pageSettings) : 0
+  // The flat width card style only applies to pageless surfaces; paged
+  // surfaces render real `PageNode` sheets managed by `PagesPlugin`.
+  const pageStyle =
+    features.pageLayout && !paged ? pageSettingsToStyle(pageSettings) : undefined
 
   const handleChange = useCallback(
     (editorState: EditorState, editorInstance: LexicalEditor) => {
@@ -269,59 +271,55 @@ function EditorBody({
         )}
         ref={setAnchorElem}
       >
-        <div
-          className={cn(
-            features.pageLayout && "mx-auto relative",
-            paged &&
-              "bg-white dark:bg-gray-900 shadow-md border border-gray-200 dark:border-gray-700",
-          )}
-          style={pageStyle}
-        >
-          {paged && (
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute border border-dashed border-gray-300 dark:border-gray-600"
-              style={{
-                top: marginPx,
-                left: marginPx,
-                right: marginPx,
-                bottom: marginPx,
-              }}
+        {(() => {
+          const editable = (
+            <ContentEditable
+              readOnly={readOnly}
+              tabIndex={readOnly ? -1 : 0}
+              data-lexical-readonly={readOnly ? "true" : "false"}
+              style={contentStyle}
+              className={cn(
+                "lexical-editor outline-none text-base text-gray-900 dark:text-gray-100",
+                readOnly ? "lexical-readonly" : "lexical-editable",
+                !paged && "relative",
+                !features.pageLayout && "px-4 py-3",
+                features.pageLayout && !paged && "py-3",
+                paged && "h-full box-border",
+                paged && "px-8 py-8",
+                contentClassName,
+              )}
             />
-          )}
-          <RichTextPlugin
-            contentEditable={
-              <ContentEditable
-                readOnly={readOnly}
-                tabIndex={readOnly ? -1 : 0}
-                data-lexical-readonly={readOnly ? "true" : "false"}
-                style={contentStyle}
-                className={cn(
-                  "lexical-editor outline-none text-base text-gray-900 dark:text-gray-100 relative",
-                  readOnly ? "lexical-readonly" : "lexical-editable",
-                  !features.pageLayout && "px-4 py-3",
-                  features.pageLayout && !paged && "py-3",
-                  contentClassName,
-                )}
-              />
-            }
-            placeholder={
-              placeholder ? (
-                <div
-                  className="pointer-events-none absolute select-none text-gray-400 dark:text-gray-500"
-                  style={
-                    paged
-                      ? { top: marginPx, left: marginPx }
-                      : { top: 12, left: 16 }
-                  }
-                >
-                  {placeholder}
-                </div>
-              ) : null
-            }
-            ErrorBoundary={LexicalErrorBoundary}
-          />
-        </div>
+          )
+          const richText = (
+            <RichTextPlugin
+              contentEditable={editable}
+              placeholder={
+                placeholder && !paged ? (
+                  <div
+                    className="pointer-events-none absolute select-none text-gray-400 dark:text-gray-500"
+                    style={{ top: 12, left: 16 }}
+                  >
+                    {placeholder}
+                  </div>
+                ) : null
+              }
+              ErrorBoundary={LexicalErrorBoundary}
+            />
+          )
+          return paged ? (
+            richText
+          ) : (
+            <div
+              className={cn(features.pageLayout && "mx-auto relative")}
+              style={pageStyle}
+            >
+              {richText}
+            </div>
+          )
+        })()}
+        {features.pageLayout && (
+          <PagesPlugin pageSettings={pageSettings} enabled={paged} />
+        )}
         {features.history && <HistoryPlugin />}
         {features.list && <ListPlugin />}
         {features.checkList && <CheckListPlugin />}

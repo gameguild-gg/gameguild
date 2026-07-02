@@ -23,7 +23,7 @@ const toolbarConfig: Partial<ToolbarConfig> = {
 export default function DocEditorPage() {
   return (
     <EditorProvider fieldConfig={fieldConfig} toolbarConfig={toolbarConfig}>
-      <StudioLayout header={<EditorToolbar />}>
+      <StudioLayout header={<EditorToolbar />} className="max-w-none w-full">
         <EditorField maxHeight="calc(100dvh - 16px)" />
       </StudioLayout>
       <EditorDialogs />

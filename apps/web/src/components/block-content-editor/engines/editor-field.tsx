@@ -17,9 +17,16 @@ export interface EditorFieldProps {
   className?: string
   /** Maximum height for the container. Defaults to 100%. */
   maxHeight?: string | number
+  /**
+   * Width mode for the editor container:
+   * - "content": the scroll container matches the width of the editor card (max-w-4xl).
+   * - "wide": the scroll container spans the full layout width (capturing scroll/drags to the edges),
+   *          while the editor card remains centered and constrained to max-w-4xl.
+   */
+  widthMode?: "content" | "wide"
 }
 
-export function EditorField({ className, maxHeight }: EditorFieldProps = {}) {
+export function EditorField({ className, maxHeight, widthMode = "content" }: EditorFieldProps = {}) {
   const { project, history, effectiveFieldConfig: fieldConfig } = useEditor()
   const [blocksDragging, setBlocksDragging] = useState(false)
   const [scaledHeight, setScaledHeight] = useState<number | null>(null)
@@ -74,11 +81,13 @@ export function EditorField({ className, maxHeight }: EditorFieldProps = {}) {
       <div
         className={cn(
           "w-full flex flex-col min-h-0 overflow-hidden",
-          "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm rounded-lg",
+          widthMode === "content"
+            ? "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm rounded-lg max-w-4xl mx-auto"
+            : "bg-transparent border-none shadow-none max-w-none",
           "flex-1 h-full",
           className
         )}
-        style={{ maxHeight: maxHeight ?? undefined, height: "100%" }}
+        style={{ maxHeight: maxHeight ?? "var(--editor-max-height)", height: "100%" }}
       >
         <LexicalSurface
           namespace="DocumentEditor"
@@ -92,7 +101,9 @@ export function EditorField({ className, maxHeight }: EditorFieldProps = {}) {
           }}
           placeholder="Start writing your document..."
           className="flex-1 flex flex-col min-h-0"
-          contentClassName="min-h-[600px] max-w-none px-8 py-10"
+          // In paged mode, page geometry/padding is owned by `PagesPlugin`.
+          // Keep this class neutral so we don't override fixed sheet sizing.
+          contentClassName="max-w-none"
           contentScrollable
         />
       </div>
@@ -103,14 +114,18 @@ export function EditorField({ className, maxHeight }: EditorFieldProps = {}) {
     <div
       className={cn(
         "w-full flex flex-col min-h-0 overflow-hidden",
+        widthMode === "content" ? "max-w-4xl mx-auto" : "max-w-none",
         className
       )}
-      style={{ maxHeight: maxHeight ?? undefined, height: "100%" }}
+      style={{ maxHeight: maxHeight ?? "var(--editor-max-height)", height: "100%" }}
     >
       <div ref={wrapperRef} className="flex-1 min-h-0 overflow-y-auto" style={blocksDragging ? { height: scaledHeight ?? undefined } : undefined}>
         <div
           ref={fieldRef}
-          className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 transition-transform duration-300 ease-in-out"
+          className={cn(
+            "border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 transition-transform duration-300 ease-in-out",
+            widthMode === "wide" && "max-w-4xl mx-auto w-full"
+          )}
           style={blocksDragging ? { transform: "scale(0.5)", transformOrigin: "top center" } : undefined}
         >
           <BlockArrayEditor

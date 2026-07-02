@@ -217,12 +217,39 @@ body>.monaco-editor,
   margin: 0;
 }
 
+/*
+ * Paged editor margin guide (dashed printable area box).
+ * Drawn from page CSS variables so it tracks size/orientation/margins.
+ */
+.lexical-page::after {
+  content: "";
+  position: absolute;
+  top: var(--page-margin-top, 0px);
+  right: var(--page-margin-right, 0px);
+  bottom: var(--page-margin-bottom, 0px);
+  left: var(--page-margin-left, 0px);
+  border: 1px dashed rgba(148, 163, 184, 0.72);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark .lexical-page::after {
+  border-color: rgba(148, 163, 184, 0.58);
+}
+
+.lexical-page .lexical-page-content {
+  position: relative;
+  z-index: 1;
+}
+
 :root {
   --editor-toolbar-offset: 68px;
+  --editor-max-height: calc(100dvh - 88px);
 }
 
 @media (min-width: 1536px) {
   :root {
     --editor-toolbar-offset: 12px;
+    --editor-max-height: calc(100dvh - 24px);
   }
 }

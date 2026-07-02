@@ -130,3 +130,29 @@ export function isPagedLayout(settings: PageSettings): boolean {
 export function pageMarginPx(settings: PageSettings): number {
   return Math.round(PAGE_MARGIN_INCHES[settings.margin] * PX_PER_INCH)
 }
+
+export interface PageBoxPx {
+  /** Sheet width in CSS px (accounts for orientation). */
+  widthPx: number
+  /** Sheet height in CSS px (accounts for orientation). */
+  heightPx: number
+  /** Margin in CSS px on every edge. */
+  marginPx: number
+}
+
+/**
+ * Sheet dimensions in CSS px for a bounded (paged) layout, or `null`
+ * for pageless. Used by the multi-page background to know how tall one
+ * physical sheet is and how many sheets the content currently spans.
+ */
+export function pageBoxPx(settings: PageSettings): PageBoxPx | null {
+  const size = PAGE_SIZES.find((s) => s.id === settings.size)
+  if (!size || size.widthIn == null || size.heightIn == null) return null
+  const widthIn = settings.orientation === "portrait" ? size.widthIn : size.heightIn
+  const heightIn = settings.orientation === "portrait" ? size.heightIn : size.widthIn
+  return {
+    widthPx: Math.round(widthIn * PX_PER_INCH),
+    heightPx: Math.round(heightIn * PX_PER_INCH),
+    marginPx: pageMarginPx(settings),
+  }
+}
