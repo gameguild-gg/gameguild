@@ -13,12 +13,9 @@ import {
   CodeStudioEditor,
   HTMLEditor,
   MarkdownEditor,
-  MermaidEditor,
   ModeSelectionDialog,
   QuizSettingsDialog,
   RichTextEditor,
-  UnifiedMediaEditor,
-  VegaLiteEditor,
 } from "@/components/block-content-editor/lazy-client-components"
 
 // Pattern A standalone editors
@@ -297,80 +294,6 @@ export function BlockEditorModal({ open, onOpenChange, block, blockType, onSave 
   if (blockType === "markdown") {
     if (!open) return null
     return <MarkdownEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
-  }
-
-  // Mermaid — renders its own full-screen overlay
-  if (blockType === "mermaid") {
-    if (!open) return null
-    return <MermaidEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
-  }
-
-  // Vega-Lite — renders its own full-screen overlay
-  if (blockType === "vega-lite") {
-    if (!open) return null
-    return <VegaLiteEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
-  }
-
-  // Media types (image, video, audio) — UnifiedMediaEditor renders its own overlay
-  if (blockType === "image" || blockType === "video" || blockType === "audio") {
-    if (!open) return null
-    const mediaType = blockType
-    return (
-      <UnifiedMediaEditor
-        data={{ ...currentData, type: mediaType } as BaseMediaData}
-        onChange={(partial) => handleDataChange({ ...currentData, ...editData, ...partial })}
-        onSave={(items?: BaseMediaData[]) => {
-          if (items && items.length > 0 && items[0]) {
-            handleSave(items[0])
-          } else {
-            handleCancel()
-          }
-        }}
-        onClose={handleCancel}
-      />
-    )
-  }
-
-  // Gallery — UnifiedMediaEditor in gallery mode, renders its own overlay
-  if (blockType === "gallery") {
-    if (!open) return null
-    const galleryImages: BaseMediaData[] = (currentData.images || []).map((img: any) => ({
-      type: "image" as const,
-      src: img.src || "",
-      alt: img.alt || "",
-      caption: img.caption || "",
-      size: 100,
-    }))
-    return (
-      <UnifiedMediaEditor
-        data={galleryImages[0] || { type: "image" as const, src: "", alt: "", size: 100, isNew: true } as BaseMediaData}
-        onChange={() => {}}
-        onSave={(items?: BaseMediaData[], columns?: number, caption?: string) => {
-          if (!items || items.length === 0) {
-            handleCancel()
-            return
-          }
-          const galleryImgs = items.filter(i => i.src && i.src.trim() !== "").map(item => ({
-            id: Math.random().toString(36).substring(7),
-            src: item.src || "",
-            alt: item.alt || "",
-            caption: item.caption || "",
-            displayMode: "adaptive" as const,
-            span: "1x1" as const,
-          }))
-          handleSave({
-            images: galleryImgs,
-            layout: columns?.toString() || currentData.layout || "2",
-            caption: caption ?? currentData.caption ?? "",
-            defaultDisplayMode: currentData.defaultDisplayMode || "crop",
-          })
-        }}
-        onClose={handleCancel}
-        galleryItems={galleryImages}
-        galleryColumns={Number(currentData.layout) || 2}
-        galleryCaption={currentData.caption || ""}
-      />
-    )
   }
 
   // HTML — renders its own full-screen overlay
