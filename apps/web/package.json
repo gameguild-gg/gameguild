@@ -180,7 +180,7 @@
     "@graphql-codegen/typescript": "^4.1.6",
     "@graphql-codegen/typescript-operations": "^4.6.1",
     "@graphql-codegen/typescript-react-apollo": "^4.3.3",
-    "@hey-api/openapi-ts": "0.78.3",
+    "@hey-api/openapi-ts": "0.97.3",
     "@next/bundle-analyzer": "^16.2.4",
     "@parcel/watcher": "^2.4.1",
     "@tailwindcss/postcss": "^4.1.11",
