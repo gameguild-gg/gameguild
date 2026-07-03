@@ -5,10 +5,8 @@
  * Detects the 4 scenarios in which the user could lose the node:
  *  1. `NodeSelection` containing the node.
  *  2. `RangeSelection` not collapsed that includes the node (or its parent).
- *  3. `RangeSelection` collapsed + Backspace at the start of the top-level
- *     immediately after the node.
- *  4. `RangeSelection` collapsed + Delete at the end of the top-level
- *     immediately before the node.
+ *  3. `RangeSelection` collapsed + Backspace immediately after the node.
+ *  4. `RangeSelection` collapsed + Delete immediately before the node.
  *
  * When any of these occur, it intercepts the key, prevents deletion,
  * and calls `onRequestDelete` (use this to open a confirmation dialog).
@@ -21,8 +19,11 @@ import { mergeRegister } from "@lexical/utils"
 import {
   $getNodeByKey,
   $getSelection,
+  $isElementNode,
   $isNodeSelection,
   $isRangeSelection,
+  $isRootOrShadowRoot,
+  $isTextNode,
   COMMAND_PRIORITY_HIGH,
   KEY_BACKSPACE_COMMAND,
   KEY_DELETE_COMMAND,
@@ -30,12 +31,123 @@ import {
   type NodeKey,
 } from "lexical"
 
-function $getTopLevel(node: LexicalNode): LexicalNode | null {
-  let n: LexicalNode | null = node
-  while (n && n.getParent() && n.getParent()!.getKey() !== "root") {
-    n = n.getParent()
+function $isSameOrDescendant(node: LexicalNode | null, ancestor: LexicalNode): boolean {
+  let current: LexicalNode | null = node
+  while (current) {
+    if (current.getKey() === ancestor.getKey()) {
+      return true
+    }
+    current = current.getParent()
   }
-  return n
+  return false
+}
+
+function $getTopLevelInRootOrShadow(node: LexicalNode): LexicalNode | null {
+  let current: LexicalNode | null = node
+  while (current) {
+    const parent: LexicalNode | null = current.getParent()
+    if (!parent) {
+      return current
+    }
+    if ($isRootOrShadowRoot(parent)) {
+      return current
+    }
+    current = parent
+  }
+  return null
+}
+
+function $getDeepestFirstDescendant(node: LexicalNode): LexicalNode {
+  let current = node
+  while ($isElementNode(current) && current.getChildrenSize() > 0) {
+    const child = current.getChildAtIndex(0)
+    if (!child) break
+    current = child
+  }
+  return current
+}
+
+function $getDeepestLastDescendant(node: LexicalNode): LexicalNode {
+  let current = node
+  while ($isElementNode(current) && current.getChildrenSize() > 0) {
+    const child = current.getChildAtIndex(current.getChildrenSize() - 1)
+    if (!child) break
+    current = child
+  }
+  return current
+}
+
+function $getPreviousNodeFrom(node: LexicalNode): LexicalNode | null {
+  let current: LexicalNode | null = node
+  while (current) {
+    const previous = current.getPreviousSibling()
+    if (previous) {
+      return $getDeepestLastDescendant(previous)
+    }
+    current = current.getParent()
+  }
+  return null
+}
+
+function $getNextNodeFrom(node: LexicalNode): LexicalNode | null {
+  let current: LexicalNode | null = node
+  while (current) {
+    const next = current.getNextSibling()
+    if (next) {
+      return $getDeepestFirstDescendant(next)
+    }
+    current = current.getParent()
+  }
+  return null
+}
+
+function $getAdjacentNodeFromCollapsedSelection(isBackspace: boolean): LexicalNode | null {
+  const selection = $getSelection()
+  if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
+    return null
+  }
+
+  const anchor = selection.anchor
+  const anchorNode = anchor.getNode()
+
+  if (anchor.type === "text") {
+    if (!$isTextNode(anchorNode)) {
+      return null
+    }
+    const offset = anchor.offset
+    const textLength = anchorNode.getTextContentSize()
+    if (isBackspace) {
+      if (offset !== 0) {
+        return null
+      }
+      return $getPreviousNodeFrom(anchorNode)
+    }
+    if (offset !== textLength) {
+      return null
+    }
+    return $getNextNodeFrom(anchorNode)
+  }
+
+  if ($isElementNode(anchorNode)) {
+    const offset = anchor.offset
+    const childrenSize = anchorNode.getChildrenSize()
+
+    if (isBackspace) {
+      if (offset > 0) {
+        const childBefore = anchorNode.getChildAtIndex(offset - 1)
+        return childBefore ? $getDeepestLastDescendant(childBefore) : null
+      }
+      return $getPreviousNodeFrom(anchorNode)
+    }
+
+    if (offset < childrenSize) {
+      const childAfter = anchorNode.getChildAtIndex(offset)
+      return childAfter ? $getDeepestFirstDescendant(childAfter) : null
+    }
+    return $getNextNodeFrom(anchorNode)
+  }
+
+  return isBackspace ? $getPreviousNodeFrom(anchorNode) : $getNextNodeFrom(anchorNode)
 }
 
 /**
@@ -65,25 +177,32 @@ export function $wouldDeletionAffectNodeKey(nodeKey: NodeKey, isBackspace: boole
       }
       return false
     }
-    // Range collapsed: checa adjacência top-level.
+    // Range collapsed: checa o nó imediatamente adjacente ao caret.
     const targetNode = $getNodeByKey(nodeKey)
     if (!targetNode) return false
-    const anchor = selection.anchor.getNode()
-    const top = $getTopLevel(anchor)
-    const targetTop = $getTopLevel(targetNode)
-    if (!top || !targetTop) return false
-    const offset = selection.anchor.offset
-    if (isBackspace) {
-      if (offset !== 0) return false
-      return top.getPreviousSibling()?.getKey() === targetTop.getKey()
-    } else {
-      const textLen =
-        "getTextContentSize" in anchor
-          ? (anchor as unknown as { getTextContentSize: () => number }).getTextContentSize()
-          : 0
-      if (offset !== textLen) return false
-      return top.getNextSibling()?.getKey() === targetTop.getKey()
+    const adjacentNode = $getAdjacentNodeFromCollapsedSelection(isBackspace)
+    if (!adjacentNode) return false
+    // IMPORTANT: only trigger when the node being deleted is exactly the
+    // adjacent node (or an internal descendant). Do not trigger when only a
+    // container/ancestor is adjacent, otherwise lines below may incorrectly
+    // open the confirmation dialog.
+    if (!$isSameOrDescendant(adjacentNode, targetNode)) {
+      return false
     }
+
+    // Backspace nuance for block decorator nodes inside paragraphs:
+    // only trigger when the caret is in the same top-level container
+    // as the protected node. This avoids false positives on the second
+    // line below a node while preserving confirmation on the first line
+    // that is structurally merged with the node container.
+    if (isBackspace) {
+      const anchorTop = $getTopLevelInRootOrShadow(selection.anchor.getNode())
+      const targetTop = $getTopLevelInRootOrShadow(targetNode)
+      if (!anchorTop || !targetTop) return false
+      if (anchorTop.getKey() !== targetTop.getKey()) return false
+    }
+
+    return true
   }
   return false
 }
