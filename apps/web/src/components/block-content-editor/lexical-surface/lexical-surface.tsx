@@ -60,7 +60,7 @@ import {
 } from "./floating"
 import { ComponentPickerPlugin } from "./picker"
 import { DraggableBlockPlugin } from "./draggable"
-import { pageSettingsToStyle, isPagedLayout, PagesPlugin } from "./page"
+import { pageSettingsToStyle, isPagedLayout, PagesPlugin, type PageSettings } from "./page"
 
 export type LexicalSurfaceFeatures = {
   /** Top toolbar (block format, font, color, alignment, …). Default: true */
@@ -142,6 +142,8 @@ export interface LexicalSurfaceProps {
   toolbarWrapper?: (toolbar: React.ReactNode) => React.ReactNode
   /** Enable internal content scroll container (useful for container scroll mode). */
   contentScrollable?: boolean
+  /** Optional initial page settings for the internal Lexical toolbar context. */
+  initialPageSettings?: PageSettings
 }
 
 const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
@@ -266,7 +268,7 @@ function EditorBody({
         className={cn(
           "relative",
           features.pageLayout && "bg-gray-100 dark:bg-gray-950 py-6",
-          contentScrollable && "flex-1 overflow-y-auto min-h-0 scroll-container",
+          contentScrollable && "flex-1 overflow-y-auto overflow-x-hidden min-h-0 scroll-container",
           className,
         )}
         ref={setAnchorElem}
@@ -284,7 +286,7 @@ function EditorBody({
                 !paged && "relative",
                 !features.pageLayout && "px-4 py-3",
                 features.pageLayout && !paged && "py-3",
-                paged && "h-full box-border",
+                paged && "min-h-full box-border",
                 paged && "px-8 py-8",
                 contentClassName,
               )}
@@ -387,6 +389,7 @@ export function LexicalSurface({
   headerSlot,
   toolbarWrapper,
   contentScrollable,
+  initialPageSettings,
 }: LexicalSurfaceProps) {
   const resolvedFeatures = useMemo(() => resolveFeatures(features, readOnly), [features, readOnly])
   // Re-mount when caller passes a new `mountKey` (e.g. external state reset).
@@ -419,7 +422,7 @@ export function LexicalSurface({
 
   return (
     <LexicalComposer key={mountKey} initialConfig={initialConfig}>
-      <ToolbarContextProvider>
+      <ToolbarContextProvider initialPageSettings={initialPageSettings}>
         <EditorBody
           features={resolvedFeatures}
           onChange={onChange}

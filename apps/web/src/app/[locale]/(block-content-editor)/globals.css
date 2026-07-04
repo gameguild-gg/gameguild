@@ -246,10 +246,3 @@ body>.monaco-editor,
   --editor-toolbar-offset: 68px;
   --editor-max-height: calc(100dvh - 88px);
 }
-
-@media (min-width: 1536px) {
-  :root {
-    --editor-toolbar-offset: 12px;
-    --editor-max-height: calc(100dvh - 24px);
-  }
-}

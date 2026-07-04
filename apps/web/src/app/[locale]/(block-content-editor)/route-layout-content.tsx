@@ -21,14 +21,14 @@ export function RouteLayoutContent({ children }: { children: React.ReactNode }) 
   return (
     <EditorLayoutWrapper
       style={{
-        "--lexical-toolbar-offset": isEditor ? "var(--editor-toolbar-offset, 12px)" : "80px"
+        "--lexical-toolbar-offset": isEditor ? "var(--editor-toolbar-offset, 68px)" : "80px"
       } as React.CSSProperties}
     >
       {!isEditor && <TopMenu />}
       <div 
         className={cn(
-          "flex flex-col flex-1",
-          isEditor ? "mt-16 2xl:mt-0" : "mt-20"
+          "flex flex-col flex-1 min-h-0",
+          isEditor ? "mt-0 overflow-hidden" : "mt-20"
         )}
       >
         {children}

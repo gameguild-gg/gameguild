@@ -40,10 +40,9 @@ export function EditorToolbar() {
 
   return (
     <>
-      {/* Top Navigation Bar / Panels */}
-      <div className="fixed top-3 z-50 flex items-center 2xl:justify-between justify-center 2xl:pointer-events-none pointer-events-auto 2xl:bg-transparent bg-white/90 2xl:dark:bg-transparent dark:bg-gray-900/90 2xl:backdrop-blur-none backdrop-blur-md 2xl:border-none border border-gray-200 dark:border-gray-800 2xl:shadow-none shadow-lg 2xl:rounded-none rounded-full 2xl:p-0 px-3 h-11 2xl:h-auto 2xl:left-4 2xl:right-4 left-1/2 -translate-x-1/2 2xl:translate-x-0 max-w-[95vw] w-max 2xl:w-auto gap-2">
-        {/* Left Menu Panel */}
-        <div className="flex items-center gap-2 pointer-events-auto bg-transparent 2xl:bg-white/90 2xl:dark:bg-gray-900/90 2xl:backdrop-blur-md border-none 2xl:border 2xl:border-gray-200 2xl:dark:border-gray-800 shadow-none 2xl:shadow-lg rounded-none 2xl:rounded-full p-0 2xl:px-3 h-auto 2xl:h-11">
+      {/* Top Navigation Bar */}
+      <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-lg px-3 h-11 max-w-[95vw] w-max">
+        <div className="flex min-w-0 items-center gap-2 pointer-events-auto">
           {/* Logo */}
           <div className="p-1 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
             <Blocks className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
@@ -154,11 +153,9 @@ export function EditorToolbar() {
           </div>
         </div>
 
-        {/* Mid Separator (Visible only on mobile in combined panel) */}
-        <div className="2xl:hidden w-px h-5 bg-gray-200 dark:bg-gray-800 mx-1"></div>
+        <div className="w-px h-5 bg-gray-200 dark:bg-gray-800 mx-1"></div>
 
-        {/* Right Menu Panel */}
-        <div className="flex items-center gap-3 pointer-events-auto bg-transparent 2xl:bg-white/90 2xl:dark:bg-gray-900/90 2xl:backdrop-blur-md border-none 2xl:border 2xl:border-gray-200 2xl:dark:border-gray-800 shadow-none 2xl:shadow-lg rounded-none 2xl:rounded-full p-0 2xl:px-3 h-auto 2xl:h-11">
+        <div className="flex items-center gap-3 pointer-events-auto">
           <div className="flex items-center gap-2.5 text-[11px]">
             {project.projectId && tc.showTypeIndicator !== false && (
               <div className="hidden sm:inline-flex">

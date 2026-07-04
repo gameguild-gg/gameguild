@@ -20,8 +20,14 @@ const toolbarConfig: Partial<ToolbarConfig> = {
 export default function QuizEditorPage() {
   return (
     <EditorProvider fieldConfig={fieldConfig} toolbarConfig={toolbarConfig}>
-      <StudioLayout header={<EditorToolbar />} className="max-w-none w-full">
-        <EditorField widthMode="wide" />
+      <StudioLayout header={<EditorToolbar />} mode="wide" className="max-w-none w-full">
+        <EditorField
+          contentContainer={{
+            className: "flex-1 h-full max-h-[calc(100dvh-16px)]",
+            blocksClassName:
+              "w-full max-w-6xl mx-auto border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 transition-transform duration-300 ease-in-out",
+          }}
+        />
       </StudioLayout>
       <EditorDialogs />
     </EditorProvider>
