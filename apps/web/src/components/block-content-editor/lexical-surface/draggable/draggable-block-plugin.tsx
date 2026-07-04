@@ -40,6 +40,8 @@ const SPACE = 4
 const TARGET_LINE_HALF_HEIGHT = 2
 const TEXT_BOX_HORIZONTAL_PADDING = 28
 const DRAG_DATA_FORMAT = "application/x-lexical-drag-block"
+const DRAG_HANDLE_WIDTH_PX = 24
+const DRAG_HANDLE_GAP_PX = 12
 
 const Downward = 1
 const Upward = -1
@@ -189,6 +191,7 @@ function setMenuPosition(
   const targetStyle = window.getComputedStyle(targetElem)
   const floatingRect = floatingElem.getBoundingClientRect()
   const anchorRect = anchorElem.getBoundingClientRect()
+  const floatingWidth = floatingRect.width > 0 ? floatingRect.width : DRAG_HANDLE_WIDTH_PX
 
   let targetLineHeight = Number.parseInt(targetStyle.lineHeight, 10)
   if (Number.isNaN(targetLineHeight)) {
@@ -202,9 +205,30 @@ function setMenuPosition(
       anchorElem.scrollTop) /
     zoomLevel
 
+  // Horizontal anchor should follow the sheet border itself, not page
+  // content margins nor block-level indentation.
+  const pageElem = targetElem.closest(".lexical-page")
+  const editorElem = anchorElem.querySelector(".lexical-editor")
+  const referenceElem =
+    (isHTMLElement(pageElem) && pageElem) ||
+    (isHTMLElement(editorElem) && editorElem) ||
+    targetElem
+  const referenceLeft = referenceElem.getBoundingClientRect().left
+
+  // Keep the drag handle visually attached to the document column instead of
+  // the viewport edge. This tracks layout width changes automatically.
+  const rawLeft =
+    (referenceLeft -
+      anchorRect.left +
+      anchorElem.scrollLeft -
+      floatingWidth -
+      DRAG_HANDLE_GAP_PX) /
+    zoomLevel
+  const left = Math.max(SPACE, rawLeft)
+
   floatingElem.style.display = "flex"
   floatingElem.style.opacity = "1"
-  floatingElem.style.transform = `translate(${SPACE}px, ${top}px)`
+  floatingElem.style.transform = `translate(${left}px, ${top}px)`
 }
 
 function setDragImage(dataTransfer: DataTransfer, draggableBlockElem: HTMLElement): void {
@@ -474,7 +498,7 @@ export default function DraggableBlockPlugin({ anchorElem }: { anchorElem: HTMLE
           <div
             ref={targetLineRef}
             className={cn(
-              "pointer-events-none absolute left-0 right-0 z-30",
+              "pointer-events-none absolute top-0 left-0 right-0 z-30",
               "h-[3px] rounded-full",
               "bg-blue-500 dark:bg-blue-400",
               "shadow-[0_0_0_1px_rgba(59,130,246,0.25),0_0_12px_2px_rgba(59,130,246,0.45)]",
