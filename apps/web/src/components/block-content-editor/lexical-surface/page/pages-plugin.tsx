@@ -67,6 +67,8 @@ const PAGE_PROPS = [
 const PAGE_FIXED_HEIGHT = "var(--page-height)"
 // Reflow hysteresis to avoid 1-2px jitter causing page content ping-pong.
 const REFLOW_HYSTERESIS_PX = 2
+// System bottom inset for paged documents.
+const PAGE_DOCUMENT_BOTTOM_INSET_PX = 64
 
 type ReconcilableContentNode = PageContentNode & {
   reconcileObservedMutation?: (dom: HTMLElement, editor: LexicalEditor) => void
@@ -93,6 +95,7 @@ export function PagesPlugin({
   useEffect(() => {
     const rootElement = editor.getRootElement()
     if (!rootElement) return
+
     if (enabled) {
       const box = pageBoxPx(pageSettings)
       if (box) {
@@ -102,12 +105,14 @@ export function PagesPlugin({
         rootElement.style.setProperty("--page-margin-right", `${box.marginPx}px`)
         rootElement.style.setProperty("--page-margin-bottom", `${box.marginPx}px`)
         rootElement.style.setProperty("--page-margin-left", `${box.marginPx}px`)
+        rootElement.style.paddingBottom = `${PAGE_DOCUMENT_BOTTOM_INSET_PX}px`
         // Re-measure every page against the new geometry (no structure teardown).
         resizeRef.current?.()
       }
     } else {
       for (const prop of PAGE_PROPS) rootElement.style.removeProperty(prop)
       rootElement.style.zoom = ""
+      rootElement.style.paddingBottom = ""
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, enabled, pageSettings.size, pageSettings.orientation, pageSettings.margin])
@@ -282,6 +287,7 @@ export function PagesPlugin({
       if (root) {
         for (const prop of PAGE_PROPS) root.style.removeProperty(prop)
         root.style.zoom = ""
+        root.style.paddingBottom = ""
       }
       destroyPageStructure()
       return
