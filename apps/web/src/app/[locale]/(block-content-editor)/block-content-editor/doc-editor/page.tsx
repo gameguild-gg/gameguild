@@ -23,8 +23,23 @@ const toolbarConfig: Partial<ToolbarConfig> = {
 export default function DocEditorPage() {
   return (
     <EditorProvider fieldConfig={fieldConfig} toolbarConfig={toolbarConfig}>
-      <StudioLayout header={<EditorToolbar />} className="max-w-none w-full">
-        <EditorField maxHeight="calc(100dvh - 16px)" />
+      <StudioLayout header={<EditorToolbar />} mode="wide" className="max-w-none w-full">
+        <EditorField
+          toolbarContainer={{
+            className: "w-full shrink-0 h-auto",
+            innerClassName: "w-full max-w-4xl mx-auto",
+            mergeWithContent: false,
+          }}
+          contentContainer={{
+            className: "flex-1 h-full max-h-[calc(100dvh-16px)]",
+            documentClassName: "flex-1 min-h-0 w-full max-w-full bg-transparent border-none shadow-none rounded-none",
+            pageSettings: {
+              size: "a4",
+              orientation: "portrait",
+              margin: "normal",
+            },
+          }}
+        />
       </StudioLayout>
       <EditorDialogs />
     </EditorProvider>

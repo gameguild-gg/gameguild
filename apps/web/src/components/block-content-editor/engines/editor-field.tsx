@@ -10,28 +10,81 @@ import { BLOCK_REGISTRY } from "@/components/block-content-editor/engines/blocks
 import { nextBlockId } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { useEditor } from "./editor-provider"
 import { LexicalSurface } from "@/components/block-content-editor/lexical-surface"
+import type { PageSettings } from "@/components/block-content-editor/lexical-surface/page"
 import { cn } from "@/lib/utils"
+
+export interface EditorFieldToolbarContainerLayout {
+  /** Tailwind classes for the toolbar outer wrapper. */
+  className?: string
+  /** Tailwind classes for the toolbar inner wrapper. */
+  innerClassName?: string
+  /** Whether toolbar and document surface should visually merge. */
+  mergeWithContent?: boolean
+}
+
+export interface EditorFieldContentContainerLayout {
+  /** Tailwind classes for the outer content wrapper. */
+  className?: string
+  /** Tailwind classes for the scroll wrapper (block mode). */
+  scrollClassName?: string
+  /** Tailwind classes for the document surface wrapper. */
+  documentClassName?: string
+  /** Tailwind classes for the blocks surface wrapper. */
+  blocksClassName?: string
+  /** Optional initial page settings used in document mode. */
+  pageSettings?: PageSettings
+}
+
+const BASE_CONTAINER_CLASS = "w-full flex flex-col min-h-0 overflow-hidden"
+const DEFAULT_CONTENT_CONTAINER_CLASS = "flex-1 h-full max-h-[var(--editor-max-height)]"
+const DEFAULT_CONTENT_SCROLL_CLASS = "flex-1 min-h-0"
+const DEFAULT_DOC_SURFACE_CLASS =
+  "flex-1 min-h-0 w-full max-w-4xl mx-auto bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 shadow-sm rounded-lg"
+const DEFAULT_BLOCKS_SURFACE_CLASS =
+  "w-full max-w-4xl mx-auto border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 transition-transform duration-300 ease-in-out"
+const DEFAULT_TOOLBAR_CONTAINER_CLASS = "w-full shrink-0 h-auto"
+const DEFAULT_TOOLBAR_INNER_CLASS = "w-full max-w-4xl mx-auto"
+const DRAG_PREVIEW_WIDTH = "50%"
+const DRAG_PREVIEW_SCALE = 0.75
+const BLOCKS_SCROLL_BOTTOM_INSET_PX = 256
 
 export interface EditorFieldProps {
   /** Optional additional className for the outermost container. */
   className?: string
-  /** Maximum height for the container. Defaults to 100%. */
-  maxHeight?: string | number
   /**
-   * Width mode for the editor container:
-   * - "content": the scroll container matches the width of the editor card (max-w-4xl).
-   * - "wide": the scroll container spans the full layout width (capturing scroll/drags to the edges),
-   *          while the editor card remains centered and constrained to max-w-4xl.
+   * Compound 1 — internal Lexical toolbar container.
+   * (Applies in document mode; blocks do not render this toolbar.)
    */
-  widthMode?: "content" | "wide"
+  toolbarContainer?: EditorFieldToolbarContainerLayout
+  /**
+   * Compound 2 — content container (Lexical body or blocks list).
+   */
+  contentContainer?: EditorFieldContentContainerLayout
 }
 
-export function EditorField({ className, maxHeight, widthMode = "content" }: EditorFieldProps = {}) {
+export function EditorField({
+  className,
+  toolbarContainer,
+  contentContainer,
+}: EditorFieldProps = {}) {
   const { project, history, effectiveFieldConfig: fieldConfig } = useEditor()
   const [blocksDragging, setBlocksDragging] = useState(false)
-  const [scaledHeight, setScaledHeight] = useState<number | null>(null)
   const fieldRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
+
+  const resolvedToolbar = {
+    className: toolbarContainer?.className ?? DEFAULT_TOOLBAR_CONTAINER_CLASS,
+    innerClassName: toolbarContainer?.innerClassName ?? DEFAULT_TOOLBAR_INNER_CLASS,
+    mergeWithContent: toolbarContainer?.mergeWithContent ?? true,
+  } as const
+
+  const resolvedContent = {
+    className: contentContainer?.className ?? DEFAULT_CONTENT_CONTAINER_CLASS,
+    scrollClassName: contentContainer?.scrollClassName ?? DEFAULT_CONTENT_SCROLL_CLASS,
+    documentClassName: contentContainer?.documentClassName,
+    blocksClassName: contentContainer?.blocksClassName,
+    pageSettings: contentContainer?.pageSettings,
+  } as const
 
   // Mode "single block document": ensures exactly one block of
   // the allowed type (or rich-text by default). Automatically creates if
@@ -49,13 +102,8 @@ export function EditorField({ className, maxHeight, widthMode = "content" }: Edi
   }, [fieldConfig.singleBlockMode, project.blocks.length, history.isViewingHistory])
 
   const handleDragStateChange = useCallback((dragging: boolean) => {
-    if (dragging && fieldRef.current) {
-      setScaledHeight(fieldRef.current.offsetHeight * 0.5)
-    }
     setBlocksDragging(dragging)
-    if (!dragging) {
-      setScaledHeight(null)
-    } else {
+    if (dragging) {
       requestAnimationFrame(() => {
         wrapperRef.current?.scrollIntoView({ behavior: "auto", block: "nearest" })
       })
@@ -76,18 +124,16 @@ export function EditorField({ className, maxHeight, widthMode = "content" }: Edi
     // mountKey ensures LexicalComposer re-mounts when a different project
     // is loaded (otherwise the old empty state stays).
     const documentMountKey = `${project.projectId ?? "new"}-${block.id}`
+    const canMergeToolbarWithContent = !history.isViewingHistory && resolvedToolbar.mergeWithContent
+    const initialPageSettings: PageSettings | undefined = resolvedContent.pageSettings
 
     return (
       <div
         className={cn(
-          "w-full flex flex-col min-h-0 overflow-hidden",
-          widthMode === "content"
-            ? "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm rounded-lg max-w-4xl mx-auto"
-            : "bg-transparent border-none shadow-none max-w-none",
-          "flex-1 h-full",
+          BASE_CONTAINER_CLASS,
+          resolvedContent.className,
           className
         )}
-        style={{ maxHeight: maxHeight ?? "var(--editor-max-height)", height: "100%" }}
       >
         <LexicalSurface
           namespace="DocumentEditor"
@@ -100,7 +146,25 @@ export function EditorField({ className, maxHeight, widthMode = "content" }: Edi
             project.setBlocks(next)
           }}
           placeholder="Start writing your document..."
-          className="flex-1 flex flex-col min-h-0"
+          className={cn(
+            "relative",
+            resolvedContent.documentClassName ?? DEFAULT_DOC_SURFACE_CLASS,
+            canMergeToolbarWithContent && "rounded-b-lg border-t-0",
+          )}
+          toolbarWrapper={(toolbar) => (
+            <div className={cn(resolvedToolbar.className)}>
+              <div
+                className={cn(
+                  resolvedToolbar.innerClassName,
+                  canMergeToolbarWithContent &&
+                    "border border-gray-200 dark:border-gray-800 border-b-0 rounded-t-lg bg-white dark:bg-gray-950 shadow-sm overflow-hidden",
+                )}
+              >
+                {toolbar}
+              </div>
+            </div>
+          )}
+          initialPageSettings={initialPageSettings}
           // In paged mode, page geometry/padding is owned by `PagesPlugin`.
           // Keep this class neutral so we don't override fixed sheet sizing.
           contentClassName="max-w-none"
@@ -113,20 +177,30 @@ export function EditorField({ className, maxHeight, widthMode = "content" }: Edi
   return (
     <div
       className={cn(
-        "w-full flex flex-col min-h-0 overflow-hidden",
-        widthMode === "content" ? "max-w-4xl mx-auto" : "max-w-none",
+        BASE_CONTAINER_CLASS,
+        resolvedContent.className,
         className
       )}
-      style={{ maxHeight: maxHeight ?? "var(--editor-max-height)", height: "100%" }}
     >
-      <div ref={wrapperRef} className="flex-1 min-h-0 overflow-y-auto" style={blocksDragging ? { height: scaledHeight ?? undefined } : undefined}>
+      <div
+        ref={wrapperRef}
+        className={cn("overflow-y-auto", resolvedContent.scrollClassName)}
+        style={{ paddingBottom: `${BLOCKS_SCROLL_BOTTOM_INSET_PX}px` }}
+      >
         <div
           ref={fieldRef}
-          className={cn(
-            "border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 transition-transform duration-300 ease-in-out",
-            widthMode === "wide" && "max-w-4xl mx-auto w-full"
-          )}
-          style={blocksDragging ? { transform: "scale(0.5)", transformOrigin: "top center" } : undefined}
+          className={cn(resolvedContent.blocksClassName ?? DEFAULT_BLOCKS_SURFACE_CLASS)}
+          style={
+            blocksDragging
+              ? {
+                  width: DRAG_PREVIEW_WIDTH,
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                  transform: `scale(${DRAG_PREVIEW_SCALE})`,
+                  transformOrigin: "top center",
+                }
+              : undefined
+          }
         >
           <BlockArrayEditor
             blocks={project.blocks}
