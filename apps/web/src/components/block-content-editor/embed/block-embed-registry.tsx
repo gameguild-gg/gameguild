@@ -15,20 +15,9 @@
 import { lazy } from "react"
 import { Loader2 } from "lucide-react"
 
-import { PreviewImage } from "../plugins/preview-components/preview-image"
-import { PreviewVideo } from "../plugins/preview-components/preview-video"
-import { PreviewAudio } from "../plugins/preview-components/preview-audio"
-import { PreviewGallery } from "../plugins/preview-components/preview-gallery"
 import { PreviewHTML } from "../plugins/preview-components/preview-html"
 
 import type { Block } from "../lib/storage/editor/block-structure"
-import type { CodeStudioData } from "../extras/code-studio/types"
-import type { MermaidData } from "../nodes/mermaid-node"
-import type { SerializedImageNode } from "../nodes/image-node"
-import type { SerializedVideoNode } from "../nodes/video-node"
-import type { SerializedAudioNode } from "../nodes/audio-node"
-import type { SerializedGalleryNode } from "../nodes/gallery-node"
-import type { SerializedVegaLiteNode } from "../nodes/vega-lite-node"
 import type { SerializedHTMLNode } from "../nodes/html-node"
 import type { SerializedMarkdownNode } from "../nodes/markdown-node"
 
@@ -77,48 +66,12 @@ function toSerialized<T extends string, D>(block: Block & { type: T; data: D }) 
   return { type: block.type, version: 1, data: block.data }
 }
 
-function PreviewImageAdapter({ block }: EmbedPreviewProps<"image">) {
-  return <PreviewImage node={toSerialized(block) as SerializedImageNode} />
-}
-
-function PreviewVideoAdapter({ block }: EmbedPreviewProps<"video">) {
-  return <PreviewVideo node={toSerialized(block) as SerializedVideoNode} />
-}
-
-function PreviewAudioAdapter({ block }: EmbedPreviewProps<"audio">) {
-  return <PreviewAudio node={toSerialized(block) as SerializedAudioNode} />
-}
-
-function PreviewGalleryAdapter({ block }: EmbedPreviewProps<"gallery">) {
-  return <PreviewGallery node={toSerialized(block) as SerializedGalleryNode} />
-}
-
 function PreviewCodeStudioAdapter({ block }: EmbedPreviewProps<"code-studio">) {
   return (
     <ClientOnlyLazy
       component={LazyPreviewCodeStudio}
       props={{ data: block.data, isPreview: true }}
       fallback={<PreviewSkeleton label="code studio" />}
-    />
-  )
-}
-
-function PreviewMermaidAdapter({ block }: EmbedPreviewProps<"mermaid">) {
-  return (
-    <ClientOnlyLazy
-      component={LazyPreviewMermaid}
-      props={{ data: block.data }}
-      fallback={<PreviewSkeleton label="diagrama" />}
-    />
-  )
-}
-
-function PreviewVegaLiteAdapter({ block }: EmbedPreviewProps<"vega-lite">) {
-  return (
-    <ClientOnlyLazy
-      component={LazyPreviewVegaLite}
-      props={{ node: toSerialized(block) as SerializedVegaLiteNode }}
-      fallback={<PreviewSkeleton label="gráfico" />}
     />
   )
 }
@@ -142,13 +95,7 @@ function PreviewMarkdownAdapter({ block }: EmbedPreviewProps<"markdown">) {
 // ---------------------------------------------------------------------------
 
 export const EMBEDDABLE_BLOCK_CONFIG: EmbeddableBlockConfig = {
-  "image": { Preview: PreviewImageAdapter },
-  "video": { Preview: PreviewVideoAdapter },
-  "audio": { Preview: PreviewAudioAdapter },
-  "gallery": { Preview: PreviewGalleryAdapter },
   "code-studio": { Preview: PreviewCodeStudioAdapter },
-  "mermaid": { Preview: PreviewMermaidAdapter },
-  "vega-lite": { Preview: PreviewVegaLiteAdapter },
   "html": { Preview: PreviewHTMLAdapter },
   "markdown": { Preview: PreviewMarkdownAdapter },
 }
