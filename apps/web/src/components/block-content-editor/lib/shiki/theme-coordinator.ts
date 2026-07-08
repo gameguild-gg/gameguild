@@ -1,9 +1,10 @@
 "use client"
 
 import type { Monaco } from "@monaco-editor/react"
-import * as monacoEditor from "monaco-editor"
+type MonacoEditorModule = typeof import("monaco-editor")
+type MonacoEditorRuntime = MonacoEditorModule extends { default: infer T } ? T : MonacoEditorModule
 
-type MonacoNamespace = Monaco | typeof monacoEditor
+type MonacoNamespace = Monaco | MonacoEditorRuntime
 
 interface Registration {
   monaco: MonacoNamespace
