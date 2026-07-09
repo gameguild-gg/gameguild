@@ -1,4 +1,5 @@
-import { BROWSER_BUILD_PRESETS, bootInWorker } from '@gameguild/emception-browser';
+import type { NativePreset } from '@gameguild/emception-browser';
+import { TOOLCHAIN_PRESETS as EMCEPTION_PRESETS, bootInWorker } from '@gameguild/emception-browser';
 import type { OnMount } from '@monaco-editor/react';
 import { Terminal } from '@xterm/xterm';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -6,9 +7,9 @@ import { createPortal } from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
-import type { DockGroup, IdeProps, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
-import { DEFAULT_IMAGE, PRESET_LAYOUTS, SDL_CANVAS_PATH, deriveStorageKey, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
-import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
+import type { DockGroup, IdeProps, OpenTab, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
+import { DEFAULT_IMAGE, deriveStorageKey, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
+import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, resolveWsPath } from './ide-utils';
 import TerminalPanel from './TerminalPanel';
 import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets';
 
@@ -79,7 +80,6 @@ export default function Ide({
   onFullscreenChange,
   showHiddenFiles = false,
   showSolutionFiles = false,
-  canvasPath = SDL_CANVAS_PATH,
   onStdout,
   onStderr,
   stdin: stdinProp,
@@ -111,10 +111,10 @@ export default function Ide({
   const [activePresetId, setActivePresetId] = useState<string>(workspaceConfig?.id ?? DEFAULT_PRESET.id);
   const [fetchedConfig, setFetchedConfig] = useState<WorkspaceConfig | null>(null);
   const resolvedConfig = workspaceConfig ?? fetchedConfig ?? PRESETS[activePresetId] ?? DEFAULT_PRESET;
-  const initialState = workspaceConfigToState(resolvedConfig, PRESET_LAYOUTS[resolvedConfig.id]);
+  const initialState = workspaceConfigToState(resolvedConfig);
 
   const [files, setFiles] = useState<Record<string, WorkspaceFile>>(initialState.files);
-  const [selectedPath, setSelectedPath] = useState(PRESET_LAYOUTS[resolvedConfig.id]?.activeFile ?? '');
+  const [selectedPath, setSelectedPath] = useState(initialState.activeTabId.startsWith('tab:') ? initialState.activeTabId.slice(4) : '');
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(initialState.expandedDirs);
   const [openTabs, setOpenTabs] = useState<OpenTab[]>(initialState.openTabs);
   const [activeTabId, setActiveTabId] = useState(initialState.activeTabId);
@@ -137,7 +137,6 @@ export default function Ide({
 
   // Visibility filter: honour showHiddenFiles and showSolutionFiles props.
   const visiblePaths = Object.keys(files).filter((path) => {
-    if (path === canvasPath || files[path]?.type === 'canvas') return false;
     const name = path.split('/').pop() ?? '';
     if (!showHiddenFiles && name.startsWith('.')) return false;
     if (!showSolutionFiles && /\.solution\./.test(name)) return false;
@@ -145,13 +144,8 @@ export default function Ide({
   });
   const fileTree = buildFileTree(visiblePaths);
   const activeTab = openTabs.find((t) => t.id === activeTabId) ?? openTabs[0] ?? null;
-  const activeFile = activeTab
-    ? (files[activeTab.path] ??
-      (activeTab.type === 'canvas' || activeTab.path === canvasPath
-        ? { path: canvasPath, type: 'canvas' as const, content: canvasIsRunning ? 'sdl' : '' }
-        : null))
-    : null;
-  const activeFileName = activeFile ? (activeFile.path.split('/').filter(Boolean).pop() ?? '') : '';
+  const activeFile = activeTab && activeTab.type !== 'canvas' ? (files[activeTab.path] ?? null) : null;
+  const activeFileName = activeTab?.type === 'canvas' ? 'Canvas' : (activeFile?.path.split('/').filter(Boolean).pop() ?? '');
   const groupTabs = (group: DockGroup) => openTabs.filter((t) => t.group === group);
   const hasRightGroup = groupTabs('right').length > 0;
   const hasBottomGroup = groupTabs('bottom').length > 0;
@@ -168,7 +162,7 @@ export default function Ide({
         activeTabId?: string;
       };
       if (parsed.files && Object.keys(parsed.files).length > 0) {
-        const nextFiles = Object.fromEntries(Object.entries(parsed.files).filter(([path, file]) => path !== canvasPath && file?.type !== 'canvas'));
+        const nextFiles = Object.fromEntries(Object.entries(parsed.files));
         setFiles(nextFiles);
       }
       if (parsed.selectedPath) setSelectedPath(parsed.selectedPath);
@@ -182,8 +176,8 @@ export default function Ide({
 
   useEffect(() => {
     try {
-      // Exclude runtime-only canvas entries from persisted workspace files
-      const filesToSave = Object.fromEntries(Object.entries(files).filter(([path, file]) => path !== canvasPath && file.type !== 'canvas'));
+      // Persist workspace files
+      const filesToSave = files;
       if (!enableWorkspace) return;
       window.localStorage.setItem(
         storageKey,
@@ -212,12 +206,12 @@ export default function Ide({
         const config = parseWorkspaceBundle(text);
         if (cancelled) return;
         setFetchedConfig(config);
-        const state = workspaceConfigToState(config, PRESET_LAYOUTS[config.id]);
+        const state = workspaceConfigToState(config);
         setFiles(state.files);
         setOpenTabs(state.openTabs);
         setActiveTabId(state.activeTabId);
         setExpandedDirs(state.expandedDirs);
-        setSelectedPath(PRESET_LAYOUTS[config.id]?.activeFile ?? '');
+        setSelectedPath(state.activeTabId.startsWith('tab:') ? state.activeTabId.slice(4) : '');
       } catch (e) {
         console.error('[Emception:IDE] Failed to fetch workspace bundle:', e);
       }
@@ -236,9 +230,8 @@ export default function Ide({
     const enc = new TextEncoder();
     const textFiles = Object.values(filesToSync).filter((f) => f.type === 'text' && isTextFile(f.path));
     for (const file of textFiles) {
-      const fsPath = toWorkspaceFsPath(file.path);
-      await client.writeFile(fsPath, enc.encode(file.content));
-      console.log(`${P} VFS sync: ${file.path} -> ${fsPath}`);
+      await client.writeFile(file.path, enc.encode(file.content));
+      console.log(`${P} VFS sync: ${file.path}`);
     }
     console.log(`${P} VFS sync complete (${textFiles.length} files)`);
   }, []);
@@ -291,12 +284,12 @@ export default function Ide({
 
       stoppedRef.current = false;
       setActivePresetId(presetId);
-      const state = workspaceConfigToState(preset, PRESET_LAYOUTS[preset.id]);
+      const state = workspaceConfigToState(preset);
       setFiles(state.files);
       setOpenTabs(state.openTabs);
       setActiveTabId(state.activeTabId);
       setExpandedDirs(state.expandedDirs);
-      setSelectedPath(PRESET_LAYOUTS[preset.id]?.activeFile ?? '');
+      setSelectedPath(state.activeTabId.startsWith('tab:') ? state.activeTabId.slice(4) : '');
 
       // Dispose stale Monaco models from the OLD workspace after React re-renders.
       // We defer disposal so @monaco-editor/react can cleanly unmount its model
@@ -414,18 +407,26 @@ export default function Ide({
   const ensureOpenTab = useCallback(
     (path: string, group: DockGroup = 'main') => {
       const file = files[path];
-      const type: TabType | null = file?.type ?? (path === canvasPath ? 'canvas' : null);
-      if (!type) return;
+      if (!file) return;
       const id = `tab:${path}`;
       setOpenTabs((prev) => {
         const existing = prev.find((t) => t.id === id);
-        if (existing) return prev.map((t) => (t.id === id ? { ...t, group } : t));
-        return [...prev, { id, path, type, group }];
+        if (existing) return prev.map((t) => (t.id === id ? ({ ...t, group } as OpenTab) : t));
+        return [...prev, { id, path, type: file.type, group }];
       });
       setActiveTabId(id);
     },
     [files],
   );
+
+  const ensureCanvasTab = useCallback((group: DockGroup = 'right') => {
+    setOpenTabs((prev) => {
+      const existing = prev.find((t) => t.id === 'canvas');
+      if (existing) return prev.map((t) => (t.id === 'canvas' ? ({ ...t, group } as OpenTab) : t));
+      return [...prev, { id: 'canvas', type: 'canvas', group }];
+    });
+    setActiveTabId('canvas');
+  }, []);
 
   const closeTab = useCallback((tabId: string) => {
     setOpenTabs((prev) => {
@@ -441,7 +442,7 @@ export default function Ide({
   }, []);
 
   const moveTabToGroup = useCallback((tabId: string, group: DockGroup) => {
-    setOpenTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, group } : t)));
+    setOpenTabs((prev) => prev.map((t) => (t.id === tabId ? ({ ...t, group } as OpenTab) : t)));
     setActiveTabId(tabId);
   }, []);
 
@@ -451,7 +452,7 @@ export default function Ide({
       const srcIdx = prev.findIndex((t) => t.id === tabId);
       const dstIdx = prev.findIndex((t) => t.id === beforeTabId);
       if (srcIdx === -1 || dstIdx === -1 || srcIdx === dstIdx) return prev;
-      const tab = { ...prev[srcIdx], group: prev[dstIdx].group };
+      const tab = { ...prev[srcIdx], group: prev[dstIdx].group } as OpenTab;
       const next = prev.filter((_, i) => i !== srcIdx);
       const insertIdx = next.findIndex((t) => t.id === beforeTabId);
       next.splice(insertIdx, 0, tab);
@@ -488,9 +489,9 @@ export default function Ide({
   });
 
   const createFile = useCallback(
-    (kind: TabType) => {
+    (kind: 'text' | 'image') => {
       const baseDir = '/user';
-      const defaultName = kind === 'canvas' ? 'new-canvas' : kind === 'image' ? 'new-image.svg' : 'new-file.cpp';
+      const defaultName = kind === 'image' ? 'new-image.svg' : 'new-file.cpp';
       const input = window.prompt(`Create new ${kind} file`, `${baseDir}/${defaultName}`);
       if (!input) return;
       const path = input.startsWith('/') ? input : `${baseDir}/${input}`;
@@ -498,8 +499,7 @@ export default function Ide({
         window.alert(`File already exists: ${path}`);
         return;
       }
-      const content =
-        kind === 'image' ? DEFAULT_IMAGE : kind === 'canvas' ? '' : kind === 'text' && path.endsWith('.h') ? '#pragma once\n\n' : '// New source file\n';
+      const content = kind === 'image' ? DEFAULT_IMAGE : kind === 'text' && path.endsWith('.h') ? '#pragma once\n\n' : '// New source file\n';
       setFiles((prev) => ({ ...prev, [path]: { path, type: kind, content } }));
       const parts = path.split('/').filter(Boolean);
       if (parts.length > 1) {
@@ -535,7 +535,9 @@ export default function Ide({
       clone[norm] = { ...file, path: norm };
       return clone;
     });
-    setOpenTabs((prev) => prev.map((tab) => (tab.path === selectedPath ? { ...tab, path: norm, id: `tab:${norm}` } : tab)));
+    setOpenTabs((prev) =>
+      prev.map((tab) => (tab.type !== 'canvas' && tab.path === selectedPath ? ({ ...tab, path: norm, id: `tab:${norm}` } as OpenTab) : tab)),
+    );
     setSelectedPath(norm);
     setActiveTabId((cur) => (cur === `tab:${selectedPath}` ? `tab:${norm}` : cur));
   }, [selectedPath, files]);
@@ -593,9 +595,9 @@ export default function Ide({
     }
 
     stoppedRef.current = false;
-    const state = workspaceConfigToState(resolvedConfig, PRESET_LAYOUTS[resolvedConfig.id]);
+    const state = workspaceConfigToState(resolvedConfig);
     setFiles(state.files);
-    setSelectedPath(PRESET_LAYOUTS[resolvedConfig.id]?.activeFile ?? '');
+    setSelectedPath(state.activeTabId.startsWith('tab:') ? state.activeTabId.slice(4) : '');
     setExpandedDirs(state.expandedDirs);
     setOpenTabs(state.openTabs);
     setActiveTabId(state.activeTabId);
@@ -675,7 +677,9 @@ export default function Ide({
       }
     };
 
-    for (const tab of openTabs) ensureModel(tab.path);
+    for (const tab of openTabs) {
+      if (tab.type !== 'canvas') ensureModel(tab.path);
+    }
     if (selectedPath) ensureModel(selectedPath);
 
     const activePath = activeTabId.startsWith('tab:') ? activeTabId.slice(4) : null;
@@ -752,7 +756,9 @@ export default function Ide({
     const textFiles = Object.values(currentFiles).filter((f) => f.type === 'text' && isTextFile(f.path));
 
     // Determine which source file to compile/run
-    const entryPoint = resolvedConfig.compile.sourceDetect?.entryPoint;
+    const cwd = resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`;
+    const entryPointRel = resolvedConfig.compile.sourceDetect?.entryPoint;
+    const entryPoint = entryPointRel ? resolveWsPath(cwd, entryPointRel) : undefined;
     const compileTarget = isSourceFile(activeFile.path)
       ? activeFile.path
       : entryPoint && currentFiles[entryPoint]
@@ -765,9 +771,8 @@ export default function Ide({
       console.log(`${P} COMPILE & RUN START`);
       const enc = new TextEncoder();
       for (const file of textFiles) {
-        const fsPath = toWorkspaceFsPath(file.path);
-        await client.writeFile(fsPath, enc.encode(file.content));
-        console.log(`${P} Synced ${file.path} -> ${fsPath}`);
+        await client.writeFile(file.path, enc.encode(file.content));
+        console.log(`${P} Synced ${file.path}`);
       }
 
       const t0 = performance.now();
@@ -775,15 +780,14 @@ export default function Ide({
 
       // ── Python script path ──────────────────────────────────────
       if (runType === 'python-script') {
-        const pyFile = compileTarget ?? entryPoint ?? '/user/main.py';
-        const fsPath = toWorkspaceFsPath(pyFile);
-        const args = resolvedConfig.run.args ? resolveArgs(resolvedConfig.run.args, fsPath) : ['python3', fsPath];
+        const pyFile = compileTarget ?? entryPoint ?? `${cwd}/main.py`;
+        const args = resolvedConfig.run.args ? resolveArgs(resolvedConfig.run.args, pyFile) : ['python3', pyFile];
         setStatus('Running Python...');
         tty.writeLine(`\x1b[36mRunning ${pyFile}...\x1b[0m`);
         setExecutionPhase('running');
         const lineBufferedStdin = makeLineBufferedStdin(tty);
         await client.run(args[0], args, {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
           },
@@ -809,7 +813,7 @@ export default function Ide({
         tty.writeLine('\x1b[36mCMake configure...\x1b[0m');
         const configArgs = resolvedConfig.compile.args;
         const configResult = await client.run(configArgs[0], configArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.writeLine(t);
           },
@@ -827,7 +831,7 @@ export default function Ide({
         tty.writeLine('\x1b[36mNinja build...\x1b[0m');
         const buildDir = configArgs.includes('-B') ? configArgs[configArgs.indexOf('-B') + 1] : '/home/user/build';
         const ninjaResult = await client.run('ninja', ['ninja', '-C', buildDir], {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.writeLine(t);
           },
@@ -848,7 +852,7 @@ export default function Ide({
         setExecutionPhase('running');
         const lineBufferedStdin = makeLineBufferedStdin(tty);
         await client.run(runArgs[0], runArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
           },
@@ -873,30 +877,19 @@ export default function Ide({
         setStatus('Compiling...');
         tty.writeLine(`Compiling ${compileTarget}...`);
 
-        const sourceFsPath = toWorkspaceFsPath(compileTarget);
+        const sourceFsPath = compileTarget;
 
-        // Detect compilation path from the declarative canvasPreset field.
-        // Falls back to legacy heuristics for workspaces that lack the field
-        // (e.g. hand-crafted configs that pre-date the canvasPreset field).
-        const canvasPresetName =
-          (resolvedConfig.compile.canvasPreset as 'sdl' | 'raylib' | 'allegro' | undefined) ??
-          (resolvedConfig.compile.args.some((a) => a === '-sUSE_SDL=3')
-            ? 'sdl'
-            : resolvedConfig.id === 'cpp-allegro'
-              ? 'allegro'
-              : resolvedConfig.compile.tool === 'clang' && runType === 'canvas'
-                ? 'raylib'
-                : null);
-        const isSDL3 = canvasPresetName === 'sdl';
-        const isAllegro = canvasPresetName === 'allegro';
-        const isRaylib = canvasPresetName === 'raylib';
+        const { toolchain } = resolvedConfig.compile;
+        const isSDL3 = toolchain?.startsWith('sdl') ?? false;
+        const isAllegro = toolchain?.startsWith('allegro') ?? false;
+        const isRaylib = toolchain?.startsWith('raylib') ?? false;
 
         if (!isSDL3 && !isRaylib && !isAllegro) {
           // ── Generic emcc single-step path (raylib, etc.) ────────
           tty.writeLine('\x1b[36mCanvas compile...\x1b[0m');
           const compileArgv = resolveArgs(resolvedConfig.compile.args, sourceFsPath);
           const canvasCompile = await client.run(compileArgv[0], compileArgv, {
-            cwd: resolvedConfig.compile.cwd ?? '/home/user',
+            cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
             onStdout: (t: string) => {
               tty.writeLine(t);
             },
@@ -913,7 +906,7 @@ export default function Ide({
           }
           tty.writeLine(`\x1b[32mCompiled in ${canvasDuration}s \u2014 loading...\x1b[0m`);
 
-          const jsOutPath = resolvedConfig.compile.output || '/home/user/main.js';
+          const jsOutPath = resolveWsPath(cwd, resolvedConfig.compile.output || 'main.js');
           const jsBytes = await client.getFile(jsOutPath);
           if (!jsBytes) {
             setExecutionPhase('idle');
@@ -922,7 +915,7 @@ export default function Ide({
           }
 
           setCanvasIsRunning(true);
-          ensureOpenTab(canvasPath, 'right');
+          ensureCanvasTab('right');
           setActiveTabId(`tab:${compileTarget}`);
           await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 
@@ -970,11 +963,7 @@ export default function Ide({
         // SDL3 exports SDL_App* callbacks; raylib and Allegro export main() and
         // register their loop via emscripten_set_main_loop — callMain() handles all.
         const canvasLabel = isSDL3 ? 'SDL3' : isAllegro ? 'allegro' : 'raylib';
-        const canvasPreset = isSDL3
-          ? BROWSER_BUILD_PRESETS.sdl
-          : isAllegro
-            ? BROWSER_BUILD_PRESETS.allegro
-            : BROWSER_BUILD_PRESETS.raylib;
+        const canvasPreset = EMCEPTION_PRESETS[toolchain!] as NativePreset;
         const runtimePath = isAllegro
           ? '/usr/lib/emscripten/allegro-runtime.mjs'
           : isRaylib
@@ -990,7 +979,7 @@ export default function Ide({
         const canvasBundleName = isSDL3 ? 'sdl3' : isAllegro ? 'allegro' : 'raylib';
         const canvasRunHints = { bundlesNeeded: [canvasBundleName] };
         const sdlCompile = await client.run(canvasPreset.compileTool, canvasPreset.compileArgv(sdlPaths), {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             console.log(t);
             tty.writeLine(t);
@@ -1013,7 +1002,7 @@ export default function Ide({
         tty.writeLine(`\x1b[36m${canvasLabel} linking (wasm-ld)...\x1b[0m`);
 
         const sdlLink = await client.run(canvasPreset.linkTool, canvasPreset.linkArgv(sdlPaths), {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             console.log(t);
             tty.writeLine(t);
@@ -1053,7 +1042,7 @@ export default function Ide({
 
         // Mark canvas tab as SDL-active (keeps the canvas element visible)
         setCanvasIsRunning(true);
-        ensureOpenTab(canvasPath, 'right');
+        ensureCanvasTab('right');
         setActiveTabId(`tab:${compileTarget}`);
 
         // Wait for React to flush + browser to paint so canvasRef.current is ready
@@ -1062,7 +1051,7 @@ export default function Ide({
         const canvas = canvasRef.current;
         if (!canvas) {
           setExecutionPhase('idle');
-          tty.writeError('SDL canvas element not found — open the SDL Canvas tab first');
+          tty.writeError('SDL canvas element not found \u2014 open the SDL Canvas tab first');
           return;
         }
 
@@ -1190,7 +1179,8 @@ export default function Ide({
             // lifecycle exports for callback-only apps. Raylib and Allegro have
             // their own runtime glue and should use the runtime's native
             // instantiate path.
-            ...(!isRaylib && !isAllegro && {
+            ...(!isRaylib &&
+              !isAllegro && {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               instantiateWasm(info: any, receiveInstance: (inst: WebAssembly.Instance) => void) {
                 const envBase = {
@@ -1216,7 +1206,11 @@ export default function Ide({
                   // _abort_js is the WASM import for C abort(). Newer Emscripten
                   // runtimes include it; if the stub WASM didn't use abort() the
                   // runtime omits it, but the user's WASM may still need it.
-                  _abort_js: info?.env?._abort_js ?? (() => { throw new Error('abort()'); }),
+                  _abort_js:
+                    info?.env?._abort_js ??
+                    (() => {
+                      throw new Error('abort()');
+                    }),
                 };
                 const env = new Proxy(envBase, {
                   get(target, prop, receiver) {
@@ -1267,7 +1261,9 @@ export default function Ide({
                                 return new TextDecoder().decode(heap.subarray(ptr, end));
                               };
                               fileStr = readStr(_file);
-                            } catch { /* ignore decode errors */ }
+                            } catch {
+                              /* ignore decode errors */
+                            }
                           }
                           throw new Error(`Assertion failed (${fileStr}:${line})`);
                         };
@@ -1348,7 +1344,7 @@ export default function Ide({
           sdlLoadOk = false;
           tty.writeError(`${canvasLabel} module error: ${e}`);
           // Surface error to console so e2e tests / devtools can see the full message + stack.
-          // eslint-disable-next-line no-console
+
           console.error(`[Emception:IDE] ${canvasLabel} module load error:`, e);
           setStatus(`${canvasLabel} load failed`);
           return null;
@@ -1465,9 +1461,9 @@ export default function Ide({
       const useDirectPath = resolvedConfig.compile.args.length === 0 && resolvedConfig.run.type === 'wasi-terminal';
 
       if (useDirectPath) {
-        const sourceFsPath = toWorkspaceFsPath(compileTarget);
+        const sourceFsPath = compileTarget;
         const objPath = '/tmp/emception-terminal-main.o';
-        const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
+        const wasmPath = resolveWsPath(cwd, resolvedConfig.compile.output || 'main.wasm');
 
         tty.writeLine('\x1b[36mDirect compile (clang -cc1)...\x1b[0m');
         // Use clang -cc1 directly (not driver mode). The driver tries to
@@ -1478,10 +1474,10 @@ export default function Ide({
         // Detect language from source file extension to pick the right preset.
         // C source files (.c) use the C preset; everything else uses C++.
         const isC = compileTarget.endsWith('.c');
-        const directPreset = isC ? BROWSER_BUILD_PRESETS.c : BROWSER_BUILD_PRESETS.cpp;
+        const directPreset = isC ? (EMCEPTION_PRESETS.c as NativePreset) : (EMCEPTION_PRESETS.cpp as NativePreset);
         const presetPaths = { sourcePath: sourceFsPath, objectPath: objPath, wasmPath };
         const clangResult = await client.run(directPreset.compileTool, directPreset.compileArgv(presetPaths), {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             console.log(t);
             tty.writeLine(t);
@@ -1502,7 +1498,7 @@ export default function Ide({
 
         tty.writeLine('\x1b[36mLinking (wasm-ld)...\x1b[0m');
         const lldResult = await client.run(directPreset.linkTool, directPreset.linkArgv(presetPaths), {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             console.log(t);
             tty.writeLine(t);
@@ -1536,7 +1532,7 @@ export default function Ide({
         const runArgs = resolvedConfig.run.args ?? ['wasi-run', wasmPath];
         setExecutionPhase('running');
         await client.run(runArgs[0], runArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
           },
@@ -1553,10 +1549,10 @@ export default function Ide({
       // ── emcc path (Python-based pipeline) ───────────────────────
       const compileArgs =
         resolvedConfig.compile.args.length > 0
-          ? resolveArgs(resolvedConfig.compile.args, toWorkspaceFsPath(compileTarget))
-          : ['emcc', toWorkspaceFsPath(compileTarget), '-o', '/home/user/main.wasm', '-O2'];
+          ? resolveArgs(resolvedConfig.compile.args, compileTarget)
+          : ['emcc', compileTarget, '-o', resolveWsPath(cwd, resolvedConfig.compile.output || 'main.wasm'), '-O2'];
       const result = await client.run(compileArgs[0], compileArgs, {
-        cwd: resolvedConfig.compile.cwd ?? '/home/user',
+        cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
         onStdout: (t: string) => {
           console.log(t);
           tty.writeLine(t);
@@ -1575,7 +1571,7 @@ export default function Ide({
       }
       setStatus('Compilation successful');
       tty.writeLine(`\x1b[32mCompilation successful in ${duration}s\x1b[0m`);
-      const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
+      const wasmPath = resolveWsPath(cwd, resolvedConfig.compile.output || 'main.wasm');
       let wasmBytes = await client.getFile(wasmPath);
 
       // emcc may return before all subprocess-linked outputs are flushed to VFS.
@@ -1591,7 +1587,7 @@ export default function Ide({
       if ((!wasmBytes || wasmBytes.length === 0) && resolvedConfig.run.type === 'wasi-terminal' && resolvedConfig.compile.tool === 'emcc') {
         tty.writeLine('\x1b[33mOutput artifact missing after emcc; attempting fallback link pipeline...\x1b[0m');
         const fallbackObj = '/tmp/emception-fallback-main.o';
-        const sourceFsPath = toWorkspaceFsPath(compileTarget);
+        const sourceFsPath = compileTarget;
 
         const clangFallback = await client.run(
           'clang',
@@ -1610,7 +1606,7 @@ export default function Ide({
             fallbackObj,
           ],
           {
-            cwd: resolvedConfig.compile.cwd ?? '/home/user',
+            cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
             onStdout: (t: string) => tty.writeLine(t),
             onStderr: (t: string) => tty.writeError(t),
           },
@@ -1656,7 +1652,7 @@ export default function Ide({
               '-lsockets',
             ],
             {
-              cwd: resolvedConfig.compile.cwd ?? '/home/user',
+              cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
               onStdout: (t: string) => tty.writeLine(t),
               onStderr: (t: string) => tty.writeError(t),
             },
@@ -1677,7 +1673,7 @@ export default function Ide({
       const runArgs = resolvedConfig.run.args ?? ['wasi-run', resolvedConfig.compile.output || '/home/user/main.wasm'];
       setExecutionPhase('running');
       await client.run(runArgs[0], runArgs, {
-        cwd: resolvedConfig.compile.cwd ?? '/home/user',
+        cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
         onStdout: (t: string) => {
           tty.write(t.replace(/\n/g, '\r\n'));
         },
@@ -1720,15 +1716,14 @@ export default function Ide({
       const textFiles = Object.values(files).filter((f) => f.type === 'text' && isTextFile(f.path));
       const enc = new TextEncoder();
       for (const file of textFiles) {
-        const fsPath = toWorkspaceFsPath(file.path);
-        await client.writeFile(fsPath, enc.encode(file.content));
+        await client.writeFile(file.path, enc.encode(file.content));
       }
 
       // Compile test if needed
       if (testConfig.compileArgs && testConfig.compileArgs.length > 0) {
         setStatus('Compiling tests...');
         const compileResult = await client.run(testConfig.tool, testConfig.compileArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/home/user',
+          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.writeLine(t);
           },
@@ -1749,7 +1744,7 @@ export default function Ide({
       setExecutionPhase('running');
       const lineBufferedStdin = makeLineBufferedStdin(tty);
       const runResult = await client.run(testConfig.runArgs[0], testConfig.runArgs, {
-        cwd: resolvedConfig.compile.cwd ?? '/home/user',
+        cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
         onStdout: (t: string) => {
           tty.write(t.replace(/\n/g, '\r\n'));
         },

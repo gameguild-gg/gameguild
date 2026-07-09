@@ -1,4 +1,5 @@
 import type { WorkspaceConfig } from '../workspace-config.js';
+import { ToolchainPreset } from '../types.js';
 import { DEFAULT_IMAGE } from './defaults.js';
 
 export const SDL_DEMO_CODE = `// SDL3 + Dear ImGui demo — compiled in the browser via Emscripten
@@ -114,16 +115,15 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
     description: 'SDL3 graphics demo compiled in the browser with Emscripten',
     version: 1,
     compile: {
-        // Direct clang + wasm-ld two-step path via BROWSER_BUILD_PRESETS.sdl.
+        // Direct clang + wasm-ld two-step path.
         // SDL3 is not an emsdk port — using emcc would trigger ports/__init__.py
-        // which fails in the WASM sandbox. canvasPreset replaces the former
-        // '-sUSE_SDL=3' heuristic the IDE used to detect this path.
+        // which fails in the WASM sandbox. toolchain='sdl-cpp' selects the argv
+        // builders and runtime module without any file-extension heuristics.
         tool: 'clang',
         args: [],
-        cwd: '/home/user/cpp-sdl3',
-        output: '/home/user/cpp-sdl3/main.wasm',
-        canvasPreset: 'sdl',
-        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/cpp-sdl3/sdl-main.cpp' },
+        output: 'main.wasm',
+        toolchain: ToolchainPreset.SDL_CPP,
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: 'sdl-main.cpp' },
     },
     run: {
         type: 'canvas',
@@ -134,7 +134,7 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/cpp-sdl3/sdl-main.cpp': { encoding: 'text', content: SDL_DEMO_CODE },
-        '/user/cpp-sdl3/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+        'sdl-main.cpp': { encoding: 'text', content: SDL_DEMO_CODE },
+        'workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
     },
 };

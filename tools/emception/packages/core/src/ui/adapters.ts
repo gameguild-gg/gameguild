@@ -128,14 +128,12 @@ export const ATTRIBUTE_SCHEMA: Record<string, AttrSpec> = {
   'show-solution': { target: 'showSolution', kind: 'boolean' },
 
   // Build-config flatteners.
-  std: { target: 'workspace.build.std', kind: 'string' },
-  output: { target: 'workspace.build.output', kind: 'string' },
-  cflags: { target: 'workspace.build.cflags', kind: 'list' },
-  cxxflags: { target: 'workspace.build.cxxflags', kind: 'list' },
-  ldflags: { target: 'workspace.build.ldflags', kind: 'list' },
-  libs: { target: 'workspace.build.libs', kind: 'list' },
-  'include-paths': { target: 'workspace.build.includePaths', kind: 'list' },
-  'lib-paths': { target: 'workspace.build.libPaths', kind: 'list' },
+  output: { target: 'workspace.output', kind: 'string' },
+  flags: { target: 'workspace.flags', kind: 'list' },
+  ldflags: { target: 'workspace.ldflags', kind: 'list' },
+  libs: { target: 'workspace.libs', kind: 'list' },
+  'include-paths': { target: 'workspace.includePaths', kind: 'list' },
+  'lib-paths': { target: 'workspace.libPaths', kind: 'list' },
 };
 
 export interface ParseAttributesOptions {
@@ -153,7 +151,7 @@ export interface ParseAttributesOptions {
  * - Booleans use `parseBooleanAttr` semantics.
  * - List attributes split on whitespace / commas.
  * - Enum attributes are validated case-insensitively; bad values throw.
- * - Build-related attributes are folded into `workspace.build` even when
+ * - Build-related attributes are folded into `workspace` directly even when
  *   `workspace` itself isn't set (the validator will invent a name).
  *
  * Returns the partial `ViewConfigInput`; callers should hand it straight

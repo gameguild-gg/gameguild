@@ -2,7 +2,7 @@ import Editor, { type OnMount } from '@monaco-editor/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import DockDropOverlay, { dropZoneToGroup, type DropZone } from './DockDropOverlay';
 import { tabIcon } from './FileExplorer';
-import { SDL_CANVAS_PATH, type DockGroup, type OpenTab, type WorkspaceFile } from './ide-types';
+import { type DockGroup, type OpenTab, type WorkspaceFile } from './ide-types';
 import { fileName, inferLanguage } from './ide-utils';
 
 const DOCK_LABELS: Record<DockGroup, string> = {
@@ -48,11 +48,7 @@ export default function DockGroupPanel({
     if (tabs.length === 0) return null;
 
     const localActive = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
-    const localFile =
-        files[localActive.path] ??
-        (localActive.type === 'canvas' || localActive.path === SDL_CANVAS_PATH
-            ? { path: SDL_CANVAS_PATH, type: 'canvas' as const, content: canvasIsRunning ? 'sdl' : '' }
-            : undefined);
+    const localFile = localActive.type !== 'canvas' ? files[localActive.path] : undefined;
 
     return (
         <DockGroupPanelInner
@@ -202,7 +198,7 @@ function DockGroupPanelInner({
                 <div style={{ display: 'flex', overflowX: 'auto', flex: 1 }}>
                     {tabs.map((tab) => {
                         const isActive = tab.id === localActive.id;
-                        const { icon, color } = tabIcon(tab.type, fileName(tab.path));
+                        const { icon, color } = tab.type === 'canvas' ? tabIcon('canvas', '') : tabIcon(tab.type, fileName(tab.path));
                         return (
                             <div
                                 key={tab.id}
@@ -256,10 +252,12 @@ function DockGroupPanelInner({
                                     transition: 'opacity 0.15s, border-left-color 0.1s',
                                 }}
                                 onClick={() => onSetActiveTab(tab.id)}
-                                title={tab.path}
+                                title={tab.type === 'canvas' ? 'Canvas' : tab.path}
                             >
                                 <span style={{ color, fontSize: '0.75rem', flexShrink: 0 }}>{icon}</span>
-                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }}>{fileName(tab.path)}</span>
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }}>
+                                    {tab.type === 'canvas' ? 'Canvas' : fileName(tab.path)}
+                                </span>
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -275,7 +273,7 @@ function DockGroupPanelInner({
                                         flexShrink: 0,
                                         lineHeight: 1,
                                     }}
-                                    aria-label={`Close ${tab.path}`}
+                                    aria-label={`Close ${tab.type === 'canvas' ? 'Canvas' : tab.path}`}
                                 >
                                     ×
                                 </button>
@@ -347,7 +345,7 @@ function DockGroupPanelInner({
                         <img src={localFile.content} alt={fileName(localFile.path)} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                     </div>
                 )}
-                {localFile?.type === 'canvas' && (
+                {localActive.type === 'canvas' && (
                     <div
                         ref={onCanvasHost}
                         style={{

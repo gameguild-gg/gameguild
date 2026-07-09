@@ -1,24 +1,10 @@
-import { CANVAS_PATH, deriveStorageKey, SDL_CANVAS_PATH, WORKSPACE_STORAGE_KEY } from './ide-types';
+import { deriveStorageKey, WORKSPACE_STORAGE_KEY } from './ide-types';
 
 // ─── WORKSPACE_STORAGE_KEY ───────────────────────────────────────────────────
 
 describe('WORKSPACE_STORAGE_KEY', () => {
     it('is the legacy key string', () => {
         expect(WORKSPACE_STORAGE_KEY).toBe('gameguild.emception.workspace.v1');
-    });
-});
-
-// ─── CANVAS_PATH ──────────────────────────────────────────────────────────────────────────────
-
-describe('CANVAS_PATH', () => {
-    it('equals /user/canvas', () => {
-        expect(CANVAS_PATH).toBe('/user/canvas');
-    });
-});
-
-describe('SDL_CANVAS_PATH backward-compat alias', () => {
-    it('equals CANVAS_PATH', () => {
-        expect(SDL_CANVAS_PATH).toBe(CANVAS_PATH);
     });
 });
 

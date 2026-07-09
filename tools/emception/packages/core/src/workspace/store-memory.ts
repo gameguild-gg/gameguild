@@ -9,6 +9,7 @@
 // No DOM, no Node, no IDB references — safe to import anywhere.
 
 import { BuildConfigError, WorkspaceConflictError } from '../errors.js';
+import { ToolchainPreset } from '../types.js';
 import type {
     FileEntry,
     WorkspaceBuildConfig,
@@ -116,7 +117,7 @@ class MemoryWorkspaceHandle implements WorkspaceHandle {
 
     async reset(): Promise<void> {
         this.ws.files.clear();
-        this.ws.build = { kind: 'native' };
+        this.ws.build = { toolchain: ToolchainPreset.CPP };
         this.ws.seedMarker = null;
     }
 
@@ -186,7 +187,7 @@ export class MemoryWorkspaceManager implements WorkspaceManager {
                 name: opts.name,
                 mountPath: opts.mountPath ?? defaultMountPath(opts.name),
                 files: new Map(),
-                build: opts.build ?? { kind: 'native' },
+                build: opts.build ?? { toolchain: ToolchainPreset.CPP },
                 seedMarker: null,
             };
             this.workspaces.set(opts.name, ws);

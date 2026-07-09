@@ -10,9 +10,9 @@ export function isTextFile(path: string): boolean {
     );
 }
 
-export function toWorkspaceFsPath(path: string): string {
-    if (path.startsWith('/user/')) return `/home${path}`;
-    return `/home/user/${fileName(path)}`;
+export function resolveWsPath(cwd: string, relOrAbs: string): string {
+    if (relOrAbs.startsWith('/')) return relOrAbs;
+    return `${cwd}/${relOrAbs}`;
 }
 
 export function fileName(path: string): string {
@@ -76,15 +76,7 @@ export function detectsSDL(files: Record<string, WorkspaceFile>): boolean {
  * binary are satisfied by makeWasiStubs() at runtime in Ide.tsx.
  */
 export function buildSDL3ArgsPort(targetFsPath: string): string[] {
-    return [
-        'emcc', targetFsPath,
-        '-sUSE_SDL=3',
-        '-I/usr/include',
-        '-sALLOW_MEMORY_GROWTH=1',
-        '-sENVIRONMENT=web',
-        '-O1',
-        '-o', '/home/user/main.wasm',
-    ];
+    return ['emcc', targetFsPath, '-sUSE_SDL=3', '-I/usr/include', '-sALLOW_MEMORY_GROWTH=1', '-sENVIRONMENT=web', '-O1', '-o', '/home/user/main.wasm'];
 }
 
 /**
@@ -97,10 +89,7 @@ export function buildSDL3ArgsPort(targetFsPath: string): string[] {
  * The `getMemory` callback lets the stubs lazily resolve the WASM linear memory
  * (available only after WebAssembly.instantiate returns).
  */
-export function makeWasiStubs(
-    getMemory: () => WebAssembly.Memory | null,
-    writeLine: (s: string) => void,
-): Record<string, CallableFunction> {
+export function makeWasiStubs(getMemory: () => WebAssembly.Memory | null, writeLine: (s: string) => void): Record<string, CallableFunction> {
     // WASI error codes
     const WASI_ESUCCESS = 0;
     const WASI_EBADF = 8;
@@ -117,7 +106,9 @@ export function makeWasiStubs(
             }
             return WASI_ESUCCESS;
         },
-        args_get(): number { return WASI_ESUCCESS; },
+        args_get(): number {
+            return WASI_ESUCCESS;
+        },
 
         // environ_count = 0, environ_buf_size = 0
         environ_sizes_get(count_ptr: number, buf_size_ptr: number): number {
@@ -129,7 +120,9 @@ export function makeWasiStubs(
             }
             return WASI_ESUCCESS;
         },
-        environ_get(): number { return WASI_ESUCCESS; },
+        environ_get(): number {
+            return WASI_ESUCCESS;
+        },
 
         // Write iov buffers (fd 1 = stdout, fd 2 = stderr)
         fd_write(fd: number, iovs_ptr: number, iovs_len: number, nwritten_ptr: number): number {
@@ -150,13 +143,27 @@ export function makeWasiStubs(
             v.setUint32(nwritten_ptr, totalWritten, true);
             return WASI_ESUCCESS;
         },
-        fd_close(): number { return WASI_ESUCCESS; },
-        fd_seek(): number { return WASI_ESPIPE; },
-        fd_read(): number { return WASI_EBADF; },
-        fd_fdstat_get(): number { return WASI_EBADF; },
-        path_open(): number { return WASI_EBADF; },
-        path_filestat_get(): number { return WASI_EBADF; },
-        path_unlink_file(): number { return WASI_EBADF; },
+        fd_close(): number {
+            return WASI_ESUCCESS;
+        },
+        fd_seek(): number {
+            return WASI_ESPIPE;
+        },
+        fd_read(): number {
+            return WASI_EBADF;
+        },
+        fd_fdstat_get(): number {
+            return WASI_EBADF;
+        },
+        path_open(): number {
+            return WASI_EBADF;
+        },
+        path_filestat_get(): number {
+            return WASI_EBADF;
+        },
+        path_unlink_file(): number {
+            return WASI_EBADF;
+        },
 
         // Monotonic clock → nanoseconds via performance.now()
         clock_time_get(clk_id: number, _precision_lo: number, _precision_hi: number, time_ptr: number): number {

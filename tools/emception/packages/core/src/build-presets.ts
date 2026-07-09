@@ -1,146 +1,36 @@
-// Build preset definitions. Includes bundlesToPreload + tools.
+// Build preset definitions.
 //
-// These are runtime/build-level presets used by the build resolver to map a
-// short label (e.g. 'cpp', 'sdl') to compiler/linker defaults and the bundles
-// that must be preloaded into the VFS for the tools to work.
+// Minimal core preset surface: maps a ToolchainPreset to its default build
+// configuration. Used by the build resolver and config validator.
+//
+// The full preset (bundlesToPreload, defaultTools, argv builders) lives in
+// @emception/browser as `PRESETS`.
 //
 // Note: this file is intentionally distinct from the higher-level
 // "workspace presets" (`@emception/core` `workspace-presets.ts`) which describe
 // full IDE workspace configurations layered on top of these build presets.
 
-import type { NativeBuildConfig, CMakeBuildConfig, PythonBuildConfig, WorkspaceBuildConfig } from './types';
+import { ToolchainPreset, type WorkspaceBuildConfig } from './types';
 
-export type BuildPresetName = 'c' | 'cpp' | 'python' | 'sdl' | 'sdl-cpp' | 'sdl-c' | 'raylib' | 'raylib-cpp' | 'raylib-c' | 'allegro' | 'allegro-cpp' | 'allegro-c' | 'cmake';
-
-export interface BuildPreset {
-  name: BuildPresetName;
-  bundlesToPreload: string[];
-  defaultTools: string[];
-  build: WorkspaceBuildConfig;
-}
-
-export const BUILD_PRESETS: Record<BuildPresetName, BuildPreset> = {
-  c: {
-    name: 'c',
-    bundlesToPreload: ['llvm', 'libcurl-lite'],
-    defaultTools: ['clang', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang', std: 'c2y', cflags: ['-O1'] } satisfies NativeBuildConfig,
+export const BUILD_PRESETS: Record<ToolchainPreset, WorkspaceBuildConfig> = {
+  [ToolchainPreset.C]: { toolchain: ToolchainPreset.C, compiler: 'clang', flags: ['-O1', '-std=c2y'] },
+  [ToolchainPreset.CPP]: { toolchain: ToolchainPreset.CPP, compiler: 'clang++', flags: ['-O1', '-std=c++2c'] },
+  [ToolchainPreset.Python]: { toolchain: ToolchainPreset.Python },
+  [ToolchainPreset.SDL_CPP]: { toolchain: ToolchainPreset.SDL_CPP, compiler: 'clang', flags: ['-std=c++2c'], libs: ['SDL3'] },
+  [ToolchainPreset.SDL_C]: { toolchain: ToolchainPreset.SDL_C, compiler: 'clang', flags: ['-std=c2y'], libs: ['SDL3'] },
+  [ToolchainPreset.Raylib_CPP]: { toolchain: ToolchainPreset.Raylib_CPP, compiler: 'clang', flags: ['-std=c++2c'], libs: ['raylib', 'raygui', 'physac', 'rlights'] },
+  [ToolchainPreset.Raylib_C]: { toolchain: ToolchainPreset.Raylib_C, compiler: 'clang', flags: ['-std=c2y'], libs: ['raylib', 'raygui', 'physac', 'rlights'] },
+  [ToolchainPreset.Allegro_CPP]: {
+    toolchain: ToolchainPreset.Allegro_CPP,
+    compiler: 'clang',
+    flags: ['-std=c++2c'],
+    libs: ['allegro', 'allegro_image', 'allegro_primitives', 'allegro_font', 'allegro_ttf', 'allegro_audio', 'allegro_acodec', 'allegro_color', 'allegro_main'],
   },
-  cpp: {
-    name: 'cpp',
-    bundlesToPreload: ['llvm', 'libcurl-lite'],
-    defaultTools: ['clang++', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang++', std: 'c++2c', cflags: ['-O1'] } satisfies NativeBuildConfig,
+  [ToolchainPreset.Allegro_C]: {
+    toolchain: ToolchainPreset.Allegro_C,
+    compiler: 'clang',
+    flags: ['-std=c2y'],
+    libs: ['allegro', 'allegro_image', 'allegro_primitives', 'allegro_font', 'allegro_ttf', 'allegro_audio', 'allegro_acodec', 'allegro_color', 'allegro_main'],
   },
-  python: {
-    name: 'python',
-    bundlesToPreload: ['cpython'],
-    defaultTools: ['python3'],
-    build: { kind: 'python' } satisfies PythonBuildConfig,
-  },
-  sdl: {
-    name: 'sdl',
-    bundlesToPreload: ['llvm', 'sdl3', 'imgui'],
-    defaultTools: ['clang', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang', std: 'c++2c', libs: ['SDL3'] } satisfies NativeBuildConfig,
-  },
-  'sdl-cpp': {
-    name: 'sdl-cpp',
-    bundlesToPreload: ['llvm', 'sdl3', 'imgui'],
-    defaultTools: ['clang', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang', std: 'c++2c', libs: ['SDL3'] } satisfies NativeBuildConfig,
-  },
-  'sdl-c': {
-    name: 'sdl-c',
-    bundlesToPreload: ['llvm', 'sdl3', 'imgui'],
-    defaultTools: ['clang', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang', std: 'c2y', libs: ['SDL3'] } satisfies NativeBuildConfig,
-  },
-  raylib: {
-    name: 'raylib',
-    bundlesToPreload: ['llvm', 'raylib'],
-    defaultTools: ['clang', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang', std: 'c++2c', libs: ['raylib', 'raygui', 'physac', 'rlights'] } satisfies NativeBuildConfig,
-  },
-  'raylib-cpp': {
-    name: 'raylib-cpp',
-    bundlesToPreload: ['llvm', 'raylib'],
-    defaultTools: ['clang', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang', std: 'c++2c', libs: ['raylib', 'raygui', 'physac', 'rlights'] } satisfies NativeBuildConfig,
-  },
-  'raylib-c': {
-    name: 'raylib-c',
-    bundlesToPreload: ['llvm', 'raylib'],
-    defaultTools: ['clang', 'wasm-ld'],
-    build: { kind: 'native', compiler: 'clang', std: 'c2y', libs: ['raylib', 'raygui', 'physac', 'rlights'] } satisfies NativeBuildConfig,
-  },
-  allegro: {
-    name: 'allegro',
-    bundlesToPreload: ['llvm', 'allegro'],
-    defaultTools: ['clang', 'wasm-ld'],
-    build: {
-      kind: 'native',
-      compiler: 'clang',
-      std: 'c++2c',
-      libs: [
-        'allegro',
-        'allegro_image',
-        'allegro_primitives',
-        'allegro_font',
-        'allegro_ttf',
-        'allegro_audio',
-        'allegro_acodec',
-        'allegro_color',
-        'allegro_main',
-      ],
-    } satisfies NativeBuildConfig,
-  },
-  'allegro-cpp': {
-    name: 'allegro-cpp',
-    bundlesToPreload: ['llvm', 'allegro'],
-    defaultTools: ['clang', 'wasm-ld'],
-    build: {
-      kind: 'native',
-      compiler: 'clang',
-      std: 'c++2c',
-      libs: [
-        'allegro',
-        'allegro_image',
-        'allegro_primitives',
-        'allegro_font',
-        'allegro_ttf',
-        'allegro_audio',
-        'allegro_acodec',
-        'allegro_color',
-        'allegro_main',
-      ],
-    } satisfies NativeBuildConfig,
-  },
-  'allegro-c': {
-    name: 'allegro-c',
-    bundlesToPreload: ['llvm', 'allegro'],
-    defaultTools: ['clang', 'wasm-ld'],
-    build: {
-      kind: 'native',
-      compiler: 'clang',
-      std: 'c2y',
-      libs: [
-        'allegro',
-        'allegro_image',
-        'allegro_primitives',
-        'allegro_font',
-        'allegro_ttf',
-        'allegro_audio',
-        'allegro_acodec',
-        'allegro_color',
-        'allegro_main',
-      ],
-    } satisfies NativeBuildConfig,
-  },
-  cmake: {
-    name: 'cmake',
-    bundlesToPreload: ['llvm', 'cmake', 'ninja'],
-    defaultTools: ['cmake', 'ninja'],
-    build: { kind: 'cmake' } satisfies CMakeBuildConfig,
-  },
+  [ToolchainPreset.CMake]: { toolchain: ToolchainPreset.CMake },
 };
