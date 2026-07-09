@@ -57,5 +57,39 @@ describe('ProjectCarouselEditorForm', () => {
       ]);
     });
     expect(screen.getByText('Project carousel updated successfully.')).toBeInTheDocument();
-  });
+  }, 15_000);
+
+  it('supports empty project setup, add/remove flows, and API errors', async () => {
+    const user = userEvent.setup();
+    updateCourseLandingProjectsMock.mockResolvedValueOnce({ success: false, error: 'Project carousel is invalid.' });
+
+    render(<ProjectCarouselEditorForm courseId="course-1" items={[]} />);
+
+    expect(screen.getByText('Project 1')).toBeInTheDocument();
+    expect(screen.getByLabelText('Module label 1')).toHaveValue('Project 01');
+
+    await user.click(screen.getByRole('button', { name: /add project/i }));
+    expect(screen.getByText('Project 2')).toBeInTheDocument();
+    expect(screen.getByLabelText('Module label 2')).toHaveValue('Project 02');
+
+    await user.click(screen.getByRole('button', { name: /remove project 2/i }));
+    expect(screen.queryByText('Project 2')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /remove project 1/i }));
+    expect(screen.getByText('Project 1')).toBeInTheDocument();
+    expect(screen.getByLabelText('Project title 1')).toHaveValue('');
+
+    await user.type(screen.getByLabelText('Project title 1'), 'Portfolio milestone');
+    await user.click(screen.getByRole('button', { name: /save project carousel/i }));
+
+    await waitFor(() => {
+      expect(updateCourseLandingProjectsMock).toHaveBeenCalledWith('course-1', [
+        expect.objectContaining({
+          title: 'Portfolio milestone',
+          moduleLabel: 'Project 01',
+        }),
+      ]);
+    });
+    expect(screen.getByText('Project carousel is invalid.')).toBeInTheDocument();
+  }, 15_000);
 });

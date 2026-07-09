@@ -1,11 +1,24 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssessmentsList } from './assessments-list';
-import { deleteAssessmentGroup, updateAssessmentGroup } from '@/lib/learning/actions';
+import { createAssessment, createAssessmentGroup, deleteAssessmentGroup, updateAssessmentGroup } from '@/lib/learning/actions';
 import type { Assessment, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
+
+Object.defineProperties(HTMLElement.prototype, {
+  hasPointerCapture: { value: vi.fn(() => false) },
+  setPointerCapture: { value: vi.fn() },
+  releasePointerCapture: { value: vi.fn() },
+  scrollIntoView: { value: vi.fn() },
+});
+
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
 
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
@@ -69,6 +82,28 @@ const groupedAssessments = [
   },
 ] as unknown as Assessment[];
 
+const assignmentAssessment = {
+  id: 'assignment-1',
+  courseId: 'course-1',
+  contentId: 'lesson-1',
+  title: 'Environment setup',
+  description: null,
+  type: 'Assignment',
+  maxScore: 15,
+  passingScore: 10,
+  timeLimitMinutes: 45,
+  maxAttempts: 2,
+  isRequired: false,
+  order: 0,
+  availableFrom: null,
+  availableUntil: null,
+  isAvailable: false,
+  assessmentGroupId: null,
+  assessmentGroupName: null,
+  assessmentGroupWeightPercent: null,
+  assessmentGroupOrder: null,
+} as unknown as Assessment;
+
 const assessmentGroups = [
   {
     id: 'group-quizzes',
@@ -128,9 +163,40 @@ const analytics = {
   ],
 } satisfies CourseAssessmentAnalytics;
 
+const emptyAnalytics = {
+  courseId: 'course-1',
+  assessmentCount: 0,
+  gradedCount: 0,
+  ungradedCount: 2,
+  averagePercent: 0,
+  passRate: 0,
+  distribution: [
+    { label: '0-59', minPercent: 0, maxPercent: 59, count: 0 },
+    { label: '60-69', minPercent: 60, maxPercent: 69, count: 0 },
+    { label: '70-79', minPercent: 70, maxPercent: 79, count: 0 },
+    { label: '80-89', minPercent: 80, maxPercent: 89, count: 0 },
+    { label: '90-100', minPercent: 90, maxPercent: 100, count: 0 },
+  ],
+  groups: [
+    {
+      groupId: null,
+      groupName: 'Ungrouped activities',
+      weightPercent: null,
+      assessmentCount: 2,
+      gradedCount: 0,
+      ungradedCount: 2,
+      averagePercent: 0,
+      passRate: 0,
+      distribution: [],
+    },
+  ],
+} satisfies CourseAssessmentAnalytics;
+
 describe('AssessmentsList weighted groups', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(createAssessment).mockResolvedValue({ success: true, data: { id: 'assessment-new' } });
+    vi.mocked(createAssessmentGroup).mockResolvedValue({ success: true, data: { id: 'group-new' } });
     vi.mocked(updateAssessmentGroup).mockResolvedValue({ success: true, data: { id: 'group-quizzes' } });
     vi.mocked(deleteAssessmentGroup).mockResolvedValue({ success: true, data: null });
   });
@@ -188,6 +254,69 @@ describe('AssessmentsList weighted groups', () => {
     expect(screen.getAllByText(/weekly quizzes/i).length).toBeGreaterThan(0);
   });
 
+  it('renders empty analytics and ungraded weighted groups without score bars', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={[]}
+        total={0}
+        assessmentGroups={[]}
+        analytics={emptyAnalytics}
+      />,
+    );
+
+    expect(screen.getByText('No graded scores yet')).toBeInTheDocument();
+    expect(screen.getByText(/score distribution appears after submissions are graded/i)).toBeInTheDocument();
+    expect(screen.getByText('Ungrouped activities')).toBeInTheDocument();
+    expect(screen.getAllByText('Ungraded').length).toBeGreaterThan(0);
+  });
+
+  it('renders linked ungrouped assignments with schedule and attempt metadata', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={[assignmentAssessment]}
+        total={1}
+        contentItems={[
+          {
+            id: 'lesson-1',
+            parentId: null,
+            order: 0,
+            type: 'Lesson',
+            title: 'Setup lesson',
+            description: null,
+            status: 'published',
+            duration: null,
+            metadata: {},
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
+          },
+        ]}
+      />,
+    );
+
+    const ungrouped = screen.getByTestId('assessment-group-ungrouped');
+    expect(within(ungrouped).getByText('Activities that do not yet count toward a weighted grade group.')).toBeInTheDocument();
+    expect(within(ungrouped).getByText('Setup lesson')).toBeInTheDocument();
+    expect(within(ungrouped).getByText('45m')).toBeInTheDocument();
+    expect(within(ungrouped).getByText('2 attempts')).toBeInTheDocument();
+    expect(within(ungrouped).getByText('scheduled')).toBeInTheDocument();
+    expect(within(ungrouped).getByText('Assignment')).toBeInTheDocument();
+  });
+
+  it('renders the empty state and validates missing assessment titles', async () => {
+    const user = userEvent.setup();
+    render(<AssessmentsList courseId="course-1" assessments={[]} total={0} />);
+
+    expect(screen.getByText('No assessments yet')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /create first assessment/i }));
+    await user.click(screen.getByRole('button', { name: /^create$/i }));
+
+    expect(await screen.findByText('Title is required.')).toBeInTheDocument();
+    expect(createAssessment).not.toHaveBeenCalled();
+  });
+
   it('does not offer Exam as a professor-facing assessment type', async () => {
     const user = userEvent.setup();
     render(
@@ -204,6 +333,131 @@ describe('AssessmentsList weighted groups', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.queryByText(/\bExam\b/i)).not.toBeInTheDocument();
     expect(screen.getByText(/quiz, assignment, or project/i)).toBeInTheDocument();
+  });
+
+  it('creates a weighted group and validates group weights before calling the API', async () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /add group/i }));
+    let dialog = screen.getByRole('dialog', { name: /create assessment group/i });
+    fireEvent.change(within(dialog).getByLabelText(/group name/i), { target: { value: 'Attendance' } });
+    fireEvent.change(within(dialog).getByLabelText(/weight percent/i), { target: { value: '125' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /create group/i }));
+
+    expect(await screen.findByText('Weight must be between 0 and 100.')).toBeInTheDocument();
+    expect(createAssessmentGroup).not.toHaveBeenCalled();
+
+    fireEvent.change(within(dialog).getByLabelText(/weight percent/i), { target: { value: '30' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /create group/i }));
+
+    await waitFor(() => {
+      expect(createAssessmentGroup).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        name: 'Attendance',
+        weightPercent: 30,
+        order: 3,
+      });
+    });
+  });
+
+  it('shows create group server errors without closing the dialog', async () => {
+    vi.mocked(createAssessmentGroup).mockResolvedValueOnce({ success: false, error: 'Group quota reached.' });
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /add group/i }));
+    const dialog = screen.getByRole('dialog', { name: /create assessment group/i });
+    fireEvent.click(within(dialog).getByRole('button', { name: /create group/i }));
+
+    expect(await screen.findByText('Group name is required.')).toBeInTheDocument();
+    expect(createAssessmentGroup).not.toHaveBeenCalled();
+
+    fireEvent.change(within(dialog).getByLabelText(/group name/i), { target: { value: 'Participation' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /create group/i }));
+
+    expect(await screen.findByText('Group quota reached.')).toBeInTheDocument();
+  });
+
+  it('creates a course-level assessment in the selected weighted group', async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /add assessment/i }));
+    const dialog = screen.getByRole('dialog', { name: /create assessment/i });
+    await user.type(within(dialog).getByLabelText(/title/i), 'Final presentation');
+    await user.click(within(dialog).getByRole('combobox', { name: /type/i }));
+    await user.click(await screen.findByRole('option', { name: 'Project' }));
+    await user.click(within(dialog).getByRole('combobox', { name: /grade group/i }));
+    await user.click(await screen.findByRole('option', { name: /final project/i }));
+    await user.clear(within(dialog).getByLabelText(/max score/i));
+    await user.type(within(dialog).getByLabelText(/max score/i), '80');
+    await user.clear(within(dialog).getByLabelText(/passing score/i));
+    await user.type(within(dialog).getByLabelText(/passing score/i), '56');
+    await user.click(within(dialog).getByRole('button', { name: /^create$/i }));
+
+    await waitFor(() => {
+      expect(createAssessment).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        title: 'Final presentation',
+        type: 'Project',
+        assessmentGroupId: 'group-project',
+        maxScore: 80,
+        passingScore: 56,
+        isRequired: true,
+      });
+    });
+  }, 15_000);
+
+  it('creates an ungrouped activity from the ungrouped group shortcut and surfaces API errors', async () => {
+    const user = userEvent.setup();
+    vi.mocked(createAssessment).mockResolvedValueOnce({ success: false, error: 'Assessment title must be unique.' });
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={[assignmentAssessment]}
+        total={1}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /add activity to ungrouped activities/i }));
+    const dialog = screen.getByRole('dialog', { name: /create assessment/i });
+    await user.type(within(dialog).getByLabelText(/title/i), 'Environment setup');
+    await user.clear(within(dialog).getByLabelText(/max score/i));
+    await user.clear(within(dialog).getByLabelText(/passing score/i));
+    await user.click(within(dialog).getByRole('button', { name: /^create$/i }));
+
+    await waitFor(() => {
+      expect(createAssessment).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        title: 'Environment setup',
+        type: 'Quiz',
+        assessmentGroupId: null,
+        maxScore: 100,
+        passingScore: 70,
+        isRequired: true,
+      });
+    });
+    expect(await screen.findByText('Assessment title must be unique.')).toBeInTheDocument();
   });
 
   it('lets professors edit a weighted assessment group without leaving the assessment hub', async () => {
@@ -234,6 +488,38 @@ describe('AssessmentsList weighted groups', () => {
     });
   });
 
+  it('validates edit group fields and keeps server errors visible', async () => {
+    vi.mocked(updateAssessmentGroup).mockResolvedValueOnce({ success: false, error: 'Group name already exists.' });
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /edit group weekly quizzes/i }));
+    const dialog = screen.getByRole('dialog', { name: /edit assessment group/i });
+    fireEvent.change(within(dialog).getByLabelText(/group name/i), { target: { value: '' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /save group/i }));
+
+    expect(await screen.findByText('Group name is required.')).toBeInTheDocument();
+    expect(updateAssessmentGroup).not.toHaveBeenCalled();
+
+    fireEvent.change(within(dialog).getByLabelText(/group name/i), { target: { value: 'Weekly coding' } });
+    fireEvent.change(within(dialog).getByLabelText(/weight percent/i), { target: { value: '-1' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /save group/i }));
+
+    expect(await screen.findByText('Weight must be between 0 and 100.')).toBeInTheDocument();
+
+    fireEvent.change(within(dialog).getByLabelText(/weight percent/i), { target: { value: '30' } });
+    fireEvent.change(within(dialog).getByLabelText(/description/i), { target: { value: 'Short weekly checks' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /save group/i }));
+
+    expect(await screen.findByText('Group name already exists.')).toBeInTheDocument();
+  });
+
   it('lets professors delete a weighted group and move its assessments back to ungrouped work', async () => {
     const user = userEvent.setup();
     render(
@@ -252,5 +538,23 @@ describe('AssessmentsList weighted groups', () => {
     await waitFor(() => {
       expect(deleteAssessmentGroup).toHaveBeenCalledWith('course-1', 'group-project');
     });
+  });
+
+  it('keeps delete group errors visible for retry', async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteAssessmentGroup).mockResolvedValueOnce({ success: false, error: 'Cannot delete a locked grade group.' });
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /delete group final project/i }));
+    await user.click(screen.getByRole('button', { name: /delete group/i }));
+
+    expect(await screen.findByText('Cannot delete a locked grade group.')).toBeInTheDocument();
   });
 });

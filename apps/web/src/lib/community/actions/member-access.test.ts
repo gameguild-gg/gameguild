@@ -67,4 +67,44 @@ describe('updateMemberAccessRole', () => {
 
     expect(mocks.request).not.toHaveBeenCalled();
   });
+
+  it('trims submitted identifiers and redirects with an API error when the role update fails', async () => {
+    mocks.request.mockResolvedValue({
+      ok: false,
+      error: { message: 'Only another super admin can grant this role.' },
+    });
+    const formData = new FormData();
+    formData.set('userId', ' user-2 ');
+    formData.set('tenantId', ' tenant-2 ');
+    formData.set('role', ' SystemAdmin ');
+
+    await expect(updateMemberAccessRole(formData)).rejects.toThrow(
+      'redirect:/dashboard/community/members/users?error=Only+another+super+admin+can+grant+this+role.',
+    );
+
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: 'PATCH',
+      path: '/v1/users/user-2/memberships/tenant-2/role',
+      body: { role: 'SystemAdmin' },
+      requiresAuth: true,
+    });
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('redirects with the rejection message when the API returns success false', async () => {
+    mocks.request.mockResolvedValue({
+      ok: true,
+      data: { success: false, message: 'Cannot demote the only super admin.' },
+    });
+    const formData = new FormData();
+    formData.set('userId', 'user-owner');
+    formData.set('tenantId', 'tenant-1');
+    formData.set('role', 'Member');
+
+    await expect(updateMemberAccessRole(formData)).rejects.toThrow(
+      'redirect:/dashboard/community/members/users?error=Cannot+demote+the+only+super+admin.',
+    );
+
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
 });

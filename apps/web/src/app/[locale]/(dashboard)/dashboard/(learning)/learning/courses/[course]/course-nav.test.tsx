@@ -5,7 +5,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CourseNav } from './course-nav';
 
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ children, href, locale, ...rest }: { children: ReactNode; href: string; locale?: string }) => (
+  Link: ({
+    children,
+    href,
+    locale,
+    prefetch: _prefetch,
+    ...rest
+  }: {
+    children: ReactNode;
+    href: string;
+    locale?: string;
+    prefetch?: boolean;
+  }) => (
     <a href={href} data-locale={locale} {...rest}>
       {children}
     </a>

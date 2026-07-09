@@ -1,10 +1,16 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContentTree } from './content-tree';
 import type { ContentItem } from '@/lib/learning/types';
 import { TooltipProvider } from '@game-guild/ui/components/tooltip';
+import { addContent, deleteContent, reorderContent, updateAssessment, updateContent } from '@/lib/learning/actions';
+
+const navigationMocks = vi.hoisted(() => ({
+  refresh: vi.fn(),
+  push: vi.fn(),
+}));
 
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
@@ -13,11 +19,17 @@ Object.defineProperties(HTMLElement.prototype, {
   scrollIntoView: { value: vi.fn() },
 });
 
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 vi.mock('next/navigation', () => ({
   usePathname: () => '/en-US/dashboard/learning/courses/course-1/content',
   useRouter: () => ({
-    push: vi.fn(),
-    refresh: vi.fn(),
+    push: navigationMocks.push,
+    refresh: navigationMocks.refresh,
   }),
 }));
 
@@ -43,20 +55,99 @@ const moduleItem = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 } satisfies ContentItem;
 
-describe('ContentTree lesson creation', () => {
+const secondModuleItem = {
+  ...moduleItem,
+  id: 'module-2',
+  order: 1,
+  title: 'Week 02',
+  description: 'Combat systems',
+  status: 'draft',
+} satisfies ContentItem;
+
+const lessonItem = {
+  id: 'lesson-1',
+  parentId: 'module-1',
+  order: 0,
+  type: 'Lesson',
+  title: 'Course overview',
+  description: null,
+  status: 'published',
+  duration: 20,
+  metadata: {},
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+} satisfies ContentItem;
+
+const subLessonItem = {
+  ...lessonItem,
+  id: 'sublesson-1',
+  parentId: 'lesson-1',
+  order: 0,
+  type: 'Code',
+  title: 'Starter exercise',
+  status: 'archived',
+  duration: 0,
+} satisfies ContentItem;
+
+const secondLessonItem = {
+  ...lessonItem,
+  id: 'lesson-2',
+  title: 'Setup environment',
+  order: 1,
+} satisfies ContentItem;
+
+const availableAssessments = [
+  {
+    id: 'assessment-1',
+    courseId: 'course-1',
+    contentId: null,
+    title: 'Week 01 Quiz',
+    description: null,
+    type: 'Quiz',
+    maxScore: 10,
+    passingScore: 7,
+    isRequired: true,
+  },
+];
+
+function renderContentTree({
+  modules = [moduleItem],
+  allItems = [moduleItem],
+  assessments = [],
+  virtualModuleIds = [],
+}: {
+  modules?: ContentItem[];
+  allItems?: ContentItem[];
+  assessments?: any[];
+  virtualModuleIds?: string[];
+} = {}) {
+  return render(
+    <TooltipProvider>
+      <ContentTree
+        courseId="course-1"
+        modules={modules}
+        allItems={allItems}
+        assessments={assessments}
+        virtualModuleIds={virtualModuleIds}
+      />
+    </TooltipProvider>,
+  );
+}
+
+describe('ContentTree course management', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(addContent).mockResolvedValue({ success: true, data: { id: 'created-content' } });
+    vi.mocked(deleteContent).mockResolvedValue({ success: true, data: null });
+    vi.mocked(reorderContent).mockResolvedValue({ success: true, data: null });
+    vi.mocked(updateAssessment).mockResolvedValue({ success: true, data: null });
+    vi.mocked(updateContent).mockResolvedValue({ success: true, data: null });
+  });
+
   it('offers lesson and activity types without legacy Page or Challenge options', async () => {
     const user = userEvent.setup();
 
-    render(
-      <TooltipProvider>
-        <ContentTree
-          courseId="course-1"
-          modules={[moduleItem]}
-          allItems={[moduleItem]}
-          assessments={[]}
-        />
-      </TooltipProvider>,
-    );
+    renderContentTree();
 
     await user.click(screen.getByRole('button', { name: /add lesson/i }));
     await user.click(screen.getByRole('combobox', { name: /type/i }));
@@ -67,5 +158,531 @@ describe('ContentTree lesson creation', () => {
     expect(screen.getByRole('option', { name: 'Project' })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Page' })).not.toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Challenge' })).not.toBeInTheDocument();
+  });
+
+  it('creates a top-level module with title and description', async () => {
+    renderContentTree();
+
+    fireEvent.click(screen.getByRole('button', { name: /^add module$/i }));
+    const dialog = screen.getByRole('dialog', { name: /add module/i });
+    fireEvent.change(within(dialog).getByLabelText(/title/i), { target: { value: 'Week 02' } });
+    fireEvent.change(within(dialog).getByLabelText(/description/i), { target: { value: 'Combat systems' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /^add module$/i }));
+
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        title: 'Week 02',
+        description: 'Combat systems',
+        type: 'Lesson',
+        sortOrder: 1,
+      });
+    });
+    expect(navigationMocks.refresh).toHaveBeenCalled();
+  });
+
+  it('creates a quiz lesson inside a module with the normalized backend type', async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    await user.click(screen.getByRole('button', { name: /add lesson/i }));
+    const dialog = screen.getByRole('dialog', { name: /add lesson/i });
+    await user.type(within(dialog).getByLabelText(/title/i), 'Knowledge check');
+    await user.click(within(dialog).getByRole('combobox', { name: /type/i }));
+    await user.click(screen.getByRole('option', { name: 'Quiz' }));
+    await user.click(within(dialog).getByRole('button', { name: /^add lesson$/i }));
+
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        parentId: 'module-1',
+        title: 'Knowledge check',
+        type: 'Questionnaire',
+        sortOrder: 1,
+      });
+    });
+    expect(navigationMocks.refresh).toHaveBeenCalled();
+  }, 15_000);
+
+  it('duplicates lesson items from the content tree', async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem, secondLessonItem] });
+
+    await user.click(screen.getAllByRole('button', { name: /^duplicate$/i })[0]!);
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        parentId: 'module-1',
+        title: 'Course overview (copy)',
+        description: undefined,
+        type: 'Lesson',
+      });
+    });
+  });
+
+  it('navigates from visible lesson action icons to the content editor', async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    await user.click(screen.getByRole('button', { name: /edit lesson/i }));
+
+    expect(navigationMocks.push).toHaveBeenCalledWith('/en-US/dashboard/learning/courses/course-1/content/lesson-1');
+  });
+
+  it('duplicates modules from always-visible action icons', async () => {
+    const user = userEvent.setup();
+    renderContentTree({
+      modules: [moduleItem, secondModuleItem],
+      allItems: [moduleItem, secondModuleItem],
+    });
+
+    await user.click(screen.getAllByRole('button', { name: /duplicate module/i })[0]!);
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        parentId: undefined,
+        title: 'Week 01 (copy)',
+        description: undefined,
+        type: 'Lesson',
+      });
+    });
+  });
+
+  it('moves modules from always-visible action icons', async () => {
+    const user = userEvent.setup();
+    renderContentTree({
+      modules: [moduleItem, secondModuleItem],
+      allItems: [moduleItem, secondModuleItem],
+    });
+
+    await user.click(screen.getAllByRole('button', { name: /move module down/i })[0]!);
+    await waitFor(() => {
+      expect(reorderContent).toHaveBeenCalledWith('course-1', ['module-2', 'module-1']);
+    });
+  });
+
+  it('moves modules upward from enabled module action icons', async () => {
+    renderContentTree({
+      modules: [moduleItem, secondModuleItem],
+      allItems: [moduleItem, secondModuleItem],
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /move module up/i })[1]!);
+    await waitFor(() => {
+      expect(reorderContent).toHaveBeenCalledWith('course-1', ['module-2', 'module-1']);
+    });
+  });
+
+  it('collapses and reopens modules from the chevron trigger', () => {
+    const { container } = renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    expect(screen.getByText('Course overview')).toBeInTheDocument();
+    const trigger = container.querySelector('button[aria-expanded="true"]');
+    expect(trigger).toBeTruthy();
+
+    fireEvent.click(trigger!);
+    expect(screen.queryByText('Course overview')).not.toBeInTheDocument();
+
+    const closedTrigger = container.querySelector('button[aria-expanded="false"]');
+    expect(closedTrigger).toBeTruthy();
+    fireEvent.click(closedTrigger!);
+    expect(screen.getByText('Course overview')).toBeInTheDocument();
+  });
+
+  it('keeps add module server errors visible for retry and allows canceling', async () => {
+    vi.mocked(addContent).mockResolvedValueOnce({ success: false, error: 'Module could not be created.' });
+    renderContentTree();
+
+    fireEvent.click(screen.getByRole('button', { name: /^add module$/i }));
+    const dialog = screen.getByRole('dialog', { name: /add module/i });
+    fireEvent.change(within(dialog).getByLabelText(/title/i), { target: { value: 'Week 03' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /^add module$/i }));
+
+    expect(await screen.findByText('Module could not be created.')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('dialog', { name: /add module/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps add lesson server errors visible and lets professors cancel the dialog', async () => {
+    vi.mocked(addContent).mockResolvedValueOnce({ success: false, error: 'Lesson could not be created.' });
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    fireEvent.click(screen.getByRole('button', { name: /add lesson/i }));
+    const dialog = screen.getByRole('dialog', { name: /add lesson/i });
+    fireEvent.change(within(dialog).getByLabelText(/title/i), { target: { value: 'Broken lesson' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /^add lesson$/i }));
+
+    expect(await screen.findByText('Lesson could not be created.')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('dialog', { name: /add lesson/i })).not.toBeInTheDocument();
+  });
+
+  it('creates virtual-module content without persisting the virtual parent id', async () => {
+    renderContentTree({
+      allItems: [moduleItem, lessonItem],
+      virtualModuleIds: ['module-1'],
+    });
+
+    expect(screen.queryByRole('button', { name: /edit module/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /add content item/i }));
+    const dialog = screen.getByRole('dialog', { name: /add lesson/i });
+    fireEvent.change(within(dialog).getByLabelText(/title/i), { target: { value: 'Imported activity' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /^add lesson$/i }));
+
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        parentId: undefined,
+        title: 'Imported activity',
+        type: 'Lesson',
+        sortOrder: 1,
+      });
+    });
+  });
+
+  it('creates submodules and nested lessons inside existing lessons', async () => {
+    renderContentTree({ allItems: [moduleItem, lessonItem, subLessonItem] });
+
+    expect(screen.getByText('1 sub-items')).toBeInTheDocument();
+    expect(screen.getByText('Starter exercise')).toBeInTheDocument();
+    expect(screen.getByText('Code')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /add submodule/i }));
+    let dialog = screen.getByRole('dialog', { name: /add submodule/i });
+    fireEvent.change(within(dialog).getByLabelText(/title/i), { target: { value: 'Part A' } });
+    fireEvent.change(within(dialog).getByLabelText(/description/i), { target: { value: 'Nested foundations' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /add submodule/i }));
+
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        parentId: 'module-1',
+        title: 'Part A',
+        description: 'Nested foundations',
+        type: 'Lesson',
+        sortOrder: 1,
+      });
+    });
+
+    vi.clearAllMocks();
+    fireEvent.click(screen.getByRole('button', { name: /add to course overview/i }));
+    dialog = screen.getByRole('dialog', { name: /add lesson/i });
+    fireEvent.change(within(dialog).getByLabelText(/title/i), { target: { value: 'Nested reflection' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /^add lesson$/i }));
+
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        parentId: 'lesson-1',
+        title: 'Nested reflection',
+        type: 'Lesson',
+        sortOrder: 1,
+      });
+    });
+  });
+
+  it('keeps submodule server errors visible for retry and supports canceling', async () => {
+    vi.mocked(addContent).mockResolvedValueOnce({ success: false, error: 'Submodule could not be created.' });
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    fireEvent.click(screen.getByRole('button', { name: /add submodule/i }));
+    const dialog = screen.getByRole('dialog', { name: /add submodule/i });
+    fireEvent.change(within(dialog).getByLabelText(/title/i), { target: { value: 'Part B' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /add submodule/i }));
+
+    expect(await screen.findByText('Submodule could not be created.')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('dialog', { name: /add submodule/i })).not.toBeInTheDocument();
+  });
+
+  it('reorders lesson items from the content tree', async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem, secondLessonItem] });
+
+    await user.click(screen.getAllByRole('button', { name: /^move down$/i })[0]!);
+    await waitFor(() => {
+      expect(reorderContent).toHaveBeenCalledWith('course-1', ['lesson-2', 'lesson-1']);
+    });
+  });
+
+  it('moves lessons upward from enabled lesson action icons', async () => {
+    renderContentTree({ allItems: [moduleItem, lessonItem, secondLessonItem] });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /^move up$/i })[1]!);
+    await waitFor(() => {
+      expect(reorderContent).toHaveBeenCalledWith('course-1', ['lesson-2', 'lesson-1']);
+    });
+  });
+
+  it('handles module move server errors without refreshing', async () => {
+    vi.mocked(reorderContent).mockResolvedValueOnce({ success: false, error: 'Module order failed.' });
+    renderContentTree({
+      modules: [moduleItem, secondModuleItem],
+      allItems: [moduleItem, secondModuleItem, lessonItem, secondLessonItem],
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /move module down/i })[0]!);
+    await waitFor(() => {
+      expect(reorderContent).toHaveBeenCalledWith('course-1', ['module-2', 'module-1']);
+    });
+    expect(navigationMocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it('handles lesson move server errors without refreshing', async () => {
+    vi.mocked(reorderContent).mockResolvedValueOnce({ success: false, error: 'Lesson order failed.' });
+    renderContentTree({
+      modules: [moduleItem, secondModuleItem],
+      allItems: [moduleItem, secondModuleItem, lessonItem, secondLessonItem],
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /^move down$/i })[0]!);
+    await waitFor(() => {
+      expect(reorderContent).toHaveBeenCalledWith('course-1', ['lesson-2', 'lesson-1']);
+    });
+    expect(navigationMocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it('ignores unavailable move buttons at the module and lesson boundaries', () => {
+    renderContentTree({
+      modules: [moduleItem, secondModuleItem],
+      allItems: [moduleItem, secondModuleItem, lessonItem, secondLessonItem],
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /move module up/i })[0]!);
+    fireEvent.click(screen.getAllByRole('button', { name: /move module down/i })[1]!);
+    fireEvent.click(screen.getAllByRole('button', { name: /^move up$/i })[0]!);
+    fireEvent.click(screen.getAllByRole('button', { name: /^move down$/i })[1]!);
+
+    expect(reorderContent).not.toHaveBeenCalled();
+  });
+
+  it('deletes lesson items from the content tree', async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem, secondLessonItem] });
+
+    await user.click(screen.getAllByRole('button', { name: /^delete$/i })[0]!);
+    const deleteDialog = screen.getByRole('dialog', { name: /delete item/i });
+    expect(deleteDialog).toHaveTextContent('Course overview');
+    await user.click(within(deleteDialog).getByRole('button', { name: /^delete$/i }));
+
+    await waitFor(() => {
+      expect(deleteContent).toHaveBeenCalledWith('course-1', 'lesson-1');
+    });
+  });
+
+  it('keeps deletion errors visible for retry', async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteContent).mockResolvedValueOnce({ success: false, error: 'Content item is locked.' });
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    await user.click(screen.getByRole('button', { name: /^delete$/i }));
+    const deleteDialog = screen.getByRole('dialog', { name: /delete item/i });
+    await user.click(within(deleteDialog).getByRole('button', { name: /^delete$/i }));
+
+    expect(await screen.findByText('Content item is locked.')).toBeInTheDocument();
+  });
+
+  it('deletes modules with the module-specific confirmation copy and supports canceling deletion', async () => {
+    const user = userEvent.setup();
+    renderContentTree();
+
+    await user.click(screen.getByRole('button', { name: /delete module/i }));
+    const deleteDialog = screen.getByRole('dialog', { name: /delete module/i });
+    expect(deleteDialog).toHaveTextContent('All lessons within this module will also be deleted.');
+    fireEvent.click(within(deleteDialog).getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('dialog', { name: /delete module/i })).not.toBeInTheDocument();
+  });
+
+  it('edits modules and surfaces server-action validation failures', async () => {
+    vi.mocked(updateContent).mockResolvedValueOnce({ success: false, error: 'Module title already exists.' });
+    renderContentTree();
+
+    fireEvent.click(screen.getByRole('button', { name: /edit module/i }));
+    const dialog = screen.getByRole('dialog', { name: /edit module/i });
+    fireEvent.change(within(dialog).getByLabelText(/title/i), { target: { value: 'Week 01 revised' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        contentId: 'module-1',
+        title: 'Week 01 revised',
+        description: '',
+      });
+    });
+    expect(await screen.findByText('Module title already exists.')).toBeInTheDocument();
+  });
+
+  it('saves module edits successfully and supports canceling edits', async () => {
+    renderContentTree();
+
+    fireEvent.click(screen.getAllByRole('button', { name: /edit module/i })[0]!);
+    let dialog = screen.getByRole('dialog', { name: /edit module/i });
+    fireEvent.change(within(dialog).getByLabelText(/title/i), { target: { value: 'Week 01 updated' } });
+    fireEvent.change(within(dialog).getByLabelText(/description/i), { target: { value: 'Updated module scope' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        contentId: 'module-1',
+        title: 'Week 01 updated',
+        description: 'Updated module scope',
+      });
+    });
+    await waitFor(() => {
+      expect(navigationMocks.refresh).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /edit module/i })[0]!);
+    dialog = screen.getByRole('dialog', { name: /edit module/i });
+    fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('dialog', { name: /edit module/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps duplicate errors from refreshing the content tree', async () => {
+    vi.mocked(addContent).mockResolvedValueOnce({ success: false, error: 'Duplicate failed.' });
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    fireEvent.click(screen.getByRole('button', { name: /^duplicate$/i }));
+
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        parentId: 'module-1',
+        title: 'Course overview (copy)',
+        description: undefined,
+        type: 'Lesson',
+      });
+    });
+    expect(navigationMocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it('attaches and detaches assessments from content items', async () => {
+    const user = userEvent.setup();
+    renderContentTree({
+      allItems: [moduleItem, lessonItem],
+      assessments: availableAssessments,
+    });
+
+    await user.click(screen.getByRole('button', { name: /attach assessment/i }));
+    const attachDialog = screen.getByRole('dialog', { name: /attach assessment/i });
+    await user.click(within(attachDialog).getByRole('button', { name: /week 01 quiz/i }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        assessmentId: 'assessment-1',
+        contentId: 'lesson-1',
+      });
+    });
+
+    vi.clearAllMocks();
+    renderContentTree({
+      allItems: [moduleItem, lessonItem],
+      assessments: [{ ...availableAssessments[0], contentId: 'lesson-1' }],
+    });
+
+    await user.click(screen.getAllByRole('button', { name: /detach assessment/i })[0]!);
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        assessmentId: 'assessment-1',
+        clearContentId: true,
+      });
+    });
+  });
+
+  it('marks unavailable assessment choices and surfaces attach errors', async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateAssessment).mockResolvedValueOnce({ success: false, error: 'Assessment is already linked.' });
+    renderContentTree({
+      allItems: [moduleItem, lessonItem],
+      assessments: [
+        ...availableAssessments,
+        {
+          ...availableAssessments[0],
+          id: 'assessment-2',
+          title: 'Linked elsewhere',
+          contentId: 'other-lesson',
+        },
+      ],
+    });
+
+    await user.click(screen.getByRole('button', { name: /attach assessment/i }));
+    const attachDialog = screen.getByRole('dialog', { name: /attach assessment/i });
+    expect(within(attachDialog).getByText(/already linked to another item/i)).toBeInTheDocument();
+
+    await user.click(within(attachDialog).getByRole('button', { name: /week 01 quiz/i }));
+    expect(await screen.findByText('Assessment is already linked.')).toBeInTheDocument();
+  });
+
+  it('handles detach assessment errors and lets professors cancel the picker', async () => {
+    vi.mocked(updateAssessment).mockResolvedValueOnce({ success: false, error: 'Cannot detach assessment.' });
+    renderContentTree({
+      allItems: [moduleItem, lessonItem],
+      assessments: [{ ...availableAssessments[0], contentId: 'lesson-1' }],
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /detach assessment/i })[1]!);
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        assessmentId: 'assessment-1',
+        clearContentId: true,
+      });
+    });
+    expect(navigationMocks.refresh).not.toHaveBeenCalled();
+
+    vi.clearAllMocks();
+    renderContentTree({
+      allItems: [moduleItem, secondLessonItem],
+      assessments: availableAssessments,
+    });
+    fireEvent.click(screen.getByRole('button', { name: /attach assessment/i }));
+    const picker = screen.getByRole('dialog', { name: /attach assessment/i });
+    fireEvent.click(within(picker).getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('dialog', { name: /attach assessment/i })).not.toBeInTheDocument();
+  });
+
+  it('closes management dialogs through the dialog close affordance', () => {
+    renderContentTree({
+      modules: [moduleItem, secondModuleItem],
+      allItems: [moduleItem, secondModuleItem, lessonItem],
+      assessments: availableAssessments,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^close$/i }));
+    expect(screen.queryByRole('dialog', { name: /delete item/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole('button', { name: /edit module/i })[0]!);
+    fireEvent.click(screen.getByRole('button', { name: /^close$/i }));
+    expect(screen.queryByRole('dialog', { name: /edit module/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole('button', { name: /add submodule/i })[0]!);
+    fireEvent.click(screen.getByRole('button', { name: /^close$/i }));
+    expect(screen.queryByRole('dialog', { name: /add submodule/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /attach assessment/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^close$/i }));
+    expect(screen.queryByRole('dialog', { name: /attach assessment/i })).not.toBeInTheDocument();
+  });
+
+  it('uses subitem edit and delete actions from nested content rows', async () => {
+    renderContentTree({ allItems: [moduleItem, lessonItem, subLessonItem] });
+
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }));
+    expect(navigationMocks.push).toHaveBeenCalledWith('/en-US/dashboard/learning/courses/course-1/content/sublesson-1');
+
+    fireEvent.click(screen.getAllByRole('button', { name: /^delete$/i })[1]!);
+    const dialog = screen.getByRole('dialog', { name: /delete item/i });
+    expect(dialog).toHaveTextContent('Starter exercise');
+    fireEvent.click(within(dialog).getByRole('button', { name: /^delete$/i }));
+
+    await waitFor(() => {
+      expect(deleteContent).toHaveBeenCalledWith('course-1', 'sublesson-1');
+    });
   });
 });

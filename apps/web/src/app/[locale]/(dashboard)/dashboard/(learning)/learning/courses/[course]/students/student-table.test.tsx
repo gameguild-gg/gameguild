@@ -1,0 +1,165 @@
+import '@testing-library/jest-dom/vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { StudentTable } from './student-table';
+import { manualEnrollStudent } from '@/lib/learning/actions';
+
+Object.defineProperties(HTMLElement.prototype, {
+  hasPointerCapture: { value: vi.fn(() => false) },
+  setPointerCapture: { value: vi.fn() },
+  releasePointerCapture: { value: vi.fn() },
+  scrollIntoView: { value: vi.fn() },
+});
+
+beforeAll(() => {
+  global.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+});
+
+vi.mock('@/lib/learning/actions', () => ({
+  manualEnrollStudent: vi.fn(),
+}));
+
+const students = [
+  {
+    id: 'student-1',
+    name: 'Ada Learner',
+    email: 'ada@example.com',
+    completionPercent: 100,
+    isActive: true,
+    enrolledAt: '2026-06-01T00:00:00.000Z',
+    lastActivity: '2026-06-10T00:00:00.000Z',
+  },
+  {
+    id: 'student-2',
+    name: 'Grace Builder',
+    email: 'grace@example.com',
+    completionPercent: 60,
+    isActive: true,
+    enrolledAt: '2026-06-02T00:00:00.000Z',
+    lastActivity: '2026-06-11T00:00:00.000Z',
+  },
+  {
+    id: 'student-3',
+    name: 'Alan Inactive',
+    email: 'alan@example.com',
+    completionPercent: 20,
+    isActive: false,
+    enrolledAt: '2026-06-03T00:00:00.000Z',
+    lastActivity: '2026-06-04T00:00:00.000Z',
+  },
+];
+
+describe('StudentTable', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(manualEnrollStudent).mockResolvedValue({ success: true, data: { id: 'enrollment-1' } });
+  });
+
+  it('filters enrolled students by search and status', async () => {
+    const user = userEvent.setup();
+
+    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
+
+    expect(screen.getByText('3 students enrolled')).toBeInTheDocument();
+    expect(screen.getByText('Ada Learner')).toBeInTheDocument();
+    expect(screen.getByText('Grace Builder')).toBeInTheDocument();
+    expect(screen.getByText('Alan Inactive')).toBeInTheDocument();
+
+    await user.type(screen.getByPlaceholderText(/search by name or email/i), 'grace');
+
+    expect(screen.queryByText('Ada Learner')).not.toBeInTheDocument();
+    expect(screen.getByText('Grace Builder')).toBeInTheDocument();
+
+    await user.clear(screen.getByPlaceholderText(/search by name or email/i));
+    await user.click(screen.getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: /inactive/i }));
+
+    expect(screen.getByText('Alan Inactive')).toBeInTheDocument();
+    expect(screen.queryByText('Ada Learner')).not.toBeInTheDocument();
+  });
+
+  it('supports bulk selection and row action menus', async () => {
+    const user = userEvent.setup();
+
+    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
+
+    const table = screen.getByRole('table');
+    await user.click(within(table).getAllByRole('checkbox')[0]);
+
+    expect(screen.getByText('3 student(s) selected')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send message/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^remove$/i })).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: '' })[0]);
+    expect(screen.getByText('View Profile')).toBeInTheDocument();
+    expect(screen.getByText('View Progress')).toBeInTheDocument();
+    expect(screen.getByText('Remove from Course')).toBeInTheDocument();
+  });
+
+  it('supports individual selection, bulk clearing, filtered empty states, and enrollment cancel', async () => {
+    const user = userEvent.setup();
+
+    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
+
+    const table = screen.getByRole('table');
+    const checkboxes = within(table).getAllByRole('checkbox');
+
+    await user.click(checkboxes[1]);
+    expect(screen.getByText('1 student(s) selected')).toBeInTheDocument();
+
+    await user.click(checkboxes[1]);
+    expect(screen.queryByText(/student\(s\) selected/i)).not.toBeInTheDocument();
+
+    await user.click(checkboxes[0]);
+    expect(screen.getByText('3 student(s) selected')).toBeInTheDocument();
+    await user.click(checkboxes[0]);
+    expect(screen.queryByText(/student\(s\) selected/i)).not.toBeInTheDocument();
+
+    await user.type(screen.getByPlaceholderText(/search by name or email/i), 'nobody');
+    expect(screen.getByText('No students found')).toBeInTheDocument();
+    expect(screen.getByText('Try adjusting your search or filter criteria.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /enroll student/i }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('manually enrolls an existing student and closes the dialog on success', async () => {
+    render(<StudentTable courseId="course-1" students={[]} total={0} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /enroll student/i }));
+    fireEvent.change(screen.getByLabelText(/^student$/i), { target: { value: 'new-student@example.com' } });
+    fireEvent.change(screen.getByLabelText(/cohort id/i), { target: { value: 'cohort-1' } });
+    fireEvent.click(screen.getByRole('button', { name: /enroll student$/i }));
+
+    await waitFor(() => {
+      expect(manualEnrollStudent).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        userId: 'new-student@example.com',
+        cohortId: 'cohort-1',
+      });
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
+  it('keeps the manual enrollment dialog open when the API returns a validation error', async () => {
+    vi.mocked(manualEnrollStudent).mockResolvedValueOnce({ success: false, error: 'Student was not found.' });
+
+    render(<StudentTable courseId="course-1" students={[]} total={0} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /enroll student/i }));
+    fireEvent.change(screen.getByLabelText(/^student$/i), { target: { value: 'missing@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: /enroll student$/i }));
+
+    expect(await screen.findByText('Student was not found.')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+});

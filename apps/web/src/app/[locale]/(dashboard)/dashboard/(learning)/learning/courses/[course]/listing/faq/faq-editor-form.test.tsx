@@ -56,4 +56,37 @@ describe('FaqEditorForm', () => {
     });
     expect(screen.getByText('FAQ updated successfully.')).toBeInTheDocument();
   });
+
+  it('supports empty FAQ setup, adding questions, removing down to one draft, and API errors', async () => {
+    updateCourseFaqMock.mockResolvedValueOnce({ success: false, error: 'FAQ validation failed.' });
+
+    render(<FaqEditorForm courseId="course-1" items={[]} />);
+
+    expect(screen.getByText('Question 1')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/^question$/i), { target: { value: 'Is there a certificate?' } });
+    fireEvent.change(screen.getByLabelText(/^answer$/i), { target: { value: 'Yes, after course completion.' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /add question/i }));
+    expect(screen.getByText('Question 2')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /remove question 2/i }));
+    expect(screen.queryByText('Question 2')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /remove question 1/i }));
+    expect(screen.getByText('Question 1')).toBeInTheDocument();
+    expect(screen.getByLabelText(/^question$/i)).toHaveValue('');
+
+    fireEvent.click(screen.getByRole('button', { name: /save faq/i }));
+
+    await waitFor(() => {
+      expect(updateCourseFaqMock).toHaveBeenCalledWith('course-1', [
+        expect.objectContaining({
+          question: '',
+          answer: '',
+          category: 'Course details',
+        }),
+      ]);
+    });
+    expect(screen.getByText('FAQ validation failed.')).toBeInTheDocument();
+  });
 });
