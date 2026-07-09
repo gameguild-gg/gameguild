@@ -1,16 +1,13 @@
-import type { ShikiTheme } from "@/components/block-content-editor/extras/code-studio/types"
 import type { ProjectMode, NodeRestrictions } from "./project-modes"
 
 // Project-level preferences structure
 export interface ProjectPreferences {
   global: {
-    shikiTheme?: ShikiTheme
     mode?: ProjectMode
     restrictions?: NodeRestrictions
   }
   nodes: {
     [nodeType: string]: {
-      shikiTheme?: ShikiTheme
       mode?: ProjectMode
       restrictions?: NodeRestrictions
     }
@@ -23,7 +20,6 @@ type NodeOverridableKey = keyof ProjectPreferences['nodes'][string]
 // Default preferences
 export const DEFAULT_PROJECT_PREFERENCES: ProjectPreferences = {
   global: {
-    shikiTheme: "github",
     mode: "free-page",
     restrictions: {
       blocks: {

@@ -40,11 +40,12 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
         showFeedback={showFeedback}
       />
 
-      {/* Submit button */}
+      {/* Submit button - h-12 ensures Submit/Feedback/Submitted all share
+          the same height so swapping them does not shift sibling blocks. */}
       {!showFeedback && (
         <button
           onClick={checkAnswers}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+          className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
         >
           Submit Answer
         </button>
@@ -62,9 +63,9 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
         />
       )}
 
-      {/* Submitted without feedback */}
+      {/* Submitted without feedback - h-12 matches Submit button height */}
       {showFeedback && !(entry.settings.showFeedback ?? true) && (
-        <div className="flex items-center justify-between gap-3 rounded-lg mt-3 px-4 py-3 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
+        <div className="flex items-center justify-between gap-3 rounded-lg px-4 h-12 py-0 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
           <span className="font-medium">Answer submitted.</span>
           {entry.settings.allowRetry && (
             <button

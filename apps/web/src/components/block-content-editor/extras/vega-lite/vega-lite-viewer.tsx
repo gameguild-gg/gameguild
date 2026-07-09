@@ -73,6 +73,17 @@ export function VegaLiteViewer({
 
   // Container ref for zoom/pan functionality
   const containerRef = useRef<HTMLDivElement>(null)
+  const fullscreenContainerRef = useRef<HTMLDivElement>(null)
+
+  // Refs espelhando estado para uso em listeners nativos (zoom-to-cursor).
+  const zoomRef = useRef(zoom)
+  const positionRef = useRef(position)
+  const fullscreenZoomRef = useRef(fullscreenZoom)
+  const fullscreenPositionRef = useRef(fullscreenPosition)
+  useEffect(() => { zoomRef.current = zoom }, [zoom])
+  useEffect(() => { positionRef.current = position }, [position])
+  useEffect(() => { fullscreenZoomRef.current = fullscreenZoom }, [fullscreenZoom])
+  useEffect(() => { fullscreenPositionRef.current = fullscreenPosition }, [fullscreenPosition])
 
   // Render chart when parsedSpec is available
   useEffect(() => {
@@ -179,7 +190,7 @@ export function VegaLiteViewer({
 
   // Fullscreen zoom control functions
   const handleFullscreenZoomIn = () => {
-    setFullscreenZoom((prev) => Math.min(prev + 50, 500))
+    setFullscreenZoom((prev) => Math.min(prev + 50, 1000))
   }
 
   const handleFullscreenZoomOut = () => {
@@ -226,17 +237,73 @@ export function VegaLiteViewer({
     }
   }
 
-  // Fullscreen wheel zoom for smoother zoom experience
-  const handleFullscreenWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
+  // Fullscreen wheel zoom (no-op no React; lógica real no listener nativo).
+  const handleFullscreenWheel = (_e: React.WheelEvent) => {
+    // no-op
+  }
+
+  // Listener wheel nativo non-passive para o modal fullscreen.
+  // Zoom-to-cursor: ancora o ponto sob o cursor durante o zoom.
+  useEffect(() => {
+    if (!isFullscreen) return
+    const container = fullscreenContainerRef.current
+    if (!container) return
+    const onWheelNative = (e: WheelEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return
       e.preventDefault()
-      const delta = e.deltaY > 0 ? -25 : 25 // Larger increments for fullscreen
-      setFullscreenZoom((prev) => {
-        const newZoom = Math.max(100, Math.min(500, prev + delta))
-        return newZoom
+      const oldZoom = fullscreenZoomRef.current
+      // Multiplicativo: cada tick = 20% do zoom atual.
+      const factor = e.deltaY > 0 ? 1 / 1.25 : 1.25
+      const newZoom = Math.round(Math.max(100, Math.min(1000, oldZoom * factor)))
+      if (newZoom === oldZoom) return
+      const rect = container.getBoundingClientRect()
+      const ox = e.clientX - (rect.left + rect.width / 2)
+      const oy = e.clientY - (rect.top + rect.height / 2)
+      const ratio = newZoom / oldZoom
+      const pos = fullscreenPositionRef.current
+      setFullscreenZoom(newZoom)
+      setFullscreenPosition({
+        x: ox - (ox - pos.x) * ratio,
+        y: oy - (oy - pos.y) * ratio,
       })
     }
-  }
+    container.addEventListener("wheel", onWheelNative, { passive: false })
+    return () => container.removeEventListener("wheel", onWheelNative)
+  }, [isFullscreen])
+
+  // Atalhos de teclado para zoom no modo fullscreen (+ / - / 0).
+  useEffect(() => {
+    if (!isFullscreen) return
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === "INPUT" || tag === "TEXTAREA") return
+      if (e.key === "+" || e.key === "=") {
+        e.preventDefault()
+        setFullscreenZoom((prev) => Math.min(1000, prev + 25))
+      } else if (e.key === "-" || e.key === "_") {
+        e.preventDefault()
+        setFullscreenZoom((prev) => Math.max(100, prev - 25))
+      } else if (e.key === "0") {
+        e.preventDefault()
+        setFullscreenZoom(150)
+        setFullscreenPosition({ x: 0, y: 0 })
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [isFullscreen])
+
+  // Trava o scroll da página enquanto o modal fullscreen está aberto.
+  // Sem isso, scroll do mouse (sem Ctrl) dentro do modal propaga e rola a
+  // página por trás.
+  useEffect(() => {
+    if (!isFullscreen) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prevOverflow
+    }
+  }, [isFullscreen])
 
   // Pan/Drag control functions
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -273,17 +340,39 @@ export function VegaLiteViewer({
     }
   }
 
-  // Wheel zoom for smoother zoom experience
-  const handleWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
+  // Wheel zoom (no-op no React; lógica real no listener nativo).
+  const handleWheel = (_e: React.WheelEvent) => {
+    // no-op
+  }
+
+  // Listener wheel nativo non-passive — Ctrl+scroll deve zoomar o chart,
+  // não a página. preventDefault só funciona em listener non-passive.
+  // Zoom-to-cursor: ancora o ponto sob o cursor durante o zoom.
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const onWheelNative = (e: WheelEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return
       e.preventDefault()
-      const delta = e.deltaY > 0 ? -5 : 5 // Smaller increments for smooth zoom
-      setZoom((prev) => {
-        const newZoom = Math.max(100, Math.min(300, prev + delta))
-        return newZoom
+      const oldZoom = zoomRef.current
+      // Multiplicativo: cada tick = 10% do zoom atual.
+      const factor = e.deltaY > 0 ? 1 / 1.1 : 1.1
+      const newZoom = Math.round(Math.max(100, Math.min(300, oldZoom * factor)))
+      if (newZoom === oldZoom) return
+      const rect = container.getBoundingClientRect()
+      const ox = e.clientX - (rect.left + rect.width / 2)
+      const oy = e.clientY - (rect.top + rect.height / 2)
+      const ratio = newZoom / oldZoom
+      const pos = positionRef.current
+      setZoom(newZoom)
+      setPosition({
+        x: ox - (ox - pos.x) * ratio,
+        y: oy - (oy - pos.y) * ratio,
       })
     }
-  }
+    container.addEventListener("wheel", onWheelNative, { passive: false })
+    return () => container.removeEventListener("wheel", onWheelNative)
+  }, [])
 
   if (!spec) {
     return (
@@ -416,13 +505,13 @@ export function VegaLiteViewer({
         )}
       </div>
 
-      {/* Fullscreen Modal */}
+      {/* Fullscreen Modal — ocupa página inteira */}
       {isFullscreen && allowFullscreen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-900 shadow-2xl w-screen h-screen flex flex-col">
             {/* Fullscreen Header */}
             <div className="flex items-center justify-between gap-4 p-4 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
+              <div className="flex items-center gap-2 min-w-0 shrink-0">
                 <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
                   {title || "Vega-Lite Chart"}
@@ -431,26 +520,26 @@ export function VegaLiteViewer({
               
               {/* Zoom Slider Bar - Centered */}
               <div className="flex items-center gap-3 flex-1 max-w-md mx-auto">
-                <ZoomOut className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                <ZoomOut className="h-4 w-4 text-gray-500 dark:text-gray-400 shrink-0" />
                 <input
                   type="range"
                   min="100"
-                  max="500"
+                  max="1000"
                   step="25"
                   value={fullscreenZoom}
                   onChange={(e) => setFullscreenZoom(Number(e.target.value))}
                   className="flex-1 h-2 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 dark:[&::-webkit-slider-thumb]:bg-blue-400 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-blue-600 dark:[&::-moz-range-thumb]:bg-blue-400 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
                   style={{
                     background: isDark
-                      ? `linear-gradient(to right, rgb(96, 165, 250) 0%, rgb(96, 165, 250) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(55, 65, 81) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(55, 65, 81) 100%)`
-                      : `linear-gradient(to right, rgb(37, 99, 235) 0%, rgb(37, 99, 235) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(229, 231, 235) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(229, 231, 235) 100%)`,
+                      ? `linear-gradient(to right, rgb(96, 165, 250) 0%, rgb(96, 165, 250) ${((fullscreenZoom - 100) / 900) * 100}%, rgb(55, 65, 81) ${((fullscreenZoom - 100) / 900) * 100}%, rgb(55, 65, 81) 100%)`
+                      : `linear-gradient(to right, rgb(37, 99, 235) 0%, rgb(37, 99, 235) ${((fullscreenZoom - 100) / 900) * 100}%, rgb(229, 231, 235) ${((fullscreenZoom - 100) / 900) * 100}%, rgb(229, 231, 235) 100%)`,
                   }}
                 />
-                <ZoomIn className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                <ZoomIn className="h-4 w-4 text-gray-500 dark:text-gray-400 shrink-0" />
               </div>
 
               {/* Fullscreen Zoom Controls */}
-              <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="flex items-center gap-4 shrink-0">
                 <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-md p-1">
                   <Button
                     variant="ghost"
@@ -469,7 +558,7 @@ export function VegaLiteViewer({
                     variant="ghost"
                     size="sm"
                     onClick={handleFullscreenZoomIn}
-                    disabled={fullscreenZoom >= 500}
+                    disabled={fullscreenZoom >= 1000}
                     className="h-8 w-8 p-0"
                     title="Zoom In"
                   >
@@ -499,7 +588,8 @@ export function VegaLiteViewer({
 
             {/* Fullscreen Content */}
             <div className="flex-1 p-6 overflow-auto bg-gray-50 dark:bg-gray-900">
-              <div 
+              <div
+                ref={fullscreenContainerRef}
                 className={`flex justify-center items-center h-full ${
                   fullscreenZoom > 100 ? "cursor-move" : "cursor-default"
                 }`}

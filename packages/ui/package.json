@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/ui",
-  "version": "3.8.0",
+  "version": "3.10.0",
   "type": "module",
   "description": "UI components and utilities for the website and related projects",
   "author": "GameGuild <contact@gameguild.gg>",

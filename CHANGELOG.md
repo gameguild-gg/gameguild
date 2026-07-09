@@ -1,3 +1,52 @@
+# [3.10.0](https://github.com/gameguild-gg/gameguild/compare/v3.9.0...v3.10.0) (2026-05-25)
+
+### Features
+
+* **block-content-editor:** math-live with latex for quiz with formula ([018f36c](https://github.com/gameguild-gg/gameguild/commit/018f36c787d7a238c17a751e41155bfcc03d82b0))
+* **block-content-editor:** lexical top menu always visible ([1cd496f](https://github.com/gameguild-gg/gameguild/commit/1cd496f70ae834d29604498a411fcce3db0d4471))
+* **block-content-editor:** monaco preferences for vega node ([7c71835](https://github.com/gameguild-gg/gameguild/commit/7c71835048b7cc59324a7424159dfcf7d91e9fc8))
+* **block-content-editor:** monaco preferences for studio node ([cd52a61](https://github.com/gameguild-gg/gameguild/commit/cd52a610ab71f49860b54a5e3c329b74d152fdd5))
+* **block-content-editor:** monaco preferences for html node ([bc0f711](https://github.com/gameguild-gg/gameguild/commit/bc0f711024923265fe7d1147f699206cfd8f1eed))
+* **block-content-editor:** monaco preferences for markdown node ([7b29bbd](https://github.com/gameguild-gg/gameguild/commit/7b29bbd5854a70fda9c2e7e92d66423f9729318c))
+* **block-content-editor:** monaco preferences for mermaid node ([e8b259e](https://github.com/gameguild-gg/gameguild/commit/e8b259e949a50a10e0646a54dd7d4a75b8cf96ee))
+* **block-content-editor:** monaco global and preview preferences ([1751f10](https://github.com/gameguild-gg/gameguild/commit/1751f10fbf9ce09e5ee557ca257d35b72bfcb6da))
+* **block-content-editor:** rectangle style for monaco ([4235806](https://github.com/gameguild-gg/gameguild/commit/423580620cffbceb67a12a14f1e5df0076285210))
+* **block-content-editor:** shiki and settings menu for mermaid node ([83c5326](https://github.com/gameguild-gg/gameguild/commit/83c5326586f2725f93557d98301c833a4590acd7))
+* **block-content-editor:** shiki and settings menu for code-studio node ([282c023](https://github.com/gameguild-gg/gameguild/commit/282c0233ac37a9c0862d7f56d91fc27cca291092))
+* **block-content-editor:** shiki and settings menu for markdown node ([46da15d](https://github.com/gameguild-gg/gameguild/commit/46da15d5de987769bde2c472ac8a17b4513b8f3a))
+* **block-content-editor:** shiki and settings menu for rich, html node ([bb4ff55](https://github.com/gameguild-gg/gameguild/commit/bb4ff550794ce2e4358c224fd537231144978489))
+* **block-content-editor:** shiki and settings menu for vega node ([5b4220c](https://github.com/gameguild-gg/gameguild/commit/5b4220cfd5d584c3b621a351c06978ea0f89a4f2))
+* **block-content-editor:** settings menu for quiz, media and othernodes ([072e196](https://github.com/gameguild-gg/gameguild/commit/072e196767d8aca6ea38bd95df51b20d0cf6715a))
+* **block-content-editor:** block editor unified for all nodes ([b57ef5f](https://github.com/gameguild-gg/gameguild/commit/b57ef5fbe0120b44ac6aa8c05267e6d5d5de6f99))
+* **block-content-editor:** resible editor in preview mode ([bb16fcb](https://github.com/gameguild-gg/gameguild/commit/bb16fcb7214697971bdea17ed97ef5a28dc14ec4))
+* **block-content-editor:** code studio node editor redefined experience ([14b251f](https://github.com/gameguild-gg/gameguild/commit/14b251f092d0876e742f354065aa8b95e071b120))
+
+### Bug Fixes
+
+* **block-content-editor:** lexical lists ([995923b](https://github.com/gameguild-gg/gameguild/commit/995923be5dafa74f9749759db99783fc55589d73))
+* **block-content-editor:** quiz preview button equal height ([dbb79fc](https://github.com/gameguild-gg/gameguild/commit/dbb79fccd874f82c5e8e4236f0caefd5282e3c6c))
+* **block-content-editor:** code-studio does not open on its own. ([fc122f5](https://github.com/gameguild-gg/gameguild/commit/fc122f5249a011593b46c54a54c2e089844dda0f))
+* **block-content-editor:** race condition over blocks ([ba6bde8](https://github.com/gameguild-gg/gameguild/commit/ba6bde8d9cd3cd3acdf945f7b6c21435171671bd))
+* **block-content-editor:** can't access property "domNode" ([4546262](https://github.com/gameguild-gg/gameguild/commit/4546262cc2da7024b0f771cc043d2d0292189870))
+* **block-content-editor:** monaco overflowingContentWidgets ([66291cf](https://github.com/gameguild-gg/gameguild/commit/66291cfb0719089f2c26c3c8b2b750d5e395d923))
+* **block-content-editor:** tailwind classes fix ([8afdfd3](https://github.com/gameguild-gg/gameguild/commit/8afdfd36f28fc2d4a6ac7ca47a0f29b7f8b2af1a))
+* **block-content-editor:** focus folder only opens in focus editor ([8a5f74a](https://github.com/gameguild-gg/gameguild/commit/8a5f74a507bc200a03c8414b3a43ab5261f5e024))
+* **block-content-editor:** focus editor only multiple form ([a46e748](https://github.com/gameguild-gg/gameguild/commit/a46e7482bf0a4cd0b516c7d417e27387921e9fef))
+* **block-content-editor:** only one full and focus editor for display ([c2e8054](https://github.com/gameguild-gg/gameguild/commit/c2e8054b3e79f79544e4ecdc9c0a725ef1753b13))
+* **block-content-editor:** focus and full editor opens files ([f7f033d](https://github.com/gameguild-gg/gameguild/commit/f7f033d3b7a73813dd424e9b48221708e3b2df73))
+* **block-content-editor:** delete dialog for remove displays in studio ([43e92be](https://github.com/gameguild-gg/gameguild/commit/43e92bed8d62523bb64fc6e4e120944497d51b67))
+
+# [3.9.0](https://github.com/gameguild-gg/gameguild/compare/v3.8.0...v3.9.0) (2026-05-20)
+
+### Features
+
+* **block-content-editor:** static-viewer Direct Folder and file Section ([f98aa1e](https://github.com/gameguild-gg/gameguild/commit/f98aa1e4c8dc7e0dda955c5563c96f63ebbd5d63))
+
+### Bug Fixes
+
+* **block-content-editor:** scroll bar involuntary ([b2bfba8](https://github.com/gameguild-gg/gameguild/commit/b2bfba834282bd74c4dbefb35fcd22a67a2c5c10))
+* **block-content-editor:** import project from folder ([9b8932e](https://github.com/gameguild-gg/gameguild/commit/9b8932ef326705fa64e10f0e8eab4364ff80ffc4))
+
 # [3.8.0](https://github.com/gameguild-gg/gameguild/compare/v3.7.3...v3.8.0) (2026-05-19)
 
 ### Features

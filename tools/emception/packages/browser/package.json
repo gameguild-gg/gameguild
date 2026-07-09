@@ -1,5 +1,5 @@
 {
-  "version": "3.8.0",
+  "version": "3.10.0",
   "name": "@gameguild/emception-browser",
   "description": "Browser runtime adapter for emception: Web Worker spawn, IDB workspace store, OffscreenCanvas helpers, COI preflight.",
   "license": "MIT",

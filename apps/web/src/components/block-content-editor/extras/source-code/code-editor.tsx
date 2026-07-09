@@ -196,6 +196,8 @@ export function CodeEditor({
           fontSize: 14,
           scrollBeyondLastLine: false,
           automaticLayout: true,
+          // Float hovers/suggest widgets above the modal chrome.
+          fixedOverflowWidgets: true,
           quickSuggestions: isAutocompleteEnabled !== false,
           suggestOnTriggerCharacters: isAutocompleteEnabled !== false,
           acceptSuggestionOnEnter: isAutocompleteEnabled !== false ? "on" : "off",

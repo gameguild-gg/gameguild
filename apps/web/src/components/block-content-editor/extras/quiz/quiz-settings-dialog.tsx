@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from "react"
 import { useForm, FormProvider } from "react-hook-form"
-import { X, BookOpen, Save, FileText, Users, RotateCcw } from "lucide-react"
+import { BookOpen, Save, FileText, Users, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,6 +18,8 @@ import { QuizTypeSelector } from "./quiz-type-selector"
 import { QuizRenderer } from "./renderers/quiz-renderer"
 import { QuizFeedback } from "./quiz-feedback"
 import { useQuizAnswers } from "./hooks/use-quiz-answers"
+import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
+import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 import {
   type QuizEntry,
   QuizEntryType,
@@ -104,6 +106,7 @@ function getTypeLabel(type: QuizEntryType): string {
 
 export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSettingsDialogProps) {
   const [showTypeSelector, setShowTypeSelector] = useState(!entry.stem)
+  const settings = useEditorSettings("quiz")
 
   const form = useForm<QuizEntry>({
     defaultValues: entry,
@@ -128,12 +131,6 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
     if (isOpen) {
       reset(entry)
       setShowTypeSelector(!entry.stem)
-      document.body.style.overflow = "hidden"
-      document.body.style.pointerEvents = "none"
-    }
-    return () => {
-      document.body.style.overflow = ""
-      document.body.style.pointerEvents = ""
     }
   }, [isOpen, entry, reset])
 
@@ -143,15 +140,11 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
   }
 
   const onSubmit = (formData: QuizEntry) => {
-    document.body.style.overflow = ""
-    document.body.style.pointerEvents = ""
     onSave(formData)
     onClose()
   }
 
   const handleClose = () => {
-    document.body.style.overflow = ""
-    document.body.style.pointerEvents = ""
     onClose()
   }
 
@@ -160,26 +153,13 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
   const EditorComponent = getEditorComponent(currentEntry.type)
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      style={{ pointerEvents: "auto" }}
-      onClick={handleClose}
+    <BlockEditorShell
+      settings={settings}
+      includeMonacoTheme={false}
+      onClose={handleClose}
+      icon={<BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+      title="Quiz Builder"
     >
-      <div
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col rounded-lg"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded-t-lg">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Quiz Builder</h2>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleClose} className="hover:bg-gray-100 dark:hover:bg-gray-800">
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
         {showTypeSelector && (
           <QuizTypeSelector onSelect={handleTypeSelect} onCancel={() => setShowTypeSelector(false)} />
         )}
@@ -321,12 +301,12 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                             showFeedback={showFeedback}
                           />
 
-                          {/* Submit button */}
+                          {/* Submit button - h-12 matches Feedback/Submitted height */}
                           {!showFeedback && (
                             <button
                               type="button"
                               onClick={checkAnswers}
-                              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 rounded-lg transition-colors"
                             >
                               Submit Answer
                             </button>
@@ -344,9 +324,9 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                             />
                           )}
 
-                          {/* Submitted without feedback */}
+                          {/* Submitted without feedback - h-12 matches Submit button height */}
                           {showFeedback && !(currentEntry.settings.showFeedback ?? true) && (
-                            <div className="flex items-center justify-between gap-3 rounded-lg mt-3 px-4 py-3 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
+                            <div className="flex items-center justify-between gap-3 rounded-lg px-4 h-12 py-0 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
                               <span className="font-medium">Answer submitted.</span>
                               {currentEntry.settings.allowRetry ? (
                                 <button
@@ -395,7 +375,6 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
             </form>
           </FormProvider>
         )}
-      </div>
-    </div>
+    </BlockEditorShell>
   )
 }

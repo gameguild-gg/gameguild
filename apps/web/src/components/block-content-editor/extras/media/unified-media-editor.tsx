@@ -4,8 +4,10 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, Save, Image, Video, Music, FileText, Eye, Grid } from "lucide-react"
+import { Save, Image, Video, Music, FileText, Eye, Grid } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
+import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 import { MediaPreview } from "./media-preview"
 import { ImageOptions } from "./image-options"
 import { VideoOptions } from "./video-options"
@@ -52,6 +54,7 @@ export function UnifiedMediaEditor({
   const [localData, setLocalData] = useState<BaseMediaData>(data)
   const [urlDetectionEnabled, setUrlDetectionEnabled] = useState(true)
   const [activeTab, setActiveTab] = useState<string>("media")
+  const settings = useEditorSettings("media")
   
   // Only allow gallery mode for images (video/audio always single)
   const canUseGallery = data.type === "image"
@@ -85,19 +88,6 @@ export function UnifiedMediaEditor({
       setLocalData(prev => ({ ...prev, src: "" }))
     }
   }, [localGalleryItems, isGalleryMode])
-
-  // Block body scroll and pointer events when modal is open
-  useEffect(() => {
-    // Disable scroll and pointer events on body
-    document.body.style.overflow = 'hidden'
-    document.body.style.pointerEvents = 'none'
-    
-    // Cleanup on unmount - always restore to empty string (default)
-    return () => {
-      document.body.style.overflow = ''
-      document.body.style.pointerEvents = ''
-    }
-  }, [])
 
   // Auto-detect embed type when URL changes
   useEffect(() => {
@@ -155,10 +145,6 @@ export function UnifiedMediaEditor({
   }
 
   const handleSave = () => {
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
-    
     // Filter out items without src that are not placeholders
     const validItems = localGalleryItems.filter(item => 
       item.isPlaceholder || (item.src && item.src.trim() !== "")
@@ -194,10 +180,6 @@ export function UnifiedMediaEditor({
   }
 
   const handleClose = () => {
-    // Restore body styles before closing
-    document.body.style.overflow = ''
-    document.body.style.pointerEvents = ''
-    
     if (onClose) {
       onClose()
     }
@@ -249,80 +231,73 @@ export function UnifiedMediaEditor({
   }
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      style={{ pointerEvents: 'auto' }}
-      onClick={handleClose}
-      onMouseDown={(e) => e.stopPropagation()}
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') {
-          handleClose()
-        }
-        // Prevent all keyboard events from propagating to the editor
-        e.stopPropagation()
-      }}
-    >
-      <div 
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
-        style={{ pointerEvents: 'auto' }}
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-        onKeyUp={(e) => e.stopPropagation()}
-        onKeyPress={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center gap-2">
-            {getHeaderIcon()}
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{getMediaTitle()}</h2>
-            
-            {/* Gallery Info Display */}
-            {isGalleryMode ? (
-              <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-300 dark:border-gray-600">
-                <span className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                  Items: <span className="font-medium text-gray-800 dark:text-gray-200">{localGalleryItems.length}</span>
-                </span>
-                <span className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
-                  Columns: <span className="font-medium text-blue-600 dark:text-blue-400">{localColumns}</span>
-                </span>
-              </div>
-            ) : (
-              <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-300 dark:border-gray-600">
-              <span className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                Type: <span className="font-medium text-gray-800 dark:text-gray-200 capitalize">{localData.type}</span>
+    <BlockEditorShell
+      settings={settings}
+      includeMonacoTheme={false}
+      onClose={handleClose}
+      icon={getHeaderIcon()}
+      title={getMediaTitle()}
+      headerMeta={
+        isGalleryMode ? (
+          <>
+            <span className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+              Items: <span className="font-medium text-gray-800 dark:text-gray-200">{localGalleryItems.length}</span>
+            </span>
+            <span className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
+              Columns: <span className="font-medium text-blue-600 dark:text-blue-400">{localColumns}</span>
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+              Type: <span className="font-medium text-gray-800 dark:text-gray-200 capitalize">{localData.type}</span>
+            </span>
+            {localData.embedType && localData.embedType !== "direct" && (
+              <span className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded flex items-center gap-1">
+                <span className="font-medium text-blue-600 dark:text-blue-400 capitalize">{localData.embedType}</span>
+                {urlDetectionEnabled && <span className="text-xs">🔍</span>}
               </span>
-              {localData.embedType && localData.embedType !== "direct" && (
-                <span className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded flex items-center gap-1">
-                  <span className="font-medium text-blue-600 dark:text-blue-400 capitalize">{localData.embedType}</span>
-                  {urlDetectionEnabled && <span className="text-xs">🔍</span>}
-                </span>
-              )}
-              {localData.embedAudioType && localData.embedAudioType !== "direct" && (
-                <span className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded flex items-center gap-1">
-                  <span className="font-medium text-blue-600 dark:text-blue-400 capitalize">{localData.embedAudioType}</span>
-                  {urlDetectionEnabled && <span className="text-xs">🔍</span>}
-                </span>
-              )}
-              {localData.embedType === "direct" && localData.type === "video" && localData.videoType && (
-                <span className="text-sm text-gray-600 dark:text-gray-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">
-                  <span className="font-medium text-green-600 dark:text-green-400">{localData.videoType}</span>
-                </span>
-              )}
-              {localData.embedAudioType === "direct" && localData.type === "audio" && localData.audioType && (
-                <span className="text-sm text-gray-600 dark:text-gray-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">
-                  <span className="font-medium text-green-600 dark:text-green-400">{localData.audioType}</span>
-                </span>
-              )}
-              </div>
             )}
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleClose} className="hover:bg-gray-100 dark:hover:bg-gray-800">
-            <X className="h-4 w-4" />
+            {localData.embedAudioType && localData.embedAudioType !== "direct" && (
+              <span className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded flex items-center gap-1">
+                <span className="font-medium text-blue-600 dark:text-blue-400 capitalize">{localData.embedAudioType}</span>
+                {urlDetectionEnabled && <span className="text-xs">🔍</span>}
+              </span>
+            )}
+            {localData.embedType === "direct" && localData.type === "video" && localData.videoType && (
+              <span className="text-sm text-gray-600 dark:text-gray-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">
+                <span className="font-medium text-green-600 dark:text-green-400">{localData.videoType}</span>
+              </span>
+            )}
+            {localData.embedAudioType === "direct" && localData.type === "audio" && localData.audioType && (
+              <span className="text-sm text-gray-600 dark:text-gray-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">
+                <span className="font-medium text-green-600 dark:text-green-400">{localData.audioType}</span>
+              </span>
+            )}
+          </>
+        )
+      }
+      footer={
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+          >
+            <Save className="h-4 w-4" />
+            {isGalleryMode ? "Save Gallery" : "Save Media"}
           </Button>
         </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex min-h-0">
+      }
+    >
+      {/* Main Content */}
+      <div className="flex-1 flex min-h-0">
           {/* Left Panel - Configuration */}
           <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-gray-900">
             <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
@@ -474,27 +449,6 @@ export function UnifiedMediaEditor({
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={handleClose}
-              className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-            >
-              <Save className="h-4 w-4" />
-              {isGalleryMode ? "Save Gallery" : "Save Media"}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </BlockEditorShell>
   )
 }

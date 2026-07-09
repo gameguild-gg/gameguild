@@ -5,8 +5,8 @@ import { useImmer } from "use-immer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, Save, Code2, Menu, Lock, Layout } from "lucide-react"
-import type { CodeStudioData, CodeFile, FileTreeFolder, PanelConfig, DisplayConfig, PanelType, AspectRatio, ShikiTheme } from "./types"
+import { Save, Code2, Menu, Lock, Layout } from "lucide-react"
+import type { CodeStudioData, CodeFile, FileTreeFolder, LeafPanel, DisplayConfig, PanelType } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
 import type { XTermTerminalHandle } from "./xterm-terminal"
@@ -15,10 +15,10 @@ import { useTheme } from "next-themes"
 import { FileExplorer } from "./file-system/file-explorer"
 import { FileTabs } from "./file-tabs"
 import { LanguageSelector } from "./language-selector"
-import { SettingsMenu } from "./settings-menu"
-import { ResizablePanel } from "./resizable-panel"
-import { GridDropZone } from "./grid-drop-zone"
+import { SplitterCanvas } from "./splitter-canvas"
+import { getAllLeaves, displayHasPanelType, findUniqueEditorLeaf } from "./tree-operations"
 import { DisplayManager } from "./display-manager"
+import { BaseAuthorSidebar } from "./base-author-sidebar"
 import { EditorInstanceSwitch } from "./editor-instance-switch"
 import { EmptyEditorState } from "./empty-editor-state"
 import { cn } from "@/lib/utils"
@@ -27,7 +27,6 @@ import * as FileOps from "./file-operations"
 import * as LayoutOps from "./layout-operations"
 import * as TabOps from "./tab-operations"
 import * as PanelOps from "./panel-operations"
-import { getGridDimensions, getContainerDimensions } from "./grid-utils"
 import { UnifiedCodeRunner, setDownloadNotificationCallback } from "./runners"
 import { initializeMonacoFileSystem, syncFilesToMonacoFS, updateMonacoFile, disposeMonacoFileSystem } from "./monaco-file-system"
 import { saveProjectAsCollection, countAssetReferences } from "./file-system/collection-utils"
@@ -37,8 +36,8 @@ import {
   getEditorPreferences, 
   getModalSizeClasses 
 } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
-import { getProjectPreference, type ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
-import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
+import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
+import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -75,94 +74,49 @@ export function CodeStudioEditor({
   })
   const [isExecuting, setIsExecuting] = useImmer(false)
   const [output, setOutput] = useImmer<string>("")
-  const [showSettingsMenu, setShowSettingsMenu] = useImmer(false)
   const [resolvedContents, setResolvedContents] = useImmer<Record<string, string>>({})
-  const [modalSize, setModalSize] = useState<ModalSize | null>(null)
-  const [projectPreferences, setProjectPreferences] = useState<ProjectPreferences | undefined>()
-  const [effectiveShikiTheme, setEffectiveShikiTheme] = useState<ShikiTheme>(data.shikiTheme || "github")
-  const gridContainerRef = useRef<HTMLDivElement | null>(null)
-  const modalContainerRef = useRef<HTMLDivElement | null>(null)
+  const settings = useEditorSettings("code-studio")
+  const modalSize = settings.modalSize
+  const setModalSize = settings.setModalSize
+  // Two global Monaco-option groups drive every Monaco surface in the
+  // code-studio:
+  //   - `editorOptions` (settings.editor) is for the IDE-style
+  //     secondary displays (Mirror, Test, custom) where authors actively
+  //     edit. Theme, font size, line numbers, word wrap, minimap, tab
+  //     size and whitespace rendering all flow from this group.
+  //   - `previewOptions` (settings.preview) is for the "base" display
+  //     (display-1) — the embed-sized frame that mirrors exactly what
+  //     students will see — and for the published `isPreview` render
+  //     mounted by `PreviewCodeStudio`. This keeps the WYSIWYG promise:
+  //     the base display in the editor matches the document preview
+  //     byte-for-byte.
+  //   While preferences are still hydrating (`null`) we leave the bag
+  //   unset; `MonacoCodeEditor` substitutes its own sane defaults so the
+  //   editor can mount before IndexedDB resolves.
+  const editorOptions = settings.editor
+  const previewOptions = settings.preview ?? settings.editor
+  const baseDisplayId = localData.layout?.displays[0]?.id
+  // Canvas size in the editor follows the active display's scope:
+  //   - Base (first display) renders inside a fixed embed-sized frame so authors
+  //     see exactly what students will see in the document.
+  //   - Secondary displays (Mirror, Test, custom) render full-bleed (IDE-style).
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
   const terminalRef = useRef<XTermTerminalHandle | null>(null)
   const initializedRef = useRef(false)
   const originalDataRef = useRef<CodeStudioData>(JSON.parse(JSON.stringify(data)))
   const lastProcessedContentsRef = useRef<Record<string, string>>({})
 
-  // Load modal size and project preferences on mount
-  useEffect(() => {
-    getEditorPreferences('code-studio').then((prefs: { modalSize: ModalSize }) => {
-      setModalSize(prefs.modalSize)
-    })
-    
-    // Load project preferences if projectId is available
-    if (projectId) {
-      const loadProjectPrefs = async () => {
-        try {
-          const adapter = new EnhancedStorageAdapter()
-          await adapter.init()
-          const prefs = await adapter.getProjectPreferences(projectId)
-          setProjectPreferences(prefs)
-          
-          // Get shikiTheme from project preferences
-          if (prefs) {
-            const theme = getProjectPreference(prefs, 'code-studio', 'shikiTheme')
-            if (theme) {
-              setEffectiveShikiTheme(theme)
-            }
-          }
-        } catch (error) {
-          console.error("Failed to load project preferences:", error)
-        }
-      }
-      loadProjectPrefs()
-    }
-  }, [projectId])
-
-  // Update effectiveShikiTheme when projectPreferences changes
-  useEffect(() => {
-    if (projectId && projectPreferences) {
-      const theme = getProjectPreference(projectPreferences, 'code-studio', 'shikiTheme')
-      if (theme) {
-        setEffectiveShikiTheme(theme)
-      }
-    }
-  }, [projectPreferences, projectId])
-
-  // Reload project preferences when settings menu closes (to get latest changes)
-  useEffect(() => {
-    if (!showSettingsMenu && projectId) {
-      const reloadPrefs = async () => {
-        try {
-          const adapter = new EnhancedStorageAdapter()
-          await adapter.init()
-          const prefs = await adapter.getProjectPreferences(projectId)
-          if (prefs) {
-            setProjectPreferences(prefs)
-            const theme = getProjectPreference(prefs, 'code-studio', 'shikiTheme')
-            if (theme) {
-              setEffectiveShikiTheme(theme)
-            }
-          }
-        } catch (error) {
-          console.error("Failed to reload project preferences:", error)
-        }
-      }
-      reloadPrefs()
-    }
-  }, [showSettingsMenu, projectId])
-
-  // Block body scroll and browser navigation when editor is open (not in preview mode)
-  useEffect(() => {
-    if (!isPreview) {
-      document.body.style.overflow = 'hidden'
-      document.body.style.pointerEvents = 'none'
-      
-      return () => {
-        document.body.style.overflow = ''
-        document.body.style.pointerEvents = ''
-      }
-    }
-  }, [isPreview])
+  // Body-scroll lock is centralised in `BlockEditorShell` (html-level
+  // refcounted CSS class). This editor used to set
+  // `document.body.style.overflow = 'hidden'` + `pointerEvents = 'none'`
+  // here as well, but that duplicated lock conflicted with the shell's
+  // lock and with Radix UI's own body-lock (used by inline Select /
+  // Popover / Dialog children), producing two visible bugs:
+  //   1. Permanent `pointer-events: none` on body after closing.
+  //   2. Scroll position snapping to top after closing (the body briefly
+  //      loses then regains its overflow, which can reset scroll under
+  //      some browser/layout conditions).
+  // The shell already handles both scroll and click isolation correctly.
 
   // Initialize runner and Monaco file system
   useEffect(() => {
@@ -282,19 +236,6 @@ export function CodeStudioEditor({
       }
     })
   }, [data, setLocalData])
-
-  // Fechar menu de settings quando clicar fora
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      if (showSettingsMenu && !target.closest('.settings-menu-container')) {
-        setShowSettingsMenu(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showSettingsMenu])
 
   // Resolver conteúdos de assets quando necessário
   useEffect(() => {
@@ -441,28 +382,29 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    // Check if there's a focus-editor in the active display
-    const hasFocusEditor = activeDisplay.panels.some(p => p.type === "focus-editor")
-    
-    if (hasFocusEditor) {
-      // Find the focus folder
-      const focusFolder = localData.folders?.find(f => f.isFocusFolder)
-      
-      if (focusFolder) {
-        // Check if the file is in the focus folder
-        const file = localData.files.find(f => f.id === fileId)
-        if (file) {
-          const fileFolderPath = file.path.substring(0, file.path.lastIndexOf('/'))
-          
-          // If file is not in focus folder, don't select it
-          if (fileFolderPath !== focusFolder.path) {
-            return
-          }
-        }
-      }
+    const hasFocusEditor = displayHasPanelType(activeDisplay, "focus-editor")
+    const hasFullEditor = displayHasPanelType(activeDisplay, "full-editor")
+    const focusFolder = localData.folders?.find(f => f.isFocusFolder)
+    const file = localData.files.find(f => f.id === fileId)
+    const fileFolderPath = file ? file.path.substring(0, file.path.lastIndexOf('/')) : ''
+    const isFocusFile = !!(focusFolder && file && fileFolderPath === focusFolder.path)
+
+    // Focus editor is the only editor and the clicked file is outside the
+    // focus folder — it would have nowhere to render, so ignore the click.
+    if (hasFocusEditor && !hasFullEditor && focusFolder && file && !isFocusFile) {
+      return
     }
 
     setLocalData(draft => {
+      // When a focus-editor is present, files that live in the focus folder
+      // should be routed ONLY to the focus-editor — they must not appear as
+      // tabs in the sibling full-editor. We achieve that by just updating the
+      // global active file (which the focus-editor reads) without adding the
+      // file to the shared openTabs list that drives full-editor tabs.
+      if (hasFocusEditor && isFocusFile) {
+        draft.activeFileId = fileId
+        return
+      }
       TabOps.selectFile(draft, fileId, panelId, activeDisplay)
     })
   }
@@ -488,8 +430,22 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
+    const hasFocusEditor = displayHasPanelType(activeDisplay, "focus-editor")
+    const focusFolder = localData.folders?.find(f => f.isFocusFolder)
+    const routeToFocusOnly = !!(hasFocusEditor && focusFolder && path === focusFolder.path)
+
     setLocalData(draft => {
       FileOps.createFile(draft, path, name, activeDisplay.id)
+      if (routeToFocusOnly) {
+        // The shared createFile helper adds the new file to the global
+        // openTabs list (which feeds the full-editor). For focus-folder files
+        // we strip it back out so it only surfaces inside the focus-editor.
+        const fullPath = path ? `${path}/${name}` : name
+        const newFile = draft.files.find(f => f.path === fullPath)
+        if (newFile && draft.openTabs) {
+          draft.openTabs = draft.openTabs.filter(id => id !== newFile.id)
+        }
+      }
     })
   }
 
@@ -507,8 +463,19 @@ export function CodeStudioEditor({
       })
     }
 
+    const hasFocusEditor = displayHasPanelType(activeDisplay, "focus-editor")
+    const focusFolder = localData.folders?.find(f => f.isFocusFolder)
+    const routeToFocusOnly = !!(hasFocusEditor && focusFolder && path === focusFolder.path)
+
     setLocalData(draft => {
       FileOps.addFileFromAsset(draft, path, assetId, fileName, content, activeDisplay.id)
+      if (routeToFocusOnly) {
+        const fullPath = path ? `${path}/${fileName}` : fileName
+        const newFile = draft.files.find(f => f.path === fullPath)
+        if (newFile && draft.openTabs) {
+          draft.openTabs = draft.openTabs.filter(id => id !== newFile.id)
+        }
+      }
     })
   }
 
@@ -1034,10 +1001,8 @@ export function CodeStudioEditor({
       // Ao trocar de display, atualizar activeFileId para refletir o estado do novo display
       const newDisplay = draft.layout?.displays.find(d => d.id === displayId)
       if (newDisplay) {
-        const editorPanel = newDisplay.panels.find(p => 
-          p.type === 'full-editor' || p.type === 'focus-editor'
-        )
-        if (editorPanel?.editorInstance === 'unique') {
+        const uniqueEditor = findUniqueEditorLeaf(newDisplay)
+        if (uniqueEditor) {
           // Display com editor único: usar uniqueActiveFileId
           draft.activeFileId = newDisplay.uniqueActiveFileId
         } else {
@@ -1054,9 +1019,9 @@ export function CodeStudioEditor({
     })
   }
 
-  const handleCreateDisplay = (name: string, aspectRatio: AspectRatio) => {
+  const handleCreateDisplay = (name: string, templateId: string) => {
     setLocalData(draft => {
-      LayoutOps.createDisplay(draft, name, aspectRatio)
+      LayoutOps.createDisplay(draft, name, templateId)
     })
   }
 
@@ -1072,9 +1037,9 @@ export function CodeStudioEditor({
     })
   }
 
-  const handleChangeAspectRatio = (displayId: string, newAspectRatio: AspectRatio) => {
+  const handleApplyTemplate = (displayId: string, templateId: string) => {
     setLocalData(draft => {
-      LayoutOps.changeAspectRatio(draft, displayId, newAspectRatio)
+      LayoutOps.applyTemplateToDisplay(draft, displayId, templateId)
     })
   }
 
@@ -1084,43 +1049,52 @@ export function CodeStudioEditor({
     })
   }
 
-  const handleAddPanel = (type: PanelType, row?: number, col?: number) => {
+  const handleAddPanel = (type: PanelType) => {
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
-    
+
+    // Hard cap: at most one Full Editor and at most one Focus Editor per
+    // display. Other panel types (explorer, output) may repeat.
+    if (
+      (type === "full-editor" || type === "focus-editor") &&
+      displayHasPanelType(activeDisplay, type)
+    ) {
+      return
+    }
+
     setLocalData(draft => {
-      PanelOps.addPanel(draft, activeDisplay, type, row, col)
+      PanelOps.addPanel(draft, activeDisplay, type)
     })
   }
 
-  const handleGridDrop = (row: number, col: number, type: PanelType) => {
-    handleAddPanel(type, row, col)
-  }
-
-  const handlePanelResize = (panelId: string, row: number, col: number, rowSpan: number, colSpan: number) => {
+  const handleSplitResize = (splitId: string, sizes: number[]) => {
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
-    
-    setLocalData(draft => {
-      PanelOps.resizePanel(draft, activeDisplay, panelId, row, col, rowSpan, colSpan)
-    })
-  }
 
-  const handlePanelMove = (panelId: string, row: number, col: number) => {
-    const activeDisplay = getActiveDisplay()
-    if (!activeDisplay) return
-    
     setLocalData(draft => {
-      PanelOps.movePanel(draft, activeDisplay, panelId, row, col)
+      PanelOps.resizeSplit(draft, activeDisplay, splitId, sizes)
     })
   }
 
   const handleRemovePanel = (panelId: string) => {
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
-    
+
     setLocalData(draft => {
       PanelOps.removePanel(draft, activeDisplay, panelId)
+    })
+  }
+
+  const handleMovePanel = (
+    sourcePanelId: string,
+    targetPanelId: string,
+    position: "top" | "right" | "bottom" | "left",
+  ) => {
+    const activeDisplay = getActiveDisplay()
+    if (!activeDisplay) return
+
+    setLocalData(draft => {
+      PanelOps.movePanel(draft, activeDisplay, sourcePanelId, targetPanelId, position)
     })
   }
 
@@ -1133,16 +1107,16 @@ export function CodeStudioEditor({
     })
   }
 
-  const handlePanelDragStart = (panelId: string) => {
-    PanelOps.onPanelDragStart(panelId)
-  }
-
-  const handlePanelDragEnd = () => {
-    PanelOps.onPanelDragEnd()
-  }
-
   // Renderizar conteúdo de cada painel
-  const renderPanelContent = (panel: PanelConfig, displayConfig?: DisplayConfig) => {
+  const renderPanelContent = (panel: LeafPanel, displayConfig?: DisplayConfig) => {
+    // Pick the Monaco-options group based on which display this leaf
+    // belongs to. The base display (display-1) — and the `isPreview`
+    // re-mount, which also targets the base display — uses the global
+    // `preview` group because that's what students see. Every other
+    // display is the IDE-style authoring surface and uses the global
+    // `editor` group.
+    const isBaseLeaf = isPreview || (displayConfig?.id !== undefined && displayConfig.id === baseDisplayId)
+    const optionsForLeaf = isBaseLeaf ? previewOptions : editorOptions
     switch (panel.type) {
       case "explorer":
         return (
@@ -1180,15 +1154,41 @@ export function CodeStudioEditor({
         // No preview, usar displayConfig passado; no editor, usar activeDisplay
         const displayToUse = isPreview && displayConfig ? displayConfig : getActiveDisplay()
         const isUniqueInstance = panel.editorInstance === "unique"
-        const currentOpenTabs = isUniqueInstance 
+        const rawCurrentOpenTabs = isUniqueInstance 
           ? (displayToUse?.uniqueOpenTabs || [])
           : (localData.openTabs || [])
-        const currentActiveFileId = isUniqueInstance
+
+        // When the same display also has a focus-editor, files that live in
+        // the focus folder are owned exclusively by it — strip them out of the
+        // full-editor's tab strip so they don't show up in both places. This
+        // is defensive: handleFileSelect / handleCreateFile already avoid
+        // adding them, but legacy data may carry stale entries.
+        const fullDisplayHasFocus = displayToUse ? displayHasPanelType(displayToUse, "focus-editor") : false
+        const fullFocusFolder = fullDisplayHasFocus
+          ? localData.folders?.find(f => f.isFocusFolder)
+          : undefined
+        const currentOpenTabs = fullFocusFolder
+          ? rawCurrentOpenTabs.filter(tabId => {
+              const f = localData.files.find(file => file.id === tabId)
+              if (!f) return true
+              const folderPath = f.path.substring(0, f.path.lastIndexOf('/'))
+              return folderPath !== fullFocusFolder.path
+            })
+          : rawCurrentOpenTabs
+
+        const rawCurrentActiveFileId = isUniqueInstance
           ? displayToUse?.uniqueActiveFileId
           : localData.activeFileId
+        // If the global active file points at a focus-folder file (now owned
+        // by the focus-editor), the full-editor should fall back to the first
+        // tab it actually has so its editor surface keeps showing something
+        // meaningful instead of going blank.
+        const currentActiveFileId = rawCurrentActiveFileId && currentOpenTabs.includes(rawCurrentActiveFileId)
+          ? rawCurrentActiveFileId
+          : currentOpenTabs[0]
         
         // No preview, verificar se há explorer no Display Base para permitir fechar tabs
-        const hasExplorer = displayConfig ? displayConfig.panels.some(p => p.type === 'explorer') : true
+        const hasExplorer = displayConfig ? displayHasPanelType(displayConfig, 'explorer') : true
         const canCloseTabs = isPreview ? hasExplorer : true
         
         return (
@@ -1251,9 +1251,7 @@ export function CodeStudioEditor({
                           onChange={(content) => handleCodeChange(content, file.id)}
                           language={file.language}
                           readonly={localData.readonly || isFileReadonly}
-                          showLineNumbers={localData.showLineNumbers}
-                          fontSize={localData.fontSize}
-                          shikiTheme={effectiveShikiTheme}
+                          options={optionsForLeaf}
                         />
                       </div>
                     )
@@ -1265,25 +1263,43 @@ export function CodeStudioEditor({
         )
       
       case "focus-editor":
-        // Focus editor: Language selector instead of file tabs
-        const focusDisplayToUse = isPreview && displayConfig ? displayConfig : getActiveDisplay()
-        const isFocusUniqueInstance = panel.editorInstance === "unique"
-        
-        // For focus-editor, we maintain a single active file based on language selection
-        const focusActiveFileId = isFocusUniqueInstance
-          ? focusDisplayToUse?.uniqueActiveFileId
-          : localData.activeFileId
+        // Focus editor: Language selector instead of file tabs.
+        // Always rendered in "multiple" mode — it intentionally shares the
+        // global active file with sibling editors so the toggle is hidden.
+        const focusFolderForRender = localData.folders?.find(f => f.isFocusFolder)
+
+        // No focus folder configured — the focus-editor has no scope to render.
+        // Show a guidance message instead of an empty editor; the author can
+        // mark any folder as the focus folder from the file explorer.
+        if (!focusFolderForRender) {
+          return (
+            <div className="flex flex-col h-full items-center justify-center text-center px-6 py-8 gap-2 text-gray-600 dark:text-gray-300">
+              <div className="text-sm font-medium">
+                Nenhuma pasta marcada como foco
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 max-w-xs">
+                Marque uma pasta como “foco” no explorador de arquivos para
+                que ela apareça aqui.
+              </div>
+            </div>
+          )
+        }
+
+        const rawFocusActiveFileId = localData.activeFileId
+
+        // Constrain the rendered file to the focus folder. When the global
+        // active file lives outside (e.g. user opened it in a sibling Full
+        // Editor), fall back to the first file inside the focus folder so the
+        // focus-editor keeps showing the focus context instead of spilling.
+        const focusFolderFiles = localData.files.filter(
+          f => f.path.substring(0, f.path.lastIndexOf('/')) === focusFolderForRender.path,
+        )
+        const focusActiveFileId = rawFocusActiveFileId && focusFolderFiles.some(f => f.id === rawFocusActiveFileId)
+          ? rawFocusActiveFileId
+          : focusFolderFiles[0]?.id
         
         return (
           <div className="flex flex-col h-full relative">
-            {/* Editor Instance Switch */}
-            {panel.editorInstance && localData.layout?.editMode && (
-              <EditorInstanceSwitch
-                editorInstance={panel.editorInstance}
-                onToggle={() => handleToggleEditorInstance(panel.id)}
-              />
-            )}
-            
             <LanguageSelector
               files={localData.files}
               folders={localData.folders || []}
@@ -1322,9 +1338,7 @@ export function CodeStudioEditor({
                       onChange={(content) => handleCodeChange(content, file.id)}
                       language={file.language}
                       readonly={localData.readonly || isFileReadonly}
-                      showLineNumbers={localData.showLineNumbers}
-                      fontSize={localData.fontSize}
-                      shikiTheme={effectiveShikiTheme}
+                      options={optionsForLeaf}
                     />
                   )
                 })()
@@ -1366,9 +1380,7 @@ export function CodeStudioEditor({
     
     // Se houver painéis com instância única, usar o arquivo ativo deles
     if (activeDisplay) {
-      const uniqueEditorPanel = activeDisplay.panels.find(
-        p => (p.type === 'full-editor' || p.type === 'focus-editor') && p.editorInstance === 'unique'
-      )
+      const uniqueEditorPanel = findUniqueEditorLeaf(activeDisplay)
       if (uniqueEditorPanel && activeDisplay.uniqueActiveFileId) {
         fileToExecute = localData.files.find(f => f.id === activeDisplay.uniqueActiveFileId)
       }
@@ -1476,10 +1488,7 @@ export function CodeStudioEditor({
       const display1 = localData.layout?.displays.find(d => d.id === 'display-1')
       
       // Determinar o tipo de editor no display-1
-      const display1Editor = display1?.panels.find(p => 
-        p.type === 'full-editor' || p.type === 'focus-editor'
-      )
-      const isDisplay1Unique = display1Editor?.editorInstance === 'unique'
+      const isDisplay1Unique = display1 ? !!findUniqueEditorLeaf(display1) : false
       
       // Sincronizar activeFileId com a aba ativa apropriada
       let syncedActiveFileId = localData.activeFileId
@@ -1528,107 +1537,47 @@ export function CodeStudioEditor({
     const baseDisplay = localData.layout?.displays.find(d => d.id === 'display-1')
     if (!baseDisplay) return null
 
-    // Verificar se há painel explorer no Display Base
-    const hasExplorer = baseDisplay.panels.some(p => p.type === 'explorer')
-    
-    // Calcular altura máxima baseada nos painéis
-    const maxRowSpan = Math.max(...baseDisplay.panels.map(p => p.row + p.rowSpan))
-    const totalRows = baseDisplay.aspectRatio === '1:2' ? 24 : 12
-    
-    // Usar apenas as linhas necessárias para os painéis
-    const actualRows = maxRowSpan
-    const actualCols = baseDisplay.aspectRatio === '2:1' ? 24 : 12
+    const leaves = getAllLeaves(baseDisplay.root)
+    const isSingleLeaf = leaves.length === 1
+    // Minimal embed: a single focus-editor or full-editor leaf renders without
+    // any surrounding chrome (no rounded card, no border). Larger trees use
+    // the full SplitterCanvas in read-only mode.
+    if (isSingleLeaf && leaves[0]) {
+      return (
+        <div className="w-full h-[500px] min-h-0">
+          {renderPanelContent(leaves[0], baseDisplay)}
+        </div>
+      )
+    }
 
     return (
-      <>
-        {/* Layout renderizado com base no Display Base */}
-        <div 
-          className="grid gap-3 w-full h-[500px]"
-          style={{
-            gridTemplateColumns: `repeat(${actualCols}, 1fr)`,
-            gridTemplateRows: `repeat(${actualRows}, minmax(0, 1fr))`,
-          }}
-        >
-          {baseDisplay.panels.map(panel => (
-            <div
-              key={panel.id}
-              style={{
-                gridColumn: `${panel.col + 1} / span ${panel.colSpan}`,
-                gridRow: `${panel.row + 1} / span ${panel.rowSpan}`,
-              }}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800 h-full min-h-0"
-            >
-              {renderPanelContent(panel, baseDisplay)}
-            </div>
-          ))}
-        </div>
-      </>
+      <div className="w-full h-[500px] min-h-0">
+        <SplitterCanvas
+          root={baseDisplay.root}
+          renderLeaf={(leaf) => renderPanelContent(leaf, baseDisplay)}
+          editable={false}
+          resizable
+        />
+      </div>
     )
   }
 
   // Modal de edição (fullscreen)
-  // Wait for preferences to load
-  if (!modalSize) {
-    return null
-  }
-  
-  const { container, modal } = getModalSizeClasses(modalSize)
-  
-  return (
-    <div 
-      ref={modalContainerRef}
-      className={cn("fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50", container)}
-      style={{ pointerEvents: 'auto' }}
-      onClick={handleCancelClick}
-    >
-      <div 
-        className={cn("bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl flex flex-col", modal)}
-        style={{ pointerEvents: 'auto' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Code2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Code Studio</h2>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <div className="relative settings-menu-container">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-                className="h-8 w-8 p-0"
-                title="Settings"
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
-              
-              {/* Settings Dropdown Menu */}
-              {showSettingsMenu && (
-                <SettingsMenu
-                  data={localData}
-                  onDataChange={handleDataChange}
-                  onClose={() => setShowSettingsMenu(false)}
-                  nodeType="code-studio"
-                  onModalSizeChange={(size) => setModalSize(size)}
-                  projectId={projectId}
-                  onShikiThemePreview={(theme) => setEffectiveShikiTheme(theme)}
-                />
-              )}
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleCancelClick}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+  const baseDisplayIdForSettings = localData.layout?.displays[0]?.id
+  const activeDisplayIdForSettings = localData.layout?.activeDisplayId
+  const isViewingBase = baseDisplayIdForSettings !== undefined && baseDisplayIdForSettings === activeDisplayIdForSettings
 
+  return (
+    <BlockEditorShell
+      settings={settings}
+      onClose={handleCancelClick}
+      icon={<Code2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+      title="Code Studio"
+      defaultMonacoTab={isViewingBase ? 'preview' : 'editor'}
+    >
         {/* Settings Bar */}
-        <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex-wrap">
+          <div className="flex items-center gap-2 shrink-0">
             <Label htmlFor="title" className="text-sm font-medium">
               Title:
             </Label>
@@ -1639,31 +1588,57 @@ export function CodeStudioEditor({
               placeholder="Optional title"
               className="w-48"
             />
-
-            {/* Display Selector - Only when NOT editing layout */}
-            {!localData.layout?.editMode && localData.layout && (
-              <div className="flex items-center gap-1 ml-4 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-                {localData.layout.displays.map((display) => (
-                  <button
-                    key={display.id}
-                    onClick={() => handleSelectDisplay(display.id)}
-                    className={cn(
-                      "px-2.5 py-1 rounded text-xs font-medium transition-all",
-                      localData.layout?.activeDisplayId === display.id
-                        ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-                    )}
-                    title={display.name}
-                  >
-                    {display.name}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
+          {/* Display Selector — read-only chips when NOT editing layout */}
+          {!localData.layout?.editMode && localData.layout && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+              {localData.layout.displays.map((display) => (
+                <button
+                  key={display.id}
+                  onClick={() => handleSelectDisplay(display.id)}
+                  className={cn(
+                    "px-2.5 py-1 rounded text-xs font-medium transition-all",
+                    localData.layout?.activeDisplayId === display.id
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  )}
+                  title={display.name}
+                >
+                  {display.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Inline layout-edit toolbar (display tabs + templates + add-panel) */}
+          {localData.layout?.editMode && localData.layout && (() => {
+            const editToolbarActive = localData.layout.displays.find(
+              d => d.id === localData.layout?.activeDisplayId,
+            )
+            const existingPanelTypes = editToolbarActive
+              ? new Set<PanelType>(getAllLeaves(editToolbarActive.root).map(l => l.type))
+              : undefined
+            return (
+              <DisplayManager
+                displays={localData.layout.displays}
+                activeDisplayId={localData.layout.activeDisplayId}
+                activeDisplayScope={
+                  localData.layout.displays[0]?.id === localData.layout.activeDisplayId ? "compact" : "expanded"
+                }
+                existingPanelTypes={existingPanelTypes}
+                onSelectDisplay={handleSelectDisplay}
+                onCreateDisplay={handleCreateDisplay}
+                onDeleteDisplay={handleDeleteDisplay}
+                onRenameDisplay={handleRenameDisplay}
+                onApplyTemplate={handleApplyTemplate}
+                onAddPanel={handleAddPanel}
+              />
+            )
+          })()}
+
           {/* Layout Edit Button */}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2 shrink-0">
             <Button
               variant={localData.layout?.editMode ? "default" : "outline"}
               size="sm"
@@ -1677,111 +1652,90 @@ export function CodeStudioEditor({
           </div>
         </div>
 
-        {/* Main Content - Grid Layout Customizável */}
+        {/* Main Content - Splitter-pane Layout */}
         <div className="flex-1 min-h-0 p-3 bg-gray-100 dark:bg-gray-950 overflow-hidden flex flex-col">
-          {/* Layout Edit Tools */}
-          {localData.layout?.editMode && (
-            <div className="mb-3 p-2 bg-white dark:bg-gray-900 border border-blue-500/30 rounded-lg shrink-0">
-              <DisplayManager
-                displays={localData.layout.displays}
-                activeDisplayId={localData.layout.activeDisplayId}
-                onSelectDisplay={handleSelectDisplay}
-                onCreateDisplay={handleCreateDisplay}
-                onDeleteDisplay={handleDeleteDisplay}
-                onRenameDisplay={handleRenameDisplay}
-                onChangeAspectRatio={handleChangeAspectRatio}
-                onAddPanel={handleAddPanel}
-              />
-            </div>
-          )}
 
-          {/* Grid Container */}
-          <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center p-4">
-            {(() => {
-              const activeDisplay = getActiveDisplay()
-              if (!activeDisplay) return null
+          {/* Canvas Container
+              Base (first) display → embed-sized preview frame centered, plus
+              an author-only sidebar on the left when editing the layout.
+              Secondary displays → fill the available canvas area. */}
+          {(() => {
+            const activeDisplay = getActiveDisplay()
+            if (!activeDisplay) return null
 
-              const { cols, rows } = getGridDimensions(activeDisplay.aspectRatio)
-              const { maxWidth, maxHeight } = getContainerDimensions(activeDisplay.aspectRatio)
-              
-              // Scale dimensions for fullscreen while respecting aspect ratio
-              // Only scale if NOT the Base display
-              let scaledMaxWidth = maxWidth
-              let scaledMaxHeight = maxHeight
-              
-              if (modalSize === 'fullscreen' && activeDisplay.name !== 'Base') {
-                switch (activeDisplay.aspectRatio) {
-                  case '2:1':
-                    scaledMaxWidth = '90vw'
-                    scaledMaxHeight = '45vw' // Mantém proporção 2:1
-                    break
-                  case '1:1':
-                    scaledMaxWidth = '80vh'
-                    scaledMaxHeight = '80vh' // Mantém proporção 1:1
-                    break
-                  case '1:2':
-                    scaledMaxWidth = '40vw'
-                    scaledMaxHeight = '80vw' // Mantém proporção 1:2
-                    break
-                }
-              }
+            const isBase = localData.layout?.displays[0]?.id === activeDisplay.id
+            const isEditing = localData.layout?.editMode || false
+            // Author-only Files sidebar appears on Base whenever the layout
+            // itself doesn't already expose a student-facing Explorer panel.
+            // Visible in both edit and view modes so authors can manage files
+            // without entering layout edit mode.
+            const showBaseSidebar = isBase && !displayHasPanelType(activeDisplay, "explorer")
 
+            const outerClass = isBase
+              ? "flex-1 min-h-0 overflow-hidden flex items-stretch justify-center gap-10 p-4"
+              : "flex-1 min-h-0 overflow-hidden flex items-stretch justify-stretch"
+            const containerClass = isBase
+              ? "h-[600px] w-full max-w-[720px] self-center"
+              : "w-full h-full"
+
+            const canvas = (
+              <div
+                className={cn(
+                  containerClass,
+                  isEditing && "ring-2 ring-blue-500/40 ring-dashed rounded-lg",
+                )}
+              >
+                <SplitterCanvas
+                  root={activeDisplay.root}
+                  renderLeaf={(leaf) => renderPanelContent(leaf, activeDisplay)}
+                  editable={isEditing}
+                  resizable
+                  onSplitResize={handleSplitResize}
+                  onMovePanel={handleMovePanel}
+                  onRemovePanel={handleRemovePanel}
+                />
+              </div>
+            )
+
+            if (showBaseSidebar) {
               return (
-                <div
-                  className={cn(
-                    "w-full h-full",
-                    localData.layout?.editMode && "border-2 border-blue-500 border-dashed"
-                  )}
-                  style={{
-                    maxWidth: scaledMaxWidth,
-                    maxHeight: scaledMaxHeight,
-                    backgroundImage: localData.layout?.editMode 
-                      ? `linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-                         linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)`
-                      : undefined,
-                    backgroundSize: localData.layout?.editMode 
-                      ? `calc(100% / ${cols}) calc(100% / ${rows})`
-                      : undefined,
-                  }}
-                >
-                  <GridDropZone
-                    isActive={localData.layout?.editMode || false}
-                    onDrop={handleGridDrop}
-                    gridCols={cols}
-                    gridRows={rows}
-                  >
-                    <div
-                      ref={gridContainerRef}
-                      className="h-full w-full grid gap-3"
-                      style={{
-                        gridTemplateColumns: `repeat(${cols}, 1fr)`,
-                        gridTemplateRows: `repeat(${rows}, 1fr)`,
-                      }}
-                    >
-                    {activeDisplay.panels.map(panel => (
-                      <ResizablePanel
-                        key={panel.id}
-                        panel={panel}
-                        allPanels={activeDisplay.panels}
-                        isEditMode={localData.layout?.editMode || false}
-                        gridContainerRef={gridContainerRef}
-                        gridCols={cols}
-                        gridRows={rows}
-                        onResize={handlePanelResize}
-                        onMove={handlePanelMove}
-                        onRemove={handleRemovePanel}
-                        onDragStart={handlePanelDragStart}
-                        onDragEnd={handlePanelDragEnd}
-                      >
-                        {renderPanelContent(panel)}
-                      </ResizablePanel>
-                    ))}
-                  </div>
-                </GridDropZone>
+                <div className={outerClass}>
+                  <BaseAuthorSidebar
+                    fileExplorerProps={{
+                      files: localData.files,
+                      folders: localData.folders || [],
+                      activeFileId: localData.activeFileId,
+                      onFileSelect: handleFileSelect,
+                      onCreateFile: handleCreateFile,
+                      onCreateFolder: handleCreateFolder,
+                      onDeleteFile: handleDeleteFile,
+                      onDeleteFolder: handleDeleteFolder,
+                      onRenameFile: handleRenameFile,
+                      onRenameFolder: handleRenameFolder,
+                      onToggleFolder: handleToggleFolder,
+                      onMoveFile: handleMoveFile,
+                      onMoveFolder: handleMoveFolder,
+                      onReorderFiles: handleReorderFiles,
+                      onAddFileFromAsset: handleAddFileFromAsset,
+                      onChangeFileType: handleChangeFileType,
+                      onToggleFileVisibility: handleToggleFileVisibility,
+                      onToggleFolderVisibility: handleToggleFolderVisibility,
+                      onToggleFileReadonly: handleToggleFileReadonly,
+                      onToggleFolderReadonly: handleToggleFolderReadonly,
+                      onToggleFocusFolder: handleToggleFocusFolder,
+                      onSetAllReadonly: handleSetAllReadonly,
+                      onSetAllHidden: handleSetAllHidden,
+                      onImportCollection: handleImportCollection,
+                      onSaveAsCollection: handleSaveAsCollection,
+                    }}
+                  />
+                  {canvas}
                 </div>
               )
-            })()}
-          </div>
+            }
+
+            return <div className={outerClass}>{canvas}</div>
+          })()}
         </div>
 
         {/* Footer */}
@@ -1819,7 +1773,6 @@ export function CodeStudioEditor({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </BlockEditorShell>
   )
 }
