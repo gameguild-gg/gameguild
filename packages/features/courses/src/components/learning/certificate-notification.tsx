@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
 import { Award, Check, Download, ExternalLink, Loader2 } from 'lucide-react';
 
 interface CertificateNotificationProps {
@@ -40,7 +40,7 @@ export function CertificateNotification({ courseId, courseTitle, completionDate,
 
   return (
     <>
-      <Card className="w-full border-green-200 bg-green-50/50 dark:bg-green-950/20 dark:border-green-800">
+      <Card data-course-id={courseId} className="w-full border-green-200 bg-green-50/50 dark:bg-green-950/20 dark:border-green-800">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-green-800 dark:text-green-400">

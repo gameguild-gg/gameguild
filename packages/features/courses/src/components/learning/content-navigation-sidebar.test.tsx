@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ContentNavigationSidebar, type CourseModule } from './content-navigation-sidebar';
 
@@ -46,15 +46,19 @@ const modules: CourseModule[] = [
   },
 ];
 
+afterEach(() => {
+  cleanup();
+});
+
 describe('ContentNavigationSidebar', () => {
   it('renders modules with progress and current content state', () => {
     render(<ContentNavigationSidebar modules={modules} currentContentId="lesson-2" />);
 
-    expect(screen.getByRole('heading', { name: 'Course content' })).toBeInTheDocument();
-    expect(screen.getByText('Getting Started')).toBeInTheDocument();
-    expect(screen.getByText('50%')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Install the tools/ })).toHaveAttribute('aria-current', 'step');
-    expect(screen.getByText('Completed')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Course content' })).toBeTruthy();
+    expect(screen.getByText('Getting Started')).toBeTruthy();
+    expect(screen.getByText('50%')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Install the tools/ }).getAttribute('aria-current')).toBe('step');
+    expect(screen.getByText('Completed')).toBeTruthy();
     expect(screen.getAllByText('Locked').length).toBeGreaterThan(0);
   });
 

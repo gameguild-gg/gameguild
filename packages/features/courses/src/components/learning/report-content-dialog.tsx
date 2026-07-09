@@ -1,10 +1,10 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@game-guild/ui/components/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
+import { Label } from '@game-guild/ui/components/label';
+import { RadioGroup, RadioGroupItem } from '@game-guild/ui/components/radio-group';
+import { Textarea } from '@game-guild/ui/components/textarea';
 import { AlertTriangle, Ban, Copyright, Flag, Shield } from 'lucide-react';
 import { useState } from 'react';
 

@@ -9,13 +9,10 @@ import { useCallback, useEffect, useState } from 'react';
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CourseCompletionCertificateService } from '@/lib/courses/services/certificate.service';
 import { ContentReportService } from '@/lib/courses/services/content-report.service';
+import { CertificateNotification, ContentNavigationSidebar, LessonViewer, ReportContentDialog } from '@game-guild/courses/components/learning';
 import { BookOpen, CheckCircle, ChevronLeft, ChevronRight, Clock, FileText, Flag, MessageSquare, MoreVertical, Play, Trophy, Upload } from 'lucide-react';
 import { ActivityComponent } from './activity-component';
-import { CertificateNotification } from './certificate-notification';
-import { ContentNavigationSidebar } from './content-navigation-sidebar';
-import { LessonViewer } from './lesson-viewer';
 import { PeerReviewInterface } from './peer-review-interface';
-import { ReportContentDialog } from './report-content-dialog';
 
 type ContentReportMessage = {
   type: 'success' | 'error';
