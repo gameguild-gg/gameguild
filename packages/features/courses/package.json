@@ -11,9 +11,12 @@
     "exports": {
         ".": "./src/index.ts",
         "./components/*": "./src/components/*.tsx",
+        "./components/learning": "./src/components/learning/index.ts",
+        "./components/learning/*": "./src/components/learning/*.tsx",
         "./types": "./src/types.ts"
     },
     "dependencies": {
+        "@game-guild/content-rendering": "workspace:*",
         "@game-guild/ui": "workspace:*",
         "lucide-react": "^0.525.0",
         "next": "16.2.9",
@@ -24,10 +27,12 @@
         "@game-guild/eslint-config": "workspace:*",
         "@game-guild/prettier-config": "workspace:*",
         "@game-guild/typescript-config": "workspace:*",
+        "@testing-library/react": "^16.3.0",
         "@types/node": "^20.0.0",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
         "eslint": "^9.0.0",
-        "typescript": "^5.5.0"
+        "typescript": "^5.5.0",
+        "vitest": "^3.2.4"
     }
 }
