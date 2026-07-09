@@ -1,5 +1,5 @@
 import { type JSX, useCallback, useRef, useState } from 'react';
-import type { DockGroup, TabType, TreeNode, WorkspaceFile } from './ide-types';
+import type { DockGroup, TreeNode, WorkspaceFile } from './ide-types';
 import { fileName } from './ide-utils';
 
 /** Simple VS Code–style file/folder icons using Unicode symbols + color */
@@ -40,7 +40,7 @@ interface FileExplorerProps {
     onSelectPath: (path: string) => void;
     onToggleDir: (path: string) => void;
     onOpenTab: (path: string, group?: DockGroup) => void;
-    onCreateFile: (kind: TabType) => void;
+    onCreateFile: (kind: 'text' | 'image') => void;
     onRename: () => void;
     onDelete: () => void;
     fileTree: TreeNode[];

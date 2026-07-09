@@ -1,4 +1,5 @@
 import type { WorkspaceConfig } from '../workspace-config.js';
+import { ToolchainPreset } from '../types.js';
 import { DEFAULT_IMAGE } from './defaults.js';
 
 export const RAYLIB_DEMO_CODE = `// raylib interactive demo — compiled in the browser via Emscripten.
@@ -73,15 +74,15 @@ export const CPP_RAYLIB_PRESET: WorkspaceConfig = {
     description: 'raylib graphics demo compiled in the browser with Emscripten',
     version: 2,
     compile: {
-        // tool: 'clang' signals the IDE to use the direct clang + wasm-ld two-step
-        // path (BROWSER_BUILD_PRESETS.raylib) instead of Python/emcc. raylib is not
-        // an emsdk port, so em++ triggers ports/__init__.py which fails in WASM sandbox.
+        // Direct clang + wasm-ld two-step path.
+        // raylib is not an emsdk port — em++ triggers ports/__init__.py which
+        // fails in the WASM sandbox. toolchain='raylib-cpp' selects argv builders
+        // and the raylib-runtime.mjs canvas module.
         tool: 'clang',
         args: [],
-        cwd: '/home/user/cpp-raylib',
-        output: '/home/user/cpp-raylib/main.wasm',
-        canvasPreset: 'raylib',
-        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/cpp-raylib/raylib-main.cpp' },
+        output: 'main.wasm',
+        toolchain: ToolchainPreset.Raylib_CPP,
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: 'raylib-main.cpp' },
     },
     run: {
         type: 'canvas',
@@ -92,7 +93,7 @@ export const CPP_RAYLIB_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/cpp-raylib/raylib-main.cpp': { encoding: 'text', content: RAYLIB_DEMO_CODE },
-        '/user/cpp-raylib/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+        'raylib-main.cpp': { encoding: 'text', content: RAYLIB_DEMO_CODE },
+        'workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
     },
 };

@@ -1,4 +1,5 @@
 import type { WorkspaceConfig } from '../workspace-config.js';
+import { ToolchainPreset } from '../types.js';
 import { DEFAULT_IMAGE } from './defaults.js';
 
 export const ALLEGRO_DEMO_CODE = `// Allegro 5 interactive demo — compiled in the browser via Emscripten.
@@ -98,15 +99,14 @@ export const CPP_ALLEGRO_PRESET: WorkspaceConfig = {
     description: 'Allegro 5 graphics demo compiled in the browser with Emscripten',
     version: 1,
     compile: {
-        // tool: 'clang' + canvasPreset 'allegro' signals the IDE to use the
-        // direct clang + wasm-ld two-step path (BROWSER_BUILD_PRESETS.allegro)
-        // and to load allegro-runtime.mjs as the canvas runtime.
+        // Direct clang + wasm-ld two-step path.
+        // toolchain='allegro-cpp' selects the argv builders and loads
+        // allegro-runtime.mjs as the canvas runtime.
         tool: 'clang',
         args: [],
-        cwd: '/home/user/cpp-allegro',
-        output: '/home/user/cpp-allegro/main.wasm',
-        canvasPreset: 'allegro',
-        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/cpp-allegro/allegro-main.cpp' },
+        output: 'main.wasm',
+        toolchain: ToolchainPreset.Allegro_CPP,
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: 'allegro-main.cpp' },
     },
     run: {
         type: 'canvas',
@@ -117,7 +117,7 @@ export const CPP_ALLEGRO_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/cpp-allegro/allegro-main.cpp': { encoding: 'text', content: ALLEGRO_DEMO_CODE },
-        '/user/cpp-allegro/workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
+        'allegro-main.cpp': { encoding: 'text', content: ALLEGRO_DEMO_CODE },
+        'workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
     },
 };

@@ -2,6 +2,19 @@
 
 import type { EmceptionEventListener, EmceptionEventName, Unsubscribe } from './events';
 
+export enum ToolchainPreset {
+  C = 'c',
+  CPP = 'cpp',
+  Python = 'python',
+  SDL_CPP = 'sdl-cpp',
+  SDL_C = 'sdl-c',
+  Raylib_CPP = 'raylib-cpp',
+  Raylib_C = 'raylib-c',
+  Allegro_CPP = 'allegro-cpp',
+  Allegro_C = 'allegro-c',
+  CMake = 'cmake',
+}
+
 /**
  * A single file in a workspace seed or VFS listing.
  *
@@ -32,14 +45,12 @@ export type WorkspaceSeed = Record<string, FileEntry | string>;
  * result to `buildArgv()` which produces the final `clang` / `em++` argv.
  *
  * Omit `compiler` to let the preset choose (e.g. `'emcc'` for web targets).
- * Set `std` to a C/C++ standard string: `'c17'`, `'c++20'`, etc.
+ * The C/C++ standard is passed via `flags`, e.g. `flags: ['-std=c++2c']`.
  */
 export interface NativeBuildConfig {
-  kind: 'native';
+  toolchain: Exclude<ToolchainPreset, ToolchainPreset.CMake | ToolchainPreset.Python>;
   compiler?: 'clang' | 'clang++' | 'emcc' | 'em++';
-  std?: string;
-  cflags?: string[];
-  cxxflags?: string[];
+  flags?: string[];
   ldflags?: string[];
   defines?: Record<string, string | true>;
   includePaths?: string[];
@@ -54,25 +65,23 @@ export interface NativeBuildConfig {
  * CMake build configuration — drives cmake + ninja (or make) instead of
  * invoking the compiler directly.
  *
- * Only `env` and `cmake.*` fields are meaningful; compiler/linker flags live
- * in `CMakeLists.txt`.
+ * Compiler/linker flags live in `CMakeLists.txt`; only cmake-specific settings
+ * and `env` belong here.
  */
 export interface CMakeBuildConfig {
-  kind: 'cmake';
-  cmake?: {
-    sourceDir?: string;
-    buildDir?: string;
-    configureArgs?: string[];
-    buildArgs?: string[];
-    /**
-     * Multi-binary CMake projects: list of target names to build. The resolver
-     * invokes `cmake --build <buildDir> --target <name>` per entry with shared
-     * flags. Per-target customization belongs in `CMakeLists.txt`, not here.
-     *
-     * Merged via array concat + dedup.
-     */
-    targets?: string[];
-  };
+  toolchain: ToolchainPreset.CMake;
+  sourceDir?: string;
+  buildDir?: string;
+  configureArgs?: string[];
+  buildArgs?: string[];
+  /**
+   * Multi-binary CMake projects: list of target names to build. The resolver
+   * invokes `cmake --build <buildDir> --target <name>` per entry with shared
+   * flags. Per-target customization belongs in `CMakeLists.txt`, not here.
+   *
+   * Merged via array concat + dedup.
+   */
+  targets?: string[];
   env?: Record<string, string>;
 }
 
@@ -83,23 +92,29 @@ export interface CMakeBuildConfig {
  * Only `env` is meaningful; all other build fields are inapplicable.
  */
 export interface PythonBuildConfig {
-  kind: 'python';
+  toolchain: ToolchainPreset.Python;
   env?: Record<string, string>;
 }
 
 /**
  * Discriminated union of all supported build configurations.
  *
- * Use the `kind` field to narrow to the appropriate shape:
+ * Use the `toolchain` field to narrow to the appropriate shape:
  *
  * ```ts
- * if (build.kind === 'native') { // NativeBuildConfig — cflags, libs, compiler …
- * } else if (build.kind === 'cmake') { // CMakeBuildConfig — cmake.configureArgs …
- * } else { // PythonBuildConfig — env only
+ * if (build.toolchain === ToolchainPreset.CMake) { // CMakeBuildConfig — configureArgs …
+ * } else if (build.toolchain === ToolchainPreset.Python) { // PythonBuildConfig — env only
+ * } else { // NativeBuildConfig — flags, libs, compiler …
  * }
  * ```
  */
 export type WorkspaceBuildConfig = NativeBuildConfig | CMakeBuildConfig | PythonBuildConfig;
+
+export enum WorkspaceSeedPolicy {
+  Once = 'once',
+  Overwrite = 'overwrite',
+  Merge = 'merge',
+}
 
 /**
  * Options passed to `workspace.switch()` or the `workspace` prop of
@@ -113,16 +128,51 @@ export type WorkspaceBuildConfig = NativeBuildConfig | CMakeBuildConfig | Python
  *   - `'overwrite'` — replaces seed files every time. Existing non-seed files
  *     are kept. Useful for live-reloading starter code from the host.
  *   - `'merge'` — adds missing seed files without overwriting existing ones.
- * - `mountPath` — virtual mount point inside the Emscripten FS (default `/home/user`).
- * - `build` — default build config. The student can override it at runtime.
+ * - `toolchain` — workspace build toolchain preset. Omit for native (clang/em++); set to
+ *   `ToolchainPreset.CMake` or `ToolchainPreset.Python` for those build systems.
+ *   When `toolchain` is a native variant the build fields from `NativeBuildConfig`
+ *   (`compiler`, `flags`, …) may be provided directly on the options
+ *   object; pass the standard via `flags: ['-std=c++2c']`. Likewise CMake
+ *   fields (`sourceDir`, `configureArgs`, …) are
+ *   top-level on the cmake variant.
+ *
+ * The virtual mount path is always `/home/user/<name>` and is derived
+ * automatically — there is no `mountPath` option.
  */
-export interface WorkspaceOptions {
+type WorkspaceBase = {
   name: string;
   seed?: WorkspaceSeed;
-  seedPolicy?: 'once' | 'overwrite' | 'merge';
-  mountPath?: string;
-  build?: WorkspaceBuildConfig;
-}
+  seedPolicy?: WorkspaceSeedPolicy;
+  env?: Record<string, string>;
+};
+
+export type NativeWorkspaceOptions = WorkspaceBase & {
+  toolchain?: Exclude<ToolchainPreset, ToolchainPreset.CMake | ToolchainPreset.Python>;
+  compiler?: NativeBuildConfig['compiler'];
+  flags?: string[];
+  ldflags?: string[];
+  defines?: Record<string, string | true>;
+  includePaths?: string[];
+  libPaths?: string[];
+  libs?: string[];
+  sources?: string[];
+  output?: string;
+};
+
+export type CMakeWorkspaceOptions = WorkspaceBase & {
+  toolchain: ToolchainPreset.CMake;
+  sourceDir?: string;
+  buildDir?: string;
+  configureArgs?: string[];
+  buildArgs?: string[];
+  targets?: string[];
+};
+
+export type PythonWorkspaceOptions = WorkspaceBase & {
+  toolchain: ToolchainPreset.Python;
+};
+
+export type WorkspaceOptions = NativeWorkspaceOptions | CMakeWorkspaceOptions | PythonWorkspaceOptions;
 
 // I/O sinks/sources are runtime-agnostic; xterm shape lives in @emception/xterm.
 export type StdinInput =
@@ -139,6 +189,10 @@ export type StdoutSink = 'capture' | WritableStream<Uint8Array> | ((chunk: Uint8
  * Per-invocation options for {@link EmceptionAPI.run} and
  * {@link EmceptionAPI.compileAndRun}.
  *
+ * - `cwd` — working directory override. Defaults to the workspace mount path
+ *   (`/home/user/<name>`) when not provided.
+ * - `env` — environment variable overrides. Merged on top of the workspace
+ *   `env` (per-run values win for the same key).
  * - `stdin` — feed data to the child process stdin. Use `'none'` (default)
  *   for interactive programs that need a terminal, or pass a string / async
  *   iterable for batch runs.
@@ -163,8 +217,6 @@ export interface RunOptions {
 export interface CompileOptions extends RunOptions {
   sources?: string[];
   build?: Partial<WorkspaceBuildConfig>;
-  /** Legacy: appended to cflags. Only valid for native builds. */
-  flags?: string[];
 }
 
 /**

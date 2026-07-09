@@ -1,4 +1,5 @@
 import type { WorkspaceConfig } from '../workspace-config.js';
+import { ToolchainPreset } from '../types.js';
 
 const PYTHON_HELLO = `# Python 3 — runs directly in the browser via WebAssembly
 name = input("What is your name? ")
@@ -16,9 +17,9 @@ export const PYTHON_PRESET: WorkspaceConfig = {
     compile: {
         tool: 'python3',
         args: ['python3', '{sourceFile}'],
-        cwd: '/home/user/python',
         output: '',
-        sourceDetect: { extensions: ['.py'], entryPoint: '/user/python/main.py' },
+        toolchain: ToolchainPreset.Python,
+        sourceDetect: { extensions: ['.py'], entryPoint: 'main.py' },
     },
     run: {
         type: 'python-script',
@@ -31,6 +32,6 @@ export const PYTHON_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/python/main.py': { encoding: 'text', content: PYTHON_HELLO },
+        'main.py': { encoding: 'text', content: PYTHON_HELLO },
     },
 };

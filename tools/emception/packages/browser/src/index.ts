@@ -37,13 +37,15 @@ export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/emception/cdn/
 
 // Headless build presets + compileAndRun helper.
 export {
-    BROWSER_BUILD_PRESETS,
     compileAndRun,
-    type BrowserBuildPreset,
-    type BrowserBuildPresetName,
+    TOOLCHAIN_PRESETS,
+    type CMakePreset,
     type CompileAndRunOptions,
     type CompileAndRunResult,
     type CompilePaths,
-    type CompilePhase
+    type CompilePhase,
+    type NativePreset,
+    type Preset,
+    type PythonPreset
 } from './presets';
 

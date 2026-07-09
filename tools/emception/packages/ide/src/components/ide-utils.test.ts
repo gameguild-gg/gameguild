@@ -1,5 +1,5 @@
 import { SDL_DEMO_CODE } from './ide-types';
-import { buildFileTree, buildSDL3ArgsPort, detectsSDL, fileName, inferLanguage, isSourceFile, isTextFile, toWorkspaceFsPath } from './ide-utils';
+import { buildFileTree, buildSDL3ArgsPort, detectsSDL, fileName, inferLanguage, isSourceFile, isTextFile } from './ide-utils';
 
 // ─── isSourceFile ────────────────────────────────────────────────────────────
 
@@ -31,14 +31,6 @@ describe('fileName', () => {
   it('extracts the last path segment', () => expect(fileName('/src/main.cpp')).toBe('main.cpp'));
   it('handles a bare filename', () => expect(fileName('README.md')).toBe('README.md'));
   it('strips leading slashes', () => expect(fileName('/foo/bar/baz.ts')).toBe('baz.ts'));
-});
-
-// ─── toWorkspaceFsPath ───────────────────────────────────────────────────────
-
-describe('toWorkspaceFsPath', () => {
-  it('maps /user/* to /home/user/*', () => expect(toWorkspaceFsPath('/user/main.cpp')).toBe('/home/user/main.cpp'));
-  it('maps a nested /user path correctly', () => expect(toWorkspaceFsPath('/user/lib/utils.cpp')).toBe('/home/user/lib/utils.cpp'));
-  it('falls back to /home/user/<basename> for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas')).toBe('/home/user/canvas'));
 });
 
 // ─── inferLanguage ───────────────────────────────────────────────────────────
@@ -105,7 +97,7 @@ describe('detectsSDL', () => {
 
   it('ignores non-source files (e.g. .md)', () => expect(detectsSDL({ f: makeFile('/src/README.md', '#include <SDL3/SDL.h>') })).toBe(false));
 
-  it('ignores canvas/runtime entries', () => expect(detectsSDL({ r: { path: '/user/canvas', type: 'canvas' as const, content: 'sdl' } })).toBe(false));
+  it('ignores non-source image entries', () => expect(detectsSDL({ r: { path: '/user/canvas', type: 'image' as const, content: 'sdl' } })).toBe(false));
 
   it('returns false for an empty workspace', () => expect(detectsSDL({})).toBe(false));
 

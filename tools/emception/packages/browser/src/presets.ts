@@ -11,10 +11,9 @@
 // `emception` (events, workspace seeding, cancellation) is a
 // separate, higher-level layer that lands later in the roadmap.
 
+import { ToolchainPreset } from 'emception';
 import type { ToolResult } from './tool-runner';
 import type { WorkerClient } from './worker-client';
-
-export type BrowserBuildPresetName = 'c' | 'cpp' | 'sdl' | 'sdl-cpp' | 'sdl-c' | 'raylib' | 'raylib-cpp' | 'raylib-c' | 'allegro' | 'allegro-cpp' | 'allegro-c';
 
 export interface CompilePaths {
     /** Source file path inside the VFS (also appears in error messages). */
@@ -26,9 +25,9 @@ export interface CompilePaths {
 }
 
 const DEFAULT_PATHS: CompilePaths = {
-    sourcePath: '/home/user/main.cpp',
-    objectPath: '/home/user/main.o',
-    wasmPath: '/home/user/main.wasm',
+    sourcePath: 'main.cpp',
+    objectPath: 'main.o',
+    wasmPath: 'main.wasm',
 };
 
 /**
@@ -156,7 +155,14 @@ const WASM_LD_SDL_FLAGS: readonly string[] = [
 ];
 
 /** Extra cc1 -internal-isystem entries needed to find SDL3 and Dear ImGui headers. */
-const CC1_SDL_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/fakesdl', '-internal-isystem', '/usr/include/SDL3', '-internal-isystem', '/usr/include/imgui'];
+const CC1_SDL_EXTRA: readonly string[] = [
+    '-internal-isystem',
+    '/usr/include/fakesdl',
+    '-internal-isystem',
+    '/usr/include/SDL3',
+    '-internal-isystem',
+    '/usr/include/imgui',
+];
 
 /** Extra cc1 -internal-isystem entries needed to find raylib headers. */
 const CC1_RAYLIB_EXTRA: readonly string[] = ['-internal-isystem', '/usr/include/raylib'];
@@ -227,21 +233,53 @@ const WASM_LD_ALLEGRO_FLAGS: readonly string[] = [
     '-lhtml5',
 ];
 
-export interface BrowserBuildPreset {
-    readonly name: BrowserBuildPresetName;
-    /** Tool name to spawn for the compile step (always `'clang'` today). */
+/** Full preset for a native (clang + wasm-ld) target. */
+export interface NativePreset {
+    readonly toolchain: Exclude<ToolchainPreset, ToolchainPreset.CMake | ToolchainPreset.Python>;
+    readonly bundlesToPreload: string[];
+    readonly defaultTools: string[];
+    readonly compiler?: 'clang' | 'clang++' | 'emcc' | 'em++';
+    readonly flags?: string[];
+    readonly ldflags?: string[];
+    readonly defines?: Record<string, string | true>;
+    readonly includePaths?: string[];
+    readonly libPaths?: string[];
+    readonly libs?: string[];
+    readonly sources?: string[];
+    readonly output?: string;
+    readonly env?: Record<string, string>;
     readonly compileTool: string;
-    /** Tool name to spawn for the link step. */
     readonly linkTool: string;
-    /** Build the compile-step argv (argv[0] is the tool name). */
     compileArgv(paths: CompilePaths): string[];
-    /** Build the link-step argv (argv[0] is the tool name). */
     linkArgv(paths: CompilePaths): string[];
 }
 
-export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildPreset> = {
-    c: {
-        name: 'c',
+/** Full preset for a Python script target (no compile/link step). */
+export interface PythonPreset {
+    readonly toolchain: ToolchainPreset.Python;
+    readonly bundlesToPreload: string[];
+    readonly defaultTools: string[];
+    readonly env?: Record<string, string>;
+}
+
+/** Full preset for a CMake project (no direct clang invocation). */
+export interface CMakePreset {
+    readonly toolchain: ToolchainPreset.CMake;
+    readonly bundlesToPreload: string[];
+    readonly defaultTools: string[];
+    readonly env?: Record<string, string>;
+}
+
+/** Unified preset — discriminated by `toolchain`. */
+export type Preset = NativePreset | PythonPreset | CMakePreset;
+
+export const TOOLCHAIN_PRESETS: Record<ToolchainPreset, Preset> = {
+    [ToolchainPreset.C]: {
+        toolchain: ToolchainPreset.C,
+        bundlesToPreload: ['llvm', 'libcurl-lite'],
+        defaultTools: ['clang', 'wasm-ld'],
+        compiler: 'clang',
+        flags: ['-O1'],
         compileTool: 'clang',
         linkTool: 'wasm-ld',
         compileArgv: ({ sourcePath, objectPath }) => [
@@ -260,8 +298,12 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
         ],
         linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_BASE, ...WASM_LD_C_LIBS],
     },
-    cpp: {
-        name: 'cpp',
+    [ToolchainPreset.CPP]: {
+        toolchain: ToolchainPreset.CPP,
+        bundlesToPreload: ['llvm', 'libcurl-lite'],
+        defaultTools: ['clang++', 'wasm-ld'],
+        compiler: 'clang++',
+        flags: ['-O1'],
         compileTool: 'clang',
         linkTool: 'wasm-ld',
         compileArgv: ({ sourcePath, objectPath }) => [
@@ -281,8 +323,12 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
         ],
         linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_BASE, ...WASM_LD_CPP_LIBS],
     },
-    sdl: {
-        name: 'sdl',
+    [ToolchainPreset.SDL_CPP]: {
+        toolchain: ToolchainPreset.SDL_CPP,
+        bundlesToPreload: ['llvm', 'sdl3', 'imgui'],
+        defaultTools: ['clang', 'wasm-ld'],
+        compiler: 'clang',
+        libs: ['SDL3'],
         compileTool: 'clang',
         linkTool: 'wasm-ld',
         compileArgv: ({ sourcePath, objectPath }) => [
@@ -303,30 +349,12 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
         ],
         linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_SDL_FLAGS],
     },
-    'sdl-cpp': {
-        name: 'sdl-cpp',
-        compileTool: 'clang',
-        linkTool: 'wasm-ld',
-        compileArgv: ({ sourcePath, objectPath }) => [
-            'clang',
-            ...CC1_FRONTEND,
-            ...CC1_CPP_INCLUDES,
-            ...CC1_SDL_EXTRA,
-            ...CC1_STD_CPP,
-            ...CC1_TAIL,
-            ...CC1_CPP_EXC,
-            '-main-file-name',
-            basename(sourcePath),
-            '-o',
-            objectPath,
-            '-x',
-            'c++',
-            sourcePath,
-        ],
-        linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_SDL_FLAGS],
-    },
-    'sdl-c': {
-        name: 'sdl-c',
+    [ToolchainPreset.SDL_C]: {
+        toolchain: ToolchainPreset.SDL_C,
+        bundlesToPreload: ['llvm', 'sdl3', 'imgui'],
+        defaultTools: ['clang', 'wasm-ld'],
+        compiler: 'clang',
+        libs: ['SDL3'],
         compileTool: 'clang',
         linkTool: 'wasm-ld',
         compileArgv: ({ sourcePath, objectPath }) => [
@@ -346,8 +374,12 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
         ],
         linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_SDL_FLAGS],
     },
-    raylib: {
-        name: 'raylib',
+    [ToolchainPreset.Raylib_CPP]: {
+        toolchain: ToolchainPreset.Raylib_CPP,
+        bundlesToPreload: ['llvm', 'raylib'],
+        defaultTools: ['clang', 'wasm-ld'],
+        compiler: 'clang',
+        libs: ['raylib', 'raygui', 'physac', 'rlights'],
         compileTool: 'clang',
         linkTool: 'wasm-ld',
         compileArgv: ({ sourcePath, objectPath }) => [
@@ -368,30 +400,12 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
         ],
         linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_RAYLIB_FLAGS],
     },
-    'raylib-cpp': {
-        name: 'raylib-cpp',
-        compileTool: 'clang',
-        linkTool: 'wasm-ld',
-        compileArgv: ({ sourcePath, objectPath }) => [
-            'clang',
-            ...CC1_FRONTEND,
-            ...CC1_CPP_INCLUDES,
-            ...CC1_RAYLIB_EXTRA,
-            ...CC1_STD_CPP,
-            ...CC1_TAIL,
-            ...CC1_CPP_EXC,
-            '-main-file-name',
-            basename(sourcePath),
-            '-o',
-            objectPath,
-            '-x',
-            'c++',
-            sourcePath,
-        ],
-        linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_RAYLIB_FLAGS],
-    },
-    'raylib-c': {
-        name: 'raylib-c',
+    [ToolchainPreset.Raylib_C]: {
+        toolchain: ToolchainPreset.Raylib_C,
+        bundlesToPreload: ['llvm', 'raylib'],
+        defaultTools: ['clang', 'wasm-ld'],
+        compiler: 'clang',
+        libs: ['raylib', 'raygui', 'physac', 'rlights'],
         compileTool: 'clang',
         linkTool: 'wasm-ld',
         compileArgv: ({ sourcePath, objectPath }) => [
@@ -411,8 +425,22 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
         ],
         linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_RAYLIB_FLAGS],
     },
-    allegro: {
-        name: 'allegro',
+    [ToolchainPreset.Allegro_CPP]: {
+        toolchain: ToolchainPreset.Allegro_CPP,
+        bundlesToPreload: ['llvm', 'allegro'],
+        defaultTools: ['clang', 'wasm-ld'],
+        compiler: 'clang',
+        libs: [
+            'allegro',
+            'allegro_image',
+            'allegro_primitives',
+            'allegro_font',
+            'allegro_ttf',
+            'allegro_audio',
+            'allegro_acodec',
+            'allegro_color',
+            'allegro_main',
+        ],
         compileTool: 'clang',
         linkTool: 'wasm-ld',
         compileArgv: ({ sourcePath, objectPath }) => [
@@ -433,30 +461,22 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
         ],
         linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_ALLEGRO_FLAGS],
     },
-    'allegro-cpp': {
-        name: 'allegro-cpp',
-        compileTool: 'clang',
-        linkTool: 'wasm-ld',
-        compileArgv: ({ sourcePath, objectPath }) => [
-            'clang',
-            ...CC1_FRONTEND,
-            ...CC1_CPP_INCLUDES,
-            ...CC1_ALLEGRO_EXTRA,
-            ...CC1_STD_CPP,
-            ...CC1_TAIL,
-            ...CC1_CPP_EXC,
-            '-main-file-name',
-            basename(sourcePath),
-            '-o',
-            objectPath,
-            '-x',
-            'c++',
-            sourcePath,
+    [ToolchainPreset.Allegro_C]: {
+        toolchain: ToolchainPreset.Allegro_C,
+        bundlesToPreload: ['llvm', 'allegro'],
+        defaultTools: ['clang', 'wasm-ld'],
+        compiler: 'clang',
+        libs: [
+            'allegro',
+            'allegro_image',
+            'allegro_primitives',
+            'allegro_font',
+            'allegro_ttf',
+            'allegro_audio',
+            'allegro_acodec',
+            'allegro_color',
+            'allegro_main',
         ],
-        linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_ALLEGRO_FLAGS],
-    },
-    'allegro-c': {
-        name: 'allegro-c',
         compileTool: 'clang',
         linkTool: 'wasm-ld',
         compileArgv: ({ sourcePath, objectPath }) => [
@@ -475,6 +495,16 @@ export const BROWSER_BUILD_PRESETS: Record<BrowserBuildPresetName, BrowserBuildP
             sourcePath,
         ],
         linkArgv: ({ objectPath, wasmPath }) => ['wasm-ld', objectPath, '-o', wasmPath, ...WASM_LD_ALLEGRO_FLAGS],
+    },
+    [ToolchainPreset.Python]: {
+        toolchain: ToolchainPreset.Python,
+        bundlesToPreload: ['cpython'],
+        defaultTools: ['python3'],
+    },
+    [ToolchainPreset.CMake]: {
+        toolchain: ToolchainPreset.CMake,
+        bundlesToPreload: ['llvm', 'cmake', 'ninja'],
+        defaultTools: ['cmake', 'ninja'],
     },
 };
 
@@ -486,7 +516,7 @@ function basename(path: string): string {
 export type CompilePhase = 'write' | 'compile' | 'link' | 'run';
 
 export interface CompileAndRunOptions {
-    preset: BrowserBuildPresetName;
+    toolchain: ToolchainPreset;
     /** Source code to compile. Written to `paths.sourcePath` before compiling. */
     source: string;
     /** Optional working dir for each tool invocation. Defaults to dirname(sourcePath). */
@@ -518,9 +548,9 @@ export interface CompileAndRunResult {
  * `WorkerClient`. Stops early on compile or link failure.
  */
 export async function compileAndRun(client: WorkerClient, opts: CompileAndRunOptions): Promise<CompileAndRunResult> {
-    const preset = BROWSER_BUILD_PRESETS[opts.preset];
+    const preset = TOOLCHAIN_PRESETS[opts.toolchain] as NativePreset | undefined;
     if (!preset) {
-        throw new Error(`compileAndRun: unknown preset '${opts.preset}'`);
+        throw new Error(`compileAndRun: unknown toolchain '${opts.toolchain}'`);
     }
 
     const paths: CompilePaths = { ...DEFAULT_PATHS, ...opts.paths };
@@ -557,7 +587,7 @@ export async function compileAndRun(client: WorkerClient, opts: CompileAndRunOpt
 
 function dirname(path: string): string {
     const i = path.lastIndexOf('/');
-    return i <= 0 ? '/' : path.slice(0, i);
+    return i <= 0 ? '.' : path.slice(0, i);
 }
 
 function makeStdinFeeder(stdin: string | undefined): (() => number | null) | undefined {

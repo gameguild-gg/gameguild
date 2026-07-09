@@ -1,4 +1,5 @@
 import type { WorkspaceConfig } from '../workspace-config.js';
+import { ToolchainPreset } from '../types.js';
 
 // _Generic demo — showcases compile-time type dispatch, a C11 feature.
 export const C_GENERIC_CODE = `#include <stdio.h>
@@ -39,14 +40,14 @@ export const C_TERMINAL_PRESET: WorkspaceConfig = {
     compile: {
         tool: 'clang',
         args: [],
-        cwd: '/home/user/c-terminal',
-        output: '/home/user/c-terminal/main.wasm',
-        sourceDetect: { extensions: ['.c'], entryPoint: '/user/c-terminal/main.c' },
+        output: 'main.wasm',
+        toolchain: ToolchainPreset.C,
+        sourceDetect: { extensions: ['.c'], entryPoint: 'main.c' },
     },
     run: {
         type: 'wasi-terminal',
         tool: 'wasi-run',
-        args: ['wasi-run', '/home/user/c-terminal/main.wasm'],
+        args: ['wasi-run', 'main.wasm'],
     },
     features: {
         canvas: false,
@@ -54,6 +55,6 @@ export const C_TERMINAL_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/c-terminal/main.c': { encoding: 'text', content: C_GENERIC_CODE },
+        'main.c': { encoding: 'text', content: C_GENERIC_CODE },
     },
 };

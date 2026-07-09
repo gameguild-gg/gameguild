@@ -1,4 +1,5 @@
 import type { WorkspaceConfig } from '../workspace-config.js';
+import { ToolchainPreset } from '../types.js';
 
 const CMAKE_LISTS = `cmake_minimum_required(VERSION 3.20)
 project(hello LANGUAGES CXX)
@@ -21,15 +22,15 @@ export const CMAKE_PRESET: WorkspaceConfig = {
     version: 1,
     compile: {
         tool: 'cmake',
-        args: ['cmake', '-B', '/home/user/cmake/build', '-G', 'Ninja', '-S', '/home/user/cmake'],
-        cwd: '/home/user/cmake',
-        output: '/home/user/cmake/build/hello',
-        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/cmake/main.cpp' },
+        args: ['cmake', '-B', 'build', '-G', 'Ninja', '-S', '.'],
+        output: 'build/hello',
+        toolchain: ToolchainPreset.CMake,
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: 'main.cpp' },
     },
     run: {
         type: 'cmake-build',
         tool: 'wasi-run',
-        args: ['wasi-run', '/home/user/cmake/build/hello'],
+        args: ['wasi-run', 'build/hello'],
     },
     features: {
         canvas: false,
@@ -37,7 +38,7 @@ export const CMAKE_PRESET: WorkspaceConfig = {
         showTestButton: false,
     },
     files: {
-        '/user/cmake/main.cpp': { encoding: 'text', content: CMAKE_MAIN },
-        '/user/cmake/CMakeLists.txt': { encoding: 'text', content: CMAKE_LISTS },
+        'main.cpp': { encoding: 'text', content: CMAKE_MAIN },
+        'CMakeLists.txt': { encoding: 'text', content: CMAKE_LISTS },
     },
 };

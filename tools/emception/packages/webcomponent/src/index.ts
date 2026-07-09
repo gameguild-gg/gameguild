@@ -20,15 +20,8 @@
 // All non-DOM work (attribute parsing) is done by `emception`;
 // the compile+run pipeline uses `compileAndRun` from `@emception/browser`.
 
-import {
-    compileAndRun,
-    type BrowserBuildPresetName,
-    type EmceptionAPI as BrowserEmceptionAPI,
-} from '@gameguild/emception-browser';
-import {
-    parseAttributesToInput,
-    type ViewConfigInput,
-} from 'emception';
+import { compileAndRun, type EmceptionAPI as BrowserEmceptionAPI } from '@gameguild/emception-browser';
+import { parseAttributesToInput, ToolchainPreset, type ViewConfigInput } from 'emception';
 
 export const ELEMENT_NAME = 'emception-run';
 
@@ -58,10 +51,23 @@ const TEMPLATE = `
 export class EmceptionRunElement extends HTMLElement {
     static get observedAttributes(): string[] {
         return [
-            'preset', 'manifest-url', 'workspace', 'source', 'seed-url',
-            'build-url', 'seed-policy', 'autorun', 'canvas', 'show-hidden',
-            'show-solution', 'std', 'output', 'cflags', 'cxxflags', 'ldflags',
-            'libs', 'include-paths', 'lib-paths',
+            'preset',
+            'manifest-url',
+            'workspace',
+            'source',
+            'seed-url',
+            'build-url',
+            'seed-policy',
+            'autorun',
+            'canvas',
+            'show-hidden',
+            'show-solution',
+            'output',
+            'flags',
+            'ldflags',
+            'libs',
+            'include-paths',
+            'lib-paths',
         ];
     }
 
@@ -131,32 +137,40 @@ export class EmceptionRunElement extends HTMLElement {
 
         const source = this.getAttribute('source') ?? '';
         const presetAttr = this.getAttribute('preset') ?? 'cpp';
-        const preset = presetAttr as BrowserBuildPresetName;
+        const toolchain = presetAttr as ToolchainPreset;
         const stdinEl = this.querySelector<HTMLTextAreaElement>(':scope > [slot="stdin"]');
         const stdin = stdinEl?.value ?? stdinEl?.textContent ?? '';
 
         if (this.outputEl) this.outputEl.textContent = '';
 
         const result = await compileAndRun(api, {
-            preset,
+            toolchain,
             source,
             stdin: stdin || undefined,
-            onStdout: (t) => { if (this.outputEl) this.outputEl.append(t); },
-            onStderr: (t) => { if (this.outputEl) this.outputEl.append(t); },
+            onStdout: (t) => {
+                if (this.outputEl) this.outputEl.append(t);
+            },
+            onStderr: (t) => {
+                if (this.outputEl) this.outputEl.append(t);
+            },
         });
 
-        this.dispatchEvent(new CustomEvent('emception-exit', {
-            detail: { exitCode: result.exitCode, finalPhase: result.finalPhase },
-            bubbles: true,
-            composed: true,
-        }));
-
-        if (result.exitCode === 0) {
-            this.dispatchEvent(new CustomEvent('emception-ready', {
-                detail: {},
+        this.dispatchEvent(
+            new CustomEvent('emception-exit', {
+                detail: { exitCode: result.exitCode, finalPhase: result.finalPhase },
                 bubbles: true,
                 composed: true,
-            }));
+            }),
+        );
+
+        if (result.exitCode === 0) {
+            this.dispatchEvent(
+                new CustomEvent('emception-ready', {
+                    detail: {},
+                    bubbles: true,
+                    composed: true,
+                }),
+            );
         }
     }
 
@@ -177,9 +191,7 @@ export class EmceptionRunElement extends HTMLElement {
  */
 export function registerEmceptionRun(tag: string = ELEMENT_NAME): CustomElementConstructor {
     if (typeof customElements === 'undefined') {
-        throw new Error(
-            '@emception/webcomponent: customElements is not available in this environment.',
-        );
+        throw new Error('@emception/webcomponent: customElements is not available in this environment.');
     }
     const existing = customElements.get(tag);
     if (existing) return existing;

@@ -61,7 +61,7 @@ expectAssignable<WorkspaceSeed>(seed);
 const build: WorkspaceBuildConfig = {
     compiler: 'em++',
     std: 'c++20',
-    cflags: ['-O2'],
+    flags: ['-O2'],
     ldflags: ['-sEXIT_RUNTIME=1'],
 };
 expectAssignable<WorkspaceBuildConfig>(build);

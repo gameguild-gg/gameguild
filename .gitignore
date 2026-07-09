@@ -71,3 +71,7 @@ playwright-report-react/
 tools/emception/userland/**/.git/
 
 .next/
+
+data/state_store.db/
+
+data/stream_store/

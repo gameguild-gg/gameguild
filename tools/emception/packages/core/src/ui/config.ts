@@ -9,9 +9,10 @@
 // Pure core: no DOM, no React, no Node. Inputs are plain JSON-ish; outputs
 // are typed.
 
-import { BUILD_PRESETS, type BuildPresetName } from '../build-presets';
+import { BUILD_PRESETS } from '../build-presets';
+import { ToolchainPreset } from '../types';
 import { BuildConfigError } from '../errors';
-import type { StdinInput, StdoutSink, WorkspaceBuildConfig, WorkspaceOptions, WorkspaceSeed } from '../types';
+import type { StdinInput, StdoutSink, WorkspaceOptions, WorkspaceSeed } from '../types';
 
 /**
  * The shape both UI surfaces accept BEFORE normalization. Mirrors the
@@ -39,7 +40,7 @@ export interface ViewConfigInput {
 }
 
 export interface NormalizedViewConfig {
-  preset: BuildPresetName | undefined;
+  preset: ToolchainPreset | undefined;
   manifestUrl: string | undefined;
   workspace: WorkspaceOptions | undefined;
   seedUrl: string | undefined;
@@ -87,12 +88,12 @@ export function normalizeViewConfig(input: ViewConfigInput): NormalizedViewConfi
   };
 }
 
-function normalizePreset(p: string | undefined): BuildPresetName | undefined {
+function normalizePreset(p: string | undefined): ToolchainPreset | undefined {
   if (p === undefined) return undefined;
   if (!(p in BUILD_PRESETS)) {
     throw new BuildConfigError(`view-config: unknown preset '${p}'. Known: ${Object.keys(BUILD_PRESETS).join(', ')}`);
   }
-  return p as BuildPresetName;
+  return p as ToolchainPreset;
 }
 
 function normalizeWorkspace(
@@ -172,14 +173,12 @@ function stripFns(cfg: NormalizedViewConfig): Record<string, unknown> {
     manifestUrl: cfg.manifestUrl,
     workspace: cfg.workspace
       ? {
-          name: cfg.workspace.name,
-          seedPolicy: cfg.workspace.seedPolicy,
-          mountPath: cfg.workspace.mountPath,
-          build: cfg.workspace.build as WorkspaceBuildConfig | undefined,
-          // seed content is hashable but not directly comparable when
-          // it contains Uint8Array; treat presence-only here.
-          seedKeys: cfg.workspace.seed ? Object.keys(cfg.workspace.seed).sort() : undefined,
-        }
+        name: cfg.workspace.name,
+        seedPolicy: cfg.workspace.seedPolicy,
+        // seed content is hashable but not directly comparable when
+        // it contains Uint8Array; treat presence-only here.
+        seedKeys: cfg.workspace.seed ? Object.keys(cfg.workspace.seed).sort() : undefined,
+      }
       : undefined,
     seedUrl: cfg.seedUrl,
     buildUrl: cfg.buildUrl,

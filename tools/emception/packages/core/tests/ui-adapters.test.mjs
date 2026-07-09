@@ -112,11 +112,10 @@ test('parseAttributesToInput maps top-level kebab attrs', () => {
     });
 });
 
-test('parseAttributesToInput folds build attrs into workspace.build', () => {
+test('parseAttributesToInput folds build attrs into workspace directly', () => {
     const input = parseAttributesToInput({
         'preset': 'cpp',
-        'std': 'c++23',
-        'cflags': '-O2 -Wall',
+        'flags': '-O2 -Wall',
         'ldflags': '-lm',
         'output': 'a.out',
         'include-paths': 'inc, vendor/inc',
@@ -124,13 +123,10 @@ test('parseAttributesToInput folds build attrs into workspace.build', () => {
     assert.deepEqual(input, {
         preset: 'cpp',
         workspace: {
-            build: {
-                std: 'c++23',
-                cflags: ['-O2', '-Wall'],
-                ldflags: ['-lm'],
-                output: 'a.out',
-                includePaths: ['inc', 'vendor/inc'],
-            },
+            output: 'a.out',
+            flags: ['-O2', '-Wall'],
+            ldflags: ['-lm'],
+            includePaths: ['inc', 'vendor/inc'],
         },
     });
 });
@@ -162,7 +158,6 @@ test('parseAttributesToInput surfaces unknowns via onUnknown callback', () => {
 test('parseAttributesToInput skips attrs with undefined / empty string values', () => {
     const input = parseAttributesToInput({
         'preset': 'cpp',
-        'std': '',
         'output': undefined,
         'manifest-url': '',
     });
@@ -194,7 +189,7 @@ test('parseAttributesToInput schema gate blocks arbitrary attribute names from r
 });
 
 test('ATTRIBUTE_SCHEMA includes all spec-required attrs', () => {
-    for (const required of ['cflags', 'ldflags', 'std', 'output', 'build-url']) {
+    for (const required of ['flags', 'ldflags', 'output', 'build-url']) {
         assert.ok(required in ATTRIBUTE_SCHEMA, `missing attr '${required}'`);
     }
 });

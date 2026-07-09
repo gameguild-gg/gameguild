@@ -119,7 +119,6 @@ const handlers: { [K in TestCase['kind']]: TestKindHandler<K> } = {
       };
     }
     const argv: string[] = ['-Xclang', '-ast-dump=json', '-fsyntax-only'];
-    if (plan.build?.std) argv.push(`-std=${plan.build.std}`);
     for (const inc of plan.build?.includePaths ?? []) argv.push(`-I${inc}`);
     if (plan.build?.defines) {
       for (const key of Object.keys(plan.build.defines).sort()) {

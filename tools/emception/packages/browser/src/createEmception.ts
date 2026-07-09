@@ -25,7 +25,7 @@
  * `boot()` / `bootInWorker()` exports remain available for advanced use.
  */
 
-import { HeadlessIOProvider } from 'emception';
+import { HeadlessIOProvider, ToolchainPreset } from 'emception';
 import type {
     EmceptionAPI,
     EmceptionEventListener,
@@ -134,11 +134,13 @@ function wrap(client: WorkerClient): EmceptionAPI {
     }
 
     // Local workspace state.
-    let currentBuild: WorkspaceBuildConfig = { kind: 'native' };
+    let currentBuild: WorkspaceBuildConfig = { toolchain: ToolchainPreset.CPP };
+    let currentWorkspaceName = 'default';
+    const mountPath = () => `/home/user/${currentWorkspaceName}`;
 
     /** Translate a core RunOptions into the browser WorkerClient RunOptions. */
     function toBrowserOpts(opts: RunOptions): BrowserRunOptions {
-        const browser: BrowserRunOptions = { cwd: opts.cwd, env: opts.env };
+        const browser: BrowserRunOptions = { cwd: opts.cwd ?? mountPath(), env: { ...currentBuild.env, ...opts.env } };
         if (typeof opts.stdout === 'function') {
             const fn = opts.stdout;
             browser.onStdout = (text: string) => { (fn as (c: Uint8Array) => void)(encoder.encode(text)); };
@@ -187,12 +189,12 @@ function wrap(client: WorkerClient): EmceptionAPI {
 
     const workspace: WorkspaceAPI = {
         list: async () => ['default'],
-        switch: async (_name: string) => { /* single-workspace browser model: no-op */ },
+        switch: async (name: string) => { currentWorkspaceName = name; },
         reset: async () => client.resetVfs(),
         readFile: (path: string) => client.getFile(path),
         writeFile: async (path: string, data: Uint8Array | string, _meta?: Partial<FileEntry>) =>
             client.writeFile(path, toBytes(data)),
-        listFiles: async (_opts?) => walkDir('/home/user'),
+        listFiles: async (_opts?) => walkDir(mountPath()),
         setVisibility: async (_path: string, _v: FileEntry['visibility']) => { /* metadata-only, no-op */ },
         getBuild: async () => currentBuild,
         setBuild: async (build: WorkspaceBuildConfig) => { currentBuild = build; },

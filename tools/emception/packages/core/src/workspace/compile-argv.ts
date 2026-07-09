@@ -36,14 +36,13 @@ export interface BuildArgvOptions {
  * Build a `(compiler, argv, output)` triple from a resolved native build config.
  *
  * Order of flags (stable so snapshots stay diffable):
- *   1. `-std=...`
- *   2. `-D<key>[=value]` (sorted by key)
- *   3. `-I<path>` (preserve insertion order)
- *   4. `cflags` / `cxxflags` (cxxflags only for C++ compilers)
- *   5. sources (preserve insertion order)
- *   6. `-L<path>`, `-l<name>`
- *   7. `ldflags`
- *   8. `-o <output>`
+ *   1. `-D<key>[=value]` (sorted by key)
+ *   2. `-I<path>` (preserve insertion order)
+ *   3. `flags`
+ *   4. sources (preserve insertion order)
+ *   5. `-L<path>`, `-l<name>`
+ *   6. `ldflags`
+ *   7. `-o <output>`
  */
 export function buildArgv(build: NativeBuildConfig, opts: BuildArgvOptions = {}): CompileInvocation {
   const compiler = opts.compiler ?? build.compiler;
@@ -53,11 +52,8 @@ export function buildArgv(build: NativeBuildConfig, opts: BuildArgvOptions = {})
 
   const sources = opts.sources ?? build.sources ?? [];
   const output = build.output ?? 'a.out';
-  const isCxx = compiler === 'clang++' || compiler === 'em++';
 
   const argv: string[] = [];
-
-  if (build.std) argv.push(`-std=${build.std}`);
 
   if (build.defines) {
     for (const key of Object.keys(build.defines).sort()) {
@@ -68,8 +64,7 @@ export function buildArgv(build: NativeBuildConfig, opts: BuildArgvOptions = {})
 
   for (const inc of build.includePaths ?? []) argv.push(`-I${inc}`);
 
-  if (build.cflags) argv.push(...build.cflags);
-  if (isCxx && build.cxxflags) argv.push(...build.cxxflags);
+  if (build.flags) argv.push(...build.flags);
 
   argv.push(...sources);
 
