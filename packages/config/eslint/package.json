@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/eslint-config",
-  "version": "3.10.0",
+  "version": "3.11.0",
   "description": "ESLint configuration for matheusmartins.com website and related projects",
   "license": "UNLICENSED",
   "author": "Matheus Martins <contact@matheusmartins.com>",
