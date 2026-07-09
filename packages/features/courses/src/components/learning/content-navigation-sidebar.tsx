@@ -1,8 +1,8 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Progress } from '@game-guild/ui/components/progress';
+import { cn } from '@game-guild/ui/lib/utils';
 import { BookOpen, CheckCircle2, Circle, FileQuestion, Lock, MessageSquare, PlayCircle, Upload } from 'lucide-react';
 
 export interface ContentNavigationItem {
