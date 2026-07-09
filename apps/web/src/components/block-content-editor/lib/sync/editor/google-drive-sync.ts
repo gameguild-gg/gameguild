@@ -1,16 +1,5 @@
 import { GoogleDriveService } from "../../../services/editor/google-drive-service"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  hash: string
-  storageType: "local" | "gameguild-cloud" | "google-drive"
-}
+import type { ProjectData } from "../../storage/editor/project-data"
 
 interface SyncResult {
   success: boolean
@@ -91,10 +80,12 @@ export class GoogleDriveSync {
           name: project.name,
           data: project.data,
           tags: project.tags,
-          size: project.size,
-          hash: project.hash,
-          createdAt: project.createdAt,
-          updatedAt: project.updatedAt,
+          metadata: {
+            size: project.size,
+            hash: project.hash,
+            createdAt: project.createdAt,
+            updatedAt: project.updatedAt,
+          },
           storageType: "google-drive"
         }
       }
@@ -122,10 +113,12 @@ export class GoogleDriveSync {
         name: project.name,
         data: project.data,
         tags: project.tags,
-        size: project.size,
-        hash: project.hash,
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt,
+        metadata: {
+          size: project.size,
+          hash: project.hash,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+        },
         storageType: "google-drive" as const
       }))
     } catch (error) {

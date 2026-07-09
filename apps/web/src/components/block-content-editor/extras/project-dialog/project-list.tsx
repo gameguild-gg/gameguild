@@ -7,19 +7,7 @@ import { FolderOpen } from "lucide-react"
 import { DownloadConfirmDialog } from "@/components/block-content-editor/extras/dialogs/download-confirm-dialog"
 import { ProjectGridView } from "./project-grid-view"
 import { ProjectListView } from "./project-list-view"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  isLocallyAvailable?: boolean
-  preferences?: any
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface ProjectListProps {
   projects: ProjectData[]
@@ -95,8 +83,8 @@ export function ProjectList({
           downloadDialog.project.name,
           downloadDialog.project.data,
           downloadDialog.project.tags,
-          downloadDialog.project.createdAt,
-          downloadDialog.project.updatedAt,
+          downloadDialog.project.metadata.createdAt,
+          downloadDialog.project.metadata.updatedAt,
           downloadDialog.project.preferences
         )
       } else {
@@ -121,8 +109,8 @@ export function ProjectList({
             data: downloadDialog.project.data,
             tags: downloadDialog.project.tags,
             size: new Blob([downloadDialog.project.data]).size,
-            createdAt: downloadDialog.project.createdAt,
-            updatedAt: downloadDialog.project.updatedAt,
+            createdAt: downloadDialog.project.metadata.createdAt,
+            updatedAt: downloadDialog.project.metadata.updatedAt,
             hash: hash,
             storageType: "local" as const,
             preferences: downloadDialog.project.preferences
@@ -226,8 +214,8 @@ export function ProjectList({
         open={downloadDialog.open}
         onOpenChange={(open) => setDownloadDialog({ open, project: null })}
         fileName={`gg-lexical-editor-${downloadDialog.project?.name || "project"}.zip`}
-        fileSize={formatSize(downloadDialog.project?.size || 0)}
-        lastModified={downloadDialog.project ? new Date(downloadDialog.project.updatedAt).toLocaleDateString() : ""}
+        fileSize={formatSize(downloadDialog.project?.metadata.size || 0)}
+        lastModified={downloadDialog.project ? new Date(downloadDialog.project.metadata.updatedAt).toLocaleDateString() : ""}
         onConfirm={handleDownloadConfirm}
         project={downloadDialog.project}
       />

@@ -8,7 +8,7 @@ import { StudioLayout } from "../studio/studio-layout"
 import type { FieldConfig, ToolbarConfig } from "@/components/block-content-editor/engines/editor-config"
 
 const fieldConfig: Partial<FieldConfig> = {
-  allowedBlockTypes: ["rt"],
+  allowedBlockTypes: ["rich-text"],
   defaultMode: "free-page",
 }
 

@@ -287,7 +287,7 @@ export function BlockEditorModal({ open, onOpenChange, block, blockType, onSave 
   }
 
   // Code Studio — mode selection for new blocks, then full-screen editor
-  if (blockType === "code") {
+  if (blockType === "code-studio") {
     if (!open) return null
     const isNewCodeStudio = !currentData.files || currentData.files.length === 0
     if (isNewCodeStudio && !showModeSelection && !editData) {
@@ -298,27 +298,27 @@ export function BlockEditorModal({ open, onOpenChange, block, blockType, onSave 
   }
 
   // Markdown — renders its own full-screen overlay
-  if (blockType === "md") {
+  if (blockType === "markdown") {
     if (!open) return null
     return <MarkdownEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // Mermaid — renders its own full-screen overlay
-  if (blockType === "mmd") {
+  if (blockType === "mermaid") {
     if (!open) return null
     return <MermaidEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // Vega-Lite — renders its own full-screen overlay
-  if (blockType === "vega") {
+  if (blockType === "vega-lite") {
     if (!open) return null
     return <VegaLiteEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // Media types (image, video, audio) — UnifiedMediaEditor renders its own overlay
-  if (blockType === "img" || blockType === "vid" || blockType === "aud") {
+  if (blockType === "image" || blockType === "video" || blockType === "audio") {
     if (!open) return null
-    const mediaType = blockType === "img" ? "image" : blockType === "vid" ? "video" : "audio"
+    const mediaType = blockType
     return (
       <UnifiedMediaEditor
         data={{ ...currentData, type: mediaType } as BaseMediaData}
@@ -336,7 +336,7 @@ export function BlockEditorModal({ open, onOpenChange, block, blockType, onSave 
   }
 
   // Gallery — UnifiedMediaEditor in gallery mode, renders its own overlay
-  if (blockType === "gal") {
+  if (blockType === "gallery") {
     if (!open) return null
     const galleryImages: BaseMediaData[] = (currentData.images || []).map((img: any) => ({
       type: "image" as const,
@@ -378,23 +378,23 @@ export function BlockEditorModal({ open, onOpenChange, block, blockType, onSave 
   }
 
   // Divider, Button, Admonition — render their own full-screen overlay
-  if (blockType === "div") {
+  if (blockType === "divider") {
     if (!open) return null
     return <DividerEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
-  if (blockType === "btn") {
+  if (blockType === "button") {
     if (!open) return null
     return <ButtonEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
-  if (blockType === "adm") {
+  if (blockType === "admonition") {
     if (!open) return null
     return <AdmonitionEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
   // Table — renders its own full-screen overlay
-  if (blockType === "tbl") {
+  if (blockType === "table") {
     if (!open) return null
     return <TableEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
@@ -406,23 +406,23 @@ export function BlockEditorModal({ open, onOpenChange, block, blockType, onSave 
   }
 
   // Rich Text — renders its own full-screen overlay
-  if (blockType === "rt") {
+  if (blockType === "rich-text") {
     if (!open) return null
     return <RichTextEditor initialData={currentData} onSave={handleSave} onCancel={handleCancel} />
   }
 
-  // ─── Pattern B: Simple form editors for Lexical-coupled types ───
+  // ─── Pattern B: Simple form editors ───
 
   const formMap: Record<string, React.ComponentType<{ data: any; onChange: (d: any) => void }>> = {
-    yt: YouTubeForm,
-    spot: SpotifyForm,
-    hdr: HeaderForm,
-    src: SourceForm,
+    "youtube": YouTubeForm,
+    "spotify": SpotifyForm,
+    "header": HeaderForm,
+    "source": SourceForm,
   }
   const FormComponent = formMap[blockType]
 
   // Presentation and Project get a simple form too
-  if (blockType === "pres") {
+  if (blockType === "presentation") {
     return (
       <Dialog open={open} onOpenChange={(v) => { if (!v) handleCancel() }}>
         <DialogContent className="max-w-2xl">
@@ -447,7 +447,7 @@ export function BlockEditorModal({ open, onOpenChange, block, blockType, onSave 
     )
   }
 
-  if (blockType === "proj") {
+  if (blockType === "project") {
     return (
       <Dialog open={open} onOpenChange={(v) => { if (!v) handleCancel() }}>
         <DialogContent className="max-w-2xl">

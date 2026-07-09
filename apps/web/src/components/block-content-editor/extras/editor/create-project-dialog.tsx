@@ -12,16 +12,7 @@ import {
   type ProjectMode,
 } from "@/components/block-content-editor/lib/storage/editor/project-modes"
 import { EMPTY_PROJECT_DATA } from "@/components/block-content-editor/lib/storage/editor/block-storage"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>

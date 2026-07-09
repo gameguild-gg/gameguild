@@ -92,7 +92,7 @@ export function ProjectSearchFilters({
   }
 
   return (
-    <div className="space-y-3 rounded-lg bg-gray-100/50 p-4 dark:bg-gray-900/50">
+    <div className="space-y-3 rounded-xl border border-border/40 bg-muted/30 p-4">
       
       { (
         <>

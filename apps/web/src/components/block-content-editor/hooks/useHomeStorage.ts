@@ -3,19 +3,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
 import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 import { toast } from "sonner"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  isLocallyAvailable?: boolean
-}
 
 export interface HomeStorageAdapter {
   load: (id: string) => Promise<ProjectData | null>

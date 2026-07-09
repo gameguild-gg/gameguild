@@ -6,17 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { FileText, Search, X, HardDrive, Cloud, Database } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface SelectProjectDialogProps {
   open: boolean
@@ -64,7 +54,7 @@ export function SelectProjectDialog({
       }
 
       // Sort by updated date (newest first)
-      allProjects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      allProjects.sort((a, b) => new Date(b.metadata.updatedAt).getTime() - new Date(a.metadata.updatedAt).getTime())
 
       setProjects(allProjects)
     } catch (error) {
@@ -201,9 +191,9 @@ export function SelectProjectDialog({
                           {project.storageType || "local"}
                         </span>
                         <span>•</span>
-                        <span>{formatSize(project.size)}</span>
+                        <span>{formatSize(project.metadata.size)}</span>
                         <span>•</span>
-                        <span>{new Date(project.updatedAt).toLocaleDateString()}</span>
+                        <span>{new Date(project.metadata.updatedAt).toLocaleDateString()}</span>
                       </div>
 
                       {project.tags && project.tags.length > 0 && (

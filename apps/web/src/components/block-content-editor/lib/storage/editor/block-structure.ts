@@ -37,26 +37,26 @@ import type { QuizEntry } from "../../../extras/quiz"
 
 export const BLOCK_CELL_TYPES = [
   "quiz",
-  "code",
-  "img",
-  "vid",
-  "aud",
-  "gal",
-  "yt",
-  "spot",
-  "mmd",
-  "vega",
-  "pres",
-  "src",
-  "md",
+  "code-studio",
+  "image",
+  "video",
+  "audio",
+  "gallery",
+  "youtube",
+  "spotify",
+  "mermaid",
+  "vega-lite",
+  "presentation",
+  "source",
+  "markdown",
   "html",
-  "rt",
-  "hdr",
-  "div",
-  "btn",
-  "adm",
-  "tbl",
-  "proj",
+  "rich-text",
+  "header",
+  "divider",
+  "button",
+  "admonition",
+  "table",
+  "project",
 ] as const
 
 export type BlockCellType = (typeof BLOCK_CELL_TYPES)[number]
@@ -66,27 +66,27 @@ export type BlockCellType = (typeof BLOCK_CELL_TYPES)[number]
 // ============================================================================
 
 export interface BlockDataMap {
-  quiz: QuizEntry
-  code: CodeStudioData
-  img: ImageData
-  vid: VideoData
-  aud: AudioData
-  gal: GalleryData
-  yt: YouTubeData
-  spot: SpotifyData
-  mmd: MermaidData
-  vega: VegaLiteData
-  pres: unknown
-  src: SourceData
-  md: MarkdownData
-  html: HTMLData
-  rt: RichTextData
-  hdr: HeaderData
-  div: DividerData
-  btn: ButtonData
-  adm: AdmonitionData
-  tbl: TableData
-  proj: ProjectNodeData
+  "quiz": QuizEntry
+  "code-studio": CodeStudioData
+  "image": ImageData
+  "video": VideoData
+  "audio": AudioData
+  "gallery": GalleryData
+  "youtube": YouTubeData
+  "spotify": SpotifyData
+  "mermaid": MermaidData
+  "vega-lite": VegaLiteData
+  "presentation": unknown
+  "source": SourceData
+  "markdown": MarkdownData
+  "html": HTMLData
+  "rich-text": RichTextData
+  "header": HeaderData
+  "divider": DividerData
+  "button": ButtonData
+  "admonition": AdmonitionData
+  "table": TableData
+  "project": ProjectNodeData
 }
 
 // ============================================================================

@@ -2,28 +2,7 @@ import { ApiClient } from "../../api/editor/api-client"
 import { SyncQueue } from "./sync-queue"
 import { HashManager } from "./hash-manager"
 import { syncConfig } from "./sync-config"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  hash: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-}
-
-interface ProjectMetadata {
-  id: string
-  name: string
-  tags: string[]
-  size: number
-  hash: string
-  createdAt: string
-  updatedAt: string
-}
+import type { ProjectData, ProjectMetadataRecord } from "../../storage/editor/project-data"
 
 interface TagData {
   id: string
@@ -80,7 +59,7 @@ export class SyncManager {
     console.log("Sync Manager initialized")
   }
 
-  async fetchServerProjectsMetadata(): Promise<ProjectMetadata[]> {
+  async fetchServerProjectsMetadata(): Promise<ProjectMetadataRecord[]> {
     if (!syncConfig.isEnabled()) {
       if (syncConfig.getConfig().debugMode) {
         console.log("Sync disabled, skipping server metadata fetch")
@@ -142,7 +121,7 @@ export class SyncManager {
     }
 
     try {
-      const localHash = localProject.hash || (await HashManager.generateProjectHash(localProject))
+      const localHash = localProject.metadata.hash || (await HashManager.generateProjectHash(localProject))
       const hashCheck = await this.apiClient.checkProjectHash(localProject.id, localHash)
 
       if (hashCheck.needsUpdate && hashCheck.serverHash) {

@@ -10,14 +10,4 @@ export { ProjectPagination } from './project-pagination'
 export { AdvancedFilters } from './advanced-filters'
 
 // Types
-export interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  isLocallyAvailable?: boolean
-}
+export type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"

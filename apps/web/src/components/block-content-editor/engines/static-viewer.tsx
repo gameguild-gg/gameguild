@@ -72,7 +72,7 @@ export function StaticViewer({
   }
 
   const meta = project as any
-  const updatedAt = meta.updatedAt ? new Date(meta.updatedAt) : null
+  const updatedAt = meta.metadata?.updatedAt ? new Date(meta.metadata.updatedAt) : null
   const tags: string[] = meta.tags ?? []
 
   return (

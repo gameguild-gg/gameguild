@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X, Save, FileText, GitBranch, Users, AlertCircle, CheckCircle } from "lucide-react"
+import { Save, FileText, GitBranch, Users, AlertCircle, CheckCircle } from "lucide-react"
 import type { MermaidData } from "@/components/block-content-editor/nodes/mermaid-node"
-import { useEditorSettings, EditorSettingsButton } from "../settings-menu"
+import { useEditorSettings } from "../settings-menu"
+import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 import { MermaidTemplateSelector } from "./mermaid-template-selector"
 import { MonacoMermaidEditor } from "./monaco-mermaid-editor"
 import { MermaidValidator, type MermaidValidationResult } from "./mermaid-validator"
@@ -51,17 +52,6 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
   const [alwaysCollapseErrors, setAlwaysCollapseErrors] = useState(false)
   const settings = useEditorSettings("mermaid")
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Block body scroll and pointer events when modal is open
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    document.body.style.pointerEvents = 'none'
-    
-    return () => {
-      document.body.style.overflow = ''
-      document.body.style.pointerEvents = ''
-    }
-  }, [])
 
   const handleCodeChange = (newCode: string | undefined) => {
     const code = newCode || ""
@@ -144,80 +134,49 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
   }, [])
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      style={{ pointerEvents: 'auto' }}
-      onClick={handleCancel}
-      onMouseDown={(e) => e.stopPropagation()}
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') {
-          handleCancel()
-        }
-        // Prevent all keyboard events from propagating to the editor
-        e.stopPropagation()
-      }}
+    <BlockEditorShell
+      settings={settings}
+      onClose={handleCancel}
+      icon={<GitBranch className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+      title="Mermaid Diagram Editor"
+      headerMeta={
+        <>
+          <div className="text-sm">
+            <span className="text-gray-600 dark:text-gray-400">Theme:</span>
+            <span className="ml-2 font-medium text-gray-800 dark:text-gray-200">
+              {data.theme ? MERMAID_THEME_DESCRIPTIONS[data.theme] : "Default"}
+            </span>
+          </div>
+          <div className="text-sm">
+            <span className="text-gray-600 dark:text-gray-400">Mode:</span>
+            <span className="ml-2 font-medium text-gray-800 dark:text-gray-200">
+              {MERMAID_THEME_MODE_DESCRIPTIONS[data.themeMode || "system"].label}
+            </span>
+          </div>
+          {(() => {
+            const pair = getMermaidThemePair((data.theme as any) || "default", (data.themeMode as any) || "system")
+            return (
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                ({pair.themeLight} / {pair.themeDark})
+              </div>
+            )
+          })()}
+          <div className="flex items-center gap-1 ml-4">
+            {validationResult.isValid ? (
+              <div className="flex items-center gap-1 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Valid</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded-full">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Invalid</span>
+              </div>
+            )}
+          </div>
+        </>
+      }
     >
-      <div 
-        className={`bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl flex flex-col ${settings.modalClassName}`}
-        style={{ pointerEvents: 'auto' }}
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-        onKeyUp={(e) => e.stopPropagation()}
-        onKeyPress={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center gap-2">
-            <GitBranch className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Mermaid Diagram Editor</h2>
-            
-            {/* Theme Display */}
-            <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-300 dark:border-gray-600">
-              <div className="text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Theme:</span>
-                <span className="ml-2 font-medium text-gray-800 dark:text-gray-200">
-                  {data.theme ? MERMAID_THEME_DESCRIPTIONS[data.theme] : "Default"}
-                </span>
-              </div>
-              <div className="text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Mode:</span>
-                <span className="ml-2 font-medium text-gray-800 dark:text-gray-200">
-                  {MERMAID_THEME_MODE_DESCRIPTIONS[data.themeMode || "system"].label}
-                </span>
-              </div>
-              
-              {/* Preview of what theme pair will be used */}
-              {(() => {
-                const pair = getMermaidThemePair((data.theme as any) || "default", (data.themeMode as any) || "system")
-                return (
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    ({pair.themeLight} / {pair.themeDark})
-                  </div>
-                )
-              })()}
-            </div>
-            
-            <div className="flex items-center gap-1 ml-4">
-              {validationResult.isValid ? (
-                <div className="flex items-center gap-1 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
-                  <CheckCircle className="h-4 w-4" />
-                  <span className="text-sm font-medium">Valid</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded-full">
-                  <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm font-medium">Invalid</span>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <EditorSettingsButton settings={settings} />
-            <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
 
         {/* Template Selector */}
         {showTemplateSelector && (
@@ -344,8 +303,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
                         onValidationChange={handleValidationChange}
                         height="100%"
                         theme={isDarkMode ? "dark" : "light"}
-                        fontSize={settings.editorFontSize}
-                        lineNumbers={settings.editorLineNumbers}
+                        options={settings.editor}
                       />
                     </div>
                   </div>
@@ -482,7 +440,6 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
             </div>
           </>
         )}
-      </div>
-    </div>
+    </BlockEditorShell>
   )
 }

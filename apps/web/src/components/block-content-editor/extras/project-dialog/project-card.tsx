@@ -4,19 +4,7 @@ import type React from "react"
 import { Button } from "@/components/ui/button"
 import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud, Database, Wifi, WifiOff, Eye, Blocks } from "lucide-react"
 import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-  isLocallyAvailable?: boolean
-  preferences?: any
-}
+import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 
 interface ProjectCardProps {
   project: ProjectData
@@ -120,19 +108,19 @@ export function ProjectCard({
   if (viewMode === 'grid') {
     return (
       <div
-        className="group relative flex min-h-[180px] cursor-pointer flex-col justify-between overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ease-in-out hover:shadow-lg hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-600"
+        className="group relative flex min-h-[200px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl border border-border/50 bg-card text-card-foreground shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-border hover:shadow-md"
         onClick={(e) => !showStudioViewerButtons && onOpen(project.id, e)}
       >
-        <div className="flex flex-col p-3 sm:p-4">
-          <div className="mb-1.5 sm:mb-2 flex items-start justify-between gap-1">
+        <div className="flex flex-col p-4 sm:p-5">
+          <div className="mb-2 flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <span
-                className="block truncate text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 leading-tight"
+                className="block truncate text-sm sm:text-base font-semibold text-foreground leading-tight"
                 title={project.name}
               >
                 {project.name}
               </span>
-              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+              <span className="text-[11px] text-muted-foreground font-medium">
                 {getProjectTypeLabel()}
               </span>
             </div>
@@ -140,26 +128,26 @@ export function ProjectCard({
           </div>
           
           {project.tags && project.tags.length > 0 && (
-            <div className="mb-2 sm:mb-3 flex flex-wrap gap-1" title={project.tags.join(", ")}>
+            <div className="mb-3 flex flex-wrap gap-1.5" title={project.tags.join(", ")}>
               {project.tags.slice(0, 2).map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center rounded-md bg-blue-50 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/50 dark:text-blue-300 dark:ring-blue-700/30 truncate max-w-[100px]"
+                  className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 ring-1 ring-inset ring-blue-700/15 dark:bg-blue-900/40 dark:text-blue-300 dark:ring-blue-700/30 truncate max-w-[120px]"
                 >
                   {tag}
                 </span>
               ))}
               {project.tags.length > 2 && (
-                <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">+{project.tags.length - 2}</span>
+                <span className="text-[11px] text-muted-foreground">+{project.tags.length - 2}</span>
               )}
             </div>
           )}
           
-          <div className="mt-auto text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
-            <span>{formatSize(project.size)}</span>
-            <span className="mx-1">•</span>
-            <span className="hidden sm:inline">{new Date(project.updatedAt).toLocaleDateString()}</span>
-            <span className="sm:hidden">{new Date(project.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+          <div className="mt-auto text-[11px] text-muted-foreground truncate">
+            <span>{formatSize(project.metadata.size)}</span>
+            <span className="mx-1.5 text-border">•</span>
+            <span className="hidden sm:inline">{new Date(project.metadata.updatedAt).toLocaleDateString()}</span>
+            <span className="sm:hidden">{new Date(project.metadata.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
           </div>
         </div>
 
@@ -303,7 +291,7 @@ export function ProjectCard({
           </div>
         )}
 
-        <div className="absolute top-2 right-2 text-xs font-mono text-gray-400/50 dark:text-gray-500/50">
+        <div className="absolute top-2 right-2 text-[10px] font-mono text-muted-foreground/40">
           {project.id.slice(0, 8)}
         </div>
       </div>
@@ -312,7 +300,7 @@ export function ProjectCard({
 
   // List view
   return (
-    <div className="group rounded-lg border bg-card p-4 shadow-sm transition-all duration-200 hover:shadow-lg hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-600">
+    <div className="group rounded-xl border border-border/50 bg-card p-4 shadow-sm transition-all duration-200 hover:border-border hover:shadow-md">
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
@@ -344,9 +332,9 @@ export function ProjectCard({
           )}
           
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            <span>{formatSize(project.size)}</span>
+            <span>{formatSize(project.metadata.size)}</span>
             <span className="mx-1.5">•</span>
-            <span>Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
+            <span>Updated {new Date(project.metadata.updatedAt).toLocaleDateString()}</span>
             <span className="mx-1.5">•</span>
             <span className="font-mono">#{project.id.slice(0, 8)}</span>
           </div>

@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/common",
-  "version": "3.8.0",
+  "version": "3.10.0",
   "type": "module",
   "description": "Common utilities and types for GameGuild",
   "author": "GameGuild <contact@gameguild.gg>",

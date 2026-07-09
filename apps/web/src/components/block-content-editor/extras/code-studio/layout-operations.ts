@@ -1,5 +1,5 @@
-import type { CodeStudioData, DisplayConfig, AspectRatio } from "./types"
-import { getGridDimensions } from "./grid-utils"
+import type { CodeStudioData, DisplayConfig } from "./types"
+import { buildTemplateTree } from "./templates/templates"
 
 export function toggleLayoutEdit(draft: CodeStudioData): void {
   if (!draft.layout) return
@@ -11,95 +11,75 @@ export function selectDisplay(draft: CodeStudioData, displayId: string): void {
   draft.layout.activeDisplayId = displayId
 }
 
+/**
+ * Append a new display seeded from a layout template.
+ */
 export function createDisplay(
   draft: CodeStudioData,
   name: string,
-  aspectRatio: AspectRatio
+  templateId: string,
 ): void {
-  if (!draft.layout || draft.layout.displays.length >= 4) return
-  
-  const { cols, rows } = getGridDimensions(aspectRatio)
+  if (!draft.layout) return
+
   const displayNumber = draft.layout.displays.length + 1
+  const id = `display-${Date.now()}-${displayNumber}`
   const newDisplay: DisplayConfig = {
-    id: `display-${displayNumber}`,
+    id,
     name: name || `Display ${displayNumber}`,
-    aspectRatio,
-    panels: [
-      { 
-        id: `editor-${Date.now()}`, 
-        type: "full-editor", 
-        row: 0, 
-        col: 0, 
-        rowSpan: rows, 
-        colSpan: cols, 
-        editorInstance: "multiple" 
-      },
-    ],
+    templateId,
+    root: buildTemplateTree(templateId),
   }
 
   draft.layout.displays.push(newDisplay)
   draft.layout.activeDisplayId = newDisplay.id
 }
 
+/**
+ * Replace the splitter tree of an existing display with a fresh template tree.
+ * Any unique-editor tab state is cleared since the panel ids change.
+ */
+export function applyTemplateToDisplay(
+  draft: CodeStudioData,
+  displayId: string,
+  templateId: string,
+): void {
+  if (!draft.layout) return
+  const display = draft.layout.displays.find(d => d.id === displayId)
+  if (!display) return
+  display.templateId = templateId
+  display.root = buildTemplateTree(templateId)
+  display.uniqueOpenTabs = undefined
+  display.uniqueActiveFileId = undefined
+}
+
 export function deleteDisplay(draft: CodeStudioData, displayId: string): void {
-  if (!draft.layout || draft.layout.displays.length <= 2) return
-  
+  if (!draft.layout || draft.layout.displays.length <= 1) return
+
   draft.layout.displays = draft.layout.displays.filter(d => d.id !== displayId)
-  
+
   if (draft.layout.activeDisplayId === displayId) {
-    draft.layout.activeDisplayId = draft.layout.displays[0]?.id || ""
+    // Select the most recently created remaining display (displays array is
+    // append-only, so the last entry is the newest).
+    const newest = draft.layout.displays[draft.layout.displays.length - 1]
+    draft.layout.activeDisplayId = newest?.id || ""
   }
 }
 
 export function renameDisplay(
   draft: CodeStudioData,
   displayId: string,
-  newName: string
+  newName: string,
 ): void {
   if (!draft.layout) return
-  
   const display = draft.layout.displays.find(d => d.id === displayId)
-  if (display) {
-    display.name = newName
-  }
-}
-
-export function changeAspectRatio(
-  draft: CodeStudioData,
-  displayId: string,
-  newAspectRatio: AspectRatio
-): void {
-  if (!draft.layout) return
-  
-  const display = draft.layout.displays.find(d => d.id === displayId)
-  if (!display) return
-
-  const oldDimensions = getGridDimensions(display.aspectRatio)
-  const newDimensions = getGridDimensions(newAspectRatio)
-
-  // Calcular fatores de escala
-  const colScale = newDimensions.cols / oldDimensions.cols
-  const rowScale = newDimensions.rows / oldDimensions.rows
-
-  // Reescalar todos os painéis
-  display.panels.forEach(panel => {
-    panel.col = Math.floor(panel.col * colScale)
-    panel.row = Math.floor(panel.row * rowScale)
-    panel.colSpan = Math.max(1, Math.min(Math.round(panel.colSpan * colScale), newDimensions.cols - Math.floor(panel.col * colScale)))
-    panel.rowSpan = Math.max(1, Math.min(Math.round(panel.rowSpan * rowScale), newDimensions.rows - Math.floor(panel.row * rowScale)))
-  })
-
-  display.aspectRatio = newAspectRatio
+  if (display) display.name = newName
 }
 
 export function updateCurrentDisplay(
   draft: CodeStudioData,
-  updatedDisplay: DisplayConfig
+  updatedDisplay: DisplayConfig,
 ): void {
   if (!draft.layout) return
-  
   const display = draft.layout.displays.find(d => d.id === updatedDisplay.id)
-  if (display) {
-    Object.assign(display, updatedDisplay)
-  }
+  if (display) Object.assign(display, updatedDisplay)
 }

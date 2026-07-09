@@ -197,6 +197,84 @@ export class ProjectImporter {
   }
 
   /**
+   * Import from a set of files representing an uncompressed projeto-* folder.
+   * Accepts files from <input webkitdirectory> or extracted from drag-and-drop entries.
+   * Each file should have a relative path (webkitRelativePath) like:
+   *   projeto-<id>/index.json
+   *   projeto-<id>/data.block-content-editor
+   *   projeto-<id>/asset_index.json
+   *   projeto-<id>/assets/<assetId>.json
+   * Bare files (without a parent folder) are also tolerated.
+   */
+  static async importFromFolder(files: File[]): Promise<ImportedProjectData> {
+    if (!files || files.length === 0) {
+      throw new Error('No files provided in folder selection')
+    }
+
+    // Build a map keyed by the path *inside* the project folder (or just filename if at root)
+    const fileMap = new Map<string, File>()
+    for (const file of files) {
+      const rel = (file as any).webkitRelativePath || file.name
+      const parts = rel.split('/').filter(Boolean)
+      // Drop the top-level folder name if it exists, so paths are relative to the project root
+      const innerPath = parts.length > 1 ? parts.slice(1).join('/') : parts[0]
+      fileMap.set(innerPath, file)
+    }
+
+    const indexFile = fileMap.get(ProjectImporter.METADATA_FILENAME)
+    const dataFile = fileMap.get(ProjectImporter.DATA_FILENAME)
+
+    if (!indexFile || !dataFile) {
+      throw new Error(`Selected folder must contain both ${ProjectImporter.METADATA_FILENAME} and ${ProjectImporter.DATA_FILENAME}`)
+    }
+
+    try {
+      const indexContent = await indexFile.text()
+      const dataContent = await dataFile.text()
+
+      const metadata: ProjectMetadata = JSON.parse(indexContent)
+
+      if (!ProjectImporter.isValidMetadata(metadata)) {
+        throw new Error('Invalid metadata structure')
+      }
+
+      JSON.parse(dataContent)
+
+      // Optional assets
+      const assets: Record<string, AssetData> = {}
+      let assetIndex: Record<string, AssetUsage[]> = {}
+
+      const assetIndexFile = fileMap.get(ProjectImporter.ASSET_INDEX_FILENAME)
+      if (assetIndexFile) {
+        assetIndex = JSON.parse(await assetIndexFile.text())
+      }
+
+      const assetPrefix = `${ProjectImporter.ASSETS_FOLDER}/`
+      for (const [path, file] of fileMap.entries()) {
+        if (path.startsWith(assetPrefix) && path.endsWith('.json')) {
+          const assetId = path.slice(assetPrefix.length).replace(/\.json$/, '')
+          if (assetId) {
+            assets[assetId] = JSON.parse(await file.text())
+          }
+        }
+      }
+
+      return {
+        id: metadata.id,
+        name: metadata.name,
+        data: dataContent,
+        tags: metadata.tags,
+        metadata,
+        assets: Object.keys(assets).length > 0 ? assets : undefined,
+        assetIndex: Object.keys(assetIndex).length > 0 ? assetIndex : undefined,
+        preferences: metadata.preferences,
+      }
+    } catch (error) {
+      throw new Error(`Failed to parse project folder: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  /**
    * Import from folder structure (for Google Drive)
    */
   static async importFromFolderStructure(
