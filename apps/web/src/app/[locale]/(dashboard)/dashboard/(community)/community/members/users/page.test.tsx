@@ -1,24 +1,30 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getMemberAccessDirectory: vi.fn(),
-  updateMemberAccessRole: vi.fn(),
+  createCommunityGroup: vi.fn(),
+  invitePlatformUser: vi.fn(),
 }));
 
 vi.mock('@/lib/community', () => ({
   COMMUNITY_ACCESS_ROLES: [
-    { value: 'Member', label: 'Member', description: 'Community access.' },
-    { value: 'Moderator', label: 'Moderator', description: 'Moderation access.' },
-    { value: 'TenantAdmin', label: 'Platform admin', description: 'Tenant operations access.' },
-    { value: 'SystemAdmin', label: 'Super admin', description: 'Full platform access.' },
+    { value: 'Member', label: 'Member', description: 'Can access the community and learning surfaces.' },
+    { value: 'Moderator', label: 'Moderator', description: 'Can moderate member activity and support queues.' },
+    { value: 'TenantAdmin', label: 'Platform admin', description: 'Can manage users, content, and tenant operations.' },
+    { value: 'SystemAdmin', label: 'Super admin', description: 'Full platform-management authority.' },
   ],
   getMemberAccessDirectory: mocks.getMemberAccessDirectory,
 }));
 
+vi.mock('@/lib/community/actions/groups', () => ({
+  createCommunityGroup: mocks.createCommunityGroup,
+}));
+
 vi.mock('@/lib/community/actions/member-access', () => ({
-  updateMemberAccessRole: mocks.updateMemberAccessRole,
+  invitePlatformUser: mocks.invitePlatformUser,
 }));
 
 vi.mock('@/i18n/navigation', () => ({
@@ -29,7 +35,7 @@ vi.mock('@/i18n/navigation', () => ({
   ),
 }));
 
-import UsersAndRolesPage from './page';
+import UsersPage from './page';
 
 function buildMemberAccessRow(overrides: Partial<Record<string, unknown>> = {}) {
   const id = String(overrides.id ?? 'user-member');
@@ -68,12 +74,12 @@ function buildMemberAccessRow(overrides: Partial<Record<string, unknown>> = {}) 
   };
 }
 
-describe('community users and roles page', () => {
+describe('community users page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders member counts and promotion controls from the access directory', async () => {
+  it('renders member counts and read-only access from the directory', async () => {
     mocks.getMemberAccessDirectory.mockResolvedValue({
       total: 2,
       currentUserId: 'user-admin',
@@ -100,20 +106,53 @@ describe('community users and roles page', () => {
       ],
     });
 
-    render(await UsersAndRolesPage({ searchParams: Promise.resolve({}) }));
+    render(await UsersPage({ searchParams: Promise.resolve({}) }));
 
-    expect(screen.getByRole('heading', { name: 'Users and roles' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Users' })).toBeInTheDocument();
     expect(screen.getByText('Loaded from the identity API')).toBeInTheDocument();
-    expect(screen.getByText('Full platform authority')).toBeInTheDocument();
+    expect(screen.getByText('Members linked to an access workspace')).toBeInTheDocument();
     expect(screen.getByText('Admin User')).toBeInTheDocument();
     expect(screen.getByText('Member User')).toBeInTheDocument();
     expect(screen.getAllByText('GameGuild')).toHaveLength(2);
     expect(screen.getByText('You')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Save' })).toHaveLength(2);
+    expect(screen.queryByText('Promote / demote')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
 
     const row = screen.getByText('Member User').closest('tr');
     expect(row).not.toBeNull();
     expect(within(row!).getAllByText('Member').length).toBeGreaterThan(0);
+  });
+
+  it('opens an invite dialog with user and workspace fields', async () => {
+    const user = userEvent.setup();
+    mocks.getMemberAccessDirectory.mockResolvedValue({
+      total: 1,
+      currentUserId: 'user-admin',
+      error: null,
+      members: [
+        buildMemberAccessRow({
+          id: 'user-admin',
+          username: 'admin',
+          displayName: 'Admin User',
+          email: 'admin@game-guild.com',
+          role: 'SystemAdmin',
+          isCurrentUser: true,
+          tenantId: 'tenant-1',
+          tenantName: 'GameGuild',
+        }),
+      ],
+    });
+
+    render(await UsersPage({ searchParams: Promise.resolve({}) }));
+    await user.click(screen.getByRole('button', { name: 'Invite User' }));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Invite user' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toBeInTheDocument();
+    expect(screen.getByText('Workspace')).toBeInTheDocument();
+    expect(screen.getByText('Access role')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Send invite' })).toBeInTheDocument();
   });
 
   it('renders empty and warning states when the user directory cannot be loaded', async () => {
@@ -124,7 +163,7 @@ describe('community users and roles page', () => {
       members: [],
     });
 
-    render(await UsersAndRolesPage({ searchParams: Promise.resolve({}) }));
+    render(await UsersPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByRole('alert')).toHaveTextContent('Access warning');
     expect(screen.getByRole('alert')).toHaveTextContent('Forbidden');
@@ -180,17 +219,17 @@ describe('community users and roles page', () => {
       ],
     });
 
-    render(await UsersAndRolesPage({ searchParams: Promise.resolve({ message: 'Role changed.' }) }));
+    render(await UsersPage({ searchParams: Promise.resolve({ message: 'Role changed.' }) }));
 
     expect(screen.getByRole('alert')).toHaveTextContent('Role changed.');
 
-    const platformAdminsCard = screen.getByText('Platform admins').closest('[data-slot="card"]');
-    expect(platformAdminsCard).not.toBeNull();
-    expect(within(platformAdminsCard!).getByText('2')).toBeInTheDocument();
+    const activeMembersCard = screen.getByText('Active members').closest('[data-slot="card"]');
+    expect(activeMembersCard).not.toBeNull();
+    expect(within(activeMembersCard!).getByText('3')).toBeInTheDocument();
 
-    const superAdminsCard = screen.getByText('Super admins').closest('[data-slot="card"]');
-    expect(superAdminsCard).not.toBeNull();
-    expect(within(superAdminsCard!).getByText('1')).toBeInTheDocument();
+    const workspaceAccessCard = screen.getByText('Workspace access').closest('[data-slot="card"]');
+    expect(workspaceAccessCard).not.toBeNull();
+    expect(within(workspaceAccessCard!).getByText('4')).toBeInTheDocument();
 
     const ownerRow = screen.getByText('Owner User').closest('tr');
     expect(ownerRow).not.toBeNull();
@@ -206,8 +245,7 @@ describe('community users and roles page', () => {
     expect(unassignedRow).not.toBeNull();
     expect(within(unassignedRow!).getByText('No active workspace')).toBeInTheDocument();
     expect(within(unassignedRow!).getByText('pending')).toBeInTheDocument();
-    expect(within(unassignedRow!).getByText('No membership')).toBeInTheDocument();
 
-    expect(screen.getAllByRole('button', { name: 'Save' })).toHaveLength(4);
+    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
   });
 });

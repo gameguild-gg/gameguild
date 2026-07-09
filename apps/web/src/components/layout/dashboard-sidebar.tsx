@@ -28,6 +28,7 @@ import {
   HeadphonesIcon,
   LayoutDashboard,
   Rocket,
+  ShieldCheck,
   UserCog,
   Users,
   type LucideIcon,
@@ -120,9 +121,9 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
     label: 'Platform Management',
     items: [
       {
-        title: 'Users & roles',
-        url: '/dashboard/community/members/users',
-        icon: UserCog,
+        title: 'Roles',
+        url: '/dashboard/platform/roles',
+        icon: ShieldCheck,
       },
       {
         title: 'Learning',

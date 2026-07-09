@@ -102,7 +102,7 @@ describe('community member management pages', () => {
     expect(screen.getByText('No members registered yet')).toBeInTheDocument();
     expect(screen.getByText('No members to display. Members will appear here once users register.')).toBeInTheDocument();
 
-    render(await GroupsPage());
+    render(await GroupsPage({ searchParams: Promise.resolve({}) }));
     expect(screen.getByRole('heading', { name: 'Groups' })).toBeInTheDocument();
     expect(screen.getByText('No groups created yet')).toBeInTheDocument();
     expect(screen.getByText('No groups yet')).toBeInTheDocument();
@@ -171,7 +171,7 @@ describe('community member management pages', () => {
       ],
     });
 
-    render(await GroupsPage());
+    render(await GroupsPage({ searchParams: Promise.resolve({}) }));
     expect(screen.getByText('2 groups created')).toBeInTheDocument();
     expect(screen.getByText('Mentors')).toBeInTheDocument();
     expect(screen.getByText('Public')).toBeInTheDocument();
