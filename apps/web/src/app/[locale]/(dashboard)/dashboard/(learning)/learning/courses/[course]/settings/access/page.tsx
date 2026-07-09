@@ -103,9 +103,9 @@ export default function AccessSettingsPage({ params }: { params: Promise<{ local
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label>Course Visibility</Label>
+            <Label htmlFor="course-visibility">Course Visibility</Label>
             <Select value={visibility} onValueChange={setVisibility}>
-              <SelectTrigger>
+              <SelectTrigger id="course-visibility">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -130,9 +130,9 @@ export default function AccessSettingsPage({ params }: { params: Promise<{ local
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
-            <Label>Enrollment Status</Label>
+            <Label htmlFor="course-enrollment-status">Enrollment Status</Label>
             <Select value={enrollmentStatus} onValueChange={setEnrollmentStatus}>
-              <SelectTrigger>
+              <SelectTrigger id="course-enrollment-status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -238,10 +238,12 @@ export function PublicWebsiteFooter() {
   );
 }
 
-export function PublicWebsiteShell({ children }: { readonly children: ReactNode }) {
+export async function PublicWebsiteShell({ children }: { readonly children: ReactNode }) {
+  const header = await PublicWebsiteHeader();
+
   return (
     <div className="min-h-svh bg-slate-950">
-      <PublicWebsiteHeader />
+      {header}
       {children}
       <PublicWebsiteFooter />
     </div>
