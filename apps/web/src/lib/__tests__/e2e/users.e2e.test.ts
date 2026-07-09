@@ -19,6 +19,7 @@ const unwrapResult = <T>(result: Result<T, ApiError>, label: string): T => {
 describe('Users E2E', () => {
   let accessToken: string;
   let userId: string;
+  let managedUserId: string;
   let email: string;
   let password: string;
   let tenantId: string | undefined = TENANT_ID;
@@ -96,6 +97,44 @@ describe('Users E2E', () => {
 
       accessToken = unwrapResult(signInResult, 'Users tenant-owner sign-in').accessToken!;
     }
+
+    const managedUnique = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const managedSignUpResult = await client.request<IdentityAuthenticationSignInOutput>({
+      method: 'POST',
+      path: '/v1/auth/sign-up',
+      body: {
+        username: `managed_user_${managedUnique}`,
+        email: `managed_user_${managedUnique}@example.com`,
+        password: 'Str0ng!Passw0rd123!',
+        ...(tenantId ? { tenantId } : {}),
+      },
+      requiresAuth: false,
+    });
+
+    const managedSignUp = unwrapResult(managedSignUpResult, 'Managed user sign-up');
+    const rawManagedUserId = managedSignUp.userId ?? managedSignUp.user?.id;
+    managedUserId = rawManagedUserId && rawManagedUserId !== '00000000-0000-0000-0000-000000000000'
+      ? rawManagedUserId
+      : managedSignUp.user?.id ?? '';
+
+    if (tenantId && managedUserId) {
+      const addMembershipResult = await createAuthedClient().request<{ success?: boolean; message?: string | null }>({
+        method: 'POST',
+        path: `/v1/users/${managedUserId}/memberships`,
+        body: {
+          tenantId,
+          role: 'Member',
+          invitedByEmail: email,
+        },
+        requiresAuth: true,
+      });
+
+      if (!addMembershipResult.ok && addMembershipResult.error?.status !== 409) {
+        throw new Error(
+          `Managed user membership add failed: ${addMembershipResult.error?.message ?? 'Unknown'} (${addMembershipResult.error?.status})`,
+        );
+      }
+    }
   }, 30_000);
 
   it('lists users with pagination', async () => {
@@ -160,5 +199,56 @@ describe('Users E2E', () => {
     });
 
     expect(result.ok).toBe(true);
+  });
+
+  it('promotes and demotes a tenant member through the dashboard membership role endpoint', async () => {
+    const authedClient = createAuthedClient();
+    expect(tenantId).toBeTruthy();
+    expect(managedUserId).toBeTruthy();
+
+    const promoteResult = await authedClient.request<{ success: boolean; message?: string | null }>({
+      method: 'PATCH',
+      path: `/v1/users/${managedUserId}/memberships/${tenantId}/role`,
+      body: { role: 'TenantAdmin' },
+      requiresAuth: true,
+    });
+
+    expect(promoteResult.ok, JSON.stringify(promoteResult.ok ? promoteResult.data : promoteResult.error, null, 2)).toBe(true);
+    if (promoteResult.ok) {
+      expect(promoteResult.data.success).toBe(true);
+    }
+
+    const promotedMemberships = await authedClient.request<{
+      memberships: Array<{ tenantId: string; role: string; isActive: boolean }>;
+    }>({
+      method: 'GET',
+      path: `/v1/users/${managedUserId}/memberships`,
+      requiresAuth: true,
+    });
+
+    expect(promotedMemberships.ok).toBe(true);
+    if (promotedMemberships.ok) {
+      expect(promotedMemberships.data.memberships).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            tenantId,
+            role: 'TenantAdmin',
+            isActive: true,
+          }),
+        ]),
+      );
+    }
+
+    const demoteResult = await authedClient.request<{ success: boolean; message?: string | null }>({
+      method: 'PATCH',
+      path: `/v1/users/${managedUserId}/memberships/${tenantId}/role`,
+      body: { role: 'Member' },
+      requiresAuth: true,
+    });
+
+    expect(demoteResult.ok, JSON.stringify(demoteResult.ok ? demoteResult.data : demoteResult.error, null, 2)).toBe(true);
+    if (demoteResult.ok) {
+      expect(demoteResult.data.success).toBe(true);
+    }
   });
 });
