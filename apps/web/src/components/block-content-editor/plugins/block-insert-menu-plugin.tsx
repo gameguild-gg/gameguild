@@ -83,7 +83,7 @@ export function BlockInsertMenuPlugin() {
         nodeToReplace?.remove()
         const block = createEmbeddableBlock(selected.blockType)
         // mark as new so the view auto-opens the editor
-        block.data = { ...block.data, isNew: true } as typeof block.data
+        block.data = { ...(block.data as unknown as Record<string, unknown>), isNew: true } as unknown as typeof block.data
         editor.dispatchCommand(INSERT_BLOCK_COMMAND, block)
       })
       closeMenu()
