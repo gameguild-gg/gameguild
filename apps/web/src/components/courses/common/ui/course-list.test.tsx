@@ -1,6 +1,31 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/dashboard/learning/courses',
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ href, children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+  usePathname: () => '/dashboard/learning/courses',
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
 
 import { CourseList } from './course-list';
 
