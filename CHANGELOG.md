@@ -1,3 +1,21 @@
+# [3.11.0](https://github.com/gameguild-gg/gameguild/compare/v3.10.0...v3.11.0) (2026-07-09)
+
+### BREAKING CHANGES
+
+* **emception/core:** unify EmceptionAPI surfaces — add EmbedderEmceptionAPI ([7276626](https://github.com/gameguild-gg/gameguild/commit/72766261980ab51b0246c63216ca9f9dcd0a65c7))
+* **emception/core:** discriminated WorkspaceBuildConfig union (semver-major) ([15a1438](https://github.com/gameguild-gg/gameguild/commit/15a143819e8a6cc8eb98ba5a28ffd965fc7807a9))
+
+### Features
+
+* **emception:** add language-flavor preset suffixes, latest C standards, C terminal preset ([abb5f0b](https://github.com/gameguild-gg/gameguild/commit/abb5f0b48ce17d2e98f7c6b38af336ce9e45e829))
+* **emception:** replace EmbedderEmceptionAPI with full EmceptionAPI surface ([36740ab](https://github.com/gameguild-gg/gameguild/commit/36740ab0c7ae54ed3da466477266a159c060e9d8))
+* **emception/core:** unify EmceptionAPI surfaces — add EmbedderEmceptionAPI ([7276626](https://github.com/gameguild-gg/gameguild/commit/72766261980ab51b0246c63216ca9f9dcd0a65c7))
+* **emception/core:** discriminated WorkspaceBuildConfig union (semver-major) ([15a1438](https://github.com/gameguild-gg/gameguild/commit/15a143819e8a6cc8eb98ba5a28ffd965fc7807a9))
+
+### Bug Fixes
+
+* **emception/core:** make layout optional, harden parseWorkspaceBundle, remove full preset ([1a29cc8](https://github.com/gameguild-gg/gameguild/commit/1a29cc8d6a0327bcc0ea4009753b1f5beab37f93))
+
 # [3.10.0](https://github.com/gameguild-gg/gameguild/compare/v3.9.0...v3.10.0) (2026-05-25)
 
 ### Features
