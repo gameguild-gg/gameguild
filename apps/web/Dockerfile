@@ -4,11 +4,11 @@ FROM node:20-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
 WORKDIR /repo
 
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc* ./
+COPY pnpm-workspace.yaml package.json .npmrc* ./
 COPY apps/web/package.json ./apps/web/
 COPY packages ./packages
 
-RUN pnpm install --frozen-lockfile --prefer-offline
+RUN pnpm install --no-frozen-lockfile --prefer-offline
 
 FROM deps AS builder
 ARG GIT_HASH
