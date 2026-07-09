@@ -1,13 +1,16 @@
 import { Link } from '@/i18n/navigation';
 import { COMMUNITY_ACCESS_ROLES, getMemberAccessDirectory } from '@/lib/community';
-import { updateMemberAccessRole } from '@/lib/community/actions/member-access';
+import { invitePlatformUser } from '@/lib/community/actions/member-access';
 import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
-import { Crown, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { ShieldCheck, UserPlus, Users } from 'lucide-react';
 import React from 'react';
 
 interface Props {
@@ -23,25 +26,107 @@ function getRoleBadgeVariant(role: string) {
   return 'outline';
 }
 
+function getWorkspaceOptions(members: Awaited<ReturnType<typeof getMemberAccessDirectory>>['members']) {
+  const workspaces = new Map<string, { tenantId: string; label: string }>();
+
+  for (const row of members) {
+    for (const membership of row.memberships) {
+      if (!membership.tenantId || workspaces.has(membership.tenantId)) continue;
+
+      workspaces.set(membership.tenantId, {
+        tenantId: membership.tenantId,
+        label: membership.tenantName ?? membership.tenantSlug ?? membership.tenantId,
+      });
+    }
+  }
+
+  return [...workspaces.values()].sort((left, right) => left.label.localeCompare(right.label));
+}
+
 export default async function Page({ searchParams }: Props): Promise<React.JSX.Element> {
   const query = await searchParams;
   const directory = await getMemberAccessDirectory({ limit: 50 });
   const members = directory.members;
   const total = directory.total;
-  const superAdmins = members.filter((row) => row.isSuperAdmin).length;
-  const tenantAdmins = members.filter((row) => row.role === 'TenantAdmin' || row.role === 'Owner').length;
+  const activeMembers = members.filter((row) => row.member.status === 'active').length;
+  const workspaceMembers = members.filter((row) => row.primaryMembership?.tenantId).length;
+  const workspaceOptions = getWorkspaceOptions(members);
+  const inviteSenderEmail = members.find((row) => row.isCurrentUser)?.member.email ?? '';
 
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Users and roles</h1>
-          <p className="text-muted-foreground">Manage registered members, promote admins, and demote access from one dashboard.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
+          <p className="text-muted-foreground">Browse registered community members and their workspace access.</p>
         </div>
-        <Button>
-          <UserPlus className="mr-2 size-4" />
-          Invite User
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="mr-2 size-4" />
+              Invite User
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Invite user</DialogTitle>
+              <DialogDescription>Create a platform user and assign their initial workspace access.</DialogDescription>
+            </DialogHeader>
+            <form action={invitePlatformUser} className="space-y-4">
+              <input type="hidden" name="invitedByEmail" value={inviteSenderEmail} />
+              <div className="space-y-2">
+                <Label htmlFor="invite-email">Email</Label>
+                <Input id="invite-email" name="email" type="email" autoComplete="email" required placeholder="member@example.com" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invite-name">Name</Label>
+                <Input id="invite-name" name="name" autoComplete="name" placeholder="Member name" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="invite-workspace">Workspace</Label>
+                  {workspaceOptions.length > 0 ? (
+                    <Select name="tenantId" defaultValue={workspaceOptions[0]?.tenantId}>
+                      <SelectTrigger id="invite-workspace" className="w-full">
+                        <SelectValue placeholder="Select workspace" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {workspaceOptions.map((workspace) => (
+                          <SelectItem key={workspace.tenantId} value={workspace.tenantId}>
+                            {workspace.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input id="invite-workspace" name="tenantId" required placeholder="Workspace ID" />
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite-role">Access role</Label>
+                  <Select name="role" defaultValue="Member">
+                    <SelectTrigger id="invite-role" className="w-full">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMMUNITY_ACCESS_ROLES.map((role) => (
+                        <SelectItem key={role.value} value={role.value}>
+                          {role.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit">
+                  <UserPlus className="mr-2 size-4" />
+                  Send invite
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {query?.message ? (
@@ -73,22 +158,22 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Platform admins</CardTitle>
+            <CardTitle className="text-sm font-medium">Active members</CardTitle>
             <ShieldCheck className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{tenantAdmins}</div>
-            <CardDescription>Tenant owner/admin access</CardDescription>
+            <div className="text-2xl font-bold">{activeMembers}</div>
+            <CardDescription>Recently active community accounts</CardDescription>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Super admins</CardTitle>
-            <Crown className="size-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Workspace access</CardTitle>
+            <ShieldCheck className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{superAdmins}</div>
-            <CardDescription>Full platform authority</CardDescription>
+            <div className="text-2xl font-bold">{workspaceMembers}</div>
+            <CardDescription>Members linked to an access workspace</CardDescription>
           </CardContent>
         </Card>
       </div>
@@ -116,7 +201,6 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead>Last Active</TableHead>
-                  <TableHead className="min-w-60 text-right">Promote / demote</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -142,34 +226,6 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{new Date(row.member.joinedAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{new Date(row.member.lastActiveAt).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      {row.primaryMembership?.tenantId ? (
-                        <form action={updateMemberAccessRole} className="ml-auto flex items-center justify-end gap-2">
-                          <input type="hidden" name="userId" value={row.member.id} />
-                          <input type="hidden" name="tenantId" value={row.primaryMembership.tenantId} />
-                          <Select name="role" defaultValue={row.role}>
-                            <SelectTrigger className="w-40">
-                              <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectGroup>
-                                <SelectLabel>Access role</SelectLabel>
-                                {COMMUNITY_ACCESS_ROLES.map((role) => (
-                                  <SelectItem key={role.value} value={role.value}>
-                                    {role.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                          <Button type="submit" variant="outline" size="sm">
-                            Save
-                          </Button>
-                        </form>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">No membership</span>
-                      )}
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

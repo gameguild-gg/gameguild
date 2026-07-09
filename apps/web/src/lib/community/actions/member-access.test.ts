@@ -3,6 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getToken: vi.fn(),
   createServerClient: vi.fn(),
+  usersPostUsers: vi.fn(),
+  usersMembershipsPost: vi.fn(),
+  UsersModule: vi.fn(),
+  UsersMembershipsModule: vi.fn(),
   request: vi.fn(),
   redirect: vi.fn((href: string) => {
     throw new Error(`redirect:${href}`);
@@ -16,6 +20,10 @@ vi.mock('@/auth', () => ({
 
 vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
+  GeneratedApi: {
+    UsersModule: mocks.UsersModule,
+    UsersMembershipsModule: mocks.UsersMembershipsModule,
+  },
 }));
 
 vi.mock('next/cache', () => ({
@@ -26,7 +34,7 @@ vi.mock('next/navigation', () => ({
   redirect: mocks.redirect,
 }));
 
-import { updateMemberAccessRole } from './member-access';
+import { invitePlatformUser, updateMemberAccessRole } from './member-access';
 
 describe('updateMemberAccessRole', () => {
   beforeEach(() => {
@@ -34,6 +42,10 @@ describe('updateMemberAccessRole', () => {
     mocks.getToken.mockResolvedValue('access-token');
     mocks.createServerClient.mockReturnValue({ request: mocks.request });
     mocks.request.mockResolvedValue({ ok: true, data: { success: true } });
+    mocks.UsersModule.mockReturnValue({ postUsers: mocks.usersPostUsers });
+    mocks.UsersMembershipsModule.mockReturnValue({ postUsersMemberships: mocks.usersMembershipsPost });
+    mocks.usersPostUsers.mockResolvedValue({ ok: true, data: { id: 'user-1', email: 'learner@game-guild.com' } });
+    mocks.usersMembershipsPost.mockResolvedValue({ ok: true, data: { success: true, memberId: 'member-1' } });
   });
 
   it('patches the user membership role and revalidates the dashboard routes', async () => {
@@ -43,7 +55,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('role', 'SystemAdmin');
 
     await expect(updateMemberAccessRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?message=Updated+member+role+to+SystemAdmin.',
+      'redirect:/dashboard/platform/roles?message=Updated+member+role+to+SystemAdmin.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
@@ -55,6 +67,7 @@ describe('updateMemberAccessRole', () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/users');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/platform/roles');
   });
 
   it('redirects with an error when required fields are missing', async () => {
@@ -62,7 +75,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('userId', 'user-1');
 
     await expect(updateMemberAccessRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?error=User%2C+tenant%2C+and+role+are+required+to+update+access.',
+      'redirect:/dashboard/platform/roles?error=User%2C+tenant%2C+and+role+are+required+to+update+access.',
     );
 
     expect(mocks.request).not.toHaveBeenCalled();
@@ -79,7 +92,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('role', ' SystemAdmin ');
 
     await expect(updateMemberAccessRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?error=Only+another+super+admin+can+grant+this+role.',
+      'redirect:/dashboard/platform/roles?error=Only+another+super+admin+can+grant+this+role.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
@@ -102,9 +115,72 @@ describe('updateMemberAccessRole', () => {
     formData.set('role', 'Member');
 
     await expect(updateMemberAccessRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?error=Cannot+demote+the+only+super+admin.',
+      'redirect:/dashboard/platform/roles?error=Cannot+demote+the+only+super+admin.',
     );
 
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('creates a user and assigns the selected tenant role for platform invites', async () => {
+    const formData = new FormData();
+    formData.set('email', ' learner@game-guild.com ');
+    formData.set('name', ' Learner One ');
+    formData.set('tenantId', ' tenant-1 ');
+    formData.set('role', ' Moderator ');
+    formData.set('invitedByEmail', ' admin@game-guild.com ');
+
+    await expect(invitePlatformUser(formData)).rejects.toThrow(
+      'redirect:/dashboard/community/members/users?message=Invited+Learner+One+as+Moderator.',
+    );
+
+    expect(mocks.usersPostUsers).toHaveBeenCalledWith({
+      email: 'learner@game-guild.com',
+      name: 'Learner One',
+      phoneNumber: null,
+    });
+    expect(mocks.usersMembershipsPost).toHaveBeenCalledWith('user-1', {
+      tenantId: 'tenant-1',
+      role: 'Moderator',
+      invitedByEmail: 'admin@game-guild.com',
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/users');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/platform/roles');
+  });
+
+  it('requires email and tenant before creating invited users', async () => {
+    const formData = new FormData();
+    formData.set('email', 'not-an-email');
+
+    await expect(invitePlatformUser(formData)).rejects.toThrow(
+      'redirect:/dashboard/community/members/users?error=A+valid+email+and+workspace+are+required+to+invite+a+user.',
+    );
+
+    expect(mocks.usersPostUsers).not.toHaveBeenCalled();
+    expect(mocks.usersMembershipsPost).not.toHaveBeenCalled();
+  });
+
+  it('redirects with the API error when invited user creation fails', async () => {
+    mocks.usersPostUsers.mockResolvedValue({ ok: false, error: { message: 'Email already exists.' } });
+    const formData = new FormData();
+    formData.set('email', 'learner@game-guild.com');
+    formData.set('tenantId', 'tenant-1');
+
+    await expect(invitePlatformUser(formData)).rejects.toThrow(
+      'redirect:/dashboard/community/members/users?error=Email+already+exists.',
+    );
+
+    expect(mocks.usersMembershipsPost).not.toHaveBeenCalled();
+  });
+
+  it('redirects with the API error when membership assignment fails', async () => {
+    mocks.usersMembershipsPost.mockResolvedValue({ ok: false, error: { message: 'Tenant not found.' } });
+    const formData = new FormData();
+    formData.set('email', 'learner@game-guild.com');
+    formData.set('name', 'Learner One');
+    formData.set('tenantId', 'tenant-1');
+
+    await expect(invitePlatformUser(formData)).rejects.toThrow(
+      'redirect:/dashboard/community/members/users?error=Tenant+not+found.',
+    );
   });
 });
