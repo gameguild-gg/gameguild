@@ -29,7 +29,7 @@ export function BlockInsertButtonPlugin({ disabled }: BlockInsertButtonPluginPro
       const embeddable = {
         ...block,
         data: { ...(block.data as Record<string, unknown>), isNew: true },
-      } as EmbeddableBlock
+      } as unknown as EmbeddableBlock
       editor.dispatchCommand(INSERT_BLOCK_COMMAND, embeddable)
     },
     [editor],
@@ -61,4 +61,3 @@ export function BlockInsertButtonPlugin({ disabled }: BlockInsertButtonPluginPro
     </DropDown>
   )
 }
-
