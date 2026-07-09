@@ -79,7 +79,8 @@ export class VegaLiteLexicalNode extends DecoratorNode<React.JSX.Element> {
     this.__data = data ?? {}
   }
 
-  static importJSON(s: SerializedVegaLiteLexicalNode): VegaLiteLexicalNode {
+  static importJSON(serializedNode: SerializedLexicalNode & Record<string, unknown>): VegaLiteLexicalNode {
+    const s = serializedNode as Partial<SerializedVegaLiteLexicalNode>
     return $applyNodeReplacement(new VegaLiteLexicalNode(
       s.spec, s.title, s.caption, s.size, s.theme, s.themeMode, s.layout, s.data,
     ))

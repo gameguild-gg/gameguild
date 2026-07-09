@@ -1,7 +1,7 @@
 "use client"
 
 import { ListNode, SerializedListNode, ListType } from "@lexical/list"
-import type { LexicalNode, NodeKey, EditorConfig } from "lexical"
+import type { LexicalNode, NodeKey, EditorConfig, SerializedLexicalNode } from "lexical"
 
 export interface SerializedCustomListNode extends SerializedListNode {
   listStyleType?: string
@@ -448,8 +448,12 @@ export class CustomListNode extends ListNode {
     }
   }
 
-  static importJSON(serializedNode: SerializedCustomListNode): CustomListNode {
-    const { listType, start, listStyleType, markerColor } = serializedNode
+  static importJSON(serializedNode: SerializedLexicalNode & Record<string, unknown>): CustomListNode {
+    const payload = serializedNode as Partial<SerializedCustomListNode>
+    const listType = payload.listType ?? "number"
+    const start = payload.start ?? 1
+    const listStyleType = payload.listStyleType
+    const markerColor = payload.markerColor
     const node = new CustomListNode(listType as ListType, start, listStyleType, markerColor)
     
     // IMPORTANTE: Sempre definir a cor, incluindo a padrão
