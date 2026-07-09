@@ -93,9 +93,9 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label>Catalog visibility</Label>
+            <Label htmlFor="catalog-visibility">Catalog visibility</Label>
             <Select value={visibility} onValueChange={(value: 'public' | 'private') => setVisibility(value)}>
-              <SelectTrigger>
+              <SelectTrigger id="catalog-visibility">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -107,9 +107,9 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Enrollment status</Label>
+            <Label htmlFor="listing-enrollment-status">Enrollment status</Label>
             <Select value={enrollmentStatus} onValueChange={setEnrollmentStatus}>
-              <SelectTrigger>
+              <SelectTrigger id="listing-enrollment-status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

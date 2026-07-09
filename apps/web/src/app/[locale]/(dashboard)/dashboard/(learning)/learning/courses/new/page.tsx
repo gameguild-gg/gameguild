@@ -226,9 +226,9 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
             <CardContent className="flex flex-col gap-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <Label>Category</Label>
+                  <Label htmlFor="course-category">Category</Label>
                   <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger>
+                    <SelectTrigger id="course-category">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -242,9 +242,9 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label>Difficulty</Label>
+                  <Label htmlFor="course-difficulty">Difficulty</Label>
                   <Select value={difficulty} onValueChange={setDifficulty}>
-                    <SelectTrigger>
+                    <SelectTrigger id="course-difficulty">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -301,9 +301,9 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
             <CardContent className="flex flex-col gap-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <Label>Visibility</Label>
+                  <Label htmlFor="course-visibility">Visibility</Label>
                   <Select value={visibility} onValueChange={setVisibility}>
-                    <SelectTrigger>
+                    <SelectTrigger id="course-visibility">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -317,9 +317,9 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label>Enrollment Status</Label>
+                  <Label htmlFor="course-enrollment-status">Enrollment Status</Label>
                   <Select value={enrollmentStatus} onValueChange={setEnrollmentStatus}>
-                    <SelectTrigger>
+                    <SelectTrigger id="course-enrollment-status">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

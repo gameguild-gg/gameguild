@@ -152,7 +152,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-40">
+          <SelectTrigger className="w-full sm:w-40" aria-label="Course status filter">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -167,6 +167,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
             variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
             size="sm"
             className="rounded-r-none"
+            aria-label="Grid view"
             onClick={() => setViewMode('grid')}
           >
             <Grid3X3 className="size-4" />
@@ -175,6 +176,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
             variant={viewMode === 'table' ? 'secondary' : 'ghost'}
             size="sm"
             className="rounded-l-none"
+            aria-label="Table view"
             onClick={() => setViewMode('table')}
           >
             <List className="size-4" />

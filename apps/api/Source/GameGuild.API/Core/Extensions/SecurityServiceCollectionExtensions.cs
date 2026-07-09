@@ -3,6 +3,7 @@ using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.Authentication;
 using GameGuild.Configuration.PresentationLayer.CORS;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -198,7 +199,18 @@ public static class SecurityServiceCollectionExtensions
             
             // Tenant policies (require authenticated user and tenant context)
             authzOptions.AddPolicy("TenantMember", policy => policy.RequireAuthenticatedUser().RequireClaim("TenantId"));
-            authzOptions.AddPolicy("TenantAdmin", policy => policy.RequireRole("Admin").RequireClaim("TenantId"));
+            authzOptions.AddPolicy("TenantAdmin", policy => policy
+                .RequireAuthenticatedUser()
+                .RequireAssertion(context =>
+                {
+                    var roles = ClaimsExtractor.GetRoles(context.User);
+
+                    return ClaimsExtractor.GetTenantId(context.User) is not null &&
+                           (roles.Contains("Admin") ||
+                            roles.Contains("SystemAdmin") ||
+                            roles.Contains("TenantAdmin") ||
+                            roles.Contains("Owner"));
+                }));
             
             // Admin policies
             authzOptions.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
