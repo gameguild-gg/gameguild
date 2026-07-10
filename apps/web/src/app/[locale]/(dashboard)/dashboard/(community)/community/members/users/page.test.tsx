@@ -51,6 +51,8 @@ function buildMemberAccessRow(overrides: Partial<Record<string, unknown>> = {}) 
         tenantSlug,
         role,
         isActive: true,
+        joinedAt: String(overrides.membershipJoinedAt ?? '2026-01-01T00:00:00.000Z'),
+        leftAt: overrides.membershipLeftAt ?? null,
       }
     : null;
 
@@ -111,6 +113,7 @@ describe('community users page', () => {
     expect(screen.getByRole('heading', { name: 'Users' })).toBeInTheDocument();
     expect(screen.getByText('Loaded from the identity API')).toBeInTheDocument();
     expect(screen.getByText('Members linked to an access workspace')).toBeInTheDocument();
+    expect(screen.getByText('Access status')).toBeInTheDocument();
     expect(screen.getByText('Admin User')).toBeInTheDocument();
     expect(screen.getByText('Member User')).toBeInTheDocument();
     expect(screen.getAllByText('GameGuild')).toHaveLength(2);
@@ -121,6 +124,7 @@ describe('community users page', () => {
     const row = screen.getByText('Member User').closest('tr');
     expect(row).not.toBeNull();
     expect(within(row!).getAllByText('Member').length).toBeGreaterThan(0);
+    expect(within(row!).getByText('Accepted')).toBeInTheDocument();
   });
 
   it('opens an invite dialog with user and workspace fields', async () => {
@@ -244,6 +248,7 @@ describe('community users page', () => {
     const unassignedRow = screen.getByText('Unassigned User').closest('tr');
     expect(unassignedRow).not.toBeNull();
     expect(within(unassignedRow!).getByText('No active workspace')).toBeInTheDocument();
+    expect(within(unassignedRow!).getByText('No workspace')).toBeInTheDocument();
     expect(within(unassignedRow!).getByText('pending')).toBeInTheDocument();
 
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
