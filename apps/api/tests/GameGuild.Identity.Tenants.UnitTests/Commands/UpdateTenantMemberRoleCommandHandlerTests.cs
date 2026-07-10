@@ -40,6 +40,8 @@ public class UpdateTenantMemberRoleCommandHandlerTests
         var result = await _handler.Handle(new UpdateTenantMemberRoleCommand(member.TenantId, member.UserId, "Admin"), CancellationToken.None);
 
         result.Success.Should().BeTrue();
+        result.MemberId.Should().Be(member.Id);
+        result.NewRole.Should().Be("Admin");
         member.Role.Should().Be("Admin");
         _memberRepositoryMock.Verify(r => r.UpdateAsync(member, It.IsAny<CancellationToken>()), Times.Once);
     }

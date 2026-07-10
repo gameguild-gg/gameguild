@@ -16,6 +16,12 @@ public sealed class UpdateTenantMemberRoleCommandHandler(ITenantMemberRepository
         member.Role = request.NewRole;
         await memberRepository.UpdateAsync(member, cancellationToken).ConfigureAwait(false);
 
-        return new UpdateTenantMemberRoleResponse { Success = true, Message = "Member role updated successfully" };
+        return new UpdateTenantMemberRoleResponse
+        {
+            Success = true,
+            Message = "Member role updated successfully",
+            MemberId = member.Id,
+            NewRole = member.Role
+        };
     }
 }

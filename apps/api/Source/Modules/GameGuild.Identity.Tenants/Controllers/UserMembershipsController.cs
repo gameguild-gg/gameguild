@@ -29,7 +29,7 @@ public sealed class UserMembershipsController(ISender sender) : BaseApiControlle
     /// <param name="ct">Cancellation token</param>
     /// <returns>Membership creation result</returns>
     [HttpPost("v{version:apiVersion}/users/{userId:guid}/memberships")]
-    [Authorize(Policy = Policies.UsersEditSelf)]
+    [Authorize(Policy = Policies.TenantAdmin)]
     [EndpointSummary("Add a tenant membership for a user")]
     [EndpointDescription("Adds the specified user to a tenant with the requested role so the user can access that workspace.")]
     [ProducesResponseType<AddTenantMemberResponse>(StatusCodes.Status201Created)]
