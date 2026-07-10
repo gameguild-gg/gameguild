@@ -218,11 +218,11 @@ public static class SecurityServiceCollectionExtensions
             
             // User management policies (require authenticated user)
             authzOptions.AddPolicy("Users.Read", policy => policy.RequireAuthenticatedUser());
-            authzOptions.AddPolicy("Users.Create", policy => policy.RequireRole("Admin"));
-            authzOptions.AddPolicy("Users.Update", policy => policy.RequireRole("Admin"));
-            authzOptions.AddPolicy("Users.Delete", policy => policy.RequireRole("Admin"));
-            authzOptions.AddPolicy("Users.Admin", policy => policy.RequireRole("Admin"));
-            authzOptions.AddPolicy("Users.Purge", policy => policy.RequireRole("Admin"));
+            authzOptions.AddPolicy("Users.Create", policy => policy.RequireAssertion(context => IsUserAdministrator(context.User)));
+            authzOptions.AddPolicy("Users.Update", policy => policy.RequireAssertion(context => IsUserAdministrator(context.User)));
+            authzOptions.AddPolicy("Users.Delete", policy => policy.RequireAssertion(context => IsUserAdministrator(context.User)));
+            authzOptions.AddPolicy("Users.Admin", policy => policy.RequireAssertion(context => IsUserAdministrator(context.User)));
+            authzOptions.AddPolicy("Users.Purge", policy => policy.RequireAssertion(context => IsUserAdministrator(context.User)));
             authzOptions.AddPolicy("Users.ReadSelf", policy => policy.RequireAuthenticatedUser());
             authzOptions.AddPolicy("Users.EditSelf", policy => policy.RequireAuthenticatedUser());
             authzOptions.AddPolicy("Users.DeleteSelf", policy => policy.RequireAuthenticatedUser());
@@ -246,5 +246,14 @@ public static class SecurityServiceCollectionExtensions
         });
 
         return services;
+    }
+
+    private static bool IsUserAdministrator(System.Security.Claims.ClaimsPrincipal user)
+    {
+        var roles = ClaimsExtractor.GetRoles(user);
+
+        return roles.Contains("Admin") ||
+               roles.Contains("SystemAdmin") ||
+               roles.Contains("TenantAdmin");
     }
 }
