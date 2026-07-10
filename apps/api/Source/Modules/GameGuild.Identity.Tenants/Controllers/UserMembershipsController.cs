@@ -40,7 +40,7 @@ public sealed class UserMembershipsController(ISender sender) : BaseApiControlle
         ArgumentNullException.ThrowIfNull(body);
 
         var result = await sender.Send(
-                new AddTenantMemberCommand(body.TenantId, userId, body.Role, body.InvitedByEmail),
+                new AddTenantMemberCommand(body.TenantId, userId, body.Role, body.InvitedByEmail, body.RequiresAcceptance, body.InviteeEmail, body.InviteeName),
                 ct
             )
             .ConfigureAwait(false);
@@ -87,6 +87,73 @@ public sealed class UserMembershipsController(ISender sender) : BaseApiControlle
             .ConfigureAwait(false);
 
         return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    /// <summary>
+    ///     Resend a pending membership invite.
+    /// </summary>
+    [HttpPost("v{version:apiVersion}/users/{userId:guid}/memberships/{tenantId:guid}/invite:resend")]
+    [Authorize(Policy = Policies.TenantAdmin)]
+    [EndpointSummary("Resend tenant membership invite")]
+    [ProducesResponseType<UpdateTenantMemberInviteResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<UpdateTenantMemberInviteResponse>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<UpdateTenantMemberInviteResponse>(StatusCodes.Status409Conflict)]
+    public Task<IActionResult> ResendUserMembershipInvite(Guid userId, Guid tenantId, [FromBody] UpdateUserMembershipInviteRequest? body = null, CancellationToken ct = default)
+    {
+        return UpdateInvite(userId, tenantId, TenantMemberInviteAction.Resend, body, ct);
+    }
+
+    /// <summary>
+    ///     Cancel a pending membership invite without deleting the audit trail.
+    /// </summary>
+    [HttpPost("v{version:apiVersion}/users/{userId:guid}/memberships/{tenantId:guid}/invite:cancel")]
+    [Authorize(Policy = Policies.TenantAdmin)]
+    [EndpointSummary("Cancel tenant membership invite")]
+    [ProducesResponseType<UpdateTenantMemberInviteResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<UpdateTenantMemberInviteResponse>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<UpdateTenantMemberInviteResponse>(StatusCodes.Status409Conflict)]
+    public Task<IActionResult> CancelUserMembershipInvite(Guid userId, Guid tenantId, [FromBody] UpdateUserMembershipInviteRequest? body = null, CancellationToken ct = default)
+    {
+        return UpdateInvite(userId, tenantId, TenantMemberInviteAction.Cancel, body, ct);
+    }
+
+    /// <summary>
+    ///     Accept a pending membership invite and activate the membership.
+    /// </summary>
+    [HttpPost("v{version:apiVersion}/users/{userId:guid}/memberships/{tenantId:guid}/invite:accept")]
+    [Authorize(Policy = Policies.TenantAdmin)]
+    [EndpointSummary("Accept tenant membership invite")]
+    [ProducesResponseType<UpdateTenantMemberInviteResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<UpdateTenantMemberInviteResponse>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<UpdateTenantMemberInviteResponse>(StatusCodes.Status409Conflict)]
+    public Task<IActionResult> AcceptUserMembershipInvite(Guid userId, Guid tenantId, [FromBody] UpdateUserMembershipInviteRequest? body = null, CancellationToken ct = default)
+    {
+        return UpdateInvite(userId, tenantId, TenantMemberInviteAction.Accept, body, ct);
+    }
+
+    private async Task<IActionResult> UpdateInvite(
+        Guid userId,
+        Guid tenantId,
+        TenantMemberInviteAction action,
+        UpdateUserMembershipInviteRequest? body,
+        CancellationToken ct)
+    {
+        var result = await sender.Send(
+                new UpdateTenantMemberInviteCommand(tenantId, userId, action, body?.ActorEmail),
+                ct)
+            .ConfigureAwait(false);
+
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+
+        if (result.Message?.Contains("not found", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return NotFound(result);
+        }
+
+        return Conflict(result);
     }
 
     /// <summary>
@@ -184,6 +251,32 @@ public sealed record AddUserMembershipRequest
     ///     Optional inviter identifier for audit trail purposes.
     /// </summary>
     public string? InvitedByEmail { get; init; }
+
+    /// <summary>
+    ///     Whether the invited user must accept the membership before gaining active access.
+    /// </summary>
+    public bool RequiresAcceptance { get; init; }
+
+    /// <summary>
+    ///     Email of the user receiving an invite, used for delivery and audit metadata.
+    /// </summary>
+    public string? InviteeEmail { get; init; }
+
+    /// <summary>
+    ///     Display name of the user receiving an invite.
+    /// </summary>
+    public string? InviteeName { get; init; }
+}
+
+/// <summary>
+///     Request body for membership invite actions.
+/// </summary>
+public sealed record UpdateUserMembershipInviteRequest
+{
+    /// <summary>
+    ///     Optional operator email for audit trail purposes.
+    /// </summary>
+    public string? ActorEmail { get; init; }
 }
 
 /// <summary>

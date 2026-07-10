@@ -34,7 +34,7 @@ vi.mock('next/navigation', () => ({
   redirect: mocks.redirect,
 }));
 
-import { invitePlatformUser, updateMemberAccessRole } from './member-access';
+import { acceptPlatformInvite, cancelPlatformInvite, invitePlatformUser, resendPlatformInvite, updateMemberAccessRole } from './member-access';
 
 describe('updateMemberAccessRole', () => {
   beforeEach(() => {
@@ -138,10 +138,18 @@ describe('updateMemberAccessRole', () => {
       name: 'Learner One',
       phoneNumber: null,
     });
-    expect(mocks.usersMembershipsPost).toHaveBeenCalledWith('user-1', {
-      tenantId: 'tenant-1',
-      role: 'Moderator',
-      invitedByEmail: 'admin@game-guild.com',
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/v1/users/user-1/memberships',
+      requiresAuth: true,
+      body: {
+        tenantId: 'tenant-1',
+        role: 'Moderator',
+        invitedByEmail: 'admin@game-guild.com',
+        requiresAcceptance: true,
+        inviteeEmail: 'learner@game-guild.com',
+        inviteeName: 'Learner One',
+      },
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/users');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/platform/roles');
@@ -173,7 +181,7 @@ describe('updateMemberAccessRole', () => {
   });
 
   it('redirects with the API error when membership assignment fails', async () => {
-    mocks.usersMembershipsPost.mockResolvedValue({ ok: false, error: { message: 'Tenant not found.' } });
+    mocks.request.mockResolvedValue({ ok: false, error: { message: 'Tenant not found.' } });
     const formData = new FormData();
     formData.set('email', 'learner@game-guild.com');
     formData.set('name', 'Learner One');
@@ -182,5 +190,57 @@ describe('updateMemberAccessRole', () => {
     await expect(invitePlatformUser(formData)).rejects.toThrow(
       'redirect:/dashboard/community/members/users?error=Tenant+not+found.',
     );
+  });
+
+  it('resends a pending platform invite through the membership invite endpoint', async () => {
+    const formData = new FormData();
+    formData.set('userId', 'user-1');
+    formData.set('tenantId', 'tenant-1');
+
+    await expect(resendPlatformInvite(formData)).rejects.toThrow(
+      'redirect:/dashboard/community/members/users?message=Invite+resent.',
+    );
+
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/v1/users/user-1/memberships/tenant-1/invite:resend',
+      body: {},
+      requiresAuth: true,
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/users');
+  });
+
+  it('cancels a pending platform invite through the membership invite endpoint', async () => {
+    const formData = new FormData();
+    formData.set('userId', 'user-1');
+    formData.set('tenantId', 'tenant-1');
+
+    await expect(cancelPlatformInvite(formData)).rejects.toThrow(
+      'redirect:/dashboard/community/members/users?message=Invite+cancelled.',
+    );
+
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/v1/users/user-1/memberships/tenant-1/invite:cancel',
+      body: {},
+      requiresAuth: true,
+    });
+  });
+
+  it('accepts a pending platform invite through the membership invite endpoint', async () => {
+    const formData = new FormData();
+    formData.set('userId', 'user-1');
+    formData.set('tenantId', 'tenant-1');
+
+    await expect(acceptPlatformInvite(formData)).rejects.toThrow(
+      'redirect:/dashboard/community/members/users?message=Invite+accepted.',
+    );
+
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/v1/users/user-1/memberships/tenant-1/invite:accept',
+      body: {},
+      requiresAuth: true,
+    });
   });
 });
