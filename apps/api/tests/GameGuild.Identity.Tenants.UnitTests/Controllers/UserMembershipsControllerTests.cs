@@ -1,13 +1,27 @@
 using FluentAssertions;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 using Xunit;
 
 namespace GameGuild.Identity.Tenants.UnitTests.Controllers;
 
 public class UserMembershipsControllerTests
 {
+    [Fact]
+    public void AddUserMembership_Should_Require_Tenant_Admin()
+    {
+        var method = typeof(UserMembershipsController).GetMethod(nameof(UserMembershipsController.AddUserMembership));
+
+        method.Should().NotBeNull();
+        method!.GetCustomAttributes<AuthorizeAttribute>()
+            .Should()
+            .ContainSingle(attribute => attribute.Policy == Policies.TenantAdmin);
+    }
+
     [Fact]
     public async Task GetUserMemberships_Should_Return_Ok()
     {
