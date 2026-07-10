@@ -3,7 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getMemberAccessDirectory: vi.fn(),
+  getPlatformRoles: vi.fn(),
+  getPermissionTemplates: vi.fn(),
   updateMemberAccessRole: vi.fn(),
+  createPlatformRole: vi.fn(),
+  updatePlatformRole: vi.fn(),
+  deletePlatformRole: vi.fn(),
 }));
 
 vi.mock('@/lib/community', () => ({
@@ -14,10 +19,33 @@ vi.mock('@/lib/community', () => ({
     { value: 'SystemAdmin', label: 'Super admin', description: 'Full platform access.' },
   ],
   getMemberAccessDirectory: mocks.getMemberAccessDirectory,
+  getPlatformRoles: mocks.getPlatformRoles,
+  getPermissionTemplates: mocks.getPermissionTemplates,
+  PLATFORM_PERMISSION_MATRIX: [
+    {
+      area: 'Learning',
+      description: 'Learning operations',
+      permissions: [
+        { value: 'courses:read', label: 'View courses' },
+        { value: 'courses:update', label: 'Edit courses' },
+      ],
+    },
+    {
+      area: 'Platform',
+      description: 'Platform operations',
+      permissions: [{ value: 'roles:read', label: 'View roles' }],
+    },
+  ],
 }));
 
 vi.mock('@/lib/community/actions/member-access', () => ({
   updateMemberAccessRole: mocks.updateMemberAccessRole,
+}));
+
+vi.mock('@/lib/community/actions/roles', () => ({
+  createPlatformRole: mocks.createPlatformRole,
+  updatePlatformRole: mocks.updatePlatformRole,
+  deletePlatformRole: mocks.deletePlatformRole,
 }));
 
 function buildMemberAccessRow(overrides: Partial<Record<string, unknown>> = {}) {
@@ -60,6 +88,36 @@ import RolesPage from './page';
 describe('platform roles page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getPlatformRoles.mockResolvedValue({
+      roles: [
+        {
+          id: 'role-course-operator',
+          name: 'Course Operator',
+          description: 'Runs learning operations.',
+          permissions: ['courses:read', 'courses:update'],
+          isActive: true,
+          tenantId: null,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-02T00:00:00.000Z',
+        },
+      ],
+      error: null,
+    });
+    mocks.getPermissionTemplates.mockResolvedValue({
+      templates: [
+        {
+          id: 'template-learning',
+          name: 'Learning manager',
+          description: 'Recommended permissions for learning operators.',
+          category: 'Learning',
+          permissions: ['courses:read', 'courses:update'],
+          isSystemTemplate: true,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+      error: null,
+    });
   });
 
   it('renders role catalog and assignment controls outside the community users table', async () => {
@@ -94,8 +152,14 @@ describe('platform roles page', () => {
     expect(screen.getByRole('heading', { name: 'Roles' })).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Role changed.');
     expect(screen.getByText('Role assignments')).toBeInTheDocument();
-    expect(screen.getByText('Role catalog')).toBeInTheDocument();
+    expect(screen.getByText('Workspace access roles')).toBeInTheDocument();
     expect(screen.getByText('Full platform access.')).toBeInTheDocument();
+    expect(screen.getByText('Custom roles')).toBeInTheDocument();
+    expect(screen.getAllByText('Course Operator').length).toBeGreaterThan(0);
+    expect(screen.getByText('Permission matrix')).toBeInTheDocument();
+    expect(screen.getAllByText('View courses').length).toBeGreaterThan(0);
+    expect(screen.getByText('Learning manager')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create role' })).toBeInTheDocument();
 
     const superAdminRow = screen.getByText('Super Admin').closest('tr');
     expect(superAdminRow).not.toBeNull();

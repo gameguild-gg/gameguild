@@ -14,6 +14,12 @@ import type {
   SocialFeedFeedItem,
   SocialFeedFeedItemReason,
   SocialGroupsSocialGroup,
+  SocialGroupsSocialGroupMember,
+  SocialGroupsSocialGroupMemberRole,
+  SocialGroupsSocialGroupMembershipStatus,
+  SocialGroupsSocialGroupStatus,
+  SocialGroupsSocialGroupType,
+  SocialGroupsSocialGroupVisibility,
   SocialProfilesProfilePortfolioItem,
   SocialProfilesProfileSkillProficiency,
   SocialProfilesProfileSkill,
@@ -37,8 +43,25 @@ export interface MemberGroup {
   name: string;
   description: string;
   memberCount: number;
+  pendingMemberCount: number;
   createdAt: string;
   isPublic: boolean;
+  type: SocialGroupsSocialGroupType;
+  visibility: SocialGroupsSocialGroupVisibility;
+  status: SocialGroupsSocialGroupStatus;
+}
+
+export interface MemberGroupMember {
+  id: string;
+  userId: string;
+  displayName: string;
+  email: string;
+  role: SocialGroupsSocialGroupMemberRole;
+  status: SocialGroupsSocialGroupMembershipStatus;
+  requestedAt: string;
+  joinedAt: string | null;
+  approvedByUserId?: string | null;
+  removedAt?: string | null;
 }
 
 export interface SupportTicket {
@@ -910,6 +933,48 @@ export async function getGroups(options?: { page?: number; limit?: number; searc
   }
 }
 
+export async function getGroup(groupId: string): Promise<{ group: MemberGroup | null; error?: string | null }> {
+  try {
+    const client = getApiClient();
+    const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+    const result = await socialGroups.getApiSocialGroups1(groupId);
+
+    if (!result.ok) return { group: null, error: result.error.message };
+
+    return { group: mapSocialGroup(result.data), error: null };
+  } catch (error) {
+    return { group: null, error: error instanceof Error ? error.message : 'Group could not be loaded.' };
+  }
+}
+
+export async function getGroupMembers(
+  groupId: string,
+  options?: { status?: SocialGroupsSocialGroupMembershipStatus; limit?: number },
+): Promise<{ members: MemberGroupMember[]; error?: string | null }> {
+  try {
+    const client = getApiClient();
+    const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+    const [membersResult, directory] = await Promise.all([
+      socialGroups.getApiSocialGroupsMembers(groupId, {
+        status: options?.status,
+        skip: 0,
+        take: options?.limit ?? 200,
+      }),
+      getMemberAccessDirectory({ limit: 500 }),
+    ]);
+
+    if (!membersResult.ok) return { members: [], error: membersResult.error.message };
+
+    const usersById = new Map(directory.members.map((row) => [row.member.id, row.member]));
+    return {
+      members: (membersResult.data ?? []).map((member) => mapSocialGroupMember(member, usersById.get(member.userId ?? ''))),
+      error: directory.error ?? null,
+    };
+  } catch (error) {
+    return { members: [], error: error instanceof Error ? error.message : 'Group members could not be loaded.' };
+  }
+}
+
 /**
  * Fetch support tickets.
  */
@@ -949,7 +1014,28 @@ function mapSocialGroup(group: SocialGroupsSocialGroup): MemberGroup {
     name: group.name ?? 'Untitled group',
     description: group.description ?? '',
     memberCount: group.memberCount ?? 0,
+    pendingMemberCount: group.pendingMemberCount ?? 0,
     createdAt: group.createdAt ?? new Date(0).toISOString(),
     isPublic: group.visibility === 'Public',
+    type: group.type ?? 'InterestCommunity',
+    visibility: group.visibility ?? 'Public',
+    status: group.status ?? 'Active',
+  };
+}
+
+function mapSocialGroupMember(member: SocialGroupsSocialGroupMember, user?: MemberSummary): MemberGroupMember {
+  const userId = member.userId ?? '';
+
+  return {
+    id: member.id ?? `${member.groupId ?? 'group'}-${userId}`,
+    userId,
+    displayName: user?.displayName ?? user?.username ?? userId,
+    email: user?.email ?? '',
+    role: member.role ?? 'Member',
+    status: member.status ?? 'Pending',
+    requestedAt: member.requestedAt ?? new Date(0).toISOString(),
+    joinedAt: member.joinedAt ?? null,
+    approvedByUserId: member.approvedByUserId ?? null,
+    removedAt: member.removedAt ?? null,
   };
 }
