@@ -1,6 +1,6 @@
 import { Link } from '@/i18n/navigation';
 import { COMMUNITY_ACCESS_ROLES, getMemberAccessDirectory } from '@/lib/community';
-import { invitePlatformUser } from '@/lib/community/actions/member-access';
+import { acceptPlatformInvite, cancelPlatformInvite, invitePlatformUser, resendPlatformInvite } from '@/lib/community/actions/member-access';
 import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
@@ -10,7 +10,7 @@ import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
-import { ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { Check, RotateCw, ShieldCheck, UserPlus, Users, X } from 'lucide-react';
 import React from 'react';
 
 interface Props {
@@ -45,14 +45,51 @@ function getWorkspaceOptions(members: Awaited<ReturnType<typeof getMemberAccessD
 
 function getAccessStatus(row: Awaited<ReturnType<typeof getMemberAccessDirectory>>['members'][number]) {
   if (!row.primaryMembership) return 'No workspace';
+  if (row.primaryMembership.inviteStatus === 'Pending') return 'Pending invite';
+  if (row.primaryMembership.inviteStatus === 'Cancelled') return 'Invite cancelled';
   if (row.primaryMembership.isActive === false) return 'Inactive';
   return 'Accepted';
 }
 
 function getAccessStatusVariant(status: string) {
   if (status === 'Accepted') return 'default';
+  if (status === 'Pending invite') return 'secondary';
+  if (status === 'Invite cancelled') return 'destructive';
   if (status === 'Inactive') return 'secondary';
   return 'outline';
+}
+
+function getInviteAuditLabel(row: Awaited<ReturnType<typeof getMemberAccessDirectory>>['members'][number]) {
+  if (!row.primaryMembership?.invitedByEmail) return null;
+
+  return `Invited by ${row.primaryMembership.invitedByEmail}`;
+}
+
+function InviteActionButton({
+  action,
+  userId,
+  tenantId,
+  label,
+  icon,
+  variant = 'outline',
+}: {
+  action: (formData: FormData) => Promise<void>;
+  userId: string;
+  tenantId: string;
+  label: string;
+  icon: React.ReactNode;
+  variant?: React.ComponentProps<typeof Button>['variant'];
+}) {
+  return (
+    <form action={action}>
+      <input type="hidden" name="userId" value={userId} />
+      <input type="hidden" name="tenantId" value={tenantId} />
+      <Button type="submit" variant={variant} size="sm" aria-label={label}>
+        {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ 'aria-hidden'?: boolean }>, { 'aria-hidden': true }) : icon}
+        <span aria-hidden="true" className="hidden xl:inline">{label}</span>
+      </Button>
+    </form>
+  );
 }
 
 export default async function Page({ searchParams }: Props): Promise<React.JSX.Element> {
@@ -214,11 +251,18 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead>Last Active</TableHead>
+                  <TableHead className="text-right">Invite actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {members.map((row) => (
-                  <TableRow key={row.member.id} className="hover:bg-muted/50">
+                {members.map((row) => {
+                  const accessStatus = getAccessStatus(row);
+                  const inviteAuditLabel = getInviteAuditLabel(row);
+                  const inviteTenantId = row.primaryMembership?.tenantId ?? '';
+                  const isPendingInvite = accessStatus === 'Pending invite' && inviteTenantId.length > 0;
+
+                  return (
+                    <TableRow key={row.member.id} className="hover:bg-muted/50">
                     <TableCell>
                       <Link href={`/dashboard/community/members/users/${row.member.id}`} className="flex flex-col">
                         <span className="font-medium">{row.member.displayName}</span>
@@ -235,15 +279,49 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                       {row.membershipLoadError ? <span className="block text-xs text-destructive">{row.membershipLoadError}</span> : null}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getAccessStatusVariant(getAccessStatus(row))}>{getAccessStatus(row)}</Badge>
+                      <div className="flex flex-col gap-1">
+                        <Badge variant={getAccessStatusVariant(accessStatus)}>{accessStatus}</Badge>
+                        {inviteAuditLabel ? <span className="text-xs text-muted-foreground">{inviteAuditLabel}</span> : null}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={row.member.status === 'active' ? 'default' : row.member.status === 'banned' ? 'destructive' : 'secondary'}>{row.member.status}</Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{new Date(row.member.joinedAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{new Date(row.member.lastActiveAt).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      {isPendingInvite ? (
+                        <div className="flex justify-end gap-2">
+                          <InviteActionButton
+                            action={resendPlatformInvite}
+                            userId={row.member.id}
+                            tenantId={inviteTenantId}
+                            label="Resend invite"
+                            icon={<RotateCw className="size-4" />}
+                          />
+                          <InviteActionButton
+                            action={acceptPlatformInvite}
+                            userId={row.member.id}
+                            tenantId={inviteTenantId}
+                            label="Accept invite"
+                            icon={<Check className="size-4" />}
+                          />
+                          <InviteActionButton
+                            action={cancelPlatformInvite}
+                            userId={row.member.id}
+                            tenantId={inviteTenantId}
+                            label="Cancel invite"
+                            icon={<X className="size-4" />}
+                            variant="destructive"
+                          />
+                        </div>
+                      ) : (
+                        <span className="flex justify-end text-sm text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}

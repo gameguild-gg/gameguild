@@ -64,6 +64,20 @@ export interface MemberGroupMember {
   removedAt?: string | null;
 }
 
+export interface MembershipInviteFields {
+  inviteStatus?: string | null;
+  invitedByEmail?: string | null;
+  inviteeEmail?: string | null;
+  inviteeName?: string | null;
+  invitedAt?: string | null;
+  lastInviteSentAt?: string | null;
+  acceptedAt?: string | null;
+  cancelledAt?: string | null;
+  inviteResendCount?: number | null;
+}
+
+export type MemberAccessMembership = IdentityTenantsUserMembership & MembershipInviteFields;
+
 export interface SupportTicket {
   id: string;
   subject: string;
@@ -109,8 +123,8 @@ export const COMMUNITY_ACCESS_ROLES = [
 
 export interface MemberAccessRow {
   member: MemberSummary;
-  memberships: IdentityTenantsUserMembership[];
-  primaryMembership: IdentityTenantsUserMembership | null;
+  memberships: MemberAccessMembership[];
+  primaryMembership: MemberAccessMembership | null;
   role: string;
   isSuperAdmin: boolean;
   isCurrentUser: boolean;
@@ -289,7 +303,7 @@ function isSuperAdminRole(role?: string | null) {
   return role === 'SystemAdmin' || role === 'Admin';
 }
 
-function selectPrimaryMembership(memberships: IdentityTenantsUserMembership[]) {
+function selectPrimaryMembership(memberships: MemberAccessMembership[]) {
   return (
     memberships.find((membership) => membership.isActive && isSuperAdminRole(membership.role)) ??
     memberships.find((membership) => membership.isActive && membership.role === 'TenantAdmin') ??
@@ -302,7 +316,7 @@ function selectPrimaryMembership(memberships: IdentityTenantsUserMembership[]) {
 async function getUserMemberships(
   client: ReturnType<typeof getApiClient>,
   userId: string,
-): Promise<{ memberships: IdentityTenantsUserMembership[]; error?: string | null }> {
+): Promise<{ memberships: MemberAccessMembership[]; error?: string | null }> {
   const result = await client.request<IdentityTenantsGetUserMembershipsOutput>({
     method: 'GET',
     path: `/v1/users/${userId}/memberships`,
@@ -314,7 +328,7 @@ async function getUserMemberships(
     return { memberships: [], error: result.error.message };
   }
 
-  return { memberships: result.data?.memberships ?? [], error: null };
+  return { memberships: (result.data?.memberships ?? []) as MemberAccessMembership[], error: null };
 }
 
 function getInitials(displayName: string) {

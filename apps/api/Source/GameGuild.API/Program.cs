@@ -1,8 +1,10 @@
 using GameGuild.API;
+using GameGuild.API.Email;
 using GameGuild.API.Database;
 using GameGuild.API.Integration;
 using GameGuild.API.Setup;
 using GameGuild.Commerce.Subscriptions;
+using GameGuild.Email;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -90,6 +92,8 @@ builder.AddApplicationLayer();
 builder.AddPresentationLayer();
 
 // Cross-module background jobs (composition-root level)
+builder.Services.Configure<EmailDeliveryOptions>(builder.Configuration.GetSection("EmailDelivery"));
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.Configure<SubscriptionNotificationLinkOptions>(builder.Configuration.GetSection("SubscriptionNotifications"));
 builder.Services.AddScoped<IMonthlyStatementMailSender, MonthlyStatementMailSenderAdapter>();
 builder.Services.AddScoped<IMonthlyStatementDataProvider, MonthlyStatementDataProvider>();

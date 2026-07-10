@@ -240,8 +240,12 @@ describe('community member queries', () => {
           name: 'Arcade Builders',
           description: 'Teams shipping arcade projects.',
           memberCount: 14,
+          pendingMemberCount: 0,
           createdAt: '2026-06-01T00:00:00Z',
           isPublic: true,
+          type: 'InterestCommunity',
+          visibility: 'Public',
+          status: 'Active',
         },
       ],
     });
