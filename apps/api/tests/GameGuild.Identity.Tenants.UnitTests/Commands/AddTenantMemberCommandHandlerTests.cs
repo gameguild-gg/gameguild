@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Email;
 using Moq;
 using Xunit;
 
@@ -54,20 +55,106 @@ public class AddTenantMemberCommandHandlerTests
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var tenant = new Tenant { Id = tenantId, Name = "Tenant", Slug = "tenant" };
+        TenantMember? capturedMember = null;
 
         _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenant);
         _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((TenantMember?)null);
         _memberRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
+            .Callback<TenantMember, CancellationToken>((member, _) => capturedMember = member)
             .ReturnsAsync((TenantMember m, CancellationToken _) => m);
 
         var result = await _handler.Handle(new TestAddTenantMemberCommand(tenantId, userId, "Member", "inviter@example.com"), CancellationToken.None);
 
         result.Success.Should().BeTrue();
+        capturedMember.Should().NotBeNull();
+        capturedMember!.IsActive.Should().BeTrue();
+        capturedMember.Metadata.Should().BeNull();
         tenant.DomainEvents.Should().Contain(e => e is TenantMemberAddedEvent);
     }
 
-    private sealed record TestAddTenantMemberCommand(Guid TenantId, Guid UserId, string Role, string? InvitedByEmail = null)
-        : AddTenantMemberCommand(TenantId, UserId, Role, InvitedByEmail);
+    [Fact]
+    public async Task Handle_WhenRequiresAcceptance_Should_Create_Pending_Invite_Metadata()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenant = new Tenant { Id = tenantId, Name = "Tenant", Slug = "tenant" };
+        TenantMember? capturedMember = null;
+
+        _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantMember?)null);
+        _memberRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
+            .Callback<TenantMember, CancellationToken>((member, _) => capturedMember = member)
+            .ReturnsAsync((TenantMember m, CancellationToken _) => m);
+
+        var result = await _handler.Handle(
+            new TestAddTenantMemberCommand(tenantId, userId, "Moderator", "admin@game-guild.com", RequiresAcceptance: true),
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        capturedMember.Should().NotBeNull();
+        capturedMember!.IsActive.Should().BeFalse();
+        capturedMember.LeftAt.Should().BeNull();
+        capturedMember.LeaveReason.Should().BeNull();
+        capturedMember.Metadata.Should().Contain("\"inviteStatus\":\"Pending\"");
+        capturedMember.Metadata.Should().Contain("\"invitedByEmail\":\"admin@game-guild.com\"");
+        capturedMember.Metadata.Should().Contain("\"lastSentAt\"");
+    }
+
+    [Fact]
+    public async Task Handle_WhenRequiresAcceptanceAndInviteeEmail_Should_Send_Invite_Email()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenant = new Tenant { Id = tenantId, Name = "GameGuild Studio", Slug = "gameguild-studio" };
+        var emailSender = new Mock<IEmailSender>();
+        EmailMessage? sentMessage = null;
+        TenantMember? capturedMember = null;
+        var handler = new AddTenantMemberCommandHandler(_tenantRepositoryMock.Object, _memberRepositoryMock.Object, emailSender.Object);
+
+        _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantMember?)null);
+        _memberRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
+            .Callback<TenantMember, CancellationToken>((member, _) => capturedMember = member)
+            .ReturnsAsync((TenantMember m, CancellationToken _) => m);
+        emailSender
+            .Setup(sender => sender.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
+            .Callback<EmailMessage, CancellationToken>((message, _) => sentMessage = message)
+            .Returns(Task.CompletedTask);
+
+        var result = await handler.Handle(
+            new TestAddTenantMemberCommand(
+                tenantId,
+                userId,
+                "Moderator",
+                "admin@game-guild.com",
+                RequiresAcceptance: true,
+                InviteeEmail: "learner@example.com",
+                InviteeName: "Learner One"),
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        sentMessage.Should().NotBeNull();
+        sentMessage!.ToEmail.Should().Be("learner@example.com");
+        sentMessage.ToName.Should().Be("Learner One");
+        sentMessage.Subject.Should().Contain("GameGuild Studio");
+        sentMessage.PlainTextContent.Should().Contain("Moderator");
+        capturedMember!.Metadata.Should().Contain("\"inviteeEmail\":\"learner@example.com\"");
+        capturedMember.Metadata.Should().Contain("\"inviteeName\":\"Learner One\"");
+    }
+
+    private sealed record TestAddTenantMemberCommand(
+        Guid TenantId,
+        Guid UserId,
+        string Role,
+        string? InvitedByEmail = null,
+        bool RequiresAcceptance = false,
+        string? InviteeEmail = null,
+        string? InviteeName = null)
+        : AddTenantMemberCommand(TenantId, UserId, Role, InvitedByEmail, RequiresAcceptance, InviteeEmail, InviteeName);
 }

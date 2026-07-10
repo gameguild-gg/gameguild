@@ -71,4 +71,49 @@ public sealed record UserMembershipDto
     ///     When the user left this tenant (null if still a member)
     /// </summary>
     public DateTime? LeftAt { get; init; }
+
+    /// <summary>
+    ///     Invitation workflow status, when this membership was created as an invite.
+    /// </summary>
+    public string? InviteStatus { get; init; }
+
+    /// <summary>
+    ///     Email of the operator who sent the invite.
+    /// </summary>
+    public string? InvitedByEmail { get; init; }
+
+    /// <summary>
+    ///     Email of the user who received the invite.
+    /// </summary>
+    public string? InviteeEmail { get; init; }
+
+    /// <summary>
+    ///     Display name of the user who received the invite.
+    /// </summary>
+    public string? InviteeName { get; init; }
+
+    /// <summary>
+    ///     When the invite was created.
+    /// </summary>
+    public DateTime? InvitedAt { get; init; }
+
+    /// <summary>
+    ///     When the invite was last sent.
+    /// </summary>
+    public DateTime? LastInviteSentAt { get; init; }
+
+    /// <summary>
+    ///     When the invite was accepted.
+    /// </summary>
+    public DateTime? AcceptedAt { get; init; }
+
+    /// <summary>
+    ///     When the invite was cancelled.
+    /// </summary>
+    public DateTime? CancelledAt { get; init; }
+
+    /// <summary>
+    ///     Number of times the invite has been sent.
+    /// </summary>
+    public int InviteResendCount { get; init; }
 }

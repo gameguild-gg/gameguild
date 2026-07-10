@@ -20,18 +20,32 @@ public sealed class GetUserMembershipsQueryHandler : IQueryHandler<GetUserMember
             .GetByUserIdAsync(request.UserId, request.IncludeInactive, cancellationToken)
             .ConfigureAwait(false);
 
-        var dtos = memberships.Select(m => new UserMembershipDto
+        var dtos = memberships.Select(m =>
         {
-            MembershipId = m.Id,
-            TenantId = m.TenantId,
-            TenantName = m.Tenant?.Name ?? string.Empty,
-            TenantSlug = m.Tenant?.Slug ?? string.Empty,
-            TenantIsActive = m.Tenant?.IsActive ?? false,
-            TenantDescription = m.Tenant?.Description,
-            Role = m.Role,
-            IsActive = m.IsActive,
-            JoinedAt = m.JoinedAt,
-            LeftAt = m.LeftAt
+            var invite = TenantMemberInviteMetadata.FromJson(m.Metadata);
+
+            return new UserMembershipDto
+            {
+                MembershipId = m.Id,
+                TenantId = m.TenantId,
+                TenantName = m.Tenant?.Name ?? string.Empty,
+                TenantSlug = m.Tenant?.Slug ?? string.Empty,
+                TenantIsActive = m.Tenant?.IsActive ?? false,
+                TenantDescription = m.Tenant?.Description,
+                Role = m.Role,
+                IsActive = m.IsActive,
+                JoinedAt = m.JoinedAt,
+                LeftAt = m.LeftAt,
+                InviteStatus = invite.InviteStatus,
+                InvitedByEmail = invite.InvitedByEmail,
+                InviteeEmail = invite.InviteeEmail,
+                InviteeName = invite.InviteeName,
+                InvitedAt = invite.InvitedAt,
+                LastInviteSentAt = invite.LastSentAt,
+                AcceptedAt = invite.AcceptedAt,
+                CancelledAt = invite.CancelledAt,
+                InviteResendCount = invite.ResendCount
+            };
         }).ToList();
 
         return new GetUserMembershipsResponse

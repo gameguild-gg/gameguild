@@ -7,6 +7,9 @@ const mocks = vi.hoisted(() => ({
   getMemberAccessDirectory: vi.fn(),
   createCommunityGroup: vi.fn(),
   invitePlatformUser: vi.fn(),
+  resendPlatformInvite: vi.fn(),
+  cancelPlatformInvite: vi.fn(),
+  acceptPlatformInvite: vi.fn(),
 }));
 
 vi.mock('@/lib/community', () => ({
@@ -25,6 +28,9 @@ vi.mock('@/lib/community/actions/groups', () => ({
 
 vi.mock('@/lib/community/actions/member-access', () => ({
   invitePlatformUser: mocks.invitePlatformUser,
+  resendPlatformInvite: mocks.resendPlatformInvite,
+  cancelPlatformInvite: mocks.cancelPlatformInvite,
+  acceptPlatformInvite: mocks.acceptPlatformInvite,
 }));
 
 vi.mock('@/i18n/navigation', () => ({
@@ -50,9 +56,13 @@ function buildMemberAccessRow(overrides: Partial<Record<string, unknown>> = {}) 
         tenantName,
         tenantSlug,
         role,
-        isActive: true,
+        isActive: overrides.membershipIsActive ?? true,
         joinedAt: String(overrides.membershipJoinedAt ?? '2026-01-01T00:00:00.000Z'),
         leftAt: overrides.membershipLeftAt ?? null,
+        inviteStatus: overrides.inviteStatus,
+        invitedByEmail: overrides.invitedByEmail,
+        invitedAt: overrides.invitedAt,
+        lastInviteSentAt: overrides.lastInviteSentAt,
       }
     : null;
 
@@ -125,6 +135,47 @@ describe('community users page', () => {
     expect(row).not.toBeNull();
     expect(within(row!).getAllByText('Member').length).toBeGreaterThan(0);
     expect(within(row!).getByText('Accepted')).toBeInTheDocument();
+  });
+
+  it('shows pending invite controls when workspace access is waiting for acceptance', async () => {
+    mocks.getMemberAccessDirectory.mockResolvedValue({
+      total: 2,
+      currentUserId: 'user-admin',
+      error: null,
+      members: [
+        buildMemberAccessRow({
+          id: 'user-admin',
+          username: 'admin',
+          displayName: 'Admin User',
+          email: 'admin@game-guild.com',
+          role: 'SystemAdmin',
+          isCurrentUser: true,
+          tenantId: 'tenant-1',
+          tenantName: 'GameGuild',
+        }),
+        buildMemberAccessRow({
+          id: 'user-pending',
+          username: 'pending',
+          displayName: 'Pending User',
+          email: 'pending@game-guild.com',
+          role: 'Moderator',
+          membershipIsActive: false,
+          inviteStatus: 'Pending',
+          invitedByEmail: 'admin@game-guild.com',
+          lastInviteSentAt: '2026-07-01T12:00:00.000Z',
+        }),
+      ],
+    });
+
+    render(await UsersPage({ searchParams: Promise.resolve({}) }));
+
+    const row = screen.getByText('Pending User').closest('tr');
+    expect(row).not.toBeNull();
+    expect(within(row!).getByText('Pending invite')).toBeInTheDocument();
+    expect(within(row!).getByText('Invited by admin@game-guild.com')).toBeInTheDocument();
+    expect(within(row!).getByRole('button', { name: 'Resend invite' })).toBeInTheDocument();
+    expect(within(row!).getByRole('button', { name: 'Accept invite' })).toBeInTheDocument();
+    expect(within(row!).getByRole('button', { name: 'Cancel invite' })).toBeInTheDocument();
   });
 
   it('opens an invite dialog with user and workspace fields', async () => {

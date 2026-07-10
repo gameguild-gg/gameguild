@@ -1,0 +1,149 @@
+using FluentAssertions;
+using GameGuild.Email;
+using Moq;
+using Xunit;
+
+namespace GameGuild.Identity.Tenants.UnitTests.Commands;
+
+public class UpdateTenantMemberInviteCommandHandlerTests
+{
+    private readonly Mock<ITenantMemberRepository> _memberRepositoryMock = new();
+    private readonly UpdateTenantMemberInviteCommandHandler _handler;
+
+    public UpdateTenantMemberInviteCommandHandlerTests()
+    {
+        _handler = new UpdateTenantMemberInviteCommandHandler(_memberRepositoryMock.Object);
+    }
+
+    [Fact]
+    public async Task Handle_WhenMemberMissing_Should_Return_NotFound()
+    {
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantMember?)null);
+
+        var result = await _handler.Handle(
+            new UpdateTenantMemberInviteCommand(Guid.NewGuid(), Guid.NewGuid(), TenantMemberInviteAction.Accept),
+            CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("not found");
+    }
+
+    [Fact]
+    public async Task Handle_WhenResendingPendingInvite_Should_Update_LastSent_And_Count()
+    {
+        var member = CreatePendingInvite();
+        TenantMember? updated = null;
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _memberRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
+            .Callback<TenantMember, CancellationToken>((entity, _) => updated = entity)
+            .ReturnsAsync((TenantMember entity, CancellationToken _) => entity);
+
+        var result = await _handler.Handle(
+            new UpdateTenantMemberInviteCommand(member.TenantId, member.UserId, TenantMemberInviteAction.Resend, "admin@game-guild.com"),
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        updated.Should().NotBeNull();
+        updated!.IsActive.Should().BeFalse();
+        updated.Metadata.Should().Contain("\"inviteStatus\":\"Pending\"");
+        updated.Metadata.Should().Contain("\"resendCount\":2");
+        updated.Metadata.Should().Contain("\"lastSentAt\"");
+    }
+
+    [Fact]
+    public async Task Handle_WhenResendingPendingInviteWithInviteeEmail_Should_Send_Email()
+    {
+        var member = CreatePendingInvite();
+        var emailSender = new Mock<IEmailSender>();
+        EmailMessage? sentMessage = null;
+        var handler = new UpdateTenantMemberInviteCommandHandler(_memberRepositoryMock.Object, emailSender.Object);
+
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _memberRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantMember entity, CancellationToken _) => entity);
+        emailSender
+            .Setup(sender => sender.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
+            .Callback<EmailMessage, CancellationToken>((message, _) => sentMessage = message)
+            .Returns(Task.CompletedTask);
+
+        var result = await handler.Handle(
+            new UpdateTenantMemberInviteCommand(member.TenantId, member.UserId, TenantMemberInviteAction.Resend, "admin@game-guild.com"),
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        sentMessage.Should().NotBeNull();
+        sentMessage!.ToEmail.Should().Be("learner@example.com");
+        sentMessage.ToName.Should().Be("Learner One");
+        sentMessage.Subject.Should().Contain("GameGuild Studio");
+    }
+
+    [Fact]
+    public async Task Handle_WhenCancellingPendingInvite_Should_Mark_Cancelled_Without_Deleting()
+    {
+        var member = CreatePendingInvite();
+        TenantMember? updated = null;
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _memberRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
+            .Callback<TenantMember, CancellationToken>((entity, _) => updated = entity)
+            .ReturnsAsync((TenantMember entity, CancellationToken _) => entity);
+
+        var result = await _handler.Handle(
+            new UpdateTenantMemberInviteCommand(member.TenantId, member.UserId, TenantMemberInviteAction.Cancel, "admin@game-guild.com"),
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        updated.Should().NotBeNull();
+        updated!.IsActive.Should().BeFalse();
+        updated.LeftAt.Should().NotBeNull();
+        updated.LeaveReason.Should().Be("Invite cancelled");
+        updated.Metadata.Should().Contain("\"inviteStatus\":\"Cancelled\"");
+        updated.Metadata.Should().Contain("\"cancelledAt\"");
+    }
+
+    [Fact]
+    public async Task Handle_WhenAcceptingPendingInvite_Should_Activate_Membership()
+    {
+        var member = CreatePendingInvite();
+        TenantMember? updated = null;
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _memberRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
+            .Callback<TenantMember, CancellationToken>((entity, _) => updated = entity)
+            .ReturnsAsync((TenantMember entity, CancellationToken _) => entity);
+
+        var result = await _handler.Handle(
+            new UpdateTenantMemberInviteCommand(member.TenantId, member.UserId, TenantMemberInviteAction.Accept),
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        updated.Should().NotBeNull();
+        updated!.IsActive.Should().BeTrue();
+        updated.LeftAt.Should().BeNull();
+        updated.LeaveReason.Should().BeNull();
+        updated.Metadata.Should().Contain("\"inviteStatus\":\"Accepted\"");
+        updated.Metadata.Should().Contain("\"acceptedAt\"");
+    }
+
+    private static TenantMember CreatePendingInvite()
+    {
+        var now = DateTime.Parse("2026-07-01T12:00:00Z").ToUniversalTime();
+
+        return new TenantMember
+        {
+            Id = Guid.NewGuid(),
+            TenantId = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            Role = "Member",
+            IsActive = false,
+            JoinedAt = now,
+            Tenant = new Tenant { Id = Guid.NewGuid(), Name = "GameGuild Studio", Slug = "gameguild-studio" },
+            Metadata = $$"""
+            {"inviteStatus":"Pending","invitedByEmail":"admin@game-guild.com","inviteeEmail":"learner@example.com","inviteeName":"Learner One","invitedAt":"{{now:O}}","lastSentAt":"{{now:O}}","resendCount":1}
+            """
+        };
+    }
+}
