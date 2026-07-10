@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from '@/i18n/navigation';
 import { getGroups } from '@/lib/community';
 import { createCommunityGroup } from '@/lib/community/actions/groups';
 import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
@@ -11,7 +12,7 @@ import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Textarea } from '@game-guild/ui/components/textarea';
-import { Plus, ShieldCheck, Users } from 'lucide-react';
+import { ArrowRight, Plus, ShieldCheck, Users } from 'lucide-react';
 
 interface Props {
   searchParams?: Promise<{
@@ -124,22 +125,48 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Members</TableHead>
                   <TableHead>Visibility</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Manage</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {groups.map((group) => (
                   <TableRow key={group.id}>
-                    <TableCell className="font-medium">{group.name}</TableCell>
-                    <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{group.description}</TableCell>
-                    <TableCell>{group.memberCount}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link href={`/dashboard/community/members/groups/${group.id}`} className="hover:underline">
+                        {group.name}
+                      </Link>
+                    </TableCell>
                     <TableCell>
-                      <Badge variant={group.isPublic ? 'default' : 'secondary'}>{group.isPublic ? 'Public' : 'Private'}</Badge>
+                      <Badge variant="outline">{group.type}</Badge>
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{group.description}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span>{group.memberCount}</span>
+                        {group.pendingMemberCount > 0 ? <span className="text-xs text-amber-600">{group.pendingMemberCount} pending</span> : null}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={group.isPublic ? 'default' : 'secondary'}>{group.visibility}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={group.status === 'Active' ? 'default' : 'secondary'}>{group.status}</Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{new Date(group.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-right">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/dashboard/community/members/groups/${group.id}`}>
+                          Manage
+                          <ArrowRight className="ml-2 size-4" />
+                        </Link>
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

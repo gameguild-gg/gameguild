@@ -43,6 +43,18 @@ function getWorkspaceOptions(members: Awaited<ReturnType<typeof getMemberAccessD
   return [...workspaces.values()].sort((left, right) => left.label.localeCompare(right.label));
 }
 
+function getAccessStatus(row: Awaited<ReturnType<typeof getMemberAccessDirectory>>['members'][number]) {
+  if (!row.primaryMembership) return 'No workspace';
+  if (row.primaryMembership.isActive === false) return 'Inactive';
+  return 'Accepted';
+}
+
+function getAccessStatusVariant(status: string) {
+  if (status === 'Accepted') return 'default';
+  if (status === 'Inactive') return 'secondary';
+  return 'outline';
+}
+
 export default async function Page({ searchParams }: Props): Promise<React.JSX.Element> {
   const query = await searchParams;
   const directory = await getMemberAccessDirectory({ limit: 50 });
@@ -198,6 +210,7 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                   <TableHead>Email</TableHead>
                   <TableHead>Current role</TableHead>
                   <TableHead>Access workspace</TableHead>
+                  <TableHead>Access status</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead>Last Active</TableHead>
@@ -220,6 +233,9 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                     <TableCell className="text-sm text-muted-foreground">
                       {row.primaryMembership?.tenantName ?? row.primaryMembership?.tenantSlug ?? 'No active workspace'}
                       {row.membershipLoadError ? <span className="block text-xs text-destructive">{row.membershipLoadError}</span> : null}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getAccessStatusVariant(getAccessStatus(row))}>{getAccessStatus(row)}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={row.member.status === 'active' ? 'default' : row.member.status === 'banned' ? 'destructive' : 'secondary'}>{row.member.status}</Badge>
