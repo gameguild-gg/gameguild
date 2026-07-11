@@ -1,7 +1,5 @@
-using GameGuild.CQRS.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GameGuild.Notifications.Configuration;
 
@@ -45,15 +43,6 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.Priority)
             .HasConversion<string>()
             .HasMaxLength(20);
-
-        // Configure TenantId with value converter
-        var tenantIdConverter = new ValueConverter<TenantId?, Guid?>(
-            v => v.HasValue ? v.Value.Value : null,
-            v => v.HasValue ? new TenantId(v.Value) : null);
-
-        builder.Property(n => n.NotificationTenantId)
-            .HasConversion(tenantIdConverter)
-            .HasColumnName("TenantId");
 
         // Configure the relationship with NotificationTemplate
         builder.HasOne(n => n.Template)
@@ -117,15 +106,6 @@ public class NotificationTemplateConfiguration : IEntityTypeConfiguration<Notifi
         builder.Property(t => t.DefaultPriority)
             .HasConversion<string>()
             .HasMaxLength(20);
-
-        // Configure TenantId with value converter
-        var tenantIdConverter = new ValueConverter<TenantId?, Guid?>(
-            v => v.HasValue ? v.Value.Value : null,
-            v => v.HasValue ? new TenantId(v.Value) : null);
-
-        builder.Property(t => t.TemplateTenantId)
-            .HasConversion(tenantIdConverter)
-            .HasColumnName("TenantId");
 
         // Global query filter for soft delete
         builder.HasQueryFilter(t => t.DeletedAt == null);

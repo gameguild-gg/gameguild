@@ -25,7 +25,8 @@ public class Notification : EntityBase
     /// <summary>
     /// Tenant context for this notification
     /// </summary>
-    public TenantId? NotificationTenantId { get; private set; }
+    [NotMapped]
+    public TenantId? NotificationTenantId => TenantId.HasValue ? new TenantId(TenantId.Value) : null;
 
     /// <summary>
     /// The type of notification (e.g., CourseEnrollment, AchievementUnlocked, etc.)
@@ -151,7 +152,7 @@ public class Notification : EntityBase
         {
             Id = Guid.NewGuid(),
             RecipientId = recipientId,
-            NotificationTenantId = tenantId.HasValue ? new TenantId(tenantId.Value) : null,
+            TenantId = tenantId,
             Type = type,
             Channel = channel,
             Title = title,

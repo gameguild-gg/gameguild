@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
 using Xunit;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 
 namespace GameGuild.Learning.Courses.UnitTests;
 
@@ -88,6 +90,27 @@ public class CourseStudentManagementTests
 
         response.Result.Should().BeOfType<OkObjectResult>();
         sender.VerifyAll();
+    }
+
+    [Theory]
+    [InlineData(typeof(SendCourseStudentMessageRequest), "UserIds")]
+    [InlineData(typeof(SendCourseStudentMessageRequest), "Subject")]
+    [InlineData(typeof(SendCourseStudentMessageRequest), "Message")]
+    [InlineData(typeof(CourseSupportTicketMessageRequest), "Message")]
+    [InlineData(typeof(ResolveCourseSupportTicketRequest), "Summary")]
+    public void RequestValidationMetadata_ShouldBeDeclaredOnRecordConstructorParameters(
+        Type requestType,
+        string parameterName)
+    {
+        var parameter = requestType.GetConstructors(BindingFlags.Public | BindingFlags.Instance)
+            .Single()
+            .GetParameters()
+            .Single(current => current.Name?.Equals(parameterName, StringComparison.OrdinalIgnoreCase) == true);
+
+        parameter.GetCustomAttributes<ValidationAttribute>().Should().NotBeEmpty();
+        requestType.GetProperty(parameterName)!
+            .GetCustomAttributes<ValidationAttribute>()
+            .Should().BeEmpty();
     }
 
     private sealed class CourseStudentDbContext(DbContextOptions<CourseStudentDbContext> options)

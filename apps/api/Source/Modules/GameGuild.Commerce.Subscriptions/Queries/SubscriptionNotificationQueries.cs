@@ -46,9 +46,7 @@ public sealed class GetSubscriptionNotificationsQueryHandler(IApplicationDbConte
         if (request.TenantId.HasValue)
         {
             var tenantId = request.TenantId.Value;
-            query = query.Where(notification =>
-                notification.NotificationTenantId.HasValue &&
-                notification.NotificationTenantId.Value.Value == tenantId);
+            query = query.Where(notification => notification.TenantId == tenantId);
         }
 
         if (request.SubscriptionId.HasValue)
@@ -109,7 +107,7 @@ public sealed class ResendSubscriptionNotificationCommandHandler(
                 source.Title,
                 source.Message,
                 request.Channel ?? source.Channel,
-                source.NotificationTenantId?.Value,
+                source.TenantId,
                 source.ActionUrl,
                 source.Priority,
                 source.ReferenceEntityId,
@@ -138,7 +136,7 @@ file static class SubscriptionNotificationMapper
         => new(
             notification.Id,
             notification.RecipientId,
-            notification.NotificationTenantId?.Value,
+            notification.TenantId,
             notification.ReferenceEntityId,
             notification.Channel.ToString(),
             notification.Title,
