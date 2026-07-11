@@ -1,9 +1,11 @@
 using System.Security.Claims;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using AuthenticationOptions = GameGuild.Configuration.PresentationLayer.Authentication.AuthenticationOptions;
 using GameGuildAuthorizationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions;
 using MicrosoftAuthorizationOptions = Microsoft.AspNetCore.Authorization.AuthorizationOptions;
 
@@ -11,6 +13,35 @@ namespace GameGuild.API.UnitTests.Core.Extensions;
 
 public sealed class SecurityServiceCollectionExtensionsTests
 {
+    [Fact]
+    public void SetupAuthentication_UsesTheRoleClaimTypeEmittedByJwtTokenService()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Secret"] = new string('s', 64),
+                ["Jwt:Issuer"] = "GameGuild",
+                ["Jwt:Audience"] = "GameGuild.Users"
+            })
+            .Build();
+        var options = new AuthenticationOptions
+        {
+            JwtSecretKey = new string('s', 64),
+            JwtIssuer = "GameGuild",
+            JwtAudience = "GameGuild.Users"
+        };
+
+        services.AddLogging();
+        services.SetupAuthentication(configuration, options);
+        using var serviceProvider = services.BuildServiceProvider();
+        var jwtOptions = serviceProvider
+            .GetRequiredService<IOptionsMonitor<JwtBearerOptions>>()
+            .Get(JwtBearerDefaults.AuthenticationScheme);
+
+        Assert.Equal(ClaimTypes.Role, jwtOptions.TokenValidationParameters.RoleClaimType);
+    }
+
     [Theory]
     [InlineData("Admin")]
     [InlineData("SystemAdmin")]
