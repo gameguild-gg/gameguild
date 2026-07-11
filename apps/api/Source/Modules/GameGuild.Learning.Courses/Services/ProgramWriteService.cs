@@ -133,8 +133,10 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     if (updateDto.SkillsRequired != null) program.SkillsRequired = updateDto.SkillsRequired;
     if (updateDto.SkillsProvided != null) program.SkillsProvided = updateDto.SkillsProvided;
     if (updateDto.EnrollmentStatus.HasValue) program.EnrollmentStatus = updateDto.EnrollmentStatus.Value;
-    if (updateDto.MaxEnrollments.HasValue) program.MaxEnrollments = updateDto.MaxEnrollments.Value;
-    if (updateDto.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = updateDto.EnrollmentDeadline.Value;
+    if (updateDto.ClearMaxEnrollments) program.MaxEnrollments = null;
+    else if (updateDto.MaxEnrollments.HasValue) program.MaxEnrollments = updateDto.MaxEnrollments.Value;
+    if (updateDto.ClearEnrollmentDeadline) program.EnrollmentDeadline = null;
+    else if (updateDto.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = updateDto.EnrollmentDeadline.Value;
 
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);

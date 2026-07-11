@@ -1,4 +1,5 @@
 using System.Text;
+using System.Security.Claims;
 using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.Authentication;
 using GameGuild.Configuration.PresentationLayer.CORS;
@@ -72,7 +73,7 @@ public static class SecurityServiceCollectionExtensions
                         ClockSkew = TimeSpan.Zero,
                         // Map JWT claim names to .NET claim types
                         NameClaimType = "sub",
-                        RoleClaimType = "role",
+                        RoleClaimType = ClaimTypes.Role,
                         // Try all keys even if kid doesn't match
                         TryAllIssuerSigningKeys = true
                     };

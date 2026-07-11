@@ -34,6 +34,16 @@ public sealed class LxpCapabilityFilter : IAsyncActionFilter
             return;
         }
 
+        // Platform administrators must be able to configure and verify every LXP
+        // capability without requiring a commercial entitlement on the admin tenant.
+        var user = context.HttpContext.User;
+        if (user.Identity?.IsAuthenticated == true && user.IsInRole("SystemAdmin"))
+        {
+            _logger.LogDebug("Bypassing LXP capability checks for an authenticated SystemAdmin");
+            await next().ConfigureAwait(false);
+            return;
+        }
+
         // Get tenant ID from route or header
         var tenantId = GetTenantId(context.HttpContext);
         if (tenantId == null)
