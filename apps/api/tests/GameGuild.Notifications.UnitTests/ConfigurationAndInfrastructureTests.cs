@@ -41,6 +41,26 @@ public class ConfigurationAndInfrastructureTests
     }
 
     [Fact]
+    public void NotificationsModelConfiguration_ShouldRegisterCanonicalTenantColumns()
+    {
+        var options = new DbContextOptionsBuilder<NotificationsModuleDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        using var context = new NotificationsModuleDbContext(options);
+        var notification = context.Model.FindEntityType(typeof(Notification));
+        var template = context.Model.FindEntityType(typeof(NotificationTemplate));
+        context.Model.FindEntityType(typeof(NotificationPreference)).Should().NotBeNull();
+        notification.Should().NotBeNull();
+        template.Should().NotBeNull();
+        notification!.FindProperty(nameof(Notification.TenantId)).Should().NotBeNull();
+        notification.FindProperty(nameof(Notification.NotificationTenantId)).Should().BeNull();
+        template!.FindProperty(nameof(NotificationTemplate.TenantId)).Should().NotBeNull();
+        template.FindProperty(nameof(NotificationTemplate.TemplateTenantId)).Should().BeNull();
+        notification.FindProperty("TenantId1").Should().BeNull();
+        template.FindProperty("TenantId1").Should().BeNull();
+    }
+
+    [Fact]
     public void NotificationDeliveryService_CanBeInstantiated()
     {
         var service = new NotificationDeliveryService(
@@ -50,5 +70,15 @@ public class ConfigurationAndInfrastructureTests
             NullLogger<NotificationDeliveryService>.Instance);
 
         service.Should().NotBeNull();
+    }
+
+    private sealed class NotificationsModuleDbContext(DbContextOptions<NotificationsModuleDbContext> options)
+        : DbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            new NotificationsModelConfiguration().Configure(modelBuilder);
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

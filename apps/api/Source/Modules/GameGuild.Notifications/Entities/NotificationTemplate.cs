@@ -84,7 +84,8 @@ public class NotificationTemplate : EntityBase
     /// <summary>
     /// Tenant ID if this is a tenant-specific template
     /// </summary>
-    public TenantId? TemplateTenantId { get; private set; }
+    [NotMapped]
+    public TenantId? TemplateTenantId => TenantId.HasValue ? new TenantId(TenantId.Value) : null;
 
     /// <summary>
     /// Category for grouping templates (e.g., "Learning", "Social", "Billing")
@@ -134,7 +135,7 @@ public class NotificationTemplate : EntityBase
             ActionUrlTemplate = actionUrlTemplate,
             DefaultIconUrl = defaultIconUrl,
             DefaultPriority = defaultPriority,
-            TemplateTenantId = tenantId.HasValue ? new TenantId(tenantId.Value) : null,
+            TenantId = tenantId,
             Category = category,
             SupportedPlaceholders = supportedPlaceholders,
             IsActive = true
