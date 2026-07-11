@@ -89,4 +89,16 @@ describe('FaqEditorForm', () => {
     });
     expect(screen.getByText('FAQ validation failed.')).toBeInTheDocument();
   });
+
+  it('rejects partially completed FAQ entries before calling the API', async () => {
+    render(<FaqEditorForm courseId="course-1" items={[]} />);
+
+    fireEvent.change(screen.getByLabelText(/^question$/i), { target: { value: 'Is mentoring included?' } });
+    fireEvent.click(screen.getByRole('button', { name: /save faq/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Complete both the question and answer for Question 1.',
+    );
+    expect(updateCourseFaqMock).not.toHaveBeenCalled();
+  });
 });

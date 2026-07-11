@@ -107,7 +107,10 @@ describe('ClassDetailPage', () => {
       }));
     });
     expect(await screen.findByRole('status')).toHaveTextContent('Class updated.');
-    expect(mocks.refresh).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /open enrollment/i })).toBeEnabled();
+    });
+    expect(mocks.refresh).not.toHaveBeenCalled();
 
   });
 
@@ -120,6 +123,8 @@ describe('ClassDetailPage', () => {
       expect(updateCourseClassStatus).toHaveBeenCalledWith('course-1', 'class-1', 'open');
     });
     expect(await screen.findByRole('status')).toHaveTextContent('Class status updated.');
+    expect(screen.getByText('live')).toBeInTheDocument();
+    expect(mocks.refresh).not.toHaveBeenCalled();
   });
 
   it('uses not-found when the course or class cannot be loaded', async () => {

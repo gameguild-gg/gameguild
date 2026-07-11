@@ -72,6 +72,13 @@ async function waitForClientHydration(page) {
   await page.waitForTimeout(250);
 }
 
+async function waitForReactControl(page, locator) {
+  const element = await locator.elementHandle();
+  if (!element) throw new Error('Could not resolve the expected React control.');
+
+  await page.waitForFunction((control) => Object.keys(control).some((key) => key.startsWith('__reactProps$')), element);
+}
+
 function routeFromUrl(url) {
   const match = new URL(url).pathname.match(/\/courses\/([^/]+)/);
   if (!match) throw new Error(`Could not derive course route from ${url}`);
@@ -89,6 +96,30 @@ async function waitForLocation(page, predicate, timeout = 45_000) {
   throw new Error(`Timed out waiting for the expected location. Current URL: ${page.url()}`);
 }
 
+async function waitForApiState(readState, predicate, timeout = 45_000) {
+  const deadline = Date.now() + timeout;
+  let lastState = null;
+
+  while (Date.now() < deadline) {
+    lastState = await readState();
+    if (predicate(lastState)) return lastState;
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  }
+
+  throw new Error(`Timed out waiting for persisted API state. Last state: ${JSON.stringify(lastState)}`);
+}
+
+function readCourseMetadata(course) {
+  if (!course?.metadata) return {};
+  if (typeof course.metadata === 'object') return course.metadata;
+
+  try {
+    return JSON.parse(course.metadata);
+  } catch {
+    return {};
+  }
+}
+
 async function run() {
   const fixture = await bootstrap();
   const browser = await chromium.launch({ headless });
@@ -97,6 +128,7 @@ async function run() {
   const browserErrors = [];
   const failedResponses = [];
   let courseId = null;
+  let deletedCourseId = null;
   let courseSlug = null;
 
   page.setDefaultTimeout(45_000);
@@ -125,6 +157,7 @@ async function run() {
     await page.goto(`${webBaseUrl}/dashboard/learning/courses/new`, { waitUntil: 'domcontentloaded' });
     console.log('[professor-e2e] create course');
     await waitForClientHydration(page);
+    await waitForReactControl(page, page.getByLabel('Title *'));
     courseSlug = `professor-browser-${fixture.tag}`;
     await page.getByLabel('Title *').fill(`Professor Browser ${fixture.tag}`);
     await page.getByLabel('URL Slug').fill(courseSlug);
@@ -187,22 +220,113 @@ async function run() {
     await page.getByLabel('Currency').fill('USD');
     await page.getByRole('button', { name: 'Save pricing' }).click();
     await waitForText(page, 'Pricing updated successfully');
+    await visit(page, courseRoute, 'listing/pricing', 'Pricing');
+    if ((await page.getByLabel('Price').inputValue()) !== '79') {
+      throw new Error('The saved course offer was not restored from the API.');
+    }
+    await page.getByLabel('Price').fill('99');
+    await page.getByRole('button', { name: 'Save pricing' }).click();
+    await waitForText(page, 'Pricing updated successfully');
 
     await visit(page, courseRoute, 'listing/faq', 'Frequently Asked Questions');
     console.log('[professor-e2e] listing FAQ, projects, testimonials');
+    const initialFaqCount = await page.getByLabel('Question', { exact: true }).count();
     await page.getByRole('button', { name: 'Add question' }).click();
-    await page.getByLabel('Question').last().fill('Who is this course for?');
-    await page.getByLabel('Answer').last().fill('Game developers preparing a production-ready portfolio project.');
+    await page.getByLabel('Question', { exact: true }).last().fill('Who is this course for?');
+    await page.getByLabel('Answer', { exact: true }).last().fill('Game developers preparing a production-ready portfolio project.');
     await page.getByRole('button', { name: 'Save FAQ' }).click();
     await waitForText(page, 'FAQ updated successfully');
+    await waitForApiState(
+      async () => readCourseMetadata(await apiRequest(`/v1/courses/slug/${encodeURIComponent(courseSlug)}`, {}, fixture.accessToken)),
+      (metadata) => metadata.landingFaq?.some((item) => item.question === 'Who is this course for?'),
+    );
+    await page.getByLabel('Question', { exact: true }).first().fill('Who should take this production course?');
+    await page.getByRole('button', { name: 'Save FAQ' }).click();
+    await waitForText(page, 'FAQ updated successfully');
+    await waitForApiState(
+      async () => readCourseMetadata(await apiRequest(`/v1/courses/slug/${encodeURIComponent(courseSlug)}`, {}, fixture.accessToken)),
+      (metadata) => metadata.landingFaq?.[0]?.question === 'Who should take this production course?',
+    );
+    await page.getByRole('button', { name: 'Add question' }).click();
+    await page.getByLabel('Question', { exact: true }).last().fill('Temporary FAQ entry');
+    await page.getByLabel('Answer', { exact: true }).last().fill('This entry proves FAQ removal.');
+    await page.getByRole('button', { name: 'Save FAQ' }).click();
+    await waitForText(page, 'FAQ updated successfully');
+    await waitForApiState(
+      async () => readCourseMetadata(await apiRequest(`/v1/courses/slug/${encodeURIComponent(courseSlug)}`, {}, fixture.accessToken)),
+      (metadata) => metadata.landingFaq?.some((item) => item.question === 'Temporary FAQ entry'),
+    );
+    await page.getByRole('button', { name: `Remove question ${initialFaqCount + 2}` }).click();
+    await page.getByRole('button', { name: 'Save FAQ' }).click();
+    await waitForText(page, 'FAQ updated successfully');
+    await waitForApiState(
+      async () => readCourseMetadata(await apiRequest(`/v1/courses/slug/${encodeURIComponent(courseSlug)}`, {}, fixture.accessToken)),
+      (metadata) =>
+        metadata.landingFaq?.[0]?.question === 'Who should take this production course?' &&
+        !metadata.landingFaq.some((item) => item.question === 'Temporary FAQ entry'),
+    );
 
     await visit(page, courseRoute, 'listing/projects', 'Project Carousel');
     await page.getByRole('button', { name: 'Add project' }).click();
-    await page.getByLabel(/Project title/).last().fill('Playable vertical slice');
-    await page.getByLabel(/Summary/).last().fill('Build and present a focused production milestone.');
-    await page.getByLabel(/Deliverable/).last().fill('A playable build and retrospective.');
+    await page
+      .getByLabel(/Project title/)
+      .last()
+      .fill('Playable vertical slice');
+    await page
+      .getByLabel(/Summary/)
+      .last()
+      .fill('Build and present a focused production milestone.');
+    await page
+      .getByLabel(/Deliverable/)
+      .last()
+      .fill('A playable build and retrospective.');
     await page.getByRole('button', { name: 'Save project carousel' }).click();
     await waitForText(page, 'Project carousel updated successfully');
+    await waitForApiState(
+      async () => readCourseMetadata(await apiRequest(`/v1/courses/slug/${encodeURIComponent(courseSlug)}`, {}, fixture.accessToken)),
+      (metadata) => metadata.landingProjects?.some((item) => item.title === 'Playable vertical slice'),
+    );
+    await page
+      .getByLabel(/Project title/)
+      .last()
+      .fill('Playable vertical slice showcase');
+    await page.getByRole('button', { name: 'Save project carousel' }).click();
+    await waitForText(page, 'Project carousel updated successfully');
+    await waitForApiState(
+      async () => readCourseMetadata(await apiRequest(`/v1/courses/slug/${encodeURIComponent(courseSlug)}`, {}, fixture.accessToken)),
+      (metadata) => metadata.landingProjects?.[0]?.title === 'Playable vertical slice showcase',
+    );
+    await page.getByRole('button', { name: 'Add project' }).click();
+    await page
+      .getByLabel(/Project title/)
+      .last()
+      .fill('Temporary project');
+    await page
+      .getByLabel(/Summary/)
+      .last()
+      .fill('Temporary entry for removal coverage.');
+    await page
+      .getByLabel(/Deliverable/)
+      .last()
+      .fill('Temporary deliverable for removal coverage.');
+    await page.getByRole('button', { name: 'Save project carousel' }).click();
+    await waitForText(page, 'Project carousel updated successfully');
+    await waitForApiState(
+      async () => readCourseMetadata(await apiRequest(`/v1/courses/slug/${encodeURIComponent(courseSlug)}`, {}, fixture.accessToken)),
+      (metadata) => metadata.landingProjects?.some((item) => item.title === 'Temporary project'),
+    );
+    const temporaryProjectTitle = page.getByLabel(/Project title/).last();
+    if ((await temporaryProjectTitle.inputValue()) !== 'Temporary project') throw new Error('Temporary project should be the last authored slide.');
+    const temporaryProjectCard = temporaryProjectTitle.locator('xpath=ancestor::div[contains(@class, "rounded-lg")][1]');
+    await temporaryProjectCard.getByRole('button', { name: /Remove project/ }).click();
+    await page.getByRole('button', { name: 'Save project carousel' }).click();
+    await waitForText(page, 'Project carousel updated successfully');
+    await waitForApiState(
+      async () => readCourseMetadata(await apiRequest(`/v1/courses/slug/${encodeURIComponent(courseSlug)}`, {}, fixture.accessToken)),
+      (metadata) =>
+        metadata.landingProjects?.[0]?.title === 'Playable vertical slice showcase' &&
+        !metadata.landingProjects.some((item) => item.title === 'Temporary project'),
+    );
     await visit(page, courseRoute, 'listing/testimonials', 'Testimonials');
 
     await visit(page, courseRoute, 'content', 'Course Content');
@@ -225,6 +349,11 @@ async function run() {
     await page.getByRole('button', { name: 'Save Changes' }).click();
     await waitForText(page, 'Saved successfully');
     await page.getByRole('button', { name: 'Cancel' }).click();
+    await page.getByRole('button', { name: 'Edit module' }).click();
+    await page.getByLabel('Title').fill('Production Delivery');
+    await page.getByLabel('Description (optional)').fill('Updated module description for the complete professor flow.');
+    await page.getByRole('button', { name: 'Save Changes' }).click();
+    await waitForText(page, 'Production Delivery');
 
     await visit(page, courseRoute, 'assessments', 'Assessments');
     console.log('[professor-e2e] assessment group and assessment');
@@ -242,10 +371,29 @@ async function run() {
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await waitForText(page, 'Vertical Slice Review');
 
+    await page.getByRole('link', { name: /Vertical Slice Review/ }).click();
+    await waitForText(page, 'Assessment Editor');
+    await page.getByLabel('Title').fill('Vertical Slice Final Review');
+    await page.getByLabel('Description').fill('Updated assessment instructions for the final production review.');
+    await page.getByLabel('Max Score').fill('120');
+    await page.getByLabel('Passing Score').fill('84');
+    await page.getByLabel('Time Limit (minutes)').fill('45');
+    await page.getByLabel('Max Attempts').fill('2');
+    await page.getByRole('button', { name: 'Save Changes' }).click();
+    await waitForText(page, 'Saved successfully');
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await waitForText(page, 'Vertical Slice Final Review');
+    await page.getByRole('button', { name: 'Edit group Final Project' }).click();
+    await page.getByLabel('Group name').fill('Capstone Delivery');
+    await page.getByLabel('Description').fill('Weighted capstone assessment block.');
+    await page.getByLabel('Weight percent').fill('100');
+    await page.getByRole('button', { name: 'Save Group' }).click();
+    await waitForText(page, 'Capstone Delivery');
+
     await visit(page, courseRoute, 'content', 'Course Content');
     await page.getByRole('button', { name: 'Attach assessment' }).click();
-    await page.getByRole('button', { name: /Vertical Slice Review/ }).click();
-    await waitForText(page, 'Vertical Slice Review');
+    await page.getByRole('button', { name: /Vertical Slice Final Review/ }).click();
+    await waitForText(page, 'Vertical Slice Final Review');
 
     await visit(page, courseRoute, 'classes', 'Classes');
     console.log('[professor-e2e] class, certificate, enrollment');
@@ -261,12 +409,31 @@ async function run() {
     await page.getByRole('button', { name: 'Schedule class' }).click();
     await waitForText(page, 'Class scheduled.');
     await waitForText(page, 'July Production Cohort');
+    await page.getByRole('link', { name: /July Production Cohort/ }).click();
+    await page.getByLabel('Name').fill('August Production Cohort');
+    await page.getByLabel('Description').fill('Updated cohort schedule and production support.');
+    await page.getByLabel('Capacity').fill('24');
+    await page.getByRole('button', { name: 'Save class' }).click();
+    await waitForText(page, 'Class updated.');
+    const openEnrollmentButton = page.getByRole('button', { name: 'Open enrollment' });
+    await page.waitForFunction((button) => !button.disabled, await openEnrollmentButton.elementHandle());
+    await openEnrollmentButton.click();
+    await waitForText(page, 'Class status updated.');
+    await visit(page, courseRoute, 'classes', 'Classes');
+    await waitForText(page, 'August Production Cohort');
 
     await visit(page, courseRoute, 'certificates', 'Certificates');
     await page.getByLabel('Name').fill('Production Course Completion');
     await page.getByRole('button', { name: 'Create template' }).click();
     await waitForText(page, 'Certificate template created.');
     await waitForText(page, 'Production Course Completion');
+    await page.getByRole('link', { name: /Production Course Completion/ }).click();
+    await page.getByLabel('Template name').fill('Game Production Certificate');
+    await page.getByLabel('Description').fill('Updated completion credential for production students.');
+    await page.getByRole('button', { name: 'Save certificate template' }).click();
+    await waitForText(page, 'Certificate template saved.');
+    await visit(page, courseRoute, 'certificates', 'Certificates');
+    await waitForText(page, 'Game Production Certificate');
 
     await visit(page, courseRoute, 'students', 'Students');
     await page.getByRole('button', { name: 'Enroll student', exact: true }).first().click();
@@ -274,6 +441,13 @@ async function run() {
     await page.getByRole('button', { name: 'Enroll student', exact: true }).last().click();
     await waitForText(page, 'Student enrolled successfully');
     await waitForText(page, fixture.studentEmail);
+    const studentRow = page.getByRole('row').filter({ hasText: fixture.studentEmail });
+    await studentRow.getByRole('checkbox').click();
+    await page.getByRole('button', { name: 'Send Message' }).click();
+    await page.getByLabel('Subject').fill('Production milestone reminder');
+    await page.getByRole('textbox', { name: 'Message' }).fill('Bring your playable build and retrospective to the next review.');
+    await page.getByRole('button', { name: 'Send message' }).click();
+    await waitForText(page, 'Message sent to 1 student');
 
     await visit(page, courseRoute, 'analytics', 'Analytics');
     await waitForLocation(page, (url) => url.pathname.endsWith('/analytics/engagement'));
@@ -307,14 +481,86 @@ async function run() {
     await page.getByRole('button', { name: 'Add to course' }).click();
     await page.getByRole('button', { name: 'Save integration settings' }).click();
     await waitForText(page, 'Integration settings saved');
+    await page.getByRole('button', { name: 'Remove webhook https://hooks.example.test/gameguild' }).click();
+    await page.getByRole('button', { name: 'Save integration settings' }).click();
+    await waitForText(page, 'Integration settings saved');
 
     await visit(page, courseRoute, 'preview', 'Course Preview');
     await visit(page, courseRoute, 'overview', 'Course Readiness');
     await page.getByRole('button', { name: 'Publish', exact: true }).first().click();
     await waitForText(page, 'Published');
 
+    console.log('[professor-e2e] public storefront synchronization');
+    await page.goto(`${webBaseUrl}/courses/${courseSlug}`, { waitUntil: 'domcontentloaded' });
+    await assertNoErrorSurface(page, 'public course storefront');
+    await waitForText(page, `Complete Professor Course ${fixture.tag}`);
+    await waitForText(page, 'Who should take this production course?');
+    await waitForText(page, 'Playable vertical slice showcase');
+    await visit(page, courseRoute, 'overview', 'Course Readiness');
+
+    console.log('[professor-e2e] lifecycle and subsection cleanup');
+    await page.getByRole('button', { name: 'Unpublish' }).click();
+    await waitForText(page, 'Draft');
+    await page.getByRole('button', { name: 'Publish', exact: true }).first().click();
+    await waitForText(page, 'Published');
+    await page.getByRole('button', { name: 'Archive' }).click();
+    await waitForText(page, 'Archived');
+    await page.getByRole('button', { name: 'Re-publish' }).click();
+    await waitForText(page, 'Published');
+
+    await visit(page, courseRoute, 'students', 'Students');
+    const enrolledStudentRow = page.getByRole('row').filter({ hasText: fixture.studentEmail });
+    await enrolledStudentRow.getByRole('checkbox').click();
+    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await page.getByRole('button', { name: 'Confirm removal' }).click();
+    await waitForText(page, '1 student removed');
+
+    await visit(page, courseRoute, 'certificates', 'Certificates');
+    await page.getByRole('button', { name: 'Delete Game Production Certificate' }).click();
+    await waitForText(page, 'Certificate template deleted.');
+
+    await visit(page, courseRoute, 'classes', 'Classes');
+    await page.getByRole('button', { name: 'Delete August Production Cohort' }).click();
+    await waitForText(page, 'Class deleted.');
+
+    await visit(page, courseRoute, 'content', 'Course Content');
+    const updatedLessonRow = page.getByText('Define the playable promise', { exact: true }).locator('xpath=ancestor::div[contains(@class, "group")][1]');
+    await updatedLessonRow.locator('button[aria-label="Detach assessment"]').click();
+    await updatedLessonRow.getByRole('button', { name: 'Delete', exact: true }).click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).last().click();
+    await waitForText(page, 'Production Delivery');
+    await page.getByRole('button', { name: 'Delete module' }).click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).last().click();
+
+    await visit(page, courseRoute, 'assessments', 'Assessments');
+    await page.getByRole('link', { name: /Vertical Slice Final Review/ }).click();
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: 'Delete Assessment' }).click();
+    await waitForLocation(page, (url) => url.pathname.endsWith('/assessments'));
+    await page.getByRole('button', { name: 'Delete group Capstone Delivery' }).click();
+    await page.getByRole('button', { name: 'Delete Group' }).click();
+
+    await visit(page, courseRoute, 'support/discussions', 'Discussions');
+    await page.getByRole('button', { name: 'Delete Milestone review expectations' }).click();
+
+    await visit(page, courseRoute, 'listing/faq', 'Frequently Asked Questions');
+    await page.getByRole('button', { name: 'Remove question 1' }).click();
+    await page.getByRole('button', { name: 'Save FAQ' }).click();
+    await waitForText(page, 'FAQ updated successfully');
+
+    await visit(page, courseRoute, 'listing/projects', 'Project Carousel');
+    const projectCountBeforeCleanup = await page.getByLabel(/Project title/).count();
+    await page.getByRole('button', { name: `Remove project ${projectCountBeforeCleanup}` }).click();
+    await page.getByRole('button', { name: 'Save project carousel' }).click();
+    await waitForText(page, 'Project carousel updated successfully');
+
     await visit(page, courseRoute, 'settings/danger', 'Danger Zone');
-    await visit(page, courseRoute, 'settings/general', 'Course Information');
+    await page.getByRole('button', { name: 'Delete Course' }).click();
+    await page.getByLabel(/type.*confirm/i).fill(`Complete Professor Course ${fixture.tag}`);
+    await page.getByRole('button', { name: 'Permanently Delete' }).click();
+    await waitForLocation(page, (url) => url.pathname.endsWith('/dashboard/learning/courses'));
+    deletedCourseId = courseId;
+    courseId = null;
 
     const meaningfulFailures = [...new Set(failedResponses)].filter((value) => !/favicon|manifest\.webmanifest/.test(value));
     if (meaningfulFailures.length > 0) {
@@ -324,7 +570,17 @@ async function run() {
       throw new Error(`Browser errors detected during professor journey:\n${[...new Set(browserErrors)].join('\n')}`);
     }
 
-    console.log(`Professor learning browser E2E passed for ${courseSlug} (${courseId}).`);
+    console.log(`Professor learning browser E2E passed for ${courseSlug} (${deletedCourseId ?? courseId}).`);
+  } catch (error) {
+    const pageText = await page
+      .locator('body')
+      .innerText()
+      .catch(() => 'Unable to read page body.');
+    console.error(`[professor-e2e] failed at ${page.url()}`);
+    console.error(`[professor-e2e] HTTP failures: ${[...new Set(failedResponses)].join(', ') || 'none'}`);
+    console.error(`[professor-e2e] browser errors: ${[...new Set(browserErrors)].join(' | ') || 'none'}`);
+    console.error(`[professor-e2e] page excerpt:\n${pageText.slice(0, 2400)}`);
+    throw error;
   } finally {
     if (courseId) {
       await apiRequest(`/v1/courses/${courseId}`, { method: 'DELETE' }, fixture.accessToken).catch(() => undefined);
@@ -334,6 +590,6 @@ async function run() {
 }
 
 run().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : error);
+  console.error(error instanceof Error ? (error.stack ?? error.message) : error);
   process.exit(1);
 });

@@ -75,8 +75,11 @@ describe('ListingLaunchForm', () => {
         maxEnrollments: null,
       });
     });
-    expect(refreshMock).toHaveBeenCalled();
     expect(screen.getByText('Listing controls updated successfully.')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /save launch controls/i })).toBeEnabled();
+    });
+    expect(refreshMock).not.toHaveBeenCalled();
   }, 15_000);
 
   it('renders API errors without clearing the launch form', async () => {
