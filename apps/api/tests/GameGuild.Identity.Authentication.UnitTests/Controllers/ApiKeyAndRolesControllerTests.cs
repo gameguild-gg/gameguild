@@ -1,4 +1,8 @@
 using FluentAssertions;
+using GameGuild.Identity.Authorization;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -149,6 +153,41 @@ public sealed class ApiKeyControllerTests
 public sealed class RolesControllerTests
 {
     [Fact]
+    public void Controller_ShouldExposeRoleApiAndProtectAdministrativeMutations()
+    {
+        typeof(RolesController)
+            .GetCustomAttributes(typeof(ApiExplorerSettingsAttribute), inherit: true)
+            .Cast<ApiExplorerSettingsAttribute>()
+            .Should()
+            .NotContain(attribute => attribute.IgnoreApi);
+
+        var administrativeEndpointNames = new[]
+        {
+            nameof(RolesController.GetAll),
+            nameof(RolesController.GetById),
+            nameof(RolesController.Create),
+            nameof(RolesController.Update),
+            nameof(RolesController.Delete),
+            nameof(RolesController.GetUserRoles),
+            nameof(RolesController.AssignRoleToUser),
+            nameof(RolesController.RemoveRoleFromUser)
+        };
+
+        foreach (var methodName in administrativeEndpointNames)
+        {
+            var authorize = typeof(RolesController)
+                .GetMethod(methodName)!
+                .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+                .Cast<AuthorizeAttribute>()
+                .Should()
+                .ContainSingle()
+                .Subject;
+
+            authorize.Policy.Should().Be("SystemAdmin");
+        }
+    }
+
+    [Fact]
     public async Task GetAll_ShouldReturnOkAndForwardQuery()
     {
         var sender = new Mock<ISender>();
@@ -245,7 +284,7 @@ public sealed class RolesControllerTests
 
         var created = result.Should().BeOfType<CreatedAtActionResult>().Subject;
         created.ActionName.Should().Be(nameof(RolesController.GetById));
-        created.RouteValues!["id"].Should().Be(role.Id);
+        created.RouteValues!["roleId"].Should().Be(role.Id);
         created.Value.Should().BeSameAs(role);
     }
 
@@ -349,6 +388,16 @@ public sealed class RolesControllerTests
             .ReturnsAsync(userRole);
 
         var controller = new RolesController(NullLogger<RolesController>.Instance, sender.Object);
+        var assignedBy = Guid.NewGuid();
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(
+                    [new Claim(ClaimTypes.NameIdentifier, assignedBy.ToString())],
+                    "test"))
+            }
+        };
 
         var result = await controller.AssignRoleToUser(request, CancellationToken.None);
 
@@ -356,6 +405,7 @@ public sealed class RolesControllerTests
         captured!.UserId.Should().Be(request.UserId);
         captured.RoleId.Should().Be(request.RoleId);
         captured.ExpiresAt.Should().Be(request.ExpiresAt);
+        captured.AssignedBy.Should().Be(assignedBy);
 
         var created = result.Should().BeOfType<CreatedAtActionResult>().Subject;
         created.ActionName.Should().Be(nameof(RolesController.GetUserRoles));

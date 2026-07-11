@@ -16,6 +16,7 @@ public class PermissionQueryServiceTests
 {
     private readonly Mock<ITenantPermissionRepository> _repoMock = new();
     private readonly Mock<ITenantMembershipChecker> _membershipMock = new();
+    private readonly Mock<IAuthorizationRolePermissionProvider> _rolePermissionsMock = new();
     private readonly PermissionQueryService _sut;
 
     public PermissionQueryServiceTests()
@@ -23,7 +24,8 @@ public class PermissionQueryServiceTests
         _sut = new PermissionQueryService(
             _repoMock.Object,
             _membershipMock.Object,
-            NullLogger<PermissionQueryService>.Instance
+            NullLogger<PermissionQueryService>.Instance,
+            [_rolePermissionsMock.Object]
         );
     }
 
@@ -93,6 +95,76 @@ public class PermissionQueryServiceTests
 
         var result = await _sut.HasTenantPermissionAsync(permission.UserId, permission.TenantId, "read");
         result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task HasTenantPermissionAsync_CustomRoleGrantsPermission_ReturnsTrue()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        _repoMock
+            .Setup(x => x.GetByUserAndTenantAsync(It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission?)null);
+        _repoMock
+            .Setup(x => x.GetByUserAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _rolePermissionsMock
+            .Setup(x => x.GetPermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["courses:update"]);
+
+        var result = await _sut.HasTenantPermissionAsync(userId, tenantId, "courses:update");
+
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetEffectivePermissionsAsync_DirectDenyOverridesCustomRolePermission()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        _repoMock
+            .Setup(x => x.GetByUserAndTenantAsync(null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission?)null);
+        _repoMock
+            .Setup(x => x.GetByUserAndTenantAsync(null, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission?)null);
+        _repoMock
+            .Setup(x => x.GetByUserAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                new TenantPermission
+                {
+                    UserId = userId,
+                    TenantId = tenantId,
+                    DenyPermissions = ["courses:update"]
+                }
+            ]);
+        _rolePermissionsMock
+            .Setup(x => x.GetPermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["courses:read", "courses:update"]);
+
+        var result = await _sut.GetEffectivePermissionsAsync(userId, tenantId);
+
+        result.Should().Contain("courses:read").And.NotContain("courses:update");
+    }
+
+    [Fact]
+    public async Task GetEffectivePermissionsAsync_IgnoresUniversalWildcardFromRoleProvider()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        _repoMock
+            .Setup(x => x.GetByUserAndTenantAsync(It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission?)null);
+        _repoMock
+            .Setup(x => x.GetByUserAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _rolePermissionsMock
+            .Setup(x => x.GetPermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["admin:*", "courses:read"]);
+
+        var result = await _sut.GetEffectivePermissionsAsync(userId, tenantId);
+
+        result.Should().Equal("courses:read");
     }
 
     // ── GetTenantPermissionsAsync ─────────────────────────────

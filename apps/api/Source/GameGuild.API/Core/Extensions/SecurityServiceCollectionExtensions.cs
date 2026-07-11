@@ -199,6 +199,13 @@ public static class SecurityServiceCollectionExtensions
             
             // Tenant policies (require authenticated user and tenant context)
             authzOptions.AddPolicy("TenantMember", policy => policy.RequireAuthenticatedUser().RequireClaim("TenantId"));
+            authzOptions.AddPolicy("SystemAdmin", policy => policy
+                .RequireAuthenticatedUser()
+                .RequireAssertion(context =>
+                {
+                    var roles = ClaimsExtractor.GetRoles(context.User);
+                    return roles.Contains("SystemAdmin") || roles.Contains("Admin");
+                }));
             authzOptions.AddPolicy("TenantAdmin", policy => policy
                 .RequireAuthenticatedUser()
                 .RequireAssertion(context =>

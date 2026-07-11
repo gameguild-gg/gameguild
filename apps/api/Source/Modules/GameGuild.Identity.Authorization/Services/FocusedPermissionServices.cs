@@ -358,7 +358,8 @@ public sealed class PermissionGrantService(
 public sealed class PermissionQueryService(
     ITenantPermissionRepository repository,
     ITenantMembershipChecker membershipChecker,
-    ILogger<PermissionQueryService> logger
+    ILogger<PermissionQueryService> logger,
+    IEnumerable<IAuthorizationRolePermissionProvider>? rolePermissionProviders = null
 ) : IPermissionQueryService
 {
     public async Task<bool> HasTenantPermissionAsync(
@@ -367,12 +368,36 @@ public sealed class PermissionQueryService(
         string permission,
         CancellationToken cancellationToken = default)
     {
-        var existing = await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
+        var grants = new[]
+        {
+            await repository.GetByUserAndTenantAsync(null, null, cancellationToken).ConfigureAwait(false),
+            tenantId.HasValue
+                ? await repository.GetByUserAndTenantAsync(null, tenantId, cancellationToken).ConfigureAwait(false)
+                : null,
+            await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken).ConfigureAwait(false)
+        };
 
-        if (existing == null || existing.ExpiresAt.HasValue && existing.ExpiresAt.Value < SystemClock.UtcNow)
+        var activeGrants = grants.Where(grant => grant is not null && !grant.IsExpired()).Cast<TenantPermission>().ToList();
+        if (activeGrants.Any(grant => grant.HasDenyPermission(permission)))
             return false;
 
-        return existing.HasPermission(permission);
+        if (activeGrants.Any(grant => grant.HasPermission(permission)))
+            return true;
+
+        if (!userId.HasValue || !tenantId.HasValue)
+            return false;
+
+        foreach (var provider in rolePermissionProviders ?? [])
+        {
+            var permissions = await provider.GetPermissionsAsync(userId.Value, tenantId.Value, cancellationToken).ConfigureAwait(false)
+                              ?? [];
+            if (permissions
+                .Where(IsDelegableRolePermission)
+                .Contains(permission, StringComparer.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 
     public async Task<List<string>> GetTenantPermissionsAsync(
@@ -456,6 +481,13 @@ public sealed class PermissionQueryService(
             deniedPermissions.UnionWith(grant.DenyPermissions);
         }
 
+        foreach (var provider in rolePermissionProviders ?? [])
+        {
+            var rolePermissions = await provider.GetPermissionsAsync(userId, tenantId.Value, cancellationToken).ConfigureAwait(false)
+                                  ?? [];
+            allowedPermissions.UnionWith(rolePermissions.Where(IsDelegableRolePermission));
+        }
+
         // DENY-WINS: Subtract all denied permissions from allowed set
         allowedPermissions.ExceptWith(deniedPermissions);
 
@@ -465,6 +497,9 @@ public sealed class PermissionQueryService(
 
         return allowedPermissions.ToList();
     }
+
+    private static bool IsDelegableRolePermission(string permission) =>
+        !string.Equals(permission, "admin:*", StringComparison.OrdinalIgnoreCase);
 
     public async Task<List<string>> GetGlobalDefaultPermissionsAsync(
         CancellationToken cancellationToken = default)
