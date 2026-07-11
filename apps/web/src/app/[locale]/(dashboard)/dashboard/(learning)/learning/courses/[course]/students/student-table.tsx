@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useMemo, useState, useTransition } from 'react';
+import React, { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { manualEnrollStudent, removeCourseStudents, sendCourseStudentMessage } from '@/lib/learning/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -53,6 +54,7 @@ function StatusBadge({ student }: { student: Student }) {
 }
 
 export function StudentTable({ courseId, students }: { courseId: string; students: Student[]; total: number }) {
+  const router = useRouter();
   const [items, setItems] = useState(students);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -72,9 +74,16 @@ export function StudentTable({ courseId, students }: { courseId: string; student
   const [operationError, setOperationError] = useState<string | null>(null);
   const [operationStatus, setOperationStatus] = useState<string | null>(null);
 
+  useEffect(() => {
+    const availableIds = new Set(students.map((student) => student.id));
+    setItems(students);
+    setSelectedIds((current) => new Set([...current].filter((id) => availableIds.has(id))));
+  }, [students]);
+
   const submitManualEnrollment = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setManualEnrollError(null);
+    setOperationStatus(null);
 
     startTransition(async () => {
       const result = await manualEnrollStudent({
@@ -87,6 +96,8 @@ export function StudentTable({ courseId, students }: { courseId: string; student
         setManualEnrollOpen(false);
         setManualUserId('');
         setManualCohortId('');
+        setOperationStatus('Student enrolled successfully.');
+        router.refresh();
         return;
       }
 
@@ -211,7 +222,7 @@ export function StudentTable({ courseId, students }: { courseId: string; student
           <div>
             <CardTitle>Enrolled Students</CardTitle>
             <CardDescription>
-              {items.length > 0 ? `${items.length} students enrolled` : 'No students enrolled yet'}
+              {items.length > 0 ? `${items.length} ${items.length === 1 ? 'student' : 'students'} enrolled` : 'No students enrolled yet'}
             </CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">

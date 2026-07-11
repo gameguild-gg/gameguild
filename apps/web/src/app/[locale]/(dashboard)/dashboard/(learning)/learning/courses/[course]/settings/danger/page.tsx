@@ -25,10 +25,12 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
 
   useEffect(() => {
     params.then(async (p) => {
-      setCourseId(p.course);
       setLocale(p.locale);
       try {
         const data = await fetchCourse(p.course);
+        if (data) {
+          setCourseId(data.id);
+        }
         setCourse(data);
       } catch {
         // ignore

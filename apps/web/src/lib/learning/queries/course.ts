@@ -171,16 +171,13 @@ function mapProgramDtoToCourseDetails(dto: LearningCoursesProgram, creatorHandle
 
 async function fetchCourseBySlug(slug: string): Promise<CourseDetails | null> {
   try {
-    const { client } = createCourseModules();
-    const result = await client.request({
-      method: 'GET',
-      path: `/v1/courses/slug/${encodeURIComponent(slug)}`,
-      requiresAuth: true,
-    }) as { ok: true; data: LearningCoursesProgram } | { ok: false; error?: { status?: number; code?: string; message?: string; detail?: string } };
+    const course = await learningApiGet<LearningCoursesProgram>(
+      `/v1/courses/slug/${encodeURIComponent(slug)}`,
+      0,
+    );
+    if (!course) return null;
 
-    if (!result.ok) return null;
-
-    return mapProgramDtoToCourseDetails(result.data, await resolveCreatorHandle(result.data.creatorId));
+    return mapProgramDtoToCourseDetails(course, await resolveCreatorHandle(course.creatorId));
   } catch {
     return null;
   }
@@ -188,16 +185,10 @@ async function fetchCourseBySlug(slug: string): Promise<CourseDetails | null> {
 
 async function fetchCourseById(courseId: string): Promise<CourseDetails | null> {
   try {
-    const { programs } = createCourseModules();
-    const result = await programs.getCourses1(courseId);
+    const course = await learningApiGet<LearningCoursesProgram>(`/v1/courses/${courseId}`, 0);
+    if (!course) return null;
 
-    if (!result.ok) {
-      const err = result.error as { status?: number; code?: string; message?: string; detail?: string } | undefined;
-      console.error(`[getCourse] Failed for ${courseId}: status=${err?.status}, code=${err?.code}, detail=${err?.detail || err?.message}`);
-      return null;
-    }
-
-    return mapProgramDtoToCourseDetails(result.data, await resolveCreatorHandle(result.data.creatorId));
+    return mapProgramDtoToCourseDetails(course, await resolveCreatorHandle(course.creatorId));
   } catch {
     return null;
   }
@@ -290,15 +281,19 @@ export const getCourseContent = cache(async (courseId: string): Promise<CourseCo
 
     if (!result.ok) return { items: [], total: 0 };
 
-    // Flatten the tree if children are nested
     const items: ContentItem[] = [];
-    for (const dto of result.data) {
-      items.push(mapContentDto(dto));
-      if (dto.children) {
-        for (const child of dto.children) {
-          items.push(mapContentDto(child));
-        }
+    const seenIds = new Set<string>();
+    const visit = (dto: LearningCoursesProgramContent) => {
+      if (dto.id && !seenIds.has(dto.id)) {
+        seenIds.add(dto.id);
+        items.push(mapContentDto(dto));
       }
+
+      for (const child of dto.children ?? []) visit(child);
+    };
+
+    for (const dto of result.data) {
+      visit(dto);
     }
 
     return { items, total: items.length };

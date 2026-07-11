@@ -69,7 +69,7 @@ describe('ListingMediaPage', () => {
   });
 
   it('loads the course and saves media URLs through updateCourse', async () => {
-    render(<ListingMediaPage params={Promise.resolve({ locale: 'en-US', course: 'course-1' })} />);
+    render(<ListingMediaPage params={Promise.resolve({ locale: 'en-US', course: 'ai-for-boss-encounters-by-instructor-one' })} />);
 
     const thumbnailInput = await screen.findByLabelText(/thumbnail url/i);
     fireEvent.change(thumbnailInput, {

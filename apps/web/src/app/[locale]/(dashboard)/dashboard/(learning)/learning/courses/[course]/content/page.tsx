@@ -4,6 +4,7 @@ import { CheckCircle2, Clock } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { ContentTree } from './content-tree';
+import { buildContentTreeModel } from './content-tree-model';
 
 export default async function ContentPage({ params }: PageProps<'/[locale]/dashboard/learning/courses/[course]/content'>): Promise<React.JSX.Element> {
   const { course: courseId } = await params;
@@ -18,38 +19,9 @@ export default async function ContentPage({ params }: PageProps<'/[locale]/dashb
     notFound();
   }
 
-  const topLevelItems = content.items.filter((i) => !i.parentId).sort((a, b) => a.order - b.order);
-  const hasNestedContent = content.items.some((item) => Boolean(item.parentId));
-  const legacyFlatModuleId = `${courseId}-content`;
-  const modules = hasNestedContent
-    ? topLevelItems
-    : [
-      {
-        id: legacyFlatModuleId,
-        parentId: null,
-        order: 0,
-        type: 'Lesson' as const,
-        title: 'Course Content',
-        description: course.description || 'Imported course content',
-        status: 'published' as const,
-        duration: null,
-        metadata: {},
-        createdAt: course.createdAt,
-        updatedAt: course.updatedAt,
-      },
-    ];
-  const treeItems = hasNestedContent
-    ? content.items
-    : content.items.map((item) =>
-      item.parentId
-        ? item
-        : {
-          ...item,
-          parentId: legacyFlatModuleId,
-        },
-    );
-  const totalLessons = hasNestedContent ? content.items.filter((i) => i.parentId).length : topLevelItems.length;
-  const publishedCount = content.items.filter((i) => i.status === 'published').length;
+  const treeModel = buildContentTreeModel(courseId, content.items, course);
+  const totalLessons = content.items.filter((item) => item.type !== 'Module' && (treeModel.hasModules ? Boolean(item.parentId) : true)).length;
+  const publishedCount = content.items.filter((item) => item.type !== 'Module' && item.status === 'published').length;
   const totalDuration = content.items.reduce((acc, i) => acc + (i.duration ?? 0), 0);
 
   return (
@@ -57,9 +29,9 @@ export default async function ContentPage({ params }: PageProps<'/[locale]/dashb
       {/* Stats Bar */}
       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
         <span className="font-medium text-foreground">
-          {hasNestedContent ? `${modules.length} modules` : `${topLevelItems.length} content items`}
+          {treeModel.hasModules ? `${treeModel.modules.length} modules` : `${content.items.length} content items`}
         </span>
-        {hasNestedContent && (
+        {treeModel.hasModules && (
           <>
             <span>&bull;</span>
             <span>{totalLessons} lessons</span>
@@ -79,10 +51,10 @@ export default async function ContentPage({ params }: PageProps<'/[locale]/dashb
 
       <ContentTree
         courseId={courseId}
-        modules={modules}
-        allItems={treeItems}
+        modules={treeModel.modules}
+        allItems={treeModel.treeItems}
         assessments={assessmentsData.assessments}
-        virtualModuleIds={hasNestedContent ? [] : [legacyFlatModuleId]}
+        virtualModuleIds={treeModel.virtualModuleIds}
       />
     </div>
   );

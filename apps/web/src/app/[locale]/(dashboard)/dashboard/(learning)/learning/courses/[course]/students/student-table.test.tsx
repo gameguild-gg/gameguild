@@ -5,6 +5,12 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StudentTable } from './student-table';
 import { manualEnrollStudent, removeCourseStudents, sendCourseStudentMessage } from '@/lib/learning/actions';
 
+const refreshMock = vi.fn();
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: refreshMock }),
+}));
+
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
   setPointerCapture: { value: vi.fn() },
@@ -155,6 +161,17 @@ describe('StudentTable', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
+    expect(screen.getByRole('status')).toHaveTextContent('Student enrolled successfully.');
+    expect(refreshMock).toHaveBeenCalled();
+  });
+
+  it('renders the refreshed roster after a server refresh supplies newly enrolled students', async () => {
+    const view = render(<StudentTable courseId="course-1" students={[]} total={0} />);
+
+    view.rerender(<StudentTable courseId="course-1" students={[students[0]!]} total={1} />);
+
+    expect(await screen.findByText('Ada Learner')).toBeInTheDocument();
+    expect(screen.getByText('1 student enrolled')).toBeInTheDocument();
   });
 
   it('keeps the manual enrollment dialog open when the API returns a validation error', async () => {

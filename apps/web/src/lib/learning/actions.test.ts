@@ -69,6 +69,7 @@ const {
   manualEnrollStudent,
   removeCourseStudents,
   sendCourseStudentMessage,
+  updateCourse,
 } = await import('./actions');
 
 describe('learning server actions', () => {
@@ -91,6 +92,47 @@ describe('learning server actions', () => {
     mocks.deleteCoursesUsers.mockResolvedValue({ ok: true, data: undefined });
     mocks.postApiLearningEnrollments.mockResolvedValue({ ok: true, data: { id: 'cohort-enrollment-1' } });
     vi.stubGlobal('fetch', mocks.fetch);
+  });
+
+  it('uses explicit clear flags for nullable enrollment controls', async () => {
+    const result = await updateCourse({
+      courseId: 'course-1',
+      maxEnrollments: null,
+      enrollmentDeadline: null,
+    });
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.putCourses).toHaveBeenCalledWith('course-1', {
+      clearMaxEnrollments: true,
+      clearEnrollmentDeadline: true,
+    });
+  });
+
+  it('preserves finite enrollment controls without clear flags', async () => {
+    const result = await updateCourse({
+      courseId: 'course-1',
+      maxEnrollments: 25,
+      enrollmentDeadline: '2026-09-01T12:00:00.000Z',
+    });
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.putCourses).toHaveBeenCalledWith('course-1', {
+      maxEnrollments: 25,
+      enrollmentDeadline: '2026-09-01T12:00:00.000Z',
+    });
+  });
+
+  it('resolves canonical course routes before updating the API resource', async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce('resolved-course-id');
+
+    const result = await updateCourse({
+      courseId: 'boss-ai-by-instructor-one',
+      title: 'Resolved course',
+    });
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.resolveCourseId).toHaveBeenCalledWith('boss-ai-by-instructor-one');
+    expect(mocks.putCourses).toHaveBeenCalledWith('resolved-course-id', { title: 'Resolved course' });
   });
 
   it('persists notification settings while preserving unrelated course metadata', async () => {

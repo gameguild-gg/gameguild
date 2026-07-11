@@ -280,10 +280,24 @@ export interface UpdateCourseInput {
 
 export async function updateCourse(input: UpdateCourseInput): Promise<ActionResult<null>> {
   const { courseId, ...fields } = input;
+  const updateFields: LearningCoursesUpdateProgram & {
+    clearMaxEnrollments?: boolean;
+    clearEnrollmentDeadline?: boolean;
+  } = { ...fields } as LearningCoursesUpdateProgram;
+
+  if (input.maxEnrollments === null) {
+    delete updateFields.maxEnrollments;
+    updateFields.clearMaxEnrollments = true;
+  }
+  if (input.enrollmentDeadline === null) {
+    delete updateFields.enrollmentDeadline;
+    updateFields.clearEnrollmentDeadline = true;
+  }
 
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { programs } = createCourseModules();
-    const result = await programs.putCourses(courseId, fields as LearningCoursesUpdateProgram);
+    const result = await programs.putCourses(resolvedCourseId, updateFields);
 
     if (result.ok) {
       revalidatePath(`/dashboard/learning/courses/${courseId}`);
@@ -732,10 +746,11 @@ export interface UpdateCoursePricingInput {
 
 export async function updateCoursePricing(input: UpdateCoursePricingInput): Promise<ActionResult<null>> {
   try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
     const { programs } = createCourseModules();
 
     if (!input.isMonetizationEnabled) {
-      const result = await programs.postCoursesDisableMonetization(input.courseId);
+      const result = await programs.postCoursesDisableMonetization(resolvedCourseId);
 
       if (result.ok) {
         revalidatePath(`/dashboard/learning/courses/${input.courseId}/listing/pricing`);
@@ -750,7 +765,7 @@ export async function updateCoursePricing(input: UpdateCoursePricingInput): Prom
       return { success: false, error: 'Price must be zero or greater.' };
     }
 
-    const result = await programs.postCoursesMonetize(input.courseId, {
+    const result = await programs.postCoursesMonetize(resolvedCourseId, {
       price: input.price,
       currency: input.currency.trim().toUpperCase() || 'USD',
       isSubscription: input.isSubscription,
@@ -810,8 +825,9 @@ export async function createAssessment(input: CreateAssessmentInput): Promise<Ac
   }
 
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const body: LearningAssessmentsCreateAssessmentInput & { assessmentGroupId?: string | null } = {
-      courseId,
+      courseId: resolvedCourseId,
       title: title.trim(),
       description: rest.description?.trim() ?? null,
       type: rest.type,
@@ -882,10 +898,11 @@ export async function createAssessmentGroup(input: CreateAssessmentGroupInput): 
   }
 
   try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
     const result = await learningApiRequest<AssessmentGroupActionDto>('/v1/assessments/groups', {
       method: 'POST',
       body: JSON.stringify({
-        courseId: input.courseId,
+        courseId: resolvedCourseId,
         name,
         weightPercent: input.weightPercent,
         order: input.order ?? 0,
@@ -1064,10 +1081,11 @@ export async function createCertificateTemplate(input: CreateCertificateTemplate
   }
 
   try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
     const result = await learningApiRequest<CertificateTemplateActionDto>('/api/certificates/templates', {
       method: 'POST',
       body: JSON.stringify({
-        courseId: input.courseId,
+        courseId: resolvedCourseId,
         name,
         templateHtml,
       }),
@@ -1207,10 +1225,11 @@ export async function createCourseClass(input: CreateCourseClassInput): Promise<
   }
 
   try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
     const result = await learningApiRequest<CourseClassActionDto>('/api/cohorts', {
       method: 'POST',
       body: JSON.stringify({
-        courseId: input.courseId,
+        courseId: resolvedCourseId,
         name,
         description: input.description?.trim() || null,
         startDate: new Date(input.startDate).toISOString(),
@@ -1399,10 +1418,11 @@ export async function createCourseDiscussion(input: CreateCourseDiscussionInput)
   }
 
   try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
     const result = await learningApiRequest<DiscussionActionDto>('/api/social/discussions', {
       method: 'POST',
       body: JSON.stringify({
-        courseId: input.courseId,
+        courseId: resolvedCourseId,
         title,
         content,
         contentId: input.contentId?.trim() || null,

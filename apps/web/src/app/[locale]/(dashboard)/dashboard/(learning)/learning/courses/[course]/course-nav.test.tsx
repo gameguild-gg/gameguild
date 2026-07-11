@@ -64,6 +64,7 @@ describe('CourseNav', () => {
     const previewLink = screen.getByRole('link', { name: /preview/i });
     expect(previewLink).toHaveAttribute('href', '/dashboard/learning/courses/ai-for-boss-encounters/preview');
     expect(previewLink).toHaveAttribute('data-locale', 'en-US');
+    expect(screen.getAllByText('Course editor content')).toHaveLength(1);
   });
 
   it('copies the public storefront course URL from the share action', async () => {

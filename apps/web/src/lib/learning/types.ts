@@ -6,6 +6,7 @@
 // =============================================================================
 
 export type LearningCoursesProgramContentType =
+  | 'Module'
   | 'Lesson'
   | 'Assignment'
   | 'Questionnaire'
