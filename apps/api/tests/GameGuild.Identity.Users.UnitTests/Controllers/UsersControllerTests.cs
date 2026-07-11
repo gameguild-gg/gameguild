@@ -13,12 +13,13 @@ public class UsersControllerTests
 {
     private readonly Mock<ISender> _sender = new();
     private readonly Mock<IActorContextAccessor> _actorContextAccessor = new();
+    private readonly Mock<ITenantMembershipChecker> _membershipChecker = new();
     private readonly UsersController _controller;
 
     public UsersControllerTests()
     {
         _actorContextAccessor.Setup(x => x.ActorContext).Returns(CreateActorContext(roles: new[] { "Admin" }));
-        _controller = new UsersController(_sender.Object, _actorContextAccessor.Object)
+        _controller = new UsersController(_sender.Object, _actorContextAccessor.Object, _membershipChecker.Object)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
@@ -192,15 +193,88 @@ public class UsersControllerTests
         deleteResult.Should().BeOfType<NoContentResult>();
     }
 
+    [Fact]
+    public async Task UserByIdEndpoints_ShouldForbidRegularMemberFromManagingAnotherUser()
+    {
+        var actorId = Guid.NewGuid();
+        var targetUserId = Guid.NewGuid();
+        _actorContextAccessor.Setup(x => x.ActorContext)
+            .Returns(CreateActorContext(["Member"], subjectId: actorId));
+
+        (await _controller.CheckUserExistsById(targetUserId, CancellationToken.None)).Should().BeOfType<ForbidResult>();
+        (await _controller.GetUserById(targetUserId, CancellationToken.None)).Should().BeOfType<ForbidResult>();
+        (await _controller.PatchUserById(targetUserId, new UpdateUserRequest("Blocked", null), CancellationToken.None)).Should().BeOfType<ForbidResult>();
+        (await _controller.UpdateUserById(targetUserId, new CreateUserRequest("target@example.com", "Blocked", null), CancellationToken.None)).Should().BeOfType<ForbidResult>();
+        (await _controller.DeleteUserById(targetUserId, CancellationToken.None)).Should().BeOfType<ForbidResult>();
+
+        _sender.Verify(sender => sender.Send(It.IsAny<GetUserByIdQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+        _sender.Verify(sender => sender.Send(It.IsAny<UpdateUserCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+        _sender.Verify(sender => sender.Send(It.IsAny<DeleteUserCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UserByIdEndpoints_ShouldAllowRegularMemberToManageSelf()
+    {
+        var actorId = Guid.NewGuid();
+        var user = CreateUserDto(actorId);
+        _actorContextAccessor.Setup(x => x.ActorContext)
+            .Returns(CreateActorContext(["Member"], subjectId: actorId));
+        _sender.Setup(sender => sender.Send(It.IsAny<GetUserByIdQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _sender.Setup(sender => sender.Send(It.IsAny<UpdateUserCommand>(), It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _sender.Setup(sender => sender.Send(It.IsAny<DeleteUserCommand>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        (await _controller.GetUserById(actorId, CancellationToken.None)).Should().BeOfType<OkObjectResult>();
+        (await _controller.PatchUserById(actorId, new UpdateUserRequest("Self", null), CancellationToken.None)).Should().BeOfType<OkObjectResult>();
+        (await _controller.DeleteUserById(actorId, CancellationToken.None)).Should().BeOfType<NoContentResult>();
+    }
+
+    [Fact]
+    public async Task UserByIdEndpoints_ShouldForbidTenantAdminFromManagingUserOutsideCurrentTenant()
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var targetUserId = Guid.NewGuid();
+        _actorContextAccessor.Setup(x => x.ActorContext)
+            .Returns(CreateActorContext(["TenantAdmin"], subjectId: actorId, tenantId: tenantId));
+
+        var result = await _controller.GetUserById(targetUserId, CancellationToken.None);
+
+        result.Should().BeOfType<ForbidResult>();
+        _sender.Verify(sender => sender.Send(It.IsAny<GetUserByIdQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UserByIdEndpoints_ShouldAllowTenantAdminToManageUserInCurrentTenant()
+    {
+        var tenantId = Guid.NewGuid();
+        var targetUserId = Guid.NewGuid();
+        var user = CreateUserDto(targetUserId);
+        _actorContextAccessor.Setup(x => x.ActorContext)
+            .Returns(CreateActorContext(["TenantAdmin"], tenantId: tenantId));
+        _membershipChecker
+            .Setup(x => x.IsUserMemberOfTenantAsync(targetUserId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _sender.Setup(sender => sender.Send(It.Is<GetUserByIdQuery>(query => query.UserId == targetUserId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        var result = await _controller.GetUserById(targetUserId, CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(user);
+    }
+
     private static UserDto CreateUserDto(Guid? id = null, string name = "Test User", string? phoneNumber = "+15550000")
         => new(id ?? Guid.NewGuid(), "user@example.com", name, DateTime.UtcNow, DateTime.UtcNow, true, phoneNumber, DateTime.UtcNow);
 
-    private static ActorContext CreateActorContext(IEnumerable<string> roles, IEnumerable<string>? permissions = null)
+    private static ActorContext CreateActorContext(
+        IEnumerable<string> roles,
+        IEnumerable<string>? permissions = null,
+        Guid? subjectId = null,
+        Guid? tenantId = null)
         => new()
         {
             ActorKind = ActorKind.User,
-            SubjectId = Guid.NewGuid().ToString(),
-            TenantId = null,
+            SubjectId = (subjectId ?? Guid.NewGuid()).ToString(),
+            TenantId = tenantId,
             Roles = roles.ToHashSet(),
             Permissions = (permissions ?? Array.Empty<string>()).ToHashSet(),
             TypedAttributes = ActorAttributes.Empty,

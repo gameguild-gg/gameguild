@@ -41,12 +41,9 @@
         <PackageReference Include="Moq" />
         <PackageReference Include="MockQueryable.Moq" />
         <PackageReference Include="FluentAssertions" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
         <PackageReference Include="AutoFixture" />
         <PackageReference Include="AutoFixture.Xunit2" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     </ItemGroup>
 
     <ItemGroup>

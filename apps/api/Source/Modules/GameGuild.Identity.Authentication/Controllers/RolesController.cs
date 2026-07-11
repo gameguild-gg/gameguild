@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,6 @@ using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
-// PLANNED: Reactivate this controller when role management features are ready for production
 /// <summary>
 ///     Controller for role management endpoints
 /// </summary>
@@ -15,8 +15,7 @@ namespace GameGuild.Identity.Authentication;
 [Route("v{version:apiVersion}/roles")]
 [Microsoft.AspNetCore.Http.Tags("auth/roles")]
 [Produces("application/json")]
-[ApiExplorerSettings(IgnoreApi = true)]
-public class RolesController(ILogger<RolesController> logger, ISender sender) : BaseApiController
+public class RolesController(ILogger<RolesController> logger, ISender sender) : AuthControllerBase
 {
     /// <summary>
     ///     Get all roles in the system
@@ -26,7 +25,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of roles</returns>
     [HttpGet]
-    [Authorize] // Requires authentication
+    [Authorize(Policy = Policies.SystemAdmin)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAll([FromQuery] Guid? tenantId, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
@@ -49,7 +48,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// <param name="roleId">Role ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [HttpGet("{roleId:guid}")]
-    [Authorize]
+    [Authorize(Policy = Policies.SystemAdmin)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -74,7 +73,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// <param name="request">Create role request</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [HttpPost]
-    [Authorize]
+    [Authorize(Policy = Policies.SystemAdmin)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -91,7 +90,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
         };
 
         var role = await sender.Send(command, cancellationToken).ConfigureAwait(false);
-        return CreatedAtAction(nameof(GetById), new { id = role.Id }, role);
+        return CreatedAtAction(nameof(GetById), new { roleId = role.Id }, role);
     }
 
     /// <summary>
@@ -101,7 +100,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// <param name="request">Update role request</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [HttpPut("{roleId:guid}")]
-    [Authorize]
+    [Authorize(Policy = Policies.SystemAdmin)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -128,7 +127,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// <param name="roleId">Role ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [HttpDelete("{roleId:guid}")]
-    [Authorize]
+    [Authorize(Policy = Policies.SystemAdmin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -148,7 +147,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// <param name="includeExpired">Whether to include expired role assignments</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [HttpGet("user/{userId:guid}")]
-    [Authorize]
+    [Authorize(Policy = Policies.SystemAdmin)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetUserRoles(Guid userId, [FromQuery] bool includeExpired = false, CancellationToken cancellationToken = default)
@@ -171,7 +170,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// <param name="request">Assign role request</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [HttpPost(":assign")]
-    [Authorize]
+    [Authorize(Policy = Policies.SystemAdmin)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -183,6 +182,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
         {
             UserId = request.UserId,
             RoleId = request.RoleId,
+            AssignedBy = GetCurrentUserId(),
             ExpiresAt = request.ExpiresAt
         };
 
@@ -196,7 +196,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// <param name="request">Remove role request</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [HttpPost(":remove")]
-    [Authorize]
+    [Authorize(Policy = Policies.SystemAdmin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

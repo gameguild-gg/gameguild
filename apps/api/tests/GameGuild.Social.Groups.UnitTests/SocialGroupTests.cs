@@ -1,6 +1,10 @@
 using FluentAssertions;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +17,119 @@ namespace GameGuild.Social.Groups.UnitTests;
 
 public class SocialGroupTests
 {
+    [Fact]
+    public void Controller_ShouldProtectAdministrativeGroupOperations()
+    {
+        var mutationNames = new[]
+        {
+            nameof(SocialGroupsController.Create),
+            nameof(SocialGroupsController.Update),
+            nameof(SocialGroupsController.Activate),
+            nameof(SocialGroupsController.Archive),
+            nameof(SocialGroupsController.Suspend),
+            nameof(SocialGroupsController.ListMembers),
+            nameof(SocialGroupsController.Join),
+            nameof(SocialGroupsController.Approve),
+            nameof(SocialGroupsController.Reject),
+            nameof(SocialGroupsController.ChangeRole),
+            nameof(SocialGroupsController.Leave)
+        };
+
+        foreach (var methodName in mutationNames)
+        {
+            var authorize = typeof(SocialGroupsController)
+                .GetMethod(methodName)!
+                .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+                .Cast<AuthorizeAttribute>()
+                .Should()
+                .ContainSingle()
+                .Subject;
+
+            authorize.Policy.Should().Be(Policies.TenantAdmin);
+        }
+    }
+
+    [Fact]
+    public async Task Controller_Create_DerivesOwnerAndTenantFromAuthenticatedActor()
+    {
+        var sender = new StubSender();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        sender.Next = new SocialGroupDto(Guid.NewGuid(), tenantId, actorId, "Group", "group", null, SocialGroupType.StudyGroup, SocialGroupVisibility.Private, SocialGroupStatus.Active, 1, 0, DateTime.UtcNow, DateTime.UtcNow);
+        var controller = CreateController(sender, CreateActorContext(actorId, tenantId, "TenantAdmin"));
+
+        await controller.Create(
+            new CreateSocialGroupRequest(Guid.NewGuid(), "Group", "group", SocialGroupType.StudyGroup, SocialGroupVisibility.Private, TenantId: Guid.NewGuid()),
+            CancellationToken.None);
+
+        sender.LastRequest.Should().BeOfType<CreateSocialGroupCommand>().Which.Should().Match<CreateSocialGroupCommand>(command =>
+            command.OwnerId == actorId && command.TenantId == tenantId);
+    }
+
+    [Fact]
+    public async Task Controller_List_AnonymousCallOnlyQueriesPublicActiveGroups()
+    {
+        var sender = new StubSender { Next = new List<SocialGroupDto>() };
+        var controller = CreateController(sender, ActorContext.Anonymous);
+
+        await controller.List(null, null, null, null, null, null, 0, 25, CancellationToken.None);
+
+        sender.LastRequest.Should().BeOfType<ListSocialGroupsQuery>().Which.Should().Match<ListSocialGroupsQuery>(query =>
+            query.Visibility == SocialGroupVisibility.Public && query.Status == SocialGroupStatus.Active);
+    }
+
+    [Fact]
+    public async Task Controller_Get_AnonymousCallDoesNotExposePrivateGroup()
+    {
+        var sender = new StubSender
+        {
+            Next = new SocialGroupDto(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Private", "private", null, SocialGroupType.StudyGroup, SocialGroupVisibility.Private, SocialGroupStatus.Active, 1, 0, DateTime.UtcNow, DateTime.UtcNow)
+        };
+        var controller = CreateController(sender, ActorContext.Anonymous);
+
+        var result = await controller.Get(Guid.NewGuid(), CancellationToken.None);
+
+        result.Result.Should().BeOfType<NotFoundResult>();
+    }
+
+    [Fact]
+    public async Task Controller_Update_ForbidsTenantAdminFromMutatingAnotherTenantGroup()
+    {
+        var actorTenantId = Guid.NewGuid();
+        var sender = new StubSender
+        {
+            Next = new SocialGroupDto(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Other", "other", null, SocialGroupType.StudyGroup, SocialGroupVisibility.Private, SocialGroupStatus.Active, 1, 0, DateTime.UtcNow, DateTime.UtcNow)
+        };
+        var controller = CreateController(sender, CreateActorContext(Guid.NewGuid(), actorTenantId, "TenantAdmin"));
+
+        var result = await controller.Update(Guid.NewGuid(), new UpdateSocialGroupRequest("Changed", "changed", SocialGroupType.StudyGroup, SocialGroupVisibility.Private), CancellationToken.None);
+
+        result.Result.Should().BeOfType<ForbidResult>();
+        sender.Requests.Should().NotContain(request => request is UpdateSocialGroupCommand);
+    }
+
+    internal static SocialGroupsController CreateController(StubSender sender, ActorContext actor)
+    {
+        var accessor = new ActorContextAccessor();
+        accessor.SetActorContext(actor);
+        return new SocialGroupsController(sender, accessor)
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+        };
+    }
+
+    internal static ActorContext CreateActorContext(Guid userId, Guid? tenantId, params string[] roles)
+        => new()
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = userId.ToString(),
+            TenantId = tenantId,
+            Roles = roles.ToHashSet(StringComparer.OrdinalIgnoreCase),
+            Permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+            TypedAttributes = ActorAttributes.Empty,
+            IsAuthenticated = true
+        };
+
     [Fact]
     public void Create_SetsDefaultsAndNormalizesValues()
     {
@@ -425,33 +542,43 @@ public class SocialGroupServiceTests
     public async Task Controller_UsesSenderAndMapsNotFoundResponses()
     {
         var sender = new StubSender();
-        var controller = new SocialGroupsController(sender);
+        var controller = SocialGroupTests.CreateController(sender, SocialGroupTests.CreateActorContext(Guid.NewGuid(), Guid.NewGuid(), "SystemAdmin"));
         var groupId = Guid.NewGuid();
+        var group = new SocialGroupDto(groupId, null, Guid.NewGuid(), "Group", "group", null, SocialGroupType.StudyGroup, SocialGroupVisibility.Public, SocialGroupStatus.Active, 1, 0, DateTime.UtcNow, DateTime.UtcNow);
+        var member = new SocialGroupMemberDto(Guid.NewGuid(), groupId, Guid.NewGuid(), SocialGroupMemberRole.Member, SocialGroupMembershipStatus.Active, DateTime.UtcNow, DateTime.UtcNow, null, null);
 
-        sender.Next = new SocialGroupDto(groupId, null, Guid.NewGuid(), "Group", "group", null, SocialGroupType.StudyGroup, SocialGroupVisibility.Public, SocialGroupStatus.Active, 1, 0, DateTime.UtcNow, DateTime.UtcNow);
+        sender.SetResponse<GetSocialGroupQuery>(group);
+        sender.SetResponse<UpdateSocialGroupCommand>(group);
         (await controller.Get(groupId, CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
         (await controller.Update(groupId, new UpdateSocialGroupRequest("n", "n", SocialGroupType.StudyGroup, SocialGroupVisibility.Public), CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
 
-        sender.Next = new SocialGroupMemberDto(Guid.NewGuid(), groupId, Guid.NewGuid(), SocialGroupMemberRole.Member, SocialGroupMembershipStatus.Active, DateTime.UtcNow, DateTime.UtcNow, null, null);
+        sender.SetResponse<JoinSocialGroupCommand>(member);
         (await controller.Join(groupId, new JoinSocialGroupRequest(Guid.NewGuid()), CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
 
-        sender.Next = new List<SocialGroupDto>();
+        sender.SetResponse<ListSocialGroupsQuery>(new List<SocialGroupDto>());
         (await controller.List(null, null, null, null, null, null, 0, 0, CancellationToken.None)).Should().BeEmpty();
         (await controller.List(null, null, null, null, null, null, 0, 5, CancellationToken.None)).Should().BeEmpty();
 
-        sender.Next = new List<SocialGroupMemberDto>();
-        (await controller.ListMembers(groupId, null, 0, 0, CancellationToken.None)).Should().BeEmpty();
-        (await controller.ListMembers(groupId, null, 0, 5, CancellationToken.None)).Should().BeEmpty();
+        sender.SetResponse<ListSocialGroupMembersQuery>(new List<SocialGroupMemberDto>());
+        (await controller.ListMembers(groupId, null, 0, 0, CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
+        (await controller.ListMembers(groupId, null, 0, 5, CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
 
-        sender.Next = null;
+        sender.SetResponse<GetSocialGroupQuery>(null);
         (await controller.Get(groupId, CancellationToken.None)).Result.Should().BeOfType<NotFoundResult>();
         (await controller.Update(groupId, new UpdateSocialGroupRequest("n", "n", SocialGroupType.StudyGroup, SocialGroupVisibility.Public), CancellationToken.None)).Result.Should().BeOfType<NotFoundResult>();
         (await controller.Join(groupId, new JoinSocialGroupRequest(Guid.NewGuid()), CancellationToken.None)).Result.Should().BeOfType<NotFoundResult>();
 
-        sender.Next = new SocialGroupDto(groupId, null, Guid.NewGuid(), "Created", "created", null, SocialGroupType.StudyGroup, SocialGroupVisibility.Public, SocialGroupStatus.Active, 1, 0, DateTime.UtcNow, DateTime.UtcNow);
-        (await controller.Create(new CreateSocialGroupRequest(Guid.NewGuid(), "Created", "created", SocialGroupType.StudyGroup, SocialGroupVisibility.Public), CancellationToken.None)).Name.Should().Be("Created");
+        var createdGroup = group with { Name = "Created", Slug = "created" };
+        sender.SetResponse<CreateSocialGroupCommand>(createdGroup);
+        var created = await controller.Create(new CreateSocialGroupRequest(Guid.NewGuid(), "Created", "created", SocialGroupType.StudyGroup, SocialGroupVisibility.Public), CancellationToken.None);
+        created.Result.Should().BeOfType<CreatedAtActionResult>().Which.Value.Should().Be(createdGroup);
 
-        sender.Next = true;
+        sender.SetResponse<GetSocialGroupQuery>(group);
+        sender.SetResponse<SetSocialGroupStatusCommand>(true);
+        sender.SetResponse<ApproveSocialGroupMemberCommand>(true);
+        sender.SetResponse<RejectSocialGroupMemberCommand>(true);
+        sender.SetResponse<ChangeSocialGroupMemberRoleCommand>(true);
+        sender.SetResponse<LeaveSocialGroupCommand>(true);
         (await controller.Activate(groupId, CancellationToken.None)).Should().BeOfType<NoContentResult>();
         (await controller.Archive(groupId, CancellationToken.None)).Should().BeOfType<NoContentResult>();
         (await controller.Suspend(groupId, CancellationToken.None)).Should().BeOfType<NoContentResult>();
@@ -460,7 +587,11 @@ public class SocialGroupServiceTests
         (await controller.ChangeRole(groupId, Guid.NewGuid(), new ChangeSocialGroupMemberRoleRequest(SocialGroupMemberRole.Admin), CancellationToken.None)).Should().BeOfType<NoContentResult>();
         (await controller.Leave(groupId, Guid.NewGuid(), CancellationToken.None)).Should().BeOfType<NoContentResult>();
 
-        sender.Next = false;
+        sender.SetResponse<SetSocialGroupStatusCommand>(false);
+        sender.SetResponse<ApproveSocialGroupMemberCommand>(false);
+        sender.SetResponse<RejectSocialGroupMemberCommand>(false);
+        sender.SetResponse<ChangeSocialGroupMemberRoleCommand>(false);
+        sender.SetResponse<LeaveSocialGroupCommand>(false);
         (await controller.Activate(groupId, CancellationToken.None)).Should().BeOfType<NotFoundResult>();
         (await controller.Archive(groupId, CancellationToken.None)).Should().BeOfType<NotFoundResult>();
         (await controller.Suspend(groupId, CancellationToken.None)).Should().BeOfType<NotFoundResult>();
@@ -657,17 +788,27 @@ internal sealed class InMemorySocialGroupMemberRepository : ISocialGroupMemberRe
 
 internal sealed class StubSender : ISender
 {
+    private readonly Dictionary<Type, object?> _responses = [];
     public object? Next { get; set; }
+    public object? LastRequest { get; private set; }
+    public List<object> Requests { get; } = [];
+
+    public void SetResponse<TRequest>(object? response) => _responses[typeof(TRequest)] = response;
 
     public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-        => Task.FromResult((TResponse)Next!);
+    {
+        LastRequest = request;
+        Requests.Add(request);
+        var response = _responses.TryGetValue(request.GetType(), out var configured) ? configured : Next;
+        return Task.FromResult((TResponse)response!);
+    }
 
     public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
         where TRequest : IRequest
         => Task.CompletedTask;
 
     public Task<object?> Send(object request, CancellationToken cancellationToken = default)
-        => Task.FromResult(Next);
+        => Task.FromResult(_responses.TryGetValue(request.GetType(), out var configured) ? configured : Next);
 }
 
 internal sealed class TestSocialGroupsDbContext(DbContextOptions<TestSocialGroupsDbContext> options) : DbContext(options), IApplicationDbContext

@@ -128,7 +128,15 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
 
         if (existingUserRole != null)
         {
-            // Role is already assigned, return the existing assignment
+            if (existingUserRole.IsExpired())
+            {
+                existingUserRole.AssignedBy = userRole.AssignedBy;
+                existingUserRole.AssignedAt = SystemClock.UtcNow;
+                existingUserRole.ExpiresAt = userRole.ExpiresAt;
+                existingUserRole.Touch();
+                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+
             return existingUserRole;
         }
 

@@ -337,7 +337,7 @@ public static class DatabaseSeeder
                 Country = "Online",
                 Capacity = 24,
                 MaxProjectsCapacity = 6,
-                VirtualUrl = "https://meet.gameguild.gg/testing-lab",
+                VirtualUrl = (string?)"https://meet.gameguild.gg/testing-lab",
                 Equipment = "Discord, screen share, capture notes, controller checklist"
             },
             new
@@ -345,7 +345,7 @@ public static class DatabaseSeeder
                 Name = "Campus QA Lab",
                 Description = "In-person QA station with controller, keyboard, and accessibility coverage.",
                 IsVirtual = false,
-                City = "Orlando",
+                City = (string?)"Orlando",
                 Country = "United States",
                 Capacity = 18,
                 MaxProjectsCapacity = 4,

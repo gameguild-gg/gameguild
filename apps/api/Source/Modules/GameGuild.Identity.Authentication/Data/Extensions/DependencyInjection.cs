@@ -55,6 +55,7 @@ public static class DataDependencyInjection
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
         services.AddScoped<IMfaAttemptRepository, MfaAttemptRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<GameGuild.Identity.Authorization.IAuthorizationRolePermissionProvider, RolePermissionProvider>();
         services.AddScoped<IServiceAccountRepository, ServiceAccountRepository>();
 
         // Core authentication services - focused sub-services

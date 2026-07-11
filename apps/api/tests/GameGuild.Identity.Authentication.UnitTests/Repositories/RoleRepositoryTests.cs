@@ -380,6 +380,33 @@ public class RoleRepositoryTests
     }
 
     [Fact]
+    public async Task AssignRoleToUserAsync_WhenExistingAssignmentExpired_ReactivatesAssignment()
+    {
+        var userId = Guid.NewGuid();
+        var roleId = Guid.NewGuid();
+        var assignedBy = Guid.NewGuid();
+        var existingUserRole = new UserRole(userId, roleId, null)
+        {
+            Id = Guid.NewGuid(),
+            ExpiresAt = DateTime.UtcNow.AddDays(-1)
+        };
+        var userRoles = new List<UserRole> { existingUserRole }.AsQueryable();
+        var mockSet = CreateMockDbSet(userRoles);
+        _mockContext.Setup(c => c.Set<UserRole>()).Returns(mockSet.Object);
+        _mockContext.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        var repository = new RoleRepository(_mockContext.Object);
+        var renewed = new UserRole(userId, roleId, assignedBy) { ExpiresAt = DateTime.UtcNow.AddDays(30) };
+
+        var result = await repository.AssignRoleToUserAsync(renewed);
+
+        result.Id.Should().Be(existingUserRole.Id);
+        result.AssignedBy.Should().Be(assignedBy);
+        result.ExpiresAt.Should().Be(renewed.ExpiresAt);
+        result.IsExpired().Should().BeFalse();
+        _mockContext.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task UserHasRoleAsync_WhenUserHasRole_ReturnsTrue()
     {
         // Arrange

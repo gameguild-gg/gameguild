@@ -14,7 +14,10 @@ namespace GameGuild.Identity.Users;
 [ApiVersion("1.0")]
 [Microsoft.AspNetCore.Http.Tags("users")]
 [Authorize]
-public sealed class UsersController(ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController
+public sealed class UsersController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor,
+    ITenantMembershipChecker membershipChecker) : BaseApiController
 {
     #region Collection Operations - /v1/users
 
@@ -99,6 +102,9 @@ public sealed class UsersController(ISender sender, IActorContextAccessor actorC
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckUserExistsById(Guid userId, CancellationToken ct)
     {
+        if (!await CanAccessUserAsync(userId, ct, UsersPermission.Keys.Read, UsersPermission.Keys.Manage).ConfigureAwait(false))
+            return Forbid();
+
         UserDto? user = await sender.Send(new GetUserByIdQuery(userId), ct).ConfigureAwait(false);
 
         return user is null ? NotFound() : Ok();
@@ -119,6 +125,9 @@ public sealed class UsersController(ISender sender, IActorContextAccessor actorC
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetUserById(Guid userId, CancellationToken ct)
     {
+        if (!await CanAccessUserAsync(userId, ct, UsersPermission.Keys.Read, UsersPermission.Keys.Manage).ConfigureAwait(false))
+            return Forbid();
+
         UserDto? user = await sender.Send(new GetUserByIdQuery(userId), ct).ConfigureAwait(false);
 
         return user is null ? NotFound() : Ok(user);
@@ -140,6 +149,9 @@ public sealed class UsersController(ISender sender, IActorContextAccessor actorC
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> PatchUserById(Guid userId, [FromBody] UpdateUserRequest body, CancellationToken ct)
     {
+        if (!await CanAccessUserAsync(userId, ct, UsersPermission.Keys.Update, UsersPermission.Keys.Manage).ConfigureAwait(false))
+            return Forbid();
+
         ArgumentNullException.ThrowIfNull(body);
         var command = new UpdateUserCommand(userId, body.Name, body.PhoneNumber);
         var user = await sender.Send(command, ct).ConfigureAwait(false);
@@ -163,6 +175,9 @@ public sealed class UsersController(ISender sender, IActorContextAccessor actorC
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateUserById(Guid userId, [FromBody] CreateUserRequest body, CancellationToken ct)
     {
+        if (!await CanAccessUserAsync(userId, ct, UsersPermission.Keys.Update, UsersPermission.Keys.Manage).ConfigureAwait(false))
+            return Forbid();
+
         ArgumentNullException.ThrowIfNull(body);
         var command = new UpdateUserCommand(userId, body.Name, body.PhoneNumber);
         var user = await sender.Send(command, ct).ConfigureAwait(false);
@@ -184,10 +199,31 @@ public sealed class UsersController(ISender sender, IActorContextAccessor actorC
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteUserById(Guid userId, CancellationToken ct)
     {
+        if (!await CanAccessUserAsync(userId, ct, UsersPermission.Keys.Delete, UsersPermission.Keys.Manage).ConfigureAwait(false))
+            return Forbid();
+
         await sender.Send(new DeleteUserCommand(userId), ct).ConfigureAwait(false);
 
         return NoContent();
     }
 
     #endregion
+
+    private async Task<bool> CanAccessUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken,
+        params string[] permissions)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (actor.SubjectIdAsGuid == userId || actor.IsSystemAdmin)
+            return true;
+
+        if (!actor.TenantId.HasValue ||
+            (!actor.IsTenantAdmin && !permissions.Any(actor.HasPermission)))
+            return false;
+
+        return await membershipChecker
+            .IsUserMemberOfTenantAsync(userId, actor.TenantId.Value, cancellationToken)
+            .ConfigureAwait(false);
+    }
 }

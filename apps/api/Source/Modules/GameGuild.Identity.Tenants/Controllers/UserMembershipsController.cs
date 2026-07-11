@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +19,9 @@ namespace GameGuild.Identity.Tenants;
 [ApiVersion("1.0")]
 [Microsoft.AspNetCore.Http.Tags("users/memberships")]
 [Authorize]
-public sealed class UserMembershipsController(ISender sender) : BaseApiController
+public sealed class UserMembershipsController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     /// <summary>
     ///     Add a user to a tenant membership.
@@ -38,6 +41,8 @@ public sealed class UserMembershipsController(ISender sender) : BaseApiControlle
     public async Task<IActionResult> AddUserMembership(Guid userId, [FromBody] AddUserMembershipRequest body, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(body);
+        if (!CanManageTenant(body.TenantId) || !CanAssignRole(body.Role))
+            return Forbid();
 
         var result = await sender.Send(
                 new AddTenantMemberCommand(body.TenantId, userId, body.Role, body.InvitedByEmail, body.RequiresAcceptance, body.InviteeEmail, body.InviteeName),
@@ -80,6 +85,8 @@ public sealed class UserMembershipsController(ISender sender) : BaseApiControlle
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(body);
+        if (!CanManageTenant(tenantId) || !CanAssignRole(body.Role))
+            return Forbid();
 
         var result = await sender.Send(
                 new UpdateTenantMemberRoleCommand(tenantId, userId, body.Role),
@@ -121,7 +128,7 @@ public sealed class UserMembershipsController(ISender sender) : BaseApiControlle
     ///     Accept a pending membership invite and activate the membership.
     /// </summary>
     [HttpPost("v{version:apiVersion}/users/{userId:guid}/memberships/{tenantId:guid}/invite:accept")]
-    [Authorize(Policy = Policies.TenantAdmin)]
+    [Authorize]
     [EndpointSummary("Accept tenant membership invite")]
     [ProducesResponseType<UpdateTenantMemberInviteResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<UpdateTenantMemberInviteResponse>(StatusCodes.Status404NotFound)]
@@ -138,6 +145,9 @@ public sealed class UserMembershipsController(ISender sender) : BaseApiControlle
         UpdateUserMembershipInviteRequest? body,
         CancellationToken ct)
     {
+        if (!CanUpdateInvite(userId, tenantId, action))
+            return Forbid();
+
         var result = await sender.Send(
                 new UpdateTenantMemberInviteCommand(tenantId, userId, action, body?.ActorEmail),
                 ct)
@@ -177,10 +187,13 @@ public sealed class UserMembershipsController(ISender sender) : BaseApiControlle
         [FromQuery] bool includeInactive = false,
         CancellationToken ct = default)
     {
+        if (!CanReadMemberships(userId))
+            return Forbid();
+
         var query = new GetUserMembershipsQuery(userId, includeInactive);
         var result = await sender.Send(query, ct).ConfigureAwait(false);
 
-        return Ok(result);
+        return Ok(ScopeMemberships(result, userId));
     }
 
     /// <summary>
@@ -196,10 +209,14 @@ public sealed class UserMembershipsController(ISender sender) : BaseApiControlle
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckUserHasMemberships(Guid userId, CancellationToken ct = default)
     {
+        if (!CanReadMemberships(userId))
+            return Forbid();
+
         var query = new GetUserMembershipsQuery(userId, IncludeInactive: false);
         var result = await sender.Send(query, ct).ConfigureAwait(false);
+        var scoped = ScopeMemberships(result, userId);
 
-        return result.TotalCount > 0 ? Ok() : NotFound();
+        return scoped.TotalCount > 0 ? Ok() : NotFound();
     }
 
     /// <summary>
@@ -214,10 +231,58 @@ public sealed class UserMembershipsController(ISender sender) : BaseApiControlle
     [ProducesResponseType<MembershipCountResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMembershipCount(Guid userId, CancellationToken ct = default)
     {
+        if (!CanReadMemberships(userId))
+            return Forbid();
+
         var query = new GetUserMembershipsQuery(userId, IncludeInactive: false);
         var result = await sender.Send(query, ct).ConfigureAwait(false);
+        var scoped = ScopeMemberships(result, userId);
 
-        return Ok(new MembershipCountResponse { Count = result.TotalCount });
+        return Ok(new MembershipCountResponse { Count = scoped.TotalCount });
+    }
+
+    private bool CanManageTenant(Guid tenantId)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        return actor.IsSystemAdmin ||
+               actor.IsTenantAdmin && actor.TenantId.HasValue && actor.TenantId.Value == tenantId;
+    }
+
+    private bool CanUpdateInvite(Guid userId, Guid tenantId, TenantMemberInviteAction action)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        return CanManageTenant(tenantId) ||
+               action == TenantMemberInviteAction.Accept && actor.SubjectIdAsGuid == userId;
+    }
+
+    private bool CanAssignRole(string role)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        return !string.Equals(role, "SystemAdmin", StringComparison.OrdinalIgnoreCase) || actor.IsSystemAdmin;
+    }
+
+    private bool CanReadMemberships(Guid userId)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        return actor.IsSystemAdmin ||
+               actor.SubjectIdAsGuid == userId ||
+               actor.IsTenantAdmin && actor.TenantId.HasValue;
+    }
+
+    private GetUserMembershipsResponse ScopeMemberships(GetUserMembershipsResponse result, Guid userId)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (actor.IsSystemAdmin || actor.SubjectIdAsGuid == userId)
+            return result;
+
+        var memberships = result.Memberships
+            .Where(membership => membership.TenantId == actor.TenantId)
+            .ToList();
+        return new GetUserMembershipsResponse
+        {
+            Memberships = memberships,
+            TotalCount = memberships.Count
+        };
     }
 }
 
