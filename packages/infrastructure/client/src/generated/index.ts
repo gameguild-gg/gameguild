@@ -3,8 +3,8 @@
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
- * Generated from: http://localhost:5295/swagger/v1/swagger.json
- * Generated at: 2026-07-10T18:14:25.128Z
+ * Generated from: http://localhost:5295/openapi/v1.json
+ * Generated at: 2026-07-11T07:47:36.562Z
  *
  * To regenerate, run: pnpm generate
  */
@@ -51,6 +51,8 @@ export * from './modules/content-pages-opengraph.gen.js';
 export * from './modules/content-pages-resources.gen.js';
 export * from './modules/learning-courses-contentinteraction.gen.js';
 export * from './modules/learning-courses-checkout.gen.js';
+export * from './modules/learning-courses-students.gen.js';
+export * from './modules/learning-courses-supporttickets.gen.js';
 export * from './modules/learning-experience-discovery.gen.js';
 export * from './modules/learning-experience-social-discussions.gen.js';
 export * from './modules/learning-enrollments.gen.js';
