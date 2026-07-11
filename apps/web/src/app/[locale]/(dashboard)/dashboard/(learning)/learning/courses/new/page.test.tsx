@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import CreateCoursePage from './page';
-import { createCourse, updateCourse } from '@/lib/learning/actions';
+import { createCourse, deleteCourse, updateCourse } from '@/lib/learning/actions';
 
 const pushMock = vi.fn();
 
@@ -35,6 +35,7 @@ vi.mock('@/i18n/navigation', () => ({
 
 vi.mock('@/lib/learning/actions', () => ({
   createCourse: vi.fn(),
+  deleteCourse: vi.fn(),
   updateCourse: vi.fn(),
 }));
 
@@ -49,6 +50,7 @@ describe('CreateCoursePage', () => {
         routeParam: 'boss-ai-by-gameguild',
       },
     });
+    vi.mocked(deleteCourse).mockResolvedValue({ success: true, data: null });
     vi.mocked(updateCourse).mockResolvedValue({ success: true, data: null });
   });
 
@@ -107,8 +109,7 @@ describe('CreateCoursePage', () => {
     expect(pushMock).not.toHaveBeenCalled();
   });
 
-  it('supports custom slugs, back navigation, finite enrollment caps, and update warnings', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  it('supports custom slugs and back navigation, then rolls back a partially-created course', async () => {
     vi.mocked(createCourse).mockResolvedValueOnce({
       success: true,
       data: {
@@ -151,9 +152,31 @@ describe('CreateCoursePage', () => {
         skillsProvided: undefined,
       }));
     });
-    expect(warnSpy).toHaveBeenCalledWith('[CreateCourse] Update failed after creation:', 'Extended course data failed.');
-    expect(pushMock).toHaveBeenCalledWith('/dashboard/learning/courses/manual-slug-custom-by-gameguild');
+    expect(deleteCourse).toHaveBeenCalledWith('course-2');
+    expect(await screen.findByText('Extended course data failed. The incomplete draft was removed; review the form and try again.')).toBeInTheDocument();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
 
-    warnSpy.mockRestore();
+  it('reports rollback failure without hiding the persisted draft', async () => {
+    vi.mocked(createCourse).mockResolvedValueOnce({
+      success: true,
+      data: { id: 'course-3', slug: 'rollback-failure', routeParam: 'rollback-failure-by-gameguild' },
+    });
+    vi.mocked(updateCourse).mockResolvedValueOnce({ success: false, error: 'Extended course data failed.' });
+    vi.mocked(deleteCourse).mockResolvedValueOnce({ success: false, error: 'Draft could not be removed.' });
+
+    render(<CreateCoursePage params={Promise.resolve({ locale: 'en-US' })} />);
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Rollback Failure' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'A complete description for rollback verification.' } });
+    fireEvent.click(screen.getByRole('button', { name: /next/i }));
+    fireEvent.click(screen.getByRole('button', { name: /next/i }));
+    fireEvent.click(screen.getByRole('button', { name: /create course/i }));
+
+    expect(await screen.findByText(/The draft still exists as "rollback-failure"/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open the draft/i })).toHaveAttribute(
+      'href',
+      '/dashboard/learning/courses/rollback-failure-by-gameguild',
+    );
+    expect(pushMock).not.toHaveBeenCalled();
   });
 });

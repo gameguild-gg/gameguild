@@ -1,7 +1,7 @@
 'use client';
 
 import { Link, useRouter } from '@/i18n/navigation';
-import { createCourse, updateCourse } from '@/lib/learning/actions';
+import { createCourse, deleteCourse, updateCourse } from '@/lib/learning/actions';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
 import {
   CONTENT_VISIBILITIES,
@@ -42,6 +42,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [recoveryHref, setRecoveryHref] = useState<string | null>(null);
 
   // params is unused now (locale handled by next-intl router)
   void params;
@@ -88,6 +89,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setRecoveryHref(null);
 
     if (step < STEPS.length - 1) {
       setStep(step + 1);
@@ -120,8 +122,17 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
         skillsProvided: skillsProvided.trim() || undefined,
       });
       if (!updateResult.success) {
-        // Course was created but update failed — still redirect, user can fix in settings
-        console.warn('[CreateCourse] Update failed after creation:', updateResult.error);
+        const rollbackResult = await deleteCourse(courseId);
+        if (rollbackResult.success) {
+          setError(`${updateResult.error} The incomplete draft was removed; review the form and try again.`);
+          return;
+        }
+
+        setRecoveryHref(`/dashboard/learning/courses/${courseRouteParam}`);
+        setError(
+          `${updateResult.error} The draft still exists as "${createResult.data.slug}" because cleanup failed: ${rollbackResult.error}`,
+        );
+        return;
       }
 
       router.push(`/dashboard/learning/courses/${courseRouteParam}`);
@@ -370,8 +381,13 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
         )}
 
         {error && (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
-            {error}
+          <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+            <p>{error}</p>
+            {recoveryHref ? (
+              <Button asChild variant="link" className="mt-2 h-auto p-0 text-red-700 underline dark:text-red-300">
+                <Link href={recoveryHref}>Open the draft and finish it manually</Link>
+              </Button>
+            ) : null}
           </div>
         )}
 

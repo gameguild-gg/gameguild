@@ -24,10 +24,10 @@ export default function ListingMediaPage({ params }: { params: Promise<{ locale:
 
   useEffect(() => {
     params.then(async (p) => {
-      setCourseId(p.course);
       try {
         const data = await fetchCourse(p.course);
         if (data) {
+          setCourseId(data.id);
           setCourse(data);
           setThumbnail(data.thumbnail ?? '');
           setVideoShowcaseUrl(data.videoShowcaseUrl ?? '');
@@ -47,8 +47,8 @@ export default function ListingMediaPage({ params }: { params: Promise<{ locale:
     startTransition(async () => {
       const result = await updateCourse({
         courseId,
-        thumbnail: thumbnail.trim() || undefined,
-        videoShowcaseUrl: videoShowcaseUrl.trim() || undefined,
+        thumbnail: thumbnail.trim(),
+        videoShowcaseUrl: videoShowcaseUrl.trim(),
       });
       if (result.success) {
         setSuccess(true);

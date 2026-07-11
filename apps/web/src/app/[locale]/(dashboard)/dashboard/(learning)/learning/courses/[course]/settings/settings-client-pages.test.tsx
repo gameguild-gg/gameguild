@@ -51,7 +51,7 @@ const course = {
   isEnrollmentOpen: true,
 };
 
-const params = Promise.resolve({ locale: 'en-US', course: 'course-1' });
+const params = Promise.resolve({ locale: 'en-US', course: 'boss-ai-by-instructor-one' });
 
 describe('course settings client pages', () => {
   beforeEach(() => {

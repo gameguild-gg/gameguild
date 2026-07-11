@@ -174,11 +174,34 @@ describe('ContentTree course management', () => {
         courseId: 'course-1',
         title: 'Week 02',
         description: 'Combat systems',
-        type: 'Lesson',
+        type: 'Module',
         sortOrder: 1,
       });
     });
     expect(navigationMocks.refresh).toHaveBeenCalled();
+  });
+
+  it('opens modules introduced by a server refresh so their lesson actions are immediately available', () => {
+    const view = renderContentTree({
+      modules: [moduleItem],
+      allItems: [moduleItem],
+      virtualModuleIds: ['module-1'],
+    });
+    const createdModule = { ...moduleItem, id: 'module-created', type: 'Module' as const, title: 'Production Foundations' };
+
+    view.rerender(
+      <TooltipProvider>
+        <ContentTree
+          courseId="course-1"
+          modules={[createdModule]}
+          allItems={[createdModule]}
+          assessments={[]}
+          virtualModuleIds={[]}
+        />
+      </TooltipProvider>,
+    );
+
+    expect(screen.getByRole('button', { name: /add lesson/i })).toBeInTheDocument();
   });
 
   it('creates a quiz lesson inside a module with the normalized backend type', async () => {
@@ -360,7 +383,7 @@ describe('ContentTree course management', () => {
         parentId: 'module-1',
         title: 'Part A',
         description: 'Nested foundations',
-        type: 'Lesson',
+        type: 'Module',
         sortOrder: 1,
       });
     });

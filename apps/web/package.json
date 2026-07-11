@@ -12,6 +12,7 @@
     "test:browser:public": "node scripts/public-browser-smoke.mjs",
     "test:browser:block-editor": "node scripts/block-content-editor-browser-e2e.mjs",
     "test:browser:learning-checkout": "node scripts/learning-checkout-browser-e2e.mjs",
+    "test:browser:learning-professor": "node scripts/learning-professor-browser-e2e.mjs",
     "test:watch": "vitest",
     "test:e2e": "vitest run -c vitest.e2e.config.ts"
   },

@@ -7,10 +7,12 @@ import ListingInfoPage from './page';
 const fetchCourseMock = vi.fn();
 const updateCourseMock = vi.fn();
 const refreshMock = vi.fn();
+const replaceMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     refresh: refreshMock,
+    replace: replaceMock,
   }),
 }));
 
@@ -64,12 +66,13 @@ describe('ListingInfoPage', () => {
     fetchCourseMock.mockReset();
     updateCourseMock.mockReset();
     refreshMock.mockReset();
+    replaceMock.mockReset();
     fetchCourseMock.mockResolvedValue(courseFixture);
     updateCourseMock.mockResolvedValue({ success: true, data: null });
   });
 
   it('loads the course and saves storefront identity fields through updateCourse', async () => {
-    render(<ListingInfoPage params={Promise.resolve({ locale: 'en-US', course: 'course-1' })} />);
+    render(<ListingInfoPage params={Promise.resolve({ locale: 'en-US', course: 'ai-for-boss-encounters-by-instructor-one' })} />);
 
     const titleInput = await screen.findByLabelText(/course title/i);
     fireEvent.change(titleInput, { target: { value: 'Advanced Encounter AI' } });
@@ -101,6 +104,9 @@ describe('ListingInfoPage', () => {
       });
     });
     expect(refreshMock).toHaveBeenCalled();
+    expect(replaceMock).toHaveBeenCalledWith(
+      '/dashboard/learning/courses/advanced-encounter-ai-by-instructor-one/listing/info',
+    );
     expect(screen.getByText('Course info updated successfully.')).toBeInTheDocument();
   });
 });

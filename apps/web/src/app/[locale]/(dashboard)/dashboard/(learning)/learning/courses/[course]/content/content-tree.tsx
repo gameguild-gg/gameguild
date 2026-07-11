@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@game-guild/ui/components/tooltip';
 import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronRight, ClipboardList, Clock, Code2, Copy, Edit, FileText, Flag, GripVertical, HelpCircle, LinkIcon, Loader2, MessageSquare, Plus, Trash2, Unlink } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useState, useTransition } from 'react';
+import React, { useEffect, useRef, useState, useTransition } from 'react';
 
 interface ContentTreeProps {
   courseId: string;
@@ -29,6 +29,7 @@ interface ContentTreeProps {
 }
 
 const typeConfig: Record<LearningCoursesProgramContentType, { icon: React.ElementType; label: string }> = {
+  Module: { icon: BookOpen, label: 'Module' },
   Lesson: { icon: FileText, label: 'Lesson' },
   Assignment: { icon: FileText, label: 'Assignment' },
   Questionnaire: { icon: HelpCircle, label: 'Quiz' },
@@ -117,7 +118,23 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const [openModules, setOpenModules] = useState<Set<string>>(() => new Set(modules.map((m) => m.id)));
+  const previousModuleIds = useRef(new Set(modules.map((module) => module.id)));
   const virtualModuleIdSet = React.useMemo(() => new Set(virtualModuleIds), [virtualModuleIds]);
+
+  useEffect(() => {
+    const nextModuleIds = new Set(modules.map((module) => module.id));
+    const priorModuleIds = previousModuleIds.current;
+
+    setOpenModules((current) => {
+      const next = new Set([...current].filter((id) => nextModuleIds.has(id)));
+      for (const id of nextModuleIds) {
+        if (!priorModuleIds.has(id)) next.add(id);
+      }
+      return next;
+    });
+
+    previousModuleIds.current = nextModuleIds;
+  }, [modules]);
 
   // Derive the base path for navigation (e.g. /en-US/learning/courses/{id}/content)
   const contentBasePath = pathname.endsWith('/content') ? pathname : pathname.replace(/\/content\/.*$/, '/content');
@@ -229,7 +246,7 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
         parentId: submoduleParentId,
         title: moduleTitle.trim(),
         description: moduleDescription.trim(),
-        type: 'Lesson',
+        type: 'Module',
         sortOrder: parentChildren.length,
       });
       if (result.success) {
@@ -294,7 +311,7 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
         courseId,
         title: moduleTitle.trim(),
         description: moduleDescription.trim(),
-        type: 'Lesson', // backend type for a structural grouping
+        type: 'Module',
         sortOrder: modules.length,
       });
       if (result.success) {

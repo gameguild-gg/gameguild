@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@game-guild/ui/components/badge';
 import { Loader2, Save } from 'lucide-react';
 import { updateCourse, fetchCourse } from '@/lib/learning/actions';
+import { buildDashboardCoursePath } from '@/lib/learning/course-route';
 import type { CourseDetails } from '@/lib/learning/types';
 import {
   PROGRAM_CATEGORIES,
@@ -39,10 +40,10 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
 
   useEffect(() => {
     params.then(async (p) => {
-      setCourseId(p.course);
       try {
         const data = await fetchCourse(p.course);
         if (data) {
+          setCourseId(data.id);
           setCourse(data);
           setTitle(data.title);
           setSlug(data.slug);
@@ -73,12 +74,15 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
         description: description.trim(),
         category,
         difficulty,
-        estimatedHours: estimatedHours ? parseInt(estimatedHours, 10) : undefined,
-        skillsRequired: skillsRequired.trim() || undefined,
-        skillsProvided: skillsProvided.trim() || undefined,
+        estimatedHours: estimatedHours ? parseInt(estimatedHours, 10) : 0,
+        skillsRequired: skillsRequired.trim(),
+        skillsProvided: skillsProvided.trim(),
       });
       if (result.success) {
         setSuccess(true);
+        if (course) {
+          router.replace(buildDashboardCoursePath({ ...course, slug: slug.trim() }, 'listing/info'));
+        }
         router.refresh();
       } else {
         setError(result.error);

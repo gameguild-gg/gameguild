@@ -184,9 +184,9 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
           })}
         </nav>
 
-        {/* Mobile tabs - scrollable */}
-        <div className="flex min-w-0 w-full flex-col gap-6 lg:hidden">
-          <div className="flex min-w-0 max-w-full gap-1 overflow-x-auto border-b pb-2">
+        <div className="flex min-w-0 w-full flex-1 flex-col gap-6">
+          {/* Mobile tabs - scrollable */}
+          <div className="flex min-w-0 max-w-full gap-1 overflow-x-auto border-b pb-2 lg:hidden">
             {navItems.map((item) => {
               const isActive = activeSegment === item.segment;
               return (
@@ -206,9 +206,6 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
           </div>
           <div className="min-w-0 flex-1">{children}</div>
         </div>
-
-        {/* Desktop Content */}
-        <div className="hidden min-w-0 max-w-full flex-1 flex-col lg:flex">{children}</div>
       </div>
     </div>
   );

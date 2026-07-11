@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   getCourses1: vi.fn(),
   getCoursesAnalytics: vi.fn(),
   getCoursesUsers: vi.fn(),
+  getCoursesContent: vi.fn(),
   getUsers1: vi.fn(),
   getApiLearningEnrollmentsCourses: vi.fn(),
   getToken: vi.fn(),
@@ -24,7 +25,9 @@ vi.mock('@game-guild/client', () => ({
       getCoursesAnalytics = mocks.getCoursesAnalytics;
       getCoursesUsers = mocks.getCoursesUsers;
     },
-    LearningCoursesProgramcontentModule: class {},
+    LearningCoursesProgramcontentModule: class {
+      getCoursesContent = mocks.getCoursesContent;
+    },
     LearningEnrollmentsModule: class {
       getApiLearningEnrollmentsCourses = mocks.getApiLearningEnrollmentsCourses;
     },
@@ -38,7 +41,7 @@ vi.mock('./http', () => ({
   learningApiGet: mocks.learningApiGet,
 }));
 
-import { getCourse, getCourseAnalytics, getCourseClass, getCourseStudents, resolveCourseId } from './course';
+import { getCourse, getCourseAnalytics, getCourseClass, getCourseContent, getCourseStudents, resolveCourseId } from './course';
 
 describe('course analytics query', () => {
   beforeEach(() => {
@@ -50,14 +53,12 @@ describe('course analytics query', () => {
     mocks.learningApiGet.mockReset();
     mocks.getApiLearningEnrollmentsCourses.mockReset();
     mocks.getCoursesUsers.mockReset();
+    mocks.getCoursesContent.mockReset();
     mocks.getUsers1.mockReset();
   });
 
   it('resolves dashboard course slugs through the authenticated slug endpoint', async () => {
-    mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
-    mocks.clientRequest.mockResolvedValue({
-      ok: true,
-      data: {
+    mocks.learningApiGet.mockResolvedValue({
         id: '08691da8-245e-4d9e-b729-83c9023ba061',
         title: 'AI for Boss Encounters',
         description: 'Build readable encounter AI.',
@@ -65,16 +66,11 @@ describe('course analytics query', () => {
         status: 'Published',
         visibility: 'Public',
         createdAt: '2026-06-01T00:00:00.000Z',
-      },
     });
 
     const course = await getCourse('ai-for-boss-encounters');
 
-    expect(mocks.clientRequest).toHaveBeenCalledWith({
-      method: 'GET',
-      path: '/v1/courses/slug/ai-for-boss-encounters',
-      requiresAuth: true,
-    });
+    expect(mocks.learningApiGet).toHaveBeenCalledWith('/v1/courses/slug/ai-for-boss-encounters', 0);
     expect(course).toMatchObject({
       id: '08691da8-245e-4d9e-b729-83c9023ba061',
       slug: 'ai-for-boss-encounters',
@@ -85,10 +81,7 @@ describe('course analytics query', () => {
   });
 
   it('resolves slug-by-author dashboard params through the clean API slug', async () => {
-    mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
-    mocks.clientRequest.mockResolvedValue({
-      ok: true,
-      data: {
+    mocks.learningApiGet.mockResolvedValue({
         id: '18691da8-245e-4d9e-b729-83c9023ba062',
         title: 'AI for Boss Encounters',
         description: 'Build readable encounter AI.',
@@ -96,23 +89,16 @@ describe('course analytics query', () => {
         status: 'Published',
         visibility: 'Public',
         createdAt: '2026-06-01T00:00:00.000Z',
-      },
     });
 
     const course = await getCourse('ai-for-boss-encounters-by-ada-lovelace');
 
-    expect(mocks.clientRequest).toHaveBeenCalledWith({
-      method: 'GET',
-      path: '/v1/courses/slug/ai-for-boss-encounters',
-      requiresAuth: true,
-    });
+    expect(mocks.learningApiGet).toHaveBeenCalledWith('/v1/courses/slug/ai-for-boss-encounters', 0);
     expect(course?.slug).toBe('ai-for-boss-encounters');
   });
 
   it('keeps legacy UUID route params working through the course ID endpoint', async () => {
-    mocks.getCourses1.mockResolvedValue({
-      ok: true,
-      data: {
+    mocks.learningApiGet.mockResolvedValue({
         id: '08691da8-245e-4d9e-b729-83c9023ba061',
         title: 'AI for Boss Encounters',
         description: 'Build readable encounter AI.',
@@ -120,30 +106,79 @@ describe('course analytics query', () => {
         status: 'Published',
         visibility: 'Public',
         createdAt: '2026-06-01T00:00:00.000Z',
-      },
     });
 
     const course = await getCourse('08691da8-245e-4d9e-b729-83c9023ba061');
 
-    expect(mocks.getCourses1).toHaveBeenCalledWith('08691da8-245e-4d9e-b729-83c9023ba061');
+    expect(mocks.learningApiGet).toHaveBeenCalledWith('/v1/courses/08691da8-245e-4d9e-b729-83c9023ba061', 0);
     expect(mocks.clientRequest).not.toHaveBeenCalled();
     expect(course?.slug).toBe('ai-for-boss-encounters');
   });
 
+  it('loads authenticated course identity through the no-store HTTP query helper', async () => {
+    const courseId = '28691da8-245e-4d9e-b729-83c9023ba063';
+    mocks.learningApiGet.mockResolvedValue({
+      id: courseId,
+      title: 'Immediately Published Course',
+      description: 'The latest persisted lifecycle state.',
+      slug: 'immediately-published-course',
+      status: 'Published',
+      visibility: 'Public',
+      createdAt: '2026-06-01T00:00:00.000Z',
+    });
+
+    const course = await getCourse(courseId);
+
+    expect(mocks.learningApiGet).toHaveBeenCalledWith(`/v1/courses/${courseId}`, 0);
+    expect(course?.status).toBe('published');
+  });
+
   it('returns the canonical API course ID for a dashboard slug', async () => {
-    mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
-    mocks.clientRequest.mockResolvedValue({
-      ok: true,
-      data: {
+    mocks.learningApiGet.mockResolvedValue({
         id: '1caa16bb-6810-4e53-bb0d-91f0d5702333',
         title: 'Creature Design Production',
         slug: 'creature-design-production',
         status: 'Draft',
         visibility: 'Private',
-      },
     });
 
     await expect(resolveCourseId('creature-design-production')).resolves.toBe('1caa16bb-6810-4e53-bb0d-91f0d5702333');
+  });
+
+  it('deduplicates nested content when the API also returns children in the flat collection', async () => {
+    const courseId = '08691da8-245e-4d9e-b729-83c9023ba061';
+    const child = {
+      id: '28691da8-245e-4d9e-b729-83c9023ba063',
+      parentId: '18691da8-245e-4d9e-b729-83c9023ba062',
+      title: 'Lesson',
+      type: 'Lesson',
+      visibility: 'Public',
+      sortOrder: 0,
+      children: [],
+    };
+    mocks.getCoursesContent.mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: '18691da8-245e-4d9e-b729-83c9023ba062',
+          parentId: null,
+          title: 'Module',
+          type: 'Module',
+          visibility: 'Public',
+          sortOrder: 0,
+          children: [child],
+        },
+        child,
+      ],
+    });
+
+    const content = await getCourseContent(courseId);
+
+    expect(content.items.map((item) => item.id)).toEqual([
+      '18691da8-245e-4d9e-b729-83c9023ba062',
+      '28691da8-245e-4d9e-b729-83c9023ba063',
+    ]);
+    expect(content.total).toBe(2);
   });
 
   it('maps aggregate API analytics without inventing detail rows', async () => {

@@ -5,7 +5,7 @@ export async function learningApiGet<T>(path: string, revalidate = 60): Promise<
   const token = await getToken();
   const response = await fetch(`${apiUrl}${path}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    next: { revalidate },
+    ...(token ? { cache: 'no-store' as const } : { next: { revalidate } }),
   });
 
   if (response.status === 404 || response.status === 403 || response.status === 401) {
