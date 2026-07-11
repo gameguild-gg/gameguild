@@ -80,6 +80,8 @@ describe('ProjectCarouselEditorForm', () => {
     expect(screen.getByLabelText('Project title 1')).toHaveValue('');
 
     await user.type(screen.getByLabelText('Project title 1'), 'Portfolio milestone');
+    await user.type(screen.getByLabelText('Summary 1'), 'A portfolio-ready production milestone.');
+    await user.type(screen.getByLabelText('Deliverable 1'), 'A playable build with a short retrospective.');
     await user.click(screen.getByRole('button', { name: /save project carousel/i }));
 
     await waitFor(() => {
@@ -91,5 +93,41 @@ describe('ProjectCarouselEditorForm', () => {
       ]);
     });
     expect(screen.getByText('Project carousel is invalid.')).toBeInTheDocument();
+  }, 15_000);
+
+  it('rejects partially completed project slides before calling the API', async () => {
+    const user = userEvent.setup();
+    render(<ProjectCarouselEditorForm courseId="course-1" items={[]} />);
+
+    await user.type(screen.getByLabelText('Project title 1'), 'Incomplete milestone');
+    await user.click(screen.getByRole('button', { name: /save project carousel/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Complete the title, summary, and deliverable for Project 1.');
+    expect(updateCourseLandingProjectsMock).not.toHaveBeenCalled();
+  });
+  it('allows consecutive saves after editing and removing a project', async () => {
+    const user = userEvent.setup();
+    render(<ProjectCarouselEditorForm courseId="course-1" items={[]} />);
+
+    await user.type(screen.getByLabelText('Project title 1'), 'First milestone');
+    await user.type(screen.getByLabelText('Summary 1'), 'First milestone summary.');
+    await user.type(screen.getByLabelText('Deliverable 1'), 'First milestone deliverable.');
+    await user.click(screen.getByRole('button', { name: /save project carousel/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: /save project carousel/i })).toBeEnabled());
+
+    await user.click(screen.getByRole('button', { name: /add project/i }));
+    await user.type(screen.getByLabelText('Project title 2'), 'Temporary milestone');
+    await user.type(screen.getByLabelText('Summary 2'), 'Temporary milestone summary.');
+    await user.type(screen.getByLabelText('Deliverable 2'), 'Temporary milestone deliverable.');
+    await user.click(screen.getByRole('button', { name: /save project carousel/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: /save project carousel/i })).toBeEnabled());
+
+    await user.click(screen.getByRole('button', { name: /remove project 2/i }));
+    await user.click(screen.getByRole('button', { name: /save project carousel/i }));
+
+    await waitFor(() => expect(updateCourseLandingProjectsMock).toHaveBeenCalledTimes(3));
+    expect(updateCourseLandingProjectsMock).toHaveBeenLastCalledWith('course-1', [expect.objectContaining({ title: 'First milestone' })]);
+    expect(screen.getAllByLabelText(/Project title/)).toHaveLength(1);
+    expect(screen.getByRole('button', { name: /save project carousel/i })).toBeEnabled();
   }, 15_000);
 });

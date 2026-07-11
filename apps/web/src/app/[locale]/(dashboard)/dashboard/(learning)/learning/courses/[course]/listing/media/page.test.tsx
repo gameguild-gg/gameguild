@@ -88,7 +88,10 @@ describe('ListingMediaPage', () => {
         videoShowcaseUrl: 'https://video.example.com/advanced-encounter-ai',
       });
     });
-    expect(refreshMock).toHaveBeenCalled();
     expect(screen.getByText('Media updated successfully.')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /save media/i })).toBeEnabled();
+    });
+    expect(refreshMock).not.toHaveBeenCalled();
   });
 });

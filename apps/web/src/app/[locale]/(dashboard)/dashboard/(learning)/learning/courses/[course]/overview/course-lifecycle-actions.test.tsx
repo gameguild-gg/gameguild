@@ -31,7 +31,7 @@ describe('CourseLifecycleActions', () => {
     vi.mocked(unpublishCourse).mockResolvedValue({ success: true, data: null });
   });
 
-  it('publishes draft courses and refreshes the dashboard', async () => {
+  it('publishes draft courses without blocking on a dashboard refresh', async () => {
     const user = userEvent.setup();
 
     render(<CourseLifecycleActions courseId="course-1" status="draft" locale="en-US" />);
@@ -43,8 +43,10 @@ describe('CourseLifecycleActions', () => {
       expect(publishCourse).toHaveBeenCalledWith('course-1');
     });
     expect(await screen.findByText('Published')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /unpublish/i })).toBeInTheDocument();
-    expect(refreshMock).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /unpublish/i })).toBeEnabled();
+    });
+    expect(refreshMock).not.toHaveBeenCalled();
   });
 
   it('unpublishes published courses and updates the lifecycle controls', async () => {
@@ -57,7 +59,10 @@ describe('CourseLifecycleActions', () => {
       expect(unpublishCourse).toHaveBeenCalledWith('course-1');
     });
     expect(await screen.findByText('Draft')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^publish$/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /^publish$/i })).toBeEnabled();
+    });
+    expect(refreshMock).not.toHaveBeenCalled();
   });
 
   it('archives published courses and updates the lifecycle controls', async () => {
@@ -84,6 +89,31 @@ describe('CourseLifecycleActions', () => {
     await waitFor(() => {
       expect(publishCourse).toHaveBeenCalledWith('course-1');
     });
+  });
+
+  it('keeps every lifecycle action available across a complete status sequence', async () => {
+    const user = userEvent.setup();
+
+    render(<CourseLifecycleActions courseId="course-1" status="published" locale="en-US" />);
+
+    await user.click(screen.getByRole('button', { name: /unpublish/i }));
+    const publishButton = await screen.findByRole('button', { name: /^publish$/i });
+    await waitFor(() => expect(publishButton).toBeEnabled());
+
+    await user.click(publishButton);
+    const archiveButton = await screen.findByRole('button', { name: /^archive$/i });
+    await waitFor(() => expect(archiveButton).toBeEnabled());
+
+    await user.click(archiveButton);
+    const republishButton = await screen.findByRole('button', { name: /re-publish/i });
+    await waitFor(() => expect(republishButton).toBeEnabled());
+
+    await user.click(republishButton);
+    await waitFor(() => expect(screen.getByRole('button', { name: /unpublish/i })).toBeEnabled());
+
+    expect(unpublishCourse).toHaveBeenCalledTimes(1);
+    expect(publishCourse).toHaveBeenCalledTimes(2);
+    expect(archiveCourse).toHaveBeenCalledTimes(1);
   });
 
   it('requires a second click before deleting and then routes back to courses', async () => {
