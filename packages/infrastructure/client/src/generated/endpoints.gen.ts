@@ -2257,6 +2257,19 @@ export const getApiCertificatesTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PutApiCertificatesTemplatesInput {
+  templateId: string;
+  body?: Types.LearningCertificatesUpdateCertificateTemplateInput;
+}
+export type PutApiCertificatesTemplatesOutput = Types.LearningCertificatesCertificateTemplateDetail;
+export const putApiCertificatesTemplatesEndpoint = {
+  operationId: 'putApiCertificatesTemplates' as const,
+  method: 'PUT' as const,
+  path: '/api/certificates/templates/{templateId}' as const,
+  tags: ['Learning/certificates'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface DeleteApiCertificatesTemplatesInput {
   templateId: string;
 }
@@ -4145,6 +4158,76 @@ export const postVCoursesCheckoutCompleteEndpoint = {
   method: 'POST' as const,
   path: '/v{version}/courses/{courseId}/checkout/complete' as const,
   tags: ['Learning/courses/checkout'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesStudentsMessageInput {
+  courseId: string;
+  body?: Types.LearningCoursesSendCourseStudentMessageInput;
+}
+export type PostCoursesStudentsMessageOutput = Types.LearningCoursesSendCourseStudentMessageOutput;
+export const postCoursesStudentsMessageEndpoint = {
+  operationId: 'postCoursesStudentsMessage' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{courseId}/students/message' as const,
+  tags: ['Learning/courses/students'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetCoursesSupportTicketsInput {
+  courseId: string;
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetCoursesSupportTicketsOutput = Types.PagedResultOfGameGuildCommerceProductsSupportTicketDto;
+export const getCoursesSupportTicketsEndpoint = {
+  operationId: 'getCoursesSupportTickets' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{courseId}/support/tickets' as const,
+  tags: ['Learning/courses/supportTickets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetCoursesSupportTickets1Input {
+  courseId: string;
+  ticketId: string;
+}
+export type GetCoursesSupportTickets1Output = Types.CommerceProductsSupportTicket;
+export const getCoursesSupportTickets1Endpoint = {
+  operationId: 'getCoursesSupportTickets1' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{courseId}/support/tickets/{ticketId}' as const,
+  tags: ['Learning/courses/supportTickets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesSupportTicketsMessagesInput {
+  courseId: string;
+  ticketId: string;
+  body?: Types.LearningCoursesCourseSupportTicketMessageInput;
+}
+export type PostCoursesSupportTicketsMessagesOutput = Types.CommerceProductsSupportTicket;
+export const postCoursesSupportTicketsMessagesEndpoint = {
+  operationId: 'postCoursesSupportTicketsMessages' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{courseId}/support/tickets/{ticketId}/messages' as const,
+  tags: ['Learning/courses/supportTickets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesSupportTicketsResolveInput {
+  courseId: string;
+  ticketId: string;
+  body?: Types.LearningCoursesResolveCourseSupportTicketInput;
+}
+export type PostCoursesSupportTicketsResolveOutput = Types.CommerceProductsSupportTicket;
+export const postCoursesSupportTicketsResolveEndpoint = {
+  operationId: 'postCoursesSupportTicketsResolve' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{courseId}/support/tickets/{ticketId}:resolve' as const,
+  tags: ['Learning/courses/supportTickets'] as const,
   requiresAuth: true,
 } as const;
 
@@ -8066,6 +8149,19 @@ export const postApiSocialReviewsFeatureEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PatchApiSocialReviewsModerationInput {
+  id: string;
+  body?: Types.LearningExperienceSocialControllersUpdateReviewModerationInput;
+}
+export type PatchApiSocialReviewsModerationOutput = Types.LearningExperienceSocialServicesCourseReview;
+export const patchApiSocialReviewsModerationEndpoint = {
+  operationId: 'patchApiSocialReviewsModeration' as const,
+  method: 'PATCH' as const,
+  path: '/api/social/reviews/{id}/moderation' as const,
+  tags: ['Learning/experience/social/reviews'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiSocialProfilesUsersInput {
   userId: string;
 }
@@ -8393,6 +8489,7 @@ export interface GetSupportTicketsInput {
     search?: string;
     skip?: number;
     take?: number;
+    customerId?: string;
   };
 }
 export type GetSupportTicketsOutput = Types.PagedResultOfGameGuildCommerceProductsSupportTicketDto;
@@ -13046,6 +13143,7 @@ export const endpoints = {
   getApiCertificatesCourse: getApiCertificatesCourseEndpoint,
   getApiCertificatesTemplatesCourse: getApiCertificatesTemplatesCourseEndpoint,
   getApiCertificatesTemplates: getApiCertificatesTemplatesEndpoint,
+  putApiCertificatesTemplates: putApiCertificatesTemplatesEndpoint,
   deleteApiCertificatesTemplates: deleteApiCertificatesTemplatesEndpoint,
   postApiCertificatesTemplates: postApiCertificatesTemplatesEndpoint,
   getApiCertificatesExpiring: getApiCertificatesExpiringEndpoint,
@@ -13168,6 +13266,11 @@ export const endpoints = {
   getCourseInteractionsUser: getCourseInteractionsUserEndpoint,
   putCourseInteractionsTimeSpent: putCourseInteractionsTimeSpentEndpoint,
   postVCoursesCheckoutComplete: postVCoursesCheckoutCompleteEndpoint,
+  postCoursesStudentsMessage: postCoursesStudentsMessageEndpoint,
+  getCoursesSupportTickets: getCoursesSupportTicketsEndpoint,
+  getCoursesSupportTickets1: getCoursesSupportTickets1Endpoint,
+  postCoursesSupportTicketsMessages: postCoursesSupportTicketsMessagesEndpoint,
+  postCoursesSupportTicketsResolve: postCoursesSupportTicketsResolveEndpoint,
   getDiscoveryFeatured: getDiscoveryFeaturedEndpoint,
   postDiscoveryFeatured: postDiscoveryFeaturedEndpoint,
   getDiscoveryFeaturedType: getDiscoveryFeaturedTypeEndpoint,
@@ -13453,6 +13556,7 @@ export const endpoints = {
   getApiSocialCoursesRatingStats: getApiSocialCoursesRatingStatsEndpoint,
   postApiSocialReviewsApprove: postApiSocialReviewsApproveEndpoint,
   postApiSocialReviewsFeature: postApiSocialReviewsFeatureEndpoint,
+  patchApiSocialReviewsModeration: patchApiSocialReviewsModerationEndpoint,
   getApiSocialProfilesUsers: getApiSocialProfilesUsersEndpoint,
   putApiSocialProfilesUsers: putApiSocialProfilesUsersEndpoint,
   getApiSocialProfiles: getApiSocialProfilesEndpoint,

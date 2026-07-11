@@ -4128,6 +4128,15 @@ export interface LearningCertificatesRevokeCertificateInput {
   reason?: string | null;
 }
 
+export interface LearningCertificatesUpdateCertificateTemplateInput {
+  name?: string | null;
+  description?: string | null;
+  templateHtml?: string | null;
+  templateStyles?: string | null;
+  isDefault?: boolean;
+  isActive?: boolean;
+}
+
 export interface LearningCohortsCohort {
   id?: string;
   courseId?: string;
@@ -4293,6 +4302,7 @@ export interface LearningCoursesContentStats {
     Reflection?: number;
     Survey?: number;
     Project?: number;
+    Module?: number;
   } | null;
   contentByVisibility?: { Public?: number; Internal?: number; Private?: number; Restricted?: number } | null;
   topLevelContent?: number;
@@ -4304,6 +4314,11 @@ export interface LearningCoursesContentSummary {
   title?: string | null;
   contentType?: string | null;
   estimatedMinutes?: number | null;
+}
+
+export interface LearningCoursesCourseSupportTicketMessageInput {
+  message?: string | null;
+  isInternal?: boolean;
 }
 
 export interface LearningCoursesCreateActivityGrade {
@@ -4485,7 +4500,8 @@ export type LearningCoursesProgramContentType =
   | 'Challenge'
   | 'Reflection'
   | 'Survey'
-  | 'Project';
+  | 'Project'
+  | 'Module';
 
 export type LearningCoursesProgramDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
@@ -4536,6 +4552,10 @@ export interface LearningCoursesReorderPrerequisitesInput {
   prerequisiteIds?: Array<string> | null;
 }
 
+export interface LearningCoursesResolveCourseSupportTicketInput {
+  summary?: string | null;
+}
+
 export interface LearningCoursesRevenueAnalytics {
   programId?: string;
   totalRevenue?: number;
@@ -4564,6 +4584,16 @@ export interface LearningCoursesSearchContent {
   visibility?: LearningCoursesVisibility;
   isRequired?: boolean | null;
   parentId?: string | null;
+}
+
+export interface LearningCoursesSendCourseStudentMessageInput {
+  userIds?: Array<string> | null;
+  subject?: string | null;
+  message?: string | null;
+}
+
+export interface LearningCoursesSendCourseStudentMessageOutput {
+  sent?: number;
 }
 
 export interface LearningCoursesStartContentInput {
@@ -4638,6 +4668,8 @@ export interface LearningCoursesUpdateProgram {
   enrollmentStatus?: LearningCoursesEnrollmentStatus;
   maxEnrollments?: number | null;
   enrollmentDeadline?: string | null;
+  clearMaxEnrollments?: boolean;
+  clearEnrollmentDeadline?: boolean;
 }
 
 export interface LearningCoursesUpdateProgress {
@@ -5014,6 +5046,11 @@ export interface LearningExperienceRecommendationsUserLearningProfile {
   lastActivityAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface LearningExperienceSocialControllersUpdateReviewModerationInput {
+  isApproved?: boolean;
+  isFeatured?: boolean;
 }
 
 export type LearningExperienceSocialFeedItemType =
@@ -7283,6 +7320,7 @@ export let LearningCertificatesCertificateVerificationResultSchema: z.ZodType<Le
 export let LearningCertificatesCreateCertificateTemplateInputSchema: z.ZodType<LearningCertificatesCreateCertificateTemplateInput>;
 export let LearningCertificatesIssueCertificateInputSchema: z.ZodType<LearningCertificatesIssueCertificateInput>;
 export let LearningCertificatesRevokeCertificateInputSchema: z.ZodType<LearningCertificatesRevokeCertificateInput>;
+export let LearningCertificatesUpdateCertificateTemplateInputSchema: z.ZodType<LearningCertificatesUpdateCertificateTemplateInput>;
 export let LearningCohortsCohortSchema: z.ZodType<LearningCohortsCohort>;
 export let LearningCohortsCohortStatusSchema: z.ZodType<LearningCohortsCohortStatus>;
 export let LearningCohortsCreateCohortInputSchema: z.ZodType<LearningCohortsCreateCohortInput>;
@@ -7300,6 +7338,7 @@ export let LearningCoursesContentInteractionSummarySchema: z.ZodType<LearningCou
 export let LearningCoursesContentProgressSchema: z.ZodType<LearningCoursesContentProgress>;
 export let LearningCoursesContentStatsSchema: z.ZodType<LearningCoursesContentStats>;
 export let LearningCoursesContentSummarySchema: z.ZodType<LearningCoursesContentSummary>;
+export let LearningCoursesCourseSupportTicketMessageInputSchema: z.ZodType<LearningCoursesCourseSupportTicketMessageInput>;
 export let LearningCoursesCreateActivityGradeSchema: z.ZodType<LearningCoursesCreateActivityGrade>;
 export let LearningCoursesCreatePrerequisiteApiInputSchema: z.ZodType<LearningCoursesCreatePrerequisiteApiInput>;
 export let LearningCoursesCreateProductFromProgramSchema: z.ZodType<LearningCoursesCreateProductFromProgram>;
@@ -7327,10 +7366,13 @@ export let LearningCoursesProgressStatusSchema: z.ZodType<LearningCoursesProgres
 export let LearningCoursesRejectProgramSchema: z.ZodType<LearningCoursesRejectProgram>;
 export let LearningCoursesReorderContentSchema: z.ZodType<LearningCoursesReorderContent>;
 export let LearningCoursesReorderPrerequisitesInputSchema: z.ZodType<LearningCoursesReorderPrerequisitesInput>;
+export let LearningCoursesResolveCourseSupportTicketInputSchema: z.ZodType<LearningCoursesResolveCourseSupportTicketInput>;
 export let LearningCoursesRevenueAnalyticsSchema: z.ZodType<LearningCoursesRevenueAnalytics>;
 export let LearningCoursesRevenueChartSchema: z.ZodType<LearningCoursesRevenueChart>;
 export let LearningCoursesScheduleProgramSchema: z.ZodType<LearningCoursesScheduleProgram>;
 export let LearningCoursesSearchContentSchema: z.ZodType<LearningCoursesSearchContent>;
+export let LearningCoursesSendCourseStudentMessageInputSchema: z.ZodType<LearningCoursesSendCourseStudentMessageInput>;
+export let LearningCoursesSendCourseStudentMessageOutputSchema: z.ZodType<LearningCoursesSendCourseStudentMessageOutput>;
 export let LearningCoursesStartContentInputSchema: z.ZodType<LearningCoursesStartContentInput>;
 export let LearningCoursesStudentSummarySchema: z.ZodType<LearningCoursesStudentSummary>;
 export let LearningCoursesSubmitContentInputSchema: z.ZodType<LearningCoursesSubmitContentInput>;
@@ -7383,6 +7425,7 @@ export let LearningExperienceRecommendationsRecommendationTypeSchema: z.ZodType<
 export let LearningExperienceRecommendationsSimilarCourseSchema: z.ZodType<LearningExperienceRecommendationsSimilarCourse>;
 export let LearningExperienceRecommendationsTrendingCourseSchema: z.ZodType<LearningExperienceRecommendationsTrendingCourse>;
 export let LearningExperienceRecommendationsUserLearningProfileSchema: z.ZodType<LearningExperienceRecommendationsUserLearningProfile>;
+export let LearningExperienceSocialControllersUpdateReviewModerationInputSchema: z.ZodType<LearningExperienceSocialControllersUpdateReviewModerationInput>;
 export let LearningExperienceSocialFeedItemTypeSchema: z.ZodType<LearningExperienceSocialFeedItemType>;
 export let LearningExperienceSocialServicesCourseDiscussionSchema: z.ZodType<LearningExperienceSocialServicesCourseDiscussion>;
 export let LearningExperienceSocialServicesCourseLikeSchema: z.ZodType<LearningExperienceSocialServicesCourseLike>;
@@ -12359,6 +12402,16 @@ LearningCertificatesRevokeCertificateInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
+/** Zod schema for LearningCertificatesUpdateCertificateTemplateInput */
+LearningCertificatesUpdateCertificateTemplateInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  templateHtml: z.string().nullable().optional(),
+  templateStyles: z.string().nullable().optional(),
+  isDefault: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+});
+
 /** Zod schema for LearningCohortsCohort */
 LearningCohortsCohortSchema = z.object({
   id: z.string().uuid().optional(),
@@ -12544,6 +12597,7 @@ LearningCoursesContentStatsSchema = z.object({
       Reflection: z.number().int(),
       Survey: z.number().int(),
       Project: z.number().int(),
+      Module: z.number().int(),
     })
     .nullable()
     .optional(),
@@ -12566,6 +12620,12 @@ LearningCoursesContentSummarySchema = z.object({
   title: z.string().nullable().optional(),
   contentType: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesCourseSupportTicketMessageInput */
+LearningCoursesCourseSupportTicketMessageInputSchema = z.object({
+  message: z.string().nullable().optional(),
+  isInternal: z.boolean().optional(),
 });
 
 /** Zod schema for LearningCoursesCreateActivityGrade */
@@ -12774,6 +12834,7 @@ LearningCoursesProgramContentTypeSchema = z.enum([
   'Reflection',
   'Survey',
   'Project',
+  'Module',
 ]);
 
 /** Zod schema for LearningCoursesProgramDifficulty */
@@ -12832,6 +12893,11 @@ LearningCoursesReorderPrerequisitesInputSchema = z.object({
   prerequisiteIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
+/** Zod schema for LearningCoursesResolveCourseSupportTicketInput */
+LearningCoursesResolveCourseSupportTicketInputSchema = z.object({
+  summary: z.string().nullable().optional(),
+});
+
 /** Zod schema for LearningCoursesRevenueAnalytics */
 LearningCoursesRevenueAnalyticsSchema = z.object({
   programId: z.string().uuid().optional(),
@@ -12867,6 +12933,18 @@ LearningCoursesSearchContentSchema = z.object({
   visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
   isRequired: z.boolean().nullable().optional(),
   parentId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesSendCourseStudentMessageInput */
+LearningCoursesSendCourseStudentMessageInputSchema = z.object({
+  userIds: z.array(z.string().uuid()).nullable().optional(),
+  subject: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesSendCourseStudentMessageOutput */
+LearningCoursesSendCourseStudentMessageOutputSchema = z.object({
+  sent: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCoursesStartContentInput */
@@ -12950,6 +13028,8 @@ LearningCoursesUpdateProgramSchema = z.object({
   enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
   maxEnrollments: z.number().int().nullable().optional(),
   enrollmentDeadline: z.string().datetime().nullable().optional(),
+  clearMaxEnrollments: z.boolean().optional(),
+  clearEnrollmentDeadline: z.boolean().optional(),
 });
 
 /** Zod schema for LearningCoursesUpdateProgress */
@@ -13383,6 +13463,12 @@ LearningExperienceRecommendationsUserLearningProfileSchema = z.object({
   lastActivityAt: z.string().datetime().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for LearningExperienceSocialControllersUpdateReviewModerationInput */
+LearningExperienceSocialControllersUpdateReviewModerationInputSchema = z.object({
+  isApproved: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialFeedItemType */

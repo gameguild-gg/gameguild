@@ -30,4 +30,6 @@ public enum ProgramContentType {
   [Description("Data collection activity without grading")] Survey = 8,
 
   [Description("Project activity used for milestone or final-project delivery")] Project = 9,
+
+  [Description("Structural module used to organize lessons and activities")] Module = 10,
 }

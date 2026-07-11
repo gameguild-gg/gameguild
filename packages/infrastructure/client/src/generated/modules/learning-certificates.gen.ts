@@ -161,6 +161,33 @@ export class LearningCertificatesModule {
 
   /**
    */
+  async putApiCertificatesTemplates(
+    templateId: string,
+    body: Types.LearningCertificatesUpdateCertificateTemplateInput,
+  ): Promise<Result<Types.LearningCertificatesCertificateTemplateDetail, ApiError>> {
+    const url = `/api/certificates/templates/${templateId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCertificatesUpdateCertificateTemplateInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCertificatesCertificateTemplateDetailSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async deleteApiCertificatesTemplates(templateId: string): Promise<Result<void, ApiError>> {
     const url = `/api/certificates/templates/${templateId}`;
 

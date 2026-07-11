@@ -187,6 +187,33 @@ export class LearningExperienceSocialReviewsModule {
 
     return result;
   }
+
+  /**
+   */
+  async patchApiSocialReviewsModeration(
+    id: string,
+    body: Types.LearningExperienceSocialControllersUpdateReviewModerationInput,
+  ): Promise<Result<Types.LearningExperienceSocialServicesCourseReview, ApiError>> {
+    const url = `/api/social/reviews/${id}/moderation`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningExperienceSocialControllersUpdateReviewModerationInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PATCH',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningExperienceSocialServicesCourseReviewSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
 export function createLearningExperienceSocialReviewsModule(client: ApiClient): LearningExperienceSocialReviewsModule {

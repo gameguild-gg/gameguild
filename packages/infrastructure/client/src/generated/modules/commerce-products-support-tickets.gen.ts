@@ -24,6 +24,7 @@ export class CommerceProductsSupportTicketsModule {
     search?: string;
     skip?: number;
     take?: number;
+    customerId?: string;
   }): Promise<Result<Types.PagedResultOfGameGuildCommerceProductsSupportTicketDto, ApiError>> {
     const url = '/v1/support/tickets';
 
