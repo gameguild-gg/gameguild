@@ -21,6 +21,7 @@ import { generateEndpoints } from './codegen/endpoints.js';
 import { generateErrors } from './codegen/errors.js';
 import { generateModules } from './codegen/modules.js';
 import { formatOutput } from './utils/formatting.js';
+import { cleanGeneratedOutput } from './utils/clean-generated-output.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -129,14 +130,17 @@ async function generate(): Promise<void> {
     console.log(`📋 API Version: ${rawSpec.info?.version || 'unknown'}`);
     console.log(`🔄 Spec hash: ${currentHash.slice(0, 12)}...\n`);
 
-    // Step 3: Normalize the specification
+    // Step 3: Remove outputs from endpoints that no longer exist in the specification.
+    cleanGeneratedOutput(CONFIG.outputDir);
+
+    // Step 4: Normalize the specification
     console.log('🔧 Normalizing OpenAPI spec...');
     const spec = normalizeSpec(rawSpec);
 
-    // Step 4: Ensure output directory exists
+    // Step 5: Ensure output directory exists
     ensureOutputDir();
 
-    // Step 5: Generate code
+    // Step 6: Generate code
     console.log('📝 Generating TypeScript code...');
 
     // Generate types (DTOs, models, enums)
@@ -161,7 +165,7 @@ async function generate(): Promise<void> {
     const indexCode = generateIndex(Object.keys(modules));
     await writeGeneratedFile('index.ts', indexCode);
 
-    // Step 6: Save metadata
+    // Step 7: Save metadata
     saveMetadata(currentHash, rawSpec);
 
     console.log('\n✅ Code generation complete!\n');

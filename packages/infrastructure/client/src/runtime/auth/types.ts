@@ -478,7 +478,7 @@ export interface ResolvedAuthConfig {
   secret: string;
   apiUrl: string;
   pages: PagesConfig;
-  cookies: Required<CookieConfig>;
+  cookies: Omit<Required<CookieConfig>, 'domain'> & Pick<CookieConfig, 'domain'>;
   maxAge: number;
   updateAge: number;
   basePath: string;

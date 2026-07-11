@@ -60,7 +60,7 @@ export class CommercePaymentsTaxrulesModule {
    *
    * Retrieves detailed information for a specific tax rule.
    */
-  async getTaxRules1(ruleId: string): Promise<Result<Types.CommercePaymentsTaxRule, ApiError>> {
+  async getTaxRules1(ruleId: string): Promise<Result<Types.CommercePaymentsTaxRuleDto, ApiError>> {
     const url = `/api/v1/tax-rules/${ruleId}`;
 
     const result = await this.client.request({
@@ -71,7 +71,7 @@ export class CommercePaymentsTaxrulesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsTaxRuleSchema, result.data, 'response');
+      const validatedData = safeParse(Types.CommercePaymentsTaxRuleDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

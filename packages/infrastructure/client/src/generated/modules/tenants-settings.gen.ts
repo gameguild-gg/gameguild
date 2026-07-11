@@ -20,7 +20,7 @@ export class TenantsSettingsModule {
    *
    * Retrieves comprehensive tenant settings including system configuration, feature toggles, business rules, and operational preferences.
    */
-  async getTenantsSettings(tenantId: string): Promise<Result<Types.IdentityTenantsTenantSettings, ApiError>> {
+  async getTenantsSettings(tenantId: string): Promise<Result<Types.IdentityTenantsTenantSettingsDto, ApiError>> {
     const url = `/v1/tenants/${tenantId}/settings`;
 
     const result = await this.client.request({
@@ -31,7 +31,7 @@ export class TenantsSettingsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityTenantsTenantSettingsSchema, result.data, 'response');
+      const validatedData = safeParse(Types.IdentityTenantsTenantSettingsDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

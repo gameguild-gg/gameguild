@@ -24,7 +24,7 @@ export class UsersProfilesModule {
     search?: string;
     sortBy?: string;
     sortDirection?: string;
-  }): Promise<Result<Types.PagedResult, ApiError>> {
+  }): Promise<Result<Types.PagedResultOfGameGuildIdentityUsersUserProfileDto, ApiError>> {
     const url = '/v1/users/profiles';
 
     const result = await this.client.request({
@@ -36,7 +36,7 @@ export class UsersProfilesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultSchema, result.data, 'response');
+      const validatedData = safeParse(Types.PagedResultOfGameGuildIdentityUsersUserProfileDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -46,7 +46,7 @@ export class UsersProfilesModule {
   /**
    * Get user profile by user ID
    */
-  async getUsersProfile(userId: string): Promise<Result<Types.IdentityUsersUserProfile, ApiError>> {
+  async getUsersProfile(userId: string): Promise<Result<Types.IdentityUsersUserProfileDto, ApiError>> {
     const url = `/v1/users/${userId}/profile`;
 
     const result = await this.client.request({
@@ -57,7 +57,7 @@ export class UsersProfilesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserProfileSchema, result.data, 'response');
+      const validatedData = safeParse(Types.IdentityUsersUserProfileDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

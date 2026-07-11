@@ -33,7 +33,7 @@ export class UsersNotificationsModule {
       fromDate?: string;
       toDate?: string;
     },
-  ): Promise<Result<Types.PagedResult, ApiError>> {
+  ): Promise<Result<Types.PagedResultOfGameGuildIdentityUsersUserNotificationDto, ApiError>> {
     const url = `/v1/users/${userId}/notifications`;
 
     const result = await this.client.request({
@@ -45,7 +45,7 @@ export class UsersNotificationsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultSchema, result.data, 'response');
+      const validatedData = safeParse(Types.PagedResultOfGameGuildIdentityUsersUserNotificationDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

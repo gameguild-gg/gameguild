@@ -359,7 +359,7 @@ export class TenantsModule {
   async getTenantsAuditLog(
     tenantId: string,
     query?: { startDate?: string; endDate?: string; action?: string; actorId?: string; page?: number; pageSize?: number },
-  ): Promise<Result<Types.PagedResult, ApiError>> {
+  ): Promise<Result<Types.PagedResultOfGameGuildIdentityTenantsTenantAuditLogEntry, ApiError>> {
     const url = `/v1/tenants/${tenantId}/audit-log`;
 
     const result = await this.client.request({
@@ -371,7 +371,7 @@ export class TenantsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultSchema, result.data, 'response');
+      const validatedData = safeParse(Types.PagedResultOfGameGuildIdentityTenantsTenantAuditLogEntrySchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -383,7 +383,12 @@ export class TenantsModule {
    *
    * Retrieves a paginated list of all tenant organizations accessible to the requesting user.
    */
-  async getTenants(query?: { page?: number; pageSize?: number; status?: string; searchTerm?: string }): Promise<Result<Types.PagedResult, ApiError>> {
+  async getTenants(query?: {
+    page?: number;
+    pageSize?: number;
+    status?: string;
+    searchTerm?: string;
+  }): Promise<Result<Types.PagedResultOfGameGuildIdentityTenantsTenant, ApiError>> {
     const url = '/v1/tenants';
 
     const result = await this.client.request({
@@ -395,7 +400,7 @@ export class TenantsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultSchema, result.data, 'response');
+      const validatedData = safeParse(Types.PagedResultOfGameGuildIdentityTenantsTenantSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

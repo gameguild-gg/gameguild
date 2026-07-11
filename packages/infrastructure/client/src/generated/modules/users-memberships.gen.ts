@@ -116,6 +116,93 @@ export class UsersMembershipsModule {
   }
 
   /**
+   * Resend tenant membership invite
+   */
+  async postUsersMembershipsInviteResend(
+    userId: string,
+    tenantId: string,
+    body: Types.IdentityTenantsUpdateUserMembershipInviteInput,
+  ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>> {
+    const url = `/v1/users/${userId}/memberships/${tenantId}/invite:resend`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityTenantsUpdateTenantMemberInviteOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Cancel tenant membership invite
+   */
+  async postUsersMembershipsInviteCancel(
+    userId: string,
+    tenantId: string,
+    body: Types.IdentityTenantsUpdateUserMembershipInviteInput,
+  ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>> {
+    const url = `/v1/users/${userId}/memberships/${tenantId}/invite:cancel`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityTenantsUpdateTenantMemberInviteOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Accept tenant membership invite
+   */
+  async postUsersMembershipsInviteAccept(
+    userId: string,
+    tenantId: string,
+    body: Types.IdentityTenantsUpdateUserMembershipInviteInput,
+  ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>> {
+    const url = `/v1/users/${userId}/memberships/${tenantId}/invite:accept`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityTenantsUpdateTenantMemberInviteOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Get count of user's active tenant memberships
    */
   async getUsersMembershipsCount(userId: string): Promise<Result<Types.IdentityTenantsMembershipCountOutput, ApiError>> {

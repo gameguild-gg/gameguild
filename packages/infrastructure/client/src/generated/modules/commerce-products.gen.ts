@@ -147,7 +147,7 @@ export class CommerceProductsModule {
     take?: number;
     sortBy?: string;
     sortDirection?: string;
-  }): Promise<Result<Types.PagedResult, ApiError>> {
+  }): Promise<Result<Types.PagedResultOfGameGuildCommerceProductsProductDto, ApiError>> {
     const url = '/v1/products';
 
     const result = await this.client.request({
@@ -159,7 +159,7 @@ export class CommerceProductsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultSchema, result.data, 'response');
+      const validatedData = safeParse(Types.PagedResultOfGameGuildCommerceProductsProductDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

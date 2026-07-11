@@ -153,6 +153,72 @@ describe('OpenAPI Spec Normalizer', () => {
     expect(userListOutput.properties.users.items.$ref).toBe('#/components/schemas/User');
   });
 
+  it('should preserve distinct entity and DTO schemas when their normalized names collide', () => {
+    const spec: OpenApiSpec = {
+      ...simpleSpec,
+      components: {
+        schemas: {
+          Identity_Users_UserProfile: {
+            type: 'object',
+            properties: { visibility: { type: 'string' } },
+          },
+          Identity_Users_UserProfileDto: {
+            type: 'object',
+            properties: { timeZone: { type: 'string' } },
+          },
+          ProfileEnvelope: {
+            type: 'object',
+            properties: {
+              entity: { $ref: '#/components/schemas/Identity_Users_UserProfile' },
+              dto: { $ref: '#/components/schemas/Identity_Users_UserProfileDto' },
+            },
+          },
+        },
+      },
+    } as OpenApiSpec;
+
+    const normalized = normalizeSpec(spec);
+    const schemas = (normalized.components as any)?.schemas;
+
+    expect(schemas).toHaveProperty('IdentityUsersUserProfile');
+    expect(schemas).toHaveProperty('IdentityUsersUserProfileDto');
+    expect(schemas.ProfileEnvelope.properties.entity.$ref).toBe('#/components/schemas/IdentityUsersUserProfile');
+    expect(schemas.ProfileEnvelope.properties.dto.$ref).toBe('#/components/schemas/IdentityUsersUserProfileDto');
+  });
+
+  it('should preserve the generic argument when multiple paged result schemas collide', () => {
+    const profilePage = 'PagedResult`1[[GameGuild_Identity_Users_UserProfileDto, GameGuild.Identity.Users]]';
+    const notificationPage = 'PagedResult`1[[GameGuild_Identity_Users_UserNotificationDto, GameGuild.Identity.Users]]';
+    const spec: OpenApiSpec = {
+      ...simpleSpec,
+      components: {
+        schemas: {
+          [profilePage]: { type: 'object' },
+          [notificationPage]: { type: 'object' },
+          PageEnvelope: {
+            type: 'object',
+            properties: {
+              profiles: { $ref: `#/components/schemas/${profilePage}` },
+              notifications: { $ref: `#/components/schemas/${notificationPage}` },
+            },
+          },
+        },
+      },
+    } as OpenApiSpec;
+
+    const normalized = normalizeSpec(spec);
+    const schemas = (normalized.components as any)?.schemas;
+
+    expect(schemas).toHaveProperty('PagedResultOfGameGuildIdentityUsersUserProfileDto');
+    expect(schemas).toHaveProperty('PagedResultOfGameGuildIdentityUsersUserNotificationDto');
+    expect(schemas.PageEnvelope.properties.profiles.$ref).toBe(
+      '#/components/schemas/PagedResultOfGameGuildIdentityUsersUserProfileDto',
+    );
+    expect(schemas.PageEnvelope.properties.notifications.$ref).toBe(
+      '#/components/schemas/PagedResultOfGameGuildIdentityUsersUserNotificationDto',
+    );
+  });
+
   it('should preserve the original spec structure', () => {
     const spec: OpenApiSpec = { ...simpleSpec };
     const originalInfo = spec.info;

@@ -109,8 +109,56 @@ export class AiModule {
 
   /**
    */
+  async postAiEmail(body: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+    const url = '/v1/ai/email';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.AIAiCompletionOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postAiGenerateContentReport(body: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = '/v1/ai/generate-content/report';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.AIAiCompletionOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAiReport(body: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+    const url = '/v1/ai/report';
 
     // Validate request body
     const validatedBody = safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');

@@ -17,7 +17,7 @@ export class GamejamsModule {
 
   /**
    */
-  async getApiGameJams(query?: { status?: Types.GameJamsJamStatus; skip?: number; take?: number }): Promise<Result<Array<Types.GameJamsJam>, ApiError>> {
+  async getApiGameJams(query?: { status?: Types.GameJamsJamStatus; skip?: number; take?: number }): Promise<Result<Array<Types.GameJamsJamDto>, ApiError>> {
     const url = '/api/game-jams';
 
     const result = await this.client.request({
@@ -27,12 +27,12 @@ export class GamejamsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.GameJamsJam>, ApiError>;
+    return result as Result<Array<Types.GameJamsJamDto>, ApiError>;
   }
 
   /**
    */
-  async postApiGameJams(body: Types.GameJamsCreateJamInput): Promise<Result<Types.GameJamsJam, ApiError>> {
+  async postApiGameJams(body: Types.GameJamsCreateJamInput): Promise<Result<Types.GameJamsJamDto, ApiError>> {
     const url = '/api/game-jams';
 
     // Validate request body
@@ -47,7 +47,7 @@ export class GamejamsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.GameJamsJamSchema, result.data, 'response');
+      const validatedData = safeParse(Types.GameJamsJamDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -160,7 +160,10 @@ export class GamejamsModule {
 
   /**
    */
-  async postApiGameJamsSubmissionsScores(submissionId: string, body: Types.GameJamsScoreJamSubmissionInput): Promise<Result<Types.GameJamsJamScore, ApiError>> {
+  async postApiGameJamsSubmissionsScores(
+    submissionId: string,
+    body: Types.GameJamsScoreJamSubmissionInput,
+  ): Promise<Result<Types.GameJamsJamScoreDto, ApiError>> {
     const url = `/api/game-jams/submissions/${submissionId}/scores`;
 
     // Validate request body
@@ -175,7 +178,7 @@ export class GamejamsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.GameJamsJamScoreSchema, result.data, 'response');
+      const validatedData = safeParse(Types.GameJamsJamScoreDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
