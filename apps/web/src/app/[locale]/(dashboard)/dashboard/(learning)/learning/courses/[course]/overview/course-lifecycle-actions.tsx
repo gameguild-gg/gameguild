@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@game-guild/ui/components/button';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -18,6 +18,11 @@ export function CourseLifecycleActions({ courseId, status, locale }: CourseLifec
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(status);
+
+  useEffect(() => {
+    setCurrentStatus(status);
+  }, [status]);
 
   function handleAction(action: 'publish' | 'unpublish' | 'archive' | 'delete') {
     setError(null);
@@ -44,6 +49,9 @@ export function CourseLifecycleActions({ courseId, status, locale }: CourseLifec
       if (result && !result.success) {
         setError(result.error);
       } else {
+        if (action === 'publish') setCurrentStatus('published');
+        if (action === 'unpublish') setCurrentStatus('draft');
+        if (action === 'archive') setCurrentStatus('archived');
         router.refresh();
       }
     });
@@ -73,7 +81,7 @@ export function CourseLifecycleActions({ courseId, status, locale }: CourseLifec
     },
   };
 
-  const config = statusConfig[status];
+  const config = statusConfig[currentStatus];
 
   return (
     <div className="flex flex-col gap-3">
@@ -86,13 +94,13 @@ export function CourseLifecycleActions({ courseId, status, locale }: CourseLifec
           <span className="text-sm text-muted-foreground">{config.message}</span>
         </div>
         <div className="flex items-center gap-2">
-          {status === 'draft' && (
+          {currentStatus === 'draft' && (
             <Button size="sm" onClick={() => handleAction('publish')} disabled={isPending}>
               {isPending ? <Loader2 className="mr-1 size-3 animate-spin" /> : <Eye className="mr-1 size-3" />}
               Publish
             </Button>
           )}
-          {status === 'published' && (
+          {currentStatus === 'published' && (
             <>
               <Button size="sm" variant="outline" onClick={() => handleAction('unpublish')} disabled={isPending}>
                 {isPending ? <Loader2 className="mr-1 size-3 animate-spin" /> : <EyeOff className="mr-1 size-3" />}
@@ -104,7 +112,7 @@ export function CourseLifecycleActions({ courseId, status, locale }: CourseLifec
               </Button>
             </>
           )}
-          {status === 'archived' && (
+          {currentStatus === 'archived' && (
             <Button size="sm" variant="outline" onClick={() => handleAction('publish')} disabled={isPending}>
               {isPending ? <Loader2 className="mr-1 size-3 animate-spin" /> : <Eye className="mr-1 size-3" />}
               Re-publish

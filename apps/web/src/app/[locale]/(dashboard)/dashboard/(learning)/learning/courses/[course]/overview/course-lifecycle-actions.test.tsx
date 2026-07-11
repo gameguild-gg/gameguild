@@ -42,10 +42,12 @@ describe('CourseLifecycleActions', () => {
     await waitFor(() => {
       expect(publishCourse).toHaveBeenCalledWith('course-1');
     });
+    expect(await screen.findByText('Published')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /unpublish/i })).toBeInTheDocument();
     expect(refreshMock).toHaveBeenCalled();
   });
 
-  it('unpublishes and archives published courses', async () => {
+  it('unpublishes published courses and updates the lifecycle controls', async () => {
     const user = userEvent.setup();
 
     render(<CourseLifecycleActions courseId="course-1" status="published" locale="en-US" />);
@@ -54,11 +56,21 @@ describe('CourseLifecycleActions', () => {
     await waitFor(() => {
       expect(unpublishCourse).toHaveBeenCalledWith('course-1');
     });
+    expect(await screen.findByText('Draft')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^publish$/i })).toBeInTheDocument();
+  });
+
+  it('archives published courses and updates the lifecycle controls', async () => {
+    const user = userEvent.setup();
+
+    render(<CourseLifecycleActions courseId="course-1" status="published" locale="en-US" />);
 
     await user.click(screen.getByRole('button', { name: /^archive$/i }));
     await waitFor(() => {
       expect(archiveCourse).toHaveBeenCalledWith('course-1');
     });
+    expect(await screen.findByText('Archived')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /re-publish/i })).toBeInTheDocument();
   });
 
   it('republishes archived courses', async () => {

@@ -38,10 +38,10 @@ export default function AccessSettingsPage({ params }: { params: Promise<{ local
 
   useEffect(() => {
     params.then(async (p) => {
-      setCourseId(p.course);
       try {
         const data = await fetchCourse(p.course);
         if (data) {
+          setCourseId(data.id);
           setCourse(data);
           // Map backend visibility format to Select values
           const visMap: Record<string, string> = { public: 'Public', private: 'Private', unlisted: 'Internal' };
