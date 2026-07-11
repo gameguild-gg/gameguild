@@ -1,4 +1,5 @@
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Abstractions;
 using GameGuild.Learning.Attributes;
 using GameGuild.Learning.Experience.Social.Services;
@@ -180,6 +181,7 @@ public class ReviewsController : LearningControllerBase
     /// Approves a review (admin only)
     /// </summary>
     [HttpPost("reviews/{id:guid}/approve")]
+    [RequireContentTypePermission<CourseReview>(PermissionType.Edit)]
     [ProducesResponseType(typeof(CourseReviewDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ApproveReview(Guid id, CancellationToken cancellationToken = default)
@@ -198,11 +200,38 @@ public class ReviewsController : LearningControllerBase
     /// Features a review (admin only)
     /// </summary>
     [HttpPost("reviews/{id:guid}/feature")]
+    [RequireContentTypePermission<CourseReview>(PermissionType.Edit)]
     [ProducesResponseType(typeof(CourseReviewDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> FeatureReview(Guid id, CancellationToken cancellationToken = default)
     {
         var result = await _reviewService.FeatureReviewAsync(id, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            return NotFound(result.Error);
+        }
+
+        return Ok(MapToReviewDto(result.Value));
+    }
+
+    /// <summary>
+    /// Updates review approval and storefront featured state.
+    /// </summary>
+    [HttpPatch("reviews/{id:guid}/moderation")]
+    [RequireContentTypePermission<CourseReview>(PermissionType.Edit)]
+    [ProducesResponseType(typeof(CourseReviewDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateReviewModeration(
+        Guid id,
+        [FromBody] UpdateReviewModerationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _reviewService.UpdateReviewModerationAsync(
+            id,
+            request.IsApproved,
+            request.IsFeatured,
+            cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -225,3 +254,5 @@ public class ReviewsController : LearningControllerBase
             review.IsFeatured,
             review.CreatedAt);
 }
+
+public sealed record UpdateReviewModerationRequest(bool IsApproved, bool IsFeatured);
