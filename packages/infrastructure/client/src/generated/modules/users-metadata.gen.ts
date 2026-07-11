@@ -18,7 +18,7 @@ export class UsersMetadataModule {
   /**
    * Get user metadata by user ID
    */
-  async getUsersMetadata(userId: string): Promise<Result<Types.IdentityUsersUserMetadata, ApiError>> {
+  async getUsersMetadata(userId: string): Promise<Result<Types.IdentityUsersUserMetadataDto, ApiError>> {
     const url = `/v1/users/${userId}/metadata`;
 
     const result = await this.client.request({
@@ -29,7 +29,7 @@ export class UsersMetadataModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserMetadataSchema, result.data, 'response');
+      const validatedData = safeParse(Types.IdentityUsersUserMetadataDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

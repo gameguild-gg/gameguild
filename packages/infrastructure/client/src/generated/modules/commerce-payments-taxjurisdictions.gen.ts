@@ -55,7 +55,7 @@ export class CommercePaymentsTaxjurisdictionsModule {
    *
    * Retrieves detailed information for a specific tax jurisdiction.
    */
-  async getTaxJurisdictions1(jurisdictionId: string): Promise<Result<Types.CommercePaymentsTaxJurisdiction, ApiError>> {
+  async getTaxJurisdictions1(jurisdictionId: string): Promise<Result<Types.CommercePaymentsTaxJurisdictionDto, ApiError>> {
     const url = `/api/v1/tax-jurisdictions/${jurisdictionId}`;
 
     const result = await this.client.request({
@@ -66,7 +66,7 @@ export class CommercePaymentsTaxjurisdictionsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsTaxJurisdictionSchema, result.data, 'response');
+      const validatedData = safeParse(Types.CommercePaymentsTaxJurisdictionDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

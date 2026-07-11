@@ -25,7 +25,7 @@ export class CommerceProductsPromocodesModule {
     searchTerm?: string;
     skip?: number;
     take?: number;
-  }): Promise<Result<Types.PagedResult, ApiError>> {
+  }): Promise<Result<Types.PagedResultOfGameGuildCommerceProductsPromoCodeDto, ApiError>> {
     const url = '/v1/promo-codes';
 
     const result = await this.client.request({
@@ -37,7 +37,7 @@ export class CommerceProductsPromocodesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultSchema, result.data, 'response');
+      const validatedData = safeParse(Types.PagedResultOfGameGuildCommerceProductsPromoCodeDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
