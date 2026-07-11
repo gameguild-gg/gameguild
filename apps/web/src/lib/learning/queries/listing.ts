@@ -70,6 +70,7 @@ export interface CourseTestimonial {
   title: string;
   content: string;
   featured: boolean;          // Show on listing page
+  approved: boolean;          // Approved for public display
   verified: boolean;          // Verified purchase
   helpful: number;            // Helpful votes count
   createdAt: string;
@@ -368,6 +369,7 @@ function mapReviewToTestimonial(dto: CourseReviewApiDto): CourseTestimonial {
     title: dto.title ?? 'Course review',
     content: dto.content ?? '',
     featured: dto.isFeatured ?? false,
+    approved: dto.isApproved ?? false,
     verified: dto.isVerifiedPurchase ?? false,
     helpful: dto.helpfulCount ?? 0,
     createdAt,

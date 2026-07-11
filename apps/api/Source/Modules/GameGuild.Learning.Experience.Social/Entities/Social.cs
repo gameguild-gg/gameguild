@@ -44,8 +44,15 @@ public class CourseReview : EntityBase
     }
 
     public void MarkHelpful() => HelpfulCount++;
-    public void Approve() { IsApproved = true; UpdatedAt = SystemClock.UtcNow; }
-    public void Feature() { IsFeatured = true; UpdatedAt = SystemClock.UtcNow; }
+    public void Approve() => SetModeration(true, IsFeatured);
+    public void Feature() => SetModeration(IsApproved, true);
+
+    public void SetModeration(bool isApproved, bool isFeatured)
+    {
+        IsApproved = isApproved;
+        IsFeatured = isFeatured;
+        UpdatedAt = SystemClock.UtcNow;
+    }
 }
 
 /// <summary>

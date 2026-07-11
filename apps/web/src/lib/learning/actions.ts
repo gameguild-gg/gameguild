@@ -3,6 +3,7 @@
 import { getToken } from '@/auth';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
 import type { AssessmentType } from '@/lib/learning/queries/assessments';
+import type { CourseIntegrationSettings, CourseNotificationSettings } from '@/lib/learning/queries/settings';
 import type { LearningCoursesProgramContentType } from '@/lib/learning/types';
 import {
   createServerClient,
@@ -498,6 +499,114 @@ function normalizeStringList(value: string | string[] | undefined): string[] {
   return [];
 }
 
+type NotificationSettingsInput = Omit<CourseNotificationSettings, 'courseId' | 'updatedAt'>;
+type IntegrationSettingsInput = Omit<CourseIntegrationSettings, 'courseId' | 'updatedAt'>;
+
+async function updateCourseMetadataSection(
+  courseId: string,
+  key: 'notificationSettings' | 'integrationSettings',
+  value: unknown,
+): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const { programs } = createCourseModules();
+    const courseResult = await programs.getCourses1(resolvedCourseId);
+    if (!courseResult.ok) return { success: false, error: extractError(courseResult.error) };
+
+    const metadata = parseMetadata(courseResult.data.metadata);
+    metadata[key] = value;
+    const result = await programs.putCourses(resolvedCourseId, {
+      metadata: JSON.stringify(metadata),
+    } satisfies LearningCoursesUpdateProgram);
+
+    if (!result.ok) return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(courseId, resolvedCourseId, `settings/${key === 'notificationSettings' ? 'notifications' : 'integrations'}`);
+    return { success: true, data: null };
+  } catch (error) {
+    return { success: false, error: `Unexpected error: ${error instanceof Error ? error.message : String(error)}` };
+  }
+}
+
+export async function updateCourseNotificationSettings(
+  courseId: string,
+  input: NotificationSettingsInput,
+): Promise<ActionResult<null>> {
+  const classReminders = [...new Set(input.studentNotifications.classReminders)]
+    .filter((minutes) => Number.isFinite(minutes) && minutes >= 0 && minutes <= 10080)
+    .sort((a, b) => b - a);
+  const lowRatingThreshold = Math.min(5, Math.max(1, Math.round(input.instructorNotifications.lowRatingThreshold)));
+  const templates = input.templates
+    .map((template) => ({
+      id: template.id.trim(),
+      type: template.type.trim(),
+      subject: template.subject.trim(),
+      enabled: Boolean(template.enabled),
+    }))
+    .filter((template) => template.id && template.type && template.subject)
+    .slice(0, 20);
+
+  return updateCourseMetadataSection(courseId, 'notificationSettings', {
+    studentNotifications: {
+      ...input.studentNotifications,
+      classReminders,
+    },
+    instructorNotifications: {
+      ...input.instructorNotifications,
+      lowRatingThreshold,
+    },
+    templates,
+  });
+}
+
+export async function updateCourseIntegrationSettings(
+  courseId: string,
+  input: IntegrationSettingsInput,
+): Promise<ActionResult<null>> {
+  for (const webhook of input.webhooks) {
+    try {
+      const url = new URL(webhook.url);
+      if (!['http:', 'https:'].includes(url.protocol)) throw new Error('invalid protocol');
+    } catch {
+      return { success: false, error: 'Webhook URLs must use http or https.' };
+    }
+  }
+
+  const integrations = input.integrations.slice(0, 20).map((integration) => ({
+    ...integration,
+    id: integration.id.trim(),
+    name: integration.name.trim(),
+    enabled: Boolean(integration.enabled),
+    status: integration.enabled ? integration.status : 'disconnected' as const,
+  })).filter((integration) => integration.id && integration.name);
+  const webhooks = input.webhooks.slice(0, 20).map((webhook) => ({
+    id: webhook.id.trim(),
+    url: webhook.url.trim(),
+    events: [...new Set(webhook.events.map((event) => event.trim()).filter(Boolean))],
+    enabled: Boolean(webhook.enabled),
+  }));
+
+  return updateCourseMetadataSection(courseId, 'integrationSettings', { integrations, webhooks });
+}
+
+export async function updateCourseReviewModeration(
+  courseId: string,
+  reviewId: string,
+  isApproved: boolean,
+  isFeatured: boolean,
+): Promise<ActionResult<null>> {
+  const result = await learningApiRequest<unknown>(`/api/social/reviews/${reviewId}/moderation`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isApproved, isFeatured }),
+  });
+
+  if (!result.success) return { success: false, error: result.error };
+
+  revalidatePath(`/dashboard/learning/courses/${courseId}/listing/testimonials`);
+  revalidatePath(`/courses/${courseId}`);
+  return { success: true, data: null };
+}
+
 export async function updateCourseFaq(courseId: string, items: LandingFaqInput[]): Promise<ActionResult<null>> {
   const sanitizedItems = items
     .map((item) => ({
@@ -909,6 +1018,52 @@ export async function createCertificateTemplate(input: CreateCertificateTemplate
 
     revalidatePath(`/dashboard/learning/courses/${input.courseId}/certificates`);
     return { success: true, data: { id: result.data.id } };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export interface UpdateCertificateTemplateInput {
+  courseId: string;
+  templateId: string;
+  name: string;
+  description?: string | null;
+  templateHtml: string;
+  templateStyles?: string | null;
+  isDefault: boolean;
+  isActive: boolean;
+}
+
+export async function updateCertificateTemplate(input: UpdateCertificateTemplateInput): Promise<ActionResult<null>> {
+  const name = input.name.trim();
+  const templateHtml = input.templateHtml.trim();
+
+  if (name.length < 3) {
+    return { success: false, error: 'Template name must be at least 3 characters.' };
+  }
+
+  if (templateHtml.length < 20) {
+    return { success: false, error: 'Template HTML must be at least 20 characters.' };
+  }
+
+  try {
+    const result = await learningApiRequest<CertificateTemplateActionDto>(`/api/certificates/templates/${input.templateId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        name,
+        description: input.description?.trim() || null,
+        templateHtml,
+        templateStyles: input.templateStyles?.trim() || null,
+        isDefault: input.isDefault,
+        isActive: input.isActive,
+      }),
+    });
+
+    if (!result.success) return result;
+
+    revalidatePath(`/dashboard/learning/courses/${input.courseId}/certificates`);
+    revalidatePath(`/dashboard/learning/courses/${input.courseId}/certificates/${input.templateId}`);
+    return { success: true, data: null };
   } catch (e) {
     return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
   }
