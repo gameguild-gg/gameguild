@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useMemo, useState, useTransition } from 'react';
-import { manualEnrollStudent } from '@/lib/learning/actions';
+import Link from 'next/link';
+import { manualEnrollStudent, removeCourseStudents, sendCourseStudentMessage } from '@/lib/learning/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
+import { Textarea } from '@game-guild/ui/components/textarea';
 import { Label } from '@game-guild/ui/components/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
@@ -18,6 +20,7 @@ import { Download, Eye, Loader2, Mail, MoreHorizontal, Search, TrendingUp, UserM
 
 interface Student {
   id: string;
+  userId: string;
   name: string;
   email: string;
   completionPercent: number;
@@ -49,7 +52,8 @@ function StatusBadge({ student }: { student: Student }) {
   return <Badge variant={c.variant}>{c.label}</Badge>;
 }
 
-export function StudentTable({ courseId, students, total }: { courseId: string; students: Student[]; total: number }) {
+export function StudentTable({ courseId, students }: { courseId: string; students: Student[]; total: number }) {
+  const [items, setItems] = useState(students);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -58,6 +62,15 @@ export function StudentTable({ courseId, students, total }: { courseId: string; 
   const [manualUserId, setManualUserId] = useState('');
   const [manualCohortId, setManualCohortId] = useState('');
   const [manualEnrollError, setManualEnrollError] = useState<string | null>(null);
+  const [removeOpen, setRemoveOpen] = useState(false);
+  const [removeTargets, setRemoveTargets] = useState<Student[]>([]);
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [messageTargets, setMessageTargets] = useState<Student[]>([]);
+  const [messageSubject, setMessageSubject] = useState('');
+  const [messageBody, setMessageBody] = useState('');
+  const [progressStudent, setProgressStudent] = useState<Student | null>(null);
+  const [operationError, setOperationError] = useState<string | null>(null);
+  const [operationStatus, setOperationStatus] = useState<string | null>(null);
 
   const submitManualEnrollment = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -82,7 +95,7 @@ export function StudentTable({ courseId, students, total }: { courseId: string; 
   };
 
   const filtered = useMemo(() => {
-    let result = students;
+    let result = items;
 
     if (search) {
       const q = search.toLowerCase();
@@ -96,7 +109,12 @@ export function StudentTable({ courseId, students, total }: { courseId: string; 
     }
 
     return result;
-  }, [students, search, statusFilter]);
+  }, [items, search, statusFilter]);
+
+  const selectedStudents = useMemo(
+    () => items.filter((student) => selectedIds.has(student.id)),
+    [items, selectedIds],
+  );
 
   const toggleAll = () => {
     if (selectedIds.size === filtered.length) {
@@ -115,6 +133,77 @@ export function StudentTable({ courseId, students, total }: { courseId: string; 
     });
   };
 
+  const requestRemoval = (targets: Student[]) => {
+    setOperationError(null);
+    setRemoveTargets(targets);
+    setRemoveOpen(true);
+  };
+
+  const confirmRemoval = () => {
+    startTransition(async () => {
+      const result = await removeCourseStudents(courseId, removeTargets.map((student) => student.userId));
+      if (!result.success) {
+        setOperationError(result.error);
+        return;
+      }
+
+      const removedIds = new Set(removeTargets.map((student) => student.id));
+      setItems((current) => current.filter((student) => !removedIds.has(student.id)));
+      setSelectedIds(new Set());
+      setRemoveOpen(false);
+      setOperationStatus(`${result.data.removed} ${result.data.removed === 1 ? 'student' : 'students'} removed.`);
+    });
+  };
+
+  const openMessageDialog = (targets: Student[]) => {
+    setOperationError(null);
+    setMessageTargets(targets);
+    setMessageOpen(true);
+  };
+
+  const submitMessage = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setOperationError(null);
+    startTransition(async () => {
+      const result = await sendCourseStudentMessage({
+        courseId,
+        userIds: messageTargets.map((student) => student.userId),
+        subject: messageSubject,
+        message: messageBody,
+      });
+      if (!result.success) {
+        setOperationError(result.error);
+        return;
+      }
+
+      setMessageOpen(false);
+      setMessageSubject('');
+      setMessageBody('');
+      setOperationStatus(`Message sent to ${result.data.sent} ${result.data.sent === 1 ? 'student' : 'students'}.`);
+    });
+  };
+
+  const exportStudents = () => {
+    const escape = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`;
+    const rows = [
+      ['Name', 'Email', 'Status', 'Progress', 'Enrolled', 'Last active'],
+      ...filtered.map((student) => [
+        student.name,
+        student.email,
+        getStatusLabel(student),
+        student.completionPercent,
+        student.enrolledAt,
+        student.lastActivity,
+      ]),
+    ];
+    const url = URL.createObjectURL(new Blob([rows.map((row) => row.map(escape).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `course-${courseId}-students.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -122,7 +211,7 @@ export function StudentTable({ courseId, students, total }: { courseId: string; 
           <div>
             <CardTitle>Enrolled Students</CardTitle>
             <CardDescription>
-              {total > 0 ? `${total} students enrolled` : 'No students enrolled yet'}
+              {items.length > 0 ? `${items.length} students enrolled` : 'No students enrolled yet'}
             </CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -176,7 +265,7 @@ export function StudentTable({ courseId, students, total }: { courseId: string; 
                 </form>
               </DialogContent>
             </Dialog>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={exportStudents}>
               <Download className="mr-2 size-4" />
               Export
             </Button>
@@ -213,11 +302,11 @@ export function StudentTable({ courseId, students, total }: { courseId: string; 
           <div className="mb-4 flex items-center justify-between rounded-lg bg-muted/50 p-3">
             <span className="text-sm">{selectedIds.size} student(s) selected</span>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => openMessageDialog(selectedStudents)}>
                 <Mail className="mr-2 size-4" />
                 Send Message
               </Button>
-              <Button variant="outline" size="sm" className="text-destructive">
+              <Button variant="outline" size="sm" className="text-destructive" onClick={() => requestRemoval(selectedStudents)}>
                 <UserMinus className="mr-2 size-4" />
                 Remove
               </Button>
@@ -302,21 +391,23 @@ export function StudentTable({ courseId, students, total }: { courseId: string; 
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="size-8">
+                              <Button variant="ghost" size="icon" className="size-8" aria-label={`Actions for ${student.name}`}>
                                 <MoreHorizontal className="size-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 size-4" />
-                                View Profile
+                              <DropdownMenuItem asChild>
+                                <Link href={`/dashboard/community/members/users/${student.userId}`}>
+                                  <Eye className="mr-2 size-4" />
+                                  View profile
+                                </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => setProgressStudent(student)}>
                                 <TrendingUp className="mr-2 size-4" />
-                                View Progress
+                                View progress
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive">
+                              <DropdownMenuItem className="text-destructive" onSelect={() => requestRemoval([student])}>
                                 <UserMinus className="mr-2 size-4" />
                                 Remove from Course
                               </DropdownMenuItem>
@@ -332,12 +423,80 @@ export function StudentTable({ courseId, students, total }: { courseId: string; 
 
             <div className="mt-4 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Showing {filtered.length} of {students.length} students
+                Showing {filtered.length} of {items.length} students
               </p>
             </div>
           </>
         )}
       </CardContent>
+
+      {operationStatus && <p role="status" className="sr-only">{operationStatus}</p>}
+      {operationError && <p role="alert" className="px-6 pb-4 text-sm text-destructive">{operationError}</p>}
+
+      <Dialog open={removeOpen} onOpenChange={setRemoveOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove students</DialogTitle>
+            <DialogDescription>
+              Remove {removeTargets.length} selected {removeTargets.length === 1 ? 'student' : 'students'} from this course. Their course access will end immediately.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRemoveOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmRemoval} disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+              Confirm removal
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={messageOpen} onOpenChange={setMessageOpen}>
+        <DialogContent>
+          <form onSubmit={submitMessage} className="space-y-5">
+            <DialogHeader>
+              <DialogTitle>Message students</DialogTitle>
+              <DialogDescription>Send an in-app notification to {messageTargets.length} selected {messageTargets.length === 1 ? 'student' : 'students'}.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="student-message-subject">Subject</Label>
+                <Input id="student-message-subject" value={messageSubject} onChange={(event) => setMessageSubject(event.target.value)} required minLength={3} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="student-message-body">Message</Label>
+                <Textarea id="student-message-body" value={messageBody} onChange={(event) => setMessageBody(event.target.value)} required />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setMessageOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={isPending || messageSubject.trim().length < 3 || !messageBody.trim()}>
+                {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Send message
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(progressStudent)} onOpenChange={(open) => !open && setProgressStudent(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{progressStudent?.name} progress</DialogTitle>
+            <DialogDescription>Current completion and activity for this course enrollment.</DialogDescription>
+          </DialogHeader>
+          {progressStudent && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between"><span>Completion</span><strong>{progressStudent.completionPercent}% complete</strong></div>
+              <Progress value={progressStudent.completionPercent} />
+              <div className="grid gap-3 text-sm sm:grid-cols-2">
+                <div><p className="text-muted-foreground">Enrolled</p><p>{new Date(progressStudent.enrolledAt).toLocaleDateString()}</p></div>
+                <div><p className="text-muted-foreground">Last active</p><p>{new Date(progressStudent.lastActivity).toLocaleDateString()}</p></div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

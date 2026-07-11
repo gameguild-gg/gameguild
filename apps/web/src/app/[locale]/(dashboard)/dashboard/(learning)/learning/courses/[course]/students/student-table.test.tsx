@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StudentTable } from './student-table';
-import { manualEnrollStudent } from '@/lib/learning/actions';
+import { manualEnrollStudent, removeCourseStudents, sendCourseStudentMessage } from '@/lib/learning/actions';
 
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
@@ -22,11 +22,14 @@ beforeAll(() => {
 
 vi.mock('@/lib/learning/actions', () => ({
   manualEnrollStudent: vi.fn(),
+  removeCourseStudents: vi.fn(),
+  sendCourseStudentMessage: vi.fn(),
 }));
 
 const students = [
   {
     id: 'student-1',
+    userId: 'user-1',
     name: 'Ada Learner',
     email: 'ada@example.com',
     completionPercent: 100,
@@ -36,6 +39,7 @@ const students = [
   },
   {
     id: 'student-2',
+    userId: 'user-2',
     name: 'Grace Builder',
     email: 'grace@example.com',
     completionPercent: 60,
@@ -45,6 +49,7 @@ const students = [
   },
   {
     id: 'student-3',
+    userId: 'user-3',
     name: 'Alan Inactive',
     email: 'alan@example.com',
     completionPercent: 20,
@@ -58,6 +63,8 @@ describe('StudentTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(manualEnrollStudent).mockResolvedValue({ success: true, data: { id: 'enrollment-1' } });
+    vi.mocked(removeCourseStudents).mockResolvedValue({ success: true, data: { removed: 1 } });
+    vi.mocked(sendCourseStudentMessage).mockResolvedValue({ success: true, data: { sent: 1 } });
   });
 
   it('filters enrolled students by search and status', async () => {
@@ -95,9 +102,9 @@ describe('StudentTable', () => {
     expect(screen.getByRole('button', { name: /send message/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^remove$/i })).toBeInTheDocument();
 
-    await user.click(screen.getAllByRole('button', { name: '' })[0]);
-    expect(screen.getByText('View Profile')).toBeInTheDocument();
-    expect(screen.getByText('View Progress')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Actions for Ada Learner' }));
+    expect(screen.getByText('View profile')).toBeInTheDocument();
+    expect(screen.getByText('View progress')).toBeInTheDocument();
     expect(screen.getByText('Remove from Course')).toBeInTheDocument();
   });
 
@@ -161,5 +168,52 @@ describe('StudentTable', () => {
 
     expect(await screen.findByText('Student was not found.')).toBeInTheDocument();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('removes selected students after explicit confirmation', async () => {
+    const user = userEvent.setup();
+    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
+
+    await user.click(within(screen.getByRole('table')).getAllByRole('checkbox')[1]);
+    await user.click(screen.getByRole('button', { name: /^remove$/i }));
+    expect(screen.getByRole('dialog', { name: 'Remove students' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Confirm removal' }));
+
+    await waitFor(() => expect(removeCourseStudents).toHaveBeenCalledWith('course-1', ['user-1']));
+    expect(await screen.findByRole('status')).toHaveTextContent('1 student removed.');
+  });
+
+  it('sends a message to selected students through the course notification flow', async () => {
+    const user = userEvent.setup();
+    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
+
+    await user.click(within(screen.getByRole('table')).getAllByRole('checkbox')[2]);
+    await user.click(screen.getByRole('button', { name: /send message/i }));
+    fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'Milestone update' } });
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'The critique session moved to Friday.' } });
+    await user.click(screen.getByRole('button', { name: 'Send message' }));
+
+    await waitFor(() => expect(sendCourseStudentMessage).toHaveBeenCalledWith({
+      courseId: 'course-1',
+      userIds: ['user-2'],
+      subject: 'Milestone update',
+      message: 'The critique session moved to Friday.',
+    }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Message sent to 1 student.');
+  });
+
+  it('links to the member profile and opens course progress details', async () => {
+    const user = userEvent.setup();
+    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
+
+    await user.click(screen.getAllByRole('button', { name: 'Actions for Ada Learner' })[0]);
+    expect(screen.getByRole('menuitem', { name: 'View profile' })).toHaveAttribute(
+      'href',
+      '/dashboard/community/members/users/user-1',
+    );
+    await user.click(screen.getByRole('menuitem', { name: 'View progress' }));
+
+    expect(screen.getByRole('dialog', { name: 'Ada Learner progress' })).toBeInTheDocument();
+    expect(screen.getByText('100% complete')).toBeInTheDocument();
   });
 });
