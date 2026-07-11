@@ -1,6 +1,11 @@
 import { ForgotPasswordForm } from '@/components/forgot-password-form';
 import { requestPasswordResetAction } from '../actions';
 
-export default function ForgotPasswordPage() {
-  return <ForgotPasswordForm onRequestReset={requestPasswordResetAction} />;
+interface Props {
+  searchParams?: Promise<{ email?: string }>;
+}
+
+export default async function ForgotPasswordPage({ searchParams }: Props) {
+  const query = await searchParams;
+  return <ForgotPasswordForm initialEmail={query?.email ?? ''} onRequestReset={requestPasswordResetAction} />;
 }

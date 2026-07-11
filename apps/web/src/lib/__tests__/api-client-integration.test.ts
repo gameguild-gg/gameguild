@@ -205,7 +205,6 @@ describe('API Client Package Integration', () => {
         socialReactions: new GeneratedApi.SocialReactionsModule(client),
         enrollments: new GeneratedApi.LearningEnrollmentsModule(client),
         gameJams: new GeneratedApi.GamejamsModule(client),
-        tags: new GeneratedApi.TagsModule(client),
       };
 
       expect(modules.ai.getAiStatus).toBeTypeOf('function');
@@ -219,7 +218,6 @@ describe('API Client Package Integration', () => {
       expect(modules.socialReactions.getApiSocialReactionsTarget).toBeTypeOf('function');
       expect(modules.enrollments.postApiLearningEnrollments).toBeTypeOf('function');
       expect(modules.gameJams.getApiGameJams).toBeTypeOf('function');
-      expect(modules.tags.getApiTags).toBeTypeOf('function');
     });
   });
 

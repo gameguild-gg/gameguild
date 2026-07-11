@@ -1,6 +1,6 @@
 import { Link } from '@/i18n/navigation';
 import { COMMUNITY_ACCESS_ROLES, getMemberAccessDirectory } from '@/lib/community';
-import { acceptPlatformInvite, cancelPlatformInvite, invitePlatformUser, resendPlatformInvite } from '@/lib/community/actions/member-access';
+import { cancelPlatformInvite, invitePlatformUser, resendPlatformInvite } from '@/lib/community/actions/member-access';
 import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
@@ -10,7 +10,7 @@ import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
-import { Check, RotateCw, ShieldCheck, UserPlus, Users, X } from 'lucide-react';
+import { RotateCw, ShieldCheck, UserPlus, Users, X } from 'lucide-react';
 import React from 'react';
 
 interface Props {
@@ -298,13 +298,6 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                             tenantId={inviteTenantId}
                             label="Resend invite"
                             icon={<RotateCw className="size-4" />}
-                          />
-                          <InviteActionButton
-                            action={acceptPlatformInvite}
-                            userId={row.member.id}
-                            tenantId={inviteTenantId}
-                            label="Accept invite"
-                            icon={<Check className="size-4" />}
                           />
                           <InviteActionButton
                             action={cancelPlatformInvite}

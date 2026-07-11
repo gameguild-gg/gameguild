@@ -1,4 +1,7 @@
-import '@testing-library/jest-dom/vitest';
+import * as matchers from '@testing-library/jest-dom/matchers';
+import { expect } from 'vitest';
+
+expect.extend(matchers);
 
 process.env.AUTH_SECRET ??= 'vitest-auth-secret-must-be-at-least-32-characters';
 

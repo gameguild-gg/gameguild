@@ -8,6 +8,9 @@ import type {
 
 const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:5295';
 const TENANT_ID = process.env.API_TENANT_ID ?? process.env.TENANT_ID ?? undefined;
+const SYSTEM_ADMIN_EMAIL = process.env.E2E_SYSTEM_ADMIN_EMAIL ?? 'admin@game-guild.com';
+const SYSTEM_ADMIN_PASSWORD = process.env.E2E_SYSTEM_ADMIN_PASSWORD ?? 'Admin123!';
+const SYSTEM_ADMIN_TENANT_ID = process.env.E2E_SYSTEM_ADMIN_TENANT_ID ?? TENANT_ID;
 
 const unwrapResult = <T>(result: Result<T, ApiError>, label: string): T => {
   if (result.ok) {
@@ -23,6 +26,9 @@ describe('Users E2E', () => {
   let email: string;
   let password: string;
   let tenantId: string | undefined = TENANT_ID;
+  let systemAdminAccessToken: string;
+  let systemAdminUserId: string;
+  let systemAdminTenantId: string | undefined;
 
   const createAuthedClient = () => createClient({
     baseUrl: BASE_URL,
@@ -33,6 +39,18 @@ describe('Users E2E', () => {
     },
     tenant: {
       getTenantId: async () => tenantId,
+    },
+  });
+
+  const createSystemAdminClient = () => createClient({
+    baseUrl: BASE_URL,
+    timeout: 10_000,
+    devtools: { enabled: false },
+    auth: {
+      getAccessToken: async () => systemAdminAccessToken,
+    },
+    tenant: {
+      getTenantId: async () => systemAdminTenantId,
     },
   });
 
@@ -135,6 +153,21 @@ describe('Users E2E', () => {
         );
       }
     }
+
+    const systemAdminSignInResult = await client.request<IdentityAuthenticationSignInOutput>({
+      method: 'POST',
+      path: '/v1/auth/sign-in',
+      body: {
+        email: SYSTEM_ADMIN_EMAIL,
+        password: SYSTEM_ADMIN_PASSWORD,
+        ...(SYSTEM_ADMIN_TENANT_ID ? { tenantId: SYSTEM_ADMIN_TENANT_ID } : {}),
+      },
+      requiresAuth: false,
+    });
+    const systemAdminSignIn = unwrapResult(systemAdminSignInResult, 'System administrator sign-in');
+    systemAdminAccessToken = systemAdminSignIn.accessToken!;
+    systemAdminUserId = systemAdminSignIn.userId || systemAdminSignIn.user?.id || '';
+    systemAdminTenantId = systemAdminSignIn.tenantId || SYSTEM_ADMIN_TENANT_ID;
   }, 30_000);
 
   it('lists users with pagination', async () => {
@@ -250,5 +283,126 @@ describe('Users E2E', () => {
     if (demoteResult.ok) {
       expect(demoteResult.data.success).toBe(true);
     }
+  });
+
+  it('manages custom roles, effective assignments, groups, and group membership end to end', async () => {
+    const authedClient = createSystemAdminClient();
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    expect(tenantId).toBeTruthy();
+    expect(userId).toBeTruthy();
+    expect(managedUserId).toBeTruthy();
+    expect(systemAdminUserId).toBeTruthy();
+
+    const roleResult = await authedClient.request<{ id: string; name: string; permissions: string[] }>({
+      method: 'POST',
+      path: '/v1/roles',
+      body: {
+        name: `E2E Course Operator ${suffix}`,
+        description: 'Created by the administration lifecycle E2E test.',
+        permissions: ['courses:read', 'courses:update', 'groups:members'],
+        tenantId: null,
+      },
+      requiresAuth: true,
+    });
+    const role = unwrapResult(roleResult, 'Create custom role');
+
+    const assignResult = await authedClient.request<{ roleId: string; userId: string; assignedBy?: string | null }>({
+      method: 'POST',
+      path: '/v1/roles/:assign',
+      body: { userId: managedUserId, roleId: role.id, expiresAt: null },
+      requiresAuth: true,
+    });
+    const assignment = unwrapResult(assignResult, 'Assign custom role');
+    expect(assignment.roleId).toBe(role.id);
+    expect(assignment.userId).toBe(managedUserId);
+    expect(assignment.assignedBy).toBe(systemAdminUserId);
+
+    const userRolesResult = await authedClient.request<Array<{ id: string; name: string; permissions: string[] }>>({
+      method: 'GET',
+      path: `/v1/roles/user/${managedUserId}`,
+      params: { includeExpired: false },
+      requiresAuth: true,
+    });
+    const userRoles = unwrapResult(userRolesResult, 'List user custom roles');
+    expect(userRoles).toEqual(expect.arrayContaining([expect.objectContaining({ id: role.id })]));
+
+    const groupResult = await authedClient.request<{
+      id: string;
+      ownerId: string;
+      status: string;
+      memberCount: number;
+    }>({
+      method: 'POST',
+      path: '/api/social/groups',
+      body: {
+        ownerId: userId,
+        tenantId,
+        name: `E2E Administration Group ${suffix}`,
+        slug: `e2e-administration-group-${suffix}`,
+        description: 'Created by the administration lifecycle E2E test.',
+        type: 'ProjectTeam',
+        visibility: 'Public',
+      },
+      requiresAuth: true,
+    });
+    const group = unwrapResult(groupResult, 'Create social group');
+    expect(group.ownerId).toBe(systemAdminUserId);
+    expect(group.memberCount).toBe(1);
+
+    const addMemberResult = await authedClient.request<{ userId: string; role: string; status: string }>({
+      method: 'POST',
+      path: `/api/social/groups/${group.id}/members`,
+      body: { userId: managedUserId, requestedRole: 'Moderator' },
+      requiresAuth: true,
+    });
+    const groupMember = unwrapResult(addMemberResult, 'Add social group member');
+    expect(groupMember).toMatchObject({ userId: managedUserId, role: 'Moderator', status: 'Active' });
+
+    const changeRoleResult = await authedClient.request<void>({
+      method: 'PUT',
+      path: `/api/social/groups/${group.id}/members/${managedUserId}/role`,
+      body: { role: 'Admin' },
+      requiresAuth: true,
+    });
+    expect(changeRoleResult.ok).toBe(true);
+
+    const groupMembersResult = await authedClient.request<Array<{ userId: string; role: string; status: string }>>({
+      method: 'GET',
+      path: `/api/social/groups/${group.id}/members`,
+      requiresAuth: true,
+    });
+    const groupMembers = unwrapResult(groupMembersResult, 'List social group members');
+    expect(groupMembers).toEqual(
+      expect.arrayContaining([expect.objectContaining({ userId: managedUserId, role: 'Admin', status: 'Active' })]),
+    );
+
+    const removeMemberResult = await authedClient.request<void>({
+      method: 'DELETE',
+      path: `/api/social/groups/${group.id}/members/${managedUserId}`,
+      requiresAuth: true,
+    });
+    expect(removeMemberResult.ok).toBe(true);
+
+    const archiveResult = await authedClient.request<void>({
+      method: 'POST',
+      path: `/api/social/groups/${group.id}/archive`,
+      requiresAuth: true,
+    });
+    expect(archiveResult.ok).toBe(true);
+
+    const removeRoleResult = await authedClient.request<void>({
+      method: 'POST',
+      path: '/v1/roles/:remove',
+      body: { userId: managedUserId, roleId: role.id },
+      requiresAuth: true,
+    });
+    expect(removeRoleResult.ok).toBe(true);
+
+    const deleteRoleResult = await authedClient.request<void>({
+      method: 'DELETE',
+      path: `/v1/roles/${role.id}`,
+      requiresAuth: true,
+    });
+    expect(deleteRoleResult.ok).toBe(true);
   });
 });
