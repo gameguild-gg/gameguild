@@ -8,6 +8,11 @@ const mocks = vi.hoisted(() => ({
   deleteCoursesContent: vi.fn(),
   getCourses1: vi.fn(),
   putCourses: vi.fn(),
+  postCoursesUsers: vi.fn(),
+  deleteCoursesUsers: vi.fn(),
+  postApiLearningEnrollments: vi.fn(),
+  clientRequest: vi.fn(),
+  createServerClient: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
@@ -19,18 +24,22 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('@game-guild/client', () => ({
-  createServerClient: vi.fn(),
+  createServerClient: mocks.createServerClient,
   GeneratedApi: {
     LearningAssessmentsModule: class {},
     LearningCoursesProgramModule: class {
       getCourses1 = mocks.getCourses1;
       putCourses = mocks.putCourses;
+      postCoursesUsers = mocks.postCoursesUsers;
+      deleteCoursesUsers = mocks.deleteCoursesUsers;
     },
     LearningCoursesProgramcontentModule: class {
       deleteCoursesContent = mocks.deleteCoursesContent;
     },
     LearningCoursesProgramlifecycleModule: class {},
-    LearningEnrollmentsModule: class {},
+    LearningEnrollmentsModule: class {
+      postApiLearningEnrollments = mocks.postApiLearningEnrollments;
+    },
   },
 }));
 
@@ -48,6 +57,8 @@ const {
   updateCourseClassStatus,
   createCourseDiscussion,
   createDiscussionReply,
+  addCourseSupportTicketMessage,
+  resolveCourseSupportTicket,
   deleteAssessmentGroup,
   updateDiscussionPin,
   updateAssessmentGroup,
@@ -55,6 +66,9 @@ const {
   updateCourseNotificationSettings,
   updateCourseIntegrationSettings,
   updateCourseReviewModeration,
+  manualEnrollStudent,
+  removeCourseStudents,
+  sendCourseStudentMessage,
 } = await import('./actions');
 
 describe('learning server actions', () => {
@@ -68,6 +82,14 @@ describe('learning server actions', () => {
       data: { id: 'course-1', metadata: JSON.stringify({ landingFaq: [{ question: 'Existing' }] }) },
     });
     mocks.putCourses.mockResolvedValue({ ok: true, data: {} });
+    mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
+    mocks.clientRequest.mockResolvedValue({
+      ok: true,
+      data: { items: [{ id: 'user-1', email: 'student@example.com', username: 'student', name: 'Student' }] },
+    });
+    mocks.postCoursesUsers.mockResolvedValue({ ok: true, data: { enrollmentId: 'program-user-1' } });
+    mocks.deleteCoursesUsers.mockResolvedValue({ ok: true, data: undefined });
+    mocks.postApiLearningEnrollments.mockResolvedValue({ ok: true, data: { id: 'cohort-enrollment-1' } });
     vi.stubGlobal('fetch', mocks.fetch);
   });
 
@@ -143,6 +165,107 @@ describe('learning server actions', () => {
       },
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/listing/testimonials');
+  });
+
+  it('enrolls through the canonical course roster and synchronizes an optional cohort', async () => {
+    const result = await manualEnrollStudent({
+      courseId: 'course-slug',
+      userId: 'student@example.com',
+      cohortId: 'cohort-1',
+    });
+
+    expect(result).toEqual({ success: true, data: { id: 'program-user-1' } });
+    expect(mocks.postCoursesUsers).toHaveBeenCalledWith('course-slug', 'user-1');
+    expect(mocks.postApiLearningEnrollments).toHaveBeenCalledWith({
+      courseId: 'course-slug',
+      userId: 'user-1',
+      cohortId: 'cohort-1',
+    });
+  });
+
+  it('rolls back the canonical roster when cohort synchronization fails', async () => {
+    mocks.postApiLearningEnrollments.mockResolvedValueOnce({ ok: false, error: { detail: 'Cohort is full.' } });
+
+    const result = await manualEnrollStudent({
+      courseId: 'course-1',
+      userId: 'student@example.com',
+      cohortId: 'cohort-full',
+    });
+
+    expect(result).toEqual({ success: false, error: 'Cohort is full.' });
+    expect(mocks.deleteCoursesUsers).toHaveBeenCalledWith('course-1', 'user-1');
+  });
+
+  it('removes selected users from the canonical course roster', async () => {
+    const result = await removeCourseStudents('course-1', ['user-1', 'user-2', 'user-1']);
+
+    expect(result).toEqual({ success: true, data: { removed: 2 } });
+    expect(mocks.deleteCoursesUsers).toHaveBeenCalledTimes(2);
+    expect(mocks.deleteCoursesUsers).toHaveBeenCalledWith('course-1', 'user-1');
+    expect(mocks.deleteCoursesUsers).toHaveBeenCalledWith('course-1', 'user-2');
+  });
+
+  it('sends a course message to selected enrolled users', async () => {
+    mocks.fetch.mockResolvedValue(new Response(JSON.stringify({ sent: 2 }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+
+    const result = await sendCourseStudentMessage({
+      courseId: 'course-1',
+      userIds: ['user-1', 'user-2'],
+      subject: ' Milestone update ',
+      message: ' The critique session moved to Friday. ',
+    });
+
+    expect(result).toEqual({ success: true, data: { sent: 2 } });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/courses/course-1/students/message', {
+      method: 'POST',
+      body: JSON.stringify({
+        userIds: ['user-1', 'user-2'],
+        subject: 'Milestone update',
+        message: 'The critique session moved to Friday.',
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+  });
+
+  it('replies to and resolves persisted course support tickets', async () => {
+    mocks.fetch.mockImplementation(async () => new Response(JSON.stringify({ id: 'ticket-1' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+
+    await expect(addCourseSupportTicketMessage({
+      courseId: 'course-1',
+      ticketId: 'ticket-1',
+      message: ' Please retry now. ',
+    })).resolves.toEqual({ success: true, data: null });
+    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:5295/v1/courses/course-1/support/tickets/ticket-1/messages', {
+      method: 'POST',
+      body: JSON.stringify({ message: 'Please retry now.' }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+
+    await expect(resolveCourseSupportTicket({
+      courseId: 'course-1',
+      ticketId: 'ticket-1',
+      summary: ' Entitlement refreshed. ',
+    })).resolves.toEqual({ success: true, data: null });
+    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:5295/v1/courses/course-1/support/tickets/ticket-1:resolve', {
+      method: 'POST',
+      body: JSON.stringify({ summary: 'Entitlement refreshed.' }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
   });
 
   it('resolves dashboard course slugs before deleting course content', async () => {

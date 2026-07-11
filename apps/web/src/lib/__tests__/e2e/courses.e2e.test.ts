@@ -106,6 +106,18 @@ interface CourseAssessmentAnalyticsOutput {
   }>;
 }
 
+interface SupportTicketOutput {
+  id: string;
+  customerId: string;
+  subject: string;
+  messageCount: number;
+}
+
+interface SupportTicketPageOutput {
+  items: SupportTicketOutput[];
+  totalCount: number;
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -251,6 +263,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
   let cohortId: string;
   let discussionId: string;
   let discussionReplyId: string;
+  let supportTicketId: string;
   let paidProductId: string;
   const courseSlug = `e2e-course-${Date.now()}`;
 
@@ -633,6 +646,48 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(deleted.ok).toBe(false);
   });
 
+  it('persists, lists, replies to, and resolves a course support ticket', async () => {
+    if (!tenantId) throw new Error('Course support E2E requires a tenant.');
+
+    const created = unwrap(await authedClient.request<SupportTicketOutput>({
+      method: 'POST',
+      path: '/v1/support/tickets',
+      body: {
+        tenantId,
+        customerId: courseId,
+        customerName: 'E2E Test Course',
+        reporterUserId: userId,
+        reporterName: 'Course E2E Learner',
+        reporterEmail: email,
+        subject: 'Cannot open the milestone lesson',
+        body: 'The milestone lesson remains unavailable after enrollment.',
+        priority: 'Normal',
+        category: 'access',
+      },
+    }), 'Create course support ticket');
+    supportTicketId = created.id;
+
+    const queue = unwrap(await authedClient.request<SupportTicketPageOutput>({
+      method: 'GET',
+      path: `/v1/courses/${courseId}/support/tickets?skip=0&take=100`,
+    }), 'List course support tickets');
+    expect(queue.items).toContainEqual(expect.objectContaining({ id: supportTicketId, customerId: courseId }));
+
+    const replied = unwrap(await authedClient.request<SupportTicketOutput>({
+      method: 'POST',
+      path: `/v1/courses/${courseId}/support/tickets/${supportTicketId}/messages`,
+      body: { message: 'The entitlement was refreshed. Please retry.' },
+    }), 'Reply to course support ticket');
+    expect(replied.messageCount).toBeGreaterThanOrEqual(2);
+
+    const resolved = unwrap(await authedClient.request<SupportTicketOutput>({
+      method: 'POST',
+      path: `/v1/courses/${courseId}/support/tickets/${supportTicketId}:resolve`,
+      body: { summary: 'The course entitlement was refreshed.' },
+    }), 'Resolve course support ticket');
+    expect(resolved.id).toBe(supportTicketId);
+  });
+
   // ── 7. List courses ─────────────────────────────────────────────────────
   it('lists courses and the new course appears', async () => {
     const result = await programs.getCourses({ take: 100 });
@@ -991,6 +1046,20 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
       expect(Array.isArray(result.data)).toBe(true);
       expect(result.data.length).toBeGreaterThanOrEqual(1);
     }
+  });
+
+  it('sends an in-app course message only to an enrolled user', async () => {
+    const result = unwrap(await authedClient.request<{ sent: number }>({
+      method: 'POST',
+      path: `/v1/courses/${courseId}/students/message`,
+      body: {
+        userIds: [userId],
+        subject: 'Milestone update',
+        message: 'The critique session moved to Friday.',
+      },
+    }), 'Send enrolled student message');
+
+    expect(result.sent).toBe(1);
   });
 
   // ── 15. Get user progress ──────────────────────────────────────────────

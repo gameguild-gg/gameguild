@@ -125,6 +125,81 @@ export interface DiscussionThreadDetail extends DiscussionThread {
   replies: DiscussionReply[];
 }
 
+interface SupportTicketApiDto {
+  id: string;
+  customerId: string;
+  reporterUserId: string;
+  reporterName: string;
+  reporterEmail?: string | null;
+  subject: string;
+  category?: string | null;
+  status: 'Open' | 'InProgress' | 'Resolved' | 'Closed' | 'Cancelled' | string;
+  priority: 'Low' | 'Normal' | 'High' | 'Urgent' | string;
+  assignedToUserId?: string | null;
+  assignedToName?: string | null;
+  openedAt: string;
+  lastMessageAt?: string | null;
+  messageCount: number;
+  messages: SupportTicketMessageApiDto[];
+}
+
+interface SupportTicketMessageApiDto {
+  id: string;
+  ticketId: string;
+  authorUserId: string;
+  authorName: string;
+  authorType: 'Customer' | 'Agent' | 'System' | string;
+  body: string;
+  createdAt: string;
+}
+
+interface SupportTicketPageApiDto {
+  items: SupportTicketApiDto[];
+  total?: number;
+  totalCount?: number;
+}
+
+function mapTicketStatus(status: SupportTicketApiDto['status']): TicketStatus {
+  if (status === 'InProgress') return 'in-progress';
+  if (status === 'Resolved') return 'resolved';
+  if (status === 'Closed' || status === 'Cancelled') return 'closed';
+  return 'open';
+}
+
+function mapTicketPriority(priority: SupportTicketApiDto['priority']): TicketPriority {
+  const normalized = priority.toLowerCase();
+  return normalized === 'low' || normalized === 'high' || normalized === 'urgent' ? normalized : 'normal';
+}
+
+function mapTicketCategory(category: string | null | undefined): TicketCategory {
+  const normalized = category?.toLowerCase();
+  return normalized === 'technical' || normalized === 'content' || normalized === 'billing' || normalized === 'access' || normalized === 'feedback'
+    ? normalized
+    : 'other';
+}
+
+function mapSupportTicket(dto: SupportTicketApiDto): SupportTicket {
+  const lastMessageAt = dto.lastMessageAt ?? dto.openedAt;
+  return {
+    id: dto.id,
+    courseId: dto.customerId,
+    studentId: dto.reporterUserId,
+    studentName: dto.reporterName,
+    studentEmail: dto.reporterEmail ?? '',
+    subject: dto.subject,
+    status: mapTicketStatus(dto.status),
+    priority: mapTicketPriority(dto.priority),
+    category: mapTicketCategory(dto.category),
+    messageCount: dto.messageCount,
+    lastMessageAt,
+    assignedTo: dto.assignedToUserId && dto.assignedToName
+      ? { id: dto.assignedToUserId, name: dto.assignedToName }
+      : undefined,
+    createdAt: dto.openedAt,
+    updatedAt: lastMessageAt,
+  };
+}
+
 // =============================================================================
 // FETCH FUNCTIONS
 // =============================================================================
@@ -134,26 +209,16 @@ export interface DiscussionThreadDetail extends DiscussionThread {
  * Cache: revalidate 30s (highly volatile)
  */
 export const getCourseSupportTickets = cache(async (courseId: string): Promise<CourseSupportTickets> => {
-  const discussions = await getCourseDiscussions(courseId);
-  const tickets: SupportTicket[] = discussions.threads.map((thread) => ({
-    id: thread.id,
-    courseId: thread.courseId,
-    studentId: thread.authorId,
-    studentName: thread.authorName,
-    studentEmail: '',
-    subject: thread.title,
-    status: thread.locked ? 'closed' : thread.replyCount > 0 ? 'in-progress' : 'open',
-    priority: thread.pinned ? 'high' : 'normal',
-    category: 'content',
-    messageCount: thread.replyCount + 1,
-    lastMessageAt: thread.lastReplyAt ?? thread.createdAt,
-    createdAt: thread.createdAt,
-    updatedAt: thread.updatedAt,
-  }));
+  const resolvedCourseId = await resolveCourseId(courseId);
+  const response = await learningApiGet<SupportTicketPageApiDto>(
+    `/v1/courses/${resolvedCourseId}/support/tickets?skip=0&take=100`,
+    30,
+  );
+  const tickets = (response?.items ?? []).map(mapSupportTicket);
 
   return {
     tickets,
-    total: tickets.length,
+    total: response?.totalCount ?? response?.total ?? tickets.length,
     openCount: tickets.filter((ticket) => ticket.status === 'open').length,
     inProgressCount: tickets.filter((ticket) => ticket.status === 'in-progress').length,
     resolvedCount: tickets.filter((ticket) => ticket.status === 'resolved' || ticket.status === 'closed').length,
@@ -164,46 +229,26 @@ export const getCourseSupportTickets = cache(async (courseId: string): Promise<C
  * Fetch single ticket detail with messages.
  * Cache: revalidate 30s
  */
-export const getSupportTicket = cache(async (ticketId: string): Promise<SupportTicketDetail | null> => {
-  const thread = await getDiscussionThread(ticketId);
-  if (!thread) return null;
+export const getSupportTicket = cache(async (courseId: string, ticketId: string): Promise<SupportTicketDetail | null> => {
+  const resolvedCourseId = await resolveCourseId(courseId);
+  const dto = await learningApiGet<SupportTicketApiDto>(
+    `/v1/courses/${resolvedCourseId}/support/tickets/${ticketId}`,
+    30,
+  );
+  if (!dto) return null;
 
   return {
-    id: thread.id,
-    courseId: thread.courseId,
-    studentId: thread.authorId,
-    studentName: thread.authorName,
-    studentEmail: '',
-    subject: thread.title,
-    status: thread.locked ? 'closed' : thread.replyCount > 0 ? 'in-progress' : 'open',
-    priority: thread.pinned ? 'high' : 'normal',
-    category: 'content',
-    messageCount: thread.replies.length + 1,
-    lastMessageAt: thread.lastReplyAt ?? thread.createdAt,
-    createdAt: thread.createdAt,
-    updatedAt: thread.updatedAt,
-    messages: [
-      {
-        id: `${thread.id}-root`,
-        ticketId: thread.id,
-        authorId: thread.authorId,
-        authorName: thread.authorName,
-        authorRole: 'student',
-        content: thread.content,
-        attachments: [],
-        createdAt: thread.createdAt,
-      },
-      ...thread.replies.map((reply) => ({
-        id: reply.id,
-        ticketId: thread.id,
-        authorId: reply.authorId,
-        authorName: reply.authorName,
-        authorRole: reply.authorRole === 'ta' ? 'support' as const : reply.authorRole,
-        content: reply.content,
-        attachments: [],
-        createdAt: reply.createdAt,
-      })),
-    ],
+    ...mapSupportTicket(dto),
+    messages: dto.messages.map((message) => ({
+      id: message.id,
+      ticketId: message.ticketId,
+      authorId: message.authorUserId,
+      authorName: message.authorName,
+      authorRole: message.authorType === 'Customer' ? 'student' : message.authorType === 'Agent' ? 'instructor' : 'support',
+      content: message.body,
+      attachments: [],
+      createdAt: message.createdAt,
+    })),
   };
 });
 

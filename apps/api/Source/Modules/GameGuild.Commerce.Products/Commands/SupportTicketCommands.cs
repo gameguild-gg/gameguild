@@ -87,7 +87,8 @@ public sealed record GetSupportTicketsQuery(
     SupportTicketPriority? Priority = null,
     string? Search = null,
     int Skip = 0,
-    int Take = 50) : IQuery<PagedResult<SupportTicketDto>>;
+    int Take = 50,
+    Guid? CustomerId = null) : IQuery<PagedResult<SupportTicketDto>>;
 
 public sealed record GetSupportTicketByIdQuery(
     Guid TicketId,
@@ -210,6 +211,11 @@ public sealed class GetSupportTicketsQueryHandler(IApplicationDbContext context)
         if (request.Priority.HasValue)
         {
             query = query.Where(ticket => ticket.Priority == request.Priority.Value);
+        }
+
+        if (request.CustomerId.HasValue)
+        {
+            query = query.Where(ticket => ticket.CustomerId == request.CustomerId.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(request.Search))

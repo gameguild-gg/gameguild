@@ -131,6 +131,28 @@ public sealed class SupportTicketCqrsTests
     }
 
     [Fact]
+    public async Task SupportTicketQuery_ShouldFilterByOwningCustomer()
+    {
+        await using var db = CreateDbContext();
+        var tenantId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+
+        var expected = await new CreateSupportTicketCommandHandler(db).Handle(
+            NewCreateCommand(tenantId, SupportTicketPriority.Normal, customerId: courseId),
+            CancellationToken.None);
+        await new CreateSupportTicketCommandHandler(db).Handle(
+            NewCreateCommand(tenantId, SupportTicketPriority.Normal, customerId: Guid.NewGuid()),
+            CancellationToken.None);
+
+        var result = await new GetSupportTicketsQueryHandler(db).Handle(
+            new GetSupportTicketsQuery(TenantId: tenantId, CustomerId: courseId, Take: 100),
+            CancellationToken.None);
+
+        result.Items.Should().ContainSingle(ticket => ticket.Id == expected.Id);
+        result.TotalCount.Should().Be(1);
+    }
+
+    [Fact]
     public async Task SupportTicketHandlers_ShouldValidateMissingTicketAndCloseWithoutNotes()
     {
         await using var db = CreateDbContext();
@@ -314,10 +336,11 @@ public sealed class SupportTicketCqrsTests
     private static CreateSupportTicketCommand NewCreateCommand(
         Guid tenantId,
         SupportTicketPriority priority,
-        string body = "The account billing sync is not refreshing.")
+        string body = "The account billing sync is not refreshing.",
+        Guid? customerId = null)
         => new(
             tenantId,
-            Guid.NewGuid(),
+            customerId ?? Guid.NewGuid(),
             "Acme Properties",
             Guid.NewGuid(),
             "Morgan Support",

@@ -19,6 +19,7 @@
         <ProjectReference Include="..\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj" />
         <ProjectReference Include="..\GameGuild.Tags\GameGuild.Tags.csproj" />
         <ProjectReference Include="..\GameGuild.Learning\GameGuild.Learning.csproj" />
+        <ProjectReference Include="..\GameGuild.Notifications\GameGuild.Notifications.csproj" />
     </ItemGroup>
 
 </Project>

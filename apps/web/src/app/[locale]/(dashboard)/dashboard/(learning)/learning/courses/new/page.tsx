@@ -66,10 +66,6 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
   const [skillsRequired, setSkillsRequired] = useState('');
   const [skillsProvided, setSkillsProvided] = useState('');
 
-  React.useEffect(() => {
-    // no-op
-  }, []);
-
   function handleTitleChange(value: string) {
     setTitle(value);
     if (autoSlug) {
