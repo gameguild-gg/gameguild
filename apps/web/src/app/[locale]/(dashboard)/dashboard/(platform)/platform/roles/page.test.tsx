@@ -5,10 +5,13 @@ const mocks = vi.hoisted(() => ({
   getMemberAccessDirectory: vi.fn(),
   getPlatformRoles: vi.fn(),
   getPermissionTemplates: vi.fn(),
+  getUserPlatformRoles: vi.fn(),
   updateMemberAccessRole: vi.fn(),
   createPlatformRole: vi.fn(),
   updatePlatformRole: vi.fn(),
   deletePlatformRole: vi.fn(),
+  assignPlatformRole: vi.fn(),
+  removePlatformRole: vi.fn(),
 }));
 
 vi.mock('@/lib/community', () => ({
@@ -21,6 +24,7 @@ vi.mock('@/lib/community', () => ({
   getMemberAccessDirectory: mocks.getMemberAccessDirectory,
   getPlatformRoles: mocks.getPlatformRoles,
   getPermissionTemplates: mocks.getPermissionTemplates,
+  getUserPlatformRoles: mocks.getUserPlatformRoles,
   PLATFORM_PERMISSION_MATRIX: [
     {
       area: 'Learning',
@@ -46,6 +50,8 @@ vi.mock('@/lib/community/actions/roles', () => ({
   createPlatformRole: mocks.createPlatformRole,
   updatePlatformRole: mocks.updatePlatformRole,
   deletePlatformRole: mocks.deletePlatformRole,
+  assignPlatformRole: mocks.assignPlatformRole,
+  removePlatformRole: mocks.removePlatformRole,
 }));
 
 function buildMemberAccessRow(overrides: Partial<Record<string, unknown>> = {}) {
@@ -118,6 +124,24 @@ describe('platform roles page', () => {
       ],
       error: null,
     });
+    mocks.getUserPlatformRoles.mockImplementation(async (userId: string) => ({
+      roles:
+        userId === 'user-admin'
+          ? [
+              {
+                id: 'role-course-operator',
+                name: 'Course Operator',
+                description: 'Runs learning operations.',
+                permissions: ['courses:read', 'courses:update'],
+                isActive: true,
+                tenantId: null,
+                createdAt: '2026-01-01T00:00:00.000Z',
+                updatedAt: '2026-01-02T00:00:00.000Z',
+              },
+            ]
+          : [],
+      error: null,
+    }));
   });
 
   it('renders role catalog and assignment controls outside the community users table', async () => {
@@ -161,12 +185,25 @@ describe('platform roles page', () => {
     expect(screen.getByText('Learning manager')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create role' })).toBeInTheDocument();
 
-    const superAdminRow = screen.getByText('Super Admin').closest('tr');
+    const workspaceAssignments = screen.getByText('Role assignments').closest('[data-slot="card"]');
+    expect(workspaceAssignments).not.toBeNull();
+    const superAdminRow = within(workspaceAssignments!).getByText('Super Admin').closest('tr');
     expect(superAdminRow).not.toBeNull();
     expect(within(superAdminRow!).getByText('You')).toBeInTheDocument();
     expect(within(superAdminRow!).getByRole('button', { name: 'Save' })).toBeInTheDocument();
 
-    const memberRow = screen.getByText('Community Member').closest('tr');
+    const customAssignments = screen.getByText('Custom role assignments').closest('[data-slot="card"]');
+    expect(customAssignments).not.toBeNull();
+    const customSuperAdminRow = within(customAssignments!).getByText('Super Admin').closest('tr');
+    expect(customSuperAdminRow).not.toBeNull();
+    expect(within(customSuperAdminRow!).getByRole('button', { name: 'Assign custom role' })).toBeInTheDocument();
+
+    const platformAdminRow = within(customAssignments!).getByText('Platform Admin').closest('tr');
+    expect(platformAdminRow).not.toBeNull();
+    expect(within(platformAdminRow!).getByText('Course Operator')).toBeInTheDocument();
+    expect(within(platformAdminRow!).getByRole('button', { name: 'Remove Course Operator from Platform Admin' })).toBeInTheDocument();
+
+    const memberRow = within(workspaceAssignments!).getByText('Community Member').closest('tr');
     expect(memberRow).not.toBeNull();
     expect(within(memberRow!).getByText('No membership')).toBeInTheDocument();
   });
