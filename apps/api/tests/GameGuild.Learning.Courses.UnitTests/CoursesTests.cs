@@ -795,12 +795,14 @@ public class CoursesEnumTests
         ((int)ProgramContentType.Reflection).Should().Be(7);
         ((int)ProgramContentType.Survey).Should().Be(8);
         ((int)ProgramContentType.Project).Should().Be(9);
+        ((int)ProgramContentType.Module).Should().Be(10);
     }
 
     [Theory]
     [InlineData(ProgramContentType.Page, ProgramContentType.Lesson)]
     [InlineData(ProgramContentType.Challenge, ProgramContentType.Assignment)]
     [InlineData(ProgramContentType.Project, ProgramContentType.Project)]
+    [InlineData(ProgramContentType.Module, ProgramContentType.Module)]
     public void ProgramContentDto_ShouldNormalizeProfessorFacingTypes(ProgramContentType storedType, ProgramContentType expectedType)
     {
         var content = new ProgramContent
