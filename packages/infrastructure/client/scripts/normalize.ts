@@ -147,29 +147,73 @@ function normalizeTagNames(spec: OpenApiSpec): void {
  * Normalize schema names (remove Dto suffix, clean Microsoft namespaces)
  */
 function normalizeSchemaNames(spec: OpenApiSpec): void {
-  const schemas = (spec.components as OpenAPIV3.ComponentsObject)?.schemas;
+  const components = spec.components as OpenAPIV3.ComponentsObject | undefined;
+  const schemas = components?.schemas;
   if (!schemas) return;
 
   const schemaMapping = new Map<string, string>();
+  const preferredNames = new Map<string, string>();
+  const preferredNameCounts = new Map<string, number>();
+  const assignedNames = new Set<string>();
 
-  // Build mapping of old names to new names
+  // Determine preferred names first so collisions can be disambiguated without
+  // making the result depend on the order of schemas in the OpenAPI document.
   for (const name of Object.keys(schemas)) {
-    const normalized = normalizeSchemaName(name);
-    if (normalized !== name) {
-      schemaMapping.set(name, normalized);
+    const preferredName = normalizeSchemaName(name);
+    preferredNames.set(name, preferredName);
+    preferredNameCounts.set(preferredName, (preferredNameCounts.get(preferredName) ?? 0) + 1);
+  }
+
+  const assignName = (oldName: string, candidate: string): void => {
+    let uniqueName = candidate;
+    let suffix = 2;
+
+    while (assignedNames.has(uniqueName)) {
+      uniqueName = `${candidate}${suffix}`;
+      suffix += 1;
+    }
+
+    assignedNames.add(uniqueName);
+    schemaMapping.set(oldName, uniqueName);
+  };
+
+  // Preserve the concise name for schemas that do not collide.
+  for (const [oldName, preferredName] of preferredNames) {
+    if (preferredNameCounts.get(preferredName) === 1) {
+      assignName(oldName, preferredName);
     }
   }
 
-  // Rename schemas
-  for (const [oldName, newName] of schemaMapping) {
-    if (schemas[oldName] && !schemas[newName]) {
-      schemas[newName] = schemas[oldName];
-      delete schemas[oldName];
+  // Entity/DTO pairs and closed generic types need a stable semantic suffix.
+  for (const [oldName, preferredName] of preferredNames) {
+    if (preferredNameCounts.get(preferredName) !== 1) {
+      assignName(oldName, normalizeCollidingSchemaName(oldName));
     }
   }
+
+  const renamedSchemas: Record<string, OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject> = {};
+  for (const [oldName, schema] of Object.entries(schemas)) {
+    renamedSchemas[schemaMapping.get(oldName) ?? oldName] = schema;
+  }
+  components.schemas = renamedSchemas;
 
   // Update all $ref references
   updateSchemaRefs(spec, schemaMapping);
+}
+
+/**
+ * Produce a stable unique name when lossy normalization maps multiple schemas
+ * to the same value (for example UserProfile and UserProfileDto).
+ */
+function normalizeCollidingSchemaName(name: string): string {
+  const genericMatch = name.match(/^(.+?)`\d+\[\[([^,\]]+)/);
+  if (genericMatch) {
+    return `${toPascalCase(genericMatch[1])}Of${toPascalCase(genericMatch[2])}`;
+  }
+
+  const lastDotIndex = name.lastIndexOf('.');
+  const localName = lastDotIndex === -1 ? name : name.substring(lastDotIndex + 1);
+  return toPascalCase(localName.replace(/\+/g, ''));
 }
 
 /**
@@ -248,5 +292,4 @@ function cleanAspNetPatterns(spec: OpenApiSpec): void {
     delete schemas[name];
   }
 }
-
 

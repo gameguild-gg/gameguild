@@ -18,7 +18,7 @@ export class UsersPreferencesModule {
   /**
    * Get user preferences
    */
-  async getUsersPreferences(userId: string): Promise<Result<Types.IdentityUsersUserPreferences, ApiError>> {
+  async getUsersPreferences(userId: string): Promise<Result<Types.IdentityUsersUserPreferencesDto, ApiError>> {
     const url = `/v1/users/${userId}/preferences`;
 
     const result = await this.client.request({
@@ -29,7 +29,7 @@ export class UsersPreferencesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserPreferencesSchema, result.data, 'response');
+      const validatedData = safeParse(Types.IdentityUsersUserPreferencesDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
