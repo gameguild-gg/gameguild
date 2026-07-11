@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
   resolveCourseId: vi.fn(),
   deleteCoursesContent: vi.fn(),
+  getCourses1: vi.fn(),
+  putCourses: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
@@ -20,7 +22,10 @@ vi.mock('@game-guild/client', () => ({
   createServerClient: vi.fn(),
   GeneratedApi: {
     LearningAssessmentsModule: class {},
-    LearningCoursesProgramModule: class {},
+    LearningCoursesProgramModule: class {
+      getCourses1 = mocks.getCourses1;
+      putCourses = mocks.putCourses;
+    },
     LearningCoursesProgramcontentModule: class {
       deleteCoursesContent = mocks.deleteCoursesContent;
     },
@@ -35,6 +40,7 @@ vi.mock('@/lib/learning/queries/course', () => ({
 
 const {
   createCertificateTemplate,
+  updateCertificateTemplate,
   deleteCertificateTemplate,
   deleteContent,
   createCourseClass,
@@ -46,6 +52,9 @@ const {
   updateDiscussionPin,
   updateAssessmentGroup,
   resolveDiscussion,
+  updateCourseNotificationSettings,
+  updateCourseIntegrationSettings,
+  updateCourseReviewModeration,
 } = await import('./actions');
 
 describe('learning server actions', () => {
@@ -54,7 +63,86 @@ describe('learning server actions', () => {
     mocks.getToken.mockResolvedValue('access-token');
     mocks.resolveCourseId.mockImplementation(async (courseId: string) => courseId);
     mocks.deleteCoursesContent.mockResolvedValue({ ok: true, data: undefined });
+    mocks.getCourses1.mockResolvedValue({
+      ok: true,
+      data: { id: 'course-1', metadata: JSON.stringify({ landingFaq: [{ question: 'Existing' }] }) },
+    });
+    mocks.putCourses.mockResolvedValue({ ok: true, data: {} });
     vi.stubGlobal('fetch', mocks.fetch);
+  });
+
+  it('persists notification settings while preserving unrelated course metadata', async () => {
+    const result = await updateCourseNotificationSettings('course-1', {
+      studentNotifications: {
+        enrollmentConfirmation: true,
+        courseUpdates: false,
+        newContent: true,
+        upcomingClasses: true,
+        classReminders: [120, -1, 15, 120],
+        assignmentDue: true,
+        assessmentResults: true,
+        certificateReady: true,
+        discussionReplies: false,
+      },
+      instructorNotifications: {
+        newEnrollment: true,
+        newReview: true,
+        supportTicket: true,
+        discussionMention: false,
+        lowRating: true,
+        lowRatingThreshold: 9,
+      },
+      templates: [{ id: 'updates', type: 'course-update', subject: '  Course update  ', enabled: true }],
+    });
+
+    expect(result).toEqual({ success: true, data: null });
+    const metadata = JSON.parse(mocks.putCourses.mock.calls[0][1].metadata);
+    expect(metadata.landingFaq).toEqual([{ question: 'Existing' }]);
+    expect(metadata.notificationSettings.studentNotifications.classReminders).toEqual([120, 15]);
+    expect(metadata.notificationSettings.instructorNotifications.lowRatingThreshold).toBe(5);
+    expect(metadata.notificationSettings.templates[0].subject).toBe('Course update');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/settings/notifications');
+  });
+
+  it('persists course integrations and rejects invalid webhook URLs', async () => {
+    const invalid = await updateCourseIntegrationSettings('course-1', {
+      integrations: [],
+      webhooks: [{ id: 'hook-1', url: 'javascript:alert(1)', events: ['course.updated'], enabled: true }],
+    });
+    expect(invalid).toEqual({ success: false, error: 'Webhook URLs must use http or https.' });
+
+    const result = await updateCourseIntegrationSettings('course-1', {
+      integrations: [
+        { id: 'discord', type: 'discord', name: ' Class Discord ', enabled: true, status: 'connected', config: { inviteUrl: 'https://discord.gg/gameguild' } },
+      ],
+      webhooks: [{ id: 'hook-1', url: 'https://example.com/events', events: ['course.updated', '', 'course.updated'], enabled: true }],
+    });
+
+    expect(result).toEqual({ success: true, data: null });
+    const metadata = JSON.parse(mocks.putCourses.mock.calls.at(-1)?.[1].metadata);
+    expect(metadata.integrationSettings.integrations[0].name).toBe('Class Discord');
+    expect(metadata.integrationSettings.webhooks[0].events).toEqual(['course.updated']);
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/settings/integrations');
+  });
+
+  it('updates testimonial approval and featured state through the moderation endpoint', async () => {
+    mocks.fetch.mockResolvedValue(new Response(JSON.stringify({ id: 'review-1', isApproved: true, isFeatured: false }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+
+    const result = await updateCourseReviewModeration('course-1', 'review-1', true, false);
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/social/reviews/review-1/moderation', {
+      method: 'PATCH',
+      body: JSON.stringify({ isApproved: true, isFeatured: false }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/listing/testimonials');
   });
 
   it('resolves dashboard course slugs before deleting course content', async () => {
@@ -116,6 +204,45 @@ describe('learning server actions', () => {
       },
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/certificates');
+  });
+
+  it('updates certificate templates and refreshes the list and editor', async () => {
+    mocks.fetch.mockResolvedValue(
+      new Response(JSON.stringify({ id: 'template-1', courseId: 'course-1', name: 'Completion' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const result = await updateCertificateTemplate({
+      courseId: 'course-1',
+      templateId: 'template-1',
+      name: ' Completion ',
+      description: ' Course credential ',
+      templateHtml: '<main>{{recipientName}}</main>',
+      templateStyles: ' main { color: navy; } ',
+      isDefault: true,
+      isActive: true,
+    });
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/certificates/templates/template-1', {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: 'Completion',
+        description: 'Course credential',
+        templateHtml: '<main>{{recipientName}}</main>',
+        templateStyles: 'main { color: navy; }',
+        isDefault: true,
+        isActive: true,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/certificates');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/certificates/template-1');
   });
 
   it('creates course classes through the Learning.Cohorts API', async () => {

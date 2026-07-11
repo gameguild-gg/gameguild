@@ -103,4 +103,41 @@ public class ControllerTests
         var r = await CreateController().RevokeCertificate(id, new RevokeCertificateRequest("V"));
         r.Should().BeOfType<NoContentResult>();
     }
+
+    [Fact]
+    public async Task UpdateCertificateTemplate_Success_ReturnsUpdatedTemplate()
+    {
+        var template = CertificateTemplate.Create(Guid.NewGuid(), "Original", "<h1>Original</h1>");
+        var request = new UpdateCertificateTemplateRequest(
+            "Completion",
+            "Awarded after completion",
+            "<main>{{recipientName}}</main>",
+            "main { color: navy; }",
+            true,
+            true);
+        _tmplSvc.Setup(service => service.GetTemplateByIdAsync(template.Id)).ReturnsAsync(template);
+        _tmplSvc.Setup(service => service.UpdateTemplateAsync(template)).ReturnsAsync(Result.Success(template));
+        _tmplSvc.Setup(service => service.SetDefaultTemplateAsync(template.CourseId, template.Id)).ReturnsAsync(Result.Success(template));
+
+        var result = await CreateController().UpdateCertificateTemplate(template.Id, request);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        template.Name.Should().Be("Completion");
+        template.Description.Should().Be("Awarded after completion");
+        template.IsDefault.Should().BeTrue();
+        _tmplSvc.Verify(service => service.SetDefaultTemplateAsync(template.CourseId, template.Id), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateCertificateTemplate_MissingTemplate_Returns404()
+    {
+        var templateId = Guid.NewGuid();
+        _tmplSvc.Setup(service => service.GetTemplateByIdAsync(templateId)).ReturnsAsync((CertificateTemplate?)null);
+
+        var result = await CreateController().UpdateCertificateTemplate(
+            templateId,
+            new UpdateCertificateTemplateRequest("Completion", null, "<main>Certificate</main>", null, false, true));
+
+        result.Result.Should().BeOfType<NotFoundResult>();
+    }
 }

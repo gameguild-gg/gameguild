@@ -81,6 +81,20 @@ public class CourseReviewTests
 
         review.IsFeatured.Should().BeTrue();
     }
+
+    [Fact]
+    public void SetModeration_ShouldAllowApprovingFeaturingAndRevertingBothFlags()
+    {
+        var review = CourseReview.Create(Guid.NewGuid(), Guid.NewGuid(), 5);
+
+        review.SetModeration(isApproved: true, isFeatured: true);
+        review.IsApproved.Should().BeTrue();
+        review.IsFeatured.Should().BeTrue();
+
+        review.SetModeration(isApproved: false, isFeatured: false);
+        review.IsApproved.Should().BeFalse();
+        review.IsFeatured.Should().BeFalse();
+    }
 }
 
 public class CourseWishlistTests

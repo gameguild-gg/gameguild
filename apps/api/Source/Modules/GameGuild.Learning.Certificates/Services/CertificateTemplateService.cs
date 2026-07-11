@@ -112,16 +112,15 @@ public class CertificateTemplateService : ICertificateTemplateService
                 .Where(t => t.CourseId == courseId)
                 .ToListAsync().ConfigureAwait(false);
 
-            foreach (var t in templates)
-            {
-                // Note: Using reflection or direct property access since we have private setters
-                // In a real scenario, you'd add a domain method to CertificateTemplate
-            }
-
             var template = templates.FirstOrDefault(t => t.Id == templateId);
             if (template == null)
             {
                 return Result.Failure<CertificateTemplate>(Error.NotFound("Template", "Certificate template not found"));
+            }
+
+            foreach (var courseTemplate in templates)
+            {
+                courseTemplate.SetDefault(courseTemplate.Id == templateId);
             }
 
             await _context.SaveChangesAsync().ConfigureAwait(false);

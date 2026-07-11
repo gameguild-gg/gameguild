@@ -30,6 +30,25 @@ public class CertificateTemplate : EntityBase
             IsActive = true
         };
     }
+
+    public void Update(string name, string? description, string templateHtml, string? templateStyles, bool isActive)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(templateHtml);
+
+        Name = name.Trim();
+        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        TemplateHtml = templateHtml.Trim();
+        TemplateStyles = string.IsNullOrWhiteSpace(templateStyles) ? null : templateStyles.Trim();
+        IsActive = isActive;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public void SetDefault(bool isDefault)
+    {
+        IsDefault = isDefault;
+        UpdatedAt = SystemClock.UtcNow;
+    }
 }
 
 /// <summary>

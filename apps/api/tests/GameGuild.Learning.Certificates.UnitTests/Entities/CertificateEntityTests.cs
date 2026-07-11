@@ -140,6 +140,34 @@ public class CertificateTemplateEntityTests
         var template = CertificateTemplate.Create(Guid.NewGuid(), "Template", "<h1>Cert</h1>", tenantId);
         template.TenantId.Should().Be(tenantId);
     }
+
+    [Fact]
+    public void Update_ShouldReplaceEditableFieldsAndTimestamp()
+    {
+        var template = CertificateTemplate.Create(Guid.NewGuid(), "Original", "<h1>Original</h1>");
+        var previousUpdatedAt = template.UpdatedAt;
+
+        template.Update(" Completion ", " Course credential ", "<main>Updated</main>", " main { color: navy; } ", false);
+
+        template.Name.Should().Be("Completion");
+        template.Description.Should().Be("Course credential");
+        template.TemplateHtml.Should().Be("<main>Updated</main>");
+        template.TemplateStyles.Should().Be("main { color: navy; }");
+        template.IsActive.Should().BeFalse();
+        template.UpdatedAt.Should().BeOnOrAfter(previousUpdatedAt);
+    }
+
+    [Fact]
+    public void SetDefault_ShouldBeReversible()
+    {
+        var template = CertificateTemplate.Create(Guid.NewGuid(), "Template", "<h1>Cert</h1>");
+
+        template.SetDefault(true);
+        template.IsDefault.Should().BeTrue();
+
+        template.SetDefault(false);
+        template.IsDefault.Should().BeFalse();
+    }
 }
 
 /// <summary>

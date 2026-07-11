@@ -103,6 +103,82 @@ export interface CourseIntegrationSettings {
   updatedAt: string;
 }
 
+interface StoredCourseSettingsMetadata {
+  notificationSettings?: Partial<Omit<CourseNotificationSettings, 'courseId' | 'updatedAt'>>;
+  integrationSettings?: Partial<Omit<CourseIntegrationSettings, 'courseId' | 'updatedAt'>>;
+}
+
+function parseSettingsMetadata(raw: string | null | undefined): StoredCourseSettingsMetadata {
+  if (!raw) return {};
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed as StoredCourseSettingsMetadata
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function defaultNotificationSettings(course: Awaited<ReturnType<typeof getCourse>> & {}): CourseNotificationSettings {
+  return {
+    courseId: course.id,
+    studentNotifications: {
+      enrollmentConfirmation: true,
+      courseUpdates: true,
+      newContent: true,
+      upcomingClasses: course.features.hasClasses,
+      classReminders: course.features.hasClasses ? [1440, 60, 10] : [],
+      assignmentDue: true,
+      assessmentResults: course.features.hasAssessments,
+      certificateReady: course.features.hasCertificate,
+      discussionReplies: course.features.hasDiscussions,
+    },
+    instructorNotifications: {
+      newEnrollment: true,
+      newReview: true,
+      supportTicket: true,
+      discussionMention: true,
+      lowRating: true,
+      lowRatingThreshold: 3,
+    },
+    templates: [
+      { id: `${course.id}-enrollment`, type: 'enrollment-confirmation', subject: `Welcome to ${course.title}`, enabled: true },
+      { id: `${course.id}-certificate`, type: 'certificate-ready', subject: `Your ${course.title} certificate is ready`, enabled: course.features.hasCertificate },
+      { id: `${course.id}-discussion`, type: 'discussion-reply', subject: `New reply in ${course.title}`, enabled: course.features.hasDiscussions },
+    ],
+    updatedAt: course.updatedAt,
+  };
+}
+
+function defaultIntegrationSettings(course: Awaited<ReturnType<typeof getCourse>> & {}): CourseIntegrationSettings {
+  return {
+    courseId: course.id,
+    integrations: [
+      {
+        id: `${course.id}-video`,
+        type: 'webhook',
+        name: 'Course media pipeline',
+        enabled: Boolean(course.videoShowcaseUrl),
+        config: { videoShowcaseUrl: course.videoShowcaseUrl },
+        status: course.videoShowcaseUrl ? 'connected' : 'disconnected',
+        lastSyncAt: course.updatedAt,
+      },
+      {
+        id: `${course.id}-classes`,
+        type: 'zoom',
+        name: 'Live class provider',
+        enabled: course.features.hasClasses,
+        config: {},
+        status: course.features.hasClasses ? 'connected' : 'disconnected',
+      },
+    ],
+    webhooks: [],
+    updatedAt: course.updatedAt,
+  };
+}
+
 // =============================================================================
 // FETCH FUNCTIONS
 // =============================================================================
@@ -136,33 +212,21 @@ export const getCourseNotificationSettings = cache(async (courseId: string): Pro
   const course = await getCourse(courseId);
   if (!course) return null;
 
+  const defaults = defaultNotificationSettings(course);
+  const stored = parseSettingsMetadata(course.metadata).notificationSettings;
+  if (!stored) return defaults;
+
   return {
-    courseId,
+    ...defaults,
     studentNotifications: {
-      enrollmentConfirmation: true,
-      courseUpdates: true,
-      newContent: true,
-      upcomingClasses: course.features.hasClasses,
-      classReminders: course.features.hasClasses ? [1440, 60, 10] : [],
-      assignmentDue: true,
-      assessmentResults: course.features.hasAssessments,
-      certificateReady: course.features.hasCertificate,
-      discussionReplies: course.features.hasDiscussions,
+      ...defaults.studentNotifications,
+      ...(stored.studentNotifications ?? {}),
     },
     instructorNotifications: {
-      newEnrollment: true,
-      newReview: true,
-      supportTicket: true,
-      discussionMention: true,
-      lowRating: true,
-      lowRatingThreshold: 3,
+      ...defaults.instructorNotifications,
+      ...(stored.instructorNotifications ?? {}),
     },
-    templates: [
-      { id: `${courseId}-enrollment`, type: 'enrollment-confirmation', subject: `Welcome to ${course.title}`, enabled: true },
-      { id: `${courseId}-certificate`, type: 'certificate-ready', subject: `Your ${course.title} certificate is ready`, enabled: course.features.hasCertificate },
-      { id: `${courseId}-discussion`, type: 'discussion-reply', subject: `New reply in ${course.title}`, enabled: course.features.hasDiscussions },
-    ],
-    updatedAt: course.updatedAt,
+    templates: Array.isArray(stored.templates) ? stored.templates : defaults.templates,
   };
 });
 
@@ -174,28 +238,13 @@ export const getCourseIntegrationSettings = cache(async (courseId: string): Prom
   const course = await getCourse(courseId);
   if (!course) return null;
 
+  const defaults = defaultIntegrationSettings(course);
+  const stored = parseSettingsMetadata(course.metadata).integrationSettings;
+  if (!stored) return defaults;
+
   return {
-    courseId,
-    integrations: [
-      {
-        id: `${courseId}-video`,
-        type: 'webhook',
-        name: 'Course media pipeline',
-        enabled: Boolean(course.videoShowcaseUrl),
-        config: { videoShowcaseUrl: course.videoShowcaseUrl },
-        status: course.videoShowcaseUrl ? 'connected' : 'disconnected',
-        lastSyncAt: course.updatedAt,
-      },
-      {
-        id: `${courseId}-classes`,
-        type: 'zoom',
-        name: 'Live class provider',
-        enabled: course.features.hasClasses,
-        config: {},
-        status: course.features.hasClasses ? 'connected' : 'disconnected',
-      },
-    ],
-    webhooks: [],
-    updatedAt: course.updatedAt,
+    ...defaults,
+    integrations: Array.isArray(stored.integrations) ? stored.integrations : defaults.integrations,
+    webhooks: Array.isArray(stored.webhooks) ? stored.webhooks : defaults.webhooks,
   };
 });

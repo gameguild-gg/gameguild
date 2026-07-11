@@ -189,6 +189,43 @@ public class CertificatesController : BaseApiController
     }
 
     /// <summary>
+    /// Update a certificate template and its course-default state
+    /// </summary>
+    [HttpPut("templates/{templateId:guid}")]
+    [RequireContentTypePermission<CertificateTemplate>(PermissionType.Edit)]
+    public async Task<ActionResult<CertificateTemplateDetailDto>> UpdateCertificateTemplate(
+        Guid templateId,
+        [FromBody] UpdateCertificateTemplateRequest request)
+    {
+        var template = await _templateService.GetTemplateByIdAsync(templateId).ConfigureAwait(false);
+        if (template is null)
+        {
+            return NotFound();
+        }
+
+        template.Update(request.Name, request.Description, request.TemplateHtml, request.TemplateStyles, request.IsActive);
+
+        Result<CertificateTemplate> result;
+        if (request.IsDefault)
+        {
+            template.SetDefault(true);
+            result = await _templateService.SetDefaultTemplateAsync(template.CourseId, template.Id).ConfigureAwait(false);
+        }
+        else
+        {
+            template.SetDefault(false);
+            result = await _templateService.UpdateTemplateAsync(template).ConfigureAwait(false);
+        }
+
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound ? NotFound(result.Error) : BadRequest(result.Error);
+        }
+
+        return Ok(CertificateTemplateDetailDto.FromEntity(result.Value));
+    }
+
+    /// <summary>
     /// Delete a certificate template
     /// </summary>
     [HttpDelete("templates/{templateId:guid}")]
@@ -308,6 +345,17 @@ public sealed record CertificateTemplateDetailDto(
 /// Request to create a certificate template
 /// </summary>
 public sealed record CreateCertificateTemplateRequest(Guid CourseId, string Name, string TemplateHtml);
+
+/// <summary>
+/// Request to update a certificate template
+/// </summary>
+public sealed record UpdateCertificateTemplateRequest(
+    string Name,
+    string? Description,
+    string TemplateHtml,
+    string? TemplateStyles,
+    bool IsDefault,
+    bool IsActive);
 
 /// <summary>
 /// Request to issue a certificate

@@ -52,6 +52,15 @@ public interface IReviewService
     Task<Result<CourseReview>> FeatureReviewAsync(Guid reviewId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Sets both moderation flags, allowing administrators to reverse approval and featured state.
+    /// </summary>
+    Task<Result<CourseReview>> UpdateReviewModerationAsync(
+        Guid reviewId,
+        bool isApproved,
+        bool isFeatured,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Marks a review as helpful
     /// </summary>
     Task<Result<CourseReview>> MarkReviewHelpfulAsync(Guid reviewId, CancellationToken cancellationToken = default);

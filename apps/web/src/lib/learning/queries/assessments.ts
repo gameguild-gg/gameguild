@@ -226,6 +226,7 @@ export interface CertificateTemplate {
   name: string;
   description: string | null;
   status: 'draft' | 'active' | 'archived';
+  isDefault: boolean;
   issuedCount: number;
   createdAt: string;
   updatedAt: string;
@@ -270,6 +271,7 @@ function mapCertificateTemplate(dto: CertificateTemplateApiDto, issuedCount = 0)
     name: dto.name,
     description: dto.description ?? null,
     status: dto.isActive === false ? 'archived' : 'active',
+    isDefault: dto.isDefault === true,
     issuedCount,
     createdAt,
     updatedAt: dto.updatedAt ?? createdAt,

@@ -55,6 +55,7 @@ export function CertificateTemplateManager({ courseId, templates }: CertificateT
           name: submittedName,
           description: null,
           status: 'active',
+          isDefault: false,
           issuedCount: 0,
           createdAt: now,
           updatedAt: now,

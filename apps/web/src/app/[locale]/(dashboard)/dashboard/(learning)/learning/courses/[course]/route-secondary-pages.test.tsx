@@ -265,15 +265,36 @@ describe('course-management secondary route pages', () => {
       ],
     });
     mocks.getCourseNotificationSettings.mockResolvedValue({
-      studentNotifications: { enrollment: true, reminders: ['email'], digest: [] },
-      instructorNotifications: { newEnrollment: true, stalledLearner: false },
+      courseId: 'course-1',
+      studentNotifications: {
+        enrollmentConfirmation: true,
+        courseUpdates: true,
+        newContent: true,
+        upcomingClasses: true,
+        classReminders: [60],
+        assignmentDue: true,
+        assessmentResults: true,
+        certificateReady: true,
+        discussionReplies: true,
+      },
+      instructorNotifications: {
+        newEnrollment: true,
+        newReview: true,
+        supportTicket: true,
+        discussionMention: true,
+        lowRating: true,
+        lowRatingThreshold: 3,
+      },
       templates: [
         { id: 'template-1', subject: 'Welcome', type: 'Enrollment', enabled: true },
       ],
+      updatedAt: '2026-07-01T00:00:00.000Z',
     });
     mocks.getCourseIntegrationSettings.mockResolvedValue({
-      integrations: [{ id: 'int-1', name: 'Discord', type: 'community', status: 'connected' }],
+      courseId: 'course-1',
+      integrations: [{ id: 'int-1', name: 'Discord', type: 'discord', enabled: true, config: {}, status: 'connected' }],
       webhooks: [],
+      updatedAt: '2026-07-01T00:00:00.000Z',
     });
     mocks.getCourseFaq.mockResolvedValue({ items: [{ id: 'faq-1', question: 'When?', answer: 'Now.' }] });
     mocks.getCoursePricing.mockResolvedValue({
@@ -301,8 +322,12 @@ describe('course-management secondary route pages', () => {
       name: 'Completion certificate',
       description: 'Issued on completion',
       status: 'active',
+      isDefault: true,
       issuedCount: 3,
+      createdAt: '2026-06-01T00:00:00.000Z',
       templateHtml: '<p>Certificate body</p>',
+      templateStyles: null,
+      previewUrl: '/api/certificates/templates/template-1',
       updatedAt: '2026-07-01T00:00:00.000Z',
     });
   });
@@ -429,11 +454,11 @@ describe('course-management secondary route pages', () => {
 
   it('renders settings and listing management pages from API contracts', async () => {
     render(await NotificationSettingsPage({ params: params() } as never));
-    expect(screen.getByText('Notification Settings')).toBeInTheDocument();
-    expect(screen.getByText('Welcome')).toBeInTheDocument();
+    expect(screen.getByText('Notification settings')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Welcome')).toBeInTheDocument();
 
     render(await IntegrationSettingsPage({ params: params() } as never));
-    expect(screen.getByText('Integrations')).toBeInTheDocument();
+    expect(screen.getByText('Course integrations')).toBeInTheDocument();
     expect(screen.getByText('Discord')).toBeInTheDocument();
 
     render(await ListingFaqPage({ params: params() } as never));
@@ -446,7 +471,7 @@ describe('course-management secondary route pages', () => {
     expect(screen.getByTestId('project-carousel-editor')).toHaveTextContent('1 project slides');
 
     render(await ListingTestimonialsPage({ params: params() } as never));
-    expect(screen.getByText('Testimonials & Reviews')).toBeInTheDocument();
+    expect(screen.getByText('Testimonials & reviews')).toBeInTheDocument();
     expect(screen.getByText('Useful')).toBeInTheDocument();
   });
 
@@ -458,8 +483,8 @@ describe('course-management secondary route pages', () => {
     expect(screen.getByTestId('assessment-editor')).toHaveTextContent('Quiz 1:1');
 
     render(await CertificateTemplateDetailPage({ params: params({ templateId: 'template-1' }) } as never));
-    expect(screen.getByText('Completion certificate')).toBeInTheDocument();
-    expect(screen.getByText('Certificate body')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Completion certificate')).toBeInTheDocument();
+    expect(screen.getByTitle('Certificate preview').getAttribute('srcdoc')).toContain('Certificate body');
 
     mocks.getContentItem.mockResolvedValueOnce(null);
     await expect(ContentItemPage({ params: params({ contentId: 'missing' }) } as never)).rejects.toThrow('not-found');

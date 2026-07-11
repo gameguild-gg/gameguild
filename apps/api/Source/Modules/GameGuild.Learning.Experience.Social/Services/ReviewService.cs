@@ -133,6 +133,31 @@ public class ReviewService : IReviewService
         return Result.Success(review);
     }
 
+    public async Task<Result<CourseReview>> UpdateReviewModerationAsync(
+        Guid reviewId,
+        bool isApproved,
+        bool isFeatured,
+        CancellationToken cancellationToken = default)
+    {
+        var review = await _context.Set<CourseReview>()
+            .FirstOrDefaultAsync(r => r.Id == reviewId, cancellationToken).ConfigureAwait(false);
+
+        if (review == null)
+        {
+            return Result.Failure<CourseReview>(Error.NotFound("Review.NotFound", $"Review with ID {reviewId} not found"));
+        }
+
+        review.SetModeration(isApproved, isFeatured);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        _logger.LogInformation(
+            "Review {ReviewId} moderation updated: approved={IsApproved}, featured={IsFeatured}",
+            reviewId,
+            isApproved,
+            isFeatured);
+        return Result.Success(review);
+    }
+
     public async Task<Result<CourseReview>> MarkReviewHelpfulAsync(Guid reviewId, CancellationToken cancellationToken = default)
     {
         var review = await _context.Set<CourseReview>()

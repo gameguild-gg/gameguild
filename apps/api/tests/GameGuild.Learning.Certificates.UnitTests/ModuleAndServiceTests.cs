@@ -90,6 +90,27 @@ public class CertificatesModuleAndServiceTests
         service.Should().NotBeNull();
     }
 
+    [Fact]
+    public async Task SetDefaultTemplateAsync_ShouldKeepExactlyOneDefaultPerCourse()
+    {
+        await using var context = CertificateServiceDbContext.Create();
+        var courseId = Guid.NewGuid();
+        var first = CertificateTemplate.Create(courseId, "First", "<html>First</html>");
+        var second = CertificateTemplate.Create(courseId, "Second", "<html>Second</html>");
+        first.SetDefault(true);
+        context.Set<CertificateTemplate>().AddRange(first, second);
+        await context.SaveChangesAsync();
+        var service = new CertificateTemplateService(context, NullLogger<CertificateTemplateService>.Instance);
+
+        var result = await service.SetDefaultTemplateAsync(courseId, second.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        var templates = await context.Set<CertificateTemplate>().OrderBy(template => template.Name).ToListAsync();
+        templates.Single(template => template.Id == first.Id).IsDefault.Should().BeFalse();
+        templates.Single(template => template.Id == second.Id).IsDefault.Should().BeTrue();
+        templates.Count(template => template.IsDefault).Should().Be(1);
+    }
+
     private sealed class CertificateServiceDbContext(DbContextOptions<CertificateServiceDbContext> options)
         : DbContext(options), IApplicationDbContext
     {
