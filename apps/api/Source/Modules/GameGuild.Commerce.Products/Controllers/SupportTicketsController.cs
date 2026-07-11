@@ -23,10 +23,11 @@ public sealed class SupportTicketsController(ISender sender) : BaseApiController
         [FromQuery] string? search = null,
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        [FromQuery] Guid? customerId = null)
     {
         var result = await sender.Send(
-            new GetSupportTicketsQuery(tenantId, status, priority, search, skip, take),
+            new GetSupportTicketsQuery(tenantId, status, priority, search, skip, take, customerId),
             cancellationToken).ConfigureAwait(false);
 
         return Ok(result);

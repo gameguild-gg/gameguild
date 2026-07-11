@@ -340,23 +340,37 @@ export const getCourseStudents = cache(async (courseId: string): Promise<CourseS
   try {
     const resolvedCourseId = await resolveCourseId(courseId);
     const { programs } = createCourseModules();
+    const users = createUsersModule();
     const result = await programs.getCoursesUsers(resolvedCourseId, { take: 200 });
 
     if (!result.ok) return { students: [], total: 0 };
 
-    const students = (result.data as Array<GeneratedApi.LearningCoursesUserProgress & {
-      userId?: string;
-      userName?: string;
-      userEmail?: string;
-    }>).map((dto, i) => ({
-      id: dto.userId ?? `user-${i}`,
-      name: dto.userName ?? `Student ${i + 1}`,
-      email: dto.userEmail ?? '',
-      enrolledAt: dto.startedAt ?? new Date().toISOString(),
-      progress: Math.round(dto.completionPercentage ?? 0),
-      completedAt: dto.completedAt ?? null,
-      lastActivity: dto.lastAccessedAt ?? new Date().toISOString(),
-    }));
+    const students = await Promise.all(
+      result.data.map(async (dto, i) => {
+        const userId = dto.userId ?? `user-${i}`;
+        let identity: { name?: string | null; email?: string | null } | null = null;
+
+        if (users && dto.userId) {
+          try {
+            const userResult = await users.getUsers1(dto.userId);
+            if (userResult.ok) identity = userResult.data;
+          } catch {
+            // The roster remains usable if an individual identity lookup fails.
+          }
+        }
+
+        return {
+          id: dto.enrollmentId ?? userId,
+          userId,
+          name: identity?.name?.trim() || identity?.email?.split('@')[0] || `Student ${i + 1}`,
+          email: identity?.email ?? '',
+          enrolledAt: dto.startedAt ?? new Date().toISOString(),
+          progress: Math.round(dto.completionPercentage ?? 0),
+          completedAt: dto.completedAt ?? null,
+          lastActivity: dto.lastAccessedAt ?? dto.startedAt ?? new Date().toISOString(),
+        };
+      }),
+    );
 
     return { students, total: students.length };
   } catch {

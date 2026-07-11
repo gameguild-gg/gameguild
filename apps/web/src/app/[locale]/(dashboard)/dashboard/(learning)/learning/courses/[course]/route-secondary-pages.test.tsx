@@ -114,6 +114,12 @@ vi.mock('./support/thread-action-panel', () => ({
   ),
 }));
 
+vi.mock('./support/tickets/course-ticket-action-panel', () => ({
+  CourseTicketActionPanel: ({ ticketId, resolved }: { ticketId: string; resolved: boolean }) => (
+    <aside data-testid="course-ticket-action-panel">{`${ticketId}:${resolved}`}</aside>
+  ),
+}));
+
 import AnalyticsLayout from './analytics/layout';
 import AnalyticsRedirectPage from './analytics/page';
 import CompletionAnalyticsPage from './analytics/completion/page';
@@ -442,7 +448,7 @@ describe('course-management secondary route pages', () => {
 
     render(await SupportTicketDetailPage({ params: params({ ticketId: 'ticket-1' }) } as never));
     expect(screen.getAllByText('Cannot submit quiz').length).toBeGreaterThan(0);
-    expect(screen.getByTestId('thread-action-panel')).toHaveTextContent('ticket-1:1');
+    expect(screen.getByTestId('course-ticket-action-panel')).toHaveTextContent('ticket-1:false');
 
     render(await DiscussionsPage({ params: params() } as never));
     expect(screen.getByTestId('course-discussions-manager')).toHaveTextContent('Advanced AI:1');

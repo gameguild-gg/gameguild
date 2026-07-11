@@ -434,25 +434,84 @@ export async function manualEnrollStudent(input: ManualEnrollStudentInput): Prom
   }
 
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const resolvedUser = await resolveEnrollmentUserId(userReference);
     if (!resolvedUser.success) {
       return resolvedUser;
     }
 
-    const { enrollments } = createCourseModules();
-    const result = await enrollments.postApiLearningEnrollments({
-      courseId,
-      userId: resolvedUser.data.userId,
-      cohortId,
-    });
-
-    if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}/students`);
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
-      return { success: true, data: { id: result.data.id ?? null } };
+    const { programs, enrollments } = createCourseModules();
+    const rosterResult = await programs.postCoursesUsers(resolvedCourseId, resolvedUser.data.userId);
+    if (!rosterResult.ok) {
+      return { success: false, error: extractError(rosterResult.error) };
     }
 
-    return { success: false, error: extractError(result.error) };
+    if (cohortId) {
+      const cohortResult = await enrollments.postApiLearningEnrollments({
+        courseId: resolvedCourseId,
+        userId: resolvedUser.data.userId,
+        cohortId,
+      });
+
+      if (!cohortResult.ok) {
+        await programs.deleteCoursesUsers(resolvedCourseId, resolvedUser.data.userId);
+        return { success: false, error: extractError(cohortResult.error) };
+      }
+    }
+
+    revalidateCoursePath(courseId, resolvedCourseId, 'students');
+    revalidateCoursePath(courseId, resolvedCourseId);
+    return { success: true, data: { id: rosterResult.data.enrollmentId ?? null } };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export async function removeCourseStudents(courseId: string, userIds: string[]): Promise<ActionResult<{ removed: number }>> {
+  const uniqueUserIds = [...new Set(userIds.map((userId) => userId.trim()).filter(Boolean))];
+  if (uniqueUserIds.length === 0) {
+    return { success: false, error: 'Select at least one student to remove.' };
+  }
+
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const { programs } = createCourseModules();
+    const results = await Promise.all(
+      uniqueUserIds.map((userId) => programs.deleteCoursesUsers(resolvedCourseId, userId)),
+    );
+    const failed = results.find((result) => !result.ok);
+    if (failed && !failed.ok) return { success: false, error: extractError(failed.error) };
+
+    revalidateCoursePath(courseId, resolvedCourseId, 'students');
+    revalidateCoursePath(courseId, resolvedCourseId);
+    return { success: true, data: { removed: uniqueUserIds.length } };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export interface SendCourseStudentMessageInput {
+  courseId: string;
+  userIds: string[];
+  subject: string;
+  message: string;
+}
+
+export async function sendCourseStudentMessage(input: SendCourseStudentMessageInput): Promise<ActionResult<{ sent: number }>> {
+  const subject = input.subject.trim();
+  const message = input.message.trim();
+  const userIds = [...new Set(input.userIds.map((userId) => userId.trim()).filter(Boolean))];
+
+  if (userIds.length === 0) return { success: false, error: 'Select at least one student.' };
+  if (subject.length < 3) return { success: false, error: 'Subject must be at least 3 characters.' };
+  if (message.length < 2) return { success: false, error: 'Message is required.' };
+
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
+    return await learningApiRequest<{ sent: number }>(`/v1/courses/${resolvedCourseId}/students/message`, {
+      method: 'POST',
+      body: JSON.stringify({ userIds, subject, message }),
+    });
   } catch (e) {
     return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
   }
@@ -1274,6 +1333,56 @@ function revalidateCourseSupport(courseId: string, discussionId?: string) {
   if (discussionId) {
     revalidatePath(`/dashboard/learning/courses/${courseId}/support/tickets/${discussionId}`);
     revalidatePath(`/dashboard/learning/courses/${courseId}/support/discussions/${discussionId}`);
+  }
+}
+
+export interface AddCourseSupportTicketMessageInput {
+  courseId: string;
+  ticketId: string;
+  message: string;
+}
+
+export async function addCourseSupportTicketMessage(input: AddCourseSupportTicketMessageInput): Promise<ActionResult<null>> {
+  const message = input.message.trim();
+  if (message.length < 2) return { success: false, error: 'Reply is required.' };
+
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
+    const result = await learningApiRequest<unknown>(
+      `/v1/courses/${resolvedCourseId}/support/tickets/${input.ticketId}/messages`,
+      { method: 'POST', body: JSON.stringify({ message }) },
+    );
+    if (!result.success) return { success: false, error: result.error };
+
+    revalidateCourseSupport(input.courseId, input.ticketId);
+    return { success: true, data: null };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export interface ResolveCourseSupportTicketInput {
+  courseId: string;
+  ticketId: string;
+  summary: string;
+}
+
+export async function resolveCourseSupportTicket(input: ResolveCourseSupportTicketInput): Promise<ActionResult<null>> {
+  const summary = input.summary.trim();
+  if (summary.length < 3) return { success: false, error: 'Resolution summary must be at least 3 characters.' };
+
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
+    const result = await learningApiRequest<unknown>(
+      `/v1/courses/${resolvedCourseId}/support/tickets/${input.ticketId}:resolve`,
+      { method: 'POST', body: JSON.stringify({ summary }) },
+    );
+    if (!result.success) return { success: false, error: result.error };
+
+    revalidateCourseSupport(input.courseId, input.ticketId);
+    return { success: true, data: null };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
   }
 }
 

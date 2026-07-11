@@ -5,6 +5,8 @@ const mocks = vi.hoisted(() => ({
   clientRequest: vi.fn(),
   getCourses1: vi.fn(),
   getCoursesAnalytics: vi.fn(),
+  getCoursesUsers: vi.fn(),
+  getUsers1: vi.fn(),
   getApiLearningEnrollmentsCourses: vi.fn(),
   getToken: vi.fn(),
   learningApiGet: vi.fn(),
@@ -20,10 +22,14 @@ vi.mock('@game-guild/client', () => ({
     LearningCoursesProgramModule: class {
       getCourses1 = mocks.getCourses1;
       getCoursesAnalytics = mocks.getCoursesAnalytics;
+      getCoursesUsers = mocks.getCoursesUsers;
     },
     LearningCoursesProgramcontentModule: class {},
     LearningEnrollmentsModule: class {
       getApiLearningEnrollmentsCourses = mocks.getApiLearningEnrollmentsCourses;
+    },
+    UsersModule: class {
+      getUsers1 = mocks.getUsers1;
     },
   },
 }));
@@ -32,7 +38,7 @@ vi.mock('./http', () => ({
   learningApiGet: mocks.learningApiGet,
 }));
 
-import { getCourse, getCourseAnalytics, getCourseClass, resolveCourseId } from './course';
+import { getCourse, getCourseAnalytics, getCourseClass, getCourseStudents, resolveCourseId } from './course';
 
 describe('course analytics query', () => {
   beforeEach(() => {
@@ -43,6 +49,8 @@ describe('course analytics query', () => {
     mocks.getToken.mockResolvedValue('access-token');
     mocks.learningApiGet.mockReset();
     mocks.getApiLearningEnrollmentsCourses.mockReset();
+    mocks.getCoursesUsers.mockReset();
+    mocks.getUsers1.mockReset();
   });
 
   it('resolves dashboard course slugs through the authenticated slug endpoint', async () => {
@@ -267,5 +275,42 @@ describe('course analytics query', () => {
     });
     expect(classDetail).not.toHaveProperty('settings');
     expect(classDetail?.instructor).toBeUndefined();
+  });
+
+  it('loads canonical course enrollments and joins real user identity data', async () => {
+    mocks.getCoursesUsers.mockResolvedValue({
+      ok: true,
+      data: [{
+        enrollmentId: 'enrollment-1',
+        courseId: 'course-1',
+        userId: 'user-1',
+        completionPercentage: 42.4,
+        startedAt: '2026-06-01T00:00:00.000Z',
+        lastAccessedAt: '2026-06-10T00:00:00.000Z',
+        completedAt: null,
+      }],
+    });
+    mocks.getUsers1.mockResolvedValue({
+      ok: true,
+      data: { id: 'user-1', name: 'Ada Learner', email: 'ada@example.com' },
+    });
+
+    const result = await getCourseStudents('course-1');
+
+    expect(mocks.getCoursesUsers).toHaveBeenCalledWith('course-1', { take: 200 });
+    expect(mocks.getUsers1).toHaveBeenCalledWith('user-1');
+    expect(result).toEqual({
+      students: [{
+        id: 'enrollment-1',
+        userId: 'user-1',
+        name: 'Ada Learner',
+        email: 'ada@example.com',
+        enrolledAt: '2026-06-01T00:00:00.000Z',
+        progress: 42,
+        completedAt: null,
+        lastActivity: '2026-06-10T00:00:00.000Z',
+      }],
+      total: 1,
+    });
   });
 });

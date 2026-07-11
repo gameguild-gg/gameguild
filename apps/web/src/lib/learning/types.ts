@@ -148,6 +148,7 @@ export interface ContentItemDetail extends ContentItem {
 export interface CourseStudents {
   students: Array<{
     id: string;
+    userId: string;
     name: string;
     email: string;
     enrolledAt: string;

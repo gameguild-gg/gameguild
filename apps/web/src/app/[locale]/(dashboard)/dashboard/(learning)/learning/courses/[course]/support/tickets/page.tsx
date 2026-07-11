@@ -26,7 +26,7 @@ export default async function SupportTicketsPage({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><LifeBuoy className="size-5" />Support Queue</CardTitle>
-          <CardDescription>Support queue derived from course discussion threads until a dedicated ticket table is needed.</CardDescription>
+          <CardDescription>Persisted learner support requests assigned to this course.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {tickets.tickets.length === 0 ? (
