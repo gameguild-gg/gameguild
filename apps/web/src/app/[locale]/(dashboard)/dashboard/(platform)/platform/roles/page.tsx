@@ -4,10 +4,11 @@ import {
   getMemberAccessDirectory,
   getPermissionTemplates,
   getPlatformRoles,
+  getUserPlatformRoles,
   type PlatformRole,
 } from '@/lib/community';
 import { updateMemberAccessRole } from '@/lib/community/actions/member-access';
-import { createPlatformRole, deletePlatformRole, updatePlatformRole } from '@/lib/community/actions/roles';
+import { assignPlatformRole, createPlatformRole, deletePlatformRole, removePlatformRole, updatePlatformRole } from '@/lib/community/actions/roles';
 import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
@@ -164,11 +165,16 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
   const members = directory.members;
   const platformRoles = platformRolesResult.roles;
   const templates = permissionTemplatesResult.templates;
+  const userRoleResults = await Promise.all(
+    members.map(async (row) => [row.member.id, await getUserPlatformRoles(row.member.id)] as const),
+  );
+  const userRoles = new Map(userRoleResults.map(([userId, result]) => [userId, result.roles]));
+  const userRoleError = userRoleResults.find(([, result]) => result.error)?.[1].error;
   const total = directory.total;
   const superAdmins = members.filter((row) => row.isSuperAdmin).length;
   const platformAdmins = members.filter((row) => row.role === 'TenantAdmin' || row.role === 'Owner').length;
   const assignedMembers = members.filter((row) => row.primaryMembership?.tenantId).length;
-  const warning = query?.error ?? directory.error ?? platformRolesResult.error ?? permissionTemplatesResult.error;
+  const warning = query?.error ?? directory.error ?? platformRolesResult.error ?? permissionTemplatesResult.error ?? userRoleError;
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -333,6 +339,97 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Custom role assignments</CardTitle>
+          <CardDescription>Grant or remove permission-based roles independently from workspace access.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {members.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No users are available for role assignment.</div>
+          ) : platformRoles.filter((role) => role.isActive).length === 0 ? (
+            <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">Create an active custom role before assigning permissions to users.</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Assigned custom roles</TableHead>
+                  <TableHead className="min-w-80 text-right">Grant role</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {members.map((row) => {
+                  const assignedRoles = userRoles.get(row.member.id) ?? [];
+                  const assignedIds = new Set(assignedRoles.map((role) => role.id));
+                  const availableRoles = platformRoles.filter((role) => role.isActive && !assignedIds.has(role.id));
+
+                  return (
+                    <TableRow key={`custom-${row.member.id}`}>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{row.member.displayName}</span>
+                          <span className="text-xs text-muted-foreground">{row.member.email}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {assignedRoles.length === 0 ? (
+                          <span className="text-sm text-muted-foreground">No custom roles</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {assignedRoles.map((role) => (
+                              <form key={role.id} action={removePlatformRole}>
+                                <input type="hidden" name="userId" value={row.member.id} />
+                                <input type="hidden" name="roleId" value={role.id} />
+                                <input type="hidden" name="roleName" value={role.name} />
+                                <Button
+                                  type="submit"
+                                  variant="outline"
+                                  size="sm"
+                                  aria-label={`Remove ${role.name} from ${row.member.displayName}`}
+                                  title={`Remove ${role.name}`}
+                                >
+                                  {role.name}
+                                  <Trash2 className="ml-2 size-3" />
+                                </Button>
+                              </form>
+                            ))}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {availableRoles.length > 0 ? (
+                          <form action={assignPlatformRole} className="ml-auto flex items-center justify-end gap-2">
+                            <input type="hidden" name="userId" value={row.member.id} />
+                            <Select name="roleId" defaultValue={availableRoles[0]?.id}>
+                              <SelectTrigger className="w-52" aria-label={`Custom role for ${row.member.displayName}`}>
+                                <SelectValue placeholder="Select custom role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableRoles.map((role) => (
+                                  <SelectItem key={role.id} value={role.id}>
+                                    {role.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button type="submit" variant="outline" size="sm">
+                              Assign custom role
+                            </Button>
+                          </form>
+                        ) : (
+                          <span className="block text-right text-sm text-muted-foreground">All active roles assigned</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

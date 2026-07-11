@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 
 const DASHBOARD_ROLES_PATH = '/dashboard/platform/roles';
 const DASHBOARD_USERS_PATH = '/dashboard/community/members/users';
+const DASHBOARD_INVITATIONS_PATH = '/dashboard/invitations';
 
 function buildRolesHref(params: { message?: string; error?: string }) {
   const searchParams = new URLSearchParams();
@@ -24,6 +25,15 @@ function buildUsersHref(params: { message?: string; error?: string }) {
 
   const suffix = searchParams.toString();
   return `${DASHBOARD_USERS_PATH}${suffix ? `?${suffix}` : ''}`;
+}
+
+function buildInvitationsHref(params: { message?: string; error?: string }) {
+  const searchParams = new URLSearchParams();
+  if (params.message) searchParams.set('message', params.message);
+  if (params.error) searchParams.set('error', params.error);
+
+  const suffix = searchParams.toString();
+  return `${DASHBOARD_INVITATIONS_PATH}${suffix ? `?${suffix}` : ''}`;
 }
 
 function readRequired(formData: FormData, key: string) {
@@ -88,17 +98,25 @@ export async function invitePlatformUser(formData: FormData) {
 
   const client = createClient();
   const users = new GeneratedApi.UsersModule(client);
-  const createResult = await users.postUsers({
-    email,
-    name,
-    phoneNumber: null,
-  });
-
-  if (!createResult.ok) {
-    redirect(buildUsersHref({ error: createResult.error.message }));
+  const lookupResult = await users.getUsers({ email, limit: 2 });
+  if (!lookupResult.ok) {
+    redirect(buildUsersHref({ error: lookupResult.error.message }));
   }
 
-  const userId = createResult.data.id;
+  const existingUser = lookupResult.data.items?.find((user) => user.email?.toLowerCase() === email.toLowerCase());
+  let userId = existingUser?.id;
+  if (!userId) {
+    const createResult = await users.postUsers({
+      email,
+      name,
+      phoneNumber: null,
+    });
+
+    if (!createResult.ok) {
+      redirect(buildUsersHref({ error: createResult.error.message }));
+    }
+    userId = createResult.data.id;
+  }
   if (!userId) {
     redirect(buildUsersHref({ error: 'The user was created but the API did not return a user id.' }));
   }
@@ -132,12 +150,19 @@ export async function invitePlatformUser(formData: FormData) {
   redirect(buildUsersHref({ message: `Invited ${name} as ${role}.` }));
 }
 
-async function updateInvite(formData: FormData, action: 'resend' | 'cancel' | 'accept', message: string) {
+async function updateInvite(
+  formData: FormData,
+  action: 'resend' | 'cancel' | 'accept',
+  message: string,
+  destination: 'users' | 'invitations' = 'users',
+) {
   const userId = readRequired(formData, 'userId');
   const tenantId = readRequired(formData, 'tenantId');
 
   if (!userId || !tenantId) {
-    redirect(buildUsersHref({ error: 'User and workspace are required to update an invite.' }));
+    redirect(destination === 'users'
+      ? buildUsersHref({ error: 'User and workspace are required to update an invite.' })
+      : buildInvitationsHref({ error: 'User and workspace are required to update an invite.' }));
   }
 
   const client = createClient();
@@ -149,18 +174,22 @@ async function updateInvite(formData: FormData, action: 'resend' | 'cancel' | 'a
   });
 
   if (!result.ok) {
-    redirect(buildUsersHref({ error: result.error.message }));
+    redirect(destination === 'users'
+      ? buildUsersHref({ error: result.error.message })
+      : buildInvitationsHref({ error: result.error.message }));
   }
 
   if (result.data?.success === false) {
-    redirect(buildUsersHref({ error: result.data.message ?? 'Invite update was rejected.' }));
+    const error = result.data.message ?? 'Invite update was rejected.';
+    redirect(destination === 'users' ? buildUsersHref({ error }) : buildInvitationsHref({ error }));
   }
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/community');
   revalidatePath(DASHBOARD_USERS_PATH);
   revalidatePath(DASHBOARD_ROLES_PATH);
-  redirect(buildUsersHref({ message }));
+  revalidatePath(DASHBOARD_INVITATIONS_PATH);
+  redirect(destination === 'users' ? buildUsersHref({ message }) : buildInvitationsHref({ message }));
 }
 
 export async function resendPlatformInvite(formData: FormData) {
@@ -171,6 +200,6 @@ export async function cancelPlatformInvite(formData: FormData) {
   await updateInvite(formData, 'cancel', 'Invite cancelled.');
 }
 
-export async function acceptPlatformInvite(formData: FormData) {
-  await updateInvite(formData, 'accept', 'Invite accepted.');
+export async function acceptCurrentUserInvite(formData: FormData) {
+  await updateInvite(formData, 'accept', 'Invitation accepted. Your workspace access is now active.', 'invitations');
 }

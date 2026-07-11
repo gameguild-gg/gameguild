@@ -1,6 +1,6 @@
 'use server';
 
-import { getToken } from '@/auth';
+import { auth, getToken } from '@/auth';
 import { createServerClient, GeneratedApi } from '@game-guild/client';
 import type { SocialGroupsSocialGroupMemberRole, SocialGroupsSocialGroupType, SocialGroupsSocialGroupVisibility } from '@game-guild/client';
 import { revalidatePath } from 'next/cache';
@@ -62,9 +62,17 @@ export async function createCommunityGroup(formData: FormData) {
     redirect(buildGroupsHref({ error: 'Group name is required.' }));
   }
 
+  const session = await auth().catch(() => null);
+  const ownerId = session?.user?.id?.trim();
+  if (!ownerId) {
+    redirect(buildGroupsHref({ error: 'Authentication is required to create a group.' }));
+  }
+
   const client = createClient();
   const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
   const result = await socialGroups.postApiSocialGroups({
+    ownerId,
+    tenantId: session?.tenantId || undefined,
     name,
     slug: slugify(name),
     description: description || null,

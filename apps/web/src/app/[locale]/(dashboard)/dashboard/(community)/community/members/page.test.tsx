@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import type React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -13,6 +14,14 @@ vi.mock('@/lib/community', () => ({
   getCommunityStats: mocks.getCommunityStats,
   getGroups: mocks.getGroups,
   getSupportTickets: mocks.getSupportTickets,
+}));
+
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }));
 
 import MembersOverviewPage from './page';
@@ -121,7 +130,11 @@ describe('community member management pages', () => {
           id: 'public-group',
           name: 'Mentors',
           description: 'Mentor-led critique group',
+          type: 'InterestCommunity',
+          visibility: 'Public',
+          status: 'Active',
           memberCount: 12,
+          pendingMemberCount: 0,
           isPublic: true,
           createdAt: '2026-04-01T00:00:00.000Z',
         },
@@ -129,7 +142,11 @@ describe('community member management pages', () => {
           id: 'private-group',
           name: 'Super Admin Review',
           description: 'Private operator group',
+          type: 'ProjectTeam',
+          visibility: 'Private',
+          status: 'Active',
           memberCount: 2,
+          pendingMemberCount: 0,
           isPublic: false,
           createdAt: '2026-05-01T00:00:00.000Z',
         },

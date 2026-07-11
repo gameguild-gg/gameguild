@@ -163,6 +163,27 @@ export async function getPlatformRoles(options?: { includeInactive?: boolean; te
   }
 }
 
+export async function getUserPlatformRoles(userId: string): Promise<{ roles: PlatformRole[]; error?: string | null }> {
+  try {
+    const client = getApiClient();
+    const result = await client.request<RolesResponse>({
+      method: 'GET',
+      path: `/v1/roles/user/${userId}`,
+      params: { includeExpired: false },
+      requiresAuth: true,
+    });
+
+    if (!result.ok) return { roles: [], error: result.error.message };
+
+    return {
+      roles: (result.data ?? []).map(normalizeRole),
+      error: null,
+    };
+  } catch (error) {
+    return { roles: [], error: error instanceof Error ? error.message : 'User roles could not be loaded.' };
+  }
+}
+
 export async function getPermissionTemplates(): Promise<{ templates: PermissionTemplate[]; error?: string | null }> {
   try {
     const client = getApiClient();

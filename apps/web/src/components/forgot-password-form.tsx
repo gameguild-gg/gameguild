@@ -12,10 +12,11 @@ type ActionResult<T> = { success: true; data: T } | { success: false; error: str
 
 interface ForgotPasswordFormProps extends React.ComponentProps<'div'> {
   onRequestReset?: (email: string) => Promise<ActionResult<void>>;
+  initialEmail?: string;
 }
 
-export function ForgotPasswordForm({ className, onRequestReset, ...props }: ForgotPasswordFormProps) {
-  const [email, setEmail] = useState('');
+export function ForgotPasswordForm({ className, initialEmail = '', onRequestReset, ...props }: ForgotPasswordFormProps) {
+  const [email, setEmail] = useState(initialEmail);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);

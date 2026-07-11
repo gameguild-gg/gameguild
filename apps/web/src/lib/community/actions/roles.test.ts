@@ -26,7 +26,7 @@ vi.mock('next/navigation', () => ({
   redirect: mocks.redirect,
 }));
 
-import { createPlatformRole, deletePlatformRole, updatePlatformRole } from './roles';
+import { assignPlatformRole, createPlatformRole, deletePlatformRole, removePlatformRole, updatePlatformRole } from './roles';
 
 describe('platform role actions', () => {
   beforeEach(() => {
@@ -100,6 +100,49 @@ describe('platform role actions', () => {
     expect(mocks.request).toHaveBeenCalledWith({
       method: 'DELETE',
       path: '/v1/roles/role-1',
+      requiresAuth: true,
+    });
+  });
+
+  it('assigns a custom role to a platform user', async () => {
+    const formData = new FormData();
+    formData.set('userId', 'user-1');
+    formData.set('roleId', 'role-1');
+    formData.set('roleName', 'Course Operator');
+
+    await expect(assignPlatformRole(formData)).rejects.toThrow(
+      'redirect:/dashboard/platform/roles?message=Assigned+Course+Operator.',
+    );
+
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/v1/roles/:assign',
+      body: {
+        userId: 'user-1',
+        roleId: 'role-1',
+        expiresAt: null,
+      },
+      requiresAuth: true,
+    });
+  });
+
+  it('removes a custom role from a platform user', async () => {
+    const formData = new FormData();
+    formData.set('userId', 'user-1');
+    formData.set('roleId', 'role-1');
+    formData.set('roleName', 'Course Operator');
+
+    await expect(removePlatformRole(formData)).rejects.toThrow(
+      'redirect:/dashboard/platform/roles?message=Removed+Course+Operator.',
+    );
+
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/v1/roles/:remove',
+      body: {
+        userId: 'user-1',
+        roleId: 'role-1',
+      },
       requiresAuth: true,
     });
   });

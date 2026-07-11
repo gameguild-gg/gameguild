@@ -126,3 +126,60 @@ export async function deletePlatformRole(formData: FormData) {
   revalidateRoles();
   redirect(buildRolesHref({ message: `Deleted role ${name}.` }));
 }
+
+export async function assignPlatformRole(formData: FormData) {
+  const userId = readText(formData, 'userId');
+  const roleId = readText(formData, 'roleId');
+  const roleName = readText(formData, 'roleName') || 'custom role';
+
+  if (!userId || !roleId) {
+    redirect(buildRolesHref({ error: 'User and role are required.' }));
+  }
+
+  const client = createClient();
+  const result = await client.request({
+    method: 'POST',
+    path: '/v1/roles/:assign',
+    body: {
+      userId,
+      roleId,
+      expiresAt: null,
+    },
+    requiresAuth: true,
+  });
+
+  if (!result.ok) {
+    redirect(buildRolesHref({ error: result.error.message }));
+  }
+
+  revalidateRoles();
+  redirect(buildRolesHref({ message: `Assigned ${roleName}.` }));
+}
+
+export async function removePlatformRole(formData: FormData) {
+  const userId = readText(formData, 'userId');
+  const roleId = readText(formData, 'roleId');
+  const roleName = readText(formData, 'roleName') || 'custom role';
+
+  if (!userId || !roleId) {
+    redirect(buildRolesHref({ error: 'User and role are required.' }));
+  }
+
+  const client = createClient();
+  const result = await client.request({
+    method: 'POST',
+    path: '/v1/roles/:remove',
+    body: {
+      userId,
+      roleId,
+    },
+    requiresAuth: true,
+  });
+
+  if (!result.ok) {
+    redirect(buildRolesHref({ error: result.error.message }));
+  }
+
+  revalidateRoles();
+  redirect(buildRolesHref({ message: `Removed ${roleName}.` }));
+}

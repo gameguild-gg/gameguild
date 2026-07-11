@@ -1,5 +1,5 @@
 import { getToken } from '@/auth';
-import { createServerClient, GeneratedApi, type IdentityUsersUserNotification } from '@game-guild/client';
+import { createServerClient, GeneratedApi, type IdentityUsersUserNotificationDto } from '@game-guild/client';
 
 export interface DashboardNotificationItem {
   id: string;
@@ -39,7 +39,7 @@ function formatNotificationDate(value?: string | null) {
   }).format(date)} UTC`;
 }
 
-function mapNotification(notification: IdentityUsersUserNotification): DashboardNotificationItem {
+function mapNotification(notification: IdentityUsersUserNotificationDto): DashboardNotificationItem {
   const createdAt = notification.createdAt ?? notification.updatedAt;
 
   return {
@@ -53,9 +53,9 @@ function mapNotification(notification: IdentityUsersUserNotification): Dashboard
   };
 }
 
-function getPagedItems(data: unknown): IdentityUsersUserNotification[] {
+function getPagedItems(data: unknown): IdentityUsersUserNotificationDto[] {
   const items = (data as { items?: unknown[] | null } | null)?.items;
-  return Array.isArray(items) ? (items as IdentityUsersUserNotification[]) : [];
+  return Array.isArray(items) ? (items as IdentityUsersUserNotificationDto[]) : [];
 }
 
 export async function getDashboardNotificationSummary(userId: string): Promise<DashboardNotificationSummary> {

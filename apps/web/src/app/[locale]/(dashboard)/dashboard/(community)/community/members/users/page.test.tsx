@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
   invitePlatformUser: vi.fn(),
   resendPlatformInvite: vi.fn(),
   cancelPlatformInvite: vi.fn(),
-  acceptPlatformInvite: vi.fn(),
 }));
 
 vi.mock('@/lib/community', () => ({
@@ -30,7 +29,6 @@ vi.mock('@/lib/community/actions/member-access', () => ({
   invitePlatformUser: mocks.invitePlatformUser,
   resendPlatformInvite: mocks.resendPlatformInvite,
   cancelPlatformInvite: mocks.cancelPlatformInvite,
-  acceptPlatformInvite: mocks.acceptPlatformInvite,
 }));
 
 vi.mock('@/i18n/navigation', () => ({
@@ -174,7 +172,7 @@ describe('community users page', () => {
     expect(within(row!).getByText('Pending invite')).toBeInTheDocument();
     expect(within(row!).getByText('Invited by admin@game-guild.com')).toBeInTheDocument();
     expect(within(row!).getByRole('button', { name: 'Resend invite' })).toBeInTheDocument();
-    expect(within(row!).getByRole('button', { name: 'Accept invite' })).toBeInTheDocument();
+    expect(within(row!).queryByRole('button', { name: 'Accept invite' })).not.toBeInTheDocument();
     expect(within(row!).getByRole('button', { name: 'Cancel invite' })).toBeInTheDocument();
   });
 

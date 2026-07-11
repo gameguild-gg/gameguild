@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  auth: vi.fn(),
   getToken: vi.fn(),
   createServerClient: vi.fn(),
   postApiSocialGroups: vi.fn(),
@@ -20,6 +21,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/auth', () => ({
+  auth: mocks.auth,
   getToken: mocks.getToken,
 }));
 
@@ -52,6 +54,10 @@ import {
 describe('createCommunityGroup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.auth.mockResolvedValue({
+      user: { id: 'admin-1', email: 'admin@game-guild.com' },
+      tenantId: 'tenant-1',
+    });
     mocks.getToken.mockResolvedValue('access-token');
     mocks.createServerClient.mockReturnValue({ request: vi.fn() });
     mocks.SocialGroupsSocialgroupsModule.mockReturnValue({
@@ -87,6 +93,8 @@ describe('createCommunityGroup', () => {
     );
 
     expect(mocks.postApiSocialGroups).toHaveBeenCalledWith({
+      ownerId: 'admin-1',
+      tenantId: 'tenant-1',
       name: 'Pixel Art Mentors',
       slug: 'pixel-art-mentors',
       description: 'Mentor-led critiques',
@@ -119,6 +127,8 @@ describe('createCommunityGroup', () => {
     );
 
     expect(mocks.postApiSocialGroups).toHaveBeenCalledWith({
+      ownerId: 'admin-1',
+      tenantId: 'tenant-1',
       name: 'General',
       slug: 'general',
       description: null,
@@ -137,6 +147,18 @@ describe('createCommunityGroup', () => {
     );
 
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('requires an authenticated owner before creating a group', async () => {
+    mocks.auth.mockResolvedValue(null);
+    const formData = new FormData();
+    formData.set('name', 'Anonymous Group');
+
+    await expect(createCommunityGroup(formData)).rejects.toThrow(
+      'redirect:/dashboard/community/members/groups?error=Authentication+is+required+to+create+a+group.',
+    );
+
+    expect(mocks.postApiSocialGroups).not.toHaveBeenCalled();
   });
 
   it('updates group settings from the detail page', async () => {

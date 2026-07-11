@@ -10,7 +10,7 @@ import type {
   IdentityTenantsGetUserMembershipsOutput,
   IdentityTenantsUserMembership,
   IdentityUsersUser,
-  IdentityUsersUserProfile,
+  IdentityUsersUserProfileDto,
   SocialFeedFeedItem,
   SocialFeedFeedItemReason,
   SocialGroupsSocialGroup,
@@ -329,6 +329,21 @@ async function getUserMemberships(
   }
 
   return { memberships: (result.data?.memberships ?? []) as MemberAccessMembership[], error: null };
+}
+
+export async function getPendingMemberInvitations(userId: string): Promise<{
+  invitations: MemberAccessMembership[];
+  error?: string | null;
+}> {
+  if (!userId) return { invitations: [], error: 'A signed-in user is required to load invitations.' };
+
+  const result = await getUserMemberships(getApiClient(), userId);
+  return {
+    invitations: result.memberships.filter(
+      (membership) => !membership.isActive && membership.inviteStatus === 'Pending',
+    ),
+    error: result.error,
+  };
 }
 
 function getInitials(displayName: string) {
@@ -880,7 +895,7 @@ export async function getMember(userId: string): Promise<MemberDetail | null> {
         path: `/v1/users/${userId}`,
         requiresAuth: true,
       }),
-      client.request<IdentityUsersUserProfile>({
+      client.request<IdentityUsersUserProfileDto>({
         method: 'GET',
         path: `/v1/users/${userId}/profile`,
         requiresAuth: true,

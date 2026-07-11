@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getToken: vi.fn(),
   createServerClient: vi.fn(),
+  usersGetUsers: vi.fn(),
   usersPostUsers: vi.fn(),
   usersMembershipsPost: vi.fn(),
   UsersModule: vi.fn(),
@@ -34,7 +35,7 @@ vi.mock('next/navigation', () => ({
   redirect: mocks.redirect,
 }));
 
-import { acceptPlatformInvite, cancelPlatformInvite, invitePlatformUser, resendPlatformInvite, updateMemberAccessRole } from './member-access';
+import { acceptCurrentUserInvite, cancelPlatformInvite, invitePlatformUser, resendPlatformInvite, updateMemberAccessRole } from './member-access';
 
 describe('updateMemberAccessRole', () => {
   beforeEach(() => {
@@ -42,9 +43,10 @@ describe('updateMemberAccessRole', () => {
     mocks.getToken.mockResolvedValue('access-token');
     mocks.createServerClient.mockReturnValue({ request: mocks.request });
     mocks.request.mockResolvedValue({ ok: true, data: { success: true } });
-    mocks.UsersModule.mockReturnValue({ postUsers: mocks.usersPostUsers });
+    mocks.UsersModule.mockReturnValue({ getUsers: mocks.usersGetUsers, postUsers: mocks.usersPostUsers });
     mocks.UsersMembershipsModule.mockReturnValue({ postUsersMemberships: mocks.usersMembershipsPost });
     mocks.usersPostUsers.mockResolvedValue({ ok: true, data: { id: 'user-1', email: 'learner@game-guild.com' } });
+    mocks.usersGetUsers.mockResolvedValue({ ok: true, data: { items: [] } });
     mocks.usersMembershipsPost.mockResolvedValue({ ok: true, data: { success: true, memberId: 'member-1' } });
   });
 
@@ -155,6 +157,25 @@ describe('updateMemberAccessRole', () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/platform/roles');
   });
 
+  it('reuses an existing user when inviting an email already present in the directory', async () => {
+    mocks.usersGetUsers.mockResolvedValue({
+      ok: true,
+      data: { items: [{ id: 'existing-user', email: 'learner@game-guild.com', name: 'Existing Learner' }] },
+    });
+    const formData = new FormData();
+    formData.set('email', 'learner@game-guild.com');
+    formData.set('tenantId', 'tenant-1');
+
+    await expect(invitePlatformUser(formData)).rejects.toThrow(
+      'redirect:/dashboard/community/members/users?message=Invited+learner+as+Member.',
+    );
+
+    expect(mocks.usersPostUsers).not.toHaveBeenCalled();
+    expect(mocks.request).toHaveBeenCalledWith(expect.objectContaining({
+      path: '/v1/users/existing-user/memberships',
+    }));
+  });
+
   it('requires email and tenant before creating invited users', async () => {
     const formData = new FormData();
     formData.set('email', 'not-an-email');
@@ -232,8 +253,8 @@ describe('updateMemberAccessRole', () => {
     formData.set('userId', 'user-1');
     formData.set('tenantId', 'tenant-1');
 
-    await expect(acceptPlatformInvite(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?message=Invite+accepted.',
+    await expect(acceptCurrentUserInvite(formData)).rejects.toThrow(
+      'redirect:/dashboard/invitations?message=Invitation+accepted.+Your+workspace+access+is+now+active.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
