@@ -33,8 +33,8 @@ public sealed class CourseStudentsController(ISender sender, IActorContextAccess
 }
 
 public sealed record SendCourseStudentMessageRequest(
-    [property: MinLength(1)] IReadOnlyCollection<Guid> UserIds,
-    [property: Required, MinLength(3), MaxLength(160)] string Subject,
-    [property: Required, MinLength(2), MaxLength(4000)] string Message);
+    [MinLength(1)] IReadOnlyCollection<Guid> UserIds,
+    [Required, MinLength(3), MaxLength(160)] string Subject,
+    [Required, MinLength(2), MaxLength(4000)] string Message);
 
 public sealed record SendCourseStudentMessageResponse(int Sent);

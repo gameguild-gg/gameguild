@@ -105,8 +105,8 @@ public sealed class CourseSupportTicketsController(ISender sender, IActorContext
 }
 
 public sealed record CourseSupportTicketMessageRequest(
-    [property: Required, MinLength(2), MaxLength(4000)] string Message,
+    [Required, MinLength(2), MaxLength(4000)] string Message,
     bool IsInternal = false);
 
 public sealed record ResolveCourseSupportTicketRequest(
-    [property: Required, MinLength(3), MaxLength(1000)] string Summary);
+    [Required, MinLength(3), MaxLength(1000)] string Summary);
