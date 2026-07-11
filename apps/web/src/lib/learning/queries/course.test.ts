@@ -97,6 +97,15 @@ describe('course analytics query', () => {
     expect(course?.slug).toBe('ai-for-boss-encounters');
   });
 
+  it('does not retry a missing dashboard slug through the UUID endpoint', async () => {
+    mocks.learningApiGet.mockResolvedValueOnce(null);
+
+    await expect(getCourse('retired-course-by-ada-lovelace')).resolves.toBeNull();
+
+    expect(mocks.learningApiGet).toHaveBeenCalledTimes(1);
+    expect(mocks.learningApiGet).toHaveBeenCalledWith('/v1/courses/slug/retired-course', 0);
+  });
+
   it('keeps legacy UUID route params working through the course ID endpoint', async () => {
     mocks.learningApiGet.mockResolvedValue({
         id: '08691da8-245e-4d9e-b729-83c9023ba061',

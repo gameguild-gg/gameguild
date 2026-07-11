@@ -48,6 +48,7 @@ export function FaqEditorForm({ courseId, items }: FaqEditorFormProps) {
 
   function updateItem(id: string, field: keyof Omit<EditableFaqItem, 'id'>, value: string) {
     setDraftItems((current) => current.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
+    setError(null);
     setSuccess(false);
   }
 
@@ -68,6 +69,17 @@ export function FaqEditorForm({ courseId, items }: FaqEditorFormProps) {
     event.preventDefault();
     setError(null);
     setSuccess(false);
+
+    const incompleteIndex = draftItems.findIndex((item) => {
+      const question = item.question.trim();
+      const answer = item.answer.trim();
+      return (question.length > 0 || answer.length > 0) && (question.length === 0 || answer.length === 0);
+    });
+
+    if (incompleteIndex >= 0) {
+      setError(`Complete both the question and answer for Question ${incompleteIndex + 1}.`);
+      return;
+    }
 
     startTransition(async () => {
       const result = await updateCourseFaq(courseId, draftItems);
@@ -130,7 +142,7 @@ export function FaqEditorForm({ courseId, items }: FaqEditorFormProps) {
       </div>
 
       {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{error}</div>
+        <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{error}</div>
       ) : null}
       {success ? (
         <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300">

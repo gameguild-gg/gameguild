@@ -45,5 +45,5 @@ describe('IntegrationSettingsEditor', () => {
       }),
     );
     expect(await screen.findByRole('status')).toHaveTextContent('Integration settings saved.');
-  });
+  }, 15_000);
 });

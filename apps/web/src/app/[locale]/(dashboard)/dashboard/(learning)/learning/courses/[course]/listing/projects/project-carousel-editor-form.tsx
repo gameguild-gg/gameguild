@@ -8,7 +8,7 @@ import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 
 interface ProjectCarouselEditorFormProps {
   courseId: string;
@@ -38,7 +38,7 @@ function createEmptyProject(index: number): EditableProjectItem {
 }
 
 export function ProjectCarouselEditorForm({ courseId, items }: ProjectCarouselEditorFormProps) {
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [draftItems, setDraftItems] = useState<EditableProjectItem[]>(
     items.length > 0
       ? items.map((item) => ({
@@ -57,6 +57,7 @@ export function ProjectCarouselEditorForm({ courseId, items }: ProjectCarouselEd
 
   function updateItem(id: string, field: keyof Omit<EditableProjectItem, 'id'>, value: string) {
     setDraftItems((current) => current.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
+    setError(null);
     setSuccess(false);
   }
 
@@ -73,21 +74,44 @@ export function ProjectCarouselEditorForm({ courseId, items }: ProjectCarouselEd
     setSuccess(false);
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setSuccess(false);
 
-    startTransition(async () => {
-      const result = await updateCourseLandingProjects(courseId, draftItems);
+    const incompleteIndex = draftItems.findIndex((item) => {
+      const requiredValues = [item.title, item.summary, item.deliverable];
+      const hasAuthoredContent = requiredValues.some((value) => value.trim().length > 0) || item.image.trim().length > 0 || item.skills.trim().length > 0;
+
+      return hasAuthoredContent && requiredValues.some((value) => value.trim().length === 0);
+    });
+
+    if (incompleteIndex >= 0) {
+      setError(`Complete the title, summary, and deliverable for Project ${incompleteIndex + 1}.`);
+      return;
+    }
+
+    const persistedItems = draftItems
+      .filter((item) => item.title.trim().length > 0 && item.summary.trim().length > 0 && item.deliverable.trim().length > 0)
+      .slice(0, 6);
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await updateCourseLandingProjects(courseId, persistedItems);
 
       if (!result.success) {
         setError(result.error);
         return;
       }
 
+      setDraftItems(persistedItems.length > 0 ? persistedItems : [createEmptyProject(1)]);
       setSuccess(true);
-    });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'The project carousel could not be saved.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -171,7 +195,9 @@ export function ProjectCarouselEditorForm({ courseId, items }: ProjectCarouselEd
       </div>
 
       {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{error}</div>
+        <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+          {error}
+        </div>
       ) : null}
       {success ? (
         <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300">
@@ -184,8 +210,8 @@ export function ProjectCarouselEditorForm({ courseId, items }: ProjectCarouselEd
           <Plus className="mr-2 size-4" />
           Add project
         </Button>
-        <Button type="submit" disabled={isPending}>
-          {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" />}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" />}
           Save project carousel
         </Button>
       </div>

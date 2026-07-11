@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@game-guild/ui/components/button';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -15,7 +15,7 @@ interface CourseLifecycleActionsProps {
 
 export function CourseLifecycleActions({ courseId, status, locale }: CourseLifecycleActionsProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(status);
@@ -24,9 +24,11 @@ export function CourseLifecycleActions({ courseId, status, locale }: CourseLifec
     setCurrentStatus(status);
   }, [status]);
 
-  function handleAction(action: 'publish' | 'unpublish' | 'archive' | 'delete') {
+  async function handleAction(action: 'publish' | 'unpublish' | 'archive' | 'delete') {
     setError(null);
-    startTransition(async () => {
+    setIsSubmitting(true);
+
+    try {
       let result;
       switch (action) {
         case 'publish':
@@ -52,9 +54,12 @@ export function CourseLifecycleActions({ courseId, status, locale }: CourseLifec
         if (action === 'publish') setCurrentStatus('published');
         if (action === 'unpublish') setCurrentStatus('draft');
         if (action === 'archive') setCurrentStatus('archived');
-        router.refresh();
       }
-    });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'The course lifecycle action failed.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const statusConfig = {
@@ -95,40 +100,40 @@ export function CourseLifecycleActions({ courseId, status, locale }: CourseLifec
         </div>
         <div className="flex items-center gap-2">
           {currentStatus === 'draft' && (
-            <Button size="sm" onClick={() => handleAction('publish')} disabled={isPending}>
-              {isPending ? <Loader2 className="mr-1 size-3 animate-spin" /> : <Eye className="mr-1 size-3" />}
+            <Button size="sm" onClick={() => handleAction('publish')} disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="mr-1 size-3 animate-spin" /> : <Eye className="mr-1 size-3" />}
               Publish
             </Button>
           )}
           {currentStatus === 'published' && (
             <>
-              <Button size="sm" variant="outline" onClick={() => handleAction('unpublish')} disabled={isPending}>
-                {isPending ? <Loader2 className="mr-1 size-3 animate-spin" /> : <EyeOff className="mr-1 size-3" />}
+              <Button size="sm" variant="outline" onClick={() => handleAction('unpublish')} disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-1 size-3 animate-spin" /> : <EyeOff className="mr-1 size-3" />}
                 Unpublish
               </Button>
-              <Button size="sm" variant="outline" onClick={() => handleAction('archive')} disabled={isPending}>
+              <Button size="sm" variant="outline" onClick={() => handleAction('archive')} disabled={isSubmitting}>
                 <Archive className="mr-1 size-3" />
                 Archive
               </Button>
             </>
           )}
           {currentStatus === 'archived' && (
-            <Button size="sm" variant="outline" onClick={() => handleAction('publish')} disabled={isPending}>
-              {isPending ? <Loader2 className="mr-1 size-3 animate-spin" /> : <Eye className="mr-1 size-3" />}
+            <Button size="sm" variant="outline" onClick={() => handleAction('publish')} disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="mr-1 size-3 animate-spin" /> : <Eye className="mr-1 size-3" />}
               Re-publish
             </Button>
           )}
           {!confirmDelete ? (
-            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)} disabled={isPending}>
+            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)} disabled={isSubmitting}>
               <Trash2 className="size-3" />
             </Button>
           ) : (
             <div className="flex items-center gap-1">
-              <Button size="sm" variant="destructive" onClick={() => handleAction('delete')} disabled={isPending}>
-                {isPending ? <Loader2 className="mr-1 size-3 animate-spin" /> : <AlertTriangle className="mr-1 size-3" />}
+              <Button size="sm" variant="destructive" onClick={() => handleAction('delete')} disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-1 size-3 animate-spin" /> : <AlertTriangle className="mr-1 size-3" />}
                 Confirm Delete
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)} disabled={isPending}>
+              <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
             </div>

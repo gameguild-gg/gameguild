@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useTransition, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';
@@ -11,7 +10,6 @@ import { updateCourse, fetchCourse } from '@/lib/learning/actions';
 import type { CourseDetails } from '@/lib/learning/types';
 
 export default function ListingMediaPage({ params }: { params: Promise<{ locale: string; course: string }> }) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [course, setCourse] = useState<CourseDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,7 +50,6 @@ export default function ListingMediaPage({ params }: { params: Promise<{ locale:
       });
       if (result.success) {
         setSuccess(true);
-        router.refresh();
       } else {
         setError(result.error);
       }

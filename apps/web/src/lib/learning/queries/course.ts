@@ -206,7 +206,7 @@ export const getCourse = cache(async (courseIdentifier: string): Promise<CourseD
   }
 
   const slug = getCourseLookupSlug(identifier);
-  return (await fetchCourseBySlug(slug)) ?? fetchCourseById(identifier);
+  return fetchCourseBySlug(slug);
 });
 
 export const resolveCourseId = cache(async (courseIdentifier: string): Promise<string> => {

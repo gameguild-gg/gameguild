@@ -13,7 +13,6 @@ import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { Loader2, Save, Settings } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
 
 interface ClassDetailActionsProps {
@@ -35,7 +34,6 @@ function toDateTimeInputValue(date: Date): string {
 }
 
 export function ClassDetailActions({ courseId, classDetail }: ClassDetailActionsProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const initialEnd = useMemo(() => new Date(new Date(classDetail.scheduledAt).getTime() + classDetail.duration * 60000), [classDetail.duration, classDetail.scheduledAt]);
   const [title, setTitle] = useState(classDetail.title);
@@ -44,6 +42,7 @@ export function ClassDetailActions({ courseId, classDetail }: ClassDetailActions
   const [endDate, setEndDate] = useState(toDateTimeInputValue(initialEnd));
   const [capacity, setCapacity] = useState(String(classDetail.maxAttendees ?? 24));
   const [meeting, setMeeting] = useState(classDetail.location?.meetingUrl ?? '');
+  const [currentStatus, setCurrentStatus] = useState(classDetail.status);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const saveChanges = () => {
@@ -66,7 +65,6 @@ export function ClassDetailActions({ courseId, classDetail }: ClassDetailActions
       }
 
       setMessage({ type: 'success', text: 'Class updated.' });
-      router.refresh();
     });
   };
 
@@ -80,7 +78,15 @@ export function ClassDetailActions({ courseId, classDetail }: ClassDetailActions
       }
 
       setMessage({ type: 'success', text: 'Class status updated.' });
-      router.refresh();
+      setCurrentStatus(
+        statusAction === 'open'
+          ? 'live'
+          : statusAction === 'complete'
+            ? 'completed'
+            : statusAction === 'cancel'
+              ? 'cancelled'
+              : 'scheduled',
+      );
     });
   };
 
@@ -95,7 +101,7 @@ export function ClassDetailActions({ courseId, classDetail }: ClassDetailActions
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2">
-          <Badge>{classDetail.status}</Badge>
+          <Badge>{currentStatus}</Badge>
           {statusActions.map((action) => (
             <Button key={action.value} type="button" size="sm" variant="outline" disabled={isPending} onClick={() => runStatusAction(action.value)}>
               {action.label}

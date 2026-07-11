@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { updateCourse } from '@/lib/learning/actions';
 import type { CourseDetails } from '@/lib/learning/types';
 import { ENROLLMENT_STATUSES, formatEnumLabel } from '@/lib/learning/enums';
@@ -49,7 +48,6 @@ function parseEnrollmentCap(value: string): number | null {
 }
 
 export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [visibility, setVisibility] = useState<'public' | 'private'>(course.visibility === 'public' ? 'public' : 'private');
   const [enrollmentStatus, setEnrollmentStatus] = useState(course.enrollmentStatus || 'Open');
@@ -78,7 +76,6 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
       }
 
       setSuccess(true);
-      router.refresh();
     });
   }
 
