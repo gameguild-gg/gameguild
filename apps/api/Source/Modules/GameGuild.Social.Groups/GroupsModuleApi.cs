@@ -1,4 +1,7 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -553,7 +556,9 @@ public sealed class ListSocialGroupMembersQueryHandler(ISocialGroupService servi
 
 [ApiController]
 [Route("api/social/groups")]
-public sealed class SocialGroupsController(ISender sender) : ControllerBase
+public sealed class SocialGroupsController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor) : ControllerBase
 {
     [HttpGet]
     public Task<IReadOnlyList<SocialGroupDto>> List(
@@ -566,33 +571,72 @@ public sealed class SocialGroupsController(ISender sender) : ControllerBase
         [FromQuery] int skip,
         [FromQuery] int take,
         CancellationToken cancellationToken)
-        => sender.Send(
-            new ListSocialGroupsQuery(tenantId, ownerId, type, visibility, status, search, skip, take <= 0 ? 50 : take),
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (actor.IsSystemAdmin)
+        {
+            return sender.Send(
+                new ListSocialGroupsQuery(tenantId, ownerId, type, visibility, status, search, skip, take <= 0 ? 50 : take),
+                cancellationToken);
+        }
+
+        if (actor.IsTenantAdmin && actor.TenantId.HasValue)
+        {
+            return sender.Send(
+                new ListSocialGroupsQuery(actor.TenantId.Value, ownerId, type, visibility, status, search, skip, take <= 0 ? 50 : take),
+                cancellationToken);
+        }
+
+        return sender.Send(
+            new ListSocialGroupsQuery(null, ownerId, type, SocialGroupVisibility.Public, SocialGroupStatus.Active, search, skip, take <= 0 ? 50 : take),
             cancellationToken);
+    }
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<SocialGroupDto>> Get(Guid id, CancellationToken cancellationToken)
     {
         var group = await sender.Send(new GetSocialGroupQuery(id), cancellationToken).ConfigureAwait(false);
-        return group is null ? NotFound() : Ok(group);
+        if (group is null)
+            return NotFound();
+
+        return IsPubliclyVisible(group) || CanManageGroup(group)
+            ? Ok(group)
+            : NotFound();
     }
 
     [HttpPost]
-    public Task<SocialGroupDto> Create(CreateSocialGroupRequest request, CancellationToken cancellationToken)
-        => sender.Send(
+    [Authorize(Policy = Policies.TenantAdmin)]
+    public async Task<ActionResult<SocialGroupDto>> Create(CreateSocialGroupRequest request, CancellationToken cancellationToken)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.SubjectIdAsGuid.HasValue || (!actor.IsSystemAdmin && !actor.TenantId.HasValue))
+            return Forbid();
+
+        var tenantId = actor.IsSystemAdmin
+            ? request.TenantId ?? actor.TenantId
+            : actor.TenantId;
+        var group = await sender.Send(
             new CreateSocialGroupCommand(
-                request.OwnerId,
+                actor.SubjectIdAsGuid.Value,
                 request.Name,
                 request.Slug,
                 request.Type,
                 request.Visibility,
                 request.Description,
-                request.TenantId),
-            cancellationToken);
+                tenantId),
+            cancellationToken).ConfigureAwait(false);
+
+        return CreatedAtAction(nameof(Get), new { id = group.Id }, group);
+    }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = Policies.TenantAdmin)]
     public async Task<ActionResult<SocialGroupDto>> Update(Guid id, UpdateSocialGroupRequest request, CancellationToken cancellationToken)
     {
+        var access = await EnsureCanManageGroupAsync(id, cancellationToken).ConfigureAwait(false);
+        if (access.Failure is not null)
+            return access.Failure;
+
         var group = await sender.Send(
             new UpdateSocialGroupCommand(id, request.Name, request.Slug, request.Type, request.Visibility, request.Description),
             cancellationToken).ConfigureAwait(false);
@@ -600,63 +644,141 @@ public sealed class SocialGroupsController(ISender sender) : ControllerBase
     }
 
     [HttpPost("{id:guid}/activate")]
-    public async Task<IActionResult> Activate(Guid id, CancellationToken cancellationToken)
-        => await sender.Send(new SetSocialGroupStatusCommand(id, SocialGroupStatus.Active), cancellationToken).ConfigureAwait(false)
-            ? NoContent()
-            : NotFound();
+    [Authorize(Policy = Policies.TenantAdmin)]
+    public Task<IActionResult> Activate(Guid id, CancellationToken cancellationToken)
+        => SetStatusAsync(id, SocialGroupStatus.Active, cancellationToken);
 
     [HttpPost("{id:guid}/archive")]
-    public async Task<IActionResult> Archive(Guid id, CancellationToken cancellationToken)
-        => await sender.Send(new SetSocialGroupStatusCommand(id, SocialGroupStatus.Archived), cancellationToken).ConfigureAwait(false)
-            ? NoContent()
-            : NotFound();
+    [Authorize(Policy = Policies.TenantAdmin)]
+    public Task<IActionResult> Archive(Guid id, CancellationToken cancellationToken)
+        => SetStatusAsync(id, SocialGroupStatus.Archived, cancellationToken);
 
     [HttpPost("{id:guid}/suspend")]
-    public async Task<IActionResult> Suspend(Guid id, CancellationToken cancellationToken)
-        => await sender.Send(new SetSocialGroupStatusCommand(id, SocialGroupStatus.Suspended), cancellationToken).ConfigureAwait(false)
-            ? NoContent()
-            : NotFound();
+    [Authorize(Policy = Policies.TenantAdmin)]
+    public Task<IActionResult> Suspend(Guid id, CancellationToken cancellationToken)
+        => SetStatusAsync(id, SocialGroupStatus.Suspended, cancellationToken);
 
     [HttpGet("{id:guid}/members")]
-    public Task<IReadOnlyList<SocialGroupMemberDto>> ListMembers(
+    [Authorize(Policy = Policies.TenantAdmin)]
+    public async Task<ActionResult<IReadOnlyList<SocialGroupMemberDto>>> ListMembers(
         Guid id,
         [FromQuery] SocialGroupMembershipStatus? status,
         [FromQuery] int skip,
         [FromQuery] int take,
         CancellationToken cancellationToken)
-        => sender.Send(new ListSocialGroupMembersQuery(id, status, skip, take <= 0 ? 50 : take), cancellationToken);
+    {
+        var access = await EnsureCanManageGroupAsync(id, cancellationToken).ConfigureAwait(false);
+        if (access.Failure is not null)
+            return access.Failure;
+
+        var members = await sender.Send(
+            new ListSocialGroupMembersQuery(id, status, skip, take <= 0 ? 50 : take),
+            cancellationToken).ConfigureAwait(false);
+        return Ok(members);
+    }
 
     [HttpPost("{id:guid}/members")]
+    [Authorize(Policy = Policies.TenantAdmin)]
     public async Task<ActionResult<SocialGroupMemberDto>> Join(Guid id, JoinSocialGroupRequest request, CancellationToken cancellationToken)
     {
+        var access = await EnsureCanManageGroupAsync(id, cancellationToken).ConfigureAwait(false);
+        if (access.Failure is not null)
+            return access.Failure;
+
         var membership = await sender.Send(new JoinSocialGroupCommand(id, request.UserId, request.RequestedRole), cancellationToken)
             .ConfigureAwait(false);
         return membership is null ? NotFound() : Ok(membership);
     }
 
     [HttpPost("{id:guid}/members/{userId:guid}/approve")]
+    [Authorize(Policy = Policies.TenantAdmin)]
     public async Task<IActionResult> Approve(Guid id, Guid userId, ApproveSocialGroupMemberRequest request, CancellationToken cancellationToken)
-        => await sender.Send(new ApproveSocialGroupMemberCommand(id, userId, request.ApprovedByUserId), cancellationToken).ConfigureAwait(false)
+    {
+        var access = await EnsureCanManageGroupAsync(id, cancellationToken).ConfigureAwait(false);
+        if (access.Failure is not null)
+            return access.Failure;
+
+        var approverId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
+        if (!approverId.HasValue)
+            return Forbid();
+
+        return await sender.Send(new ApproveSocialGroupMemberCommand(id, userId, approverId.Value), cancellationToken).ConfigureAwait(false)
             ? NoContent()
             : NotFound();
+    }
 
     [HttpPost("{id:guid}/members/{userId:guid}/reject")]
+    [Authorize(Policy = Policies.TenantAdmin)]
     public async Task<IActionResult> Reject(Guid id, Guid userId, CancellationToken cancellationToken)
-        => await sender.Send(new RejectSocialGroupMemberCommand(id, userId), cancellationToken).ConfigureAwait(false)
+    {
+        var access = await EnsureCanManageGroupAsync(id, cancellationToken).ConfigureAwait(false);
+        if (access.Failure is not null)
+            return access.Failure;
+
+        return await sender.Send(new RejectSocialGroupMemberCommand(id, userId), cancellationToken).ConfigureAwait(false)
             ? NoContent()
             : NotFound();
+    }
 
     [HttpPut("{id:guid}/members/{userId:guid}/role")]
+    [Authorize(Policy = Policies.TenantAdmin)]
     public async Task<IActionResult> ChangeRole(Guid id, Guid userId, ChangeSocialGroupMemberRoleRequest request, CancellationToken cancellationToken)
-        => await sender.Send(new ChangeSocialGroupMemberRoleCommand(id, userId, request.Role), cancellationToken).ConfigureAwait(false)
+    {
+        var access = await EnsureCanManageGroupAsync(id, cancellationToken).ConfigureAwait(false);
+        if (access.Failure is not null)
+            return access.Failure;
+
+        return await sender.Send(new ChangeSocialGroupMemberRoleCommand(id, userId, request.Role), cancellationToken).ConfigureAwait(false)
             ? NoContent()
             : NotFound();
+    }
 
     [HttpDelete("{id:guid}/members/{userId:guid}")]
+    [Authorize(Policy = Policies.TenantAdmin)]
     public async Task<IActionResult> Leave(Guid id, Guid userId, CancellationToken cancellationToken)
-        => await sender.Send(new LeaveSocialGroupCommand(id, userId), cancellationToken).ConfigureAwait(false)
+    {
+        var access = await EnsureCanManageGroupAsync(id, cancellationToken).ConfigureAwait(false);
+        if (access.Failure is not null)
+            return access.Failure;
+
+        return await sender.Send(new LeaveSocialGroupCommand(id, userId), cancellationToken).ConfigureAwait(false)
             ? NoContent()
             : NotFound();
+    }
+
+    private async Task<IActionResult> SetStatusAsync(Guid id, SocialGroupStatus status, CancellationToken cancellationToken)
+    {
+        var access = await EnsureCanManageGroupAsync(id, cancellationToken).ConfigureAwait(false);
+        if (access.Failure is not null)
+            return access.Failure;
+
+        return await sender.Send(new SetSocialGroupStatusCommand(id, status), cancellationToken).ConfigureAwait(false)
+            ? NoContent()
+            : NotFound();
+    }
+
+    private async Task<(SocialGroupDto? Group, ActionResult? Failure)> EnsureCanManageGroupAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var group = await sender.Send(new GetSocialGroupQuery(id), cancellationToken).ConfigureAwait(false);
+        if (group is null)
+            return (null, NotFound());
+
+        return CanManageGroup(group)
+            ? (group, null)
+            : (null, Forbid());
+    }
+
+    private bool CanManageGroup(SocialGroupDto group)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        return actor.IsSystemAdmin ||
+               actor.IsTenantAdmin && actor.TenantId.HasValue && group.TenantId == actor.TenantId;
+    }
+
+    private static bool IsPubliclyVisible(SocialGroupDto group) =>
+        group.Visibility == SocialGroupVisibility.Public && group.Status == SocialGroupStatus.Active;
 }
 
 public sealed class SocialGroupsModelConfiguration : IModelConfiguration

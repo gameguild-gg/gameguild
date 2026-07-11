@@ -104,11 +104,12 @@ public sealed class UpdateTenantMemberInviteCommandHandler(
         var inviter = string.IsNullOrWhiteSpace(actorEmail)
             ? metadata.InvitedByEmail ?? "A GameGuild administrator"
             : actorEmail.Trim();
-        var signInUrl = BuildSignInUrl();
+        var reviewUrl = BuildReviewUrl();
+        var activationUrl = BuildActivationUrl(metadata.InviteeEmail);
         var plainTextContent =
-            $"Hi {recipientName},\n\n{inviter} resent your invitation to join {tenantName} on GameGuild as {member.Role}.\n\nSign in to review and accept your access:\n{signInUrl}\n\nIf you were not expecting this invite, you can ignore this email.";
+            $"Hi {recipientName},\n\n{inviter} resent your invitation to join {tenantName} on GameGuild as {member.Role}.\n\nReview and accept your access:\n{reviewUrl}\n\nIf this is your first GameGuild invitation, set your password first:\n{activationUrl}\n\nIf you were not expecting this invite, you can ignore this email.";
         var htmlContent =
-            $"<p>Hi {WebUtility.HtmlEncode(recipientName)},</p><p>{WebUtility.HtmlEncode(inviter)} resent your invitation to join <strong>{WebUtility.HtmlEncode(tenantName)}</strong> on GameGuild as <strong>{WebUtility.HtmlEncode(member.Role)}</strong>.</p><p><a href=\"{WebUtility.HtmlEncode(signInUrl)}\">Sign in to review and accept your access</a></p><p>If you were not expecting this invite, you can ignore this email.</p>";
+            $"<p>Hi {WebUtility.HtmlEncode(recipientName)},</p><p>{WebUtility.HtmlEncode(inviter)} resent your invitation to join <strong>{WebUtility.HtmlEncode(tenantName)}</strong> on GameGuild as <strong>{WebUtility.HtmlEncode(member.Role)}</strong>.</p><p><a href=\"{WebUtility.HtmlEncode(reviewUrl)}\">Review and accept your access</a></p><p>First time on GameGuild? <a href=\"{WebUtility.HtmlEncode(activationUrl)}\">Set your password</a>, then return to your invitations.</p><p>If you were not expecting this invite, you can ignore this email.</p>";
 
         await emailSender.SendAsync(
             new EmailMessage(
@@ -120,10 +121,16 @@ public sealed class UpdateTenantMemberInviteCommandHandler(
             cancellationToken).ConfigureAwait(false);
     }
 
-    private string BuildSignInUrl()
+    private string BuildReviewUrl()
     {
         var appBaseUrl = configuration?["App:BaseUrl"] ?? "http://localhost:3000";
-        var callbackPath = "/dashboard/community/members/users";
+        var callbackPath = "/dashboard/invitations";
         return $"{appBaseUrl.TrimEnd('/')}/sign-in?callbackUrl={Uri.EscapeDataString(callbackPath)}";
+    }
+
+    private string BuildActivationUrl(string email)
+    {
+        var appBaseUrl = configuration?["App:BaseUrl"] ?? "http://localhost:3000";
+        return $"{appBaseUrl.TrimEnd('/')}/forgot-password?email={Uri.EscapeDataString(email.Trim())}";
     }
 }

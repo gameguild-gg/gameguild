@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -28,7 +29,7 @@ public class UserMembershipsControllerTests
         var sender = new StubSender();
         sender.Setup<GetUserMembershipsQuery, GetUserMembershipsResponse>(_ => new GetUserMembershipsResponse { TotalCount = 1, Memberships = new List<UserMembershipDto>() });
 
-        var controller = new UserMembershipsController(sender);
+        var controller = CreateController(sender, CreateActorContext("SystemAdmin"));
         var result = await controller.GetUserMemberships(Guid.NewGuid(), false, CancellationToken.None);
 
         result.Should().BeOfType<OkObjectResult>();
@@ -40,7 +41,7 @@ public class UserMembershipsControllerTests
         var sender = new StubSender();
         sender.Setup<GetUserMembershipsQuery, GetUserMembershipsResponse>(_ => new GetUserMembershipsResponse { TotalCount = 0, Memberships = new List<UserMembershipDto>() });
 
-        var controller = new UserMembershipsController(sender);
+        var controller = CreateController(sender, CreateActorContext("SystemAdmin"));
         var result = await controller.CheckUserHasMemberships(Guid.NewGuid(), CancellationToken.None);
 
         result.Should().BeOfType<NotFoundResult>();
@@ -52,7 +53,7 @@ public class UserMembershipsControllerTests
         var sender = new StubSender();
         sender.Setup<GetUserMembershipsQuery, GetUserMembershipsResponse>(_ => new GetUserMembershipsResponse { TotalCount = 3, Memberships = new List<UserMembershipDto>() });
 
-        var controller = new UserMembershipsController(sender);
+        var controller = CreateController(sender, CreateActorContext("SystemAdmin"));
         var result = await controller.GetMembershipCount(Guid.NewGuid(), CancellationToken.None);
 
         result.Should().BeOfType<OkObjectResult>();
@@ -69,7 +70,7 @@ public class UserMembershipsControllerTests
             Message = "Member added successfully"
         });
 
-        var controller = new UserMembershipsController(sender);
+        var controller = CreateController(sender, CreateActorContext("SystemAdmin"));
         var result = await controller.AddUserMembership(
             Guid.NewGuid(),
             new AddUserMembershipRequest
@@ -83,6 +84,161 @@ public class UserMembershipsControllerTests
         result.Should().BeOfType<ObjectResult>()
             .Which.StatusCode.Should().Be(StatusCodes.Status201Created);
     }
+
+    [Fact]
+    public async Task UpdateUserMembershipRole_ShouldForbidTenantAdminFromGrantingSystemAdmin()
+    {
+        var sender = new StubSender();
+        sender.Setup<UpdateTenantMemberRoleCommand, UpdateTenantMemberRoleResponse>(_ => new UpdateTenantMemberRoleResponse
+        {
+            Success = true,
+            NewRole = "SystemAdmin"
+        });
+        var tenantId = Guid.NewGuid();
+        var controller = CreateController(sender, CreateActorContext("TenantAdmin", tenantId));
+
+        var result = await controller.UpdateUserMembershipRole(
+            tenantId,
+            Guid.NewGuid(),
+            new UpdateUserMembershipRoleRequest { Role = "SystemAdmin" },
+            CancellationToken.None);
+
+        result.Should().BeOfType<ForbidResult>();
+    }
+
+    [Fact]
+    public async Task UpdateUserMembershipRole_ShouldForbidTenantAdminFromManagingAnotherTenant()
+    {
+        var sender = new StubSender();
+        var actorTenantId = Guid.NewGuid();
+        var controller = CreateController(sender, CreateActorContext("TenantAdmin", actorTenantId));
+
+        var result = await controller.UpdateUserMembershipRole(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new UpdateUserMembershipRoleRequest { Role = "Member" },
+            CancellationToken.None);
+
+        result.Should().BeOfType<ForbidResult>();
+    }
+
+    [Fact]
+    public async Task UpdateUserMembershipRole_ShouldAllowTenantAdminWithinCurrentTenant()
+    {
+        var sender = new StubSender();
+        var tenantId = Guid.NewGuid();
+        sender.Setup<UpdateTenantMemberRoleCommand, UpdateTenantMemberRoleResponse>(_ => new UpdateTenantMemberRoleResponse
+        {
+            Success = true,
+            NewRole = "Moderator"
+        });
+        var controller = CreateController(sender, CreateActorContext("TenantAdmin", tenantId));
+
+        var result = await controller.UpdateUserMembershipRole(
+            Guid.NewGuid(),
+            tenantId,
+            new UpdateUserMembershipRoleRequest { Role = "Moderator" },
+            CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetUserMemberships_ShouldAllowSelfAndForbidAnotherRegularUser()
+    {
+        var sender = new StubSender();
+        var actorId = Guid.NewGuid();
+        sender.Setup<GetUserMembershipsQuery, GetUserMembershipsResponse>(_ => new GetUserMembershipsResponse
+        {
+            TotalCount = 0,
+            Memberships = []
+        });
+        var controller = CreateController(sender, CreateActorContext("Member", Guid.NewGuid(), actorId));
+
+        (await controller.GetUserMemberships(actorId, false, CancellationToken.None)).Should().BeOfType<OkObjectResult>();
+        (await controller.GetUserMemberships(Guid.NewGuid(), false, CancellationToken.None)).Should().BeOfType<ForbidResult>();
+    }
+
+    [Fact]
+    public async Task GetUserMemberships_TenantAdminOnlyReceivesCurrentTenantMembership()
+    {
+        var sender = new StubSender();
+        var tenantId = Guid.NewGuid();
+        sender.Setup<GetUserMembershipsQuery, GetUserMembershipsResponse>(_ => new GetUserMembershipsResponse
+        {
+            TotalCount = 2,
+            Memberships =
+            [
+                new UserMembershipDto { TenantId = tenantId, TenantName = "Current" },
+                new UserMembershipDto { TenantId = Guid.NewGuid(), TenantName = "Other" }
+            ]
+        });
+        var controller = CreateController(sender, CreateActorContext("TenantAdmin", tenantId));
+
+        var result = await controller.GetUserMemberships(Guid.NewGuid(), false, CancellationToken.None);
+
+        var response = result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeOfType<GetUserMembershipsResponse>().Subject;
+        response.TotalCount.Should().Be(1);
+        response.Memberships.Should().ContainSingle(membership => membership.TenantId == tenantId);
+    }
+
+    [Fact]
+    public async Task AcceptUserMembershipInvite_ShouldAllowInvitedUserToAcceptOwnInvite()
+    {
+        var sender = new StubSender();
+        var invitedUserId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        sender.Setup<UpdateTenantMemberInviteCommand, UpdateTenantMemberInviteResponse>(_ => new UpdateTenantMemberInviteResponse
+        {
+            Success = true,
+            InviteStatus = TenantMemberInviteStatuses.Accepted
+        });
+        var controller = CreateController(sender, CreateActorContext("Member", userId: invitedUserId));
+
+        var result = await controller.AcceptUserMembershipInvite(invitedUserId, tenantId, null, CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task AcceptUserMembershipInvite_ShouldForbidAnotherRegularUser()
+    {
+        var controller = CreateController(new StubSender(), CreateActorContext("Member", userId: Guid.NewGuid()));
+
+        var result = await controller.AcceptUserMembershipInvite(Guid.NewGuid(), Guid.NewGuid(), null, CancellationToken.None);
+
+        result.Should().BeOfType<ForbidResult>();
+    }
+
+    [Fact]
+    public void AcceptUserMembershipInvite_ShouldRequireAuthenticationWithoutTenantAdminPolicy()
+    {
+        var method = typeof(UserMembershipsController).GetMethod(nameof(UserMembershipsController.AcceptUserMembershipInvite));
+
+        method.Should().NotBeNull();
+        method!.GetCustomAttributes<AuthorizeAttribute>()
+            .Should()
+            .ContainSingle(attribute => string.IsNullOrWhiteSpace(attribute.Policy));
+    }
+
+    private static UserMembershipsController CreateController(StubSender sender, ActorContext actor)
+    {
+        var accessor = new ActorContextAccessor();
+        accessor.SetActorContext(actor);
+        return new UserMembershipsController(sender, accessor);
+    }
+
+    private static ActorContext CreateActorContext(string role, Guid? tenantId = null, Guid? userId = null)
+        => new()
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = (userId ?? Guid.NewGuid()).ToString(),
+            TenantId = tenantId,
+            Roles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { role },
+            Permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+            TypedAttributes = ActorAttributes.Empty,
+            IsAuthenticated = true
+        };
 
     private sealed class StubSender : ISender
     {

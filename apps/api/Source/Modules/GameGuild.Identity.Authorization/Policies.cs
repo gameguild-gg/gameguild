@@ -82,6 +82,9 @@ public static class Policies
     /// <summary>Administrator role with full access</summary>
     public const string Admin = "Admin";
 
+    /// <summary>System administrator with cross-tenant platform authority</summary>
+    public const string SystemAdmin = "SystemAdmin";
+
     /// <summary>Admin operations requiring MFA</summary>
     public const string SecureAdmin = "SecureAdmin";
 
@@ -159,7 +162,7 @@ public static class Policies
         // Document
         DocumentEdit,
         // Admin
-        Admin, SecureAdmin,
+        Admin, SystemAdmin, SecureAdmin,
         // Users - Collection
         UsersRead, UsersCreate, UsersUpdate, UsersDelete, UsersAdmin, UsersPurge,
         // Employees
