@@ -21,7 +21,9 @@ ARG WEB_PUBLIC_URL
 ENV GIT_HASH=${GIT_HASH}
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PRIVATE_BUILD_WORKER_COUNT=1
-ENV NODE_OPTIONS=--max-old-space-size=1024
+# The generated API client emits a large declaration graph before Next builds.
+# Keep this bounded, but above the 1 GiB worker ceiling that fails in Coolify.
+ENV NODE_OPTIONS=--max-old-space-size=2048
 ENV AUTH_SECRET=${AUTH_SECRET}
 ENV NEXTAUTH_URL=${LEARNING_PUBLIC_URL}
 ENV AUTH_TRUST_HOST=true
