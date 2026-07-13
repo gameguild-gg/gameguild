@@ -13,8 +13,9 @@
     "test:browser:block-editor": "node scripts/block-content-editor-browser-e2e.mjs",
     "test:browser:learning-checkout": "node scripts/learning-checkout-browser-e2e.mjs",
     "test:browser:learning-professor": "node scripts/learning-professor-browser-e2e.mjs",
+    "test:browser:community-admin": "node scripts/community-admin-browser-e2e.mjs",
     "test:watch": "vitest",
-    "test:e2e": "vitest run -c vitest.e2e.config.ts"
+    "test:e2e": "vitest run -c vitest.e2e.config.mts"
   },
   "dependencies": {
     "@codingame/monaco-vscode-files-service-override": "^23.1.0",

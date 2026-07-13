@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { InputOTPForm } from '@/components/input-otp-form';
 
@@ -219,6 +219,9 @@ describe('InputOTPForm', () => {
     expect(screen.getByText('Sending...')).toBeInTheDocument();
 
     // Resolve the promise to clean up
-    resolveResend!();
+    await act(async () => {
+      resolveResend!();
+    });
+    await waitFor(() => expect(screen.getByRole('button', { name: /resend code/i })).toBeEnabled());
   });
 });

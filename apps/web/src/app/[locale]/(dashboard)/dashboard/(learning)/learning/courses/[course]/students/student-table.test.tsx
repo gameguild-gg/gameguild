@@ -137,10 +137,10 @@ describe('StudentTable', () => {
     expect(screen.getByText('No students found')).toBeInTheDocument();
     expect(screen.getByText('Try adjusting your search or filter criteria.')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /enroll student/i }));
+    await user.click(screen.getByRole('button', { name: /enroll student/i }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('manually enrolls an existing student and closes the dialog on success', async () => {
