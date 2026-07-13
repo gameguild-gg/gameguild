@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CourseLifecycleActions } from './course-lifecycle-actions';
-import { archiveCourse, deleteCourse, publishCourse, unpublishCourse } from '@/lib/learning/actions';
+import { publishCourse, unpublishCourse } from '@/lib/learning/actions';
 
 const refreshMock = vi.fn();
 const pushMock = vi.fn();
@@ -16,8 +16,6 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/lib/learning/actions', () => ({
-  archiveCourse: vi.fn(),
-  deleteCourse: vi.fn(),
   publishCourse: vi.fn(),
   unpublishCourse: vi.fn(),
 }));
@@ -25,8 +23,6 @@ vi.mock('@/lib/learning/actions', () => ({
 describe('CourseLifecycleActions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(archiveCourse).mockResolvedValue({ success: true, data: null });
-    vi.mocked(deleteCourse).mockResolvedValue({ success: true, data: null });
     vi.mocked(publishCourse).mockResolvedValue({ success: true, data: null });
     vi.mocked(unpublishCourse).mockResolvedValue({ success: true, data: null });
   });
@@ -65,19 +61,6 @@ describe('CourseLifecycleActions', () => {
     expect(refreshMock).not.toHaveBeenCalled();
   });
 
-  it('archives published courses and updates the lifecycle controls', async () => {
-    const user = userEvent.setup();
-
-    render(<CourseLifecycleActions courseId="course-1" status="published" locale="en-US" />);
-
-    await user.click(screen.getByRole('button', { name: /^archive$/i }));
-    await waitFor(() => {
-      expect(archiveCourse).toHaveBeenCalledWith('course-1');
-    });
-    expect(await screen.findByText('Archived')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /re-publish/i })).toBeInTheDocument();
-  });
-
   it('republishes archived courses', async () => {
     const user = userEvent.setup();
 
@@ -91,7 +74,7 @@ describe('CourseLifecycleActions', () => {
     });
   });
 
-  it('keeps every lifecycle action available across a complete status sequence', async () => {
+  it('keeps publish and unpublish available across a complete status sequence', async () => {
     const user = userEvent.setup();
 
     render(<CourseLifecycleActions courseId="course-1" status="published" locale="en-US" />);
@@ -101,33 +84,10 @@ describe('CourseLifecycleActions', () => {
     await waitFor(() => expect(publishButton).toBeEnabled());
 
     await user.click(publishButton);
-    const archiveButton = await screen.findByRole('button', { name: /^archive$/i });
-    await waitFor(() => expect(archiveButton).toBeEnabled());
-
-    await user.click(archiveButton);
-    const republishButton = await screen.findByRole('button', { name: /re-publish/i });
-    await waitFor(() => expect(republishButton).toBeEnabled());
-
-    await user.click(republishButton);
     await waitFor(() => expect(screen.getByRole('button', { name: /unpublish/i })).toBeEnabled());
 
     expect(unpublishCourse).toHaveBeenCalledTimes(1);
-    expect(publishCourse).toHaveBeenCalledTimes(2);
-    expect(archiveCourse).toHaveBeenCalledTimes(1);
-  });
-
-  it('requires a second click before deleting and then routes back to courses', async () => {
-    const user = userEvent.setup();
-
-    render(<CourseLifecycleActions courseId="course-1" status="draft" locale="en-US" />);
-
-    await user.click(screen.getByRole('button', { name: '' }));
-    await user.click(screen.getByRole('button', { name: /confirm delete/i }));
-
-    await waitFor(() => {
-      expect(deleteCourse).toHaveBeenCalledWith('course-1');
-    });
-    expect(pushMock).toHaveBeenCalledWith('/en-US/dashboard/learning/courses');
+    expect(publishCourse).toHaveBeenCalledTimes(1);
   });
 
   it('shows action errors without navigating away', async () => {

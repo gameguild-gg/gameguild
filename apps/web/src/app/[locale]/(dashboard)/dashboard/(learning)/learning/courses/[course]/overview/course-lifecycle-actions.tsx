@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@game-guild/ui/components/button';
 import { Badge } from '@game-guild/ui/components/badge';
-import { AlertTriangle, Archive, Eye, EyeOff, Globe, Loader2, Lock, Trash2 } from 'lucide-react';
-import { publishCourse, unpublishCourse, archiveCourse, deleteCourse } from '@/lib/learning/actions';
+import { Archive, Eye, EyeOff, Globe, Loader2, Lock } from 'lucide-react';
+import { publishCourse, unpublishCourse } from '@/lib/learning/actions';
 
 interface CourseLifecycleActionsProps {
   courseId: string;
@@ -14,17 +13,15 @@ interface CourseLifecycleActionsProps {
 }
 
 export function CourseLifecycleActions({ courseId, status, locale }: CourseLifecycleActionsProps) {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(status);
 
   useEffect(() => {
     setCurrentStatus(status);
   }, [status]);
 
-  async function handleAction(action: 'publish' | 'unpublish' | 'archive' | 'delete') {
+  async function handleAction(action: 'publish' | 'unpublish') {
     setError(null);
     setIsSubmitting(true);
 
@@ -37,23 +34,12 @@ export function CourseLifecycleActions({ courseId, status, locale }: CourseLifec
         case 'unpublish':
           result = await unpublishCourse(courseId);
           break;
-        case 'archive':
-          result = await archiveCourse(courseId);
-          break;
-        case 'delete':
-          result = await deleteCourse(courseId);
-          if (result.success) {
-            router.push(`/${locale}/dashboard/learning/courses`);
-            return;
-          }
-          break;
       }
       if (result && !result.success) {
         setError(result.error);
       } else {
         if (action === 'publish') setCurrentStatus('published');
         if (action === 'unpublish') setCurrentStatus('draft');
-        if (action === 'archive') setCurrentStatus('archived');
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'The course lifecycle action failed.');
@@ -111,10 +97,6 @@ export function CourseLifecycleActions({ courseId, status, locale }: CourseLifec
                 {isSubmitting ? <Loader2 className="mr-1 size-3 animate-spin" /> : <EyeOff className="mr-1 size-3" />}
                 Unpublish
               </Button>
-              <Button size="sm" variant="outline" onClick={() => handleAction('archive')} disabled={isSubmitting}>
-                <Archive className="mr-1 size-3" />
-                Archive
-              </Button>
             </>
           )}
           {currentStatus === 'archived' && (
@@ -122,21 +104,6 @@ export function CourseLifecycleActions({ courseId, status, locale }: CourseLifec
               {isSubmitting ? <Loader2 className="mr-1 size-3 animate-spin" /> : <Eye className="mr-1 size-3" />}
               Re-publish
             </Button>
-          )}
-          {!confirmDelete ? (
-            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)} disabled={isSubmitting}>
-              <Trash2 className="size-3" />
-            </Button>
-          ) : (
-            <div className="flex items-center gap-1">
-              <Button size="sm" variant="destructive" onClick={() => handleAction('delete')} disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-1 size-3 animate-spin" /> : <AlertTriangle className="mr-1 size-3" />}
-                Confirm Delete
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)} disabled={isSubmitting}>
-                Cancel
-              </Button>
-            </div>
           )}
         </div>
       </div>

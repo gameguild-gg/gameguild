@@ -11,7 +11,7 @@ import {
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { AlertCircle, BookOpen, Edit, Globe, ImageIcon, Images, Rocket, Users } from 'lucide-react';
+import { AlertCircle, BookOpen, Edit, Globe, ImageIcon, Images, Rocket, Shield, Users } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { ListingLaunchForm } from './listing-launch-form';
@@ -222,6 +222,16 @@ export default async function ListingPage({
                 <p className="text-sm text-muted-foreground">Portfolio project slides shown on the public course landing page.</p>
                 <Button asChild variant="outline" className="mt-4 w-full justify-start">
                   <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/projects')} locale={locale}>Open project editor</Link>
+                </Button>
+              </div>
+              <div className="rounded-lg border p-4">
+                <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+                  <Shield className="size-4" />
+                  Access and enrollment
+                </div>
+                <p className="text-sm text-muted-foreground">Visibility, enrollment status, seat cap, and enrollment deadline.</p>
+                <Button asChild variant="outline" className="mt-4 w-full justify-start">
+                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/access')} locale={locale}>Open access controls</Link>
                 </Button>
               </div>
             </div>

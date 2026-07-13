@@ -83,12 +83,6 @@ vi.mock('./course-nav', () => ({
   ),
 }));
 
-vi.mock('./overview/course-lifecycle-actions', () => ({
-  CourseLifecycleActions: ({ courseId, status }: { courseId: string; status: string }) => (
-    <div data-testid="course-lifecycle-actions">{`${courseId}:${status}`}</div>
-  ),
-}));
-
 vi.mock('./content/content-tree', () => ({
   ContentTree: ({
     modules,
@@ -287,7 +281,6 @@ describe('course-management dashboard route pages', () => {
   it('renders the overview dashboard from analytics and content data', async () => {
     render(await OverviewPage({ params: params() } as never));
 
-    expect(screen.getByTestId('course-lifecycle-actions')).toHaveTextContent('course-1:Published');
     expect(screen.getByText('Launch Control')).toBeInTheDocument();
     expect(screen.getByText('Course Readiness')).toBeInTheDocument();
     expect(screen.getByText('No launch blockers remain on the current dashboard contract.')).toBeInTheDocument();

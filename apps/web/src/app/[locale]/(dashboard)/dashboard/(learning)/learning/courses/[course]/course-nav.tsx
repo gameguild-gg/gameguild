@@ -21,7 +21,6 @@ import {
   MoreHorizontal,
   Settings,
   Share2,
-  Trash2,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -151,10 +150,9 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive" asChild>
+              <DropdownMenuItem asChild>
                 <Link href={buildDashboardCoursePath(courseRouteParam, 'settings/danger')} locale={locale} prefetch={false}>
-                  <Trash2 className="mr-2 size-4" />
-                  Delete Course
+                  Advanced course controls
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
