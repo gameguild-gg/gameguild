@@ -79,13 +79,7 @@ describe('FaqEditorForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /save faq/i }));
 
     await waitFor(() => {
-      expect(updateCourseFaqMock).toHaveBeenCalledWith('course-1', [
-        expect.objectContaining({
-          question: '',
-          answer: '',
-          category: 'Course details',
-        }),
-      ]);
+      expect(updateCourseFaqMock).toHaveBeenCalledWith('course-1', []);
     });
     expect(screen.getByText('FAQ validation failed.')).toBeInTheDocument();
   });
@@ -96,9 +90,29 @@ describe('FaqEditorForm', () => {
     fireEvent.change(screen.getByLabelText(/^question$/i), { target: { value: 'Is mentoring included?' } });
     fireEvent.click(screen.getByRole('button', { name: /save faq/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Complete both the question and answer for Question 1.',
-    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('Complete both the question and answer for Question 1.');
     expect(updateCourseFaqMock).not.toHaveBeenCalled();
+  });
+  it('allows consecutive FAQ saves after editing and removing an entry', async () => {
+    render(<FaqEditorForm courseId="course-1" items={[]} />);
+
+    fireEvent.change(screen.getByLabelText(/^question$/i), { target: { value: 'Primary question' } });
+    fireEvent.change(screen.getByLabelText(/^answer$/i), { target: { value: 'Primary answer.' } });
+    fireEvent.click(screen.getByRole('button', { name: /save faq/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: /save faq/i })).toBeEnabled());
+
+    fireEvent.click(screen.getByRole('button', { name: /add question/i }));
+    fireEvent.change(screen.getAllByLabelText(/^question$/i).at(-1)!, { target: { value: 'Temporary question' } });
+    fireEvent.change(screen.getAllByLabelText(/^answer$/i).at(-1)!, { target: { value: 'Temporary answer.' } });
+    fireEvent.click(screen.getByRole('button', { name: /save faq/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: /save faq/i })).toBeEnabled());
+
+    fireEvent.click(screen.getByRole('button', { name: /remove question 2/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save faq/i }));
+
+    await waitFor(() => expect(updateCourseFaqMock).toHaveBeenCalledTimes(3));
+    expect(updateCourseFaqMock).toHaveBeenLastCalledWith('course-1', [expect.objectContaining({ question: 'Primary question' })]);
+    expect(screen.getAllByLabelText(/^question$/i)).toHaveLength(1);
+    expect(screen.getByRole('button', { name: /save faq/i })).toBeEnabled();
   });
 });
