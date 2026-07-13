@@ -24,7 +24,6 @@ beforeEach(() => {
   Object.defineProperty(window, 'location', {
     value: {
       ...originalLocation,
-      href: '',
       set href(url: string) {
         mockLocationHref(url);
       },

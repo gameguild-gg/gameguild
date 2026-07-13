@@ -402,13 +402,9 @@ describe('AssessmentsList weighted groups', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: /add assessment/i }));
+    await user.click(screen.getByRole('button', { name: /add activity to final project/i }));
     const dialog = screen.getByRole('dialog', { name: /create assessment/i });
     await user.type(within(dialog).getByLabelText(/title/i), 'Final presentation');
-    await user.click(within(dialog).getByRole('combobox', { name: /type/i }));
-    await user.click(await screen.findByRole('option', { name: 'Project' }));
-    await user.click(within(dialog).getByRole('combobox', { name: /grade group/i }));
-    await user.click(await screen.findByRole('option', { name: /final project/i }));
     await user.clear(within(dialog).getByLabelText(/max score/i));
     await user.type(within(dialog).getByLabelText(/max score/i), '80');
     await user.clear(within(dialog).getByLabelText(/passing score/i));
@@ -419,7 +415,7 @@ describe('AssessmentsList weighted groups', () => {
       expect(createAssessment).toHaveBeenCalledWith({
         courseId: 'course-1',
         title: 'Final presentation',
-        type: 'Project',
+        type: 'Quiz',
         assessmentGroupId: 'group-project',
         maxScore: 80,
         passingScore: 56,
