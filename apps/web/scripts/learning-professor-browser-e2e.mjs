@@ -28,6 +28,42 @@ async function apiRequest(path, init = {}, accessToken) {
   return body;
 }
 
+async function apiStatus(path, init = {}, accessToken) {
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    ...init,
+    headers: {
+      'content-type': 'application/json',
+      ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
+      ...init.headers,
+    },
+  });
+  return response.status;
+}
+
+async function deleteAndVerify(path, accessToken) {
+  const deleteStatus = await apiStatus(path, { method: 'DELETE' }, accessToken);
+  if (![204, 404].includes(deleteStatus)) {
+    throw new Error(`DELETE ${path} failed with ${deleteStatus}`);
+  }
+
+  await waitForApiState(
+    () => apiStatus(path, {}, accessToken),
+    (status) => status === 404,
+  );
+}
+
+function flattenCourseContent(value) {
+  const roots = Array.isArray(value) ? value : Array.isArray(value?.items) ? value.items : [];
+  const flattened = [];
+  const visit = (item) => {
+    if (!item || typeof item !== 'object') return;
+    flattened.push(item);
+    for (const child of Array.isArray(item.children) ? item.children : []) visit(child);
+  };
+  for (const root of roots) visit(root);
+  return flattened;
+}
+
 async function bootstrap() {
   const signIn = await apiRequest('/v1/auth/sign-in', {
     method: 'POST',
@@ -44,7 +80,11 @@ async function bootstrap() {
       tenantId: signIn.tenantId,
     }),
   });
-  return { accessToken: signIn.accessToken, studentEmail, tag };
+  const lookup = await apiRequest(`/v1/users?email=${encodeURIComponent(studentEmail)}&limit=2`, {}, signIn.accessToken);
+  const student = lookup.items?.find((candidate) => candidate.email?.toLowerCase() === studentEmail.toLowerCase());
+  if (!student?.id) throw new Error(`Could not resolve temporary professor E2E student ${studentEmail}.`);
+
+  return { accessToken: signIn.accessToken, studentEmail, studentId: student.id, tag };
 }
 
 async function assertNoErrorSurface(page, label) {
@@ -338,10 +378,21 @@ async function run() {
     await page.getByLabel('Description (optional)').fill('Prepare the project, scope, and delivery plan.');
     await page.getByRole('button', { name: 'Add Module', exact: true }).last().click();
     await waitForText(page, 'Production Foundations');
+    const moduleState = await waitForApiState(
+      () => apiRequest(`/v1/courses/${courseId}/content`, {}, fixture.accessToken),
+      (content) => flattenCourseContent(content).some((item) => item.title === 'Production Foundations'),
+    );
+    const createdModule = flattenCourseContent(moduleState).find((item) => item.title === 'Production Foundations');
+    if (!createdModule?.id) throw new Error('The content API did not return the newly created module id.');
     const moduleCard = page.getByText('Production Foundations', { exact: true }).locator('xpath=ancestor::*[@data-slot="card"][1]');
     await moduleCard.getByRole('button', { name: /Add lesson/i }).click();
     await page.getByLabel('Title').fill('Define the playable promise');
     await page.getByRole('button', { name: 'Add Lesson', exact: true }).click();
+    await waitForApiState(
+      () => apiRequest(`/v1/courses/${courseId}/content`, {}, fixture.accessToken),
+      (content) => flattenCourseContent(content).some((item) =>
+        item.title === 'Define the playable promise' && String(item.parentId).toLowerCase() === String(createdModule.id).toLowerCase()),
+    );
     await waitForText(page, 'Define the playable promise');
     const lessonRow = page.getByText('Define the playable promise', { exact: true }).locator('xpath=ancestor::div[contains(@class, "group")][1]');
     await lessonRow.getByRole('button', { name: 'Edit Lesson' }).click();
@@ -562,6 +613,10 @@ async function run() {
     await page.getByRole('button', { name: 'Permanently Delete' }).click();
     await waitForLocation(page, (url) => url.pathname.endsWith('/dashboard/learning/courses'));
     deletedCourseId = courseId;
+    await waitForApiState(
+      () => apiStatus(`/v1/courses/${deletedCourseId}`, {}, fixture.accessToken),
+      (status) => status === 404,
+    );
     courseId = null;
 
     const meaningfulFailures = [...new Set(failedResponses)].filter((value) => !/favicon|manifest\.webmanifest/.test(value));
@@ -585,8 +640,9 @@ async function run() {
     throw error;
   } finally {
     if (courseId) {
-      await apiRequest(`/v1/courses/${courseId}`, { method: 'DELETE' }, fixture.accessToken).catch(() => undefined);
+      await deleteAndVerify(`/v1/courses/${courseId}`, fixture.accessToken);
     }
+    await deleteAndVerify(`/v1/users/${fixture.studentId}`, fixture.accessToken);
     await browser.close();
   }
 }
