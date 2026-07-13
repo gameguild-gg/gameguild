@@ -46,4 +46,22 @@ public class UpdateTenantMemberRoleCommandHandlerTests
         _memberRepositoryMock.Verify(r => r.UpdateAsync(member, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task Handle_WhenDemotingLastSystemAdmin_ShouldRejectUpdate()
+    {
+        var member = new TenantMember { TenantId = Guid.NewGuid(), UserId = Guid.NewGuid(), Role = "SystemAdmin" };
+
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _memberRepositoryMock.Setup(r => r.GetByTenantIdAsync(member.TenantId, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([member]);
+
+        var result = await _handler.Handle(new UpdateTenantMemberRoleCommand(member.TenantId, member.UserId, "Member"), CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("another super admin");
+        member.Role.Should().Be("SystemAdmin");
+        _memberRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
 }

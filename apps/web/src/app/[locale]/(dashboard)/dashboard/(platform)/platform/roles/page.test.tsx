@@ -190,7 +190,8 @@ describe('platform roles page', () => {
     const superAdminRow = within(workspaceAssignments!).getByText('Super Admin').closest('tr');
     expect(superAdminRow).not.toBeNull();
     expect(within(superAdminRow!).getByText('You')).toBeInTheDocument();
-    expect(within(superAdminRow!).getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    expect(within(superAdminRow!).queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+    expect(within(superAdminRow!).getByText('Transfer super admin before changing this account.')).toBeInTheDocument();
 
     const customAssignments = screen.getByText('Custom role assignments').closest('[data-slot="card"]');
     expect(customAssignments).not.toBeNull();
