@@ -230,7 +230,6 @@ async function run() {
 
     await visit(page, courseRoute, 'listing/faq', 'Frequently Asked Questions');
     console.log('[professor-e2e] listing FAQ, projects, testimonials');
-    const initialFaqCount = await page.getByLabel('Question', { exact: true }).count();
     await page.getByRole('button', { name: 'Add question' }).click();
     await page.getByLabel('Question', { exact: true }).last().fill('Who is this course for?');
     await page.getByLabel('Answer', { exact: true }).last().fill('Game developers preparing a production-ready portfolio project.');
@@ -256,7 +255,10 @@ async function run() {
       async () => readCourseMetadata(await apiRequest(`/v1/courses/slug/${encodeURIComponent(courseSlug)}`, {}, fixture.accessToken)),
       (metadata) => metadata.landingFaq?.some((item) => item.question === 'Temporary FAQ entry'),
     );
-    await page.getByRole('button', { name: `Remove question ${initialFaqCount + 2}` }).click();
+    const temporaryFaqQuestion = page.getByLabel('Question', { exact: true }).last();
+    if ((await temporaryFaqQuestion.inputValue()) !== 'Temporary FAQ entry') throw new Error('Temporary FAQ should be the last authored entry.');
+    const temporaryFaqCard = temporaryFaqQuestion.locator('xpath=ancestor::div[contains(@class, "rounded-lg")][1]');
+    await temporaryFaqCard.getByRole('button', { name: /Remove question/ }).click();
     await page.getByRole('button', { name: 'Save FAQ' }).click();
     await waitForText(page, 'FAQ updated successfully');
     await waitForApiState(

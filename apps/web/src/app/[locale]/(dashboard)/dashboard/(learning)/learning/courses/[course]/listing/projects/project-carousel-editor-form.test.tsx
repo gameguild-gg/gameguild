@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProjectCarouselEditorForm } from './project-carousel-editor-form';
@@ -106,28 +106,27 @@ describe('ProjectCarouselEditorForm', () => {
     expect(updateCourseLandingProjectsMock).not.toHaveBeenCalled();
   });
   it('allows consecutive saves after editing and removing a project', async () => {
-    const user = userEvent.setup();
     render(<ProjectCarouselEditorForm courseId="course-1" items={[]} />);
 
-    await user.type(screen.getByLabelText('Project title 1'), 'First milestone');
-    await user.type(screen.getByLabelText('Summary 1'), 'First milestone summary.');
-    await user.type(screen.getByLabelText('Deliverable 1'), 'First milestone deliverable.');
-    await user.click(screen.getByRole('button', { name: /save project carousel/i }));
+    fireEvent.change(screen.getByLabelText('Project title 1'), { target: { value: 'First milestone' } });
+    fireEvent.change(screen.getByLabelText('Summary 1'), { target: { value: 'First milestone summary.' } });
+    fireEvent.change(screen.getByLabelText('Deliverable 1'), { target: { value: 'First milestone deliverable.' } });
+    fireEvent.click(screen.getByRole('button', { name: /save project carousel/i }));
     await waitFor(() => expect(screen.getByRole('button', { name: /save project carousel/i })).toBeEnabled());
 
-    await user.click(screen.getByRole('button', { name: /add project/i }));
-    await user.type(screen.getByLabelText('Project title 2'), 'Temporary milestone');
-    await user.type(screen.getByLabelText('Summary 2'), 'Temporary milestone summary.');
-    await user.type(screen.getByLabelText('Deliverable 2'), 'Temporary milestone deliverable.');
-    await user.click(screen.getByRole('button', { name: /save project carousel/i }));
+    fireEvent.click(screen.getByRole('button', { name: /add project/i }));
+    fireEvent.change(screen.getByLabelText('Project title 2'), { target: { value: 'Temporary milestone' } });
+    fireEvent.change(screen.getByLabelText('Summary 2'), { target: { value: 'Temporary milestone summary.' } });
+    fireEvent.change(screen.getByLabelText('Deliverable 2'), { target: { value: 'Temporary milestone deliverable.' } });
+    fireEvent.click(screen.getByRole('button', { name: /save project carousel/i }));
     await waitFor(() => expect(screen.getByRole('button', { name: /save project carousel/i })).toBeEnabled());
 
-    await user.click(screen.getByRole('button', { name: /remove project 2/i }));
-    await user.click(screen.getByRole('button', { name: /save project carousel/i }));
+    fireEvent.click(screen.getByRole('button', { name: /remove project 2/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save project carousel/i }));
 
     await waitFor(() => expect(updateCourseLandingProjectsMock).toHaveBeenCalledTimes(3));
     expect(updateCourseLandingProjectsMock).toHaveBeenLastCalledWith('course-1', [expect.objectContaining({ title: 'First milestone' })]);
     expect(screen.getAllByLabelText(/Project title/)).toHaveLength(1);
     expect(screen.getByRole('button', { name: /save project carousel/i })).toBeEnabled();
-  }, 15_000);
+  });
 });

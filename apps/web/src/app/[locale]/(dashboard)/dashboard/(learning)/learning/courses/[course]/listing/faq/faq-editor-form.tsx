@@ -8,7 +8,7 @@ import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 
 interface FaqEditorFormProps {
   courseId: string;
@@ -32,7 +32,7 @@ function createEmptyItem(): EditableFaqItem {
 }
 
 export function FaqEditorForm({ courseId, items }: FaqEditorFormProps) {
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [draftItems, setDraftItems] = useState<EditableFaqItem[]>(
     items.length > 0
       ? items.map((item) => ({
@@ -65,7 +65,7 @@ export function FaqEditorForm({ courseId, items }: FaqEditorFormProps) {
     setSuccess(false);
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setSuccess(false);
@@ -81,16 +81,25 @@ export function FaqEditorForm({ courseId, items }: FaqEditorFormProps) {
       return;
     }
 
-    startTransition(async () => {
-      const result = await updateCourseFaq(courseId, draftItems);
+    const persistedItems = draftItems.filter((item) => item.question.trim().length > 0 && item.answer.trim().length > 0).slice(0, 12);
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await updateCourseFaq(courseId, persistedItems);
 
       if (!result.success) {
         setError(result.error);
         return;
       }
 
+      setDraftItems(persistedItems.length > 0 ? persistedItems : [createEmptyItem()]);
       setSuccess(true);
-    });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'The FAQ could not be saved.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -142,7 +151,9 @@ export function FaqEditorForm({ courseId, items }: FaqEditorFormProps) {
       </div>
 
       {error ? (
-        <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{error}</div>
+        <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+          {error}
+        </div>
       ) : null}
       {success ? (
         <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300">
@@ -155,8 +166,8 @@ export function FaqEditorForm({ courseId, items }: FaqEditorFormProps) {
           <Plus className="mr-2 size-4" />
           Add question
         </Button>
-        <Button type="submit" disabled={isPending}>
-          {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" />}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" />}
           Save FAQ
         </Button>
       </div>
