@@ -346,7 +346,7 @@ describe('course-management secondary route pages', () => {
       'redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/support/tickets',
     );
     await expect(SettingsRedirectPage({ params: params() } as never)).rejects.toThrow(
-      'redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/settings/access',
+      'redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/settings/general',
     );
     await expect(GeneralSettingsPage({ params: params() } as never)).rejects.toThrow(
       'redirect:/en-US/dashboard/learning/courses/course-1/listing/info',

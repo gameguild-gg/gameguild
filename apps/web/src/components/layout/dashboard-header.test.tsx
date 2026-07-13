@@ -92,6 +92,7 @@ describe('DashboardHeader', () => {
     expect(searchButtons).toHaveLength(2);
     expect(searchButtons[0]).toHaveClass('max-w-sm');
     expect(searchButtons[0]).toHaveClass('lg:max-w-md');
+    expect(searchButtons[0].parentElement).toHaveClass('justify-center');
     expect(searchButtons[1]).toHaveClass('sm:hidden');
   });
 });

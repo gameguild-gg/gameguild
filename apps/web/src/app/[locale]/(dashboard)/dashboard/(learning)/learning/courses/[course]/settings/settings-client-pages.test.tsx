@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import AccessSettingsPage from './access/page';
+import AccessSettingsPage from '../listing/access/page';
 import DangerPage from './danger/page';
 import { archiveCourse, deleteCourse, fetchCourse, updateCourse } from '@/lib/learning/actions';
 
@@ -67,12 +67,12 @@ describe('course settings client pages', () => {
 
     render(<AccessSettingsPage params={params} />);
 
-    expect(await screen.findByText('Visibility')).toBeInTheDocument();
+    expect(await screen.findByText('Listing visibility')).toBeInTheDocument();
     await user.clear(screen.getByLabelText(/maximum enrollments/i));
     await user.type(screen.getByLabelText(/maximum enrollments/i), '0');
     await user.clear(screen.getByLabelText(/enrollment deadline/i));
     await user.type(screen.getByLabelText(/enrollment deadline/i), '2026-09-10');
-    await user.click(screen.getByRole('button', { name: /save access settings/i }));
+    await user.click(screen.getByRole('button', { name: /save listing access/i }));
 
     await waitFor(() => {
       expect(updateCourse).toHaveBeenCalledWith({
@@ -84,7 +84,7 @@ describe('course settings client pages', () => {
       });
     });
     expect(refreshMock).toHaveBeenCalled();
-    expect(screen.getByText('Access settings saved successfully.')).toBeInTheDocument();
+    expect(screen.getByText('Listing access settings saved successfully.')).toBeInTheDocument();
   });
 
   it('renders access API errors and course-not-found state', async () => {
@@ -92,8 +92,8 @@ describe('course settings client pages', () => {
     vi.mocked(updateCourse).mockResolvedValueOnce({ success: false, error: 'Enrollment is closed.' });
 
     render(<AccessSettingsPage params={params} />);
-    expect(await screen.findByText('Visibility')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /save access settings/i }));
+    expect(await screen.findByText('Listing visibility')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /save listing access/i }));
     expect(await screen.findByText('Enrollment is closed.')).toBeInTheDocument();
 
     vi.mocked(fetchCourse).mockResolvedValueOnce(null);

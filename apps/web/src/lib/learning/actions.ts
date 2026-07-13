@@ -325,11 +325,34 @@ export async function updateCourse(input: UpdateCourseInput): Promise<ActionResu
 
 export async function publishCourse(courseId: string): Promise<ActionResult<null>> {
   try {
+    const [{ getCourse, getCourseContent }, { deriveCourseLaunchSummary }] = await Promise.all([
+      import('@/lib/learning/queries/course'),
+      import('@/lib/learning/course-launch'),
+    ]);
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const [course, content] = await Promise.all([
+      getCourse(courseId),
+      getCourseContent(resolvedCourseId),
+    ]);
+
+    if (!course) {
+      return { success: false, error: 'Course could not be loaded before publishing.' };
+    }
+
+    const launchSummary = deriveCourseLaunchSummary(course, content);
+    if (launchSummary.blockers.length > 0) {
+      return {
+        success: false,
+        error: `Course cannot be published until readiness is complete: ${launchSummary.blockers.join(', ')}.`,
+      };
+    }
+
     const { lifecycle } = createCourseModules();
-    const result = await lifecycle.postCoursesPublish(courseId);
+    const result = await lifecycle.postCoursesPublish(resolvedCourseId);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
+      revalidateCoursePath(courseId, resolvedCourseId);
+      revalidateCoursePath(courseId, resolvedCourseId, 'overview');
       revalidatePath('/dashboard/learning/courses');
       return { success: true, data: null };
     }

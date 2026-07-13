@@ -10,7 +10,6 @@ import React from 'react';
  * Routes:
  * - /settings (redirect → /settings/general)
  * - /settings/general - Title, description, category, difficulty, skills
- * - /settings/access - Visibility, enrollment rules
  * - /settings/notifications - Email templates, alerts
  * - /settings/integrations - Third-party integrations
  */

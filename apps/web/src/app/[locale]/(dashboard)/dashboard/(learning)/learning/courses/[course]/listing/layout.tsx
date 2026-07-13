@@ -15,6 +15,7 @@ import React from 'react';
  * - /listing/testimonials - Student reviews & testimonials
  * - /listing/faq - Frequently asked questions
  * - /listing/pricing - Pricing tiers (conditional: hasPricing)
+ * - /listing/access - Visibility and enrollment controls
  */
 export default async function ListingLayout({
   children,

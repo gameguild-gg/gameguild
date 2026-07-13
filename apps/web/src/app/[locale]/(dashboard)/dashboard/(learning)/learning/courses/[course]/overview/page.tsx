@@ -31,7 +31,6 @@ import {
 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import React from 'react';
-import { CourseLifecycleActions } from './course-lifecycle-actions';
 
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -152,9 +151,6 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Lifecycle Status Banner */}
-      <CourseLifecycleActions courseId={courseId} status={course.status} locale={locale} />
-
       {/* Key Metrics */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
