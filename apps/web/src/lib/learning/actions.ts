@@ -43,6 +43,12 @@ function revalidateCoursePath(courseId: string, resolvedCourseId: string, segmen
   }
 }
 
+function revalidateCourseContentPaths(courseId: string, resolvedCourseId: string) {
+  revalidateCoursePath(courseId, resolvedCourseId);
+  revalidateCoursePath(courseId, resolvedCourseId, 'content');
+  revalidateCoursePath(courseId, resolvedCourseId, 'overview');
+}
+
 function createCourseModules() {
   const client = getApiClient();
 
@@ -128,7 +134,7 @@ export async function addContent(input: AddContentInput): Promise<ActionResult<{
     const result = await content.postCoursesContent(resolvedCourseId, contentBody);
 
     if (result.ok) {
-      revalidateCoursePath(courseId, resolvedCourseId);
+      revalidateCourseContentPaths(courseId, resolvedCourseId);
       return { success: true, data: { id: result.data.id! } };
     }
 
@@ -145,7 +151,7 @@ export async function deleteContent(courseId: string, contentId: string): Promis
     const result = await content.deleteCoursesContent(resolvedCourseId, contentId);
 
     if (result.ok) {
-      revalidateCoursePath(courseId, resolvedCourseId);
+      revalidateCourseContentPaths(courseId, resolvedCourseId);
       return { success: true, data: null };
     }
 
@@ -178,7 +184,7 @@ export async function updateContent(input: UpdateContentInput): Promise<ActionRe
     const result = await content.putCoursesContent(resolvedCourseId, contentId, body);
 
     if (result.ok) {
-      revalidateCoursePath(courseId, resolvedCourseId);
+      revalidateCourseContentPaths(courseId, resolvedCourseId);
       return { success: true, data: null };
     }
 
@@ -195,7 +201,7 @@ export async function reorderContent(courseId: string, contentIds: string[]): Pr
     const result = await programs.postCoursesContentReorder1(resolvedCourseId, { contentIds });
 
     if (result.ok) {
-      revalidateCoursePath(courseId, resolvedCourseId);
+      revalidateCourseContentPaths(courseId, resolvedCourseId);
       return { success: true, data: null };
     }
 

@@ -204,28 +204,65 @@ describe('ContentTree course management', () => {
     expect(screen.getByRole('button', { name: /add lesson/i })).toBeInTheDocument();
   });
 
-  it('creates a quiz lesson inside a module with the normalized backend type', async () => {
+  it('creates a lesson in a module introduced by the preceding server refresh', async () => {
+    const view = renderContentTree();
+
+    fireEvent.click(screen.getByRole('button', { name: /^add module$/i }));
+    let dialog = screen.getByRole('dialog', { name: /add module/i });
+    fireEvent.change(within(dialog).getByLabelText(/title/i), { target: { value: 'Production Foundations' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /^add module$/i }));
+    await waitFor(() => expect(navigationMocks.refresh).toHaveBeenCalledTimes(1));
+
+    const createdModule = { ...moduleItem, id: 'module-created', type: 'Module' as const, title: 'Production Foundations' };
+    view.rerender(
+      <TooltipProvider>
+        <ContentTree
+          courseId="course-1"
+          modules={[createdModule]}
+          allItems={[createdModule]}
+          assessments={[]}
+          virtualModuleIds={[]}
+        />
+      </TooltipProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /add lesson/i }));
+    dialog = screen.getByRole('dialog', { name: /add lesson/i });
+    fireEvent.change(within(dialog).getByLabelText(/title/i), { target: { value: 'Define the playable promise' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /^add lesson$/i }));
+
+    await waitFor(() => {
+      expect(addContent).toHaveBeenLastCalledWith({
+        courseId: 'course-1',
+        parentId: 'module-created',
+        title: 'Define the playable promise',
+        type: 'Lesson',
+        sortOrder: 0,
+      });
+    });
+    expect(navigationMocks.refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it('creates a lesson inside a module with the default backend type', async () => {
     const user = userEvent.setup();
     renderContentTree({ allItems: [moduleItem, lessonItem] });
 
     await user.click(screen.getByRole('button', { name: /add lesson/i }));
     const dialog = screen.getByRole('dialog', { name: /add lesson/i });
-    await user.type(within(dialog).getByLabelText(/title/i), 'Knowledge check');
-    await user.click(within(dialog).getByRole('combobox', { name: /type/i }));
-    await user.click(screen.getByRole('option', { name: 'Quiz' }));
+    await user.type(within(dialog).getByLabelText(/title/i), 'Playable promise');
     await user.click(within(dialog).getByRole('button', { name: /^add lesson$/i }));
 
     await waitFor(() => {
       expect(addContent).toHaveBeenCalledWith({
         courseId: 'course-1',
         parentId: 'module-1',
-        title: 'Knowledge check',
-        type: 'Questionnaire',
+        title: 'Playable promise',
+        type: 'Lesson',
         sortOrder: 1,
       });
     });
     expect(navigationMocks.refresh).toHaveBeenCalled();
-  }, 15_000);
+  });
 
   it('duplicates lesson items from the content tree', async () => {
     const user = userEvent.setup();
@@ -326,7 +363,7 @@ describe('ContentTree course management', () => {
     expect(screen.queryByRole('dialog', { name: /add module/i })).not.toBeInTheDocument();
   });
 
-  it('keeps add lesson server errors visible and lets professors cancel the dialog', async () => {
+  it('keeps add lesson server errors visible and allows retrying without losing the draft', async () => {
     vi.mocked(addContent).mockResolvedValueOnce({ success: false, error: 'Lesson could not be created.' });
     renderContentTree({ allItems: [moduleItem, lessonItem] });
 
@@ -336,8 +373,13 @@ describe('ContentTree course management', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: /^add lesson$/i }));
 
     expect(await screen.findByText('Lesson could not be created.')).toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
+    expect(within(dialog).getByLabelText(/title/i)).toHaveValue('Broken lesson');
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: /^add lesson$/i })).toBeEnabled());
+    fireEvent.click(within(dialog).getByRole('button', { name: /^add lesson$/i }));
+
+    await waitFor(() => expect(addContent).toHaveBeenCalledTimes(2));
     expect(screen.queryByRole('dialog', { name: /add lesson/i })).not.toBeInTheDocument();
+    expect(navigationMocks.refresh).toHaveBeenCalled();
   });
 
   it('creates virtual-module content without persisting the virtual parent id', async () => {

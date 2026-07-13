@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
   fetch: vi.fn(),
   resolveCourseId: vi.fn(),
+  postCoursesContent: vi.fn(),
   deleteCoursesContent: vi.fn(),
   getCourses1: vi.fn(),
   putCourses: vi.fn(),
@@ -34,6 +35,7 @@ vi.mock('@game-guild/client', () => ({
       deleteCoursesUsers = mocks.deleteCoursesUsers;
     },
     LearningCoursesProgramcontentModule: class {
+      postCoursesContent = mocks.postCoursesContent;
       deleteCoursesContent = mocks.deleteCoursesContent;
     },
     LearningCoursesProgramlifecycleModule: class {},
@@ -49,6 +51,7 @@ vi.mock('@/lib/learning/queries/course', () => ({
 
 const {
   createCertificateTemplate,
+  addContent,
   updateCertificateTemplate,
   deleteCertificateTemplate,
   deleteContent,
@@ -77,6 +80,7 @@ describe('learning server actions', () => {
     vi.clearAllMocks();
     mocks.getToken.mockResolvedValue('access-token');
     mocks.resolveCourseId.mockImplementation(async (courseId: string) => courseId);
+    mocks.postCoursesContent.mockResolvedValue({ ok: true, data: { id: 'content-1' } });
     mocks.deleteCoursesContent.mockResolvedValue({ ok: true, data: undefined });
     mocks.getCourses1.mockResolvedValue({
       ok: true,
@@ -323,6 +327,30 @@ describe('learning server actions', () => {
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333');
+  });
+
+  it('revalidates the course content route after creating a lesson', async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce('1caa16bb-6810-4e53-bb0d-91f0d5702333');
+
+    const result = await addContent({
+      courseId: 'creature-design-by-admin',
+      parentId: '9ec3b854-89ca-4757-83fb-cfc823da1a5e',
+      title: 'Gesture foundations',
+      type: 'Lesson',
+    });
+
+    expect(result).toEqual({ success: true, data: { id: 'content-1' } });
+    expect(mocks.postCoursesContent).toHaveBeenCalledWith(
+      '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+      expect.objectContaining({
+        programId: '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+        parentId: '9ec3b854-89ca-4757-83fb-cfc823da1a5e',
+        title: 'Gesture foundations',
+        type: 'Lesson',
+      }),
+    );
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin/content');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content');
   });
 
   it('creates certificate templates through the Learning.Certificates API', async () => {
