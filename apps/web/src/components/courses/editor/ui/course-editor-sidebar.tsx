@@ -102,7 +102,7 @@ const COURSE_SECTION_GROUPS = [
         id: 'publish',
         label: 'Preview & Publish',
         icon: Play,
-        path: '/settings/access',
+        path: '/listing/access',
         description: 'Publishing, versions, live preview',
       },
       {

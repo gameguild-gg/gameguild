@@ -12,11 +12,15 @@ const mocks = vi.hoisted(() => ({
   deleteAssessments: vi.fn(),
   getCourses1: vi.fn(),
   putCourses: vi.fn(),
+  postCoursesPublish: vi.fn(),
   postCoursesUsers: vi.fn(),
   deleteCoursesUsers: vi.fn(),
   postApiLearningEnrollments: vi.fn(),
   clientRequest: vi.fn(),
   createServerClient: vi.fn(),
+  getCourse: vi.fn(),
+  getCourseContent: vi.fn(),
+  deriveCourseLaunchSummary: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
@@ -45,7 +49,9 @@ vi.mock('@game-guild/client', () => ({
       postCoursesContent = mocks.postCoursesContent;
       deleteCoursesContent = mocks.deleteCoursesContent;
     },
-    LearningCoursesProgramlifecycleModule: class {},
+    LearningCoursesProgramlifecycleModule: class {
+      postCoursesPublish = mocks.postCoursesPublish;
+    },
     LearningEnrollmentsModule: class {
       postApiLearningEnrollments = mocks.postApiLearningEnrollments;
     },
@@ -54,6 +60,12 @@ vi.mock('@game-guild/client', () => ({
 
 vi.mock('@/lib/learning/queries/course', () => ({
   resolveCourseId: mocks.resolveCourseId,
+  getCourse: mocks.getCourse,
+  getCourseContent: mocks.getCourseContent,
+}));
+
+vi.mock('@/lib/learning/course-launch', () => ({
+  deriveCourseLaunchSummary: mocks.deriveCourseLaunchSummary,
 }));
 
 const {
@@ -81,6 +93,7 @@ const {
   removeCourseStudents,
   sendCourseStudentMessage,
   updateCourse,
+  publishCourse,
 } = await import('./actions');
 
 describe('learning server actions', () => {
@@ -98,7 +111,23 @@ describe('learning server actions', () => {
       data: { id: 'course-1', metadata: JSON.stringify({ landingFaq: [{ question: 'Existing' }] }) },
     });
     mocks.putCourses.mockResolvedValue({ ok: true, data: {} });
+    mocks.postCoursesPublish.mockResolvedValue({ ok: true, data: {} });
     mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
+    mocks.getCourse.mockResolvedValue({
+      id: 'course-1',
+      title: 'Ready course',
+      description: 'Ready course description.',
+      slug: 'ready-course',
+      status: 'draft',
+      visibility: 'public',
+      thumbnail: 'https://example.test/cover.jpg',
+      enrollmentStatus: 'Open',
+      enrollmentDeadline: null,
+      currentEnrollments: 0,
+      isEnrollmentOpen: true,
+    });
+    mocks.getCourseContent.mockResolvedValue({ items: [], total: 0 });
+    mocks.deriveCourseLaunchSummary.mockReturnValue({ blockers: [] });
     mocks.clientRequest.mockResolvedValue({
       ok: true,
       data: { items: [{ id: 'user-1', email: 'student@example.com', username: 'student', name: 'Student' }] },
@@ -148,6 +177,36 @@ describe('learning server actions', () => {
     expect(result).toEqual({ success: true, data: null });
     expect(mocks.resolveCourseId).toHaveBeenCalledWith('boss-ai-by-instructor-one');
     expect(mocks.putCourses).toHaveBeenCalledWith('resolved-course-id', { title: 'Resolved course' });
+  });
+
+  it('blocks publishing when course readiness is incomplete', async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce('resolved-course-id');
+    mocks.deriveCourseLaunchSummary.mockReturnValueOnce({
+      blockers: ['Add at least one lesson', 'Upload a cover image'],
+    });
+
+    const result = await publishCourse('boss-ai-by-instructor-one');
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Course cannot be published until readiness is complete: Add at least one lesson, Upload a cover image.',
+    });
+    expect(mocks.getCourse).toHaveBeenCalledWith('boss-ai-by-instructor-one');
+    expect(mocks.getCourseContent).toHaveBeenCalledWith('resolved-course-id');
+    expect(mocks.postCoursesPublish).not.toHaveBeenCalled();
+  });
+
+  it('publishes only after readiness is complete and uses the canonical course id', async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce('resolved-course-id');
+
+    const result = await publishCourse('boss-ai-by-instructor-one');
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.postCoursesPublish).toHaveBeenCalledWith('resolved-course-id');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/boss-ai-by-instructor-one');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/resolved-course-id');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/boss-ai-by-instructor-one/overview');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/resolved-course-id/overview');
   });
 
   it('persists notification settings while preserving unrelated course metadata', async () => {
