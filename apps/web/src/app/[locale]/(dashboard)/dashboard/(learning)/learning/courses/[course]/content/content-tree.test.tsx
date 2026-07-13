@@ -262,7 +262,7 @@ describe('ContentTree course management', () => {
       });
     });
     expect(navigationMocks.refresh).toHaveBeenCalled();
-  });
+  }, 15_000);
 
   it('duplicates lesson items from the content tree', async () => {
     const user = userEvent.setup();

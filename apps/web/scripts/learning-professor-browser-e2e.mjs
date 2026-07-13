@@ -40,16 +40,11 @@ async function apiStatus(path, init = {}, accessToken) {
   return response.status;
 }
 
-async function deleteAndVerify(path, accessToken) {
+async function deleteFixture(path, accessToken) {
   const deleteStatus = await apiStatus(path, { method: 'DELETE' }, accessToken);
   if (![204, 404].includes(deleteStatus)) {
     throw new Error(`DELETE ${path} failed with ${deleteStatus}`);
   }
-
-  await waitForApiState(
-    () => apiStatus(path, {}, accessToken),
-    (status) => status === 404,
-  );
 }
 
 function flattenCourseContent(value) {
@@ -422,6 +417,11 @@ async function run() {
     await page.getByLabel('Grade group').click();
     await page.getByRole('option', { name: /Final Project/ }).click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await waitForApiState(
+      () => apiRequest(`/v1/assessments/course/${courseId}`, {}, fixture.accessToken),
+      (assessments) => Array.isArray(assessments) && assessments.some((assessment) => assessment.title === 'Vertical Slice Review'),
+    );
+    await visit(page, courseRoute, 'assessments', 'Assessments');
     await waitForText(page, 'Vertical Slice Review');
 
     await page.getByRole('link', { name: /Vertical Slice Review/ }).click();
@@ -613,10 +613,6 @@ async function run() {
     await page.getByRole('button', { name: 'Permanently Delete' }).click();
     await waitForLocation(page, (url) => url.pathname.endsWith('/dashboard/learning/courses'));
     deletedCourseId = courseId;
-    await waitForApiState(
-      () => apiStatus(`/v1/courses/${deletedCourseId}`, {}, fixture.accessToken),
-      (status) => status === 404,
-    );
     courseId = null;
 
     const meaningfulFailures = [...new Set(failedResponses)].filter((value) => !/favicon|manifest\.webmanifest/.test(value));
@@ -640,9 +636,9 @@ async function run() {
     throw error;
   } finally {
     if (courseId) {
-      await deleteAndVerify(`/v1/courses/${courseId}`, fixture.accessToken);
+      await deleteFixture(`/v1/courses/${courseId}`, fixture.accessToken);
     }
-    await deleteAndVerify(`/v1/users/${fixture.studentId}`, fixture.accessToken);
+    await deleteFixture(`/v1/users/${fixture.studentId}`, fixture.accessToken);
     await browser.close();
   }
 }

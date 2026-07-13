@@ -49,6 +49,12 @@ function revalidateCourseContentPaths(courseId: string, resolvedCourseId: string
   revalidateCoursePath(courseId, resolvedCourseId, 'overview');
 }
 
+function revalidateCourseAssessmentPaths(courseId: string, resolvedCourseId: string) {
+  revalidateCoursePath(courseId, resolvedCourseId);
+  revalidateCoursePath(courseId, resolvedCourseId, 'assessments');
+  revalidateCoursePath(courseId, resolvedCourseId, 'overview');
+}
+
 function createCourseModules() {
   const client = getApiClient();
 
@@ -851,7 +857,7 @@ export async function createAssessment(input: CreateAssessmentInput): Promise<Ac
     const result = await assessments.postAssessments(body);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
+      revalidateCourseAssessmentPaths(courseId, resolvedCourseId);
       return { success: true, data: { id: result.data.id! } };
     }
 
@@ -1001,6 +1007,7 @@ export async function updateAssessment(input: UpdateAssessmentInput): Promise<Ac
   const { courseId, assessmentId, ...fields } = input;
 
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const body: LearningAssessmentsUpdateAssessmentInput & {
       assessmentGroupId?: string | null;
       clearAssessmentGroupId?: boolean;
@@ -1024,7 +1031,7 @@ export async function updateAssessment(input: UpdateAssessmentInput): Promise<Ac
     const result = await assessments.putAssessments(assessmentId, body);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
+      revalidateCourseAssessmentPaths(courseId, resolvedCourseId);
       return { success: true, data: null };
     }
 
@@ -1036,11 +1043,12 @@ export async function updateAssessment(input: UpdateAssessmentInput): Promise<Ac
 
 export async function deleteAssessment(courseId: string, assessmentId: string): Promise<ActionResult<null>> {
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { assessments } = createCourseModules();
     const result = await assessments.deleteAssessments(assessmentId);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
+      revalidateCourseAssessmentPaths(courseId, resolvedCourseId);
       return { success: true, data: null };
     }
 
