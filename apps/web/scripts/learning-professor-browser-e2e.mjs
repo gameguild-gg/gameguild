@@ -461,6 +461,12 @@ async function run() {
     await page.getByLabel('Meeting URL or room').fill('https://meet.example.test/gameguild');
     await page.getByRole('button', { name: 'Schedule class' }).click();
     await waitForText(page, 'Class scheduled.');
+    const classState = await waitForApiState(
+      () => apiRequest(`/api/cohorts/course/${courseId}`, {}, fixture.accessToken),
+      (classes) => Array.isArray(classes) && classes.some((courseClass) => courseClass.name === 'July Production Cohort'),
+    );
+    const createdClass = classState.find((courseClass) => courseClass.name === 'July Production Cohort');
+    if (!createdClass?.id) throw new Error('The cohort API did not return the newly scheduled class id.');
     await waitForText(page, 'July Production Cohort');
     await page.getByRole('link', { name: /July Production Cohort/ }).click();
     await page.getByLabel('Name').fill('August Production Cohort');
@@ -468,6 +474,10 @@ async function run() {
     await page.getByLabel('Capacity').fill('24');
     await page.getByRole('button', { name: 'Save class' }).click();
     await waitForText(page, 'Class updated.');
+    await waitForApiState(
+      () => apiRequest(`/api/cohorts/${createdClass.id}`, {}, fixture.accessToken),
+      (courseClass) => courseClass?.name === 'August Production Cohort',
+    );
     const openEnrollmentButton = page.getByRole('button', { name: 'Open enrollment' });
     await page.waitForFunction((button) => !button.disabled, await openEnrollmentButton.elementHandle());
     await openEnrollmentButton.click();
