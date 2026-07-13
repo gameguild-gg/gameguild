@@ -7,6 +7,9 @@ const mocks = vi.hoisted(() => ({
   resolveCourseId: vi.fn(),
   postCoursesContent: vi.fn(),
   deleteCoursesContent: vi.fn(),
+  postAssessments: vi.fn(),
+  putAssessments: vi.fn(),
+  deleteAssessments: vi.fn(),
   getCourses1: vi.fn(),
   putCourses: vi.fn(),
   postCoursesUsers: vi.fn(),
@@ -27,7 +30,11 @@ vi.mock('next/cache', () => ({
 vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
-    LearningAssessmentsModule: class {},
+    LearningAssessmentsModule: class {
+      postAssessments = mocks.postAssessments;
+      putAssessments = mocks.putAssessments;
+      deleteAssessments = mocks.deleteAssessments;
+    },
     LearningCoursesProgramModule: class {
       getCourses1 = mocks.getCourses1;
       putCourses = mocks.putCourses;
@@ -52,6 +59,7 @@ vi.mock('@/lib/learning/queries/course', () => ({
 const {
   createCertificateTemplate,
   addContent,
+  createAssessment,
   updateCertificateTemplate,
   deleteCertificateTemplate,
   deleteContent,
@@ -82,6 +90,9 @@ describe('learning server actions', () => {
     mocks.resolveCourseId.mockImplementation(async (courseId: string) => courseId);
     mocks.postCoursesContent.mockResolvedValue({ ok: true, data: { id: 'content-1' } });
     mocks.deleteCoursesContent.mockResolvedValue({ ok: true, data: undefined });
+    mocks.postAssessments.mockResolvedValue({ ok: true, data: { id: 'assessment-1' } });
+    mocks.putAssessments.mockResolvedValue({ ok: true, data: undefined });
+    mocks.deleteAssessments.mockResolvedValue({ ok: true, data: undefined });
     mocks.getCourses1.mockResolvedValue({
       ok: true,
       data: { id: 'course-1', metadata: JSON.stringify({ landingFaq: [{ question: 'Existing' }] }) },
@@ -351,6 +362,31 @@ describe('learning server actions', () => {
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin/content');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content');
+  });
+
+  it('revalidates the assessment hub after creating an assessment', async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce('1caa16bb-6810-4e53-bb0d-91f0d5702333');
+
+    const result = await createAssessment({
+      courseId: 'creature-design-by-admin',
+      title: 'Final review',
+      type: 'Quiz',
+      maxScore: 100,
+      passingScore: 70,
+      assessmentGroupId: 'group-1',
+    });
+
+    expect(result).toEqual({ success: true, data: { id: 'assessment-1' } });
+    expect(mocks.postAssessments).toHaveBeenCalledWith(
+      expect.objectContaining({
+        courseId: '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+        title: 'Final review',
+        type: 'Quiz',
+        assessmentGroupId: 'group-1',
+      }),
+    );
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin/assessments');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/assessments');
   });
 
   it('creates certificate templates through the Learning.Certificates API', async () => {
