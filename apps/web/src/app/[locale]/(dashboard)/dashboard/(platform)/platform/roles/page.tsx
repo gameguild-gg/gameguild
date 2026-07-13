@@ -286,7 +286,9 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                         {row.isCurrentUser ? <Badge variant="outline" className="ml-2">You</Badge> : null}
                       </TableCell>
                       <TableCell className="text-right">
-                        {row.primaryMembership?.tenantId ? (
+                        {row.isSuperAdmin && superAdmins <= 1 ? (
+                          <span className="text-sm text-muted-foreground">Transfer super admin before changing this account.</span>
+                        ) : row.primaryMembership?.tenantId ? (
                           <form action={updateMemberAccessRole} className="ml-auto flex items-center justify-end gap-2">
                             <input type="hidden" name="userId" value={row.member.id} />
                             <input type="hidden" name="tenantId" value={row.primaryMembership.tenantId} />
