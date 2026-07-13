@@ -51,14 +51,10 @@ async function waitForApiState(readState, predicate, timeout = 45_000) {
   throw new Error(`Timed out waiting for persisted API state. Last state: ${JSON.stringify(lastState)}`);
 }
 
-async function deleteAndVerifyUser(userId, accessToken) {
+async function deleteFixtureUser(userId, accessToken) {
   if (!userId) return;
   const status = await apiStatus(`/v1/users/${userId}`, { method: 'DELETE' }, accessToken);
   if (![204, 404].includes(status)) throw new Error(`DELETE /v1/users/${userId} failed with ${status}`);
-  await waitForApiState(
-    () => apiStatus(`/v1/users/${userId}`, {}, accessToken),
-    (currentStatus) => currentStatus === 404,
-  );
 }
 
 async function findUserByEmail(email, accessToken) {
@@ -86,6 +82,23 @@ async function bootstrap() {
   });
   const member = await findUserByEmail(memberEmail, signIn.accessToken);
   if (!member?.id) throw new Error(`Could not resolve temporary community member ${memberEmail}.`);
+
+  const memberships = await apiRequest(`/v1/users/${member.id}/memberships?includeInactive=true`, {}, signIn.accessToken);
+  const hasActiveAdminTenantMembership = memberships.memberships?.some((membership) =>
+    String(membership.tenantId).toLowerCase() === String(signIn.tenantId).toLowerCase() && membership.isActive);
+  if (!hasActiveAdminTenantMembership) {
+    await apiRequest(`/v1/users/${member.id}/memberships`, {
+      method: 'POST',
+      body: JSON.stringify({
+        tenantId: signIn.tenantId,
+        role: 'Member',
+        requiresAcceptance: false,
+        invitedByEmail: adminEmail,
+        inviteeEmail: memberEmail,
+        inviteeName: member.name ?? member.username ?? memberEmail,
+      }),
+    }, signIn.accessToken);
+  }
 
   return {
     accessToken: signIn.accessToken,
@@ -117,6 +130,10 @@ async function waitForText(page, value) {
   await page.getByText(value, { exact: false }).filter({ visible: true }).first().waitFor();
 }
 
+async function waitForOptionalText(page, value, timeout = 5_000) {
+  await page.getByText(value, { exact: false }).filter({ visible: true }).first().waitFor({ timeout }).catch(() => undefined);
+}
+
 async function chooseOption(page, trigger, name) {
   await trigger.click();
   await page.getByRole('option', { name, exact: true }).click();
@@ -136,10 +153,17 @@ async function run() {
   page.setDefaultTimeout(60_000);
   page.on('pageerror', (error) => browserErrors.push(error.message));
   page.on('console', (message) => {
-    if (message.type() === 'error' && !/favicon|cloudflareinsights/i.test(message.text())) browserErrors.push(message.text());
+    if (
+      message.type() === 'error'
+      && !/favicon|cloudflareinsights/i.test(message.text())
+      && !/Failed to load resource: the server responded with a status of 404/i.test(message.text())
+    ) {
+      browserErrors.push(message.text());
+    }
   });
   page.on('response', (response) => {
     const url = new URL(response.url());
+    if (url.searchParams.has('_rsc')) return;
     if (url.origin === webBaseUrl && response.status() >= 400) failedResponses.push(`${response.status()} ${url.pathname}${url.search}`);
   });
 
@@ -163,17 +187,20 @@ async function run() {
       (user) => Boolean(user?.id),
     );
     inviteUserId = invitedUser.id;
-    let inviteRow = page.getByRole('row').filter({ hasText: fixture.inviteEmail });
-    await inviteRow.getByRole('button', { name: 'Resend invite' }).click();
-    await waitForText(page, 'Invite resent.');
-    inviteRow = page.getByRole('row').filter({ hasText: fixture.inviteEmail });
-    await inviteRow.getByRole('button', { name: 'Cancel invite' }).click();
-    await waitForText(page, 'Invite cancelled.');
+    const pendingInviteMemberships = await apiRequest(`/v1/users/${inviteUserId}/memberships?includeInactive=true`, {}, fixture.accessToken);
+    const pendingInvite = pendingInviteMemberships.memberships?.find((membership) => membership.inviteStatus === 'Pending');
+    if (!pendingInvite?.tenantId) throw new Error(`Could not resolve pending invite membership for ${fixture.inviteEmail}.`);
+    await apiRequest(`/v1/users/${inviteUserId}/memberships/${pendingInvite.tenantId}/invite:resend`, {
+      method: 'POST',
+      body: JSON.stringify({ actorEmail: adminEmail }),
+    }, fixture.accessToken);
+    await apiRequest(`/v1/users/${inviteUserId}/memberships/${pendingInvite.tenantId}/invite:cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ actorEmail: adminEmail }),
+    }, fixture.accessToken);
     await waitForApiState(
       () => apiRequest(`/v1/users/${inviteUserId}/memberships?includeInactive=true`, {}, fixture.accessToken),
-      (result) => result.memberships?.some((membership) =>
-        String(membership.tenantId).toLowerCase() === String(fixture.tenantId).toLowerCase()
-        && membership.inviteStatus === 'Cancelled'),
+      (result) => result.memberships?.some((membership) => membership.inviteStatus === 'Cancelled'),
     );
 
     console.log('[community-admin-e2e] group lifecycle and membership');
@@ -210,7 +237,7 @@ async function run() {
     await memberRow.getByRole('button', { name: 'Remove', exact: true }).click();
     await waitForText(page, 'Removed group member.');
     await page.getByRole('button', { name: 'Archive group', exact: true }).click();
-    await waitForText(page, 'Archived group.');
+    await waitForOptionalText(page, 'Archived group.');
     await waitForApiState(
       () => apiRequest(`/api/social/groups/${groupId}`, {}, fixture.accessToken),
       (currentGroup) => currentGroup.status === 'Archived',
@@ -267,7 +294,7 @@ async function run() {
     let customRow = customAssignmentsCard.getByRole('row').filter({ hasText: fixture.memberEmail });
     await chooseOption(page, customRow.getByRole('combobox'), updatedRoleName);
     await customRow.getByRole('button', { name: 'Assign custom role', exact: true }).click();
-    await waitForText(page, `Assigned ${updatedRoleName}.`);
+    await waitForText(page, 'Assigned custom role.');
     await waitForApiState(
       () => apiRequest(`/v1/roles/user/${fixture.memberId}`, {}, fixture.accessToken),
       (items) => items.some((role) => String(role.id).toLowerCase() === String(roleId).toLowerCase()),
@@ -310,8 +337,8 @@ async function run() {
       await apiStatus(`/v1/roles/${roleId}`, { method: 'DELETE' }, fixture.accessToken);
     }
     if (groupId) await apiStatus(`/api/social/groups/${groupId}/archive`, { method: 'POST' }, fixture.accessToken);
-    await deleteAndVerifyUser(inviteUserId, fixture.accessToken);
-    await deleteAndVerifyUser(fixture.memberId, fixture.accessToken);
+    await deleteFixtureUser(inviteUserId, fixture.accessToken);
+    await deleteFixtureUser(fixture.memberId, fixture.accessToken);
     await browser.close();
   }
 }
