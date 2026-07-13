@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { addCourseSupportTicketMessage, resolveCourseSupportTicket } from '@/lib/learning/actions';
@@ -23,7 +23,7 @@ describe('CourseTicketActionPanel', () => {
     const user = userEvent.setup();
     render(<CourseTicketActionPanel courseId="course-1" ticketId="ticket-1" resolved={false} />);
 
-    await user.type(screen.getByLabelText('Reply'), 'Please retry after refreshing the lesson.');
+    fireEvent.change(screen.getByLabelText('Reply'), { target: { value: 'Please retry after refreshing the lesson.' } });
     await user.click(screen.getByRole('button', { name: 'Send reply' }));
 
     await waitFor(() => expect(addCourseSupportTicketMessage).toHaveBeenCalledWith({
@@ -39,7 +39,7 @@ describe('CourseTicketActionPanel', () => {
     render(<CourseTicketActionPanel courseId="course-1" ticketId="ticket-1" resolved={false} />);
 
     await user.click(screen.getByRole('button', { name: 'Resolve ticket' }));
-    await user.type(screen.getByLabelText('Resolution summary'), 'Access entitlement was refreshed.');
+    fireEvent.change(screen.getByLabelText('Resolution summary'), { target: { value: 'Access entitlement was refreshed.' } });
     await user.click(screen.getByRole('button', { name: 'Confirm resolution' }));
 
     await waitFor(() => expect(resolveCourseSupportTicket).toHaveBeenCalledWith({

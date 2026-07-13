@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -48,12 +48,9 @@ describe('NotificationSettingsEditor', () => {
     );
 
     await user.click(screen.getByRole('switch', { name: 'Course updates' }));
-    await user.clear(screen.getByLabelText('Class reminder minutes'));
-    await user.type(screen.getByLabelText('Class reminder minutes'), '120, 15');
-    await user.clear(screen.getByLabelText('Low rating threshold'));
-    await user.type(screen.getByLabelText('Low rating threshold'), '2');
-    await user.clear(screen.getByLabelText('Subject for enrollment'));
-    await user.type(screen.getByLabelText('Subject for enrollment'), 'Welcome to production');
+    fireEvent.change(screen.getByLabelText('Class reminder minutes'), { target: { value: '120, 15' } });
+    fireEvent.change(screen.getByLabelText('Low rating threshold'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Subject for enrollment'), { target: { value: 'Welcome to production' } });
     await user.click(screen.getByRole('button', { name: 'Save notification settings' }));
 
     expect(mocks.updateCourseNotificationSettings).toHaveBeenCalledWith(
