@@ -13,6 +13,7 @@ import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { Loader2, Save, Settings } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
 
 interface ClassDetailActionsProps {
@@ -34,6 +35,7 @@ function toDateTimeInputValue(date: Date): string {
 }
 
 export function ClassDetailActions({ courseId, classDetail }: ClassDetailActionsProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const initialEnd = useMemo(() => new Date(new Date(classDetail.scheduledAt).getTime() + classDetail.duration * 60000), [classDetail.duration, classDetail.scheduledAt]);
   const [title, setTitle] = useState(classDetail.title);
@@ -65,6 +67,7 @@ export function ClassDetailActions({ courseId, classDetail }: ClassDetailActions
       }
 
       setMessage({ type: 'success', text: 'Class updated.' });
+      router.refresh();
     });
   };
 
@@ -78,6 +81,7 @@ export function ClassDetailActions({ courseId, classDetail }: ClassDetailActions
       }
 
       setMessage({ type: 'success', text: 'Class status updated.' });
+      router.refresh();
       setCurrentStatus(
         statusAction === 'open'
           ? 'live'
