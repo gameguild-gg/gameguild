@@ -109,4 +109,39 @@ public sealed class CohortScheduleItem : EntityBase
         DueAt = DueAt?.Add(offset);
         Touch();
     }
+
+    public void UpdateDelivery(
+        string? title,
+        DateTime? startsAt,
+        DateTime? endsAt,
+        DateTime? availableFrom,
+        DateTime? availableUntil,
+        DateTime? dueAt,
+        string? location,
+        string? meetingUrl,
+        CohortScheduleItemStatus status,
+        CohortVisibilityOverride visibilityOverride)
+    {
+        if (startsAt.HasValue && endsAt.HasValue && endsAt <= startsAt)
+        {
+            throw new ArgumentException("The end time must be later than the start time.", nameof(endsAt));
+        }
+
+        if (availableFrom.HasValue && availableUntil.HasValue && availableUntil < availableFrom)
+        {
+            throw new ArgumentException("The availability end must not precede its start.", nameof(availableUntil));
+        }
+
+        Title = title?.Trim();
+        StartsAt = startsAt;
+        EndsAt = endsAt;
+        AvailableFrom = availableFrom;
+        AvailableUntil = availableUntil;
+        DueAt = dueAt;
+        Location = location?.Trim();
+        MeetingUrl = meetingUrl?.Trim();
+        Status = status;
+        VisibilityOverride = visibilityOverride;
+        Touch();
+    }
 }

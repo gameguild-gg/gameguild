@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Xunit;
+using Moq;
 
 namespace GameGuild.Learning.Courses.UnitTests;
 
@@ -19,7 +20,7 @@ public sealed class ProgramContentServiceTests
         context.Set<ProgramContent>().AddRange(module, submodule, lesson);
         await context.SaveChangesAsync();
 
-        var service = new ProgramContentService(context);
+        var service = new ProgramContentService(context, Mock.Of<IProgramContentScheduleGuard>());
 
         var deleted = await service.DeleteContentAsync(module.Id);
 

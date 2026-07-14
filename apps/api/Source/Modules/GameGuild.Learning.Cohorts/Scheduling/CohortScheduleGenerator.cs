@@ -73,12 +73,13 @@ public sealed class CohortScheduleGenerator
         IReadOnlySet<DateOnly> skippedDates,
         ICollection<CohortSchedulePreviewItem> items)
     {
-        var content = SelectSchedulableContent(request).OrderBy(item => item.SortOrder).ToArray();
+        var content = SelectSchedulableContent(request);
 
         for (var index = 0; index < content.Length; index++)
         {
-            var canonical = content[index];
-            var releaseDate = CalculateReleaseDate(request, skippedDates, index);
+            var scheduled = content[index];
+            var canonical = scheduled.Content;
+            var releaseDate = CalculateReleaseDate(request, skippedDates, scheduled.PeriodIndex);
             var releaseAt = ToUtc(releaseDate, request.MeetingStartTime, timezone);
             releaseAt = request.ReleasePolicy switch
             {
@@ -102,7 +103,7 @@ public sealed class CohortScheduleGenerator
                 canonical.AssessmentId,
                 type,
                 InstructionalWeek(request.FirstInstructionalDate, releaseDate),
-                canonical.SortOrder,
+                index,
                 null,
                 null,
                 releaseAt,
@@ -112,17 +113,74 @@ public sealed class CohortScheduleGenerator
         }
     }
 
-    private static IEnumerable<CanonicalScheduleContent> SelectSchedulableContent(
+    private static ScheduledContent[] SelectSchedulableContent(
         CohortScheduleGenerationRequest request)
     {
-        if (request.PacingMode == CohortPacingMode.OneModulePerWeek)
+        var ordered = request.Content
+            .OrderBy(item => item.SortOrder)
+            .ThenBy(item => item.ContentId)
+            .ToArray();
+        if (request.PacingMode != CohortPacingMode.OneModulePerWeek)
         {
-            var modules = request.Content.Where(item => item.Type == ProgramContentType.Module).ToArray();
-            return modules.Length > 0 ? modules : request.Content;
+            return ordered
+                .Where(item => item.Type != ProgramContentType.Module)
+                .Select((item, index) => new ScheduledContent(item, index))
+                .ToArray();
         }
 
-        return request.Content.Where(item => item.Type != ProgramContentType.Module);
+        var modules = ordered
+            .Where(item => item.Type == ProgramContentType.Module && item.ParentId is null)
+            .ToArray();
+        if (modules.Length == 0)
+        {
+            modules = ordered.Where(item => item.Type == ProgramContentType.Module).ToArray();
+        }
+        if (modules.Length == 0)
+        {
+            return ordered.Select((item, index) => new ScheduledContent(item, index)).ToArray();
+        }
+
+        var children = ordered
+            .Where(item => item.ParentId.HasValue)
+            .GroupBy(item => item.ParentId!.Value)
+            .ToDictionary(group => group.Key, group => group.ToArray());
+        var scheduled = new List<ScheduledContent>(ordered.Length);
+        var visited = new HashSet<Guid>();
+
+        void AddTree(CanonicalScheduleContent item, int periodIndex)
+        {
+            if (!visited.Add(item.ContentId))
+            {
+                return;
+            }
+
+            scheduled.Add(new ScheduledContent(item, periodIndex));
+            if (!children.TryGetValue(item.ContentId, out var childItems))
+            {
+                return;
+            }
+
+            foreach (var child in childItems)
+            {
+                AddTree(child, periodIndex);
+            }
+        }
+
+        for (var moduleIndex = 0; moduleIndex < modules.Length; moduleIndex++)
+        {
+            AddTree(modules[moduleIndex], moduleIndex);
+        }
+
+        var nextPeriod = modules.Length;
+        foreach (var item in ordered.Where(item => !visited.Contains(item.ContentId)))
+        {
+            AddTree(item, nextPeriod++);
+        }
+
+        return scheduled.ToArray();
     }
+
+    private sealed record ScheduledContent(CanonicalScheduleContent Content, int PeriodIndex);
 
     private static DateOnly CalculateReleaseDate(
         CohortScheduleGenerationRequest request,

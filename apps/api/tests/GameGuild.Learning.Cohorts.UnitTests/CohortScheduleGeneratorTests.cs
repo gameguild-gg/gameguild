@@ -23,6 +23,40 @@ public class CohortScheduleGeneratorTests
     }
 
     [Fact]
+    public void OneModulePerWeek_ReleasesChildLessonsWithTheirModule()
+    {
+        var moduleId = Guid.NewGuid();
+        var module = new CanonicalScheduleContent(
+            moduleId,
+            null,
+            null,
+            "Foundations",
+            ProgramContentType.Module,
+            0,
+            60);
+        var lessons = Enumerable.Range(0, 2)
+            .Select(index => new CanonicalScheduleContent(
+                Guid.NewGuid(),
+                null,
+                moduleId,
+                $"Lesson {index + 1}",
+                ProgramContentType.Lesson,
+                index,
+                45))
+            .ToArray();
+
+        var preview = _generator.Generate(Request(
+            content: [module, .. lessons],
+            pacingMode: CohortPacingMode.OneModulePerWeek));
+
+        preview.Items
+            .Where(item => item.ProgramContentId.HasValue)
+            .Should().HaveCount(3)
+            .And.OnlyContain(item =>
+                DateOnly.FromDateTime(item.AvailableFrom!.Value) == new DateOnly(2026, 8, 12));
+    }
+
+    [Fact]
     public void OneLessonPerMeeting_UsesEachMeetingDate()
     {
         var preview = _generator.Generate(Request(
