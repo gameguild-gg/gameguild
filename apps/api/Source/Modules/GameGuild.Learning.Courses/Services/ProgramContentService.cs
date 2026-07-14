@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Service implementation for ProgramContent management with full DAC permission support Handles CRUD operations, hierarchical content structure, and content ordering </summary>
-public class ProgramContentService(IApplicationDbContext context) : IProgramContentService {
+public class ProgramContentService(
+  IApplicationDbContext context,
+  IProgramContentScheduleGuard scheduleGuard) : IProgramContentService {
   public async Task<ProgramContent> CreateContentAsync(ProgramContent content) {
     // Set creation timestamp
     content.Touch();
@@ -68,6 +70,14 @@ public class ProgramContentService(IApplicationDbContext context) : IProgramCont
     if (content == null) return false;
 
     var contents = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == content.ProgramId && pc.DeletedAt == null).ToListAsync();
+    var contentTreeIds = ProgramContentTree.GetIds(id, contents);
+    foreach (var contentId in contentTreeIds) {
+      if (await scheduleGuard.HasActiveScheduleReference(contentId).ConfigureAwait(false)) {
+        throw new GameGuild.CQRS.RequestValidationException(
+          "Content used by an active class schedule cannot be deleted. Remove or replace its schedule entry first.");
+      }
+    }
+
     SoftDeleteContentTree(id, contents);
 
     await context.SaveChangesAsync().ConfigureAwait(false);

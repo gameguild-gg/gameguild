@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using GameGuild.Learning.Courses;
 
 namespace GameGuild.Learning.Cohorts;
 
@@ -16,6 +17,9 @@ public static class CohortsModule
     {
         // Register services
         services.AddScoped<ICohortService, CohortService>();
+        services.AddSingleton<CohortScheduleGenerator>();
+        services.AddSingleton<ScheduleConflictDetector>();
+        services.AddScoped<IProgramContentScheduleGuard, ProgramContentScheduleGuard>();
 
         return services;
     }
