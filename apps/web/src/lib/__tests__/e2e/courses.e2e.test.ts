@@ -30,6 +30,27 @@ interface CohortOutput {
   meetingSchedule?: string | null;
 }
 
+interface CohortScheduleItemOutput {
+  id: string;
+  programContentId?: string | null;
+  title: string;
+  startsAt?: string | null;
+  availableFrom?: string | null;
+  dueAt?: string | null;
+}
+
+interface CohortScheduleOutput {
+  cohortId: string;
+  version: number;
+  items: CohortScheduleItemOutput[];
+}
+
+interface AvailableCohortContentOutput {
+  contentId: string;
+  title: string;
+  instructionalWeek: number;
+}
+
 interface DiscussionOutput {
   id: string;
   courseId: string;
@@ -826,6 +847,202 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
     expect(result.ok).toBe(true);
   });
+
+  it('keeps morning and evening class schedules and student releases independent', async () => {
+    const day = 24 * 60 * 60 * 1000;
+    const dateOnly = (offset: number) => new Date(Date.now() + offset * day).toISOString().slice(0, 10);
+    const cohortIds: string[] = [];
+    const temporaryUserIds: string[] = [];
+
+    const createStudent = async (label: string) => {
+      const tag = unique();
+      const result = unwrap(
+        await authedClient.request<SignInOutput>({
+          method: 'POST',
+          path: '/v1/auth/sign-up',
+          body: {
+            username: `cohort_${label}_${tag}`,
+            email: `cohort_${label}_${tag}@example.com`,
+            password: 'Str0ng!Passw0rd123!',
+            ...(tenantId ? { tenantId } : {}),
+          },
+          requiresAuth: false,
+        }),
+        `Create ${label} cohort student`,
+      );
+      const id = result.userId || result.user?.id || '';
+      expect(id).toBeTruthy();
+      temporaryUserIds.push(id);
+      return { id, accessToken: result.accessToken };
+    };
+
+    const createCohort = async (name: string, startsInDays: number) => {
+      const startDate = dateOnly(startsInDays);
+      const endDate = dateOnly(startsInDays + 70);
+      const cohort = unwrap(
+        await authedClient.request<CohortOutput>({
+          method: 'POST',
+          path: '/api/cohorts',
+          body: {
+            courseId,
+            name,
+            description: `${name} delivery used by the independent schedule E2E.`,
+            startDate: `${startDate}T00:00:00.000Z`,
+            endDate: `${endDate}T23:59:59.000Z`,
+            maxCapacity: 20,
+            meetingSchedule: name.includes('Morning') ? 'Monday 09:00' : 'Thursday 19:00',
+          },
+        }),
+        `Create ${name}`,
+      );
+      cohortIds.push(cohort.id);
+      return { cohort, startDate, endDate };
+    };
+
+    const applySchedule = async (
+      cohort: CohortOutput,
+      startDate: string,
+      endDate: string,
+      meetingDay: 'Monday' | 'Thursday',
+      meetingStartTime: string,
+    ) => unwrap(
+      await authedClient.request<CohortScheduleOutput>({
+        method: 'PUT',
+        path: `/v1/courses/${courseId}/cohorts/${cohort.id}/schedule`,
+        body: {
+          expectedVersion: 0,
+          confirmAdvisories: true,
+          rules: {
+            firstInstructionalDate: startDate,
+            cohortEndDate: endDate,
+            timezoneId: 'UTC',
+            meetingDays: [meetingDay],
+            meetingStartTime,
+            meetingDurationMinutes: 90,
+            pacingMode: 'OneLessonPerMeeting',
+            unitsPerPeriod: 1,
+            releasePolicy: 'Immediately',
+            skippedDates: [],
+            assessmentDueOffsetDays: 7,
+          },
+        },
+      }),
+      `Apply ${cohort.name} schedule`,
+    );
+
+    try {
+      const morning = await createCohort('2026.2 - Morning', -1);
+      const evening = await createCohort('2026.2 - Evening', 7);
+      const morningSchedule = await applySchedule(
+        morning.cohort,
+        morning.startDate,
+        morning.endDate,
+        'Monday',
+        '09:00:00',
+      );
+      const eveningSchedule = await applySchedule(
+        evening.cohort,
+        evening.startDate,
+        evening.endDate,
+        'Thursday',
+        '19:00:00',
+      );
+
+      const morningStudent = await createStudent('morning');
+      const eveningStudent = await createStudent('evening');
+      for (const [student, cohort] of [
+        [morningStudent, morning.cohort],
+        [eveningStudent, evening.cohort],
+      ] as const) {
+        unwrap(
+          await authedClient.request({
+            method: 'POST',
+            path: '/api/learning/enrollments',
+            body: { courseId, userId: student.id, cohortId: cohort.id },
+          }),
+          `Enroll ${student.id} into ${cohort.name}`,
+        );
+      }
+
+      const morningBeforeShift = unwrap(
+        await authedClient.request<CohortScheduleOutput>({
+          method: 'GET',
+          path: `/v1/courses/${courseId}/cohorts/${morning.cohort.id}/schedule`,
+        }),
+        'Read morning schedule before evening shift',
+      );
+      const shiftTarget = eveningSchedule.items.find((item) => item.startsAt || item.availableFrom);
+      expect(shiftTarget?.id).toBeTruthy();
+      const shiftedEvening = unwrap(
+        await authedClient.request<CohortScheduleOutput>({
+          method: 'POST',
+          path: `/v1/courses/${courseId}/cohorts/${evening.cohort.id}/schedule/items/${shiftTarget!.id}/shift`,
+          body: { expectedVersion: eveningSchedule.version, days: 2, scope: 'Following' },
+        }),
+        'Shift evening schedule',
+      );
+      const morningAfterShift = unwrap(
+        await authedClient.request<CohortScheduleOutput>({
+          method: 'GET',
+          path: `/v1/courses/${courseId}/cohorts/${morning.cohort.id}/schedule`,
+        }),
+        'Read morning schedule after evening shift',
+      );
+
+      expect(morningBeforeShift.items).toEqual(morningAfterShift.items);
+      expect(shiftedEvening.version).toBeGreaterThan(eveningSchedule.version);
+      expect(shiftedEvening.items).not.toEqual(eveningSchedule.items);
+      expect(morningSchedule.items.some((item) => item.programContentId === lessonContentId)).toBe(true);
+      expect(eveningSchedule.items.some((item) => item.programContentId === lessonContentId)).toBe(true);
+
+      const morningClient = createClient({
+        baseUrl: BASE_URL,
+        timeout: 15_000,
+        devtools: { enabled: false },
+        auth: { getAccessToken: async () => morningStudent.accessToken },
+        tenant: { getTenantId: async () => tenantId },
+      });
+      const eveningClient = createClient({
+        baseUrl: BASE_URL,
+        timeout: 15_000,
+        devtools: { enabled: false },
+        auth: { getAccessToken: async () => eveningStudent.accessToken },
+        tenant: { getTenantId: async () => tenantId },
+      });
+      const morningContent = unwrap(
+        await morningClient.request<AvailableCohortContentOutput[]>({
+          method: 'GET',
+          path: `/v1/courses/${courseId}/cohorts/${morning.cohort.id}/schedule/available-content`,
+        }),
+        'Read released morning content',
+      );
+      const eveningContent = unwrap(
+        await eveningClient.request<AvailableCohortContentOutput[]>({
+          method: 'GET',
+          path: `/v1/courses/${courseId}/cohorts/${evening.cohort.id}/schedule/available-content`,
+        }),
+        'Read released evening content',
+      );
+      const crossCohortContent = unwrap(
+        await morningClient.request<AvailableCohortContentOutput[]>({
+          method: 'GET',
+          path: `/v1/courses/${courseId}/cohorts/${evening.cohort.id}/schedule/available-content`,
+        }),
+        'Read cross-cohort content as morning student',
+      );
+
+      expect(morningContent.map((item) => item.contentId)).toContain(lessonContentId);
+      expect(eveningContent).toHaveLength(0);
+      expect(crossCohortContent).toHaveLength(0);
+    } finally {
+      for (const cohortId of cohortIds.reverse()) {
+        await authedClient.request<void>({ method: 'DELETE', path: `/api/cohorts/${cohortId}` });
+      }
+      for (const temporaryUserId of temporaryUserIds.reverse()) {
+        await authedClient.request<void>({ method: 'DELETE', path: `/v1/users/${temporaryUserId}` });
+      }
+    }
+  }, 60_000);
 
   // ── 12a. Professor grading setup: weighted groups + assessments ─────────
   it('creates weighted assessment groups for the course', async () => {

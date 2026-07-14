@@ -4143,6 +4143,20 @@ export interface LearningCohortsApplyCohortScheduleInput {
   confirmAdvisories?: boolean;
 }
 
+export interface LearningCohortsAvailableCohortContent {
+  contentId?: string;
+  parentId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  body?: string | null;
+  type?: LearningCoursesProgramContentType;
+  sortOrder?: number;
+  instructionalWeek?: number;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  dueAt?: string | null;
+}
+
 export interface LearningCohortsCohortCalendarEntry {
   cohortId?: string;
   cohortName?: string | null;
@@ -7477,6 +7491,7 @@ export let LearningCertificatesIssueCertificateInputSchema: z.ZodType<LearningCe
 export let LearningCertificatesRevokeCertificateInputSchema: z.ZodType<LearningCertificatesRevokeCertificateInput>;
 export let LearningCertificatesUpdateCertificateTemplateInputSchema: z.ZodType<LearningCertificatesUpdateCertificateTemplateInput>;
 export let LearningCohortsApplyCohortScheduleInputSchema: z.ZodType<LearningCohortsApplyCohortScheduleInput>;
+export let LearningCohortsAvailableCohortContentSchema: z.ZodType<LearningCohortsAvailableCohortContent>;
 export let LearningCohortsCohortCalendarEntrySchema: z.ZodType<LearningCohortsCohortCalendarEntry>;
 export let LearningCohortsCohortSchema: z.ZodType<LearningCohortsCohort>;
 export let LearningCohortsCohortPacingModeSchema: z.ZodType<LearningCohortsCohortPacingMode>;
@@ -12593,6 +12608,21 @@ LearningCohortsApplyCohortScheduleInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
   rules: z.lazy(() => LearningCohortsPreviewCohortScheduleInputSchema).optional(),
   confirmAdvisories: z.boolean().optional(),
+});
+
+/** Zod schema for LearningCohortsAvailableCohortContent */
+LearningCohortsAvailableCohortContentSchema = z.object({
+  contentId: z.string().uuid().optional(),
+  parentId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
+  sortOrder: z.number().int().optional(),
+  instructionalWeek: z.number().int().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for LearningCohortsCohortCalendarEntry */

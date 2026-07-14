@@ -64,7 +64,7 @@ public sealed class CohortScheduleHandlerTests
     }
 
     [Fact]
-    public async Task Apply_PersistsScheduleAndCommitsTransaction()
+    public async Task Apply_PersistsScheduleWithSingleAtomicSave()
     {
         await using var context = CreateContext();
         var (courseId, cohort) = await SeedCourseAsync(context);
@@ -80,9 +80,7 @@ public sealed class CohortScheduleHandlerTests
         context.Set<CohortSchedule>().Should().ContainSingle();
         context.Set<CohortScheduleItem>().Should().HaveCount(result.Items.Count);
         context.SaveChangesCalls.Should().Be(1);
-        context.LastTransaction.Should().NotBeNull();
-        context.LastTransaction!.CommitCalled.Should().BeTrue();
-        context.LastTransaction.RollbackCalled.Should().BeFalse();
+        context.LastTransaction.Should().BeNull();
     }
 
     [Fact]

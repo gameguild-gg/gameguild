@@ -13,6 +13,16 @@ namespace GameGuild.Learning.Cohorts;
 [Authorize]
 public sealed class CohortSchedulesController(ISender sender) : BaseApiController
 {
+    [HttpGet("available-content")]
+    [ProducesResponseType<IReadOnlyList<AvailableCohortContentDto>>(StatusCodes.Status200OK)]
+    public Task<IReadOnlyList<AvailableCohortContentDto>> GetAvailableContent(
+        Guid courseId,
+        Guid cohortId,
+        CancellationToken cancellationToken) =>
+        sender.Send<IReadOnlyList<AvailableCohortContentDto>>(
+            new GetAvailableCohortContentQuery(courseId, cohortId),
+            cancellationToken);
+
     [HttpGet]
     [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit, "courseId")]
     [ProducesResponseType<CohortScheduleDto>(StatusCodes.Status200OK)]

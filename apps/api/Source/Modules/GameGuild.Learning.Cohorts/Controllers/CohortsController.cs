@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace GameGuild.Learning.Cohorts;
 
@@ -336,7 +337,7 @@ public sealed record CohortDto(
     DateTime CreatedAt,
     DateTime? NextMeetingAt = null,
     int ConflictCount = 0,
-    CohortScheduleSummaryDto? Schedule = null)
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] CohortScheduleSummaryDto? Schedule = null)
 {
     public static CohortDto FromEntity(Cohort entity) => new(
         entity.Id,

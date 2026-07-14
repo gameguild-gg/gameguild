@@ -17,6 +17,23 @@ export class LearningCohortsSchedulesModule {
 
   /**
    */
+  async getCoursesCohortsScheduleAvailableContent(
+    courseId: string,
+    cohortId: string,
+  ): Promise<Result<Array<Types.LearningCohortsAvailableCohortContent>, ApiError>> {
+    const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule/available-content`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCohortsAvailableCohortContent>, ApiError>;
+  }
+
+  /**
+   */
   async getCoursesCohortsSchedule(courseId: string, cohortId: string): Promise<Result<Types.LearningCohortsCohortSchedule, ApiError>> {
     const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule`;
 
