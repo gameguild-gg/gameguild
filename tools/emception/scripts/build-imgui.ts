@@ -15,13 +15,14 @@ import path from 'path';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-imgui');
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 setupEmsdk(EMSDK_VERSION);
 
 const USERLAND_DIR = path.join(ROOT, 'userland', 'imgui');
@@ -41,12 +42,26 @@ function detectVersion(): string {
     if (envVer) return envVer;
 
     console.log('Detecting latest ImGui release...');
-    const result = shell.exec(
-        'curl -fsSL https://api.github.com/repos/ocornut/imgui/releases/latest',
-        { silent: true },
-    );
+    const url = 'https://api.github.com/repos/ocornut/imgui/releases/latest';
+
+    const execCurl = (extraArgs = '') =>
+        shell.exec(`curl -fsSL ${extraArgs} ${url}`, {
+            silent: true,
+            fatal: false,
+        });
+
+    let result = process.env.GITHUB_TOKEN
+        ? execCurl(`-H "Authorization: Bearer ${process.env.GITHUB_TOKEN}"`)
+        : execCurl();
+
+    if (result.code !== 0 && process.env.GITHUB_TOKEN) {
+        console.warn('  Authenticated GitHub API call failed; retrying without token...');
+        result = execCurl();
+    }
+
     if (result.code !== 0) {
-        throw new Error('Failed to query GitHub for latest ImGui release');
+        console.warn(`  GitHub API unavailable (exit ${result.code}), using pinned ${PINNED.IMGUI_VERSION}`);
+        return PINNED.IMGUI_VERSION;
     }
     const tag: string = JSON.parse(result.stdout).tag_name;
     console.log(`  Latest ImGui release: ${tag}`);
@@ -103,6 +118,7 @@ const backendFiles = [
 // Compile flags
 const CXXFLAGS = [
     '-Os',
+    '-DNDEBUG',               // Disable IM_ASSERT → no __assert_fail import in libimgui.a
     // No -fwasm-exceptions: incompatible with -mno-reference-types (Asyncify).
     `-I"${SOURCE_DIR}"`,
     `-I"${SOURCE_DIR}/backends"`,

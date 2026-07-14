@@ -27,6 +27,7 @@ defineBuildScript({
                     if (f !== 'scripts') shell.rm('-rf', path.join(dist, f));
                 }
             }
+            shell.rm('-rf', path.join(SCRIPT_ROOT, 'packages', 'core', 'cdn'));
             for (const dir of ['sysroot', 'sysroot-staging', 'tools', 'playwright-report', 'test-results']) {
                 shell.rm('-rf', path.join(SCRIPT_ROOT, dir));
             }
@@ -34,13 +35,28 @@ defineBuildScript({
 
         await step('userland', () => {
             const userlandTrash: readonly string[] = [
+                'allegro',
+                'allegro/allegro-*',
                 'binaryen/build-wasm', 'binaryen/build-native', 'binaryen/binaryen-*', 'binaryen/version_*',
+                'cmake/cmake-*', 'cmake/CMake-*',
                 'cpython/build-wasm', 'cpython/build-native', 'cpython/cpython-*', 'cpython/sysroot-staging', 'cpython/v*',
+                'imgui/imgui-*',
                 'llvm/build-wasm', 'llvm/build-native', 'llvm/llvm-project-*', 'llvm/gh-actions-bin',
+                'ninja/ninja-*',
+                'raylib/raylib-*', 'raylib/raygui-*', 'raylib/physac-*', 'raylib/rlights-*',
                 'runtime/build',
             ];
             for (const rel of userlandTrash) {
                 shell.rm('-rf', path.join(SCRIPT_ROOT, 'userland', rel));
+            }
+            // brotli: only remove extracted upstream source dirs, not hand-written brotli-wrapper.c
+            const brotliDir = path.join(SCRIPT_ROOT, 'userland', 'brotli');
+            if (fs.existsSync(brotliDir)) {
+                for (const entry of fs.readdirSync(brotliDir)) {
+                    if (entry.startsWith('brotli-') && fs.statSync(path.join(brotliDir, entry)).isDirectory()) {
+                        shell.rm('-rf', path.join(brotliDir, entry));
+                    }
+                }
             }
         });
 
@@ -48,11 +64,17 @@ defineBuildScript({
             for (const dir of ['.next', 'playwright-report', 'test-results']) {
                 shell.rm('-rf', path.join(SCRIPT_ROOT, dir));
             }
-            const cdnDir = path.join(SCRIPT_ROOT, 'public/cdn');
-            if (fs.existsSync(cdnDir)) {
-                shell.rm('-rf', path.join(cdnDir, 'etc'));
-                shell.rm('-rf', path.join(cdnDir, 'usr'));
-                shell.rm('-f', path.join(cdnDir, 'manifest.json'));
+            // Clean CDN from root workspace
+            shell.rm('-rf', path.join(SCRIPT_ROOT, 'public/cdn'));
+            // Clean CDN from all demo apps
+            const appDirs = [
+                'apps/ide-react',
+                'apps/ide-next',
+                'apps/run-react',
+                'apps/run-webcomponent',
+            ];
+            for (const appDir of appDirs) {
+                shell.rm('-rf', path.join(SCRIPT_ROOT, appDir, 'public/cdn'));
             }
         });
 

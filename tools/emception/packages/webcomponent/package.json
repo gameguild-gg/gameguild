@@ -1,0 +1,53 @@
+{
+  "version": "3.11.0",
+  "name": "@gameguild/emception-webcomponent",
+  "description": "<emception-run> custom element. No framework deps.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "./dist/index.js"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "examples",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gameguild-gg/gameguild.git",
+    "directory": "tools/emception/packages/webcomponent"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test 'tests/*.test.mjs'",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@gameguild/emception-browser": "*",
+    "emception": "*"
+  },
+  "peerDependencies": {
+    "@gameguild/emception-xterm": "*"
+  },
+  "peerDependenciesMeta": {
+    "@gameguild/emception-xterm": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

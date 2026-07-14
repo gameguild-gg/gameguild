@@ -12,6 +12,27 @@ const EMSDK_DIR = path.join(ROOT, 'tools', 'emsdk');
 shell.config.fatal = true;
 
 /**
+ * Acquire a simple advisory lock using O_EXCL (atomic create).
+ * Spins up to `timeoutMs` (default 120 s) waiting for the lock.
+ * Returns a release function.
+ */
+function acquireEmsdkLock(timeoutMs = 120_000): () => void {
+  const lockFile = path.join(EMSDK_DIR, '.emception-setup.lock');
+  const deadline = Date.now() + timeoutMs;
+  while (true) {
+    try {
+      const fd = fs.openSync(lockFile, 'wx'); // O_WRONLY|O_CREAT|O_EXCL — atomic
+      fs.writeSync(fd, String(process.pid));
+      fs.closeSync(fd);
+      return () => { try { fs.unlinkSync(lockFile); } catch { } };
+    } catch {
+      if (Date.now() > deadline) throw new Error('Timed out waiting for emsdk setup lock');
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 250);
+    }
+  }
+}
+
+/**
  * Downloads, installs, activates EMSDK, and sets environment variables.
  * Returns the environment variables map.
  */
@@ -36,12 +57,33 @@ export function setupEmsdk(version: string = 'latest'): NodeJS.ProcessEnv {
 
   const emsdkCmd = process.platform === 'win32' ? 'emsdk.bat' : './emsdk';
 
-  // Install if needed (or force install to be safe)
-  console.log(`    Installing ${version}...`);
-  shell.exec(`${emsdkCmd} install ${version}`);
+  // Marker file records that install+activate for this exact version already ran.
+  // Multiple parallel scripts (e.g. build:imgui and build:raylib) check this to
+  // avoid racing on the emsdk activate step which is not concurrency-safe.
+  const markerFile = path.join(EMSDK_DIR, `.emception-activated-${version}`);
 
-  console.log(`    Activating ${version}...`);
-  shell.exec(`${emsdkCmd} activate ${version}`);
+  if (!fs.existsSync(markerFile)) {
+    // Acquire exclusive lock — other parallel processes will spin until released.
+    const release = acquireEmsdkLock();
+    try {
+      // Double-check inside the lock: another process may have just written the marker.
+      if (!fs.existsSync(markerFile)) {
+        console.log(`    Installing ${version}...`);
+        shell.exec(`${emsdkCmd} install ${version}`);
+
+        console.log(`    Activating ${version}...`);
+        shell.exec(`${emsdkCmd} activate ${version}`);
+
+        fs.writeFileSync(markerFile, String(Date.now()));
+      } else {
+        console.log(`    Already activated by parallel process (skipping).`);
+      }
+    } finally {
+      release();
+    }
+  } else {
+    console.log(`    Already activated (skipping install/activate).`);
+  }
 
   // Capture environment variables
   console.log('    Capturing environment variables...');

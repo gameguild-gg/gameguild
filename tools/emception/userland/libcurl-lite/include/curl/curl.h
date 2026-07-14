@@ -36,10 +36,10 @@ extern "C"
     /*  Version info                                                       */
     /* ------------------------------------------------------------------ */
 
-#define LIBCURL_VERSION "8.0.0-lite"
-#define LIBCURL_VERSION_NUM 0x080000
+#define LIBCURL_VERSION "8.20.0-lite"
+#define LIBCURL_VERSION_NUM 0x081400
 #define LIBCURL_VERSION_MAJOR 8
-#define LIBCURL_VERSION_MINOR 0
+#define LIBCURL_VERSION_MINOR 20
 #define LIBCURL_VERSION_PATCH 0
 
     /* ------------------------------------------------------------------ */

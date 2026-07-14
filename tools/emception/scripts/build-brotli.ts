@@ -12,6 +12,7 @@ import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-brotli');
 
@@ -22,10 +23,10 @@ const ROOT = process.cwd();
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 
 // Brotli version to use
-const BROTLI_VERSION = process.env.BROTLI_VERSION || '1.1.0';
+const BROTLI_VERSION = process.env.BROTLI_VERSION || PINNED.BROTLI_VERSION;
 
 // Directories
 const USERLAND_DIR = path.join(ROOT, 'userland', 'brotli');

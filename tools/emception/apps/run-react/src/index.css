@@ -1,0 +1,37 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body, #root {
+    height: 100%;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #1e1e2e;
+    color: #cdd6f4;
+}
+
+.page {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+header h1 {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.error {
+    color: #f38ba8;
+    background: #313244;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    overflow: auto;
+}
