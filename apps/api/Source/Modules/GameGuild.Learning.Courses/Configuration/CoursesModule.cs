@@ -23,6 +23,7 @@ public static class CoursesModule
         services.AddScoped<IProgramService, ProgramService>();
 
         // Content services
+        services.AddScoped<IProgramContentScheduleGuard, NullProgramContentScheduleGuard>();
         services.AddScoped<IProgramContentService, ProgramContentService>();
 
         // User / enrollment services

@@ -2,6 +2,7 @@ using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Learning.Cohorts;
 
@@ -15,14 +16,17 @@ public class CohortsController : BaseApiController
     private readonly ICohortService _cohortService;
     private readonly IActorContextAccessor _actorContextAccessor;
     private readonly ILogger<CohortsController> _logger;
+    private readonly IApplicationDbContext _context;
 
     public CohortsController(
         ICohortService cohortService,
         IActorContextAccessor actorContextAccessor,
+        IApplicationDbContext context,
         ILogger<CohortsController> logger)
     {
         _cohortService = cohortService;
         _actorContextAccessor = actorContextAccessor;
+        _context = context;
         _logger = logger;
     }
 
@@ -58,7 +62,7 @@ public class CohortsController : BaseApiController
             return NotFound();
         }
 
-        return Ok(CohortDto.FromEntity(cohort));
+        return Ok(await EnrichAsync(cohort).ConfigureAwait(false));
     }
 
     /// <summary>
@@ -69,7 +73,7 @@ public class CohortsController : BaseApiController
     {
         var actor = _actorContextAccessor.ActorContext;
         var cohorts = await _cohortService.GetCoursCohortsAsync(courseId, actor.TenantId).ConfigureAwait(false);
-        return Ok(cohorts.Select(CohortDto.FromEntity));
+        return Ok(await EnrichAsync(cohorts).ConfigureAwait(false));
     }
 
     /// <summary>
@@ -80,7 +84,7 @@ public class CohortsController : BaseApiController
     {
         var actor = _actorContextAccessor.ActorContext;
         var cohorts = await _cohortService.GetActiveCohortsAsync(courseId, actor.TenantId).ConfigureAwait(false);
-        return Ok(cohorts.Select(CohortDto.FromEntity));
+        return Ok(await EnrichAsync(cohorts).ConfigureAwait(false));
     }
 
     /// <summary>
@@ -91,7 +95,7 @@ public class CohortsController : BaseApiController
     {
         var actor = _actorContextAccessor.ActorContext;
         var cohorts = await _cohortService.GetEnrollableCohortsAsync(courseId, actor.TenantId).ConfigureAwait(false);
-        return Ok(cohorts.Select(CohortDto.FromEntity));
+        return Ok(await EnrichAsync(cohorts).ConfigureAwait(false));
     }
 
     /// <summary>
@@ -195,6 +199,120 @@ public class CohortsController : BaseApiController
 
         return NoContent();
     }
+
+    private async Task<CohortDto> EnrichAsync(Cohort cohort)
+    {
+        var results = await EnrichAsync([cohort]).ConfigureAwait(false);
+        return results.Single();
+    }
+
+    private async Task<IReadOnlyList<CohortDto>> EnrichAsync(IEnumerable<Cohort> source)
+    {
+        var cohorts = source.ToArray();
+        if (cohorts.Length == 0)
+        {
+            return [];
+        }
+
+        var cohortIds = cohorts.Select(cohort => cohort.Id).ToArray();
+        var schedules = await _context.Set<CohortSchedule>()
+            .AsNoTracking()
+            .Where(schedule => cohortIds.Contains(schedule.CohortId))
+            .ToArrayAsync()
+            .ConfigureAwait(false);
+        var scheduleItems = await _context.Set<CohortScheduleItem>()
+            .AsNoTracking()
+            .Where(item => cohortIds.Contains(item.CohortId))
+            .ToArrayAsync()
+            .ConfigureAwait(false);
+        var instructorIds = cohorts
+            .Where(cohort => cohort.InstructorId.HasValue)
+            .Select(cohort => cohort.InstructorId!.Value)
+            .Distinct()
+            .ToArray();
+        var instructorCohorts = instructorIds.Length == 0
+            ? []
+            : await _context.Set<Cohort>()
+                .AsNoTracking()
+                .Where(cohort => cohort.InstructorId.HasValue && instructorIds.Contains(cohort.InstructorId.Value))
+                .ToArrayAsync()
+                .ConfigureAwait(false);
+        var instructorCohortIds = instructorCohorts.Select(cohort => cohort.Id).ToArray();
+        var instructorMeetings = instructorCohortIds.Length == 0
+            ? []
+            : await _context.Set<CohortScheduleItem>()
+                .AsNoTracking()
+                .Where(item =>
+                    instructorCohortIds.Contains(item.CohortId) &&
+                    item.Type == CohortScheduleItemType.LiveSession &&
+                    item.Status != CohortScheduleItemStatus.Cancelled &&
+                    item.StartsAt.HasValue &&
+                    item.EndsAt.HasValue)
+                .ToArrayAsync()
+                .ConfigureAwait(false);
+        var now = SystemClock.UtcNow;
+
+        return cohorts.Select(cohort =>
+        {
+            var schedule = schedules.SingleOrDefault(candidate => candidate.CohortId == cohort.Id);
+            var items = scheduleItems.Where(item => item.CohortId == cohort.Id).ToArray();
+            var nextMeetingAt = items
+                .Where(item =>
+                    item.Type == CohortScheduleItemType.LiveSession &&
+                    item.Status != CohortScheduleItemStatus.Cancelled &&
+                    item.StartsAt >= now)
+                .Select(item => item.StartsAt)
+                .Min();
+            var conflictCount = cohort.InstructorId.HasValue
+                ? CountInstructorConflicts(cohort, items, instructorCohorts, instructorMeetings)
+                : 0;
+            var summary = schedule is null
+                ? null
+                : new CohortScheduleSummaryDto(
+                    schedule.Version,
+                    schedule.TimezoneId,
+                    schedule.MeetingDays,
+                    schedule.MeetingStartTime,
+                    schedule.PacingMode,
+                    schedule.ReleasePolicy,
+                    items.Length);
+
+            return CohortDto.FromEntity(cohort) with
+            {
+                NextMeetingAt = nextMeetingAt,
+                ConflictCount = conflictCount,
+                Schedule = summary
+            };
+        }).ToArray();
+    }
+
+    private static int CountInstructorConflicts(
+        Cohort cohort,
+        IEnumerable<CohortScheduleItem> ownItems,
+        IReadOnlyCollection<Cohort> instructorCohorts,
+        IReadOnlyCollection<CohortScheduleItem> instructorMeetings)
+    {
+        var otherCohortIds = instructorCohorts
+            .Where(candidate => candidate.Id != cohort.Id && candidate.InstructorId == cohort.InstructorId)
+            .Select(candidate => candidate.Id)
+            .ToHashSet();
+        if (otherCohortIds.Count == 0)
+        {
+            return 0;
+        }
+
+        var otherMeetings = instructorMeetings
+            .Where(item => otherCohortIds.Contains(item.CohortId))
+            .ToArray();
+        return ownItems.Count(item =>
+            item.Type == CohortScheduleItemType.LiveSession &&
+            item.Status != CohortScheduleItemStatus.Cancelled &&
+            item.StartsAt.HasValue &&
+            item.EndsAt.HasValue &&
+            otherMeetings.Any(other =>
+                item.StartsAt.Value < other.EndsAt!.Value &&
+                item.EndsAt.Value > other.StartsAt!.Value));
+    }
 }
 
 // ===== DTOs =====
@@ -215,7 +333,10 @@ public sealed record CohortDto(
     bool CanEnroll,
     Guid? InstructorId,
     string? MeetingSchedule,
-    DateTime CreatedAt)
+    DateTime CreatedAt,
+    DateTime? NextMeetingAt = null,
+    int ConflictCount = 0,
+    CohortScheduleSummaryDto? Schedule = null)
 {
     public static CohortDto FromEntity(Cohort entity) => new(
         entity.Id,
@@ -235,3 +356,12 @@ public sealed record CohortDto(
         entity.MeetingSchedule,
         entity.CreatedAt);
 }
+
+public sealed record CohortScheduleSummaryDto(
+    int Version,
+    string TimezoneId,
+    IReadOnlyCollection<DayOfWeek> MeetingDays,
+    TimeOnly MeetingStartTime,
+    CohortPacingMode PacingMode,
+    CohortReleasePolicy ReleasePolicy,
+    int ItemCount);
