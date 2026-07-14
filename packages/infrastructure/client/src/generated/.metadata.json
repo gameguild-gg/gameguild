@@ -1,6 +1,6 @@
 {
-  "hash": "fd8f4f5962a8c534ff3c43d8542d02779d6fb2237af5c572d7f94fa80ed2379d",
-  "timestamp": "2026-07-11T07:47:36.568Z",
+  "hash": "e53897c3eb327b57da58dd8b98fca27baee974a4b881906bb7d2e8ff85736543",
+  "timestamp": "2026-07-14T12:08:26.066Z",
   "apiVersion": "1.0",
-  "specUrl": "http://localhost:5295/openapi/v1.json"
+  "specUrl": "http://localhost:5295/swagger/v1/swagger.json"
 }
