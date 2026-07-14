@@ -2721,6 +2721,19 @@ export const postApiCohortsCancelEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetCoursesCohortsScheduleAvailableContentInput {
+  courseId: string;
+  cohortId: string;
+}
+export type GetCoursesCohortsScheduleAvailableContentOutput = Array<Types.LearningCohortsAvailableCohortContent>;
+export const getCoursesCohortsScheduleAvailableContentEndpoint = {
+  operationId: 'getCoursesCohortsScheduleAvailableContent' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{courseId}/cohorts/{cohortId}/schedule/available-content' as const,
+  tags: ['Learning/cohorts/schedules'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetCoursesCohortsScheduleInput {
   courseId: string;
   cohortId: string;
@@ -13262,6 +13275,7 @@ export const endpoints = {
   postApiCohortsClose: postApiCohortsCloseEndpoint,
   postApiCohortsComplete: postApiCohortsCompleteEndpoint,
   postApiCohortsCancel: postApiCohortsCancelEndpoint,
+  getCoursesCohortsScheduleAvailableContent: getCoursesCohortsScheduleAvailableContentEndpoint,
   getCoursesCohortsSchedule: getCoursesCohortsScheduleEndpoint,
   putCoursesCohortsSchedule: putCoursesCohortsScheduleEndpoint,
   postCoursesCohortsSchedulePreview: postCoursesCohortsSchedulePreviewEndpoint,

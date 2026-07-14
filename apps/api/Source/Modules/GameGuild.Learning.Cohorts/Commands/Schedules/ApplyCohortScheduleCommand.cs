@@ -58,76 +58,66 @@ public sealed class ApplyCohortScheduleCommandHandler(
             throw new CohortScheduleVersionConflictException(request.ExpectedVersion, currentVersion);
         }
 
-        await using var transaction = await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        try
+        if (schedule is null)
         {
-            if (schedule is null)
-            {
-                schedule = CohortSchedule.Create(
-                    request.CohortId,
-                    request.Rules.TimezoneId,
-                    request.Rules.MeetingDays,
-                    request.Rules.MeetingStartTime,
-                    request.Rules.MeetingDurationMinutes,
-                    request.Rules.PacingMode,
-                    request.Rules.UnitsPerPeriod,
-                    request.Rules.ReleasePolicy,
-                    cohort.TenantId);
-                context.Set<CohortSchedule>().Add(schedule);
-            }
-            else
-            {
-                schedule.UpdateRules(
-                    request.Rules.TimezoneId,
-                    request.Rules.MeetingDays,
-                    request.Rules.MeetingStartTime,
-                    request.Rules.MeetingDurationMinutes,
-                    request.Rules.PacingMode,
-                    request.Rules.UnitsPerPeriod,
-                    request.Rules.ReleasePolicy);
-
-                var existingItems = await context.Set<CohortScheduleItem>()
-                    .Where(item => item.CohortId == request.CohortId)
-                    .ToArrayAsync(cancellationToken)
-                    .ConfigureAwait(false);
-                context.Set<CohortScheduleItem>().RemoveRange(existingItems);
-            }
-
-            schedule.Version = currentVersion + 1;
-            var items = preview.Items.Select(item => CohortScheduleItem.Create(
-                    request.CohortId,
-                    item.ProgramContentId,
-                    item.AssessmentId,
-                    item.Type,
-                    item.Title,
-                    item.InstructionalWeek,
-                    item.SortOrder,
-                    item.StartsAt,
-                    item.EndsAt,
-                    item.AvailableFrom,
-                    item.AvailableUntil,
-                    item.DueAt,
-                    status: CohortScheduleItemStatus.Scheduled,
-                    tenantId: cohort.TenantId))
-                .ToArray();
-
-            context.Set<CohortScheduleItem>().AddRange(items);
-            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-
-            var unscheduledContentIds = await CohortScheduleReadModel.FindUnscheduledContentIdsAsync(
-                context,
-                request.CourseId,
-                items,
-                cancellationToken).ConfigureAwait(false);
-
-            return CohortScheduleDtoMapper.ToDto(schedule, items, unscheduledContentIds);
+            schedule = CohortSchedule.Create(
+                request.CohortId,
+                request.Rules.TimezoneId,
+                request.Rules.MeetingDays,
+                request.Rules.MeetingStartTime,
+                request.Rules.MeetingDurationMinutes,
+                request.Rules.PacingMode,
+                request.Rules.UnitsPerPeriod,
+                request.Rules.ReleasePolicy,
+                cohort.TenantId);
+            context.Set<CohortSchedule>().Add(schedule);
         }
-        catch
+        else
         {
-            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
-            throw;
+            schedule.UpdateRules(
+                request.Rules.TimezoneId,
+                request.Rules.MeetingDays,
+                request.Rules.MeetingStartTime,
+                request.Rules.MeetingDurationMinutes,
+                request.Rules.PacingMode,
+                request.Rules.UnitsPerPeriod,
+                request.Rules.ReleasePolicy);
+
+            var existingItems = await context.Set<CohortScheduleItem>()
+                .Where(item => item.CohortId == request.CohortId)
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+            context.Set<CohortScheduleItem>().RemoveRange(existingItems);
         }
+
+        schedule.Version = currentVersion + 1;
+        var items = preview.Items.Select(item => CohortScheduleItem.Create(
+                request.CohortId,
+                item.ProgramContentId,
+                item.AssessmentId,
+                item.Type,
+                item.Title,
+                item.InstructionalWeek,
+                item.SortOrder,
+                item.StartsAt,
+                item.EndsAt,
+                item.AvailableFrom,
+                item.AvailableUntil,
+                item.DueAt,
+                status: CohortScheduleItemStatus.Scheduled,
+                tenantId: cohort.TenantId))
+            .ToArray();
+
+        context.Set<CohortScheduleItem>().AddRange(items);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        var unscheduledContentIds = await CohortScheduleReadModel.FindUnscheduledContentIdsAsync(
+            context,
+            request.CourseId,
+            items,
+            cancellationToken).ConfigureAwait(false);
+
+        return CohortScheduleDtoMapper.ToDto(schedule, items, unscheduledContentIds);
     }
 }
 

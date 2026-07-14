@@ -1,11 +1,23 @@
 using FluentAssertions;
 using GameGuild.Learning.Cohorts;
+using System.Text.Json;
 using Xunit;
 
 namespace GameGuild.Learning.Cohorts.UnitTests;
 
 public class CohortCreateTests
 {
+    [Fact]
+    public void CohortDto_WithoutSchedule_ShouldOmitNullScheduleFromJson()
+    {
+        var cohort = Cohort.Create(Guid.NewGuid(), "Test", DateTime.UtcNow, DateTime.UtcNow.AddDays(30), 10);
+
+        var json = JsonSerializer.Serialize(CohortDto.FromEntity(cohort));
+
+        json.Should().NotContain("\"Schedule\"");
+        json.Should().NotContain("\"schedule\"");
+    }
+
     [Fact]
     public void Create_ShouldSetAllProperties()
     {

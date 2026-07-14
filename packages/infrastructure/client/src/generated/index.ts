@@ -4,7 +4,7 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
  * Generated from: http://localhost:5295/swagger/v1/swagger.json
- * Generated at: 2026-07-14T12:08:26.055Z
+ * Generated at: 2026-07-14T14:59:51.119Z
  *
  * To regenerate, run: pnpm generate
  */
