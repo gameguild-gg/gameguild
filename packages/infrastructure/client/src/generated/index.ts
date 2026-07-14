@@ -3,8 +3,8 @@
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
- * Generated from: http://localhost:5295/openapi/v1.json
- * Generated at: 2026-07-11T07:47:36.562Z
+ * Generated from: http://localhost:5295/swagger/v1/swagger.json
+ * Generated at: 2026-07-14T12:08:26.055Z
  *
  * To regenerate, run: pnpm generate
  */
@@ -42,6 +42,7 @@ export * from './modules/features-capabilities.gen.js';
 export * from './modules/learning-certificates.gen.js';
 export * from './modules/commerce-subscriptions-clients.gen.js';
 export * from './modules/learning-cohorts.gen.js';
+export * from './modules/learning-cohorts-schedules.gen.js';
 export * from './modules/commerce-subscriptions.gen.js';
 export * from './modules/commerce-subscriptions-plans.gen.js';
 export * from './modules/compliance-ferpa.gen.js';

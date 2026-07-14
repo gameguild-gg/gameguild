@@ -2721,6 +2721,94 @@ export const postApiCohortsCancelEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetCoursesCohortsScheduleInput {
+  courseId: string;
+  cohortId: string;
+}
+export type GetCoursesCohortsScheduleOutput = Types.LearningCohortsCohortSchedule;
+export const getCoursesCohortsScheduleEndpoint = {
+  operationId: 'getCoursesCohortsSchedule' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{courseId}/cohorts/{cohortId}/schedule' as const,
+  tags: ['Learning/cohorts/schedules'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutCoursesCohortsScheduleInput {
+  courseId: string;
+  cohortId: string;
+  body?: Types.LearningCohortsApplyCohortScheduleInput;
+}
+export type PutCoursesCohortsScheduleOutput = Types.LearningCohortsCohortSchedule;
+export const putCoursesCohortsScheduleEndpoint = {
+  operationId: 'putCoursesCohortsSchedule' as const,
+  method: 'PUT' as const,
+  path: '/v1/courses/{courseId}/cohorts/{cohortId}/schedule' as const,
+  tags: ['Learning/cohorts/schedules'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesCohortsSchedulePreviewInput {
+  courseId: string;
+  cohortId: string;
+  body?: Types.LearningCohortsPreviewCohortScheduleInput;
+}
+export type PostCoursesCohortsSchedulePreviewOutput = Types.LearningCohortsCohortSchedulePreview;
+export const postCoursesCohortsSchedulePreviewEndpoint = {
+  operationId: 'postCoursesCohortsSchedulePreview' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{courseId}/cohorts/{cohortId}/schedule/preview' as const,
+  tags: ['Learning/cohorts/schedules'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PatchCoursesCohortsScheduleItemsInput {
+  courseId: string;
+  cohortId: string;
+  itemId: string;
+  body?: Types.LearningCohortsUpdateCohortScheduleInput;
+}
+export type PatchCoursesCohortsScheduleItemsOutput = Types.LearningCohortsCohortSchedule;
+export const patchCoursesCohortsScheduleItemsEndpoint = {
+  operationId: 'patchCoursesCohortsScheduleItems' as const,
+  method: 'PATCH' as const,
+  path: '/v1/courses/{courseId}/cohorts/{cohortId}/schedule/items/{itemId}' as const,
+  tags: ['Learning/cohorts/schedules'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesCohortsScheduleItemsShiftInput {
+  courseId: string;
+  cohortId: string;
+  itemId: string;
+  body?: Types.LearningCohortsShiftCohortScheduleInput;
+}
+export type PostCoursesCohortsScheduleItemsShiftOutput = Types.LearningCohortsCohortSchedule;
+export const postCoursesCohortsScheduleItemsShiftEndpoint = {
+  operationId: 'postCoursesCohortsScheduleItemsShift' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{courseId}/cohorts/{cohortId}/schedule/items/{itemId}/shift' as const,
+  tags: ['Learning/cohorts/schedules'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetCoursesCohortsCalendarInput {
+  courseId: string;
+  query?: {
+    cohortId?: string;
+    from?: string;
+    to?: string;
+  };
+}
+export type GetCoursesCohortsCalendarOutput = Types.LearningCohortsCourseCohortCalendar;
+export const getCoursesCohortsCalendarEndpoint = {
+  operationId: 'getCoursesCohortsCalendar' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{courseId}/cohorts/calendar' as const,
+  tags: ['Learning/cohorts/schedules'] as const,
+  requiresAuth: true,
+} as const;
+
 /**
  * Get subscription metrics
  *
@@ -13174,6 +13262,12 @@ export const endpoints = {
   postApiCohortsClose: postApiCohortsCloseEndpoint,
   postApiCohortsComplete: postApiCohortsCompleteEndpoint,
   postApiCohortsCancel: postApiCohortsCancelEndpoint,
+  getCoursesCohortsSchedule: getCoursesCohortsScheduleEndpoint,
+  putCoursesCohortsSchedule: putCoursesCohortsScheduleEndpoint,
+  postCoursesCohortsSchedulePreview: postCoursesCohortsSchedulePreviewEndpoint,
+  patchCoursesCohortsScheduleItems: patchCoursesCohortsScheduleItemsEndpoint,
+  postCoursesCohortsScheduleItemsShift: postCoursesCohortsScheduleItemsShiftEndpoint,
+  getCoursesCohortsCalendar: getCoursesCohortsCalendarEndpoint,
   getSubscriptionsGetMetrics: getSubscriptionsGetMetricsEndpoint,
   getSubscriptionsInvoices: getSubscriptionsInvoicesEndpoint,
   getSubscriptionsUsage: getSubscriptionsUsageEndpoint,
