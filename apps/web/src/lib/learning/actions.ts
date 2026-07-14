@@ -382,6 +382,25 @@ export async function unpublishCourse(courseId: string): Promise<ActionResult<nu
   }
 }
 
+export async function restoreCourse(courseId: string): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const { lifecycle } = createCourseModules();
+    const result = await lifecycle.postCoursesRestore(resolvedCourseId);
+
+    if (result.ok) {
+      revalidateCoursePath(courseId, resolvedCourseId);
+      revalidateCoursePath(courseId, resolvedCourseId, 'overview');
+      revalidatePath('/dashboard/learning/courses');
+      return { success: true, data: null };
+    }
+
+    return { success: false, error: extractError(result.error) };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
 export async function transferCourseOwnership(courseId: string, ownerReference: string): Promise<ActionResult<null>> {
   const reference = ownerReference.trim();
   if (!reference) {
