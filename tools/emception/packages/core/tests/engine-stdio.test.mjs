@@ -49,7 +49,7 @@ test('stdio: matching stdout → passes; forwards build + stdin', async () => {
         },
     });
     const report = await runTests(api, {
-        build: { std: 'c++20', sources: ['main.cpp'] },
+        build: { toolchain: 'cpp', flags: ['-std=c++20'], sources: ['main.cpp'] },
         cases: [{ kind: 'stdio', stdin: 'in\n', expectedStdout: 'hi\n' }],
     });
     assert.equal(report.passed, 1);
@@ -57,7 +57,7 @@ test('stdio: matching stdout → passes; forwards build + stdin', async () => {
     assert.equal(captured.stdin, 'in\n');
     assert.equal(captured.stdout, 'capture');
     assert.equal(captured.stderr, 'capture');
-    assert.deepEqual(captured.build, { std: 'c++20', sources: ['main.cpp'] });
+    assert.deepEqual(captured.build, { toolchain: 'cpp', flags: ['-std=c++20'], sources: ['main.cpp'] });
 });
 
 test('stdio: regex stdout match', async () => {

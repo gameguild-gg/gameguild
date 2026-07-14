@@ -4,12 +4,12 @@
  */
 
 import type { FSStats, OverlayFS } from 'emception';
-import { LazyFS } from './lazy';
+import { LazyFS } from './lazy.js';
 
-export { mountVFSFS, type MountVFSFSOptions, type VFSFSRuntime } from './emscripten-vfsfs';
-export { IDBFS } from './idb';
-export type { IDBFSOptions } from './idb';
-export { LazyFS, type FileEntry, type FSManifest } from './lazy';
+export { mountVFSFS, type MountVFSFSOptions, type VFSFSRuntime } from './emscripten-vfsfs.js';
+export { IDBFS } from './idb.js';
+export type { IDBFSOptions } from './idb.js';
+export { LazyFS, type FileEntry, type FSManifest } from './lazy.js';
 
 export interface VFSManager {
     /** Used by tool runner when a WASM module needs a file not yet in Emscripten FS. */

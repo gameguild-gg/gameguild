@@ -1,6 +1,6 @@
 // Smoke test for @emception/webcomponent. Polyfills the bare minimum of
 // the DOM (customElements registry + HTMLElement + CustomEvent) so the
-// module can be imported under raw Node and we can verify event relay
+// module can be imported under raw Node and we can verify lifecycle events
 // and attribute parsing without bringing in jsdom.
 
 import assert from 'node:assert/strict';
@@ -50,6 +50,7 @@ class FakeHTMLElement {
     }
     setAttribute(n, v) { this._attrs.set(n, String(v)); }
     getAttribute(n) { return this._attrs.has(n) ? this._attrs.get(n) : null; }
+    hasAttribute(n) { return this._attrs.has(n); }
     attachShadow() {
         this.shadowRoot = new FakeShadowRoot();
         return this.shadowRoot;
@@ -80,7 +81,6 @@ globalThis.CustomEvent = FakeCustomEvent;
 // --- Import target -------------------------------------------------------
 
 const wc = await import('../dist/index.js');
-const core = await import('../../core/dist/index.js');
 
 test('exports ELEMENT_NAME, EmceptionRunElement, registerEmceptionRun', () => {
     assert.equal(wc.ELEMENT_NAME, 'emception-run');
@@ -107,47 +107,55 @@ test('readConfig returns parsed ViewConfigInput from attributes', () => {
     const el = new wc.EmceptionRunElement();
     el.setAttribute('preset', 'cpp');
     el.setAttribute('autorun', '');
-    el.setAttribute('cflags', '-O2 -Wall');
+    el.setAttribute('flags', '-O2 -Wall');
     const cfg = el.readConfig();
     assert.equal(cfg.preset, 'cpp');
     assert.equal(cfg.autorun, true);
-    assert.deepEqual(cfg.workspace?.build?.cflags, ['-O2', '-Wall']);
+    assert.deepEqual(cfg.workspace?.flags, ['-O2', '-Wall']);
 });
 
-test('attaching api wires every event and detaching unwires them', () => {
+test('api property stores and clears the browser API', () => {
     const el = new wc.EmceptionRunElement();
-    const subscribed = new Map();
-    const api = {
-        on(name, fn) {
-            if (!subscribed.has(name)) subscribed.set(name, []);
-            subscribed.get(name).push(fn);
-            return () => {
-                const arr = subscribed.get(name);
-                arr.splice(arr.indexOf(fn), 1);
-            };
-        },
-    };
+    const api = { workspace: {}, run() {} };
+
     el.api = api;
-    for (const name of Object.keys(core.EVENT_DOM_NAMES)) {
-        assert.ok(subscribed.get(name)?.length, 'expected listener for ' + name);
-    }
+    assert.equal(el.api, api);
+
     el.api = null;
-    for (const arr of subscribed.values()) assert.equal(arr.length, 0);
+    assert.equal(el.api, null);
 });
 
-test('dispatches CustomEvent emception-stdout when stdout fires', () => {
+test('run compiles C++ and dispatches exit and ready events', async () => {
     const el = new wc.EmceptionRunElement();
-    const fired = [];
-    el.addEventListener('emception-stdout', (ev) => fired.push(ev.detail));
-    let stdoutHandler;
+    el.connectedCallback();
+    el.setAttribute('preset', 'cpp');
+    el.setAttribute('source', '#include <iostream>\nint main() { std::cout << "hello"; }');
+
+    const writes = [];
+    const runs = [];
     const api = {
-        on(name, fn) {
-            if (name === 'stdout') stdoutHandler = fn;
-            return () => undefined;
+        workspace: {
+            async writeFile(path, bytes) {
+                writes.push({ path, source: new TextDecoder().decode(bytes) });
+            },
+        },
+        async run(tool, argv, options) {
+            runs.push({ tool, argv });
+            if (tool === 'wasi-run') {
+                options.stdout?.(new TextEncoder().encode('hello'));
+            }
+            return { exitCode: 0, stdout: '', stderr: '', durationMs: 1, timedOut: false };
         },
     };
+
     el.api = api;
-    stdoutHandler({ chunk: 'hello' });
-    assert.equal(fired.length, 1);
-    assert.deepEqual(fired[0], { chunk: 'hello' });
+    await el.run();
+
+    assert.deepEqual(writes, [{
+        path: '/home/user/main.cpp',
+        source: '#include <iostream>\nint main() { std::cout << "hello"; }',
+    }]);
+    assert.deepEqual(runs.map(({ tool }) => tool), ['clang', 'wasm-ld', 'wasi-run']);
+    assert.deepEqual(el.dispatched.map(({ type }) => type), ['emception-exit', 'emception-ready']);
+    assert.deepEqual(el.dispatched[0].detail, { exitCode: 0, finalPhase: 'run' });
 });

@@ -5,13 +5,12 @@
   "description": "Demo IDE for the emception browser C/C++ toolchain",
   "type": "module",
   "scripts": {
-    "predev": "npm run build:packages:core --prefix ../.. && npm run build:packages:browser --prefix ../.. && npm run build:packages:ide --prefix ../.. && npm run build:lib --prefix ../.. && node ../../scripts/install-app-cdn-from-package.mjs apps/ide-next",
+    "predev": "pnpm --dir ../.. run build:packages",
     "dev": "run-p watch:core watch:browser watch:ide next",
     "next": "next dev",
     "watch:core": "tsc -p ../../packages/core/tsconfig.json --watch --preserveWatchOutput",
     "watch:browser": "tsc -p ../../packages/browser/tsconfig.json --watch --preserveWatchOutput",
     "watch:ide": "tsc -p ../../packages/ide/tsconfig.json --watch --preserveWatchOutput",
-    "prebuild": "npm run build:packages:core --prefix ../.. && npm run build:packages:browser --prefix ../.. && npm run build:packages:ide --prefix ../.. && npm run build:lib --prefix ../.. && node ../../scripts/install-app-cdn-from-package.mjs apps/ide-next",
     "build": "next build",
     "start": "npx serve@latest out",
     "lint": "eslint"

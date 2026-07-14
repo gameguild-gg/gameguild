@@ -1,6 +1,6 @@
 import type { OnMount } from '@monaco-editor/react';
+import { bootInWorker, DEFAULT_MANIFEST_URL } from '@gameguild/emception-browser';
 import { Terminal } from '@xterm/xterm';
-import { bootInWorker } from 'emception';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
@@ -68,7 +68,7 @@ export interface IdeProps {
 
 type WorkerBoot = Awaited<ReturnType<typeof bootInWorker>>;
 
-export default function Ide({ title = 'Emception', manifestUrl = '/cdn/manifest.json', workspaceConfig, workspaceUrl }: IdeProps) {
+export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFEST_URL, workspaceConfig, workspaceUrl }: IdeProps) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
