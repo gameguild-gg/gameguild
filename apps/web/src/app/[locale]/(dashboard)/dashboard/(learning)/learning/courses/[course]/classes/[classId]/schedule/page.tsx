@@ -1,6 +1,7 @@
-import { getCohortSchedule } from '@/lib/learning';
-import { Card, CardContent } from '@game-guild/ui/components/card';
-import { CalendarDays } from 'lucide-react';
+import { getCohort, getCohortSchedule } from '@/lib/learning';
+import { notFound } from 'next/navigation';
+
+import { CohortScheduleWorkspace } from './cohort-schedule-workspace';
 
 export default async function CohortSchedulePage({
   params,
@@ -8,14 +9,8 @@ export default async function CohortSchedulePage({
   params: Promise<{ course: string; classId: string }>;
 }) {
   const { course, classId } = await params;
-  const schedule = await getCohortSchedule(course, classId);
+  const [cohort, schedule] = await Promise.all([getCohort(classId), getCohortSchedule(course, classId)]);
+  if (!cohort || cohort.courseId === '') notFound();
 
-  return (
-    <Card className="rounded-lg shadow-none">
-      <CardContent className="py-12 text-center">
-        <CalendarDays className="mx-auto size-8 text-muted-foreground" />
-        <h3 className="mt-4 font-medium">{schedule ? `${schedule.items?.length ?? 0} scheduled items` : 'Schedule not configured'}</h3>
-      </CardContent>
-    </Card>
-  );
+  return <CohortScheduleWorkspace courseId={course} cohort={cohort} initialSchedule={schedule} />;
 }
