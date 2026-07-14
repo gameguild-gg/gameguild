@@ -132,6 +132,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     if (updateDto.Difficulty.HasValue) program.Difficulty = updateDto.Difficulty.Value;
     if (updateDto.SkillsRequired != null) program.SkillsRequired = updateDto.SkillsRequired;
     if (updateDto.SkillsProvided != null) program.SkillsProvided = updateDto.SkillsProvided;
+    if (updateDto.CreatorId.HasValue) program.CreatorId = updateDto.CreatorId.Value;
     if (updateDto.EnrollmentStatus.HasValue) program.EnrollmentStatus = updateDto.EnrollmentStatus.Value;
     if (updateDto.ClearMaxEnrollments) program.MaxEnrollments = null;
     else if (updateDto.MaxEnrollments.HasValue) program.MaxEnrollments = updateDto.MaxEnrollments.Value;

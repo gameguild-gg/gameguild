@@ -3,8 +3,7 @@ import { getCourseRouteParam } from '@/lib/learning/course-route';
 import { redirect } from 'next/navigation';
 
 /**
- * Analytics Index Redirect
- * /analytics → /analytics/engagement
+ * Analytics is surfaced inside Overview.
  */
 export default async function AnalyticsPage({
   params,
@@ -13,5 +12,5 @@ export default async function AnalyticsPage({
   const course = await getCourse(courseIdentifier);
   const courseRouteParam = course ? getCourseRouteParam(course) : courseIdentifier;
 
-  redirect(`/${locale}/dashboard/learning/courses/${encodeURIComponent(courseRouteParam)}/analytics/engagement`);
+  redirect(`/${locale}/dashboard/learning/courses/${encodeURIComponent(courseRouteParam)}/overview`);
 }

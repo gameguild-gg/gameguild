@@ -92,6 +92,7 @@ const {
   manualEnrollStudent,
   removeCourseStudents,
   sendCourseStudentMessage,
+  transferCourseOwnership,
   updateCourse,
   publishCourse,
 } = await import('./actions');
@@ -310,6 +311,33 @@ describe('learning server actions', () => {
 
     expect(result).toEqual({ success: false, error: 'Cohort is full.' });
     expect(mocks.deleteCoursesUsers).toHaveBeenCalledWith('course-1', 'user-1');
+  });
+
+  it('transfers ownership to a resolved user through the canonical course resource', async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce('resolved-course-id');
+    mocks.fetch.mockResolvedValue(new Response(JSON.stringify({ id: 'resolved-course-id' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+
+    const result = await transferCourseOwnership('boss-ai-by-instructor-one', 'student@example.com');
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.clientRequest).toHaveBeenCalledWith({
+      method: 'GET',
+      path: '/v1/users',
+      params: { email: 'student@example.com', limit: 5 },
+      requiresAuth: true,
+    });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/courses/resolved-course-id', {
+      method: 'PUT',
+      body: JSON.stringify({ creatorId: 'user-1' }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/boss-ai-by-instructor-one/settings/danger');
   });
 
   it('removes selected users from the canonical course roster', async () => {

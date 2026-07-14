@@ -365,11 +365,13 @@ export async function publishCourse(courseId: string): Promise<ActionResult<null
 
 export async function unpublishCourse(courseId: string): Promise<ActionResult<null>> {
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { lifecycle } = createCourseModules();
-    const result = await lifecycle.postCoursesUnpublish(courseId);
+    const result = await lifecycle.postCoursesUnpublish(resolvedCourseId);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
+      revalidateCoursePath(courseId, resolvedCourseId);
+      revalidateCoursePath(courseId, resolvedCourseId, 'overview');
       revalidatePath('/dashboard/learning/courses');
       return { success: true, data: null };
     }
@@ -380,13 +382,43 @@ export async function unpublishCourse(courseId: string): Promise<ActionResult<nu
   }
 }
 
+export async function transferCourseOwnership(courseId: string, ownerReference: string): Promise<ActionResult<null>> {
+  const reference = ownerReference.trim();
+  if (!reference) {
+    return { success: false, error: 'New owner email, username, or user ID is required.' };
+  }
+
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const resolvedUser = await resolveEnrollmentUserId(reference);
+    if (!resolvedUser.success) {
+      return resolvedUser;
+    }
+
+    const result = await learningApiRequest<unknown>(`/v1/courses/${resolvedCourseId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ creatorId: resolvedUser.data.userId }),
+    });
+
+    if (!result.success) return { success: false, error: result.error };
+
+    revalidateCoursePath(courseId, resolvedCourseId);
+    revalidateCoursePath(courseId, resolvedCourseId, 'settings/danger');
+    revalidatePath('/dashboard/learning/courses');
+    return { success: true, data: null };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
 export async function archiveCourse(courseId: string): Promise<ActionResult<null>> {
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { lifecycle } = createCourseModules();
-    const result = await lifecycle.postCoursesArchive(courseId);
+    const result = await lifecycle.postCoursesArchive(resolvedCourseId);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
+      revalidateCoursePath(courseId, resolvedCourseId);
       revalidatePath('/dashboard/learning/courses');
       return { success: true, data: null };
     }
@@ -399,8 +431,9 @@ export async function archiveCourse(courseId: string): Promise<ActionResult<null
 
 export async function deleteCourse(courseId: string): Promise<ActionResult<null>> {
   try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { programs } = createCourseModules();
-    const result = await programs.deleteCourses(courseId);
+    const result = await programs.deleteCourses(resolvedCourseId);
 
     if (result.ok) {
       revalidatePath('/dashboard/learning/courses');

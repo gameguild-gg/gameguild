@@ -8,10 +8,10 @@ import React from 'react';
  * Shared layout for course settings subroutes.
  *
  * Routes:
- * - /settings (redirect → /settings/general)
- * - /settings/general - Title, description, category, difficulty, skills
+ * - /settings (redirect → /settings/danger)
  * - /settings/notifications - Email templates, alerts
  * - /settings/integrations - Third-party integrations
+ * - /settings/danger - Ownership transfer, archive, delete
  */
 export default async function SettingsLayout({
   children,

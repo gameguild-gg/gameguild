@@ -4665,6 +4665,7 @@ export interface LearningCoursesUpdateProgram {
   difficulty?: LearningCoursesProgramDifficulty;
   skillsRequired?: string | null;
   skillsProvided?: string | null;
+  creatorId?: string | null;
   enrollmentStatus?: LearningCoursesEnrollmentStatus;
   maxEnrollments?: number | null;
   enrollmentDeadline?: string | null;
@@ -13025,6 +13026,7 @@ LearningCoursesUpdateProgramSchema = z.object({
   difficulty: z.lazy(() => LearningCoursesProgramDifficultySchema).optional(),
   skillsRequired: z.string().nullable().optional(),
   skillsProvided: z.string().nullable().optional(),
+  creatorId: z.string().uuid().nullable().optional(),
   enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
   maxEnrollments: z.number().int().nullable().optional(),
   enrollmentDeadline: z.string().datetime().nullable().optional(),

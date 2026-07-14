@@ -13,6 +13,7 @@ public sealed record UpdateProgramDto {
   public ProgramDifficulty? Difficulty { get; init; }
   public string? SkillsRequired { get; init; }
   public string? SkillsProvided { get; init; }
+  public Guid? CreatorId { get; init; }
   public EnrollmentStatus? EnrollmentStatus { get; init; }
   public int? MaxEnrollments { get; init; }
   public DateTime? EnrollmentDeadline { get; init; }

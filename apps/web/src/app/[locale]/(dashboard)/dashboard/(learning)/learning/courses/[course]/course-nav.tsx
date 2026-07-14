@@ -1,30 +1,37 @@
 'use client';
 
-import { Link, usePathname } from '@/i18n/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { buildDashboardCoursePath } from '@/lib/learning/course-route';
 import type { CourseFeatures } from '@/lib/learning/types';
+import { publishCourse, unpublishCourse } from '@/lib/learning/actions';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@game-guild/ui/components/dialog';
 import {
   ArrowLeft,
   Award,
-  BarChart3,
   BookOpen,
   CalendarDays,
-  Edit,
   Eye,
+  EyeOff,
   GraduationCap,
   Info,
   LayoutDashboard,
+  Loader2,
   MessageSquare,
-  MoreHorizontal,
   Settings,
   Share2,
   Users,
   type LucideIcon,
 } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, useTransition, type ReactNode } from 'react';
 
 interface CourseNavProps {
   courseTitle: string;
@@ -66,7 +73,6 @@ function buildNavItems(features: CourseFeatures): NavItem[] {
     { title: 'Assessments', icon: GraduationCap, segment: 'assessments', enabled: features.hasAssessments },
     { title: 'Certificates', icon: Award, segment: 'certificates', enabled: features.hasCertificate },
     { title: 'Students', icon: Users, segment: 'students', enabled: true },
-    { title: 'Analytics', icon: BarChart3, segment: 'analytics', enabled: true },
     { title: 'Support', icon: MessageSquare, segment: 'support', enabled: true },
     { title: 'Settings', icon: Settings, segment: 'settings', enabled: true },
   ].filter((item) => item.enabled);
@@ -74,11 +80,20 @@ function buildNavItems(features: CourseFeatures): NavItem[] {
 
 export function CourseNav({ courseTitle, courseDescription, courseStatus, courseSlug, courseRouteParam, locale, features, children }: CourseNavProps) {
   const pathname = usePathname() ?? '';
+  const router = useRouter();
   const publicCourseHref = courseSlug?.trim() ? `/courses/${courseSlug.trim()}` : null;
   const previewHref = buildDashboardCoursePath(courseRouteParam, 'preview');
   const [shareLabel, setShareLabel] = useState('Share');
+  const [status, setStatus] = useState(courseStatus);
+  const [isPending, startTransition] = useTransition();
+  const [showUnpublishDialog, setShowUnpublishDialog] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const navItems = buildNavItems(features);
+
+  useEffect(() => {
+    setStatus(courseStatus);
+  }, [courseStatus]);
 
   async function copyPublicCourseUrl() {
     if (!publicCourseHref || !navigator.clipboard?.writeText) {
@@ -87,6 +102,24 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
 
     await navigator.clipboard.writeText(`${window.location.origin}${publicCourseHref}`);
     setShareLabel('Copied');
+  }
+
+  function runLifecycleAction(action: 'publish' | 'unpublish') {
+    setActionError(null);
+    startTransition(async () => {
+      const result = action === 'publish'
+        ? await publishCourse(courseRouteParam)
+        : await unpublishCourse(courseRouteParam);
+
+      if (!result.success) {
+        setActionError(result.error);
+        return;
+      }
+
+      setStatus(action === 'publish' ? 'published' : 'draft');
+      setShowUnpublishDialog(false);
+      router.refresh();
+    });
   }
 
   // Match the active segment after the dynamic course route param.
@@ -130,35 +163,31 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
             <Share2 className="mr-2 size-4" />
             {shareLabel}
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <MoreHorizontal className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={buildDashboardCoursePath(courseRouteParam, 'listing')} locale={locale} prefetch={false}>
-                  <Edit className="mr-2 size-4" />
-                  Edit Listing
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={buildDashboardCoursePath(courseRouteParam, 'settings')} locale={locale} prefetch={false}>
-                  <Settings className="mr-2 size-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href={buildDashboardCoursePath(courseRouteParam, 'settings/danger')} locale={locale} prefetch={false}>
-                  Advanced course controls
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {status === 'published' ? (
+            <Button variant="outline" size="sm" type="button" disabled={isPending} onClick={() => setShowUnpublishDialog(true)}>
+              {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <EyeOff className="mr-2 size-4" />}
+              Unpublish
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" type="button" disabled={isPending || status === 'archived'} onClick={() => runLifecycleAction('publish')}>
+              {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Eye className="mr-2 size-4" />}
+              Publish
+            </Button>
+          )}
+          <Button variant="outline" size="sm" asChild>
+            <Link href={buildDashboardCoursePath(courseRouteParam, 'settings')} locale={locale} prefetch={false}>
+              <Settings className="mr-2 size-4" />
+              Settings
+            </Link>
+          </Button>
         </div>
       </div>
+
+      {actionError && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {actionError}
+        </div>
+      )}
 
       {/* Nav Tabs + Content */}
       <div className="flex min-w-0 flex-1 gap-6">
@@ -205,6 +234,26 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
           <div className="min-w-0 flex-1">{children}</div>
         </div>
       </div>
+
+      <Dialog open={showUnpublishDialog} onOpenChange={setShowUnpublishDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Unpublish this course?</DialogTitle>
+            <DialogDescription>
+              This will remove the course from the public catalog and block new enrollments. Existing students and course data are preserved.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" type="button" onClick={() => setShowUnpublishDialog(false)} disabled={isPending}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={() => runLifecycleAction('unpublish')} disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+              Unpublish course
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
