@@ -13,7 +13,7 @@
  * and every modern browser) and TextEncoder. No DOM types.
  */
 
-import type { StdinInput, StdoutSink } from '../types';
+import type { StdinInput, StdoutSink } from '../types.js';
 
 const encoder = new TextEncoder();
 

@@ -14,4 +14,6 @@ packages:
 
   # Tools & demos
   - "tools/*"
+  - "tools/emception/packages/*"
+  - "tools/emception/apps/*"
   - "demos/*"

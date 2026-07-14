@@ -29,7 +29,7 @@ for (const name of ['ready', 'exit'] as const) {
     });
 }
 
-const manifestUrl = `${import.meta.env.BASE_URL}cdn/manifest.json`;
+const manifestUrl = import.meta.env.VITE_EMCEPTION_MANIFEST_URL || 'https://gameguild-gg.github.io/gameguild/cdn/manifest.json';
 
 void (async () => {
     try {
@@ -41,4 +41,3 @@ void (async () => {
         print(`createEmception failed: ${err instanceof Error ? err.message : String(err)}`, 'err');
     }
 })();
-

@@ -31,7 +31,7 @@ export class RuntimeFeatureUnavailableError extends EmceptionError { }
  * Fix: in browser apps, self-host a root-level `/coi-serviceworker.js` or configure
  * your server to emit these headers.
  */
-export class CrossOriginIsolationError extends EmceptionError { }
+export class CrossOriginIsolationError extends RuntimeFeatureUnavailableError { }
 
 /**
  * Thrown when an SDL / WebGL canvas output path is requested but

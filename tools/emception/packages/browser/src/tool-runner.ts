@@ -14,10 +14,10 @@
  * Each tool is compiled as a standalone Emscripten module (MODULARIZE + EXPORT_ES6).
  */
 
-import { SUBPROCESS_SHIM } from './emscripten/subprocess-shim';
-import { loadModuleFactory } from './loader/wasm-module';
-import { mountVFSFS, type VFSFSRuntime } from './vfs/emscripten-vfsfs';
-import type { VFSManager } from './vfs/index';
+import { SUBPROCESS_SHIM } from './emscripten/subprocess-shim.js';
+import { loadModuleFactory } from './loader/wasm-module.js';
+import { mountVFSFS, type VFSFSRuntime } from './vfs/emscripten-vfsfs.js';
+import type { VFSManager } from './vfs/index.js';
 
 const LOG_PREFIX = '[Emception:Kernel]';
 function elapsed(t0: number): string {

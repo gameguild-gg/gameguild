@@ -53,9 +53,9 @@ Every kebab-case attribute in `ATTRIBUTE_SCHEMA` (exported from
 | `seed-url` / `build-url`                   | URL                 | remote workspace seed / build config   |
 | `autorun`                                  | boolean (presence)  | auto-execute on ready                  |
 | `canvas`                                   | boolean (presence)  | show the `<slot name="canvas">` region |
-| `cflags` / `cxxflags` / `ldflags` / `libs` | space-or-comma list | folded into `workspace.build`          |
+| `flags` / `ldflags` / `libs`               | space-or-comma list | folded into the workspace build config |
 | `include-paths` / `lib-paths`              | list                | folded into `workspace.build`          |
-| `std` / `output`                           | string              | C/C++ standard, output filename        |
+| `output`                                   | string              | output filename                        |
 
 Unknown attributes are ignored.
 
@@ -73,30 +73,27 @@ attribute) is present.
 
 ## Events
 
-Re-broadcasts every typed `EmceptionEventName` as a bubbling +
-composed `CustomEvent` named `emception-<name>`. The `detail`
-payload matches the matching key of `EmceptionEventMap`:
+The element dispatches bubbling and composed lifecycle events for its own
+compile-and-run cycle:
 
-| event                                   | payload                           |
-| --------------------------------------- | --------------------------------- |
-| `emception-ready`                       | `{}`                              |
-| `emception-stdout` / `emception-stderr` | `{ chunk: string \| Uint8Array }` |
-| `emception-exit`                        | `{ code, signal }`                |
-| `emception-test-report`                 | `TestReport`                      |
-| `emception-test-case`                   | one item from a test report       |
+| event             | payload                            |
+| ----------------- | ---------------------------------- |
+| `emception-ready` | `{}` after the first successful run |
+| `emception-exit`  | `{ exitCode, finalPhase }`          |
 
 ```ts
-el.addEventListener('emception-stdout', (ev) => {
-  console.log((ev as CustomEvent).detail.chunk);
+el.addEventListener('emception-exit', (ev) => {
+  console.log((ev as CustomEvent).detail.exitCode);
 });
 ```
 
 ## Properties + methods
 
-- `el.api` — get/set the attached `EmceptionAPI`. Setting attaches every
-  event listener; clearing detaches them.
+- `el.api` — get/set the attached `EmceptionAPI`. Setting it enables
+  compile-and-run operations; clearing it detaches the runtime.
 - `el.readConfig()` — snapshot the current attributes as a parsed
   `ViewConfigInput`.
+- `el.run()` — compile and run the configured source imperatively.
 
 ## Custom tag name
 

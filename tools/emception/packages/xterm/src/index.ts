@@ -3,7 +3,7 @@
 import type { Terminal } from '@xterm/xterm';
 import type { StdinInput, StdoutSink } from 'emception';
 
-export { TTYBridge } from './bridge';
+export { TTYBridge } from './bridge.js';
 
 export interface XtermStdin {
     xterm: Terminal;
