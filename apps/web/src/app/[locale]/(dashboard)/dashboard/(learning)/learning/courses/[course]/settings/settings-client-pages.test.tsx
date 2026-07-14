@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import AccessSettingsPage from '../listing/access/page';
 import DangerPage from './danger/page';
-import { archiveCourse, deleteCourse, fetchCourse, updateCourse } from '@/lib/learning/actions';
+import { archiveCourse, deleteCourse, fetchCourse, transferCourseOwnership, updateCourse } from '@/lib/learning/actions';
 
 const refreshMock = vi.fn();
 const pushMock = vi.fn();
@@ -35,6 +35,7 @@ vi.mock('@/lib/learning/actions', () => ({
   archiveCourse: vi.fn(),
   deleteCourse: vi.fn(),
   fetchCourse: vi.fn(),
+  transferCourseOwnership: vi.fn(),
   updateCourse: vi.fn(),
 }));
 
@@ -60,6 +61,7 @@ describe('course settings client pages', () => {
     vi.mocked(updateCourse).mockResolvedValue({ success: true, data: null });
     vi.mocked(archiveCourse).mockResolvedValue({ success: true, data: null });
     vi.mocked(deleteCourse).mockResolvedValue({ success: true, data: null });
+    vi.mocked(transferCourseOwnership).mockResolvedValue({ success: true, data: null });
   });
 
   it('saves access settings with unlimited enrollment cap semantics', async () => {
@@ -106,7 +108,7 @@ describe('course settings client pages', () => {
 
     render(<DangerPage params={params} />);
 
-    expect(await screen.findByText('Danger Zone')).toBeInTheDocument();
+    expect(await screen.findByText('Settings')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /archive course/i }));
 
     await waitFor(() => {
@@ -120,7 +122,7 @@ describe('course settings client pages', () => {
 
     render(<DangerPage params={params} />);
 
-    expect(await screen.findByText('Danger Zone')).toBeInTheDocument();
+    expect(await screen.findByText('Settings')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^delete course$/i }));
 
     const deleteButton = screen.getByRole('button', { name: /permanently delete/i });
@@ -142,10 +144,29 @@ describe('course settings client pages', () => {
 
     render(<DangerPage params={params} />);
 
-    expect(await screen.findByText('Danger Zone')).toBeInTheDocument();
+    expect(await screen.findByText('Settings')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /archive course/i }));
 
     expect(await screen.findByText('Course has active sessions.')).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it('transfers ownership after confirming the course title', async () => {
+    const user = userEvent.setup();
+
+    render(<DangerPage params={params} />);
+
+    expect(await screen.findByText('Transfer course ownership')).toBeInTheDocument();
+    const transferButton = screen.getByRole('button', { name: /transfer ownership/i });
+    expect(transferButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText(/new owner email/i), 'new-owner@gameguild.gg');
+    await user.type(screen.getByLabelText(/type boss ai to confirm transfer/i), 'Boss AI');
+    await user.click(transferButton);
+
+    await waitFor(() => {
+      expect(transferCourseOwnership).toHaveBeenCalledWith('course-1', 'new-owner@gameguild.gg');
+    });
+    expect(await screen.findByText('Course ownership was transferred.')).toBeInTheDocument();
   });
 });

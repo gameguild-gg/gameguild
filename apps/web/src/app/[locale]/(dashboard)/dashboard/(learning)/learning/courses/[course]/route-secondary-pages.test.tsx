@@ -340,13 +340,13 @@ describe('course-management secondary route pages', () => {
 
   it('redirects index routes to their canonical course-management tabs', async () => {
     await expect(AnalyticsRedirectPage({ params: params() } as never)).rejects.toThrow(
-      'redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/analytics/engagement',
+      'redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/overview',
     );
     await expect(SupportRedirectPage({ params: params() } as never)).rejects.toThrow(
       'redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/support/tickets',
     );
     await expect(SettingsRedirectPage({ params: params() } as never)).rejects.toThrow(
-      'redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/settings/general',
+      'redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/settings/danger',
     );
     await expect(GeneralSettingsPage({ params: params() } as never)).rejects.toThrow(
       'redirect:/en-US/dashboard/learning/courses/course-1/listing/info',

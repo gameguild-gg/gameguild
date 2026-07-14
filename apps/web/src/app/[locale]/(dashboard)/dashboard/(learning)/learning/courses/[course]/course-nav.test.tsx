@@ -4,6 +4,12 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CourseNav } from './course-nav';
 
+const refreshMock = vi.fn();
+const actionMocks = vi.hoisted(() => ({
+  publishCourse: vi.fn(),
+  unpublishCourse: vi.fn(),
+}));
+
 vi.mock('@/i18n/navigation', () => ({
   Link: ({
     children,
@@ -22,6 +28,12 @@ vi.mock('@/i18n/navigation', () => ({
     </a>
   ),
   usePathname: () => '/en-US/dashboard/learning/courses/ai-for-boss-encounters/listing',
+  useRouter: () => ({ refresh: refreshMock }),
+}));
+
+vi.mock('@/lib/learning/actions', () => ({
+  publishCourse: actionMocks.publishCourse,
+  unpublishCourse: actionMocks.unpublishCourse,
 }));
 
 const enabledFeatures = {
@@ -40,6 +52,8 @@ describe('CourseNav', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    actionMocks.publishCourse.mockResolvedValue({ success: true, data: null });
+    actionMocks.unpublishCourse.mockResolvedValue({ success: true, data: null });
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText: writeTextMock },
@@ -105,5 +119,27 @@ describe('CourseNav', () => {
 
     expect(screen.getByRole('link', { name: /preview/i })).toHaveAttribute('href', '/dashboard/learning/courses/untitled-draft/preview');
     expect(screen.getByRole('button', { name: /share/i })).toBeDisabled();
+  });
+
+  it('confirms before unpublishing a published course', async () => {
+    render(
+      <CourseNav
+        courseTitle="AI for Boss Encounters"
+        courseDescription="Build readable encounter AI."
+        courseStatus="published"
+        courseSlug="ai-for-boss-encounters"
+        courseRouteParam="ai-for-boss-encounters-by-gameguild"
+        locale="en-US"
+        features={enabledFeatures}
+      >
+        <div>Course editor content</div>
+      </CourseNav>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /^unpublish$/i }));
+    expect(screen.getByRole('heading', { name: /unpublish this course/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /unpublish course/i }));
+
+    expect(actionMocks.unpublishCourse).toHaveBeenCalledWith('ai-for-boss-encounters-by-gameguild');
   });
 });
