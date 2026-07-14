@@ -1,0 +1,88 @@
+flowchart TD
+
+  subgraph Phase1["Phase 1 - build:toolchain"]
+    direction LR
+    EMSDK[emsdk] --> EmCC[emcc / em++]
+    EmCC --> P1Out["clang.wasm  lld.wasm  python.wasm<br/>wasm-opt.wasm  ninja.wasm  cmake.wasm"]
+  end
+
+  subgraph Phase2["Phase 2 - build:sdl3 + build:raylib + build:imgui"]
+    direction LR
+    SDL3Src[SDL3] -->|emcmake| SDL3Lib[libSDL3.a] -->|emcc MODULARIZE| SDL3Mjs[sdl3-runtime.mjs]
+    RaylibSrc[raylib] -->|emcmake GLES3| RaylibLib[libraylib.a] -->|emcc GLFW3 WebGL2| RaylibMjs[raylib-runtime.mjs]
+    RaylibSrc -->|header-only| Companions["libraygui  libphysac  librlights"]
+    ImguiSrc[imgui] -->|emcc| ImguiLib[libimgui.a]
+  end
+
+  subgraph Phase3["Phase 3 - build:sysroot"]
+    direction LR
+    BrotliSrc[brotli-wrapper.c] -->|emcc| BrotliWasm[brotli_wasm.wasm]
+    PatchGlue[patch:glue]
+    P3Bin["sysroot/usr/bin/<br/>6 tool WASMs"]
+    P3Lib["sysroot/usr/lib/<br/>libs + runtime.mjs + brotli + glue"]
+    P3Inc["sysroot/usr/include/<br/>C++ + raylib/ + SDL3/ + imgui/"]
+    BrotliWasm --> P3Lib
+    PatchGlue --> P3Lib
+  end
+
+  Phase1 -->|6 tool WASMs| Phase3
+  Phase2 -->|libs + headers| Phase3
+
+  subgraph Phase4["Phase 4 - build:cdn"]
+    direction LR
+    Manifest["manifest.json<br/>13 282 files"]
+    TBundles["Tool Pairs x6<br/>clang  lld  python<br/>wasm-opt  ninja  cmake"]
+    CBundles["Cache Sub-Bundles x8<br/>crt  core  libcxx-variants<br/>libc-variants  gl-variants<br/>wasmfs  sanitizers  misc"]
+    SDL3Bun["sdl3<br/>libSDL3.a + SDL3/ headers"]
+    PBundles["Prefix Groups x11<br/>raylib  imgui  clang-headers<br/>usr-include  emscripten-core<br/>python-runtime  usr-bin<br/>libcurl  usr-share  home"]
+    MiscBun["usr-lib-misc<br/>catch-all"]
+    CDN["public/cdn/<br/>~29 x .tar.br  ~182 MB"]
+    Manifest -->|pass 1| TBundles
+    Manifest -->|pass 2a| CBundles
+    Manifest -->|pass 2b| SDL3Bun
+    Manifest -->|pass 2c| PBundles
+    Manifest -->|pass 3| MiscBun
+    TBundles & CBundles & SDL3Bun & PBundles & MiscBun -->|brotli Q11 parallel| CDN
+  end
+
+  Phase3 -->|scan + sha256| Phase4
+
+  subgraph Phase5["Phase 5 - build:lib"]
+    direction LR
+    CoreTs[emception/core] -->|tsup+tsc| CoreDist[dist/core ESM]
+    IdeTs[emception/ide] -->|tsup+tsc| IdeDist[dist/ide ESM]
+    ReactTs[emception/react] -->|tsup+tsc| ReactDist[dist/react ESM]
+  end
+
+  Phase4 --> Phase5
+
+  subgraph Browser["Browser Runtime"]
+    direction TB
+    HostApp[Host App] -->|new Worker| WebWorker[Web Worker emception/core]
+    WebWorker -->|fetch| ManifestFetch[manifest.json from /cdn/]
+    ManifestFetch -->|on-demand per bundle| LazyFS["LazyFS  fetch .tar.br + decompress<br/>populate IndexedDB lazyfs-cache-v3"]
+
+    subgraph VFSLayer["OverlayFS  routes reads/writes by path"]
+      direction LR
+      IDB_RO["IndexedDB lazyfs-cache-v3<br/>usr/ etc/  read-only toolchain<br/>RAM hot-cache via Asyncify"]
+      IDB_RW["IndexedDB overlay-writes<br/>home/  persistent writes<br/>write-through RAM cache"]
+      TmpFS["volatile Map<br/>tmp/  in-memory only<br/>discarded after each run"]
+    end
+
+    LazyFS --> VFSLayer
+    VFSLayer --> Shell[Shell ready]
+    Shell -->|user edits C++| Monaco[Monaco Editor]
+    Monaco -->|click Run| CompileStep{Compile path}
+    CompileStep -->|C++ only| ClangPath["clang.wasm + wasm-ld<br/>clang lld cache-crt cache-core clang-headers"]
+    CompileStep -->|SDL3 project| SDL3Path["cmake + ninja<br/>sdl3 bundle"]
+    CompileStep -->|raylib project| RaylibPath["cmake + ninja<br/>raylib bundle"]
+    CompileStep -->|full emcc| EmccPath["python.wasm + emcc<br/>emscripten-core python-runtime"]
+    ClangPath & SDL3Path & RaylibPath & EmccPath --> WASMOut[app.wasm]
+    WASMOut -->|fetch from VFS| RuntimeMjs[raylib-runtime.mjs or sdl3-runtime.mjs]
+    RuntimeMjs -->|patch for canvas| PatchedRuntime["patched factory<br/>wasmImports + GL + GLFW"]
+    PatchedRuntime -->|dynamic import| WasmInst[WebAssembly.instantiate app.wasm]
+    WasmInst -->|library_glfw.js WebGL2| Canvas[Canvas  RAF loop 60 fps]
+  end
+
+  Phase4 -->|CDN bundles| Browser
+  Phase5 -->|SDK| Browser

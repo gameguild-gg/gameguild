@@ -10,10 +10,10 @@ import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
-import { detectBinaryenVersion } from './lib/detect-versions.ts';
 import { standaloneFlags } from './lib/emcc-flags.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-binaryen');
 
@@ -24,12 +24,12 @@ const ROOT = process.cwd();
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 
-// Setup EMSDK first so we can detect the bundled Binaryen version
+// Setup EMSDK first
 setupEmsdk(EMSDK_VERSION);
 
-const BINARYEN_VERSION = process.env.BINARYEN_VERSION || detectBinaryenVersion();
+const BINARYEN_VERSION = process.env.BINARYEN_VERSION || PINNED.BINARYEN_VERSION;
 
 const USERLAND_DIR = path.join(ROOT, 'userland', 'binaryen');
 const SOURCE_DIR = path.join(USERLAND_DIR, `binaryen-version_${BINARYEN_VERSION}`);
@@ -46,12 +46,26 @@ shell.mkdir('-p', USERLAND_DIR);
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 
+const GITHUB_AUTH = process.env.GITHUB_TOKEN
+    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
+    : '';
+
 // 1. Download Binaryen source
-if (!fs.existsSync(SOURCE_DIR)) {
+// Validate the source dir by checking for CMakeLists.txt — a missing file
+// indicates an incomplete or corrupt cache entry that must be re-downloaded.
+const isBinaryenSourceValid = fs.existsSync(path.join(SOURCE_DIR, 'CMakeLists.txt'));
+if (!isBinaryenSourceValid) {
+    if (fs.existsSync(SOURCE_DIR)) {
+        console.log(`Removing incomplete Binaryen source dir: ${path.basename(SOURCE_DIR)}`);
+        shell.rm('-rf', SOURCE_DIR);
+    }
     console.log(`Downloading Binaryen ${BINARYEN_VERSION}...`);
     shell.cd(USERLAND_DIR);
     const tarball = `version_${BINARYEN_VERSION}.tar.gz`;
-    shell.exec(`curl -fSL -o "${tarball}" "https://github.com/WebAssembly/binaryen/archive/refs/tags/${tarball}"`);
+    shell.exec(
+        `curl -fSL --http1.1 --retry 8 --retry-all-errors --retry-delay 2 ${GITHUB_AUTH} -o "${tarball}" "https://github.com/WebAssembly/binaryen/archive/refs/tags/${tarball}" || ` +
+        `curl -fSL --http1.1 --retry 8 --retry-all-errors --retry-delay 2 ${GITHUB_AUTH} -o "${tarball}" "https://codeload.github.com/WebAssembly/binaryen/tar.gz/refs/tags/version_${BINARYEN_VERSION}"`
+    );
     shell.exec(`tar xzf "${tarball}"`);
     shell.rm(tarball);
 }

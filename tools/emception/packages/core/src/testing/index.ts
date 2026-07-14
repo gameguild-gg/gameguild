@@ -1,0 +1,17 @@
+// Testing subsystem barrel.
+export {
+    compileMatcher,
+    queryClangAst,
+    runMatcher,
+    type ClangAstNode,
+    type CompiledMatcher,
+    type MatchResult
+} from './clang-query/matcher.js';
+export {
+    parseDoctestConsole,
+    type DoctestCounts,
+    type DoctestFailure,
+    type DoctestReport
+} from './doctest/parse.js';
+export { runTests, type TestKindHandler } from './engine.js';
+

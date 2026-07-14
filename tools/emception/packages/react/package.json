@@ -1,0 +1,56 @@
+{
+  "version": "3.11.0",
+  "name": "@gameguild/emception-react",
+  "description": "React 19 components for emception: <EmceptionRun>, <EmceptionTerminal>, <EmceptionCanvas>, useEmception().",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "examples",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gameguild-gg/gameguild.git",
+    "directory": "tools/emception/packages/react"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@gameguild/emception-browser": "*",
+    "emception": "*"
+  },
+  "peerDependencies": {
+    "@gameguild/emception-xterm": "*",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "peerDependenciesMeta": {
+    "@gameguild/emception-xterm": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "react": "^19",
+    "react-dom": "^19",
+    "typescript": "^5.3.0"
+  }
+}

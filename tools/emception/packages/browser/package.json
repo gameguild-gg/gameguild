@@ -1,0 +1,51 @@
+{
+  "version": "3.11.0",
+  "name": "@gameguild/emception-browser",
+  "description": "Browser runtime adapter for emception: Web Worker spawn, IDB workspace store, OffscreenCanvas helpers, COI preflight.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./coi": {
+      "import": "./dist/coi/index.js",
+      "types": "./dist/coi/index.d.ts"
+    },
+    "./coi-serviceworker.js": "./dist/coi-serviceworker.js",
+    "./worker": {
+      "import": "./dist/worker-entry.js",
+      "types": "./dist/worker-entry.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gameguild-gg/gameguild.git",
+    "directory": "tools/emception/packages/browser"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && cp src/emscripten/subprocess_shim.py dist/emscripten/subprocess_shim.py && cp ../../public/coi-serviceworker.js dist/coi-serviceworker.js",
+    "prepack": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "emception": "*",
+    "@gameguild/emception-xterm": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

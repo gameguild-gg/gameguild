@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Playwright config targeting demos/emception-react (Vite).
+ * Playwright config targeting tools/emception/apps/ide-react (Vite).
  *
  * Use:  npx playwright test --config=playwright.config.react.ts
  * Or:   npm run e2e:react   (from tools/emception/)
@@ -36,9 +36,9 @@ export default defineConfig({
     webServer: {
         // Run `vite --port PORT` directly; the `predev` CDN-sync step is a
         // one-time setup that must have been run beforehand (npm run dev once,
-        // or `node ../../scripts/sync-emception-cdn.mjs demos/emception-react`).
+        // or `node ../../scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react`).
         command: `npx vite --strictPort --port ${PORT}`,
-        cwd: '../../demos/emception-react',
+        cwd: './apps/ide-react',
         url: `http://localhost:${PORT}`,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
