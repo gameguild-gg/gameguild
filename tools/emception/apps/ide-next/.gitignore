@@ -1,0 +1,7 @@
+# Synced CDN assets
+public/cdn/
+
+# Next.js local output
+.next/
+out/
+next-env.d.ts

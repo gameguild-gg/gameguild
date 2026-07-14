@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url';
 import { detectLLVMGitCommit, detectLLVMVersion, resolveAvailableLLVMRelease } from './lib/detect-versions.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-llvm');
 
@@ -27,7 +28,7 @@ const LLVM_DIR = path.join(ROOT, 'userland/llvm');
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 
 // Setup EMSDK first so we can detect the bundled LLVM version
 setupEmsdk(EMSDK_VERSION);
@@ -40,7 +41,7 @@ const LLVM_GIT_COMMIT = detectLLVMGitCommit();
 let LLVM_VERSION: string;
 let LLVM_USE_GIT = false;
 try {
-    LLVM_VERSION = process.env.LLVM_VERSION || resolveAvailableLLVMRelease(DETECTED_LLVM);
+    LLVM_VERSION = process.env.LLVM_VERSION || resolveAvailableLLVMRelease(PINNED.LLVM_VERSION);
 } catch {
     // No released tarball available — fall back to git clone
     LLVM_VERSION = DETECTED_LLVM;
@@ -320,6 +321,14 @@ function buildClang() {
 function buildLLD() {
     console.log('>>> Building lld.wasm (standalone)...');
     const wasmBuildDir = path.join(LLVM_DIR, 'build-wasm');
+
+    // Some environments can lose the wasm build dir between clang and lld
+    // phases (e.g. interrupted runs or external cleanup). Recreate/reconfigure
+    // on demand so `build:llvm` remains resumable.
+    if (!fs.existsSync(wasmBuildDir) || !fs.existsSync(path.join(wasmBuildDir, 'Makefile'))) {
+        console.warn('LLD step detected missing build-wasm directory; reconfiguring LLVM wasm build...');
+        buildStaticLLVM();
+    }
 
     // Build lld static libraries
     console.log('Building lld static libraries...');

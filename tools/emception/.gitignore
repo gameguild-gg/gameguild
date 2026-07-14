@@ -8,6 +8,18 @@ package-lock.json
 build/
 .next/
 out/
+packages/core/cdn/
+
+# IDE/Next.js output
+out/
+public/cdn/
+public/managed/
+tsc.log
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# CMake, sysroot, and extracted toolchains
+public/cdn/usr/
 
 # Local toolchains and extracted upstream sources
 tools/
@@ -23,10 +35,15 @@ userland/**/SDL_image-*/
 userland/**/SDL_ttf-*/
 userland/**/SDL_mixer-*/
 userland/**/imgui-*/
+userland/**/raylib-*/
+userland/**/raygui-*/
+userland/**/physac-*/
+userland/**/allegro-*/
 userland/**/*.tar.gz
 userland/**/*.tar.xz
 userland/**/version_*.tar.gz
-userland/brotli/
+# Ignore only the extracted upstream brotli source, not our hand-written wrapper.
+userland/brotli/brotli-*/
 
 # Sysroot staging
 sysroot/
@@ -47,6 +64,8 @@ playwright-report-react/
 npm-debug.log*
 yarn-debug.log*
 nohup.out
+logs
+logs/
 
 # Miscellaneous local files
 .DS_Store

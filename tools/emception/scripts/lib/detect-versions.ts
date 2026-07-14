@@ -121,8 +121,11 @@ export function resolveAvailableLLVMRelease(detectedVersion: string): string {
 /** Check if an LLVM release tag exists on GitHub using a HEAD request. */
 function llvmReleaseExists(version: string): boolean {
     const url = `https://github.com/llvm/llvm-project/releases/tag/llvmorg-${version}`;
+    const authHeader = process.env.GITHUB_TOKEN
+        ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
+        : '';
     const result = shell.exec(
-        `curl -sI -o /dev/null -w "%{http_code}" -L "${url}"`,
+        `curl -sI ${authHeader} -o /dev/null -w "%{http_code}" -L "${url}"`,
         { silent: true }
     );
     return result.stdout.trim() === '200';
@@ -132,10 +135,13 @@ function llvmReleaseExists(version: string): boolean {
 function findLatestLLVMReleaseForMajor(major: number): string | null {
     // GitHub API returns releases sorted newest first (paginated, 30 per page).
     // We check the first 2 pages which covers recent releases.
+    const authHeader = process.env.GITHUB_TOKEN
+        ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
+        : '';
     for (let page = 1; page <= 2; page++) {
         const apiUrl = `https://api.github.com/repos/llvm/llvm-project/releases?per_page=30&page=${page}`;
         const result = shell.exec(
-            `curl -sf -H "Accept: application/vnd.github.v3+json" "${apiUrl}"`,
+            `curl -sf ${authHeader} -H "Accept: application/vnd.github.v3+json" "${apiUrl}"`,
             { silent: true }
         );
         if (result.code !== 0) continue;

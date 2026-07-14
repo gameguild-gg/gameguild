@@ -5,7 +5,7 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "noEmit": true,
+      "noEmit": false,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -13,7 +13,19 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "emception": ["./packages/core/src/index.ts"],
+      "emception/*": ["./packages/core/src/*"],
+      "@gameguild/emception-browser": ["./packages/browser/src/index.ts"],
+      "@gameguild/emception-browser/*": ["./packages/browser/src/*"],
+      "@gameguild/emception-xterm": ["./packages/xterm/src/index.ts"],
+      "@gameguild/emception-xterm/*": ["./packages/xterm/src/*"],
+      "@gameguild/emception-react": ["./packages/react/src/index.tsx"],
+      "@gameguild/emception-react/*": ["./packages/react/src/*"],
+      "@gameguild/emception-webcomponent": ["./packages/webcomponent/src/index.ts"],
+      "@gameguild/emception-webcomponent/*": ["./packages/webcomponent/src/*"],
+      "@gameguild/emception-ide": ["./packages/ide/src/index.ts"],
+      "@gameguild/emception-ide/*": ["./packages/ide/src/*"]
     }
   },
   "include": [
@@ -21,5 +33,14 @@
     "src/**/*.tsx",
     "src/**/*.d.ts"
   ],
-  "exclude": ["node_modules", "dist", "e2e", "build"]
+  "exclude": ["node_modules", "dist", "e2e", "build"],
+  "files": [],
+  "references": [
+    { "path": "packages/core" },
+    { "path": "packages/browser" },
+    { "path": "packages/xterm" },
+    { "path": "packages/react" },
+    { "path": "packages/webcomponent" },
+    { "path": "packages/ide" }
+  ]
 }

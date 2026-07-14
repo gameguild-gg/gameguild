@@ -27,13 +27,14 @@ import path from 'path';
 import shell from 'shelljs';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-sdl3');
 
 const ROOT = process.cwd();
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || 'latest';
+const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 setupEmsdk(EMSDK_VERSION);
 
 const EMSDK_DIR = getEmsdkDir();
@@ -68,16 +69,15 @@ fs.writeFileSync(
 #include <emscripten.h>
 #include <stdlib.h>
 
-static SDL_Renderer *g_renderer;
+static SDL_Window   *g_window;
+static SDL_GLContext g_glctx;
 
 static void loop_iter(void) {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_EVENT_QUIT) emscripten_cancel_main_loop();
     }
-    SDL_SetRenderDrawColor(g_renderer, 30, 30, 30, 255);
-    SDL_RenderClear(g_renderer);
-    SDL_RenderPresent(g_renderer);
+    SDL_GL_SwapWindow(g_window);
 }
 
 /* Force emscripten_set_main_loop_arg into wasmImports. */
@@ -92,13 +92,24 @@ __attribute__((used)) static void _force_mem_growth(void) {
 }
 
 int main(void) {
+    /* Request GLES 3.0 (= WebGL2) so the runtime canvas context is WebGL2.
+     * SDL_CreateRenderer(w, NULL) may pick SDL3's WebGPU "gpu" renderer on
+     * modern browsers, which never calls emscripten_webgl_make_context_current
+     * and leaves GLctx undefined for user WASM OpenGL calls.  Using
+     * SDL_GL_CreateContext explicitly guarantees the WebGL2 context is
+     * created and made current (GLctx is set) regardless of which SDL3
+     * renderer would otherwise be chosen. */
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) return 1;
-    SDL_Window *w = SDL_CreateWindow("sdl3-runtime", 640, 480,
-                                     SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    g_renderer = SDL_CreateRenderer(w, NULL);
+    g_window = SDL_CreateWindow("sdl3-runtime", 640, 480,
+                                SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    g_glctx = SDL_GL_CreateContext(g_window);
+    SDL_GL_MakeCurrent(g_window, g_glctx);
     emscripten_set_main_loop(loop_iter, 0, 1);
-    SDL_DestroyRenderer(g_renderer);
-    SDL_DestroyWindow(w);
+    SDL_GL_DestroyContext(g_glctx);
+    SDL_DestroyWindow(g_window);
     SDL_Quit();
     return 0;
 }
@@ -119,6 +130,9 @@ const result = shell.exec(
         '-sEXPORT_NAME=createSDL3Module',
         '-sEXPORT_ES6=1',
         '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue,UTF8ToString,stringToUTF8,lengthBytesUTF8',
+        '-sUSE_WEBGL2=1',
+        '-sMIN_WEBGL_VERSION=1',
+        '-sMAX_WEBGL_VERSION=2',
         '-O2',
         `-o "${TMP_JS}"`,
     ].join(' '),

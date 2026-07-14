@@ -16,6 +16,7 @@
  *   cache-gl-variants   -- libGL emulation variants (100+ tiny files)
  *   cache-wasmfs        -- libwasmfs variants
  *   cache-sanitizers    -- ASan/LSan/UBSan runtime libraries
+ *   cache-debug         -- debug-mode variants of all families (libc++-debug, libc-debug, etc.)
  *   cache-misc          -- embind, fetch, sqlite3, zlib, thinlto, etc.
  *   usr-include         -- all files under /usr/include/
  *   emscripten-core     -- all files under /usr/lib/emscripten/ (excl. cache-lib)
@@ -111,6 +112,10 @@ function brotliCompress(data: Buffer, outPath: string): Promise<Buffer> {
       {
         params: {
           [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
+          // P4: 16 MB back-reference window (RFC 7932 max = 24 bits).
+          // Node.js default is 22 bits (4 MB).  Large cache bundles have
+          // pattern repetitions spanning >4 MB, so this saves ~5–8 MB.
+          [zlib.constants.BROTLI_PARAM_LGWIN]: 24,
         },
       },
       (err, result) => {
@@ -313,6 +318,11 @@ async function main() {
     // GL emulation variants (after core check so libGL-getprocaddr.a lands in core)
     if (basename.startsWith('libGL')) return 'cache-gl-variants';
 
+    // Debug-mode variants of any family (libc++-debug, libc-debug, dlmalloc-debug, etc.)
+    // Isolated into a single optional bundle to keep release bundles slim.
+    // Checked BEFORE the family patterns so debug variants don't pollute them.
+    if (/-debug/.test(basename)) return 'cache-debug';
+
     // C++/unwind variant families
     if (/^lib(c\+\+|c\+\+abi|unwind)/.test(basename)) return 'cache-libcxx-variants';
 
@@ -331,6 +341,7 @@ async function main() {
     'cache-gl-variants',
     'cache-wasmfs',
     'cache-sanitizers',
+    'cache-debug',
     'cache-misc',
   ];
   for (const name of cacheBundleNames) {
@@ -361,6 +372,24 @@ async function main() {
     // These prefixes act as forward-compat fallback only (first-match wins, assigned files are skipped).
     { name: 'sdl3', prefixes: ['/usr/include/SDL3/', '/usr/lib/emscripten_ports/sdl3/'], outputPath: '/usr/lib/sdl3.tar.br' },
     { name: 'imgui', prefixes: ['/usr/lib/libimgui', '/usr/include/imgui/'], outputPath: '/usr/lib/imgui.tar.br' },
+    {
+      name: 'raylib',
+      prefixes: [
+        '/usr/lib/libraylib',
+        '/usr/lib/libraygui',
+        '/usr/lib/libphysac',
+        '/usr/lib/librlights',
+        '/usr/include/raylib/',
+      ],
+      outputPath: '/usr/lib/raylib.tar.br',
+    },
+    {
+      name: 'allegro',
+      prefixes: ['/usr/lib/liballegro', '/usr/lib/libSDL2.a', '/usr/include/allegro5/'],
+      // NOTE: SDL2 headers are intentionally excluded — they are not needed by
+      // user Allegro code (SDL2 is an impl detail hidden inside the static libs).
+      outputPath: '/usr/lib/allegro.tar.br',
+    },
     { name: 'usr-share', prefixes: ['/usr/share/'], outputPath: '/usr/share.tar.br' },
     { name: 'home', prefixes: ['/home/'], outputPath: '/home.tar.br' },
   ];
@@ -415,6 +444,62 @@ async function main() {
   }
   console.log(`Total files: ${allPaths.length}, all assigned to bundles.`);
 
+  // ── P0: Global SHA-256 dedup pre-pass ─────────────────────────────────────
+  // Invariant: no SHA-256 hash may be written as raw bytes more than once
+  // across all .tar.br outputs. Second+ occurrences become
+  // { symlink: canonicalPath } manifest entries — LazyFS.readFile() already
+  // resolves these by recursively reading from the canonical bundle.
+  {
+    const seenHashes = new Map<string, string>(); // hash → first canonical manifest path
+    let dedupCount = 0;
+    let savedBytes = 0;
+
+    // Compute pre-dedup total uncompressed bytes (for P0 report)
+    let beforeUncompressedBytes = 0;
+    for (const [, files] of bundleFiles) {
+      for (const fp of files) {
+        const e = manifest.files[fp];
+        if (e && !e.symlink && typeof e.size === 'number') beforeUncompressedBytes += e.size;
+      }
+    }
+
+    for (const [, files] of bundleFiles) {
+      for (const filePath of files) {
+        const entry = manifest.files[filePath];
+        if (!entry || entry.symlink) continue; // already a symlink from source sysroot
+        const hash = entry.hash;
+        if (!hash) continue;
+        if (seenHashes.has(hash)) {
+          const canonicalPath = seenHashes.get(hash)!;
+          const fileSize = entry.size ?? 0;
+          // Replace manifest entry with a symlink; raw bytes will NOT be tarred
+          manifest.files[filePath] = { symlink: canonicalPath };
+          dedupCount++;
+          savedBytes += fileSize;
+          console.log(`  [dedup] ${filePath} → ${canonicalPath} (saves ${(fileSize / 1024).toFixed(0)}KB)`);
+        } else {
+          seenHashes.set(hash, filePath);
+        }
+      }
+    }
+
+    // Compute post-dedup total
+    let afterUncompressedBytes = 0;
+    for (const [, files] of bundleFiles) {
+      for (const fp of files) {
+        const e = manifest.files[fp];
+        if (e && !e.symlink && typeof e.size === 'number') afterUncompressedBytes += e.size;
+      }
+    }
+
+    console.log(`\nP0 dedup summary:`);
+    console.log(`  Unique hashes:              ${seenHashes.size}`);
+    console.log(`  Duplicate files collapsed:  ${dedupCount}`);
+    console.log(`  Uncompressed bytes saved:   ${(savedBytes / (1024 * 1024)).toFixed(1)} MB`);
+    console.log(`  Before (uncompressed total): ${(beforeUncompressedBytes / (1024 * 1024)).toFixed(1)} MB`);
+    console.log(`  After  (uncompressed total): ${(afterUncompressedBytes / (1024 * 1024)).toFixed(1)} MB`);
+  }
+
   // ── Generate tar.br archives ──
 
   const cpuCount = os.cpus().length;
@@ -439,6 +524,8 @@ async function main() {
     // Read file data from CDN output directory
     const entries: { path: string; data: Uint8Array; executable?: boolean }[] = [];
     for (const filePath of files) {
+      // P0: skip entries that were deduped to symlinks in the pre-pass
+      if (manifest.files[filePath]?.symlink) continue;
       const cdnPath = path.join(OUTPUT_DIR, filePath.substring(1));
       if (!fs.existsSync(cdnPath)) {
         console.warn(`  Warning: ${filePath} not found at ${cdnPath}, skipping`);
@@ -457,6 +544,16 @@ async function main() {
       console.warn(`  Warning: no files found for bundle ${bundleName}`);
       continue;
     }
+
+    // P5: Sort by extension then path so structurally similar files (e.g. all
+    // .a, all .pyc) are adjacent.  Brotli can then reference earlier identical
+    // or near-identical blocks within its window, improving ratios across the
+    // whole bundle (~2–4 MB saving across the tarball).
+    entries.sort((a, b) => {
+      const extA = path.extname(a.path);
+      const extB = path.extname(b.path);
+      return extA !== extB ? extA.localeCompare(extB) : a.path.localeCompare(b.path);
+    });
 
     // Create tar
     const tar = createTar(entries);
