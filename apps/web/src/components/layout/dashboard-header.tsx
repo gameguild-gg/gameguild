@@ -6,7 +6,6 @@ import { DashboardUserMenu, type DashboardUser } from './dashboard-user-menu';
 import { Badge } from '@game-guild/ui/components/badge';
 import {
   Breadcrumb,
-  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
@@ -14,16 +13,6 @@ import {
   BreadcrumbSeparator,
 } from '@game-guild/ui/components/breadcrumb';
 import { Button } from '@game-guild/ui/components/button';
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from '@game-guild/ui/components/drawer';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +28,7 @@ import * as React from 'react';
 import type { DashboardNotificationItem, DashboardNotificationSummary } from '@/lib/dashboard-notifications';
 import { openDashboardCommandPalette } from './dashboard-command-palette';
 
-const ITEMS_TO_DISPLAY = 3;
+const COURSE_ROUTE_PREFIX = ['dashboard', 'learning', 'courses'];
 
 function NotificationMenuItem({ item }: { item: DashboardNotificationItem }) {
   const content = (
@@ -72,7 +61,6 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
   const pathname = usePathname();
-  const [open, setOpen] = React.useState(false);
   const notificationSummary = notifications ?? { items: [], unreadCount: 0 };
   const unreadLabel = notificationSummary.unreadCount > 99 ? '99+' : String(notificationSummary.unreadCount);
 
@@ -80,7 +68,10 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
   const generateBreadcrumbs = () => {
     if (!pathname) return [];
 
-    const paths = pathname.split('/').filter(Boolean);
+    const paths = pathname
+      .split('/')
+      .filter(Boolean)
+      .filter((segment) => !/^[a-z]{2}(?:-[A-Z]{2})?$/.test(segment));
 
     // If we're at the root, don't show anything
     if (paths.length === 0) {
@@ -92,7 +83,9 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
     let currentPath = '';
     paths.forEach((path, index) => {
       currentPath += `/${path}`;
-      const label = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
+      const label = path
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
 
       // Last item shouldn't have href (it's the current page)
       if (index === paths.length - 1) {
@@ -102,7 +95,11 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
       }
     });
 
-    return breadcrumbs;
+    if (paths.length >= 5 && COURSE_ROUTE_PREFIX.every((segment, index) => paths[index] === segment)) {
+      return breadcrumbs.slice(0, 3).concat(breadcrumbs.slice(-2));
+    }
+
+    return breadcrumbs.slice(-5);
   };
 
   const breadcrumbs = generateBreadcrumbs();
@@ -126,60 +123,15 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
                   )}
                 </BreadcrumbItem>
                 {breadcrumbs.length > 1 && <BreadcrumbSeparator />}
-                {breadcrumbs.length > ITEMS_TO_DISPLAY ? (
-                  <>
-                    <BreadcrumbItem>
-                      <DropdownMenu open={open} onOpenChange={setOpen}>
-                        <DropdownMenuTrigger className="flex items-center gap-1" aria-label="Toggle menu">
-                          <BreadcrumbEllipsis className="size-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                          {breadcrumbs.slice(1, -2).map((item, index) => (
-                            <DropdownMenuItem key={index}>
-                              <Link href={item.href ?? '#'}>{item.label}</Link>
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <Drawer open={open} onOpenChange={setOpen}>
-                        <DrawerTrigger aria-label="Toggle Menu">
-                          <BreadcrumbEllipsis className="size-4" />
-                        </DrawerTrigger>
-                        <DrawerContent>
-                          <DrawerHeader className="text-left">
-                            <DrawerTitle>Navigate to</DrawerTitle>
-                            <DrawerDescription>Select a page to navigate to.</DrawerDescription>
-                          </DrawerHeader>
-                          <div className="grid gap-1 px-4">
-                            {breadcrumbs.slice(1, -2).map((item, index) => (
-                              <Link key={index} href={item.href ?? '#'} className="py-1 text-sm" onClick={() => setOpen(false)}>
-                                {item.label}
-                              </Link>
-                            ))}
-                          </div>
-                          <DrawerFooter className="pt-4">
-                            <DrawerClose asChild>
-                              <Button variant="outline">Close</Button>
-                            </DrawerClose>
-                          </DrawerFooter>
-                        </DrawerContent>
-                      </Drawer>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                  </>
-                ) : null}
-                {(breadcrumbs.length > ITEMS_TO_DISPLAY
-                  ? breadcrumbs.slice(-ITEMS_TO_DISPLAY + 1)
-                  : breadcrumbs.slice(1)
-                ).map((item, index) => (
+                {breadcrumbs.slice(1).map((item, index) => (
                   <React.Fragment key={index}>
                     <BreadcrumbItem>
                       {item.href ? (
-                        <BreadcrumbLink asChild className="max-w-20 truncate md:max-w-none">
+                        <BreadcrumbLink asChild className="max-w-24 truncate md:max-w-40 xl:max-w-64">
                           <Link href={item.href}>{item.label}</Link>
                         </BreadcrumbLink>
                       ) : (
-                        <BreadcrumbPage className="max-w-20 truncate md:max-w-none">{item.label}</BreadcrumbPage>
+                        <BreadcrumbPage className="max-w-24 truncate md:max-w-40 xl:max-w-64">{item.label}</BreadcrumbPage>
                       )}
                     </BreadcrumbItem>
                     {item.href && <BreadcrumbSeparator />}

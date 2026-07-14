@@ -1,6 +1,13 @@
 import { Link } from '@/i18n/navigation';
 import { buildDashboardCoursePath, getCourseRouteParam } from '@/lib/learning/course-route';
-import { getCourse, getCourseAnalytics, getCourseContent } from '@/lib/learning';
+import {
+  getCourse,
+  getCourseAnalytics,
+  getCourseCompletionAnalytics,
+  getCourseContent,
+  getCourseEngagementAnalytics,
+  getCourseRevenueAnalytics,
+} from '@/lib/learning';
 import {
   deriveCourseLaunchSummary,
   formatDurationLabel,
@@ -14,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { Progress } from '@game-guild/ui/components/progress';
 import {
   AlertCircle,
+  Activity,
   BookOpen,
   CheckCircle2,
   ClipboardList,
@@ -115,7 +123,13 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
 
   const courseId = course.id;
   const courseRouteParam = getCourseRouteParam(course);
-  const [analytics, content] = await Promise.all([getCourseAnalytics(courseId), getCourseContent(courseId)]);
+  const [analytics, content, completionAnalytics, engagementAnalytics, revenueAnalytics] = await Promise.all([
+    getCourseAnalytics(courseId),
+    getCourseContent(courseId),
+    getCourseCompletionAnalytics(courseId),
+    getCourseEngagementAnalytics(courseId),
+    course.features.hasPricing ? getCourseRevenueAnalytics(courseId) : Promise.resolve(null),
+  ]);
 
   const totalEnrollments = analytics.totalUsers || course.currentEnrollments;
   const completedCount = analytics.completedUsers;
@@ -302,7 +316,7 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
           {/* Course Performance */}
           <Card>
             <CardHeader>
-              <CardTitle>Course Performance</CardTitle>
+              <CardTitle>Analytics</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-3">
@@ -330,10 +344,10 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
                   </div>
                 </div>
                 <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <BookOpen className="size-5 text-purple-500" />
+                  <Activity className="size-5 text-purple-500" />
                   <div>
-                    <p className="text-lg font-bold">{lessonsCount}</p>
-                    <p className="text-xs text-muted-foreground">Lessons</p>
+                    <p className="text-lg font-bold">{engagementAnalytics.activeStudents}</p>
+                    <p className="text-xs text-muted-foreground">Active students</p>
                   </div>
                 </div>
               </div>
@@ -343,6 +357,49 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
                   <span className="font-medium">{completionRate}%</span>
                 </div>
                 <Progress value={completionRate} className="h-2" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border p-3">
+                  <p className="text-sm font-medium">Completion funnel</p>
+                  <div className="mt-3 space-y-2">
+                    {completionAnalytics.funnel.map((stage) => (
+                      <div key={stage.stage} className="space-y-1">
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>{stage.stage}</span>
+                          <span>{stage.count} · {Math.round(stage.percentage)}%</span>
+                        </div>
+                        <Progress value={stage.percentage} className="h-1.5" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-sm font-medium">Engagement</p>
+                  <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Views</dt>
+                      <dd className="font-semibold">{engagementAnalytics.totalViews}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Avg. session</dt>
+                      <dd className="font-semibold">{Math.round(engagementAnalytics.avgSessionDuration / 60)}m</dd>
+                    </div>
+                    {revenueAnalytics && (
+                      <>
+                        <div>
+                          <dt className="text-xs text-muted-foreground">Revenue</dt>
+                          <dd className="font-semibold">
+                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: revenueAnalytics.currency }).format(revenueAnalytics.totalRevenue)}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs text-muted-foreground">Transactions</dt>
+                          <dd className="font-semibold">{revenueAnalytics.totalTransactions}</dd>
+                        </div>
+                      </>
+                    )}
+                  </dl>
+                </div>
               </div>
             </CardContent>
           </Card>

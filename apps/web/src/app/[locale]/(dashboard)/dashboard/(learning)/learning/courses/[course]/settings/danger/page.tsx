@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
-import { AlertTriangle, Archive, Loader2, Trash2 } from 'lucide-react';
-import { archiveCourse, deleteCourse, fetchCourse } from '@/lib/learning/actions';
+import { AlertTriangle, Archive, Loader2, ShieldCheck, Trash2, UserRoundCog } from 'lucide-react';
+import { archiveCourse, deleteCourse, fetchCourse, transferCourseOwnership } from '@/lib/learning/actions';
 import type { CourseDetails } from '@/lib/learning/types';
 
 export default function DangerPage({ params }: { params: Promise<{ locale: string; course: string }> }) {
@@ -18,10 +18,13 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
   const [courseId, setCourseId] = useState('');
   const [locale, setLocale] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [newOwnerReference, setNewOwnerReference] = useState('');
+  const [ownershipConfirm, setOwnershipConfirm] = useState('');
 
   useEffect(() => {
     params.then(async (p) => {
@@ -41,6 +44,7 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
 
   function handleArchive() {
     setError(null);
+    setSuccess(null);
     startTransition(async () => {
       const result = await archiveCourse(courseId);
       if (result.success) {
@@ -54,10 +58,28 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
   function handleDelete() {
     if (deleteConfirm !== course?.title) return;
     setError(null);
+    setSuccess(null);
     startTransition(async () => {
       const result = await deleteCourse(courseId);
       if (result.success) {
         router.push(`/${locale}/dashboard/learning/courses`);
+      } else {
+        setError(result.error);
+      }
+    });
+  }
+
+  function handleTransferOwnership() {
+    if (ownershipConfirm !== course?.title) return;
+    setError(null);
+    setSuccess(null);
+    startTransition(async () => {
+      const result = await transferCourseOwnership(courseId, newOwnerReference);
+      if (result.success) {
+        setNewOwnerReference('');
+        setOwnershipConfirm('');
+        setSuccess('Course ownership was transferred.');
+        router.refresh();
       } else {
         setError(result.error);
       }
@@ -79,8 +101,8 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-lg font-semibold text-destructive">Danger Zone</h2>
-        <p className="text-sm text-muted-foreground">Irreversible actions that affect your course.</p>
+        <h2 className="text-lg font-semibold">Settings</h2>
+        <p className="text-sm text-muted-foreground">Manage course ownership and restricted lifecycle controls.</p>
       </div>
 
       {error && (
@@ -88,6 +110,60 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
           {error}
         </div>
       )}
+      {success && (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300">
+          {success}
+        </div>
+      )}
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <UserRoundCog className="size-5 text-primary" />
+            <CardTitle className="text-base">Transfer course ownership</CardTitle>
+          </div>
+          <CardDescription>
+            Transfer the course owner to another instructor or administrator. The new owner can manage listing, content, students, billing-sensitive settings, and lifecycle controls.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="rounded-md border bg-muted/30 p-3 text-sm">
+            <span className="text-muted-foreground">Current owner ID:</span>{' '}
+            <span className="font-mono">{course.creatorId ?? 'Not assigned'}</span>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="new-owner">New owner email, username, or user ID</Label>
+            <Input
+              id="new-owner"
+              value={newOwnerReference}
+              onChange={(event) => setNewOwnerReference(event.target.value)}
+              placeholder="instructor@gameguild.gg"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="ownership-confirm">
+              Type <strong>{course.title}</strong> to confirm transfer
+            </Label>
+            <Input
+              id="ownership-confirm"
+              value={ownershipConfirm}
+              onChange={(event) => setOwnershipConfirm(event.target.value)}
+              placeholder={course.title}
+            />
+          </div>
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleTransferOwnership}
+              disabled={isPending || !newOwnerReference.trim() || ownershipConfirm !== course.title}
+            >
+              {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <ShieldCheck className="mr-2 size-4" />}
+              Transfer ownership
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Archive */}
       {course.status !== 'archived' && (
@@ -98,7 +174,7 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
               <CardTitle className="text-base">Archive this course</CardTitle>
             </div>
             <CardDescription>
-              Archiving hides the course from students and stops new enrollments. Existing student data is preserved. You can unarchive later from the Overview page.
+              Archiving hides the course from students and stops new enrollments. Existing student data is preserved.
             </CardDescription>
           </CardHeader>
           <CardContent>

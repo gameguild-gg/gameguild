@@ -11,6 +11,9 @@ const mocks = vi.hoisted(() => ({
   }),
   getCourse: vi.fn(),
   getCourseAnalytics: vi.fn(),
+  getCourseCompletionAnalytics: vi.fn(),
+  getCourseEngagementAnalytics: vi.fn(),
+  getCourseRevenueAnalytics: vi.fn(),
   getCourseClasses: vi.fn(),
   getCourseContent: vi.fn(),
   getCourseStudents: vi.fn(),
@@ -61,6 +64,9 @@ vi.mock('@/lib/learning/course-launch', () => ({
 vi.mock('@/lib/learning', () => ({
   getCourse: mocks.getCourse,
   getCourseAnalytics: mocks.getCourseAnalytics,
+  getCourseCompletionAnalytics: mocks.getCourseCompletionAnalytics,
+  getCourseEngagementAnalytics: mocks.getCourseEngagementAnalytics,
+  getCourseRevenueAnalytics: mocks.getCourseRevenueAnalytics,
   getCourseClasses: mocks.getCourseClasses,
   getCourseContent: mocks.getCourseContent,
   getCourseStudents: mocks.getCourseStudents,
@@ -201,6 +207,42 @@ describe('course-management dashboard route pages', () => {
       completionRate: 42,
     });
     mocks.getCourseContent.mockResolvedValue(courseContent);
+    mocks.getCourseCompletionAnalytics.mockResolvedValue({
+      courseId: 'course-1',
+      totalEnrolled: 12,
+      totalCompleted: 5,
+      completionRate: 42,
+      avgCompletionTime: 0,
+      dropOffPoints: [],
+      funnel: [
+        { stage: 'Enrolled', count: 12, percentage: 100 },
+        { stage: 'Completed', count: 5, percentage: 42 },
+      ],
+      completionTrend: [],
+    });
+    mocks.getCourseEngagementAnalytics.mockResolvedValue({
+      courseId: 'course-1',
+      period: { from: '2026-06-01T00:00:00.000Z', to: '2026-06-30T00:00:00.000Z' },
+      activeStudents: 8,
+      totalViews: 32,
+      avgSessionDuration: 600,
+      contentViews: [],
+      dailyActivity: [],
+      peakHours: [],
+    });
+    mocks.getCourseRevenueAnalytics.mockResolvedValue({
+      courseId: 'course-1',
+      period: { from: '2026-06-01T00:00:00.000Z', to: '2026-06-30T00:00:00.000Z' },
+      currency: 'USD',
+      totalRevenue: 1200,
+      totalTransactions: 4,
+      avgTransactionValue: 300,
+      refundRate: 0,
+      revenueByTier: [],
+      revenueBySource: [],
+      revenueTrend: [],
+      discountUsage: [],
+    });
     mocks.getCourseStudents.mockResolvedValue({
       total: 2,
       students: [
