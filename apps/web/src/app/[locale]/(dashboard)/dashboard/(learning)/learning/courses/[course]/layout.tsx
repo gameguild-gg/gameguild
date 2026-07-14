@@ -1,5 +1,5 @@
 import { getCourseRouteParam } from '@/lib/learning/course-route';
-import { getCourse, getCourseAnalytics, getCourseClasses, getCourseContent, getCourseStudents } from '@/lib/learning';
+import { getCourse, getCourseAnalytics, getCourseCohorts, getCourseContent, getCourseStudents } from '@/lib/learning';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { CourseNav } from './course-nav';
@@ -28,7 +28,7 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
 
   // Conditional preload based on features
   if (course.features.hasClasses) {
-    getCourseClasses(courseId);
+    getCourseCohorts(courseId);
   }
 
   return (

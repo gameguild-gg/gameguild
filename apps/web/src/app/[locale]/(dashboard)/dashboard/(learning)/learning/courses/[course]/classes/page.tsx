@@ -1,31 +1,23 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { getCourse, getCourseClasses } from '@/lib/learning';
-import { Card, CardContent } from '@game-guild/ui/components/card';
-import { CourseClassesManager } from './course-classes-manager';
+import { getCourse, getCourseCohorts } from '@/lib/learning';
+import { ClassControlCenter } from './class-control-center';
 
 /**
  * L6: Course Classes/Schedule Page
  *
  * Route: /learning/courses/[course]/classes
  *
- * Lists all scheduled and past classes for live/presential/hybrid courses.
- * Only available when course.features.hasClasses = true.
+ * Lists independent cohorts and their operational schedule state.
  *
  * Data Pattern:
- * - Layout conditionally preloaded getCourseClasses() if hasClasses
- * - This page awaits getCourseClasses() — hits warm cache or in-flight promise
+ * - Layout preloads getCourseCohorts() when classes are enabled
+ * - This page awaits the same cached query
  * - Also validates course exists AND has classes feature enabled
  *
  * UI Responsibility:
- * - Scheduled class list with upcoming/live/completed counts
- * - Session metadata, attendance capacity, and virtual meeting indicators
- * - Navigate to /classes/[classId] for class detail/editing
- *
- * Delivery Mode Behavior:
- * - Live: Virtual sessions with meeting URLs
- * - Presential: Physical location with address
- * - Hybrid: Mix of both, location.type per class
+ * - Cohort periods, schedules, capacity, next meeting, and conflicts
+ * - Navigate to the cohort schedule workspace
  */
 export default async function ClassesPage({
   params,
@@ -33,9 +25,9 @@ export default async function ClassesPage({
   const { course: courseId } = await params;
 
   // Parallel fetch - both hit warm cache from layout preload
-  const [course, classes] = await Promise.all([
+  const [course, collection] = await Promise.all([
     getCourse(courseId),
-    getCourseClasses(courseId),
+    getCourseCohorts(courseId),
   ]);
 
   if (!course) {
@@ -43,14 +35,6 @@ export default async function ClassesPage({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card><CardContent className="p-4"><p className="text-2xl font-semibold">{classes.total}</p><p className="text-sm text-muted-foreground">Total sessions</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-2xl font-semibold">{classes.upcomingCount}</p><p className="text-sm text-muted-foreground">Upcoming or live</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-2xl font-semibold">{classes.completedCount}</p><p className="text-sm text-muted-foreground">Completed</p></CardContent></Card>
-      </div>
-
-      <CourseClassesManager courseId={courseId} courseTitle={course.title} classes={classes.classes} />
-    </div>
+    <ClassControlCenter courseId={courseId} cohorts={collection.cohorts} />
   );
 }

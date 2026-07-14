@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   getCourseCompletionAnalytics: vi.fn(),
   getCourseEngagementAnalytics: vi.fn(),
   getCourseRevenueAnalytics: vi.fn(),
-  getCourseClasses: vi.fn(),
+  getCourseCohorts: vi.fn(),
   getCourseContent: vi.fn(),
   getCourseStudents: vi.fn(),
   getCourseAssessments: vi.fn(),
@@ -67,7 +67,7 @@ vi.mock('@/lib/learning', () => ({
   getCourseCompletionAnalytics: mocks.getCourseCompletionAnalytics,
   getCourseEngagementAnalytics: mocks.getCourseEngagementAnalytics,
   getCourseRevenueAnalytics: mocks.getCourseRevenueAnalytics,
-  getCourseClasses: mocks.getCourseClasses,
+  getCourseCohorts: mocks.getCourseCohorts,
   getCourseContent: mocks.getCourseContent,
   getCourseStudents: mocks.getCourseStudents,
   getCourseAssessments: mocks.getCourseAssessments,
@@ -111,8 +111,8 @@ vi.mock('./assessments/assessments-list', () => ({
   ),
 }));
 
-vi.mock('./classes/course-classes-manager', () => ({
-  CourseClassesManager: ({ classes }: { classes: unknown[] }) => <div data-testid="classes-manager">{`${classes.length} classes`}</div>,
+vi.mock('./classes/class-control-center', () => ({
+  ClassControlCenter: ({ cohorts }: { cohorts: unknown[] }) => <div data-testid="classes-manager">{`${cohorts.length} classes`}</div>,
 }));
 
 vi.mock('./students/student-table', () => ({
@@ -268,11 +268,12 @@ describe('course-management dashboard route pages', () => {
         },
       ],
     });
-    mocks.getCourseClasses.mockResolvedValue({
+    mocks.getCourseCohorts.mockResolvedValue({
       total: 1,
-      upcomingCount: 1,
+      scheduledCount: 1,
+      activeCount: 0,
       completedCount: 0,
-      classes: [{ id: 'class-1', name: 'June Cohort', status: 'Scheduled' }],
+      cohorts: [{ id: 'class-1', name: 'June Cohort', status: 'scheduled' }],
     });
     mocks.getCourseAssessments.mockResolvedValue({
       assessments: [{ id: 'assessment-1', title: 'Week 01 Quiz' }],
@@ -311,7 +312,7 @@ describe('course-management dashboard route pages', () => {
     expect(mocks.getCourseAnalytics).toHaveBeenCalledWith('course-1');
     expect(mocks.getCourseContent).toHaveBeenCalledWith('course-1');
     expect(mocks.getCourseStudents).toHaveBeenCalledWith('course-1');
-    expect(mocks.getCourseClasses).toHaveBeenCalledWith('course-1');
+    expect(mocks.getCourseCohorts).toHaveBeenCalledWith('course-1');
   });
 
   it('redirects the course root to the canonical overview slug route', async () => {
@@ -340,7 +341,6 @@ describe('course-management dashboard route pages', () => {
 
     cleanup();
     render(await ClassesPage({ params: params() } as never));
-    expect(screen.getByText('Total sessions')).toBeInTheDocument();
     expect(screen.getByTestId('classes-manager')).toHaveTextContent('1 classes');
 
     cleanup();
