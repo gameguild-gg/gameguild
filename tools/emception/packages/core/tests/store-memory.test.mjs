@@ -101,9 +101,9 @@ test('listFiles respects visibility filters', async () => {
 test('build sidecar persists across re-open', async () => {
     const m = createMemoryWorkspaceManager();
     const ws1 = await m.open({ name: 'a' });
-    await ws1.setBuild({ compiler: 'clang++', std: 'c++23' });
+    await ws1.setBuild({ toolchain: 'cpp', compiler: 'clang++', flags: ['-std=c++23'] });
     const ws2 = await m.open({ name: 'a' });
-    assert.deepEqual(await ws2.getBuild(), { compiler: 'clang++', std: 'c++23' });
+    assert.deepEqual(await ws2.getBuild(), { toolchain: 'cpp', compiler: 'clang++', flags: ['-std=c++23'] });
 });
 
 test('dispose makes the manager throw on further use', async () => {

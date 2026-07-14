@@ -1,4 +1,4 @@
-import type { TreeNode, WorkspaceFile } from './ide-types';
+import type { TreeNode, WorkspaceFile } from './ide-types.js';
 
 export function isSourceFile(path: string): boolean {
     return path.endsWith('.cpp') || path.endsWith('.cc') || path.endsWith('.cxx') || path.endsWith('.c');

@@ -38,21 +38,21 @@ import type {
     WorkspaceBuildConfig,
     WorkspaceAPI,
 } from 'emception';
-import { bootInWorker } from './index';
-import type { RunOptions as BrowserRunOptions } from './tool-runner';
-import { WorkerClient } from './worker-client';
+import { bootInWorker } from './index.js';
+import type { RunOptions as BrowserRunOptions } from './tool-runner.js';
+import { WorkerClient } from './worker-client.js';
 
 /**
  * Default manifest URL used when `manifestUrl` is omitted. Points at the
- * latest published `emception` package CDN payload on jsDelivr so a host can
- * boot emception with zero configuration:
+ * canonical GameGuild CDN payload so a host can boot emception with zero
+ * configuration:
  *
  *     await createEmception({ container: el }); // uses DEFAULT_MANIFEST_URL
  *
- * Pin to a specific version in production by passing `manifestUrl`
- * explicitly, e.g. `https://cdn.jsdelivr.net/npm/emception@1.2.3/cdn/manifest.json`.
+ * Pin or self-host a toolchain release in production by passing
+ * `manifestUrl` explicitly.
  */
-export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/emception/cdn/manifest.json';
+export const DEFAULT_MANIFEST_URL = 'https://gameguild-gg.github.io/gameguild/cdn/manifest.json';
 
 export interface CreateEmceptionOptions {
     /**
@@ -80,10 +80,9 @@ export interface CreateEmceptionOptions {
     /**
      * URL of the manifest produced by `npm run build:manifest`.
      *
-    * If omitted, falls back to {@link DEFAULT_MANIFEST_URL} (the latest
-    * published `emception` CDN payload on jsDelivr). For production deploys
-     * pin a specific version or self-host the manifest under your own
-     * origin to avoid CDN drift.
+    * If omitted, falls back to {@link DEFAULT_MANIFEST_URL}. For production
+     * deploys, pin or self-host the manifest under your own origin to avoid
+     * CDN drift.
      */
     manifestUrl?: string;
 }

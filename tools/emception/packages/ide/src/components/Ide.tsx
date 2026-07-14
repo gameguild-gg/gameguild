@@ -5,13 +5,13 @@ import { Terminal } from '@xterm/xterm';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import DockGroupPanel from './DockGroup';
-import FileExplorer from './FileExplorer';
-import type { DockGroup, IdeProps, OpenTab, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
-import { DEFAULT_IMAGE, deriveStorageKey, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
-import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, resolveWsPath } from './ide-utils';
-import TerminalPanel from './TerminalPanel';
-import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets';
+import DockGroupPanel from './DockGroup.js';
+import FileExplorer from './FileExplorer.js';
+import type { DockGroup, IdeProps, OpenTab, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types.js';
+import { DEFAULT_IMAGE, deriveStorageKey, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types.js';
+import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, resolveWsPath } from './ide-utils.js';
+import TerminalPanel from './TerminalPanel.js';
+import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets.js';
 
 /** Creates a line-buffered stdin reader from the tty. Shared by WASI, CMake, and Python paths. */
 function makeLineBufferedStdin(tty: { readByteExclusive: () => number | Promise<number> | null }): () => Promise<number> {

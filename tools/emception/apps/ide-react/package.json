@@ -4,13 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "npm run build:lib --prefix ../.. && node ../../scripts/install-app-cdn-from-package.mjs apps/ide-react",
+    "predev": "pnpm --dir ../.. run build:packages",
     "dev": "run-p watch:core watch:browser watch:ide vite",
     "vite": "vite",
     "watch:core": "tsc -p ../../packages/core/tsconfig.json --watch --preserveWatchOutput",
     "watch:browser": "tsc -p ../../packages/browser/tsconfig.json --watch --preserveWatchOutput",
     "watch:ide": "tsc -p ../../packages/ide/tsconfig.json --watch --preserveWatchOutput",
-    "prebuild": "npm run build:lib --prefix ../.. && node ../../scripts/install-app-cdn-from-package.mjs apps/ide-react",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },
