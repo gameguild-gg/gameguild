@@ -99,3 +99,4 @@ tools/emception/userland/**/.git/
 
 # Miscellaneous
 *.pem
+.superpowers/
