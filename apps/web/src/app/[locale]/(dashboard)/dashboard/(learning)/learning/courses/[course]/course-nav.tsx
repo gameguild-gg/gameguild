@@ -3,7 +3,7 @@
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { buildDashboardCoursePath } from '@/lib/learning/course-route';
 import type { CourseFeatures } from '@/lib/learning/types';
-import { publishCourse, unpublishCourse } from '@/lib/learning/actions';
+import { publishCourse, restoreCourse, unpublishCourse } from '@/lib/learning/actions';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import {
@@ -31,7 +31,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useState, useTransition, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 interface CourseNavProps {
   courseTitle: string;
@@ -85,7 +85,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
   const previewHref = buildDashboardCoursePath(courseRouteParam, 'preview');
   const [shareLabel, setShareLabel] = useState('Share');
   const [status, setStatus] = useState(courseStatus);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [showUnpublishDialog, setShowUnpublishDialog] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -104,12 +104,15 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
     setShareLabel('Copied');
   }
 
-  function runLifecycleAction(action: 'publish' | 'unpublish') {
+  async function runLifecycleAction(action: 'publish' | 'unpublish' | 'restore') {
     setActionError(null);
-    startTransition(async () => {
+    setIsPending(true);
+    try {
       const result = action === 'publish'
         ? await publishCourse(courseRouteParam)
-        : await unpublishCourse(courseRouteParam);
+        : action === 'restore'
+          ? await restoreCourse(courseRouteParam)
+          : await unpublishCourse(courseRouteParam);
 
       if (!result.success) {
         setActionError(result.error);
@@ -119,7 +122,11 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
       setStatus(action === 'publish' ? 'published' : 'draft');
       setShowUnpublishDialog(false);
       router.refresh();
-    });
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'The course lifecycle action failed.');
+    } finally {
+      setIsPending(false);
+    }
   }
 
   // Match the active segment after the dynamic course route param.
@@ -147,7 +154,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h1 className="min-w-0 break-words text-2xl font-bold tracking-tight">{courseTitle}</h1>
-              {getStatusBadge(courseStatus)}
+              {getStatusBadge(status)}
             </div>
             <p className="max-w-prose break-words text-sm text-muted-foreground">{courseDescription}</p>
           </div>
@@ -168,8 +175,13 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
               {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <EyeOff className="mr-2 size-4" />}
               Unpublish
             </Button>
+          ) : status === 'archived' ? (
+            <Button variant="outline" size="sm" type="button" disabled={isPending} onClick={() => void runLifecycleAction('restore')}>
+              {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Eye className="mr-2 size-4" />}
+              Restore
+            </Button>
           ) : (
-            <Button variant="outline" size="sm" type="button" disabled={isPending || status === 'archived'} onClick={() => runLifecycleAction('publish')}>
+            <Button variant="outline" size="sm" type="button" disabled={isPending} onClick={() => void runLifecycleAction('publish')}>
               {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Eye className="mr-2 size-4" />}
               Publish
             </Button>
@@ -247,7 +259,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
             <Button variant="outline" type="button" onClick={() => setShowUnpublishDialog(false)} disabled={isPending}>
               Cancel
             </Button>
-            <Button type="button" onClick={() => runLifecycleAction('unpublish')} disabled={isPending}>
+            <Button type="button" onClick={() => void runLifecycleAction('unpublish')} disabled={isPending}>
               {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
               Unpublish course
             </Button>

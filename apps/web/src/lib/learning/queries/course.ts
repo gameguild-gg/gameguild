@@ -63,10 +63,10 @@ function emptyCourseAnalytics(): CourseAnalytics {
   };
 }
 
-// Map ContentStatus string union to simplified frontend status
-function mapStatus(s: ContentStatus | undefined): 'draft' | 'published' | 'archived' {
-  if (s === 'Published') return 'published';
-  if (s === 'Archived') return 'archived';
+// Compatibility endpoints may serialize enums as either names or numeric values.
+function mapStatus(s: ContentStatus | number | string | undefined): 'draft' | 'published' | 'archived' {
+  if (s === 2 || s === '2' || s === 'Published' || s === 'published') return 'published';
+  if (s === 3 || s === '3' || s === 'Archived' || s === 'archived') return 'archived';
   return 'draft';
 }
 

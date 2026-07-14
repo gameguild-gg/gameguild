@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';
@@ -12,7 +12,8 @@ import type { CourseDetails } from '@/lib/learning/types';
 
 export default function DangerPage({ params }: { params: Promise<{ locale: string; course: string }> }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [pendingAction, setPendingAction] = useState<'archive' | 'delete' | 'transfer' | null>(null);
+  const isPending = pendingAction !== null;
   const [course, setCourse] = useState<CourseDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [courseId, setCourseId] = useState('');
@@ -42,38 +43,51 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
     });
   }, [params]);
 
-  function handleArchive() {
+  async function handleArchive() {
     setError(null);
     setSuccess(null);
-    startTransition(async () => {
+    setPendingAction('archive');
+    try {
       const result = await archiveCourse(courseId);
       if (result.success) {
+        setCourse((current) => current ? { ...current, status: 'archived' } : current);
+        setSuccess('Archived successfully.');
         router.refresh();
       } else {
         setError(result.error);
       }
-    });
+    } catch (archiveError) {
+      setError(archiveError instanceof Error ? archiveError.message : 'Course could not be archived.');
+    } finally {
+      setPendingAction(null);
+    }
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (deleteConfirm !== course?.title) return;
     setError(null);
     setSuccess(null);
-    startTransition(async () => {
+    setPendingAction('delete');
+    try {
       const result = await deleteCourse(courseId);
       if (result.success) {
         router.push(`/${locale}/dashboard/learning/courses`);
       } else {
         setError(result.error);
       }
-    });
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Course could not be deleted.');
+    } finally {
+      setPendingAction(null);
+    }
   }
 
-  function handleTransferOwnership() {
+  async function handleTransferOwnership() {
     if (ownershipConfirm !== course?.title) return;
     setError(null);
     setSuccess(null);
-    startTransition(async () => {
+    setPendingAction('transfer');
+    try {
       const result = await transferCourseOwnership(courseId, newOwnerReference);
       if (result.success) {
         setNewOwnerReference('');
@@ -83,7 +97,11 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
       } else {
         setError(result.error);
       }
-    });
+    } catch (transferError) {
+      setError(transferError instanceof Error ? transferError.message : 'Course ownership could not be transferred.');
+    } finally {
+      setPendingAction(null);
+    }
   }
 
   if (loading) {
@@ -155,7 +173,7 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
             <Button
               type="button"
               variant="outline"
-              onClick={handleTransferOwnership}
+              onClick={() => void handleTransferOwnership()}
               disabled={isPending || !newOwnerReference.trim() || ownershipConfirm !== course.title}
             >
               {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <ShieldCheck className="mr-2 size-4" />}
@@ -178,7 +196,7 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" onClick={handleArchive} disabled={isPending}>
+            <Button variant="outline" onClick={() => void handleArchive()} disabled={isPending}>
               {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Archive className="mr-2 size-4" />}
               Archive Course
             </Button>
@@ -220,7 +238,7 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
               <div className="flex gap-2">
                 <Button
                   variant="destructive"
-                  onClick={handleDelete}
+                  onClick={() => void handleDelete()}
                   disabled={isPending || deleteConfirm !== course.title}
                 >
                   {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Trash2 className="mr-2 size-4" />}

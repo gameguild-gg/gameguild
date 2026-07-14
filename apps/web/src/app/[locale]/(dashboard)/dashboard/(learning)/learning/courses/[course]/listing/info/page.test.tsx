@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { StrictMode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CourseDetails } from '@/lib/learning/types';
 import ListingInfoPage from './page';
@@ -108,5 +109,31 @@ describe('ListingInfoPage', () => {
       '/dashboard/learning/courses/advanced-encounter-ai-by-instructor-one/listing/info',
     );
     expect(screen.getByText('Course info updated successfully.')).toBeInTheDocument();
+  });
+
+  it('does not overwrite professor edits when an obsolete StrictMode load resolves late', async () => {
+    let resolveFirst!: (course: CourseDetails) => void;
+    let resolveSecond!: (course: CourseDetails) => void;
+    fetchCourseMock
+      .mockReturnValueOnce(new Promise<CourseDetails>((resolve) => { resolveFirst = resolve; }))
+      .mockReturnValueOnce(new Promise<CourseDetails>((resolve) => { resolveSecond = resolve; }));
+
+    render(
+      <StrictMode>
+        <ListingInfoPage params={Promise.resolve({ locale: 'en-US', course: 'ai-for-boss-encounters-by-instructor-one' })} />
+      </StrictMode>,
+    );
+
+    await waitFor(() => expect(fetchCourseMock).toHaveBeenCalledTimes(2));
+    resolveSecond(courseFixture);
+    const titleInput = await screen.findByLabelText(/course title/i);
+    fireEvent.change(titleInput, { target: { value: 'Professor work in progress' } });
+
+    await act(async () => {
+      resolveFirst({ ...courseFixture, title: 'Obsolete server title' });
+      await Promise.resolve();
+    });
+
+    expect(titleInput).toHaveValue('Professor work in progress');
   });
 });

@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   getCourses1: vi.fn(),
   putCourses: vi.fn(),
   postCoursesPublish: vi.fn(),
+  postCoursesRestore: vi.fn(),
   postCoursesUsers: vi.fn(),
   deleteCoursesUsers: vi.fn(),
   postApiLearningEnrollments: vi.fn(),
@@ -51,6 +52,7 @@ vi.mock('@game-guild/client', () => ({
     },
     LearningCoursesProgramlifecycleModule: class {
       postCoursesPublish = mocks.postCoursesPublish;
+      postCoursesRestore = mocks.postCoursesRestore;
     },
     LearningEnrollmentsModule: class {
       postApiLearningEnrollments = mocks.postApiLearningEnrollments;
@@ -92,6 +94,7 @@ const {
   transferCourseOwnership,
   updateCourse,
   publishCourse,
+  restoreCourse,
 } = await import('./actions');
 
 describe('learning server actions', () => {
@@ -110,6 +113,7 @@ describe('learning server actions', () => {
     });
     mocks.putCourses.mockResolvedValue({ ok: true, data: {} });
     mocks.postCoursesPublish.mockResolvedValue({ ok: true, data: {} });
+    mocks.postCoursesRestore.mockResolvedValue({ ok: true, data: {} });
     mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
     mocks.getCourse.mockResolvedValue({
       id: 'course-1',
@@ -201,6 +205,19 @@ describe('learning server actions', () => {
 
     expect(result).toEqual({ success: true, data: null });
     expect(mocks.postCoursesPublish).toHaveBeenCalledWith('resolved-course-id');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/boss-ai-by-instructor-one');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/resolved-course-id');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/boss-ai-by-instructor-one/overview');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/resolved-course-id/overview');
+  });
+
+  it('restores an archived course to draft using the canonical course id', async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce('resolved-course-id');
+
+    const result = await restoreCourse('boss-ai-by-instructor-one');
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.postCoursesRestore).toHaveBeenCalledWith('resolved-course-id');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/boss-ai-by-instructor-one');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/resolved-course-id');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/boss-ai-by-instructor-one/overview');

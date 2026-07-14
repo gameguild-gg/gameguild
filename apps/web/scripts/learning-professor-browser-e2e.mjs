@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const apiBaseUrl = (process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5295').replace(/\/$/, '');
@@ -91,6 +94,69 @@ async function assertNoErrorSurface(page, label) {
   }
 }
 
+async function assertNoHorizontalOverflow(page, label) {
+  const dimensions = await page.evaluate(() => ({
+    viewportWidth: window.innerWidth,
+    documentWidth: Math.max(document.documentElement.scrollWidth, document.body?.scrollWidth ?? 0),
+  }));
+
+  if (dimensions.documentWidth > dimensions.viewportWidth + 1) {
+    throw new Error(
+      `${label} overflows horizontally: ${dimensions.documentWidth}px document width at ${dimensions.viewportWidth}px viewport width.`,
+    );
+  }
+}
+
+async function assertHeaderContentContained(page, label) {
+  const overflow = await page.locator('header').first().evaluate((header) => {
+    const headerBounds = header.getBoundingClientRect();
+    const visibleDescendants = [...header.querySelectorAll('*')].filter((element) => {
+      const bounds = element.getBoundingClientRect();
+      const styles = window.getComputedStyle(element);
+      return styles.display !== 'none' && styles.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
+    });
+    const contentBottom = visibleDescendants.reduce(
+      (bottom, element) => Math.max(bottom, element.getBoundingClientRect().bottom),
+      headerBounds.bottom,
+    );
+
+    return { contentBottom, headerBottom: headerBounds.bottom };
+  });
+
+  if (overflow.contentBottom > overflow.headerBottom + 1) {
+    throw new Error(
+      `${label} header content escapes its bounds: ${overflow.contentBottom}px content bottom vs ${overflow.headerBottom}px header bottom.`,
+    );
+  }
+}
+
+async function captureResponsiveSchedule(page, label) {
+  const originalViewport = page.viewportSize() ?? { width: 1440, height: 1000 };
+  const outputDirectory = fileURLToPath(new URL('../test-results/learning-professor', import.meta.url));
+  await mkdir(outputDirectory, { recursive: true });
+
+  for (const viewport of [
+    { name: 'desktop', width: 1440, height: 1000 },
+    { name: 'tablet', width: 900, height: 1000 },
+    { name: 'mobile', width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await waitForClientHydration(page);
+    await assertNoErrorSurface(page, `${label} ${viewport.name}`);
+    await assertNoHorizontalOverflow(page, `${label} ${viewport.name}`);
+    await assertHeaderContentContained(page, `${label} ${viewport.name}`);
+    await page.screenshot({
+      path: join(outputDirectory, `${label}-${viewport.name}.png`),
+      fullPage: true,
+    });
+  }
+
+  await page.setViewportSize(originalViewport);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await waitForClientHydration(page);
+}
+
 async function visit(page, courseRoute, suffix, _expectedText) {
   const path = `/dashboard/learning/courses/${courseRoute}${suffix ? `/${suffix}` : ''}`;
   await page.goto(`${webBaseUrl}${path}`, { waitUntil: 'domcontentloaded' });
@@ -112,6 +178,16 @@ async function waitForReactControl(page, locator) {
   if (!element) throw new Error('Could not resolve the expected React control.');
 
   await page.waitForFunction((control) => Object.keys(control).some((key) => key.startsWith('__reactProps$')), element);
+}
+
+async function waitForEnabled(locator, timeout = 45_000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    if (await locator.isVisible().catch(() => false) && await locator.isEnabled().catch(() => false)) return;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  throw new Error('Timed out waiting for the expected control to become enabled.');
 }
 
 function routeFromUrl(url) {
@@ -169,6 +245,7 @@ async function run() {
   let courseId = null;
   let deletedCourseId = null;
   let courseSlug = null;
+  const createdClassIds = [];
 
   page.setDefaultTimeout(45_000);
   page.on('pageerror', (error) => browserErrors.push(error.message));
@@ -189,6 +266,7 @@ async function run() {
     console.log('[professor-e2e] authentication');
     await page.goto(`${webBaseUrl}/sign-in`, { waitUntil: 'domcontentloaded' });
     await waitForClientHydration(page);
+    await waitForReactControl(page, page.getByLabel('Email'));
     await page.getByLabel('Email').fill(adminEmail);
     await page.getByLabel('Password').fill(adminPassword);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
@@ -220,6 +298,7 @@ async function run() {
 
     await visit(page, courseRoute, 'listing/info', 'Course Identity');
     console.log('[professor-e2e] listing identity, media, launch, pricing');
+    await waitForReactControl(page, page.getByLabel('Course Title'));
     const updatedSlug = `${courseSlug}-updated`;
     await page.getByLabel('Course Title').fill(`Complete Professor Course ${fixture.tag}`);
     await page.getByLabel('URL Slug').fill(updatedSlug);
@@ -229,6 +308,11 @@ async function run() {
     await waitForLocation(page, (url) => url.pathname.includes(`${updatedSlug}-by-`));
     courseSlug = updatedSlug;
     courseRoute = routeFromUrl(page.url());
+    await waitForApiState(
+      () => apiRequest(`/v1/courses/slug/${encodeURIComponent(updatedSlug)}`, {}, fixture.accessToken),
+      (course) => course?.title === `Complete Professor Course ${fixture.tag}`,
+    );
+    await visit(page, courseRoute, 'listing/info', 'Course Identity');
     await page.getByLabel('Course Title').waitFor();
     if ((await page.getByLabel('Course Title').inputValue()) !== `Complete Professor Course ${fixture.tag}`) {
       throw new Error('Course identity changes were not persisted after the canonical route update.');
@@ -239,6 +323,8 @@ async function run() {
     await page.getByLabel('Video URL').fill('');
     await page.getByRole('button', { name: 'Save Media' }).click();
     await waitForText(page, 'Media updated successfully');
+    await visit(page, courseRoute, 'listing/media', 'Course Media');
+    await waitForReactControl(page, page.getByLabel('Thumbnail URL'));
     await page.getByLabel('Thumbnail URL').fill('https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1400&h=900&fit=crop');
     await page.getByLabel('Video URL').fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
     await page.getByRole('button', { name: 'Save Media' }).click();
@@ -470,41 +556,97 @@ async function run() {
     await waitForText(page, 'Vertical Slice Final Review');
 
     await visit(page, courseRoute, 'classes', 'Classes');
-    console.log('[professor-e2e] class, certificate, enrollment');
-    const start = new Date(Date.now() + 86_400_000);
-    const end = new Date(start.getTime() + 7_200_000);
-    const localInput = (date) => new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-    await page.getByLabel('Name').fill('July Production Cohort');
-    await page.getByLabel('Description').fill('Live review and production support cohort.');
-    await page.getByLabel('Start').fill(localInput(start));
-    await page.getByLabel('End').fill(localInput(end));
-    await page.getByLabel('Capacity').fill('20');
-    await page.getByLabel('Meeting URL or room').fill('https://meet.example.test/gameguild');
-    await page.getByRole('button', { name: 'Schedule class' }).click();
-    await waitForText(page, 'Class scheduled.');
-    const classState = await waitForApiState(
-      () => apiRequest(`/api/cohorts/course/${courseId}`, {}, fixture.accessToken),
-      (classes) => Array.isArray(classes) && classes.some((courseClass) => courseClass.name === 'July Production Cohort'),
+    console.log('[professor-e2e] independent morning and evening class schedules');
+    const dateInput = (offsetDays) => {
+      const date = new Date(Date.now() + offsetDays * 86_400_000);
+      return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+    };
+    const createScheduledClass = async ({ name, description, startOffsetDays, meetingPattern, meetingDay, meetingStartTime }) => {
+      await visit(page, courseRoute, 'classes', 'Classes');
+      await page.getByRole('button', { name: 'New class' }).click();
+      await page.getByLabel('Class name').fill(name);
+      await page.getByLabel('Description').fill(description);
+      await page.getByLabel('Start date').fill(dateInput(startOffsetDays));
+      await page.getByLabel('End date').fill(dateInput(startOffsetDays + 56));
+      await page.getByLabel('Capacity').fill('24');
+      await page.getByLabel('Meeting pattern').fill(meetingPattern);
+      await page.getByRole('button', { name: 'Create and build schedule' }).click();
+      const scheduleLocation = await waitForLocation(
+        page,
+        (url) => /\/classes\/[0-9a-f-]+\/schedule$/i.test(url.pathname),
+      );
+      const classId = scheduleLocation.pathname.match(/\/classes\/([0-9a-f-]+)\/schedule$/i)?.[1];
+      if (!classId) throw new Error(`Could not derive the newly created class id from ${scheduleLocation.pathname}.`);
+      createdClassIds.push(classId);
+
+      await waitForText(page, 'Class schedule');
+      await page.getByRole('button', { name: 'Build schedule' }).click();
+      await page.getByLabel('Timezone').fill('America/Sao_Paulo');
+      if (meetingDay !== 'Mon') {
+        const monday = page.getByLabel('Mon');
+        if ((await monday.getAttribute('data-state')) === 'checked') await monday.click();
+        await page.getByLabel(meetingDay).click();
+      }
+      await page.getByLabel('Meeting start time').fill(meetingStartTime);
+      await page.getByRole('button', { name: 'Generate preview' }).click();
+      await waitForText(page, 'Generated schedule');
+      const advisoryConfirmation = page.getByLabel('I reviewed the advisory conflicts');
+      if (await advisoryConfirmation.isVisible().catch(() => false)) await advisoryConfirmation.click();
+      await page.getByRole('button', { name: 'Apply schedule' }).click();
+      await page.getByText(/^Version \d+$/).filter({ visible: true }).first().waitFor();
+      await page.getByRole('heading', { name: /^Week 1 - / }).first().waitFor();
+
+      return {
+        id: classId,
+        schedule: await apiRequest(`/v1/courses/${courseId}/cohorts/${classId}/schedule`, {}, fixture.accessToken),
+      };
+    };
+
+    const morningClass = await createScheduledClass({
+      name: 'Morning Production Cohort',
+      description: 'Morning delivery for students working in the evening.',
+      startOffsetDays: 7,
+      meetingPattern: 'Monday - 09:00',
+      meetingDay: 'Mon',
+      meetingStartTime: '09:00',
+    });
+    const eveningClass = await createScheduledClass({
+      name: 'Evening Production Cohort',
+      description: 'Evening delivery for students working during the day.',
+      startOffsetDays: 14,
+      meetingPattern: 'Thursday - 19:00',
+      meetingDay: 'Thu',
+      meetingStartTime: '19:00',
+    });
+
+    const morningBeforeShift = JSON.stringify(morningClass.schedule.items ?? []);
+    const eveningVersionBeforeShift = eveningClass.schedule.version ?? 0;
+    await page.getByRole('button', { name: /^Shift / }).first().click();
+    await page.getByLabel('Days to shift').fill('2');
+    await page.getByLabel('This and following items').click();
+    await page.getByRole('button', { name: 'Shift schedule item' }).click();
+    const shiftedEveningSchedule = await waitForApiState(
+      () => apiRequest(`/v1/courses/${courseId}/cohorts/${eveningClass.id}/schedule`, {}, fixture.accessToken),
+      (schedule) => (schedule?.version ?? 0) > eveningVersionBeforeShift,
     );
-    const createdClass = classState.find((courseClass) => courseClass.name === 'July Production Cohort');
-    if (!createdClass?.id) throw new Error('The cohort API did not return the newly scheduled class id.');
-    await waitForText(page, 'July Production Cohort');
-    await page.getByRole('link', { name: /July Production Cohort/ }).click();
-    await page.locator('#class-detail-title').fill('August Production Cohort');
-    await page.locator('#class-detail-description').fill('Updated cohort schedule and production support.');
-    await page.locator('#class-detail-capacity').fill('24');
-    await page.getByRole('button', { name: 'Save class' }).click();
-    await waitForText(page, 'Class updated.');
-    await waitForApiState(
-      () => apiRequest(`/api/cohorts/${createdClass.id}`, {}, fixture.accessToken),
-      (courseClass) => courseClass?.name === 'August Production Cohort',
+    const morningAfterShift = await apiRequest(
+      `/v1/courses/${courseId}/cohorts/${morningClass.id}/schedule`,
+      {},
+      fixture.accessToken,
     );
-    const openEnrollmentButton = page.getByRole('button', { name: 'Open enrollment' });
-    await page.waitForFunction((button) => !button.disabled, await openEnrollmentButton.elementHandle());
-    await openEnrollmentButton.click();
-    await waitForText(page, 'Class status updated.');
-    await visit(page, courseRoute, 'classes', 'Classes');
-    await waitForText(page, 'August Production Cohort');
+    if (JSON.stringify(morningAfterShift.items ?? []) !== morningBeforeShift) {
+      throw new Error('Shifting the evening schedule changed the morning class schedule.');
+    }
+    if (JSON.stringify(shiftedEveningSchedule.items ?? []) === JSON.stringify(eveningClass.schedule.items ?? [])) {
+      throw new Error('The evening schedule version changed without shifting its schedule items.');
+    }
+
+    await captureResponsiveSchedule(page, 'cohort-schedule');
+    await page.getByRole('button', { name: 'Switch class' }).click();
+    await page.getByRole('menuitem').filter({ hasText: 'Morning Production Cohort' }).click();
+    await waitForLocation(page, (url) => url.pathname.includes(`/classes/${morningClass.id}/schedule`));
+    await waitForText(page, 'Morning Production Cohort');
+    await waitForText(page, 'Monday');
 
     await visit(page, courseRoute, 'certificates', 'Certificates');
     await page.getByLabel('Name').fill('Production Course Completion');
@@ -533,11 +675,10 @@ async function run() {
     await page.getByRole('button', { name: 'Send message' }).click();
     await waitForText(page, 'Message sent to 1 student');
 
-    await visit(page, courseRoute, 'analytics', 'Analytics');
-    await waitForLocation(page, (url) => url.pathname.endsWith('/analytics/engagement'));
-    for (const suffix of ['analytics/completion', 'analytics/engagement', 'analytics/revenue']) {
-      await visit(page, courseRoute, suffix, 'Analytics');
-    }
+    await visit(page, courseRoute, 'overview', 'Analytics');
+    await waitForText(page, 'Completion funnel');
+    await waitForText(page, 'Engagement');
+    await waitForText(page, 'Revenue');
     console.log('[professor-e2e] analytics, support, settings, preview');
 
     await visit(page, courseRoute, 'support/discussions', 'Discussions');
@@ -547,11 +688,11 @@ async function run() {
     await waitForText(page, 'Milestone review expectations');
     await visit(page, courseRoute, 'support/tickets', 'Support Tickets');
 
-    await visit(page, courseRoute, 'settings/access', 'Access');
+    await visit(page, courseRoute, 'listing/access', 'Listing visibility');
     await page.getByLabel('Maximum Enrollments').fill('0');
     await page.getByLabel('Enrollment deadline').fill('');
-    await page.getByRole('button', { name: 'Save Access Settings' }).click();
-    await waitForText(page, 'Access settings saved successfully');
+    await page.getByRole('button', { name: 'Save Listing Access' }).click();
+    await waitForText(page, 'Listing access settings saved successfully');
 
     await visit(page, courseRoute, 'settings/notifications', 'Notifications');
     await page.getByLabel('Class reminder minutes').fill('1440, 60, 10');
@@ -584,12 +725,25 @@ async function run() {
 
     console.log('[professor-e2e] lifecycle and subsection cleanup');
     await page.getByRole('button', { name: 'Unpublish' }).click();
+    await page.getByRole('button', { name: 'Unpublish course', exact: true }).click();
     await waitForText(page, 'Draft');
-    await page.getByRole('button', { name: 'Publish', exact: true }).first().click();
+    const republishButton = page.getByRole('button', { name: 'Publish', exact: true }).first();
+    await waitForEnabled(republishButton);
+    await republishButton.click();
     await waitForText(page, 'Published');
-    await page.getByRole('button', { name: 'Archive' }).click();
-    await waitForText(page, 'Archived');
-    await page.getByRole('button', { name: 'Re-publish' }).click();
+    await visit(page, courseRoute, 'settings/danger', 'Settings');
+    await page.getByRole('button', { name: 'Archive Course' }).click();
+    await waitForText(page, 'Archived successfully.');
+    await waitForApiState(
+      () => apiRequest(`/v1/courses/slug/${encodeURIComponent(courseSlug)}`, {}, fixture.accessToken),
+      (course) => ['Archived', 'archived', 3, '3'].includes(course?.status),
+    );
+    await visit(page, courseRoute, 'overview', 'Course Readiness');
+    await page.getByRole('button', { name: 'Restore', exact: true }).first().click();
+    await waitForText(page, 'Draft');
+    const restoredPublishButton = page.getByRole('button', { name: 'Publish', exact: true }).first();
+    await waitForEnabled(restoredPublishButton);
+    await restoredPublishButton.click();
     await waitForText(page, 'Published');
 
     await visit(page, courseRoute, 'students', 'Students');
@@ -603,9 +757,9 @@ async function run() {
     await page.getByRole('button', { name: 'Delete Game Production Certificate' }).click();
     await waitForText(page, 'Certificate template deleted.');
 
-    await visit(page, courseRoute, 'classes', 'Classes');
-    await page.getByRole('button', { name: 'Delete August Production Cohort' }).click();
-    await waitForText(page, 'Class deleted.');
+    for (const classId of createdClassIds.splice(0)) {
+      await deleteFixture(`/api/cohorts/${classId}`, fixture.accessToken);
+    }
 
     await visit(page, courseRoute, 'content', 'Course Content');
     const updatedLessonRow = page.getByText('Define the playable promise', { exact: true }).locator('xpath=ancestor::div[contains(@class, "group")][1]');
@@ -640,7 +794,7 @@ async function run() {
 
     await visit(page, courseRoute, 'settings/danger', 'Danger Zone');
     await page.getByRole('button', { name: 'Delete Course' }).click();
-    await page.getByLabel(/type.*confirm/i).fill(`Complete Professor Course ${fixture.tag}`);
+    await page.getByRole('textbox', { name: /confirm deletion/i }).fill(`Complete Professor Course ${fixture.tag}`);
     await page.getByRole('button', { name: 'Permanently Delete' }).click();
     await waitForLocation(page, (url) => url.pathname.endsWith('/dashboard/learning/courses'));
     deletedCourseId = courseId;

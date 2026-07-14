@@ -142,6 +142,23 @@ describe('course analytics query', () => {
     expect(course?.status).toBe('published');
   });
 
+  it('normalizes numeric archived status returned by compatibility endpoints', async () => {
+    const courseId = '38691da8-245e-4d9e-b729-83c9023ba064';
+    mocks.learningApiGet.mockResolvedValue({
+      id: courseId,
+      title: 'Archived Course',
+      description: 'Preserved for enrolled students.',
+      slug: 'archived-course',
+      status: 3,
+      visibility: 1,
+      createdAt: '2026-06-01T00:00:00.000Z',
+    });
+
+    const course = await getCourse(courseId);
+
+    expect(course?.status).toBe('archived');
+  });
+
   it('returns the canonical API course ID for a dashboard slug', async () => {
     mocks.learningApiGet.mockResolvedValue({
         id: '1caa16bb-6810-4e53-bb0d-91f0d5702333',

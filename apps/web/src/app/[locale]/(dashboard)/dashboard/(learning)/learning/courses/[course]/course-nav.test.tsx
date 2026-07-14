@@ -7,6 +7,7 @@ import { CourseNav } from './course-nav';
 const refreshMock = vi.fn();
 const actionMocks = vi.hoisted(() => ({
   publishCourse: vi.fn(),
+  restoreCourse: vi.fn(),
   unpublishCourse: vi.fn(),
 }));
 
@@ -33,6 +34,7 @@ vi.mock('@/i18n/navigation', () => ({
 
 vi.mock('@/lib/learning/actions', () => ({
   publishCourse: actionMocks.publishCourse,
+  restoreCourse: actionMocks.restoreCourse,
   unpublishCourse: actionMocks.unpublishCourse,
 }));
 
@@ -53,6 +55,7 @@ describe('CourseNav', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     actionMocks.publishCourse.mockResolvedValue({ success: true, data: null });
+    actionMocks.restoreCourse.mockResolvedValue({ success: true, data: null });
     actionMocks.unpublishCourse.mockResolvedValue({ success: true, data: null });
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
@@ -141,5 +144,31 @@ describe('CourseNav', () => {
     fireEvent.click(screen.getByRole('button', { name: /unpublish course/i }));
 
     expect(actionMocks.unpublishCourse).toHaveBeenCalledWith('ai-for-boss-encounters-by-gameguild');
+    expect(await screen.findByRole('button', { name: /^publish$/i })).toBeEnabled();
+  });
+
+  it('restores an archived course to draft before it can be published again', async () => {
+    render(
+      <CourseNav
+        courseTitle="AI for Boss Encounters"
+        courseDescription="Build readable encounter AI."
+        courseStatus="archived"
+        courseSlug="ai-for-boss-encounters"
+        courseRouteParam="ai-for-boss-encounters-by-gameguild"
+        locale="en-US"
+        features={enabledFeatures}
+      >
+        <div>Course editor content</div>
+      </CourseNav>,
+    );
+
+    const restoreButton = screen.getByRole('button', { name: /^restore$/i });
+    expect(restoreButton).toBeEnabled();
+    fireEvent.click(restoreButton);
+
+    expect(actionMocks.restoreCourse).toHaveBeenCalledWith('ai-for-boss-encounters-by-gameguild');
+    expect(actionMocks.publishCourse).not.toHaveBeenCalled();
+    expect(await screen.findByText('Draft')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /^publish$/i })).toBeEnabled();
   });
 });
