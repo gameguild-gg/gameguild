@@ -110,11 +110,16 @@ function detectLatestDefaultBranchSha(repo: string, envVar: string, fallback: st
 
 // ─────────────── source download ───────────────
 
-function downloadTarball(repo: string, tag: string, destName: string): string {
+function downloadTarball(repo: string, tag: string, destName: string, keyFile = 'CMakeLists.txt'): string {
     const destDir = path.join(USERLAND_DIR, destName);
-    if (fs.existsSync(destDir) && fs.readdirSync(destDir).length > 0) {
+    const isSourceValid = fs.existsSync(path.join(destDir, keyFile));
+    if (isSourceValid) {
         console.log(`Using existing source: ${destName}`);
         return destDir;
+    }
+    if (fs.existsSync(destDir)) {
+        console.log(`Removing incomplete source dir: ${destName}`);
+        shell.rm('-rf', destDir);
     }
     shell.mkdir('-p', destDir);
     const tarball = path.join(USERLAND_DIR, `${destName}.tar.gz`);
@@ -333,9 +338,10 @@ for (const lib of COMPANIONS) {
             continue;
         }
         const tag = detectLatestDefaultBranchSha(lib.repo, lib.envVar, lib.fallback ?? 'master');
+        const keyFile = lib.headerSubpath || lib.headerName;
         let srcDir: string;
         try {
-            srcDir = downloadTarball(lib.repo, tag, `${lib.libName}-${tag}`);
+            srcDir = downloadTarball(lib.repo, tag, `${lib.libName}-${tag}`, keyFile);
         } catch (e) {
             console.warn(`  ${lib.repo}: download failed, skipping (${(e as Error).message})`);
             continue;
