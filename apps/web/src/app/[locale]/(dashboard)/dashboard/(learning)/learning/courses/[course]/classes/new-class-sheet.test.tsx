@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -23,14 +23,11 @@ describe('NewClassSheet', () => {
     render(<NewClassSheet courseId="course-1" />);
 
     await user.click(screen.getByRole('button', { name: 'New class' }));
-    await user.type(screen.getByLabelText('Class name'), '2026.2 - Evening');
-    await user.clear(screen.getByLabelText('Start date'));
-    await user.type(screen.getByLabelText('Start date'), '2026-08-12');
-    await user.clear(screen.getByLabelText('End date'));
-    await user.type(screen.getByLabelText('End date'), '2026-12-18');
-    await user.clear(screen.getByLabelText('Capacity'));
-    await user.type(screen.getByLabelText('Capacity'), '24');
-    await user.type(screen.getByLabelText('Meeting pattern'), 'Tue/Thu - 19:00');
+    fireEvent.change(screen.getByLabelText('Class name'), { target: { value: '2026.2 - Evening' } });
+    fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2026-08-12' } });
+    fireEvent.change(screen.getByLabelText('End date'), { target: { value: '2026-12-18' } });
+    fireEvent.change(screen.getByLabelText('Capacity'), { target: { value: '24' } });
+    fireEvent.change(screen.getByLabelText('Meeting pattern'), { target: { value: 'Tue/Thu - 19:00' } });
     await user.click(screen.getByRole('button', { name: 'Create and build schedule' }));
 
     await waitFor(() => {
