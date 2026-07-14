@@ -4,7 +4,7 @@ import React from 'react';
 
 /**
  * Error boundary for Class Detail route.
- * Catches errors from getCourseClass() or child components.
+ * Catches errors from the cohort workspace or child routes.
  */
 export default function Error({
   error,
