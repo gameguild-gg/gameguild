@@ -4137,6 +4137,25 @@ export interface LearningCertificatesUpdateCertificateTemplateInput {
   isActive?: boolean;
 }
 
+export interface LearningCohortsApplyCohortScheduleInput {
+  expectedVersion?: number;
+  rules?: LearningCohortsPreviewCohortScheduleInput;
+  confirmAdvisories?: boolean;
+}
+
+export interface LearningCohortsCohortCalendarEntry {
+  cohortId?: string;
+  cohortName?: string | null;
+  itemId?: string;
+  type?: LearningCohortsCohortScheduleItemType;
+  title?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  availableFrom?: string | null;
+  dueAt?: string | null;
+  status?: LearningCohortsCohortScheduleItemStatus;
+}
+
 export interface LearningCohortsCohort {
   id?: string;
   courseId?: string;
@@ -4154,9 +4173,100 @@ export interface LearningCohortsCohort {
   instructorId?: string | null;
   meetingSchedule?: string | null;
   createdAt?: string;
+  nextMeetingAt?: string | null;
+  conflictCount?: number;
+  schedule?: LearningCohortsCohortScheduleSummary;
+}
+
+export type LearningCohortsCohortPacingMode = 'OneModulePerWeek' | 'OneLessonPerMeeting' | 'FixedLessonsPerWeek' | 'Manual';
+
+export type LearningCohortsCohortReleasePolicy = 'Weekly' | 'BeforeMeeting' | 'Manual' | 'Immediately';
+
+export interface LearningCohortsCohortScheduleConflict {
+  code?: string | null;
+  severity?: LearningCohortsScheduleConflictSeverity;
+  message?: string | null;
+  programContentId?: string | null;
+  assessmentId?: string | null;
+}
+
+export interface LearningCohortsCohortSchedule {
+  id?: string;
+  cohortId?: string;
+  version?: number;
+  timezoneId?: string | null;
+  meetingDays?: Array<SystemDayOfWeek> | null;
+  meetingStartTime?: string;
+  meetingDurationMinutes?: number;
+  pacingMode?: LearningCohortsCohortPacingMode;
+  unitsPerPeriod?: number;
+  releasePolicy?: LearningCohortsCohortReleasePolicy;
+  items?: Array<LearningCohortsCohortScheduleItem> | null;
+  unscheduledContentIds?: Array<string> | null;
+}
+
+export interface LearningCohortsCohortScheduleItem {
+  id?: string;
+  programContentId?: string | null;
+  assessmentId?: string | null;
+  type?: LearningCohortsCohortScheduleItemType;
+  instructionalWeek?: number;
+  sortOrder?: number;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  dueAt?: string | null;
+  title?: string | null;
+  location?: string | null;
+  meetingUrl?: string | null;
+  status?: LearningCohortsCohortScheduleItemStatus;
+  visibilityOverride?: LearningCohortsCohortVisibilityOverride;
+}
+
+export type LearningCohortsCohortScheduleItemStatus = 'Draft' | 'Scheduled' | 'Published' | 'Completed' | 'Cancelled';
+
+export type LearningCohortsCohortScheduleItemType = 'ContentRelease' | 'LiveSession' | 'AssessmentWindow' | 'Milestone';
+
+export interface LearningCohortsCohortSchedulePreview {
+  items?: Array<LearningCohortsCohortSchedulePreviewItem> | null;
+  conflicts?: Array<LearningCohortsCohortScheduleConflict> | null;
+  calculatedEndDate?: string;
+  hasBlockingConflicts?: boolean;
+}
+
+export interface LearningCohortsCohortSchedulePreviewItem {
+  programContentId?: string | null;
+  assessmentId?: string | null;
+  type?: LearningCohortsCohortScheduleItemType;
+  instructionalWeek?: number;
+  sortOrder?: number;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  dueAt?: string | null;
+  title?: string | null;
+}
+
+export interface LearningCohortsCohortScheduleSummary {
+  version?: number;
+  timezoneId?: string | null;
+  meetingDays?: Array<SystemDayOfWeek> | null;
+  meetingStartTime?: string;
+  pacingMode?: LearningCohortsCohortPacingMode;
+  releasePolicy?: LearningCohortsCohortReleasePolicy;
+  itemCount?: number;
 }
 
 export type LearningCohortsCohortStatus = 'Scheduled' | 'Active' | 'Completed' | 'Cancelled';
+
+export type LearningCohortsCohortVisibilityOverride = 'Inherited' | 'Hidden' | 'Visible';
+
+export interface LearningCohortsCourseCohortCalendar {
+  courseId?: string;
+  entries?: Array<LearningCohortsCohortCalendarEntry> | null;
+}
 
 export interface LearningCohortsCreateCohortInput {
   courseId?: string;
@@ -4170,6 +4280,30 @@ export interface LearningCohortsCreateCohortInput {
   meetingSchedule?: string | null;
 }
 
+export interface LearningCohortsPreviewCohortScheduleInput {
+  firstInstructionalDate?: string;
+  cohortEndDate?: string;
+  timezoneId?: string | null;
+  meetingDays?: Array<SystemDayOfWeek> | null;
+  meetingStartTime?: string;
+  meetingDurationMinutes?: number;
+  pacingMode?: LearningCohortsCohortPacingMode;
+  unitsPerPeriod?: number;
+  releasePolicy?: LearningCohortsCohortReleasePolicy;
+  skippedDates?: Array<string> | null;
+  assessmentDueOffsetDays?: number;
+}
+
+export type LearningCohortsScheduleConflictSeverity = 'Advisory' | 'Blocking';
+
+export type LearningCohortsScheduleShiftScope = 'Single' | 'Following';
+
+export interface LearningCohortsShiftCohortScheduleInput {
+  expectedVersion?: number;
+  days?: number;
+  scope?: LearningCohortsScheduleShiftScope;
+}
+
 export interface LearningCohortsUpdateCohortInput {
   name?: string | null;
   description?: string | null;
@@ -4178,6 +4312,24 @@ export interface LearningCohortsUpdateCohortInput {
   maxCapacity?: number | null;
   instructorId?: string | null;
   meetingSchedule?: string | null;
+}
+
+export interface LearningCohortsUpdateCohortScheduleItemInput {
+  title?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  dueAt?: string | null;
+  location?: string | null;
+  meetingUrl?: string | null;
+  status?: LearningCohortsCohortScheduleItemStatus;
+  visibilityOverride?: LearningCohortsCohortVisibilityOverride;
+}
+
+export interface LearningCohortsUpdateCohortScheduleInput {
+  expectedVersion?: number;
+  item?: LearningCohortsUpdateCohortScheduleItemInput;
 }
 
 export interface LearningCoursesActivityGrade {
@@ -6354,6 +6506,8 @@ export interface SocialReactionsTargetReactionSummary {
   total?: number;
 }
 
+export type SystemDayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+
 export interface TenantInfo {
   id?: string;
   name?: string | null;
@@ -7322,10 +7476,30 @@ export let LearningCertificatesCreateCertificateTemplateInputSchema: z.ZodType<L
 export let LearningCertificatesIssueCertificateInputSchema: z.ZodType<LearningCertificatesIssueCertificateInput>;
 export let LearningCertificatesRevokeCertificateInputSchema: z.ZodType<LearningCertificatesRevokeCertificateInput>;
 export let LearningCertificatesUpdateCertificateTemplateInputSchema: z.ZodType<LearningCertificatesUpdateCertificateTemplateInput>;
+export let LearningCohortsApplyCohortScheduleInputSchema: z.ZodType<LearningCohortsApplyCohortScheduleInput>;
+export let LearningCohortsCohortCalendarEntrySchema: z.ZodType<LearningCohortsCohortCalendarEntry>;
 export let LearningCohortsCohortSchema: z.ZodType<LearningCohortsCohort>;
+export let LearningCohortsCohortPacingModeSchema: z.ZodType<LearningCohortsCohortPacingMode>;
+export let LearningCohortsCohortReleasePolicySchema: z.ZodType<LearningCohortsCohortReleasePolicy>;
+export let LearningCohortsCohortScheduleConflictSchema: z.ZodType<LearningCohortsCohortScheduleConflict>;
+export let LearningCohortsCohortScheduleSchema: z.ZodType<LearningCohortsCohortSchedule>;
+export let LearningCohortsCohortScheduleItemSchema: z.ZodType<LearningCohortsCohortScheduleItem>;
+export let LearningCohortsCohortScheduleItemStatusSchema: z.ZodType<LearningCohortsCohortScheduleItemStatus>;
+export let LearningCohortsCohortScheduleItemTypeSchema: z.ZodType<LearningCohortsCohortScheduleItemType>;
+export let LearningCohortsCohortSchedulePreviewSchema: z.ZodType<LearningCohortsCohortSchedulePreview>;
+export let LearningCohortsCohortSchedulePreviewItemSchema: z.ZodType<LearningCohortsCohortSchedulePreviewItem>;
+export let LearningCohortsCohortScheduleSummarySchema: z.ZodType<LearningCohortsCohortScheduleSummary>;
 export let LearningCohortsCohortStatusSchema: z.ZodType<LearningCohortsCohortStatus>;
+export let LearningCohortsCohortVisibilityOverrideSchema: z.ZodType<LearningCohortsCohortVisibilityOverride>;
+export let LearningCohortsCourseCohortCalendarSchema: z.ZodType<LearningCohortsCourseCohortCalendar>;
 export let LearningCohortsCreateCohortInputSchema: z.ZodType<LearningCohortsCreateCohortInput>;
+export let LearningCohortsPreviewCohortScheduleInputSchema: z.ZodType<LearningCohortsPreviewCohortScheduleInput>;
+export let LearningCohortsScheduleConflictSeveritySchema: z.ZodType<LearningCohortsScheduleConflictSeverity>;
+export let LearningCohortsScheduleShiftScopeSchema: z.ZodType<LearningCohortsScheduleShiftScope>;
+export let LearningCohortsShiftCohortScheduleInputSchema: z.ZodType<LearningCohortsShiftCohortScheduleInput>;
 export let LearningCohortsUpdateCohortInputSchema: z.ZodType<LearningCohortsUpdateCohortInput>;
+export let LearningCohortsUpdateCohortScheduleItemInputSchema: z.ZodType<LearningCohortsUpdateCohortScheduleItemInput>;
+export let LearningCohortsUpdateCohortScheduleInputSchema: z.ZodType<LearningCohortsUpdateCohortScheduleInput>;
 export let LearningCoursesActivityGradeSchema: z.ZodType<LearningCoursesActivityGrade>;
 export let LearningCoursesCircularDependencyCheckResultSchema: z.ZodType<LearningCoursesCircularDependencyCheckResult>;
 export let LearningCoursesCloneProgramSchema: z.ZodType<LearningCoursesCloneProgram>;
@@ -7560,6 +7734,7 @@ export let SocialReactionsReactionTypeSchema: z.ZodType<SocialReactionsReactionT
 export let SocialReactionsRemoveReactionInputSchema: z.ZodType<SocialReactionsRemoveReactionInput>;
 export let SocialReactionsSetReactionInputSchema: z.ZodType<SocialReactionsSetReactionInput>;
 export let SocialReactionsTargetReactionSummarySchema: z.ZodType<SocialReactionsTargetReactionSummary>;
+export let SystemDayOfWeekSchema: z.ZodType<SystemDayOfWeek>;
 export let TenantInfoSchema: z.ZodType<TenantInfo>;
 export let TestingLabAssignTestingLabRoleInputSchema: z.ZodType<TestingLabAssignTestingLabRoleInput>;
 export let TestingLabAttendanceStatusSchema: z.ZodType<TestingLabAttendanceStatus>;
@@ -12413,6 +12588,27 @@ LearningCertificatesUpdateCertificateTemplateInputSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+/** Zod schema for LearningCohortsApplyCohortScheduleInput */
+LearningCohortsApplyCohortScheduleInputSchema = z.object({
+  expectedVersion: z.number().int().optional(),
+  rules: z.lazy(() => LearningCohortsPreviewCohortScheduleInputSchema).optional(),
+  confirmAdvisories: z.boolean().optional(),
+});
+
+/** Zod schema for LearningCohortsCohortCalendarEntry */
+LearningCohortsCohortCalendarEntrySchema = z.object({
+  cohortId: z.string().uuid().optional(),
+  cohortName: z.string().nullable().optional(),
+  itemId: z.string().uuid().optional(),
+  type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
+  title: z.string().nullable().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => LearningCohortsCohortScheduleItemStatusSchema).optional(),
+});
+
 /** Zod schema for LearningCohortsCohort */
 LearningCohortsCohortSchema = z.object({
   id: z.string().uuid().optional(),
@@ -12431,10 +12627,131 @@ LearningCohortsCohortSchema = z.object({
   instructorId: z.string().uuid().nullable().optional(),
   meetingSchedule: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  nextMeetingAt: z.string().datetime().nullable().optional(),
+  conflictCount: z.number().int().optional(),
+  schedule: z.lazy(() => LearningCohortsCohortScheduleSummarySchema).optional(),
+});
+
+/** Zod schema for LearningCohortsCohortPacingMode */
+LearningCohortsCohortPacingModeSchema = z.enum(['OneModulePerWeek', 'OneLessonPerMeeting', 'FixedLessonsPerWeek', 'Manual']);
+
+/** Zod schema for LearningCohortsCohortReleasePolicy */
+LearningCohortsCohortReleasePolicySchema = z.enum(['Weekly', 'BeforeMeeting', 'Manual', 'Immediately']);
+
+/** Zod schema for LearningCohortsCohortScheduleConflict */
+LearningCohortsCohortScheduleConflictSchema = z.object({
+  code: z.string().nullable().optional(),
+  severity: z.lazy(() => LearningCohortsScheduleConflictSeveritySchema).optional(),
+  message: z.string().nullable().optional(),
+  programContentId: z.string().uuid().nullable().optional(),
+  assessmentId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for LearningCohortsCohortSchedule */
+LearningCohortsCohortScheduleSchema = z.object({
+  id: z.string().uuid().optional(),
+  cohortId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  timezoneId: z.string().nullable().optional(),
+  meetingDays: z
+    .array(z.lazy(() => SystemDayOfWeekSchema))
+    .nullable()
+    .optional(),
+  meetingStartTime: z.string().optional(),
+  meetingDurationMinutes: z.number().int().optional(),
+  pacingMode: z.lazy(() => LearningCohortsCohortPacingModeSchema).optional(),
+  unitsPerPeriod: z.number().int().optional(),
+  releasePolicy: z.lazy(() => LearningCohortsCohortReleasePolicySchema).optional(),
+  items: z
+    .array(z.lazy(() => LearningCohortsCohortScheduleItemSchema))
+    .nullable()
+    .optional(),
+  unscheduledContentIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for LearningCohortsCohortScheduleItem */
+LearningCohortsCohortScheduleItemSchema = z.object({
+  id: z.string().uuid().optional(),
+  programContentId: z.string().uuid().nullable().optional(),
+  assessmentId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
+  instructionalWeek: z.number().int().optional(),
+  sortOrder: z.number().int().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  title: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  meetingUrl: z.string().nullable().optional(),
+  status: z.lazy(() => LearningCohortsCohortScheduleItemStatusSchema).optional(),
+  visibilityOverride: z.lazy(() => LearningCohortsCohortVisibilityOverrideSchema).optional(),
+});
+
+/** Zod schema for LearningCohortsCohortScheduleItemStatus */
+LearningCohortsCohortScheduleItemStatusSchema = z.enum(['Draft', 'Scheduled', 'Published', 'Completed', 'Cancelled']);
+
+/** Zod schema for LearningCohortsCohortScheduleItemType */
+LearningCohortsCohortScheduleItemTypeSchema = z.enum(['ContentRelease', 'LiveSession', 'AssessmentWindow', 'Milestone']);
+
+/** Zod schema for LearningCohortsCohortSchedulePreview */
+LearningCohortsCohortSchedulePreviewSchema = z.object({
+  items: z
+    .array(z.lazy(() => LearningCohortsCohortSchedulePreviewItemSchema))
+    .nullable()
+    .optional(),
+  conflicts: z
+    .array(z.lazy(() => LearningCohortsCohortScheduleConflictSchema))
+    .nullable()
+    .optional(),
+  calculatedEndDate: z.string().date().optional(),
+  hasBlockingConflicts: z.boolean().optional(),
+});
+
+/** Zod schema for LearningCohortsCohortSchedulePreviewItem */
+LearningCohortsCohortSchedulePreviewItemSchema = z.object({
+  programContentId: z.string().uuid().nullable().optional(),
+  assessmentId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
+  instructionalWeek: z.number().int().optional(),
+  sortOrder: z.number().int().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  title: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCohortsCohortScheduleSummary */
+LearningCohortsCohortScheduleSummarySchema = z.object({
+  version: z.number().int().optional(),
+  timezoneId: z.string().nullable().optional(),
+  meetingDays: z
+    .array(z.lazy(() => SystemDayOfWeekSchema))
+    .nullable()
+    .optional(),
+  meetingStartTime: z.string().optional(),
+  pacingMode: z.lazy(() => LearningCohortsCohortPacingModeSchema).optional(),
+  releasePolicy: z.lazy(() => LearningCohortsCohortReleasePolicySchema).optional(),
+  itemCount: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCohortsCohortStatus */
 LearningCohortsCohortStatusSchema = z.enum(['Scheduled', 'Active', 'Completed', 'Cancelled']);
+
+/** Zod schema for LearningCohortsCohortVisibilityOverride */
+LearningCohortsCohortVisibilityOverrideSchema = z.enum(['Inherited', 'Hidden', 'Visible']);
+
+/** Zod schema for LearningCohortsCourseCohortCalendar */
+LearningCohortsCourseCohortCalendarSchema = z.object({
+  courseId: z.string().uuid().optional(),
+  entries: z
+    .array(z.lazy(() => LearningCohortsCohortCalendarEntrySchema))
+    .nullable()
+    .optional(),
+});
 
 /** Zod schema for LearningCohortsCreateCohortInput */
 LearningCohortsCreateCohortInputSchema = z.object({
@@ -12449,6 +12766,37 @@ LearningCohortsCreateCohortInputSchema = z.object({
   meetingSchedule: z.string().nullable().optional(),
 });
 
+/** Zod schema for LearningCohortsPreviewCohortScheduleInput */
+LearningCohortsPreviewCohortScheduleInputSchema = z.object({
+  firstInstructionalDate: z.string().date().optional(),
+  cohortEndDate: z.string().date().optional(),
+  timezoneId: z.string().nullable().optional(),
+  meetingDays: z
+    .array(z.lazy(() => SystemDayOfWeekSchema))
+    .nullable()
+    .optional(),
+  meetingStartTime: z.string().optional(),
+  meetingDurationMinutes: z.number().int().optional(),
+  pacingMode: z.lazy(() => LearningCohortsCohortPacingModeSchema).optional(),
+  unitsPerPeriod: z.number().int().optional(),
+  releasePolicy: z.lazy(() => LearningCohortsCohortReleasePolicySchema).optional(),
+  skippedDates: z.array(z.string().date()).nullable().optional(),
+  assessmentDueOffsetDays: z.number().int().optional(),
+});
+
+/** Zod schema for LearningCohortsScheduleConflictSeverity */
+LearningCohortsScheduleConflictSeveritySchema = z.enum(['Advisory', 'Blocking']);
+
+/** Zod schema for LearningCohortsScheduleShiftScope */
+LearningCohortsScheduleShiftScopeSchema = z.enum(['Single', 'Following']);
+
+/** Zod schema for LearningCohortsShiftCohortScheduleInput */
+LearningCohortsShiftCohortScheduleInputSchema = z.object({
+  expectedVersion: z.number().int().optional(),
+  days: z.number().int().optional(),
+  scope: z.lazy(() => LearningCohortsScheduleShiftScopeSchema).optional(),
+});
+
 /** Zod schema for LearningCohortsUpdateCohortInput */
 LearningCohortsUpdateCohortInputSchema = z.object({
   name: z.string().nullable().optional(),
@@ -12458,6 +12806,26 @@ LearningCohortsUpdateCohortInputSchema = z.object({
   maxCapacity: z.number().int().nullable().optional(),
   instructorId: z.string().uuid().nullable().optional(),
   meetingSchedule: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCohortsUpdateCohortScheduleItemInput */
+LearningCohortsUpdateCohortScheduleItemInputSchema = z.object({
+  title: z.string().nullable().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  location: z.string().nullable().optional(),
+  meetingUrl: z.string().nullable().optional(),
+  status: z.lazy(() => LearningCohortsCohortScheduleItemStatusSchema).optional(),
+  visibilityOverride: z.lazy(() => LearningCohortsCohortVisibilityOverrideSchema).optional(),
+});
+
+/** Zod schema for LearningCohortsUpdateCohortScheduleInput */
+LearningCohortsUpdateCohortScheduleInputSchema = z.object({
+  expectedVersion: z.number().int().optional(),
+  item: z.lazy(() => LearningCohortsUpdateCohortScheduleItemInputSchema).optional(),
 });
 
 /** Zod schema for LearningCoursesActivityGrade */
@@ -15054,6 +15422,9 @@ SocialReactionsTargetReactionSummarySchema = z.object({
     .optional(),
   total: z.number().int().optional(),
 });
+
+/** Zod schema for SystemDayOfWeek */
+SystemDayOfWeekSchema = z.enum(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
 
 /** Zod schema for TenantInfo */
 TenantInfoSchema = z.object({
