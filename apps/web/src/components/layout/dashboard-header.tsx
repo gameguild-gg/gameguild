@@ -105,14 +105,14 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
   const breadcrumbs = generateBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-40 grid h-16 min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b px-3 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,32rem)_minmax(0,1fr)] sm:px-4">
+    <header className="sticky top-0 z-40 grid h-16 min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b px-3 sm:px-4 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,32rem)_minmax(0,1fr)]">
       <div className="flex min-w-0 items-center gap-2">
         <SidebarTrigger />
         {breadcrumbs.length > 0 && (
           <>
             <Separator orientation="vertical" className="mr-2 hidden data-[orientation=vertical]:h-4 sm:block" />
-            <Breadcrumb className="hidden min-w-0 sm:block">
-              <BreadcrumbList>
+            <Breadcrumb className="hidden min-w-0 flex-1 overflow-hidden sm:block">
+              <BreadcrumbList className="flex-nowrap overflow-hidden">
                 <BreadcrumbItem>
                   {breadcrumbs[0]?.href ? (
                     <BreadcrumbLink asChild>
@@ -142,7 +142,7 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
           </>
         )}
       </div>
-      <div className="hidden min-w-0 items-center justify-center sm:flex">
+      <div className="hidden min-w-0 items-center justify-center xl:flex">
         {/* Search */}
         <button
           type="button"
@@ -162,7 +162,7 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
           type="button"
           variant="ghost"
           size="icon"
-          className="sm:hidden"
+          className="xl:hidden"
           onClick={openDashboardCommandPalette}
           aria-label="Search dashboard"
         >

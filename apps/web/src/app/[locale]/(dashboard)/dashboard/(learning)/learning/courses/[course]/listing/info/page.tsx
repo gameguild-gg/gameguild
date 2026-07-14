@@ -39,10 +39,12 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
   const [skillsProvided, setSkillsProvided] = useState('');
 
   useEffect(() => {
+    let active = true;
+
     params.then(async (p) => {
       try {
         const data = await fetchCourse(p.course);
-        if (data) {
+        if (active && data) {
           setCourseId(data.id);
           setCourse(data);
           setTitle(data.title);
@@ -57,8 +59,12 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
       } catch {
         // ignore
       }
-      setLoading(false);
+      if (active) setLoading(false);
     });
+
+    return () => {
+      active = false;
+    };
   }, [params]);
 
   function handleSubmit(e: React.FormEvent) {

@@ -114,6 +114,8 @@ describe('course settings client pages', () => {
     await waitFor(() => {
       expect(archiveCourse).toHaveBeenCalledWith('course-1');
     });
+    expect(await screen.findByText('Archived successfully.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /archive course/i })).not.toBeInTheDocument();
     expect(refreshMock).toHaveBeenCalled();
   });
 
