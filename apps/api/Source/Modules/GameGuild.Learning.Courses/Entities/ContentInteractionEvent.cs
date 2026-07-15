@@ -47,6 +47,11 @@ public sealed class ContentInteractionEvent : EntityBase
             throw new ArgumentException("Interaction ID is required.", nameof(interactionId));
         }
 
+        if (!Enum.IsDefined(type))
+        {
+            throw new ArgumentOutOfRangeException(nameof(type), type, "Interaction event type is not supported.");
+        }
+
         if (durationSeconds <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(durationSeconds), "Duration must be positive when provided.");

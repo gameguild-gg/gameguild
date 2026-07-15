@@ -13,7 +13,7 @@ namespace GameGuild.Learning.Courses;
 public sealed class LessonInteractionEventsController(ISender sender) : BaseApiController
 {
     [HttpPost]
-    [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit, "programId")]
+    [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
     public async Task<ActionResult<ContentInteractionEventDto>> Record(
         Guid programId,
         Guid interactionId,

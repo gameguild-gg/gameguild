@@ -210,6 +210,14 @@ public class ProgramContent : EntityBase
         if (Type == ProgramContentType.Lesson)
         {
             LessonFormat ??= LessonContentFormatInference.FromBody(Body);
+            if (!Enum.IsDefined(LessonFormat.Value))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(LessonFormat),
+                    LessonFormat,
+                    "Lesson format is not supported.");
+            }
+
             GradingMethod = GradingMethod.None;
             MaxPoints = null;
             return;

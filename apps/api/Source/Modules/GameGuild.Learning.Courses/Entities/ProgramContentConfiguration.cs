@@ -15,7 +15,7 @@ public class ProgramContentConfiguration : IEntityTypeConfiguration<ProgramConte
         "\"Type\" NOT IN (0, 1) OR (\"GradingMethod\" = 0 AND \"MaxPoints\" IS NULL)");
       table.HasCheckConstraint(
         "CK_program_contents_LessonFormat",
-        "((\"Type\" IN (0, 1)) AND \"LessonFormat\" IS NOT NULL) OR ((\"Type\" NOT IN (0, 1)) AND \"LessonFormat\" IS NULL)");
+        "((\"Type\" IN (0, 1)) AND \"LessonFormat\" IN (0, 1, 2, 3)) OR ((\"Type\" NOT IN (0, 1)) AND \"LessonFormat\" IS NULL)");
     });
 
     // Configure relationship with Program (can't be done with annotations)

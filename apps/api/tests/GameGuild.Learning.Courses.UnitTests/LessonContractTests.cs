@@ -1,4 +1,6 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Xunit;
 
 namespace GameGuild.Learning.Courses.UnitTests;
@@ -133,6 +135,34 @@ public sealed class LessonContractTests
         assignment.NormalizeLearningContract();
 
         assignment.LessonFormat.Should().BeNull();
+    }
+
+    [Fact]
+    public void NormalizeLearningContract_WhenLessonFormatIsUnknown_ShouldRejectIt()
+    {
+        var lesson = new ProgramContent
+        {
+            Type = ProgramContentType.Lesson,
+            LessonFormat = (LessonContentFormat)999,
+        };
+
+        var action = lesson.NormalizeLearningContract;
+
+        action.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName(nameof(ProgramContent.LessonFormat));
+    }
+
+    [Fact]
+    public void DatabaseContract_ShouldRestrictPersistedLessonFormatValues()
+    {
+        var modelBuilder = new ModelBuilder(new ConventionSet());
+        var entity = modelBuilder.Entity<ProgramContent>();
+
+        new ProgramContentConfiguration().Configure(entity);
+
+        var constraint = entity.Metadata.GetCheckConstraints()
+            .Single(item => item.Name == "CK_program_contents_LessonFormat");
+        constraint.Sql.Should().Contain("\"LessonFormat\" IN (0, 1, 2, 3)");
     }
 
     private static CreateProgramContentDto CreateLessonDto(string body) =>

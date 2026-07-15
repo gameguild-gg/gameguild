@@ -1,7 +1,10 @@
 using FluentAssertions;
+using FluentValidation;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
 using Xunit;
@@ -70,6 +73,77 @@ public sealed class LessonInteractionTrackingTests
     }
 
     [Fact]
+    public void CreateEvent_WhenTypeIsUnknown_ShouldRejectIt()
+    {
+        var action = () => ContentInteractionEvent.Create(
+            Guid.NewGuid(),
+            (ContentInteractionEventType)999);
+
+        action.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName("type");
+    }
+
+    [Fact]
+    public void DatabaseContract_ShouldRestrictPersistedInteractionEventTypes()
+    {
+        var modelBuilder = new ModelBuilder(new ConventionSet());
+        var entity = modelBuilder.Entity<ContentInteractionEvent>();
+
+        new ContentInteractionEventConfiguration().Configure(entity);
+
+        var constraint = entity.Metadata.GetCheckConstraints()
+            .Single(item => item.Name == "CK_content_interaction_events_Type_Valid");
+        constraint.Sql.Should().Be("\"Type\" BETWEEN 0 AND 8");
+    }
+
+    [Fact]
+    public void RecordEventCommandValidator_WhenTypeIsUnknown_ShouldRejectIt()
+    {
+        var validatorType = typeof(RecordContentInteractionEventCommand).Assembly
+            .GetTypes()
+            .SingleOrDefault(type =>
+                !type.IsAbstract &&
+                typeof(IValidator<RecordContentInteractionEventCommand>).IsAssignableFrom(type));
+        validatorType.Should().NotBeNull();
+        var validator = (IValidator<RecordContentInteractionEventCommand>)Activator.CreateInstance(validatorType!)!;
+        var command = new RecordContentInteractionEventCommand(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            (ContentInteractionEventType)999);
+
+        var result = validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(command.Type));
+    }
+
+    [Fact]
+    public void InteractionEventHandlers_ShouldDependOnAuthenticatedRequestContext()
+    {
+        var recordParameters = typeof(RecordContentInteractionEventCommandHandler)
+            .GetConstructors().Single().GetParameters().Select(parameter => parameter.ParameterType);
+        var queryParameters = typeof(GetContentInteractionEventsQueryHandler)
+            .GetConstructors().Single().GetParameters().Select(parameter => parameter.ParameterType);
+
+        recordParameters.Should().Contain(typeof(IRequestContextAccessor));
+        queryParameters.Should().Contain(typeof(IRequestContextAccessor));
+    }
+
+    [Fact]
+    public void RecordEndpoint_ShouldRequireReadPermissionForSelfTracking()
+    {
+        var method = typeof(LessonInteractionEventsController).GetMethod(
+            nameof(LessonInteractionEventsController.Record));
+
+        var permission = method!.GetCustomAttributes(
+                typeof(RequireResourcePermissionAttribute<PermissionType, Program>),
+                inherit: true)
+            .Cast<RequireResourcePermissionAttribute<PermissionType, Program>>()
+            .Single();
+        permission.RequiredPermission.Should().Be(PermissionType.Read);
+    }
+
+    [Fact]
     public async Task RecordEventHandler_WhenHeartbeatIsRetried_ShouldBeIdempotent()
     {
         await using var context = TrackingTestDbContext.Create();
@@ -87,7 +161,9 @@ public sealed class LessonInteractionTrackingTests
         context.Set<ProgramContent>().Add(lesson);
         context.Set<ContentInteraction>().Add(interaction);
         await context.SaveChangesAsync();
-        var handler = new RecordContentInteractionEventCommandHandler(context);
+        var handler = new RecordContentInteractionEventCommandHandler(
+            context,
+            new TestRequestContextAccessor(interaction.UserId));
         var command = new RecordContentInteractionEventCommand(
             lesson.ProgramId,
             interaction.Id,
@@ -112,6 +188,77 @@ public sealed class LessonInteractionTrackingTests
             command with { ProgramId = Guid.NewGuid() },
             CancellationToken.None);
         await crossCourseRetry.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("Content interaction was not found in this course.");
+    }
+
+    [Fact]
+    public async Task RecordEventHandler_WhenConcurrentRetryWins_ShouldReturnThePersistedEvent()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var databaseRoot = new InMemoryDatabaseRoot();
+        await using var context = TrackingTestDbContext.Create(databaseName, databaseRoot);
+        var lesson = CreateLesson();
+        var interaction = CreateInteraction();
+        interaction.ContentId = lesson.Id;
+        interaction.Content = lesson;
+        context.Set<ProgramContent>().Add(lesson);
+        context.Set<ContentInteraction>().Add(interaction);
+        await context.SaveChangesAsync();
+        var command = new RecordContentInteractionEventCommand(
+            lesson.ProgramId,
+            interaction.Id,
+            ContentInteractionEventType.Heartbeat,
+            DurationSeconds: 30,
+            IdempotencyKey: "heartbeat-race");
+        var winningEvent = ContentInteractionEvent.Create(
+            interaction.Id,
+            command.Type,
+            command.DurationSeconds,
+            idempotencyKey: command.IdempotencyKey);
+        context.BeforeEventSaveAsync = async cancellationToken =>
+        {
+            await using var winningContext = TrackingTestDbContext.Create(databaseName, databaseRoot);
+            var winningInteraction = await winningContext.Set<ContentInteraction>()
+                .SingleAsync(item => item.Id == interaction.Id, cancellationToken);
+            winningInteraction.AddTimeSpentSeconds(command.DurationSeconds!.Value);
+            winningContext.Set<ContentInteractionEvent>().Add(winningEvent);
+            await winningContext.SaveChangesAsync(cancellationToken);
+        };
+        var handler = new RecordContentInteractionEventCommandHandler(
+            context,
+            new TestRequestContextAccessor(interaction.UserId));
+
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        result.Id.Should().Be(winningEvent.Id);
+        await using var verificationContext = TrackingTestDbContext.Create(databaseName, databaseRoot);
+        (await verificationContext.Set<ContentInteractionEvent>().CountAsync()).Should().Be(1);
+        (await verificationContext.Set<ContentInteraction>().SingleAsync()).TimeSpentSeconds.Should().Be(30);
+    }
+
+    [Fact]
+    public async Task RecordEventHandler_WhenInteractionBelongsToAnotherLearner_ShouldRejectIt()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var lesson = CreateLesson();
+        var interaction = CreateInteraction();
+        interaction.ContentId = lesson.Id;
+        interaction.Content = lesson;
+        context.Set<ProgramContent>().Add(lesson);
+        context.Set<ContentInteraction>().Add(interaction);
+        await context.SaveChangesAsync();
+        var handler = new RecordContentInteractionEventCommandHandler(
+            context,
+            new TestRequestContextAccessor(Guid.NewGuid()));
+
+        var action = () => handler.Handle(
+            new RecordContentInteractionEventCommand(
+                lesson.ProgramId,
+                interaction.Id,
+                ContentInteractionEventType.Opened),
+            CancellationToken.None);
+
+        await action.Should().ThrowAsync<RequestValidationException>()
             .WithMessage("Content interaction was not found in this course.");
     }
 
@@ -181,7 +328,9 @@ public sealed class LessonInteractionTrackingTests
             occurredAt: new DateTime(2026, 7, 15, 12, 0, 0, DateTimeKind.Utc));
         context.Set<ContentInteractionEvent>().AddRange(later, earlier);
         await context.SaveChangesAsync();
-        var handler = new GetContentInteractionEventsQueryHandler(context);
+        var handler = new GetContentInteractionEventsQueryHandler(
+            context,
+            new TestRequestContextAccessor(interaction.UserId));
 
         var result = await handler.Handle(
             new GetContentInteractionEventsQuery(lesson.ProgramId, interaction.Id),
@@ -192,6 +341,90 @@ public sealed class LessonInteractionTrackingTests
             ContentInteractionEventType.Paused);
     }
 
+    [Fact]
+    public async Task GetEventsHandler_WhenInteractionBelongsToAnotherLearner_ShouldRejectIt()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var lesson = CreateLesson();
+        var interaction = CreateInteraction();
+        interaction.ContentId = lesson.Id;
+        interaction.Content = lesson;
+        context.Set<ProgramContent>().Add(lesson);
+        context.Set<ContentInteraction>().Add(interaction);
+        await context.SaveChangesAsync();
+        var handler = new GetContentInteractionEventsQueryHandler(
+            context,
+            new TestRequestContextAccessor(Guid.NewGuid()));
+
+        var action = () => handler.Handle(
+            new GetContentInteractionEventsQuery(lesson.ProgramId, interaction.Id),
+            CancellationToken.None);
+
+        await action.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("Content interaction was not found in this course.");
+    }
+
+    [Fact]
+    public async Task StartContent_WhenCreatingInteraction_ShouldCopyTheEnrollmentUserId()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var lesson = CreateLesson();
+        var enrollment = new ProgramUser
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = lesson.ProgramId,
+            UserId = Guid.NewGuid(),
+            JoinedAt = SystemClock.UtcNow,
+        };
+        context.Set<ProgramContent>().Add(lesson);
+        context.Set<ProgramUser>().Add(enrollment);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(context);
+
+        var interaction = await service.StartContentAsync(enrollment.Id, lesson.Id);
+
+        interaction.UserId.Should().Be(enrollment.UserId);
+    }
+
+    [Fact]
+    public async Task StartContent_WhenPreviousInteractionWasSubmitted_ShouldRepairOwnershipOnTheNewAttempt()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var lesson = CreateLesson();
+        var enrollment = new ProgramUser
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = lesson.ProgramId,
+            UserId = Guid.NewGuid(),
+            JoinedAt = SystemClock.UtcNow,
+        };
+        var previousInteraction = CreateInteraction();
+        previousInteraction.ProgramUserId = enrollment.Id;
+        previousInteraction.ContentId = lesson.Id;
+        previousInteraction.Content = lesson;
+        previousInteraction.UserId = Guid.Empty;
+        previousInteraction.SubmittedAt = SystemClock.UtcNow;
+        context.Set<ProgramContent>().Add(lesson);
+        context.Set<ProgramUser>().Add(enrollment);
+        context.Set<ContentInteraction>().Add(previousInteraction);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(context);
+
+        var newAttempt = await service.StartContentAsync(enrollment.Id, lesson.Id);
+
+        newAttempt.Id.Should().NotBe(previousInteraction.Id);
+        newAttempt.UserId.Should().Be(enrollment.UserId);
+    }
+
+    private static ProgramContent CreateLesson() =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = Guid.NewGuid(),
+            Title = "Lesson",
+            Type = ProgramContentType.Lesson,
+        };
+
     private static ContentInteraction CreateInteraction() =>
         new()
         {
@@ -201,15 +434,62 @@ public sealed class LessonInteractionTrackingTests
             ProgramUserId = Guid.NewGuid(),
         };
 
+    private sealed class TestRequestContextAccessor(Guid? currentUserId) : IRequestContextAccessor
+    {
+        public Guid? CurrentUserId { get; } = currentUserId;
+
+        public Guid? CurrentTenantId => null;
+
+        public bool IsAuthenticated => CurrentUserId.HasValue;
+
+        public bool HasTenantContext => false;
+
+        public Task<UserInfo?> GetCurrentUserAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<UserInfo?>(CurrentUserId.HasValue
+                ? new UserInfo(CurrentUserId.Value, "learner@example.com", "Learner", true)
+                : null);
+
+        public Task<TenantInfo?> GetCurrentTenantAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<TenantInfo?>(null);
+    }
+
     private sealed class TrackingTestDbContext(DbContextOptions<TrackingTestDbContext> options)
         : DbContext(options), IApplicationDbContext
     {
-        public static TrackingTestDbContext Create()
+        public Func<CancellationToken, Task>? BeforeEventSaveAsync { get; set; }
+
+        public static TrackingTestDbContext Create(
+            string? databaseName = null,
+            InMemoryDatabaseRoot? databaseRoot = null)
         {
-            var options = new DbContextOptionsBuilder<TrackingTestDbContext>()
-                .UseInMemoryDatabase(Guid.NewGuid().ToString())
-                .Options;
+            var builder = new DbContextOptionsBuilder<TrackingTestDbContext>();
+            var resolvedName = databaseName ?? Guid.NewGuid().ToString();
+            if (databaseRoot is null)
+            {
+                builder.UseInMemoryDatabase(resolvedName);
+            }
+            else
+            {
+                builder.UseInMemoryDatabase(resolvedName, databaseRoot);
+            }
+
+            var options = builder.Options;
             return new TrackingTestDbContext(options);
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var beforeSave = BeforeEventSaveAsync;
+            if (beforeSave is not null &&
+                ChangeTracker.Entries<ContentInteractionEvent>()
+                    .Any(entry => entry.State == EntityState.Added))
+            {
+                BeforeEventSaveAsync = null;
+                await beforeSave(cancellationToken);
+                throw new DbUpdateException("Simulated concurrent idempotency conflict.");
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
         }
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
@@ -241,6 +521,16 @@ public sealed class LessonInteractionTrackingTests
                 entity.HasOne(item => item.Interaction)
                     .WithMany(interaction => interaction.Events)
                     .HasForeignKey(item => item.InteractionId);
+            });
+            modelBuilder.Entity<ProgramUser>(entity =>
+            {
+                entity.HasKey(item => item.Id);
+                entity.Ignore(item => item.User);
+                entity.Ignore(item => item.Program);
+                entity.Ignore(item => item.ContentInteractions);
+                entity.Ignore(item => item.ReceivedGrades);
+                entity.Ignore(item => item.GivenGrades);
+                entity.Ignore(item => item.ProgramRatings);
             });
         }
     }
