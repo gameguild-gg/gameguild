@@ -10,7 +10,6 @@ namespace GameGuild.Learning.Courses;
 /// Represents a user's interaction with program content, tracking progress and completion
 /// </summary>
 [Table("content_interactions")]
-[Index(nameof(UserId), nameof(ContentId))]
 [Index(nameof(UserId))]
 [Index(nameof(ContentId))]
 [Index(nameof(ProgramUserId))]
