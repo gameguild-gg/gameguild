@@ -53,6 +53,7 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
   // ── Lexical editor state (Lesson only) ──
   const initialLexicalState = useMemo(() => parseLexicalState(item.content), [item.content]);
   const editorStateRef = useRef<SerializedEditorState | null>(initialLexicalState);
+  const quizContentRef = useRef<string | undefined>(undefined);
 
   const handleEditorChange = useCallback(
     (state: SerializedEditorState) => {
@@ -60,6 +61,10 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
     },
     [],
   );
+
+  const handleQuizContentChange = useCallback((content: string) => {
+    quizContentRef.current = content;
+  }, []);
 
   const isLesson = item.type === 'Lesson';
   const isQuiz = item.type === 'Questionnaire';
@@ -73,9 +78,13 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
     setError(null);
     setSaved(false);
 
-    // For Lesson: serialize Lexical JSON. For Quiz: body is managed by the quiz engine.
+    // Lesson and quiz use different editor engines, but both persist into content.body.
     const bodyToSave =
-      isLesson && editorStateRef.current ? JSON.stringify(editorStateRef.current) : undefined;
+      isLesson && editorStateRef.current
+        ? JSON.stringify(editorStateRef.current)
+        : isQuiz
+          ? quizContentRef.current
+          : undefined;
 
     startTransition(async () => {
       const result = await updateContent({
@@ -157,7 +166,13 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
                 />
               )}
 
-              {isQuiz && <QuizContentEditor />}
+              {isQuiz && (
+                <QuizContentEditor
+                  key={item.id}
+                  initialContent={item.content}
+                  onChange={handleQuizContentChange}
+                />
+              )}
 
               {!isLesson && !isQuiz && (
                 <div className="space-y-2">
