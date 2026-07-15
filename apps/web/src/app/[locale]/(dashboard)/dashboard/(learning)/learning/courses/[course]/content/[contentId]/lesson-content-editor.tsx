@@ -18,7 +18,7 @@ const LESSON_EDITOR_FEATURES = {
   draggable: true,
   picker: true,
   blockEmbed: false,
-  blockInsertMenu: false,
+  blockInsertMenu: true,
   pageLayout: false,
   shortcuts: true,
   equation: true,
