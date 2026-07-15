@@ -12,8 +12,8 @@
 // separate, higher-level layer that lands later in the roadmap.
 
 import { ToolchainPreset, type EmceptionAPI } from 'emception';
-import type { ToolResult } from './tool-runner.js';
-import type { WorkerClient } from './worker-client.js';
+import type { ToolResult } from './tool-runner';
+import type { WorkerClient } from './worker-client';
 
 export interface CompilePaths {
     /** Source file path inside the VFS (also appears in error messages). */
@@ -25,9 +25,9 @@ export interface CompilePaths {
 }
 
 const DEFAULT_PATHS: CompilePaths = {
-    sourcePath: '/home/user/main.cpp',
-    objectPath: '/home/user/main.o',
-    wasmPath: '/home/user/main.wasm',
+    sourcePath: 'main.cpp',
+    objectPath: 'main.o',
+    wasmPath: 'main.wasm',
 };
 
 /**
@@ -547,9 +547,7 @@ export interface CompileAndRunResult {
  * End-to-end "edit → compile → link → run" cycle on top of the headless
  * `WorkerClient`. Stops early on compile or link failure.
  */
-type CompileAndRunRuntime = WorkerClient | Pick<EmceptionAPI, 'run' | 'workspace'>;
-
-export async function compileAndRun(client: CompileAndRunRuntime, opts: CompileAndRunOptions): Promise<CompileAndRunResult> {
+export async function compileAndRun(client: WorkerClient | EmceptionAPI, opts: CompileAndRunOptions): Promise<CompileAndRunResult> {
     const preset = TOOLCHAIN_PRESETS[opts.toolchain] as NativePreset | undefined;
     if (!preset) {
         throw new Error(`compileAndRun: unknown toolchain '${opts.toolchain}'`);
@@ -557,56 +555,38 @@ export async function compileAndRun(client: CompileAndRunRuntime, opts: CompileA
 
     const paths: CompilePaths = { ...DEFAULT_PATHS, ...opts.paths };
     const cwd = opts.cwd ?? dirname(paths.sourcePath);
+    const runOpts = {
+        cwd,
+        onStdout: opts.onStdout,
+        onStderr: opts.onStderr,
+    };
+
     opts.onPhase?.('write');
-    const source = new TextEncoder().encode(opts.source);
-    if ('writeFile' in client) {
-        await client.writeFile(paths.sourcePath, source);
+    if ('workspace' in client) {
+        await client.workspace.writeFile(paths.sourcePath, opts.source);
     } else {
-        await client.workspace.writeFile(paths.sourcePath, source);
+        await client.writeFile(paths.sourcePath, new TextEncoder().encode(opts.source));
     }
 
     opts.onPhase?.('compile');
-    const compile = await runTool(client, preset.compileTool, preset.compileArgv(paths), cwd, opts);
+    const compile = await client.run(preset.compileTool, preset.compileArgv(paths), runOpts as any);
     if (compile.exitCode !== 0) {
         return { finalPhase: 'compile', exitCode: compile.exitCode, compile };
     }
 
     opts.onPhase?.('link');
-    const link = await runTool(client, preset.linkTool, preset.linkArgv(paths), cwd, opts);
+    const link = await client.run(preset.linkTool, preset.linkArgv(paths), runOpts as any);
     if (link.exitCode !== 0) {
         return { finalPhase: 'link', exitCode: link.exitCode, compile, link };
     }
 
     opts.onPhase?.('run');
-    const run = await runTool(client, 'wasi-run', ['wasi-run', paths.wasmPath], cwd, opts, opts.stdin);
+    const stdinFn = makeStdinFeeder(opts.stdin);
+    const run = await client.run('wasi-run', ['wasi-run', paths.wasmPath], {
+        ...runOpts,
+        stdin: stdinFn,
+    } as any);
     return { finalPhase: 'run', exitCode: run.exitCode, compile, link, run };
-}
-
-async function runTool(
-    client: CompileAndRunRuntime,
-    tool: string,
-    argv: string[],
-    cwd: string,
-    opts: CompileAndRunOptions,
-    stdin?: string,
-): Promise<ToolResult> {
-    if ('writeFile' in client) {
-        return client.run(tool, argv, {
-            cwd,
-            onStdout: opts.onStdout,
-            onStderr: opts.onStderr,
-            stdin: makeStdinFeeder(stdin),
-        });
-    }
-
-    const stdoutDecoder = new TextDecoder();
-    const stderrDecoder = new TextDecoder();
-    return client.run(tool, argv, {
-        cwd,
-        stdin,
-        stdout: opts.onStdout ? (chunk) => opts.onStdout?.(stdoutDecoder.decode(chunk, { stream: true })) : 'capture',
-        stderr: opts.onStderr ? (chunk) => opts.onStderr?.(stderrDecoder.decode(chunk, { stream: true })) : 'capture',
-    });
 }
 
 function dirname(path: string): string {

@@ -4,14 +4,14 @@
 
 import { TTYBridge } from '@gameguild/emception-xterm';
 import { OverlayFS } from 'emception';
-import { detectAsyncStrategy } from './async-bridge.js';
-import { FetchBridge } from './net/fetch-bridge.js';
-import { MiniShell } from './shell.js';
-import { ToolRunner } from './tool-runner.js';
-import { IDBFS } from './vfs/idb.js';
-import { createVFSManager } from './vfs/index.js';
-import type { FSManifest } from './vfs/lazy.js';
-import { LazyFS } from './vfs/lazy.js';
+import { detectAsyncStrategy } from './async-bridge';
+import { FetchBridge } from './net/fetch-bridge';
+import { MiniShell } from './shell';
+import { ToolRunner } from './tool-runner';
+import { IDBFS } from './vfs/idb';
+import { createVFSManager } from './vfs/index';
+import type { FSManifest } from './vfs/lazy';
+import { LazyFS } from './vfs/lazy';
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -153,7 +153,7 @@ export async function boot(manifestUrl: string, terminalContainerOrTerminal: HTM
 /* ------------------------------------------------------------------ */
 
 export interface WorkerBootResult {
-  client: import('./worker-client.js').WorkerClient;
+  client: import('./worker-client').WorkerClient;
   tty: TTYBridge;
 }
 
@@ -186,7 +186,7 @@ export async function bootInWorker(
   );
 
   // Create the client proxy
-  const { WorkerClient } = await import('./worker-client.js');
+  const { WorkerClient } = await import('./worker-client');
   const client = new WorkerClient(worker, tty);
 
   // Resolve to absolute URL — Workers may not share the page's base URL,
@@ -218,12 +218,12 @@ export async function bootInWorker(
 
 export { LineBuffer } from 'emception';
 export type { IOProvider } from 'emception';
-export { createEmception, type CreateEmceptionOptions } from './createEmception.js';
+export { createEmception, type CreateEmceptionOptions } from './createEmception';
 export type { EmceptionAPI } from 'emception';
-export { createBrowserBridge, SUBPROCESS_SHIM, type BrowserBridge } from './emscripten/index.js';
-export { decompressBrotli, isBrotliSupported } from './loader/brotli.js';
-export { clearModuleCache, loadModuleFactory } from './loader/wasm-module.js';
-export type { RunOptions, ToolResult } from './tool-runner.js';
-export type { VFSManager } from './vfs/index.js';
+export { createBrowserBridge, SUBPROCESS_SHIM, type BrowserBridge } from './emscripten/index';
+export { decompressBrotli, isBrotliSupported } from './loader/brotli';
+export { clearModuleCache, loadModuleFactory } from './loader/wasm-module';
+export type { RunOptions, ToolResult } from './tool-runner';
+export type { VFSManager } from './vfs/index';
 export { createVFSManager, detectAsyncStrategy, MiniShell, ToolRunner, TTYBridge };
 

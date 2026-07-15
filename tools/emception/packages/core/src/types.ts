@@ -1,6 +1,6 @@
 // Public type surface for emception.
 
-import type { EmceptionEventListener, EmceptionEventName, Unsubscribe } from './events.js';
+import type { EmceptionEventListener, EmceptionEventName, Unsubscribe } from './events';
 
 export enum ToolchainPreset {
   C = 'c',

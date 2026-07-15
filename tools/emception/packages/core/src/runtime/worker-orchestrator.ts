@@ -30,9 +30,9 @@ import type {
   WorkerToMainMessage,
   WriteFileResultMessage,
 } from '../worker-protocol.js';
-import { BootHandshake } from './boot-handshake.js';
-import type { RpcTransport } from './rpc-channel.js';
-import { RpcChannel } from './rpc-channel.js';
+import { BootHandshake } from './boot-handshake';
+import type { RpcTransport } from './rpc-channel';
+import { RpcChannel } from './rpc-channel';
 
 /* ------------------------------------------------------------------ */
 /*  Public types                                                        */
