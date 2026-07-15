@@ -490,6 +490,7 @@ console.log(`Toolchain file: ${toolchainSrc}`);
 // deployed cmake.mjs in both build/ and sysroot/. Without these patches,
 // std::system() returns -52 (ENOSYS) and callMain() cannot suspend for async I/O.
 console.log('Applying glue patches to cmake.mjs...');
+shell.cd(ROOT);
 const patchGlueResult = shell.exec('npx tsx scripts/patch-glue.ts', { silent: false });
 if (patchGlueResult.code !== 0) {
     console.error('WARNING: patch:glue failed — cmake.mjs may be missing systemCallback patches');
