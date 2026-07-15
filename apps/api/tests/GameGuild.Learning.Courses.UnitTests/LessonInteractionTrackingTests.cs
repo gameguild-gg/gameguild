@@ -107,6 +107,12 @@ public sealed class LessonInteractionTrackingTests
         persistedInteraction.TimeSpentSeconds.Should().Be(45);
         persistedInteraction.ProgressPercentage.Should().Be(25);
         persistedInteraction.BookmarkPosition.Should().Be("video:90.5");
+
+        var crossCourseRetry = () => handler.Handle(
+            command with { ProgramId = Guid.NewGuid() },
+            CancellationToken.None);
+        await crossCourseRetry.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("Content interaction was not found in this course.");
     }
 
     [Fact]
