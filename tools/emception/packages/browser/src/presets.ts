@@ -11,7 +11,7 @@
 // `emception` (events, workspace seeding, cancellation) is a
 // separate, higher-level layer that lands later in the roadmap.
 
-import { ToolchainPreset } from 'emception';
+import { ToolchainPreset, type EmceptionAPI } from 'emception';
 import type { ToolResult } from './tool-runner';
 import type { WorkerClient } from './worker-client';
 
@@ -547,7 +547,7 @@ export interface CompileAndRunResult {
  * End-to-end "edit → compile → link → run" cycle on top of the headless
  * `WorkerClient`. Stops early on compile or link failure.
  */
-export async function compileAndRun(client: WorkerClient, opts: CompileAndRunOptions): Promise<CompileAndRunResult> {
+export async function compileAndRun(client: WorkerClient | EmceptionAPI, opts: CompileAndRunOptions): Promise<CompileAndRunResult> {
     const preset = TOOLCHAIN_PRESETS[opts.toolchain] as NativePreset | undefined;
     if (!preset) {
         throw new Error(`compileAndRun: unknown toolchain '${opts.toolchain}'`);
@@ -562,16 +562,20 @@ export async function compileAndRun(client: WorkerClient, opts: CompileAndRunOpt
     };
 
     opts.onPhase?.('write');
-    await client.writeFile(paths.sourcePath, new TextEncoder().encode(opts.source));
+    if ('workspace' in client) {
+        await client.workspace.writeFile(paths.sourcePath, opts.source);
+    } else {
+        await client.writeFile(paths.sourcePath, new TextEncoder().encode(opts.source));
+    }
 
     opts.onPhase?.('compile');
-    const compile = await client.run(preset.compileTool, preset.compileArgv(paths), runOpts);
+    const compile = await client.run(preset.compileTool, preset.compileArgv(paths), runOpts as any);
     if (compile.exitCode !== 0) {
         return { finalPhase: 'compile', exitCode: compile.exitCode, compile };
     }
 
     opts.onPhase?.('link');
-    const link = await client.run(preset.linkTool, preset.linkArgv(paths), runOpts);
+    const link = await client.run(preset.linkTool, preset.linkArgv(paths), runOpts as any);
     if (link.exitCode !== 0) {
         return { finalPhase: 'link', exitCode: link.exitCode, compile, link };
     }
@@ -581,7 +585,7 @@ export async function compileAndRun(client: WorkerClient, opts: CompileAndRunOpt
     const run = await client.run('wasi-run', ['wasi-run', paths.wasmPath], {
         ...runOpts,
         stdin: stdinFn,
-    });
+    } as any);
     return { finalPhase: 'run', exitCode: run.exitCode, compile, link, run };
 }
 

@@ -22,4 +22,3 @@ export {
   CPP_TERMINAL_PRESET,
   DEFAULT_PRESET, PRESET_IDS, PRESETS, PYTHON_PRESET
 } from './components/workspace-presets';
-
