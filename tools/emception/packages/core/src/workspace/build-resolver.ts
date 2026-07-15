@@ -4,7 +4,7 @@
  * Resolves a final, flat `WorkspaceBuildConfig` from three optional layers,
  * lowest precedence first:
  *
- *   1. Preset defaults (e.g. `cpp` -> `clang++ -std=c++2c`).
+ *   1. Preset defaults (e.g. `cpp` -> `clang++ -std=c++20`).
  *   2. Workspace persisted config (`.emception/build.json`).
  *   3. Call-site overrides (`compileAndRun({ build, flags, sources })`).
  *
@@ -13,14 +13,14 @@
  *   - Scalars overwrite (later wins).
  *   - Records (`defines`, `env`, `cmake`) merge by key, later wins.
  *
- * Throws `BuildConfigError` (re-exported from `emception/errors`) on
+ * Throws `BuildConfigError` (re-exported from @emception/core/errors) on
  * impossible combos (e.g. cmake + sources both set).
  */
 
-import { BUILD_PRESETS } from '../build-presets.js';
-import { BuildConfigError } from '../errors.js';
-import type { CMakeBuildConfig, NativeBuildConfig, PythonBuildConfig, WorkspaceBuildConfig } from '../types.js';
-import { ToolchainPreset } from '../types.js';
+import { BUILD_PRESETS } from '../build-presets';
+import { BuildConfigError } from '../errors';
+import type { CMakeBuildConfig, NativeBuildConfig, PythonBuildConfig, WorkspaceBuildConfig } from '../types';
+import { ToolchainPreset } from '../types';
 
 export interface ResolveBuildInput {
   preset?: ToolchainPreset;
@@ -96,10 +96,7 @@ function mergeLayer(base: WorkspaceBuildConfig, layer: Partial<WorkspaceBuildCon
 
 /** Resolve the final build config given the three optional layers. */
 export function resolveBuild(input: ResolveBuildInput): ResolvedBuild {
-  const presetBuild = input.preset ? BUILD_PRESETS[input.preset] : { toolchain: ToolchainPreset.CPP };
-  if (!presetBuild) {
-    throw new BuildConfigError(`resolveBuild: unknown toolchain preset '${input.preset}'.`);
-  }
+  const presetBuild: WorkspaceBuildConfig = input.preset ? BUILD_PRESETS[input.preset] : { toolchain: ToolchainPreset.CPP };
   const merged = [input.workspace ?? {}, input.callsite ?? {}].reduce<WorkspaceBuildConfig>(mergeLayer, presetBuild);
 
   validate(merged);

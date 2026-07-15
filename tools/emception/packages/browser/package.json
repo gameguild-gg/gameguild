@@ -36,11 +36,10 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node ../../scripts/copy-browser-assets.mjs",
-    "prepack": "pnpm run build",
+    "build": "tsc -p tsconfig.json && cp src/emscripten/subprocess_shim.py dist/emscripten/subprocess_shim.py && cp ../../public/coi-serviceworker.js dist/coi-serviceworker.js",
+    "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
-    "test": "pnpm run build && pnpm --dir ../.. exec tsx --test packages/browser/tests/*.test.mjs",
-    "clean": "node ../../scripts/clean-package.mjs dist"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "emception": "*",

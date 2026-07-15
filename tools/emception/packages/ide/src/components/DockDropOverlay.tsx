@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import type { DockGroup } from './ide-types.js';
+import type { DockGroup } from './ide-types';
 
 /** VS Code–style drop zone positions. */
 export type DropZone = 'center' | 'left' | 'right' | 'top' | 'bottom';
