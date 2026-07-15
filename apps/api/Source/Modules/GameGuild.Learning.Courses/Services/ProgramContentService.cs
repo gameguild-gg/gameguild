@@ -10,6 +10,8 @@ public class ProgramContentService(
   IApplicationDbContext context,
   IProgramContentScheduleGuard scheduleGuard) : IProgramContentService {
   public async Task<ProgramContent> CreateContentAsync(ProgramContent content) {
+    content.NormalizeLearningContract();
+
     // Set creation timestamp
     content.Touch();
 
@@ -47,16 +49,19 @@ public class ProgramContentService(
     if (existingContent == null) throw new InvalidOperationException($"ProgramContent with ID {content.Id} not found or has been deleted");
 
     // Update properties
+    content.NormalizeLearningContract();
     existingContent.Title = content.Title;
     existingContent.Description = content.Description;
     existingContent.Type = content.Type;
     existingContent.Body = content.Body;
+    existingContent.LessonFormat = content.LessonFormat;
     existingContent.SortOrder = content.SortOrder;
     existingContent.IsRequired = content.IsRequired;
     existingContent.GradingMethod = content.GradingMethod;
     existingContent.MaxPoints = content.MaxPoints;
     existingContent.EstimatedMinutes = content.EstimatedMinutes;
     existingContent.Visibility = content.Visibility;
+    existingContent.NormalizeLearningContract();
     existingContent.Touch();
 
     await context.SaveChangesAsync().ConfigureAwait(false);
