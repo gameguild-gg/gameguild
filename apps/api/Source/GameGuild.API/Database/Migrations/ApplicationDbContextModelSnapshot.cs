@@ -8765,6 +8765,9 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<int?>("TimeSpentMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TimeSpentSeconds")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -8796,7 +8799,74 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("UserId", "ContentId")
                         .IsUnique();
 
-                    b.ToTable("content_interactions");
+                    b.ToTable("content_interactions", t =>
+                        {
+                            t.HasCheckConstraint("CK_content_interactions_TimeSpentSeconds_NonNegative", "\"TimeSpentSeconds\" >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("GameGuild.Learning.Courses.ContentInteractionEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("InteractionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Payload")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("PositionSeconds")
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<decimal?>("ProgressPercentage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InteractionId", "IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("InteractionId", "OccurredAt");
+
+                    b.ToTable("content_interaction_events", t =>
+                        {
+                            t.HasCheckConstraint("CK_content_interaction_events_DurationSeconds_Positive", "\"DurationSeconds\" IS NULL OR \"DurationSeconds\" > 0");
+
+                            t.HasCheckConstraint("CK_content_interaction_events_PositionSeconds_NonNegative", "\"PositionSeconds\" IS NULL OR \"PositionSeconds\" >= 0");
+
+                            t.HasCheckConstraint("CK_content_interaction_events_ProgressPercentage_Range", "\"ProgressPercentage\" IS NULL OR (\"ProgressPercentage\" >= 0 AND \"ProgressPercentage\" <= 100)");
+                        });
                 });
 
             modelBuilder.Entity("GameGuild.Learning.Courses.ContentProgress", b =>
@@ -9114,6 +9184,9 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<bool>("IsRequired")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("LessonFormat")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("MaxPoints")
                         .HasColumnType("integer");
 
@@ -9161,7 +9234,12 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("Type");
 
-                    b.ToTable("program_contents");
+                    b.ToTable("program_contents", t =>
+                        {
+                            t.HasCheckConstraint("CK_program_contents_Lesson_NotGraded", "\"Type\" NOT IN (0, 1) OR (\"GradingMethod\" = 0 AND \"MaxPoints\" IS NULL)");
+
+                            t.HasCheckConstraint("CK_program_contents_LessonFormat", "((\"Type\" IN (0, 1)) AND \"LessonFormat\" IS NOT NULL) OR ((\"Type\" NOT IN (0, 1)) AND \"LessonFormat\" IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("GameGuild.Learning.Courses.ProgramEnrollment", b =>
@@ -13722,6 +13800,17 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("GameGuild.Learning.Courses.ContentInteractionEvent", b =>
+                {
+                    b.HasOne("GameGuild.Learning.Courses.ContentInteraction", "Interaction")
+                        .WithMany("Events")
+                        .HasForeignKey("InteractionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Interaction");
+                });
+
             modelBuilder.Entity("GameGuild.Learning.Courses.ContentProgress", b =>
                 {
                     b.HasOne("GameGuild.Learning.Courses.ProgramContent", "Content")
@@ -14528,6 +14617,8 @@ namespace GameGuild.API.Database.Migrations
             modelBuilder.Entity("GameGuild.Learning.Courses.ContentInteraction", b =>
                 {
                     b.Navigation("ActivityGrades");
+
+                    b.Navigation("Events");
                 });
 
             modelBuilder.Entity("GameGuild.Learning.Courses.Program", b =>
