@@ -30,7 +30,7 @@
  *  but before callMain().
  */
 
-import type { VFSManager } from './index.js';
+import type { VFSManager } from './index';
 
 const LOG_PREFIX = '[Emception:VFSFS]';
 

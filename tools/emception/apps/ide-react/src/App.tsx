@@ -3,7 +3,7 @@ import { Ide, PRESETS } from '@gameguild/emception-ide';
 
 // Vite injects BASE_URL from the `base` config (e.g. '/gameguild/' on GitHub Pages).
 // Use it to build the manifest URL so the CDN is found regardless of deploy path.
-const manifestUrl = import.meta.env.VITE_EMCEPTION_MANIFEST_URL || 'https://gameguild-gg.github.io/gameguild/cdn/manifest.json';
+const manifestUrl = `${import.meta.env.BASE_URL}cdn/manifest.json`;
 
 function getWorkspaceFromUrl(): WorkspaceConfig | undefined {
   const params = new URLSearchParams(window.location.search);

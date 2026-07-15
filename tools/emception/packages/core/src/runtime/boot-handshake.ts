@@ -12,7 +12,7 @@
  * Pure logic — no transport, no protocol.
  */
 
-import { EmceptionError } from '../errors.js';
+import { EmceptionError } from '../errors';
 
 export class BootError extends EmceptionError {
   constructor(message: string) {

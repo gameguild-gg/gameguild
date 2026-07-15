@@ -51,11 +51,11 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepack": "pnpm run build && node ../../scripts/stage-core-cdn.mjs",
+    "prepack": "npm run build && node ../../scripts/stage-core-cdn.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "pnpm run build && node --test tests/*.test.mjs",
-    "test:types": "pnpm run build && tsd",
-    "clean": "node ../../scripts/clean-package.mjs dist cdn"
+    "test": "npm run build && node --test 'tests/*.test.mjs'",
+    "test:types": "npm run build && tsd",
+    "clean": "rm -rf dist cdn"
   },
   "tsd": {
     "directory": ".",

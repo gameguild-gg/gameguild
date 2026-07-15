@@ -27,13 +27,13 @@ export {
     type ToolResult,
     type VFSManager,
     type WorkerBootResult
-} from './boot.js';
+} from './boot';
 
 // Lower-level VFS surface (LazyFS, IDBFS, mountVFSFS) for advanced consumers
 // that want to compose their own VFSManager.
-export { IDBFS, LazyFS, mountVFSFS, type FileEntry, type FSManifest, type IDBFSOptions, type MountVFSFSOptions, type VFSFSRuntime } from './vfs/index.js';
+export { IDBFS, LazyFS, mountVFSFS, type FileEntry, type FSManifest, type IDBFSOptions, type MountVFSFSOptions, type VFSFSRuntime } from './vfs/index';
 
-export { DEFAULT_MANIFEST_URL } from './createEmception.js';
+export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/emception/cdn/manifest.json';
 
 // Headless build presets + compileAndRun helper.
 export {
@@ -47,4 +47,5 @@ export {
     type NativePreset,
     type Preset,
     type PythonPreset
-} from './presets.js';
+} from './presets';
+

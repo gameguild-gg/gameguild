@@ -2,8 +2,8 @@ import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { TerminalTab } from './ide-types.js';
-import { TERMINAL_THEME } from './ide-types.js';
+import type { TerminalTab } from './ide-types';
+import { TERMINAL_THEME } from './ide-types';
 
 // ─── TerminalInstance ────────────────────────────────────────────────────────
 // Each terminal tab mounts one of these. It creates and owns its xterm.
