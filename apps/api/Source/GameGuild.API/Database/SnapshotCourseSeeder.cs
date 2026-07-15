@@ -212,6 +212,7 @@ public static partial class SnapshotCourseSeeder
         content.EstimatedMinutes = definition.EstimatedMinutes;
         content.Visibility = Visibility.Public;
         content.Body = BuildImportedBody(sourceKey, definition.Body);
+        content.NormalizeLearningContract();
         content.Touch();
     }
 

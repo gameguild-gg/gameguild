@@ -121,6 +121,20 @@ public sealed class LessonContractTests
         assignment.MaxPoints.Should().Be(100);
     }
 
+    [Fact]
+    public void NormalizeLearningContract_WhenSeederProvidesFormatForAssignment_ShouldClearIt()
+    {
+        var assignment = new ProgramContent
+        {
+            Type = ProgramContentType.Assignment,
+            LessonFormat = LessonContentFormat.Markdown,
+        };
+
+        assignment.NormalizeLearningContract();
+
+        assignment.LessonFormat.Should().BeNull();
+    }
+
     private static CreateProgramContentDto CreateLessonDto(string body) =>
         new()
         {
