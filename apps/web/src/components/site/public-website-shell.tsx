@@ -219,7 +219,7 @@ export function PublicWebsiteFooter() {
         </div>
 
         <div className="mt-10 border-t border-slate-700/50 pt-6 lg:mt-12 lg:pt-8">
-          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+          <div className="flex justify-center sm:justify-start">
             <div className="flex gap-3">
               {footerSocialLinks.map(({ label, href, icon: Icon }) => (
                 <a
@@ -235,7 +235,11 @@ export function PublicWebsiteFooter() {
                 </a>
               ))}
             </div>
-            <nav aria-label="Legal" className="flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-slate-400 sm:justify-end">
+          </div>
+
+          <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-slate-700/50 pt-5 text-sm text-slate-500 sm:flex-row lg:mt-8 lg:pt-6">
+            <p className="text-center sm:text-left">© 2026 Game Guild. All rights reserved.</p>
+            <nav aria-label="Legal" className="flex flex-wrap justify-center gap-x-6 gap-y-3 sm:justify-end">
               <Link href="/licenses" className="transition-colors hover:text-blue-300">
                 Licenses
               </Link>
@@ -247,10 +251,6 @@ export function PublicWebsiteFooter() {
               </Link>
             </nav>
           </div>
-
-          <p className="mt-6 border-t border-slate-700/50 pt-5 text-center text-sm text-slate-500 lg:mt-8 lg:pt-6">
-            © 2026 Game Guild Inc. All rights reserved.
-          </p>
         </div>
       </div>
       <div className="h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500" aria-hidden="true" />
