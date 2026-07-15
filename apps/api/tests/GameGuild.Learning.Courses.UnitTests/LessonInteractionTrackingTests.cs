@@ -118,6 +118,76 @@ public sealed class LessonInteractionTrackingTests
     }
 
     [Fact]
+    public void RecordEventCommandValidator_ShouldEnforceDatabaseDecimalPrecision()
+    {
+        var validator = new RecordContentInteractionEventCommandValidator();
+        var baseline = new RecordContentInteractionEventCommand(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            ContentInteractionEventType.Paused);
+
+        validator.Validate(baseline with
+        {
+            PositionSeconds = 999999999.999m,
+            ProgressPercentage = 99.99m,
+        }).IsValid.Should().BeTrue();
+
+        var positionOverflow = validator.Validate(baseline with { PositionSeconds = 1000000000m });
+        positionOverflow.Errors.Should().Contain(error => error.PropertyName == nameof(baseline.PositionSeconds));
+
+        var positionScale = validator.Validate(baseline with { PositionSeconds = 1.2345m });
+        positionScale.Errors.Should().Contain(error => error.PropertyName == nameof(baseline.PositionSeconds));
+
+        var progressScale = validator.Validate(baseline with { ProgressPercentage = 99.999m });
+        progressScale.Errors.Should().Contain(error => error.PropertyName == nameof(baseline.ProgressPercentage));
+    }
+
+    [Fact]
+    public void CreateEvent_ShouldEnforceDatabaseDecimalPrecision()
+    {
+        var positionOverflow = () => ContentInteractionEvent.Create(
+            Guid.NewGuid(),
+            ContentInteractionEventType.Paused,
+            positionSeconds: 1000000000m);
+        var progressScale = () => ContentInteractionEvent.Create(
+            Guid.NewGuid(),
+            ContentInteractionEventType.Progressed,
+            progressPercentage: 99.999m);
+
+        positionOverflow.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName("positionSeconds");
+        progressScale.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName("progressPercentage");
+    }
+
+    [Fact]
+    public void Complete_ShouldSetCompletedStatusAndPreventProgressRegression()
+    {
+        var interaction = CreateInteraction();
+        interaction.Status = ProgressStatus.InProgress;
+
+        interaction.Complete();
+        interaction.UpdateProgress(25);
+
+        interaction.IsCompleted.Should().BeTrue();
+        interaction.Status.Should().Be(ProgressStatus.Completed);
+        interaction.ProgressPercentage.Should().Be(100);
+    }
+
+    [Fact]
+    public void ContentInteractionModel_ShouldAllowMultipleAttemptsForTheSameLearnerAndContent()
+    {
+        using var context = TrackingTestDbContext.Create();
+        var entity = context.Model.FindEntityType(typeof(ContentInteraction));
+
+        var attemptIndex = entity!.GetIndexes().Single(index =>
+            index.Properties.Select(property => property.Name).SequenceEqual(
+                new[] { nameof(ContentInteraction.UserId), nameof(ContentInteraction.ContentId) }));
+
+        attemptIndex.IsUnique.Should().BeFalse();
+    }
+
+    [Fact]
     public void InteractionEventHandlers_ShouldDependOnAuthenticatedRequestContext()
     {
         var recordParameters = typeof(RecordContentInteractionEventCommandHandler)
@@ -189,6 +259,36 @@ public sealed class LessonInteractionTrackingTests
             CancellationToken.None);
         await crossCourseRetry.Should().ThrowAsync<RequestValidationException>()
             .WithMessage("Content interaction was not found in this course.");
+    }
+
+    [Fact]
+    public async Task RecordEventHandler_WhenIdempotencyKeyIsReusedForDifferentPayload_ShouldRejectIt()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var lesson = CreateLesson();
+        var interaction = CreateInteraction();
+        interaction.ContentId = lesson.Id;
+        interaction.Content = lesson;
+        context.Set<ProgramContent>().Add(lesson);
+        context.Set<ContentInteraction>().Add(interaction);
+        await context.SaveChangesAsync();
+        var handler = new RecordContentInteractionEventCommandHandler(
+            context,
+            new TestRequestContextAccessor(interaction.UserId));
+        var first = new RecordContentInteractionEventCommand(
+            lesson.ProgramId,
+            interaction.Id,
+            ContentInteractionEventType.Heartbeat,
+            DurationSeconds: 30,
+            IdempotencyKey: "heartbeat-conflict");
+        await handler.Handle(first, CancellationToken.None);
+
+        var action = () => handler.Handle(
+            first with { DurationSeconds = 60 },
+            CancellationToken.None);
+
+        await action.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("Idempotency key was already used for a different interaction event.");
     }
 
     [Fact]
@@ -379,7 +479,9 @@ public sealed class LessonInteractionTrackingTests
         context.Set<ProgramContent>().Add(lesson);
         context.Set<ProgramUser>().Add(enrollment);
         await context.SaveChangesAsync();
-        var service = new ContentInteractionService(context);
+        var service = new ContentInteractionService(
+            context,
+            new TestRequestContextAccessor(enrollment.UserId));
 
         var interaction = await service.StartContentAsync(enrollment.Id, lesson.Id);
 
@@ -408,12 +510,41 @@ public sealed class LessonInteractionTrackingTests
         context.Set<ProgramUser>().Add(enrollment);
         context.Set<ContentInteraction>().Add(previousInteraction);
         await context.SaveChangesAsync();
-        var service = new ContentInteractionService(context);
+        var service = new ContentInteractionService(
+            context,
+            new TestRequestContextAccessor(enrollment.UserId));
 
         var newAttempt = await service.StartContentAsync(enrollment.Id, lesson.Id);
+        var resumedAttempt = await service.StartContentAsync(enrollment.Id, lesson.Id);
 
         newAttempt.Id.Should().NotBe(previousInteraction.Id);
         newAttempt.UserId.Should().Be(enrollment.UserId);
+        resumedAttempt.Id.Should().Be(newAttempt.Id);
+    }
+
+    [Fact]
+    public async Task StartContent_WhenEnrollmentBelongsToAnotherLearner_ShouldRejectIt()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var lesson = CreateLesson();
+        var enrollment = new ProgramUser
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = lesson.ProgramId,
+            UserId = Guid.NewGuid(),
+            JoinedAt = SystemClock.UtcNow,
+        };
+        context.Set<ProgramContent>().Add(lesson);
+        context.Set<ProgramUser>().Add(enrollment);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(
+            context,
+            new TestRequestContextAccessor(Guid.NewGuid()));
+
+        var action = () => service.StartContentAsync(enrollment.Id, lesson.Id);
+
+        await action.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("Active course enrollment was not found.");
     }
 
     private static ProgramContent CreateLesson() =>

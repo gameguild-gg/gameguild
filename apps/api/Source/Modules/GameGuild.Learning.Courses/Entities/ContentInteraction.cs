@@ -10,7 +10,7 @@ namespace GameGuild.Learning.Courses;
 /// Represents a user's interaction with program content, tracking progress and completion
 /// </summary>
 [Table("content_interactions")]
-[Index(nameof(UserId), nameof(ContentId), IsUnique = true)]
+[Index(nameof(UserId), nameof(ContentId))]
 [Index(nameof(UserId))]
 [Index(nameof(ContentId))]
 [Index(nameof(ProgramUserId))]
@@ -198,6 +198,14 @@ public class ContentInteraction : EntityBase
     /// </summary>
     public void UpdateProgress(decimal percentage)
     {
+        if (IsCompleted)
+        {
+            Status = ProgressStatus.Completed;
+            ProgressPercentage = 100m;
+            UpdateLastAccess();
+            return;
+        }
+
         ProgressPercentage = Math.Max(0, Math.Min(100, percentage));
 
         // Auto-complete if 100%
@@ -214,11 +222,9 @@ public class ContentInteraction : EntityBase
     /// </summary>
     public void Complete()
     {
-        if (IsCompleted)
-            return; // Already completed
-
         IsCompleted = true;
-        CompletedAt = SystemClock.UtcNow;
+        Status = ProgressStatus.Completed;
+        CompletedAt ??= SystemClock.UtcNow;
         ProgressPercentage = 100m;
         UpdateLastAccess();
     }
