@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore;
 /// <summary> EntityBase Framework configuration for ContentInteraction entity </summary>
 public class ContentInteractionConfiguration : IEntityTypeConfiguration<ContentInteraction> {
   public void Configure(EntityTypeBuilder<ContentInteraction> builder) {
+    builder.ToTable(table => table.HasCheckConstraint(
+      "CK_content_interactions_TimeSpentSeconds_NonNegative",
+      "\"TimeSpentSeconds\" >= 0"));
+
     // Configure relationship with ProgramUser (can't be done with annotations)
     builder.HasOne(ci => ci.ProgramUser).WithMany(pu => pu.ContentInteractions).HasForeignKey(ci => ci.ProgramUserId).OnDelete(DeleteBehavior.Cascade);
 

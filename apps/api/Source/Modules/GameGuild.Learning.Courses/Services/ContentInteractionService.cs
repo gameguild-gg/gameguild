@@ -108,8 +108,7 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
 
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot update time spent on submitted interaction.");
 
-    interaction.TimeSpentMinutes = (interaction.TimeSpentMinutes ?? 0) + additionalMinutes;
-    interaction.LastAccessedAt = SystemClock.UtcNow;
+    interaction.AddTimeSpent(additionalMinutes);
 
     await context.SaveChangesAsync().ConfigureAwait(false);
 
