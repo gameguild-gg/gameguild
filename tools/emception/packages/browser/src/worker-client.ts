@@ -13,7 +13,7 @@
 
 import type { IOProvider } from 'emception';
 import { WorkerOrchestrator, workerTransport } from 'emception';
-import type { RunOptions, ToolResult } from './tool-runner.js';
+import type { RunOptions, ToolResult } from './tool-runner';
 
 export interface WorkerBootOptions {
     manifestUrl: string;

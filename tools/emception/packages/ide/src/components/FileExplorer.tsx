@@ -1,6 +1,6 @@
 import { type JSX, useCallback, useRef, useState } from 'react';
-import type { DockGroup, TreeNode, WorkspaceFile } from './ide-types.js';
-import { fileName } from './ide-utils.js';
+import type { DockGroup, TreeNode, WorkspaceFile } from './ide-types';
+import { fileName } from './ide-utils';
 
 /** Simple VS Code–style file/folder icons using Unicode symbols + color */
 function fileIcon(name: string, isDir = false, isOpen = false): { icon: string; color: string } {
