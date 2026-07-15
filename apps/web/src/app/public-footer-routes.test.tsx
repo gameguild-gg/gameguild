@@ -57,6 +57,10 @@ describe('PublicWebsiteFooter routes', () => {
     expect(screen.getByRole('link', { name: 'Twitter' })).toHaveAttribute('href', 'https://twitter.com/gameguild_gg');
     expect(screen.getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/gameguild-gg/gameguild');
     expect(screen.getByRole('link', { name: 'YouTube' })).toHaveAttribute('href', 'https://youtube.com/@gameguild');
-    expect(screen.getByText('© 2026 Game Guild Inc. All rights reserved.')).toBeInTheDocument();
+    const copyright = screen.getByText('© 2026 Game Guild. All rights reserved.');
+    const legalNavigation = screen.getByRole('navigation', { name: 'Legal' });
+
+    expect(copyright).toBeInTheDocument();
+    expect(copyright.parentElement).toBe(legalNavigation.parentElement);
   });
 });
