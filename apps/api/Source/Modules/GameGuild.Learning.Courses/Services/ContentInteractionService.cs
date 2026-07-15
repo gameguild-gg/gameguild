@@ -35,7 +35,8 @@ public class ContentInteractionService(
     // Check if there's already an interaction for this user/content
     var existingInteraction = await context.Set<ContentInteraction>()
       .Where(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId)
-      .OrderByDescending(ci => ci.CreatedAt)
+      .OrderBy(ci => ci.SubmittedAt.HasValue)
+      .ThenByDescending(ci => ci.CreatedAt)
       .FirstOrDefaultAsync()
       .ConfigureAwait(false);
 
@@ -48,7 +49,8 @@ public class ContentInteractionService(
       // Otherwise, resume the existing interaction
       existingInteraction.FirstAccessedAt ??= SystemClock.UtcNow;
       existingInteraction.LastAccessedAt = SystemClock.UtcNow;
-      existingInteraction.Status = ProgressStatus.InProgress;
+      if (!existingInteraction.IsCompleted)
+        existingInteraction.Status = ProgressStatus.InProgress;
 
       await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -58,10 +60,7 @@ public class ContentInteractionService(
     // Create new interaction
     var newInteraction = new ContentInteraction { ProgramUserId = programUserId, UserId = programUser.UserId, ContentId = contentId, Status = ProgressStatus.InProgress, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, CompletionPercentage = 0 };
 
-    context.Set<ContentInteraction>().Add(newInteraction);
-    await context.SaveChangesAsync().ConfigureAwait(false);
-
-    return newInteraction;
+    return await SaveNewActiveAttemptAsync(newInteraction).ConfigureAwait(false);
   }
 
   /// <summary> Update progress for an interaction (only if not submitted) </summary>
@@ -70,14 +69,9 @@ public class ContentInteractionService(
 
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot update progress on submitted interaction. Create a new interaction to continue work.");
 
-    interaction.CompletionPercentage = Math.Min(100, Math.Max(0, completionPercentage));
-    interaction.LastAccessedAt = SystemClock.UtcNow;
-
-    if (interaction.CompletionPercentage >= 100) {
-      interaction.Status = ProgressStatus.Completed;
-      interaction.CompletedAt = SystemClock.UtcNow;
-    }
-    else if (interaction.Status == ProgressStatus.NotStarted) { interaction.Status = ProgressStatus.InProgress; }
+    interaction.UpdateProgress(completionPercentage);
+    if (!interaction.IsCompleted && interaction.Status == ProgressStatus.NotStarted)
+      interaction.Status = ProgressStatus.InProgress;
 
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -124,7 +118,8 @@ public class ContentInteractionService(
     if (!currentUserId.HasValue) return null;
 
     return await context.Set<ContentInteraction>().Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades)
-      .OrderByDescending(ci => ci.CreatedAt)
+      .OrderBy(ci => ci.SubmittedAt.HasValue)
+      .ThenByDescending(ci => ci.CreatedAt)
       .FirstOrDefaultAsync(ci =>
         ci.ProgramUserId == programUserId &&
         ci.ContentId == contentId &&
@@ -186,9 +181,30 @@ public class ContentInteractionService(
       SubmissionData = previousInteraction.SubmissionData,
     };
 
-    context.Set<ContentInteraction>().Add(newInteraction);
-    await context.SaveChangesAsync().ConfigureAwait(false);
+    return await SaveNewActiveAttemptAsync(newInteraction).ConfigureAwait(false);
+  }
 
-    return newInteraction;
+  private async Task<ContentInteraction> SaveNewActiveAttemptAsync(ContentInteraction newInteraction) {
+    context.Set<ContentInteraction>().Add(newInteraction);
+    try {
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return newInteraction;
+    }
+    catch (DbUpdateException) {
+      context.Set<ContentInteraction>().Remove(newInteraction);
+      var winningInteraction = await context.Set<ContentInteraction>()
+        .Where(ci =>
+          ci.ProgramUserId == newInteraction.ProgramUserId &&
+          ci.UserId == newInteraction.UserId &&
+          ci.ContentId == newInteraction.ContentId &&
+          ci.SubmittedAt == null &&
+          ci.DeletedAt == null)
+        .OrderByDescending(ci => ci.CreatedAt)
+        .FirstOrDefaultAsync()
+        .ConfigureAwait(false);
+      if (winningInteraction is not null) return winningInteraction;
+
+      throw;
+    }
   }
 }
