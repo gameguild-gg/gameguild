@@ -48,15 +48,15 @@ describe('PublicWebsiteFooter routes', () => {
 
     expect(screen.queryByRole('heading', { name: 'Legal' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Cookies' })).toBeNull();
-    expect(screen.getByTestId('footer-cta')).toBeInTheDocument();
-    expect(screen.getByText('Ready to build with GameGuild?')).toBeInTheDocument();
-    expect(screen.getByText(/Join practical courses, community playtests/i)).toBeInTheDocument();
-    expect(screen.getByText(/A game development community for learning/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Join community' })).toHaveAttribute('href', '/sign-up');
-    expect(screen.getByRole('link', { name: 'Browse projects' })).toHaveAttribute('href', '/projects');
-    expect(screen.queryByText('Learn. Build. Ship together.')).toBeNull();
-    expect(screen.queryByText(/A thriving game development community dedicated to education/i)).toBeNull();
-    expect(screen.queryByText('Community-driven learning and development')).toBeNull();
-    expect(screen.queryByText('Open source and collaborative')).toBeNull();
+    expect(screen.queryByTestId('footer-cta')).toBeNull();
+    expect(screen.getByText('Game Guild')).toBeInTheDocument();
+    expect(screen.getByText(/A thriving gaming community dedicated to education/i)).toBeInTheDocument();
+    expect(screen.getByText('Community-driven learning and development')).toBeInTheDocument();
+    expect(screen.getByText('Open source and collaborative')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Discord' })).toHaveAttribute('href', 'https://discord.gg/9CdJeQ2XKB');
+    expect(screen.getByRole('link', { name: 'Twitter' })).toHaveAttribute('href', 'https://twitter.com/gameguild_gg');
+    expect(screen.getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/gameguild-gg/gameguild');
+    expect(screen.getByRole('link', { name: 'YouTube' })).toHaveAttribute('href', 'https://youtube.com/@gameguild');
+    expect(screen.getByText('© 2026 Game Guild Inc. All rights reserved.')).toBeInTheDocument();
   });
 });
