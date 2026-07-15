@@ -972,14 +972,15 @@ export default function Ide({
         tty.writeLine(`\x1b[36m${canvasLabel} detected \u2014 compiling object...\x1b[0m`);
 
         const sdlObjPath = '/tmp/emception-canvas-main.o';
-        const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
+        const compileCwd = resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`;
+        const wasmPath = resolveWsPath(compileCwd, resolvedConfig.compile.output || 'main.wasm');
 
         const sdlPaths = { sourcePath: sourceFsPath, objectPath: sdlObjPath, wasmPath };
         // Map canvas preset name to the CDN bundle name used by the hints system.
         const canvasBundleName = isSDL3 ? 'sdl3' : isAllegro ? 'allegro' : 'raylib';
         const canvasRunHints = { bundlesNeeded: [canvasBundleName] };
         const sdlCompile = await client.run(canvasPreset.compileTool, canvasPreset.compileArgv(sdlPaths), {
-          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
+          cwd: compileCwd,
           onStdout: (t: string) => {
             console.log(t);
             tty.writeLine(t);
@@ -1002,7 +1003,7 @@ export default function Ide({
         tty.writeLine(`\x1b[36m${canvasLabel} linking (wasm-ld)...\x1b[0m`);
 
         const sdlLink = await client.run(canvasPreset.linkTool, canvasPreset.linkArgv(sdlPaths), {
-          cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
+          cwd: compileCwd,
           onStdout: (t: string) => {
             console.log(t);
             tty.writeLine(t);

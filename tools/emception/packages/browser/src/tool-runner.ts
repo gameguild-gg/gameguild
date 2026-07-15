@@ -649,9 +649,13 @@ export class ToolRunner {
     if (cIdx >= 0 && cIdx + 1 < argv.length) {
       buildDir = argv[cIdx + 1];
     }
+    const base = options.cwd && options.cwd.startsWith('/') ? options.cwd : '/home/user';
+    const absBuildDir = buildDir.startsWith('/')
+      ? buildDir
+      : `${base.replace(/\/$/, '')}/${buildDir}`;
 
     // Read build.ninja
-    const buildNinjaPath = `${buildDir}/build.ninja`;
+    const buildNinjaPath = `${absBuildDir}/build.ninja`;
     console.log(`${LOG_PREFIX}   [ninja-bypass] Reading ${buildNinjaPath}...`);
     const buildNinjaData = await this.vfs.fetchFile(buildNinjaPath);
     if (!buildNinjaData) {
@@ -664,7 +668,7 @@ export class ToolRunner {
     const buildContent = new TextDecoder().decode(buildNinjaData);
 
     // Resolve include/subninja directives by reading referenced files
-    const resolvedContent = await this.resolveNinjaIncludes(buildContent, buildDir);
+    const resolvedContent = await this.resolveNinjaIncludes(buildContent, absBuildDir);
     const commands = this.parseBuildNinja(resolvedContent);
     console.log(`${LOG_PREFIX}   [ninja-bypass] Parsed ${commands.length} build command(s)`);
 
@@ -734,8 +738,14 @@ export class ToolRunner {
         console.log(`${LOG_PREFIX}   [ninja-bypass] ${progress} (link rewritten) ${shortLd.length > 120 ? shortLd.slice(0, 117) + '...' : shortLd}`);
       }
 
+      // Pre-create output directories (ninja normally does this before running
+      // each build command). Without this, clang fails with "No such file or
+      // directory" when trying to write object/dependency files to
+      // CMakeFiles/<target>.dir/ which doesn't exist yet.
+      this.ensureOutputDirectories(parts, absBuildDir);
+
       const result = await this.run(parts[0], parts, {
-        cwd: buildDir,
+        cwd: absBuildDir,
         onStdout: (t) => {
           stdoutChunks.push(t);
           options.onStdout?.(t);
@@ -811,6 +821,51 @@ export class ToolRunner {
       '--allow-undefined',
       ...extraLinkFlags,
     ];
+  }
+
+  /**
+   * Pre-create output directories for a build command.
+   *
+   * In a real ninja build, ninja creates output directories before running
+   * each build command. Our JS-side bypass doesn't do this, so clang fails
+   * with "No such file or directory" when trying to write object/dependency
+   * files to CMakeFiles/<target>.dir/ which doesn't exist yet.
+   *
+   * This method scans the command's argv for -o (output) and -MF (depfile)
+   * flags, extracts their parent directories, and creates them in the VFS
+   * overlay (which VFSFS will see via write-through).
+   */
+  private ensureOutputDirectories(parts: string[], absBuildDir: string): void {
+    const dirsToCreate = new Set<string>();
+
+    for (let i = 0; i < parts.length; i++) {
+      // -o <output> and -MF <depfile>
+      if ((parts[i] === '-o' || parts[i] === '-MF') && i + 1 < parts.length) {
+        const outPath = parts[i + 1];
+        // Skip absolute paths that are outside the build dir (e.g. /usr/...)
+        if (outPath.startsWith('/')) {
+          // Only create dirs for paths within the build directory
+          if (outPath.startsWith(absBuildDir + '/') || outPath === absBuildDir) {
+            const dir = outPath.substring(0, outPath.lastIndexOf('/'));
+            if (dir && dir !== absBuildDir) dirsToCreate.add(dir);
+          }
+          continue;
+        }
+        // Relative path — resolve against absBuildDir
+        const resolved = `${absBuildDir.replace(/\/$/, '')}/${outPath}`;
+        const dir = resolved.substring(0, resolved.lastIndexOf('/'));
+        if (dir && dir !== absBuildDir) dirsToCreate.add(dir);
+      }
+    }
+
+    for (const dir of dirsToCreate) {
+      try {
+        this.vfs.mkdirSync(dir);
+        console.log(`${LOG_PREFIX}   [ninja-bypass] Created output directory: ${dir}`);
+      } catch {
+        // Directory may already exist — non-fatal
+      }
+    }
   }
 
   /**
@@ -2681,7 +2736,10 @@ sys.excepthook = _hook
   private async runWasi(argv: string[], options: RunOptions = {}): Promise<ToolResult> {
     const tTotal = performance.now();
     // argv: ['wasi-run', '/home/user/main.wasm', ...extra args]
-    const wasmPath = argv.length > 1 ? argv[1] : '/home/user/main.wasm';
+    const rawWasmPath = argv.length > 1 ? argv[1] : '/home/user/main.wasm';
+    const wasmPath = rawWasmPath.startsWith('/')
+      ? rawWasmPath
+      : `${(options.cwd && options.cwd.startsWith('/') ? options.cwd : '/home/user').replace(/\/$/, '')}/${rawWasmPath}`;
     console.log(`${LOG_PREFIX} ===== WASI RUN: ${wasmPath} =====`);
 
     // 1. Read the WASM binary from the VFS
