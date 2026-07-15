@@ -76,6 +76,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
         Description = content.Description,
         Type = content.Type,
         Body = content.Body,
+        LessonFormat = content.LessonFormat,
         SortOrder = content.SortOrder,
         IsRequired = content.IsRequired,
         GradingMethod = content.GradingMethod,
@@ -83,6 +84,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
         EstimatedMinutes = content.EstimatedMinutes,
         Visibility = content.Visibility,
       };
+
+      clonedContent.NormalizeLearningContract();
 
       context.Set<ProgramContent>().Add(clonedContent);
     }
@@ -154,6 +157,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     if (!program) throw new ArgumentException("Program not found", nameof(programId));
 
     content.ProgramId = programId;
+    content.NormalizeLearningContract();
 
     if (content.SortOrder == 0)
     {
@@ -169,6 +173,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
   public async Task<ProgramContent> UpdateContentAsync(ProgramContent content)
   {
+    content.NormalizeLearningContract();
     content.Touch();
     context.Set<ProgramContent>().Update(content);
     await context.SaveChangesAsync().ConfigureAwait(false);
@@ -230,6 +235,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
       EstimatedMinutes = contentDto.EstimatedMinutes,
     };
 
+    content.NormalizeLearningContract();
+
     context.Set<ProgramContent>().Add(content);
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -244,11 +251,19 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (contentDto.Title != null) content.Title = contentDto.Title;
     if (contentDto.Description != null) content.Description = contentDto.Description;
-    if (contentDto.Body != null) content.Body = contentDto.Body;
+    if (contentDto.Body != null)
+    {
+      content.Body = contentDto.Body;
+      if (ProgramContentMappingExtensions.NormalizeProfessorFacingType(content.Type) == ProgramContentType.Lesson)
+      {
+        content.LessonFormat = LessonContentFormatInference.FromBody(contentDto.Body);
+      }
+    }
     if (contentDto.SortOrder != null) content.SortOrder = contentDto.SortOrder.Value;
     if (contentDto.IsRequired != null) content.IsRequired = contentDto.IsRequired.Value;
     if (contentDto.EstimatedMinutes != null) content.EstimatedMinutes = contentDto.EstimatedMinutes;
 
+    content.NormalizeLearningContract();
     content.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
