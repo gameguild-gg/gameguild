@@ -10,6 +10,9 @@ public sealed class ContentInteractionEventConfiguration : IEntityTypeConfigurat
         builder.ToTable(table =>
         {
             table.HasCheckConstraint(
+                "CK_content_interaction_events_Type_Valid",
+                "\"Type\" BETWEEN 0 AND 8");
+            table.HasCheckConstraint(
                 "CK_content_interaction_events_DurationSeconds_Positive",
                 "\"DurationSeconds\" IS NULL OR \"DurationSeconds\" > 0");
             table.HasCheckConstraint(
