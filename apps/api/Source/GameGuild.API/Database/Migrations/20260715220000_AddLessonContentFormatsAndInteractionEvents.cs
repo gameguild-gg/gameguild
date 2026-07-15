@@ -32,6 +32,8 @@ public partial class AddLessonContentFormatsAndInteractionEvents : Migration
             "UPDATE program_contents SET \"Type\" = 2, \"LessonFormat\" = NULL WHERE \"Type\" = 6;");
         migrationBuilder.Sql(
             "UPDATE content_interactions SET \"TimeSpentSeconds\" = GREATEST(COALESCE(\"TimeSpentMinutes\", 0), 0) * 60;");
+        migrationBuilder.Sql(
+            "UPDATE content_interactions AS interaction SET \"UserId\" = enrollment.\"UserId\" FROM program_users AS enrollment WHERE interaction.\"ProgramUserId\" = enrollment.\"Id\" AND interaction.\"UserId\" <> enrollment.\"UserId\";");
 
         migrationBuilder.AddCheckConstraint(
             name: "CK_program_contents_Lesson_NotGraded",
@@ -41,7 +43,7 @@ public partial class AddLessonContentFormatsAndInteractionEvents : Migration
         migrationBuilder.AddCheckConstraint(
             name: "CK_program_contents_LessonFormat",
             table: "program_contents",
-            sql: "((\"Type\" IN (0, 1)) AND \"LessonFormat\" IS NOT NULL) OR ((\"Type\" NOT IN (0, 1)) AND \"LessonFormat\" IS NULL)");
+            sql: "((\"Type\" IN (0, 1)) AND \"LessonFormat\" IN (0, 1, 2, 3)) OR ((\"Type\" NOT IN (0, 1)) AND \"LessonFormat\" IS NULL)");
 
         migrationBuilder.AddCheckConstraint(
             name: "CK_content_interactions_TimeSpentSeconds_NonNegative",
@@ -70,6 +72,9 @@ public partial class AddLessonContentFormatsAndInteractionEvents : Migration
             constraints: table =>
             {
                 table.PrimaryKey("PK_content_interaction_events", x => x.Id);
+                table.CheckConstraint(
+                    "CK_content_interaction_events_Type_Valid",
+                    "\"Type\" BETWEEN 0 AND 8");
                 table.CheckConstraint(
                     "CK_content_interaction_events_DurationSeconds_Positive",
                     "\"DurationSeconds\" IS NULL OR \"DurationSeconds\" > 0");

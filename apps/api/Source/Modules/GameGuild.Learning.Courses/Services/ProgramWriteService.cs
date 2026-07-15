@@ -378,7 +378,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (interaction == null)
     {
-      interaction = new ContentInteraction { ProgramUserId = programUser.Id, ContentId = contentId, Status = status, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, };
+      interaction = new ContentInteraction { ProgramUserId = programUser.Id, UserId = userId, ContentId = contentId, Status = status, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, };
 
       context.Set<ContentInteraction>().Add(interaction);
     }

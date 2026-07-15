@@ -8866,6 +8866,8 @@ namespace GameGuild.API.Database.Migrations
                             t.HasCheckConstraint("CK_content_interaction_events_PositionSeconds_NonNegative", "\"PositionSeconds\" IS NULL OR \"PositionSeconds\" >= 0");
 
                             t.HasCheckConstraint("CK_content_interaction_events_ProgressPercentage_Range", "\"ProgressPercentage\" IS NULL OR (\"ProgressPercentage\" >= 0 AND \"ProgressPercentage\" <= 100)");
+
+                            t.HasCheckConstraint("CK_content_interaction_events_Type_Valid", "\"Type\" BETWEEN 0 AND 8");
                         });
                 });
 
@@ -9238,7 +9240,7 @@ namespace GameGuild.API.Database.Migrations
                         {
                             t.HasCheckConstraint("CK_program_contents_Lesson_NotGraded", "\"Type\" NOT IN (0, 1) OR (\"GradingMethod\" = 0 AND \"MaxPoints\" IS NULL)");
 
-                            t.HasCheckConstraint("CK_program_contents_LessonFormat", "((\"Type\" IN (0, 1)) AND \"LessonFormat\" IS NOT NULL) OR ((\"Type\" NOT IN (0, 1)) AND \"LessonFormat\" IS NULL)");
+                            t.HasCheckConstraint("CK_program_contents_LessonFormat", "((\"Type\" IN (0, 1)) AND \"LessonFormat\" IN (0, 1, 2, 3)) OR ((\"Type\" NOT IN (0, 1)) AND \"LessonFormat\" IS NULL)");
                         });
                 });
 
