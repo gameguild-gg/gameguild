@@ -55,6 +55,11 @@ public class ContentInteraction : EntityBase
     public int? TimeSpentMinutes { get; set; } = 0;
 
     /// <summary>
+    /// Exact accumulated active time. TimeSpentMinutes remains as a compatibility projection.
+    /// </summary>
+    public int TimeSpentSeconds { get; set; }
+
+    /// <summary>
     /// When the user started this content
     /// </summary>
     public DateTime? StartedAt { get; set; }
@@ -139,6 +144,11 @@ public class ContentInteraction : EntityBase
     /// Activity grades for this interaction
     /// </summary>
     public virtual ICollection<ActivityGrade> ActivityGrades { get; set; } = new List<ActivityGrade>();
+
+    /// <summary>
+    /// Fine-grained lesson and video interaction timeline.
+    /// </summary>
+    public virtual ICollection<ContentInteractionEvent> Events { get; set; } = new List<ContentInteractionEvent>();
 
     // Computed Properties
     /// <summary>
@@ -227,7 +237,26 @@ public class ContentInteraction : EntityBase
     /// </summary>
     public void AddTimeSpent(int minutes)
     {
-        TimeSpentMinutes = (TimeSpentMinutes ?? 0) + minutes;
+        if (minutes <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(minutes), "Time spent must be positive.");
+        }
+
+        AddTimeSpentSeconds(checked(minutes * 60));
+    }
+
+    /// <summary>
+    /// Records exact active time while maintaining the legacy whole-minute value.
+    /// </summary>
+    public void AddTimeSpentSeconds(int seconds)
+    {
+        if (seconds <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(seconds), "Time spent must be positive.");
+        }
+
+        TimeSpentSeconds = checked(TimeSpentSeconds + seconds);
+        TimeSpentMinutes = TimeSpentSeconds / 60;
         UpdateLastAccess();
     }
 
@@ -273,6 +302,7 @@ public class ContentInteraction : EntityBase
         CompletedAt = null;
         ProgressPercentage = 0m;
         TimeSpentMinutes = 0;
+        TimeSpentSeconds = 0;
         AttemptCount = 0;
         BestScore = null;
         BookmarkPosition = null;
