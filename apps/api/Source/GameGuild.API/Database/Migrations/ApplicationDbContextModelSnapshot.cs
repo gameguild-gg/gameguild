@@ -8796,8 +8796,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("UserId", "ContentId")
-                        .IsUnique();
+                    b.HasIndex("UserId", "ContentId");
 
                     b.ToTable("content_interactions", t =>
                         {
