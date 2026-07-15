@@ -1,7 +1,6 @@
 'use client';
 
-import { compileAndRun, createEmception, type CompilePhase, type EmceptionAPI } from '@gameguild/emception-browser';
-import { ToolchainPreset } from 'emception';
+import { compileAndRun, createEmception, type BrowserBuildPresetName, type CompilePhase, type EmceptionAPI } from '@gameguild/emception-browser';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const STARTER_SOURCE = `#include <stdio.h>
@@ -13,8 +12,8 @@ int main() {
 }
 `;
 
-const manifestUrl = import.meta.env.VITE_EMCEPTION_MANIFEST_URL || 'https://gameguild-gg.github.io/gameguild/cdn/manifest.json';
-const PRESET = ToolchainPreset.CPP;
+const manifestUrl = `${import.meta.env.BASE_URL}cdn/manifest.json`;
+const PRESET: BrowserBuildPresetName = 'cpp';
 
 type LogKind = 'info' | 'stdout' | 'stderr' | 'error';
 
@@ -70,7 +69,7 @@ export default function App() {
         setLog([]);
         try {
             const result = await compileAndRun(api, {
-                toolchain: PRESET,
+                preset: PRESET,
                 source,
                 stdin,
                 onPhase: (p: CompilePhase) => append('info', `[${p}]\n`),

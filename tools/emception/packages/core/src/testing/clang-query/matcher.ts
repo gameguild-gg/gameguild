@@ -43,7 +43,7 @@
  * matchers surface immediately rather than silently matching nothing.
  */
 
-import { TestFailureError } from '../../errors.js';
+import { TestFailureError } from '../../errors';
 
 /** Minimal shape of a clang AST-dump JSON node we care about. */
 export interface ClangAstNode {
