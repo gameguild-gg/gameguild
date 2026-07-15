@@ -14,6 +14,16 @@ public sealed class RecordContentInteractionEventCommandHandler(IApplicationDbCo
         var idempotencyKey = string.IsNullOrWhiteSpace(request.IdempotencyKey)
             ? null
             : request.IdempotencyKey.Trim();
+
+        var interaction = await context.Set<ContentInteraction>()
+            .Include(item => item.Content)
+            .FirstOrDefaultAsync(item => item.Id == request.InteractionId, cancellationToken)
+            .ConfigureAwait(false);
+        if (interaction is null || interaction.Content.ProgramId != request.ProgramId)
+        {
+            throw new RequestValidationException("Content interaction was not found in this course.");
+        }
+
         if (idempotencyKey is not null)
         {
             var existing = await context.Set<ContentInteractionEvent>()
@@ -27,15 +37,6 @@ public sealed class RecordContentInteractionEventCommandHandler(IApplicationDbCo
             {
                 return ContentInteractionEventDto.FromEntity(existing);
             }
-        }
-
-        var interaction = await context.Set<ContentInteraction>()
-            .Include(item => item.Content)
-            .FirstOrDefaultAsync(item => item.Id == request.InteractionId, cancellationToken)
-            .ConfigureAwait(false);
-        if (interaction is null || interaction.Content.ProgramId != request.ProgramId)
-        {
-            throw new RequestValidationException("Content interaction was not found in this course.");
         }
 
         if (ProgramContentMappingExtensions.NormalizeProfessorFacingType(interaction.Content.Type) !=
