@@ -8,7 +8,7 @@
  * or injected as a built-in module in CPython's frozen modules.
  */
 
-import type { ToolRunner } from '../tool-runner.js';
+import type { ToolRunner } from '../tool-runner';
 
 /**
  * Create the _browser_bridge function table for injection into CPython.

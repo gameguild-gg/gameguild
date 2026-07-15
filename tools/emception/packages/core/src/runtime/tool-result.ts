@@ -4,8 +4,8 @@
 // runtime check helper that adapters (and tests) can use to fail fast when a
 // returned value violates the contract. It is pure and DOM-free.
 
-import { EmceptionError } from '../errors.js';
-import type { ToolResult } from '../types.js';
+import { EmceptionError } from '../errors';
+import type { ToolResult } from '../types';
 
 /**
  * Validate that `value` is a well-formed {@link ToolResult}.

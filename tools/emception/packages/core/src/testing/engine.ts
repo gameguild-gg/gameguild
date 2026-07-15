@@ -12,9 +12,9 @@
 // vendoring) land. Stubs throw a descriptive "not yet implemented" error
 // rather than silently passing so partial wiring can't ship false greens.
 
-import type { EmceptionAPI, TestCase, TestCaseResult, TestPlan, TestReport } from '../types.js';
-import { compileMatcher, runMatcher, type ClangAstNode, type MatchResult } from './clang-query/matcher.js';
-import { parseDoctestConsole } from './doctest/parse.js';
+import type { EmceptionAPI, TestCase, TestCaseResult, TestPlan, TestReport } from '../types';
+import { compileMatcher, runMatcher, type ClangAstNode, type MatchResult } from './clang-query/matcher';
+import { parseDoctestConsole } from './doctest/parse';
 
 /**
  * Signature every per-kind handler implements. Receives the live API plus
@@ -104,9 +104,10 @@ const handlers: { [K in TestCase['kind']]: TestKindHandler<K> } = {
     // adapter half is `clang -Xclang -ast-dump=json`. We assume the
     // resolved sources are already on disk in the workspace and shell
     // out via `em.run('clang', ...)`. The plan's `build` is consulted
-    // for include paths / flags / defines so the AST sees the same
-    // language standard and declarations as the regular build. Clang's
-    // syntax-only AST dump ignores code-generation-only flags.
+    // for include paths / std / defines so the AST sees the same
+    // declarations the build does; we deliberately skip cflags that
+    // would change AST shape (e.g. `-O*`) by relying on `clang`'s
+    // dump mode ignoring most codegen flags.
     const start = nowMs();
     const sources = (plan.build?.sources ?? []) as string[];
     if (sources.length === 0) {
@@ -125,7 +126,6 @@ const handlers: { [K in TestCase['kind']]: TestKindHandler<K> } = {
         argv.push(v === true ? `-D${key}` : `-D${key}=${v}`);
       }
     }
-    argv.push(...(plan.build?.flags ?? []));
     argv.push(...sources);
 
     const result = await em.run('clang', argv, {

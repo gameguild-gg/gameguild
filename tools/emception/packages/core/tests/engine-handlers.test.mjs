@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { ToolchainPreset, runTests } from '../dist/index.js';
+import { runTests } from '../dist/index.js';
 
 /** Minimal AST-dump JSON: a TU with one C++ class named "LinkedList". */
 const SAMPLE_AST = JSON.stringify({
@@ -86,7 +86,7 @@ test('clang-query: matcher hits → passes when expect=found', async () => {
         },
     });
     const report = await runTests(api, {
-        build: { toolchain: ToolchainPreset.CPP, sources: ['list.cpp'], flags: ['-std=c++20'], includePaths: ['inc'], defines: { B: '2', A: true } },
+        build: { sources: ['list.cpp'], std: 'c++20', includePaths: ['inc'], defines: { B: '2', A: true } },
         cases: [{ kind: 'clang-query', matcher: 'cxxRecordDecl(hasName("LinkedList"))', expect: 'found' }],
     });
     assert.equal(capturedCmd, 'clang');

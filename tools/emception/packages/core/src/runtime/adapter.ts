@@ -12,7 +12,7 @@
  * Pure types — no runtime dependencies.
  */
 
-import type { FSManifest } from '../vfs/manifest.js';
+import type { FSManifest } from '../vfs/manifest';
 
 /** Minimal worker handle abstraction shared across runtimes. */
 export interface WorkerHandle {

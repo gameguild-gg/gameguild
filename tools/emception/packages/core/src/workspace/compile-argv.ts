@@ -12,8 +12,8 @@
  * compiler.
  */
 
-import { BuildConfigError } from '../errors.js';
-import type { NativeBuildConfig } from '../types.js';
+import { BuildConfigError } from '../errors';
+import type { NativeBuildConfig } from '../types';
 
 export interface CompileInvocation {
   /** The compiler binary name (`clang`, `clang++`, `emcc`, `em++`). */
