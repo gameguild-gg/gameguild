@@ -1,9 +1,9 @@
 import Editor, { type OnMount } from '@monaco-editor/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import DockDropOverlay, { dropZoneToGroup, type DropZone } from './DockDropOverlay.js';
-import { tabIcon } from './FileExplorer.js';
-import { type DockGroup, type OpenTab, type WorkspaceFile } from './ide-types.js';
-import { fileName, inferLanguage } from './ide-utils.js';
+import DockDropOverlay, { dropZoneToGroup, type DropZone } from './DockDropOverlay';
+import { tabIcon } from './FileExplorer';
+import { type DockGroup, type OpenTab, type WorkspaceFile } from './ide-types';
+import { fileName, inferLanguage } from './ide-utils';
 
 const DOCK_LABELS: Record<DockGroup, string> = {
     main: 'EDITOR',

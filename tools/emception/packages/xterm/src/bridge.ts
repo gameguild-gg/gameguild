@@ -5,26 +5,8 @@
  * interface rather than xterm.js directly.
  */
 
-import * as XtermModule from '@xterm/xterm';
-import type { Terminal as XtermTerminal } from '@xterm/xterm';
+import { Terminal } from '@xterm/xterm';
 import type { IOProvider } from 'emception';
-
-// xterm 6 exposes ESM through its `module` field while Node loads the UMD
-// `main` entry. Support both shapes so the package remains importable in
-// Node-based tests and in browser bundlers.
-const xtermNamespace = XtermModule as unknown as Record<string, unknown>;
-const commonJsNamespace = Reflect.get(xtermNamespace, 'default') as
-  | { Terminal?: typeof XtermTerminal }
-  | undefined;
-const terminalConstructor = (xtermNamespace.Terminal as typeof XtermTerminal | undefined)
-  ?? commonJsNamespace?.Terminal;
-
-if (!terminalConstructor) {
-  throw new Error('@xterm/xterm did not expose a Terminal constructor.');
-}
-
-const TerminalConstructor: typeof XtermTerminal = terminalConstructor;
-type Terminal = XtermTerminal;
 
 export class TTYBridge implements IOProvider {
   private terminal: Terminal;
@@ -52,7 +34,7 @@ export class TTYBridge implements IOProvider {
       this.terminal = containerOrTerminal as Terminal;
       this.ownsTerminal = false;
     } else {
-      this.terminal = new TerminalConstructor({
+      this.terminal = new Terminal({
         cols: 120,
         rows: 40,
         fontFamily: '"Fira Code", monospace',

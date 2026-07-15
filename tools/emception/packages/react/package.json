@@ -30,7 +30,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "clean": "node ../../scripts/clean-package.mjs dist"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@gameguild/emception-browser": "*",

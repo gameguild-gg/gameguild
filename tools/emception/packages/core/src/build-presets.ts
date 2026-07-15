@@ -10,7 +10,7 @@
 // "workspace presets" (`@emception/core` `workspace-presets.ts`) which describe
 // full IDE workspace configurations layered on top of these build presets.
 
-import { ToolchainPreset, type WorkspaceBuildConfig } from './types.js';
+import { ToolchainPreset, type WorkspaceBuildConfig } from './types';
 
 export const BUILD_PRESETS: Record<ToolchainPreset, WorkspaceBuildConfig> = {
   [ToolchainPreset.C]: { toolchain: ToolchainPreset.C, compiler: 'clang', flags: ['-O1', '-std=c2y'] },

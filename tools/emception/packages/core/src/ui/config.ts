@@ -9,10 +9,10 @@
 // Pure core: no DOM, no React, no Node. Inputs are plain JSON-ish; outputs
 // are typed.
 
-import { BUILD_PRESETS } from '../build-presets.js';
-import { ToolchainPreset } from '../types.js';
-import { BuildConfigError } from '../errors.js';
-import type { StdinInput, StdoutSink, WorkspaceOptions, WorkspaceSeed } from '../types.js';
+import { BUILD_PRESETS } from '../build-presets';
+import { ToolchainPreset } from '../types';
+import { BuildConfigError } from '../errors';
+import type { StdinInput, StdoutSink, WorkspaceOptions, WorkspaceSeed } from '../types';
 
 /**
  * The shape both UI surfaces accept BEFORE normalization. Mirrors the
