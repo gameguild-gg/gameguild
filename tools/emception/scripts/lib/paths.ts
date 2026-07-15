@@ -61,7 +61,3 @@ export function paths(root: string = process.cwd()): EmceptionPaths {
         libcurlArchive: path.join(build, 'libcurl.a'),
     });
 }
-
-export function workspaceScriptPath(root: string, scriptName: string): string {
-    return path.resolve(root, 'scripts', scriptName);
-}

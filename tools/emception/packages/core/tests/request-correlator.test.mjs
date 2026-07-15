@@ -130,6 +130,9 @@ test('end-to-end with real MessageChannel: 5 concurrent echoes complete in order
     channel.port1.on('message', (msg) => {
         c.complete(msg.id, msg.payload);
     });
+    channel.port1.unref();
+    channel.port2.unref();
+
     const sends = ['a', 'b', 'c', 'd', 'e'].map((payload) => {
         const { id, promise } = c.allocate();
         channel.port1.postMessage({ id, payload });
@@ -156,6 +159,9 @@ test('end-to-end with real MessageChannel: stale response after complete is drop
         const ok = c.complete(msg.id, msg.payload);
         if (!ok) staleHandled = msg.payload;
     });
+    channel.port1.unref();
+    channel.port2.unref();
+
     const { id, promise } = c.allocate();
     channel.port1.postMessage({ id, ping: true });
     const result = await promise;
@@ -175,6 +181,9 @@ test('end-to-end with real MessageChannel: dispose mid-flight rejects in-flight 
     // Server NEVER responds, simulating a hung worker.
     channel.port2.on('message', () => { });
     channel.port1.on('message', (msg) => c.complete(msg.id, msg.payload));
+    channel.port1.unref();
+    channel.port2.unref();
+
     const { id, promise } = c.allocate();
     channel.port1.postMessage({ id, payload: 'hang' });
 

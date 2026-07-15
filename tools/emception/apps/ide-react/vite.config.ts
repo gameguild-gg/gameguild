@@ -60,7 +60,12 @@ export default defineConfig({
     },
     // Exclude CDN sysroot files (contains .html docs) from dependency scanning
     optimizeDeps: {
-        exclude: ['emception'],
+        exclude: [
+            '@gameguild/emception-ide',
+            '@gameguild/emception-browser',
+            '@gameguild/emception-xterm',
+            'emception'
+        ],
         entries: ['index.html', 'src/**/*.{ts,tsx}'],
     },
     server: {

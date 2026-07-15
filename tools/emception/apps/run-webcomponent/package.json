@@ -5,12 +5,13 @@
   "description": "Minimal Vite + vanilla HTML demo for the <emception-run> custom element from @gameguild/emception-webcomponent.",
   "type": "module",
   "scripts": {
-    "predev": "pnpm --dir ../.. run build:packages",
+    "predev": "npm run build:lib --prefix ../.. && node ../../scripts/install-app-cdn-from-package.mjs apps/run-webcomponent",
     "dev": "run-p watch:core watch:browser watch:webcomponent vite",
     "vite": "vite",
     "watch:core": "tsc -p ../../packages/core/tsconfig.json --watch --preserveWatchOutput",
     "watch:browser": "tsc -p ../../packages/browser/tsconfig.json --watch --preserveWatchOutput",
     "watch:webcomponent": "tsc -p ../../packages/webcomponent/tsconfig.json --watch --preserveWatchOutput",
+    "prebuild": "npm run build:lib --prefix ../.. && node ../../scripts/install-app-cdn-from-package.mjs apps/run-webcomponent",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },

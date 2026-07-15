@@ -19,8 +19,8 @@
 // Pure core: no DOM, no React, no Node. Inputs are plain string maps;
 // outputs are plain JS objects.
 
-import type { EmceptionEventName } from '../events.js';
-import type { ViewConfigInput } from './config.js';
+import type { EmceptionEventName } from '../events';
+import type { ViewConfigInput } from './config';
 
 // ─────────────── kebab ⇄ camel ───────────────
 
@@ -50,7 +50,7 @@ export function parseBooleanAttr(value: string | null | undefined): boolean {
   return v !== 'false' && v !== '0' && v !== 'no';
 }
 
-/** Parse a comma- or whitespace-separated list (e.g. `flags="-O2 -Wall"`). */
+/** Parse a comma- or whitespace-separated list (e.g. `cflags="-O2 -Wall"`). */
 export function parseListAttr(value: string | null | undefined): string[] | undefined {
   if (value == null) return undefined;
   const parts = value.split(/[\s,]+/).filter(Boolean);

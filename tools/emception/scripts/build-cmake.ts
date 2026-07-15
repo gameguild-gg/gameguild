@@ -12,7 +12,6 @@ import shell from 'shelljs';
 import { standaloneFlags } from './lib/emcc-flags.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { workspaceScriptPath } from './lib/paths.ts';
 import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-cmake');
@@ -491,8 +490,8 @@ console.log(`Toolchain file: ${toolchainSrc}`);
 // deployed cmake.mjs in both build/ and sysroot/. Without these patches,
 // std::system() returns -52 (ENOSYS) and callMain() cannot suspend for async I/O.
 console.log('Applying glue patches to cmake.mjs...');
-const patchGlueScript = workspaceScriptPath(ROOT, 'patch-glue.ts');
-const patchGlueResult = shell.exec(`npx tsx "${patchGlueScript}"`, { silent: false });
+shell.cd(ROOT);
+const patchGlueResult = shell.exec('npx tsx scripts/patch-glue.ts', { silent: false });
 if (patchGlueResult.code !== 0) {
     console.error('WARNING: patch:glue failed — cmake.mjs may be missing systemCallback patches');
 }
