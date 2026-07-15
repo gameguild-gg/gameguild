@@ -42,3 +42,6 @@ apps/website/.next/
 # Allow the packages directory and its contents, but exclude node_modules inside it
 !packages/**
 packages/**/node_modules/
+
+# Exclude unfinished/emception-only workspace package from web/learning image installs.
+packages/infrastructure/ui-emception/**

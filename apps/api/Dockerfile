@@ -14,8 +14,8 @@ RUN dotnet publish "Source/GameGuild.API/GameGuild.API.csproj" -c Release -o /ap
 # Stage 2: Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 
-# Install runtime dependencies for health checks and PostgreSQL/Npgsql auth.
-RUN apk add --no-cache curl krb5-libs \
+# Install runtime dependencies for health checks, PostgreSQL/Npgsql auth, and .NET localization.
+RUN apk add --no-cache curl krb5-libs icu-libs icu-data-full \
     && addgroup -g 1001 -S appuser \
     && adduser -S appuser -G appuser -u 1001
 
@@ -39,6 +39,7 @@ EXPOSE 3000
 ENV ASPNETCORE_HTTP_PORTS=3000 \
     ASPNETCORE_ENVIRONMENT=Production \
     DOTNET_RUNNING_IN_CONTAINER=true \
+    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false \
     DOTNET_USE_POLLING_FILE_WATCHER=true \
     ASPNETCORE_FORWARDEDHEADERS_ENABLED=true \
     DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys
