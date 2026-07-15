@@ -1,5 +1,4 @@
-
-
+using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -9,14 +8,24 @@ namespace GameGuild.Learning.Courses;
 ///   Service for managing content interactions following the permission inheritance pattern ContentInteraction inherits permissions from Program -> ProgramContent -> ContentInteraction Once submitted, interactions become immutable but
 ///   users can create new interactions
 /// </summary>
-public class ContentInteractionService(IApplicationDbContext context) : IContentInteractionService {
+public class ContentInteractionService(
+  IApplicationDbContext context,
+  IRequestContextAccessor requestContextAccessor) : IContentInteractionService {
   /// <summary> Start a new content interaction (or resume existing one if not submitted) </summary>
   public async Task<ContentInteraction> StartContentAsync(Guid programUserId, Guid contentId) {
+    var currentUserId = requestContextAccessor.CurrentUserId;
+    if (!currentUserId.HasValue)
+      throw new RequestValidationException("Active course enrollment was not found.");
+
     var programUser = await context.Set<ProgramUser>()
       .AsNoTracking()
-      .FirstOrDefaultAsync(item => item.Id == programUserId && item.DeletedAt == null && item.IsActive)
+      .FirstOrDefaultAsync(item =>
+        item.Id == programUserId &&
+        item.UserId == currentUserId.Value &&
+        item.DeletedAt == null &&
+        item.IsActive)
       .ConfigureAwait(false);
-    if (programUser == null) throw new InvalidOperationException("Active course enrollment was not found.");
+    if (programUser == null) throw new RequestValidationException("Active course enrollment was not found.");
 
     var contentBelongsToProgram = await context.Set<ProgramContent>()
       .AnyAsync(item => item.Id == contentId && item.ProgramId == programUser.ProgramId && item.DeletedAt == null)
@@ -24,7 +33,11 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
     if (!contentBelongsToProgram) throw new InvalidOperationException("Content does not belong to the enrolled course.");
 
     // Check if there's already an interaction for this user/content
-    var existingInteraction = await context.Set<ContentInteraction>().FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
+    var existingInteraction = await context.Set<ContentInteraction>()
+      .Where(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId)
+      .OrderByDescending(ci => ci.CreatedAt)
+      .FirstOrDefaultAsync()
+      .ConfigureAwait(false);
 
     if (existingInteraction != null) {
       existingInteraction.UserId = programUser.UserId;
@@ -107,12 +120,28 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
 
   /// <summary> Get interaction for a specific user and content </summary>
   public async Task<ContentInteraction?> GetInteractionAsync(Guid programUserId, Guid contentId) {
-    return await context.Set<ContentInteraction>().Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades).FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
+    var currentUserId = requestContextAccessor.CurrentUserId;
+    if (!currentUserId.HasValue) return null;
+
+    return await context.Set<ContentInteraction>().Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades)
+      .OrderByDescending(ci => ci.CreatedAt)
+      .FirstOrDefaultAsync(ci =>
+        ci.ProgramUserId == programUserId &&
+        ci.ContentId == contentId &&
+        ci.UserId == currentUserId.Value)
+      .ConfigureAwait(false);
   }
 
   /// <summary> Get all interactions for a user </summary>
   public async Task<IEnumerable<ContentInteraction>> GetUserInteractionsAsync(Guid programUserId) {
-    return await context.Set<ContentInteraction>().Include(ci => ci.Content).Include(ci => ci.ActivityGrades).Where(ci => ci.ProgramUserId == programUserId).OrderByDescending(ci => ci.LastAccessedAt).ToListAsync();
+    var currentUserId = requestContextAccessor.CurrentUserId;
+    if (!currentUserId.HasValue) return [];
+
+    return await context.Set<ContentInteraction>().Include(ci => ci.Content).Include(ci => ci.ActivityGrades)
+      .Where(ci => ci.ProgramUserId == programUserId && ci.UserId == currentUserId.Value)
+      .OrderByDescending(ci => ci.LastAccessedAt)
+      .ToListAsync()
+      .ConfigureAwait(false);
   }
 
   /// <summary> Update time spent on content </summary>
@@ -130,9 +159,15 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
 
   /// <summary> Get interaction by ID with proper error handling </summary>
   private async Task<ContentInteraction> GetInteractionByIdAsync(Guid interactionId) {
-    var interaction = await context.Set<ContentInteraction>().Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades).FirstOrDefaultAsync(ci => ci.Id == interactionId);
+    var currentUserId = requestContextAccessor.CurrentUserId;
+    if (!currentUserId.HasValue)
+      throw new RequestValidationException("Content interaction was not found.");
 
-    if (interaction == null) throw new InvalidOperationException($"Content interaction with ID {interactionId} not found.");
+    var interaction = await context.Set<ContentInteraction>().Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades)
+      .FirstOrDefaultAsync(ci => ci.Id == interactionId && ci.UserId == currentUserId.Value)
+      .ConfigureAwait(false);
+
+    if (interaction == null) throw new RequestValidationException("Content interaction was not found.");
 
     return interaction;
   }

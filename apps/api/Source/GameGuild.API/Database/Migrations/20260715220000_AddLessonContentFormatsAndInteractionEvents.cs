@@ -26,14 +26,23 @@ public partial class AddLessonContentFormatsAndInteractionEvents : Migration
             nullable: false,
             defaultValue: 0);
 
+        migrationBuilder.DropIndex(
+            name: "IX_content_interactions_UserId_ContentId",
+            table: "content_interactions");
+
         migrationBuilder.Sql(
-            "UPDATE program_contents SET \"Type\" = 0, \"GradingMethod\" = 0, \"MaxPoints\" = NULL, \"LessonFormat\" = 0 WHERE \"Type\" IN (0, 1);");
+            "UPDATE program_contents SET \"Type\" = 0, \"GradingMethod\" = 0, \"MaxPoints\" = NULL, \"LessonFormat\" = CASE WHEN LEFT(LTRIM(COALESCE(\"Body\", '')), 1) = '{' AND \"Body\" ~ '\"root\"[[:space:]]*:' THEN 1 ELSE 0 END WHERE \"Type\" IN (0, 1);");
         migrationBuilder.Sql(
             "UPDATE program_contents SET \"Type\" = 2, \"LessonFormat\" = NULL WHERE \"Type\" = 6;");
         migrationBuilder.Sql(
             "UPDATE content_interactions SET \"TimeSpentSeconds\" = GREATEST(COALESCE(\"TimeSpentMinutes\", 0), 0) * 60;");
         migrationBuilder.Sql(
             "UPDATE content_interactions AS interaction SET \"UserId\" = enrollment.\"UserId\" FROM program_users AS enrollment WHERE interaction.\"ProgramUserId\" = enrollment.\"Id\" AND interaction.\"UserId\" <> enrollment.\"UserId\";");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_content_interactions_UserId_ContentId",
+            table: "content_interactions",
+            columns: new[] { "UserId", "ContentId" });
 
         migrationBuilder.AddCheckConstraint(
             name: "CK_program_contents_Lesson_NotGraded",
@@ -108,6 +117,10 @@ public partial class AddLessonContentFormatsAndInteractionEvents : Migration
     {
         migrationBuilder.DropTable(name: "content_interaction_events");
 
+        migrationBuilder.DropIndex(
+            name: "IX_content_interactions_UserId_ContentId",
+            table: "content_interactions");
+
         migrationBuilder.DropCheckConstraint(
             name: "CK_content_interactions_TimeSpentSeconds_NonNegative",
             table: "content_interactions");
@@ -120,5 +133,11 @@ public partial class AddLessonContentFormatsAndInteractionEvents : Migration
 
         migrationBuilder.DropColumn(name: "TimeSpentSeconds", table: "content_interactions");
         migrationBuilder.DropColumn(name: "LessonFormat", table: "program_contents");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_content_interactions_UserId_ContentId",
+            table: "content_interactions",
+            columns: new[] { "UserId", "ContentId" },
+            unique: true);
     }
 }

@@ -124,6 +124,7 @@ public static class ProgramContentMappingExtensions
   /// <summary> Applies updates from UpdateProgramContentDto to ProgramContent entity </summary>
   public static void ApplyUpdates(this ProgramContent content, UpdateProgramContentDto dto)
   {
+    var wasLesson = NormalizeProfessorFacingType(content.Type) == ProgramContentType.Lesson;
     if (dto.Title != null) content.Title = dto.Title;
     if (dto.Description != null) content.Description = dto.Description;
     if (dto.Type != null) content.Type = NormalizeProfessorFacingType(dto.Type.Value);
@@ -133,7 +134,7 @@ public static class ProgramContentMappingExtensions
       content.LessonFormat = dto.LessonFormat.Value;
     }
     else if (NormalizeProfessorFacingType(content.Type) == ProgramContentType.Lesson &&
-             (dto.Type.HasValue || dto.Body != null))
+             (!wasLesson || !content.LessonFormat.HasValue))
     {
       content.LessonFormat = LessonContentFormatInference.FromBody(content.Body);
     }

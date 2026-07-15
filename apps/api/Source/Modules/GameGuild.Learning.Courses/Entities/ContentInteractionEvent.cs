@@ -57,14 +57,18 @@ public sealed class ContentInteractionEvent : EntityBase
             throw new ArgumentOutOfRangeException(nameof(durationSeconds), "Duration must be positive when provided.");
         }
 
-        if (positionSeconds < 0)
+        if (positionSeconds.HasValue && !IsValidPositionSeconds(positionSeconds.Value))
         {
-            throw new ArgumentOutOfRangeException(nameof(positionSeconds), "Position cannot be negative.");
+            throw new ArgumentOutOfRangeException(
+                nameof(positionSeconds),
+                "Position must fit numeric(12,3) and cannot be negative.");
         }
 
-        if (progressPercentage is < 0 or > 100)
+        if (progressPercentage.HasValue && !IsValidProgressPercentage(progressPercentage.Value))
         {
-            throw new ArgumentOutOfRangeException(nameof(progressPercentage), "Progress must be between 0 and 100.");
+            throw new ArgumentOutOfRangeException(
+                nameof(progressPercentage),
+                "Progress must fit numeric(5,2) and be between 0 and 100.");
         }
 
         if (!string.IsNullOrWhiteSpace(payload))
@@ -99,5 +103,31 @@ public sealed class ContentInteractionEvent : EntityBase
             Payload = string.IsNullOrWhiteSpace(payload) ? null : payload,
             IdempotencyKey = normalizedIdempotencyKey,
         };
+    }
+
+    internal static bool IsValidPositionSeconds(decimal value) =>
+        value is >= 0 and <= 999999999.999m && value == decimal.Round(value, 3);
+
+    internal static bool IsValidProgressPercentage(decimal value) =>
+        value is >= 0 and <= 100 && value == decimal.Round(value, 2);
+
+    internal bool MatchesReplay(
+        ContentInteractionEventType type,
+        int? durationSeconds,
+        decimal? positionSeconds,
+        decimal? progressPercentage,
+        string? payload,
+        DateTime? occurredAt)
+    {
+        var normalizedPayload = string.IsNullOrWhiteSpace(payload) ? null : payload;
+        var occurredAtMatches = !occurredAt.HasValue ||
+                                OccurredAt == occurredAt.Value.ToUniversalTime();
+
+        return Type == type &&
+               DurationSeconds == durationSeconds &&
+               PositionSeconds == positionSeconds &&
+               ProgressPercentage == progressPercentage &&
+               Payload == normalizedPayload &&
+               occurredAtMatches;
     }
 }

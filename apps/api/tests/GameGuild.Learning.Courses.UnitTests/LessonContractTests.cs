@@ -102,6 +102,29 @@ public sealed class LessonContractTests
         content.MaxPoints.Should().BeNull();
     }
 
+    [Theory]
+    [InlineData(LessonContentFormat.RevealJs)]
+    [InlineData(LessonContentFormat.Video)]
+    public void ApplyUpdates_WhenLessonBodyChangesWithoutFormat_ShouldPreserveExplicitFormat(
+        LessonContentFormat format)
+    {
+        var content = new ProgramContent
+        {
+            Type = ProgramContentType.Lesson,
+            LessonFormat = format,
+            Body = "old body",
+        };
+        var dto = new UpdateProgramContentDto
+        {
+            Id = content.Id,
+            Body = "updated body",
+        };
+
+        content.ApplyUpdates(dto);
+
+        content.LessonFormat.Should().Be(format);
+    }
+
     [Fact]
     public void ToEntity_WhenContentIsAssignment_ShouldKeepGradingAndIgnoreLessonFormat()
     {

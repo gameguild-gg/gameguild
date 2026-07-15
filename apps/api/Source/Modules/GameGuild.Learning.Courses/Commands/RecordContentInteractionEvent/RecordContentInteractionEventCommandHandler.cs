@@ -41,6 +41,7 @@ public sealed class RecordContentInteractionEventCommandHandler(
                 cancellationToken).ConfigureAwait(false);
             if (existing is not null)
             {
+                EnsureMatchingReplay(existing, request);
                 return ContentInteractionEventDto.FromEntity(existing);
             }
         }
@@ -86,6 +87,7 @@ public sealed class RecordContentInteractionEventCommandHandler(
                 cancellationToken).ConfigureAwait(false);
             if (existing is not null)
             {
+                EnsureMatchingReplay(existing, request);
                 return ContentInteractionEventDto.FromEntity(existing);
             }
 
@@ -105,6 +107,25 @@ public sealed class RecordContentInteractionEventCommandHandler(
                 item => item.InteractionId == interactionId &&
                         item.IdempotencyKey == idempotencyKey,
                 cancellationToken);
+
+    private static void EnsureMatchingReplay(
+        ContentInteractionEvent existing,
+        RecordContentInteractionEventCommand request)
+    {
+        if (existing.MatchesReplay(
+                request.Type,
+                request.DurationSeconds,
+                request.PositionSeconds,
+                request.ProgressPercentage,
+                request.Payload,
+                request.OccurredAt))
+        {
+            return;
+        }
+
+        throw new RequestValidationException(
+            "Idempotency key was already used for a different interaction event.");
+    }
 
     private static void ApplyEvent(ContentInteraction interaction, ContentInteractionEvent item)
     {
