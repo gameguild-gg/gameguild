@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useRef, useState, useTransition, lazy, Suspense, useEffect } from 'react';
+import React, { useCallback, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -11,69 +11,18 @@ import { Textarea } from '@game-guild/ui/components/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Switch } from '@game-guild/ui/components/switch';
 import { Separator } from '@game-guild/ui/components/separator';
-import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Clock, Loader2, Save } from 'lucide-react';
-import type { SerializedEditorState, LexicalEditor } from 'lexical';
+import type { SerializedEditorState } from 'lexical';
 import type { ContentItemDetail } from '@/lib/learning/types';
-import type { FieldConfig, ToolbarConfig } from '@/components/block-content-editor/engines/editor-config';
 import { updateContent } from '@/lib/learning/actions';
 import { CONTENT_VISIBILITIES, formatEnumLabel } from '@/lib/learning/enums';
-
-// ── Lazy-load LexicalSurface (browser-only, used for Lesson) ────────────────
-const LexicalSurface = lazy(() =>
-  import('@/components/block-content-editor/lexical-surface').then((mod) => ({
-    default: mod.LexicalSurface,
-  }))
-);
-
-// ── Lazy-load quiz engine components (browser-only, used for Questionnaire) ──
-const EditorProvider = lazy(() =>
-  import('@/components/block-content-editor/engines/editor-provider').then((mod) => ({
-    default: mod.EditorProvider,
-  }))
-);
-
-const EditorField = lazy(() =>
-  import('@/components/block-content-editor/engines/editor-field').then((mod) => ({
-    default: mod.EditorField,
-  }))
-);
-
-const EditorDialogs = lazy(() =>
-  import('@/components/block-content-editor/engines/editor-dialogs').then((mod) => ({
-    default: mod.EditorDialogs,
-  }))
-);
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Parse stored body string into a Lexical SerializedEditorState, or null. */
-function parseLexicalState(raw: string | null | undefined): SerializedEditorState | null {
-  if (!raw || raw.trim().length === 0) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object' && 'root' in parsed) {
-      return parsed as SerializedEditorState;
-    }
-  } catch {
-    // Not valid Lexical JSON
-  }
-  return null;
-}
+import { LessonContentEditor, parseLexicalState } from './lesson-content-editor';
+import { QuizContentEditor } from './quiz-content-editor';
 
 function formatContentTypeLabel(type: ContentItemDetail['type']) {
   if (type === 'Questionnaire') return 'Quiz';
   return type;
 }
-
-// ── Quiz field config (matches quiz-editor page) ─────────────────────────────
-const QUIZ_FIELD_CONFIG: Partial<FieldConfig> = {
-  allowedBlockTypes: [],
-  projectType: 'quiz',
-  allowedProjectTypes: ['quiz'],
-};
-
-const QUIZ_TOOLBAR_CONFIG: Partial<ToolbarConfig> = {};
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -100,18 +49,13 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
   );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // ── Lexical editor state (Lesson only) ──
   const initialLexicalState = useMemo(() => parseLexicalState(item.content), [item.content]);
   const editorStateRef = useRef<SerializedEditorState | null>(initialLexicalState);
 
   const handleEditorChange = useCallback(
-    (state: SerializedEditorState, _editor: LexicalEditor) => {
+    (state: SerializedEditorState) => {
       editorStateRef.current = state;
     },
     [],
@@ -130,9 +74,8 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
     setSaved(false);
 
     // For Lesson: serialize Lexical JSON. For Quiz: body is managed by the quiz engine.
-    const bodyToSave = isLesson && editorStateRef.current
-      ? JSON.stringify(editorStateRef.current)
-      : undefined;
+    const bodyToSave =
+      isLesson && editorStateRef.current ? JSON.stringify(editorStateRef.current) : undefined;
 
     startTransition(async () => {
       const result = await updateContent({
@@ -207,112 +150,14 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
 
               {/* ── Body editor: conditional by content type ── */}
               {isLesson && (
-                <div className="space-y-2">
-                  <Label>Body</Label>
-                  <p className="text-muted-foreground text-xs">
-                    Use the rich-text editor to create your lesson content.
-                  </p>
-                  <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    {isMounted ? (
-                      <Suspense
-                        fallback={
-                          <div className="space-y-3 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-[300px] w-full" />
-                          </div>
-                        }
-                      >
-                        <LexicalSurface
-                          namespace="LessonEditor"
-                          mountKey={item.id}
-                          initialState={initialLexicalState}
-                          onChange={handleEditorChange}
-                          placeholder="Start writing your lesson content..."
-                          contentStyle={{ minHeight: '400px' }}
-                          contentClassName="max-w-none"
-                          features={{
-                            toolbar: true,
-                            floatingTextFormat: true,
-                            floatingLinkEditor: true,
-                            draggable: true,
-                            picker: true,
-                            blockEmbed: false,
-                            blockInsertMenu: false,
-                            pageLayout: false,
-                            shortcuts: true,
-                            equation: true,
-                            excalidraw: true,
-                            emoji: true,
-                            autoEmbed: true,
-                            contextMenu: true,
-                            codeAction: true,
-                            table: true,
-                            layout: true,
-                            collapsible: true,
-                            sticky: true,
-                            admonition: true,
-                            button: true,
-                            divider: true,
-                            mermaid: true,
-                            vegaLite: true,
-                            media: true,
-                            history: true,
-                            list: true,
-                            link: true,
-                            checkList: true,
-                            tabIndentation: true,
-                          }}
-                        />
-                      </Suspense>
-                    ) : (
-                      <div className="space-y-3 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-[300px] w-full" />
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <LessonContentEditor
+                  itemId={item.id}
+                  initialState={initialLexicalState}
+                  onChange={handleEditorChange}
+                />
               )}
 
-              {isQuiz && (
-                <div className="space-y-2">
-                  <Label>Quiz editor</Label>
-                  <p className="text-muted-foreground text-xs">
-                    Use the quiz block editor to build your questions.
-                  </p>
-                  <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden min-h-[400px]">
-                    {isMounted ? (
-                      <Suspense
-                        fallback={
-                          <div className="space-y-3 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-[300px] w-full" />
-                          </div>
-                        }
-                      >
-                        <EditorProvider
-                          fieldConfig={QUIZ_FIELD_CONFIG}
-                          toolbarConfig={QUIZ_TOOLBAR_CONFIG}
-                        >
-                          <EditorField
-                            contentContainer={{
-                              className: 'flex-1 h-full max-h-[600px]',
-                              blocksClassName:
-                                'w-full border-none rounded-none bg-white dark:bg-gray-900 p-4',
-                            }}
-                          />
-                          <EditorDialogs />
-                        </EditorProvider>
-                      </Suspense>
-                    ) : (
-                      <div className="space-y-3 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-[300px] w-full" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              {isQuiz && <QuizContentEditor />}
 
               {!isLesson && !isQuiz && (
                 <div className="space-y-2">
@@ -424,4 +269,3 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
     </div>
   );
 }
-
