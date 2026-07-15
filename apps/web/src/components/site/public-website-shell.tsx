@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { Link } from '@/i18n/navigation';
-import { FlaskConical, Github, GraduationCap, Rocket, Users } from 'lucide-react';
+import { FlaskConical, Gamepad2, Github, GraduationCap, Heart, MessageCircle, Rocket, Twitter, Users, Youtube } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { PublicDesktopNav, PublicMobileNav, type PublicWebsiteUser } from './public-website-nav';
 
@@ -18,6 +18,8 @@ const primaryNav = [
 const footerSections = [
   {
     title: 'Learn',
+    accentClass: 'text-blue-400',
+    hoverClass: 'hover:text-blue-300',
     links: [
       { label: 'Courses', href: '/courses' },
       { label: 'Programs', href: '/programs' },
@@ -25,6 +27,8 @@ const footerSections = [
   },
   {
     title: 'Build & test',
+    accentClass: 'text-purple-400',
+    hoverClass: 'hover:text-purple-300',
     links: [
       { label: 'Testing Lab', href: '/testing-lab' },
       { label: 'Launch Pad', href: '/launch-pad' },
@@ -33,7 +37,10 @@ const footerSections = [
   },
   {
     title: 'Community',
+    accentClass: 'text-emerald-400',
+    hoverClass: 'hover:text-emerald-300',
     links: [
+      { label: 'Join community', href: '/sign-up' },
       { label: 'Community hub', href: '/community' },
       { label: 'Feed', href: '/feed' },
       { label: 'Jobs', href: '/jobs' },
@@ -41,6 +48,8 @@ const footerSections = [
   },
   {
     title: 'Company',
+    accentClass: 'text-sky-400',
+    hoverClass: 'hover:text-sky-300',
     links: [
       { label: 'About GameGuild', href: '/about' },
       { label: 'Roadmap', href: '/about/roadmap' },
@@ -50,10 +59,25 @@ const footerSections = [
   },
 ] as const;
 
+const footerSocialLinks = [
+  { label: 'Discord', href: 'https://discord.gg/9CdJeQ2XKB', icon: MessageCircle },
+  { label: 'Twitter', href: 'https://twitter.com/gameguild_gg', icon: Twitter },
+  { label: 'GitHub', href: 'https://github.com/gameguild-gg/gameguild', icon: Github },
+  { label: 'YouTube', href: 'https://youtube.com/@gameguild', icon: Youtube },
+] as const;
+
 function BrandMark() {
   return (
     <span className="flex size-9 items-center justify-center rounded-xl border border-white/15 bg-white text-slate-950 shadow-sm">
       <GraduationCap className="size-5" aria-hidden="true" />
+    </span>
+  );
+}
+
+function FooterBrandMark() {
+  return (
+    <span className="flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg shadow-purple-950/30">
+      <Gamepad2 className="size-5" aria-hidden="true" />
     </span>
   );
 }
@@ -150,65 +174,40 @@ export async function PublicWebsiteHeader() {
 
 export function PublicWebsiteFooter() {
   return (
-    <footer className="border-t border-white/10 bg-[#060a18] text-white">
-      <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div
-          data-testid="footer-cta"
-          className="grid gap-4 rounded-lg border border-sky-300/20 bg-sky-300/[0.06] px-5 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
-        >
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold tracking-tight text-white">Ready to build with GameGuild?</h2>
-            <p className="max-w-2xl text-sm leading-6 text-slate-400">
-              Join practical courses, community playtests, and project launch support in one creator network.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3 text-sm font-semibold">
-            <Link
-              href="/sign-up"
-              className="inline-flex items-center rounded-full bg-sky-300 px-4 py-2 text-slate-950 transition hover:bg-sky-200"
-            >
-              Join community
-            </Link>
-            <Link
-              href="/projects"
-              className="inline-flex items-center rounded-full border border-white/10 px-4 py-2 text-slate-200 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
-            >
-              Browse projects
-            </Link>
-          </div>
-        </div>
-
-        <div
-          data-testid="footer-primary-grid"
-          className="mt-10 grid gap-10 border-b border-white/10 pb-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.7fr)]"
-        >
-          <div className="max-w-sm space-y-4">
+    <footer className="border-t-2 border-slate-700/40 bg-gradient-to-b from-[#101a30] via-[#142039] to-[#0d172b] text-white">
+      <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+        <div data-testid="footer-primary-grid" className="grid gap-10 lg:grid-cols-6 lg:gap-12">
+          <div className="max-w-sm lg:col-span-2">
             <div className="flex items-center gap-3">
-              <BrandMark />
-              <span className="text-lg font-semibold text-white">GameGuild</span>
+              <FooterBrandMark />
+              <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-xl font-bold text-transparent">Game Guild</span>
             </div>
-            <p className="text-sm leading-6 text-slate-400">
-              A game development community for learning, testing playable work, and helping projects reach launch.
+            <p className="mt-5 text-sm leading-6 text-slate-400">
+              A thriving gaming community dedicated to education, collaboration, and innovation. Join us as we grow together and shape the future of gaming.
             </p>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium">
-              <a
-                href="https://github.com/gameguild-gg/gameguild"
-                className="inline-flex items-center gap-2 text-slate-300 transition hover:text-white"
-              >
-                <Github className="size-4" aria-hidden="true" />
-                GitHub
-              </a>
+            <div className="mt-5 space-y-3 text-sm text-slate-400">
+              <div className="flex items-center gap-3 transition-colors hover:text-blue-300">
+                <Users className="size-4 shrink-0" aria-hidden="true" />
+                <span>Community-driven learning and development</span>
+              </div>
+              <div className="flex items-center gap-3 transition-colors hover:text-purple-300">
+                <Heart className="size-4 shrink-0" aria-hidden="true" />
+                <span>Open source and collaborative</span>
+              </div>
             </div>
           </div>
 
-          <nav aria-label="Footer" className="grid gap-x-8 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
+          <nav aria-label="Footer" className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-4">
             {footerSections.map((section) => (
-              <div key={section.title} className="space-y-3">
-                <h2 className="text-sm font-semibold text-white">{section.title}</h2>
-                <ul className="space-y-2">
+              <div key={section.title} className="min-w-0">
+                <h2 className={`mb-4 text-sm font-semibold ${section.accentClass}`}>{section.title}</h2>
+                <ul className="space-y-2 text-sm text-slate-400">
                   {section.links.map((link) => (
-                    <li key={link.href}>
-                      <Link href={link.href} className="text-sm text-slate-400 transition hover:text-white">
+                    <li key={link.href} className="flex items-start gap-2">
+                      <span className="mt-0.5 shrink-0 text-slate-600" aria-hidden="true">
+                        •
+                      </span>
+                      <Link href={link.href} className={`leading-5 transition-colors ${section.hoverClass}`}>
                         {link.label}
                       </Link>
                     </li>
@@ -219,21 +218,42 @@ export function PublicWebsiteFooter() {
           </nav>
         </div>
 
-        <div className="flex flex-col gap-3 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 GameGuild. All rights reserved.</p>
-          <div className="flex flex-wrap gap-4">
-            <Link href="/licenses" className="transition hover:text-slate-300">
-              Licenses
-            </Link>
-            <Link href="/terms-of-service" className="transition hover:text-slate-300">
-              Terms
-            </Link>
-            <Link href="/polices/privacy" className="transition hover:text-slate-300">
-              Privacy
-            </Link>
+        <div className="mt-10 border-t border-slate-700/50 pt-6 lg:mt-12 lg:pt-8">
+          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+            <div className="flex gap-3">
+              {footerSocialLinks.map(({ label, href, icon: Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  title={label}
+                  className="group flex size-10 items-center justify-center rounded-lg border border-slate-600/50 bg-slate-800/60 text-slate-400 transition hover:border-blue-400/50 hover:bg-slate-800 hover:text-blue-300 hover:shadow-lg hover:shadow-blue-950/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                >
+                  <Icon className="size-4" aria-hidden="true" />
+                </a>
+              ))}
+            </div>
+            <nav aria-label="Legal" className="flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-slate-400 sm:justify-end">
+              <Link href="/licenses" className="transition-colors hover:text-blue-300">
+                Licenses
+              </Link>
+              <Link href="/terms-of-service" className="transition-colors hover:text-blue-300">
+                Terms of Service
+              </Link>
+              <Link href="/polices/privacy" className="transition-colors hover:text-blue-300">
+                Privacy
+              </Link>
+            </nav>
           </div>
+
+          <p className="mt-6 border-t border-slate-700/50 pt-5 text-center text-sm text-slate-500 lg:mt-8 lg:pt-6">
+            © 2026 Game Guild Inc. All rights reserved.
+          </p>
         </div>
       </div>
+      <div className="h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500" aria-hidden="true" />
     </footer>
   );
 }
