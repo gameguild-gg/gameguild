@@ -10,7 +10,7 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
   // auth() internally handles token refresh and cookie persistence
   const session = await auth();
 
-  if (!session) {
+  if (!session || typeof session === 'function') {
     // Preserve locale via the i18n-aware redirect helper
     redirect({ href: { pathname: '/sign-in', query: { callbackUrl: '/dashboard' } }, locale });
     throw new Error('Unauthenticated dashboard access');
