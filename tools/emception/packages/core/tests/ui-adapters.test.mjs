@@ -175,14 +175,14 @@ test('parseAttributesToInput schema gate blocks arbitrary attribute names from r
     const input = parseAttributesToInput(
         {
             'preset': 'cpp',
-            'workspace.flags': '-O2',
+            'workspace.build.cflags': '-O2',
             'constructor': 'evil',
             'foo.bar': 'qq',
         },
         { onUnknown: (k) => seen.push(k) },
     );
     assert.deepEqual(input, { preset: 'cpp' });
-    assert.ok(seen.includes('workspace.flags'));
+    assert.ok(seen.includes('workspace.build.cflags'));
     assert.ok(seen.includes('constructor'));
     assert.ok(seen.includes('foo.bar'));
     assert.equal({}.evil, undefined);

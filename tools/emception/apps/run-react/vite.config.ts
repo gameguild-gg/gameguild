@@ -57,7 +57,12 @@ export default defineConfig({
     base: process.env.VITE_BASE || '/',
     worker: { format: 'es' },
     optimizeDeps: {
-        exclude: ['@gameguild/emception-browser', '@gameguild/emception-webcomponent'],
+        exclude: [
+            '@gameguild/emception-browser',
+            '@gameguild/emception-react',
+            '@gameguild/emception-webcomponent',
+            'emception'
+        ],
         entries: ['index.html', 'src/**/*.{ts,tsx}'],
     },
     server: {

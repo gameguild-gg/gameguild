@@ -16,7 +16,7 @@ async function makeWs() {
     await ws.writeFile('main.cpp', 'int main(){}\n');
     await ws.writeFile('src/lib.h', '#pragma once\n');
     await ws.writeFile('hidden.txt', 'secret', { visibility: 'hidden' });
-    await ws.setBuild({ toolchain: 'cpp', flags: ['-std=c++17', '-O2'] });
+    await ws.setBuild({ preset: 'cpp', std: 'c++17', cflags: ['-O2'] });
     return { mgr, ws };
 }
 
@@ -33,8 +33,8 @@ test('exportWorkspace produces a valid ZIP with files and sidecars', async () =>
     const meta = JSON.parse(dec.decode(entries.find((e) => e.path === '.emception/meta.json').data));
     assert.equal(meta.files['hidden.txt'].visibility, 'hidden');
     const build = JSON.parse(dec.decode(entries.find((e) => e.path === '.emception/build.json').data));
-    assert.equal(build.toolchain, 'cpp');
-    assert.deepEqual(build.flags, ['-std=c++17', '-O2']);
+    assert.equal(build.preset, 'cpp');
+    assert.deepEqual(build.cflags, ['-O2']);
 });
 
 test('exportWorkspace honors includeHidden=false', async () => {
@@ -77,8 +77,8 @@ test('exportWorkspace + importWorkspace round-trip into fresh workspace', async 
     assert.equal(hidden.visibility, 'hidden');
 
     const build = await target.getBuild();
-    assert.equal(build.toolchain, 'cpp');
-    assert.deepEqual(build.flags, ['-std=c++17', '-O2']);
+    assert.equal(build.preset, 'cpp');
+    assert.deepEqual(build.cflags, ['-O2']);
 });
 
 test('importWorkspace policy=merge preserves existing files', async () => {

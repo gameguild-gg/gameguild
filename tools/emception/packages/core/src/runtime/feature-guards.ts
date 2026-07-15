@@ -13,7 +13,7 @@
 // fingerprint rather than by referencing real DOM types.
 
 import { CanvasUnavailableError, RuntimeFeatureUnavailableError } from '../errors.js';
-import type { StdinInput } from '../types.js';
+import type { StdinInput } from '../types';
 
 /**
  * Identifies the calling runtime in error messages so users know which
