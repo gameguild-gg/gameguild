@@ -44,7 +44,7 @@ describe('static legal and project pages', () => {
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /learn, build & connect/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /everything you need to succeed/i })).toBeInTheDocument();
-    expect(screen.getByText(/game development community for learning, testing playable work/i)).toBeInTheDocument();
+    expect(screen.getByText(/thriving gaming community dedicated to education/i)).toBeInTheDocument();
     expect(screen.queryByText(/temporary public home/i)).not.toBeInTheDocument();
   });
 
