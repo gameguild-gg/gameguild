@@ -31,18 +31,64 @@ public partial class AddLessonContentFormatsAndInteractionEvents : Migration
             table: "content_interactions");
 
         migrationBuilder.Sql(
-            "UPDATE program_contents SET \"Type\" = 0, \"GradingMethod\" = 0, \"MaxPoints\" = NULL, \"LessonFormat\" = CASE WHEN LEFT(LTRIM(COALESCE(\"Body\", '')), 1) = '{' AND \"Body\" ~ '\"root\"[[:space:]]*:' THEN 1 ELSE 0 END WHERE \"Type\" IN (0, 1);");
+            """
+            CREATE OR REPLACE FUNCTION pg_temp.gameguild_is_lexical_lesson(body text)
+            RETURNS boolean
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                IF body IS NULL THEN
+                    RETURN FALSE;
+                END IF;
+
+                RETURN jsonb_typeof(body::jsonb) = 'object' AND body::jsonb ? 'root';
+            EXCEPTION WHEN invalid_text_representation THEN
+                RETURN FALSE;
+            END;
+            $$;
+
+            UPDATE program_contents
+            SET "Type" = 0,
+                "GradingMethod" = 0,
+                "MaxPoints" = NULL,
+                "LessonFormat" = CASE
+                    WHEN pg_temp.gameguild_is_lexical_lesson("Body") THEN 1
+                    ELSE 0
+                END
+            WHERE "Type" IN (0, 1);
+            """);
         migrationBuilder.Sql(
             "UPDATE program_contents SET \"Type\" = 2, \"LessonFormat\" = NULL WHERE \"Type\" = 6;");
         migrationBuilder.Sql(
             "UPDATE content_interactions SET \"TimeSpentSeconds\" = GREATEST(COALESCE(\"TimeSpentMinutes\", 0), 0) * 60;");
         migrationBuilder.Sql(
             "UPDATE content_interactions AS interaction SET \"UserId\" = enrollment.\"UserId\" FROM program_users AS enrollment WHERE interaction.\"ProgramUserId\" = enrollment.\"Id\" AND interaction.\"UserId\" <> enrollment.\"UserId\";");
+        migrationBuilder.Sql(
+            """
+            WITH ranked_active_attempts AS (
+                SELECT "Id",
+                       ROW_NUMBER() OVER (
+                           PARTITION BY "UserId", "ContentId"
+                           ORDER BY "CreatedAt" DESC, "Id" DESC) AS attempt_rank
+                FROM content_interactions
+                WHERE "SubmittedAt" IS NULL AND "DeletedAt" IS NULL
+            )
+            UPDATE content_interactions AS interaction
+            SET "SubmittedAt" = COALESCE(
+                interaction."CompletedAt",
+                interaction."LastAccessedAt",
+                interaction."UpdatedAt",
+                interaction."CreatedAt")
+            FROM ranked_active_attempts AS ranked
+            WHERE interaction."Id" = ranked."Id" AND ranked.attempt_rank > 1;
+            """);
 
         migrationBuilder.CreateIndex(
             name: "IX_content_interactions_UserId_ContentId",
             table: "content_interactions",
-            columns: new[] { "UserId", "ContentId" });
+            columns: new[] { "UserId", "ContentId" },
+            unique: true,
+            filter: "\"SubmittedAt\" IS NULL AND \"DeletedAt\" IS NULL");
 
         migrationBuilder.AddCheckConstraint(
             name: "CK_program_contents_Lesson_NotGraded",
@@ -137,7 +183,6 @@ public partial class AddLessonContentFormatsAndInteractionEvents : Migration
         migrationBuilder.CreateIndex(
             name: "IX_content_interactions_UserId_ContentId",
             table: "content_interactions",
-            columns: new[] { "UserId", "ContentId" },
-            unique: true);
+            columns: new[] { "UserId", "ContentId" });
     }
 }

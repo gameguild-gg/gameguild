@@ -300,7 +300,11 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
     var contentCompletionRates = contentItems.ToDictionary(
       contentId => contentId,
       contentId => Percentage(
-        interactions.Count(interaction => interaction.ContentId == contentId && interaction.IsCompleted && enrolledUserIds.Contains(interaction.UserId)),
+        interactions
+          .Where(interaction => interaction.ContentId == contentId && interaction.IsCompleted && enrolledUserIds.Contains(interaction.UserId))
+          .Select(interaction => interaction.UserId)
+          .Distinct()
+          .Count(),
         programUsers.Count));
 
     var trends = new List<CompletionTrendDto>();

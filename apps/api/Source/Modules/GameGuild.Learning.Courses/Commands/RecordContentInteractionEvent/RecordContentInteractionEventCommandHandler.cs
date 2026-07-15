@@ -132,7 +132,10 @@ public sealed class RecordContentInteractionEventCommandHandler(
         if (item.Type == ContentInteractionEventType.Opened)
         {
             interaction.Start();
-            interaction.Status = ProgressStatus.InProgress;
+            if (!interaction.IsCompleted)
+            {
+                interaction.Status = ProgressStatus.InProgress;
+            }
         }
 
         if (item.DurationSeconds.HasValue)

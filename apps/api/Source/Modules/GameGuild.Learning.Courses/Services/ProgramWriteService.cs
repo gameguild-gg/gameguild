@@ -254,7 +254,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     if (contentDto.Body != null)
     {
       content.Body = contentDto.Body;
-      if (ProgramContentMappingExtensions.NormalizeProfessorFacingType(content.Type) == ProgramContentType.Lesson)
+      if (ProgramContentMappingExtensions.NormalizeProfessorFacingType(content.Type) == ProgramContentType.Lesson &&
+          !content.LessonFormat.HasValue)
       {
         content.LessonFormat = LessonContentFormatInference.FromBody(contentDto.Body);
       }
@@ -374,30 +375,32 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (programUser == null) throw new ArgumentException("User not enrolled in program");
 
-    var interaction = await context.Set<ContentInteraction>().Where(ci => ci.DeletedAt == null && ci.ProgramUserId == programUser.Id && ci.ContentId == contentId).FirstOrDefaultAsync();
+    var interaction = await context.Set<ContentInteraction>()
+      .Where(ci => ci.DeletedAt == null && ci.ProgramUserId == programUser.Id && ci.ContentId == contentId)
+      .OrderBy(ci => ci.SubmittedAt.HasValue)
+      .ThenByDescending(ci => ci.CreatedAt)
+      .FirstOrDefaultAsync();
 
     if (interaction == null)
     {
-      interaction = new ContentInteraction { ProgramUserId = programUser.Id, UserId = userId, ContentId = contentId, Status = status, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, };
+      interaction = new ContentInteraction { ProgramUserId = programUser.Id, UserId = userId, ContentId = contentId, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, };
 
       context.Set<ContentInteraction>().Add(interaction);
     }
-    else
+
+    if (status == ProgressStatus.Completed)
+    {
+      interaction.Complete();
+    }
+    else if (!interaction.IsCompleted)
     {
       interaction.Status = status;
       interaction.LastAccessedAt = SystemClock.UtcNow;
-
-      if (status == ProgressStatus.Completed && interaction.CompletedAt == null)
-      {
-        interaction.CompletedAt = SystemClock.UtcNow;
-        interaction.CompletionPercentage = 100;
-      }
-
       interaction.Touch();
     }
 
+    await context.SaveChangesAsync().ConfigureAwait(false);
     await RecalculateUserProgressAsync(programUser.Id).ConfigureAwait(false);
-
     await context.SaveChangesAsync().ConfigureAwait(false);
 
     return program;
@@ -433,7 +436,10 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     var now = SystemClock.UtcNow;
     var interaction = await context.Set<ContentInteraction>()
-      .FirstOrDefaultAsync(ci => ci.ProgramUserId == programUser.Id && ci.ContentId == contentId && ci.DeletedAt == null)
+      .Where(ci => ci.ProgramUserId == programUser.Id && ci.ContentId == contentId && ci.DeletedAt == null)
+      .OrderBy(ci => ci.SubmittedAt.HasValue)
+      .ThenByDescending(ci => ci.CreatedAt)
+      .FirstOrDefaultAsync()
       .ConfigureAwait(false);
 
     if (interaction?.SubmittedAt != null)
@@ -472,6 +478,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     programUser.LastAccessedAt = now;
     programUser.Touch();
 
+    await context.SaveChangesAsync().ConfigureAwait(false);
     await RecalculateUserProgressAsync(programUser.Id).ConfigureAwait(false);
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -492,7 +499,10 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     var now = SystemClock.UtcNow;
     var interaction = await context.Set<ContentInteraction>()
-      .FirstOrDefaultAsync(ci => ci.ProgramUserId == programUser.Id && ci.ContentId == contentId && ci.DeletedAt == null)
+      .Where(ci => ci.ProgramUserId == programUser.Id && ci.ContentId == contentId && ci.DeletedAt == null)
+      .OrderBy(ci => ci.SubmittedAt.HasValue)
+      .ThenByDescending(ci => ci.CreatedAt)
+      .FirstOrDefaultAsync()
       .ConfigureAwait(false);
 
     if (interaction == null)
@@ -713,7 +723,12 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (programUser == null) return;
 
-    var totalContent = await context.Set<ProgramContent>().Where(pc => pc.DeletedAt == null && pc.ProgramId == programUser.ProgramId && pc.IsRequired).CountAsync();
+    var requiredContentIds = await context.Set<ProgramContent>()
+      .Where(pc => pc.DeletedAt == null && pc.ProgramId == programUser.ProgramId && pc.IsRequired)
+      .Select(pc => pc.Id)
+      .ToListAsync()
+      .ConfigureAwait(false);
+    var totalContent = requiredContentIds.Count;
 
     if (totalContent == 0)
     {
@@ -722,11 +737,21 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
       return;
     }
 
-    var completedContent = await context.Set<ContentInteraction>().Where(ci => ci.DeletedAt == null && ci.ProgramUserId == programUserId && ci.Status == ProgressStatus.Completed).CountAsync();
+    var completedContent = await context.Set<ContentInteraction>()
+      .Where(ci =>
+        ci.DeletedAt == null &&
+        ci.ProgramUserId == programUserId &&
+        requiredContentIds.Contains(ci.ContentId) &&
+        (ci.IsCompleted || ci.Status == ProgressStatus.Completed))
+      .Select(ci => ci.ContentId)
+      .Distinct()
+      .CountAsync()
+      .ConfigureAwait(false);
 
     programUser.CompletionPercentage = (decimal)completedContent / totalContent * 100;
 
     if (programUser is { CompletionPercentage: >= 100, CompletedAt: null }) programUser.CompletedAt = SystemClock.UtcNow;
+    else if (programUser.CompletionPercentage < 100) programUser.CompletedAt = null;
 
     programUser.Touch();
   }
