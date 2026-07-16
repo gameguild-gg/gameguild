@@ -19,15 +19,18 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
         if (!actor.IsAuthenticated || actorId == null || actor.TenantId == null)
             return false;
 
-        var projectInTenant = await context.Set<Project>()
-            .AnyAsync(project =>
+        var project = await context.Set<Project>()
+            .Where(project =>
                 project.Id == projectId &&
                 project.DeletedAt == null &&
-                project.TenantId == actor.TenantId,
-                cancellationToken)
+                project.TenantId == actor.TenantId)
+            .Select(project => new { project.CreatedById })
+            .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
-        if (!projectInTenant)
+        if (project == null)
             return false;
+        if (project.CreatedById == actorId)
+            return true;
 
         var collaborator = await context.Set<ProjectCollaborator>()
             .AsNoTracking()
