@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -138,6 +139,16 @@ public class ContentInteractionController(IContentInteractionService contentInte
       return Ok(await contentInteractionService.GetSurveyResponsesAsync(programId, contentId).ConfigureAwait(false));
     }
     catch (InvalidOperationException exception) {
+      return BadRequest(exception.Message);
+    }
+  }
+
+  [HttpGet("content/{contentId}/survey-results/visible")]
+  public async Task<ActionResult<IEnumerable<SurveyResponseResultDto>>> GetVisibleSurveyResults([FromRoute] Guid contentId, [FromQuery] Guid programId) {
+    try {
+      return Ok(await contentInteractionService.GetVisibleSurveyResponsesAsync(programId, contentId).ConfigureAwait(false));
+    }
+    catch (RequestValidationException exception) {
       return BadRequest(exception.Message);
     }
   }
