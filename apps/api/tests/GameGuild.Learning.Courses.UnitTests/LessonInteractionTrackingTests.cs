@@ -737,6 +737,28 @@ public sealed class LessonInteractionTrackingTests
     }
 
     [Fact]
+    public async Task SubmitContent_WhenNonSurvey_ShouldPreserveUnrelatedTrackedChanges()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var lesson = CreateLesson();
+        var unrelated = CreateLesson();
+        unrelated.ProgramId = lesson.ProgramId;
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = lesson.ProgramId, UserId = Guid.NewGuid(), JoinedAt = SystemClock.UtcNow };
+        var interaction = new ContentInteraction { Id = Guid.NewGuid(), ProgramUserId = enrollment.Id, UserId = enrollment.UserId, ContentId = lesson.Id, Content = lesson };
+        context.AddRange(lesson, unrelated, enrollment, interaction);
+        await context.SaveChangesAsync();
+        unrelated.Title = "Pending unrelated change";
+        context.Entry(unrelated).State.Should().Be(EntityState.Modified);
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(enrollment.UserId));
+
+        await service.SubmitContentAsync(interaction.Id, "legacy lesson submission");
+
+        context.Entry(unrelated).State.Should().Be(EntityState.Modified);
+        await context.SaveChangesAsync();
+        (await context.Set<ProgramContent>().SingleAsync(item => item.Id == unrelated.Id)).Title.Should().Be("Pending unrelated change");
+    }
+
+    [Fact]
     public async Task StartContent_WhenSurveyAllowsOnlyOneResponse_ShouldRejectAnotherAttempt()
     {
         await using var context = TrackingTestDbContext.Create();
