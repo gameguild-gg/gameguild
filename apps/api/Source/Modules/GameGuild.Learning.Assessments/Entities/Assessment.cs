@@ -256,6 +256,11 @@ public class Assessment : EntityBase
             throw new ArgumentException("A due date is required when late submissions are allowed.", nameof(dueAt));
         }
 
+        if (allowLateSubmissions && !lateSubmissionDeadline.HasValue)
+        {
+            throw new ArgumentException("Late submission deadline is required when late submissions are allowed.", nameof(lateSubmissionDeadline));
+        }
+
         if (lateSubmissionDeadline.HasValue && (!allowLateSubmissions || !dueAt.HasValue || lateSubmissionDeadline.Value <= dueAt.Value))
         {
             throw new ArgumentException("Late submission deadline must be after the due date when late submissions are allowed.", nameof(lateSubmissionDeadline));
@@ -397,14 +402,19 @@ public class AssessmentSubmission : EntityBase
 
     public void SetPayload(SubmitAssessmentRequest payload, SubmissionModality allowedModalities)
     {
+        if (Status != SubmissionStatus.InProgress)
+        {
+            throw new InvalidOperationException("Submission payload can only be changed while in progress.");
+        }
+
         var submittedModalities = SubmissionModality.None;
-        TextPayload = NormalizePayload(payload.TextPayload, SubmissionModality.Text, ref submittedModalities);
-        FilePayload = NormalizePayload(payload.FilePayload, SubmissionModality.File, ref submittedModalities);
-        UrlPayload = NormalizeUrlPayload(payload.UrlPayload, SubmissionModality.Url, ref submittedModalities, nameof(payload.UrlPayload));
-        CodePayload = NormalizePayload(payload.CodePayload, SubmissionModality.Code, ref submittedModalities);
-        MediaPayload = NormalizeUrlPayload(payload.MediaPayload, SubmissionModality.Media, ref submittedModalities, nameof(payload.MediaPayload));
-        ProjectPayload = NormalizePayload(payload.ProjectPayload, SubmissionModality.Project, ref submittedModalities);
-        StructuredAnswerPayload = NormalizeStructuredPayload(payload.StructuredAnswerPayload, ref submittedModalities);
+        var textPayload = NormalizePayload(payload.TextPayload, SubmissionModality.Text, ref submittedModalities);
+        var filePayload = NormalizeBoundedPayload(payload.FilePayload, SubmissionModality.File, ref submittedModalities, nameof(payload.FilePayload));
+        var urlPayload = NormalizeUrlPayload(payload.UrlPayload, SubmissionModality.Url, ref submittedModalities, nameof(payload.UrlPayload));
+        var codePayload = NormalizePayload(payload.CodePayload, SubmissionModality.Code, ref submittedModalities);
+        var mediaPayload = NormalizeUrlPayload(payload.MediaPayload, SubmissionModality.Media, ref submittedModalities, nameof(payload.MediaPayload));
+        var projectPayload = NormalizeBoundedPayload(payload.ProjectPayload, SubmissionModality.Project, ref submittedModalities, nameof(payload.ProjectPayload));
+        var structuredAnswerPayload = NormalizeStructuredPayload(payload.StructuredAnswerPayload, ref submittedModalities);
 
         if (submittedModalities == SubmissionModality.None)
         {
@@ -416,6 +426,13 @@ public class AssessmentSubmission : EntityBase
             throw new ArgumentException("Submission payload contains a modality that is not accepted by this assessment.", nameof(payload));
         }
 
+        TextPayload = textPayload;
+        FilePayload = filePayload;
+        UrlPayload = urlPayload;
+        CodePayload = codePayload;
+        MediaPayload = mediaPayload;
+        ProjectPayload = projectPayload;
+        StructuredAnswerPayload = structuredAnswerPayload;
         SubmittedModalities = submittedModalities;
         UpdatedAt = SystemClock.UtcNow;
     }
@@ -456,11 +473,26 @@ public class AssessmentSubmission : EntityBase
         ref SubmissionModality submittedModalities,
         string parameterName)
     {
-        var normalized = NormalizePayload(payload, modality, ref submittedModalities);
+        var normalized = NormalizeBoundedPayload(payload, modality, ref submittedModalities, parameterName);
         if (normalized != null && (!Uri.TryCreate(normalized, UriKind.Absolute, out var uri) ||
                                    (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)))
         {
             throw new ArgumentException("Payload URL must be an absolute HTTP or HTTPS URL.", parameterName);
+        }
+
+        return normalized;
+    }
+
+    private static string? NormalizeBoundedPayload(
+        string? payload,
+        SubmissionModality modality,
+        ref SubmissionModality submittedModalities,
+        string parameterName)
+    {
+        var normalized = NormalizePayload(payload, modality, ref submittedModalities);
+        if (normalized?.Length > 2048)
+        {
+            throw new ArgumentException("Payload cannot exceed 2048 characters.", parameterName);
         }
 
         return normalized;

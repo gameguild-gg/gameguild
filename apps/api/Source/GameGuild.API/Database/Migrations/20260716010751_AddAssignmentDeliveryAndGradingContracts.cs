@@ -1,14 +1,10 @@
 using System;
-using GameGuild.API.Database;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace GameGuild.API.Database.Migrations;
-
-[DbContext(typeof(ApplicationDbContext))]
-[Migration("20260716010751_AddAssignmentDeliveryAndGradingContracts")]
+namespace GameGuild.API.Database.Migrations
+{
 public partial class AddAssignmentDeliveryAndGradingContracts : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
@@ -106,6 +102,9 @@ public partial class AddAssignmentDeliveryAndGradingContracts : Migration
             maxLength: 2048,
             nullable: true);
 
+        migrationBuilder.Sql(
+            "UPDATE \"Assessments\" SET \"AvailableFrom\" = \"AvailableUntil\", \"AvailableUntil\" = \"AvailableFrom\" WHERE \"AvailableFrom\" > \"AvailableUntil\"");
+
         migrationBuilder.AddCheckConstraint(
             name: "CK_Assessments_SubmissionModalities",
             table: "Assessments",
@@ -119,7 +118,17 @@ public partial class AddAssignmentDeliveryAndGradingContracts : Migration
         migrationBuilder.AddCheckConstraint(
             name: "CK_Assessments_DeliverySchedule",
             table: "Assessments",
-            sql: "(\"AvailableFrom\" IS NULL OR \"AvailableUntil\" IS NULL OR \"AvailableFrom\" <= \"AvailableUntil\") AND (\"DueAt\" IS NULL OR \"AvailableFrom\" IS NULL OR \"DueAt\" >= \"AvailableFrom\") AND (\"DueAt\" IS NULL OR \"AvailableUntil\" IS NULL OR \"DueAt\" <= \"AvailableUntil\") AND (NOT \"AllowLateSubmissions\" OR \"DueAt\" IS NOT NULL) AND (\"LateSubmissionDeadline\" IS NULL OR (\"AllowLateSubmissions\" AND \"DueAt\" IS NOT NULL AND \"LateSubmissionDeadline\" > \"DueAt\" AND (\"AvailableUntil\" IS NULL OR \"LateSubmissionDeadline\" <= \"AvailableUntil\")))");
+            sql: "(\"AvailableFrom\" IS NULL OR \"AvailableUntil\" IS NULL OR \"AvailableFrom\" <= \"AvailableUntil\") AND (\"DueAt\" IS NULL OR \"AvailableFrom\" IS NULL OR \"DueAt\" >= \"AvailableFrom\") AND (\"DueAt\" IS NULL OR \"AvailableUntil\" IS NULL OR \"DueAt\" <= \"AvailableUntil\") AND (NOT \"AllowLateSubmissions\" OR (\"DueAt\" IS NOT NULL AND \"LateSubmissionDeadline\" IS NOT NULL AND \"LateSubmissionDeadline\" > \"DueAt\" AND (\"AvailableUntil\" IS NULL OR \"LateSubmissionDeadline\" <= \"AvailableUntil\"))) AND (\"AllowLateSubmissions\" OR \"LateSubmissionDeadline\" IS NULL)");
+
+        migrationBuilder.AddCheckConstraint(
+            name: "CK_AssessmentSubmissions_SubmittedModalities",
+            table: "AssessmentSubmissions",
+            sql: "\"SubmittedModalities\" >= 0 AND (\"SubmittedModalities\" & ~127) = 0");
+
+        migrationBuilder.AddCheckConstraint(
+            name: "CK_AssessmentSubmissions_PayloadConsistency",
+            table: "AssessmentSubmissions",
+            sql: "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 64) = 0 OR \"StructuredAnswerPayload\" IS NOT NULL)");
 
         migrationBuilder.CreateTable(
             name: "InteractiveVideoAssessmentCues",
@@ -164,6 +173,8 @@ public partial class AddAssignmentDeliveryAndGradingContracts : Migration
         migrationBuilder.DropTable(name: "InteractiveVideoAssessmentCues");
 
         migrationBuilder.DropCheckConstraint(name: "CK_Assessments_DeliverySchedule", table: "Assessments");
+        migrationBuilder.DropCheckConstraint(name: "CK_AssessmentSubmissions_PayloadConsistency", table: "AssessmentSubmissions");
+        migrationBuilder.DropCheckConstraint(name: "CK_AssessmentSubmissions_SubmittedModalities", table: "AssessmentSubmissions");
         migrationBuilder.DropCheckConstraint(name: "CK_Assessments_PresentationMode", table: "Assessments");
         migrationBuilder.DropCheckConstraint(name: "CK_Assessments_SubmissionModalities", table: "Assessments");
 
@@ -183,4 +194,5 @@ public partial class AddAssignmentDeliveryAndGradingContracts : Migration
         migrationBuilder.DropColumn(name: "TextPayload", table: "AssessmentSubmissions");
         migrationBuilder.DropColumn(name: "UrlPayload", table: "AssessmentSubmissions");
     }
+}
 }
