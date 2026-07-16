@@ -86,6 +86,44 @@ public sealed class AssignmentDeliveryContractTests
     }
 
     [Fact]
+    public void SetDeliverySchedule_WhenLateSubmissionsHaveNoDeadline_ShouldRejectIt()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100, 60);
+        var dueAt = DateTime.UtcNow.AddDays(1);
+
+        var action = () => assessment.SetDeliverySchedule(
+            DateTime.UtcNow,
+            dueAt.AddDays(2),
+            dueAt,
+            allowLateSubmissions: true,
+            lateSubmissionDeadline: null);
+
+        action.Should().Throw<ArgumentException>()
+            .WithMessage("*Late submission deadline is required*");
+    }
+
+    [Fact]
+    public void TryGetSubmissionTiming_ShouldHonorDueAndLateDeadlineBoundaries()
+    {
+        var now = DateTime.UtcNow;
+        var dueAt = now.AddDays(1);
+        var deadline = dueAt.AddDays(1);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100, 60);
+        assessment.SetDeliverySchedule(now, deadline.AddDays(1), dueAt, true, deadline);
+
+        assessment.TryGetSubmissionTiming(dueAt, out var atDueLate).Should().BeTrue();
+        atDueLate.Should().BeFalse();
+        assessment.TryGetSubmissionTiming(dueAt.AddTicks(1), out var afterDueLate).Should().BeTrue();
+        afterDueLate.Should().BeTrue();
+        assessment.TryGetSubmissionTiming(deadline, out var atDeadlineLate).Should().BeTrue();
+        atDeadlineLate.Should().BeTrue();
+        assessment.TryGetSubmissionTiming(deadline.AddTicks(1), out _).Should().BeFalse();
+
+        assessment.SetDeliverySchedule(now, deadline.AddDays(1), dueAt, false, null);
+        assessment.TryGetSubmissionTiming(dueAt.AddTicks(1), out _).Should().BeFalse();
+    }
+
+    [Fact]
     public void Update_WhenAvailabilityEndsBeforeItStarts_ShouldRejectIt()
     {
         var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100, 60);
@@ -174,6 +212,58 @@ public sealed class AssignmentDeliveryContractTests
     }
 
     [Fact]
+    public void SetPayload_WhenSubmissionIsNotInProgress_ShouldRejectIt()
+    {
+        var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
+        submission.Submit();
+
+        var action = () => submission.SetPayload(new SubmitAssessmentRequest(TextPayload: "late edit"), SubmissionModality.Text);
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("Submission payload can only be changed while in progress.");
+    }
+
+    [Fact]
+    public void SetPayload_WhenValidationFails_ShouldNotMutateExistingPayload()
+    {
+        var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
+        submission.SetPayload(new SubmitAssessmentRequest(TextPayload: "original"), SubmissionModality.Text);
+
+        var action = () => submission.SetPayload(
+            new SubmitAssessmentRequest(TextPayload: "replacement", UrlPayload: "not-a-url"),
+            SubmissionModality.Text | SubmissionModality.Url);
+
+        action.Should().Throw<ArgumentException>();
+        submission.TextPayload.Should().Be("original");
+        submission.UrlPayload.Should().BeNull();
+        submission.SubmittedModalities.Should().Be(SubmissionModality.Text);
+    }
+
+    [Theory]
+    [InlineData(SubmissionModality.File)]
+    [InlineData(SubmissionModality.Url)]
+    [InlineData(SubmissionModality.Media)]
+    [InlineData(SubmissionModality.Project)]
+    public void SetPayload_WhenBoundedPayloadExceeds2048Characters_ShouldRejectIt(SubmissionModality modality)
+    {
+        var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
+        var oversized = new string('x', 2049);
+        var request = modality switch
+        {
+            SubmissionModality.File => new SubmitAssessmentRequest(FilePayload: oversized),
+            SubmissionModality.Url => new SubmitAssessmentRequest(UrlPayload: $"https://example.test/{oversized}"),
+            SubmissionModality.Media => new SubmitAssessmentRequest(MediaPayload: $"https://example.test/{oversized}"),
+            SubmissionModality.Project => new SubmitAssessmentRequest(ProjectPayload: oversized),
+            _ => throw new InvalidOperationException()
+        };
+
+        var action = () => submission.SetPayload(request, modality);
+
+        action.Should().Throw<ArgumentException>()
+            .WithMessage("*cannot exceed 2048 characters*");
+    }
+
+    [Fact]
     public void Assessments_ShouldPersistInteractiveVideoCueLinks()
     {
         var cueType = typeof(Assessment).Assembly.GetType("GameGuild.Learning.Assessments.InteractiveVideoAssessmentCue");
@@ -195,5 +285,16 @@ public sealed class AssignmentDeliveryContractTests
         constraints.Should().Contain(constraint => constraint.Name == "CK_Assessments_SubmissionModalities");
         constraints.Should().Contain(constraint => constraint.Name == "CK_Assessments_PresentationMode");
         constraints.Should().Contain(constraint => constraint.Name == "CK_Assessments_DeliverySchedule");
+    }
+
+    [Fact]
+    public void DatabaseContract_ShouldRestrictSubmittedModalities()
+    {
+        var modelBuilder = new ModelBuilder(new ConventionSet());
+        new AssessmentsModelConfiguration().Configure(modelBuilder);
+        var entity = modelBuilder.Model.FindEntityType(typeof(AssessmentSubmission))!;
+
+        entity.GetCheckConstraints().Should().Contain(constraint =>
+            constraint.Name == "CK_AssessmentSubmissions_SubmittedModalities");
     }
 }
