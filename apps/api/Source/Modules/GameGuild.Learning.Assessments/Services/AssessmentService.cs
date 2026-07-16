@@ -78,7 +78,7 @@ public class AssessmentService : IAssessmentService
     {
         return await _context.Set<Assessment>()
             .Include(a => a.AssessmentGroup)
-            .FirstOrDefaultAsync(a => a.Id == id).ConfigureAwait(false);
+            .FirstOrDefaultAsync(a => a.Id == id && a.DeletedAt == null).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Assessment>> GetCourseAssessmentsAsync(Guid courseId)
@@ -154,6 +154,18 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<Assessment>(Error.NotFound("Assessment", "Assessment not found"));
             }
 
+            if (request.MaxScore.HasValue &&
+                await _context.Set<AssessmentSubmission>()
+                    .AnyAsync(submission => submission.AssessmentId == id &&
+                                              submission.Score.HasValue &&
+                                              submission.Score.Value > request.MaxScore.Value)
+                    .ConfigureAwait(false))
+            {
+                return Result.Failure<Assessment>(Error.Validation(
+                    "Assessment.ScoreRange",
+                    "Maximum score cannot be lower than an assigned submission score."));
+            }
+
             assessment.Update(
                 request.Title,
                 request.Description,
@@ -211,7 +223,17 @@ public class AssessmentService : IAssessmentService
             }
 
             assessment.SoftDelete();
+            var activeCues = await _context.Set<InteractiveVideoAssessmentCue>()
+                .Where(cue => cue.AssessmentId == id && cue.DeletedAt == null)
+                .ToListAsync()
+                .ConfigureAwait(false);
+            foreach (var cue in activeCues)
+            {
+                cue.SoftDelete();
+            }
+
             _context.Set<Assessment>().Update(assessment);
+            _context.Set<InteractiveVideoAssessmentCue>().UpdateRange(activeCues);
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Assessment deleted: {AssessmentId}", id);
@@ -473,8 +495,16 @@ public class AssessmentService : IAssessmentService
 
     public async Task<Result> UnlinkInteractiveVideoCueAsync(Guid assessmentId, Guid cueId)
     {
+        var assessment = await GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+        if (assessment == null)
+        {
+            return Result.Failure(Error.NotFound("Assessment", "Assessment not found"));
+        }
+
         var cue = await _context.Set<InteractiveVideoAssessmentCue>()
-            .FirstOrDefaultAsync(candidate => candidate.Id == cueId && candidate.AssessmentId == assessmentId)
+            .FirstOrDefaultAsync(candidate => candidate.Id == cueId &&
+                                              candidate.AssessmentId == assessmentId &&
+                                              candidate.DeletedAt == null)
             .ConfigureAwait(false);
         if (cue == null)
         {
@@ -576,6 +606,9 @@ public class AssessmentService : IAssessmentService
     {
         try
         {
+            await using var attemptTransaction = await AssessmentSubmissionDatabaseLock
+                .AcquireAsync(_context, assessmentId, enrollmentId)
+                .ConfigureAwait(false);
             var assessment = await GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
             if (assessment == null)
             {
@@ -591,17 +624,29 @@ public class AssessmentService : IAssessmentService
             var attemptCount = await GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
             if (assessment.MaxAttempts.HasValue && attemptCount >= assessment.MaxAttempts.Value)
             {
-                return Result.Failure<AssessmentSubmission>(Error.Validation("Assessment", "Maximum attempts reached"));
+                return Result.Failure<AssessmentSubmission>(Error.Validation("Assessment.MaxAttemptsReached", "Maximum attempts reached"));
             }
 
-            var submission = AssessmentSubmission.Start(assessmentId, enrollmentId, userId, attemptCount + 1);
+            var highestAttemptNumber = await GetHighestAttemptNumberAsync(assessmentId, enrollmentId).ConfigureAwait(false);
+            var submission = AssessmentSubmission.Start(assessmentId, enrollmentId, userId, highestAttemptNumber + 1);
 
             _context.Set<AssessmentSubmission>().Add(submission);
             await _context.SaveChangesAsync().ConfigureAwait(false);
+            await AssessmentSubmissionDatabaseLock.CommitAsync(attemptTransaction).ConfigureAwait(false);
 
             _logger.LogInformation("Submission started: {SubmissionId} for assessment {AssessmentId}", submission.Id, assessmentId);
 
             return Result.Success(submission);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "Concurrent submission start detected for assessment {AssessmentId}", assessmentId);
+            return Result.Failure<AssessmentSubmission>(Error.Conflict("AssessmentSubmission.AttemptConflict", "A concurrent submission attempt was detected. Please retry."));
+        }
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+        {
+            _logger.LogWarning(ex, "Duplicate submission attempt detected for assessment {AssessmentId}", assessmentId);
+            return Result.Failure<AssessmentSubmission>(Error.Conflict("AssessmentSubmission.AttemptConflict", "A concurrent submission attempt was detected. Please retry."));
         }
         catch (Exception ex)
         {
@@ -677,13 +722,17 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<AssessmentSubmission>(Error.NotFound("Assessment", "Assessment not found"));
             }
 
-            submission.Grade(request.Score, assessment.PassingScore, request.GradedBy, request.Feedback);
+            submission.Grade(request.Score, assessment.PassingScore, assessment.MaxScore, request.GradedBy, request.Feedback);
             _context.Set<AssessmentSubmission>().Update(submission);
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Submission graded: {SubmissionId} with score {Score}", submissionId, request.Score);
 
             return Result.Success(submission);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure<AssessmentSubmission>(Error.Validation("Submission.InvalidScore", ex.Message));
         }
         catch (Exception ex)
         {
@@ -726,6 +775,28 @@ public class AssessmentService : IAssessmentService
     {
         return await _context.Set<AssessmentSubmission>()
             .CountAsync(s => s.AssessmentId == assessmentId && s.EnrollmentId == enrollmentId).ConfigureAwait(false);
+    }
+
+    private async Task<int> GetHighestAttemptNumberAsync(Guid assessmentId, Guid enrollmentId)
+    {
+        return await _context.Set<AssessmentSubmission>()
+            .Where(s => s.AssessmentId == assessmentId && s.EnrollmentId == enrollmentId)
+            .Select(s => (int?)s.AttemptNumber)
+            .MaxAsync()
+            .ConfigureAwait(false) ?? 0;
+    }
+
+    private static bool IsUniqueConstraintViolation(DbUpdateException exception)
+    {
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (string.Equals(current.GetType().GetProperty("SqlState")?.GetValue(current) as string, "23505", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public async Task<Result<bool>> CanAttemptAsync(Guid assessmentId, Guid enrollmentId)
