@@ -431,6 +431,100 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
             .SingleAsync(candidate => candidate.Id == request.Id)).DeletedAt.Should().NotBeNull();
     }
 
+    [Fact]
+    public async Task HardDelete_RemovesRestrictiveChannelRowsAndPreservesSafeTestingHistory()
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = NewProject(tenantId, ContentStatus.Draft, ContentVisibility.Private);
+        project.Id = Guid.NewGuid();
+        project.CreatedById = actorId;
+        var remainingProject = NewProject(tenantId, ContentStatus.Draft, ContentVisibility.Private);
+        remainingProject.Id = Guid.NewGuid();
+        var version = NewProjectVersion(project, actorId, tenantId);
+        var request = NewTestingRequest(version.Id);
+        request.CreatedById = actorId;
+        request.TenantId = tenantId;
+        var location = new TestingLocation { Id = Guid.NewGuid(), Name = "Hard-delete lab", TenantId = tenantId };
+        var session = new TestingSession
+        {
+            Id = Guid.NewGuid(),
+            TestingRequestId = request.Id,
+            LocationId = location.Id,
+            SessionName = "Hard-delete session",
+            SessionDate = SystemClock.UtcNow,
+            StartTime = SystemClock.UtcNow,
+            EndTime = SystemClock.UtcNow.AddHours(1),
+            MaxTesters = 8,
+            RegisteredProjectCount = 99,
+            ManagerId = actorId,
+            ManagerUserId = actorId,
+            CreatedById = actorId,
+            TenantId = tenantId
+        };
+        var product = Product.Create("Hard-delete product", creatorId: actorId, tenantId: tenantId);
+        var activeStoreLink = new ProjectStoreProduct
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = project.Id,
+            ProductId = product.Id,
+            TenantId = tenantId
+        };
+        var historicalStoreLink = new ProjectStoreProduct
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = project.Id,
+            ProductId = product.Id,
+            TenantId = tenantId,
+            DeletedAt = SystemClock.UtcNow.AddDays(-1)
+        };
+        var activeSessionLink = NewSessionProject(session.Id, project.Id, actorId, tenantId);
+        var historicalSessionLink = NewSessionProject(session.Id, project.Id, actorId, tenantId);
+        historicalSessionLink.IsActive = false;
+        historicalSessionLink.DeletedAt = SystemClock.UtcNow.AddDays(-1);
+        var remainingSessionLink = NewSessionProject(session.Id, remainingProject.Id, actorId, tenantId);
+        var launchPlan = new LaunchPlan
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = project.Id,
+            TenantId = tenantId,
+            Name = "Hard-delete launch"
+        };
+        await SeedAsync(
+            NewUser(actorId),
+            project,
+            remainingProject,
+            version,
+            request,
+            location,
+            session,
+            product,
+            activeStoreLink,
+            historicalStoreLink,
+            activeSessionLink,
+            historicalSessionLink,
+            remainingSessionLink,
+            launchPlan);
+
+        (await DeleteAsync(project.Id, softDelete: false)).Should().BeTrue();
+
+        await using var verify = new ApplicationDbContext(_options);
+        (await verify.Set<Project>().IgnoreQueryFilters().AnyAsync(candidate => candidate.Id == project.Id))
+            .Should().BeFalse();
+        (await verify.Set<ProjectStoreProduct>().IgnoreQueryFilters().AnyAsync(link => link.ProjectId == project.Id))
+            .Should().BeFalse();
+        (await verify.Set<SessionProject>().IgnoreQueryFilters().AnyAsync(link => link.ProjectId == project.Id))
+            .Should().BeFalse();
+        (await verify.Set<TestingSession>().SingleAsync(candidate => candidate.Id == session.Id))
+            .RegisteredProjectCount.Should().Be(1);
+        (await verify.Set<LaunchPlan>().IgnoreQueryFilters().AnyAsync(plan => plan.ProjectId == project.Id))
+            .Should().BeFalse();
+        var preservedRequest = await verify.Set<TestingRequest>().IgnoreQueryFilters()
+            .SingleAsync(candidate => candidate.Id == request.Id);
+        preservedRequest.DeletedAt.Should().BeNull();
+        preservedRequest.ProjectVersionId.Should().BeNull();
+    }
+
     public async Task DisposeAsync() => await _container.DisposeAsync();
 
     private async Task<Result<ProjectStoreProductProjection>> LinkStoreAsync(
@@ -553,7 +647,7 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
             .RestoreTestingRequestAsync(requestId);
     }
 
-    private async Task<bool> DeleteAsync(Guid projectId)
+    private async Task<bool> DeleteAsync(Guid projectId, bool softDelete = true)
     {
         await using var context = new ApplicationDbContext(_options);
         return await new ProjectLifecycleCoordinator(
@@ -564,7 +658,7 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
                     new LaunchPadProjectLifecycleParticipant(context)
                 ],
                 new ProjectLifecycleLock(context))
-            .DeleteAsync(projectId, softDelete: true);
+            .DeleteAsync(projectId, softDelete);
     }
 
     private async Task SeedAsync(params object[] entities)
@@ -616,6 +710,20 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
         request.DeletedAt = SystemClock.UtcNow.AddDays(-1);
         return request;
     }
+
+    private static SessionProject NewSessionProject(
+        Guid sessionId,
+        Guid projectId,
+        Guid actorId,
+        Guid tenantId) => new()
+    {
+        Id = Guid.NewGuid(),
+        SessionId = sessionId,
+        ProjectId = projectId,
+        RegisteredById = actorId,
+        TenantId = tenantId,
+        IsActive = true
+    };
 
     private static User NewUser(Guid userId) => new()
     {

@@ -25,7 +25,12 @@ public sealed class ProjectLifecycleCoordinator(
 
         var closedAt = SystemClock.UtcNow;
         foreach (var participant in participants)
-            await participant.CloseAsync(projectId, closedAt, cancellationToken).ConfigureAwait(false);
+        {
+            if (softDelete)
+                await participant.CloseAsync(projectId, closedAt, cancellationToken).ConfigureAwait(false);
+            else
+                await participant.RemoveAsync(projectId, closedAt, cancellationToken).ConfigureAwait(false);
+        }
 
         if (softDelete)
             project.DeletedAt = closedAt;

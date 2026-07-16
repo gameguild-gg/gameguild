@@ -70,4 +70,41 @@ public sealed class TestingLabProjectLifecycleParticipant(IApplicationDbContext 
             session.Touch();
         }
     }
+
+    public async Task RemoveAsync(
+        Guid projectId,
+        DateTime removedAt,
+        CancellationToken cancellationToken = default)
+    {
+        var projectLinks = await context.Set<SessionProject>()
+            .IgnoreQueryFilters()
+            .Where(link => link.ProjectId == projectId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (projectLinks.Count == 0) return;
+
+        var sessionIds = projectLinks.Select(link => link.SessionId).Distinct().ToArray();
+        var remainingCounts = await context.Set<SessionProject>()
+            .IgnoreQueryFilters()
+            .Where(link =>
+                sessionIds.Contains(link.SessionId) &&
+                link.ProjectId != projectId &&
+                link.IsActive &&
+                link.DeletedAt == null)
+            .GroupBy(link => link.SessionId)
+            .Select(group => new { SessionId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(entry => entry.SessionId, entry => entry.Count, cancellationToken)
+            .ConfigureAwait(false);
+        var sessions = await context.Set<TestingSession>()
+            .Where(session => sessionIds.Contains(session.Id))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        context.Set<SessionProject>().RemoveRange(projectLinks);
+        foreach (var session in sessions)
+        {
+            session.RegisteredProjectCount = remainingCounts.GetValueOrDefault(session.Id);
+            session.Touch();
+        }
+    }
 }
