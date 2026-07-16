@@ -206,6 +206,137 @@ public sealed class ProgramWriteServiceTests
         rates!.ContentCompletionRates[graph.Content.Id].Should().Be(100);
     }
 
+    [Fact]
+    public async Task GetUserProgressDtoAsync_ShouldReturnOnlyTheCurrentAttemptPerContent()
+    {
+        await using var context = CreateContext();
+        var graph = CreateAttemptGraph();
+        graph.OldAttempt.SubmittedAt = graph.OldAttempt.CreatedAt.AddMinutes(1);
+        graph.OldAttempt.Status = ProgressStatus.Completed;
+        graph.OldAttempt.IsCompleted = true;
+        graph.OldAttempt.ProgressPercentage = 100;
+        context.AddRange(
+            graph.Program,
+            graph.Content,
+            graph.Enrollment,
+            graph.OldAttempt,
+            graph.CurrentAttempt);
+        await context.SaveChangesAsync();
+        var service = new ProgramReadService(context);
+
+        var progress = await service.GetUserProgressDtoAsync(
+            graph.Program.Id,
+            graph.Enrollment.UserId);
+
+        var item = progress!.ContentProgress.Should().ContainSingle().Subject;
+        item.ContentId.Should().Be(graph.Content.Id);
+        item.Status.Should().Be(ProgressStatus.InProgress);
+    }
+
+    [Fact]
+    public async Task UpdateUserProgressAsync_ShouldReturnOnlyTheCurrentAttemptPerContent()
+    {
+        await using var context = CreateContext();
+        var graph = CreateAttemptGraph();
+        graph.OldAttempt.SubmittedAt = graph.OldAttempt.CreatedAt.AddMinutes(1);
+        graph.OldAttempt.Status = ProgressStatus.Completed;
+        graph.OldAttempt.IsCompleted = true;
+        graph.OldAttempt.ProgressPercentage = 100;
+        context.AddRange(
+            graph.Program,
+            graph.Content,
+            graph.Enrollment,
+            graph.OldAttempt,
+            graph.CurrentAttempt);
+        await context.SaveChangesAsync();
+        var service = new ProgramWriteService(context);
+
+        var progress = await service.UpdateUserProgressAsync(
+            graph.Program.Id,
+            graph.Enrollment.UserId,
+            new UpdateProgressDto(LastAccessedAt: SystemClock.UtcNow));
+
+        var item = progress!.ContentProgress.Should().ContainSingle().Subject;
+        item.ContentId.Should().Be(graph.Content.Id);
+        item.Status.Should().Be(ProgressStatus.InProgress);
+    }
+
+    [Fact]
+    public async Task UpdateUserProgressAsync_WhenConcurrentAttemptWins_ShouldCompleteTheWinner()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var databaseRoot = new InMemoryDatabaseRoot();
+        await using var context = CreateContext(databaseName, databaseRoot);
+        var graph = CreateAttemptGraph();
+        context.AddRange(graph.Program, graph.Content, graph.Enrollment);
+        await context.SaveChangesAsync();
+        var winner = new ContentInteraction
+        {
+            Id = Guid.NewGuid(),
+            ProgramUserId = graph.Enrollment.Id,
+            UserId = graph.Enrollment.UserId,
+            ContentId = graph.Content.Id,
+            Status = ProgressStatus.InProgress,
+        };
+        context.BeforeInteractionSaveAsync = async cancellationToken =>
+        {
+            await using var winningContext = CreateContext(databaseName, databaseRoot);
+            winningContext.Set<ContentInteraction>().Add(winner);
+            await winningContext.SaveChangesAsync(cancellationToken);
+        };
+        var service = new ProgramWriteService(context);
+
+        await service.UpdateUserProgressAsync(
+            graph.Program.Id,
+            graph.Enrollment.UserId,
+            graph.Content.Id,
+            ProgressStatus.Completed);
+
+        await using var verificationContext = CreateContext(databaseName, databaseRoot);
+        var persisted = await verificationContext.Set<ContentInteraction>().SingleAsync();
+        persisted.Id.Should().Be(winner.Id);
+        persisted.IsCompleted.Should().BeTrue();
+        persisted.Status.Should().Be(ProgressStatus.Completed);
+    }
+
+    [Fact]
+    public async Task MarkContentCompletedAsync_WhenConcurrentAttemptWins_ShouldCompleteTheWinner()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var databaseRoot = new InMemoryDatabaseRoot();
+        await using var context = CreateContext(databaseName, databaseRoot);
+        var graph = CreateAttemptGraph();
+        context.AddRange(graph.Program, graph.Content, graph.Enrollment);
+        await context.SaveChangesAsync();
+        var winner = new ContentInteraction
+        {
+            Id = Guid.NewGuid(),
+            ProgramUserId = graph.Enrollment.Id,
+            UserId = graph.Enrollment.UserId,
+            ContentId = graph.Content.Id,
+            Status = ProgressStatus.InProgress,
+        };
+        context.BeforeInteractionSaveAsync = async cancellationToken =>
+        {
+            await using var winningContext = CreateContext(databaseName, databaseRoot);
+            winningContext.Set<ContentInteraction>().Add(winner);
+            await winningContext.SaveChangesAsync(cancellationToken);
+        };
+        var service = new ProgramWriteService(context);
+
+        var completed = await service.MarkContentCompletedAsync(
+            graph.Program.Id,
+            graph.Enrollment.UserId,
+            graph.Content.Id);
+
+        completed.Should().BeTrue();
+        await using var verificationContext = CreateContext(databaseName, databaseRoot);
+        var persisted = await verificationContext.Set<ContentInteraction>().SingleAsync();
+        persisted.Id.Should().Be(winner.Id);
+        persisted.IsCompleted.Should().BeTrue();
+        persisted.Status.Should().Be(ProgressStatus.Completed);
+    }
+
     private static Program CreateProgram() =>
         new()
         {
@@ -252,18 +383,46 @@ public sealed class ProgramWriteServiceTests
         return new AttemptGraph(program, content, enrollment, oldAttempt, currentAttempt);
     }
 
-    private static LearningCoursesTestContext CreateContext()
+    private static LearningCoursesTestContext CreateContext(
+        string? databaseName = null,
+        InMemoryDatabaseRoot? databaseRoot = null)
     {
-        var options = new DbContextOptionsBuilder<LearningCoursesTestContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
+        var builder = new DbContextOptionsBuilder<LearningCoursesTestContext>();
+        var resolvedName = databaseName ?? Guid.NewGuid().ToString();
+        if (databaseRoot is null)
+        {
+            builder.UseInMemoryDatabase(resolvedName);
+        }
+        else
+        {
+            builder.UseInMemoryDatabase(resolvedName, databaseRoot);
+        }
+
+        var options = builder.Options;
         return new LearningCoursesTestContext(options);
     }
 
     private sealed class LearningCoursesTestContext(DbContextOptions<LearningCoursesTestContext> options)
         : DbContext(options), IApplicationDbContext
     {
+        public Func<CancellationToken, Task>? BeforeInteractionSaveAsync { get; set; }
+
         public DbSet<Program> Programs => Set<Program>();
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var beforeInteractionSave = BeforeInteractionSaveAsync;
+            if (beforeInteractionSave is not null &&
+                ChangeTracker.Entries<ContentInteraction>()
+                    .Any(entry => entry.State == EntityState.Added))
+            {
+                BeforeInteractionSaveAsync = null;
+                await beforeInteractionSave(cancellationToken);
+                throw new DbUpdateException("Simulated concurrent active-attempt conflict.");
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -293,10 +452,12 @@ public sealed class ProgramWriteServiceTests
             modelBuilder.Entity<ContentInteraction>(entity =>
             {
                 entity.Ignore(interaction => interaction.User);
-                entity.Ignore(interaction => interaction.Content);
                 entity.Ignore(interaction => interaction.ProgramUser);
                 entity.Ignore(interaction => interaction.ActivityGrades);
                 entity.Ignore(interaction => interaction.Events);
+                entity.HasOne(interaction => interaction.Content)
+                    .WithMany()
+                    .HasForeignKey(interaction => interaction.ContentId);
             });
         }
 

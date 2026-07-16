@@ -655,6 +655,72 @@ public sealed class LessonInteractionTrackingTests
     }
 
     [Fact]
+    public async Task CompleteContent_WhenReopened_ShouldPreserveCompletion()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var lesson = CreateLesson();
+        var enrollment = new ProgramUser
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = lesson.ProgramId,
+            UserId = Guid.NewGuid(),
+            JoinedAt = SystemClock.UtcNow,
+        };
+        var interaction = CreateInteraction();
+        interaction.ProgramUserId = enrollment.Id;
+        interaction.UserId = enrollment.UserId;
+        interaction.ContentId = lesson.Id;
+        interaction.Content = lesson;
+        context.Set<ProgramContent>().Add(lesson);
+        context.Set<ProgramUser>().Add(enrollment);
+        context.Set<ContentInteraction>().Add(interaction);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(
+            context,
+            new TestRequestContextAccessor(enrollment.UserId));
+
+        var completed = await service.CompleteContentAsync(interaction.Id);
+        var reopened = await service.StartContentAsync(enrollment.Id, lesson.Id);
+
+        completed.IsCompleted.Should().BeTrue();
+        reopened.IsCompleted.Should().BeTrue();
+        reopened.Status.Should().Be(ProgressStatus.Completed);
+        reopened.ProgressPercentage.Should().Be(100);
+    }
+
+    [Fact]
+    public async Task SubmitContent_ShouldSetTheDomainCompletionFlag()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var lesson = CreateLesson();
+        var enrollment = new ProgramUser
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = lesson.ProgramId,
+            UserId = Guid.NewGuid(),
+            JoinedAt = SystemClock.UtcNow,
+        };
+        var interaction = CreateInteraction();
+        interaction.ProgramUserId = enrollment.Id;
+        interaction.UserId = enrollment.UserId;
+        interaction.ContentId = lesson.Id;
+        interaction.Content = lesson;
+        context.Set<ProgramContent>().Add(lesson);
+        context.Set<ProgramUser>().Add(enrollment);
+        context.Set<ContentInteraction>().Add(interaction);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(
+            context,
+            new TestRequestContextAccessor(interaction.UserId));
+
+        var submitted = await service.SubmitContentAsync(interaction.Id, "submission");
+
+        submitted.IsCompleted.Should().BeTrue();
+        submitted.Status.Should().Be(ProgressStatus.Completed);
+        submitted.ProgressPercentage.Should().Be(100);
+    }
+
+    [Fact]
     public async Task StartContent_WhenConcurrentRequestCreatesActiveAttempt_ShouldReturnWinner()
     {
         var databaseName = Guid.NewGuid().ToString();
@@ -801,11 +867,23 @@ public sealed class LessonInteractionTrackingTests
             {
                 entity.HasKey(interaction => interaction.Id);
                 entity.Ignore(interaction => interaction.User);
-                entity.Ignore(interaction => interaction.ProgramUser);
-                entity.Ignore(interaction => interaction.ActivityGrades);
                 entity.HasOne(interaction => interaction.Content)
                     .WithMany()
                     .HasForeignKey(interaction => interaction.ContentId);
+                entity.HasOne(interaction => interaction.ProgramUser)
+                    .WithMany()
+                    .HasForeignKey(interaction => interaction.ProgramUserId);
+                entity.HasMany(interaction => interaction.ActivityGrades)
+                    .WithOne(grade => grade.ContentInteraction)
+                    .HasForeignKey(grade => grade.ContentInteractionId);
+            });
+            modelBuilder.Entity<ActivityGrade>(entity =>
+            {
+                entity.HasKey(grade => grade.Id);
+                entity.Ignore(grade => grade.Student);
+                entity.Ignore(grade => grade.Grader);
+                entity.Ignore(grade => grade.ProgramUser);
+                entity.Ignore(grade => grade.GraderProgramUser);
             });
             modelBuilder.Entity<ContentInteractionEvent>(entity =>
             {
