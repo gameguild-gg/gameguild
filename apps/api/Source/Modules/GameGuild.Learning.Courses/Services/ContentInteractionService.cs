@@ -86,10 +86,7 @@ public class ContentInteractionService(
 
     interaction.SubmissionData = submissionData;
     interaction.SubmittedAt = SystemClock.UtcNow;
-    interaction.LastAccessedAt = SystemClock.UtcNow;
-    interaction.Status = ProgressStatus.Completed; // Use Completed instead of Submitted
-    interaction.CompletedAt = SystemClock.UtcNow;
-    interaction.CompletionPercentage = 100;
+    interaction.Complete();
 
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -102,10 +99,7 @@ public class ContentInteractionService(
 
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot modify submitted interaction. Create a new interaction to continue work.");
 
-    interaction.Status = ProgressStatus.Completed;
-    interaction.CompletedAt = SystemClock.UtcNow;
-    interaction.LastAccessedAt = SystemClock.UtcNow;
-    interaction.CompletionPercentage = 100;
+    interaction.Complete();
 
     await context.SaveChangesAsync().ConfigureAwait(false);
 
