@@ -17,6 +17,8 @@ public static class ProjectsModule {
         services.AddScoped<IProjectEngagementService, ProjectEngagementService>();
         services.AddScoped<IProjectChannelAvailabilityService, ProjectChannelAvailabilityService>();
         services.AddScoped<IProjectAuthorizationService, ProjectAuthorizationService>();
+        services.AddScoped<IProjectLifecycleParticipant, ProjectStoreProductLifecycleParticipant>();
+        services.AddScoped<IProjectLifecycleCoordinator, ProjectLifecycleCoordinator>();
 
         // Register facade for backward compatibility
         services.AddScoped<IProjectService, ProjectService>();

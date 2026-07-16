@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Routing;
+using GameGuild.Projects;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,6 +30,7 @@ public class TestingLabModule : ModuleBase
         services.AddScoped<ITestingFeedbackOperations, TestingFeedbackOperationsService>();
         services.AddScoped<ITestingLocationOperations, TestingLocationOperationsService>();
         services.AddScoped<ITestingLabPermissionService, TestingLabPermissionService>();
+        services.AddScoped<IProjectLifecycleParticipant, TestingLabProjectLifecycleParticipant>();
 
         // Register composite ITestService for backward compatibility (GraphQL resolvers)
         services.AddScoped<ITestService, TestService>();
