@@ -24,6 +24,7 @@ public static class CoursesModule
 
         // Content services
         services.AddScoped<IProgramContentScheduleGuard, NullProgramContentScheduleGuard>();
+        services.AddScoped<IProgramContentLifecycleGuard, NullProgramContentLifecycleGuard>();
         services.AddScoped<IProgramContentService, ProgramContentService>();
 
         // User / enrollment services
