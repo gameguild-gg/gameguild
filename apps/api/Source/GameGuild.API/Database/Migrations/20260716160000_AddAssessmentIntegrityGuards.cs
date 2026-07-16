@@ -18,17 +18,34 @@ public partial class AddAssessmentIntegrityGuards : Migration
         migrationBuilder.Sql("UPDATE \"AssessmentSubmissions\" AS submission SET \"Score\" = NULL WHERE \"Score\" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM \"Assessments\" AS assessment WHERE assessment.\"Id\" = submission.\"AssessmentId\");");
         migrationBuilder.Sql("UPDATE \"AssessmentSubmissions\" AS submission SET \"Score\" = CASE WHEN submission.\"Score\" < 0 THEN 0 WHEN submission.\"Score\" > assessment.\"MaxScore\" THEN assessment.\"MaxScore\" ELSE submission.\"Score\" END FROM \"Assessments\" AS assessment WHERE submission.\"AssessmentId\" = assessment.\"Id\" AND submission.\"Score\" IS NOT NULL;");
         migrationBuilder.Sql("""
-            WITH numbered_attempts AS (
+            WITH ranked_attempts AS (
                 SELECT "Id",
+                       "AssessmentId",
+                       "EnrollmentId",
+                       "AttemptNumber",
+                       "StartedAt",
+                       "CreatedAt",
                        ROW_NUMBER() OVER (
-                           PARTITION BY "AssessmentId", "EnrollmentId"
-                           ORDER BY "StartedAt", "CreatedAt", "Id")::integer AS "AttemptNumber"
+                           PARTITION BY "AssessmentId", "EnrollmentId", "AttemptNumber"
+                           ORDER BY "StartedAt", "CreatedAt", "Id") AS duplicate_rank,
+                       COALESCE(
+                           MAX("AttemptNumber") FILTER (WHERE "AttemptNumber" > 0) OVER (
+                               PARTITION BY "AssessmentId", "EnrollmentId"),
+                           0) AS historical_maximum
                 FROM "AssessmentSubmissions"
+            ),
+            repair_candidates AS (
+                SELECT "Id",
+                       historical_maximum + ROW_NUMBER() OVER (
+                           PARTITION BY "AssessmentId", "EnrollmentId"
+                           ORDER BY "StartedAt", "CreatedAt", "Id") AS replacement_attempt_number
+                FROM ranked_attempts
+                WHERE "AttemptNumber" <= 0 OR duplicate_rank > 1
             )
             UPDATE "AssessmentSubmissions" AS submission
-            SET "AttemptNumber" = numbered_attempts."AttemptNumber"
-            FROM numbered_attempts
-            WHERE submission."Id" = numbered_attempts."Id";
+            SET "AttemptNumber" = repair_candidates.replacement_attempt_number
+            FROM repair_candidates
+            WHERE submission."Id" = repair_candidates."Id";
             """);
 
         migrationBuilder.AddCheckConstraint(
