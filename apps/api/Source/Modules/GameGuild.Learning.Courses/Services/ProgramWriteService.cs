@@ -94,6 +94,8 @@ public class ProgramWriteService(
       };
 
       clonedContent.NormalizeLearningContract();
+      if (content.GetActivitySettings() is { } activitySettings)
+        clonedContent.SetActivitySettings(activitySettings);
 
       context.Set<ProgramContent>().Add(clonedContent);
     }
