@@ -3,6 +3,10 @@ namespace GameGuild.Learning.Courses;
 /// <summary> Extension methods to convert from entity/service models to DTOs </summary>
 public static class ActivityGradeExtensions {
   public static ActivityGradeDto ToDto(this ActivityGrade grade) {
+    if (grade.ContentInteraction?.Content?.Type == ProgramContentType.Survey) {
+      throw new InvalidOperationException("Survey grades are not available.");
+    }
+
     return new ActivityGradeDto {
       Id = grade.Id,
       ContentInteractionId = grade.ContentInteractionId,

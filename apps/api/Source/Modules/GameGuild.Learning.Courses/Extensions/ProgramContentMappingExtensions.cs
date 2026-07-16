@@ -19,6 +19,10 @@ public static class ProgramContentMappingExtensions
   /// <summary> Maps ProgramContent entity to DTO </summary>
   public static ProgramContentDto ToDto(this ProgramContent content)
   {
+    var normalizedType = NormalizeProfessorFacingType(content.Type);
+    var isLesson = normalizedType == ProgramContentType.Lesson;
+    var isNonGraded = isLesson || normalizedType == ProgramContentType.Survey;
+
     return new ProgramContentDto
     {
       Id = content.Id,
@@ -26,12 +30,14 @@ public static class ProgramContentMappingExtensions
       ParentId = content.ParentId,
       Title = content.Title,
       Description = content.Description ?? string.Empty,
-      Type = NormalizeProfessorFacingType(content.Type),
+      Type = normalizedType,
       Body = ParseBody(content.Body),
+      LessonFormat = isLesson ? content.LessonFormat ?? LessonContentFormatInference.FromBody(content.Body) : null,
+      ActivitySettings = content.GetActivitySettings(),
       SortOrder = content.SortOrder,
       IsRequired = content.IsRequired,
-      GradingMethod = content.GradingMethod,
-      MaxPoints = content.MaxPoints,
+      GradingMethod = isNonGraded ? GradingMethod.None : content.GradingMethod,
+      MaxPoints = isNonGraded ? null : content.MaxPoints,
       EstimatedMinutes = content.EstimatedMinutes,
       Visibility = content.Visibility,
       CreatedAt = content.CreatedAt,
@@ -95,7 +101,7 @@ public static class ProgramContentMappingExtensions
   /// <summary> Maps CreateProgramContentDto to ProgramContent entity </summary>
   public static ProgramContent ToEntity(this CreateProgramContentDto dto)
   {
-    return new ProgramContent
+    var content = new ProgramContent
     {
       Id = Guid.NewGuid(),
       ProgramId = dto.ProgramId,
@@ -104,6 +110,7 @@ public static class ProgramContentMappingExtensions
       Description = dto.Description,
       Type = NormalizeProfessorFacingType(dto.Type),
       Body = dto.Body,
+      LessonFormat = dto.LessonFormat ?? LessonContentFormatInference.FromBody(dto.Body),
       SortOrder = dto.SortOrder,
       IsRequired = dto.IsRequired,
       GradingMethod = dto.GradingMethod ?? GradingMethod.None,
@@ -111,20 +118,39 @@ public static class ProgramContentMappingExtensions
       EstimatedMinutes = dto.EstimatedMinutes,
       Visibility = dto.Visibility,
     };
+
+    content.NormalizeLearningContract();
+    if (dto.ActivitySettings is not null)
+    {
+      content.SetActivitySettings(dto.ActivitySettings);
+    }
+    return content;
   }
 
   /// <summary> Applies updates from UpdateProgramContentDto to ProgramContent entity </summary>
   public static void ApplyUpdates(this ProgramContent content, UpdateProgramContentDto dto)
   {
+    var wasLesson = NormalizeProfessorFacingType(content.Type) == ProgramContentType.Lesson;
     if (dto.Title != null) content.Title = dto.Title;
     if (dto.Description != null) content.Description = dto.Description;
     if (dto.Type != null) content.Type = NormalizeProfessorFacingType(dto.Type.Value);
     if (dto.Body != null) content.Body = dto.Body;
+    if (dto.LessonFormat.HasValue)
+    {
+      content.LessonFormat = dto.LessonFormat.Value;
+    }
+    if (dto.ActivitySettings is not null) content.SetActivitySettings(dto.ActivitySettings);
+    else if (NormalizeProfessorFacingType(content.Type) == ProgramContentType.Lesson &&
+             (!wasLesson || !content.LessonFormat.HasValue))
+    {
+      content.LessonFormat = LessonContentFormatInference.FromBody(content.Body);
+    }
     if (dto.SortOrder != null) content.SortOrder = dto.SortOrder.Value;
     if (dto.IsRequired != null) content.IsRequired = dto.IsRequired.Value;
     if (dto.GradingMethod != null) content.GradingMethod = dto.GradingMethod.Value;
     if (dto.MaxPoints.HasValue) content.MaxPoints = (int?)dto.MaxPoints.Value;
     if (dto.EstimatedMinutes != null) content.EstimatedMinutes = dto.EstimatedMinutes;
     if (dto.Visibility != null) content.Visibility = dto.Visibility.Value;
+    content.NormalizeLearningContract();
   }
 }

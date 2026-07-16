@@ -13,6 +13,10 @@ public sealed class LaunchPadModelConfiguration : IModelConfiguration
             builder.Property(plan => plan.Name).IsRequired().HasMaxLength(200);
             builder.Property(plan => plan.Positioning).HasMaxLength(1000);
             builder.Property(plan => plan.Channels).HasColumnType("text[]");
+            builder.HasIndex(plan => plan.ProjectId)
+                .IsUnique()
+                .HasDatabaseName("IX_launch_plans_ProjectId")
+                .HasFilter("\"DeletedAt\" IS NULL");
             builder.HasOne(plan => plan.Project)
                 .WithMany()
                 .HasForeignKey(plan => plan.ProjectId)
