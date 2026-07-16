@@ -81,13 +81,16 @@ public sealed class ProjectStoreProductHandlers(
             return Result.Failure<bool>(Error.Forbidden("ProjectStoreProduct.ProjectForbidden", "Project Edit permission is required."));
 
         var product = await context.Set<Product>()
+            .IgnoreQueryFilters()
             .AsNoTracking()
-            .FirstOrDefaultAsync(candidate => candidate.Id == request.ProductId && candidate.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(candidate => candidate.Id == request.ProductId, cancellationToken)
             .ConfigureAwait(false);
         if (product == null || product.TenantId != actor.TenantId)
             return Result.Failure<bool>(Error.NotFound("ProjectStoreProduct.ProductNotFound", "Product not found in the current tenant."));
         if (product.CreatorId != actorId && !actor.HasAnyPermission(ProductsPermission.Keys.Update, ProductsPermission.Keys.Manage))
             return Result.Failure<bool>(Error.Forbidden("ProjectStoreProduct.ProductForbidden", "Product ownership or update permission is required."));
+        if (product.IsBundle)
+            return Result.Failure<bool>(Error.Validation("ProjectStoreProduct.BundleUnsupported", "Bundle products cannot be linked directly to projects."));
 
         var link = await context.Set<ProjectStoreProduct>()
             .FirstOrDefaultAsync(candidate =>
@@ -108,13 +111,48 @@ public sealed class ProjectStoreProductHandlers(
 
     public async Task<Result<IReadOnlyList<ProjectStoreProductProjection>>> Handle(GetProjectStoreProductsQuery request, CancellationToken cancellationToken)
     {
-        if (!await authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Read, cancellationToken).ConfigureAwait(false))
-            return Result.Failure<IReadOnlyList<ProjectStoreProductProjection>>(Error.Forbidden("ProjectStoreProduct.ProjectForbidden", "Project Read permission is required."));
+        var actor = actorContextAccessor.ActorContext;
+        var actorId = actor.SubjectIdAsGuid;
+        if (!actor.IsAuthenticated || actorId == null || actor.TenantId == null ||
+            !await authorizationService.IsActorActiveTenantMemberAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return Result.Failure<IReadOnlyList<ProjectStoreProductProjection>>(
+                Error.Unauthorized("ProjectStoreProduct.Unauthenticated", "An active authenticated tenant actor is required."));
+        }
 
-        var tenantId = actorContextAccessor.ActorContext.TenantId;
-        var links = await context.Set<ProjectStoreProduct>()
+        var availability = await availabilityService
+            .GetAsync(request.ProjectId, ProjectChannel.Store, actor.TenantId, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+        if (!availability.IsAvailable)
+            return Result.Failure<IReadOnlyList<ProjectStoreProductProjection>>(
+                Error.Validation("ProjectStoreProduct.ProjectUnavailable", availability.Reason));
+        if (!await authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false))
+            return Result.Failure<IReadOnlyList<ProjectStoreProductProjection>>(Error.Forbidden("ProjectStoreProduct.ProjectForbidden", "Project Edit permission is required."));
+
+        var tenantId = actor.TenantId.Value;
+        var validLinks = context.Set<ProjectStoreProduct>()
             .AsNoTracking()
-            .Where(link => link.ProjectId == request.ProjectId && link.TenantId == tenantId && link.DeletedAt == null)
+            .Where(link =>
+                link.ProjectId == request.ProjectId &&
+                link.TenantId == tenantId &&
+                link.DeletedAt == null &&
+                link.Project.DeletedAt == null &&
+                link.Project.TenantId == tenantId &&
+                link.Project.Status == ContentStatus.Published &&
+                link.Project.Visibility == ContentVisibility.Public &&
+                link.Product.DeletedAt == null &&
+                link.Product.TenantId == tenantId &&
+                link.Product.IsPublished &&
+                !link.Product.IsBundle);
+
+        if (!actor.HasAnyPermission(ProductsPermission.Keys.Update, ProductsPermission.Keys.Manage) &&
+            await validLinks.AnyAsync(link => link.Product.CreatorId != actorId.Value, cancellationToken).ConfigureAwait(false))
+        {
+            return Result.Failure<IReadOnlyList<ProjectStoreProductProjection>>(
+                Error.Forbidden("ProjectStoreProduct.ProductForbidden", "Product ownership or update permission is required."));
+        }
+
+        var links = await validLinks
             .OrderBy(link => link.CreatedAt)
             .Select(link => new ProjectStoreProductProjection(link.Id, link.ProjectId, link.ProductId))
             .ToListAsync(cancellationToken)
@@ -126,7 +164,12 @@ public sealed class ProjectStoreProductHandlers(
     {
         var product = await context.Set<Product>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(candidate => candidate.Id == request.ProductId && candidate.DeletedAt == null && candidate.IsPublished, cancellationToken)
+            .FirstOrDefaultAsync(candidate =>
+                candidate.Id == request.ProductId &&
+                candidate.DeletedAt == null &&
+                candidate.IsPublished &&
+                !candidate.IsBundle,
+                cancellationToken)
             .ConfigureAwait(false);
         if (product == null)
             return Result.Failure<IReadOnlyList<ProjectStoreProductProjection>>(Error.NotFound("ProjectStoreProduct.ProductNotFound", "Published product not found."));
