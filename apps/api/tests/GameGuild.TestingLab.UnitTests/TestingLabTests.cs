@@ -2,6 +2,8 @@ using FluentAssertions;
 using GameGuild.Projects;
 using GameGuild.TestingLab;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Xunit;
@@ -504,7 +506,10 @@ public class TestingRequestOperationsServiceTests
     {
         await using var context = CreateContext();
         var userId = Guid.NewGuid();
-        var (_, service) = CreateRequestService(context, userId, Guid.NewGuid());
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        await context.SaveChangesAsync();
+        var (_, service) = CreateRequestService(context, userId, tenantId);
 
         var dto = CreateRequestDto(projectId: Guid.NewGuid());
 
@@ -520,6 +525,7 @@ public class TestingRequestOperationsServiceTests
         await using var context = CreateContext();
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
         var (actorAccessor, service) = CreateRequestService(context, userId, tenantId);
         var project = new Project
         {
@@ -565,6 +571,7 @@ public class TestingRequestOperationsServiceTests
         await using var context = CreateContext();
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
         var (_, service) = CreateRequestService(context, userId, tenantId);
         var project = new Project
         {
@@ -595,6 +602,7 @@ public class TestingRequestOperationsServiceTests
         await using var context = CreateContext();
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
         var (_, service) = CreateRequestService(context, userId, tenantId);
         var crossTenant = new Project
         {
@@ -620,6 +628,30 @@ public class TestingRequestOperationsServiceTests
         await unauthorizedAct.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_ShouldRejectInactiveProjectOwner()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId, userActive: false);
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+        var project = new Project
+        {
+            Title = "Inactive owner",
+            Slug = "inactive-owner",
+            Status = ContentStatus.Draft,
+            TenantId = tenantId,
+            CreatedById = userId
+        };
+        context.Set<Project>().Add(project);
+        await context.SaveChangesAsync();
+
+        var act = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(project.Id), userId);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
     private static (IActorContextAccessor ActorAccessor, TestingRequestOperationsService Service) CreateRequestService(
         IApplicationDbContext context,
         Guid userId,
@@ -638,6 +670,28 @@ public class TestingRequestOperationsServiceTests
         => new(new DbContextOptionsBuilder<TestingLabServiceDbContext>()
             .UseInMemoryDatabase($"testing-lab-service-{Guid.NewGuid():N}")
             .Options);
+
+    private static void AddIdentity(
+        IApplicationDbContext context,
+        Guid userId,
+        Guid tenantId,
+        bool userActive = true)
+    {
+        context.Set<User>().Add(new User
+        {
+            Id = userId,
+            Email = $"{userId:N}@example.com",
+            Name = "Testing request actor",
+            IsActive = userActive
+        });
+        context.Set<TenantMember>().Add(new TenantMember
+        {
+            UserId = userId,
+            TenantId = tenantId,
+            Role = "Member",
+            IsActive = true
+        });
+    }
 
     private static CreateSimpleTestingRequestDto CreateRequestDto(Guid projectId) => new()
     {
@@ -662,6 +716,10 @@ public class TestingRequestOperationsServiceTests
         public DbSet<ProjectRelease> ProjectReleases => Set<ProjectRelease>();
 
         public DbSet<TestingRequest> TestingRequests => Set<TestingRequest>();
+
+        public DbSet<User> Users => Set<User>();
+
+        public DbSet<TenantMember> TenantMembers => Set<TenantMember>();
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException("Transactions are not required for this service regression.");
