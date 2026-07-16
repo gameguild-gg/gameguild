@@ -216,13 +216,14 @@ public class ContentInteractionService(
     if (!requestContextAccessor.IsAuthenticated || !actorId.HasValue)
       throw new RequestValidationException("Program management permission is required.");
 
+    var program = await GetTenantScopedProgramAsync(expectedProgramId, "Program management permission is required.").ConfigureAwait(false);
     var content = await context.Set<ProgramContent>()
       .FirstOrDefaultAsync(item => item.Id == contentId && item.ProgramId == expectedProgramId && item.DeletedAt == null)
       .ConfigureAwait(false);
     if (content is null || content.Type != ProgramContentType.Survey)
       throw new RequestValidationException("Survey content was not found for the specified program.");
 
-    if (!await HasProgramReadAccessAsync(expectedProgramId, actorId.Value).ConfigureAwait(false))
+    if (!await HasProgramReadAccessAsync(program.Id, actorId.Value).ConfigureAwait(false))
       throw new RequestValidationException("Program management permission is required.");
 
     var interactions = await context.Set<ContentInteraction>()
@@ -241,6 +242,7 @@ public class ContentInteractionService(
     if (!requestContextAccessor.IsAuthenticated || !learnerId.HasValue)
       throw new RequestValidationException("Active course enrollment is required.");
 
+    await GetTenantScopedProgramAsync(expectedProgramId, "Active course enrollment is required.").ConfigureAwait(false);
     var content = await context.Set<ProgramContent>()
       .FirstOrDefaultAsync(item => item.Id == contentId && item.ProgramId == expectedProgramId && item.DeletedAt == null)
       .ConfigureAwait(false);
@@ -277,6 +279,57 @@ public class ContentInteractionService(
       .ConfigureAwait(false);
     return interactions.Select(interaction => SurveyResponseResultDto.FromInteraction(interaction)).ToList();
   }
+
+  public async Task<IEnumerable<ReflectionResponseResultDto>> GetReflectionResponsesAsync(Guid expectedProgramId, Guid contentId) {
+    var actorId = requestContextAccessor.CurrentUserId;
+    if (!requestContextAccessor.IsAuthenticated || !actorId.HasValue)
+      throw new RequestValidationException("Program management permission is required.");
+    var program = await GetTenantScopedProgramAsync(expectedProgramId, "Program management permission is required.").ConfigureAwait(false);
+    if (!await HasProgramReadAccessAsync(program.Id, actorId.Value).ConfigureAwait(false))
+      throw new RequestValidationException("Program management permission is required.");
+    var content = await GetReflectionContentAsync(program.Id, contentId).ConfigureAwait(false);
+    var interactions = await SubmittedInteractionsAsync(content.Id).ConfigureAwait(false);
+    return interactions.Select(interaction => ReflectionResponseResultDto.FromInteraction(interaction, true)).ToList();
+  }
+
+  public async Task<IEnumerable<ReflectionResponseResultDto>> GetVisibleReflectionResponsesAsync(Guid expectedProgramId, Guid contentId) {
+    var learnerId = requestContextAccessor.CurrentUserId;
+    if (!requestContextAccessor.IsAuthenticated || !learnerId.HasValue)
+      throw new RequestValidationException("Active course enrollment is required.");
+    var program = await GetTenantScopedProgramAsync(expectedProgramId, "Active course enrollment is required.").ConfigureAwait(false);
+    var enrollment = await context.Set<ProgramUser>()
+      .FirstOrDefaultAsync(item => item.ProgramId == program.Id && item.UserId == learnerId.Value && item.DeletedAt == null && item.IsActive)
+      .ConfigureAwait(false);
+    if (enrollment is null) throw new RequestValidationException("Active course enrollment is required.");
+    var content = await GetReflectionContentAsync(program.Id, contentId).ConfigureAwait(false);
+    var interactions = await SubmittedInteractionsAsync(content.Id).ConfigureAwait(false);
+    if (content.GetActivitySettings() is ReflectionActivitySettings { PrivateToInstructors: true })
+      interactions = interactions.Where(interaction => interaction.ProgramUserId == enrollment.Id).ToList();
+    return interactions.Select(interaction => ReflectionResponseResultDto.FromInteraction(interaction)).ToList();
+  }
+
+  private async Task<Program> GetTenantScopedProgramAsync(Guid programId, string failureMessage) {
+    var tenantId = requestContextAccessor.CurrentTenantId;
+    if (!tenantId.HasValue) throw new RequestValidationException(failureMessage);
+    // Global programs are intentionally visible in every tenant; tenant-owned programs are not.
+    var program = await context.Set<Program>()
+      .FirstOrDefaultAsync(item => item.Id == programId && item.DeletedAt == null && (item.TenantId == null || item.TenantId == tenantId.Value))
+      .ConfigureAwait(false);
+    return program ?? throw new RequestValidationException(failureMessage);
+  }
+
+  private async Task<ProgramContent> GetReflectionContentAsync(Guid programId, Guid contentId) {
+    var content = await context.Set<ProgramContent>()
+      .FirstOrDefaultAsync(item => item.Id == contentId && item.ProgramId == programId && item.Type == ProgramContentType.Reflection && item.DeletedAt == null)
+      .ConfigureAwait(false);
+    return content ?? throw new RequestValidationException("Reflection content was not found for the specified program.");
+  }
+
+  private Task<List<ContentInteraction>> SubmittedInteractionsAsync(Guid contentId) =>
+    context.Set<ContentInteraction>()
+      .Where(item => item.ContentId == contentId && item.SubmittedAt != null && item.DeletedAt == null)
+      .OrderBy(item => item.SubmittedAt)
+      .ToListAsync();
 
   private Task<bool> HasProgramReadAccessAsync(Guid programId, Guid actorId) {
     if (!requestContextAccessor.CurrentTenantId.HasValue || permissionQueryService is null) return Task.FromResult(false);
