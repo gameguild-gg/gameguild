@@ -208,6 +208,7 @@ public class TestingRequestOperationsService(
         var projectVersion = await context.Set<GameGuild.Projects.ProjectVersion>()
             .FirstOrDefaultAsync(version =>
                 version.ProjectId == projectId &&
+                version.TenantId == actor.TenantId &&
                 version.DeletedAt == null &&
                 version.VersionNumber == requestDto.VersionNumber)
             .ConfigureAwait(false);

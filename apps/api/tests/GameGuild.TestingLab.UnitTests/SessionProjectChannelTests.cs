@@ -108,6 +108,40 @@ public sealed class SessionProjectChannelTests : IDisposable
         deleted.Error.Type.Should().Be(ErrorType.Validation);
     }
 
+    [Fact]
+    public async Task Link_Should_Require_Project_Version_Selected_Tenant()
+    {
+        var session = AddSession(_tenantId, _actorId);
+        var project = AddProject(_tenantId, ContentStatus.Draft);
+        AddCollaborator(project.Id, _actorId, ProjectRoles.Owner, string.Empty);
+        var crossTenantVersion = AddVersion(project.Id, Guid.NewGuid());
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(
+            new LinkSessionProjectCommand(session.Id, project.Id, crossTenantVersion.Id),
+            default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("TestingLab.ProjectVersionMismatch");
+    }
+
+    [Fact]
+    public async Task Link_Should_Require_Project_Version_Tenant_To_Match_Project_Tenant()
+    {
+        var session = AddSession(_tenantId, _actorId);
+        var project = AddProject(_tenantId, ContentStatus.Draft);
+        AddCollaborator(project.Id, _actorId, ProjectRoles.Owner, string.Empty);
+        var wrongTenantVersion = AddVersion(project.Id, Guid.NewGuid());
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(
+            new LinkSessionProjectCommand(session.Id, project.Id, wrongTenantVersion.Id),
+            default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Validation);
+    }
+
     [Theory]
     [InlineData(ContentStatus.Archived)]
     [InlineData(ContentStatus.Deleted)]
@@ -170,6 +204,41 @@ public sealed class SessionProjectChannelTests : IDisposable
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Unauthorized);
+    }
+
+    [Fact]
+    public async Task List_Should_Exclude_Active_Links_With_Stale_Project_Or_Version_State()
+    {
+        var session = AddSession(_tenantId, _actorId);
+        var validProject = AddProject(_tenantId, ContentStatus.Draft);
+        var validVersion = AddVersion(validProject.Id, _tenantId);
+        var softDeletedProject = AddProject(_tenantId, ContentStatus.Draft);
+        softDeletedProject.DeletedAt = DateTime.UtcNow;
+        var archivedProject = AddProject(_tenantId, ContentStatus.Archived);
+        var deletedProject = AddProject(_tenantId, ContentStatus.Deleted);
+        var movedProject = AddProject(Guid.NewGuid(), ContentStatus.Draft);
+        var versionMismatchProject = AddProject(_tenantId, ContentStatus.Draft);
+        var otherProjectVersion = AddVersion(validProject.Id, _tenantId);
+        var crossTenantVersionProject = AddProject(_tenantId, ContentStatus.Draft);
+        var crossTenantVersion = AddVersion(crossTenantVersionProject.Id, Guid.NewGuid());
+        var deletedVersionProject = AddProject(_tenantId, ContentStatus.Draft);
+        var deletedVersion = AddVersion(deletedVersionProject.Id, _tenantId);
+        deletedVersion.DeletedAt = DateTime.UtcNow;
+
+        AddLink(session.Id, validProject.Id, validVersion.Id);
+        AddLink(session.Id, softDeletedProject.Id);
+        AddLink(session.Id, archivedProject.Id);
+        AddLink(session.Id, deletedProject.Id);
+        AddLink(session.Id, movedProject.Id);
+        AddLink(session.Id, versionMismatchProject.Id, otherProjectVersion.Id);
+        AddLink(session.Id, crossTenantVersionProject.Id, crossTenantVersion.Id);
+        AddLink(session.Id, deletedVersionProject.Id, deletedVersion.Id);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(new GetSessionProjectLinksQuery(session.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle().Which.ProjectId.Should().Be(validProject.Id);
     }
 
     [Fact]
@@ -278,6 +347,17 @@ public sealed class SessionProjectChannelTests : IDisposable
             UserId = userId,
             Role = role,
             Permissions = permissions,
+            IsActive = true
+        });
+
+    private void AddLink(Guid sessionId, Guid projectId, Guid? projectVersionId = null)
+        => _context.Set<SessionProject>().Add(new SessionProject
+        {
+            SessionId = sessionId,
+            ProjectId = projectId,
+            ProjectVersionId = projectVersionId,
+            RegisteredById = _actorId,
+            TenantId = _tenantId,
             IsActive = true
         });
 
