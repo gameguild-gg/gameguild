@@ -38,6 +38,19 @@ public sealed class CanonicalSnapshotEntitySetTests
         }
     }
 
+    [Fact]
+    public void Snapshot_Maps_Only_The_Canonical_Project_Aggregate_To_Projects()
+    {
+        var projectEntities = CreateSnapshotModel()
+            .GetEntityTypes()
+            .Where(entity => string.Equals(entity.GetTableName(), "projects", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        projectEntities.Should().ContainSingle();
+        projectEntities[0].Name.Should().Be("GameGuild.Projects.Project");
+        projectEntities.Should().NotContain(entity => entity.Name == "GameGuild.Projects.ProjectLegacy");
+    }
+
     private static IModel CreateSnapshotModel()
     {
         var snapshotType = typeof(ApplicationDbContext).Assembly.GetType(
