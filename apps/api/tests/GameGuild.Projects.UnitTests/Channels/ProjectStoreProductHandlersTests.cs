@@ -2,6 +2,8 @@ using GameGuild.API.Database;
 using GameGuild.Commerce.Products;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace GameGuild.Projects.UnitTests.Channels;
@@ -65,6 +67,23 @@ public sealed class ProjectStoreProductHandlersTests : IDisposable
         var result = await CreateHandler().Handle(new LinkProjectStoreProductCommand(project.Id, product.Id), default);
 
         result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Link_Should_Deny_Inactive_Product_And_Project_Owner()
+    {
+        SetActor();
+        var project = AddProject(_tenantId, ContentStatus.Published, ContentVisibility.Public);
+        project.CreatedById = _actorId;
+        var product = AddProduct(_tenantId, _actorId, isPublished: true);
+        await _context.SaveChangesAsync();
+        (await _context.Set<User>().SingleAsync()).IsActive = false;
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(new LinkProjectStoreProductCommand(project.Id, product.Id), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Forbidden);
     }
 
     [Fact]
@@ -194,6 +213,20 @@ public sealed class ProjectStoreProductHandlersTests : IDisposable
     {
         var builder = ActorContextBuilder.ForUser(_actorId).WithTenantId(_tenantId).WithPermissions(permissions);
         _actorAccessor.SetupGet(accessor => accessor.ActorContext).Returns(builder.Build());
+        _context.Set<User>().Add(new User
+        {
+            Id = _actorId,
+            Email = $"{_actorId:N}@example.com",
+            Name = "Store actor",
+            IsActive = true
+        });
+        _context.Set<TenantMember>().Add(new TenantMember
+        {
+            UserId = _actorId,
+            TenantId = _tenantId,
+            Role = "Member",
+            IsActive = true
+        });
     }
 
     private Project AddProject(Guid tenantId, ContentStatus status, ContentVisibility visibility)

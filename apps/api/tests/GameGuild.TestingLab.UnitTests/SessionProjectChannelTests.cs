@@ -2,6 +2,8 @@ using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using GameGuild.Projects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -157,6 +159,20 @@ public sealed class SessionProjectChannelTests : IDisposable
     }
 
     [Fact]
+    public async Task List_Should_Deny_Inactive_Session_Manager()
+    {
+        var session = AddSession(_tenantId, _actorId);
+        await _context.SaveChangesAsync();
+        (await _context.Set<User>().SingleAsync()).IsActive = false;
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(new GetSessionProjectLinksQuery(session.Id), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Unauthorized);
+    }
+
+    [Fact]
     public async Task Unlink_Should_Deactivate_And_SoftDelete_Link()
     {
         var session = AddSession(_tenantId, _actorId);
@@ -189,8 +205,24 @@ public sealed class SessionProjectChannelTests : IDisposable
             NullLogger<SessionProjectHandlers>.Instance);
 
     private void SetActor()
-        => _actorAccessor.SetupGet(accessor => accessor.ActorContext)
+    {
+        _actorAccessor.SetupGet(accessor => accessor.ActorContext)
             .Returns(ActorContextBuilder.ForUser(_actorId).WithTenantId(_tenantId).Build());
+        _context.Set<User>().Add(new User
+        {
+            Id = _actorId,
+            Email = $"{_actorId:N}@example.com",
+            Name = "Testing Lab actor",
+            IsActive = true
+        });
+        _context.Set<TenantMember>().Add(new TenantMember
+        {
+            UserId = _actorId,
+            TenantId = _tenantId,
+            Role = "Member",
+            IsActive = true
+        });
+    }
 
     private TestingSession AddSession(Guid tenantId, Guid managerId)
     {
@@ -256,6 +288,8 @@ public sealed class SessionProjectChannelTests : IDisposable
         public DbSet<Project> Projects => Set<Project>();
         public DbSet<ProjectCollaborator> ProjectCollaborators => Set<ProjectCollaborator>();
         public DbSet<ProjectVersion> ProjectVersions => Set<ProjectVersion>();
+        public DbSet<User> Users => Set<User>();
+        public DbSet<TenantMember> TenantMembers => Set<TenantMember>();
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
