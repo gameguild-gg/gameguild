@@ -26,17 +26,17 @@ No web implementation can guarantee zero ad fraud. The security objective is to 
 
 ## Actors And Adversaries
 
-| Actor | Security concern |
-| --- | --- |
-| Normal user | Accidental duplicate requests, compromised session, incorrect balance assumptions |
-| Malicious user | Arbitrary wallet access, replay, double spend, forged client price, refund abuse |
-| Colluding accounts | Purchased-to-earned laundering, bounty self-dealing, ad farms, payout evasion |
-| Malicious seller | Fake delivery, refund evasion, rapid payout, related-account purchases |
-| Bot or farm operator | Automated playback, account/device rotation, proxy use, timing manipulation |
-| Provider impersonator | Forged or replayed Stripe/ad/KYC webhook |
-| Malicious administrator | Unauthorized adjustment, hold release, payout override, evidence deletion |
-| Database attacker | Historical entry update/delete, chain-head rewrite, projection manipulation |
-| Compromised worker | Duplicate event handling, stale policy use, out-of-order transitions |
+| Actor                   | Security concern                                                                  |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| Normal user             | Accidental duplicate requests, compromised session, incorrect balance assumptions |
+| Malicious user          | Arbitrary wallet access, replay, double spend, forged client price, refund abuse  |
+| Colluding accounts      | Purchased-to-earned laundering, bounty self-dealing, ad farms, payout evasion     |
+| Malicious seller        | Fake delivery, refund evasion, rapid payout, related-account purchases            |
+| Bot or farm operator    | Automated playback, account/device rotation, proxy use, timing manipulation       |
+| Provider impersonator   | Forged or replayed Stripe/ad/KYC webhook                                          |
+| Malicious administrator | Unauthorized adjustment, hold release, payout override, evidence deletion         |
+| Database attacker       | Historical entry update/delete, chain-head rewrite, projection manipulation       |
+| Compromised worker      | Duplicate event handling, stale policy use, out-of-order transitions              |
 
 ## Trust Boundaries
 

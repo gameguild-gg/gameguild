@@ -15,11 +15,11 @@ The source whitepaper remains the product and economic intent. This architecture
 
 The dual-currency economy is separate from the legacy `GGG` governance-token material in `docs/papers/whitepaper.md` and `docs/papers/tokenomics.md`.
 
-| Asset | Nature | On chain | Cash redeemable | Purpose |
-| --- | --- | --- | --- | --- |
-| Hard coin | Internal stored-value unit; `100 HC = USD 1.00` | No | Earned hard only, through approved payouts | Marketplace settlement and creator earnings |
-| Soft coin | Fixed-value internal service credit; `100,000 SC = USD 1.00` | No | Never | Ad rewards, AI services, peer activity, and low-stakes purchases |
-| GGG | Separate governance concept | Potentially | Outside this architecture | Governance and voting |
+| Asset     | Nature                                                       | On chain    | Cash redeemable                            | Purpose                                                          |
+| --------- | ------------------------------------------------------------ | ----------- | ------------------------------------------ | ---------------------------------------------------------------- |
+| Hard coin | Internal stored-value unit; `100 HC = USD 1.00`              | No          | Earned hard only, through approved payouts | Marketplace settlement and creator earnings                      |
+| Soft coin | Fixed-value internal service credit; `100,000 SC = USD 1.00` | No          | Never                                      | Ad rewards, AI services, peer activity, and low-stakes purchases |
+| GGG       | Separate governance concept                                  | Potentially | Outside this architecture                  | Governance and voting                                            |
 
 No API, table, conversion, or user-facing projection may conflate these assets.
 
@@ -48,11 +48,11 @@ These decisions are the normative launch contract. Parity, confirmed-only FIFO s
 
 Reference examples:
 
-| USD reference | Hard coin | Soft coin |
-| ---: | ---: | ---: |
-| USD 0.01 | 1 HC | 1,000 SC |
-| USD 1.00 | 100 HC | 100,000 SC |
-| USD 10.00 | 1,000 HC | 1,000,000 SC |
+| USD reference | Hard coin |    Soft coin |
+| ------------: | --------: | -----------: |
+|      USD 0.01 |      1 HC |     1,000 SC |
+|      USD 1.00 |    100 HC |   100,000 SC |
+|     USD 10.00 |  1,000 HC | 1,000,000 SC |
 
 ## Goals
 
@@ -105,13 +105,13 @@ This keeps the ledger centralized without turning every economy feature into one
 
 ### New Modules
 
-| Module | Owns | Must never own |
-| --- | --- | --- |
-| `GameGuild.Economy` | Wallet identities, accounts, posting groups, journal entries, credit lots, fragment lineage, projections, holds, authoritative reserve head/allocation locks, fee/rate policy versions, idempotent posting, chain verification | Stripe SDK calls, ad playback, product catalog, orders, KYC provider calls |
-| `GameGuild.Economy.AdRewards` | Ad sessions, signed reward claims, network yield policies, reward quotes, fraud decisions, revenue batches, reconciliation | Direct balance mutation, Stripe payouts, product fulfillment |
-| `GameGuild.Economy.Bounties` | Bounty lifecycle, eligibility snapshots, escrow positions, claim and reclaim decisions | Generic wallet mutation, product checkout, KYC |
-| `GameGuild.Economy.Payouts` | Payout requests, earned-lot reservation, connected-account status, payout lifecycle, dispute-to-hold orchestration, seller debt | Provider webhook ingress, journal table mutation outside core posting contracts |
-| `GameGuild.Economy.Treasury` | External-asset observations, reserve calculations proposed to Core, custody reconciliation, admin revenue maturity, monthly withdrawal runs, variance and shortfall reporting | User checkout, mutable wallet balances, ad playback verification, direct mutation of the authoritative reserve head |
+| Module                        | Owns                                                                                                                                                                                                                           | Must never own                                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `GameGuild.Economy`           | Wallet identities, accounts, posting groups, journal entries, credit lots, fragment lineage, projections, holds, authoritative reserve head/allocation locks, fee/rate policy versions, idempotent posting, chain verification | Stripe SDK calls, ad playback, product catalog, orders, KYC provider calls                                          |
+| `GameGuild.Economy.AdRewards` | Ad sessions, signed reward claims, network yield policies, reward quotes, fraud decisions, revenue batches, reconciliation                                                                                                     | Direct balance mutation, Stripe payouts, product fulfillment                                                        |
+| `GameGuild.Economy.Bounties`  | Bounty lifecycle, eligibility snapshots, escrow positions, claim and reclaim decisions                                                                                                                                         | Generic wallet mutation, product checkout, KYC                                                                      |
+| `GameGuild.Economy.Payouts`   | Payout requests, earned-lot reservation, connected-account status, payout lifecycle, dispute-to-hold orchestration, seller debt                                                                                                | Provider webhook ingress, journal table mutation outside core posting contracts                                     |
+| `GameGuild.Economy.Treasury`  | External-asset observations, reserve calculations proposed to Core, custody reconciliation, admin revenue maturity, monthly withdrawal runs, variance and shortfall reporting                                                  | User checkout, mutable wallet balances, ad playback verification, direct mutation of the authoritative reserve head |
 
 ### Physical Package Map
 
@@ -143,15 +143,15 @@ Each project exposes a narrow `Contracts` namespace and keeps persistence intern
 
 ### Existing Modules
 
-| Module | Economy responsibility |
-| --- | --- |
+| Module                        | Economy responsibility                                                                                                                       |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GameGuild.Commerce.Payments` | Stripe PaymentIntent, refund, Connect account, transfer, and payout adapters. It reports provider facts and requests typed economy postings. |
-| `GameGuild.Commerce.Billing` | Signature verification, durable webhook inbox, normalized provider events, retries, and provider reconciliation triggers. |
-| `GameGuild.Commerce.Products` | Product prices and accepted-currency policy: hard-only, soft-only, either, or fixed mix. |
-| `GameGuild.Commerce.Orders` | Checkout intent, immutable price snapshot, settlement orchestration, refund decision, and entitlement coordination. |
-| `GameGuild.AI` | Exact provider usage and cost facts. It requests an economy authorization/charge before or atomically with billable work. |
-| `GameGuild.Compliance.KYC` | Verified identity and risk status consumed by payout eligibility. It does not compute balances. |
-| `GameGuild.SharedKernel` | CQRS abstractions, authorization, validation, clock, domain-event and observability primitives. It contains no economy policy. |
+| `GameGuild.Commerce.Billing`  | Signature verification, durable webhook inbox, normalized provider events, retries, and provider reconciliation triggers.                    |
+| `GameGuild.Commerce.Products` | Product prices and accepted-currency policy: hard-only, soft-only, either, or fixed mix.                                                     |
+| `GameGuild.Commerce.Orders`   | Checkout intent, immutable price snapshot, settlement orchestration, refund decision, and entitlement coordination.                          |
+| `GameGuild.AI`                | Exact provider usage and cost facts. It requests an economy authorization/charge before or atomically with billable work.                    |
+| `GameGuild.Compliance.KYC`    | Verified identity and risk status consumed by payout eligibility. It does not compute balances.                                              |
+| `GameGuild.SharedKernel`      | CQRS abstractions, authorization, validation, clock, domain-event and observability primitives. It contains no economy policy.               |
 
 ### Dependency Direction
 
@@ -179,19 +179,19 @@ The core never references Ads, Bounties, Payouts, Treasury, Products, Orders, Pa
 
 ### Value Types
 
-| Type | Representation | Rule |
-| --- | --- | --- |
-| `HardCoinAmount` | signed `long` | `100 HC = USD 1.00`; checked integer arithmetic only |
-| `SoftCoinAmount` | signed `long` | `100,000 SC = USD 1.00`; one SC is the indivisible base unit and is never cash redeemable |
-| `UsdNanoAmount` | signed `long` with checked `Int128` intermediates | Internal rate calculation only; `1,000,000,000` nanos equals USD 1.00 and is never a wallet balance |
-| `CurrencyKind` | explicit enum | `Hard`, `Soft` |
-| `HardCoinProvenance` | explicit enum | `Purchased`, `Earned` |
-| `SoftCoinProvenance` | explicit enum | `AdReward`, `HardConversion`, `SystemBackedGrant`, `EarnedTransfer` |
-| `CreditSourceKind` | explicit stable enum | Monetary source tag such as Stripe top-up, order sale, bounty claim, ad reward, hard conversion, system grant, refund restoration, or adjustment |
-| `AccountCode` | explicit enum/value | User, escrow, fee revenue, issuance/redemption, burn, debt, and other system accounts |
-| `PostingReference` | type plus stable ID | Connects a posting to a provider or domain event |
-| `SourceStamp` | opaque immutable value/reference | Source kind, provenance, internal source ID, provider-fact mapping, confirmation kind/time, policy version, and canonical hash |
-| `IdempotencyKey` | bounded string/value | Unique within an operation scope |
+| Type                 | Representation                                    | Rule                                                                                                                                             |
+| -------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `HardCoinAmount`     | signed `long`                                     | `100 HC = USD 1.00`; checked integer arithmetic only                                                                                             |
+| `SoftCoinAmount`     | signed `long`                                     | `100,000 SC = USD 1.00`; one SC is the indivisible base unit and is never cash redeemable                                                        |
+| `UsdNanoAmount`      | signed `long` with checked `Int128` intermediates | Internal rate calculation only; `1,000,000,000` nanos equals USD 1.00 and is never a wallet balance                                              |
+| `CurrencyKind`       | explicit enum                                     | `Hard`, `Soft`                                                                                                                                   |
+| `HardCoinProvenance` | explicit enum                                     | `Purchased`, `Earned`                                                                                                                            |
+| `SoftCoinProvenance` | explicit enum                                     | `AdReward`, `HardConversion`, `SystemBackedGrant`, `EarnedTransfer`                                                                              |
+| `CreditSourceKind`   | explicit stable enum                              | Monetary source tag such as Stripe top-up, order sale, bounty claim, ad reward, hard conversion, system grant, refund restoration, or adjustment |
+| `AccountCode`        | explicit enum/value                               | User, escrow, fee revenue, issuance/redemption, burn, debt, and other system accounts                                                            |
+| `PostingReference`   | type plus stable ID                               | Connects a posting to a provider or domain event                                                                                                 |
+| `SourceStamp`        | opaque immutable value/reference                  | Source kind, provenance, internal source ID, provider-fact mapping, confirmation kind/time, policy version, and canonical hash                   |
+| `IdempotencyKey`     | bounded string/value                              | Unique within an operation scope                                                                                                                 |
 
 Provenance and account purpose are different dimensions. `Purchased` and `Earned` describe origin. `FeeRevenue`, `Reserve`, and `PayoutClearing` describe accounting purpose. They must not share one `source_tag` field.
 
@@ -199,33 +199,33 @@ Provenance and account purpose are different dimensions. `Purchased` and `Earned
 
 All names below are logical. Final EF names follow project conventions.
 
-| Table | Purpose | Mutability |
-| --- | --- | --- |
-| `economy_wallets` | Owner identity and wallet lifecycle | Status transitions only |
-| `economy_accounts` | Currency, provenance, and account-code partitions | Configuration/status only |
-| `economy_posting_groups` | One atomic business transaction, immutable posting-template type/version, authorization context, and idempotency anchor | Append-only |
-| `economy_journal_entries` | Ordered signed postings | Append-only |
-| `economy_source_stamps` | Immutable source/provenance tag, opaque source/provider fact, observed time, policy version, and hash for every funding intent or inbound credit | Append-only |
-| `economy_source_stamp_events` | Observed, confirmed, failed, expired, disputed, and reversed evidence for a source stamp | Append-only |
-| `economy_provider_fact_allocations` | Unique provider/environment/account/object/monetary-leg binding and cumulative confirmed/refunded/disputed amount consumption | Append-only monetary events plus guarded cumulative projection |
-| `economy_credit_lots` | Immutable credit amount, source-stamp ID, `credited_at`, `confirmed_at`, `matures_at`, and cash-out eligibility | Append-only |
-| `economy_entry_allocations` | Debit-to-credit-lot provenance consumption | Append-only |
-| `economy_lot_lineage_edges` | Exact integer parent-fragment to child-lot mapping for splits, merges, fees, escrow, transfers, and settlement | Append-only |
-| `economy_fragment_root_ranges` | Immutable root ID plus half-open trace-unit intervals carried through each allocation/output, including mixed-root lots | Append-only |
-| `economy_root_reversal_states` | Per-root reversal epoch, cumulative provider amount, targeted intervals, and active/frozen/completed state | Guarded transition only |
-| `economy_dispatch_snapshots` | Canonical payout/admin-withdrawal eligibility state and hash bound to exact fragments and operation versions | Append-only |
-| `economy_external_anchors` | KMS signature and WORM reference covering chain head plus optional dispatch-snapshot hash | Append-only |
-| `economy_chain_head` | Singleton current sequence/hash | Mutable under row lock |
-| `economy_pending_funding_projections` | Observed external funding claims shown before confirmation; never a coin account or spend authority | Rebuildable from source evidence |
-| `economy_balance_projections` | Fast aggregate confirmed, held, available, and withdrawable reads plus a joined pending-claim view; never authoritative monetary state | Rebuildable cache |
-| `economy_credit_lot_projections` | Remaining and reserved amount per credit lot | Rebuildable cache |
-| `economy_holds` | Administrative encumbrance state | Controlled state machine |
-| `economy_hold_events` | Hold audit history | Append-only |
-| `economy_policy_versions` | Versioned fees, ad-yield inputs, service prices/margins, limits, and maturity rules; fixed parity is not policy-configurable | Append-only versions |
-| `economy_idempotency_records` | Exactly-once command result and state | Controlled state machine |
-| `economy_outbox_messages` | Events committed with postings | Append-only, delivery state mutable |
-| `economy_reserve_heads` | Core-validated active reserve version, coverage state, asset-allocation lock, and authorization epoch | Guarded transition only |
-| `economy_reserve_asset_allocations` | Exclusive assignment of eligible external assets to hard or soft backing | Guarded transition only |
+| Table                                 | Purpose                                                                                                                                          | Mutability                                                     |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| `economy_wallets`                     | Owner identity and wallet lifecycle                                                                                                              | Status transitions only                                        |
+| `economy_accounts`                    | Currency, provenance, and account-code partitions                                                                                                | Configuration/status only                                      |
+| `economy_posting_groups`              | One atomic business transaction, immutable posting-template type/version, authorization context, and idempotency anchor                          | Append-only                                                    |
+| `economy_journal_entries`             | Ordered signed postings                                                                                                                          | Append-only                                                    |
+| `economy_source_stamps`               | Immutable source/provenance tag, opaque source/provider fact, observed time, policy version, and hash for every funding intent or inbound credit | Append-only                                                    |
+| `economy_source_stamp_events`         | Observed, confirmed, failed, expired, disputed, and reversed evidence for a source stamp                                                         | Append-only                                                    |
+| `economy_provider_fact_allocations`   | Unique provider/environment/account/object/monetary-leg binding and cumulative confirmed/refunded/disputed amount consumption                    | Append-only monetary events plus guarded cumulative projection |
+| `economy_credit_lots`                 | Immutable credit amount, source-stamp ID, `credited_at`, `confirmed_at`, `matures_at`, and cash-out eligibility                                  | Append-only                                                    |
+| `economy_entry_allocations`           | Debit-to-credit-lot provenance consumption                                                                                                       | Append-only                                                    |
+| `economy_lot_lineage_edges`           | Exact integer parent-fragment to child-lot mapping for splits, merges, fees, escrow, transfers, and settlement                                   | Append-only                                                    |
+| `economy_fragment_root_ranges`        | Immutable root ID plus half-open trace-unit intervals carried through each allocation/output, including mixed-root lots                          | Append-only                                                    |
+| `economy_root_reversal_states`        | Per-root reversal epoch, cumulative provider amount, targeted intervals, and active/frozen/completed state                                       | Guarded transition only                                        |
+| `economy_dispatch_snapshots`          | Canonical payout/admin-withdrawal eligibility state and hash bound to exact fragments and operation versions                                     | Append-only                                                    |
+| `economy_external_anchors`            | KMS signature and WORM reference covering chain head plus optional dispatch-snapshot hash                                                        | Append-only                                                    |
+| `economy_chain_head`                  | Singleton current sequence/hash                                                                                                                  | Mutable under row lock                                         |
+| `economy_pending_funding_projections` | Observed external funding claims shown before confirmation; never a coin account or spend authority                                              | Rebuildable from source evidence                               |
+| `economy_balance_projections`         | Fast aggregate confirmed, held, available, and withdrawable reads plus a joined pending-claim view; never authoritative monetary state           | Rebuildable cache                                              |
+| `economy_credit_lot_projections`      | Remaining and reserved amount per credit lot                                                                                                     | Rebuildable cache                                              |
+| `economy_holds`                       | Administrative encumbrance state                                                                                                                 | Controlled state machine                                       |
+| `economy_hold_events`                 | Hold audit history                                                                                                                               | Append-only                                                    |
+| `economy_policy_versions`             | Versioned fees, ad-yield inputs, service prices/margins, limits, and maturity rules; fixed parity is not policy-configurable                     | Append-only versions                                           |
+| `economy_idempotency_records`         | Exactly-once command result and state                                                                                                            | Controlled state machine                                       |
+| `economy_outbox_messages`             | Events committed with postings                                                                                                                   | Append-only, delivery state mutable                            |
+| `economy_reserve_heads`               | Core-validated active reserve version, coverage state, asset-allocation lock, and authorization epoch                                            | Guarded transition only                                        |
+| `economy_reserve_asset_allocations`   | Exclusive assignment of eligible external assets to hard or soft backing                                                                         | Guarded transition only                                        |
 
 ### Posting Group Invariant
 
@@ -244,28 +244,28 @@ Balance alone is insufficient. Every group also stores an immutable `operation_t
 
 `+` increases the account claim and `-` decreases it.
 
-| Event | Entries |
-| --- | --- |
-| Deposit observed | No monetary entries. Create the immutable funding source stamp, append `Observed` evidence, and update the rebuildable pending-funding claim projection |
-| Deposit confirmed / mint | Buyer confirmed purchased-hard `+H`; hard issuance `-H`; append authoritative `Confirmed` evidence and create the root credit lot atomically |
-| Deposit failed/expired | No monetary entries. Append terminal evidence and remove the claim from the rebuilt pending-funding projection |
-| Provider top-up refund/chargeback | Reverse every recoverable descendant using balanced per-currency retirement templates; route unavailable root-equivalent portions to responsible-party debt/receivable or the snapshotted platform-loss account; enforce cumulative provider amount and source lineage without reminting an already retired root |
-| Hard marketplace purchase | Buyer hard lots `-H`; seller earned-hard `+(H-F)`; platform fee `+F` |
-| Soft marketplace purchase | Buyer soft lots `-S`; seller earned-soft `+(S-F)`; platform fee/burn account `+F`, according to the fee policy |
-| Fixed mix purchase | The complete hard template and complete soft template in one database transaction; both succeed or both fail |
-| Ad reward | Student ad-reward soft `+S`; ad-backed soft issuance `-S` |
-| Hard-to-soft conversion | User hard `-(H+F)`; hard issuance/redemption `+H`; fee account `+F`; user soft `+S`; soft issuance `-S`, where principal `S = H * 1,000`; the same transaction reclassifies backing from hard to soft reserve |
-| System-backed soft grant | Platform hard `-H`; hard issuance/redemption `+H`; user soft `+S`; system-backed soft issuance `-S`, where `S = H * 1,000`; the same transaction consumes an approved grant budget and reclassifies backing to soft reserve |
-| Soft burn for AI | User soft `-S`; soft burn/service-consumption account `+S` |
-| Bounty claim | Escrow `-A`; claimant earned account `+A`, less any separately posted configured fee |
-| Bounty reclaim | Escrow `-A`; poster original provenance `+(A-F)`; reclaim fee `+F` |
-| Payout reservation/dispatch | No monetary entries. Reserve the oldest eligible earned-hard fragments, persist the fencing/kill-switch epoch, and atomically claim the provider-dispatch command |
-| Payout provider success / burn | User earned-hard `-H`; hard redemption/issuance `+H`; retire the exact reserved fragments only after authoritative provider success |
-| Payout provider failure | No monetary entries. Release the same fragment reservations; lot identity, provenance, confirmation time, and maturity never change |
-| Admin withdrawal reservation/dispatch | No monetary entries. Reserve the oldest eligible platform-fee fragments and persist the approved run plus fencing version |
-| Admin withdrawal success / burn | Platform fee hard `-H`; hard redemption/issuance `+H`; retire the exact reserved fragments after authoritative provider success and record the company cash transfer |
-| Admin withdrawal failure | No monetary entries. Release the same reserved platform-fee fragments without creating a new lot or maturity clock |
-| Refund | New reversing group restores buyer lot provenance and debits seller proceeds, platform fee, debt, or loss accounts according to the snapshotted refund policy |
+| Event                                 | Entries                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deposit observed                      | No monetary entries. Create the immutable funding source stamp, append `Observed` evidence, and update the rebuildable pending-funding claim projection                                                                                                                                                          |
+| Deposit confirmed / mint              | Buyer confirmed purchased-hard `+H`; hard issuance `-H`; append authoritative `Confirmed` evidence and create the root credit lot atomically                                                                                                                                                                     |
+| Deposit failed/expired                | No monetary entries. Append terminal evidence and remove the claim from the rebuilt pending-funding projection                                                                                                                                                                                                   |
+| Provider top-up refund/chargeback     | Reverse every recoverable descendant using balanced per-currency retirement templates; route unavailable root-equivalent portions to responsible-party debt/receivable or the snapshotted platform-loss account; enforce cumulative provider amount and source lineage without reminting an already retired root |
+| Hard marketplace purchase             | Buyer hard lots `-H`; seller earned-hard `+(H-F)`; platform fee `+F`                                                                                                                                                                                                                                             |
+| Soft marketplace purchase             | Buyer soft lots `-S`; seller earned-soft `+(S-F)`; platform fee/burn account `+F`, according to the fee policy                                                                                                                                                                                                   |
+| Fixed mix purchase                    | The complete hard template and complete soft template in one database transaction; both succeed or both fail                                                                                                                                                                                                     |
+| Ad reward                             | Student ad-reward soft `+S`; ad-backed soft issuance `-S`                                                                                                                                                                                                                                                        |
+| Hard-to-soft conversion               | User hard `-(H+F)`; hard issuance/redemption `+H`; fee account `+F`; user soft `+S`; soft issuance `-S`, where principal `S = H * 1,000`; the same transaction reclassifies backing from hard to soft reserve                                                                                                    |
+| System-backed soft grant              | Platform hard `-H`; hard issuance/redemption `+H`; user soft `+S`; system-backed soft issuance `-S`, where `S = H * 1,000`; the same transaction consumes an approved grant budget and reclassifies backing to soft reserve                                                                                      |
+| Soft burn for AI                      | User soft `-S`; soft burn/service-consumption account `+S`                                                                                                                                                                                                                                                       |
+| Bounty claim                          | Escrow `-A`; claimant earned account `+A`, less any separately posted configured fee                                                                                                                                                                                                                             |
+| Bounty reclaim                        | Escrow `-A`; poster original provenance `+(A-F)`; reclaim fee `+F`                                                                                                                                                                                                                                               |
+| Payout reservation/dispatch           | No monetary entries. Reserve the oldest eligible earned-hard fragments, persist the fencing/kill-switch epoch, and atomically claim the provider-dispatch command                                                                                                                                                |
+| Payout provider success / burn        | User earned-hard `-H`; hard redemption/issuance `+H`; retire the exact reserved fragments only after authoritative provider success                                                                                                                                                                              |
+| Payout provider failure               | No monetary entries. Release the same fragment reservations; lot identity, provenance, confirmation time, and maturity never change                                                                                                                                                                              |
+| Admin withdrawal reservation/dispatch | No monetary entries. Reserve the oldest eligible platform-fee fragments and persist the approved run plus fencing version                                                                                                                                                                                        |
+| Admin withdrawal success / burn       | Platform fee hard `-H`; hard redemption/issuance `+H`; retire the exact reserved fragments after authoritative provider success and record the company cash transfer                                                                                                                                             |
+| Admin withdrawal failure              | No monetary entries. Release the same reserved platform-fee fragments without creating a new lot or maturity clock                                                                                                                                                                                               |
+| Refund                                | New reversing group restores buyer lot provenance and debits seller proceeds, platform fee, debt, or loss accounts according to the snapshotted refund policy                                                                                                                                                    |
 
 Every template records the effective policy version and all variable fees/rates applied. Fixed parity is a domain/schema invariant, not a mutable policy. A later policy change cannot reinterpret a historical transaction.
 
@@ -644,13 +644,13 @@ Every capability continuously evaluates positive readiness predicates at command
 
 Containment modes are explicit:
 
-| Failed predicate | Allowed | Blocked |
-| --- | --- | --- |
-| Provider/ad/KYC dependency unavailable, ledger integrity healthy | Safe reads, signed evidence ingestion, reconciliation, pre-dispatch reservation release, authoritative-terminal-failure release, quarantined refund/dispute obligation intake | Affected provider dispatch, issuance, service authorization, and release of any dispatching/ambiguous reservation |
-| Privileged KYC/risk audit writer unavailable or unverifiable | Ordinary non-sensitive reads and quarantine intake | Every privileged KYC/risk read or export; protected data is never released before durable audit acceptance |
-| Reserve/margin/custody input stale or insufficient, ledger integrity healthy | Safe reads, evidence ingestion, reconciliation, liability-reducing reversal when its exact template remains provably safe | New issuance, conversion, settlement, payout, admin withdrawal, new cost-bearing authorization |
-| Projection mismatch with verified journal/lineage | Safe reads using the lower recomputed amount, evidence ingestion, reconciliation and rebuild | All value authorization and provider dispatch for affected wallets/capabilities |
-| Writer, chain, anchor, source evidence, lineage, or immutable-ledger integrity failure | Evidence intake into quarantine, forensic reads from last verified anchor, independent recovery workflow | Every journal posting, reservation change, value authorization, and provider dispatch, including refunds, debt recovery, and incident adjustments |
+| Failed predicate                                                                       | Allowed                                                                                                                                                                       | Blocked                                                                                                                                           |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Provider/ad/KYC dependency unavailable, ledger integrity healthy                       | Safe reads, signed evidence ingestion, reconciliation, pre-dispatch reservation release, authoritative-terminal-failure release, quarantined refund/dispute obligation intake | Affected provider dispatch, issuance, service authorization, and release of any dispatching/ambiguous reservation                                 |
+| Privileged KYC/risk audit writer unavailable or unverifiable                           | Ordinary non-sensitive reads and quarantine intake                                                                                                                            | Every privileged KYC/risk read or export; protected data is never released before durable audit acceptance                                        |
+| Reserve/margin/custody input stale or insufficient, ledger integrity healthy           | Safe reads, evidence ingestion, reconciliation, liability-reducing reversal when its exact template remains provably safe                                                     | New issuance, conversion, settlement, payout, admin withdrawal, new cost-bearing authorization                                                    |
+| Projection mismatch with verified journal/lineage                                      | Safe reads using the lower recomputed amount, evidence ingestion, reconciliation and rebuild                                                                                  | All value authorization and provider dispatch for affected wallets/capabilities                                                                   |
+| Writer, chain, anchor, source evidence, lineage, or immutable-ledger integrity failure | Evidence intake into quarantine, forensic reads from last verified anchor, independent recovery workflow                                                                      | Every journal posting, reservation change, value authorization, and provider dispatch, including refunds, debt recovery, and incident adjustments |
 
 Quarantined obligations resume only after integrity is restored and a new verified anchor covers the recovery posting. No operator can bypass this matrix with a generic adjustment.
 
