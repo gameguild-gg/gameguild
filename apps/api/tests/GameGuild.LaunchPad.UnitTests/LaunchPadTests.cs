@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Authorization;
 using GameGuild.Projects;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,17 +23,21 @@ public sealed class LaunchPadTests
     {
         await using var context = CreateContext();
         var projectId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
         context.Set<Project>().Add(new Project
         {
             Id = projectId,
             Title = "Portfolio Game",
             Slug = "portfolio-game",
             Status = ContentStatus.Draft,
-            Visibility = ContentVisibility.Private
+            Visibility = ContentVisibility.Private,
+            TenantId = tenantId
         });
+        AddCollaborator(context, projectId, actorId, ProjectRoles.Owner, string.Empty);
         await context.SaveChangesAsync();
-        var actorAccessor = ActorAccessor(Guid.NewGuid());
-        var handler = new LaunchPadHandlers(context, actorAccessor.Object, NullLogger<LaunchPadHandlers>.Instance);
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+        var handler = CreateHandler(context, actorAccessor);
 
         var created = await handler.Handle(new CreateLaunchPlanCommand
         {
@@ -160,8 +165,10 @@ public sealed class LaunchPadTests
     public async Task LaunchPad_Handler_Should_Return_NotFound_Conflict_And_NotReady_Errors()
     {
         await using var context = CreateContext();
-        var actorAccessor = ActorAccessor(Guid.NewGuid());
-        var handler = new LaunchPadHandlers(context, actorAccessor.Object, NullLogger<LaunchPadHandlers>.Instance);
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+        var handler = CreateHandler(context, actorAccessor);
 
         var missingProject = await handler.Handle(new CreateLaunchPlanCommand
         {
@@ -178,8 +185,10 @@ public sealed class LaunchPadTests
             Title = "Prototype",
             Slug = "prototype",
             Status = ContentStatus.Draft,
-            Visibility = ContentVisibility.Private
+            Visibility = ContentVisibility.Private,
+            TenantId = tenantId
         });
+        AddCollaborator(context, projectId, actorId, ProjectRoles.Owner, string.Empty);
         context.Set<LaunchPlan>().Add(new LaunchPlan
         {
             ProjectId = projectId,
@@ -207,6 +216,152 @@ public sealed class LaunchPadTests
 
         var notReady = await handler.Handle(new PublishLaunchCommand { LaunchPlanId = existing.Id }, CancellationToken.None);
         notReady.Error.Type.Should().Be(ErrorType.Validation);
+    }
+
+    [Fact]
+    public async Task LaunchPad_Handler_Should_Fail_Closed_Without_Actor_Context()
+    {
+        await using var context = CreateContext();
+        var accessor = new Mock<IActorContextAccessor>();
+        accessor.SetupGet(candidate => candidate.ActorContext).Returns(ActorContext.Anonymous);
+
+        var result = await CreateHandler(context, accessor).Handle(new CreateLaunchPlanCommand
+        {
+            ProjectId = Guid.NewGuid(),
+            Name = "Denied"
+        }, default);
+
+        result.Error.Type.Should().Be(ErrorType.Unauthorized);
+    }
+
+    [Theory]
+    [InlineData(ContentStatus.Archived)]
+    [InlineData(ContentStatus.Deleted)]
+    public async Task LaunchPad_Handler_Should_Reject_Terminal_Project_At_Creation(ContentStatus status)
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = new Project
+        {
+            Title = "Unavailable",
+            Slug = "unavailable",
+            Status = status,
+            TenantId = tenantId
+        };
+        context.Set<Project>().Add(project);
+        AddCollaborator(context, project.Id, actorId, ProjectRoles.Owner, string.Empty);
+        await context.SaveChangesAsync();
+
+        var result = await CreateHandler(context, ActorAccessor(actorId, tenantId)).Handle(
+            new CreateLaunchPlanCommand { ProjectId = project.Id, Name = "Denied" }, default);
+
+        result.Error.Type.Should().Be(ErrorType.Validation);
+    }
+
+    [Fact]
+    public async Task LaunchPad_Handler_Should_Reject_CrossTenant_And_Missing_Edit_Permission()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var crossTenant = new Project
+        {
+            Title = "Other tenant",
+            Slug = "other-tenant",
+            Status = ContentStatus.Draft,
+            TenantId = Guid.NewGuid()
+        };
+        var unauthorized = new Project
+        {
+            Title = "No edit",
+            Slug = "no-edit",
+            Status = ContentStatus.Draft,
+            TenantId = tenantId
+        };
+        context.Set<Project>().AddRange(crossTenant, unauthorized);
+        AddCollaborator(context, crossTenant.Id, actorId, ProjectRoles.Owner, string.Empty);
+        AddCollaborator(context, unauthorized.Id, actorId, ProjectRoles.Viewer, "Read");
+        await context.SaveChangesAsync();
+        var handler = CreateHandler(context, ActorAccessor(actorId, tenantId));
+
+        var tenantResult = await handler.Handle(new CreateLaunchPlanCommand { ProjectId = crossTenant.Id, Name = "Other" }, default);
+        var permissionResult = await handler.Handle(new CreateLaunchPlanCommand { ProjectId = unauthorized.Id, Name = "Denied" }, default);
+
+        tenantResult.IsFailure.Should().BeTrue();
+        permissionResult.Error.Type.Should().Be(ErrorType.Forbidden);
+    }
+
+    [Fact]
+    public async Task Checklist_Should_Require_Edit_And_Publish_Should_Require_Publish_Permission()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = new Project { Title = "Permissions", Slug = "permissions", Status = ContentStatus.Draft, TenantId = tenantId };
+        var plan = new LaunchPlan
+        {
+            ProjectId = project.Id,
+            TenantId = tenantId,
+            Name = "Permission plan",
+            ChecklistItems = [new LaunchChecklistItem { Title = "Ready", Category = "Readiness", IsRequired = true }]
+        };
+        context.Set<Project>().Add(project);
+        context.Set<LaunchPlan>().Add(plan);
+        AddCollaborator(context, project.Id, actorId, ProjectRoles.Editor, "Edit");
+        await context.SaveChangesAsync();
+        var handler = CreateHandler(context, ActorAccessor(actorId, tenantId));
+
+        var completed = await handler.Handle(new CompleteLaunchChecklistItemCommand
+        {
+            LaunchPlanId = plan.Id,
+            ChecklistItemId = plan.ChecklistItems.Single().Id
+        }, default);
+        var publishDenied = await handler.Handle(new PublishLaunchCommand { LaunchPlanId = plan.Id }, default);
+
+        completed.IsSuccess.Should().BeTrue();
+        publishDenied.Error.Type.Should().Be(ErrorType.Forbidden);
+
+        var collaborator = await context.Set<ProjectCollaborator>().SingleAsync();
+        collaborator.Permissions = "Publish";
+        await context.SaveChangesAsync();
+        var checklistDenied = await handler.Handle(new CompleteLaunchChecklistItemCommand
+        {
+            LaunchPlanId = plan.Id,
+            ChecklistItemId = plan.ChecklistItems.Single().Id
+        }, default);
+        checklistDenied.Error.Type.Should().Be(ErrorType.Forbidden);
+    }
+
+    [Theory]
+    [InlineData(true, ContentStatus.Draft)]
+    [InlineData(false, ContentStatus.Archived)]
+    public async Task Publish_Should_Recheck_Project_Immediately_Before_State_Change(bool softDeleted, ContentStatus status)
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = new Project { Title = "Changed", Slug = "changed", Status = status, TenantId = tenantId };
+        if (softDeleted) project.DeletedAt = DateTime.UtcNow;
+        var plan = new LaunchPlan
+        {
+            ProjectId = project.Id,
+            TenantId = tenantId,
+            Name = "Ready plan",
+            ChecklistItems = [new LaunchChecklistItem { Title = "Ready", Category = "Readiness", IsComplete = true }]
+        };
+        plan.RecalculateStatus();
+        context.Set<Project>().Add(project);
+        context.Set<LaunchPlan>().Add(plan);
+        AddCollaborator(context, project.Id, actorId, ProjectRoles.Owner, string.Empty);
+        await context.SaveChangesAsync();
+
+        var result = await CreateHandler(context, ActorAccessor(actorId, tenantId)).Handle(
+            new PublishLaunchCommand { LaunchPlanId = plan.Id }, default);
+
+        result.IsFailure.Should().BeTrue();
+        plan.Status.Should().Be(LaunchPlanStatus.Ready);
+        project.Status.Should().Be(status);
     }
 
     [Fact]
@@ -253,14 +408,37 @@ public sealed class LaunchPadTests
         return new LaunchPadTestDbContext(options);
     }
 
-    private static Mock<IActorContextAccessor> ActorAccessor(Guid userId)
+    private static LaunchPadHandlers CreateHandler(LaunchPadTestDbContext context, Mock<IActorContextAccessor> actorAccessor)
+        => new(
+            context,
+            actorAccessor.Object,
+            new ProjectChannelAvailabilityService(context),
+            new ProjectAuthorizationService(context, actorAccessor.Object),
+            NullLogger<LaunchPadHandlers>.Instance);
+
+    private static Mock<IActorContextAccessor> ActorAccessor(Guid userId, Guid tenantId)
     {
         var accessor = new Mock<IActorContextAccessor>();
         accessor
             .SetupGet(a => a.ActorContext)
-            .Returns(ActorContextBuilder.ForUser(userId).WithRole("Admin").Build());
+            .Returns(ActorContextBuilder.ForUser(userId).WithTenantId(tenantId).Build());
         return accessor;
     }
+
+    private static void AddCollaborator(
+        LaunchPadTestDbContext context,
+        Guid projectId,
+        Guid userId,
+        string role,
+        string permissions)
+        => context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = projectId,
+            UserId = userId,
+            Role = role,
+            Permissions = permissions,
+            IsActive = true
+        });
 
     private sealed class LaunchPadTestDbContext(DbContextOptions<LaunchPadTestDbContext> options)
         : DbContext(options), IApplicationDbContext
@@ -268,6 +446,7 @@ public sealed class LaunchPadTests
         public DbSet<Project> Projects => Set<Project>();
         public DbSet<LaunchPlan> LaunchPlans => Set<LaunchPlan>();
         public DbSet<LaunchChecklistItem> LaunchChecklistItems => Set<LaunchChecklistItem>();
+        public DbSet<ProjectCollaborator> ProjectCollaborators => Set<ProjectCollaborator>();
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => Database.BeginTransactionAsync(cancellationToken);
