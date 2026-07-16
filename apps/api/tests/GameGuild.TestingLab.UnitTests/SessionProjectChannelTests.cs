@@ -176,6 +176,43 @@ public sealed class SessionProjectChannelTests : IDisposable
     }
 
     [Fact]
+    public async Task List_Should_Not_Use_Unscoped_Owner_Claim_For_Selected_Tenant()
+    {
+        var ownerTenantId = Guid.NewGuid();
+        var session = AddSession(_tenantId, Guid.NewGuid());
+        _context.Set<TenantMember>().Add(new TenantMember
+        {
+            UserId = _actorId,
+            TenantId = ownerTenantId,
+            Role = TenantRole.Owner,
+            IsActive = true
+        });
+        _actorAccessor.SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.ForUser(_actorId)
+                .WithTenantId(_tenantId)
+                .WithRole("Owner")
+                .Build());
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(new GetSessionProjectLinksQuery(session.Id), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Forbidden);
+    }
+
+    [Fact]
+    public async Task List_Should_Authorize_Selected_Tenant_Owner_Membership_Without_Role_Claim()
+    {
+        var session = AddSession(_tenantId, Guid.NewGuid());
+        _context.Set<TenantMember>().Local.Single(member => member.TenantId == _tenantId).Role = TenantRole.Owner;
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(new GetSessionProjectLinksQuery(session.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task List_Should_Deny_Inactive_Session_Manager()
     {
         var session = AddSession(_tenantId, _actorId);
