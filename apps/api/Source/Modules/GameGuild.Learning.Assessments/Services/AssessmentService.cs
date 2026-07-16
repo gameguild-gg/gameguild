@@ -216,6 +216,9 @@ public class AssessmentService : IAssessmentService
     {
         try
         {
+            await using var lifecycleTransaction = await AssessmentLifecycleDatabaseLock
+                .AcquireAsync(_context, id)
+                .ConfigureAwait(false);
             var assessment = await GetAssessmentByIdAsync(id).ConfigureAwait(false);
             if (assessment == null)
             {
@@ -227,6 +230,9 @@ public class AssessmentService : IAssessmentService
                 .Where(cue => cue.AssessmentId == id && cue.DeletedAt == null)
                 .ToListAsync()
                 .ConfigureAwait(false);
+            await using var contentLifecycleTransaction = await ProgramContentLifecycleDatabaseLock
+                .AcquireAsync(_context, activeCues.Select(cue => cue.ContentId))
+                .ConfigureAwait(false);
             foreach (var cue in activeCues)
             {
                 cue.SoftDelete();
@@ -235,6 +241,7 @@ public class AssessmentService : IAssessmentService
             _context.Set<Assessment>().Update(assessment);
             _context.Set<InteractiveVideoAssessmentCue>().UpdateRange(activeCues);
             await _context.SaveChangesAsync().ConfigureAwait(false);
+            await AssessmentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
 
             _logger.LogInformation("Assessment deleted: {AssessmentId}", id);
 
@@ -399,6 +406,10 @@ public class AssessmentService : IAssessmentService
     {
         try
         {
+            // Assessment locks are acquired before content locks in both cue-link and assessment-delete flows.
+            await using var assessmentLifecycleTransaction = await AssessmentLifecycleDatabaseLock
+                .AcquireAsync(_context, assessmentId)
+                .ConfigureAwait(false);
             var assessment = await GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
             if (assessment == null)
             {
@@ -444,7 +455,7 @@ public class AssessmentService : IAssessmentService
             var cue = assessment.AddInteractiveVideoCue(request.ContentId, cueId, request.CuePositionSeconds);
             _context.Set<InteractiveVideoAssessmentCue>().Add(cue);
             await _context.SaveChangesAsync().ConfigureAwait(false);
-            await ProgramContentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
+            await AssessmentLifecycleDatabaseLock.CommitAsync(assessmentLifecycleTransaction).ConfigureAwait(false);
 
             return Result.Success(cue);
         }
