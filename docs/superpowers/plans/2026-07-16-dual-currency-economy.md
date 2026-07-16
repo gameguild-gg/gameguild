@@ -98,12 +98,12 @@ Expected result at a merge gate: every step exits `0`; the required-project mani
 
 Task 1.0 first merges the additive provider-mapping/inbox schema required by later consumers. Four agents may then work in parallel because their primary write scopes are separate:
 
-| Lane | Branch | Exclusive ownership |
-| --- | --- | --- |
-| A | `fix/economy-wallet-authorization` | Payments wallet controller, wallet authorization policies, focused tests |
-| B | `fix/economy-stripe-webhook-verification` | Billing Stripe webhook ingress/service, signature tests |
-| C | `fix/economy-authoritative-pricing` | Payment command pricing validation, Orders/Products module logic, focused tests; no shared API composition files |
-| D | `fix/economy-production-guardrails` | Shared API composition/startup, Orders route activation after Lane C merges, deployment configuration, simulation guards, smoke tests |
+| Lane | Branch                                    | Exclusive ownership                                                                                                                   |
+| ---- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| A    | `fix/economy-wallet-authorization`        | Payments wallet controller, wallet authorization policies, focused tests                                                              |
+| B    | `fix/economy-stripe-webhook-verification` | Billing Stripe webhook ingress/service, signature tests                                                                               |
+| C    | `fix/economy-authoritative-pricing`       | Payment command pricing validation, Orders/Products module logic, focused tests; no shared API composition files                      |
+| D    | `fix/economy-production-guardrails`       | Shared API composition/startup, Orders route activation after Lane C merges, deployment configuration, simulation guards, smoke tests |
 
 Merge one at a time after review. Lane C merges before Lane D's final API-composition update. Before each merge, update the candidate from current `develop`, rerun the strict API build plus combined Commerce security test set, merge, and rerun the same gate on the resulting `develop` SHA. A centralized constraint/backfill rollup follows the four code branches.
 
@@ -127,12 +127,12 @@ Independent review agents may run in parallel with implementation, but only one 
 
 After the core posting API, policy contracts, and reserve authority are merged, first merge one bootstrap branch that creates and registers every disabled capability/test project in API composition. Task 3.1 then implements and merges the sole hard-funding/provider-source path with exclusive Billing/Payments/funding ownership and no shared Core or catalog edits. After Task 3.1 is deleted, Tasks 3.2-3.5 can run in parallel without journal or shared-composition ownership:
 
-| Lane | Branch | Exclusive ownership |
-| --- | --- | --- |
-| A | `feat/economy-ad-rewards` | `GameGuild.Economy.AdRewards` and its tests |
-| B | `feat/economy-bounties` | `GameGuild.Economy.Bounties` and its tests |
-| C | `feat/economy-marketplace-settlement` | Products/Orders currency policy and settlement orchestration |
-| D | `feat/economy-ai-cost-accounting` | AI usage-cost facts and economy charge integration |
+| Lane | Branch                                | Exclusive ownership                                          |
+| ---- | ------------------------------------- | ------------------------------------------------------------ |
+| A    | `feat/economy-ad-rewards`             | `GameGuild.Economy.AdRewards` and its tests                  |
+| B    | `feat/economy-bounties`               | `GameGuild.Economy.Bounties` and its tests                   |
+| C    | `feat/economy-marketplace-settlement` | Products/Orders currency policy and settlement orchestration |
+| D    | `feat/economy-ai-cost-accounting`     | AI usage-cost facts and economy charge integration           |
 
 These branches must not edit centralized migrations, the API project-reference list, default module configuration, or shared infrastructure composition. A schema-rollup branch generates and tests the integrated migration after the model branches merge.
 
