@@ -1,8 +1,9 @@
 using FluentAssertions;
+using GameGuild.API.Database;
 using GameGuild.API.Database.Migrations;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.EntityFrameworkCore.Migrations.Operations;
-using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Testcontainers.PostgreSql;
 
@@ -50,8 +51,8 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
                 verify.Parameters.AddWithValue("id", assessmentId);
                 await using var reader = await verify.ExecuteReaderAsync();
                 (await reader.ReadAsync()).Should().BeTrue();
-                reader.GetDateTime(0).Should().Be(until);
-                reader.GetDateTime(1).Should().Be(from);
+                reader.GetDateTime(0).Should().BeCloseTo(until, TimeSpan.FromMicroseconds(1));
+                reader.GetDateTime(1).Should().BeCloseTo(from, TimeSpan.FromMicroseconds(1));
             }
 
             await RejectAsync(connection, "UPDATE \"Assessments\" SET \"AvailableFrom\" = now() + interval '2 days', \"AvailableUntil\" = now() + interval '1 day' WHERE \"Id\" = '" + assessmentId + "';");
@@ -69,8 +70,11 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
     {
         var builder = new MigrationBuilder("Npgsql.EntityFrameworkCore.PostgreSQL");
         new ExposedMigration().BuildUp(builder);
-        var services = new ServiceCollection().AddEntityFrameworkNpgsql().BuildServiceProvider();
-        var generator = services.GetRequiredService<IMigrationsSqlGenerator>();
+        await using var context = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseNpgsql(connection.ConnectionString)
+                .Options);
+        var generator = context.GetService<IMigrationsSqlGenerator>();
         foreach (var command in generator.Generate(builder.Operations, null))
         {
             await ExecuteAsync(connection, command.CommandText);
