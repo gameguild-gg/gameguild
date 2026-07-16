@@ -208,6 +208,70 @@ public sealed class InteractiveVideoCueServiceTests
         (await db.Set<InteractiveVideoAssessmentCue>().CountAsync()).Should().Be(1);
     }
 
+    [Fact]
+    public async Task DeleteAssessmentAsync_SoftDeletesActiveCueLinksAndRemovesOperationalReads()
+    {
+        await using var db = CreateContext();
+        var courseId = Guid.NewGuid();
+        var assessment = Assessment.Create(courseId, "Video checkpoint", AssessmentType.Quiz, 10, 6);
+        assessment.Version = 1;
+        var cue = assessment.AddInteractiveVideoCue(Guid.NewGuid(), "chapter-1");
+        cue.Version = 1;
+        db.AddRange(assessment, cue);
+        await db.SaveChangesAsync();
+        var content = CreateVideoLesson(courseId);
+        content.Id = cue.ContentId;
+        var contents = new Mock<IProgramContentService>();
+        contents.Setup(service => service.GetContentByIdAsync(content.Id)).ReturnsAsync(content);
+        var service = new AssessmentService(db, contents.Object, NullLogger<AssessmentService>.Instance);
+
+        var deleted = await service.DeleteAssessmentAsync(assessment.Id);
+        var loaded = await service.GetAssessmentByIdAsync(assessment.Id);
+        var cues = await service.GetInteractiveVideoCuesAsync(assessment.Id);
+
+        deleted.IsSuccess.Should().BeTrue();
+        loaded.Should().BeNull();
+        cues.Should().BeEmpty();
+        (await db.Set<InteractiveVideoAssessmentCue>().SingleAsync()).DeletedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GradeSubmissionAsync_WhenScoreExceedsAssessmentMaximum_ReturnsValidationError()
+    {
+        await using var db = CreateContext();
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 60);
+        var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
+        submission.Submit();
+        db.AddRange(assessment, submission);
+        await db.SaveChangesAsync();
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+
+        var result = await service.GradeSubmissionAsync(submission.Id, new GradeSubmissionRequest(101));
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Type.Should().Be(ErrorType.Validation);
+    }
+
+    [Fact]
+    public async Task UpdateAssessmentAsync_WhenNewMaximumIsBelowAssignedScore_ReturnsValidationError()
+    {
+        await using var db = CreateContext();
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 60);
+        var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
+        submission.Submit();
+        submission.Grade(80, assessment.PassingScore, assessment.MaxScore);
+        db.AddRange(assessment, submission);
+        await db.SaveChangesAsync();
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+
+        var result = await service.UpdateAssessmentAsync(
+            assessment.Id,
+            new UpdateAssessmentRequest(MaxScore: 70, PassingScore: 60));
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Type.Should().Be(ErrorType.Validation);
+    }
+
     private static ProgramContent CreateVideoLesson(Guid courseId) => new()
     {
         Id = Guid.NewGuid(),

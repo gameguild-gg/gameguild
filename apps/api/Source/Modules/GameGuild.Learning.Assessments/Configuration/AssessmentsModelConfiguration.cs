@@ -27,6 +27,9 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
                     "CK_Assessments_PresentationMode",
                     "\"PresentationMode\" IN (0, 1)");
                 table.HasCheckConstraint(
+                    "CK_Assessments_ScoreRange",
+                    "\"MaxScore\" > 0 AND \"PassingScore\" >= 0 AND \"PassingScore\" <= \"MaxScore\"");
+                table.HasCheckConstraint(
                     "CK_Assessments_DeliverySchedule",
                     "(\"AvailableFrom\" IS NULL OR \"AvailableUntil\" IS NULL OR \"AvailableFrom\" <= \"AvailableUntil\") AND " +
                     "(\"DueAt\" IS NULL OR \"AvailableFrom\" IS NULL OR \"DueAt\" >= \"AvailableFrom\") AND " +
@@ -60,6 +63,9 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             entity.HasIndex(e => e.AssessmentId);
             entity.HasIndex(e => e.EnrollmentId);
             entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.AssessmentId, e.EnrollmentId, e.AttemptNumber })
+                .IsUnique()
+                .HasDatabaseName("UX_AssessmentSubmissions_Assessment_Enrollment_Attempt");
             entity.Property(e => e.SubmittedModalities).HasConversion<int>();
             entity.Property(e => e.TextPayload).HasColumnType("text");
             entity.Property(e => e.FilePayload).HasMaxLength(2048);
@@ -73,6 +79,12 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
                 table.HasCheckConstraint(
                     "CK_AssessmentSubmissions_SubmittedModalities",
                     "\"SubmittedModalities\" >= 0 AND (\"SubmittedModalities\" & ~127) = 0");
+                table.HasCheckConstraint(
+                    "CK_AssessmentSubmissions_ScoreNonNegative",
+                    "\"Score\" IS NULL OR \"Score\" >= 0");
+                table.HasCheckConstraint(
+                    "CK_AssessmentSubmissions_AttemptNumberPositive",
+                    "\"AttemptNumber\" > 0");
                 table.HasCheckConstraint(
                     "CK_AssessmentSubmissions_PayloadConsistency",
                     "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND " +
