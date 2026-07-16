@@ -12,6 +12,67 @@ namespace GameGuild.Learning.Courses.UnitTests;
 public sealed class ProgramWriteServiceTests
 {
     [Theory]
+    [InlineData(SurveyResultsVisibility.AfterSubmission, true, false, true)]
+    [InlineData(SurveyResultsVisibility.AfterSubmission, false, false, false)]
+    [InlineData(SurveyResultsVisibility.AfterClose, false, false, false)]
+    [InlineData(SurveyResultsVisibility.AfterClose, false, true, true)]
+    [InlineData(SurveyResultsVisibility.Never, true, true, false)]
+    public async Task LearnerSurveyResults_ShouldEnforceConfiguredVisibility(
+        SurveyResultsVisibility visibility,
+        bool learnerSubmitted,
+        bool courseClosed,
+        bool shouldAllow)
+    {
+        await using var context = CreateContext();
+        var learnerId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.EnrollmentStatus = courseClosed ? EnrollmentStatus.Closed : EnrollmentStatus.Open;
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = learnerId, IsActive = true };
+        var respondentEnrollment = learnerSubmitted
+            ? enrollment
+            : new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Survey", Type = ProgramContentType.Survey };
+        survey.SetActivitySettings(new SurveyActivitySettings(ResultsVisibility: visibility));
+        var response = new ContentInteraction { Id = Guid.NewGuid(), ProgramUserId = respondentEnrollment.Id, UserId = respondentEnrollment.UserId, ContentId = survey.Id, SubmittedAt = SystemClock.UtcNow, SubmissionData = """{"kind":"survey","answers":{"a":1}}""" };
+        context.AddRange(program, enrollment, respondentEnrollment, survey, response);
+        await context.SaveChangesAsync();
+        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(learnerId));
+
+        if (shouldAllow)
+        {
+            var results = (IEnumerable<SurveyResponseResultDto>)await service.GetVisibleSurveyResponsesAsync(program.Id, survey.Id);
+            results.Should().OnlyContain(result => GetRespondentUserId(result) == null);
+        }
+        else
+        {
+            Func<Task> action = async () => _ = await service.GetVisibleSurveyResponsesAsync(program.Id, survey.Id);
+            await action.Should().ThrowAsync<RequestValidationException>();
+        }
+    }
+
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task ManagerSurveyResults_ShouldExposeIdentityOnlyForNonAnonymousSurveys(bool anonymous, bool shouldExposeIdentity)
+    {
+        await using var context = CreateContext();
+        var managerId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var program = CreateProgram();
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Survey", Type = ProgramContentType.Survey };
+        survey.SetActivitySettings(new SurveyActivitySettings(IsAnonymous: anonymous));
+        var respondentId = Guid.NewGuid();
+        var response = new ContentInteraction { Id = Guid.NewGuid(), UserId = respondentId, ContentId = survey.Id, SubmittedAt = SystemClock.UtcNow, SubmissionData = """{"kind":"survey","answers":{"a":1}}""" };
+        context.AddRange(program, survey, response);
+        await context.SaveChangesAsync();
+
+        var results = await new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreatePermissions(PermissionType.Read))
+            .GetSurveyResponsesAsync(program.Id, survey.Id);
+
+        GetRespondentUserId(results.Should().ContainSingle().Which).Should().Be(shouldExposeIdentity ? respondentId : null);
+    }
+
+    [Theory]
     [InlineData(ThreadRootKind.Valid, false)]
     [InlineData(ThreadRootKind.Arbitrary, true)]
     [InlineData(ThreadRootKind.NestedDiscussion, true)]
@@ -599,6 +660,11 @@ public sealed class ProgramWriteServiceTests
             Title = "Course",
             Slug = $"course-{Guid.NewGuid():N}",
         };
+
+    private static Guid? GetRespondentUserId(SurveyResponseResultDto result) =>
+        result.GetType().GetProperty("RespondentUserId")?.GetValue(result) is Guid respondentId
+            ? respondentId
+            : null;
 
     private static AttemptGraph CreateAttemptGraph()
     {

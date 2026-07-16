@@ -231,7 +231,51 @@ public class ContentInteractionService(
       .ToListAsync()
       .ConfigureAwait(false);
 
-    return interactions.Select(SurveyResponseResultDto.FromInteraction).ToList();
+    return interactions.Select(interaction => SurveyResponseResultDto.FromInteraction(
+      interaction,
+      !LearningActivityContract.IsAnonymousSurvey(content))).ToList();
+  }
+
+  public async Task<IEnumerable<SurveyResponseResultDto>> GetVisibleSurveyResponsesAsync(Guid expectedProgramId, Guid contentId) {
+    var learnerId = requestContextAccessor.CurrentUserId;
+    if (!requestContextAccessor.IsAuthenticated || !learnerId.HasValue)
+      throw new RequestValidationException("Active course enrollment is required.");
+
+    var content = await context.Set<ProgramContent>()
+      .FirstOrDefaultAsync(item => item.Id == contentId && item.ProgramId == expectedProgramId && item.DeletedAt == null)
+      .ConfigureAwait(false);
+    if (content is null || content.Type != ProgramContentType.Survey)
+      throw new RequestValidationException("Survey content was not found for the specified program.");
+
+    var enrollment = await context.Set<ProgramUser>()
+      .FirstOrDefaultAsync(item => item.ProgramId == expectedProgramId && item.UserId == learnerId.Value && item.DeletedAt == null && item.IsActive)
+      .ConfigureAwait(false);
+    if (enrollment is null)
+      throw new RequestValidationException("Active course enrollment is required.");
+
+    var settings = content.GetActivitySettings() as SurveyActivitySettings ?? new SurveyActivitySettings();
+    var learnerSubmitted = await context.Set<ContentInteraction>()
+      .AnyAsync(item => item.ProgramUserId == enrollment.Id && item.ContentId == contentId && item.SubmittedAt != null && item.DeletedAt == null)
+      .ConfigureAwait(false);
+    var courseClosed = await context.Set<Program>()
+      .Where(program => program.Id == expectedProgramId && program.DeletedAt == null)
+      .Select(program => program.EnrollmentStatus != EnrollmentStatus.Open)
+      .FirstOrDefaultAsync()
+      .ConfigureAwait(false);
+    var visible = settings.ResultsVisibility switch {
+      SurveyResultsVisibility.AfterSubmission => learnerSubmitted,
+      SurveyResultsVisibility.AfterClose => courseClosed,
+      SurveyResultsVisibility.Never => false,
+      _ => false,
+    };
+    if (!visible) throw new RequestValidationException("Survey results are not available to learners.");
+
+    var interactions = await context.Set<ContentInteraction>()
+      .Where(item => item.ContentId == contentId && item.SubmittedAt != null && item.DeletedAt == null)
+      .OrderBy(item => item.SubmittedAt)
+      .ToListAsync()
+      .ConfigureAwait(false);
+    return interactions.Select(interaction => SurveyResponseResultDto.FromInteraction(interaction)).ToList();
   }
 
   private Task<bool> HasProgramReadAccessAsync(Guid programId, Guid actorId) {
