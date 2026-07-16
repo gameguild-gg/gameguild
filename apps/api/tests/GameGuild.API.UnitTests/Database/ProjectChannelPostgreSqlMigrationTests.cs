@@ -11,6 +11,23 @@ namespace GameGuild.API.UnitTests.Database;
 
 public sealed class ProjectChannelPostgreSqlMigrationTests
 {
+    [Fact]
+    public void Up_AcquiresWriteConflictingSessionProjectLockBeforeRepair()
+    {
+        var builder = new MigrationBuilder("Npgsql.EntityFrameworkCore.PostgreSQL");
+        new ExposedMigration().BuildUp(builder);
+
+        var lockOperation = builder.Operations
+            .OfType<Microsoft.EntityFrameworkCore.Migrations.Operations.SqlOperation>()
+            .FirstOrDefault(operation => operation.Sql.Contains("LOCK TABLE session_projects", StringComparison.Ordinal));
+        var repairOperation = builder.Operations
+            .OfType<Microsoft.EntityFrameworkCore.Migrations.Operations.SqlOperation>()
+            .First(operation => operation.Sql.Contains("ranked_active_links", StringComparison.Ordinal));
+
+        lockOperation.Should().NotBeNull();
+        builder.Operations.IndexOf(lockOperation!).Should().BeLessThan(builder.Operations.IndexOf(repairOperation));
+    }
+
     [DockerFact]
     public async Task Up_Repairs_Active_Session_Project_Duplicates_Reconciles_Counts_And_Enforces_Uniqueness()
     {
@@ -129,6 +146,43 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
             """);
     }
 
+    [DockerFact]
+    public async Task Up_HoldsWriteConflictingLockThroughRepairAndUniqueIndexCreation()
+    {
+        await using var container = await StartPostgresAsync("project_channel_migration_lock");
+        await using var setup = new NpgsqlConnection(container.GetConnectionString());
+        await setup.OpenAsync();
+        await CreatePrerequisiteTablesAsync(setup);
+        var sessionId = Guid.NewGuid();
+        var projectId = Guid.NewGuid();
+        await ExecuteAsync(setup, $"""
+            INSERT INTO testing_sessions ("Id", "RegisteredProjectCount") VALUES ('{sessionId}', 1);
+            INSERT INTO session_projects ("Id", "SessionId", "ProjectId", "IsActive", "DeletedAt")
+            VALUES ('{Guid.NewGuid()}', '{sessionId}', '{projectId}', TRUE, NULL);
+            """);
+
+        await using var gate = new NpgsqlConnection(container.GetConnectionString());
+        await using var migration = new NpgsqlConnection(container.GetConnectionString());
+        await using var writer = new NpgsqlConnection(container.GetConnectionString());
+        await using var observer = new NpgsqlConnection(container.GetConnectionString());
+        await Task.WhenAll(gate.OpenAsync(), migration.OpenAsync(), writer.OpenAsync(), observer.OpenAsync());
+        await using var gateTransaction = await gate.BeginTransactionAsync();
+        await ExecuteAsync(gate, "LOCK TABLE testing_sessions IN ACCESS EXCLUSIVE MODE;", gateTransaction);
+
+        var migrationTask = ApplyUpAsync(migration);
+        await WaitForRelationLockAsync(observer, "session_projects", "ShareRowExclusiveLock", granted: true);
+        var writerTask = ExecuteAsync(writer, $"""
+            INSERT INTO session_projects ("Id", "SessionId", "ProjectId", "IsActive", "DeletedAt")
+            VALUES ('{Guid.NewGuid()}', '{sessionId}', '{projectId}', TRUE, NULL);
+            """);
+        await WaitForRelationLockAsync(observer, "session_projects", "RowExclusiveLock", granted: false);
+
+        await gateTransaction.CommitAsync();
+        await migrationTask;
+        var waitForWriter = async () => await writerTask;
+        await waitForWriter.Should().ThrowAsync<PostgresException>();
+    }
+
     private static async Task<PostgreSqlContainer> StartPostgresAsync(string database)
     {
         var container = new PostgreSqlBuilder()
@@ -173,8 +227,38 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(connection.ConnectionString).Options);
         var generator = context.GetService<IMigrationsSqlGenerator>();
+        await using var transaction = await connection.BeginTransactionAsync();
         foreach (var command in generator.Generate(builder.Operations, null))
-            await ExecuteAsync(connection, command.CommandText);
+            await ExecuteAsync(connection, command.CommandText, transaction);
+        await transaction.CommitAsync();
+    }
+
+    private static async Task WaitForRelationLockAsync(
+        NpgsqlConnection connection,
+        string relation,
+        string mode,
+        bool granted)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (DateTime.UtcNow < deadline)
+        {
+            await using var command = new NpgsqlCommand("""
+                SELECT count(*)
+                FROM pg_locks AS locks
+                JOIN pg_class AS relation ON relation.oid = locks.relation
+                WHERE locks.locktype = 'relation'
+                  AND relation.relname = @relation
+                  AND locks.mode = @mode
+                  AND locks.granted = @granted;
+                """, connection);
+            command.Parameters.AddWithValue("relation", relation);
+            command.Parameters.AddWithValue("mode", mode);
+            command.Parameters.AddWithValue("granted", granted);
+            if (Convert.ToInt32(await command.ExecuteScalarAsync()) > 0) return;
+            await Task.Delay(25);
+        }
+
+        throw new TimeoutException($"Timed out waiting for {mode} on {relation} with granted={granted}.");
     }
 
     private static async Task RejectAsync(NpgsqlConnection connection, string sql)
@@ -189,9 +273,12 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
         return (T)(await command.ExecuteScalarAsync())!;
     }
 
-    private static async Task ExecuteAsync(NpgsqlConnection connection, string sql)
+    private static async Task ExecuteAsync(
+        NpgsqlConnection connection,
+        string sql,
+        NpgsqlTransaction? transaction = null)
     {
-        await using var command = new NpgsqlCommand(sql, connection);
+        await using var command = new NpgsqlCommand(sql, connection, transaction);
         await command.ExecuteNonQueryAsync();
     }
 
