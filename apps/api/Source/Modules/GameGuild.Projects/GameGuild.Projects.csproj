@@ -23,6 +23,7 @@
         <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
         <ProjectReference Include="..\GameGuild.Identity.Authentication\GameGuild.Identity.Authentication.csproj" />
         <ProjectReference Include="..\GameGuild.GameJams\GameGuild.GameJams.csproj" />
+        <ProjectReference Include="..\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj" />
     </ItemGroup>
 
 </Project>
