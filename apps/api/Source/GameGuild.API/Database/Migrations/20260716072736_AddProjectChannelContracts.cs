@@ -10,19 +10,33 @@ namespace GameGuild.API.Database.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("""
-                DO $$
-                BEGIN
-                    IF EXISTS (
-                        SELECT 1
-                        FROM session_projects
-                        WHERE "DeletedAt" IS NULL AND "IsActive" = TRUE
-                        GROUP BY "SessionId", "ProjectId"
-                        HAVING COUNT(*) > 1
-                    ) THEN
-                        RAISE EXCEPTION 'Cannot add project channel constraints: duplicate active session_projects links exist for the same session and project.'
-                            USING ERRCODE = '23505';
-                    END IF;
-                END $$;
+                WITH ranked_active_links AS (
+                    SELECT
+                        "Id",
+                        ROW_NUMBER() OVER (
+                            PARTITION BY "SessionId", "ProjectId"
+                            ORDER BY "CreatedAt", "Id"
+                        ) AS duplicate_rank
+                    FROM session_projects
+                    WHERE "DeletedAt" IS NULL AND "IsActive" = TRUE
+                )
+                UPDATE session_projects AS duplicate
+                SET
+                    "IsActive" = FALSE,
+                    "DeletedAt" = CURRENT_TIMESTAMP,
+                    "UpdatedAt" = CURRENT_TIMESTAMP
+                FROM ranked_active_links AS ranked
+                WHERE duplicate."Id" = ranked."Id"
+                  AND ranked.duplicate_rank > 1;
+
+                UPDATE testing_sessions AS session
+                SET "RegisteredProjectCount" = (
+                    SELECT COUNT(*)::integer
+                    FROM session_projects AS link
+                    WHERE link."SessionId" = session."Id"
+                      AND link."DeletedAt" IS NULL
+                      AND link."IsActive" = TRUE
+                );
                 """);
 
             migrationBuilder.DropIndex(
