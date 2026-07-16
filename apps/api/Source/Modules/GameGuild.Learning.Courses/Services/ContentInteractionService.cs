@@ -223,8 +223,8 @@ public class ContentInteractionService(
     if (content is null || content.Type != ProgramContentType.Survey)
       throw new RequestValidationException("Survey content was not found for the specified program.");
 
-    if (!await HasProgramReadAccessAsync(program.Id, actorId.Value).ConfigureAwait(false))
-      throw new RequestValidationException("Program management permission is required.");
+    if (!await HasProgramReviewAccessAsync(program.Id, actorId.Value).ConfigureAwait(false))
+      throw new RequestValidationException("Program review permission is required.");
 
     var interactions = await context.Set<ContentInteraction>()
       .Where(item => item.ContentId == contentId && item.SubmittedAt != null && item.DeletedAt == null)
@@ -285,8 +285,8 @@ public class ContentInteractionService(
     if (!requestContextAccessor.IsAuthenticated || !actorId.HasValue)
       throw new RequestValidationException("Program management permission is required.");
     var program = await GetTenantScopedProgramAsync(expectedProgramId, "Program management permission is required.").ConfigureAwait(false);
-    if (!await HasProgramReadAccessAsync(program.Id, actorId.Value).ConfigureAwait(false))
-      throw new RequestValidationException("Program management permission is required.");
+    if (!await HasProgramReviewAccessAsync(program.Id, actorId.Value).ConfigureAwait(false))
+      throw new RequestValidationException("Program review permission is required.");
     var content = await GetReflectionContentAsync(program.Id, contentId).ConfigureAwait(false);
     var interactions = await SubmittedInteractionsAsync(content.Id).ConfigureAwait(false);
     return interactions.Select(interaction => ReflectionResponseResultDto.FromInteraction(interaction, true)).ToList();
@@ -331,12 +331,12 @@ public class ContentInteractionService(
       .OrderBy(item => item.SubmittedAt)
       .ToListAsync();
 
-  private Task<bool> HasProgramReadAccessAsync(Guid programId, Guid actorId) {
+  private Task<bool> HasProgramReviewAccessAsync(Guid programId, Guid actorId) {
     if (!requestContextAccessor.CurrentTenantId.HasValue || permissionQueryService is null) return Task.FromResult(false);
     return permissionQueryService.HasTenantPermissionAsync(
       actorId,
       requestContextAccessor.CurrentTenantId,
-      $"{nameof(Program)}.{programId}.{PermissionType.Read}");
+      $"{nameof(Program)}.{programId}.{PermissionType.Review}");
   }
 
   /// <summary> Update time spent on content </summary>
