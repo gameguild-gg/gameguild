@@ -568,6 +568,58 @@ public sealed class LaunchPadTests
     }
 
     [Fact]
+    public async Task ConcurrentDeleteAndLaunchPlanCreate_ShouldNotLeaveActivePlanOnDeletedProject()
+    {
+        var databaseName = $"launch-plan-race-{Guid.NewGuid():N}";
+        var databaseRoot = new InMemoryDatabaseRoot();
+        var options = new DbContextOptionsBuilder<LaunchPadTestDbContext>()
+            .UseInMemoryDatabase(databaseName, databaseRoot)
+            .Options;
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = new Project
+        {
+            Title = "Launch race",
+            Slug = $"launch-race-{Guid.NewGuid():N}",
+            TenantId = tenantId,
+            Status = ContentStatus.Draft
+        };
+        await using (var setup = new LaunchPadTestDbContext(options))
+        {
+            setup.Add(project);
+            await setup.SaveChangesAsync();
+        }
+
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+        var authorization = new BlockingAuthorizationService();
+        await using var createContext = new LaunchPadTestDbContext(options);
+        var handler = new LaunchPadHandlers(
+            createContext,
+            actorAccessor.Object,
+            new ProjectChannelAvailabilityService(createContext),
+            authorization,
+            NullLogger<LaunchPadHandlers>.Instance);
+        var createTask = handler.Handle(
+            new CreateLaunchPlanCommand { ProjectId = project.Id, Name = "Race plan" },
+            default);
+        await authorization.PermissionRequested;
+
+        await using var deleteContext = new LaunchPadTestDbContext(options);
+        var deleteTask = new ProjectLifecycleCoordinator(
+                deleteContext,
+                [new LaunchPadProjectLifecycleParticipant(deleteContext)])
+            .DeleteAsync(project.Id, softDelete: true);
+        await Task.WhenAny(deleteTask, Task.Delay(TimeSpan.FromSeconds(2)));
+        authorization.AllowPermission();
+
+        (await createTask).IsSuccess.Should().BeTrue();
+        (await deleteTask).Should().BeTrue();
+        await using var verify = new LaunchPadTestDbContext(options);
+        (await verify.Set<LaunchPlan>().AnyAsync(plan =>
+            plan.ProjectId == project.Id && plan.DeletedAt == null)).Should().BeFalse();
+    }
+
+    [Fact]
     public void LaunchPad_Module_And_Model_Configuration_Should_Register_Runtime_Surface()
     {
         var module = new LaunchPadModule();
@@ -691,5 +743,28 @@ public sealed class LaunchPadTests
         {
             new LaunchPadModelConfiguration().Configure(modelBuilder);
         }
+    }
+
+    private sealed class BlockingAuthorizationService : IProjectAuthorizationService
+    {
+        private readonly TaskCompletionSource _permissionRequested = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _permissionAllowed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task PermissionRequested => _permissionRequested.Task;
+
+        public Task<bool> IsActorActiveTenantMemberAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult(true);
+
+        public async Task<bool> HasPermissionAsync(
+            Guid projectId,
+            PermissionType permission,
+            CancellationToken cancellationToken = default)
+        {
+            _permissionRequested.TrySetResult();
+            await _permissionAllowed.Task.WaitAsync(cancellationToken);
+            return true;
+        }
+
+        public void AllowPermission() => _permissionAllowed.TrySetResult();
     }
 }
