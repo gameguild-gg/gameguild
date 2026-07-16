@@ -15,6 +15,8 @@ public static class ProjectsModule {
         // Register focused sub-services
         services.AddScoped<IProjectCrudService, ProjectCrudService>();
         services.AddScoped<IProjectEngagementService, ProjectEngagementService>();
+        services.AddScoped<IProjectChannelAvailabilityService, ProjectChannelAvailabilityService>();
+        services.AddScoped<IProjectAuthorizationService, ProjectAuthorizationService>();
 
         // Register facade for backward compatibility
         services.AddScoped<IProjectService, ProjectService>();

@@ -12,6 +12,28 @@ public sealed class ProjectsModelConfiguration : IModelConfiguration
         modelBuilder.ApplyConfiguration(new ProjectFollowerConfiguration());
         modelBuilder.ApplyConfiguration(new ProjectJamSubmissionConfiguration());
 
+        modelBuilder.Entity<ProjectStoreProduct>(builder =>
+        {
+            builder.ToTable("project_store_products");
+            builder.HasKey(link => link.Id);
+            builder.HasOne(link => link.Project)
+                .WithMany()
+                .HasForeignKey(link => link.ProjectId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(link => link.Product)
+                .WithMany()
+                .HasForeignKey(link => link.ProductId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasIndex(link => new { link.ProjectId, link.ProductId })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL")
+                .HasDatabaseName("IX_project_store_products_active_pair");
+            builder.HasIndex(link => link.ProductId);
+            builder.HasIndex(link => link.TenantId);
+        });
+
         modelBuilder.Entity<ProjectCategory>(builder =>
         {
             builder.ToTable("project_categories");
