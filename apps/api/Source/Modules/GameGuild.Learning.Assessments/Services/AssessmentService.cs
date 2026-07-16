@@ -1,3 +1,4 @@
+using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -9,11 +10,16 @@ namespace GameGuild.Learning.Assessments;
 public class AssessmentService : IAssessmentService
 {
     private readonly IApplicationDbContext _context;
+    private readonly IProgramContentService _programContentService;
     private readonly ILogger<AssessmentService> _logger;
 
-    public AssessmentService(IApplicationDbContext context, ILogger<AssessmentService> logger)
+    public AssessmentService(
+        IApplicationDbContext context,
+        IProgramContentService programContentService,
+        ILogger<AssessmentService> logger)
     {
         _context = context;
+        _programContentService = programContentService;
         _logger = logger;
     }
 
@@ -370,7 +376,40 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<InteractiveVideoAssessmentCue>(Error.NotFound("Assessment", "Assessment not found"));
             }
 
-            var cue = assessment.AddInteractiveVideoCue(request.ContentId, request.CueId, request.CuePositionSeconds);
+            var content = await _programContentService.GetContentByIdAsync(request.ContentId).ConfigureAwait(false);
+            if (content == null)
+            {
+                return Result.Failure<InteractiveVideoAssessmentCue>(Error.NotFound("ProgramContent", "Interactive-video lesson content not found"));
+            }
+
+            if (content.ProgramId != assessment.CourseId)
+            {
+                return Result.Failure<InteractiveVideoAssessmentCue>(
+                    Error.Validation("AssessmentCue.CourseMismatch", "Interactive-video content must belong to the assessment course."));
+            }
+
+            if (content.Type != ProgramContentType.Lesson || content.LessonFormat != LessonContentFormat.Video)
+            {
+                return Result.Failure<InteractiveVideoAssessmentCue>(
+                    Error.Validation("AssessmentCue.NotVideoLesson", "Interactive-video content must be a video lesson."));
+            }
+
+            var cueId = request.CueId ?? string.Empty;
+            var normalizedCueId = cueId.Trim();
+            var duplicate = await _context.Set<InteractiveVideoAssessmentCue>()
+                .AnyAsync(cue =>
+                    cue.AssessmentId == assessmentId &&
+                    cue.ContentId == request.ContentId &&
+                    cue.CueId == normalizedCueId &&
+                    cue.DeletedAt == null)
+                .ConfigureAwait(false);
+            if (duplicate)
+            {
+                return Result.Failure<InteractiveVideoAssessmentCue>(
+                    Error.Validation("AssessmentCue.Duplicate", "The interactive-video cue is already linked to this assessment."));
+            }
+
+            var cue = assessment.AddInteractiveVideoCue(request.ContentId, cueId, request.CuePositionSeconds);
             _context.Set<InteractiveVideoAssessmentCue>().Add(cue);
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -619,6 +658,14 @@ public class AssessmentService : IAssessmentService
     {
         return await _context.Set<AssessmentSubmission>()
             .Where(s => s.EnrollmentId == enrollmentId)
+            .OrderByDescending(s => s.StartedAt)
+            .ToListAsync().ConfigureAwait(false);
+    }
+
+    public async Task<IEnumerable<AssessmentSubmission>> GetUserSubmissionsAsync(Guid enrollmentId, Guid userId)
+    {
+        return await _context.Set<AssessmentSubmission>()
+            .Where(s => s.EnrollmentId == enrollmentId && s.UserId == userId)
             .OrderByDescending(s => s.StartedAt)
             .ToListAsync().ConfigureAwait(false);
     }

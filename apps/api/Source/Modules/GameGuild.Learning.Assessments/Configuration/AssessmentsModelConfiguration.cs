@@ -31,8 +31,8 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
                     "(\"AvailableFrom\" IS NULL OR \"AvailableUntil\" IS NULL OR \"AvailableFrom\" <= \"AvailableUntil\") AND " +
                     "(\"DueAt\" IS NULL OR \"AvailableFrom\" IS NULL OR \"DueAt\" >= \"AvailableFrom\") AND " +
                     "(\"DueAt\" IS NULL OR \"AvailableUntil\" IS NULL OR \"DueAt\" <= \"AvailableUntil\") AND " +
-                    "(NOT \"AllowLateSubmissions\" OR \"DueAt\" IS NOT NULL) AND " +
-                    "(\"LateSubmissionDeadline\" IS NULL OR (\"AllowLateSubmissions\" AND \"DueAt\" IS NOT NULL AND \"LateSubmissionDeadline\" > \"DueAt\" AND (\"AvailableUntil\" IS NULL OR \"LateSubmissionDeadline\" <= \"AvailableUntil\")))");
+                    "(NOT \"AllowLateSubmissions\" OR (\"DueAt\" IS NOT NULL AND \"LateSubmissionDeadline\" IS NOT NULL AND \"LateSubmissionDeadline\" > \"DueAt\" AND (\"AvailableUntil\" IS NULL OR \"LateSubmissionDeadline\" <= \"AvailableUntil\"))) AND " +
+                    "(\"AllowLateSubmissions\" OR \"LateSubmissionDeadline\" IS NULL)");
             });
             entity.HasIndex(e => e.CourseId);
             entity.HasIndex(e => e.AssessmentGroupId);
@@ -68,6 +68,21 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             entity.Property(e => e.MediaPayload).HasMaxLength(2048);
             entity.Property(e => e.ProjectPayload).HasMaxLength(2048);
             entity.Property(e => e.StructuredAnswerPayload).HasColumnType("jsonb");
+            entity.ToTable(table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_AssessmentSubmissions_SubmittedModalities",
+                    "\"SubmittedModalities\" >= 0 AND (\"SubmittedModalities\" & ~127) = 0");
+                table.HasCheckConstraint(
+                    "CK_AssessmentSubmissions_PayloadConsistency",
+                    "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND " +
+                    "((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND " +
+                    "((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND " +
+                    "((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND " +
+                    "((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND " +
+                    "((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND " +
+                    "((\"SubmittedModalities\" & 64) = 0 OR \"StructuredAnswerPayload\" IS NOT NULL)");
+            });
         });
 
         modelBuilder.Entity<InteractiveVideoAssessmentCue>(entity =>

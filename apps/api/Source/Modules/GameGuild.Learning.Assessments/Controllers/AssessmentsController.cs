@@ -1,7 +1,11 @@
 using Asp.Versioning;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Learning.Courses;
+using GameGuild.Learning.Enrollments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Learning.Assessments;
@@ -16,15 +20,24 @@ public class AssessmentsController : BaseApiController
 {
     private readonly IAssessmentService _assessmentService;
     private readonly IActorContextAccessor _actorContextAccessor;
+    private readonly IProgramCrudService _programService;
+    private readonly IEnrollmentService _enrollmentService;
+    private readonly IPermissionQueryService _permissionQueryService;
     private readonly ILogger<AssessmentsController> _logger;
 
     public AssessmentsController(
         IAssessmentService assessmentService,
         IActorContextAccessor actorContextAccessor,
+        IProgramCrudService programService,
+        IEnrollmentService enrollmentService,
+        IPermissionQueryService permissionQueryService,
         ILogger<AssessmentsController> logger)
     {
         _assessmentService = assessmentService;
         _actorContextAccessor = actorContextAccessor;
+        _programService = programService;
+        _enrollmentService = enrollmentService;
+        _permissionQueryService = permissionQueryService;
         _logger = logger;
     }
 
@@ -184,6 +197,10 @@ public class AssessmentsController : BaseApiController
         Guid id,
         [FromBody] LinkInteractiveVideoCueRequest request)
     {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
         var result = await _assessmentService.LinkInteractiveVideoCueAsync(id, request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
@@ -201,6 +218,10 @@ public class AssessmentsController : BaseApiController
     [HttpGet("{id:guid}/interactive-video-cues")]
     public async Task<ActionResult<IEnumerable<InteractiveVideoAssessmentCueDto>>> GetInteractiveVideoCues(Guid id)
     {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
         var cues = await _assessmentService.GetInteractiveVideoCuesAsync(id).ConfigureAwait(false);
         return Ok(cues.Select(InteractiveVideoAssessmentCueDto.FromEntity));
     }
@@ -228,7 +249,7 @@ public class AssessmentsController : BaseApiController
     /// Start a new assessment attempt
     /// </summary>
     [HttpPost("{assessmentId:guid}/submissions/start")]
-    public async Task<ActionResult<AssessmentSubmissionDto>> StartSubmission(
+    public async Task<ActionResult<LearnerAssessmentSubmissionDto>> StartSubmission(
         Guid assessmentId, 
         [FromBody] StartSubmissionRequest request)
     {
@@ -238,10 +259,17 @@ public class AssessmentsController : BaseApiController
             return Unauthorized();
         }
 
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        var enrollment = await _enrollmentService.GetAsync(request.EnrollmentId).ConfigureAwait(false);
+        if (enrollment == null || enrollment.CourseId != assessment.CourseId) return BadRequest();
+        var canManage = await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false);
+        if (!canManage && enrollment.UserId != actor.SubjectIdAsGuid.Value) return Forbid();
+
         var result = await _assessmentService.StartSubmissionAsync(
             assessmentId, 
-            request.EnrollmentId, 
-            actor.SubjectIdAsGuid.Value).ConfigureAwait(false);
+            request.EnrollmentId,
+            enrollment.UserId).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -251,24 +279,30 @@ public class AssessmentsController : BaseApiController
         return CreatedAtAction(
             nameof(GetSubmission), 
             new { submissionId = result.Value.Id }, 
-            AssessmentSubmissionDto.FromEntity(result.Value));
+            LearnerAssessmentSubmissionDto.FromEntity(result.Value));
     }
 
     /// <summary>
     /// Submit a completed assessment
     /// </summary>
     [HttpPost("submissions/{submissionId:guid}/submit")]
-    public async Task<ActionResult<AssessmentSubmissionDto>> SubmitAssessment(
+    public async Task<ActionResult<LearnerAssessmentSubmissionDto>> SubmitAssessment(
         Guid submissionId,
-        [FromBody] SubmitAssessmentRequest? request = null)
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] SubmitAssessmentRequest? request = null)
     {
+        var actorUserId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
+        if (!actorUserId.HasValue) return Unauthorized();
+        var submission = await _assessmentService.GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
+        if (submission == null) return NotFound();
+        if (submission.UserId != actorUserId.Value) return Forbid();
+
         var result = await _assessmentService.SubmitAsync(submissionId, request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
         }
 
-        return Ok(AssessmentSubmissionDto.FromEntity(result.Value));
+        return Ok(LearnerAssessmentSubmissionDto.FromEntity(result.Value));
     }
 
     /// <summary>
@@ -279,7 +313,18 @@ public class AssessmentsController : BaseApiController
         Guid submissionId, 
         [FromBody] GradeSubmissionRequest request)
     {
-        var result = await _assessmentService.GradeSubmissionAsync(submissionId, request).ConfigureAwait(false);
+        var submission = await _assessmentService.GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
+        if (submission == null) return NotFound();
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
+        var graderId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
+        if (!graderId.HasValue) return Unauthorized();
+        var result = await _assessmentService.GradeSubmissionAsync(
+                submissionId,
+                request with { GradedBy = graderId.Value })
+            .ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -292,7 +337,7 @@ public class AssessmentsController : BaseApiController
     /// Get a submission by ID
     /// </summary>
     [HttpGet("submissions/{submissionId:guid}")]
-    public async Task<ActionResult<AssessmentSubmissionDto>> GetSubmission(Guid submissionId)
+    public async Task<ActionResult<object>> GetSubmission(Guid submissionId)
     {
         var submission = await _assessmentService.GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
         if (submission == null)
@@ -300,6 +345,16 @@ public class AssessmentsController : BaseApiController
             return NotFound();
         }
 
+        var actorUserId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
+        if (!actorUserId.HasValue) return Unauthorized();
+        if (submission.UserId == actorUserId.Value)
+        {
+            return Ok(LearnerAssessmentSubmissionDto.FromEntity(submission));
+        }
+
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
         return Ok(AssessmentSubmissionDto.FromEntity(submission));
     }
 
@@ -309,6 +364,10 @@ public class AssessmentsController : BaseApiController
     [HttpGet("{assessmentId:guid}/submissions")]
     public async Task<ActionResult<IEnumerable<AssessmentSubmissionDto>>> GetAssessmentSubmissions(Guid assessmentId)
     {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
         var submissions = await _assessmentService.GetAssessmentSubmissionsAsync(assessmentId).ConfigureAwait(false);
         return Ok(submissions.Select(AssessmentSubmissionDto.FromEntity));
     }
@@ -317,10 +376,12 @@ public class AssessmentsController : BaseApiController
     /// Get my submissions for an enrollment
     /// </summary>
     [HttpGet("my-submissions/{enrollmentId:guid}")]
-    public async Task<ActionResult<IEnumerable<AssessmentSubmissionDto>>> GetMySubmissions(Guid enrollmentId)
+    public async Task<ActionResult<IEnumerable<LearnerAssessmentSubmissionDto>>> GetMySubmissions(Guid enrollmentId)
     {
-        var submissions = await _assessmentService.GetUserSubmissionsAsync(enrollmentId).ConfigureAwait(false);
-        return Ok(submissions.Select(AssessmentSubmissionDto.FromEntity));
+        var actorUserId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
+        if (!actorUserId.HasValue) return Unauthorized();
+        var submissions = await _assessmentService.GetUserSubmissionsAsync(enrollmentId, actorUserId.Value).ConfigureAwait(false);
+        return Ok(submissions.Select(LearnerAssessmentSubmissionDto.FromEntity));
     }
 
     /// <summary>
@@ -329,6 +390,14 @@ public class AssessmentsController : BaseApiController
     [HttpGet("{assessmentId:guid}/can-attempt/{enrollmentId:guid}")]
     public async Task<ActionResult<CanAttemptResponse>> CanAttempt(Guid assessmentId, Guid enrollmentId)
     {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        var actorUserId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
+        if (!actorUserId.HasValue) return Unauthorized();
+        var enrollment = await _enrollmentService.GetAsync(enrollmentId).ConfigureAwait(false);
+        if (enrollment == null || enrollment.CourseId != assessment.CourseId) return BadRequest();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false) && enrollment.UserId != actorUserId.Value) return Forbid();
+
         var result = await _assessmentService.CanAttemptAsync(assessmentId, enrollmentId).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
@@ -337,6 +406,31 @@ public class AssessmentsController : BaseApiController
 
         var attemptCount = await _assessmentService.GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
         return Ok(new CanAttemptResponse(result.Value, attemptCount));
+    }
+
+    private async Task<bool> CanManageCourseAsync(Guid courseId)
+    {
+        var actor = _actorContextAccessor.ActorContext;
+        if (actor.IsSystemAdmin) return true;
+        if (!actor.SubjectIdAsGuid.HasValue) return false;
+
+        var program = await _programService.GetProgramByIdAsync(courseId).ConfigureAwait(false);
+        if (program?.CreatorId == actor.SubjectIdAsGuid.Value) return true;
+        if (!actor.TenantId.HasValue) return false;
+
+        foreach (var permission in new[] { PermissionType.Edit, PermissionType.Create, PermissionType.Delete })
+        {
+            var permissionName = $"{nameof(Program)}.{courseId}.{permission}";
+            if (await _permissionQueryService.HasTenantPermissionAsync(
+                    actor.SubjectIdAsGuid.Value,
+                    actor.TenantId,
+                    permissionName).ConfigureAwait(false))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
@@ -474,6 +568,36 @@ public sealed record AssessmentSubmissionDto(
         entity.MediaPayload,
         entity.ProjectPayload,
         entity.StructuredAnswerPayload);
+}
+
+public sealed record LearnerAssessmentSubmissionDto(
+    Guid Id,
+    Guid AssessmentId,
+    Guid EnrollmentId,
+    int AttemptNumber,
+    int? Score,
+    bool? Passed,
+    DateTime StartedAt,
+    DateTime? SubmittedAt,
+    DateTime? GradedAt,
+    string? Feedback,
+    SubmissionStatus Status,
+    bool IsLate,
+    SubmissionModality SubmittedModalities,
+    string? TextPayload,
+    string? FilePayload,
+    string? UrlPayload,
+    string? CodePayload,
+    string? MediaPayload,
+    string? ProjectPayload,
+    string? StructuredAnswerPayload)
+{
+    public static LearnerAssessmentSubmissionDto FromEntity(AssessmentSubmission entity) => new(
+        entity.Id, entity.AssessmentId, entity.EnrollmentId, entity.AttemptNumber,
+        entity.Score, entity.Passed, entity.StartedAt, entity.SubmittedAt, entity.GradedAt,
+        entity.Feedback, entity.Status, entity.IsLate, entity.SubmittedModalities,
+        entity.TextPayload, entity.FilePayload, entity.UrlPayload, entity.CodePayload,
+        entity.MediaPayload, entity.ProjectPayload, entity.StructuredAnswerPayload);
 }
 
 public sealed record StartSubmissionRequest(Guid EnrollmentId);

@@ -105,6 +105,8 @@ public interface IAssessmentService
     /// </summary>
     Task<IEnumerable<AssessmentSubmission>> GetUserSubmissionsAsync(Guid enrollmentId);
 
+    Task<IEnumerable<AssessmentSubmission>> GetUserSubmissionsAsync(Guid enrollmentId, Guid userId);
+
     /// <summary>
     /// Gets the number of attempts a user has made for an assessment
     /// </summary>
