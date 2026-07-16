@@ -5,6 +5,41 @@ namespace GameGuild.API.UnitTests.Database;
 public sealed class CanonicalSnapshotEntitySetTests
 {
     [Fact]
+    public void SnapshotAndDesigner_PreserveTask2AssessmentMetadataSemantics()
+    {
+        var root = FindRepositoryRoot();
+        var files = new[]
+        {
+            Path.Combine(root, "apps", "api", "Source", "GameGuild.API", "Database", "Migrations", "ApplicationDbContextModelSnapshot.cs"),
+            Path.Combine(root, "apps", "api", "Source", "GameGuild.API", "Database", "Migrations", "20260716010751_AddAssignmentDeliveryAndGradingContracts.Designer.cs")
+        };
+
+        foreach (var file in files)
+        {
+            var metadata = File.ReadAllText(file);
+            foreach (var property in new[]
+            {
+                "AllowLateSubmissions", "AssessmentGroupId", "DueAt", "LateSubmissionDeadline",
+                "PresentationMode", "SubmissionModalities", "SubmittedModalities", "IsLate",
+                "TextPayload", "FilePayload", "UrlPayload", "CodePayload", "MediaPayload",
+                "ProjectPayload", "StructuredAnswerPayload"
+            })
+            {
+                metadata.Should().Contain($"(\"{property}\")");
+            }
+
+            metadata.Should().Contain("CK_Assessments_DeliverySchedule");
+            metadata.Should().Contain("CK_Assessments_SubmissionModalities");
+            metadata.Should().Contain("CK_AssessmentSubmissions_SubmittedModalities");
+            metadata.Should().Contain("CK_AssessmentSubmissions_PayloadConsistency");
+            metadata.Should().Contain("(\\\"TextPayload\\\" IS NULL OR (\\\"SubmittedModalities\\\" & 1) <> 0)");
+            metadata.Should().Contain("HasIndex(\"AssessmentId\", \"ContentId\", \"CueId\")");
+            metadata.Should().Contain("HasOne(\"GameGuild.Learning.Assessments.Assessment\", \"Assessment\")");
+            metadata.Should().Contain("WithMany(\"InteractiveVideoCues\")");
+        }
+    }
+
+    [Fact]
     public void Snapshot_PreservesMigrationBackedEntitiesAndExcludesAuditedDrift()
     {
         var root = FindRepositoryRoot();
