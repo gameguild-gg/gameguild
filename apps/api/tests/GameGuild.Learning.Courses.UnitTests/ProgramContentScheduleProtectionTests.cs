@@ -21,7 +21,7 @@ public sealed class ProgramContentScheduleProtectionTests
         var guard = new Mock<IProgramContentScheduleGuard>();
         guard.Setup(candidate => candidate.HasActiveScheduleReference(lesson.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        var service = new ProgramContentService(context, guard.Object);
+        var service = new ProgramContentService(context, guard.Object, Mock.Of<IProgramContentLifecycleGuard>());
 
         var act = () => service.DeleteContentAsync(module.Id);
 
@@ -29,6 +29,50 @@ public sealed class ProgramContentScheduleProtectionTests
             .WithMessage("*active class schedule*");
         (await context.Set<ProgramContent>().ToArrayAsync())
             .Should().OnlyContain(content => content.DeletedAt == null);
+    }
+
+    [Fact]
+    public async Task DeleteContentAsync_WhenContentHasAssessmentCue_RejectsDeletion()
+    {
+        await using var context = CreateContext();
+        var content = PersistedContent(Guid.NewGuid(), "Video lesson");
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var lifecycle = new Mock<IProgramContentLifecycleGuard>();
+        lifecycle.Setup(guard => guard.HasBlockingDeleteReference(content.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var service = new ProgramContentService(context, Mock.Of<IProgramContentScheduleGuard>(), lifecycle.Object);
+
+        var act = () => service.DeleteContentAsync(content.Id);
+
+        await act.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("*assessment cue*");
+    }
+
+    [Fact]
+    public async Task UpdateContentAsync_WhenLinkedVideoWouldBecomeIncompatible_RejectsUpdate()
+    {
+        await using var context = CreateContext();
+        var content = PersistedContent(Guid.NewGuid(), "Video lesson");
+        content.LessonFormat = LessonContentFormat.Video;
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var lifecycle = new Mock<IProgramContentLifecycleGuard>();
+        lifecycle.Setup(guard => guard.HasBlockingIncompatibleUpdateReference(
+                content.Id,
+                ProgramContentType.Lesson,
+                LessonContentFormat.Markdown,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var update = PersistedContent(content.ProgramId, content.Title);
+        update.Id = content.Id;
+        update.LessonFormat = LessonContentFormat.Markdown;
+        var service = new ProgramContentService(context, Mock.Of<IProgramContentScheduleGuard>(), lifecycle.Object);
+
+        var act = () => service.UpdateContentAsync(update);
+
+        await act.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("*assessment cue*");
     }
 
     private static ProgramContentProtectionTestContext CreateContext()

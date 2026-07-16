@@ -428,11 +428,28 @@ public class AssessmentService : IAssessmentService
 
     public async Task<IEnumerable<InteractiveVideoAssessmentCue>> GetInteractiveVideoCuesAsync(Guid assessmentId)
     {
-        return await _context.Set<InteractiveVideoAssessmentCue>()
+        var assessment = await GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+        if (assessment == null) return Array.Empty<InteractiveVideoAssessmentCue>();
+
+        var cues = await _context.Set<InteractiveVideoAssessmentCue>()
             .Where(cue => cue.AssessmentId == assessmentId && cue.DeletedAt == null)
             .OrderBy(cue => cue.CuePositionSeconds)
             .ThenBy(cue => cue.CueId)
             .ToListAsync().ConfigureAwait(false);
+
+        var activeCues = new List<InteractiveVideoAssessmentCue>();
+        foreach (var cue in cues)
+        {
+            var content = await _programContentService.GetContentByIdAsync(cue.ContentId).ConfigureAwait(false);
+            if (content?.ProgramId == assessment.CourseId &&
+                content.Type == ProgramContentType.Lesson &&
+                content.LessonFormat == LessonContentFormat.Video)
+            {
+                activeCues.Add(cue);
+            }
+        }
+
+        return activeCues;
     }
 
     private async Task<Result> EnsureGroupMatchesCourseAsync(Guid? groupId, Guid courseId)

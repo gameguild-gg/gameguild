@@ -439,6 +439,11 @@ public class AssessmentSubmission : EntityBase
 
     public void Submit(bool isLate = false)
     {
+        if (Status != SubmissionStatus.InProgress)
+        {
+            throw new InvalidOperationException("Only an in-progress submission can be submitted.");
+        }
+
         SubmittedAt = SystemClock.UtcNow;
         IsLate = isLate;
         Status = isLate ? SubmissionStatus.Late : SubmissionStatus.Submitted;
@@ -447,6 +452,11 @@ public class AssessmentSubmission : EntityBase
 
     public void Grade(int score, int passingScore, Guid? gradedBy = null, string? feedback = null)
     {
+        if (Status is not (SubmissionStatus.Submitted or SubmissionStatus.Late))
+        {
+            throw new InvalidOperationException("Only submitted submissions can be graded.");
+        }
+
         Score = score;
         Passed = score >= passingScore;
         GradedAt = SystemClock.UtcNow;

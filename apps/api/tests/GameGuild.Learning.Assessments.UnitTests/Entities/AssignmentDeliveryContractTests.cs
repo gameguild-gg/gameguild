@@ -224,6 +224,44 @@ public sealed class AssignmentDeliveryContractTests
     }
 
     [Fact]
+    public void Submit_WhenSubmissionIsNotInProgress_ShouldRejectRepeatedTransition()
+    {
+        var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
+        submission.Submit();
+
+        var action = () => submission.Submit();
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("Only an in-progress submission can be submitted.");
+    }
+
+    [Fact]
+    public void Grade_WhenSubmissionIsInProgress_ShouldRejectTransition()
+    {
+        var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
+
+        var action = () => submission.Grade(80, 60);
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("Only submitted submissions can be graded.");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Grade_WhenSubmissionWasAlreadyGraded_ShouldRejectRepeatedTransition(bool isLate)
+    {
+        var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
+        submission.Submit(isLate);
+        submission.Grade(80, 60);
+
+        var action = () => submission.Grade(90, 60);
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("Only submitted submissions can be graded.");
+    }
+
+    [Fact]
     public void SetPayload_WhenValidationFails_ShouldNotMutateExistingPayload()
     {
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);

@@ -42,6 +42,23 @@ public sealed class AssessmentSubmissionRelationalContractTests
         await action.Should().ThrowAsync<SqliteException>();
     }
 
+    [Fact]
+    public async Task PayloadConsistencyConstraint_RejectsPayloadWithoutModalityBit()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await CreateContextAsync(connection);
+        var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
+        db.Add(submission);
+        await db.SaveChangesAsync();
+
+        Func<Task> action = () => db.Database.ExecuteSqlRawAsync(
+            "UPDATE \"AssessmentSubmissions\" SET \"TextPayload\" = 'orphaned' WHERE \"Id\" = {0}",
+            submission.Id);
+
+        await action.Should().ThrowAsync<SqliteException>();
+    }
+
     private static async Task<TestAssessmentDbContext> CreateContextAsync(SqliteConnection connection)
     {
         var options = new DbContextOptionsBuilder<TestAssessmentDbContext>()

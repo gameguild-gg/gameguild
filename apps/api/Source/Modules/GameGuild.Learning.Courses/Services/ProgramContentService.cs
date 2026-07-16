@@ -8,7 +8,8 @@ namespace GameGuild.Learning.Courses;
 /// <summary> Service implementation for ProgramContent management with full DAC permission support Handles CRUD operations, hierarchical content structure, and content ordering </summary>
 public class ProgramContentService(
   IApplicationDbContext context,
-  IProgramContentScheduleGuard scheduleGuard) : IProgramContentService {
+  IProgramContentScheduleGuard scheduleGuard,
+  IProgramContentLifecycleGuard lifecycleGuard) : IProgramContentService {
   public async Task<ProgramContent> CreateContentAsync(ProgramContent content) {
     content.NormalizeLearningContract();
 
@@ -50,6 +51,13 @@ public class ProgramContentService(
 
     // Update properties
     content.NormalizeLearningContract();
+    if (await lifecycleGuard.HasBlockingIncompatibleUpdateReference(
+            existingContent.Id,
+            content.Type,
+            content.LessonFormat).ConfigureAwait(false)) {
+      throw new GameGuild.CQRS.RequestValidationException(
+        "Content linked to an assessment cue must remain a video lesson. Remove the assessment cue first.");
+    }
     existingContent.Title = content.Title;
     existingContent.Description = content.Description;
     existingContent.Type = content.Type;
@@ -80,6 +88,11 @@ public class ProgramContentService(
       if (await scheduleGuard.HasActiveScheduleReference(contentId).ConfigureAwait(false)) {
         throw new GameGuild.CQRS.RequestValidationException(
           "Content used by an active class schedule cannot be deleted. Remove or replace its schedule entry first.");
+      }
+
+      if (await lifecycleGuard.HasBlockingDeleteReference(contentId).ConfigureAwait(false)) {
+        throw new GameGuild.CQRS.RequestValidationException(
+          "Content linked to an assessment cue cannot be deleted. Remove the assessment cue first.");
       }
     }
 

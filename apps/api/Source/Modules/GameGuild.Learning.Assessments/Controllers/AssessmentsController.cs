@@ -337,7 +337,7 @@ public class AssessmentsController : BaseApiController
     /// Get a submission by ID
     /// </summary>
     [HttpGet("submissions/{submissionId:guid}")]
-    public async Task<ActionResult<object>> GetSubmission(Guid submissionId)
+    public async Task<ActionResult<LearnerAssessmentSubmissionDto>> GetSubmission(Guid submissionId)
     {
         var submission = await _assessmentService.GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
         if (submission == null)
@@ -355,7 +355,7 @@ public class AssessmentsController : BaseApiController
         var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
         if (assessment == null) return NotFound();
         if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
-        return Ok(AssessmentSubmissionDto.FromEntity(submission));
+        return Forbid();
     }
 
     /// <summary>

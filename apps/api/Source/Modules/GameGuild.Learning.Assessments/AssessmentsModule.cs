@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using GameGuild.Learning.Courses;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -16,6 +17,7 @@ public static class AssessmentsModule
     {
         // Register services
         services.AddScoped<IAssessmentService, AssessmentService>();
+        services.AddScoped<IProgramContentLifecycleGuard, AssessmentProgramContentLifecycleGuard>();
 
         return services;
     }
