@@ -53,6 +53,11 @@ public class ProgramContent : EntityBase
     public string? Body { get; set; }
 
     /// <summary>
+    /// Authoring and rendering format for lesson content. Non-lesson content does not use this value.
+    /// </summary>
+    public LessonContentFormat? LessonFormat { get; set; } = LessonContentFormat.Markdown;
+
+    /// <summary>
     /// Sort order within parent or program
     /// </summary>
     public int SortOrder { get; set; }
@@ -180,10 +185,49 @@ public class ProgramContent : EntityBase
     /// </summary>
     public void SetGrading(GradingMethod method, int? maxPoints = null)
     {
+        if (IsLessonType(Type) && (method != GradingMethod.None || maxPoints.HasValue))
+        {
+            throw new InvalidOperationException("Lessons cannot be graded. Create or attach an assignment instead.");
+        }
+
         GradingMethod = method;
         MaxPoints = maxPoints;
         UpdatedAt = SystemClock.UtcNow;
     }
+
+    /// <summary>
+    /// Enforces the persisted learning-content contract after mapping or direct construction.
+    /// </summary>
+    public void NormalizeLearningContract()
+    {
+        Type = Type switch
+        {
+            ProgramContentType.Page => ProgramContentType.Lesson,
+            ProgramContentType.Challenge => ProgramContentType.Assignment,
+            _ => Type,
+        };
+
+        if (Type == ProgramContentType.Lesson)
+        {
+            LessonFormat ??= LessonContentFormatInference.FromBody(Body);
+            if (!Enum.IsDefined(LessonFormat.Value))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(LessonFormat),
+                    LessonFormat,
+                    "Lesson format is not supported.");
+            }
+
+            GradingMethod = GradingMethod.None;
+            MaxPoints = null;
+            return;
+        }
+
+        LessonFormat = null;
+    }
+
+    private static bool IsLessonType(ProgramContentType type) =>
+        type is ProgramContentType.Lesson or ProgramContentType.Page;
 
     /// <summary>
     /// Updates estimated completion time
