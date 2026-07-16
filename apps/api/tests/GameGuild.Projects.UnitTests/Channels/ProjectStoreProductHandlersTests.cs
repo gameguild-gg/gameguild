@@ -178,6 +178,164 @@ public sealed class ProjectStoreProductHandlersTests : IDisposable
     }
 
     [Fact]
+    public async Task Management_List_Should_Require_Project_Edit_And_Product_Authorization()
+    {
+        SetActor();
+        var project = AddProject(_tenantId, ContentStatus.Published, ContentVisibility.Public);
+        var product = AddProduct(_tenantId, Guid.NewGuid(), isPublished: true);
+        AddProjectCollaborator(project.Id, _actorId, ProjectRoles.Viewer, "Read");
+        _context.Set<ProjectStoreProduct>().Add(NewLink(project.Id, product.Id));
+        await _context.SaveChangesAsync();
+
+        var readOnly = await CreateHandler().Handle(new GetProjectStoreProductsQuery(project.Id), default);
+        (await _context.Set<ProjectCollaborator>().SingleAsync()).Permissions = "Edit";
+        await _context.SaveChangesAsync();
+        var nonOwner = await CreateHandler().Handle(new GetProjectStoreProductsQuery(project.Id), default);
+
+        readOnly.Error.Type.Should().Be(ErrorType.Forbidden);
+        nonOwner.Error.Type.Should().Be(ErrorType.Forbidden);
+    }
+
+    [Fact]
+    public async Task Management_List_Should_Filter_Stale_And_Bundle_Invalid_Links()
+    {
+        SetActor();
+        var project = AddProject(_tenantId, ContentStatus.Published, ContentVisibility.Public);
+        AddProjectCollaborator(project.Id, _actorId, ProjectRoles.Editor, "Edit");
+        var valid = AddProduct(_tenantId, _actorId, isPublished: true);
+        var unpublished = AddProduct(_tenantId, Guid.NewGuid(), isPublished: false);
+        var bundle = AddProduct(_tenantId, Guid.NewGuid(), isPublished: true, isBundle: true);
+        var deleted = AddProduct(_tenantId, Guid.NewGuid(), isPublished: true);
+        deleted.DeletedAt = DateTime.UtcNow;
+        var crossTenant = AddProduct(Guid.NewGuid(), Guid.NewGuid(), isPublished: true);
+        _context.Set<ProjectStoreProduct>().AddRange(
+            NewLink(project.Id, valid.Id),
+            NewLink(project.Id, unpublished.Id),
+            NewLink(project.Id, bundle.Id),
+            NewLink(project.Id, deleted.Id),
+            NewLink(project.Id, crossTenant.Id));
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(new GetProjectStoreProductsQuery(project.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle().Which.ProductId.Should().Be(valid.Id);
+    }
+
+    [Fact]
+    public async Task Management_List_Should_Allow_Product_Manage_Permission_For_NonOwner()
+    {
+        SetActor(ProductsPermission.Keys.Manage);
+        var project = AddProject(_tenantId, ContentStatus.Published, ContentVisibility.Public);
+        AddProjectCollaborator(project.Id, _actorId, ProjectRoles.Editor, "Edit");
+        var product = AddProduct(_tenantId, Guid.NewGuid(), isPublished: true);
+        _context.Set<ProjectStoreProduct>().Add(NewLink(project.Id, product.Id));
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(new GetProjectStoreProductsQuery(project.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle().Which.ProductId.Should().Be(product.Id);
+    }
+
+    [Fact]
+    public async Task Management_List_Should_Reject_Project_Outside_Store_Lifecycle()
+    {
+        SetActor();
+        var project = AddProject(_tenantId, ContentStatus.Archived, ContentVisibility.Private);
+        AddProjectCollaborator(project.Id, _actorId, ProjectRoles.Owner, string.Empty);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(new GetProjectStoreProductsQuery(project.Id), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Validation);
+    }
+
+    [Fact]
+    public async Task Unlink_Cleanup_Should_Allow_Deleted_Product_But_Reject_Bundle()
+    {
+        SetActor();
+        var project = AddProject(_tenantId, ContentStatus.Archived, ContentVisibility.Private);
+        AddProjectCollaborator(project.Id, _actorId, ProjectRoles.Owner, string.Empty);
+        var deletedProduct = AddProduct(_tenantId, _actorId, isPublished: false);
+        deletedProduct.DeletedAt = DateTime.UtcNow;
+        var bundle = AddProduct(_tenantId, _actorId, isPublished: true, isBundle: true);
+        var deletedLink = NewLink(project.Id, deletedProduct.Id);
+        var bundleLink = NewLink(project.Id, bundle.Id);
+        _context.Set<ProjectStoreProduct>().AddRange(deletedLink, bundleLink);
+        await _context.SaveChangesAsync();
+
+        var deletedCleanup = await CreateHandler().Handle(
+            new UnlinkProjectStoreProductCommand(project.Id, deletedProduct.Id),
+            default);
+        var bundleCleanup = await CreateHandler().Handle(
+            new UnlinkProjectStoreProductCommand(project.Id, bundle.Id),
+            default);
+
+        deletedCleanup.IsSuccess.Should().BeTrue();
+        bundleCleanup.IsFailure.Should().BeTrue();
+        bundleCleanup.Error.Type.Should().Be(ErrorType.Validation);
+    }
+
+    [Fact]
+    public async Task Unlink_Cleanup_Should_Not_Relax_Project_Product_Or_Tenant_Authorization()
+    {
+        SetActor();
+        var project = AddProject(_tenantId, ContentStatus.Archived, ContentVisibility.Private);
+        var collaborator = new ProjectCollaborator
+        {
+            ProjectId = project.Id,
+            UserId = _actorId,
+            Role = ProjectRoles.Viewer,
+            Permissions = "Read",
+            IsActive = true
+        };
+        _context.Set<ProjectCollaborator>().Add(collaborator);
+        var product = AddProduct(_tenantId, Guid.NewGuid(), isPublished: false);
+        _context.Set<ProjectStoreProduct>().Add(NewLink(project.Id, product.Id));
+        await _context.SaveChangesAsync();
+
+        var projectDenied = await CreateHandler().Handle(
+            new UnlinkProjectStoreProductCommand(project.Id, product.Id),
+            default);
+        collaborator.Permissions = "Edit";
+        await _context.SaveChangesAsync();
+        var productDenied = await CreateHandler().Handle(
+            new UnlinkProjectStoreProductCommand(project.Id, product.Id),
+            default);
+        product.TenantId = Guid.NewGuid();
+        await _context.SaveChangesAsync();
+        var tenantDenied = await CreateHandler().Handle(
+            new UnlinkProjectStoreProductCommand(project.Id, product.Id),
+            default);
+
+        projectDenied.Error.Type.Should().Be(ErrorType.Forbidden);
+        productDenied.Error.Type.Should().Be(ErrorType.Forbidden);
+        tenantDenied.IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Unlink_Should_Deny_Inactive_Tenant_Membership()
+    {
+        SetActor();
+        var project = AddProject(_tenantId, ContentStatus.Archived, ContentVisibility.Private);
+        project.CreatedById = _actorId;
+        var product = AddProduct(_tenantId, _actorId, isPublished: false);
+        _context.Set<ProjectStoreProduct>().Add(NewLink(project.Id, product.Id));
+        await _context.SaveChangesAsync();
+        (await _context.Set<TenantMember>().SingleAsync()).IsActive = false;
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(
+            new UnlinkProjectStoreProductCommand(project.Id, product.Id),
+            default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Forbidden);
+    }
+
+    [Fact]
     public async Task Public_Query_Should_Return_Only_Canonical_Published_Public_Project_Ids()
     {
         var product = AddProduct(_tenantId, _actorId, isPublished: true);
@@ -195,6 +353,20 @@ public sealed class ProjectStoreProductHandlersTests : IDisposable
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().ContainSingle(projection => projection.ProjectId == publicProject.Id);
         result.Value.Should().OnlyContain(projection => projection.ProductId == product.Id);
+    }
+
+    [Fact]
+    public async Task Public_Query_Should_Reject_Bundle_Product()
+    {
+        var bundle = AddProduct(_tenantId, _actorId, isPublished: true, isBundle: true);
+        var project = AddProject(_tenantId, ContentStatus.Published, ContentVisibility.Public);
+        _context.Set<ProjectStoreProduct>().Add(NewLink(project.Id, bundle.Id));
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(new GetPublicStoreProductProjectsQuery(bundle.Id), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.NotFound);
     }
 
     private ProjectStoreProductHandlers CreateHandler()
