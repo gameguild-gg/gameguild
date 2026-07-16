@@ -21,6 +21,10 @@ public class ProgramContentDto {
 
   public JsonDocument? Body { get; set; }
 
+  public LessonContentFormat? LessonFormat { get; set; }
+
+  public ActivitySettings? ActivitySettings { get; set; }
+
   public int SortOrder { get; set; }
 
   public bool IsRequired { get; set; }

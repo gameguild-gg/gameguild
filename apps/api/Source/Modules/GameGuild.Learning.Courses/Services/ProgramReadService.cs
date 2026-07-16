@@ -139,11 +139,12 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
 
     if (programUser == null) return null;
 
-    var contentProgress = await context.Set<ContentInteraction>()
+    var interactions = await context.Set<ContentInteraction>()
       .Include(ci => ci.Content)
       .Where(ci => ci.ProgramUserId == programUser.Id && ci.DeletedAt == null)
-      .OrderBy(ci => ci.Content.SortOrder)
-      .ThenBy(ci => ci.Content.Title)
+      .ToListAsync()
+      .ConfigureAwait(false);
+    var contentProgress = ContentInteractionAttemptSelection.CurrentPerContent(interactions)
       .Select(ci => new ContentProgressDto(
         ci.ContentId,
         ci.Content.Title,
@@ -152,8 +153,7 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
         ci.FirstAccessedAt,
         ci.LastAccessedAt,
         ci.CompletedAt))
-      .ToListAsync()
-      .ConfigureAwait(false);
+      .ToList();
 
     return new UserProgressDto(
       programUser.Id,
@@ -300,7 +300,11 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
     var contentCompletionRates = contentItems.ToDictionary(
       contentId => contentId,
       contentId => Percentage(
-        interactions.Count(interaction => interaction.ContentId == contentId && interaction.IsCompleted && enrolledUserIds.Contains(interaction.UserId)),
+        interactions
+          .Where(interaction => interaction.ContentId == contentId && interaction.IsCompleted && enrolledUserIds.Contains(interaction.UserId))
+          .Select(interaction => interaction.UserId)
+          .Distinct()
+          .Count(),
         programUsers.Count));
 
     var trends = new List<CompletionTrendDto>();

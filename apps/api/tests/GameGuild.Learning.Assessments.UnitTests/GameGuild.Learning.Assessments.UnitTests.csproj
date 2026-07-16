@@ -4,6 +4,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
         <RootNamespace>GameGuild.Learning.Assessments.Tests</RootNamespace>
     </PropertyGroup>
 
@@ -25,6 +26,8 @@
         <PackageReference Include="coverlet.msbuild" />
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Moq" />
         <PackageReference Include="xunit" />

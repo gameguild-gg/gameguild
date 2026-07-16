@@ -1,4 +1,6 @@
 using GameGuild.Projects;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using ProjectEntity = GameGuild.Projects.Project;
 using ProjectReleaseEntity = GameGuild.Projects.ProjectRelease;
 
@@ -8,8 +10,15 @@ namespace GameGuild.TestingLab;
 /// Service implementation for testing request operations.
 /// Extracted from the monolithic TestService for focused responsibility.
 /// </summary>
-public class TestingRequestOperationsService(IApplicationDbContext context) : ITestingRequestOperations
+public class TestingRequestOperationsService(
+    IApplicationDbContext context,
+    IProjectChannelAvailabilityService availabilityService,
+    IProjectAuthorizationService authorizationService,
+    IActorContextAccessor actorContextAccessor,
+    IProjectLifecycleLock? lifecycleLock = null) : ITestingRequestOperations
 {
+    private readonly IProjectLifecycleLock _lifecycleLock = lifecycleLock ?? new ProjectLifecycleLock(context);
+
     public async Task<IEnumerable<TestingRequest>> GetAllTestingRequestsAsync()
     {
         return await context.Set<TestingRequest>()
@@ -56,11 +65,23 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingRequest> CreateTestingRequestAsync(TestingRequest testingRequest)
     {
+        var actor = RequireTenantActor();
+        IProjectLifecycleLockHandle? lockHandle = null;
+        if (testingRequest.ProjectVersionId.HasValue)
+            lockHandle = await AcquireProjectVersionLockAsync(
+                    testingRequest.ProjectVersionId.Value,
+                    actor.TenantId!.Value)
+                .ConfigureAwait(false);
+
+        await using var lockScope = lockHandle;
         testingRequest.Id = Guid.NewGuid();
+        testingRequest.CreatedById = actor.SubjectIdAsGuid!.Value;
+        testingRequest.TenantId = actor.TenantId;
         testingRequest.Touch();
 
         context.Set<TestingRequest>().Add(testingRequest);
         await context.SaveChangesAsync().ConfigureAwait(false);
+        if (lockHandle != null) await lockHandle.CommitAsync().ConfigureAwait(false);
 
         return (await GetTestingRequestByIdAsync(testingRequest.Id).ConfigureAwait(false)) ?? testingRequest;
     }
@@ -107,9 +128,22 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
         if (testingRequest == null) return false;
 
+        var actor = RequireTenantActor();
+        if (testingRequest.TenantId != actor.TenantId)
+            throw new UnauthorizedAccessException("Testing request is outside the current tenant.");
+
+        IProjectLifecycleLockHandle? lockHandle = null;
+        if (testingRequest.ProjectVersionId.HasValue)
+            lockHandle = await AcquireProjectVersionLockAsync(
+                    testingRequest.ProjectVersionId.Value,
+                    actor.TenantId!.Value)
+                .ConfigureAwait(false);
+
+        await using var lockScope = lockHandle;
         testingRequest.Restore();
         testingRequest.Touch();
         await context.SaveChangesAsync().ConfigureAwait(false);
+        if (lockHandle != null) await lockHandle.CommitAsync().ConfigureAwait(false);
 
         return true;
     }
@@ -175,22 +209,54 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingRequest> CreateSimpleTestingRequestAsync(CreateSimpleTestingRequestDto requestDto, Guid userId)
     {
-        var existingProject = requestDto.ProjectId.HasValue
-            ? await context.Set<ProjectEntity>()
-                .FirstOrDefaultAsync(p => p.Id == requestDto.ProjectId.Value && p.DeletedAt == null)
-                .ConfigureAwait(false)
-            : await context.Set<ProjectEntity>()
-                .FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier && p.DeletedAt == null)
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid != userId || actor.TenantId == null)
+            throw new UnauthorizedAccessException("An authenticated tenant actor matching the submission user is required.");
+
+        ProjectEntity? existingProject;
+        if (requestDto.ProjectId.HasValue)
+        {
+            existingProject = await context.Set<ProjectEntity>()
+                .FirstOrDefaultAsync(project =>
+                    project.Id == requestDto.ProjectId.Value &&
+                    project.TenantId == actor.TenantId &&
+                    project.DeletedAt == null)
                 .ConfigureAwait(false);
+        }
+        else
+        {
+            var matchingProjects = await context.Set<ProjectEntity>()
+                .Where(project =>
+                    project.Title == requestDto.TeamIdentifier &&
+                    project.TenantId == actor.TenantId &&
+                    project.DeletedAt == null)
+                .Take(2)
+                .ToListAsync()
+                .ConfigureAwait(false);
+            if (matchingProjects.Count > 1)
+                throw new InvalidOperationException("Multiple active projects match the legacy team identifier.");
+
+            existingProject = matchingProjects.SingleOrDefault();
+        }
 
         if (existingProject == null)
             throw new InvalidOperationException("Testing Lab submissions must be linked to an existing project.");
 
         var projectId = existingProject.Id;
+        await using var lockHandle = await _lifecycleLock.AcquireAsync(projectId).ConfigureAwait(false);
+        var availability = await availabilityService
+            .GetAsync(projectId, ProjectChannel.TestingLab, actor.TenantId)
+            .ConfigureAwait(false);
+        if (!availability.IsAvailable)
+            throw new InvalidOperationException(availability.Reason);
+        if (!await authorizationService.HasPermissionAsync(projectId, PermissionType.Edit).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("Project Edit permission is required for Testing Lab submissions.");
 
         var projectVersion = await context.Set<GameGuild.Projects.ProjectVersion>()
             .FirstOrDefaultAsync(version =>
                 version.ProjectId == projectId &&
+                version.TenantId == actor.TenantId &&
+                version.DeletedAt == null &&
                 version.VersionNumber == requestDto.VersionNumber)
             .ConfigureAwait(false);
 
@@ -204,6 +270,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
                 ReleaseNotes = requestDto.Description,
                 Status = "testing",
                 CreatedById = userId,
+                TenantId = existingProject.TenantId,
             };
 
             context.Set<GameGuild.Projects.ProjectVersion>().Add(projectVersion);
@@ -212,6 +279,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
         var projectRelease = await context.Set<GameGuild.Projects.ProjectRelease>()
             .FirstOrDefaultAsync(release =>
                 release.ProjectId == projectId &&
+                release.DeletedAt == null &&
                 release.ReleaseVersion == requestDto.VersionNumber)
             .ConfigureAwait(false);
 
@@ -228,6 +296,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
                 IsPrerelease = true,
                 ReleaseType = "testing",
                 ReleasedAt = SystemClock.UtcNow,
+                TenantId = existingProject.TenantId,
             };
 
             context.Set<GameGuild.Projects.ProjectRelease>().Add(projectRelease);
@@ -251,11 +320,68 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
             EndDate = requestDto.EndDate ?? SystemClock.UtcNow.AddDays(30),
             Status = TestingRequestStatus.Draft,
             CreatedById = userId,
+            TenantId = existingProject.TenantId,
         };
 
         context.Set<TestingRequest>().Add(testingRequest);
         await context.SaveChangesAsync().ConfigureAwait(false);
+        await lockHandle.CommitAsync().ConfigureAwait(false);
 
         return (await GetTestingRequestByIdAsync(testingRequest.Id).ConfigureAwait(false)) ?? testingRequest;
+    }
+
+    private ActorContext RequireTenantActor()
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid == null || actor.TenantId == null)
+            throw new UnauthorizedAccessException("An authenticated tenant actor is required.");
+        return actor;
+    }
+
+    private async Task<IProjectLifecycleLockHandle> AcquireProjectVersionLockAsync(
+        Guid projectVersionId,
+        Guid tenantId)
+    {
+        var projectId = await context.Set<GameGuild.Projects.ProjectVersion>()
+            .IgnoreQueryFilters()
+            .Where(version =>
+                version.Id == projectVersionId &&
+                version.TenantId == tenantId &&
+                version.DeletedAt == null)
+            .Select(version => version.ProjectId)
+            .SingleOrDefaultAsync()
+            .ConfigureAwait(false);
+        if (projectId == Guid.Empty)
+            throw new InvalidOperationException("Testing requests must reference an active project version in the current tenant.");
+
+        var lockHandle = await _lifecycleLock.AcquireAsync(projectId).ConfigureAwait(false);
+        try
+        {
+            var versionIsActive = await context.Set<GameGuild.Projects.ProjectVersion>()
+                .IgnoreQueryFilters()
+                .AnyAsync(version =>
+                    version.Id == projectVersionId &&
+                    version.ProjectId == projectId &&
+                    version.TenantId == tenantId &&
+                    version.DeletedAt == null)
+                .ConfigureAwait(false);
+            if (!versionIsActive)
+                throw new InvalidOperationException("Testing requests must reference an active project version in the current tenant.");
+
+            var availability = await availabilityService
+                .GetAsync(projectId, ProjectChannel.TestingLab, tenantId)
+                .ConfigureAwait(false);
+            if (!availability.IsAvailable)
+                throw new InvalidOperationException(availability.Reason);
+            if (!await authorizationService.HasPermissionAsync(projectId, PermissionType.Edit).ConfigureAwait(false))
+                throw new UnauthorizedAccessException("Project Edit permission is required for Testing Lab submissions.");
+
+            return lockHandle;
+        }
+        catch
+        {
+            await lockHandle.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
     }
 }

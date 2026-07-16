@@ -204,6 +204,7 @@ public static partial class SnapshotCourseSeeder
         content.Title = definition.Title;
         content.Description = definition.Description;
         content.Type = definition.Type;
+        content.LessonFormat = definition.LessonFormat;
         content.SortOrder = definition.SortOrder;
         content.IsRequired = definition.IsRequired;
         content.GradingMethod = GradingMethod.None;
@@ -211,6 +212,7 @@ public static partial class SnapshotCourseSeeder
         content.EstimatedMinutes = definition.EstimatedMinutes;
         content.Visibility = Visibility.Public;
         content.Body = BuildImportedBody(sourceKey, definition.Body);
+        content.NormalizeLearningContract();
         content.Touch();
     }
 
@@ -395,6 +397,7 @@ public static partial class SnapshotCourseSeeder
                     Title: "Course overview",
                     Description: $"Overview for {title}.",
                     Type: ProgramContentType.Page,
+                    LessonFormat: LessonContentFormat.Markdown,
                     SortOrder: 0,
                     IsRequired: true,
                     EstimatedMinutes: 20,
@@ -422,6 +425,7 @@ public static partial class SnapshotCourseSeeder
             Title: title,
             Description: description,
             Type: ParseProgramContentType(typeComment, rawType, title, description, sourceId, bodyImportName),
+            LessonFormat: ParseLessonContentFormat(typeComment, title, description, sourceId, bodyImportName),
             SortOrder: ExtractNullableInt(contentBody, "sortOrder") ?? 0,
             IsRequired: ExtractBoolean(contentBody, "isRequired") ?? true,
             EstimatedMinutes: ExtractNullableInt(contentBody, "estimatedMinutes"),
@@ -886,6 +890,31 @@ public static partial class SnapshotCourseSeeder
         return $"{programSlug}/{sourceId}";
     }
 
+    private static LessonContentFormat ParseLessonContentFormat(
+        string? typeComment,
+        string title,
+        string description,
+        string sourceId,
+        string? bodyImportName)
+    {
+        var semanticHint = NormalizeLabel(string.Join(
+            ' ',
+            new[] { typeComment, title, description, sourceId, bodyImportName }.Where(value => !string.IsNullOrWhiteSpace(value))));
+
+        if (semanticHint.Contains("reveal", StringComparison.Ordinal) ||
+            semanticHint.Contains("slides", StringComparison.Ordinal))
+        {
+            return LessonContentFormat.RevealJs;
+        }
+
+        if (semanticHint.Contains("video", StringComparison.Ordinal))
+        {
+            return LessonContentFormat.Video;
+        }
+
+        return LessonContentFormat.Markdown;
+    }
+
     private static string BuildImportedBody(string sourceKey, string markdownBody)
     {
         var trimmedBody = markdownBody.Trim();
@@ -953,6 +982,7 @@ internal sealed record SnapshotContentDefinition(
     string Title,
     string Description,
     ProgramContentType Type,
+    LessonContentFormat LessonFormat,
     int SortOrder,
     bool IsRequired,
     int? EstimatedMinutes,

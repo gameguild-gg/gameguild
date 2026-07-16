@@ -15,6 +15,10 @@ public class CreateProgramContentDto {
 
   public string Body { get; set; } = "{}";
 
+  public LessonContentFormat? LessonFormat { get; set; }
+
+  public ActivitySettings? ActivitySettings { get; set; }
+
   public int SortOrder { get; set; } = 0;
 
   public bool IsRequired { get; set; } = true;

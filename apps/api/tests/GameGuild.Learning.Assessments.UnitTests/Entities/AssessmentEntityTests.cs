@@ -1,7 +1,10 @@
 using FluentAssertions;
+using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using System.Reflection;
 using Xunit;
 
 namespace GameGuild.Learning.Assessments.Tests;
@@ -34,6 +37,18 @@ public class AssessmentEntityTests
     {
         var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 50, 25, isRequired: false);
         assessment.IsRequired.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(-1, 0)]
+    [InlineData(100, -1)]
+    [InlineData(100, 101)]
+    public void Create_WithInvalidScoreRange_Throws(int maxScore, int passingScore)
+    {
+        var action = () => Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, maxScore, passingScore);
+
+        action.Should().Throw<ArgumentOutOfRangeException>();
     }
 
     [Fact]
@@ -134,6 +149,16 @@ public class AssessmentEntityTests
     }
 
     [Fact]
+    public void Update_WhenNewMaximumWouldBeBelowPassingScore_Throws()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 60);
+
+        var action = () => assessment.Update(null, null, 50, null, null, null, null, null, null);
+
+        action.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
     public void Update_WithContentId_ShouldSetContentId()
     {
         var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100, 50);
@@ -161,6 +186,19 @@ public class AssessmentEntityTests
 /// </summary>
 public class AssessmentSubmissionEntityTests
 {
+    [Fact]
+    public void Grade_RequiresAssessmentMaximumScore()
+    {
+        var gradeMethods = typeof(AssessmentSubmission)
+            .GetMethods()
+            .Where(method => method.Name == nameof(AssessmentSubmission.Grade))
+            .ToArray();
+
+        gradeMethods.Should().ContainSingle()
+            .Which.GetParameters().Select(parameter => parameter.ParameterType)
+            .Should().Equal(typeof(int), typeof(int), typeof(int), typeof(Guid?), typeof(string));
+    }
+
     [Fact]
     public void Start_ShouldSetDefaultValues()
     {
@@ -199,7 +237,7 @@ public class AssessmentSubmissionEntityTests
         submission.Submit();
 
         var graderId = Guid.NewGuid();
-        submission.Grade(85, 70, graderId, "Good work!");
+        submission.Grade(85, 70, 100, graderId, "Good work!");
 
         submission.Score.Should().Be(85);
         submission.Passed.Should().BeTrue();
@@ -214,7 +252,7 @@ public class AssessmentSubmissionEntityTests
     {
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
         submission.Submit();
-        submission.Grade(50, 70);
+        submission.Grade(50, 70, 100);
 
         submission.Passed.Should().BeFalse();
     }
@@ -224,9 +262,67 @@ public class AssessmentSubmissionEntityTests
     {
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
         submission.Submit();
-        submission.Grade(70, 70);
+        submission.Grade(70, 70, 100);
 
         submission.Passed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Grade_WithScoreOutsideAssessmentMaximum_Throws()
+    {
+        var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
+        submission.Submit();
+        var gradeWithMaximum = typeof(AssessmentSubmission).GetMethod(
+            nameof(AssessmentSubmission.Grade),
+            [typeof(int), typeof(int), typeof(int), typeof(Guid?), typeof(string)]);
+
+        gradeWithMaximum.Should().NotBeNull();
+        var action = () => gradeWithMaximum!.Invoke(submission, [101, 60, 100, null, null]);
+
+        action.Should().Throw<TargetInvocationException>()
+            .WithInnerException<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public async Task StartSubmissionAsync_UsesHighestHistoricalAttemptNumber()
+    {
+        await using var db = CreateContext();
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 60);
+        assessment.SetMaxAttempts(4);
+        var enrollmentId = Guid.NewGuid();
+        var historicalSubmission = AssessmentSubmission.Start(assessment.Id, enrollmentId, Guid.NewGuid(), 3);
+        historicalSubmission.Version = 1;
+        historicalSubmission.SoftDelete();
+        db.AddRange(assessment, historicalSubmission);
+        await db.SaveChangesAsync();
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+
+        var result = await service.StartSubmissionAsync(assessment.Id, enrollmentId, Guid.NewGuid());
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.AttemptNumber.Should().Be(4);
+    }
+
+    private static TestAssessmentDbContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<TestAssessmentDbContext>()
+            .UseInMemoryDatabase($"AssessmentAttempt_{Guid.NewGuid()}")
+            .Options;
+        return new TestAssessmentDbContext(options);
+    }
+
+    private sealed class TestAssessmentDbContext(DbContextOptions<TestAssessmentDbContext> options)
+        : DbContext(options), IApplicationDbContext
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            new AssessmentsModelConfiguration().Configure(modelBuilder);
+        }
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException("Transactions are not required for assessment entity tests.");
+        }
     }
 }
 
@@ -315,20 +411,20 @@ public sealed class AssessmentServiceAnalyticsTests
 
         var quizSubmission = AssessmentSubmission.Start(quiz.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         quizSubmission.Submit();
-        quizSubmission.Grade(8, quiz.PassingScore);
+        quizSubmission.Grade(8, quiz.PassingScore, quiz.MaxScore);
         var projectSubmission = AssessmentSubmission.Start(project.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         projectSubmission.Submit();
-        projectSubmission.Grade(50, project.PassingScore);
+        projectSubmission.Grade(50, project.PassingScore, project.MaxScore);
         var ignoredSubmission = AssessmentSubmission.Start(ignoredOtherCourse.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         ignoredSubmission.Submit();
-        ignoredSubmission.Grade(10, ignoredOtherCourse.PassingScore);
+        ignoredSubmission.Grade(10, ignoredOtherCourse.PassingScore, ignoredOtherCourse.MaxScore);
 
         db.Set<AssessmentGroup>().AddRange(quizGroup, projectGroup);
         db.Set<Assessment>().AddRange(quiz, project, attendance, ignoredOtherCourse);
         db.Set<AssessmentSubmission>().AddRange(quizSubmission, projectSubmission, ignoredSubmission);
         await db.SaveChangesAsync();
 
-        var service = new AssessmentService(db, NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
 
         var analytics = await service.GetCourseAssessmentAnalyticsAsync(courseId);
 
@@ -379,7 +475,7 @@ public class AssessmentSubmissionDtoTests
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 2);
         submission.Submit();
         var graderId = Guid.NewGuid();
-        submission.Grade(88, 70, graderId, "Excellent");
+        submission.Grade(88, 70, 100, graderId, "Excellent");
 
         var dto = AssessmentSubmissionDto.FromEntity(submission);
 

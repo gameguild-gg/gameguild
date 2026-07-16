@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
@@ -15,6 +16,7 @@ namespace GameGuild.TestingLab;
 [Authorize]
 public class TestingSessionsController(
     ITestingSessionOperations sessionService,
+    IMediator mediator,
     IActorContextAccessor actorContextAccessor,
     ILogger<TestingSessionsController> _logger) : BaseApiController
 {
@@ -193,4 +195,48 @@ public class TestingSessionsController(
 
         return Ok(new { message = "Attendance updated successfully" });
     }
+
+    [HttpGet("sessions/{sessionId:guid}/projects")]
+    public async Task<ActionResult<IReadOnlyList<SessionProjectProjection>>> GetSessionProjects(
+        Guid sessionId,
+        [FromQuery] bool includeInactive = false,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(new GetSessionProjectLinksQuery(sessionId, includeInactive), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? Ok(result.Value) : ToChannelActionResult(result);
+    }
+
+    [HttpPost("sessions/{sessionId:guid}/projects")]
+    public async Task<ActionResult<SessionProjectProjection>> LinkSessionProject(
+        Guid sessionId,
+        LinkSessionProjectRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(
+            new LinkSessionProjectCommand(sessionId, request.ProjectId, request.ProjectVersionId, request.Notes),
+            cancellationToken).ConfigureAwait(false);
+        if (result.IsFailure) return ToChannelActionResult(result);
+        return CreatedAtAction(nameof(GetSessionProjects), new { sessionId }, result.Value);
+    }
+
+    [HttpDelete("sessions/{sessionId:guid}/projects/{projectId:guid}")]
+    public async Task<ActionResult> UnlinkSessionProject(
+        Guid sessionId,
+        Guid projectId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(new UnlinkSessionProjectCommand(sessionId, projectId), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? NoContent() : ToChannelActionResult(result);
+    }
+
+    private ObjectResult ToChannelActionResult(Result result)
+        => result.Error.Type switch
+        {
+            ErrorType.Unauthorized => StatusCode(401, result.Error),
+            ErrorType.Forbidden => StatusCode(403, result.Error),
+            ErrorType.NotFound => NotFound(result.Error),
+            ErrorType.Conflict => Conflict(result.Error),
+            ErrorType.Validation => BadRequest(result.Error),
+            _ => StatusCode(500, result.Error)
+        };
 }

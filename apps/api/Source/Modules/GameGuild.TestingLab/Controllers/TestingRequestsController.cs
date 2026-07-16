@@ -157,6 +157,11 @@ public class TestingRequestsController(
         {
             request = await requestService.CreateSimpleTestingRequestAsync(requestDto, userId.Value).ConfigureAwait(false);
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Testing Lab submission forbidden for user {UserId}", userId);
+            return Forbid();
+        }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning(ex, "Testing Lab submission rejected for user {UserId}", userId);

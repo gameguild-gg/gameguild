@@ -11,6 +11,7 @@ public static class ContentInteractionExtensions {
       SubmissionData = interaction.SubmissionData,
       CompletionPercentage = interaction.CompletionPercentage,
       TimeSpentMinutes = interaction.TimeSpentMinutes,
+      TimeSpentSeconds = interaction.TimeSpentSeconds,
       FirstAccessedAt = interaction.FirstAccessedAt,
       LastAccessedAt = interaction.LastAccessedAt,
       CompletedAt = interaction.CompletedAt,

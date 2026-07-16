@@ -4,6 +4,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
         <RootNamespace>GameGuild.Learning.Courses.UnitTests</RootNamespace>
     </PropertyGroup>
     <!-- Coverage Thresholds -->
@@ -30,6 +31,7 @@
         <PackageReference Include="xunit.runner.visualstudio" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
     </ItemGroup>
