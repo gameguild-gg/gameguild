@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 namespace GameGuild.LaunchPad;
 
 [Table("launch_plans")]
-[Index(nameof(ProjectId), IsUnique = true, Name = "IX_launch_plans_ProjectId")]
 [Index(nameof(Status), nameof(TargetLaunchAt), Name = "IX_launch_plans_Status_TargetLaunchAt")]
 public sealed class LaunchPlan : EntityBase<Guid>
 {
