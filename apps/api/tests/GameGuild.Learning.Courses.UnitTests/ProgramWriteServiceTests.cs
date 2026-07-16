@@ -117,6 +117,47 @@ public sealed class ProgramWriteServiceTests
     }
 
     [Fact]
+    public async Task SubmitUserContentAsync_WhenSurveyAllowsMultipleResponses_ShouldCreateAnotherResponse()
+    {
+        await using var context = CreateContext();
+        var program = CreateProgram();
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Survey", Type = ProgramContentType.Survey };
+        survey.SetActivitySettings(new SurveyActivitySettings(AllowMultipleResponses: true));
+        context.AddRange(program, enrollment, survey);
+        await context.SaveChangesAsync();
+        var service = new ProgramWriteService(context);
+
+        var first = await service.SubmitUserContentAsync(program.Id, enrollment.UserId, survey.Id, """{"kind":"survey","answers":{"first":true}}""");
+        var second = await service.SubmitUserContentAsync(program.Id, enrollment.UserId, survey.Id, """{"kind":"survey","answers":{"second":true}}""");
+
+        first.Should().NotBeNull();
+        second.Should().NotBeNull();
+        second!.Id.Should().NotBe(first!.Id);
+        (await context.Set<ContentInteraction>().CountAsync()).Should().Be(2);
+    }
+
+    [Fact]
+    public async Task SubmitUserContentAsync_WhenActivityPayloadDoesNotMatchContentType_ShouldReject()
+    {
+        await using var context = CreateContext();
+        var program = CreateProgram();
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
+        var reflection = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Reflection", Type = ProgramContentType.Reflection };
+        context.AddRange(program, enrollment, reflection);
+        await context.SaveChangesAsync();
+        var service = new ProgramWriteService(context);
+
+        Func<Task> action = async () => await service.SubmitUserContentAsync(
+            program.Id,
+            enrollment.UserId,
+            reflection.Id,
+            """{"kind":"discussion","body":"wrong type"}""");
+
+        await action.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
     public async Task UpdateUserProgressAsync_ShouldUpdateTheCurrentActiveAttempt()
     {
         await using var context = CreateContext();

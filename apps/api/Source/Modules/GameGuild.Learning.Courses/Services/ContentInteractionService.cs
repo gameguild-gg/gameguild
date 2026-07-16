@@ -27,10 +27,10 @@ public class ContentInteractionService(
       .ConfigureAwait(false);
     if (programUser == null) throw new RequestValidationException("Active course enrollment was not found.");
 
-    var contentBelongsToProgram = await context.Set<ProgramContent>()
-      .AnyAsync(item => item.Id == contentId && item.ProgramId == programUser.ProgramId && item.DeletedAt == null)
+    var content = await context.Set<ProgramContent>()
+      .FirstOrDefaultAsync(item => item.Id == contentId && item.ProgramId == programUser.ProgramId && item.DeletedAt == null)
       .ConfigureAwait(false);
-    if (!contentBelongsToProgram) throw new InvalidOperationException("Content does not belong to the enrolled course.");
+    if (content is null) throw new InvalidOperationException("Content does not belong to the enrolled course.");
 
     // Check if there's already an interaction for this user/content
     var existingInteraction = await context.Set<ContentInteraction>()
@@ -44,7 +44,11 @@ public class ContentInteractionService(
       existingInteraction.UserId = programUser.UserId;
 
       // If already submitted, create a new interaction based on the last one
-      if (existingInteraction.SubmittedAt.HasValue) return await CreateNewInteractionFromPreviousAsync(existingInteraction).ConfigureAwait(false);
+      if (existingInteraction.SubmittedAt.HasValue) {
+        if (content.Type == ProgramContentType.Survey && !LearningActivityContract.AllowsMultipleResponses(content))
+          throw new InvalidOperationException("This survey accepts only one response.");
+        return await CreateNewInteractionFromPreviousAsync(existingInteraction).ConfigureAwait(false);
+      }
 
       // Otherwise, resume the existing interaction
       existingInteraction.FirstAccessedAt ??= SystemClock.UtcNow;
@@ -83,6 +87,9 @@ public class ContentInteractionService(
     var interaction = await GetInteractionByIdAsync(interactionId).ConfigureAwait(false);
 
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Interaction has already been submitted and cannot be changed.");
+
+    if (LearningActivityContract.IsActivityType(interaction.Content.Type))
+      ActivityResponseContract.Parse(interaction.Content.Type, submissionData, interaction.Content.GetActivitySettings());
 
     interaction.SubmissionData = submissionData;
     interaction.SubmittedAt = SystemClock.UtcNow;
@@ -131,6 +138,24 @@ public class ContentInteractionService(
       .OrderByDescending(ci => ci.LastAccessedAt)
       .ToListAsync()
       .ConfigureAwait(false);
+  }
+
+  /// <summary>Gets survey result projections without exposing learner or enrollment identity.</summary>
+  public async Task<IEnumerable<SurveyResponseResultDto>> GetSurveyResponsesAsync(Guid contentId) {
+    var content = await context.Set<ProgramContent>()
+      .FirstOrDefaultAsync(item => item.Id == contentId && item.DeletedAt == null)
+      .ConfigureAwait(false);
+    if (content is null || content.Type != ProgramContentType.Survey)
+      throw new InvalidOperationException("Content is not a survey.");
+
+    var interactions = await context.Set<ContentInteraction>()
+      .Where(item => item.ContentId == contentId && item.SubmittedAt != null && item.DeletedAt == null)
+      .OrderBy(item => item.SubmittedAt)
+      .ToListAsync()
+      .ConfigureAwait(false);
+
+    var isAnonymous = LearningActivityContract.IsAnonymousSurvey(content);
+    return interactions.Select(interaction => SurveyResponseResultDto.FromInteraction(interaction, isAnonymous)).ToList();
   }
 
   /// <summary> Update time spent on content </summary>
@@ -201,4 +226,5 @@ public class ContentInteractionService(
       throw;
     }
   }
+
 }

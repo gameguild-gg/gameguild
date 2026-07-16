@@ -482,6 +482,9 @@ public class ProgramWriteService(
 
     if (content == null) return null;
 
+    if (LearningActivityContract.IsActivityType(content.Type))
+      ActivityResponseContract.Parse(content.Type, submissionData, content.GetActivitySettings());
+
     var now = SystemClock.UtcNow;
     var interaction = await context.Set<ContentInteraction>()
       .Where(ci => ci.ProgramUserId == programUser.Id && ci.ContentId == contentId && ci.DeletedAt == null)
@@ -490,17 +493,17 @@ public class ProgramWriteService(
       .FirstOrDefaultAsync()
       .ConfigureAwait(false);
 
-    if (interaction?.SubmittedAt != null)
+    if (interaction?.SubmittedAt != null && !LearningActivityContract.AllowsMultipleResponses(content))
     {
       return interaction;
     }
 
-    var isNewInteraction = interaction == null;
+    var isNewInteraction = interaction == null || interaction.SubmittedAt != null;
     if (isNewInteraction)
     {
       interaction = new ContentInteraction
       {
-        Id = CreateDirectSubmissionAttemptId(programUser.Id, contentId),
+        Id = interaction is null ? CreateDirectSubmissionAttemptId(programUser.Id, contentId) : Guid.NewGuid(),
         ProgramUserId = programUser.Id,
         UserId = userId,
         ContentId = contentId,

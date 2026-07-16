@@ -23,6 +23,8 @@ public class ProgramContentDto {
 
   public LessonContentFormat? LessonFormat { get; set; }
 
+  public ActivitySettings? ActivitySettings { get; set; }
+
   public int SortOrder { get; set; }
 
   public bool IsRequired { get; set; }
