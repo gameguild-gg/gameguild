@@ -7288,8 +7288,6 @@ namespace GameGuild.API.Database.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("AssessmentGroup");
-
-                    b.Navigation("InteractiveVideoCues");
                 });
 
 
@@ -13986,6 +13984,11 @@ modelBuilder.Entity("GameGuild.Learning.Assessments.InteractiveVideoAssessmentCu
                         .IsRequired();
 
                     b.Navigation("Assessment");
+                });
+
+modelBuilder.Entity("GameGuild.Learning.Assessments.Assessment", b =>
+                {
+                    b.Navigation("InteractiveVideoCues");
                 });
 
 modelBuilder.Entity("GameGuild.Notifications.Notification", b =>
