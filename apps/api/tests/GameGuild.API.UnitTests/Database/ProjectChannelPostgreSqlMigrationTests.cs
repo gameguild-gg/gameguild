@@ -183,6 +183,32 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
         await waitForWriter.Should().ThrowAsync<PostgresException>();
     }
 
+    [DockerFact]
+    public async Task Down_AfterReplacementLaunchPlan_PreservesHistoryAndActiveUniqueness()
+    {
+        await using var container = await StartPostgresAsync("project_channel_down_launch_history");
+        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await connection.OpenAsync();
+        await CreatePrerequisiteTablesAsync(connection);
+        await ApplyUpAsync(connection);
+        var projectId = Guid.NewGuid();
+        await ExecuteAsync(connection, $"""
+            INSERT INTO projects ("Id") VALUES ('{projectId}');
+            INSERT INTO launch_plans ("Id", "ProjectId", "DeletedAt") VALUES
+                ('{Guid.NewGuid()}', '{projectId}', now()),
+                ('{Guid.NewGuid()}', '{projectId}', NULL);
+            """);
+
+        await ApplyDownAsync(connection);
+
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM launch_plans WHERE \"ProjectId\" = '{projectId}';"))
+            .Should().Be(2);
+        await RejectAsync(connection, $"""
+            INSERT INTO launch_plans ("Id", "ProjectId", "DeletedAt")
+            VALUES ('{Guid.NewGuid()}', '{projectId}', NULL);
+            """);
+    }
+
     private static async Task<PostgreSqlContainer> StartPostgresAsync(string database)
     {
         var container = new PostgreSqlBuilder()
@@ -224,6 +250,20 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
     {
         var builder = new MigrationBuilder("Npgsql.EntityFrameworkCore.PostgreSQL");
         new ExposedMigration().BuildUp(builder);
+        await ApplyOperationsAsync(connection, builder);
+    }
+
+    private static async Task ApplyDownAsync(NpgsqlConnection connection)
+    {
+        var builder = new MigrationBuilder("Npgsql.EntityFrameworkCore.PostgreSQL");
+        new ExposedMigration().BuildDown(builder);
+        await ApplyOperationsAsync(connection, builder);
+    }
+
+    private static async Task ApplyOperationsAsync(
+        NpgsqlConnection connection,
+        MigrationBuilder builder)
+    {
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(connection.ConnectionString).Options);
         var generator = context.GetService<IMigrationsSqlGenerator>();
@@ -285,6 +325,7 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
     private sealed class ExposedMigration : AddProjectChannelContracts
     {
         public void BuildUp(MigrationBuilder builder) => Up(builder);
+        public void BuildDown(MigrationBuilder builder) => Down(builder);
     }
 
     private sealed class DockerFactAttribute : FactAttribute

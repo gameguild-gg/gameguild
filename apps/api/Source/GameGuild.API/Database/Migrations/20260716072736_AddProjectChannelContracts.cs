@@ -128,7 +128,8 @@ namespace GameGuild.API.Database.Migrations
                 name: "IX_launch_plans_ProjectId",
                 table: "launch_plans",
                 column: "ProjectId",
-                unique: true);
+                unique: true,
+                filter: "\"DeletedAt\" IS NULL");
 
             migrationBuilder.DropIndex(
                 name: "IX_session_projects_active_pair",
