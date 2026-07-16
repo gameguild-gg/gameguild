@@ -44,6 +44,11 @@ public interface IAssessmentService
     Task<IEnumerable<AssessmentGroup>> GetCourseAssessmentGroupsAsync(Guid courseId);
 
     /// <summary>
+    /// Gets an assessment group by its persisted identifier.
+    /// </summary>
+    Task<AssessmentGroup?> GetAssessmentGroupByIdAsync(Guid id);
+
+    /// <summary>
     /// Creates a weighted assessment group for a course.
     /// </summary>
     Task<Result<AssessmentGroup>> CreateAssessmentGroupAsync(CreateAssessmentGroupRequest request);
@@ -69,9 +74,19 @@ public interface IAssessmentService
     Task<Result<InteractiveVideoAssessmentCue>> LinkInteractiveVideoCueAsync(Guid assessmentId, LinkInteractiveVideoCueRequest request);
 
     /// <summary>
+    /// Removes a cue link. Cue links are hard deleted so the same stable cue may be linked again.
+    /// </summary>
+    Task<Result> UnlinkInteractiveVideoCueAsync(Guid assessmentId, Guid cueId);
+
+    /// <summary>
     /// Gets the interactive-video cue links configured for an assessment.
     /// </summary>
     Task<IEnumerable<InteractiveVideoAssessmentCue>> GetInteractiveVideoCuesAsync(Guid assessmentId);
+
+    /// <summary>
+    /// Gets active cue links for one delivery content item.
+    /// </summary>
+    Task<IEnumerable<InteractiveVideoAssessmentCue>> GetInteractiveVideoCuesForContentAsync(Guid assessmentId, Guid contentId);
 
     // ===== SUBMISSION MANAGEMENT =====
 

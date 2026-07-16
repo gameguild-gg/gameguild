@@ -49,6 +49,10 @@ public class AssessmentsController : BaseApiController
     [HttpPost]
     public async Task<ActionResult<AssessmentDto>> CreateAssessment([FromBody] CreateAssessmentRequest request)
     {
+        var program = await _programService.GetProgramByIdAsync(request.CourseId).ConfigureAwait(false);
+        if (program == null) return NotFound();
+        if (!await CanManageCourseAsync(program.Id).ConfigureAwait(false)) return Forbid();
+
         var result = await _assessmentService.CreateAssessmentAsync(request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
@@ -89,6 +93,10 @@ public class AssessmentsController : BaseApiController
     [HttpGet("course/{courseId:guid}/groups")]
     public async Task<ActionResult<IEnumerable<AssessmentGroupDto>>> GetCourseAssessmentGroups(Guid courseId)
     {
+        var program = await _programService.GetProgramByIdAsync(courseId).ConfigureAwait(false);
+        if (program == null) return NotFound();
+        if (!await CanManageCourseAsync(program.Id).ConfigureAwait(false)) return Forbid();
+
         var groups = await _assessmentService.GetCourseAssessmentGroupsAsync(courseId).ConfigureAwait(false);
         return Ok(groups.Select(AssessmentGroupDto.FromEntity));
     }
@@ -99,6 +107,10 @@ public class AssessmentsController : BaseApiController
     [HttpGet("course/{courseId:guid}/analytics")]
     public async Task<ActionResult<CourseAssessmentAnalyticsDto>> GetCourseAssessmentAnalytics(Guid courseId)
     {
+        var program = await _programService.GetProgramByIdAsync(courseId).ConfigureAwait(false);
+        if (program == null) return NotFound();
+        if (!await CanManageCourseAsync(program.Id).ConfigureAwait(false)) return Forbid();
+
         var analytics = await _assessmentService.GetCourseAssessmentAnalyticsAsync(courseId).ConfigureAwait(false);
         return Ok(analytics);
     }
@@ -109,6 +121,10 @@ public class AssessmentsController : BaseApiController
     [HttpPost("groups")]
     public async Task<ActionResult<AssessmentGroupDto>> CreateAssessmentGroup([FromBody] CreateAssessmentGroupRequest request)
     {
+        var program = await _programService.GetProgramByIdAsync(request.CourseId).ConfigureAwait(false);
+        if (program == null) return NotFound();
+        if (!await CanManageCourseAsync(program.Id).ConfigureAwait(false)) return Forbid();
+
         var result = await _assessmentService.CreateAssessmentGroupAsync(request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
@@ -127,6 +143,10 @@ public class AssessmentsController : BaseApiController
     [HttpPut("groups/{id:guid}")]
     public async Task<ActionResult<AssessmentGroupDto>> UpdateAssessmentGroup(Guid id, [FromBody] UpdateAssessmentGroupRequest request)
     {
+        var group = await _assessmentService.GetAssessmentGroupByIdAsync(id).ConfigureAwait(false);
+        if (group == null) return NotFound();
+        if (!await CanManageCourseAsync(group.CourseId).ConfigureAwait(false)) return Forbid();
+
         var result = await _assessmentService.UpdateAssessmentGroupAsync(id, request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
@@ -144,6 +164,10 @@ public class AssessmentsController : BaseApiController
     [HttpDelete("groups/{id:guid}")]
     public async Task<ActionResult> DeleteAssessmentGroup(Guid id)
     {
+        var group = await _assessmentService.GetAssessmentGroupByIdAsync(id).ConfigureAwait(false);
+        if (group == null) return NotFound();
+        if (!await CanManageCourseAsync(group.CourseId).ConfigureAwait(false)) return Forbid();
+
         var result = await _assessmentService.DeleteAssessmentGroupAsync(id).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
@@ -161,6 +185,10 @@ public class AssessmentsController : BaseApiController
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<AssessmentDto>> UpdateAssessment(Guid id, [FromBody] UpdateAssessmentRequest request)
     {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
         var result = await _assessmentService.UpdateAssessmentAsync(id, request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
@@ -178,6 +206,10 @@ public class AssessmentsController : BaseApiController
     [HttpPut("{id:guid}/group")]
     public async Task<ActionResult<AssessmentDto>> AssignAssessmentToGroup(Guid id, [FromBody] AssignAssessmentGroupRequest request)
     {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
         var result = await _assessmentService.AssignAssessmentToGroupAsync(id, request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
@@ -227,11 +259,57 @@ public class AssessmentsController : BaseApiController
     }
 
     /// <summary>
+    /// Removes a manager-configured interactive-video cue link.
+    /// </summary>
+    [HttpDelete("{id:guid}/interactive-video-cues/{cueId:guid}")]
+    public async Task<ActionResult> UnlinkInteractiveVideoCue(Guid id, Guid cueId)
+    {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
+        var result = await _assessmentService.UnlinkInteractiveVideoCueAsync(id, cueId).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound ? NotFound(result.Error) : BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Gets delivery-safe active cues for an enrolled learner and one video content item.
+    /// </summary>
+    [HttpGet("{assessmentId:guid}/interactive-video-cues/content/{contentId:guid}/enrollments/{enrollmentId:guid}")]
+    public async Task<ActionResult<IEnumerable<LearnerInteractiveVideoAssessmentCueDto>>> GetLearnerInteractiveVideoCues(
+        Guid assessmentId,
+        Guid contentId,
+        Guid enrollmentId)
+    {
+        var actorUserId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
+        if (!actorUserId.HasValue) return Unauthorized();
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        var enrollment = await _enrollmentService.GetAsync(enrollmentId).ConfigureAwait(false);
+        if (enrollment == null || enrollment.CourseId != assessment.CourseId) return NotFound();
+        if (enrollment.UserId != actorUserId.Value) return Forbid();
+
+        var cues = await _assessmentService
+            .GetInteractiveVideoCuesForContentAsync(assessmentId, contentId)
+            .ConfigureAwait(false);
+        return Ok(cues.Select(LearnerInteractiveVideoAssessmentCueDto.FromEntity));
+    }
+
+    /// <summary>
     /// Delete an assessment
     /// </summary>
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult> DeleteAssessment(Guid id)
     {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
         var result = await _assessmentService.DeleteAssessmentAsync(id).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
@@ -415,8 +493,10 @@ public class AssessmentsController : BaseApiController
         if (!actor.SubjectIdAsGuid.HasValue) return false;
 
         var program = await _programService.GetProgramByIdAsync(courseId).ConfigureAwait(false);
-        if (program?.CreatorId == actor.SubjectIdAsGuid.Value) return true;
+        if (program == null) return false;
         if (!actor.TenantId.HasValue) return false;
+        if (program.TenantId.HasValue && program.TenantId != actor.TenantId) return false;
+        if (program.CreatorId == actor.SubjectIdAsGuid.Value) return true;
 
         foreach (var permission in new[] { PermissionType.Edit, PermissionType.Create, PermissionType.Delete })
         {
@@ -500,6 +580,15 @@ public sealed record InteractiveVideoAssessmentCueDto(
         entity.Id,
         entity.AssessmentId,
         entity.ContentId,
+        entity.CueId,
+        entity.CuePositionSeconds);
+}
+
+public sealed record LearnerInteractiveVideoAssessmentCueDto(
+    string CueId,
+    decimal? CuePositionSeconds)
+{
+    public static LearnerInteractiveVideoAssessmentCueDto FromEntity(InteractiveVideoAssessmentCue entity) => new(
         entity.CueId,
         entity.CuePositionSeconds);
 }

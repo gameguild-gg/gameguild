@@ -10,6 +10,36 @@ namespace GameGuild.Learning.Assessments.Tests;
 
 public sealed class InteractiveVideoCueServiceTests
 {
+    private static readonly SemaphoreSlim ClockGate = new(1, 1);
+
+    [Fact]
+    public async Task SubmitAsync_AtDueBoundary_UsesOneCapturedTimestampForEligibilityAndPersistence()
+    {
+        await ClockGate.WaitAsync();
+        try
+        {
+            await using var db = CreateContext();
+            var dueAt = DateTime.UtcNow.AddHours(1);
+            var assessment = Assessment.Create(Guid.NewGuid(), "Boundary", AssessmentType.Assignment, 10, 6);
+            assessment.SetDeliverySchedule(null, dueAt, dueAt, false, null);
+            var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
+            db.AddRange(assessment, submission);
+            await db.SaveChangesAsync();
+            SystemClock.SetProvider(new SequenceTimeProvider(dueAt, dueAt.AddTicks(1)));
+            var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+
+            var result = await service.SubmitAsync(submission.Id);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value.SubmittedAt.Should().Be(dueAt);
+            result.Value.Status.Should().Be(SubmissionStatus.Submitted);
+        }
+        finally
+        {
+            SystemClock.Reset();
+            ClockGate.Release();
+        }
+    }
     [Fact]
     public async Task GetUserSubmissionsAsync_FiltersByEnrollmentAndActorUser()
     {
@@ -151,6 +181,33 @@ public sealed class InteractiveVideoCueServiceTests
         cues.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task UnlinkInteractiveVideoCueAsync_HardDeletesAndAllowsTheStableCueToBeRelinked()
+    {
+        await using var db = CreateContext();
+        var courseId = Guid.NewGuid();
+        var assessment = Assessment.Create(courseId, "Video checkpoint", AssessmentType.Quiz, 10, 6);
+        db.Set<Assessment>().Add(assessment);
+        await db.SaveChangesAsync();
+        var content = CreateVideoLesson(courseId);
+        var contents = new Mock<IProgramContentService>();
+        contents.Setup(service => service.GetContentByIdAsync(content.Id)).ReturnsAsync(content);
+        var service = new AssessmentService(db, contents.Object, NullLogger<AssessmentService>.Instance);
+
+        var linked = await service.LinkInteractiveVideoCueAsync(
+            assessment.Id,
+            new LinkInteractiveVideoCueRequest(content.Id, "checkpoint"));
+        var unlinked = await service.UnlinkInteractiveVideoCueAsync(assessment.Id, linked.Value.Id);
+        var relinked = await service.LinkInteractiveVideoCueAsync(
+            assessment.Id,
+            new LinkInteractiveVideoCueRequest(content.Id, "checkpoint"));
+
+        linked.IsSuccess.Should().BeTrue();
+        unlinked.IsSuccess.Should().BeTrue();
+        relinked.IsSuccess.Should().BeTrue();
+        (await db.Set<InteractiveVideoAssessmentCue>().CountAsync()).Should().Be(1);
+    }
+
     private static ProgramContent CreateVideoLesson(Guid courseId) => new()
     {
         Id = Guid.NewGuid(),
@@ -179,6 +236,17 @@ public sealed class InteractiveVideoCueServiceTests
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException("Transactions are not required for cue tests.");
+        }
+    }
+
+    private sealed class SequenceTimeProvider(params DateTime[] timestamps) : TimeProvider
+    {
+        private int _index;
+
+        public override DateTimeOffset GetUtcNow()
+        {
+            var timestamp = timestamps[Math.Min(_index++, timestamps.Length - 1)];
+            return new DateTimeOffset(timestamp, TimeSpan.Zero);
         }
     }
 }

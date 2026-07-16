@@ -234,6 +234,13 @@ public class AssessmentService : IAssessmentService
             .ToListAsync().ConfigureAwait(false);
     }
 
+    public async Task<AssessmentGroup?> GetAssessmentGroupByIdAsync(Guid id)
+    {
+        return await _context.Set<AssessmentGroup>()
+            .FirstOrDefaultAsync(group => group.Id == id && group.DeletedAt == null)
+            .ConfigureAwait(false);
+    }
+
     public async Task<Result<AssessmentGroup>> CreateAssessmentGroupAsync(CreateAssessmentGroupRequest request)
     {
         try
@@ -376,6 +383,9 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<InteractiveVideoAssessmentCue>(Error.NotFound("Assessment", "Assessment not found"));
             }
 
+            await using var lifecycleTransaction = await ProgramContentLifecycleDatabaseLock
+                .AcquireAsync(_context, [request.ContentId])
+                .ConfigureAwait(false);
             var content = await _programContentService.GetContentByIdAsync(request.ContentId).ConfigureAwait(false);
             if (content == null)
             {
@@ -412,6 +422,7 @@ public class AssessmentService : IAssessmentService
             var cue = assessment.AddInteractiveVideoCue(request.ContentId, cueId, request.CuePositionSeconds);
             _context.Set<InteractiveVideoAssessmentCue>().Add(cue);
             await _context.SaveChangesAsync().ConfigureAwait(false);
+            await ProgramContentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
 
             return Result.Success(cue);
         }
@@ -450,6 +461,29 @@ public class AssessmentService : IAssessmentService
         }
 
         return activeCues;
+    }
+
+    public async Task<IEnumerable<InteractiveVideoAssessmentCue>> GetInteractiveVideoCuesForContentAsync(
+        Guid assessmentId,
+        Guid contentId)
+    {
+        var cues = await GetInteractiveVideoCuesAsync(assessmentId).ConfigureAwait(false);
+        return cues.Where(cue => cue.ContentId == contentId).ToList();
+    }
+
+    public async Task<Result> UnlinkInteractiveVideoCueAsync(Guid assessmentId, Guid cueId)
+    {
+        var cue = await _context.Set<InteractiveVideoAssessmentCue>()
+            .FirstOrDefaultAsync(candidate => candidate.Id == cueId && candidate.AssessmentId == assessmentId)
+            .ConfigureAwait(false);
+        if (cue == null)
+        {
+            return Result.Failure(Error.NotFound("AssessmentCue", "Interactive-video assessment cue not found"));
+        }
+
+        _context.Set<InteractiveVideoAssessmentCue>().Remove(cue);
+        await _context.SaveChangesAsync().ConfigureAwait(false);
+        return Result.Success();
     }
 
     private async Task<Result> EnsureGroupMatchesCourseAsync(Guid? groupId, Guid courseId)
@@ -597,7 +631,8 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<AssessmentSubmission>(Error.NotFound("Assessment", "Assessment not found"));
             }
 
-            if (!assessment.TryGetSubmissionTiming(SystemClock.UtcNow, out var isLate))
+            var submittedAt = SystemClock.UtcNow;
+            if (!assessment.TryGetSubmissionTiming(submittedAt, out var isLate))
             {
                 return Result.Failure<AssessmentSubmission>(Error.Validation("Submission.Unavailable", "Assessment is not accepting submissions at this time"));
             }
@@ -607,7 +642,7 @@ public class AssessmentService : IAssessmentService
                 submission.SetPayload(request, assessment.SubmissionModalities);
             }
 
-            submission.Submit(isLate);
+            submission.Submit(isLate, submittedAt);
             _context.Set<AssessmentSubmission>().Update(submission);
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
