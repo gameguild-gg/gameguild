@@ -721,6 +721,68 @@ public sealed class LessonInteractionTrackingTests
     }
 
     [Fact]
+    public async Task SubmitContent_WhenSurveyPayloadIsMalformed_ShouldReject()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Survey", Type = ProgramContentType.Survey };
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = survey.ProgramId, UserId = Guid.NewGuid(), JoinedAt = SystemClock.UtcNow };
+        var interaction = new ContentInteraction { Id = Guid.NewGuid(), ProgramUserId = enrollment.Id, UserId = enrollment.UserId, ContentId = survey.Id, Content = survey };
+        context.AddRange(survey, enrollment, interaction);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(enrollment.UserId));
+
+        Func<Task> action = () => service.SubmitContentAsync(interaction.Id, """{"kind":"survey","answers":[]}""");
+
+        await action.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task StartContent_WhenSurveyAllowsOnlyOneResponse_ShouldRejectAnotherAttempt()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Survey", Type = ProgramContentType.Survey };
+        survey.SetActivitySettings(new SurveyActivitySettings(AllowMultipleResponses: false));
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = survey.ProgramId, UserId = Guid.NewGuid(), JoinedAt = SystemClock.UtcNow };
+        var response = new ContentInteraction { Id = Guid.NewGuid(), ProgramUserId = enrollment.Id, UserId = enrollment.UserId, ContentId = survey.Id, Content = survey, SubmittedAt = SystemClock.UtcNow };
+        context.AddRange(survey, enrollment, response);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(enrollment.UserId));
+
+        Func<Task> action = () => service.StartContentAsync(enrollment.Id, survey.Id);
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("This survey accepts only one response.");
+    }
+
+    [Fact]
+    public async Task GetSurveyResponses_ShouldReturnIdentityFreeResultsForAnonymousSurvey()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Survey", Type = ProgramContentType.Survey };
+        survey.SetActivitySettings(new SurveyActivitySettings(IsAnonymous: true, AllowMultipleResponses: true));
+        var learner = new ProgramUser { Id = Guid.NewGuid(), ProgramId = survey.ProgramId, UserId = Guid.NewGuid(), JoinedAt = SystemClock.UtcNow };
+        var response = new ContentInteraction
+        {
+            Id = Guid.NewGuid(),
+            ProgramUserId = learner.Id,
+            UserId = learner.UserId,
+            ContentId = survey.Id,
+            Content = survey,
+            SubmittedAt = SystemClock.UtcNow,
+            SubmissionData = """{"kind":"survey","answers":{"anonymous":true}}""",
+        };
+        context.AddRange(survey, learner, response);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid()));
+
+        var results = await service.GetSurveyResponsesAsync(survey.Id);
+
+        var result = results.Should().ContainSingle().Subject;
+        result.ResponseId.Should().Be(response.Id);
+        result.Answers["anonymous"].GetBoolean().Should().BeTrue();
+    }
+
+    [Fact]
     public async Task StartContent_WhenConcurrentRequestCreatesActiveAttempt_ShouldReturnWinner()
     {
         var databaseName = Guid.NewGuid().ToString();
