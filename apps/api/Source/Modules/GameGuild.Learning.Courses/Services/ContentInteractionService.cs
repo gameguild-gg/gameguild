@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -10,7 +11,8 @@ namespace GameGuild.Learning.Courses;
 /// </summary>
 public class ContentInteractionService(
   IApplicationDbContext context,
-  IRequestContextAccessor requestContextAccessor) : IContentInteractionService {
+  IRequestContextAccessor requestContextAccessor,
+  IPermissionQueryService? permissionQueryService = null) : IContentInteractionService {
   /// <summary> Start a new content interaction (or resume existing one if not submitted) </summary>
   public async Task<ContentInteraction> StartContentAsync(Guid programUserId, Guid contentId) {
     var currentUserId = requestContextAccessor.CurrentUserId;
@@ -32,6 +34,10 @@ public class ContentInteractionService(
       .ConfigureAwait(false);
     if (content is null) throw new InvalidOperationException("Content does not belong to the enrolled course.");
 
+    await using var surveyPolicyTransaction = content.Type == ProgramContentType.Survey
+      ? await ProgramContentLifecycleDatabaseLock.AcquireAsync(context, [contentId]).ConfigureAwait(false)
+      : null;
+
     // Check if there's already an interaction for this user/content
     var existingInteraction = await context.Set<ContentInteraction>()
       .Where(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId)
@@ -47,7 +53,9 @@ public class ContentInteractionService(
       if (existingInteraction.SubmittedAt.HasValue) {
         if (content.Type == ProgramContentType.Survey && !LearningActivityContract.AllowsMultipleResponses(content))
           throw new InvalidOperationException("This survey accepts only one response.");
-        return await CreateNewInteractionFromPreviousAsync(existingInteraction).ConfigureAwait(false);
+        var next = await CreateNewInteractionFromPreviousAsync(existingInteraction).ConfigureAwait(false);
+        await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
+        return next;
       }
 
       // Otherwise, resume the existing interaction
@@ -58,13 +66,16 @@ public class ContentInteractionService(
 
       await context.SaveChangesAsync().ConfigureAwait(false);
 
+      await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
       return existingInteraction;
     }
 
     // Create new interaction
     var newInteraction = new ContentInteraction { ProgramUserId = programUserId, UserId = programUser.UserId, ContentId = contentId, Status = ProgressStatus.InProgress, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, CompletionPercentage = 0 };
 
-    return await SaveNewActiveAttemptAsync(newInteraction).ConfigureAwait(false);
+    var created = await SaveNewActiveAttemptAsync(newInteraction).ConfigureAwait(false);
+    await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
+    return created;
   }
 
   /// <summary> Update progress for an interaction (only if not submitted) </summary>
@@ -86,6 +97,11 @@ public class ContentInteractionService(
   public async Task<ContentInteraction> SubmitContentAsync(Guid interactionId, string submissionData) {
     var interaction = await GetInteractionByIdAsync(interactionId).ConfigureAwait(false);
 
+    await using var surveyPolicyTransaction = interaction.Content.Type == ProgramContentType.Survey
+      ? await ProgramContentLifecycleDatabaseLock.AcquireAsync(context, [interaction.ContentId]).ConfigureAwait(false)
+      : null;
+    interaction = await GetInteractionByIdAsync(interactionId).ConfigureAwait(false);
+
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Interaction has already been submitted and cannot be changed.");
 
     if (LearningActivityContract.IsActivityType(interaction.Content.Type))
@@ -96,6 +112,7 @@ public class ContentInteractionService(
     interaction.Complete();
 
     await context.SaveChangesAsync().ConfigureAwait(false);
+    await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
 
     return interaction;
   }
@@ -141,12 +158,19 @@ public class ContentInteractionService(
   }
 
   /// <summary>Gets survey result projections without exposing learner or enrollment identity.</summary>
-  public async Task<IEnumerable<SurveyResponseResultDto>> GetSurveyResponsesAsync(Guid contentId) {
+  public async Task<IEnumerable<SurveyResponseResultDto>> GetSurveyResponsesAsync(Guid expectedProgramId, Guid contentId) {
+    var actorId = requestContextAccessor.CurrentUserId;
+    if (!requestContextAccessor.IsAuthenticated || !actorId.HasValue)
+      throw new RequestValidationException("Program management permission is required.");
+
     var content = await context.Set<ProgramContent>()
-      .FirstOrDefaultAsync(item => item.Id == contentId && item.DeletedAt == null)
+      .FirstOrDefaultAsync(item => item.Id == contentId && item.ProgramId == expectedProgramId && item.DeletedAt == null)
       .ConfigureAwait(false);
     if (content is null || content.Type != ProgramContentType.Survey)
-      throw new InvalidOperationException("Content is not a survey.");
+      throw new RequestValidationException("Survey content was not found for the specified program.");
+
+    if (!await HasProgramManagementAccessAsync(expectedProgramId, actorId.Value).ConfigureAwait(false))
+      throw new RequestValidationException("Program management permission is required.");
 
     var interactions = await context.Set<ContentInteraction>()
       .Where(item => item.ContentId == contentId && item.SubmittedAt != null && item.DeletedAt == null)
@@ -155,6 +179,20 @@ public class ContentInteractionService(
       .ConfigureAwait(false);
 
     return interactions.Select(SurveyResponseResultDto.FromInteraction).ToList();
+  }
+
+  private async Task<bool> HasProgramManagementAccessAsync(Guid programId, Guid actorId) {
+    if (!requestContextAccessor.CurrentTenantId.HasValue || permissionQueryService is null) return false;
+
+    foreach (var permission in new[] { PermissionType.Read, PermissionType.Edit, PermissionType.Create, PermissionType.Delete }) {
+      if (await permissionQueryService.HasTenantPermissionAsync(
+              actorId,
+              requestContextAccessor.CurrentTenantId,
+              $"{nameof(Program)}.{programId}.{permission}").ConfigureAwait(false))
+        return true;
+    }
+
+    return false;
   }
 
   /// <summary> Update time spent on content </summary>
