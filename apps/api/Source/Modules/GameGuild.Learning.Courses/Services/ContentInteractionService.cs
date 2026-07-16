@@ -29,14 +29,25 @@ public class ContentInteractionService(
       .ConfigureAwait(false);
     if (programUser == null) throw new RequestValidationException("Active course enrollment was not found.");
 
-    var content = await context.Set<ProgramContent>()
-      .FirstOrDefaultAsync(item => item.Id == contentId && item.ProgramId == programUser.ProgramId && item.DeletedAt == null)
+    var contentExists = await context.Set<ProgramContent>()
+      .AnyAsync(item => item.Id == contentId && item.ProgramId == programUser.ProgramId && item.DeletedAt == null)
       .ConfigureAwait(false);
-    if (content is null) throw new InvalidOperationException("Content does not belong to the enrolled course.");
+    if (!contentExists) throw new InvalidOperationException("Content does not belong to the enrolled course.");
 
-    await using var surveyPolicyTransaction = content.Type == ProgramContentType.Survey
-      ? await ProgramContentLifecycleDatabaseLock.AcquireAsync(context, [contentId]).ConfigureAwait(false)
-      : null;
+    await using var surveyPolicyTransaction = await ProgramContentLifecycleDatabaseLock
+      .AcquireAsync(context, [contentId]).ConfigureAwait(false);
+    var content = await context.Set<ProgramContent>()
+      .AsNoTracking()
+      .FirstOrDefaultAsync(item => item.Id == contentId && item.ProgramId == programUser.ProgramId && item.DeletedAt == null)
+      .ConfigureAwait(false)
+      ?? throw new InvalidOperationException("Content does not belong to the enrolled course.");
+
+    if (content.Type == ProgramContentType.Survey && !LearningActivityContract.AllowsMultipleResponses(content)) {
+      var alreadySubmitted = await context.Set<ContentInteraction>()
+        .AnyAsync(item => item.ProgramUserId == programUserId && item.ContentId == contentId && item.SubmittedAt != null && item.DeletedAt == null)
+        .ConfigureAwait(false);
+      if (alreadySubmitted) throw new InvalidOperationException("This survey accepts only one response.");
+    }
 
     // Check if there's already an interaction for this user/content
     var existingInteraction = await context.Set<ContentInteraction>()
@@ -51,8 +62,6 @@ public class ContentInteractionService(
 
       // If already submitted, create a new interaction based on the last one
       if (existingInteraction.SubmittedAt.HasValue) {
-        if (content.Type == ProgramContentType.Survey && !LearningActivityContract.AllowsMultipleResponses(content))
-          throw new InvalidOperationException("This survey accepts only one response.");
         var next = await CreateNewInteractionFromPreviousAsync(existingInteraction).ConfigureAwait(false);
         await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
         return next;
@@ -95,14 +104,26 @@ public class ContentInteractionService(
 
   /// <summary> Submit content interaction (makes it immutable) </summary>
   public async Task<ContentInteraction> SubmitContentAsync(Guid interactionId, string submissionData) {
-    var interaction = await GetInteractionByIdAsync(interactionId).ConfigureAwait(false);
+    var initialInteraction = await GetInteractionForSubmissionAsync(interactionId).ConfigureAwait(false);
 
-    await using var surveyPolicyTransaction = interaction.Content.Type == ProgramContentType.Survey
-      ? await ProgramContentLifecycleDatabaseLock.AcquireAsync(context, [interaction.ContentId]).ConfigureAwait(false)
-      : null;
-    interaction = await GetInteractionByIdAsync(interactionId).ConfigureAwait(false);
+    await using var surveyPolicyTransaction = await ProgramContentLifecycleDatabaseLock
+      .AcquireAsync(context, [initialInteraction.ContentId]).ConfigureAwait(false);
+    if (context is DbContext dbContext) dbContext.ChangeTracker.Clear();
+    var interaction = await GetInteractionForSubmissionAsync(interactionId).ConfigureAwait(false);
 
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Interaction has already been submitted and cannot be changed.");
+
+    if (interaction.Content.Type == ProgramContentType.Survey && !LearningActivityContract.AllowsMultipleResponses(interaction.Content)) {
+      var anotherResponseExists = await context.Set<ContentInteraction>()
+        .AnyAsync(item =>
+          item.Id != interaction.Id &&
+          item.ProgramUserId == interaction.ProgramUserId &&
+          item.ContentId == interaction.ContentId &&
+          item.SubmittedAt != null &&
+          item.DeletedAt == null)
+        .ConfigureAwait(false);
+      if (anotherResponseExists) throw new InvalidOperationException("This survey accepts only one response.");
+    }
 
     if (LearningActivityContract.IsActivityType(interaction.Content.Type))
       ActivityResponseContract.Parse(interaction.Content.Type, submissionData, interaction.Content.GetActivitySettings());
@@ -169,7 +190,7 @@ public class ContentInteractionService(
     if (content is null || content.Type != ProgramContentType.Survey)
       throw new RequestValidationException("Survey content was not found for the specified program.");
 
-    if (!await HasProgramManagementAccessAsync(expectedProgramId, actorId.Value).ConfigureAwait(false))
+    if (!await HasProgramReadAccessAsync(expectedProgramId, actorId.Value).ConfigureAwait(false))
       throw new RequestValidationException("Program management permission is required.");
 
     var interactions = await context.Set<ContentInteraction>()
@@ -181,18 +202,12 @@ public class ContentInteractionService(
     return interactions.Select(SurveyResponseResultDto.FromInteraction).ToList();
   }
 
-  private async Task<bool> HasProgramManagementAccessAsync(Guid programId, Guid actorId) {
-    if (!requestContextAccessor.CurrentTenantId.HasValue || permissionQueryService is null) return false;
-
-    foreach (var permission in new[] { PermissionType.Read, PermissionType.Edit, PermissionType.Create, PermissionType.Delete }) {
-      if (await permissionQueryService.HasTenantPermissionAsync(
-              actorId,
-              requestContextAccessor.CurrentTenantId,
-              $"{nameof(Program)}.{programId}.{permission}").ConfigureAwait(false))
-        return true;
-    }
-
-    return false;
+  private Task<bool> HasProgramReadAccessAsync(Guid programId, Guid actorId) {
+    if (!requestContextAccessor.CurrentTenantId.HasValue || permissionQueryService is null) return Task.FromResult(false);
+    return permissionQueryService.HasTenantPermissionAsync(
+      actorId,
+      requestContextAccessor.CurrentTenantId,
+      $"{nameof(Program)}.{programId}.{PermissionType.Read}");
   }
 
   /// <summary> Update time spent on content </summary>
@@ -218,6 +233,20 @@ public class ContentInteractionService(
       .FirstOrDefaultAsync(ci => ci.Id == interactionId && ci.UserId == currentUserId.Value)
       .ConfigureAwait(false);
 
+    if (interaction == null) throw new RequestValidationException("Content interaction was not found.");
+
+    return interaction;
+  }
+
+  private async Task<ContentInteraction> GetInteractionForSubmissionAsync(Guid interactionId) {
+    var currentUserId = requestContextAccessor.CurrentUserId;
+    if (!currentUserId.HasValue)
+      throw new RequestValidationException("Content interaction was not found.");
+
+    var interaction = await context.Set<ContentInteraction>()
+      .Include(ci => ci.Content)
+      .FirstOrDefaultAsync(ci => ci.Id == interactionId && ci.UserId == currentUserId.Value)
+      .ConfigureAwait(false);
     if (interaction == null) throw new RequestValidationException("Content interaction was not found.");
 
     return interaction;

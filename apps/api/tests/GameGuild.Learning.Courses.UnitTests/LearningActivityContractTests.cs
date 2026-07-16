@@ -37,7 +37,9 @@ public sealed class LearningActivityContractTests
     public static IEnumerable<object[]> ActivitySettingsCases =>
     [
         [ProgramContentType.Discussion, new DiscussionActivitySettings(true, false, 2, 200)],
+        [ProgramContentType.Discussion, new DiscussionActivitySettings(true, false, 1, 1)],
         [ProgramContentType.Reflection, new ReflectionActivitySettings(true, 3, 300)],
+        [ProgramContentType.Reflection, new ReflectionActivitySettings(true, 1, 1)],
         [ProgramContentType.Survey, new SurveyActivitySettings(true, true, SurveyResultsVisibility.AfterClose)],
     ];
 
@@ -116,6 +118,40 @@ public sealed class LearningActivityContractTests
         missingRoot.Should().Throw<InvalidOperationException>()
             .WithMessage("Discussion responses require a thread root.*");
         rooted.Should().BeOfType<DiscussionActivityResponse>();
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidSettingsCases))]
+    public void ValidateSettings_WhenSettingsAreInvalidOrForAnotherActivity_ShouldReject(
+        ProgramContentType contentType,
+        ActivitySettings settings)
+    {
+        var action = () => LearningActivityContract.ValidateSettings(contentType, settings);
+
+        action.Should().Throw<InvalidOperationException>();
+    }
+
+    public static IEnumerable<object[]> InvalidSettingsCases =>
+    [
+        [ProgramContentType.Discussion, new DiscussionActivitySettings(MinimumBodyLength: 0)],
+        [ProgramContentType.Discussion, new DiscussionActivitySettings(MinimumBodyLength: 10, MaximumBodyLength: 9)],
+        [ProgramContentType.Reflection, new ReflectionActivitySettings(MinimumBodyLength: 0)],
+        [ProgramContentType.Reflection, new ReflectionActivitySettings(MinimumBodyLength: 10, MaximumBodyLength: 9)],
+        [ProgramContentType.Discussion, new DiscussionActivitySettings(AllowReplies: false, RequireThreadRoot: true)],
+        [ProgramContentType.Discussion, new ReflectionActivitySettings()],
+        [ProgramContentType.Reflection, new SurveyActivitySettings()],
+        [ProgramContentType.Survey, new SurveyActivitySettings(ResultsVisibility: (SurveyResultsVisibility)99)],
+    ];
+
+    [Theory]
+    [MemberData(nameof(ActivitySettingsCases))]
+    public void ValidateSettings_WhenSettingsAreAtValidBoundaries_ShouldAccept(
+        ProgramContentType contentType,
+        ActivitySettings settings)
+    {
+        var action = () => LearningActivityContract.ValidateSettings(contentType, settings);
+
+        action.Should().NotThrow();
     }
 
     [Fact]

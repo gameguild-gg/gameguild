@@ -64,6 +64,81 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
         }
     }
 
+    [PostgreSqlFact]
+    public async Task InteractionSubmission_UsesFreshPolicyAndSerializesWithDirectSubmission()
+    {
+        var container = new PostgreSqlBuilder()
+            .WithImage("postgres:16-alpine")
+            .WithDatabase("survey_interaction_policy")
+            .WithUsername("test")
+            .WithPassword("test")
+            .WithCleanUp(true)
+            .Build();
+        await container.StartAsync();
+        try
+        {
+            var options = new DbContextOptionsBuilder<SurveyPolicyDbContext>()
+                .UseNpgsql(container.GetConnectionString())
+                .Options;
+            await using (var setup = new SurveyPolicyDbContext(options))
+            {
+                await setup.Database.EnsureCreatedAsync();
+            }
+
+            var single = await SeedSurveyAsync(options, allowMultipleResponses: false);
+            var activeId = await AddInteractionAsync(options, single, submitted: false);
+            await Task.WhenAll(
+                IgnoreSingleResponseRejectionAsync(SubmitInteractionAsync(options, single, activeId)),
+                IgnoreSingleResponseRejectionAsync(SubmitAsync(options, single)));
+            await using (var verify = new SurveyPolicyDbContext(options))
+            {
+                (await verify.Set<ContentInteraction>()
+                    .CountAsync(item => item.ContentId == single.ContentId && item.SubmittedAt != null)).Should().Be(1);
+            }
+
+            var multiple = await SeedSurveyAsync(options, allowMultipleResponses: true);
+            var multipleActiveId = await AddInteractionAsync(options, multiple, submitted: false);
+            var secondLearner = await AddEnrollmentAsync(options, multiple);
+            var responses = await Task.WhenAll(
+                SubmitInteractionAsync(options, multiple, multipleActiveId),
+                SubmitAsync(options, secondLearner));
+            var interactionResponse = responses[0];
+            var directResponse = responses[1];
+            interactionResponse.Id.Should().NotBe(directResponse.Id);
+            await using (var verify = new SurveyPolicyDbContext(options))
+            {
+                (await verify.Set<ContentInteraction>()
+                    .CountAsync(item => item.ContentId == multiple.ContentId && item.SubmittedAt != null)).Should().Be(2);
+            }
+
+            var stale = await SeedSurveyAsync(options, allowMultipleResponses: true);
+            await AddInteractionAsync(options, stale, submitted: true);
+            var staleActiveId = await AddInteractionAsync(options, stale, submitted: false);
+            await using var staleContext = new SurveyPolicyDbContext(options);
+            _ = await staleContext.Set<ContentInteraction>()
+                .Include(item => item.Content)
+                .SingleAsync(item => item.Id == staleActiveId);
+            await UpdateSurveyPolicyAsync(options, stale.ContentId, allowMultipleResponses: false);
+            var staleService = new ContentInteractionService(staleContext, new TestRequestContextAccessor(stale.UserId));
+
+            Func<Task> staleSubmit = () => staleService.SubmitContentAsync(
+                staleActiveId,
+                """{"kind":"survey","answers":{"fresh":true}}""");
+
+            await staleSubmit.Should().ThrowAsync<InvalidOperationException>()
+                .WithMessage("This survey accepts only one response.");
+            await using (var verify = new SurveyPolicyDbContext(options))
+            {
+                (await verify.Set<ContentInteraction>()
+                    .CountAsync(item => item.ContentId == stale.ContentId && item.SubmittedAt != null)).Should().Be(1);
+            }
+        }
+        finally
+        {
+            await container.DisposeAsync();
+        }
+    }
+
     private static async Task<(Guid ProgramId, Guid UserId, Guid EnrollmentId, Guid ContentId)> SeedSurveyAsync(
         DbContextOptions<SurveyPolicyDbContext> options,
         bool allowMultipleResponses)
@@ -93,6 +168,69 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
             """{"kind":"survey","answers":{"answer":true}}"""))!;
     }
 
+    private static async Task<ContentInteraction> SubmitInteractionAsync(
+        DbContextOptions<SurveyPolicyDbContext> options,
+        (Guid ProgramId, Guid UserId, Guid EnrollmentId, Guid ContentId) survey,
+        Guid interactionId)
+    {
+        await using var context = new SurveyPolicyDbContext(options);
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(survey.UserId));
+        return await service.SubmitContentAsync(
+            interactionId,
+            """{"kind":"survey","answers":{"interaction":true}}""");
+    }
+
+    private static async Task<Guid> AddInteractionAsync(
+        DbContextOptions<SurveyPolicyDbContext> options,
+        (Guid ProgramId, Guid UserId, Guid EnrollmentId, Guid ContentId) survey,
+        bool submitted)
+    {
+        await using var context = new SurveyPolicyDbContext(options);
+        var interaction = new ContentInteraction
+        {
+            Id = Guid.NewGuid(),
+            ProgramUserId = survey.EnrollmentId,
+            UserId = survey.UserId,
+            ContentId = survey.ContentId,
+            Status = submitted
+                ? GameGuild.Learning.Courses.ProgressStatus.Completed
+                : GameGuild.Learning.Courses.ProgressStatus.InProgress,
+            SubmittedAt = submitted ? SystemClock.UtcNow : null,
+            SubmissionData = submitted ? """{"kind":"survey","answers":{"existing":true}}""" : null,
+        };
+        context.Add(interaction);
+        await context.SaveChangesAsync();
+        return interaction.Id;
+    }
+
+    private static async Task<(Guid ProgramId, Guid UserId, Guid EnrollmentId, Guid ContentId)> AddEnrollmentAsync(
+        DbContextOptions<SurveyPolicyDbContext> options,
+        (Guid ProgramId, Guid UserId, Guid EnrollmentId, Guid ContentId) survey)
+    {
+        await using var context = new SurveyPolicyDbContext(options);
+        var learner = new ProgramUser
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = survey.ProgramId,
+            UserId = Guid.NewGuid(),
+            IsActive = true,
+        };
+        context.Add(learner);
+        await context.SaveChangesAsync();
+        return (survey.ProgramId, learner.UserId, learner.Id, survey.ContentId);
+    }
+
+    private static async Task UpdateSurveyPolicyAsync(
+        DbContextOptions<SurveyPolicyDbContext> options,
+        Guid contentId,
+        bool allowMultipleResponses)
+    {
+        await using var context = new SurveyPolicyDbContext(options);
+        var content = await context.Set<ProgramContent>().SingleAsync(item => item.Id == contentId);
+        content.SetActivitySettings(new SurveyActivitySettings(AllowMultipleResponses: allowMultipleResponses));
+        await context.SaveChangesAsync();
+    }
+
     private static async Task StartAsync(
         DbContextOptions<SurveyPolicyDbContext> options,
         (Guid ProgramId, Guid UserId, Guid EnrollmentId, Guid ContentId) survey)
@@ -108,7 +246,9 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
         {
             await start;
         }
-        catch (InvalidOperationException exception) when (exception.Message == "This survey accepts only one response.")
+        catch (InvalidOperationException exception) when (
+            exception.Message == "This survey accepts only one response." ||
+            exception.Message == "Interaction has already been submitted and cannot be changed.")
         {
         }
     }

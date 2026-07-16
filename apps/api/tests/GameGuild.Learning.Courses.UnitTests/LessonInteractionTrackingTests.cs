@@ -776,7 +776,7 @@ public sealed class LessonInteractionTrackingTests
         var service = new ContentInteractionService(
             context,
             new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()),
-            CreateManagerPermissions());
+            CreatePermissions(PermissionType.Read));
 
         var results = await service.GetSurveyResponsesAsync(survey.ProgramId, survey.Id);
 
@@ -807,6 +807,27 @@ public sealed class LessonInteractionTrackingTests
         context.Add(survey);
         await context.SaveChangesAsync();
         var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()), new Mock<IPermissionQueryService>().Object);
+
+        Func<Task> action = () => service.GetSurveyResponsesAsync(survey.ProgramId, survey.Id);
+
+        await action.Should().ThrowAsync<RequestValidationException>();
+    }
+
+    [Theory]
+    [InlineData(PermissionType.Create)]
+    [InlineData(PermissionType.Delete)]
+    [InlineData(PermissionType.Edit)]
+    public async Task GetSurveyResponses_WhenActorLacksProgramReadPermission_ShouldReject(PermissionType grantedPermission)
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Survey", Type = ProgramContentType.Survey };
+        context.Add(survey);
+        await context.SaveChangesAsync();
+        var managerId = Guid.NewGuid();
+        var service = new ContentInteractionService(
+            context,
+            new TestRequestContextAccessor(managerId, Guid.NewGuid()),
+            CreatePermissions(grantedPermission));
 
         Func<Task> action = () => service.GetSurveyResponsesAsync(survey.ProgramId, survey.Id);
 
@@ -879,6 +900,16 @@ public sealed class LessonInteractionTrackingTests
         permissions.Setup(service => service.HasTenantPermissionAsync(
                 It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+        return permissions.Object;
+    }
+
+    private static IPermissionQueryService CreatePermissions(PermissionType grantedPermission)
+    {
+        var permissions = new Mock<IPermissionQueryService>();
+        permissions.Setup(service => service.HasTenantPermissionAsync(
+                It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid? _, Guid? _, string permission, CancellationToken _) =>
+                permission.EndsWith($".{grantedPermission}", StringComparison.Ordinal));
         return permissions.Object;
     }
 

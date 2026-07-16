@@ -184,17 +184,33 @@ public sealed class ProgramWriteServiceTests
         context.AddRange(graph.Program, graph.Content, graph.Enrollment);
         await context.SaveChangesAsync();
         var managerId = Guid.NewGuid();
-        var permissions = new Mock<IPermissionQueryService>();
-        permissions.Setup(service => service.HasTenantPermissionAsync(
-                managerId, It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-        var service = CreateSubmissionService(context, managerId, Guid.NewGuid(), permissions.Object);
+        var service = CreateSubmissionService(context, managerId, Guid.NewGuid(), CreatePermissions(PermissionType.Edit));
 
         var submitted = await service.SubmitUserContentAsync(
             graph.Program.Id, graph.Enrollment.UserId, graph.Content.Id, "manual submission");
 
         submitted.Should().NotBeNull();
         submitted!.UserId.Should().Be(graph.Enrollment.UserId);
+    }
+
+    [Theory]
+    [InlineData(PermissionType.Read)]
+    [InlineData(PermissionType.Create)]
+    [InlineData(PermissionType.Delete)]
+    public async Task SubmitUserContentAsync_WhenActorOnlyHasNonMutationProgramPermission_ShouldRejectManualSubmission(PermissionType grantedPermission)
+    {
+        await using var context = CreateContext();
+        var graph = CreateAttemptGraph();
+        context.AddRange(graph.Program, graph.Content, graph.Enrollment);
+        await context.SaveChangesAsync();
+        var managerId = Guid.NewGuid();
+        var permissions = CreatePermissions(grantedPermission);
+        var service = CreateSubmissionService(context, managerId, Guid.NewGuid(), permissions);
+
+        Func<Task> action = () => service.SubmitUserContentAsync(
+            graph.Program.Id, graph.Enrollment.UserId, graph.Content.Id, "manual submission");
+
+        await action.Should().ThrowAsync<RequestValidationException>();
     }
 
     [Fact]
@@ -558,6 +574,16 @@ public sealed class ProgramWriteServiceTests
         Guid? tenantId = null,
         IPermissionQueryService? permissions = null) =>
         new(context, requestContextAccessor: new TestRequestContextAccessor(userId, tenantId), permissionQueryService: permissions);
+
+    private static IPermissionQueryService CreatePermissions(PermissionType grantedPermission)
+    {
+        var permissions = new Mock<IPermissionQueryService>();
+        permissions.Setup(service => service.HasTenantPermissionAsync(
+                It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid? _, Guid? _, string permission, CancellationToken _) =>
+                permission.EndsWith($".{grantedPermission}", StringComparison.Ordinal));
+        return permissions.Object;
+    }
 
     private sealed class TestRequestContextAccessor(Guid userId, Guid? tenantId = null) : IRequestContextAccessor
     {

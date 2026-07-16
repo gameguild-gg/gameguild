@@ -477,7 +477,7 @@ public class ProgramWriteService(
     var actorId = requestContextAccessor?.CurrentUserId;
     if (requestContextAccessor?.IsAuthenticated != true || !actorId.HasValue)
       throw new RequestValidationException("An authenticated actor is required to submit course content.");
-    if (actorId.Value != userId && !await HasProgramManagementAccessAsync(programId, actorId.Value).ConfigureAwait(false))
+    if (actorId.Value != userId && !await HasProgramEditAccessAsync(programId, actorId.Value).ConfigureAwait(false))
       throw new RequestValidationException("Program management permission is required to submit content for another learner.");
 
     var programUser = await context.Set<ProgramUser>()
@@ -486,18 +486,22 @@ public class ProgramWriteService(
 
     if (programUser == null) return null;
 
-    var content = await context.Set<ProgramContent>()
-      .FirstOrDefaultAsync(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)
+    var contentExists = await context.Set<ProgramContent>()
+      .AnyAsync(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)
       .ConfigureAwait(false);
 
+    if (!contentExists) return null;
+
+    await using var surveyPolicyTransaction = await ProgramContentLifecycleDatabaseLock
+      .AcquireAsync(context, [contentId]).ConfigureAwait(false);
+    var content = await context.Set<ProgramContent>()
+      .AsNoTracking()
+      .FirstOrDefaultAsync(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)
+      .ConfigureAwait(false);
     if (content == null) return null;
 
     if (LearningActivityContract.IsActivityType(content.Type))
       ActivityResponseContract.Parse(content.Type, submissionData, content.GetActivitySettings());
-
-    await using var surveyPolicyTransaction = content.Type == ProgramContentType.Survey
-      ? await ProgramContentLifecycleDatabaseLock.AcquireAsync(context, [contentId]).ConfigureAwait(false)
-      : null;
 
     var now = SystemClock.UtcNow;
     var interaction = await context.Set<ContentInteraction>()
@@ -507,7 +511,19 @@ public class ProgramWriteService(
       .FirstOrDefaultAsync()
       .ConfigureAwait(false);
 
-    if (interaction?.SubmittedAt != null && !LearningActivityContract.AllowsMultipleResponses(content))
+    if (content.Type == ProgramContentType.Survey && !LearningActivityContract.AllowsMultipleResponses(content))
+    {
+      var existingResponse = await context.Set<ContentInteraction>()
+        .Where(ci => ci.ProgramUserId == programUser.Id && ci.ContentId == contentId && ci.SubmittedAt != null && ci.DeletedAt == null)
+        .OrderByDescending(ci => ci.SubmittedAt)
+        .FirstOrDefaultAsync()
+        .ConfigureAwait(false);
+      if (existingResponse is not null) {
+        await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
+        return existingResponse;
+      }
+    }
+    else if (content.Type != ProgramContentType.Survey && interaction?.SubmittedAt != null)
     {
       await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
       return interaction;
@@ -557,20 +573,13 @@ public class ProgramWriteService(
     return interaction;
   }
 
-  private async Task<bool> HasProgramManagementAccessAsync(Guid programId, Guid actorId)
+  private Task<bool> HasProgramEditAccessAsync(Guid programId, Guid actorId)
   {
-    if (!requestContextAccessor!.CurrentTenantId.HasValue || permissionQueryService is null) return false;
-
-    foreach (var permission in new[] { PermissionType.Read, PermissionType.Edit, PermissionType.Create, PermissionType.Delete })
-    {
-      if (await permissionQueryService.HasTenantPermissionAsync(
-              actorId,
-              requestContextAccessor.CurrentTenantId,
-              $"{nameof(Program)}.{programId}.{permission}").ConfigureAwait(false))
-        return true;
-    }
-
-    return false;
+    if (!requestContextAccessor!.CurrentTenantId.HasValue || permissionQueryService is null) return Task.FromResult(false);
+    return permissionQueryService.HasTenantPermissionAsync(
+      actorId,
+      requestContextAccessor.CurrentTenantId,
+      $"{nameof(Program)}.{programId}.{PermissionType.Edit}");
   }
 
   public async Task<bool> MarkContentCompletedAsync(Guid programId, Guid userId, Guid contentId)
