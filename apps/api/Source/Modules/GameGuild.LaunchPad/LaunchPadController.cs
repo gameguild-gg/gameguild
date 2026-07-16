@@ -11,30 +11,34 @@ namespace GameGuild.LaunchPad;
 public sealed class LaunchPadController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<LaunchPlan>>> GetDashboard([FromQuery] LaunchPlanStatus? status = null)
+    public async Task<ActionResult<IReadOnlyList<LaunchPlan>>> GetDashboard(
+        [FromQuery] LaunchPlanStatus? status = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetLaunchPadDashboardQuery { Status = status }).ConfigureAwait(false);
+        var result = await mediator.Send(new GetLaunchPadDashboardQuery { Status = status }, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess ? Ok(result.Value) : ToActionResult(result);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<LaunchPlan>> GetLaunchPlan(Guid id)
+    public async Task<ActionResult<LaunchPlan>> GetLaunchPlan(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetLaunchPlanQuery { LaunchPlanId = id }).ConfigureAwait(false);
+        var result = await mediator.Send(new GetLaunchPlanQuery { LaunchPlanId = id }, cancellationToken).ConfigureAwait(false);
         if (result.IsFailure) return ToActionResult(result);
         return result.Value == null ? NotFound() : Ok(result.Value);
     }
 
     [HttpGet("projects/{projectId:guid}")]
-    public async Task<ActionResult<LaunchPlan>> GetProjectLaunchPlan(Guid projectId)
+    public async Task<ActionResult<LaunchPlan>> GetProjectLaunchPlan(Guid projectId, CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetLaunchPlanByProjectQuery { ProjectId = projectId }).ConfigureAwait(false);
+        var result = await mediator.Send(new GetLaunchPlanByProjectQuery { ProjectId = projectId }, cancellationToken).ConfigureAwait(false);
         if (result.IsFailure) return ToActionResult(result);
         return result.Value == null ? NotFound() : Ok(result.Value);
     }
 
     [HttpPost]
-    public async Task<ActionResult<LaunchPlan>> CreateLaunchPlan([FromBody] CreateLaunchPlanRequest request)
+    public async Task<ActionResult<LaunchPlan>> CreateLaunchPlan(
+        [FromBody] CreateLaunchPlanRequest request,
+        CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(new CreateLaunchPlanCommand
         {
@@ -44,28 +48,31 @@ public sealed class LaunchPadController(IMediator mediator) : ControllerBase
             TargetLaunchAt = request.TargetLaunchAt,
             Channels = request.Channels,
             ChecklistItems = request.ChecklistItems
-        }).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
 
         if (result.IsFailure) return ToActionResult(result);
         return CreatedAtAction(nameof(GetLaunchPlan), new { id = result.Value.Id }, result.Value);
     }
 
     [HttpPost("{id:guid}/checklist/{itemId:guid}:complete")]
-    public async Task<ActionResult<LaunchPlan>> CompleteChecklistItem(Guid id, Guid itemId)
+    public async Task<ActionResult<LaunchPlan>> CompleteChecklistItem(
+        Guid id,
+        Guid itemId,
+        CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(new CompleteLaunchChecklistItemCommand
         {
             LaunchPlanId = id,
             ChecklistItemId = itemId
-        }).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
 
         return result.IsSuccess ? Ok(result.Value) : ToActionResult(result);
     }
 
     [HttpPost("{id:guid}:publish")]
-    public async Task<ActionResult<LaunchPlan>> PublishLaunch(Guid id)
+    public async Task<ActionResult<LaunchPlan>> PublishLaunch(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new PublishLaunchCommand { LaunchPlanId = id }).ConfigureAwait(false);
+        var result = await mediator.Send(new PublishLaunchCommand { LaunchPlanId = id }, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess ? Ok(result.Value) : ToActionResult(result);
     }
 

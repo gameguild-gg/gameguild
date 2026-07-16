@@ -367,6 +367,7 @@ public sealed class SessionProjectControllerTests
         var mediator = new Mock<IMediator>();
         var sessionId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
+        using var cancellation = new CancellationTokenSource();
         mediator.Setup(candidate => candidate.Send(
                 It.IsAny<IRequest<Result<SessionProjectProjection>>>(),
                 It.IsAny<CancellationToken>()))
@@ -377,11 +378,46 @@ public sealed class SessionProjectControllerTests
             Mock.Of<IActorContextAccessor>(),
             NullLogger<TestingSessionsController>.Instance);
 
-        var result = await controller.LinkSessionProject(sessionId, new LinkSessionProjectRequest(projectId));
+        var result = await controller.LinkSessionProject(
+            sessionId,
+            new LinkSessionProjectRequest(projectId),
+            cancellation.Token);
 
         result.Result.Should().BeOfType<CreatedAtActionResult>();
         mediator.Verify(candidate => candidate.Send(
             It.Is<LinkSessionProjectCommand>(command => command.SessionId == sessionId && command.ProjectId == projectId),
-            It.IsAny<CancellationToken>()), Times.Once);
+            cancellation.Token), Times.Once);
+    }
+
+    [Fact]
+    public async Task SessionProject_Actions_Should_Forward_CancellationToken_To_Cqrs()
+    {
+        var mediator = new Mock<IMediator>();
+        var sessionId = Guid.NewGuid();
+        var projectId = Guid.NewGuid();
+        using var cancellation = new CancellationTokenSource();
+        mediator.Setup(candidate => candidate.Send(
+                It.IsAny<IRequest<Result<IReadOnlyList<SessionProjectProjection>>>>(),
+                cancellation.Token))
+            .ReturnsAsync(Result.Success<IReadOnlyList<SessionProjectProjection>>([]));
+        mediator.Setup(candidate => candidate.Send(
+                It.IsAny<IRequest<Result<bool>>>(),
+                cancellation.Token))
+            .ReturnsAsync(Result.Success(true));
+        var controller = new TestingSessionsController(
+            Mock.Of<ITestingSessionOperations>(),
+            mediator.Object,
+            Mock.Of<IActorContextAccessor>(),
+            NullLogger<TestingSessionsController>.Instance);
+
+        await controller.GetSessionProjects(sessionId, cancellationToken: cancellation.Token);
+        await controller.UnlinkSessionProject(sessionId, projectId, cancellation.Token);
+
+        mediator.Verify(candidate => candidate.Send(
+            It.Is<GetSessionProjectLinksQuery>(query => query.SessionId == sessionId),
+            cancellation.Token), Times.Once);
+        mediator.Verify(candidate => candidate.Send(
+            It.Is<UnlinkSessionProjectCommand>(command => command.SessionId == sessionId && command.ProjectId == projectId),
+            cancellation.Token), Times.Once);
     }
 }
