@@ -482,6 +482,15 @@ public sealed class ProgramWriteServiceTests
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                if (entry.Entity is EntityBase<Guid> entity &&
+                    (entry.State == EntityState.Added || entry.State == EntityState.Modified))
+                {
+                    entry.Property(nameof(EntityBase<Guid>.Version)).CurrentValue = entity.Version + 1;
+                }
+            }
+
             var beforeInteractionSave = BeforeInteractionSaveAsync;
             var hasAddedInteraction = ChangeTracker.Entries<ContentInteraction>()
                 .Any(entry => entry.State == EntityState.Added);

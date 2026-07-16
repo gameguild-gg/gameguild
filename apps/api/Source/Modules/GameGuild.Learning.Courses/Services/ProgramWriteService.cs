@@ -468,8 +468,12 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     programUser.Touch();
 
     if (isNewInteraction)
-      interaction = await SaveDirectSubmissionAsync(interaction!, submissionData, now)
+    {
+      var saveResult = await SaveDirectSubmissionAsync(interaction!, submissionData, now)
         .ConfigureAwait(false);
+      interaction = saveResult.Interaction;
+      if (saveResult.IsConcurrentReplay) return interaction;
+    }
     else
       await context.SaveChangesAsync().ConfigureAwait(false);
     await RecalculateUserProgressAsync(programUser.Id).ConfigureAwait(false);
@@ -798,7 +802,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     return new Guid(hash[..16]);
   }
 
-  private async Task<ContentInteraction> SaveDirectSubmissionAsync(
+  private async Task<(ContentInteraction Interaction, bool IsConcurrentReplay)> SaveDirectSubmissionAsync(
     ContentInteraction newInteraction,
     string submissionData,
     DateTime now)
@@ -807,7 +811,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     try
     {
       await context.SaveChangesAsync().ConfigureAwait(false);
-      return newInteraction;
+      return (newInteraction, false);
     }
     catch (DbUpdateException)
     {
@@ -822,9 +826,10 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
       {
         winningInteraction.Restore();
         SubmitInteraction(winningInteraction, newInteraction.UserId, submissionData, now);
+        return (winningInteraction, false);
       }
 
-      return winningInteraction;
+      return (winningInteraction, true);
     }
   }
 
