@@ -73,6 +73,8 @@ public sealed class LaunchPadController(IMediator mediator) : ControllerBase
         => result.Error.Type switch
         {
             ErrorType.NotFound => NotFound(result.Error),
+            ErrorType.Unauthorized => StatusCode(StatusCodes.Status401Unauthorized, result.Error),
+            ErrorType.Forbidden => StatusCode(StatusCodes.Status403Forbidden, result.Error),
             ErrorType.Conflict => Conflict(result.Error),
             ErrorType.Validation => BadRequest(result.Error),
             _ => StatusCode(StatusCodes.Status500InternalServerError, result.Error)
