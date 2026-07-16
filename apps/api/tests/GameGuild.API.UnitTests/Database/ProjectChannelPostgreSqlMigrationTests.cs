@@ -12,24 +12,57 @@ namespace GameGuild.API.UnitTests.Database;
 public sealed class ProjectChannelPostgreSqlMigrationTests
 {
     [DockerFact]
-    public async Task Up_Fails_Clearly_When_Active_Session_Project_Duplicates_Already_Exist()
+    public async Task Up_Repairs_Active_Session_Project_Duplicates_Reconciles_Counts_And_Enforces_Uniqueness()
     {
         await using var container = await StartPostgresAsync("project_channel_duplicates");
         await using var connection = new NpgsqlConnection(container.GetConnectionString());
         await connection.OpenAsync();
         await CreatePrerequisiteTablesAsync(connection);
         var sessionId = Guid.NewGuid();
+        var emptySessionId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
+        var remainingProjectId = Guid.NewGuid();
+        var survivorId = Guid.Parse("00000000-0000-0000-0000-000000000001");
         await ExecuteAsync(connection, $"""
-            INSERT INTO session_projects ("Id", "SessionId", "ProjectId", "IsActive", "DeletedAt") VALUES
-            ('{Guid.NewGuid()}', '{sessionId}', '{projectId}', TRUE, NULL),
-            ('{Guid.NewGuid()}', '{sessionId}', '{projectId}', TRUE, NULL);
+            INSERT INTO testing_sessions ("Id", "RegisteredProjectCount") VALUES
+            ('{sessionId}', 99),
+            ('{emptySessionId}', 99);
+            INSERT INTO session_projects
+                ("Id", "SessionId", "ProjectId", "IsActive", "DeletedAt", "CreatedAt", "UpdatedAt")
+            VALUES
+            ('00000000-0000-0000-0000-000000000003', '{sessionId}', '{projectId}', TRUE, NULL, '2026-01-03T00:00:00Z', '2026-01-03T00:00:00Z'),
+            ('{survivorId}', '{sessionId}', '{projectId}', TRUE, NULL, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z'),
+            ('00000000-0000-0000-0000-000000000002', '{sessionId}', '{projectId}', TRUE, NULL, '2026-01-02T00:00:00Z', '2026-01-02T00:00:00Z'),
+            ('{Guid.NewGuid()}', '{sessionId}', '{remainingProjectId}', TRUE, NULL, '2026-01-04T00:00:00Z', '2026-01-04T00:00:00Z');
             """);
 
-        var action = () => ApplyUpAsync(connection);
+        await ApplyUpAsync(connection);
 
-        await action.Should().ThrowAsync<PostgresException>()
-            .WithMessage("*duplicate active session_projects links*");
+        (await ScalarAsync<long>(connection, $"""
+            SELECT count(*) FROM session_projects
+            WHERE "SessionId" = '{sessionId}' AND "ProjectId" = '{projectId}'
+              AND "IsActive" = TRUE AND "DeletedAt" IS NULL;
+            """)).Should().Be(1);
+        (await ScalarAsync<Guid>(connection, $"""
+            SELECT "Id" FROM session_projects
+            WHERE "SessionId" = '{sessionId}' AND "ProjectId" = '{projectId}'
+              AND "IsActive" = TRUE AND "DeletedAt" IS NULL;
+            """)).Should().Be(survivorId);
+        (await ScalarAsync<long>(connection, $"""
+            SELECT count(*) FROM session_projects
+            WHERE "SessionId" = '{sessionId}' AND "ProjectId" = '{projectId}'
+              AND "IsActive" = FALSE AND "DeletedAt" IS NOT NULL;
+            """)).Should().Be(2);
+        (await ScalarAsync<int>(connection, $"SELECT \"RegisteredProjectCount\" FROM testing_sessions WHERE \"Id\" = '{sessionId}';"))
+            .Should().Be(2);
+        (await ScalarAsync<int>(connection, $"SELECT \"RegisteredProjectCount\" FROM testing_sessions WHERE \"Id\" = '{emptySessionId}';"))
+            .Should().Be(0);
+        await RejectAsync(connection, $"""
+            INSERT INTO session_projects
+                ("Id", "SessionId", "ProjectId", "IsActive", "DeletedAt", "CreatedAt", "UpdatedAt")
+            VALUES
+                ('{Guid.NewGuid()}', '{sessionId}', '{projectId}', TRUE, NULL, now(), now());
+            """);
     }
 
     [DockerFact]
@@ -87,13 +120,18 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
         => await ExecuteAsync(connection, """
             CREATE TABLE projects ("Id" uuid PRIMARY KEY);
             CREATE TABLE "Products" ("Id" uuid PRIMARY KEY);
+            CREATE TABLE testing_sessions (
+                "Id" uuid PRIMARY KEY,
+                "RegisteredProjectCount" integer NOT NULL);
             CREATE TABLE session_projects (
                 "Id" uuid PRIMARY KEY,
                 "SessionId" uuid NOT NULL,
                 "ProjectId" uuid NOT NULL,
                 "IsActive" boolean NOT NULL,
                 "DeletedAt" timestamp with time zone NULL,
-                "TenantId" uuid NULL);
+                "TenantId" uuid NULL,
+                "CreatedAt" timestamp with time zone NOT NULL DEFAULT now(),
+                "UpdatedAt" timestamp with time zone NOT NULL DEFAULT now());
             CREATE INDEX "IX_session_projects_SessionId" ON session_projects ("SessionId");
             """);
 
