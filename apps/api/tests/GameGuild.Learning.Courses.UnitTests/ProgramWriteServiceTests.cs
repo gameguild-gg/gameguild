@@ -11,6 +11,39 @@ namespace GameGuild.Learning.Courses.UnitTests;
 
 public sealed class ProgramWriteServiceTests
 {
+    [Theory]
+    [MemberData(nameof(ActivityContentSettings))]
+    public async Task CloneProgramAsync_ShouldPreserveActivitySettings(
+        ProgramContentType type,
+        ActivitySettings settings)
+    {
+        await using var context = CreateCloneContext();
+        var program = CreateProgram();
+        var content = new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            Title = type.ToString(),
+            Type = type,
+        };
+        content.SetActivitySettings(settings);
+        program.ProgramContents.Add(content);
+        context.Add(program);
+        await context.SaveChangesAsync();
+
+        var cloned = await new ProgramWriteService(context).CloneProgramAsync(program.Id, "Cloned course");
+
+        cloned.ProgramContents.Should().ContainSingle();
+        cloned.ProgramContents.Single().GetActivitySettings().Should().Be(settings);
+    }
+
+    public static IEnumerable<object[]> ActivityContentSettings =>
+    [
+        [ProgramContentType.Discussion, new DiscussionActivitySettings(AllowReplies: false, RequireThreadRoot: false, MinimumBodyLength: 5, MaximumBodyLength: 100)],
+        [ProgramContentType.Reflection, new ReflectionActivitySettings(PrivateToInstructors: false, MinimumBodyLength: 5, MaximumBodyLength: 100)],
+        [ProgramContentType.Survey, new SurveyActivitySettings(IsAnonymous: true, AllowMultipleResponses: true, ResultsVisibility: SurveyResultsVisibility.AfterClose)],
+    ];
+
     [Fact]
     public async Task UpdateProgramAsync_ShouldClearNullableEnrollmentControls()
     {
@@ -568,6 +601,14 @@ public sealed class ProgramWriteServiceTests
         return new LearningCoursesTestContext(options);
     }
 
+    private static CloneTestContext CreateCloneContext()
+    {
+        var options = new DbContextOptionsBuilder<CloneTestContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        return new CloneTestContext(options);
+    }
+
     private static ProgramWriteService CreateSubmissionService(
         IApplicationDbContext context,
         Guid userId,
@@ -679,6 +720,43 @@ public sealed class ProgramWriteServiceTests
         {
             throw new NotSupportedException("Transactions are not needed for these service tests.");
         }
+    }
+
+    private sealed class CloneTestContext(DbContextOptions<CloneTestContext> options)
+        : DbContext(options), IApplicationDbContext
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Program>(entity =>
+            {
+                entity.Ignore(program => program.ProgramUsers);
+                entity.Ignore(program => program.ProgramRatings);
+                entity.Ignore(program => program.ProgramWishlists);
+            });
+            modelBuilder.Entity<ProgramContent>(entity =>
+            {
+                entity.Ignore(content => content.Parent);
+                entity.Ignore(content => content.Children);
+                entity.Ignore(content => content.ContentInteractions);
+                entity.HasOne(content => content.Program)
+                    .WithMany(program => program.ProgramContents)
+                    .HasForeignKey(content => content.ProgramId);
+            });
+            modelBuilder.Entity<ProgramUser>(entity =>
+            {
+                entity.Ignore(enrollment => enrollment.User);
+                entity.Ignore(enrollment => enrollment.ContentInteractions);
+                entity.Ignore(enrollment => enrollment.ReceivedGrades);
+                entity.Ignore(enrollment => enrollment.GivenGrades);
+                entity.Ignore(enrollment => enrollment.ProgramRatings);
+                entity.HasOne(enrollment => enrollment.Program)
+                    .WithMany(program => program.ProgramUsers)
+                    .HasForeignKey(enrollment => enrollment.ProgramId);
+            });
+        }
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException("Transactions are not needed for these service tests.");
     }
 
     private sealed record AttemptGraph(
