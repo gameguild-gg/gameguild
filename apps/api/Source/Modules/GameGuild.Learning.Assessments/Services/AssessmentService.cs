@@ -1,3 +1,4 @@
+using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -9,11 +10,16 @@ namespace GameGuild.Learning.Assessments;
 public class AssessmentService : IAssessmentService
 {
     private readonly IApplicationDbContext _context;
+    private readonly IProgramContentService _programContentService;
     private readonly ILogger<AssessmentService> _logger;
 
-    public AssessmentService(IApplicationDbContext context, ILogger<AssessmentService> logger)
+    public AssessmentService(
+        IApplicationDbContext context,
+        IProgramContentService programContentService,
+        ILogger<AssessmentService> logger)
     {
         _context = context;
+        _programContentService = programContentService;
         _logger = logger;
     }
 
@@ -36,7 +42,13 @@ public class AssessmentService : IAssessmentService
             assessment.SetDescription(request.Description);
             assessment.SetTimeLimit(request.TimeLimitMinutes);
             assessment.SetMaxAttempts(request.MaxAttempts);
-            assessment.SetAvailability(request.AvailableFrom, request.AvailableUntil);
+            assessment.SetDeliveryContract(request.SubmissionModalities, request.PresentationMode);
+            assessment.SetDeliverySchedule(
+                request.AvailableFrom,
+                request.AvailableUntil,
+                request.DueAt,
+                request.AllowLateSubmissions,
+                request.LateSubmissionDeadline);
 
             var groupValidation = await EnsureGroupMatchesCourseAsync(request.AssessmentGroupId, request.CourseId).ConfigureAwait(false);
             if (!groupValidation.IsSuccess)
@@ -50,6 +62,10 @@ public class AssessmentService : IAssessmentService
             _logger.LogInformation("Assessment created: {AssessmentId} for course {CourseId}", assessment.Id, request.CourseId);
 
             return Result.Success(assessment);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure<Assessment>(Error.Validation("Assessment.Invalid", ex.Message));
         }
         catch (Exception ex)
         {
@@ -151,7 +167,14 @@ public class AssessmentService : IAssessmentService
                 request.ContentId,
                 request.ClearContentId,
                 request.AssessmentGroupId,
-                request.ClearAssessmentGroupId);
+                request.ClearAssessmentGroupId,
+                request.SubmissionModalities,
+                request.PresentationMode,
+                request.DueAt,
+                request.ClearDueAt,
+                request.AllowLateSubmissions,
+                request.LateSubmissionDeadline,
+                request.ClearLateSubmissionDeadline);
 
             var groupValidation = await EnsureGroupMatchesCourseAsync(assessment.AssessmentGroupId, assessment.CourseId).ConfigureAwait(false);
             if (!groupValidation.IsSuccess)
@@ -165,6 +188,10 @@ public class AssessmentService : IAssessmentService
             _logger.LogInformation("Assessment updated: {AssessmentId}", id);
 
             return Result.Success(assessment);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure<Assessment>(Error.Validation("Assessment.Invalid", ex.Message));
         }
         catch (Exception ex)
         {
@@ -205,6 +232,13 @@ public class AssessmentService : IAssessmentService
             .OrderBy(g => g.Order)
             .ThenBy(g => g.Name)
             .ToListAsync().ConfigureAwait(false);
+    }
+
+    public async Task<AssessmentGroup?> GetAssessmentGroupByIdAsync(Guid id)
+    {
+        return await _context.Set<AssessmentGroup>()
+            .FirstOrDefaultAsync(group => group.Id == id && group.DeletedAt == null)
+            .ConfigureAwait(false);
     }
 
     public async Task<Result<AssessmentGroup>> CreateAssessmentGroupAsync(CreateAssessmentGroupRequest request)
@@ -337,6 +371,121 @@ public class AssessmentService : IAssessmentService
         }
     }
 
+    public async Task<Result<InteractiveVideoAssessmentCue>> LinkInteractiveVideoCueAsync(
+        Guid assessmentId,
+        LinkInteractiveVideoCueRequest request)
+    {
+        try
+        {
+            var assessment = await GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+            if (assessment == null)
+            {
+                return Result.Failure<InteractiveVideoAssessmentCue>(Error.NotFound("Assessment", "Assessment not found"));
+            }
+
+            await using var lifecycleTransaction = await ProgramContentLifecycleDatabaseLock
+                .AcquireAsync(_context, [request.ContentId])
+                .ConfigureAwait(false);
+            var content = await _programContentService.GetContentByIdAsync(request.ContentId).ConfigureAwait(false);
+            if (content == null)
+            {
+                return Result.Failure<InteractiveVideoAssessmentCue>(Error.NotFound("ProgramContent", "Interactive-video lesson content not found"));
+            }
+
+            if (content.ProgramId != assessment.CourseId)
+            {
+                return Result.Failure<InteractiveVideoAssessmentCue>(
+                    Error.Validation("AssessmentCue.CourseMismatch", "Interactive-video content must belong to the assessment course."));
+            }
+
+            if (content.Type != ProgramContentType.Lesson || content.LessonFormat != LessonContentFormat.Video)
+            {
+                return Result.Failure<InteractiveVideoAssessmentCue>(
+                    Error.Validation("AssessmentCue.NotVideoLesson", "Interactive-video content must be a video lesson."));
+            }
+
+            var cueId = request.CueId ?? string.Empty;
+            var normalizedCueId = cueId.Trim();
+            var duplicate = await _context.Set<InteractiveVideoAssessmentCue>()
+                .AnyAsync(cue =>
+                    cue.AssessmentId == assessmentId &&
+                    cue.ContentId == request.ContentId &&
+                    cue.CueId == normalizedCueId &&
+                    cue.DeletedAt == null)
+                .ConfigureAwait(false);
+            if (duplicate)
+            {
+                return Result.Failure<InteractiveVideoAssessmentCue>(
+                    Error.Validation("AssessmentCue.Duplicate", "The interactive-video cue is already linked to this assessment."));
+            }
+
+            var cue = assessment.AddInteractiveVideoCue(request.ContentId, cueId, request.CuePositionSeconds);
+            _context.Set<InteractiveVideoAssessmentCue>().Add(cue);
+            await _context.SaveChangesAsync().ConfigureAwait(false);
+            await ProgramContentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
+
+            return Result.Success(cue);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure<InteractiveVideoAssessmentCue>(Error.Validation("AssessmentCue.Invalid", ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error linking interactive-video cue to assessment {AssessmentId}", assessmentId);
+            return Result.Failure<InteractiveVideoAssessmentCue>(Error.Failure("LinkAssessmentCue", "Failed to link interactive-video assessment cue"));
+        }
+    }
+
+    public async Task<IEnumerable<InteractiveVideoAssessmentCue>> GetInteractiveVideoCuesAsync(Guid assessmentId)
+    {
+        var assessment = await GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+        if (assessment == null) return Array.Empty<InteractiveVideoAssessmentCue>();
+
+        var cues = await _context.Set<InteractiveVideoAssessmentCue>()
+            .Where(cue => cue.AssessmentId == assessmentId && cue.DeletedAt == null)
+            .OrderBy(cue => cue.CuePositionSeconds)
+            .ThenBy(cue => cue.CueId)
+            .ToListAsync().ConfigureAwait(false);
+
+        var activeCues = new List<InteractiveVideoAssessmentCue>();
+        foreach (var cue in cues)
+        {
+            var content = await _programContentService.GetContentByIdAsync(cue.ContentId).ConfigureAwait(false);
+            if (content?.ProgramId == assessment.CourseId &&
+                content.Type == ProgramContentType.Lesson &&
+                content.LessonFormat == LessonContentFormat.Video)
+            {
+                activeCues.Add(cue);
+            }
+        }
+
+        return activeCues;
+    }
+
+    public async Task<IEnumerable<InteractiveVideoAssessmentCue>> GetInteractiveVideoCuesForContentAsync(
+        Guid assessmentId,
+        Guid contentId)
+    {
+        var cues = await GetInteractiveVideoCuesAsync(assessmentId).ConfigureAwait(false);
+        return cues.Where(cue => cue.ContentId == contentId).ToList();
+    }
+
+    public async Task<Result> UnlinkInteractiveVideoCueAsync(Guid assessmentId, Guid cueId)
+    {
+        var cue = await _context.Set<InteractiveVideoAssessmentCue>()
+            .FirstOrDefaultAsync(candidate => candidate.Id == cueId && candidate.AssessmentId == assessmentId)
+            .ConfigureAwait(false);
+        if (cue == null)
+        {
+            return Result.Failure(Error.NotFound("AssessmentCue", "Interactive-video assessment cue not found"));
+        }
+
+        _context.Set<InteractiveVideoAssessmentCue>().Remove(cue);
+        await _context.SaveChangesAsync().ConfigureAwait(false);
+        return Result.Success();
+    }
+
     private async Task<Result> EnsureGroupMatchesCourseAsync(Guid? groupId, Guid courseId)
     {
         if (!groupId.HasValue)
@@ -461,7 +610,7 @@ public class AssessmentService : IAssessmentService
         }
     }
 
-    public async Task<Result<AssessmentSubmission>> SubmitAsync(Guid submissionId)
+    public async Task<Result<AssessmentSubmission>> SubmitAsync(Guid submissionId, SubmitAssessmentRequest? request = null)
     {
         try
         {
@@ -476,13 +625,34 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<AssessmentSubmission>(Error.Validation("Submission", "Submission is not in progress"));
             }
 
-            submission.Submit();
+            var assessment = await GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
+            if (assessment == null)
+            {
+                return Result.Failure<AssessmentSubmission>(Error.NotFound("Assessment", "Assessment not found"));
+            }
+
+            var submittedAt = SystemClock.UtcNow;
+            if (!assessment.TryGetSubmissionTiming(submittedAt, out var isLate))
+            {
+                return Result.Failure<AssessmentSubmission>(Error.Validation("Submission.Unavailable", "Assessment is not accepting submissions at this time"));
+            }
+
+            if (request != null)
+            {
+                submission.SetPayload(request, assessment.SubmissionModalities);
+            }
+
+            submission.Submit(isLate, submittedAt);
             _context.Set<AssessmentSubmission>().Update(submission);
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Submission submitted: {SubmissionId}", submissionId);
 
             return Result.Success(submission);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure<AssessmentSubmission>(Error.Validation("Submission.Invalid", ex.Message));
         }
         catch (Exception ex)
         {
@@ -540,6 +710,14 @@ public class AssessmentService : IAssessmentService
     {
         return await _context.Set<AssessmentSubmission>()
             .Where(s => s.EnrollmentId == enrollmentId)
+            .OrderByDescending(s => s.StartedAt)
+            .ToListAsync().ConfigureAwait(false);
+    }
+
+    public async Task<IEnumerable<AssessmentSubmission>> GetUserSubmissionsAsync(Guid enrollmentId, Guid userId)
+    {
+        return await _context.Set<AssessmentSubmission>()
+            .Where(s => s.EnrollmentId == enrollmentId && s.UserId == userId)
             .OrderByDescending(s => s.StartedAt)
             .ToListAsync().ConfigureAwait(false);
     }
