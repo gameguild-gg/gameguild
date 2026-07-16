@@ -15,5 +15,7 @@ public interface IContentInteractionService {
 
   Task<IEnumerable<ContentInteraction>> GetUserInteractionsAsync(Guid programUserId);
 
+  Task<IEnumerable<SurveyResponseResultDto>> GetSurveyResponsesAsync(Guid expectedProgramId, Guid contentId);
+
   Task<ContentInteraction> UpdateTimeSpentAsync(Guid interactionId, int additionalMinutes);
 }

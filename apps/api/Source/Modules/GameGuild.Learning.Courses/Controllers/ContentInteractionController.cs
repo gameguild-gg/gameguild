@@ -127,6 +127,21 @@ public class ContentInteractionController(IContentInteractionService contentInte
     return Ok(filteredInteractions.ToDto());
   }
 
+  /// <summary>Get identity-free survey result records for course managers.</summary>
+  [HttpGet("content/{contentId}/survey-results")]
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
+  public async Task<ActionResult<IEnumerable<SurveyResponseResultDto>>> GetSurveyResults([FromRoute] Guid contentId, [FromQuery] Guid programId) {
+    var content = await programContentService.GetContentByIdAsync(contentId).ConfigureAwait(false);
+    if (content is null || content.ProgramId != programId) return NotFound();
+
+    try {
+      return Ok(await contentInteractionService.GetSurveyResponsesAsync(programId, contentId).ConfigureAwait(false));
+    }
+    catch (InvalidOperationException exception) {
+      return BadRequest(exception.Message);
+    }
+  }
+
   /// <summary>
   /// Update time spent on content
   /// Requires Edit permission on the parent Program

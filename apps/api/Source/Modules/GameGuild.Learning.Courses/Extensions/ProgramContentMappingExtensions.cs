@@ -21,6 +21,7 @@ public static class ProgramContentMappingExtensions
   {
     var normalizedType = NormalizeProfessorFacingType(content.Type);
     var isLesson = normalizedType == ProgramContentType.Lesson;
+    var isNonGraded = isLesson || normalizedType == ProgramContentType.Survey;
 
     return new ProgramContentDto
     {
@@ -32,10 +33,11 @@ public static class ProgramContentMappingExtensions
       Type = normalizedType,
       Body = ParseBody(content.Body),
       LessonFormat = isLesson ? content.LessonFormat ?? LessonContentFormatInference.FromBody(content.Body) : null,
+      ActivitySettings = content.GetActivitySettings(),
       SortOrder = content.SortOrder,
       IsRequired = content.IsRequired,
-      GradingMethod = isLesson ? GradingMethod.None : content.GradingMethod,
-      MaxPoints = isLesson ? null : content.MaxPoints,
+      GradingMethod = isNonGraded ? GradingMethod.None : content.GradingMethod,
+      MaxPoints = isNonGraded ? null : content.MaxPoints,
       EstimatedMinutes = content.EstimatedMinutes,
       Visibility = content.Visibility,
       CreatedAt = content.CreatedAt,
@@ -118,6 +120,10 @@ public static class ProgramContentMappingExtensions
     };
 
     content.NormalizeLearningContract();
+    if (dto.ActivitySettings is not null)
+    {
+      content.SetActivitySettings(dto.ActivitySettings);
+    }
     return content;
   }
 
@@ -133,6 +139,7 @@ public static class ProgramContentMappingExtensions
     {
       content.LessonFormat = dto.LessonFormat.Value;
     }
+    if (dto.ActivitySettings is not null) content.SetActivitySettings(dto.ActivitySettings);
     else if (NormalizeProfessorFacingType(content.Type) == ProgramContentType.Lesson &&
              (!wasLesson || !content.LessonFormat.HasValue))
     {
