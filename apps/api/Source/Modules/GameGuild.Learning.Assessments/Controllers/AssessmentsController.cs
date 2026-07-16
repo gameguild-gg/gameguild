@@ -177,6 +177,35 @@ public class AssessmentsController : BaseApiController
     }
 
     /// <summary>
+    /// Links this assessment to a cue in an interactive-video lesson.
+    /// </summary>
+    [HttpPost("{id:guid}/interactive-video-cues")]
+    public async Task<ActionResult<InteractiveVideoAssessmentCueDto>> LinkInteractiveVideoCue(
+        Guid id,
+        [FromBody] LinkInteractiveVideoCueRequest request)
+    {
+        var result = await _assessmentService.LinkInteractiveVideoCueAsync(id, request).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
+                : BadRequest(result.Error);
+        }
+
+        return Ok(InteractiveVideoAssessmentCueDto.FromEntity(result.Value));
+    }
+
+    /// <summary>
+    /// Gets the interactive-video cue links for this assessment.
+    /// </summary>
+    [HttpGet("{id:guid}/interactive-video-cues")]
+    public async Task<ActionResult<IEnumerable<InteractiveVideoAssessmentCueDto>>> GetInteractiveVideoCues(Guid id)
+    {
+        var cues = await _assessmentService.GetInteractiveVideoCuesAsync(id).ConfigureAwait(false);
+        return Ok(cues.Select(InteractiveVideoAssessmentCueDto.FromEntity));
+    }
+
+    /// <summary>
     /// Delete an assessment
     /// </summary>
     [HttpDelete("{id:guid}")]
@@ -229,9 +258,11 @@ public class AssessmentsController : BaseApiController
     /// Submit a completed assessment
     /// </summary>
     [HttpPost("submissions/{submissionId:guid}/submit")]
-    public async Task<ActionResult<AssessmentSubmissionDto>> SubmitAssessment(Guid submissionId)
+    public async Task<ActionResult<AssessmentSubmissionDto>> SubmitAssessment(
+        Guid submissionId,
+        [FromBody] SubmitAssessmentRequest? request = null)
     {
-        var result = await _assessmentService.SubmitAsync(submissionId).ConfigureAwait(false);
+        var result = await _assessmentService.SubmitAsync(submissionId, request).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -330,7 +361,12 @@ public sealed record AssessmentDto(
     string? AssessmentGroupName,
     decimal? AssessmentGroupWeightPercent,
     int? AssessmentGroupOrder,
-    bool IsAvailable)
+    bool IsAvailable,
+    SubmissionModality SubmissionModalities = SubmissionModality.Text,
+    AssessmentPresentationMode PresentationMode = AssessmentPresentationMode.SingleStep,
+    DateTime? DueAt = null,
+    bool AllowLateSubmissions = false,
+    DateTime? LateSubmissionDeadline = null)
 {
     public static AssessmentDto FromEntity(Assessment entity) => new(
         entity.Id,
@@ -351,7 +387,27 @@ public sealed record AssessmentDto(
         entity.AssessmentGroup?.Name,
         entity.AssessmentGroup?.WeightPercent,
         entity.AssessmentGroup?.Order,
-        entity.IsAvailable());
+        entity.IsAvailable(),
+        entity.SubmissionModalities,
+        entity.PresentationMode,
+        entity.DueAt,
+        entity.AllowLateSubmissions,
+        entity.LateSubmissionDeadline);
+}
+
+public sealed record InteractiveVideoAssessmentCueDto(
+    Guid Id,
+    Guid AssessmentId,
+    Guid ContentId,
+    string CueId,
+    decimal? CuePositionSeconds)
+{
+    public static InteractiveVideoAssessmentCueDto FromEntity(InteractiveVideoAssessmentCue entity) => new(
+        entity.Id,
+        entity.AssessmentId,
+        entity.ContentId,
+        entity.CueId,
+        entity.CuePositionSeconds);
 }
 
 public sealed record AssessmentGroupDto(
@@ -384,7 +440,16 @@ public sealed record AssessmentSubmissionDto(
     DateTime? GradedAt,
     Guid? GradedBy,
     string? Feedback,
-    SubmissionStatus Status)
+    SubmissionStatus Status,
+    bool IsLate = false,
+    SubmissionModality SubmittedModalities = SubmissionModality.None,
+    string? TextPayload = null,
+    string? FilePayload = null,
+    string? UrlPayload = null,
+    string? CodePayload = null,
+    string? MediaPayload = null,
+    string? ProjectPayload = null,
+    string? StructuredAnswerPayload = null)
 {
     public static AssessmentSubmissionDto FromEntity(AssessmentSubmission entity) => new(
         entity.Id,
@@ -399,7 +464,16 @@ public sealed record AssessmentSubmissionDto(
         entity.GradedAt,
         entity.GradedBy,
         entity.Feedback,
-        entity.Status);
+        entity.Status,
+        entity.IsLate,
+        entity.SubmittedModalities,
+        entity.TextPayload,
+        entity.FilePayload,
+        entity.UrlPayload,
+        entity.CodePayload,
+        entity.MediaPayload,
+        entity.ProjectPayload,
+        entity.StructuredAnswerPayload);
 }
 
 public sealed record StartSubmissionRequest(Guid EnrollmentId);
