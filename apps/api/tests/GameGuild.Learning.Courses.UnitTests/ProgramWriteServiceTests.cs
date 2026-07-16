@@ -1,7 +1,10 @@
 using FluentAssertions;
+using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Moq;
 using Xunit;
 
 namespace GameGuild.Learning.Courses.UnitTests;
@@ -102,7 +105,7 @@ public sealed class ProgramWriteServiceTests
             graph.OldAttempt,
             graph.CurrentAttempt);
         await context.SaveChangesAsync();
-        var service = new ProgramWriteService(context);
+        var service = CreateSubmissionService(context, graph.Enrollment.UserId);
 
         var submitted = await service.SubmitUserContentAsync(
             graph.Program.Id,
@@ -126,7 +129,7 @@ public sealed class ProgramWriteServiceTests
         survey.SetActivitySettings(new SurveyActivitySettings(AllowMultipleResponses: true));
         context.AddRange(program, enrollment, survey);
         await context.SaveChangesAsync();
-        var service = new ProgramWriteService(context);
+        var service = CreateSubmissionService(context, enrollment.UserId);
 
         var first = await service.SubmitUserContentAsync(program.Id, enrollment.UserId, survey.Id, """{"kind":"survey","answers":{"first":true}}""");
         var second = await service.SubmitUserContentAsync(program.Id, enrollment.UserId, survey.Id, """{"kind":"survey","answers":{"second":true}}""");
@@ -146,7 +149,7 @@ public sealed class ProgramWriteServiceTests
         var reflection = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Reflection", Type = ProgramContentType.Reflection };
         context.AddRange(program, enrollment, reflection);
         await context.SaveChangesAsync();
-        var service = new ProgramWriteService(context);
+        var service = CreateSubmissionService(context, enrollment.UserId);
 
         Func<Task> action = async () => await service.SubmitUserContentAsync(
             program.Id,
@@ -155,6 +158,43 @@ public sealed class ProgramWriteServiceTests
             """{"kind":"discussion","body":"wrong type"}""");
 
         await action.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task SubmitUserContentAsync_WhenActorTargetsAnotherLearnerWithoutManagementPermission_ShouldReject()
+    {
+        await using var context = CreateContext();
+        var graph = CreateAttemptGraph();
+        context.AddRange(graph.Program, graph.Content, graph.Enrollment);
+        await context.SaveChangesAsync();
+        var service = CreateSubmissionService(context, Guid.NewGuid());
+
+        Func<Task> action = () => service.SubmitUserContentAsync(
+            graph.Program.Id, graph.Enrollment.UserId, graph.Content.Id, "submission");
+
+        await action.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("Program management permission is required*");
+    }
+
+    [Fact]
+    public async Task SubmitUserContentAsync_WhenActorHasProgramManagementPermission_ShouldAllowManualSubmission()
+    {
+        await using var context = CreateContext();
+        var graph = CreateAttemptGraph();
+        context.AddRange(graph.Program, graph.Content, graph.Enrollment);
+        await context.SaveChangesAsync();
+        var managerId = Guid.NewGuid();
+        var permissions = new Mock<IPermissionQueryService>();
+        permissions.Setup(service => service.HasTenantPermissionAsync(
+                managerId, It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var service = CreateSubmissionService(context, managerId, Guid.NewGuid(), permissions.Object);
+
+        var submitted = await service.SubmitUserContentAsync(
+            graph.Program.Id, graph.Enrollment.UserId, graph.Content.Id, "manual submission");
+
+        submitted.Should().NotBeNull();
+        submitted!.UserId.Should().Be(graph.Enrollment.UserId);
     }
 
     [Fact]
@@ -391,14 +431,14 @@ public sealed class ProgramWriteServiceTests
         context.BeforeInteractionSaveAsync = async _ =>
         {
             await using var winningContext = CreateContext(databaseName, databaseRoot);
-            var winningService = new ProgramWriteService(winningContext);
+            var winningService = CreateSubmissionService(winningContext, graph.Enrollment.UserId);
             await winningService.SubmitUserContentAsync(
                 graph.Program.Id,
                 graph.Enrollment.UserId,
                 graph.Content.Id,
                 "winner submission");
         };
-        var service = new ProgramWriteService(context);
+        var service = CreateSubmissionService(context, graph.Enrollment.UserId);
 
         var result = await service.SubmitUserContentAsync(
             graph.Program.Id,
@@ -423,7 +463,7 @@ public sealed class ProgramWriteServiceTests
         var graph = CreateAttemptGraph();
         context.AddRange(graph.Program, graph.Content, graph.Enrollment);
         await context.SaveChangesAsync();
-        var service = new ProgramWriteService(context);
+        var service = CreateSubmissionService(context, graph.Enrollment.UserId);
         var original = await service.SubmitUserContentAsync(
             graph.Program.Id,
             graph.Enrollment.UserId,
@@ -433,7 +473,7 @@ public sealed class ProgramWriteServiceTests
         original!.SoftDelete();
         await context.SaveChangesAsync();
         await using var retryContext = CreateContext(databaseName, databaseRoot);
-        var retryService = new ProgramWriteService(retryContext);
+        var retryService = CreateSubmissionService(retryContext, graph.Enrollment.UserId);
 
         var restored = await retryService.SubmitUserContentAsync(
             graph.Program.Id,
@@ -510,6 +550,25 @@ public sealed class ProgramWriteServiceTests
 
         var options = builder.Options;
         return new LearningCoursesTestContext(options);
+    }
+
+    private static ProgramWriteService CreateSubmissionService(
+        IApplicationDbContext context,
+        Guid userId,
+        Guid? tenantId = null,
+        IPermissionQueryService? permissions = null) =>
+        new(context, requestContextAccessor: new TestRequestContextAccessor(userId, tenantId), permissionQueryService: permissions);
+
+    private sealed class TestRequestContextAccessor(Guid userId, Guid? tenantId = null) : IRequestContextAccessor
+    {
+        public Guid? CurrentUserId => userId;
+        public Guid? CurrentTenantId => tenantId;
+        public bool IsAuthenticated => true;
+        public bool HasTenantContext => tenantId.HasValue;
+        public Task<UserInfo?> GetCurrentUserAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<UserInfo?>(new UserInfo(userId, "learner@example.com", "Learner", true));
+        public Task<TenantInfo?> GetCurrentTenantAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<TenantInfo?>(null);
     }
 
     private sealed class LearningCoursesTestContext(DbContextOptions<LearningCoursesTestContext> options)
