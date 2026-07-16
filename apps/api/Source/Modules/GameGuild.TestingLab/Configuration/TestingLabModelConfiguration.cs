@@ -241,6 +241,11 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
                 .WithMany()
                 .HasForeignKey(project => project.RegisteredById)
                 .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(project => new { project.SessionId, project.ProjectId })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL AND \"IsActive\" = TRUE")
+                .HasDatabaseName("IX_session_projects_active_pair");
+            builder.HasIndex(project => project.TenantId);
         });
     }
 

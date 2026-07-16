@@ -20,7 +20,10 @@ public sealed class ProgramContentServiceTests
         context.Set<ProgramContent>().AddRange(module, submodule, lesson);
         await context.SaveChangesAsync();
 
-        var service = new ProgramContentService(context, Mock.Of<IProgramContentScheduleGuard>());
+        var service = new ProgramContentService(
+            context,
+            Mock.Of<IProgramContentScheduleGuard>(),
+            Mock.Of<IProgramContentLifecycleGuard>());
 
         var deleted = await service.DeleteContentAsync(module.Id);
 

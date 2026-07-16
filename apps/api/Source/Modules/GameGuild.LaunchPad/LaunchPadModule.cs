@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Routing;
+using GameGuild.Projects;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,7 +10,10 @@ public sealed class LaunchPadModule : ModuleBase
     public override string Name => "LaunchPad";
 
     public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
-        => services;
+    {
+        services.AddScoped<IProjectLifecycleParticipant, LaunchPadProjectLifecycleParticipant>();
+        return services;
+    }
 
     public override IEndpointRouteBuilder MapEndpoints(IEndpointRouteBuilder endpoints)
         => endpoints;

@@ -194,7 +194,7 @@ public class ProgramContentTests
     [Fact]
     public void SetGrading_ShouldUpdateFields()
     {
-        var content = new ProgramContent();
+        var content = new ProgramContent { Type = ProgramContentType.Assignment };
 
         content.SetGrading(GradingMethod.AutomatedTests, 100);
 

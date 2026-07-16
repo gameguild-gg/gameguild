@@ -13,6 +13,8 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
     var contentInteraction = await context.Set<ContentInteraction>().Include(ci => ci.Content).ThenInclude(c => c.Program).Include(ci => ci.ProgramUser).FirstOrDefaultAsync(ci => ci.Id == contentInteractionId);
 
     if (contentInteraction == null) throw new ArgumentException("Content interaction not found", nameof(contentInteractionId));
+    if (contentInteraction.Content.Type == ProgramContentType.Survey)
+      throw new InvalidOperationException("Surveys cannot be graded.");
 
     // Validate the grader is part of the same program
     var graderProgramUser = await context.Set<ProgramUser>().FirstOrDefaultAsync(pu => pu.Id == graderProgramUserId && pu.ProgramId == contentInteraction.Content.ProgramId);
@@ -51,7 +53,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
                         .ThenInclude(ci => ci.Content)
                         .Include(ag => ag.GraderProgramUser)
                         .ThenInclude(gpu => gpu!.User)
-                        .FirstOrDefaultAsync(ag => ag.ContentInteractionId == contentInteractionId);
+                        .FirstOrDefaultAsync(ag => ag.ContentInteractionId == contentInteractionId && ag.ContentInteraction.Content.Type != ProgramContentType.Survey);
   }
 
   /// <summary> Get grade by its ID </summary>
@@ -64,7 +66,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
                         .ThenInclude(pu => pu!.User)
                         .Include(ag => ag.GraderProgramUser)
                         .ThenInclude(gpu => gpu!.User)
-                        .FirstOrDefaultAsync(ag => ag.Id == gradeId);
+                        .FirstOrDefaultAsync(ag => ag.Id == gradeId && ag.ContentInteraction.Content.Type != ProgramContentType.Survey);
   }
 
   /// <summary> Get all grades given by a specific grader </summary>
@@ -74,7 +76,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
                         .Include(ag => ag.ContentInteraction)
                         .ThenInclude(ci => ci.ProgramUser)
                         .ThenInclude(pu => pu!.User)
-                        .Where(ag => ag.GraderProgramUserId == graderProgramUserId)
+                        .Where(ag => ag.GraderProgramUserId == graderProgramUserId && ag.ContentInteraction.Content.Type != ProgramContentType.Survey)
                         .OrderByDescending(ag => ag.GradedAt)
                         .ToListAsync();
   }
@@ -85,16 +87,21 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
                         .ThenInclude(ci => ci.Content)
                         .Include(ag => ag.GraderProgramUser)
                         .ThenInclude(gpu => gpu!.User)
-                        .Where(ag => ag.ContentInteraction.ProgramUserId == programUserId)
+                        .Where(ag => ag.ContentInteraction.ProgramUserId == programUserId && ag.ContentInteraction.Content.Type != ProgramContentType.Survey)
                         .OrderByDescending(ag => ag.GradedAt)
                         .ToListAsync();
   }
 
   /// <summary> Update an existing grade </summary>
   public async Task<ActivityGrade?> UpdateGradeAsync(Guid gradeId, decimal? newGrade = null, string? newFeedback = null, string? newGradingDetails = null) {
-    var grade = await context.Set<ActivityGrade>().FirstOrDefaultAsync(ag => ag.Id == gradeId);
+    var grade = await context.Set<ActivityGrade>()
+      .Include(ag => ag.ContentInteraction)
+      .ThenInclude(interaction => interaction.Content)
+      .FirstOrDefaultAsync(ag => ag.Id == gradeId);
 
     if (grade == null) return null;
+    if (grade.ContentInteraction.Content.Type == ProgramContentType.Survey)
+      throw new InvalidOperationException("Surveys cannot be graded.");
 
     if (newGrade.HasValue) grade.Grade = newGrade.Value;
     if (newFeedback != null) grade.Feedback = newFeedback;
@@ -124,14 +131,14 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
     return await context.Set<ContentInteraction>().Include(ci => ci.Content)
                         .Include(ci => ci.ProgramUser)
                         .ThenInclude(pu => pu.User)
-                        .Where(ci => ci.Content.ProgramId == programId && ci.SubmittedAt.HasValue && !context.Set<ActivityGrade>().Any(ag => ag.ContentInteractionId == ci.Id))
+                        .Where(ci => ci.Content.ProgramId == programId && ci.Content.Type != ProgramContentType.Survey && ci.SubmittedAt.HasValue && !context.Set<ActivityGrade>().Any(ag => ag.ContentInteractionId == ci.Id))
                         .OrderBy(ci => ci.SubmittedAt)
                         .ToListAsync();
   }
 
   /// <summary> Get grade statistics for a program </summary>
   public async Task<GradeStatistics> GetGradeStatisticsAsync(Guid programId) {
-    var grades = await context.Set<ActivityGrade>().Include(ag => ag.ContentInteraction).ThenInclude(ci => ci.Content).Where(ag => ag.ContentInteraction.Content.ProgramId == programId).Select(ag => ag.Grade).ToListAsync();
+    var grades = await context.Set<ActivityGrade>().Include(ag => ag.ContentInteraction).ThenInclude(ci => ci.Content).Where(ag => ag.ContentInteraction.Content.ProgramId == programId && ag.ContentInteraction.Content.Type != ProgramContentType.Survey).Select(ag => ag.Grade).ToListAsync();
 
     if (grades.Count == 0) return new GradeStatistics { TotalGrades = 0, AverageGrade = 0, MinGrade = 0, MaxGrade = 0, PassingRate = 0 };
 
@@ -147,7 +154,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
                         .ThenInclude(pu => pu!.User)
                         .Include(ag => ag.GraderProgramUser)
                         .ThenInclude(gpu => gpu!.User)
-                        .Where(ag => ag.ContentInteraction.ContentId == contentId)
+                        .Where(ag => ag.ContentInteraction.ContentId == contentId && ag.ContentInteraction.Content.Type != ProgramContentType.Survey)
                         .OrderByDescending(ag => ag.GradedAt)
                         .ToListAsync();
   }

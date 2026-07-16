@@ -5,8 +5,13 @@ namespace GameGuild.Projects;
 /// <summary>
 /// Service implementation for core Project CRUD operations, queries, and tenant management.
 /// </summary>
-public class ProjectCrudService(IApplicationDbContext context) : IProjectCrudService
+public class ProjectCrudService(
+    IApplicationDbContext context,
+    IProjectLifecycleCoordinator? lifecycleCoordinator = null) : IProjectCrudService
 {
+    private readonly IProjectLifecycleCoordinator _lifecycleCoordinator = lifecycleCoordinator ??
+        new ProjectLifecycleCoordinator(context, [new ProjectStoreProductLifecycleParticipant(context)]);
+
     #region Deleted Projects
 
     public async Task<IEnumerable<Project>> GetDeletedProjectsAsync()
@@ -239,12 +244,7 @@ public class ProjectCrudService(IApplicationDbContext context) : IProjectCrudSer
 
         if (project == null) return false;
 
-        project.SoftDelete();
-        project.Touch();
-
-        await context.SaveChangesAsync().ConfigureAwait(false);
-
-        return true;
+        return await _lifecycleCoordinator.DeleteAsync(id, softDelete: true).ConfigureAwait(false);
     }
 
     public async Task<bool> RestoreProjectAsync(Guid id)
