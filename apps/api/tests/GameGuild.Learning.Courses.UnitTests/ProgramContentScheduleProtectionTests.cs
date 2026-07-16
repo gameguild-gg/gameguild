@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.CQRS;
+using GameGuild.Learning.Assessments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
@@ -181,6 +182,26 @@ public sealed class ProgramContentScheduleProtectionTests
             .WithMessage("*assessment cue*");
     }
 
+    [Fact]
+    public async Task AssessmentLifecycleGuard_WhenAssessmentIsDeleted_DoesNotBlockContentDeletion()
+    {
+        await using var context = CreateContext();
+        var assessment = Assessment.Create(Guid.NewGuid(), "Checkpoint", AssessmentType.Quiz, 10, 6);
+        assessment.Version = 1;
+        var cue = assessment.AddInteractiveVideoCue(Guid.NewGuid(), "chapter-1");
+        cue.Version = 1;
+        context.AddRange(assessment, cue);
+        await context.SaveChangesAsync();
+        var guard = new AssessmentProgramContentLifecycleGuard(context);
+
+        (await guard.HasBlockingDeleteReference(cue.ContentId)).Should().BeTrue();
+        assessment.SoftDelete();
+        context.Update(assessment);
+        await context.SaveChangesAsync();
+
+        (await guard.HasBlockingDeleteReference(cue.ContentId)).Should().BeFalse();
+    }
+
     private static ProgramContentProtectionTestContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<ProgramContentProtectionTestContext>()
@@ -203,6 +224,7 @@ public sealed class ProgramContentScheduleProtectionTests
     {
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            new AssessmentsModelConfiguration().Configure(modelBuilder);
             modelBuilder.Entity<ProgramContent>(entity =>
             {
                 entity.Ignore(content => content.Program);
