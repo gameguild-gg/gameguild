@@ -1,4 +1,6 @@
 using GameGuild.Projects;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using ProjectEntity = GameGuild.Projects.Project;
 using ProjectReleaseEntity = GameGuild.Projects.ProjectRelease;
 
@@ -8,7 +10,11 @@ namespace GameGuild.TestingLab;
 /// Service implementation for testing request operations.
 /// Extracted from the monolithic TestService for focused responsibility.
 /// </summary>
-public class TestingRequestOperationsService(IApplicationDbContext context) : ITestingRequestOperations
+public class TestingRequestOperationsService(
+    IApplicationDbContext context,
+    IProjectChannelAvailabilityService availabilityService,
+    IProjectAuthorizationService authorizationService,
+    IActorContextAccessor actorContextAccessor) : ITestingRequestOperations
 {
     public async Task<IEnumerable<TestingRequest>> GetAllTestingRequestsAsync()
     {
@@ -175,22 +181,34 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingRequest> CreateSimpleTestingRequestAsync(CreateSimpleTestingRequestDto requestDto, Guid userId)
     {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid != userId || actor.TenantId == null)
+            throw new UnauthorizedAccessException("An authenticated tenant actor matching the submission user is required.");
+
         var existingProject = requestDto.ProjectId.HasValue
             ? await context.Set<ProjectEntity>()
-                .FirstOrDefaultAsync(p => p.Id == requestDto.ProjectId.Value && p.DeletedAt == null)
+                .FirstOrDefaultAsync(p => p.Id == requestDto.ProjectId.Value)
                 .ConfigureAwait(false)
             : await context.Set<ProjectEntity>()
-                .FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier && p.DeletedAt == null)
+                .FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier)
                 .ConfigureAwait(false);
 
         if (existingProject == null)
             throw new InvalidOperationException("Testing Lab submissions must be linked to an existing project.");
 
         var projectId = existingProject.Id;
+        var availability = await availabilityService
+            .GetAsync(projectId, ProjectChannel.TestingLab, actor.TenantId)
+            .ConfigureAwait(false);
+        if (!availability.IsAvailable)
+            throw new InvalidOperationException(availability.Reason);
+        if (!await authorizationService.HasPermissionAsync(projectId, PermissionType.Edit).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("Project Edit permission is required for Testing Lab submissions.");
 
         var projectVersion = await context.Set<GameGuild.Projects.ProjectVersion>()
             .FirstOrDefaultAsync(version =>
                 version.ProjectId == projectId &&
+                version.DeletedAt == null &&
                 version.VersionNumber == requestDto.VersionNumber)
             .ConfigureAwait(false);
 
@@ -204,6 +222,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
                 ReleaseNotes = requestDto.Description,
                 Status = "testing",
                 CreatedById = userId,
+                TenantId = existingProject.TenantId,
             };
 
             context.Set<GameGuild.Projects.ProjectVersion>().Add(projectVersion);
@@ -212,6 +231,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
         var projectRelease = await context.Set<GameGuild.Projects.ProjectRelease>()
             .FirstOrDefaultAsync(release =>
                 release.ProjectId == projectId &&
+                release.DeletedAt == null &&
                 release.ReleaseVersion == requestDto.VersionNumber)
             .ConfigureAwait(false);
 
@@ -228,6 +248,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
                 IsPrerelease = true,
                 ReleaseType = "testing",
                 ReleasedAt = SystemClock.UtcNow,
+                TenantId = existingProject.TenantId,
             };
 
             context.Set<GameGuild.Projects.ProjectRelease>().Add(projectRelease);
@@ -251,6 +272,7 @@ public class TestingRequestOperationsService(IApplicationDbContext context) : IT
             EndDate = requestDto.EndDate ?? SystemClock.UtcNow.AddDays(30),
             Status = TestingRequestStatus.Draft,
             CreatedById = userId,
+            TenantId = existingProject.TenantId,
         };
 
         context.Set<TestingRequest>().Add(testingRequest);

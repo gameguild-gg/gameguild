@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.Projects;
 using GameGuild.TestingLab;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Xunit;
@@ -502,11 +503,12 @@ public class TestingRequestOperationsServiceTests
     public async Task CreateSimpleTestingRequestAsync_WithoutExistingProject_ShouldThrow()
     {
         await using var context = CreateContext();
-        var service = new TestingRequestOperationsService(context);
+        var userId = Guid.NewGuid();
+        var (_, service) = CreateRequestService(context, userId, Guid.NewGuid());
 
         var dto = CreateRequestDto(projectId: Guid.NewGuid());
 
-        var act = () => service.CreateSimpleTestingRequestAsync(dto, Guid.NewGuid());
+        var act = () => service.CreateSimpleTestingRequestAsync(dto, userId);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Testing Lab submissions must be linked to an existing project.");
@@ -516,8 +518,9 @@ public class TestingRequestOperationsServiceTests
     public async Task CreateSimpleTestingRequestAsync_WithExistingProject_ShouldCreateProjectBackedRequest()
     {
         await using var context = CreateContext();
-        var service = new TestingRequestOperationsService(context);
         var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var (actorAccessor, service) = CreateRequestService(context, userId, tenantId);
         var project = new Project
         {
             Id = Guid.NewGuid(),
@@ -526,8 +529,16 @@ public class TestingRequestOperationsServiceTests
             Status = ContentStatus.Published,
             Visibility = ContentVisibility.Public,
             CreatedById = userId,
+            TenantId = tenantId,
         };
         context.Set<Project>().Add(project);
+        context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = project.Id,
+            UserId = userId,
+            Role = ProjectRoles.Owner,
+            IsActive = true
+        });
         await context.SaveChangesAsync();
 
         var dto = CreateRequestDto(project.Id);
@@ -542,6 +553,85 @@ public class TestingRequestOperationsServiceTests
             release.ProjectId == project.Id &&
             release.ReleaseVersion == dto.VersionNumber &&
             release.Title == $"{project.Title} {dto.VersionNumber}");
+        request.TenantId.Should().Be(tenantId);
+        actorAccessor.ActorContext.SubjectIdAsGuid.Should().Be(userId);
+    }
+
+    [Theory]
+    [InlineData(ContentStatus.Archived)]
+    [InlineData(ContentStatus.Deleted)]
+    public async Task CreateSimpleTestingRequestAsync_ShouldRejectTerminalProjectLifecycle(ContentStatus status)
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+        var project = new Project
+        {
+            Title = "Unavailable",
+            Slug = "unavailable",
+            Status = status,
+            Visibility = ContentVisibility.Private,
+            TenantId = tenantId
+        };
+        context.Set<Project>().Add(project);
+        context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = project.Id,
+            UserId = userId,
+            Role = ProjectRoles.Owner,
+            IsActive = true
+        });
+        await context.SaveChangesAsync();
+
+        var act = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(project.Id), userId);
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*lifecycle_unavailable*");
+    }
+
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_ShouldRejectCrossTenantAndUnauthorizedCollaborator()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+        var crossTenant = new Project
+        {
+            Title = "Other tenant",
+            Slug = "other-tenant",
+            Status = ContentStatus.Draft,
+            TenantId = Guid.NewGuid()
+        };
+        var unauthorized = new Project
+        {
+            Title = "No collaborator",
+            Slug = "no-collaborator",
+            Status = ContentStatus.Draft,
+            TenantId = tenantId
+        };
+        context.Set<Project>().AddRange(crossTenant, unauthorized);
+        await context.SaveChangesAsync();
+
+        var crossTenantAct = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(crossTenant.Id), userId);
+        var unauthorizedAct = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(unauthorized.Id), userId);
+
+        await crossTenantAct.Should().ThrowAsync<InvalidOperationException>().WithMessage("*tenant_mismatch*");
+        await unauthorizedAct.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    private static (IActorContextAccessor ActorAccessor, TestingRequestOperationsService Service) CreateRequestService(
+        IApplicationDbContext context,
+        Guid userId,
+        Guid tenantId)
+    {
+        var accessor = new ActorContextAccessor();
+        accessor.SetActorContext(ActorContextBuilder.ForUser(userId).WithTenantId(tenantId).Build());
+        return (accessor, new TestingRequestOperationsService(
+            context,
+            new ProjectChannelAvailabilityService(context),
+            new ProjectAuthorizationService(context, accessor),
+            accessor));
     }
 
     private static TestingLabServiceDbContext CreateContext()
