@@ -381,25 +381,21 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
       .ThenByDescending(ci => ci.CreatedAt)
       .FirstOrDefaultAsync();
 
-    if (interaction == null)
+    var isNewInteraction = interaction == null;
+    if (isNewInteraction)
     {
       interaction = new ContentInteraction { ProgramUserId = programUser.Id, UserId = userId, ContentId = contentId, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, };
-
-      context.Set<ContentInteraction>().Add(interaction);
     }
 
-    if (status == ProgressStatus.Completed)
-    {
-      interaction.Complete();
-    }
-    else if (!interaction.IsCompleted)
-    {
-      interaction.Status = status;
-      interaction.LastAccessedAt = SystemClock.UtcNow;
-      interaction.Touch();
-    }
+    ApplyProgressStatus(interaction!, status);
 
-    await context.SaveChangesAsync().ConfigureAwait(false);
+    if (isNewInteraction)
+      interaction = await SaveNewActiveAttemptAsync(
+          interaction!,
+          winner => ApplyProgressStatus(winner, status))
+        .ConfigureAwait(false);
+    else
+      await context.SaveChangesAsync().ConfigureAwait(false);
     await RecalculateUserProgressAsync(programUser.Id).ConfigureAwait(false);
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -505,7 +501,8 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
       .FirstOrDefaultAsync()
       .ConfigureAwait(false);
 
-    if (interaction == null)
+    var isNewInteraction = interaction == null;
+    if (isNewInteraction)
     {
       interaction = new ContentInteraction
       {
@@ -521,27 +518,22 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
         IsCompleted = true,
         AttemptCount = 1,
       };
-
-      context.Set<ContentInteraction>().Add(interaction);
     }
     else
     {
-      interaction.UserId = userId;
-      interaction.Status = ProgressStatus.Completed;
-      interaction.FirstAccessedAt ??= now;
-      interaction.LastAccessedAt = now;
-      interaction.StartedAt ??= now;
-      interaction.CompletedAt ??= now;
-      interaction.CompletionPercentage = 100;
-      interaction.IsCompleted = true;
-      interaction.AttemptCount = Math.Max(1, interaction.AttemptCount);
-      interaction.Touch();
+      CompleteInteraction(interaction!, userId, now);
     }
 
     programUser.LastAccessedAt = now;
     programUser.Touch();
 
-    await context.SaveChangesAsync().ConfigureAwait(false);
+    if (isNewInteraction)
+      interaction = await SaveNewActiveAttemptAsync(
+          interaction!,
+          winner => CompleteInteraction(winner, userId, now))
+        .ConfigureAwait(false);
+    else
+      await context.SaveChangesAsync().ConfigureAwait(false);
     await RecalculateUserProgressAsync(programUser.Id).ConfigureAwait(false);
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -756,6 +748,63 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     programUser.Touch();
   }
 
+  private static void ApplyProgressStatus(ContentInteraction interaction, ProgressStatus status)
+  {
+    if (status == ProgressStatus.Completed)
+    {
+      interaction.Complete();
+      return;
+    }
+
+    if (interaction.IsCompleted) return;
+
+    interaction.Status = status;
+    interaction.LastAccessedAt = SystemClock.UtcNow;
+    interaction.Touch();
+  }
+
+  private static void CompleteInteraction(ContentInteraction interaction, Guid userId, DateTime now)
+  {
+    interaction.UserId = userId;
+    interaction.FirstAccessedAt ??= now;
+    interaction.StartedAt ??= now;
+    interaction.Complete();
+    interaction.LastAccessedAt = now;
+    interaction.AttemptCount = Math.Max(1, interaction.AttemptCount);
+    interaction.Touch();
+  }
+
+  private async Task<ContentInteraction> SaveNewActiveAttemptAsync(
+    ContentInteraction newInteraction,
+    Action<ContentInteraction> reconcileWinner)
+  {
+    context.Set<ContentInteraction>().Add(newInteraction);
+    try
+    {
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return newInteraction;
+    }
+    catch (DbUpdateException)
+    {
+      context.Set<ContentInteraction>().Remove(newInteraction);
+      var winningInteraction = await context.Set<ContentInteraction>()
+        .Where(interaction =>
+          interaction.ProgramUserId == newInteraction.ProgramUserId &&
+          interaction.UserId == newInteraction.UserId &&
+          interaction.ContentId == newInteraction.ContentId &&
+          interaction.SubmittedAt == null &&
+          interaction.DeletedAt == null)
+        .OrderByDescending(interaction => interaction.CreatedAt)
+        .FirstOrDefaultAsync()
+        .ConfigureAwait(false);
+      if (winningInteraction is null) throw;
+
+      reconcileWinner(winningInteraction);
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return winningInteraction;
+    }
+  }
+
   /// <summary>Internal helper to build a <see cref="UserProgressDto"/> without depending on the read service.</summary>
   private async Task<UserProgressDto?> GetUserProgressDtoInternalAsync(Guid programId, Guid userId)
   {
@@ -763,11 +812,12 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
     if (programUser == null) return null;
 
-    var contentProgress = await context.Set<ContentInteraction>()
+    var interactions = await context.Set<ContentInteraction>()
       .Include(ci => ci.Content)
       .Where(ci => ci.ProgramUserId == programUser.Id && ci.DeletedAt == null)
-      .OrderBy(ci => ci.Content.SortOrder)
-      .ThenBy(ci => ci.Content.Title)
+      .ToListAsync()
+      .ConfigureAwait(false);
+    var contentProgress = ContentInteractionAttemptSelection.CurrentPerContent(interactions)
       .Select(ci => new ContentProgressDto(
         ci.ContentId,
         ci.Content.Title,
@@ -776,8 +826,7 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
         ci.FirstAccessedAt,
         ci.LastAccessedAt,
         ci.CompletedAt))
-      .ToListAsync()
-      .ConfigureAwait(false);
+      .ToList();
 
     return new UserProgressDto(
       programUser.Id,
