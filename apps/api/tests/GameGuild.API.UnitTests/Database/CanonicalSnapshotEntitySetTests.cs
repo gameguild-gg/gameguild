@@ -1,113 +1,116 @@
 using FluentAssertions;
+using GameGuild.API.Database;
+using GameGuild.API.Database.Migrations;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace GameGuild.API.UnitTests.Database;
 
 public sealed class CanonicalSnapshotEntitySetTests
 {
     [Fact]
-    public void SnapshotAndDesigner_PreserveEntityScopedTask2MetadataSemantics()
+    public void SnapshotAndDesigner_HaveIdenticalCompleteTask2EntityMetadata()
     {
-        var root = FindRepositoryRoot();
-        var snapshot = File.ReadAllText(Path.Combine(
-            root, "apps", "api", "Source", "GameGuild.API", "Database", "Migrations", "ApplicationDbContextModelSnapshot.cs"));
-        var designer = File.ReadAllText(Path.Combine(
-            root, "apps", "api", "Source", "GameGuild.API", "Database", "Migrations", "20260716010751_AddAssignmentDeliveryAndGradingContracts.Designer.cs"));
+        var snapshot = CreateSnapshotModel();
+        var designer = new AddAssignmentDeliveryAndGradingContracts().TargetModel;
 
-        AssertEntityMetadataMatches(snapshot, designer, "GameGuild.Learning.Assessments.Assessment",
-        [
-            "b.Property<bool>(\"AllowLateSubmissions\")",
-            "b.Property<Guid?>(\"AssessmentGroupId\")",
-            "b.Property<DateTime?>(\"DueAt\")",
-            "b.Property<DateTime?>(\"LateSubmissionDeadline\")",
-            "b.Property<int>(\"PresentationMode\")",
-            "b.Property<int>(\"SubmissionModalities\")",
-            "b.HasIndex(\"AssessmentGroupId\")",
-            "b.HasIndex(\"CourseId\")",
-            "CK_Assessments_DeliverySchedule",
-            "CK_Assessments_PresentationMode",
-            "CK_Assessments_SubmissionModalities",
-            "b.HasOne(\"GameGuild.Learning.Assessments.AssessmentGroup\", \"AssessmentGroup\")",
-            ".HasForeignKey(\"AssessmentGroupId\")",
-            ".OnDelete(DeleteBehavior.SetNull)",
-            "b.Navigation(\"AssessmentGroup\")",
-            "b.Navigation(\"InteractiveVideoCues\")"
-        ]);
-
-        AssertEntityMetadataMatches(snapshot, designer, "GameGuild.Learning.Assessments.AssessmentSubmission",
-        [
-            "b.Property<int>(\"SubmittedModalities\")",
-            "b.Property<bool>(\"IsLate\")",
-            "b.Property<string>(\"TextPayload\")",
-            "b.Property<string>(\"FilePayload\")",
-            "b.Property<string>(\"UrlPayload\")",
-            "b.Property<string>(\"CodePayload\")",
-            "b.Property<string>(\"MediaPayload\")",
-            "b.Property<string>(\"ProjectPayload\")",
-            "b.Property<string>(\"StructuredAnswerPayload\")",
-            "b.HasIndex(\"AssessmentId\")",
-            "b.HasIndex(\"EnrollmentId\")",
-            "b.HasIndex(\"UserId\")",
-            "CK_AssessmentSubmissions_SubmittedModalities",
-            "CK_AssessmentSubmissions_PayloadConsistency",
-            "(\\\"TextPayload\\\" IS NULL OR (\\\"SubmittedModalities\\\" & 1) <> 0)"
-        ]);
-
-        AssertEntityMetadataMatches(snapshot, designer, "GameGuild.Learning.Assessments.InteractiveVideoAssessmentCue",
-        [
-            "b.Property<Guid>(\"AssessmentId\")",
-            "b.Property<Guid>(\"ContentId\")",
-            "b.Property<string>(\"CueId\")",
-            "b.HasIndex(\"ContentId\")",
-            "b.HasIndex(\"AssessmentId\", \"ContentId\", \"CueId\")",
-            ".IsUnique()",
-            "b.HasOne(\"GameGuild.Learning.Assessments.Assessment\", \"Assessment\")",
-            ".WithMany(\"InteractiveVideoCues\")",
-            ".HasForeignKey(\"AssessmentId\")",
-            "b.Navigation(\"Assessment\")"
-        ]);
-    }
-
-    private static void AssertEntityMetadataMatches(string snapshot, string designer, string entityType, IReadOnlyCollection<string> requiredSemantics)
-    {
-        var snapshotEntity = string.Join(Environment.NewLine, ExtractEntityBlocks(snapshot, entityType));
-        var designerEntity = string.Join(Environment.NewLine, ExtractEntityBlocks(designer, entityType));
-
-        snapshotEntity.Should().NotBeNullOrWhiteSpace($"{entityType} must be represented in the snapshot");
-        designerEntity.Should().NotBeNullOrWhiteSpace($"{entityType} must be represented in the migration designer");
-
-        foreach (var semantic in requiredSemantics)
+        foreach (var entityName in Task2EntityNames)
         {
-            snapshotEntity.Should().Contain(semantic, $"{entityType} snapshot metadata must preserve {semantic}");
-            designerEntity.Should().Contain(semantic, $"{entityType} designer metadata must preserve {semantic}");
+            var snapshotContract = BuildEntityContract(snapshot, entityName);
+            var designerContract = BuildEntityContract(designer, entityName);
+            snapshotContract.Should().BeEquivalentTo(designerContract, options => options.WithStrictOrdering(),
+                $"the snapshot and designer must retain identical complete metadata for {entityName}");
         }
     }
 
-    private static IReadOnlyList<string> ExtractEntityBlocks(string metadata, string entityType)
+    private static IModel CreateSnapshotModel()
     {
-        var marker = $"modelBuilder.Entity(\"{entityType}\", b =>";
-        var blocks = new List<string>();
-        var searchStart = 0;
-
-        while (metadata.IndexOf(marker, searchStart, StringComparison.Ordinal) is var markerIndex && markerIndex >= 0)
-        {
-            var openingBraceIndex = metadata.IndexOf('{', markerIndex);
-            var depth = 0;
-            for (var index = openingBraceIndex; index < metadata.Length; index++)
-            {
-                if (metadata[index] == '{') depth++;
-                if (metadata[index] != '}') continue;
-
-                depth--;
-                if (depth != 0) continue;
-
-                blocks.Add(metadata[markerIndex..(index + 1)]);
-                searchStart = index + 1;
-                break;
-            }
-        }
-
-        return blocks;
+        var snapshotType = typeof(ApplicationDbContext).Assembly.GetType(
+            "GameGuild.API.Database.Migrations.ApplicationDbContextModelSnapshot",
+            throwOnError: true)!;
+        return ((ModelSnapshot)Activator.CreateInstance(snapshotType, nonPublic: true)!).Model;
     }
+
+    private static EntityContract BuildEntityContract(IModel model, string entityName)
+    {
+        var entity = model.FindEntityType(entityName);
+        entity.Should().NotBeNull($"{entityName} must exist");
+        var resolvedEntity = entity!;
+        return new EntityContract(
+            entityName,
+            resolvedEntity.GetTableName(),
+            resolvedEntity.GetSchema(),
+            resolvedEntity.GetProperties().OrderBy(property => property.Name).Select(property => new PropertyContract(
+                property.Name,
+                property.ClrType.FullName,
+                property.IsNullable,
+                property.GetColumnType(),
+                property.GetMaxLength(),
+                property.GetPrecision(),
+                property.GetScale(),
+                property.GetDefaultValue()?.ToString(),
+                property.GetDefaultValueSql(),
+                property.ValueGenerated.ToString(),
+                property.IsConcurrencyToken,
+                property.IsUnicode())).ToArray(),
+            resolvedEntity.GetCheckConstraints().OrderBy(constraint => constraint.Name).Select(constraint =>
+                new CheckConstraintContract(constraint.Name!, constraint.Sql!)).ToArray(),
+            resolvedEntity.GetIndexes().OrderBy(index => index.Name).Select(index => new IndexContract(
+                index.Name,
+                index.Properties.Select(property => property.Name).ToArray(),
+                index.IsUnique,
+                index.GetFilter())).ToArray(),
+            resolvedEntity.GetForeignKeys().OrderBy(foreignKey => string.Join(",", foreignKey.Properties.Select(property => property.Name))).Select(foreignKey =>
+                new ForeignKeyContract(
+                    foreignKey.Properties.Select(property => property.Name).ToArray(),
+                    foreignKey.PrincipalEntityType.Name,
+                    foreignKey.PrincipalKey.Properties.Select(property => property.Name).ToArray(),
+                    foreignKey.DeleteBehavior.ToString(),
+                    foreignKey.IsRequired,
+                    foreignKey.DependentToPrincipal?.Name,
+                    foreignKey.PrincipalToDependent?.Name)).ToArray());
+    }
+
+    private static readonly string[] Task2EntityNames =
+    [
+        "GameGuild.Learning.Assessments.Assessment",
+        "GameGuild.Learning.Assessments.AssessmentSubmission",
+        "GameGuild.Learning.Assessments.InteractiveVideoAssessmentCue"
+    ];
+
+    private sealed record EntityContract(
+        string Name,
+        string? Table,
+        string? Schema,
+        IReadOnlyList<PropertyContract> Properties,
+        IReadOnlyList<CheckConstraintContract> CheckConstraints,
+        IReadOnlyList<IndexContract> Indexes,
+        IReadOnlyList<ForeignKeyContract> ForeignKeys);
+
+    private sealed record PropertyContract(
+        string Name,
+        string? ClrType,
+        bool IsNullable,
+        string? ColumnType,
+        int? MaxLength,
+        int? Precision,
+        int? Scale,
+        string? DefaultValue,
+        string? DefaultValueSql,
+        string ValueGenerated,
+        bool IsConcurrencyToken,
+        bool? IsUnicode);
+
+    private sealed record CheckConstraintContract(string Name, string Sql);
+    private sealed record IndexContract(string? Name, IReadOnlyList<string> Properties, bool IsUnique, string? Filter);
+    private sealed record ForeignKeyContract(
+        IReadOnlyList<string> Properties,
+        string PrincipalEntity,
+        IReadOnlyList<string> PrincipalKey,
+        string DeleteBehavior,
+        bool IsRequired,
+        string? DependentNavigation,
+        string? PrincipalNavigation);
 
     [Fact]
     public void Snapshot_PreservesMigrationBackedEntitiesAndExcludesAuditedDrift()
