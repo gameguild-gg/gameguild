@@ -11,32 +11,39 @@ namespace GameGuild.Projects;
 public sealed class ProjectStoreProductsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<ProjectStoreProductProjection>>> List(Guid projectId)
+    public async Task<ActionResult<IReadOnlyList<ProjectStoreProductProjection>>> List(
+        Guid projectId,
+        CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetProjectStoreProductsQuery(projectId)).ConfigureAwait(false);
+        var result = await mediator.Send(new GetProjectStoreProductsQuery(projectId), cancellationToken).ConfigureAwait(false);
         return result.IsSuccess ? Ok(result.Value) : ToActionResult(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<ProjectStoreProductProjection>> Link(Guid projectId, [FromBody] LinkProjectStoreProductRequest request)
+    public async Task<ActionResult<ProjectStoreProductProjection>> Link(
+        Guid projectId,
+        [FromBody] LinkProjectStoreProductRequest request,
+        CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new LinkProjectStoreProductCommand(projectId, request.ProductId)).ConfigureAwait(false);
+        var result = await mediator.Send(new LinkProjectStoreProductCommand(projectId, request.ProductId), cancellationToken).ConfigureAwait(false);
         if (result.IsFailure) return ToActionResult(result);
         return CreatedAtAction(nameof(List), new { projectId }, result.Value);
     }
 
     [HttpDelete("{productId:guid}")]
-    public async Task<IActionResult> Unlink(Guid projectId, Guid productId)
+    public async Task<IActionResult> Unlink(Guid projectId, Guid productId, CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new UnlinkProjectStoreProductCommand(projectId, productId)).ConfigureAwait(false);
+        var result = await mediator.Send(new UnlinkProjectStoreProductCommand(projectId, productId), cancellationToken).ConfigureAwait(false);
         return result.IsSuccess ? NoContent() : ToActionResult(result);
     }
 
     [AllowAnonymous]
     [HttpGet("~/v1/store/products/{productId:guid}/projects")]
-    public async Task<ActionResult<IReadOnlyList<ProjectStoreProductProjection>>> ListPublicProductProjects(Guid productId)
+    public async Task<ActionResult<IReadOnlyList<ProjectStoreProductProjection>>> ListPublicProductProjects(
+        Guid productId,
+        CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetPublicStoreProductProjectsQuery(productId)).ConfigureAwait(false);
+        var result = await mediator.Send(new GetPublicStoreProductProjectsQuery(productId), cancellationToken).ConfigureAwait(false);
         return result.IsSuccess ? Ok(result.Value) : ToActionResult(result);
     }
 

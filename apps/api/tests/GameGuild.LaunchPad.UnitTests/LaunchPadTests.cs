@@ -83,6 +83,7 @@ public sealed class LaunchPadTests
     public async Task LaunchPad_Controller_Should_Use_Cqrs_Mediator()
     {
         var mediator = new Mock<IMediator>();
+        using var cancellation = new CancellationTokenSource();
         var plan = new LaunchPlan
         {
             Id = Guid.NewGuid(),
@@ -100,7 +101,7 @@ public sealed class LaunchPadTests
             ProjectId = plan.ProjectId,
             Name = "Public beta",
             Channels = ["newsletter"]
-        });
+        }, cancellation.Token);
 
         result.Result.Should().BeOfType<CreatedAtActionResult>();
         mediator.Verify(m => m.Send(
@@ -108,7 +109,7 @@ public sealed class LaunchPadTests
                 command.ProjectId == plan.ProjectId &&
                 command.Name == "Public beta" &&
                 command.Channels.SequenceEqual(new[] { "newsletter" })),
-            It.IsAny<CancellationToken>()), Times.Once);
+            cancellation.Token), Times.Once);
     }
 
     [Fact]
@@ -116,6 +117,8 @@ public sealed class LaunchPadTests
     {
         var plan = new LaunchPlan { Id = Guid.NewGuid(), ProjectId = Guid.NewGuid(), Name = "Release" };
         var mediator = new Mock<IMediator>();
+        using var cancellation = new CancellationTokenSource();
+        var checklistItemId = Guid.NewGuid();
         mediator
             .Setup(m => m.Send(It.IsAny<IRequest<Result<IReadOnlyList<LaunchPlan>>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success<IReadOnlyList<LaunchPlan>>([plan]));
@@ -134,15 +137,28 @@ public sealed class LaunchPadTests
 
         var controller = new LaunchPadController(mediator.Object);
 
-        (await controller.GetDashboard(LaunchPlanStatus.Preparing)).Result.Should().BeOfType<OkObjectResult>();
-        (await controller.GetLaunchPlan(plan.Id)).Result.Should().BeOfType<OkObjectResult>();
-        (await controller.GetProjectLaunchPlan(plan.ProjectId)).Result.Should().BeOfType<NotFoundResult>();
-        (await controller.CompleteChecklistItem(plan.Id, Guid.NewGuid())).Result.Should().BeOfType<NotFoundObjectResult>();
-        (await controller.PublishLaunch(plan.Id)).Result.Should().BeOfType<BadRequestObjectResult>();
+        (await controller.GetDashboard(LaunchPlanStatus.Preparing, cancellation.Token)).Result.Should().BeOfType<OkObjectResult>();
+        (await controller.GetLaunchPlan(plan.Id, cancellation.Token)).Result.Should().BeOfType<OkObjectResult>();
+        (await controller.GetProjectLaunchPlan(plan.ProjectId, cancellation.Token)).Result.Should().BeOfType<NotFoundResult>();
+        (await controller.CompleteChecklistItem(plan.Id, checklistItemId, cancellation.Token)).Result.Should().BeOfType<NotFoundObjectResult>();
+        (await controller.PublishLaunch(plan.Id, cancellation.Token)).Result.Should().BeOfType<BadRequestObjectResult>();
 
         mediator.Verify(m => m.Send(
             It.Is<GetLaunchPadDashboardQuery>(query => query.Status == LaunchPlanStatus.Preparing),
-            It.IsAny<CancellationToken>()), Times.Once);
+            cancellation.Token), Times.Once);
+        mediator.Verify(m => m.Send(
+            It.Is<GetLaunchPlanQuery>(query => query.LaunchPlanId == plan.Id),
+            cancellation.Token), Times.Once);
+        mediator.Verify(m => m.Send(
+            It.Is<GetLaunchPlanByProjectQuery>(query => query.ProjectId == plan.ProjectId),
+            cancellation.Token), Times.Once);
+        mediator.Verify(m => m.Send(
+            It.Is<CompleteLaunchChecklistItemCommand>(command =>
+                command.LaunchPlanId == plan.Id && command.ChecklistItemId == checklistItemId),
+            cancellation.Token), Times.Once);
+        mediator.Verify(m => m.Send(
+            It.Is<PublishLaunchCommand>(command => command.LaunchPlanId == plan.Id),
+            cancellation.Token), Times.Once);
     }
 
     [Fact]
