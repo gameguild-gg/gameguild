@@ -38,6 +38,7 @@ public sealed class SessionProjectHandlers(
                 .AnyAsync(version =>
                     version.Id == request.ProjectVersionId.Value &&
                     version.ProjectId == request.ProjectId &&
+                    version.TenantId == actor.TenantId &&
                     version.DeletedAt == null,
                     cancellationToken)
                 .ConfigureAwait(false);
@@ -110,10 +111,23 @@ public sealed class SessionProjectHandlers(
         if (authorization.Error != null)
             return Result.Failure<IReadOnlyList<SessionProjectProjection>>(authorization.Error);
 
-        var tenantId = actorContextAccessor.ActorContext.TenantId;
+        var tenantId = actorContextAccessor.ActorContext.TenantId!.Value;
         var query = context.Set<SessionProject>()
             .AsNoTracking()
-            .Where(link => link.SessionId == request.SessionId && link.TenantId == tenantId);
+            .Where(link =>
+                link.SessionId == request.SessionId &&
+                link.TenantId == tenantId &&
+                (!link.IsActive ||
+                 link.DeletedAt != null ||
+                 (link.Project.DeletedAt == null &&
+                  link.Project.TenantId == tenantId &&
+                  link.Project.Status != ContentStatus.Archived &&
+                  link.Project.Status != ContentStatus.Deleted &&
+                  (!link.ProjectVersionId.HasValue ||
+                   (link.ProjectVersion != null &&
+                    link.ProjectVersion.ProjectId == link.ProjectId &&
+                    link.ProjectVersion.TenantId == tenantId &&
+                    link.ProjectVersion.DeletedAt == null)))));
         if (!request.IncludeInactive)
             query = query.Where(link => link.IsActive && link.DeletedAt == null);
 
