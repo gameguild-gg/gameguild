@@ -7188,6 +7188,12 @@ namespace GameGuild.API.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("AllowLateSubmissions")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("AssessmentGroupId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("AvailableFrom")
                         .HasColumnType("timestamp with time zone");
 
@@ -7210,8 +7216,14 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<DateTime?>("DueAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsRequired")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LateSubmissionDeadline")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("MaxAttempts")
                         .HasColumnType("integer");
@@ -7223,6 +7235,12 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("PassingScore")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PresentationMode")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SubmissionModalities")
                         .HasColumnType("integer");
 
                     b.Property<Guid?>("TenantId")
@@ -7248,10 +7266,23 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AssessmentGroupId");
+
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Assessments", (string)null);
+                    b.ToTable("Assessments", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Assessments_DeliverySchedule", "(\"AvailableFrom\" IS NULL OR \"AvailableUntil\" IS NULL OR \"AvailableFrom\" <= \"AvailableUntil\") AND (\"DueAt\" IS NULL OR \"AvailableFrom\" IS NULL OR \"DueAt\" >= \"AvailableFrom\") AND (\"DueAt\" IS NULL OR \"AvailableUntil\" IS NULL OR \"DueAt\" <= \"AvailableUntil\") AND (NOT \"AllowLateSubmissions\" OR (\"DueAt\" IS NOT NULL AND \"LateSubmissionDeadline\" IS NOT NULL AND \"LateSubmissionDeadline\" > \"DueAt\" AND (\"AvailableUntil\" IS NULL OR \"LateSubmissionDeadline\" <= \"AvailableUntil\"))) AND (\"AllowLateSubmissions\" OR \"LateSubmissionDeadline\" IS NULL)");
+
+                            t.HasCheckConstraint("CK_Assessments_PresentationMode", "\"PresentationMode\" IN (0, 1)");
+
+                            t.HasCheckConstraint("CK_Assessments_SubmissionModalities", "\"SubmissionModalities\" > 0 AND (\"SubmissionModalities\" & ~127) = 0");
+                        });
                 });
+
+
+
+
 
             modelBuilder.Entity("GameGuild.Learning.Assessments.AssessmentSubmission", b =>
                 {
@@ -7265,6 +7296,9 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<int>("AttemptNumber")
                         .HasColumnType("integer");
 
+                    b.Property<string>("CodePayload")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -7277,14 +7311,29 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<string>("Feedback")
                         .HasColumnType("text");
 
+                    b.Property<string>("FilePayload")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
                     b.Property<DateTime?>("GradedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("GradedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("IsLate")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MediaPayload")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
                     b.Property<bool?>("Passed")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ProjectPayload")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<int?>("Score")
                         .HasColumnType("integer");
@@ -7295,14 +7344,27 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<string>("StructuredAnswerPayload")
+                        .HasColumnType("jsonb");
+
                     b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("SubmittedModalities")
+                        .HasColumnType("integer");
 
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("TextPayload")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UrlPayload")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -7319,7 +7381,12 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AssessmentSubmissions", (string)null);
+                    b.ToTable("AssessmentSubmissions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_AssessmentSubmissions_PayloadConsistency", "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 64) = 0 OR \"StructuredAnswerPayload\" IS NOT NULL) AND (\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND (\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND (\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND (\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND (\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND (\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0) AND (\"StructuredAnswerPayload\" IS NULL OR (\"SubmittedModalities\" & 64) <> 0)");
+
+                            t.HasCheckConstraint("CK_AssessmentSubmissions_SubmittedModalities", "\"SubmittedModalities\" >= 0 AND (\"SubmittedModalities\" & ~127) = 0");
+                        });
                 });
 
             modelBuilder.Entity("GameGuild.Learning.Certificates.Certificate", b =>
@@ -13728,11 +13795,6 @@ modelBuilder.Entity("GameGuild.Commerce.Products.SupportTicket", b =>
                     b.ToTable("SupportTickets");
                 });
 
-modelBuilder.Entity("GameGuild.Commerce.Products.SupportTicket", b =>
-                {
-                    b.Navigation("Messages");
-                });
-
 modelBuilder.Entity("GameGuild.Commerce.Products.SupportTicketMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -13799,6 +13861,11 @@ modelBuilder.Entity("GameGuild.Commerce.Products.SupportTicketMessage", b =>
                         .IsRequired();
 
                     b.Navigation("Ticket");
+                });
+
+modelBuilder.Entity("GameGuild.Commerce.Products.SupportTicket", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
 modelBuilder.Entity("GameGuild.Learning.Assessments.AssessmentGroup", b =>
