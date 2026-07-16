@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Commerce.Products;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Users;
@@ -9,6 +10,7 @@ using GameGuild.Projects;
 using GameGuild.TestingLab;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using Npgsql;
 using Testcontainers.PostgreSql;
 using Xunit;
@@ -310,6 +312,125 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
         (await verify.Set<TestingRequest>().AnyAsync()).Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConcurrentDeleteAndPublicTestingRequestCreate_CreateFirstClosesRequest(bool useCommandHandler)
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = NewProject(tenantId, ContentStatus.Draft, ContentVisibility.Private);
+        var version = NewProjectVersion(project, actorId, tenantId);
+        await SeedAsync(NewUser(actorId), project, version);
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+
+        await using var gateContext = new ApplicationDbContext(_options);
+        await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(project.Id);
+        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await observer.OpenAsync();
+
+        var createTask = CreatePublicTestingRequestAsync(version.Id, actorAccessor, useCommandHandler);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 1);
+        var deleteTask = DeleteAsync(project.Id);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 2);
+
+        await gate.CommitAsync();
+        var request = await createTask;
+        (await deleteTask).Should().BeTrue();
+        await using var verify = new ApplicationDbContext(_options);
+        (await verify.Set<TestingRequest>().IgnoreQueryFilters()
+            .SingleAsync(candidate => candidate.Id == request.Id)).DeletedAt.Should().NotBeNull();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConcurrentDeleteAndPublicTestingRequestCreate_DeleteFirstRejectsCreate(bool useCommandHandler)
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = NewProject(tenantId, ContentStatus.Draft, ContentVisibility.Private);
+        var version = NewProjectVersion(project, actorId, tenantId);
+        await SeedAsync(NewUser(actorId), project, version);
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+
+        await using var gateContext = new ApplicationDbContext(_options);
+        await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(project.Id);
+        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await observer.OpenAsync();
+
+        var deleteTask = DeleteAsync(project.Id);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 1);
+        var createTask = CreatePublicTestingRequestAsync(version.Id, actorAccessor, useCommandHandler);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 2);
+
+        await gate.CommitAsync();
+        (await deleteTask).Should().BeTrue();
+        var waitForCreate = async () => await createTask;
+        await waitForCreate.Should().ThrowAsync<InvalidOperationException>();
+        await using var verify = new ApplicationDbContext(_options);
+        (await verify.Set<TestingRequest>().AnyAsync()).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ConcurrentDeleteAndTestingRequestRestore_RestoreFirstClosesRequest()
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = NewProject(tenantId, ContentStatus.Draft, ContentVisibility.Private);
+        var version = NewProjectVersion(project, actorId, tenantId);
+        var request = NewDeletedTestingRequest(version.Id, actorId, tenantId);
+        await SeedAsync(NewUser(actorId), project, version, request);
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+
+        await using var gateContext = new ApplicationDbContext(_options);
+        await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(project.Id);
+        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await observer.OpenAsync();
+
+        var restoreTask = RestoreTestingRequestAsync(request.Id, actorAccessor);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 1);
+        var deleteTask = DeleteAsync(project.Id);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 2);
+
+        await gate.CommitAsync();
+        (await restoreTask).Should().BeTrue();
+        (await deleteTask).Should().BeTrue();
+        await using var verify = new ApplicationDbContext(_options);
+        (await verify.Set<TestingRequest>().IgnoreQueryFilters()
+            .SingleAsync(candidate => candidate.Id == request.Id)).DeletedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task ConcurrentDeleteAndTestingRequestRestore_DeleteFirstRejectsRestore()
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = NewProject(tenantId, ContentStatus.Draft, ContentVisibility.Private);
+        var version = NewProjectVersion(project, actorId, tenantId);
+        var request = NewDeletedTestingRequest(version.Id, actorId, tenantId);
+        await SeedAsync(NewUser(actorId), project, version, request);
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+
+        await using var gateContext = new ApplicationDbContext(_options);
+        await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(project.Id);
+        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await observer.OpenAsync();
+
+        var deleteTask = DeleteAsync(project.Id);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 1);
+        var restoreTask = RestoreTestingRequestAsync(request.Id, actorAccessor);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 2);
+
+        await gate.CommitAsync();
+        (await deleteTask).Should().BeTrue();
+        var waitForRestore = async () => await restoreTask;
+        await waitForRestore.Should().ThrowAsync<InvalidOperationException>();
+        await using var verify = new ApplicationDbContext(_options);
+        (await verify.Set<TestingRequest>().IgnoreQueryFilters()
+            .SingleAsync(candidate => candidate.Id == request.Id)).DeletedAt.Should().NotBeNull();
+    }
+
     public async Task DisposeAsync() => await _container.DisposeAsync();
 
     private async Task<Result<ProjectStoreProductProjection>> LinkStoreAsync(
@@ -381,6 +502,57 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
             }, actorId);
     }
 
+    private async Task<TestingRequest> CreatePublicTestingRequestAsync(
+        Guid projectVersionId,
+        IActorContextAccessor actorAccessor,
+        bool useCommandHandler)
+    {
+        await using var context = new ApplicationDbContext(_options);
+        var operations = new TestingRequestOperationsService(
+            context,
+            new ProjectChannelAvailabilityService(context),
+            new AllowAllProjectAuthorizationService(),
+            actorAccessor,
+            new ProjectLifecycleLock(context));
+        if (!useCommandHandler)
+            return await operations.CreateTestingRequestAsync(NewTestingRequest(projectVersionId));
+
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(candidate => candidate.Publish(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        return await new CreateTestingRequestCommandHandler(
+                Mock.Of<ITestingRequestRepository>(),
+                new TestingRequestService(context, operations),
+                mediator.Object)
+            .Handle(new CreateTestingRequestCommand(
+                projectVersionId,
+                "Public race request",
+                null,
+                null,
+                InstructionType.Text,
+                "Exercise lifecycle serialization.",
+                null,
+                null,
+                null,
+                4,
+                SystemClock.UtcNow,
+                SystemClock.UtcNow.AddDays(1)), default);
+    }
+
+    private async Task<bool> RestoreTestingRequestAsync(
+        Guid requestId,
+        IActorContextAccessor actorAccessor)
+    {
+        await using var context = new ApplicationDbContext(_options);
+        return await new TestingRequestOperationsService(
+                context,
+                new ProjectChannelAvailabilityService(context),
+                new AllowAllProjectAuthorizationService(),
+                actorAccessor,
+                new ProjectLifecycleLock(context))
+            .RestoreTestingRequestAsync(requestId);
+    }
+
     private async Task<bool> DeleteAsync(Guid projectId)
     {
         await using var context = new ApplicationDbContext(_options);
@@ -413,6 +585,37 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
         Status = status,
         Visibility = visibility
     };
+
+    private static ProjectVersion NewProjectVersion(Project project, Guid actorId, Guid tenantId) => new()
+    {
+        Id = Guid.NewGuid(),
+        ProjectId = project.Id,
+        TenantId = tenantId,
+        VersionNumber = "1.0.0",
+        CreatedById = actorId
+    };
+
+    private static TestingRequest NewTestingRequest(Guid projectVersionId) => new()
+    {
+        Id = Guid.NewGuid(),
+        ProjectVersionId = projectVersionId,
+        Title = "Public race request",
+        InstructionsType = InstructionType.Text,
+        StartDate = SystemClock.UtcNow,
+        EndDate = SystemClock.UtcNow.AddDays(1)
+    };
+
+    private static TestingRequest NewDeletedTestingRequest(
+        Guid projectVersionId,
+        Guid actorId,
+        Guid tenantId)
+    {
+        var request = NewTestingRequest(projectVersionId);
+        request.CreatedById = actorId;
+        request.TenantId = tenantId;
+        request.DeletedAt = SystemClock.UtcNow.AddDays(-1);
+        return request;
+    }
 
     private static User NewUser(Guid userId) => new()
     {
