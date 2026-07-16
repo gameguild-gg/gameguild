@@ -1,4 +1,6 @@
 
+using System.Text.Json;
+
 namespace GameGuild.Learning.Assessments;
 
 /// <summary>
@@ -21,6 +23,12 @@ public class Assessment : EntityBase
     public int Order { get; private set; }
     public DateTime? AvailableFrom { get; private set; }
     public DateTime? AvailableUntil { get; private set; }
+    public DateTime? DueAt { get; private set; }
+    public bool AllowLateSubmissions { get; private set; }
+    public DateTime? LateSubmissionDeadline { get; private set; }
+    public SubmissionModality SubmissionModalities { get; private set; } = SubmissionModality.Text;
+    public AssessmentPresentationMode PresentationMode { get; private set; } = AssessmentPresentationMode.SingleStep;
+    public ICollection<InteractiveVideoAssessmentCue> InteractiveVideoCues { get; private set; } = new List<InteractiveVideoAssessmentCue>();
 
     private Assessment() { } // EF Core
 
@@ -49,10 +57,7 @@ public class Assessment : EntityBase
 
     public bool IsAvailable()
     {
-        var now = SystemClock.UtcNow;
-        if (AvailableFrom.HasValue && now < AvailableFrom.Value) return false;
-        if (AvailableUntil.HasValue && now > AvailableUntil.Value) return false;
-        return true;
+        return TryGetSubmissionTiming(SystemClock.UtcNow, out _);
     }
 
     public void SetDescription(string? description)
@@ -75,9 +80,74 @@ public class Assessment : EntityBase
 
     public void SetAvailability(DateTime? availableFrom, DateTime? availableUntil)
     {
+        SetDeliverySchedule(availableFrom, availableUntil, DueAt, AllowLateSubmissions, LateSubmissionDeadline);
+    }
+
+    public void SetDeliveryContract(SubmissionModality submissionModalities, AssessmentPresentationMode presentationMode)
+    {
+        ValidateSubmissionModalities(submissionModalities);
+        if (!Enum.IsDefined(presentationMode))
+        {
+            throw new ArgumentOutOfRangeException(nameof(presentationMode), presentationMode, "Presentation mode is not supported.");
+        }
+
+        SubmissionModalities = submissionModalities;
+        PresentationMode = presentationMode;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public void SetDeliverySchedule(
+        DateTime? availableFrom,
+        DateTime? availableUntil,
+        DateTime? dueAt,
+        bool allowLateSubmissions,
+        DateTime? lateSubmissionDeadline)
+    {
+        ValidateDeliverySchedule(availableFrom, availableUntil, dueAt, allowLateSubmissions, lateSubmissionDeadline);
+
         AvailableFrom = availableFrom;
         AvailableUntil = availableUntil;
+        DueAt = dueAt;
+        AllowLateSubmissions = allowLateSubmissions;
+        LateSubmissionDeadline = lateSubmissionDeadline;
         UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public bool TryGetSubmissionTiming(DateTime submittedAt, out bool isLate)
+    {
+        var timestamp = submittedAt.ToUniversalTime();
+        if (AvailableFrom.HasValue && timestamp < AvailableFrom.Value)
+        {
+            isLate = false;
+            return false;
+        }
+
+        if (AvailableUntil.HasValue && timestamp > AvailableUntil.Value)
+        {
+            isLate = false;
+            return false;
+        }
+
+        isLate = DueAt.HasValue && timestamp > DueAt.Value;
+        if (!isLate)
+        {
+            return true;
+        }
+
+        return AllowLateSubmissions &&
+               LateSubmissionDeadline.HasValue &&
+               timestamp <= LateSubmissionDeadline.Value;
+    }
+
+    public InteractiveVideoAssessmentCue AddInteractiveVideoCue(
+        Guid contentId,
+        string cueId,
+        decimal? cuePositionSeconds = null)
+    {
+        var cue = InteractiveVideoAssessmentCue.Create(Id, contentId, cueId, cuePositionSeconds);
+        InteractiveVideoCues.Add(cue);
+        UpdatedAt = SystemClock.UtcNow;
+        return cue;
     }
 
     public void AssignToGroup(Guid? assessmentGroupId)
@@ -99,7 +169,14 @@ public class Assessment : EntityBase
         Guid? contentId = null,
         bool clearContentId = false,
         Guid? assessmentGroupId = null,
-        bool clearAssessmentGroupId = false)
+        bool clearAssessmentGroupId = false,
+        SubmissionModality? submissionModalities = null,
+        AssessmentPresentationMode? presentationMode = null,
+        DateTime? dueAt = null,
+        bool clearDueAt = false,
+        bool? allowLateSubmissions = null,
+        DateTime? lateSubmissionDeadline = null,
+        bool clearLateSubmissionDeadline = false)
     {
         if (title != null) Title = title;
         Description = description;
@@ -108,18 +185,91 @@ public class Assessment : EntityBase
         TimeLimitMinutes = timeLimitMinutes;
         MaxAttempts = maxAttempts;
         if (isRequired.HasValue) IsRequired = isRequired.Value;
-        AvailableFrom = availableFrom;
-        AvailableUntil = availableUntil;
+        var nextDueAt = clearDueAt ? null : dueAt ?? DueAt;
+        var nextLateSubmissionDeadline = clearLateSubmissionDeadline
+            ? null
+            : lateSubmissionDeadline ?? LateSubmissionDeadline;
+        SetDeliverySchedule(
+            availableFrom,
+            availableUntil,
+            nextDueAt,
+            allowLateSubmissions ?? AllowLateSubmissions,
+            nextLateSubmissionDeadline);
         if (clearContentId) ContentId = null;
         else if (contentId.HasValue) ContentId = contentId.Value;
         if (clearAssessmentGroupId) AssessmentGroupId = null;
         else if (assessmentGroupId.HasValue) AssessmentGroupId = assessmentGroupId.Value;
+        if (submissionModalities.HasValue || presentationMode.HasValue)
+        {
+            SetDeliveryContract(
+                submissionModalities ?? SubmissionModalities,
+                presentationMode ?? PresentationMode);
+        }
+
         UpdatedAt = SystemClock.UtcNow;
     }
 
     public static AssessmentType NormalizeType(AssessmentType type)
     {
         return type == AssessmentType.Exam ? AssessmentType.Quiz : type;
+    }
+
+    private static void ValidateSubmissionModalities(SubmissionModality submissionModalities)
+    {
+        const SubmissionModality supported = SubmissionModality.Text |
+                                               SubmissionModality.File |
+                                               SubmissionModality.Url |
+                                               SubmissionModality.Code |
+                                               SubmissionModality.Media |
+                                               SubmissionModality.Project |
+                                               SubmissionModality.StructuredAnswer;
+        if (submissionModalities == SubmissionModality.None || (submissionModalities & ~supported) != 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(submissionModalities), submissionModalities, "At least one supported submission modality is required.");
+        }
+    }
+
+    private static void ValidateDeliverySchedule(
+        DateTime? availableFrom,
+        DateTime? availableUntil,
+        DateTime? dueAt,
+        bool allowLateSubmissions,
+        DateTime? lateSubmissionDeadline)
+    {
+        if (availableFrom.HasValue && availableUntil.HasValue && availableUntil.Value < availableFrom.Value)
+        {
+            throw new ArgumentException("Assessment availability end must be on or after availability start.", nameof(availableUntil));
+        }
+
+        if (dueAt.HasValue && availableFrom.HasValue && dueAt.Value < availableFrom.Value)
+        {
+            throw new ArgumentException("Assessment due date must be on or after availability start.", nameof(dueAt));
+        }
+
+        if (dueAt.HasValue && availableUntil.HasValue && dueAt.Value > availableUntil.Value)
+        {
+            throw new ArgumentException("Assessment due date must be on or before availability end.", nameof(dueAt));
+        }
+
+        if (allowLateSubmissions && !dueAt.HasValue)
+        {
+            throw new ArgumentException("A due date is required when late submissions are allowed.", nameof(dueAt));
+        }
+
+        if (allowLateSubmissions && !lateSubmissionDeadline.HasValue)
+        {
+            throw new ArgumentException("Late submission deadline is required when late submissions are allowed.", nameof(lateSubmissionDeadline));
+        }
+
+        if (lateSubmissionDeadline.HasValue && (!allowLateSubmissions || !dueAt.HasValue || lateSubmissionDeadline.Value <= dueAt.Value))
+        {
+            throw new ArgumentException("Late submission deadline must be after the due date when late submissions are allowed.", nameof(lateSubmissionDeadline));
+        }
+
+        if (lateSubmissionDeadline.HasValue && availableUntil.HasValue && lateSubmissionDeadline.Value > availableUntil.Value)
+        {
+            throw new ArgumentException("Late submission deadline must be on or before availability end.", nameof(lateSubmissionDeadline));
+        }
     }
 }
 
@@ -224,6 +374,15 @@ public class AssessmentSubmission : EntityBase
     public Guid? GradedBy { get; private set; }
     public string? Feedback { get; private set; }
     public SubmissionStatus Status { get; private set; }
+    public bool IsLate { get; private set; }
+    public SubmissionModality SubmittedModalities { get; private set; }
+    public string? TextPayload { get; private set; }
+    public string? FilePayload { get; private set; }
+    public string? UrlPayload { get; private set; }
+    public string? CodePayload { get; private set; }
+    public string? MediaPayload { get; private set; }
+    public string? ProjectPayload { get; private set; }
+    public string? StructuredAnswerPayload { get; private set; }
 
     private AssessmentSubmission() { } // EF Core
 
@@ -241,15 +400,68 @@ public class AssessmentSubmission : EntityBase
         };
     }
 
-    public void Submit()
+    public void SetPayload(SubmitAssessmentRequest payload, SubmissionModality allowedModalities)
     {
-        SubmittedAt = SystemClock.UtcNow;
-        Status = SubmissionStatus.Submitted;
+        if (Status != SubmissionStatus.InProgress)
+        {
+            throw new InvalidOperationException("Submission payload can only be changed while in progress.");
+        }
+
+        var submittedModalities = SubmissionModality.None;
+        var textPayload = NormalizePayload(payload.TextPayload, SubmissionModality.Text, ref submittedModalities);
+        var filePayload = NormalizeBoundedPayload(payload.FilePayload, SubmissionModality.File, ref submittedModalities, nameof(payload.FilePayload));
+        var urlPayload = NormalizeUrlPayload(payload.UrlPayload, SubmissionModality.Url, ref submittedModalities, nameof(payload.UrlPayload));
+        var codePayload = NormalizePayload(payload.CodePayload, SubmissionModality.Code, ref submittedModalities);
+        var mediaPayload = NormalizeUrlPayload(payload.MediaPayload, SubmissionModality.Media, ref submittedModalities, nameof(payload.MediaPayload));
+        var projectPayload = NormalizeBoundedPayload(payload.ProjectPayload, SubmissionModality.Project, ref submittedModalities, nameof(payload.ProjectPayload));
+        var structuredAnswerPayload = NormalizeStructuredPayload(payload.StructuredAnswerPayload, ref submittedModalities);
+
+        if (submittedModalities == SubmissionModality.None)
+        {
+            throw new ArgumentException("At least one submission payload is required.", nameof(payload));
+        }
+
+        if ((submittedModalities & ~allowedModalities) != 0)
+        {
+            throw new ArgumentException("Submission payload contains a modality that is not accepted by this assessment.", nameof(payload));
+        }
+
+        TextPayload = textPayload;
+        FilePayload = filePayload;
+        UrlPayload = urlPayload;
+        CodePayload = codePayload;
+        MediaPayload = mediaPayload;
+        ProjectPayload = projectPayload;
+        StructuredAnswerPayload = structuredAnswerPayload;
+        SubmittedModalities = submittedModalities;
         UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public void Submit(bool isLate = false)
+    {
+        Submit(isLate, SystemClock.UtcNow);
+    }
+
+    public void Submit(bool isLate, DateTime submittedAt)
+    {
+        if (Status != SubmissionStatus.InProgress)
+        {
+            throw new InvalidOperationException("Only an in-progress submission can be submitted.");
+        }
+
+        SubmittedAt = submittedAt;
+        IsLate = isLate;
+        Status = isLate ? SubmissionStatus.Late : SubmissionStatus.Submitted;
+        UpdatedAt = submittedAt;
     }
 
     public void Grade(int score, int passingScore, Guid? gradedBy = null, string? feedback = null)
     {
+        if (Status is not (SubmissionStatus.Submitted or SubmissionStatus.Late))
+        {
+            throw new InvalidOperationException("Only submitted submissions can be graded.");
+        }
+
         Score = score;
         Passed = score >= passingScore;
         GradedAt = SystemClock.UtcNow;
@@ -257,6 +469,67 @@ public class AssessmentSubmission : EntityBase
         Feedback = feedback;
         Status = SubmissionStatus.Graded;
         UpdatedAt = SystemClock.UtcNow;
+    }
+
+    private static string? NormalizePayload(string? payload, SubmissionModality modality, ref SubmissionModality submittedModalities)
+    {
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            return null;
+        }
+
+        submittedModalities |= modality;
+        return payload;
+    }
+
+    private static string? NormalizeUrlPayload(
+        string? payload,
+        SubmissionModality modality,
+        ref SubmissionModality submittedModalities,
+        string parameterName)
+    {
+        var normalized = NormalizeBoundedPayload(payload, modality, ref submittedModalities, parameterName);
+        if (normalized != null && (!Uri.TryCreate(normalized, UriKind.Absolute, out var uri) ||
+                                   (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)))
+        {
+            throw new ArgumentException("Payload URL must be an absolute HTTP or HTTPS URL.", parameterName);
+        }
+
+        return normalized;
+    }
+
+    private static string? NormalizeBoundedPayload(
+        string? payload,
+        SubmissionModality modality,
+        ref SubmissionModality submittedModalities,
+        string parameterName)
+    {
+        var normalized = NormalizePayload(payload, modality, ref submittedModalities);
+        if (normalized?.Length > 2048)
+        {
+            throw new ArgumentException("Payload cannot exceed 2048 characters.", parameterName);
+        }
+
+        return normalized;
+    }
+
+    private static string? NormalizeStructuredPayload(string? payload, ref SubmissionModality submittedModalities)
+    {
+        var normalized = NormalizePayload(payload, SubmissionModality.StructuredAnswer, ref submittedModalities);
+        if (normalized == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            using var _ = JsonDocument.Parse(normalized);
+            return normalized;
+        }
+        catch (JsonException exception)
+        {
+            throw new ArgumentException("Structured answer payload must be valid JSON.", nameof(payload), exception);
+        }
     }
 }
 
@@ -273,9 +546,9 @@ public enum AssessmentType
 
 public enum SubmissionStatus
 {
-    InProgress,
-    Submitted,
-    Graded,
-    Returned,
-    Late
+    InProgress = 0,
+    Submitted = 1,
+    Graded = 2,
+    Returned = 3,
+    Late = 4
 }

@@ -8,7 +8,8 @@ namespace GameGuild.Learning.Courses;
 /// <summary> Service implementation for ProgramContent management with full DAC permission support Handles CRUD operations, hierarchical content structure, and content ordering </summary>
 public class ProgramContentService(
   IApplicationDbContext context,
-  IProgramContentScheduleGuard scheduleGuard) : IProgramContentService {
+  IProgramContentScheduleGuard scheduleGuard,
+  IProgramContentLifecycleGuard lifecycleGuard) : IProgramContentService {
   public async Task<ProgramContent> CreateContentAsync(ProgramContent content) {
     content.NormalizeLearningContract();
 
@@ -44,12 +45,22 @@ public class ProgramContentService(
   }
 
   public async Task<ProgramContent> UpdateContentAsync(ProgramContent content) {
+    await using var lifecycleTransaction = await ProgramContentLifecycleDatabaseLock
+      .AcquireAsync(context, [content.Id])
+      .ConfigureAwait(false);
     var existingContent = await context.Set<ProgramContent>().FirstOrDefaultAsync(pc => pc.Id == content.Id && pc.DeletedAt == null);
 
     if (existingContent == null) throw new InvalidOperationException($"ProgramContent with ID {content.Id} not found or has been deleted");
 
     // Update properties
     content.NormalizeLearningContract();
+    if (await lifecycleGuard.HasBlockingIncompatibleUpdateReference(
+            existingContent.Id,
+            content.Type,
+            content.LessonFormat).ConfigureAwait(false)) {
+      throw new GameGuild.CQRS.RequestValidationException(
+        "Content linked to an assessment cue must remain a video lesson. Remove the assessment cue first.");
+    }
     existingContent.Title = content.Title;
     existingContent.Description = content.Description;
     existingContent.Type = content.Type;
@@ -65,6 +76,7 @@ public class ProgramContentService(
     existingContent.Touch();
 
     await context.SaveChangesAsync().ConfigureAwait(false);
+    await ProgramContentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
 
     return existingContent;
   }
@@ -76,16 +88,27 @@ public class ProgramContentService(
 
     var contents = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == content.ProgramId && pc.DeletedAt == null).ToListAsync();
     var contentTreeIds = ProgramContentTree.GetIds(id, contents);
+    await using var lifecycleTransaction = await ProgramContentLifecycleDatabaseLock
+      .AcquireAsync(context, contentTreeIds)
+      .ConfigureAwait(false);
+    contents = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == content.ProgramId && pc.DeletedAt == null).ToListAsync();
+    contentTreeIds = ProgramContentTree.GetIds(id, contents);
     foreach (var contentId in contentTreeIds) {
       if (await scheduleGuard.HasActiveScheduleReference(contentId).ConfigureAwait(false)) {
         throw new GameGuild.CQRS.RequestValidationException(
           "Content used by an active class schedule cannot be deleted. Remove or replace its schedule entry first.");
+      }
+
+      if (await lifecycleGuard.HasBlockingDeleteReference(contentId).ConfigureAwait(false)) {
+        throw new GameGuild.CQRS.RequestValidationException(
+          "Content linked to an assessment cue cannot be deleted. Remove the assessment cue first.");
       }
     }
 
     SoftDeleteContentTree(id, contents);
 
     await context.SaveChangesAsync().ConfigureAwait(false);
+    await ProgramContentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
 
     return true;
   }

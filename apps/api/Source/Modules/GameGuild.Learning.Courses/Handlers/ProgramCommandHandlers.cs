@@ -35,7 +35,6 @@ public sealed class ProgramCommandHandlers(IApplicationDbContext context, ILogge
                                                                                                             IRequestHandler<UnenrollUserCommand, bool>,
                                                                                                             IRequestHandler<UpdateEnrollmentStatusCommand, Program>,
                                                                                                             IRequestHandler<AddProgramContentCommand, ProgramContent>,
-                                                                                                            IRequestHandler<RemoveProgramContentCommand, bool>,
                                                                                                             IRequestHandler<ReorderProgramContentCommand, IEnumerable<ProgramContent>>,
                                                                                                             IRequestHandler<RateProgramCommand, ProgramRating>,
                                                                                                             IRequestHandler<UpdateProgramRatingCommand, ProgramRating>,
@@ -300,21 +299,6 @@ public sealed class ProgramCommandHandlers(IApplicationDbContext context, ILogge
     await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Removed program {ProgramId} from wishlist for user {UserId}", request.ProgramId, request.UserId);
-
-    return true;
-  }
-
-  public async Task<bool> Handle(RemoveProgramContentCommand request, CancellationToken cancellationToken) {
-    logger.LogInformation("Removing content {ContentId} from program {ProgramId}", request.ContentId, request.ProgramId);
-
-    var programContent = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == request.ProgramId && pc.Id == request.ContentId).FirstOrDefaultAsync(cancellationToken);
-
-    if (programContent == null) { return false; }
-
-    context.Set<ProgramContent>().Remove(programContent);
-    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-    logger.LogInformation("Removed content {ContentId} from program {ProgramId}", request.ContentId, request.ProgramId);
 
     return true;
   }

@@ -1,7 +1,9 @@
 using FluentAssertions;
+using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using Xunit;
 
 namespace GameGuild.Learning.Assessments.Tests;
@@ -328,7 +330,7 @@ public sealed class AssessmentServiceAnalyticsTests
         db.Set<AssessmentSubmission>().AddRange(quizSubmission, projectSubmission, ignoredSubmission);
         await db.SaveChangesAsync();
 
-        var service = new AssessmentService(db, NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
 
         var analytics = await service.GetCourseAssessmentAnalyticsAsync(courseId);
 

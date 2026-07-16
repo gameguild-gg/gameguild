@@ -8,8 +8,11 @@ namespace GameGuild.Learning.Courses;
 /// Write-side service for Programs: create, update, delete, clone,
 /// content management, user management, progress mutations, monetization, and product integration.
 /// </summary>
-public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteService
+public class ProgramWriteService(
+  IApplicationDbContext context,
+  IProgramContentLifecycleGuard? lifecycleReferenceGuard = null) : IProgramWriteService
 {
+  private readonly IProgramContentLifecycleGuard lifecycleGuard = lifecycleReferenceGuard ?? new NullProgramContentLifecycleGuard();
   // ── Program CRUD ────────────────────────────────────────────────────
 
   public async Task<Program> CreateProgramAsync(Program program)
@@ -174,22 +177,48 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
   public async Task<ProgramContent> UpdateContentAsync(ProgramContent content)
   {
+    await using var lifecycleTransaction = await ProgramContentLifecycleDatabaseLock
+      .AcquireAsync(context, [content.Id])
+      .ConfigureAwait(false);
+    var existingContent = await context.Set<ProgramContent>()
+      .FirstOrDefaultAsync(candidate => candidate.Id == content.Id && candidate.DeletedAt == null)
+      .ConfigureAwait(false);
+    if (existingContent == null) throw new InvalidOperationException($"ProgramContent with ID {content.Id} not found or has been deleted");
+
     content.NormalizeLearningContract();
+    if (await lifecycleGuard.HasBlockingIncompatibleUpdateReference(
+          content.Id,
+          content.Type,
+          content.LessonFormat).ConfigureAwait(false))
+    {
+      throw new GameGuild.CQRS.RequestValidationException(
+        "Content linked to an assessment cue must remain a video lesson. Remove the assessment cue first.");
+    }
     content.Touch();
     context.Set<ProgramContent>().Update(content);
     await context.SaveChangesAsync().ConfigureAwait(false);
+    await ProgramContentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
 
     return content;
   }
 
   public async Task DeleteContentAsync(Guid contentId)
   {
+    await using var lifecycleTransaction = await ProgramContentLifecycleDatabaseLock
+      .AcquireAsync(context, [contentId])
+      .ConfigureAwait(false);
     var content = await context.Set<ProgramContent>().FindAsync(contentId).ConfigureAwait(false);
 
     if (content != null)
     {
+      if (await lifecycleGuard.HasBlockingDeleteReference(content.Id).ConfigureAwait(false))
+      {
+        throw new GameGuild.CQRS.RequestValidationException(
+          "Content linked to an assessment cue cannot be deleted. Remove the assessment cue first.");
+      }
       content.SoftDelete();
       await context.SaveChangesAsync().ConfigureAwait(false);
+      await ProgramContentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
     }
   }
 
@@ -246,6 +275,9 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
 
   public async Task<ProgramContent?> UpdateContentAsync(Guid programId, Guid contentId, UpdateContentDto contentDto)
   {
+    await using var lifecycleTransaction = await ProgramContentLifecycleDatabaseLock
+      .AcquireAsync(context, [contentId])
+      .ConfigureAwait(false);
     var content = await context.Set<ProgramContent>().FirstOrDefaultAsync(c => c.Id == contentId && c.ProgramId == programId && c.DeletedAt == null);
 
     if (content == null) return null;
@@ -266,20 +298,39 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     if (contentDto.EstimatedMinutes != null) content.EstimatedMinutes = contentDto.EstimatedMinutes;
 
     content.NormalizeLearningContract();
+    if (await lifecycleGuard.HasBlockingIncompatibleUpdateReference(
+          content.Id,
+          content.Type,
+          content.LessonFormat).ConfigureAwait(false))
+    {
+      throw new GameGuild.CQRS.RequestValidationException(
+        "Content linked to an assessment cue must remain a video lesson. Remove the assessment cue first.");
+    }
     content.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
+    await ProgramContentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
 
     return content;
   }
 
   public async Task<bool> RemoveContentAsync(Guid programId, Guid contentId)
   {
+    await using var lifecycleTransaction = await ProgramContentLifecycleDatabaseLock
+      .AcquireAsync(context, [contentId])
+      .ConfigureAwait(false);
     var content = await context.Set<ProgramContent>().FirstOrDefaultAsync(c => c.Id == contentId && c.ProgramId == programId && c.DeletedAt == null);
 
     if (content == null) return false;
 
+    if (await lifecycleGuard.HasBlockingDeleteReference(content.Id).ConfigureAwait(false))
+    {
+      throw new GameGuild.CQRS.RequestValidationException(
+        "Content linked to an assessment cue cannot be deleted. Remove the assessment cue first.");
+    }
+
     content.SoftDelete();
     await context.SaveChangesAsync().ConfigureAwait(false);
+    await ProgramContentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
 
     return true;
   }
