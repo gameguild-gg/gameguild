@@ -7280,6 +7280,18 @@ namespace GameGuild.API.Database.Migrations
                         });
                 });
 
+            modelBuilder.Entity("GameGuild.Learning.Assessments.Assessment", b =>
+                {
+                    b.HasOne("GameGuild.Learning.Assessments.AssessmentGroup", "AssessmentGroup")
+                        .WithMany()
+                        .HasForeignKey("AssessmentGroupId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("AssessmentGroup");
+
+                    b.Navigation("InteractiveVideoCues");
+                });
+
 
 
 
