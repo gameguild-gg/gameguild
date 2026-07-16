@@ -24,14 +24,14 @@ public class ControllerAndModuleTests
     private readonly Mock<IPermissionQueryService> _permissions = new();
     private readonly Mock<ILogger<AssessmentsController>> _log = new();
 
-    private AssessmentsController CreateController(Guid? userId = null, bool isSystemAdmin = false)
+    private AssessmentsController CreateController(Guid? userId = null, bool isSystemAdmin = false, Guid? tenantId = null)
     {
         var uid = userId ?? Guid.NewGuid();
         _actor.Setup(a => a.ActorContext).Returns(new ActorContext
         {
             ActorKind = ActorKind.User,
             SubjectId = uid.ToString(),
-            TenantId = Guid.NewGuid(),
+            TenantId = tenantId ?? Guid.NewGuid(),
             IsAuthenticated = true,
             Roles = isSystemAdmin ? new HashSet<string> { "SystemAdmin" } : new HashSet<string>(),
             Permissions = new HashSet<string>()
@@ -102,8 +102,10 @@ public class ControllerAndModuleTests
             Distribution: Array.Empty<AssessmentScoreBucketDto>(),
             Groups: Array.Empty<AssessmentGroupAnalyticsDto>());
         _svc.Setup(s => s.GetCourseAssessmentAnalyticsAsync(courseId)).ReturnsAsync(analytics);
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
 
-        var r = await CreateController().GetCourseAssessmentAnalytics(courseId);
+        var r = await CreateController(isSystemAdmin: true).GetCourseAssessmentAnalytics(courseId);
 
         r.Result.Should().BeOfType<OkObjectResult>();
     }
@@ -111,8 +113,11 @@ public class ControllerAndModuleTests
     [Fact]
     public async Task DeleteAssessment_Success_Returns204()
     {
-        _svc.Setup(s => s.DeleteAssessmentAsync(It.IsAny<Guid>())).ReturnsAsync(Result.Success());
-        var r = await CreateController().DeleteAssessment(Guid.NewGuid());
+        var assessmentId = Guid.NewGuid();
+        _svc.Setup(s => s.GetAssessmentByIdAsync(assessmentId))
+            .ReturnsAsync(Assessment.Create(Guid.NewGuid(), "T", AssessmentType.Assignment, 100, 60));
+        _svc.Setup(s => s.DeleteAssessmentAsync(assessmentId)).ReturnsAsync(Result.Success());
+        var r = await CreateController(isSystemAdmin: true).DeleteAssessment(assessmentId);
         r.Should().BeOfType<NoContentResult>();
     }
 
@@ -194,6 +199,8 @@ public class ControllerAndModuleTests
         var courseId = Guid.NewGuid();
         _svc.Setup(s => s.GetAssessmentByIdAsync(assessmentId))
             .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
         _svc.Setup(s => s.GetAssessmentSubmissionsAsync(assessmentId)).ReturnsAsync(new List<AssessmentSubmission>());
         _permissions.Setup(service => service.HasTenantPermissionAsync(
                 It.IsAny<Guid>(),
@@ -278,6 +285,20 @@ public class ControllerAndModuleTests
     }
 
     [Fact]
+    public void CoursesAndAssessmentsModules_ResolveTheRealAssessmentLifecycleGuard()
+    {
+        var sc = new ServiceCollection();
+        sc.AddScoped<IApplicationDbContext>(_ => Mock.Of<IApplicationDbContext>());
+        sc.AddCoursesModule();
+        sc.AddAssessmentsModule();
+
+        using var provider = sc.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        scope.ServiceProvider.GetRequiredService<IProgramContentLifecycleGuard>()
+            .Should().BeOfType<AssessmentProgramContentLifecycleGuard>();
+    }
+
+    [Fact]
     public void MapAssessmentsEndpoints_ReturnsSameEndpointBuilder()
     {
         var endpoints = Mock.Of<IEndpointRouteBuilder>();
@@ -304,18 +325,166 @@ public class ControllerAndModuleTests
         var req = new CreateAssessmentRequest(Guid.NewGuid(), "T", "D", AssessmentType.Quiz, 100, 60, 30, 3, true, null, null);
         _svc.Setup(s => s.CreateAssessmentAsync(req))
             .ReturnsAsync(Result.Success(Assessment.Create(req.CourseId, "T", AssessmentType.Quiz, 100, 60)));
-        var r = await CreateController().CreateAssessment(req);
+        _programs.Setup(service => service.GetProgramByIdAsync(req.CourseId))
+            .ReturnsAsync(new Program { Id = req.CourseId, CreatorId = Guid.NewGuid() });
+        var r = await CreateController(isSystemAdmin: true).CreateAssessment(req);
         r.Result.Should().BeOfType<CreatedAtActionResult>();
+    }
+
+    [Fact]
+    public async Task CreateAssessment_WhenActorCannotManagePersistedProgram_ReturnsForbiddenBeforeCallingService()
+    {
+        var actorId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var request = new CreateAssessmentRequest(courseId, "T", null, AssessmentType.Assignment, 100, 60);
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
+
+        var result = await CreateController(actorId).CreateAssessment(request);
+
+        result.Result.Should().BeOfType<ForbidResult>();
+        _svc.Verify(service => service.CreateAssessmentAsync(It.IsAny<CreateAssessmentRequest>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateAssessment_WhenActorIsPersistedProgramCreator_ReturnsCreated()
+    {
+        var actorId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var request = new CreateAssessmentRequest(courseId, "T", null, AssessmentType.Assignment, 100, 60);
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, CreatorId = actorId });
+        _svc.Setup(service => service.CreateAssessmentAsync(request))
+            .ReturnsAsync(Result.Success(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60)));
+
+        var result = await CreateController(actorId).CreateAssessment(request);
+
+        result.Result.Should().BeOfType<CreatedAtActionResult>();
+    }
+
+    [Fact]
+    public async Task CreateAssessment_WhenActorHasProgramPermission_ReturnsCreated()
+    {
+        var actorId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var request = new CreateAssessmentRequest(courseId, "T", null, AssessmentType.Assignment, 100, 60);
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
+        _permissions.Setup(service => service.HasTenantPermissionAsync(
+                actorId, It.IsAny<Guid?>(), $"{nameof(Program)}.{courseId}.{PermissionType.Create}"))
+            .ReturnsAsync(true);
+        _svc.Setup(service => service.CreateAssessmentAsync(request))
+            .ReturnsAsync(Result.Success(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60)));
+
+        var result = await CreateController(actorId).CreateAssessment(request);
+
+        result.Result.Should().BeOfType<CreatedAtActionResult>();
+    }
+
+    [Fact]
+    public async Task CreateAssessment_WhenCreatorIsInAnotherTenant_ReturnsForbidden()
+    {
+        var actorId = Guid.NewGuid();
+        var actorTenantId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var request = new CreateAssessmentRequest(courseId, "T", null, AssessmentType.Assignment, 100, 60);
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, CreatorId = actorId, TenantId = Guid.NewGuid() });
+
+        var result = await CreateController(actorId, tenantId: actorTenantId).CreateAssessment(request);
+
+        result.Result.Should().BeOfType<ForbidResult>();
+        _svc.Verify(service => service.CreateAssessmentAsync(It.IsAny<CreateAssessmentRequest>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UnlinkInteractiveVideoCue_WhenLearnerIsNotManager_ReturnsForbidden()
+    {
+        var assessmentId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        _svc.Setup(service => service.GetAssessmentByIdAsync(assessmentId))
+            .ReturnsAsync(Assessment.Create(courseId, "Video", AssessmentType.Assignment, 100, 60));
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
+
+        var result = await CreateController().UnlinkInteractiveVideoCue(assessmentId, Guid.NewGuid());
+
+        result.Should().BeOfType<ForbidResult>();
+        _svc.Verify(service => service.UnlinkInteractiveVideoCueAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetLearnerInteractiveVideoCues_WhenEnrollmentBelongsToAnotherLearner_ReturnsForbidden()
+    {
+        var actorId = Guid.NewGuid();
+        var assessmentId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var enrollmentId = Guid.NewGuid();
+        _svc.Setup(service => service.GetAssessmentByIdAsync(assessmentId))
+            .ReturnsAsync(Assessment.Create(courseId, "Video", AssessmentType.Assignment, 100, 60));
+        _enrollments.Setup(service => service.GetAsync(enrollmentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new EnrollmentDto(enrollmentId, courseId, Guid.NewGuid(), null, GameGuild.Learning.Enrollments.EnrollmentStatus.Active, DateTime.UtcNow, null, null, 0, null));
+
+        var result = await CreateController(actorId)
+            .GetLearnerInteractiveVideoCues(assessmentId, Guid.NewGuid(), enrollmentId);
+
+        result.Result.Should().BeOfType<ForbidResult>();
+        _svc.Verify(service => service.GetInteractiveVideoCuesForContentAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetCourseAssessmentAnalytics_WhenActorCannotManageProgram_ReturnsForbidden()
+    {
+        var courseId = Guid.NewGuid();
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
+
+        var result = await CreateController().GetCourseAssessmentAnalytics(courseId);
+
+        result.Result.Should().BeOfType<ForbidResult>();
+        _svc.Verify(service => service.GetCourseAssessmentAnalyticsAsync(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAssessment_WhenActorCannotManageAssessmentCourse_ReturnsForbidden()
+    {
+        var assessmentId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        _svc.Setup(service => service.GetAssessmentByIdAsync(assessmentId))
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60));
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
+
+        var result = await CreateController().UpdateAssessment(assessmentId, new UpdateAssessmentRequest(Title: "updated"));
+
+        result.Result.Should().BeOfType<ForbidResult>();
+        _svc.Verify(service => service.UpdateAssessmentAsync(It.IsAny<Guid>(), It.IsAny<UpdateAssessmentRequest>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateAssessmentGroup_WhenActorCannotManagePersistedProgram_ReturnsForbidden()
+    {
+        var courseId = Guid.NewGuid();
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
+
+        var result = await CreateController().CreateAssessmentGroup(new CreateAssessmentGroupRequest(courseId, "Quizzes", 20));
+
+        result.Result.Should().BeOfType<ForbidResult>();
+        _svc.Verify(service => service.CreateAssessmentGroupAsync(It.IsAny<CreateAssessmentGroupRequest>()), Times.Never);
     }
 
     [Fact]
     public async Task UpdateAssessment_Success_ReturnsOk()
     {
         var id = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
         var req = new UpdateAssessmentRequest("U", null, null, null, null, null, null, null, null);
+        _svc.Setup(s => s.GetAssessmentByIdAsync(id))
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60));
         _svc.Setup(s => s.UpdateAssessmentAsync(id, req))
-            .ReturnsAsync(Result.Success(Assessment.Create(Guid.NewGuid(), "U", AssessmentType.Quiz, 100, 60)));
-        var r = await CreateController().UpdateAssessment(id, req);
+            .ReturnsAsync(Result.Success(Assessment.Create(courseId, "U", AssessmentType.Quiz, 100, 60)));
+        var r = await CreateController(isSystemAdmin: true).UpdateAssessment(id, req);
         r.Result.Should().BeOfType<OkObjectResult>();
     }
 
