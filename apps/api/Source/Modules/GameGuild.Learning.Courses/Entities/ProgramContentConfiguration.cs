@@ -16,7 +16,12 @@ public class ProgramContentConfiguration : IEntityTypeConfiguration<ProgramConte
       table.HasCheckConstraint(
         "CK_program_contents_LessonFormat",
         "((\"Type\" IN (0, 1)) AND \"LessonFormat\" IN (0, 1, 2, 3)) OR ((\"Type\" NOT IN (0, 1)) AND \"LessonFormat\" IS NULL)");
+      table.HasCheckConstraint(
+        "CK_program_contents_Survey_NotGraded",
+        "\"Type\" <> 8 OR (\"GradingMethod\" = 0 AND \"MaxPoints\" IS NULL)");
     });
+
+    builder.Property(content => content.ActivitySettingsData).HasColumnType("jsonb");
 
     // Configure relationship with Program (can't be done with annotations)
     builder.HasOne(pc => pc.Program).WithMany(p => p.ProgramContents).HasForeignKey(pc => pc.ProgramId).OnDelete(DeleteBehavior.Cascade);

@@ -58,6 +58,12 @@ public class ProgramContent : EntityBase
     public LessonContentFormat? LessonFormat { get; set; } = LessonContentFormat.Markdown;
 
     /// <summary>
+    /// Serialized typed settings for discussion, reflection, and survey activities.
+    /// Legacy rows remain readable when this value is null.
+    /// </summary>
+    public string? ActivitySettingsData { get; private set; }
+
+    /// <summary>
     /// Sort order within parent or program
     /// </summary>
     public int SortOrder { get; set; }
@@ -185,6 +191,11 @@ public class ProgramContent : EntityBase
     /// </summary>
     public void SetGrading(GradingMethod method, int? maxPoints = null)
     {
+        if (Type == ProgramContentType.Survey && (method != GradingMethod.None || maxPoints.HasValue))
+        {
+            throw new InvalidOperationException("Surveys cannot be graded.");
+        }
+
         if (IsLessonType(Type) && (method != GradingMethod.None || maxPoints.HasValue))
         {
             throw new InvalidOperationException("Lessons cannot be graded. Create or attach an assignment instead.");
@@ -224,6 +235,29 @@ public class ProgramContent : EntityBase
         }
 
         LessonFormat = null;
+
+        if (Type == ProgramContentType.Survey)
+        {
+            GradingMethod = GradingMethod.None;
+            MaxPoints = null;
+        }
+
+        if (LearningActivityContract.IsActivityType(Type))
+        {
+            SetActivitySettings(GetActivitySettings()!);
+        }
+        else
+        {
+            ActivitySettingsData = null;
+        }
+    }
+
+    public ActivitySettings? GetActivitySettings() => LearningActivityContract.GetSettings(Type, ActivitySettingsData);
+
+    public void SetActivitySettings(ActivitySettings settings)
+    {
+        ActivitySettingsData = LearningActivityContract.SerializeSettings(Type, settings);
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     private static bool IsLessonType(ProgramContentType type) =>
