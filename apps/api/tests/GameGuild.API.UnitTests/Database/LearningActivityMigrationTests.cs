@@ -26,9 +26,8 @@ public sealed class LearningActivityMigrationTests
         builder.Operations.OfType<AddCheckConstraintOperation>().Should().ContainSingle(operation =>
             operation.Table == "program_contents" &&
             operation.Name == "CK_program_contents_Survey_NotGraded");
-        builder.Operations.OfType<SqlOperation>().Should().Contain(operation =>
-            operation.Sql.Contains("DELETE FROM \"activity_grades\"", StringComparison.Ordinal) &&
-            operation.Sql.Contains("\"content_interactions\"", StringComparison.Ordinal));
+        builder.Operations.OfType<SqlOperation>().Should().NotContain(operation =>
+            operation.Sql.Contains("DELETE FROM \"activity_grades\"", StringComparison.Ordinal));
         builder.Operations.OfType<SqlOperation>().Should().Contain(operation =>
             operation.Sql.Contains("UPDATE \"program_contents\"", StringComparison.Ordinal) &&
             operation.Sql.Contains("\"Type\" = 8", StringComparison.Ordinal));
@@ -54,8 +53,8 @@ public sealed class LearningActivityMigrationTests
         }
     }
 
-    [PostgreSqlFact]
-    public async Task Up_RepairsLegacySurveyGradingAndRejectsNewGrading()
+    [Fact]
+    public async Task Up_PreservesHistoricalSurveyGradesWhileRepairingLegacySurveyGrading()
     {
         var container = new PostgreSqlBuilder()
             .WithImage("postgres:16-alpine")
@@ -94,7 +93,7 @@ public sealed class LearningActivityMigrationTests
             await action.Should().ThrowAsync<PostgresException>();
 
             await using var gradeCheck = new NpgsqlCommand("SELECT COUNT(*) FROM \"activity_grades\"", connection);
-            (await gradeCheck.ExecuteScalarAsync()).Should().Be(0L);
+            (await gradeCheck.ExecuteScalarAsync()).Should().Be(1L);
         }
         finally
         {
@@ -126,27 +125,4 @@ public sealed class LearningActivityMigrationTests
         public void BuildUp(MigrationBuilder migrationBuilder) => Up(migrationBuilder);
     }
 
-    private sealed class PostgreSqlFactAttribute : FactAttribute
-    {
-        public PostgreSqlFactAttribute()
-        {
-            try
-            {
-                using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "docker",
-                    Arguments = "version --format {{.Server.Version}}",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                });
-                if (process is null || !process.WaitForExit(3000) || process.ExitCode != 0)
-                    Skip = "Docker is unavailable; PostgreSQL migration execution test was not run.";
-            }
-            catch
-            {
-                Skip = "Docker is unavailable; PostgreSQL migration execution test was not run.";
-            }
-        }
-    }
 }
