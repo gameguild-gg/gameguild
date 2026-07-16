@@ -69,6 +69,35 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ConcurrentDeleteAndStoreLink_DeleteFirstRejectsLink()
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = NewProject(tenantId, ContentStatus.Published, ContentVisibility.Public);
+        var product = Product.Create("Delete-first product", creatorId: actorId, tenantId: tenantId);
+        product.IsPublished = true;
+        await SeedAsync(NewUser(actorId), project, product);
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+
+        await using var gateContext = new ApplicationDbContext(_options);
+        await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(project.Id);
+        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await observer.OpenAsync();
+
+        var deleteTask = DeleteAsync(project.Id);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 1);
+        var linkTask = LinkStoreAsync(project.Id, product.Id, actorAccessor);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 2);
+
+        await gate.CommitAsync();
+        (await deleteTask).Should().BeTrue();
+        (await linkTask).IsFailure.Should().BeTrue();
+        await using var verify = new ApplicationDbContext(_options);
+        (await verify.Set<ProjectStoreProduct>().AnyAsync(link =>
+            link.ProjectId == project.Id && link.DeletedAt == null)).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task ConcurrentDeleteAndSessionLink_CannotLeaveActiveLinkOnDeletedProject()
     {
         var actorId = Guid.NewGuid();
@@ -123,6 +152,57 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ConcurrentDeleteAndSessionLink_DeleteFirstRejectsLink()
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = NewProject(tenantId, ContentStatus.Draft, ContentVisibility.Private);
+        var request = new TestingRequest
+        {
+            Title = "Delete-first request",
+            InstructionsType = InstructionType.Text,
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(1),
+            CreatedById = actorId,
+            TenantId = tenantId
+        };
+        var location = new TestingLocation { Name = "Delete-first lab", TenantId = tenantId };
+        var session = new TestingSession
+        {
+            TestingRequestId = request.Id,
+            LocationId = location.Id,
+            SessionName = "Delete-first session",
+            SessionDate = DateTime.UtcNow,
+            StartTime = DateTime.UtcNow,
+            EndTime = DateTime.UtcNow.AddHours(1),
+            MaxTesters = 8,
+            ManagerId = actorId,
+            ManagerUserId = actorId,
+            CreatedById = actorId,
+            TenantId = tenantId
+        };
+        await SeedAsync(NewUser(actorId), project, request, location, session);
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+
+        await using var gateContext = new ApplicationDbContext(_options);
+        await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(project.Id);
+        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await observer.OpenAsync();
+
+        var deleteTask = DeleteAsync(project.Id);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 1);
+        var linkTask = LinkSessionAsync(session.Id, project.Id, actorAccessor);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 2);
+
+        await gate.CommitAsync();
+        (await deleteTask).Should().BeTrue();
+        (await linkTask).IsFailure.Should().BeTrue();
+        await using var verify = new ApplicationDbContext(_options);
+        (await verify.Set<SessionProject>().AnyAsync(link =>
+            link.ProjectId == project.Id && link.IsActive && link.DeletedAt == null)).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task ConcurrentDeleteAndLaunchPlanCreate_CannotLeaveActivePlanOnDeletedProject()
     {
         var actorId = Guid.NewGuid();
@@ -147,6 +227,87 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
         await using var verify = new ApplicationDbContext(_options);
         (await verify.Set<LaunchPlan>().AnyAsync(plan =>
             plan.ProjectId == project.Id && plan.DeletedAt == null)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ConcurrentDeleteAndLaunchPlanCreate_DeleteFirstRejectsCreate()
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = NewProject(tenantId, ContentStatus.Draft, ContentVisibility.Private);
+        await SeedAsync(NewUser(actorId), project);
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+
+        await using var gateContext = new ApplicationDbContext(_options);
+        await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(project.Id);
+        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await observer.OpenAsync();
+
+        var deleteTask = DeleteAsync(project.Id);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 1);
+        var createTask = CreateLaunchPlanAsync(project.Id, actorAccessor);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 2);
+
+        await gate.CommitAsync();
+        (await deleteTask).Should().BeTrue();
+        (await createTask).IsFailure.Should().BeTrue();
+        await using var verify = new ApplicationDbContext(_options);
+        (await verify.Set<LaunchPlan>().AnyAsync(plan =>
+            plan.ProjectId == project.Id && plan.DeletedAt == null)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ConcurrentDeleteAndTestingRequestCreate_CreateFirstClosesRequest()
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = NewProject(tenantId, ContentStatus.Draft, ContentVisibility.Private);
+        await SeedAsync(NewUser(actorId), project);
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+
+        await using var gateContext = new ApplicationDbContext(_options);
+        await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(project.Id);
+        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await observer.OpenAsync();
+
+        var createTask = CreateTestingRequestAsync(project.Id, actorId, actorAccessor);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 1);
+        var deleteTask = DeleteAsync(project.Id);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 2);
+
+        await gate.CommitAsync();
+        var request = await createTask;
+        (await deleteTask).Should().BeTrue();
+        await using var verify = new ApplicationDbContext(_options);
+        (await verify.Set<TestingRequest>().IgnoreQueryFilters()
+            .SingleAsync(candidate => candidate.Id == request.Id)).DeletedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task ConcurrentDeleteAndTestingRequestCreate_DeleteFirstRejectsCreate()
+    {
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var project = NewProject(tenantId, ContentStatus.Draft, ContentVisibility.Private);
+        await SeedAsync(NewUser(actorId), project);
+        var actorAccessor = ActorAccessor(actorId, tenantId);
+
+        await using var gateContext = new ApplicationDbContext(_options);
+        await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(project.Id);
+        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await observer.OpenAsync();
+
+        var deleteTask = DeleteAsync(project.Id);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 1);
+        var createTask = CreateTestingRequestAsync(project.Id, actorId, actorAccessor);
+        await WaitForWaitingAdvisoryLocksAsync(observer, 2);
+
+        await gate.CommitAsync();
+        (await deleteTask).Should().BeTrue();
+        var waitForCreate = async () => await createTask;
+        await waitForCreate.Should().ThrowAsync<InvalidOperationException>();
+        await using var verify = new ApplicationDbContext(_options);
+        (await verify.Set<TestingRequest>().AnyAsync()).Should().BeFalse();
     }
 
     public async Task DisposeAsync() => await _container.DisposeAsync();
@@ -196,6 +357,28 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
                 NullLogger<LaunchPadHandlers>.Instance,
                 new ProjectLifecycleLock(context))
             .Handle(new CreateLaunchPlanCommand { ProjectId = projectId, Name = "Race plan" }, default);
+    }
+
+    private async Task<TestingRequest> CreateTestingRequestAsync(
+        Guid projectId,
+        Guid actorId,
+        IActorContextAccessor actorAccessor)
+    {
+        await using var context = new ApplicationDbContext(_options);
+        return await new TestingRequestOperationsService(
+                context,
+                new ProjectChannelAvailabilityService(context),
+                new AllowAllProjectAuthorizationService(),
+                actorAccessor,
+                new ProjectLifecycleLock(context))
+            .CreateSimpleTestingRequestAsync(new CreateSimpleTestingRequestDto
+            {
+                ProjectId = projectId,
+                Title = "Race request",
+                VersionNumber = "1.0.0",
+                InstructionsType = InstructionType.Text,
+                InstructionsContent = "Exercise the project lifecycle."
+            }, actorId);
     }
 
     private async Task<bool> DeleteAsync(Guid projectId)
