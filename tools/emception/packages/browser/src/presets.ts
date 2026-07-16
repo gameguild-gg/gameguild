@@ -504,7 +504,7 @@ export const TOOLCHAIN_PRESETS: Record<ToolchainPreset, Preset> = {
     [ToolchainPreset.CMake]: {
         toolchain: ToolchainPreset.CMake,
       bundlesToPreload: ['llvm', 'cmake'],
-      defaultTools: ['cmake'],
+      defaultTools: ['cmake', 'ninja'],
     },
 };
 
