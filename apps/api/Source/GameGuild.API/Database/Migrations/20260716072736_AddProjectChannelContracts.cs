@@ -20,6 +20,8 @@ namespace GameGuild.API.Database.Migrations
                 unique: true,
                 filter: "\"DeletedAt\" IS NULL");
 
+            migrationBuilder.Sql("LOCK TABLE session_projects IN SHARE ROW EXCLUSIVE MODE;");
+
             migrationBuilder.Sql("""
                 WITH ranked_active_links AS (
                     SELECT
