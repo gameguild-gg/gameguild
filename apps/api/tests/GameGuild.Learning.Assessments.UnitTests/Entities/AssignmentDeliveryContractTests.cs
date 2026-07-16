@@ -240,7 +240,7 @@ public sealed class AssignmentDeliveryContractTests
     {
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
 
-        var action = () => submission.Grade(80, 60);
+        var action = () => submission.Grade(80, 60, 100);
 
         action.Should().Throw<InvalidOperationException>()
             .WithMessage("Only submitted submissions can be graded.");
@@ -253,9 +253,9 @@ public sealed class AssignmentDeliveryContractTests
     {
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
         submission.Submit(isLate);
-        submission.Grade(80, 60);
+        submission.Grade(80, 60, 100);
 
-        var action = () => submission.Grade(90, 60);
+        var action = () => submission.Grade(90, 60, 100);
 
         action.Should().Throw<InvalidOperationException>()
             .WithMessage("Only submitted submissions can be graded.");

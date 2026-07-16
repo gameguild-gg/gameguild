@@ -395,7 +395,7 @@ public class AssessmentsController : BaseApiController
         if (submission == null) return NotFound();
         var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
         if (assessment == null) return NotFound();
-        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+        if (!await CanReviewCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
 
         var graderId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!graderId.HasValue) return Unauthorized();
@@ -415,7 +415,7 @@ public class AssessmentsController : BaseApiController
     /// Get a submission by ID
     /// </summary>
     [HttpGet("submissions/{submissionId:guid}")]
-    public async Task<ActionResult<LearnerAssessmentSubmissionDto>> GetSubmission(Guid submissionId)
+    public async Task<ActionResult<object>> GetSubmission(Guid submissionId)
     {
         var submission = await _assessmentService.GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
         if (submission == null)
@@ -425,15 +425,16 @@ public class AssessmentsController : BaseApiController
 
         var actorUserId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorUserId.HasValue) return Unauthorized();
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
         if (submission.UserId == actorUserId.Value)
         {
+            if (!await IsActorInProgramTenantAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
             return Ok(LearnerAssessmentSubmissionDto.FromEntity(submission));
         }
 
-        var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
-        if (assessment == null) return NotFound();
-        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
-        return Forbid();
+        if (!await CanReviewCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+        return Ok(AssessmentSubmissionDto.FromEntity(submission));
     }
 
     /// <summary>
@@ -444,7 +445,7 @@ public class AssessmentsController : BaseApiController
     {
         var assessment = await _assessmentService.GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
         if (assessment == null) return NotFound();
-        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+        if (!await CanReviewCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
 
         var submissions = await _assessmentService.GetAssessmentSubmissionsAsync(assessmentId).ConfigureAwait(false);
         return Ok(submissions.Select(AssessmentSubmissionDto.FromEntity));
@@ -459,7 +460,22 @@ public class AssessmentsController : BaseApiController
         var actorUserId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorUserId.HasValue) return Unauthorized();
         var submissions = await _assessmentService.GetUserSubmissionsAsync(enrollmentId, actorUserId.Value).ConfigureAwait(false);
-        return Ok(submissions.Select(LearnerAssessmentSubmissionDto.FromEntity));
+        var assessmentVisibility = new Dictionary<Guid, bool>();
+        var visibleSubmissions = new List<LearnerAssessmentSubmissionDto>();
+        foreach (var submission in submissions)
+        {
+            if (!assessmentVisibility.TryGetValue(submission.AssessmentId, out var isVisible))
+            {
+                var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
+                isVisible = assessment != null &&
+                            await IsActorInProgramTenantAsync(assessment.CourseId).ConfigureAwait(false);
+                assessmentVisibility[submission.AssessmentId] = isVisible;
+            }
+
+            if (isVisible) visibleSubmissions.Add(LearnerAssessmentSubmissionDto.FromEntity(submission));
+        }
+
+        return Ok(visibleSubmissions);
     }
 
     /// <summary>
@@ -511,6 +527,31 @@ public class AssessmentsController : BaseApiController
         }
 
         return false;
+    }
+
+    private async Task<bool> IsActorInProgramTenantAsync(Guid courseId)
+    {
+        var actor = _actorContextAccessor.ActorContext;
+        var program = await _programService.GetProgramByIdAsync(courseId).ConfigureAwait(false);
+        if (program == null) return false;
+        if (actor.IsSystemAdmin) return true;
+
+        return actor.TenantId.HasValue &&
+               (!program.TenantId.HasValue || program.TenantId == actor.TenantId);
+    }
+
+    private async Task<bool> CanReviewCourseAsync(Guid courseId)
+    {
+        var actor = _actorContextAccessor.ActorContext;
+        if (!actor.SubjectIdAsGuid.HasValue) return false;
+        if (!await IsActorInProgramTenantAsync(courseId).ConfigureAwait(false)) return false;
+
+        var permissionName = $"{nameof(Program)}.{courseId}.{PermissionType.Review}";
+        return await _permissionQueryService.HasTenantPermissionAsync(
+                actor.SubjectIdAsGuid.Value,
+                actor.TenantId,
+                permissionName)
+            .ConfigureAwait(false);
     }
 }
 

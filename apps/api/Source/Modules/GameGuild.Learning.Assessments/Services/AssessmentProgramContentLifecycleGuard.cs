@@ -7,7 +7,16 @@ public sealed class AssessmentProgramContentLifecycleGuard(IApplicationDbContext
 {
     public Task<bool> HasBlockingDeleteReference(Guid contentId, CancellationToken cancellationToken = default) =>
         context.Set<InteractiveVideoAssessmentCue>()
-            .AnyAsync(cue => cue.ContentId == contentId && cue.DeletedAt == null, cancellationToken);
+            .Join(
+                context.Set<Assessment>(),
+                cue => cue.AssessmentId,
+                assessment => assessment.Id,
+                (cue, assessment) => new { cue, assessment })
+            .AnyAsync(
+                item => item.cue.ContentId == contentId &&
+                        item.cue.DeletedAt == null &&
+                        item.assessment.DeletedAt == null,
+                cancellationToken);
 
     public Task<bool> HasBlockingIncompatibleUpdateReference(
         Guid contentId,
