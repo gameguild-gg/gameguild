@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Courses;
 /// </summary>
 public sealed record SurveyResponseResultDto(Guid ResponseId, DateTime? SubmittedAt, IReadOnlyDictionary<string, JsonElement> Answers)
 {
-    public static SurveyResponseResultDto FromInteraction(ContentInteraction interaction, bool isAnonymous)
+    public static SurveyResponseResultDto FromInteraction(ContentInteraction interaction)
     {
         var response = ActivityResponseContract.Parse(
             ProgramContentType.Survey,
