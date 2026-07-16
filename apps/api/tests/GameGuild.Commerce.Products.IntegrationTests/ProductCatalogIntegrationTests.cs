@@ -84,7 +84,7 @@ public class ProductCatalogIntegrationTests : IClassFixture<WebApplicationFactor
     public async Task GetProducts_ShouldSupportFiltering_ByType()
     {
         // Act
-        var response = await _client.GetAsync("/v1/products?type=Digital");
+        var response = await _client.GetAsync($"/v1/products?type={ProductType.Course}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
