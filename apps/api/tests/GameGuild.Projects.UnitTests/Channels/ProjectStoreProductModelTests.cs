@@ -1,5 +1,6 @@
 using GameGuild.Commerce.Products;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Projects.UnitTests.Channels;
 
@@ -47,5 +48,20 @@ public sealed class ProjectStoreProductModelTests
             .Should().Contain("GameGuild.Commerce.Products");
         typeof(Product).Assembly.GetReferencedAssemblies().Select(name => name.Name)
             .Should().NotContain("GameGuild.Projects");
+    }
+
+    [Fact]
+    public void ProjectsModule_Should_Register_Channel_Services()
+    {
+        var services = new ServiceCollection();
+
+        services.AddProjectsModule();
+
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(IProjectChannelAvailabilityService) &&
+            descriptor.ImplementationType == typeof(ProjectChannelAvailabilityService));
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(IProjectAuthorizationService) &&
+            descriptor.ImplementationType == typeof(ProjectAuthorizationService));
     }
 }
