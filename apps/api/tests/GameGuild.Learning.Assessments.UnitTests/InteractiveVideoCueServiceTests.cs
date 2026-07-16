@@ -134,6 +134,23 @@ public sealed class InteractiveVideoCueServiceTests
         (await db.Set<InteractiveVideoAssessmentCue>().SingleAsync()).CueId.Should().Be("chapter-1");
     }
 
+    [Fact]
+    public async Task GetInteractiveVideoCuesAsync_WhenLinkedContentNoLongerResolves_ShouldFilterStaleCue()
+    {
+        await using var db = CreateContext();
+        var assessment = Assessment.Create(Guid.NewGuid(), "Video checkpoint", AssessmentType.Quiz, 10, 6);
+        var cue = assessment.AddInteractiveVideoCue(Guid.NewGuid(), "chapter-1");
+        db.AddRange(assessment, cue);
+        await db.SaveChangesAsync();
+        var contents = new Mock<IProgramContentService>();
+        contents.Setup(service => service.GetContentByIdAsync(cue.ContentId)).ReturnsAsync((ProgramContent?)null);
+        var service = new AssessmentService(db, contents.Object, NullLogger<AssessmentService>.Instance);
+
+        var cues = await service.GetInteractiveVideoCuesAsync(assessment.Id);
+
+        cues.Should().BeEmpty();
+    }
+
     private static ProgramContent CreateVideoLesson(Guid courseId) => new()
     {
         Id = Guid.NewGuid(),

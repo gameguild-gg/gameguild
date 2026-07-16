@@ -102,6 +102,8 @@ public partial class AddAssignmentDeliveryAndGradingContracts : Migration
             maxLength: 2048,
             nullable: true);
 
+        // Legacy rows may contain a reversed availability range. This deterministic repair preserves
+        // both endpoints by ordering them; Down cannot restore the invalid original ordering.
         migrationBuilder.Sql(
             "UPDATE \"Assessments\" SET \"AvailableFrom\" = \"AvailableUntil\", \"AvailableUntil\" = \"AvailableFrom\" WHERE \"AvailableFrom\" > \"AvailableUntil\"");
 
@@ -128,7 +130,7 @@ public partial class AddAssignmentDeliveryAndGradingContracts : Migration
         migrationBuilder.AddCheckConstraint(
             name: "CK_AssessmentSubmissions_PayloadConsistency",
             table: "AssessmentSubmissions",
-            sql: "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 64) = 0 OR \"StructuredAnswerPayload\" IS NOT NULL)");
+            sql: "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 64) = 0 OR \"StructuredAnswerPayload\" IS NOT NULL) AND (\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND (\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND (\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND (\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND (\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND (\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0) AND (\"StructuredAnswerPayload\" IS NULL OR (\"SubmittedModalities\" & 64) <> 0)");
 
         migrationBuilder.CreateTable(
             name: "InteractiveVideoAssessmentCues",

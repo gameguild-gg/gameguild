@@ -81,7 +81,14 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
                     "((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND " +
                     "((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND " +
                     "((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND " +
-                    "((\"SubmittedModalities\" & 64) = 0 OR \"StructuredAnswerPayload\" IS NOT NULL)");
+                    "((\"SubmittedModalities\" & 64) = 0 OR \"StructuredAnswerPayload\" IS NOT NULL) AND " +
+                    "(\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND " +
+                    "(\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND " +
+                    "(\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND " +
+                    "(\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND " +
+                    "(\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND " +
+                    "(\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0) AND " +
+                    "(\"StructuredAnswerPayload\" IS NULL OR (\"SubmittedModalities\" & 64) <> 0)");
             });
         });
 
