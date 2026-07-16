@@ -160,7 +160,7 @@ public class TestingRequestsController(
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning(ex, "Testing Lab submission forbidden for user {UserId}", userId);
-            return StatusCode(403, ex.Message);
+            return Forbid();
         }
         catch (InvalidOperationException ex)
         {
