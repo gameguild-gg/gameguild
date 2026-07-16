@@ -187,6 +187,19 @@ public class AssessmentEntityTests
 public class AssessmentSubmissionEntityTests
 {
     [Fact]
+    public void Grade_RequiresAssessmentMaximumScore()
+    {
+        var gradeMethods = typeof(AssessmentSubmission)
+            .GetMethods()
+            .Where(method => method.Name == nameof(AssessmentSubmission.Grade))
+            .ToArray();
+
+        gradeMethods.Should().ContainSingle()
+            .Which.GetParameters().Select(parameter => parameter.ParameterType)
+            .Should().Equal(typeof(int), typeof(int), typeof(int), typeof(Guid?), typeof(string));
+    }
+
+    [Fact]
     public void Start_ShouldSetDefaultValues()
     {
         var assessmentId = Guid.NewGuid();
@@ -224,7 +237,7 @@ public class AssessmentSubmissionEntityTests
         submission.Submit();
 
         var graderId = Guid.NewGuid();
-        submission.Grade(85, 70, graderId, "Good work!");
+        submission.Grade(85, 70, 100, graderId, "Good work!");
 
         submission.Score.Should().Be(85);
         submission.Passed.Should().BeTrue();
@@ -239,7 +252,7 @@ public class AssessmentSubmissionEntityTests
     {
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
         submission.Submit();
-        submission.Grade(50, 70);
+        submission.Grade(50, 70, 100);
 
         submission.Passed.Should().BeFalse();
     }
@@ -249,7 +262,7 @@ public class AssessmentSubmissionEntityTests
     {
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
         submission.Submit();
-        submission.Grade(70, 70);
+        submission.Grade(70, 70, 100);
 
         submission.Passed.Should().BeTrue();
     }
@@ -398,13 +411,13 @@ public sealed class AssessmentServiceAnalyticsTests
 
         var quizSubmission = AssessmentSubmission.Start(quiz.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         quizSubmission.Submit();
-        quizSubmission.Grade(8, quiz.PassingScore);
+        quizSubmission.Grade(8, quiz.PassingScore, quiz.MaxScore);
         var projectSubmission = AssessmentSubmission.Start(project.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         projectSubmission.Submit();
-        projectSubmission.Grade(50, project.PassingScore);
+        projectSubmission.Grade(50, project.PassingScore, project.MaxScore);
         var ignoredSubmission = AssessmentSubmission.Start(ignoredOtherCourse.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         ignoredSubmission.Submit();
-        ignoredSubmission.Grade(10, ignoredOtherCourse.PassingScore);
+        ignoredSubmission.Grade(10, ignoredOtherCourse.PassingScore, ignoredOtherCourse.MaxScore);
 
         db.Set<AssessmentGroup>().AddRange(quizGroup, projectGroup);
         db.Set<Assessment>().AddRange(quiz, project, attendance, ignoredOtherCourse);
@@ -462,7 +475,7 @@ public class AssessmentSubmissionDtoTests
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 2);
         submission.Submit();
         var graderId = Guid.NewGuid();
-        submission.Grade(88, 70, graderId, "Excellent");
+        submission.Grade(88, 70, 100, graderId, "Excellent");
 
         var dto = AssessmentSubmissionDto.FromEntity(submission);
 
