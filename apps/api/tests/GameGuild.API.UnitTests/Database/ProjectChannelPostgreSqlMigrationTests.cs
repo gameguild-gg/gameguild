@@ -103,6 +103,32 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
         await ExecuteAsync(connection, $"INSERT INTO session_projects (\"Id\", \"SessionId\", \"ProjectId\", \"IsActive\", \"DeletedAt\") VALUES ('{Guid.NewGuid()}', '{sessionId}', '{projectId}', FALSE, NULL);");
     }
 
+    [DockerFact]
+    public async Task Up_AllowsReplacementForSoftDeletedLaunchPlanAndRejectsSecondActivePlan()
+    {
+        await using var container = await StartPostgresAsync("project_channel_launch_plan_index");
+        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await connection.OpenAsync();
+        await CreatePrerequisiteTablesAsync(connection);
+        var projectId = Guid.NewGuid();
+        await ExecuteAsync(connection, $"""
+            INSERT INTO projects ("Id") VALUES ('{projectId}');
+            INSERT INTO launch_plans ("Id", "ProjectId", "DeletedAt")
+            VALUES ('{Guid.NewGuid()}', '{projectId}', now());
+            """);
+
+        await ApplyUpAsync(connection);
+
+        await ExecuteAsync(connection, $"""
+            INSERT INTO launch_plans ("Id", "ProjectId", "DeletedAt")
+            VALUES ('{Guid.NewGuid()}', '{projectId}', NULL);
+            """);
+        await RejectAsync(connection, $"""
+            INSERT INTO launch_plans ("Id", "ProjectId", "DeletedAt")
+            VALUES ('{Guid.NewGuid()}', '{projectId}', NULL);
+            """);
+    }
+
     private static async Task<PostgreSqlContainer> StartPostgresAsync(string database)
     {
         var container = new PostgreSqlBuilder()
@@ -133,6 +159,11 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
                 "CreatedAt" timestamp with time zone NOT NULL DEFAULT now(),
                 "UpdatedAt" timestamp with time zone NOT NULL DEFAULT now());
             CREATE INDEX "IX_session_projects_SessionId" ON session_projects ("SessionId");
+            CREATE TABLE launch_plans (
+                "Id" uuid PRIMARY KEY,
+                "ProjectId" uuid NOT NULL,
+                "DeletedAt" timestamp with time zone NULL);
+            CREATE UNIQUE INDEX "IX_launch_plans_ProjectId" ON launch_plans ("ProjectId");
             """);
 
     private static async Task ApplyUpAsync(NpgsqlConnection connection)

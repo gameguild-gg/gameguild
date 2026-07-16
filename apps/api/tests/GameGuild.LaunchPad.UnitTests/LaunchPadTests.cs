@@ -636,6 +636,19 @@ public sealed class LaunchPadTests
         context.Model.FindEntityType(typeof(LaunchChecklistItem))!.GetTableName().Should().Be("launch_checklist_items");
     }
 
+    [Fact]
+    public void LaunchPlan_Model_ShouldEnforceUniquenessForActivePlansOnly()
+    {
+        using var context = CreateContext();
+
+        var projectIndex = context.Model.FindEntityType(typeof(LaunchPlan))!
+            .GetIndexes()
+            .Single(index => index.Properties.Select(property => property.Name).SequenceEqual([nameof(LaunchPlan.ProjectId)]));
+
+        projectIndex.IsUnique.Should().BeTrue();
+        projectIndex.GetFilter().Should().Be("\"DeletedAt\" IS NULL");
+    }
+
     private static LaunchPadTestDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<LaunchPadTestDbContext>()
