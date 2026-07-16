@@ -473,16 +473,6 @@ public class AssessmentSubmission : EntityBase
         UpdatedAt = submittedAt;
     }
 
-    public void Grade(int score, int passingScore, Guid? gradedBy = null, string? feedback = null)
-    {
-        if (score < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(score), "Score cannot be negative.");
-        }
-
-        GradeCore(score, passingScore, gradedBy, feedback);
-    }
-
     public void Grade(int score, int passingScore, int maxScore, Guid? gradedBy = null, string? feedback = null)
     {
         if (maxScore <= 0 || passingScore < 0 || passingScore > maxScore)

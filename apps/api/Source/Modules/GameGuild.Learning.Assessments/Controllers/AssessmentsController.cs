@@ -425,13 +425,14 @@ public class AssessmentsController : BaseApiController
 
         var actorUserId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorUserId.HasValue) return Unauthorized();
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await IsActorInProgramTenantAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
         if (submission.UserId == actorUserId.Value)
         {
             return Ok(LearnerAssessmentSubmissionDto.FromEntity(submission));
         }
 
-        var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
-        if (assessment == null) return NotFound();
         if (!await CanReviewCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
         return Ok(AssessmentSubmissionDto.FromEntity(submission));
     }
@@ -511,6 +512,17 @@ public class AssessmentsController : BaseApiController
         }
 
         return false;
+    }
+
+    private async Task<bool> IsActorInProgramTenantAsync(Guid courseId)
+    {
+        var actor = _actorContextAccessor.ActorContext;
+        var program = await _programService.GetProgramByIdAsync(courseId).ConfigureAwait(false);
+        if (program == null) return false;
+        if (actor.IsSystemAdmin) return true;
+
+        return actor.TenantId.HasValue &&
+               (!program.TenantId.HasValue || program.TenantId == actor.TenantId);
     }
 
     private async Task<bool> CanReviewCourseAsync(Guid courseId)

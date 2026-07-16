@@ -140,11 +140,48 @@ public class ControllerAndModuleTests
     public async Task GetSubmission_Found_ReturnsOk()
     {
         var userId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var assessment = Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60);
         _svc.Setup(s => s.GetSubmissionByIdAsync(It.IsAny<Guid>()))
-            .ReturnsAsync(AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), userId, 1));
+            .ReturnsAsync(AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), userId, 1));
+        _svc.Setup(s => s.GetAssessmentByIdAsync(assessment.Id)).ReturnsAsync(assessment);
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
         var r = await CreateController(userId).GetSubmission(Guid.NewGuid());
         r.Result.Should().BeOfType<OkObjectResult>()
             .Which.Value.Should().BeOfType<LearnerAssessmentSubmissionDto>();
+    }
+
+    [Fact]
+    public async Task GetSubmission_WhenOwnerIsInAnotherProgramTenant_ReturnsForbidden()
+    {
+        var actorId = Guid.NewGuid();
+        var actorTenantId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var assessment = Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60);
+        var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), actorId, 1);
+        _svc.Setup(service => service.GetSubmissionByIdAsync(submission.Id)).ReturnsAsync(submission);
+        _svc.Setup(service => service.GetAssessmentByIdAsync(assessment.Id)).ReturnsAsync(assessment);
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program { Id = courseId, TenantId = Guid.NewGuid(), CreatorId = actorId });
+
+        var result = await CreateController(actorId, tenantId: actorTenantId).GetSubmission(submission.Id);
+
+        result.Result.Should().BeOfType<ForbidResult>();
+    }
+
+    [Fact]
+    public async Task GetSubmission_WhenAssessmentIsSoftDeleted_ReturnsNotFoundForOwner()
+    {
+        var actorId = Guid.NewGuid();
+        var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), actorId, 1);
+        _svc.Setup(service => service.GetSubmissionByIdAsync(submission.Id)).ReturnsAsync(submission);
+        _svc.Setup(service => service.GetAssessmentByIdAsync(submission.AssessmentId))
+            .ReturnsAsync((Assessment?)null);
+
+        var result = await CreateController(actorId).GetSubmission(submission.Id);
+
+        result.Result.Should().BeOfType<NotFoundResult>();
     }
 
     [Fact]
@@ -179,7 +216,7 @@ public class ControllerAndModuleTests
         submission.SetPayload(new SubmitAssessmentRequest(TextPayload: "Persisted learner response"), SubmissionModality.Text);
         submission.Submit();
         var graderId = Guid.NewGuid();
-        submission.Grade(80, assessment.PassingScore, graderId, "Reviewed");
+        submission.Grade(80, assessment.PassingScore, assessment.MaxScore, graderId, "Reviewed");
         _svc.Setup(s => s.GetSubmissionByIdAsync(submission.Id)).ReturnsAsync(submission);
         _svc.Setup(s => s.GetAssessmentByIdAsync(assessment.Id)).ReturnsAsync(assessment);
         _programs.Setup(service => service.GetProgramByIdAsync(courseId))
