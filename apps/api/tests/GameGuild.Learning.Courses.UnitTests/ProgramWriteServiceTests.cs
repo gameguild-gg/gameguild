@@ -4,6 +4,8 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -50,11 +52,68 @@ public sealed class ProgramWriteServiceTests
         var respondent = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
         context.AddRange(program, reflection, respondent, ReflectionResponse(respondent, reflection));
         await context.SaveChangesAsync();
-        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreatePermissions(PermissionType.Read));
+        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreatePermissions(PermissionType.Review));
 
         var result = ((IEnumerable<object>)await service.GetReflectionResponsesAsync(program.Id, reflection.Id)).Single();
 
         GetRespondentUserId(result).Should().Be(respondent.UserId);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ManagerActivityResponses_ShouldRejectReadOnlyAuthority(bool survey)
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.TenantId = tenantId;
+        var content = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Activity", Type = survey ? ProgramContentType.Survey : ProgramContentType.Reflection };
+        if (survey) content.SetActivitySettings(new SurveyActivitySettings());
+        else content.SetActivitySettings(new ReflectionActivitySettings());
+        context.AddRange(program, content);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid(), tenantId), CreatePermissions(PermissionType.Read));
+
+        Func<Task> action = survey
+            ? () => service.GetSurveyResponsesAsync(program.Id, content.Id)
+            : () => service.GetReflectionResponsesAsync(program.Id, content.Id);
+
+        await action.Should().ThrowAsync<RequestValidationException>();
+    }
+
+    [Fact]
+    public async Task GetSurveyResults_WhenServiceRejectsRequestValidation_ShouldReturnBadRequest()
+    {
+        var programId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+        var interactions = new Mock<IContentInteractionService>();
+        interactions.Setup(service => service.GetSurveyResponsesAsync(programId, contentId))
+            .ThrowsAsync(new RequestValidationException("Program review permission is required."));
+        var contentService = new Mock<IProgramContentService>();
+        contentService.Setup(service => service.GetContentByIdAsync(contentId))
+            .ReturnsAsync(new ProgramContent { Id = contentId, ProgramId = programId, Type = ProgramContentType.Survey });
+        var controller = new ContentInteractionController(interactions.Object, contentService.Object, NullLogger<ContentInteractionController>.Instance);
+
+        var result = await controller.GetSurveyResults(contentId, programId);
+
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Theory]
+    [InlineData(nameof(ContentInteractionController.GetSurveyResults))]
+    [InlineData(nameof(ContentInteractionController.GetReflectionResponses))]
+    public void ManagerResponseEndpoints_ShouldRequireProgramReviewPermission(string actionName)
+    {
+        var action = typeof(ContentInteractionController).GetMethod(actionName);
+
+        var permission = action!.GetCustomAttributes(inherit: true)
+            .OfType<IResourcePermissionMarker>()
+            .Single();
+
+        permission.ResourceType.Should().Be(typeof(Program));
+        permission.RequiredPermission.Should().Be(PermissionType.Review);
+        permission.ResourceIdParameterName.Should().Be("programId");
     }
 
     [Theory]
@@ -138,7 +197,7 @@ public sealed class ProgramWriteServiceTests
         context.AddRange(program, survey, response);
         await context.SaveChangesAsync();
 
-        var results = await new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreatePermissions(PermissionType.Read))
+        var results = await new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreatePermissions(PermissionType.Review))
             .GetSurveyResponsesAsync(program.Id, survey.Id);
 
         GetRespondentUserId(results.Should().ContainSingle().Which).Should().Be(shouldExposeIdentity ? respondentId : null);

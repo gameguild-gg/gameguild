@@ -800,7 +800,7 @@ public sealed class LessonInteractionTrackingTests
         var service = new ContentInteractionService(
             context,
             new TestRequestContextAccessor(Guid.NewGuid(), tenantId),
-            CreatePermissions(PermissionType.Read));
+            CreatePermissions(PermissionType.Review));
 
         var results = await service.GetSurveyResponsesAsync(survey.ProgramId, survey.Id);
 
@@ -841,7 +841,7 @@ public sealed class LessonInteractionTrackingTests
     [InlineData(PermissionType.Create)]
     [InlineData(PermissionType.Delete)]
     [InlineData(PermissionType.Edit)]
-    public async Task GetSurveyResponses_WhenActorLacksProgramReadPermission_ShouldReject(PermissionType grantedPermission)
+    public async Task GetSurveyResponses_WhenActorLacksProgramReviewPermission_ShouldReject(PermissionType grantedPermission)
     {
         await using var context = TrackingTestDbContext.Create();
         var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Survey", Type = ProgramContentType.Survey };
