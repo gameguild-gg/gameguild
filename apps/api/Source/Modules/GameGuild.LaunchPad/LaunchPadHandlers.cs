@@ -12,7 +12,8 @@ public sealed class LaunchPadHandlers(
     IActorContextAccessor actorContextAccessor,
     IProjectChannelAvailabilityService availabilityService,
     IProjectAuthorizationService authorizationService,
-    ILogger<LaunchPadHandlers> logger)
+    ILogger<LaunchPadHandlers> logger,
+    IProjectLifecycleLock? lifecycleLock = null)
     : ICommandHandler<CreateLaunchPlanCommand, Result<LaunchPlan>>,
       ICommandHandler<CompleteLaunchChecklistItemCommand, Result<LaunchPlan>>,
       ICommandHandler<PublishLaunchCommand, Result<LaunchPlan>>,
@@ -20,8 +21,11 @@ public sealed class LaunchPadHandlers(
       IQueryHandler<GetLaunchPlanByProjectQuery, Result<LaunchPlan?>>,
       IQueryHandler<GetLaunchPadDashboardQuery, Result<IReadOnlyList<LaunchPlan>>>
 {
+    private readonly IProjectLifecycleLock _lifecycleLock = lifecycleLock ?? new ProjectLifecycleLock(context);
+
     public async Task<Result<LaunchPlan>> Handle(CreateLaunchPlanCommand request, CancellationToken cancellationToken)
     {
+        await using var lockHandle = await _lifecycleLock.AcquireAsync(request.ProjectId, cancellationToken).ConfigureAwait(false);
         var actorError = await ValidateActorAsync(cancellationToken).ConfigureAwait(false);
         if (actorError != null) return Result.Failure<LaunchPlan>(actorError);
 
@@ -66,6 +70,7 @@ public sealed class LaunchPadHandlers(
         plan.RecalculateStatus();
         context.Set<LaunchPlan>().Add(plan);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await lockHandle.CommitAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation(
             "Actor {ActorId} created launch plan {LaunchPlanId} for project {ProjectId}",

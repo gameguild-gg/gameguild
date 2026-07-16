@@ -1,5 +1,8 @@
 using GameGuild.API.Database;
+using GameGuild.Commerce.Products;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace GameGuild.Projects.UnitTests.Handlers;
@@ -83,6 +86,84 @@ public sealed class ProjectLifecycleTests : IAsyncDisposable
         restored.Should().BeTrue();
         project.DeletedAt.Should().BeNull();
         link.DeletedAt.Should().Be(deletedAt);
+    }
+
+    [Fact]
+    public async Task ConcurrentDeleteAndStoreLink_ShouldNotLeaveActiveLinkOnDeletedProject()
+    {
+        var databaseName = $"project-store-race-{Guid.NewGuid():N}";
+        var databaseRoot = new InMemoryDatabaseRoot();
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName, databaseRoot)
+            .Options;
+        var tenantId = Guid.NewGuid();
+        var project = new Project
+        {
+            Title = "Store race",
+            Slug = $"store-race-{Guid.NewGuid():N}",
+            TenantId = tenantId,
+            Status = ContentStatus.Published,
+            Visibility = ContentVisibility.Public
+        };
+        var product = Product.Create("Store race product", creatorId: _actorId, tenantId: tenantId);
+        product.IsPublished = true;
+        await using (var setup = new ApplicationDbContext(options))
+        {
+            setup.AddRange(project, product);
+            await setup.SaveChangesAsync();
+        }
+
+        var actorAccessor = new ActorContextAccessor();
+        actorAccessor.SetActorContext(ActorContextBuilder.ForUser(_actorId).WithTenantId(tenantId).Build());
+        var authorization = new BlockingAuthorizationService();
+        await using var linkContext = new ApplicationDbContext(options);
+        var linkHandler = new ProjectStoreProductHandlers(
+            linkContext,
+            actorAccessor,
+            new ProjectChannelAvailabilityService(linkContext),
+            authorization,
+            NullLogger<ProjectStoreProductHandlers>.Instance);
+        var linkTask = linkHandler.Handle(new LinkProjectStoreProductCommand(project.Id, product.Id), default);
+        await authorization.PermissionRequested;
+
+        await using var deleteContext = new ApplicationDbContext(options);
+        var deleteTask = new ProjectLifecycleCoordinator(
+                deleteContext,
+                [new ProjectStoreProductLifecycleParticipant(deleteContext)])
+            .DeleteAsync(project.Id, softDelete: true);
+        await Task.WhenAny(deleteTask, Task.Delay(TimeSpan.FromSeconds(2)));
+        authorization.AllowPermission();
+
+        (await linkTask).IsSuccess.Should().BeTrue();
+        (await deleteTask).Should().BeTrue();
+        await using var verify = new ApplicationDbContext(options);
+        (await verify.Set<Project>().IgnoreQueryFilters().SingleAsync(candidate => candidate.Id == project.Id))
+            .DeletedAt.Should().NotBeNull();
+        (await verify.Set<ProjectStoreProduct>().AnyAsync(link =>
+            link.ProjectId == project.Id && link.DeletedAt == null)).Should().BeFalse();
+    }
+
+    private sealed class BlockingAuthorizationService : IProjectAuthorizationService
+    {
+        private readonly TaskCompletionSource _permissionRequested = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _permissionAllowed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task PermissionRequested => _permissionRequested.Task;
+
+        public Task<bool> IsActorActiveTenantMemberAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult(true);
+
+        public async Task<bool> HasPermissionAsync(
+            Guid projectId,
+            PermissionType permission,
+            CancellationToken cancellationToken = default)
+        {
+            _permissionRequested.TrySetResult();
+            await _permissionAllowed.Task.WaitAsync(cancellationToken);
+            return true;
+        }
+
+        public void AllowPermission() => _permissionAllowed.TrySetResult();
     }
 
     public async ValueTask DisposeAsync() => await _context.DisposeAsync();

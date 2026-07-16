@@ -1,18 +1,20 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace GameGuild.Projects;
 
 public sealed class ProjectLifecycleCoordinator(
     IApplicationDbContext context,
-    IEnumerable<IProjectLifecycleParticipant> participants) : IProjectLifecycleCoordinator
+    IEnumerable<IProjectLifecycleParticipant> participants,
+    IProjectLifecycleLock? lifecycleLock = null) : IProjectLifecycleCoordinator
 {
+    private readonly IProjectLifecycleLock _lifecycleLock = lifecycleLock ?? new ProjectLifecycleLock(context);
+
     public async Task<bool> DeleteAsync(
         Guid projectId,
         bool softDelete,
         CancellationToken cancellationToken = default)
     {
-        await using var transaction = await BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await using var lockHandle = await _lifecycleLock.AcquireAsync(projectId, cancellationToken).ConfigureAwait(false);
         var project = await context.Set<Project>()
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(
@@ -32,21 +34,8 @@ public sealed class ProjectLifecycleCoordinator(
 
         project.Touch();
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        if (transaction != null)
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        await lockHandle.CommitAsync(cancellationToken).ConfigureAwait(false);
 
         return true;
-    }
-
-    private async Task<IDbContextTransaction?> BeginTransactionAsync(CancellationToken cancellationToken)
-    {
-        if (context is not DbContext dbContext ||
-            dbContext.Database.ProviderName != "Npgsql.EntityFrameworkCore.PostgreSQL" ||
-            dbContext.Database.CurrentTransaction != null)
-        {
-            return null;
-        }
-
-        return await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
     }
 }

@@ -14,8 +14,11 @@ public class TestingRequestOperationsService(
     IApplicationDbContext context,
     IProjectChannelAvailabilityService availabilityService,
     IProjectAuthorizationService authorizationService,
-    IActorContextAccessor actorContextAccessor) : ITestingRequestOperations
+    IActorContextAccessor actorContextAccessor,
+    IProjectLifecycleLock? lifecycleLock = null) : ITestingRequestOperations
 {
+    private readonly IProjectLifecycleLock _lifecycleLock = lifecycleLock ?? new ProjectLifecycleLock(context);
+
     public async Task<IEnumerable<TestingRequest>> GetAllTestingRequestsAsync()
     {
         return await context.Set<TestingRequest>()
@@ -215,6 +218,7 @@ public class TestingRequestOperationsService(
             throw new InvalidOperationException("Testing Lab submissions must be linked to an existing project.");
 
         var projectId = existingProject.Id;
+        await using var lockHandle = await _lifecycleLock.AcquireAsync(projectId).ConfigureAwait(false);
         var availability = await availabilityService
             .GetAsync(projectId, ProjectChannel.TestingLab, actor.TenantId)
             .ConfigureAwait(false);
@@ -296,6 +300,7 @@ public class TestingRequestOperationsService(
 
         context.Set<TestingRequest>().Add(testingRequest);
         await context.SaveChangesAsync().ConfigureAwait(false);
+        await lockHandle.CommitAsync().ConfigureAwait(false);
 
         return (await GetTestingRequestByIdAsync(testingRequest.Id).ConfigureAwait(false)) ?? testingRequest;
     }

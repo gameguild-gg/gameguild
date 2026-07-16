@@ -7,6 +7,7 @@ using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -679,6 +680,42 @@ public class TestingRequestOperationsServiceTests
     }
 
     [Fact]
+    public async Task CreateSimpleTestingRequestAsync_ShouldHoldProjectLifecycleLockThroughCommit()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        var project = CreateProject("Locked request", tenantId, userId);
+        context.Set<Project>().Add(project);
+        context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = project.Id,
+            UserId = userId,
+            Role = ProjectRoles.Owner,
+            IsActive = true
+        });
+        await context.SaveChangesAsync();
+        var accessor = new ActorContextAccessor();
+        accessor.SetActorContext(ActorContextBuilder.ForUser(userId).WithTenantId(tenantId).Build());
+        var recordingLock = new RecordingProjectLifecycleLock();
+        var services = new ServiceCollection();
+        services.AddSingleton<IApplicationDbContext>(context);
+        services.AddSingleton<IProjectChannelAvailabilityService>(new ProjectChannelAvailabilityService(context));
+        services.AddSingleton<IProjectAuthorizationService>(new ProjectAuthorizationService(context, accessor));
+        services.AddSingleton<IActorContextAccessor>(accessor);
+        services.AddSingleton<IProjectLifecycleLock>(recordingLock);
+        await using var provider = services.BuildServiceProvider();
+        var service = ActivatorUtilities.CreateInstance<TestingRequestOperationsService>(provider);
+
+        await service.CreateSimpleTestingRequestAsync(CreateRequestDto(project.Id), userId);
+
+        recordingLock.AcquiredProjectIds.Should().Equal(project.Id);
+        recordingLock.CommitCount.Should().Be(1);
+        recordingLock.DisposeCount.Should().Be(1);
+    }
+
+    [Fact]
     public async Task CreateSimpleTestingRequestAsync_Should_Not_Reuse_CrossTenant_Project_Version()
     {
         await using var context = CreateContext();
@@ -890,6 +927,36 @@ public class TestingRequestOperationsServiceTests
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException("Transactions are not required for this service regression.");
+    }
+
+    private sealed class RecordingProjectLifecycleLock : IProjectLifecycleLock
+    {
+        public List<Guid> AcquiredProjectIds { get; } = [];
+        public int CommitCount { get; private set; }
+        public int DisposeCount { get; private set; }
+
+        public Task<IProjectLifecycleLockHandle> AcquireAsync(
+            Guid projectId,
+            CancellationToken cancellationToken = default)
+        {
+            AcquiredProjectIds.Add(projectId);
+            return Task.FromResult<IProjectLifecycleLockHandle>(new Handle(this));
+        }
+
+        private sealed class Handle(RecordingProjectLifecycleLock owner) : IProjectLifecycleLockHandle
+        {
+            public Task CommitAsync(CancellationToken cancellationToken = default)
+            {
+                owner.CommitCount++;
+                return Task.CompletedTask;
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                owner.DisposeCount++;
+                return ValueTask.CompletedTask;
+            }
+        }
     }
 }
 

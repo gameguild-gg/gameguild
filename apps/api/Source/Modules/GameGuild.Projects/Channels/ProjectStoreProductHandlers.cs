@@ -12,18 +12,23 @@ public sealed class ProjectStoreProductHandlers(
     IActorContextAccessor actorContextAccessor,
     IProjectChannelAvailabilityService availabilityService,
     IProjectAuthorizationService authorizationService,
-    ILogger<ProjectStoreProductHandlers> logger)
+    ILogger<ProjectStoreProductHandlers> logger,
+    IProjectLifecycleLock? lifecycleLock = null)
     : ICommandHandler<LinkProjectStoreProductCommand, Result<ProjectStoreProductProjection>>,
       ICommandHandler<UnlinkProjectStoreProductCommand, Result<bool>>,
       IQueryHandler<GetProjectStoreProductsQuery, Result<IReadOnlyList<ProjectStoreProductProjection>>>,
       IQueryHandler<GetPublicStoreProductProjectsQuery, Result<IReadOnlyList<ProjectStoreProductProjection>>>
 {
+    private readonly IProjectLifecycleLock _lifecycleLock = lifecycleLock ?? new ProjectLifecycleLock(context);
+
     public async Task<Result<ProjectStoreProductProjection>> Handle(LinkProjectStoreProductCommand request, CancellationToken cancellationToken)
     {
         var actor = actorContextAccessor.ActorContext;
         var actorId = actor.SubjectIdAsGuid;
         if (!actor.IsAuthenticated || actorId == null || actor.TenantId == null)
             return Result.Failure<ProjectStoreProductProjection>(Error.Unauthorized("ProjectStoreProduct.Unauthenticated", "An authenticated tenant actor is required."));
+
+        await using var lockHandle = await _lifecycleLock.AcquireAsync(request.ProjectId, cancellationToken).ConfigureAwait(false);
 
         var availability = await availabilityService
             .GetAsync(request.ProjectId, ProjectChannel.Store, actor.TenantId, cancellationToken: cancellationToken)
@@ -66,6 +71,7 @@ public sealed class ProjectStoreProductHandlers(
         };
         context.Set<ProjectStoreProduct>().Add(link);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await lockHandle.CommitAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Actor {ActorId} linked project {ProjectId} to product {ProductId}", actorId, request.ProjectId, request.ProductId);
         return Result.Success(ToProjection(link));
