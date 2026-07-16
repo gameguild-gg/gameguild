@@ -520,6 +520,54 @@ public sealed class LaunchPadTests
     }
 
     [Fact]
+    public async Task ProjectDelete_ShouldSoftDeleteLaunchPlanAndPreserveLaunchHistory()
+    {
+        await using var context = CreateContext();
+        var project = new Project
+        {
+            Title = "Historical launch",
+            Slug = $"historical-launch-{Guid.NewGuid():N}",
+            Status = ContentStatus.Published
+        };
+        var launchedAt = DateTime.UtcNow.AddDays(-2);
+        var item = new LaunchChecklistItem
+        {
+            Title = "Store page",
+            Category = "Readiness",
+            IsRequired = true,
+            IsComplete = true,
+            CompletedAt = launchedAt.AddDays(-1)
+        };
+        var plan = new LaunchPlan
+        {
+            ProjectId = project.Id,
+            Name = "Historical plan",
+            Status = LaunchPlanStatus.Launched,
+            LaunchedAt = launchedAt,
+            ChecklistItems = [item]
+        };
+        context.AddRange(project, plan);
+        await context.SaveChangesAsync();
+        var services = new ServiceCollection();
+        services.AddScoped<IApplicationDbContext>(_ => context);
+        services.AddLaunchPadModule();
+        await using var provider = services.BuildServiceProvider();
+        var coordinator = new ProjectLifecycleCoordinator(
+            context,
+            provider.GetServices<IProjectLifecycleParticipant>());
+
+        var deleted = await coordinator.DeleteAsync(project.Id, softDelete: true);
+
+        deleted.Should().BeTrue();
+        plan.DeletedAt.Should().NotBeNull();
+        plan.Status.Should().Be(LaunchPlanStatus.Launched);
+        plan.LaunchedAt.Should().Be(launchedAt);
+        plan.ChecklistItems.Should().ContainSingle().Which.Should().BeSameAs(item);
+        item.IsComplete.Should().BeTrue();
+        item.DeletedAt.Should().BeNull();
+    }
+
+    [Fact]
     public void LaunchPad_Module_And_Model_Configuration_Should_Register_Runtime_Surface()
     {
         var module = new LaunchPadModule();
