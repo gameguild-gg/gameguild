@@ -183,21 +183,21 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("ai_prompt_templates", (string)null);
                 });
 
-            
 
-            
 
-            
 
-            
 
-            
 
-            
 
-            
 
-            
+
+
+
+
+
+
+
+
 
             modelBuilder.Entity("GameGuild.Commerce.Billing.BillingWebhookEvent", b =>
                 {
@@ -401,11 +401,11 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("invoices");
                 });
 
-            
 
-            
 
-            
+
+
+
 
             modelBuilder.Entity("GameGuild.Commerce.Payments.Payment", b =>
                 {
@@ -5642,7 +5642,7 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("PermissionDelegation");
                 });
 
-            
+
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.PolicyDefinitionEntity", b =>
                 {
@@ -9568,9 +9568,9 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("personalized_feed_items", (string)null);
                 });
 
-            
 
-            
+
+
 
             modelBuilder.Entity("GameGuild.Projects.Project", b =>
                 {
@@ -12079,19 +12079,19 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("testing_sessions", (string)null);
                 });
 
-            
 
-            
 
-            
 
-            
 
-            
 
-            
 
-            
+
+
+
+
+
+
+
 
             modelBuilder.Entity("GameGuild.Commerce.Payments.TaxJurisdiction", b =>
                 {
@@ -12885,7 +12885,7 @@ namespace GameGuild.API.Database.Migrations
                         .IsRequired();
                 });
 
-            
+
 
             modelBuilder.Entity("GameGuild.Projects.Project", b =>
                 {
@@ -13372,13 +13372,13 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("TestingRequest");
                 });
 
-            
 
-            
 
-            
 
-            
+
+
+
+
 
             modelBuilder.Entity("GameGuild.Commerce.Payments.TaxJurisdiction", b =>
                 {
@@ -13535,7 +13535,7 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("Courses");
                 });
 
-            
+
 
             modelBuilder.Entity("GameGuild.Projects.Project", b =>
                 {

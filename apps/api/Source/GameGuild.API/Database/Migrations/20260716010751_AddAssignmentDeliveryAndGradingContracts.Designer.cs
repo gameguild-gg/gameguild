@@ -2303,7 +2303,7 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("SubscriptionPlans", (string)null);
                 });
 
-            
+
 
             modelBuilder.Entity("GameGuild.Compliance.FERPA.FerpaDirectoryInformationPolicy", b =>
                 {
@@ -5603,7 +5603,7 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("PermissionDelegation");
                 });
 
-            
+
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.PolicyDefinitionEntity", b =>
                 {
