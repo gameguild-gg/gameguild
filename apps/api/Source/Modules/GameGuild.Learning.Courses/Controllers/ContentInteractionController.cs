@@ -153,6 +153,19 @@ public class ContentInteractionController(IContentInteractionService contentInte
     }
   }
 
+  [HttpGet("content/{contentId}/reflection-responses")]
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
+  public async Task<ActionResult<IEnumerable<ReflectionResponseResultDto>>> GetReflectionResponses([FromRoute] Guid contentId, [FromQuery] Guid programId) {
+    try { return Ok(await contentInteractionService.GetReflectionResponsesAsync(programId, contentId).ConfigureAwait(false)); }
+    catch (RequestValidationException exception) { return BadRequest(exception.Message); }
+  }
+
+  [HttpGet("content/{contentId}/reflection-responses/visible")]
+  public async Task<ActionResult<IEnumerable<ReflectionResponseResultDto>>> GetVisibleReflectionResponses([FromRoute] Guid contentId, [FromQuery] Guid programId) {
+    try { return Ok(await contentInteractionService.GetVisibleReflectionResponsesAsync(programId, contentId).ConfigureAwait(false)); }
+    catch (RequestValidationException exception) { return BadRequest(exception.Message); }
+  }
+
   /// <summary>
   /// Update time spent on content
   /// Requires Edit permission on the parent Program

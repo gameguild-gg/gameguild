@@ -12,6 +12,78 @@ namespace GameGuild.Learning.Courses.UnitTests;
 public sealed class ProgramWriteServiceTests
 {
     [Theory]
+    [InlineData(true, 1)]
+    [InlineData(false, 2)]
+    public async Task LearnerReflectionResponses_ShouldRespectPrivateToInstructors(bool privateToInstructors, int expectedCount)
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var learnerId = Guid.NewGuid();
+        var peerId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.TenantId = tenantId;
+        var learner = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = learnerId, IsActive = true };
+        var peer = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = peerId, IsActive = true };
+        var reflection = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Reflection", Type = ProgramContentType.Reflection };
+        reflection.SetActivitySettings(new ReflectionActivitySettings(PrivateToInstructors: privateToInstructors));
+        context.AddRange(program, learner, peer, reflection,
+            ReflectionResponse(learner, reflection),
+            ReflectionResponse(peer, reflection));
+        await context.SaveChangesAsync();
+        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(learnerId, tenantId));
+
+        var results = (IEnumerable<object>)await service.GetVisibleReflectionResponsesAsync(program.Id, reflection.Id);
+
+        results.Should().HaveCount(expectedCount);
+        results.Should().OnlyContain(result => GetRespondentUserId(result) == null);
+    }
+
+    [Fact]
+    public async Task ManagerReflectionResponses_ShouldExposeRespondentIdentityWithinTenant()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var managerId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.TenantId = tenantId;
+        var reflection = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Reflection", Type = ProgramContentType.Reflection };
+        var respondent = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
+        context.AddRange(program, reflection, respondent, ReflectionResponse(respondent, reflection));
+        await context.SaveChangesAsync();
+        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreatePermissions(PermissionType.Read));
+
+        var result = ((IEnumerable<object>)await service.GetReflectionResponsesAsync(program.Id, reflection.Id)).Single();
+
+        GetRespondentUserId(result).Should().Be(respondent.UserId);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SurveyResponsePaths_ShouldRejectDifferentTenant(bool managerPath)
+    {
+        await using var context = CreateContext();
+        var programTenantId = Guid.NewGuid();
+        var requestTenantId = Guid.NewGuid();
+        var learnerId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.TenantId = programTenantId;
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = learnerId, IsActive = true };
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Survey", Type = ProgramContentType.Survey };
+        survey.SetActivitySettings(new SurveyActivitySettings(ResultsVisibility: SurveyResultsVisibility.AfterSubmission));
+        context.AddRange(program, enrollment, survey, new ContentInteraction { Id = Guid.NewGuid(), ProgramUserId = enrollment.Id, UserId = learnerId, ContentId = survey.Id, SubmittedAt = SystemClock.UtcNow, SubmissionData = """{"kind":"survey","answers":{"a":1}}""" });
+        await context.SaveChangesAsync();
+        var actorId = managerPath ? Guid.NewGuid() : learnerId;
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(actorId, requestTenantId), CreatePermissions(PermissionType.Read));
+
+        Func<Task> action = managerPath
+            ? () => service.GetSurveyResponsesAsync(program.Id, survey.Id)
+            : () => service.GetVisibleSurveyResponsesAsync(program.Id, survey.Id);
+
+        await action.Should().ThrowAsync<RequestValidationException>();
+    }
+
+    [Theory]
     [InlineData(SurveyResultsVisibility.AfterSubmission, true, false, true)]
     [InlineData(SurveyResultsVisibility.AfterSubmission, false, false, false)]
     [InlineData(SurveyResultsVisibility.AfterClose, false, false, false)]
@@ -36,7 +108,7 @@ public sealed class ProgramWriteServiceTests
         var response = new ContentInteraction { Id = Guid.NewGuid(), ProgramUserId = respondentEnrollment.Id, UserId = respondentEnrollment.UserId, ContentId = survey.Id, SubmittedAt = SystemClock.UtcNow, SubmissionData = """{"kind":"survey","answers":{"a":1}}""" };
         context.AddRange(program, enrollment, respondentEnrollment, survey, response);
         await context.SaveChangesAsync();
-        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(learnerId));
+        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(learnerId, Guid.NewGuid()));
 
         if (shouldAllow)
         {
@@ -661,7 +733,18 @@ public sealed class ProgramWriteServiceTests
             Slug = $"course-{Guid.NewGuid():N}",
         };
 
-    private static Guid? GetRespondentUserId(SurveyResponseResultDto result) =>
+    private static ContentInteraction ReflectionResponse(ProgramUser enrollment, ProgramContent reflection) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            ProgramUserId = enrollment.Id,
+            UserId = enrollment.UserId,
+            ContentId = reflection.Id,
+            SubmittedAt = SystemClock.UtcNow,
+            SubmissionData = """{"kind":"reflection","body":"response"}""",
+        };
+
+    private static Guid? GetRespondentUserId(object result) =>
         result.GetType().GetProperty("RespondentUserId")?.GetValue(result) is Guid respondentId
             ? respondentId
             : null;
