@@ -14062,13 +14062,6 @@ modelBuilder.Entity("GameGuild.Tags.Tag", b =>
                     b.ToTable("tags");
                 });
 
-modelBuilder.Entity("GameGuild.Tags.Tag", b =>
-                {
-                    b.Navigation("SourceRelationships");
-
-                    b.Navigation("TargetRelationships");
-                });
-
 modelBuilder.Entity("GameGuild.Tags.TagProficiency", b =>
                 {
                     b.Property<Guid>("Id")
@@ -14207,6 +14200,13 @@ modelBuilder.Entity("GameGuild.Tags.TagRelationship", b =>
                     b.Navigation("Source");
 
                     b.Navigation("Target");
+                });
+
+modelBuilder.Entity("GameGuild.Tags.Tag", b =>
+                {
+                    b.Navigation("SourceRelationships");
+
+                    b.Navigation("TargetRelationships");
                 });
 
 #pragma warning restore 612, 618

@@ -43,6 +43,54 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
     }
 
     [DockerFact]
+    public async Task SortedMultiContentLocks_CompleteWhenOpposingRequestsWouldDeadlockInReverseOrder()
+    {
+        var container = new PostgreSqlBuilder()
+            .WithImage("postgres:16-alpine")
+            .WithDatabase("task2_ordered_locks")
+            .WithUsername("test")
+            .WithPassword("test")
+            .WithCleanUp(true)
+            .Build();
+        await container.StartAsync();
+        try
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseNpgsql(container.GetConnectionString())
+                .Options;
+            var ordered = new[] { Guid.NewGuid(), Guid.NewGuid() }.OrderBy(id => id).ToArray();
+            var lowId = ordered[0];
+            var highId = ordered[1];
+            await using var gateContext = new ApplicationDbContext(options);
+            await using var highIdGate = await ProgramContentLifecycleDatabaseLock.AcquireAsync(gateContext, [highId]);
+
+            var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var firstTask = AcquireAndCommitAsync(options, [highId, lowId], firstStarted);
+            await firstStarted.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            await Task.Delay(250);
+
+            var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var secondTask = AcquireAndCommitAsync(options, [lowId, highId], secondStarted);
+            await secondStarted.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            await Task.Delay(250);
+            firstTask.IsCompleted.Should().BeFalse();
+            secondTask.IsCompleted.Should().BeFalse();
+
+            // With reverse input ordering, the first request would hold highId while the
+            // second holds lowId once this gate is released. Sorting both requests low-first
+            // leaves only one waiter and lets both requests complete without a deadlock.
+            await ProgramContentLifecycleDatabaseLock.CommitAsync(highIdGate);
+
+            var outcomes = await Task.WhenAll(firstTask, secondTask).WaitAsync(TimeSpan.FromSeconds(10));
+            outcomes.Should().OnlyContain(outcome => outcome.Success && outcome.Exception == null);
+        }
+        finally
+        {
+            await container.DisposeAsync();
+        }
+    }
+
+    [DockerFact]
     public async Task AdvisoryLifecycleLocks_SerializeConcurrentCueLinkAndContentMutation()
     {
         var container = new PostgreSqlBuilder()
@@ -266,8 +314,28 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
 
         var linkResult = await linkTask.WaitAsync(TimeSpan.FromSeconds(10));
         var updateException = await updateTask.WaitAsync(TimeSpan.FromSeconds(10));
-        linkResult.IsSuccess.Should().NotBe(updateException is null,
-            "the serialized workflow either links a cue and rejects the update, or updates first and rejects the cue");
+        var updateSucceeded = updateException is null;
+        (linkResult.IsSuccess ^ updateSucceeded).Should().BeTrue(
+            "the serialized workflow must have exactly one winner");
+
+        await using var verificationScope = provider.CreateAsyncScope();
+        var verificationContext = verificationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var content = await verificationContext.Set<ProgramContent>().SingleAsync(candidate => candidate.Id == fixture.UpdateContentId);
+        var activeCueCount = await verificationContext.Set<InteractiveVideoAssessmentCue>()
+            .CountAsync(cue => cue.ContentId == fixture.UpdateContentId && cue.DeletedAt == null);
+        if (linkResult.IsSuccess)
+        {
+            updateException.Should().BeOfType<RequestValidationException>();
+            content.Type.Should().Be(ProgramContentType.Lesson);
+            content.LessonFormat.Should().Be(LessonContentFormat.Video);
+            activeCueCount.Should().Be(1);
+        }
+        else
+        {
+            updateException.Should().BeNull();
+            content.LessonFormat.Should().Be(LessonContentFormat.Markdown);
+            activeCueCount.Should().Be(0);
+        }
     }
 
     private static async Task LinkAndDeleteTreeConcurrentlyAsync(IServiceProvider provider, WorkflowFixture fixture)
@@ -280,7 +348,6 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
         gate.Should().NotBeNull();
 
         var rootLinkStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var childLinkStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var deleteStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var rootLinkTask = Task.Run(async () =>
         {
@@ -290,52 +357,74 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
                 fixture.AssessmentId,
                 new LinkInteractiveVideoCueRequest(fixture.RootContentId, "root-race"));
         });
-        var childLinkTask = Task.Run(async () =>
-        {
-            await using var scope = provider.CreateAsyncScope();
-            childLinkStarted.SetResult();
-            return await scope.ServiceProvider.GetRequiredService<IAssessmentService>().LinkInteractiveVideoCueAsync(
-                fixture.AssessmentId,
-                new LinkInteractiveVideoCueRequest(fixture.ChildContentId, "child-race"));
-        });
-        var deleteTask = Task.Run<object>(async () =>
+        var deleteTask = Task.Run(async () =>
         {
             await using var scope = provider.CreateAsyncScope();
             deleteStarted.SetResult();
             try
             {
-                return await scope.ServiceProvider
+                return new DeleteOutcome(
+                    await scope.ServiceProvider
                     .GetRequiredService<IRequestHandler<RemoveProgramContentCommand, bool>>()
-                    .Handle(new RemoveProgramContentCommand(fixture.CourseId, fixture.RootContentId), CancellationToken.None);
+                    .Handle(new RemoveProgramContentCommand(fixture.CourseId, fixture.RootContentId), CancellationToken.None),
+                    null);
             }
             catch (Exception exception)
             {
-                return exception;
+                return new DeleteOutcome(null, exception);
             }
         });
 
-        await Task.WhenAll(rootLinkStarted.Task, childLinkStarted.Task, deleteStarted.Task).WaitAsync(TimeSpan.FromSeconds(10));
+        await Task.WhenAll(rootLinkStarted.Task, deleteStarted.Task).WaitAsync(TimeSpan.FromSeconds(10));
         await Task.Delay(300);
         rootLinkTask.IsCompleted.Should().BeFalse();
-        childLinkTask.IsCompleted.Should().BeFalse();
         deleteTask.IsCompleted.Should().BeFalse("the CQRS delete path must acquire the same sorted multi-content locks");
         await ProgramContentLifecycleDatabaseLock.CommitAsync(gate);
 
-        await Task.WhenAll(rootLinkTask, childLinkTask, deleteTask).WaitAsync(TimeSpan.FromSeconds(15));
+        var rootLinkResult = await rootLinkTask.WaitAsync(TimeSpan.FromSeconds(15));
+        var deleteOutcome = await deleteTask.WaitAsync(TimeSpan.FromSeconds(15));
+        var deleteSucceeded = deleteOutcome.Result is true && deleteOutcome.Exception is null;
+        (rootLinkResult.IsSuccess ^ deleteSucceeded).Should().BeTrue(
+            "the cue link and physical tree delete must have exactly one coherent winner");
+
+        await using var verificationScope = provider.CreateAsyncScope();
+        var verificationContext = verificationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        if (deleteSucceeded)
+        {
+            rootLinkResult.IsSuccess.Should().BeFalse();
+            (await verificationContext.Set<ProgramContent>()
+                .AnyAsync(content => (content.Id == fixture.RootContentId || content.Id == fixture.ChildContentId) && content.DeletedAt == null))
+                .Should().BeFalse();
+            (await verificationContext.Set<InteractiveVideoAssessmentCue>()
+                .AnyAsync(cue => cue.ContentId == fixture.RootContentId && cue.DeletedAt == null))
+                .Should().BeFalse();
+        }
+        else
+        {
+            rootLinkResult.IsSuccess.Should().BeTrue();
+            deleteOutcome.Exception.Should().BeOfType<RequestValidationException>();
+            (await verificationContext.Set<ProgramContent>()
+                .CountAsync(content => (content.Id == fixture.RootContentId || content.Id == fixture.ChildContentId) &&
+                                       content.DeletedAt == null &&
+                                       content.Type == ProgramContentType.Lesson &&
+                                       content.LessonFormat == LessonContentFormat.Video))
+                .Should().Be(2);
+            (await verificationContext.Set<InteractiveVideoAssessmentCue>()
+                .CountAsync(cue => cue.ContentId == fixture.RootContentId && cue.DeletedAt == null))
+                .Should().Be(1);
+        }
     }
 
     private static async Task AssertNoActiveCueReferencesInvalidContentAsync(IServiceProvider provider)
     {
         await using var scope = provider.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var staleCueExists = await (
-            from cue in context.Set<InteractiveVideoAssessmentCue>()
-            join content in context.Set<ProgramContent>() on cue.ContentId equals content.Id
-            where cue.DeletedAt == null &&
-                  (content.DeletedAt != null ||
-                   content.Type != ProgramContentType.Lesson ||
-                   content.LessonFormat != LessonContentFormat.Video)
-            select cue.Id).AnyAsync();
+        var staleCueExists = await context.Set<InteractiveVideoAssessmentCue>()
+            .AnyAsync(cue => cue.DeletedAt == null && !context.Set<ProgramContent>().Any(content =>
+                content.Id == cue.ContentId &&
+                content.DeletedAt == null &&
+                content.Type == ProgramContentType.Lesson &&
+                content.LessonFormat == LessonContentFormat.Video));
 
         staleCueExists.Should().BeFalse();
     }
@@ -356,6 +445,28 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
         Guid UpdateContentId,
         Guid RootContentId,
         Guid ChildContentId);
+
+    private static async Task<LockOutcome> AcquireAndCommitAsync(
+        DbContextOptions<ApplicationDbContext> options,
+        IReadOnlyCollection<Guid> contentIds,
+        TaskCompletionSource started)
+    {
+        await using var context = new ApplicationDbContext(options);
+        started.SetResult();
+        try
+        {
+            await using var transaction = await ProgramContentLifecycleDatabaseLock.AcquireAsync(context, contentIds);
+            await ProgramContentLifecycleDatabaseLock.CommitAsync(transaction);
+            return new LockOutcome(true, null);
+        }
+        catch (Exception exception)
+        {
+            return new LockOutcome(false, exception);
+        }
+    }
+
+    private sealed record DeleteOutcome(bool? Result, Exception? Exception);
+    private sealed record LockOutcome(bool Success, Exception? Exception);
 
     private sealed class DockerFactAttribute : FactAttribute
     {
