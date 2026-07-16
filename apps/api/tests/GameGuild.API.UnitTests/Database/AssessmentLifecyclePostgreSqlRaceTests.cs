@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Learning.Assessments;
@@ -42,25 +41,23 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
                 await setup.SaveChangesAsync();
             }
 
-            await using var gateConnection = new NpgsqlConnection(container.GetConnectionString());
-            await gateConnection.OpenAsync();
-            await using var gateTransaction = await gateConnection.BeginTransactionAsync();
-            await using (var lockCommand = new NpgsqlCommand("SELECT pg_advisory_xact_lock(@key)", gateConnection, gateTransaction))
-            {
-                lockCommand.Parameters.AddWithValue("key", AssessmentLifecycleLockKey(assessmentId));
-                await lockCommand.ExecuteNonQueryAsync();
-            }
-            var deleteTask = DeleteAsync(options, assessmentId);
+            await using var gateContext = new ApplicationDbContext(options);
+            await using var contentGate = await ProgramContentLifecycleDatabaseLock.AcquireAsync(gateContext, [contentId]);
+            contentGate.Should().NotBeNull();
+            await using var observer = new NpgsqlConnection(container.GetConnectionString());
+            await observer.OpenAsync();
+
             var linkTask = LinkAsync(options, courseId, assessmentId, contentId);
-            await Task.Delay(300);
-            deleteTask.IsCompleted.Should().BeFalse("assessment deletion must acquire the assessment lifecycle lock");
-            linkTask.IsCompleted.Should().BeFalse("cue linking must acquire the same assessment lifecycle lock");
-            await gateTransaction.CommitAsync();
+            await WaitForWaitingAdvisoryLocksAsync(observer, 1);
+            var deleteTask = DeleteAsync(options, assessmentId);
+            await WaitForWaitingAdvisoryLocksAsync(observer, 2);
+
+            await ProgramContentLifecycleDatabaseLock.CommitAsync(contentGate);
             var deleteResult = await deleteTask;
             var linkResult = await linkTask;
 
             deleteResult.IsSuccess.Should().BeTrue();
-            linkResult.IsSuccess.Should().BeFalse();
+            linkResult.IsSuccess.Should().BeTrue();
             await using var verify = new ApplicationDbContext(options);
             (await verify.Set<Assessment>().SingleAsync(assessment => assessment.Id == assessmentId)).DeletedAt.Should().NotBeNull();
             (await verify.Set<InteractiveVideoAssessmentCue>()
@@ -101,13 +98,18 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
             .LinkInteractiveVideoCueAsync(assessmentId, new LinkInteractiveVideoCueRequest(contentId, "race"));
     }
 
-    private static long AssessmentLifecycleLockKey(Guid assessmentId)
+    private static async Task WaitForWaitingAdvisoryLocksAsync(NpgsqlConnection connection, int minimumCount)
     {
-        Span<byte> source = stackalloc byte[36];
-        "assessment-lifecycle"u8.CopyTo(source);
-        assessmentId.TryWriteBytes(source[20..]);
-        Span<byte> hash = stackalloc byte[32];
-        SHA256.HashData(source, hash);
-        return BitConverter.ToInt64(hash);
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        while (DateTime.UtcNow < deadline)
+        {
+            await using var command = new NpgsqlCommand(
+                "SELECT COUNT(*) FROM pg_locks WHERE locktype = 'advisory' AND NOT granted AND database = (SELECT oid FROM pg_database WHERE datname = current_database())",
+                connection);
+            if (Convert.ToInt32(await command.ExecuteScalarAsync()) >= minimumCount) return;
+            await Task.Delay(25);
+        }
+
+        throw new TimeoutException($"Timed out waiting for {minimumCount} advisory lock waiters.");
     }
 }
