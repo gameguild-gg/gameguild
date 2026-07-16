@@ -1,6 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
 using GameGuild.Projects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -155,7 +156,19 @@ public sealed class SessionProjectHandlers(
             return new(null, Error.NotFound("TestingLab.SessionNotFound", "Testing session not found."));
         if (session.TenantId != actor.TenantId)
             return new(null, Error.Forbidden("TestingLab.SessionTenantMismatch", "Testing session is outside the current tenant."));
-        if (session.ManagerId != actorId && session.CreatedById != actorId && !actor.IsTenantAdmin)
+
+        var tenantRole = await context.Set<TenantMember>()
+            .AsNoTracking()
+            .Where(member =>
+                member.UserId == actorId.Value &&
+                member.TenantId == session.TenantId &&
+                member.IsActive &&
+                member.DeletedAt == null)
+            .Select(member => member.Role)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var isSessionTenantAdmin = tenantRole != null && TenantRole.FromString(tenantRole).IsAdmin;
+        if (session.ManagerId != actorId && session.CreatedById != actorId && !isSessionTenantAdmin)
             return new(null, Error.Forbidden("TestingLab.SessionForbidden", "Session manager or creator access is required."));
 
         return new(session, null);
