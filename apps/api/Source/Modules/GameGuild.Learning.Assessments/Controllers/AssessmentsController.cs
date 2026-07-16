@@ -395,7 +395,7 @@ public class AssessmentsController : BaseApiController
         if (submission == null) return NotFound();
         var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
         if (assessment == null) return NotFound();
-        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+        if (!await CanReviewCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
 
         var graderId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!graderId.HasValue) return Unauthorized();
