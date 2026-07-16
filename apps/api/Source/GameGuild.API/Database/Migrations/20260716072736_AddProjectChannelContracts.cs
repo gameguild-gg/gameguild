@@ -9,6 +9,17 @@ namespace GameGuild.API.Database.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropIndex(
+                name: "IX_launch_plans_ProjectId",
+                table: "launch_plans");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_launch_plans_ProjectId",
+                table: "launch_plans",
+                column: "ProjectId",
+                unique: true,
+                filter: "\"DeletedAt\" IS NULL");
+
             migrationBuilder.Sql("""
                 WITH ranked_active_links AS (
                     SELECT
@@ -106,6 +117,16 @@ namespace GameGuild.API.Database.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(name: "project_store_products");
+
+            migrationBuilder.DropIndex(
+                name: "IX_launch_plans_ProjectId",
+                table: "launch_plans");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_launch_plans_ProjectId",
+                table: "launch_plans",
+                column: "ProjectId",
+                unique: true);
 
             migrationBuilder.DropIndex(
                 name: "IX_session_projects_active_pair",
