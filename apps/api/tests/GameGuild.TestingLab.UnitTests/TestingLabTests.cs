@@ -553,6 +553,88 @@ public class TestingRequestOperationsServiceTests
     }
 
     [Fact]
+    public async Task CreateSimpleTestingRequestAsync_WithProjectId_ShouldNotResolveCrossTenantProject()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        var project = CreateProject("Foreign project", Guid.NewGuid(), userId);
+        context.Set<Project>().Add(project);
+        await context.SaveChangesAsync();
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+
+        var act = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(project.Id), userId);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Testing Lab submissions must be linked to an existing project.");
+        context.Set<ProjectVersion>().Should().BeEmpty();
+        context.Set<ProjectRelease>().Should().BeEmpty();
+        context.Set<TestingRequest>().Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_WithProjectId_ShouldNotResolveSoftDeletedProject()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        var project = CreateProject("Deleted project", tenantId, userId);
+        project.DeletedAt = SystemClock.UtcNow;
+        context.Set<Project>().Add(project);
+        await context.SaveChangesAsync();
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+
+        var act = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(project.Id), userId);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Testing Lab submissions must be linked to an existing project.");
+    }
+
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_WithLegacyTitle_ShouldResolveOnlyActiveActorTenantProject()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        var expected = CreateProject("Legacy team", tenantId, userId);
+        var foreign = CreateProject("Legacy team", Guid.NewGuid(), userId);
+        var deleted = CreateProject("Legacy team", tenantId, userId);
+        deleted.DeletedAt = SystemClock.UtcNow;
+        context.Set<Project>().AddRange(foreign, deleted, expected);
+        await context.SaveChangesAsync();
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+
+        var request = await service.CreateSimpleTestingRequestAsync(CreateLegacyRequestDto("Legacy team"), userId);
+
+        request.ProjectVersion!.ProjectId.Should().Be(expected.Id);
+    }
+
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_WithAmbiguousLegacyTitle_ShouldRejectBeforeCreatingRows()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        context.Set<Project>().AddRange(
+            CreateProject("Duplicate title", tenantId, userId),
+            CreateProject("Duplicate title", tenantId, userId));
+        await context.SaveChangesAsync();
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+
+        var act = () => service.CreateSimpleTestingRequestAsync(CreateLegacyRequestDto("Duplicate title"), userId);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Multiple active projects match the legacy team identifier.");
+        context.Set<ProjectVersion>().Should().BeEmpty();
+        context.Set<ProjectRelease>().Should().BeEmpty();
+        context.Set<TestingRequest>().Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task CreateSimpleTestingRequestAsync_WithExistingProject_ShouldCreateProjectBackedRequest()
     {
         await using var context = CreateContext();
@@ -690,7 +772,8 @@ public class TestingRequestOperationsServiceTests
         var crossTenantAct = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(crossTenant.Id), userId);
         var unauthorizedAct = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(unauthorized.Id), userId);
 
-        await crossTenantAct.Should().ThrowAsync<InvalidOperationException>().WithMessage("*tenant_mismatch*");
+        await crossTenantAct.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Testing Lab submissions must be linked to an existing project.");
         await unauthorizedAct.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
@@ -770,6 +853,24 @@ public class TestingRequestOperationsServiceTests
         InstructionsContent = "Install the build and complete the tutorial.",
         FeedbackFormContent = "What blocked you?",
         MaxTesters = 8,
+    };
+
+    private static CreateSimpleTestingRequestDto CreateLegacyRequestDto(string teamIdentifier)
+    {
+        var request = CreateRequestDto(Guid.NewGuid());
+        request.ProjectId = null;
+        request.TeamIdentifier = teamIdentifier;
+        return request;
+    }
+
+    private static Project CreateProject(string title, Guid tenantId, Guid userId) => new()
+    {
+        Id = Guid.NewGuid(),
+        Title = title,
+        Slug = $"{Project.GenerateSlug(title)}-{Guid.NewGuid():N}",
+        Status = ContentStatus.Draft,
+        TenantId = tenantId,
+        CreatedById = userId
     };
 
     private sealed class TestingLabServiceDbContext(DbContextOptions<TestingLabServiceDbContext> options)
