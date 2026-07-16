@@ -563,6 +563,39 @@ public class TestingRequestOperationsServiceTests
         actorAccessor.ActorContext.SubjectIdAsGuid.Should().Be(userId);
     }
 
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_Should_Not_Reuse_CrossTenant_Project_Version()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+        var project = new Project
+        {
+            Title = "Version tenant",
+            Slug = "version-tenant",
+            Status = ContentStatus.Draft,
+            TenantId = tenantId,
+            CreatedById = userId
+        };
+        var staleVersion = new ProjectVersion
+        {
+            ProjectId = project.Id,
+            TenantId = Guid.NewGuid(),
+            VersionNumber = "0.2.0",
+            Status = "testing"
+        };
+        context.Set<Project>().Add(project);
+        context.Set<ProjectVersion>().Add(staleVersion);
+        await context.SaveChangesAsync();
+
+        var request = await service.CreateSimpleTestingRequestAsync(CreateRequestDto(project.Id), userId);
+
+        request.ProjectVersionId.Should().NotBe(staleVersion.Id);
+        request.ProjectVersion!.TenantId.Should().Be(tenantId);
+    }
+
     [Theory]
     [InlineData(ContentStatus.Archived)]
     [InlineData(ContentStatus.Deleted)]
