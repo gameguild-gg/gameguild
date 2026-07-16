@@ -129,10 +129,10 @@ public class ContentInteractionService(
     if (!currentContentType.HasValue)
       throw new RequestValidationException("Content interaction was not found.");
 
-    await using var surveyPolicyTransaction = LearningActivityContract.RequiresSurveyPolicyLock(currentContentType.Value)
+    await using var submissionPolicyTransaction = LearningActivityContract.RequiresSubmissionPolicyLock(currentContentType.Value)
       ? await ProgramContentLifecycleDatabaseLock.AcquireAsync(context, [submissionTarget.ContentId]).ConfigureAwait(false)
       : null;
-    if (LearningActivityContract.RequiresSurveyPolicyLock(currentContentType.Value))
+    if (LearningActivityContract.RequiresSubmissionPolicyLock(currentContentType.Value))
       DetachTrackedSubmissionTarget(interactionId, submissionTarget.ContentId);
     var interaction = await GetInteractionForSubmissionAsync(interactionId).ConfigureAwait(false);
 
@@ -150,15 +150,22 @@ public class ContentInteractionService(
       if (anotherResponseExists) throw new InvalidOperationException("This survey accepts only one response.");
     }
 
-    if (LearningActivityContract.IsActivityType(interaction.Content.Type))
-      ActivityResponseContract.Parse(interaction.Content.Type, submissionData, interaction.Content.GetActivitySettings());
+    var response = LearningActivityContract.IsActivityType(interaction.Content.Type)
+      ? ActivityResponseContract.Parse(interaction.Content.Type, submissionData, interaction.Content.GetActivitySettings())
+      : null;
+    if (response is not null)
+      await LearningActivityContract.ValidateDiscussionThreadRootAsync(
+          context,
+          interaction.Content.ProgramId,
+          interaction.ContentId,
+          response).ConfigureAwait(false);
 
     interaction.SubmissionData = submissionData;
     interaction.SubmittedAt = SystemClock.UtcNow;
     interaction.Complete();
 
     await SaveInteractionOnlyAsync(interaction).ConfigureAwait(false);
-    await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
+    await ProgramContentLifecycleDatabaseLock.CommitAsync(submissionPolicyTransaction).ConfigureAwait(false);
 
     return interaction;
   }

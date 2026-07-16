@@ -12,6 +12,62 @@ namespace GameGuild.Learning.Courses.UnitTests;
 public sealed class ProgramWriteServiceTests
 {
     [Theory]
+    [InlineData(ThreadRootKind.Valid, false)]
+    [InlineData(ThreadRootKind.Arbitrary, true)]
+    [InlineData(ThreadRootKind.NestedDiscussion, true)]
+    [InlineData(ThreadRootKind.OtherContent, true)]
+    [InlineData(ThreadRootKind.OtherCourse, true)]
+    [InlineData(ThreadRootKind.Deleted, true)]
+    [InlineData(ThreadRootKind.NonDiscussion, true)]
+    public async Task SubmitUserContentAsync_ShouldRequireAValidDiscussionThreadRoot(
+        ThreadRootKind rootKind,
+        bool shouldReject)
+    {
+        await using var context = CreateContext();
+        var program = CreateProgram();
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
+        var discussion = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Discussion", Type = ProgramContentType.Discussion };
+        var rootContent = rootKind == ThreadRootKind.OtherCourse
+            ? new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Other course", Type = ProgramContentType.Discussion }
+            : rootKind is ThreadRootKind.OtherContent or ThreadRootKind.NonDiscussion
+                ? new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Other content", Type = rootKind == ThreadRootKind.NonDiscussion ? ProgramContentType.Reflection : ProgramContentType.Discussion }
+                : discussion;
+        var root = new ContentInteraction
+        {
+            Id = Guid.NewGuid(),
+            ProgramUserId = enrollment.Id,
+            UserId = enrollment.UserId,
+            ContentId = rootContent.Id,
+            SubmittedAt = SystemClock.UtcNow,
+            SubmissionData = rootKind == ThreadRootKind.NestedDiscussion
+                ? $$"""{"kind":"discussion","body":"nested","threadRootId":"{{Guid.NewGuid()}}"}"""
+                : rootContent.Type == ProgramContentType.Reflection
+                    ? """{"kind":"reflection","body":"reflection"}"""
+                    : """{"kind":"discussion","body":"root"}""",
+        };
+        context.AddRange(program, enrollment, discussion, rootContent, root);
+        await context.SaveChangesAsync();
+        if (rootKind == ThreadRootKind.Deleted)
+        {
+            root.SoftDelete();
+            await context.SaveChangesAsync();
+        }
+        var rootId = rootKind == ThreadRootKind.Arbitrary ? Guid.NewGuid() : root.Id;
+
+        Func<Task<ContentInteraction?>> submit = () => CreateSubmissionService(context, enrollment.UserId).SubmitUserContentAsync(
+            program.Id, enrollment.UserId, discussion.Id,
+            $$"""{"kind":"discussion","body":"reply","threadRootId":"{{rootId}}"}""");
+
+        if (shouldReject)
+        {
+            Func<Task> action = async () => _ = await submit();
+            await action.Should().ThrowAsync<InvalidOperationException>().WithMessage("Discussion thread root is invalid.");
+        }
+        else
+            (await submit()).Should().NotBeNull();
+    }
+
+    [Theory]
     [MemberData(nameof(ActivityContentSettings))]
     public async Task CloneProgramAsync_ShouldPreserveActivitySettings(
         ProgramContentType type,
@@ -765,4 +821,15 @@ public sealed class ProgramWriteServiceTests
         ProgramUser Enrollment,
         ContentInteraction OldAttempt,
         ContentInteraction CurrentAttempt);
+
+    public enum ThreadRootKind
+    {
+        Valid,
+        Arbitrary,
+        NestedDiscussion,
+        OtherContent,
+        OtherCourse,
+        Deleted,
+        NonDiscussion,
+    }
 }
