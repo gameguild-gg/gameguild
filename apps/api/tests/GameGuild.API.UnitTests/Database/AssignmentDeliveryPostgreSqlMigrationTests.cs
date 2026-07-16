@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.API.Database.Migrations;
+using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -11,6 +12,48 @@ namespace GameGuild.API.UnitTests.Database;
 
 public sealed class AssignmentDeliveryPostgreSqlMigrationTests
 {
+    [DockerFact]
+    public async Task AdvisoryLifecycleLocks_SerializeConcurrentCueLinkAndContentMutation()
+    {
+        var container = new PostgreSqlBuilder()
+            .WithImage("postgres:16-alpine")
+            .WithDatabase("task2_locks")
+            .WithUsername("test")
+            .WithPassword("test")
+            .WithCleanUp(true)
+            .Build();
+        await container.StartAsync();
+        try
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseNpgsql(container.GetConnectionString())
+                .Options;
+            var contentId = Guid.NewGuid();
+            await using var firstContext = new ApplicationDbContext(options);
+            await using var firstLock = await ProgramContentLifecycleDatabaseLock.AcquireAsync(firstContext, [contentId]);
+            firstLock.Should().NotBeNull();
+
+            var secondEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var secondTask = Task.Run(async () =>
+            {
+                await using var secondContext = new ApplicationDbContext(options);
+                await using var secondLock = await ProgramContentLifecycleDatabaseLock.AcquireAsync(secondContext, [contentId]);
+                secondEntered.SetResult();
+                await ProgramContentLifecycleDatabaseLock.CommitAsync(secondLock);
+            });
+
+            await Task.Delay(300);
+            secondEntered.Task.IsCompleted.Should().BeFalse("the first transaction owns the content lifecycle lock");
+            await ProgramContentLifecycleDatabaseLock.CommitAsync(firstLock);
+            await secondTask.WaitAsync(TimeSpan.FromSeconds(10));
+            secondEntered.Task.IsCompleted.Should().BeTrue();
+        }
+        finally
+        {
+            await container.DisposeAsync();
+        }
+    }
+
     [DockerFact]
     public async Task Up_AppliesLegacyRepairAndRejectsInvalidDeliveryContracts()
     {

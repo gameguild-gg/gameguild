@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -9,6 +10,74 @@ namespace GameGuild.Learning.Courses.UnitTests;
 
 public sealed class ProgramContentScheduleProtectionTests
 {
+    [Fact]
+    public async Task ProgramWriteService_DeleteContentAsync_WhenContentHasAssessmentCue_RejectsDeletion()
+    {
+        await using var context = CreateContext();
+        var content = PersistedContent(Guid.NewGuid(), "Video lesson");
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var lifecycle = new Mock<IProgramContentLifecycleGuard>();
+        lifecycle.Setup(guard => guard.HasBlockingDeleteReference(content.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var service = new ProgramWriteService(context, lifecycle.Object);
+
+        var act = () => service.DeleteContentAsync(content.Id);
+
+        await act.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("*assessment cue*");
+    }
+
+    [Fact]
+    public async Task ProgramWriteService_UpdateContentAsync_WhenLinkedVideoWouldBecomeIncompatible_RejectsUpdate()
+    {
+        await using var context = CreateContext();
+        var content = PersistedContent(Guid.NewGuid(), "Video lesson");
+        content.Type = ProgramContentType.Lesson;
+        content.LessonFormat = LessonContentFormat.Video;
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var updated = PersistedContent(content.ProgramId, content.Title);
+        updated.Id = content.Id;
+        updated.Type = ProgramContentType.Lesson;
+        updated.LessonFormat = LessonContentFormat.Markdown;
+        var lifecycle = new Mock<IProgramContentLifecycleGuard>();
+        lifecycle.Setup(guard => guard.HasBlockingIncompatibleUpdateReference(
+                content.Id,
+                ProgramContentType.Lesson,
+                LessonContentFormat.Markdown,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var service = new ProgramWriteService(context, lifecycle.Object);
+
+        var act = () => service.UpdateContentAsync(updated);
+
+        await act.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("*assessment cue*");
+    }
+
+    [Fact]
+    public async Task RemoveProgramContentCommandHandler_WhenContentHasAssessmentCue_RejectsDeletion()
+    {
+        await using var context = CreateContext();
+        var content = PersistedContent(Guid.NewGuid(), "Video lesson");
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var lifecycle = new Mock<IProgramContentLifecycleGuard>();
+        lifecycle.Setup(guard => guard.HasBlockingDeleteReference(content.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var handler = new RemoveProgramContentCommandHandler(
+            context,
+            Mock.Of<IProgramContentScheduleGuard>(),
+            lifecycle.Object,
+            NullLogger<RemoveProgramContentCommandHandler>.Instance);
+
+        var act = () => handler.Handle(new RemoveProgramContentCommand(content.ProgramId, content.Id), CancellationToken.None);
+
+        await act.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("*assessment cue*");
+    }
+
     [Fact]
     public async Task DeleteContentAsync_WhenDescendantIsActivelyScheduled_RejectsEntireDeletion()
     {
