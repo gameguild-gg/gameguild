@@ -1,5 +1,6 @@
 using GameGuild.Commerce.Products;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace GameGuild.Learning.Courses;
 
@@ -443,10 +444,12 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
       return interaction;
     }
 
-    if (interaction == null)
+    var isNewInteraction = interaction == null;
+    if (isNewInteraction)
     {
       interaction = new ContentInteraction
       {
+        Id = CreateDirectSubmissionAttemptId(programUser.Id, contentId),
         ProgramUserId = programUser.Id,
         UserId = userId,
         ContentId = contentId,
@@ -457,24 +460,18 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
         CompletionPercentage = 0,
       };
 
-      context.Set<ContentInteraction>().Add(interaction);
     }
 
-    interaction.SubmissionData = submissionData;
-    interaction.SubmittedAt = now;
-    interaction.LastAccessedAt = now;
-    interaction.StartedAt ??= now;
-    interaction.Status = ProgressStatus.Completed;
-    interaction.CompletedAt = now;
-    interaction.CompletionPercentage = 100;
-    interaction.IsCompleted = true;
-    interaction.AttemptCount = Math.Max(1, interaction.AttemptCount + 1);
-    interaction.Touch();
+    SubmitInteraction(interaction!, userId, submissionData, now);
 
     programUser.LastAccessedAt = now;
     programUser.Touch();
 
-    await context.SaveChangesAsync().ConfigureAwait(false);
+    if (isNewInteraction)
+      interaction = await SaveDirectSubmissionAsync(interaction!, submissionData, now)
+        .ConfigureAwait(false);
+    else
+      await context.SaveChangesAsync().ConfigureAwait(false);
     await RecalculateUserProgressAsync(programUser.Id).ConfigureAwait(false);
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -772,6 +769,63 @@ public class ProgramWriteService(IApplicationDbContext context) : IProgramWriteS
     interaction.LastAccessedAt = now;
     interaction.AttemptCount = Math.Max(1, interaction.AttemptCount);
     interaction.Touch();
+  }
+
+  private static void SubmitInteraction(
+    ContentInteraction interaction,
+    Guid userId,
+    string submissionData,
+    DateTime now)
+  {
+    interaction.UserId = userId;
+    interaction.SubmissionData = submissionData;
+    interaction.SubmittedAt = now;
+    interaction.FirstAccessedAt ??= now;
+    interaction.StartedAt ??= now;
+    interaction.Complete();
+    interaction.LastAccessedAt = now;
+    interaction.AttemptCount = Math.Max(1, interaction.AttemptCount + 1);
+    interaction.Touch();
+  }
+
+  private static Guid CreateDirectSubmissionAttemptId(Guid programUserId, Guid contentId)
+  {
+    Span<byte> source = stackalloc byte[32];
+    programUserId.TryWriteBytes(source[..16]);
+    contentId.TryWriteBytes(source[16..]);
+    Span<byte> hash = stackalloc byte[32];
+    SHA256.HashData(source, hash);
+    return new Guid(hash[..16]);
+  }
+
+  private async Task<ContentInteraction> SaveDirectSubmissionAsync(
+    ContentInteraction newInteraction,
+    string submissionData,
+    DateTime now)
+  {
+    context.Set<ContentInteraction>().Add(newInteraction);
+    try
+    {
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return newInteraction;
+    }
+    catch (DbUpdateException)
+    {
+      context.Set<ContentInteraction>().Remove(newInteraction);
+      var winningInteraction = await context.Set<ContentInteraction>()
+        .IgnoreQueryFilters()
+        .FirstOrDefaultAsync(interaction => interaction.Id == newInteraction.Id)
+        .ConfigureAwait(false);
+      if (winningInteraction is null) throw;
+
+      if (winningInteraction.DeletedAt is not null)
+      {
+        winningInteraction.Restore();
+        SubmitInteraction(winningInteraction, newInteraction.UserId, submissionData, now);
+      }
+
+      return winningInteraction;
+    }
   }
 
   private async Task<ContentInteraction> SaveNewActiveAttemptAsync(
