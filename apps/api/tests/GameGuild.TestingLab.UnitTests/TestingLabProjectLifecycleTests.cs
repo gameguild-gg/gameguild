@@ -53,8 +53,49 @@ public sealed class TestingLabProjectLifecycleTests
         secondSession.RegisteredProjectCount.Should().Be(0);
     }
 
+    [Fact]
+    public async Task Delete_ShouldSoftDeleteActiveProjectTestingRequestsOnly()
+    {
+        await using var context = new LifecycleContext(
+            new DbContextOptionsBuilder<LifecycleContext>()
+                .UseInMemoryDatabase($"testing-request-lifecycle-{Guid.NewGuid():N}")
+                .Options);
+        var project = NewProject("request-deleted");
+        var remainingProject = NewProject("request-remaining");
+        var projectVersion = new ProjectVersion { Id = Guid.NewGuid(), ProjectId = project.Id, VersionNumber = "1.0" };
+        var remainingVersion = new ProjectVersion { Id = Guid.NewGuid(), ProjectId = remainingProject.Id, VersionNumber = "1.0" };
+        var activeRequest = NewRequest(projectVersion.Id);
+        var alreadyDeletedRequest = NewRequest(projectVersion.Id);
+        alreadyDeletedRequest.DeletedAt = DateTime.UtcNow.AddDays(-1);
+        var remainingRequest = NewRequest(remainingVersion.Id);
+        var standaloneRequest = NewRequest(projectVersionId: null);
+        context.AddRange(
+            project,
+            remainingProject,
+            projectVersion,
+            remainingVersion,
+            activeRequest,
+            alreadyDeletedRequest,
+            remainingRequest,
+            standaloneRequest);
+        await context.SaveChangesAsync();
+
+        var coordinator = new ProjectLifecycleCoordinator(
+            context,
+            [new TestingLabProjectLifecycleParticipant(context)]);
+
+        var deleted = await coordinator.DeleteAsync(project.Id, softDelete: true);
+
+        deleted.Should().BeTrue();
+        activeRequest.DeletedAt.Should().NotBeNull();
+        alreadyDeletedRequest.DeletedAt.Should().NotBeNull();
+        remainingRequest.DeletedAt.Should().BeNull();
+        standaloneRequest.DeletedAt.Should().BeNull();
+    }
+
     private static Project NewProject(string suffix) => new()
     {
+        Id = Guid.NewGuid(),
         Title = $"Project {suffix}",
         Slug = $"project-{suffix}-{Guid.NewGuid():N}",
         Status = ContentStatus.Draft
@@ -68,12 +109,24 @@ public sealed class TestingLabProjectLifecycleTests
         IsActive = true
     };
 
+    private static TestingRequest NewRequest(Guid? projectVersionId) => new()
+    {
+        ProjectVersionId = projectVersionId,
+        Title = "Lifecycle request",
+        InstructionsType = InstructionType.Text,
+        StartDate = DateTime.UtcNow,
+        EndDate = DateTime.UtcNow.AddDays(1),
+        CreatedById = Guid.NewGuid()
+    };
+
     private sealed class LifecycleContext(DbContextOptions<LifecycleContext> options)
         : DbContext(options), IApplicationDbContext
     {
         public DbSet<Project> Projects => Set<Project>();
         public DbSet<TestingSession> TestingSessions => Set<TestingSession>();
         public DbSet<SessionProject> SessionProjects => Set<SessionProject>();
+        public DbSet<ProjectVersion> ProjectVersions => Set<ProjectVersion>();
+        public DbSet<TestingRequest> TestingRequests => Set<TestingRequest>();
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException("The lifecycle coordinator uses its explicit in-memory fallback.");
