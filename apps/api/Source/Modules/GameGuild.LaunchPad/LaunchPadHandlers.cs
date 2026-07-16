@@ -146,8 +146,11 @@ public sealed class LaunchPadHandlers(
         var actorError = await ValidateActorAsync(cancellationToken).ConfigureAwait(false);
         if (actorError != null) return Result.Failure<LaunchPlan?>(actorError);
         var plan = await LoadPlan(request.LaunchPlanId, cancellationToken).ConfigureAwait(false);
-        if (plan != null && plan.Project.TenantId != actorContextAccessor.ActorContext.TenantId)
-            return Result.Failure<LaunchPlan?>(Error.Forbidden("LaunchPad.ProjectTenantMismatch", "Launch plan is outside the current tenant."));
+        if (plan == null) return Result.Success<LaunchPlan?>(null);
+
+        var accessError = await AuthorizePlanProjectAsync(plan, PermissionType.Read, cancellationToken).ConfigureAwait(false);
+        if (accessError != null) return Result.Failure<LaunchPlan?>(accessError);
+
         return Result.Success<LaunchPlan?>(plan);
     }
 
@@ -155,25 +158,30 @@ public sealed class LaunchPadHandlers(
     {
         var actorError = await ValidateActorAsync(cancellationToken).ConfigureAwait(false);
         if (actorError != null) return Result.Failure<LaunchPlan?>(actorError);
-        var tenantId = actorContextAccessor.ActorContext.TenantId;
-        return Result.Success(await context.Set<LaunchPlan>()
+        var plan = await context.Set<LaunchPlan>()
             .AsNoTracking()
             .Include(plan => plan.Project)
             .Include(plan => plan.ChecklistItems)
             .FirstOrDefaultAsync(plan =>
                 plan.ProjectId == request.ProjectId &&
-                plan.DeletedAt == null &&
-                plan.Project.DeletedAt == null &&
-                plan.Project.TenantId == tenantId,
+                plan.DeletedAt == null,
                 cancellationToken)
-            .ConfigureAwait(false));
+            .ConfigureAwait(false);
+        if (plan == null) return Result.Success<LaunchPlan?>(null);
+
+        var accessError = await AuthorizePlanProjectAsync(plan, PermissionType.Read, cancellationToken).ConfigureAwait(false);
+        if (accessError != null) return Result.Failure<LaunchPlan?>(accessError);
+
+        return Result.Success<LaunchPlan?>(plan);
     }
 
     public async Task<Result<IReadOnlyList<LaunchPlan>>> Handle(GetLaunchPadDashboardQuery request, CancellationToken cancellationToken)
     {
         var actorError = await ValidateActorAsync(cancellationToken).ConfigureAwait(false);
         if (actorError != null) return Result.Failure<IReadOnlyList<LaunchPlan>>(actorError);
-        var tenantId = actorContextAccessor.ActorContext.TenantId;
+        var actor = actorContextAccessor.ActorContext;
+        var actorId = actor.SubjectIdAsGuid!.Value;
+        var tenantId = actor.TenantId!.Value;
         var query = context.Set<LaunchPlan>()
             .AsNoTracking()
             .Include(plan => plan.Project)
@@ -181,7 +189,9 @@ public sealed class LaunchPadHandlers(
             .Where(plan =>
                 plan.DeletedAt == null &&
                 plan.Project.DeletedAt == null &&
-                plan.Project.TenantId == tenantId);
+                plan.Project.TenantId == tenantId &&
+                plan.Project.Status != ContentStatus.Archived &&
+                plan.Project.Status != ContentStatus.Deleted);
 
         if (request.Status.HasValue) query = query.Where(plan => plan.Status == request.Status.Value);
 
@@ -190,6 +200,35 @@ public sealed class LaunchPadHandlers(
             .ThenBy(plan => plan.Name)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
+
+        if (plans.Count == 0) return Result.Success<IReadOnlyList<LaunchPlan>>(plans);
+
+        var projectIds = plans.Select(plan => plan.ProjectId).Distinct().ToArray();
+        var collaborators = await context.Set<ProjectCollaborator>()
+            .AsNoTracking()
+            .Where(collaborator =>
+                projectIds.Contains(collaborator.ProjectId) &&
+                collaborator.UserId == actorId &&
+                collaborator.IsActive &&
+                collaborator.DeletedAt == null)
+            .Select(collaborator => new { collaborator.ProjectId, collaborator.Role, collaborator.Permissions })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var authorizedProjectIds = plans
+            .Where(plan => plan.Project.CreatedById == actorId)
+            .Select(plan => plan.ProjectId)
+            .ToHashSet();
+        foreach (var collaborator in collaborators)
+        {
+            if (string.Equals(collaborator.Role, ProjectRoles.Owner, StringComparison.OrdinalIgnoreCase) ||
+                HasPermission(collaborator.Permissions, PermissionType.Read))
+            {
+                authorizedProjectIds.Add(collaborator.ProjectId);
+            }
+        }
+
+        plans = plans.Where(plan => authorizedProjectIds.Contains(plan.ProjectId)).ToList();
 
         return Result.Success<IReadOnlyList<LaunchPlan>>(plans);
     }
@@ -243,4 +282,9 @@ public sealed class LaunchPadHandlers(
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(channel => channel, StringComparer.OrdinalIgnoreCase)
             .ToArray();
+
+    private static bool HasPermission(string permissions, PermissionType permission)
+        => permissions
+            .Split([',', ';', '|'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Contains(permission.ToString(), StringComparer.OrdinalIgnoreCase);
 }
