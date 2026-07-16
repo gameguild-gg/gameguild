@@ -185,13 +185,31 @@ public class TestingRequestOperationsService(
         if (!actor.IsAuthenticated || actor.SubjectIdAsGuid != userId || actor.TenantId == null)
             throw new UnauthorizedAccessException("An authenticated tenant actor matching the submission user is required.");
 
-        var existingProject = requestDto.ProjectId.HasValue
-            ? await context.Set<ProjectEntity>()
-                .FirstOrDefaultAsync(p => p.Id == requestDto.ProjectId.Value)
-                .ConfigureAwait(false)
-            : await context.Set<ProjectEntity>()
-                .FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier)
+        ProjectEntity? existingProject;
+        if (requestDto.ProjectId.HasValue)
+        {
+            existingProject = await context.Set<ProjectEntity>()
+                .FirstOrDefaultAsync(project =>
+                    project.Id == requestDto.ProjectId.Value &&
+                    project.TenantId == actor.TenantId &&
+                    project.DeletedAt == null)
                 .ConfigureAwait(false);
+        }
+        else
+        {
+            var matchingProjects = await context.Set<ProjectEntity>()
+                .Where(project =>
+                    project.Title == requestDto.TeamIdentifier &&
+                    project.TenantId == actor.TenantId &&
+                    project.DeletedAt == null)
+                .Take(2)
+                .ToListAsync()
+                .ConfigureAwait(false);
+            if (matchingProjects.Count > 1)
+                throw new InvalidOperationException("Multiple active projects match the legacy team identifier.");
+
+            existingProject = matchingProjects.SingleOrDefault();
+        }
 
         if (existingProject == null)
             throw new InvalidOperationException("Testing Lab submissions must be linked to an existing project.");
