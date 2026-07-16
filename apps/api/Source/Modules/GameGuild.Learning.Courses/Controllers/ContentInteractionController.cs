@@ -135,7 +135,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
     if (content is null || content.ProgramId != programId) return NotFound();
 
     try {
-      return Ok(await contentInteractionService.GetSurveyResponsesAsync(contentId).ConfigureAwait(false));
+      return Ok(await contentInteractionService.GetSurveyResponsesAsync(programId, contentId).ConfigureAwait(false));
     }
     catch (InvalidOperationException exception) {
       return BadRequest(exception.Message);

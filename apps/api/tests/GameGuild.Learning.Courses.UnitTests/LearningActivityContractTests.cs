@@ -23,6 +23,25 @@ public sealed class LearningActivityContractTests
     }
 
     [Theory]
+    [MemberData(nameof(ActivitySettingsCases))]
+    public void ActivitySettings_ShouldRoundTripForEveryActivityType(ProgramContentType type, ActivitySettings settings)
+    {
+        var content = new ProgramContent { Type = type };
+
+        content.SetActivitySettings(settings);
+
+        content.GetActivitySettings().Should().Be(settings);
+        content.ToDto().ActivitySettings.Should().Be(settings);
+    }
+
+    public static IEnumerable<object[]> ActivitySettingsCases =>
+    [
+        [ProgramContentType.Discussion, new DiscussionActivitySettings(true, false, 2, 200)],
+        [ProgramContentType.Reflection, new ReflectionActivitySettings(true, 3, 300)],
+        [ProgramContentType.Survey, new SurveyActivitySettings(true, true, SurveyResultsVisibility.AfterClose)],
+    ];
+
+    [Theory]
     [InlineData(ProgramContentType.Discussion, "reflection")]
     [InlineData(ProgramContentType.Reflection, "survey")]
     [InlineData(ProgramContentType.Survey, "discussion")]
@@ -78,6 +97,25 @@ public sealed class LearningActivityContractTests
         validReflection.Should().BeOfType<ReflectionActivityResponse>();
         invalidDiscussion.Should().Throw<InvalidOperationException>();
         invalidReflection.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void ParseResponse_WhenDiscussionRequiresThreadRoot_ShouldRejectTopLevelResponse()
+    {
+        var settings = new DiscussionActivitySettings(AllowReplies: true, RequireThreadRoot: true);
+
+        var missingRoot = () => ActivityResponseContract.Parse(
+            ProgramContentType.Discussion,
+            """{"kind":"discussion","body":"reply"}""",
+            settings);
+        var rooted = ActivityResponseContract.Parse(
+            ProgramContentType.Discussion,
+            $$"""{"kind":"discussion","body":"reply","threadRootId":"{{Guid.NewGuid()}}"}""",
+            settings);
+
+        missingRoot.Should().Throw<InvalidOperationException>()
+            .WithMessage("Discussion responses require a thread root.*");
+        rooted.Should().BeOfType<DiscussionActivityResponse>();
     }
 
     [Fact]

@@ -53,7 +53,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
                         .ThenInclude(ci => ci.Content)
                         .Include(ag => ag.GraderProgramUser)
                         .ThenInclude(gpu => gpu!.User)
-                        .FirstOrDefaultAsync(ag => ag.ContentInteractionId == contentInteractionId);
+                        .FirstOrDefaultAsync(ag => ag.ContentInteractionId == contentInteractionId && ag.ContentInteraction.Content.Type != ProgramContentType.Survey);
   }
 
   /// <summary> Get grade by its ID </summary>
@@ -66,7 +66,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
                         .ThenInclude(pu => pu!.User)
                         .Include(ag => ag.GraderProgramUser)
                         .ThenInclude(gpu => gpu!.User)
-                        .FirstOrDefaultAsync(ag => ag.Id == gradeId);
+                        .FirstOrDefaultAsync(ag => ag.Id == gradeId && ag.ContentInteraction.Content.Type != ProgramContentType.Survey);
   }
 
   /// <summary> Get all grades given by a specific grader </summary>
@@ -76,7 +76,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
                         .Include(ag => ag.ContentInteraction)
                         .ThenInclude(ci => ci.ProgramUser)
                         .ThenInclude(pu => pu!.User)
-                        .Where(ag => ag.GraderProgramUserId == graderProgramUserId)
+                        .Where(ag => ag.GraderProgramUserId == graderProgramUserId && ag.ContentInteraction.Content.Type != ProgramContentType.Survey)
                         .OrderByDescending(ag => ag.GradedAt)
                         .ToListAsync();
   }
@@ -87,7 +87,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
                         .ThenInclude(ci => ci.Content)
                         .Include(ag => ag.GraderProgramUser)
                         .ThenInclude(gpu => gpu!.User)
-                        .Where(ag => ag.ContentInteraction.ProgramUserId == programUserId)
+                        .Where(ag => ag.ContentInteraction.ProgramUserId == programUserId && ag.ContentInteraction.Content.Type != ProgramContentType.Survey)
                         .OrderByDescending(ag => ag.GradedAt)
                         .ToListAsync();
   }
@@ -154,7 +154,7 @@ public class ActivityGradeService(IApplicationDbContext context) : IActivityGrad
                         .ThenInclude(pu => pu!.User)
                         .Include(ag => ag.GraderProgramUser)
                         .ThenInclude(gpu => gpu!.User)
-                        .Where(ag => ag.ContentInteraction.ContentId == contentId)
+                        .Where(ag => ag.ContentInteraction.ContentId == contentId && ag.ContentInteraction.Content.Type != ProgramContentType.Survey)
                         .OrderByDescending(ag => ag.GradedAt)
                         .ToListAsync();
   }

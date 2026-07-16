@@ -15,7 +15,7 @@ public sealed class SurveyGradingProtectionTests
         var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Survey", Type = ProgramContentType.Survey };
         var learner = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
         var grader = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
-        var interaction = new ContentInteraction { Id = Guid.NewGuid(), ContentId = survey.Id, ProgramUserId = learner.Id, UserId = learner.UserId, SubmittedAt = SystemClock.UtcNow };
+        var interaction = new ContentInteraction { Id = Guid.NewGuid(), ContentId = survey.Id, Content = survey, ProgramUserId = learner.Id, UserId = learner.UserId, SubmittedAt = SystemClock.UtcNow };
         context.AddRange(program, survey, learner, grader, interaction);
         await context.SaveChangesAsync();
         var service = new ActivityGradeService(context);
@@ -25,6 +25,25 @@ public sealed class SurveyGradingProtectionTests
         await action.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Surveys cannot be graded.");
         (await context.Set<ActivityGrade>().CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GradeReadPaths_WhenLegacySurveyGradeExists_ShouldExcludeIt()
+    {
+        await using var context = CreateContext();
+        var program = new Program { Id = Guid.NewGuid(), Title = "Course", Slug = "course" };
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Survey", Type = ProgramContentType.Survey };
+        var learner = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
+        var grader = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
+        var interaction = new ContentInteraction { Id = Guid.NewGuid(), ContentId = survey.Id, ProgramUserId = learner.Id, UserId = learner.UserId, SubmittedAt = SystemClock.UtcNow };
+        var grade = new ActivityGrade { Id = Guid.NewGuid(), ContentInteractionId = interaction.Id, GraderProgramUserId = grader.Id, Grade = 90 };
+        context.AddRange(program, survey, learner, grader, interaction, grade);
+        await context.SaveChangesAsync();
+        var service = new ActivityGradeService(context);
+
+        (await service.GetGradeStatisticsAsync(program.Id)).TotalGrades.Should().Be(0);
+        var dtoAction = () => grade.ToDto();
+        dtoAction.Should().Throw<InvalidOperationException>();
     }
 
     private static GradeTestDbContext CreateContext() =>

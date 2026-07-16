@@ -185,6 +185,10 @@ public static class ActivityResponseContract
         {
             throw new InvalidOperationException("Discussion replies are disabled.");
         }
+        if (resolvedSettings.RequireThreadRoot && !threadRootId.HasValue)
+        {
+            throw new InvalidOperationException("Discussion responses require a thread root.");
+        }
 
         return new DiscussionActivityResponse(body, threadRootId);
     }

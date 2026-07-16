@@ -14,6 +14,12 @@ public partial class AddLearningActivityContracts : Migration
             type: "jsonb",
             nullable: true);
 
+        // Survey responses are never graded. Remove legacy grade rows before installing
+        // the content-level invariant, preserving the underlying audit interaction.
+        migrationBuilder.Sql(
+            "DELETE FROM \"activity_grades\" AS grade USING \"content_interactions\" AS interaction, \"program_contents\" AS content " +
+            "WHERE grade.\"ContentInteractionId\" = interaction.\"Id\" AND interaction.\"ContentId\" = content.\"Id\" AND content.\"Type\" = 8");
+
         // Existing survey rows may predate the non-grading invariant. Preserve the content and
         // remove only invalid grading values before the constraint is installed.
         migrationBuilder.Sql(

@@ -773,13 +773,44 @@ public sealed class LessonInteractionTrackingTests
         };
         context.AddRange(survey, learner, response);
         await context.SaveChangesAsync();
-        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid()));
+        var service = new ContentInteractionService(
+            context,
+            new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()),
+            CreateManagerPermissions());
 
-        var results = await service.GetSurveyResponsesAsync(survey.Id);
+        var results = await service.GetSurveyResponsesAsync(survey.ProgramId, survey.Id);
 
         var result = results.Should().ContainSingle().Subject;
         result.ResponseId.Should().Be(response.Id);
         result.Answers["anonymous"].GetBoolean().Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetSurveyResponses_WhenProgramDoesNotMatch_ShouldReject()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Survey", Type = ProgramContentType.Survey };
+        context.Add(survey);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()), CreateManagerPermissions());
+
+        Func<Task> action = () => service.GetSurveyResponsesAsync(Guid.NewGuid(), survey.Id);
+
+        await action.Should().ThrowAsync<RequestValidationException>();
+    }
+
+    [Fact]
+    public async Task GetSurveyResponses_WhenActorIsNotManager_ShouldReject()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Survey", Type = ProgramContentType.Survey };
+        context.Add(survey);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()), new Mock<IPermissionQueryService>().Object);
+
+        Func<Task> action = () => service.GetSurveyResponsesAsync(survey.ProgramId, survey.Id);
+
+        await action.Should().ThrowAsync<RequestValidationException>();
     }
 
     [Fact]
@@ -842,15 +873,24 @@ public sealed class LessonInteractionTrackingTests
             ProgramUserId = Guid.NewGuid(),
         };
 
-    private sealed class TestRequestContextAccessor(Guid? currentUserId) : IRequestContextAccessor
+    private static IPermissionQueryService CreateManagerPermissions()
+    {
+        var permissions = new Mock<IPermissionQueryService>();
+        permissions.Setup(service => service.HasTenantPermissionAsync(
+                It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        return permissions.Object;
+    }
+
+    private sealed class TestRequestContextAccessor(Guid? currentUserId, Guid? currentTenantId = null) : IRequestContextAccessor
     {
         public Guid? CurrentUserId { get; } = currentUserId;
 
-        public Guid? CurrentTenantId => null;
+        public Guid? CurrentTenantId { get; } = currentTenantId;
 
         public bool IsAuthenticated => CurrentUserId.HasValue;
 
-        public bool HasTenantContext => false;
+        public bool HasTenantContext => CurrentTenantId.HasValue;
 
         public Task<UserInfo?> GetCurrentUserAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<UserInfo?>(CurrentUserId.HasValue
