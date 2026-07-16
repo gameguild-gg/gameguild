@@ -780,7 +780,9 @@ public sealed class LessonInteractionTrackingTests
     public async Task GetSurveyResponses_ShouldReturnIdentityFreeResultsForAnonymousSurvey()
     {
         await using var context = TrackingTestDbContext.Create();
-        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Survey", Type = ProgramContentType.Survey };
+        var tenantId = Guid.NewGuid();
+        var program = new Program { Id = Guid.NewGuid(), Title = "Course", Slug = "course" , TenantId = tenantId };
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Survey", Type = ProgramContentType.Survey };
         survey.SetActivitySettings(new SurveyActivitySettings(IsAnonymous: true, AllowMultipleResponses: true));
         var learner = new ProgramUser { Id = Guid.NewGuid(), ProgramId = survey.ProgramId, UserId = Guid.NewGuid(), JoinedAt = SystemClock.UtcNow };
         var response = new ContentInteraction
@@ -793,12 +795,12 @@ public sealed class LessonInteractionTrackingTests
             SubmittedAt = SystemClock.UtcNow,
             SubmissionData = """{"kind":"survey","answers":{"anonymous":true}}""",
         };
-        context.AddRange(survey, learner, response);
+        context.AddRange(program, survey, learner, response);
         await context.SaveChangesAsync();
         var service = new ContentInteractionService(
             context,
-            new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()),
-            CreatePermissions(PermissionType.Read));
+            new TestRequestContextAccessor(Guid.NewGuid(), tenantId),
+            CreatePermissions(PermissionType.Review));
 
         var results = await service.GetSurveyResponsesAsync(survey.ProgramId, survey.Id);
 
@@ -839,7 +841,7 @@ public sealed class LessonInteractionTrackingTests
     [InlineData(PermissionType.Create)]
     [InlineData(PermissionType.Delete)]
     [InlineData(PermissionType.Edit)]
-    public async Task GetSurveyResponses_WhenActorLacksProgramReadPermission_ShouldReject(PermissionType grantedPermission)
+    public async Task GetSurveyResponses_WhenActorLacksProgramReviewPermission_ShouldReject(PermissionType grantedPermission)
     {
         await using var context = TrackingTestDbContext.Create();
         var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Survey", Type = ProgramContentType.Survey };
@@ -1010,6 +1012,14 @@ public sealed class LessonInteractionTrackingTests
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Program>(entity =>
+            {
+                entity.HasKey(program => program.Id);
+                entity.Ignore(program => program.ProgramContents);
+                entity.Ignore(program => program.ProgramUsers);
+                entity.Ignore(program => program.ProgramRatings);
+                entity.Ignore(program => program.ProgramWishlists);
+            });
             modelBuilder.Entity<ProgramContent>(entity =>
             {
                 entity.HasKey(content => content.Id);

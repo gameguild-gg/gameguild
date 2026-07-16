@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -129,7 +130,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
 
   /// <summary>Get identity-free survey result records for course managers.</summary>
   [HttpGet("content/{contentId}/survey-results")]
-  [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Review, "programId")]
   public async Task<ActionResult<IEnumerable<SurveyResponseResultDto>>> GetSurveyResults([FromRoute] Guid contentId, [FromQuery] Guid programId) {
     var content = await programContentService.GetContentByIdAsync(contentId).ConfigureAwait(false);
     if (content is null || content.ProgramId != programId) return NotFound();
@@ -137,9 +138,32 @@ public class ContentInteractionController(IContentInteractionService contentInte
     try {
       return Ok(await contentInteractionService.GetSurveyResponsesAsync(programId, contentId).ConfigureAwait(false));
     }
-    catch (InvalidOperationException exception) {
+    catch (RequestValidationException exception) {
       return BadRequest(exception.Message);
     }
+  }
+
+  [HttpGet("content/{contentId}/survey-results/visible")]
+  public async Task<ActionResult<IEnumerable<SurveyResponseResultDto>>> GetVisibleSurveyResults([FromRoute] Guid contentId, [FromQuery] Guid programId) {
+    try {
+      return Ok(await contentInteractionService.GetVisibleSurveyResponsesAsync(programId, contentId).ConfigureAwait(false));
+    }
+    catch (RequestValidationException exception) {
+      return BadRequest(exception.Message);
+    }
+  }
+
+  [HttpGet("content/{contentId}/reflection-responses")]
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Review, "programId")]
+  public async Task<ActionResult<IEnumerable<ReflectionResponseResultDto>>> GetReflectionResponses([FromRoute] Guid contentId, [FromQuery] Guid programId) {
+    try { return Ok(await contentInteractionService.GetReflectionResponsesAsync(programId, contentId).ConfigureAwait(false)); }
+    catch (RequestValidationException exception) { return BadRequest(exception.Message); }
+  }
+
+  [HttpGet("content/{contentId}/reflection-responses/visible")]
+  public async Task<ActionResult<IEnumerable<ReflectionResponseResultDto>>> GetVisibleReflectionResponses([FromRoute] Guid contentId, [FromQuery] Guid programId) {
+    try { return Ok(await contentInteractionService.GetVisibleReflectionResponsesAsync(programId, contentId).ConfigureAwait(false)); }
+    catch (RequestValidationException exception) { return BadRequest(exception.Message); }
   }
 
   /// <summary>

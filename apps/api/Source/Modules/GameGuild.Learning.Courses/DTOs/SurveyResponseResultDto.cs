@@ -5,9 +5,13 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Survey result projection. It deliberately excludes learner and enrollment identifiers.
 /// </summary>
-public sealed record SurveyResponseResultDto(Guid ResponseId, DateTime? SubmittedAt, IReadOnlyDictionary<string, JsonElement> Answers)
+public sealed record SurveyResponseResultDto(
+    Guid ResponseId,
+    DateTime? SubmittedAt,
+    IReadOnlyDictionary<string, JsonElement> Answers,
+    Guid? RespondentUserId = null)
 {
-    public static SurveyResponseResultDto FromInteraction(ContentInteraction interaction)
+    public static SurveyResponseResultDto FromInteraction(ContentInteraction interaction, bool includeRespondentIdentity = false)
     {
         var response = ActivityResponseContract.Parse(
             ProgramContentType.Survey,
@@ -15,6 +19,10 @@ public sealed record SurveyResponseResultDto(Guid ResponseId, DateTime? Submitte
             null) as SurveyActivityResponse
             ?? throw new InvalidOperationException("Survey submission data is invalid.");
 
-        return new SurveyResponseResultDto(interaction.Id, interaction.SubmittedAt, response.Answers);
+        return new SurveyResponseResultDto(
+            interaction.Id,
+            interaction.SubmittedAt,
+            response.Answers,
+            includeRespondentIdentity ? interaction.UserId : null);
     }
 }

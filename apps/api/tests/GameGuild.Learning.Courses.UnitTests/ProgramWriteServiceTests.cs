@@ -4,6 +4,8 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -11,6 +13,285 @@ namespace GameGuild.Learning.Courses.UnitTests;
 
 public sealed class ProgramWriteServiceTests
 {
+    [Theory]
+    [InlineData(true, 1)]
+    [InlineData(false, 2)]
+    public async Task LearnerReflectionResponses_ShouldRespectPrivateToInstructors(bool privateToInstructors, int expectedCount)
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var learnerId = Guid.NewGuid();
+        var peerId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.TenantId = tenantId;
+        var learner = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = learnerId, IsActive = true };
+        var peer = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = peerId, IsActive = true };
+        var reflection = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Reflection", Type = ProgramContentType.Reflection };
+        reflection.SetActivitySettings(new ReflectionActivitySettings(PrivateToInstructors: privateToInstructors));
+        context.AddRange(program, learner, peer, reflection,
+            ReflectionResponse(learner, reflection),
+            ReflectionResponse(peer, reflection));
+        await context.SaveChangesAsync();
+        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(learnerId, tenantId));
+
+        var results = (IEnumerable<object>)await service.GetVisibleReflectionResponsesAsync(program.Id, reflection.Id);
+
+        results.Should().HaveCount(expectedCount);
+        results.Should().OnlyContain(result => GetRespondentUserId(result) == null);
+    }
+
+    [Fact]
+    public async Task ManagerReflectionResponses_ShouldExposeRespondentIdentityWithinTenant()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var managerId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.TenantId = tenantId;
+        var reflection = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Reflection", Type = ProgramContentType.Reflection };
+        var respondent = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
+        context.AddRange(program, reflection, respondent, ReflectionResponse(respondent, reflection));
+        await context.SaveChangesAsync();
+        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreatePermissions(PermissionType.Review));
+
+        var result = ((IEnumerable<object>)await service.GetReflectionResponsesAsync(program.Id, reflection.Id)).Single();
+
+        GetRespondentUserId(result).Should().Be(respondent.UserId);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ManagerActivityResponses_ShouldRejectReadOnlyAuthority(bool survey)
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.TenantId = tenantId;
+        var content = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Activity", Type = survey ? ProgramContentType.Survey : ProgramContentType.Reflection };
+        if (survey) content.SetActivitySettings(new SurveyActivitySettings());
+        else content.SetActivitySettings(new ReflectionActivitySettings());
+        context.AddRange(program, content);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid(), tenantId), CreatePermissions(PermissionType.Read));
+
+        Func<Task> action = survey
+            ? () => service.GetSurveyResponsesAsync(program.Id, content.Id)
+            : () => service.GetReflectionResponsesAsync(program.Id, content.Id);
+
+        await action.Should().ThrowAsync<RequestValidationException>();
+    }
+
+    [Fact]
+    public async Task GetSurveyResults_WhenServiceRejectsRequestValidation_ShouldReturnBadRequest()
+    {
+        var programId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+        var interactions = new Mock<IContentInteractionService>();
+        interactions.Setup(service => service.GetSurveyResponsesAsync(programId, contentId))
+            .ThrowsAsync(new RequestValidationException("Program review permission is required."));
+        var contentService = new Mock<IProgramContentService>();
+        contentService.Setup(service => service.GetContentByIdAsync(contentId))
+            .ReturnsAsync(new ProgramContent { Id = contentId, ProgramId = programId, Type = ProgramContentType.Survey });
+        var controller = new ContentInteractionController(interactions.Object, contentService.Object, NullLogger<ContentInteractionController>.Instance);
+
+        var result = await controller.GetSurveyResults(contentId, programId);
+
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Theory]
+    [InlineData(nameof(ContentInteractionController.GetSurveyResults))]
+    [InlineData(nameof(ContentInteractionController.GetReflectionResponses))]
+    public void ManagerResponseEndpoints_ShouldRequireProgramReviewPermission(string actionName)
+    {
+        var action = typeof(ContentInteractionController).GetMethod(actionName);
+
+        var permission = action!.GetCustomAttributes(inherit: true)
+            .OfType<IResourcePermissionMarker>()
+            .Single();
+
+        permission.ResourceType.Should().Be(typeof(Program));
+        permission.RequiredPermission.Should().Be(PermissionType.Review);
+        permission.ResourceIdParameterName.Should().Be("programId");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SurveyResponsePaths_ShouldRejectDifferentTenant(bool managerPath)
+    {
+        await using var context = CreateContext();
+        var programTenantId = Guid.NewGuid();
+        var requestTenantId = Guid.NewGuid();
+        var learnerId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.TenantId = programTenantId;
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = learnerId, IsActive = true };
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Survey", Type = ProgramContentType.Survey };
+        survey.SetActivitySettings(new SurveyActivitySettings(ResultsVisibility: SurveyResultsVisibility.AfterSubmission));
+        context.AddRange(program, enrollment, survey, new ContentInteraction { Id = Guid.NewGuid(), ProgramUserId = enrollment.Id, UserId = learnerId, ContentId = survey.Id, SubmittedAt = SystemClock.UtcNow, SubmissionData = """{"kind":"survey","answers":{"a":1}}""" });
+        await context.SaveChangesAsync();
+        var actorId = managerPath ? Guid.NewGuid() : learnerId;
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(actorId, requestTenantId), CreatePermissions(PermissionType.Read));
+
+        Func<Task> action = managerPath
+            ? () => service.GetSurveyResponsesAsync(program.Id, survey.Id)
+            : () => service.GetVisibleSurveyResponsesAsync(program.Id, survey.Id);
+
+        await action.Should().ThrowAsync<RequestValidationException>();
+    }
+
+    [Theory]
+    [InlineData(SurveyResultsVisibility.AfterSubmission, true, false, true)]
+    [InlineData(SurveyResultsVisibility.AfterSubmission, false, false, false)]
+    [InlineData(SurveyResultsVisibility.AfterClose, false, false, false)]
+    [InlineData(SurveyResultsVisibility.AfterClose, false, true, true)]
+    [InlineData(SurveyResultsVisibility.Never, true, true, false)]
+    public async Task LearnerSurveyResults_ShouldEnforceConfiguredVisibility(
+        SurveyResultsVisibility visibility,
+        bool learnerSubmitted,
+        bool courseClosed,
+        bool shouldAllow)
+    {
+        await using var context = CreateContext();
+        var learnerId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.EnrollmentStatus = courseClosed ? EnrollmentStatus.Closed : EnrollmentStatus.Open;
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = learnerId, IsActive = true };
+        var respondentEnrollment = learnerSubmitted
+            ? enrollment
+            : new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Survey", Type = ProgramContentType.Survey };
+        survey.SetActivitySettings(new SurveyActivitySettings(ResultsVisibility: visibility));
+        var response = new ContentInteraction { Id = Guid.NewGuid(), ProgramUserId = respondentEnrollment.Id, UserId = respondentEnrollment.UserId, ContentId = survey.Id, SubmittedAt = SystemClock.UtcNow, SubmissionData = """{"kind":"survey","answers":{"a":1}}""" };
+        context.AddRange(program, enrollment, respondentEnrollment, survey, response);
+        await context.SaveChangesAsync();
+        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(learnerId, Guid.NewGuid()));
+
+        if (shouldAllow)
+        {
+            var results = (IEnumerable<SurveyResponseResultDto>)await service.GetVisibleSurveyResponsesAsync(program.Id, survey.Id);
+            results.Should().OnlyContain(result => GetRespondentUserId(result) == null);
+        }
+        else
+        {
+            Func<Task> action = async () => _ = await service.GetVisibleSurveyResponsesAsync(program.Id, survey.Id);
+            await action.Should().ThrowAsync<RequestValidationException>();
+        }
+    }
+
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task ManagerSurveyResults_ShouldExposeIdentityOnlyForNonAnonymousSurveys(bool anonymous, bool shouldExposeIdentity)
+    {
+        await using var context = CreateContext();
+        var managerId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var program = CreateProgram();
+        var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Survey", Type = ProgramContentType.Survey };
+        survey.SetActivitySettings(new SurveyActivitySettings(IsAnonymous: anonymous));
+        var respondentId = Guid.NewGuid();
+        var response = new ContentInteraction { Id = Guid.NewGuid(), UserId = respondentId, ContentId = survey.Id, SubmittedAt = SystemClock.UtcNow, SubmissionData = """{"kind":"survey","answers":{"a":1}}""" };
+        context.AddRange(program, survey, response);
+        await context.SaveChangesAsync();
+
+        var results = await new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreatePermissions(PermissionType.Review))
+            .GetSurveyResponsesAsync(program.Id, survey.Id);
+
+        GetRespondentUserId(results.Should().ContainSingle().Which).Should().Be(shouldExposeIdentity ? respondentId : null);
+    }
+
+    [Theory]
+    [InlineData(ThreadRootKind.Valid, false)]
+    [InlineData(ThreadRootKind.Arbitrary, true)]
+    [InlineData(ThreadRootKind.NestedDiscussion, true)]
+    [InlineData(ThreadRootKind.OtherContent, true)]
+    [InlineData(ThreadRootKind.OtherCourse, true)]
+    [InlineData(ThreadRootKind.Deleted, true)]
+    [InlineData(ThreadRootKind.NonDiscussion, true)]
+    public async Task SubmitUserContentAsync_ShouldRequireAValidDiscussionThreadRoot(
+        ThreadRootKind rootKind,
+        bool shouldReject)
+    {
+        await using var context = CreateContext();
+        var program = CreateProgram();
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
+        var discussion = new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Discussion", Type = ProgramContentType.Discussion };
+        var rootContent = rootKind == ThreadRootKind.OtherCourse
+            ? new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Other course", Type = ProgramContentType.Discussion }
+            : rootKind is ThreadRootKind.OtherContent or ThreadRootKind.NonDiscussion
+                ? new ProgramContent { Id = Guid.NewGuid(), ProgramId = program.Id, Title = "Other content", Type = rootKind == ThreadRootKind.NonDiscussion ? ProgramContentType.Reflection : ProgramContentType.Discussion }
+                : discussion;
+        var root = new ContentInteraction
+        {
+            Id = Guid.NewGuid(),
+            ProgramUserId = enrollment.Id,
+            UserId = enrollment.UserId,
+            ContentId = rootContent.Id,
+            SubmittedAt = SystemClock.UtcNow,
+            SubmissionData = rootKind == ThreadRootKind.NestedDiscussion
+                ? $$"""{"kind":"discussion","body":"nested","threadRootId":"{{Guid.NewGuid()}}"}"""
+                : rootContent.Type == ProgramContentType.Reflection
+                    ? """{"kind":"reflection","body":"reflection"}"""
+                    : """{"kind":"discussion","body":"root"}""",
+        };
+        context.AddRange(program, enrollment, discussion, rootContent, root);
+        await context.SaveChangesAsync();
+        if (rootKind == ThreadRootKind.Deleted)
+        {
+            root.SoftDelete();
+            await context.SaveChangesAsync();
+        }
+        var rootId = rootKind == ThreadRootKind.Arbitrary ? Guid.NewGuid() : root.Id;
+
+        Func<Task<ContentInteraction?>> submit = () => CreateSubmissionService(context, enrollment.UserId).SubmitUserContentAsync(
+            program.Id, enrollment.UserId, discussion.Id,
+            $$"""{"kind":"discussion","body":"reply","threadRootId":"{{rootId}}"}""");
+
+        if (shouldReject)
+        {
+            Func<Task> action = async () => _ = await submit();
+            await action.Should().ThrowAsync<InvalidOperationException>().WithMessage("Discussion thread root is invalid.");
+        }
+        else
+            (await submit()).Should().NotBeNull();
+    }
+
+    [Theory]
+    [MemberData(nameof(ActivityContentSettings))]
+    public async Task CloneProgramAsync_ShouldPreserveActivitySettings(
+        ProgramContentType type,
+        ActivitySettings settings)
+    {
+        await using var context = CreateCloneContext();
+        var program = CreateProgram();
+        var content = new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            Title = type.ToString(),
+            Type = type,
+        };
+        content.SetActivitySettings(settings);
+        program.ProgramContents.Add(content);
+        context.Add(program);
+        await context.SaveChangesAsync();
+
+        var cloned = await new ProgramWriteService(context).CloneProgramAsync(program.Id, "Cloned course");
+
+        cloned.ProgramContents.Should().ContainSingle();
+        cloned.ProgramContents.Single().GetActivitySettings().Should().Be(settings);
+    }
+
+    public static IEnumerable<object[]> ActivityContentSettings =>
+    [
+        [ProgramContentType.Discussion, new DiscussionActivitySettings(AllowReplies: false, RequireThreadRoot: false, MinimumBodyLength: 5, MaximumBodyLength: 100)],
+        [ProgramContentType.Reflection, new ReflectionActivitySettings(PrivateToInstructors: false, MinimumBodyLength: 5, MaximumBodyLength: 100)],
+        [ProgramContentType.Survey, new SurveyActivitySettings(IsAnonymous: true, AllowMultipleResponses: true, ResultsVisibility: SurveyResultsVisibility.AfterClose)],
+    ];
+
     [Fact]
     public async Task UpdateProgramAsync_ShouldClearNullableEnrollmentControls()
     {
@@ -511,6 +792,22 @@ public sealed class ProgramWriteServiceTests
             Slug = $"course-{Guid.NewGuid():N}",
         };
 
+    private static ContentInteraction ReflectionResponse(ProgramUser enrollment, ProgramContent reflection) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            ProgramUserId = enrollment.Id,
+            UserId = enrollment.UserId,
+            ContentId = reflection.Id,
+            SubmittedAt = SystemClock.UtcNow,
+            SubmissionData = """{"kind":"reflection","body":"response"}""",
+        };
+
+    private static Guid? GetRespondentUserId(object result) =>
+        result.GetType().GetProperty("RespondentUserId")?.GetValue(result) is Guid respondentId
+            ? respondentId
+            : null;
+
     private static AttemptGraph CreateAttemptGraph()
     {
         var program = CreateProgram();
@@ -566,6 +863,14 @@ public sealed class ProgramWriteServiceTests
 
         var options = builder.Options;
         return new LearningCoursesTestContext(options);
+    }
+
+    private static CloneTestContext CreateCloneContext()
+    {
+        var options = new DbContextOptionsBuilder<CloneTestContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        return new CloneTestContext(options);
     }
 
     private static ProgramWriteService CreateSubmissionService(
@@ -681,10 +986,58 @@ public sealed class ProgramWriteServiceTests
         }
     }
 
+    private sealed class CloneTestContext(DbContextOptions<CloneTestContext> options)
+        : DbContext(options), IApplicationDbContext
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Program>(entity =>
+            {
+                entity.Ignore(program => program.ProgramUsers);
+                entity.Ignore(program => program.ProgramRatings);
+                entity.Ignore(program => program.ProgramWishlists);
+            });
+            modelBuilder.Entity<ProgramContent>(entity =>
+            {
+                entity.Ignore(content => content.Parent);
+                entity.Ignore(content => content.Children);
+                entity.Ignore(content => content.ContentInteractions);
+                entity.HasOne(content => content.Program)
+                    .WithMany(program => program.ProgramContents)
+                    .HasForeignKey(content => content.ProgramId);
+            });
+            modelBuilder.Entity<ProgramUser>(entity =>
+            {
+                entity.Ignore(enrollment => enrollment.User);
+                entity.Ignore(enrollment => enrollment.ContentInteractions);
+                entity.Ignore(enrollment => enrollment.ReceivedGrades);
+                entity.Ignore(enrollment => enrollment.GivenGrades);
+                entity.Ignore(enrollment => enrollment.ProgramRatings);
+                entity.HasOne(enrollment => enrollment.Program)
+                    .WithMany(program => program.ProgramUsers)
+                    .HasForeignKey(enrollment => enrollment.ProgramId);
+            });
+        }
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException("Transactions are not needed for these service tests.");
+    }
+
     private sealed record AttemptGraph(
         Program Program,
         ProgramContent Content,
         ProgramUser Enrollment,
         ContentInteraction OldAttempt,
         ContentInteraction CurrentAttempt);
+
+    public enum ThreadRootKind
+    {
+        Valid,
+        Arbitrary,
+        NestedDiscussion,
+        OtherContent,
+        OtherCourse,
+        Deleted,
+        NonDiscussion,
+    }
 }

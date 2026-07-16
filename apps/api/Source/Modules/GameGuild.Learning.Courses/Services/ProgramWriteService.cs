@@ -94,6 +94,8 @@ public class ProgramWriteService(
       };
 
       clonedContent.NormalizeLearningContract();
+      if (content.GetActivitySettings() is { } activitySettings)
+        clonedContent.SetActivitySettings(activitySettings);
 
       context.Set<ProgramContent>().Add(clonedContent);
     }
@@ -503,7 +505,7 @@ public class ProgramWriteService(
       .ConfigureAwait(false);
     if (!currentContentType.HasValue) return null;
 
-    await using var surveyPolicyTransaction = LearningActivityContract.RequiresSurveyPolicyLock(currentContentType.Value)
+    await using var submissionPolicyTransaction = LearningActivityContract.RequiresSubmissionPolicyLock(currentContentType.Value)
       ? await ProgramContentLifecycleDatabaseLock.AcquireAsync(context, [contentId]).ConfigureAwait(false)
       : null;
     var content = await context.Set<ProgramContent>()
@@ -512,8 +514,11 @@ public class ProgramWriteService(
       .ConfigureAwait(false);
     if (content == null) return null;
 
-    if (LearningActivityContract.IsActivityType(content.Type))
-      ActivityResponseContract.Parse(content.Type, submissionData, content.GetActivitySettings());
+    var response = LearningActivityContract.IsActivityType(content.Type)
+      ? ActivityResponseContract.Parse(content.Type, submissionData, content.GetActivitySettings())
+      : null;
+    if (response is not null)
+      await LearningActivityContract.ValidateDiscussionThreadRootAsync(context, programId, contentId, response).ConfigureAwait(false);
 
     var now = SystemClock.UtcNow;
     var interaction = await context.Set<ContentInteraction>()
@@ -531,13 +536,13 @@ public class ProgramWriteService(
         .FirstOrDefaultAsync()
         .ConfigureAwait(false);
       if (existingResponse is not null) {
-        await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
+        await ProgramContentLifecycleDatabaseLock.CommitAsync(submissionPolicyTransaction).ConfigureAwait(false);
         return existingResponse;
       }
     }
     else if (content.Type != ProgramContentType.Survey && interaction?.SubmittedAt != null)
     {
-      await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
+      await ProgramContentLifecycleDatabaseLock.CommitAsync(submissionPolicyTransaction).ConfigureAwait(false);
       return interaction;
     }
 
@@ -572,7 +577,7 @@ public class ProgramWriteService(
         .ConfigureAwait(false);
       interaction = saveResult.Interaction;
       if (saveResult.IsConcurrentReplay) {
-        await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
+        await ProgramContentLifecycleDatabaseLock.CommitAsync(submissionPolicyTransaction).ConfigureAwait(false);
         return interaction;
       }
     }
@@ -580,7 +585,7 @@ public class ProgramWriteService(
       await context.SaveChangesAsync().ConfigureAwait(false);
     await RecalculateUserProgressAsync(programUser.Id).ConfigureAwait(false);
     await context.SaveChangesAsync().ConfigureAwait(false);
-    await ProgramContentLifecycleDatabaseLock.CommitAsync(surveyPolicyTransaction).ConfigureAwait(false);
+    await ProgramContentLifecycleDatabaseLock.CommitAsync(submissionPolicyTransaction).ConfigureAwait(false);
 
     return interaction;
   }
