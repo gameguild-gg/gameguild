@@ -131,6 +131,8 @@ public sealed class SessionProjectHandlers(
         var actorId = actor.SubjectIdAsGuid;
         if (!actor.IsAuthenticated || actorId == null || actor.TenantId == null)
             return new(null, Error.Unauthorized("TestingLab.Unauthenticated", "An authenticated tenant actor is required."));
+        if (!await authorizationService.IsActorActiveTenantMemberAsync(cancellationToken).ConfigureAwait(false))
+            return new(null, Error.Unauthorized("TestingLab.InactiveActor", "An active user and tenant membership are required."));
 
         var session = await context.Set<TestingSession>()
             .FirstOrDefaultAsync(candidate => candidate.Id == sessionId && candidate.DeletedAt == null, cancellationToken)

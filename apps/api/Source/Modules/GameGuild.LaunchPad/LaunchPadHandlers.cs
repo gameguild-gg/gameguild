@@ -22,7 +22,7 @@ public sealed class LaunchPadHandlers(
 {
     public async Task<Result<LaunchPlan>> Handle(CreateLaunchPlanCommand request, CancellationToken cancellationToken)
     {
-        var actorError = ValidateActor();
+        var actorError = await ValidateActorAsync(cancellationToken).ConfigureAwait(false);
         if (actorError != null) return Result.Failure<LaunchPlan>(actorError);
 
         var actor = actorContextAccessor.ActorContext;
@@ -78,7 +78,7 @@ public sealed class LaunchPadHandlers(
 
     public async Task<Result<LaunchPlan>> Handle(CompleteLaunchChecklistItemCommand request, CancellationToken cancellationToken)
     {
-        var actorError = ValidateActor();
+        var actorError = await ValidateActorAsync(cancellationToken).ConfigureAwait(false);
         if (actorError != null) return Result.Failure<LaunchPlan>(actorError);
         var plan = await LoadPlan(request.LaunchPlanId, cancellationToken).ConfigureAwait(false);
         if (plan == null) return Result.Failure<LaunchPlan>(Error.NotFound("LaunchPad.PlanNotFound", "Launch plan not found."));
@@ -98,7 +98,7 @@ public sealed class LaunchPadHandlers(
 
     public async Task<Result<LaunchPlan>> Handle(PublishLaunchCommand request, CancellationToken cancellationToken)
     {
-        var actorError = ValidateActor();
+        var actorError = await ValidateActorAsync(cancellationToken).ConfigureAwait(false);
         if (actorError != null) return Result.Failure<LaunchPlan>(actorError);
         var plan = await LoadPlan(request.LaunchPlanId, cancellationToken).ConfigureAwait(false);
         if (plan == null) return Result.Failure<LaunchPlan>(Error.NotFound("LaunchPad.PlanNotFound", "Launch plan not found."));
@@ -143,7 +143,7 @@ public sealed class LaunchPadHandlers(
 
     public async Task<Result<LaunchPlan?>> Handle(GetLaunchPlanQuery request, CancellationToken cancellationToken)
     {
-        var actorError = ValidateActor();
+        var actorError = await ValidateActorAsync(cancellationToken).ConfigureAwait(false);
         if (actorError != null) return Result.Failure<LaunchPlan?>(actorError);
         var plan = await LoadPlan(request.LaunchPlanId, cancellationToken).ConfigureAwait(false);
         if (plan != null && plan.Project.TenantId != actorContextAccessor.ActorContext.TenantId)
@@ -153,7 +153,7 @@ public sealed class LaunchPadHandlers(
 
     public async Task<Result<LaunchPlan?>> Handle(GetLaunchPlanByProjectQuery request, CancellationToken cancellationToken)
     {
-        var actorError = ValidateActor();
+        var actorError = await ValidateActorAsync(cancellationToken).ConfigureAwait(false);
         if (actorError != null) return Result.Failure<LaunchPlan?>(actorError);
         var tenantId = actorContextAccessor.ActorContext.TenantId;
         return Result.Success(await context.Set<LaunchPlan>()
@@ -171,7 +171,7 @@ public sealed class LaunchPadHandlers(
 
     public async Task<Result<IReadOnlyList<LaunchPlan>>> Handle(GetLaunchPadDashboardQuery request, CancellationToken cancellationToken)
     {
-        var actorError = ValidateActor();
+        var actorError = await ValidateActorAsync(cancellationToken).ConfigureAwait(false);
         if (actorError != null) return Result.Failure<IReadOnlyList<LaunchPlan>>(actorError);
         var tenantId = actorContextAccessor.ActorContext.TenantId;
         var query = context.Set<LaunchPlan>()
@@ -201,12 +201,15 @@ public sealed class LaunchPadHandlers(
             .FirstOrDefaultAsync(plan => plan.Id == launchPlanId && plan.DeletedAt == null, cancellationToken)
             .ConfigureAwait(false);
 
-    private Error? ValidateActor()
+    private async Task<Error?> ValidateActorAsync(CancellationToken cancellationToken)
     {
         var actor = actorContextAccessor.ActorContext;
-        return !actor.IsAuthenticated || actor.SubjectIdAsGuid == null || actor.TenantId == null
-            ? Error.Unauthorized("LaunchPad.Unauthenticated", "An authenticated tenant actor is required.")
-            : null;
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid == null || actor.TenantId == null)
+            return Error.Unauthorized("LaunchPad.Unauthenticated", "An authenticated tenant actor is required.");
+
+        return await authorizationService.IsActorActiveTenantMemberAsync(cancellationToken).ConfigureAwait(false)
+            ? null
+            : Error.Unauthorized("LaunchPad.InactiveActor", "An active user and tenant membership are required.");
     }
 
     private async Task<Error?> AuthorizePlanProjectAsync(LaunchPlan plan, PermissionType permission, CancellationToken cancellationToken)

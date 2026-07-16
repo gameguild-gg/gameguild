@@ -2,6 +2,8 @@ using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using GameGuild.Projects;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +37,7 @@ public sealed class LaunchPadTests
             TenantId = tenantId
         });
         AddCollaborator(context, projectId, actorId, ProjectRoles.Owner, string.Empty);
+        AddIdentity(context, actorId, tenantId);
         await context.SaveChangesAsync();
         var actorAccessor = ActorAccessor(actorId, tenantId);
         var handler = CreateHandler(context, actorAccessor);
@@ -167,6 +170,8 @@ public sealed class LaunchPadTests
         await using var context = CreateContext();
         var actorId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
+        AddIdentity(context, actorId, tenantId);
+        await context.SaveChangesAsync();
         var actorAccessor = ActorAccessor(actorId, tenantId);
         var handler = CreateHandler(context, actorAccessor);
 
@@ -234,6 +239,22 @@ public sealed class LaunchPadTests
         result.Error.Type.Should().Be(ErrorType.Unauthorized);
     }
 
+    [Fact]
+    public async Task LaunchPad_Dashboard_Should_Deny_Inactive_Tenant_Member()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, actorId, tenantId, userActive: false);
+        await context.SaveChangesAsync();
+
+        var result = await CreateHandler(context, ActorAccessor(actorId, tenantId))
+            .Handle(new GetLaunchPadDashboardQuery(), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Unauthorized);
+    }
+
     [Theory]
     [InlineData(ContentStatus.Archived)]
     [InlineData(ContentStatus.Deleted)]
@@ -251,6 +272,7 @@ public sealed class LaunchPadTests
         };
         context.Set<Project>().Add(project);
         AddCollaborator(context, project.Id, actorId, ProjectRoles.Owner, string.Empty);
+        AddIdentity(context, actorId, tenantId);
         await context.SaveChangesAsync();
 
         var result = await CreateHandler(context, ActorAccessor(actorId, tenantId)).Handle(
@@ -282,6 +304,7 @@ public sealed class LaunchPadTests
         context.Set<Project>().AddRange(crossTenant, unauthorized);
         AddCollaborator(context, crossTenant.Id, actorId, ProjectRoles.Owner, string.Empty);
         AddCollaborator(context, unauthorized.Id, actorId, ProjectRoles.Viewer, "Read");
+        AddIdentity(context, actorId, tenantId);
         await context.SaveChangesAsync();
         var handler = CreateHandler(context, ActorAccessor(actorId, tenantId));
 
@@ -309,6 +332,7 @@ public sealed class LaunchPadTests
         context.Set<Project>().Add(project);
         context.Set<LaunchPlan>().Add(plan);
         AddCollaborator(context, project.Id, actorId, ProjectRoles.Editor, "Edit");
+        AddIdentity(context, actorId, tenantId);
         await context.SaveChangesAsync();
         var handler = CreateHandler(context, ActorAccessor(actorId, tenantId));
 
@@ -354,6 +378,7 @@ public sealed class LaunchPadTests
         context.Set<Project>().Add(project);
         context.Set<LaunchPlan>().Add(plan);
         AddCollaborator(context, project.Id, actorId, ProjectRoles.Owner, string.Empty);
+        AddIdentity(context, actorId, tenantId);
         await context.SaveChangesAsync();
 
         var result = await CreateHandler(context, ActorAccessor(actorId, tenantId)).Handle(
@@ -425,6 +450,28 @@ public sealed class LaunchPadTests
         return accessor;
     }
 
+    private static void AddIdentity(
+        LaunchPadTestDbContext context,
+        Guid userId,
+        Guid tenantId,
+        bool userActive = true)
+    {
+        context.Set<User>().Add(new User
+        {
+            Id = userId,
+            Email = $"{userId:N}@example.com",
+            Name = "Launch Pad actor",
+            IsActive = userActive
+        });
+        context.Set<TenantMember>().Add(new TenantMember
+        {
+            UserId = userId,
+            TenantId = tenantId,
+            Role = "Member",
+            IsActive = true
+        });
+    }
+
     private static void AddCollaborator(
         LaunchPadTestDbContext context,
         Guid projectId,
@@ -447,6 +494,8 @@ public sealed class LaunchPadTests
         public DbSet<LaunchPlan> LaunchPlans => Set<LaunchPlan>();
         public DbSet<LaunchChecklistItem> LaunchChecklistItems => Set<LaunchChecklistItem>();
         public DbSet<ProjectCollaborator> ProjectCollaborators => Set<ProjectCollaborator>();
+        public DbSet<User> Users => Set<User>();
+        public DbSet<TenantMember> TenantMembers => Set<TenantMember>();
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => Database.BeginTransactionAsync(cancellationToken);
