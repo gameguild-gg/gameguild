@@ -415,7 +415,7 @@ public class AssessmentsController : BaseApiController
     /// Get a submission by ID
     /// </summary>
     [HttpGet("submissions/{submissionId:guid}")]
-    public async Task<ActionResult<LearnerAssessmentSubmissionDto>> GetSubmission(Guid submissionId)
+    public async Task<ActionResult<object>> GetSubmission(Guid submissionId)
     {
         var submission = await _assessmentService.GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
         if (submission == null)
@@ -432,8 +432,8 @@ public class AssessmentsController : BaseApiController
 
         var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
         if (assessment == null) return NotFound();
-        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
-        return Forbid();
+        if (!await CanReviewCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+        return Ok(AssessmentSubmissionDto.FromEntity(submission));
     }
 
     /// <summary>
@@ -511,6 +511,24 @@ public class AssessmentsController : BaseApiController
         }
 
         return false;
+    }
+
+    private async Task<bool> CanReviewCourseAsync(Guid courseId)
+    {
+        if (await CanManageCourseAsync(courseId).ConfigureAwait(false)) return true;
+
+        var actor = _actorContextAccessor.ActorContext;
+        if (!actor.SubjectIdAsGuid.HasValue || !actor.TenantId.HasValue) return false;
+
+        var program = await _programService.GetProgramByIdAsync(courseId).ConfigureAwait(false);
+        if (program == null || (program.TenantId.HasValue && program.TenantId != actor.TenantId)) return false;
+
+        var permissionName = $"{nameof(Program)}.{courseId}.{PermissionType.Review}";
+        return await _permissionQueryService.HasTenantPermissionAsync(
+                actor.SubjectIdAsGuid.Value,
+                actor.TenantId,
+                permissionName)
+            .ConfigureAwait(false);
     }
 }
 
