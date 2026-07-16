@@ -41,6 +41,8 @@ public class Assessment : EntityBase
         bool isRequired = true,
         Guid? assessmentGroupId = null)
     {
+        ValidateScoreRange(maxScore, passingScore);
+
         return new Assessment
         {
             Id = Guid.NewGuid(),
@@ -180,8 +182,11 @@ public class Assessment : EntityBase
     {
         if (title != null) Title = title;
         Description = description;
-        if (maxScore.HasValue) MaxScore = maxScore.Value;
-        if (passingScore.HasValue) PassingScore = passingScore.Value;
+        var nextMaxScore = maxScore ?? MaxScore;
+        var nextPassingScore = passingScore ?? PassingScore;
+        ValidateScoreRange(nextMaxScore, nextPassingScore);
+        MaxScore = nextMaxScore;
+        PassingScore = nextPassingScore;
         TimeLimitMinutes = timeLimitMinutes;
         MaxAttempts = maxAttempts;
         if (isRequired.HasValue) IsRequired = isRequired.Value;
@@ -226,6 +231,19 @@ public class Assessment : EntityBase
         if (submissionModalities == SubmissionModality.None || (submissionModalities & ~supported) != 0)
         {
             throw new ArgumentOutOfRangeException(nameof(submissionModalities), submissionModalities, "At least one supported submission modality is required.");
+        }
+    }
+
+    private static void ValidateScoreRange(int maxScore, int passingScore)
+    {
+        if (maxScore <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxScore), "Maximum score must be greater than zero.");
+        }
+
+        if (passingScore < 0 || passingScore > maxScore)
+        {
+            throw new ArgumentOutOfRangeException(nameof(passingScore), "Passing score must be between zero and the maximum score.");
         }
     }
 
@@ -455,7 +473,22 @@ public class AssessmentSubmission : EntityBase
         UpdatedAt = submittedAt;
     }
 
-    public void Grade(int score, int passingScore, Guid? gradedBy = null, string? feedback = null)
+    public void Grade(int score, int passingScore, int maxScore, Guid? gradedBy = null, string? feedback = null)
+    {
+        if (maxScore <= 0 || passingScore < 0 || passingScore > maxScore)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxScore), "Assessment score bounds are invalid.");
+        }
+
+        if (score < 0 || score > maxScore)
+        {
+            throw new ArgumentOutOfRangeException(nameof(score), "Score must be between zero and the assessment maximum.");
+        }
+
+        GradeCore(score, passingScore, gradedBy, feedback);
+    }
+
+    private void GradeCore(int score, int passingScore, Guid? gradedBy, string? feedback)
     {
         if (Status is not (SubmissionStatus.Submitted or SubmissionStatus.Late))
         {
