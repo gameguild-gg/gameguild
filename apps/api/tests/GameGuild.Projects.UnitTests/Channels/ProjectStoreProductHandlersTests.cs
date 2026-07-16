@@ -54,6 +54,20 @@ public sealed class ProjectStoreProductHandlersTests : IDisposable
     }
 
     [Fact]
+    public async Task Link_Should_Treat_Canonical_Project_Creator_As_Owner()
+    {
+        SetActor();
+        var project = AddProject(_tenantId, ContentStatus.Published, ContentVisibility.Public);
+        project.CreatedById = _actorId;
+        var product = AddProduct(_tenantId, _actorId, isPublished: true);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(new LinkProjectStoreProductCommand(project.Id, product.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Link_Should_Require_Project_Edit_Permission()
     {
         SetActor(ProductsPermission.Keys.Update);
