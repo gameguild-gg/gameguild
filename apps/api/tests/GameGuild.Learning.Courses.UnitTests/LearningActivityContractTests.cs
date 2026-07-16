@@ -227,4 +227,15 @@ public sealed class LearningActivityContractTests
 
         interaction.ToDto().SubmissionData.Should().Be("legacy free-form submission");
     }
+
+    [Theory]
+    [InlineData(ProgramContentType.Survey, true)]
+    [InlineData(ProgramContentType.Lesson, false)]
+    [InlineData(ProgramContentType.Assignment, false)]
+    [InlineData(ProgramContentType.Discussion, false)]
+    [InlineData(ProgramContentType.Reflection, false)]
+    public void SurveyPolicyLock_Discriminator_ShouldOnlyLockSurveys(ProgramContentType type, bool expected)
+    {
+        LearningActivityContract.RequiresSurveyPolicyLock(type).Should().Be(expected);
+    }
 }

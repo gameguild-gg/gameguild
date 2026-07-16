@@ -486,14 +486,26 @@ public class ProgramWriteService(
 
     if (programUser == null) return null;
 
-    var contentExists = await context.Set<ProgramContent>()
-      .AnyAsync(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)
+    var initialContentType = await context.Set<ProgramContent>()
+      .AsNoTracking()
+      .Where(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)
+      .Select(pc => (ProgramContentType?)pc.Type)
+      .FirstOrDefaultAsync()
       .ConfigureAwait(false);
 
-    if (!contentExists) return null;
+    if (!initialContentType.HasValue) return null;
 
-    await using var surveyPolicyTransaction = await ProgramContentLifecycleDatabaseLock
-      .AcquireAsync(context, [contentId]).ConfigureAwait(false);
+    var currentContentType = await context.Set<ProgramContent>()
+      .AsNoTracking()
+      .Where(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)
+      .Select(pc => (ProgramContentType?)pc.Type)
+      .FirstOrDefaultAsync()
+      .ConfigureAwait(false);
+    if (!currentContentType.HasValue) return null;
+
+    await using var surveyPolicyTransaction = LearningActivityContract.RequiresSurveyPolicyLock(currentContentType.Value)
+      ? await ProgramContentLifecycleDatabaseLock.AcquireAsync(context, [contentId]).ConfigureAwait(false)
+      : null;
     var content = await context.Set<ProgramContent>()
       .AsNoTracking()
       .FirstOrDefaultAsync(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)

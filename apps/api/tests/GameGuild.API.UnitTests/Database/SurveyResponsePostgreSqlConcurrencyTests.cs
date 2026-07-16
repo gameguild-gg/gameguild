@@ -1,7 +1,9 @@
 using FluentAssertions;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
+using System.Data.Common;
 using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
@@ -139,6 +141,73 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
         }
     }
 
+    [PostgreSqlFact]
+    public async Task NonSurveyInteractionPaths_DoNotAcquireSurveyAdvisoryLocks()
+    {
+        var container = CreateContainer("non_survey_transaction_policy");
+        await container.StartAsync();
+        try
+        {
+            var setupOptions = CreateOptions(container.GetConnectionString());
+            await using (var setup = new SurveyPolicyDbContext(setupOptions))
+            {
+                await setup.Database.EnsureCreatedAsync();
+            }
+
+            var fixture = await SeedLessonAsync(setupOptions);
+            var probe = new AdvisoryLockProbe();
+            var options = CreateOptions(container.GetConnectionString(), probe);
+
+            await using (var startContext = new SurveyPolicyDbContext(options))
+            {
+                var start = new ContentInteractionService(startContext, new TestRequestContextAccessor(fixture.UserId));
+                await start.StartContentAsync(fixture.EnrollmentId, fixture.StartContentId);
+            }
+            await using (var submitContext = new SurveyPolicyDbContext(options))
+            {
+                var submit = new ContentInteractionService(submitContext, new TestRequestContextAccessor(fixture.UserId));
+                await submit.SubmitContentAsync(fixture.InteractionId, "legacy lesson submission");
+            }
+            await using (var directContext = new SurveyPolicyDbContext(options))
+            {
+                var direct = new ProgramWriteService(directContext, requestContextAccessor: new TestRequestContextAccessor(fixture.UserId));
+                await direct.SubmitUserContentAsync(fixture.ProgramId, fixture.UserId, fixture.DirectContentId, "legacy direct submission");
+            }
+
+            probe.AcquisitionCount.Should().Be(0);
+        }
+        finally
+        {
+            await container.DisposeAsync();
+        }
+    }
+
+    [PostgreSqlFact]
+    public async Task LifecycleLock_WhenCallerOwnsTransaction_ShouldNotCommitOrDisposeIt()
+    {
+        var container = CreateContainer("lifecycle_existing_transaction");
+        await container.StartAsync();
+        try
+        {
+            var options = CreateOptions(container.GetConnectionString());
+            await using var context = new SurveyPolicyDbContext(options);
+            await using var outerTransaction = await context.Database.BeginTransactionAsync();
+
+            var lockHandle = await ProgramContentLifecycleDatabaseLock.AcquireAsync(context, [Guid.NewGuid()]);
+
+            lockHandle.Should().BeNull();
+            context.Database.CurrentTransaction.Should().BeSameAs(outerTransaction);
+            await ProgramContentLifecycleDatabaseLock.CommitAsync(lockHandle);
+            context.Database.CurrentTransaction.Should().BeSameAs(outerTransaction);
+            await outerTransaction.CommitAsync();
+            context.Database.CurrentTransaction.Should().BeNull();
+        }
+        finally
+        {
+            await container.DisposeAsync();
+        }
+    }
+
     private static async Task<(Guid ProgramId, Guid UserId, Guid EnrollmentId, Guid ContentId)> SeedSurveyAsync(
         DbContextOptions<SurveyPolicyDbContext> options,
         bool allowMultipleResponses)
@@ -153,6 +222,37 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
         context.AddRange(survey, enrollment);
         await context.SaveChangesAsync();
         return (programId, userId, enrollment.Id, contentId);
+    }
+
+    private static async Task<(Guid ProgramId, Guid UserId, Guid EnrollmentId, Guid StartContentId, Guid InteractionId, Guid DirectContentId)> SeedLessonAsync(
+        DbContextOptions<SurveyPolicyDbContext> options)
+    {
+        var programId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var startContent = new ProgramContent { Id = Guid.NewGuid(), ProgramId = programId, Title = "Start lesson", Type = ProgramContentType.Lesson };
+        var submitContent = new ProgramContent { Id = Guid.NewGuid(), ProgramId = programId, Title = "Submit lesson", Type = ProgramContentType.Lesson };
+        var directContent = new ProgramContent { Id = Guid.NewGuid(), ProgramId = programId, Title = "Direct lesson", Type = ProgramContentType.Lesson };
+        var enrollment = new ProgramUser { Id = Guid.NewGuid(), ProgramId = programId, UserId = userId, IsActive = true };
+        var interaction = new ContentInteraction { Id = Guid.NewGuid(), ProgramUserId = enrollment.Id, UserId = userId, ContentId = submitContent.Id, Status = GameGuild.Learning.Courses.ProgressStatus.InProgress };
+        await using var context = new SurveyPolicyDbContext(options);
+        context.AddRange(startContent, submitContent, directContent, enrollment, interaction);
+        await context.SaveChangesAsync();
+        return (programId, userId, enrollment.Id, startContent.Id, interaction.Id, directContent.Id);
+    }
+
+    private static PostgreSqlContainer CreateContainer(string database) => new PostgreSqlBuilder()
+        .WithImage("postgres:16-alpine")
+        .WithDatabase(database)
+        .WithUsername("test")
+        .WithPassword("test")
+        .WithCleanUp(true)
+        .Build();
+
+    private static DbContextOptions<SurveyPolicyDbContext> CreateOptions(string connectionString, params IInterceptor[] interceptors)
+    {
+        var builder = new DbContextOptionsBuilder<SurveyPolicyDbContext>().UseNpgsql(connectionString);
+        if (interceptors.Length > 0) builder.AddInterceptors(interceptors);
+        return builder.Options;
     }
 
     private static async Task<ContentInteraction> SubmitAsync(
@@ -322,6 +422,37 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
             {
                 Skip = "Docker is unavailable; PostgreSQL concurrency test was not run.";
             }
+        }
+    }
+
+    private sealed class AdvisoryLockProbe : DbCommandInterceptor
+    {
+        public int AcquisitionCount { get; private set; }
+
+        public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            CountAdvisoryLock(command);
+            return ValueTask.FromResult(result);
+        }
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<DbDataReader> result,
+            CancellationToken cancellationToken = default)
+        {
+            CountAdvisoryLock(command);
+            return ValueTask.FromResult(result);
+        }
+
+        private void CountAdvisoryLock(DbCommand command)
+        {
+            if (command.CommandText.Contains("pg_advisory_xact_lock", StringComparison.Ordinal))
+                AcquisitionCount++;
         }
     }
 }

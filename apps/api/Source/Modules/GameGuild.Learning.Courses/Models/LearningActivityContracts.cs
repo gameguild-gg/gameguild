@@ -50,6 +50,8 @@ public static class LearningActivityContract
     public static bool IsActivityType(ProgramContentType type) =>
         type is ProgramContentType.Discussion or ProgramContentType.Reflection or ProgramContentType.Survey;
 
+    public static bool RequiresSurveyPolicyLock(ProgramContentType type) => type == ProgramContentType.Survey;
+
     public static ActivitySettings? GetSettings(ProgramContentType type, string? serializedSettings)
     {
         if (!IsActivityType(type)) return null;
