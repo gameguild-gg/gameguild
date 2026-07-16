@@ -337,6 +337,75 @@ public sealed class ProgramWriteServiceTests
         persisted.Status.Should().Be(ProgressStatus.Completed);
     }
 
+    [Fact]
+    public async Task SubmitUserContentAsync_WhenRequestsRace_ShouldKeepOneCanonicalSubmission()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var databaseRoot = new InMemoryDatabaseRoot();
+        await using var context = CreateContext(databaseName, databaseRoot);
+        var graph = CreateAttemptGraph();
+        context.AddRange(graph.Program, graph.Content, graph.Enrollment);
+        await context.SaveChangesAsync();
+        context.SimulateInteractionConflictAfterHook = false;
+        context.BeforeInteractionSaveAsync = async _ =>
+        {
+            await using var winningContext = CreateContext(databaseName, databaseRoot);
+            var winningService = new ProgramWriteService(winningContext);
+            await winningService.SubmitUserContentAsync(
+                graph.Program.Id,
+                graph.Enrollment.UserId,
+                graph.Content.Id,
+                "winner submission");
+        };
+        var service = new ProgramWriteService(context);
+
+        var result = await service.SubmitUserContentAsync(
+            graph.Program.Id,
+            graph.Enrollment.UserId,
+            graph.Content.Id,
+            "losing submission");
+
+        result.Should().NotBeNull();
+        result!.SubmissionData.Should().Be("winner submission");
+        await using var verificationContext = CreateContext(databaseName, databaseRoot);
+        var submissions = await verificationContext.Set<ContentInteraction>().ToListAsync();
+        submissions.Should().ContainSingle();
+        submissions[0].Id.Should().Be(result.Id);
+    }
+
+    [Fact]
+    public async Task SubmitUserContentAsync_WhenCanonicalSubmissionWasDeleted_ShouldRestoreIt()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var databaseRoot = new InMemoryDatabaseRoot();
+        await using var context = CreateContext(databaseName, databaseRoot);
+        var graph = CreateAttemptGraph();
+        context.AddRange(graph.Program, graph.Content, graph.Enrollment);
+        await context.SaveChangesAsync();
+        var service = new ProgramWriteService(context);
+        var original = await service.SubmitUserContentAsync(
+            graph.Program.Id,
+            graph.Enrollment.UserId,
+            graph.Content.Id,
+            "original submission");
+        original!.Version = 1;
+        original!.SoftDelete();
+        await context.SaveChangesAsync();
+        await using var retryContext = CreateContext(databaseName, databaseRoot);
+        var retryService = new ProgramWriteService(retryContext);
+
+        var restored = await retryService.SubmitUserContentAsync(
+            graph.Program.Id,
+            graph.Enrollment.UserId,
+            graph.Content.Id,
+            "restored submission");
+
+        restored.Should().NotBeNull();
+        restored!.Id.Should().Be(original.Id);
+        restored.DeletedAt.Should().BeNull();
+        restored.SubmissionData.Should().Be("restored submission");
+    }
+
     private static Program CreateProgram() =>
         new()
         {
@@ -407,21 +476,31 @@ public sealed class ProgramWriteServiceTests
     {
         public Func<CancellationToken, Task>? BeforeInteractionSaveAsync { get; set; }
 
+        public bool SimulateInteractionConflictAfterHook { get; set; } = true;
+
         public DbSet<Program> Programs => Set<Program>();
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var beforeInteractionSave = BeforeInteractionSaveAsync;
-            if (beforeInteractionSave is not null &&
-                ChangeTracker.Entries<ContentInteraction>()
-                    .Any(entry => entry.State == EntityState.Added))
+            var hasAddedInteraction = ChangeTracker.Entries<ContentInteraction>()
+                .Any(entry => entry.State == EntityState.Added);
+            if (beforeInteractionSave is not null && hasAddedInteraction)
             {
                 BeforeInteractionSaveAsync = null;
                 await beforeInteractionSave(cancellationToken);
-                throw new DbUpdateException("Simulated concurrent active-attempt conflict.");
+                if (SimulateInteractionConflictAfterHook)
+                    throw new DbUpdateException("Simulated concurrent active-attempt conflict.");
             }
 
-            return await base.SaveChangesAsync(cancellationToken);
+            try
+            {
+                return await base.SaveChangesAsync(cancellationToken);
+            }
+            catch (ArgumentException exception) when (hasAddedInteraction)
+            {
+                throw new DbUpdateException("Simulated relational duplicate-key conflict.", exception);
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
