@@ -135,7 +135,7 @@ public sealed class LearningActivityContractTests
             SubmittedAt = SystemClock.UtcNow,
         };
 
-        var result = SurveyResponseResultDto.FromInteraction(interaction, isAnonymous: true);
+        var result = SurveyResponseResultDto.FromInteraction(interaction);
         var serialized = JsonSerializer.Serialize(result);
 
         interaction.UserId.Should().NotBeEmpty();

@@ -154,8 +154,7 @@ public class ContentInteractionService(
       .ToListAsync()
       .ConfigureAwait(false);
 
-    var isAnonymous = LearningActivityContract.IsAnonymousSurvey(content);
-    return interactions.Select(interaction => SurveyResponseResultDto.FromInteraction(interaction, isAnonymous)).ToList();
+    return interactions.Select(SurveyResponseResultDto.FromInteraction).ToList();
   }
 
   /// <summary> Update time spent on content </summary>
