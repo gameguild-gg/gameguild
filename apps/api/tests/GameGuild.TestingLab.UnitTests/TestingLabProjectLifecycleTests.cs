@@ -93,6 +93,51 @@ public sealed class TestingLabProjectLifecycleTests
         standaloneRequest.DeletedAt.Should().BeNull();
     }
 
+    [Fact]
+    public async Task HardDelete_ShouldRemoveSessionLinksRecalculateCountsAndPreserveTestingRequestHistory()
+    {
+        await using var context = new LifecycleContext(
+            new DbContextOptionsBuilder<LifecycleContext>()
+                .UseInMemoryDatabase($"testing-hard-delete-{Guid.NewGuid():N}")
+                .Options);
+        var project = NewProject("hard-deleted");
+        var remainingProject = NewProject("hard-delete-remaining");
+        var projectVersion = new ProjectVersion
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = project.Id,
+            VersionNumber = "1.0"
+        };
+        var request = NewRequest(projectVersion.Id);
+        var session = new TestingSession { RegisteredProjectCount = 99 };
+        var activeTarget = NewLink(session.Id, project.Id);
+        var historicalTarget = NewLink(session.Id, project.Id);
+        historicalTarget.IsActive = false;
+        historicalTarget.DeletedAt = SystemClock.UtcNow.AddDays(-1);
+        var remainingLink = NewLink(session.Id, remainingProject.Id);
+        context.AddRange(
+            project,
+            remainingProject,
+            projectVersion,
+            request,
+            session,
+            activeTarget,
+            historicalTarget,
+            remainingLink);
+        await context.SaveChangesAsync();
+
+        var deleted = await new ProjectLifecycleCoordinator(
+                context,
+                [new TestingLabProjectLifecycleParticipant(context)])
+            .DeleteAsync(project.Id, softDelete: false);
+
+        deleted.Should().BeTrue();
+        (await context.Set<SessionProject>().IgnoreQueryFilters()
+            .AnyAsync(link => link.ProjectId == project.Id)).Should().BeFalse();
+        session.RegisteredProjectCount.Should().Be(1);
+        request.DeletedAt.Should().BeNull();
+    }
+
     private static Project NewProject(string suffix) => new()
     {
         Id = Guid.NewGuid(),

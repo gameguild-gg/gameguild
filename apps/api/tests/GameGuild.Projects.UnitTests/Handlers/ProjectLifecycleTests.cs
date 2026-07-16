@@ -89,6 +89,41 @@ public sealed class ProjectLifecycleTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task HardDelete_ShouldRemoveProjectAndAllStoreAssociations()
+    {
+        var project = new Project
+        {
+            Id = Guid.NewGuid(),
+            Title = "Hard delete project",
+            Slug = $"hard-delete-{Guid.NewGuid():N}"
+        };
+        var activeLink = new ProjectStoreProduct
+        {
+            ProjectId = project.Id,
+            ProductId = Guid.NewGuid()
+        };
+        var historicalLink = new ProjectStoreProduct
+        {
+            ProjectId = project.Id,
+            ProductId = Guid.NewGuid(),
+            DeletedAt = SystemClock.UtcNow.AddDays(-1)
+        };
+        _context.AddRange(project, activeLink, historicalLink);
+        await _context.SaveChangesAsync();
+
+        var deleted = await new ProjectLifecycleCoordinator(
+                _context,
+                [new ProjectStoreProductLifecycleParticipant(_context)])
+            .DeleteAsync(project.Id, softDelete: false);
+
+        deleted.Should().BeTrue();
+        (await _context.Set<Project>().IgnoreQueryFilters().AnyAsync(candidate => candidate.Id == project.Id))
+            .Should().BeFalse();
+        (await _context.Set<ProjectStoreProduct>().IgnoreQueryFilters().AnyAsync(link => link.ProjectId == project.Id))
+            .Should().BeFalse();
+    }
+
+    [Fact]
     public async Task ConcurrentDeleteAndStoreLink_ShouldNotLeaveActiveLinkOnDeletedProject()
     {
         var databaseName = $"project-store-race-{Guid.NewGuid():N}";
