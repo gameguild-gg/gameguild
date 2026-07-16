@@ -4,8 +4,11 @@ using GameGuild.TestingLab;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using Xunit;
 
 namespace GameGuild.TestingLab.UnitTests;
@@ -156,6 +159,37 @@ public class TestingLocationTests
 }
 
 #endregion
+
+public sealed class TestingRequestsControllerAuthorizationTests
+{
+    [Fact]
+    public async Task SubmitSimpleTestingRequest_Should_Return_Forbidden_When_Project_Authorization_Is_Denied()
+    {
+        var userId = Guid.NewGuid();
+        var requestService = new Mock<ITestingRequestOperations>();
+        requestService
+            .Setup(service => service.CreateSimpleTestingRequestAsync(It.IsAny<CreateSimpleTestingRequestDto>(), userId))
+            .ThrowsAsync(new UnauthorizedAccessException("Project Edit permission is required."));
+        var actorAccessor = new ActorContextAccessor();
+        actorAccessor.SetActorContext(ActorContextBuilder.ForUser(userId).WithTenantId(Guid.NewGuid()).Build());
+        var controller = new TestingRequestsController(
+            requestService.Object,
+            actorAccessor,
+            NullLogger<TestingRequestsController>.Instance);
+
+        var result = await controller.SubmitSimpleTestingRequest(new CreateSimpleTestingRequestDto
+        {
+            ProjectId = Guid.NewGuid(),
+            Title = "Denied submission",
+            VersionNumber = "1.0.0",
+            DownloadUrl = "https://example.com/build.zip",
+            InstructionsType = InstructionType.Text
+        });
+
+        var forbidden = result.Result.Should().BeOfType<ObjectResult>().Subject;
+        forbidden.StatusCode.Should().Be(403);
+    }
+}
 
 #region TestingParticipant Tests
 

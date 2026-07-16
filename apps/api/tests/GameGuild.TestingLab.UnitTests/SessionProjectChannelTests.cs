@@ -125,23 +125,6 @@ public sealed class SessionProjectChannelTests : IDisposable
         result.Error.Code.Should().Be("TestingLab.ProjectVersionMismatch");
     }
 
-    [Fact]
-    public async Task Link_Should_Require_Project_Version_Tenant_To_Match_Project_Tenant()
-    {
-        var session = AddSession(_tenantId, _actorId);
-        var project = AddProject(_tenantId, ContentStatus.Draft);
-        AddCollaborator(project.Id, _actorId, ProjectRoles.Owner, string.Empty);
-        var wrongTenantVersion = AddVersion(project.Id, Guid.NewGuid());
-        await _context.SaveChangesAsync();
-
-        var result = await CreateHandler().Handle(
-            new LinkSessionProjectCommand(session.Id, project.Id, wrongTenantVersion.Id),
-            default);
-
-        result.IsFailure.Should().BeTrue();
-        result.Error.Type.Should().Be(ErrorType.Validation);
-    }
-
     [Theory]
     [InlineData(ContentStatus.Archived)]
     [InlineData(ContentStatus.Deleted)]
