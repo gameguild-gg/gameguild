@@ -51,6 +51,18 @@ public sealed class ProjectStoreProductModelTests
     }
 
     [Fact]
+    public void Projects_Should_Expose_Only_The_Canonical_Project_Aggregate()
+    {
+        var assembly = typeof(Project).Assembly;
+        var modelBuilder = new ModelBuilder();
+        new ProjectsModelConfiguration().Configure(modelBuilder);
+
+        assembly.GetType("GameGuild.Projects.ProjectLegacy").Should().BeNull();
+        modelBuilder.Model.GetEntityTypes()
+            .Should().NotContain(entity => entity.Name == "GameGuild.Projects.ProjectLegacy");
+    }
+
+    [Fact]
     public void ProjectsModule_Should_Register_Channel_Services()
     {
         var services = new ServiceCollection();
