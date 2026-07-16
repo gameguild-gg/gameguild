@@ -63,6 +63,16 @@ public interface IAssessmentService
     /// </summary>
     Task<Result<Assessment>> AssignAssessmentToGroupAsync(Guid assessmentId, AssignAssessmentGroupRequest request);
 
+    /// <summary>
+    /// Links an assessment to a cue in an interactive-video lesson.
+    /// </summary>
+    Task<Result<InteractiveVideoAssessmentCue>> LinkInteractiveVideoCueAsync(Guid assessmentId, LinkInteractiveVideoCueRequest request);
+
+    /// <summary>
+    /// Gets the interactive-video cue links configured for an assessment.
+    /// </summary>
+    Task<IEnumerable<InteractiveVideoAssessmentCue>> GetInteractiveVideoCuesAsync(Guid assessmentId);
+
     // ===== SUBMISSION MANAGEMENT =====
 
     /// <summary>
@@ -73,7 +83,7 @@ public interface IAssessmentService
     /// <summary>
     /// Submits a completed assessment
     /// </summary>
-    Task<Result<AssessmentSubmission>> SubmitAsync(Guid submissionId);
+    Task<Result<AssessmentSubmission>> SubmitAsync(Guid submissionId, SubmitAssessmentRequest? request = null);
 
     /// <summary>
     /// Grades a submission
@@ -121,7 +131,12 @@ public sealed record CreateAssessmentRequest(
     bool IsRequired = true,
     DateTime? AvailableFrom = null,
     DateTime? AvailableUntil = null,
-    Guid? AssessmentGroupId = null
+    Guid? AssessmentGroupId = null,
+    SubmissionModality SubmissionModalities = SubmissionModality.Text,
+    AssessmentPresentationMode PresentationMode = AssessmentPresentationMode.SingleStep,
+    DateTime? DueAt = null,
+    bool AllowLateSubmissions = false,
+    DateTime? LateSubmissionDeadline = null
 );
 
 /// <summary>
@@ -140,7 +155,14 @@ public sealed record UpdateAssessmentRequest(
     Guid? ContentId = null,
     bool ClearContentId = false,
     Guid? AssessmentGroupId = null,
-    bool ClearAssessmentGroupId = false
+    bool ClearAssessmentGroupId = false,
+    SubmissionModality? SubmissionModalities = null,
+    AssessmentPresentationMode? PresentationMode = null,
+    DateTime? DueAt = null,
+    bool ClearDueAt = false,
+    bool? AllowLateSubmissions = null,
+    DateTime? LateSubmissionDeadline = null,
+    bool ClearLateSubmissionDeadline = false
 );
 
 /// <summary>
@@ -170,6 +192,28 @@ public sealed record UpdateAssessmentGroupRequest(
 public sealed record AssignAssessmentGroupRequest(
     Guid? AssessmentGroupId = null,
     bool ClearAssessmentGroup = false
+);
+
+/// <summary>
+/// Links a graded assessment to a stable cue in a delivery-owned interactive video.
+/// </summary>
+public sealed record LinkInteractiveVideoCueRequest(
+    Guid ContentId,
+    string CueId,
+    decimal? CuePositionSeconds = null
+);
+
+/// <summary>
+/// Persists one or more answer payloads when a learner submits an assessment.
+/// </summary>
+public sealed record SubmitAssessmentRequest(
+    string? TextPayload = null,
+    string? FilePayload = null,
+    string? UrlPayload = null,
+    string? CodePayload = null,
+    string? MediaPayload = null,
+    string? ProjectPayload = null,
+    string? StructuredAnswerPayload = null
 );
 
 /// <summary>
