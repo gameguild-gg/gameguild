@@ -186,8 +186,7 @@ public sealed class TestingRequestsControllerAuthorizationTests
             InstructionsType = InstructionType.Text
         });
 
-        var forbidden = result.Result.Should().BeOfType<ObjectResult>().Subject;
-        forbidden.StatusCode.Should().Be(403);
+        result.Result.Should().BeOfType<ForbidResult>();
     }
 }
 
