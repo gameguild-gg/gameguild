@@ -47,7 +47,7 @@ const ALL_TOOLS = [
     // Additional LLVM tools that may have .mjs files
     'llvm-nm', 'llvm-ar', 'llvm-objcopy', 'llc',
     // Build tools (linked against libcurl-lite, need systemCallback for __dispatch_curl)
-    'ninja', 'cmake', 'curl',
+    'cmake', 'curl',
 ];
 
 // Only python.mjs needs the systemCallback patch

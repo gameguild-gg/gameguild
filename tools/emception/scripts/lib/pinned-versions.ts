@@ -13,7 +13,6 @@
 export const PINNED = {
     EMSDK_VERSION: '5.0.7',
     CMAKE_VERSION: '3.31.12',
-    NINJA_VERSION: '1.13.2',
     BINARYEN_VERSION: '129',
     BROTLI_VERSION: '1.2.0',
     PYTHON_VERSION: '3.13.3',
