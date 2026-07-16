@@ -7177,7 +7177,8 @@ namespace GameGuild.API.Database.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex(new[] { "ProjectId" }, "IX_launch_plans_ProjectId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex(new[] { "Status", "TargetLaunchAt" }, "IX_launch_plans_Status_TargetLaunchAt");
 

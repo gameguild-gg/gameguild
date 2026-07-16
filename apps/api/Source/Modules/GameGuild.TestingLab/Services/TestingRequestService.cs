@@ -4,8 +4,12 @@ namespace GameGuild.TestingLab;
 
 public class TestingRequestService : ITestingRequestService {
   private readonly IApplicationDbContext _context;
+  private readonly ITestingRequestOperations _requestOperations;
 
-  public TestingRequestService(IApplicationDbContext context) { _context = context; }
+  public TestingRequestService(IApplicationDbContext context, ITestingRequestOperations requestOperations) {
+    _context = context;
+    _requestOperations = requestOperations;
+  }
 
   public async Task<IEnumerable<TestingRequest>> GetAllAsync() {
     return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv!.Project).OrderByDescending(r => r.CreatedAt).ToListAsync();
@@ -20,13 +24,7 @@ public class TestingRequestService : ITestingRequestService {
   public async Task<TestingRequest?> GetByIdWithDetailsAsync(Guid id) { return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv!.Project).FirstOrDefaultAsync(r => r.Id == id); }
 
   public async Task<TestingRequest> CreateAsync(TestingRequest testingRequest) {
-    testingRequest.Id = Guid.NewGuid();
-    testingRequest.Touch();
-
-    _context.Set<TestingRequest>().Add(testingRequest);
-    await _context.SaveChangesAsync().ConfigureAwait(false);
-
-    return testingRequest;
+    return await _requestOperations.CreateTestingRequestAsync(testingRequest).ConfigureAwait(false);
   }
 
   public async Task<TestingRequest> UpdateAsync(TestingRequest testingRequest) {
@@ -50,11 +48,7 @@ public class TestingRequestService : ITestingRequestService {
   }
 
   public async Task<bool> RestoreAsync(Guid id) {
-    // Assuming there's a soft delete mechanism, but based on the entities I saw,
-    // there doesn't seem to be one. For now, returning false.
-    await Task.CompletedTask;
-
-    return false;
+    return await _requestOperations.RestoreTestingRequestAsync(id).ConfigureAwait(false);
   }
 
   public async Task<IEnumerable<TestingRequest>> GetByProjectVersionAsync(Guid projectVersionId) {

@@ -159,6 +159,76 @@ public sealed class SessionProjectChannelTests : IDisposable
     }
 
     [Fact]
+    public async Task ConcurrentDeleteAndSessionLink_ShouldNotLeaveActiveLinkOnDeletedProject()
+    {
+        var databaseName = $"session-project-race-{Guid.NewGuid():N}";
+        var databaseRoot = new InMemoryDatabaseRoot();
+        var options = new DbContextOptionsBuilder<TestContext>()
+            .UseInMemoryDatabase(databaseName, databaseRoot)
+            .Options;
+        var project = new Project
+        {
+            TenantId = _tenantId,
+            Title = "Session race",
+            Slug = $"session-race-{Guid.NewGuid():N}",
+            Status = ContentStatus.Draft
+        };
+        var session = new TestingSession
+        {
+            TenantId = _tenantId,
+            TestingRequestId = Guid.NewGuid(),
+            LocationId = Guid.NewGuid(),
+            SessionName = "Race session",
+            SessionDate = DateTime.UtcNow,
+            StartTime = DateTime.UtcNow,
+            EndTime = DateTime.UtcNow.AddHours(1),
+            MaxTesters = 8,
+            ManagerId = _actorId,
+            ManagerUserId = _actorId,
+            CreatedById = _actorId
+        };
+        await using (var setup = new TestContext(options))
+        {
+            setup.AddRange(
+                project,
+                session,
+                new User { Id = _actorId, Email = $"{_actorId:N}@example.com", Name = "Race actor", IsActive = true },
+                new TenantMember { UserId = _actorId, TenantId = _tenantId, Role = "Member", IsActive = true });
+            await setup.SaveChangesAsync();
+        }
+
+        var actorAccessor = new Mock<IActorContextAccessor>();
+        actorAccessor.SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.ForUser(_actorId).WithTenantId(_tenantId).Build());
+        var authorization = new BlockingAuthorizationService();
+        await using var linkContext = new TestContext(options);
+        var handler = new SessionProjectHandlers(
+            linkContext,
+            actorAccessor.Object,
+            new ProjectChannelAvailabilityService(linkContext),
+            authorization,
+            NullLogger<SessionProjectHandlers>.Instance);
+        var linkTask = handler.Handle(new LinkSessionProjectCommand(session.Id, project.Id), default);
+        await authorization.PermissionRequested;
+
+        await using var deleteContext = new TestContext(options);
+        var deleteTask = new ProjectLifecycleCoordinator(
+                deleteContext,
+                [new TestingLabProjectLifecycleParticipant(deleteContext)])
+            .DeleteAsync(project.Id, softDelete: true);
+        await Task.WhenAny(deleteTask, Task.Delay(TimeSpan.FromSeconds(2)));
+        authorization.AllowPermission();
+
+        (await linkTask).IsSuccess.Should().BeTrue();
+        (await deleteTask).Should().BeTrue();
+        await using var verify = new TestContext(options);
+        (await verify.Set<SessionProject>().AnyAsync(link =>
+            link.ProjectId == project.Id && link.IsActive && link.DeletedAt == null)).Should().BeFalse();
+        (await verify.Set<TestingSession>().SingleAsync(candidate => candidate.Id == session.Id))
+            .RegisteredProjectCount.Should().Be(0);
+    }
+
+    [Fact]
     public async Task Link_Should_Fail_Closed_And_Require_Session_Manager_Or_Creator()
     {
         var session = AddSession(_tenantId, Guid.NewGuid());
@@ -393,6 +463,29 @@ public sealed class SessionProjectChannelTests : IDisposable
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
+    }
+
+    private sealed class BlockingAuthorizationService : IProjectAuthorizationService
+    {
+        private readonly TaskCompletionSource _permissionRequested = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _permissionAllowed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task PermissionRequested => _permissionRequested.Task;
+
+        public Task<bool> IsActorActiveTenantMemberAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult(true);
+
+        public async Task<bool> HasPermissionAsync(
+            Guid projectId,
+            PermissionType permission,
+            CancellationToken cancellationToken = default)
+        {
+            _permissionRequested.TrySetResult();
+            await _permissionAllowed.Task.WaitAsync(cancellationToken);
+            return true;
+        }
+
+        public void AllowPermission() => _permissionAllowed.TrySetResult();
     }
 }
 

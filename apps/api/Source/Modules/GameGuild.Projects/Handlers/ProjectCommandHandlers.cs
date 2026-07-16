@@ -30,10 +30,19 @@ public sealed class ProjectCommandHandlers
 
   private readonly IActorContextAccessor _actorContextAccessor;
 
-  public ProjectCommandHandlers(IApplicationDbContext context, IActorContextAccessor actorContextAccessor, ILogger<ProjectCommandHandlers> logger) {
+  private readonly IProjectLifecycleCoordinator _lifecycleCoordinator;
+
+  public ProjectCommandHandlers(
+    IApplicationDbContext context,
+    IActorContextAccessor actorContextAccessor,
+    ILogger<ProjectCommandHandlers> logger,
+    IProjectLifecycleCoordinator? lifecycleCoordinator = null) {
     _context = context;
     _actorContextAccessor = actorContextAccessor;
     _logger = logger;
+    _lifecycleCoordinator = lifecycleCoordinator ?? new ProjectLifecycleCoordinator(
+      context,
+      [new ProjectStoreProductLifecycleParticipant(context)]);
   }
 
   private ActorContext Actor => _actorContextAccessor.ActorContext;
@@ -165,14 +174,8 @@ public sealed class ProjectCommandHandlers
       return Result.Failure<bool>(Error.Forbidden("Project.Forbidden", "Unauthorized to delete this project"));
     }
 
-    if (request.SoftDelete) {
-      project.SoftDelete();
-    }
-    else {
-      _context.Set<Project>().Remove(project);
-    }
-
-    await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    if (!await _lifecycleCoordinator.DeleteAsync(request.ProjectId, request.SoftDelete, cancellationToken).ConfigureAwait(false))
+      return Result.Failure<bool>(Error.NotFound("Project.NotFound", $"Project with ID {request.ProjectId} was not found"));
 
     _logger.LogInformation("Project deleted successfully: {ProjectId}", project.Id);
 

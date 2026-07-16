@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.CQRS;
 using GameGuild.Projects;
 using GameGuild.TestingLab;
 using GameGuild.Identity.Context.Actors;
@@ -7,6 +8,7 @@ using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -535,6 +537,128 @@ public class TestingLabEnumTests
 public class TestingRequestOperationsServiceTests
 {
     [Fact]
+    public async Task CreateTestingRequestAsync_WithCrossTenantProjectVersion_ShouldRejectBeforePersisting()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var actorTenantId = Guid.NewGuid();
+        AddIdentity(context, actorId, actorTenantId);
+        var foreignProject = CreateProject("Foreign version", Guid.NewGuid(), actorId);
+        var foreignVersion = new ProjectVersion
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = foreignProject.Id,
+            TenantId = foreignProject.TenantId,
+            VersionNumber = "1.0.0",
+            CreatedById = actorId
+        };
+        context.AddRange(foreignProject, foreignVersion);
+        await context.SaveChangesAsync();
+        var (_, service) = CreateRequestService(context, actorId, actorTenantId);
+        var request = NewProjectVersionRequest(foreignVersion.Id, actorId, actorTenantId);
+
+        var act = () => service.CreateTestingRequestAsync(request);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        context.Set<TestingRequest>().Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateTestingRequestAsync_WithActiveProjectVersion_ShouldHoldLifecycleLockThroughCommit()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, actorId, tenantId);
+        var (project, version) = AddAuthorizedProjectVersion(context, actorId, tenantId, "Locked create");
+        await context.SaveChangesAsync();
+        var recordingLock = new RecordingProjectLifecycleLock();
+        var service = CreateRequestService(context, actorId, tenantId, recordingLock).Service;
+
+        await service.CreateTestingRequestAsync(NewProjectVersionRequest(version.Id, actorId, tenantId));
+
+        recordingLock.AcquiredProjectIds.Should().Equal(project.Id);
+        recordingLock.CommitCount.Should().Be(1);
+        recordingLock.DisposeCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task RestoreTestingRequestAsync_WithDeletedProject_ShouldRejectAndRemainDeleted()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, actorId, tenantId);
+        var (_, version) = AddAuthorizedProjectVersion(context, actorId, tenantId, "Deleted restore");
+        var request = NewProjectVersionRequest(version.Id, actorId, tenantId);
+        request.DeletedAt = SystemClock.UtcNow.AddDays(-1);
+        context.Add(request);
+        await context.SaveChangesAsync();
+        version.Project.DeletedAt = SystemClock.UtcNow;
+        await context.SaveChangesAsync();
+        var service = CreateRequestService(context, actorId, tenantId).Service;
+
+        var act = () => service.RestoreTestingRequestAsync(request.Id);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        request.DeletedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task RestoreTestingRequestAsync_WithActiveProject_ShouldHoldLifecycleLockThroughCommit()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, actorId, tenantId);
+        var (project, version) = AddAuthorizedProjectVersion(context, actorId, tenantId, "Locked restore");
+        var request = NewProjectVersionRequest(version.Id, actorId, tenantId);
+        request.DeletedAt = SystemClock.UtcNow.AddDays(-1);
+        context.Add(request);
+        await context.SaveChangesAsync();
+        var recordingLock = new RecordingProjectLifecycleLock();
+        var service = CreateRequestService(context, actorId, tenantId, recordingLock).Service;
+
+        (await service.RestoreTestingRequestAsync(request.Id)).Should().BeTrue();
+
+        recordingLock.AcquiredProjectIds.Should().Equal(project.Id);
+        recordingLock.CommitCount.Should().Be(1);
+        recordingLock.DisposeCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreateTestingRequestCommandHandler_WithCrossTenantProjectVersion_ShouldRejectBeforePersisting()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var actorTenantId = Guid.NewGuid();
+        AddIdentity(context, actorId, actorTenantId);
+        var foreignProject = CreateProject("Command foreign version", Guid.NewGuid(), actorId);
+        var foreignVersion = new ProjectVersion
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = foreignProject.Id,
+            TenantId = foreignProject.TenantId,
+            VersionNumber = "1.0.0",
+            CreatedById = actorId
+        };
+        context.AddRange(foreignProject, foreignVersion);
+        await context.SaveChangesAsync();
+        var mediator = new Mock<IMediator>();
+        var operations = CreateRequestService(context, actorId, actorTenantId).Service;
+        var handler = new CreateTestingRequestCommandHandler(
+            Mock.Of<ITestingRequestRepository>(),
+            new TestingRequestService(context, operations),
+            mediator.Object);
+
+        var act = () => handler.Handle(NewCreateCommand(foreignVersion.Id), default);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        context.Set<TestingRequest>().Should().BeEmpty();
+        mediator.Verify(candidate => candidate.Publish(It.IsAny<TestingRequestCreatedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task CreateSimpleTestingRequestAsync_WithoutExistingProject_ShouldThrow()
     {
         await using var context = CreateContext();
@@ -550,6 +674,88 @@ public class TestingRequestOperationsServiceTests
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Testing Lab submissions must be linked to an existing project.");
+    }
+
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_WithProjectId_ShouldNotResolveCrossTenantProject()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        var project = CreateProject("Foreign project", Guid.NewGuid(), userId);
+        context.Set<Project>().Add(project);
+        await context.SaveChangesAsync();
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+
+        var act = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(project.Id), userId);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Testing Lab submissions must be linked to an existing project.");
+        context.Set<ProjectVersion>().Should().BeEmpty();
+        context.Set<ProjectRelease>().Should().BeEmpty();
+        context.Set<TestingRequest>().Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_WithProjectId_ShouldNotResolveSoftDeletedProject()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        var project = CreateProject("Deleted project", tenantId, userId);
+        project.DeletedAt = SystemClock.UtcNow;
+        context.Set<Project>().Add(project);
+        await context.SaveChangesAsync();
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+
+        var act = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(project.Id), userId);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Testing Lab submissions must be linked to an existing project.");
+    }
+
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_WithLegacyTitle_ShouldResolveOnlyActiveActorTenantProject()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        var expected = CreateProject("Legacy team", tenantId, userId);
+        var foreign = CreateProject("Legacy team", Guid.NewGuid(), userId);
+        var deleted = CreateProject("Legacy team", tenantId, userId);
+        deleted.DeletedAt = SystemClock.UtcNow;
+        context.Set<Project>().AddRange(foreign, deleted, expected);
+        await context.SaveChangesAsync();
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+
+        var request = await service.CreateSimpleTestingRequestAsync(CreateLegacyRequestDto("Legacy team"), userId);
+
+        request.ProjectVersion!.ProjectId.Should().Be(expected.Id);
+    }
+
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_WithAmbiguousLegacyTitle_ShouldRejectBeforeCreatingRows()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        context.Set<Project>().AddRange(
+            CreateProject("Duplicate title", tenantId, userId),
+            CreateProject("Duplicate title", tenantId, userId));
+        await context.SaveChangesAsync();
+        var (_, service) = CreateRequestService(context, userId, tenantId);
+
+        var act = () => service.CreateSimpleTestingRequestAsync(CreateLegacyRequestDto("Duplicate title"), userId);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Multiple active projects match the legacy team identifier.");
+        context.Set<ProjectVersion>().Should().BeEmpty();
+        context.Set<ProjectRelease>().Should().BeEmpty();
+        context.Set<TestingRequest>().Should().BeEmpty();
     }
 
     [Fact]
@@ -594,6 +800,42 @@ public class TestingRequestOperationsServiceTests
             release.Title == $"{project.Title} {dto.VersionNumber}");
         request.TenantId.Should().Be(tenantId);
         actorAccessor.ActorContext.SubjectIdAsGuid.Should().Be(userId);
+    }
+
+    [Fact]
+    public async Task CreateSimpleTestingRequestAsync_ShouldHoldProjectLifecycleLockThroughCommit()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        AddIdentity(context, userId, tenantId);
+        var project = CreateProject("Locked request", tenantId, userId);
+        context.Set<Project>().Add(project);
+        context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = project.Id,
+            UserId = userId,
+            Role = ProjectRoles.Owner,
+            IsActive = true
+        });
+        await context.SaveChangesAsync();
+        var accessor = new ActorContextAccessor();
+        accessor.SetActorContext(ActorContextBuilder.ForUser(userId).WithTenantId(tenantId).Build());
+        var recordingLock = new RecordingProjectLifecycleLock();
+        var services = new ServiceCollection();
+        services.AddSingleton<IApplicationDbContext>(context);
+        services.AddSingleton<IProjectChannelAvailabilityService>(new ProjectChannelAvailabilityService(context));
+        services.AddSingleton<IProjectAuthorizationService>(new ProjectAuthorizationService(context, accessor));
+        services.AddSingleton<IActorContextAccessor>(accessor);
+        services.AddSingleton<IProjectLifecycleLock>(recordingLock);
+        await using var provider = services.BuildServiceProvider();
+        var service = ActivatorUtilities.CreateInstance<TestingRequestOperationsService>(provider);
+
+        await service.CreateSimpleTestingRequestAsync(CreateRequestDto(project.Id), userId);
+
+        recordingLock.AcquiredProjectIds.Should().Equal(project.Id);
+        recordingLock.CommitCount.Should().Be(1);
+        recordingLock.DisposeCount.Should().Be(1);
     }
 
     [Fact]
@@ -690,7 +932,8 @@ public class TestingRequestOperationsServiceTests
         var crossTenantAct = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(crossTenant.Id), userId);
         var unauthorizedAct = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(unauthorized.Id), userId);
 
-        await crossTenantAct.Should().ThrowAsync<InvalidOperationException>().WithMessage("*tenant_mismatch*");
+        await crossTenantAct.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Testing Lab submissions must be linked to an existing project.");
         await unauthorizedAct.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
@@ -721,7 +964,8 @@ public class TestingRequestOperationsServiceTests
     private static (IActorContextAccessor ActorAccessor, TestingRequestOperationsService Service) CreateRequestService(
         IApplicationDbContext context,
         Guid userId,
-        Guid tenantId)
+        Guid tenantId,
+        IProjectLifecycleLock? lifecycleLock = null)
     {
         var accessor = new ActorContextAccessor();
         accessor.SetActorContext(ActorContextBuilder.ForUser(userId).WithTenantId(tenantId).Build());
@@ -729,8 +973,63 @@ public class TestingRequestOperationsServiceTests
             context,
             new ProjectChannelAvailabilityService(context),
             new ProjectAuthorizationService(context, accessor),
-            accessor));
+            accessor,
+            lifecycleLock));
     }
+
+    private static (Project Project, ProjectVersion Version) AddAuthorizedProjectVersion(
+        IApplicationDbContext context,
+        Guid actorId,
+        Guid tenantId,
+        string title)
+    {
+        var project = CreateProject(title, tenantId, actorId);
+        var version = new ProjectVersion
+        {
+            Id = Guid.NewGuid(),
+            Project = project,
+            ProjectId = project.Id,
+            TenantId = tenantId,
+            VersionNumber = "1.0.0",
+            CreatedById = actorId
+        };
+        context.Set<Project>().Add(project);
+        context.Set<ProjectVersion>().Add(version);
+        context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = project.Id,
+            UserId = actorId,
+            Role = ProjectRoles.Owner,
+            IsActive = true
+        });
+        return (project, version);
+    }
+
+    private static TestingRequest NewProjectVersionRequest(Guid projectVersionId, Guid actorId, Guid tenantId) => new()
+    {
+        Id = Guid.NewGuid(),
+        ProjectVersionId = projectVersionId,
+        Title = "Guarded testing request",
+        InstructionsType = InstructionType.Text,
+        StartDate = SystemClock.UtcNow,
+        EndDate = SystemClock.UtcNow.AddDays(1),
+        CreatedById = actorId,
+        TenantId = tenantId
+    };
+
+    private static CreateTestingRequestCommand NewCreateCommand(Guid projectVersionId) => new(
+        projectVersionId,
+        "Guarded command request",
+        null,
+        null,
+        InstructionType.Text,
+        "Test instructions",
+        null,
+        null,
+        null,
+        4,
+        SystemClock.UtcNow,
+        SystemClock.UtcNow.AddDays(1));
 
     private static TestingLabServiceDbContext CreateContext()
         => new(new DbContextOptionsBuilder<TestingLabServiceDbContext>()
@@ -772,6 +1071,24 @@ public class TestingRequestOperationsServiceTests
         MaxTesters = 8,
     };
 
+    private static CreateSimpleTestingRequestDto CreateLegacyRequestDto(string teamIdentifier)
+    {
+        var request = CreateRequestDto(Guid.NewGuid());
+        request.ProjectId = null;
+        request.TeamIdentifier = teamIdentifier;
+        return request;
+    }
+
+    private static Project CreateProject(string title, Guid tenantId, Guid userId) => new()
+    {
+        Id = Guid.NewGuid(),
+        Title = title,
+        Slug = $"{Project.GenerateSlug(title)}-{Guid.NewGuid():N}",
+        Status = ContentStatus.Draft,
+        TenantId = tenantId,
+        CreatedById = userId
+    };
+
     private sealed class TestingLabServiceDbContext(DbContextOptions<TestingLabServiceDbContext> options)
         : DbContext(options), IApplicationDbContext
     {
@@ -789,6 +1106,36 @@ public class TestingRequestOperationsServiceTests
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException("Transactions are not required for this service regression.");
+    }
+
+    private sealed class RecordingProjectLifecycleLock : IProjectLifecycleLock
+    {
+        public List<Guid> AcquiredProjectIds { get; } = [];
+        public int CommitCount { get; private set; }
+        public int DisposeCount { get; private set; }
+
+        public Task<IProjectLifecycleLockHandle> AcquireAsync(
+            Guid projectId,
+            CancellationToken cancellationToken = default)
+        {
+            AcquiredProjectIds.Add(projectId);
+            return Task.FromResult<IProjectLifecycleLockHandle>(new Handle(this));
+        }
+
+        private sealed class Handle(RecordingProjectLifecycleLock owner) : IProjectLifecycleLockHandle
+        {
+            public Task CommitAsync(CancellationToken cancellationToken = default)
+            {
+                owner.CommitCount++;
+                return Task.CompletedTask;
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                owner.DisposeCount++;
+                return ValueTask.CompletedTask;
+            }
+        }
     }
 }
 

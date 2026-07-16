@@ -13,13 +13,17 @@ public sealed class SessionProjectHandlers(
     IActorContextAccessor actorContextAccessor,
     IProjectChannelAvailabilityService availabilityService,
     IProjectAuthorizationService authorizationService,
-    ILogger<SessionProjectHandlers> logger)
+    ILogger<SessionProjectHandlers> logger,
+    IProjectLifecycleLock? lifecycleLock = null)
     : ICommandHandler<LinkSessionProjectCommand, Result<SessionProjectProjection>>,
       ICommandHandler<UnlinkSessionProjectCommand, Result<bool>>,
       IQueryHandler<GetSessionProjectLinksQuery, Result<IReadOnlyList<SessionProjectProjection>>>
 {
+    private readonly IProjectLifecycleLock _lifecycleLock = lifecycleLock ?? new ProjectLifecycleLock(context);
+
     public async Task<Result<SessionProjectProjection>> Handle(LinkSessionProjectCommand request, CancellationToken cancellationToken)
     {
+        await using var lockHandle = await _lifecycleLock.AcquireAsync(request.ProjectId, cancellationToken).ConfigureAwait(false);
         var authorization = await AuthorizeSessionAsync(request.SessionId, cancellationToken).ConfigureAwait(false);
         if (authorization.Error != null)
             return Result.Failure<SessionProjectProjection>(authorization.Error);
@@ -73,6 +77,7 @@ public sealed class SessionProjectHandlers(
         authorization.Session!.RegisteredProjectCount++;
         authorization.Session.Touch();
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await lockHandle.CommitAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Actor {ActorId} linked project {ProjectId} to testing session {SessionId}", actor.SubjectId, request.ProjectId, request.SessionId);
         return Result.Success(ToProjection(link));
