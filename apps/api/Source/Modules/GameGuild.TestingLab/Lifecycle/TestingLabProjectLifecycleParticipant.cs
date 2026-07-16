@@ -11,6 +11,27 @@ public sealed class TestingLabProjectLifecycleParticipant(IApplicationDbContext 
         DateTime closedAt,
         CancellationToken cancellationToken = default)
     {
+        var projectVersionIds = await context.Set<ProjectVersion>()
+            .IgnoreQueryFilters()
+            .Where(version => version.ProjectId == projectId)
+            .Select(version => version.Id)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var testingRequests = await context.Set<TestingRequest>()
+            .IgnoreQueryFilters()
+            .Where(request =>
+                request.ProjectVersionId.HasValue &&
+                projectVersionIds.Contains(request.ProjectVersionId.Value) &&
+                request.DeletedAt == null)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        foreach (var request in testingRequests)
+        {
+            request.DeletedAt = closedAt;
+            request.Touch();
+        }
+
         var projectLinks = await context.Set<SessionProject>()
             .Where(link =>
                 link.ProjectId == projectId &&
