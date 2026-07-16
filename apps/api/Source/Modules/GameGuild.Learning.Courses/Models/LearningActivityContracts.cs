@@ -52,6 +52,41 @@ public static class LearningActivityContract
 
     public static bool RequiresSurveyPolicyLock(ProgramContentType type) => type == ProgramContentType.Survey;
 
+    public static bool RequiresSubmissionPolicyLock(ProgramContentType type) =>
+        type is ProgramContentType.Survey or ProgramContentType.Discussion;
+
+    public static async Task ValidateDiscussionThreadRootAsync(
+        IApplicationDbContext context,
+        Guid programId,
+        Guid contentId,
+        ActivityResponse response)
+    {
+        if (response is not DiscussionActivityResponse { ThreadRootId: { } rootId }) return;
+
+        var rootPayload = await context.Set<ContentInteraction>()
+            .AsNoTracking()
+            .Where(interaction =>
+                interaction.Id == rootId &&
+                interaction.ContentId == contentId &&
+                interaction.SubmittedAt != null &&
+                interaction.DeletedAt == null)
+            .Join(
+                context.Set<ProgramContent>().AsNoTracking(),
+                interaction => interaction.ContentId,
+                content => content.Id,
+                (interaction, content) => new { interaction.SubmissionData, content.ProgramId, content.Type })
+            .Where(root => root.ProgramId == programId && root.Type == ProgramContentType.Discussion)
+            .Select(root => root.SubmissionData)
+            .FirstOrDefaultAsync()
+            .ConfigureAwait(false);
+
+        if (rootPayload is null ||
+            ActivityResponseContract.Parse(ProgramContentType.Discussion, rootPayload, null) is not DiscussionActivityResponse { ThreadRootId: null })
+        {
+            throw new InvalidOperationException("Discussion thread root is invalid.");
+        }
+    }
+
     public static ActivitySettings? GetSettings(ProgramContentType type, string? serializedSettings)
     {
         if (!IsActivityType(type)) return null;
