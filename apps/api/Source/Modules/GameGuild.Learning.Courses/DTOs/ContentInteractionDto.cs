@@ -16,6 +16,8 @@ public class ContentInteractionDto {
 
   public int? TimeSpentMinutes { get; set; }
 
+  public int TimeSpentSeconds { get; set; }
+
   public DateTime? FirstAccessedAt { get; set; }
 
   public DateTime? LastAccessedAt { get; set; }
@@ -41,4 +43,6 @@ public class ContentInteractionDto {
   public bool CanModify { get => !IsSubmitted; }
 
   public int DurationInMinutes { get => TimeSpentMinutes ?? 0; }
+
+  public int DurationInSeconds { get => TimeSpentSeconds; }
 }

@@ -1,5 +1,4 @@
-
-
+using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -9,20 +8,49 @@ namespace GameGuild.Learning.Courses;
 ///   Service for managing content interactions following the permission inheritance pattern ContentInteraction inherits permissions from Program -> ProgramContent -> ContentInteraction Once submitted, interactions become immutable but
 ///   users can create new interactions
 /// </summary>
-public class ContentInteractionService(IApplicationDbContext context) : IContentInteractionService {
+public class ContentInteractionService(
+  IApplicationDbContext context,
+  IRequestContextAccessor requestContextAccessor) : IContentInteractionService {
   /// <summary> Start a new content interaction (or resume existing one if not submitted) </summary>
   public async Task<ContentInteraction> StartContentAsync(Guid programUserId, Guid contentId) {
+    var currentUserId = requestContextAccessor.CurrentUserId;
+    if (!currentUserId.HasValue)
+      throw new RequestValidationException("Active course enrollment was not found.");
+
+    var programUser = await context.Set<ProgramUser>()
+      .AsNoTracking()
+      .FirstOrDefaultAsync(item =>
+        item.Id == programUserId &&
+        item.UserId == currentUserId.Value &&
+        item.DeletedAt == null &&
+        item.IsActive)
+      .ConfigureAwait(false);
+    if (programUser == null) throw new RequestValidationException("Active course enrollment was not found.");
+
+    var contentBelongsToProgram = await context.Set<ProgramContent>()
+      .AnyAsync(item => item.Id == contentId && item.ProgramId == programUser.ProgramId && item.DeletedAt == null)
+      .ConfigureAwait(false);
+    if (!contentBelongsToProgram) throw new InvalidOperationException("Content does not belong to the enrolled course.");
+
     // Check if there's already an interaction for this user/content
-    var existingInteraction = await context.Set<ContentInteraction>().FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
+    var existingInteraction = await context.Set<ContentInteraction>()
+      .Where(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId)
+      .OrderBy(ci => ci.SubmittedAt.HasValue)
+      .ThenByDescending(ci => ci.CreatedAt)
+      .FirstOrDefaultAsync()
+      .ConfigureAwait(false);
 
     if (existingInteraction != null) {
+      existingInteraction.UserId = programUser.UserId;
+
       // If already submitted, create a new interaction based on the last one
       if (existingInteraction.SubmittedAt.HasValue) return await CreateNewInteractionFromPreviousAsync(existingInteraction).ConfigureAwait(false);
 
       // Otherwise, resume the existing interaction
       existingInteraction.FirstAccessedAt ??= SystemClock.UtcNow;
       existingInteraction.LastAccessedAt = SystemClock.UtcNow;
-      existingInteraction.Status = ProgressStatus.InProgress;
+      if (!existingInteraction.IsCompleted)
+        existingInteraction.Status = ProgressStatus.InProgress;
 
       await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -30,12 +58,9 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
     }
 
     // Create new interaction
-    var newInteraction = new ContentInteraction { ProgramUserId = programUserId, ContentId = contentId, Status = ProgressStatus.InProgress, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, CompletionPercentage = 0 };
+    var newInteraction = new ContentInteraction { ProgramUserId = programUserId, UserId = programUser.UserId, ContentId = contentId, Status = ProgressStatus.InProgress, FirstAccessedAt = SystemClock.UtcNow, LastAccessedAt = SystemClock.UtcNow, CompletionPercentage = 0 };
 
-    context.Set<ContentInteraction>().Add(newInteraction);
-    await context.SaveChangesAsync().ConfigureAwait(false);
-
-    return newInteraction;
+    return await SaveNewActiveAttemptAsync(newInteraction).ConfigureAwait(false);
   }
 
   /// <summary> Update progress for an interaction (only if not submitted) </summary>
@@ -44,14 +69,9 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
 
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot update progress on submitted interaction. Create a new interaction to continue work.");
 
-    interaction.CompletionPercentage = Math.Min(100, Math.Max(0, completionPercentage));
-    interaction.LastAccessedAt = SystemClock.UtcNow;
-
-    if (interaction.CompletionPercentage >= 100) {
-      interaction.Status = ProgressStatus.Completed;
-      interaction.CompletedAt = SystemClock.UtcNow;
-    }
-    else if (interaction.Status == ProgressStatus.NotStarted) { interaction.Status = ProgressStatus.InProgress; }
+    interaction.UpdateProgress(completionPercentage);
+    if (!interaction.IsCompleted && interaction.Status == ProgressStatus.NotStarted)
+      interaction.Status = ProgressStatus.InProgress;
 
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -66,10 +86,7 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
 
     interaction.SubmissionData = submissionData;
     interaction.SubmittedAt = SystemClock.UtcNow;
-    interaction.LastAccessedAt = SystemClock.UtcNow;
-    interaction.Status = ProgressStatus.Completed; // Use Completed instead of Submitted
-    interaction.CompletedAt = SystemClock.UtcNow;
-    interaction.CompletionPercentage = 100;
+    interaction.Complete();
 
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -82,10 +99,7 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
 
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot modify submitted interaction. Create a new interaction to continue work.");
 
-    interaction.Status = ProgressStatus.Completed;
-    interaction.CompletedAt = SystemClock.UtcNow;
-    interaction.LastAccessedAt = SystemClock.UtcNow;
-    interaction.CompletionPercentage = 100;
+    interaction.Complete();
 
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -94,12 +108,29 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
 
   /// <summary> Get interaction for a specific user and content </summary>
   public async Task<ContentInteraction?> GetInteractionAsync(Guid programUserId, Guid contentId) {
-    return await context.Set<ContentInteraction>().Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades).FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
+    var currentUserId = requestContextAccessor.CurrentUserId;
+    if (!currentUserId.HasValue) return null;
+
+    return await context.Set<ContentInteraction>().Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades)
+      .OrderBy(ci => ci.SubmittedAt.HasValue)
+      .ThenByDescending(ci => ci.CreatedAt)
+      .FirstOrDefaultAsync(ci =>
+        ci.ProgramUserId == programUserId &&
+        ci.ContentId == contentId &&
+        ci.UserId == currentUserId.Value)
+      .ConfigureAwait(false);
   }
 
   /// <summary> Get all interactions for a user </summary>
   public async Task<IEnumerable<ContentInteraction>> GetUserInteractionsAsync(Guid programUserId) {
-    return await context.Set<ContentInteraction>().Include(ci => ci.Content).Include(ci => ci.ActivityGrades).Where(ci => ci.ProgramUserId == programUserId).OrderByDescending(ci => ci.LastAccessedAt).ToListAsync();
+    var currentUserId = requestContextAccessor.CurrentUserId;
+    if (!currentUserId.HasValue) return [];
+
+    return await context.Set<ContentInteraction>().Include(ci => ci.Content).Include(ci => ci.ActivityGrades)
+      .Where(ci => ci.ProgramUserId == programUserId && ci.UserId == currentUserId.Value)
+      .OrderByDescending(ci => ci.LastAccessedAt)
+      .ToListAsync()
+      .ConfigureAwait(false);
   }
 
   /// <summary> Update time spent on content </summary>
@@ -108,8 +139,7 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
 
     if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot update time spent on submitted interaction.");
 
-    interaction.TimeSpentMinutes = (interaction.TimeSpentMinutes ?? 0) + additionalMinutes;
-    interaction.LastAccessedAt = SystemClock.UtcNow;
+    interaction.AddTimeSpent(additionalMinutes);
 
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -118,9 +148,15 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
 
   /// <summary> Get interaction by ID with proper error handling </summary>
   private async Task<ContentInteraction> GetInteractionByIdAsync(Guid interactionId) {
-    var interaction = await context.Set<ContentInteraction>().Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades).FirstOrDefaultAsync(ci => ci.Id == interactionId);
+    var currentUserId = requestContextAccessor.CurrentUserId;
+    if (!currentUserId.HasValue)
+      throw new RequestValidationException("Content interaction was not found.");
 
-    if (interaction == null) throw new InvalidOperationException($"Content interaction with ID {interactionId} not found.");
+    var interaction = await context.Set<ContentInteraction>().Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades)
+      .FirstOrDefaultAsync(ci => ci.Id == interactionId && ci.UserId == currentUserId.Value)
+      .ConfigureAwait(false);
+
+    if (interaction == null) throw new RequestValidationException("Content interaction was not found.");
 
     return interaction;
   }
@@ -129,6 +165,7 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
   private async Task<ContentInteraction> CreateNewInteractionFromPreviousAsync(ContentInteraction previousInteraction) {
     var newInteraction = new ContentInteraction {
       ProgramUserId = previousInteraction.ProgramUserId,
+      UserId = previousInteraction.UserId,
       ContentId = previousInteraction.ContentId,
       Status = ProgressStatus.InProgress,
       FirstAccessedAt = SystemClock.UtcNow,
@@ -138,9 +175,30 @@ public class ContentInteractionService(IApplicationDbContext context) : IContent
       SubmissionData = previousInteraction.SubmissionData,
     };
 
-    context.Set<ContentInteraction>().Add(newInteraction);
-    await context.SaveChangesAsync().ConfigureAwait(false);
+    return await SaveNewActiveAttemptAsync(newInteraction).ConfigureAwait(false);
+  }
 
-    return newInteraction;
+  private async Task<ContentInteraction> SaveNewActiveAttemptAsync(ContentInteraction newInteraction) {
+    context.Set<ContentInteraction>().Add(newInteraction);
+    try {
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return newInteraction;
+    }
+    catch (DbUpdateException) {
+      context.Set<ContentInteraction>().Remove(newInteraction);
+      var winningInteraction = await context.Set<ContentInteraction>()
+        .Where(ci =>
+          ci.ProgramUserId == newInteraction.ProgramUserId &&
+          ci.UserId == newInteraction.UserId &&
+          ci.ContentId == newInteraction.ContentId &&
+          ci.SubmittedAt == null &&
+          ci.DeletedAt == null)
+        .OrderByDescending(ci => ci.CreatedAt)
+        .FirstOrDefaultAsync()
+        .ConfigureAwait(false);
+      if (winningInteraction is not null) return winningInteraction;
+
+      throw;
+    }
   }
 }

@@ -15,6 +15,8 @@ public class UpdateProgramContentDto {
 
   public string? Body { get; set; }
 
+  public LessonContentFormat? LessonFormat { get; set; }
+
   public int? SortOrder { get; set; }
 
   public bool? IsRequired { get; set; }
