@@ -23,6 +23,34 @@ public sealed class CanonicalSnapshotEntitySetTests
         }
     }
 
+    [Fact]
+    public void SnapshotAndDesigner_HaveIdenticalProjectChannelMetadata()
+    {
+        var snapshot = CreateSnapshotModel();
+        var designer = new AddProjectChannelContracts().TargetModel;
+
+        foreach (var entityName in ProjectChannelEntityNames)
+        {
+            BuildEntityContract(snapshot, entityName).Should().BeEquivalentTo(
+                BuildEntityContract(designer, entityName),
+                options => options.WithStrictOrdering(),
+                $"the snapshot and designer must retain identical complete metadata for {entityName}");
+        }
+    }
+
+    [Fact]
+    public void Snapshot_Maps_Only_The_Canonical_Project_Aggregate_To_Projects()
+    {
+        var projectEntities = CreateSnapshotModel()
+            .GetEntityTypes()
+            .Where(entity => string.Equals(entity.GetTableName(), "projects", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        projectEntities.Should().ContainSingle();
+        projectEntities[0].Name.Should().Be("GameGuild.Projects.Project");
+        projectEntities.Should().NotContain(entity => entity.Name == "GameGuild.Projects.ProjectLegacy");
+    }
+
     private static IModel CreateSnapshotModel()
     {
         var snapshotType = typeof(ApplicationDbContext).Assembly.GetType(
@@ -76,6 +104,12 @@ public sealed class CanonicalSnapshotEntitySetTests
         "GameGuild.Learning.Assessments.Assessment",
         "GameGuild.Learning.Assessments.AssessmentSubmission",
         "GameGuild.Learning.Assessments.InteractiveVideoAssessmentCue"
+    ];
+
+    private static readonly string[] ProjectChannelEntityNames =
+    [
+        "GameGuild.Projects.ProjectStoreProduct",
+        "GameGuild.TestingLab.SessionProject"
     ];
 
     private sealed record EntityContract(
@@ -138,7 +172,8 @@ public sealed class CanonicalSnapshotEntitySetTests
             "GameGuild.Learning.Assessments.InteractiveVideoAssessmentCue",
             "GameGuild.Notifications.Notification",
             "GameGuild.Notifications.NotificationPreference",
-            "GameGuild.Notifications.NotificationTemplate"
+            "GameGuild.Notifications.NotificationTemplate",
+            "GameGuild.Projects.ProjectStoreProduct"
         });
         entities.Should().NotContain(new[]
         {
