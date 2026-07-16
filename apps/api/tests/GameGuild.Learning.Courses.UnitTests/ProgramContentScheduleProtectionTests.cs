@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -73,6 +74,42 @@ public sealed class ProgramContentScheduleProtectionTests
             NullLogger<RemoveProgramContentCommandHandler>.Instance);
 
         var act = () => handler.Handle(new RemoveProgramContentCommand(content.ProgramId, content.Id), CancellationToken.None);
+
+        await act.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("*assessment cue*");
+    }
+
+    [Fact]
+    public async Task RegisteredRemoveProgramContentHandler_IsSingleGuardedHandler_AndBlocksCueReferencedDeletion()
+    {
+        await using var context = CreateContext();
+        var content = PersistedContent(Guid.NewGuid(), "Video lesson");
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var lifecycle = new Mock<IProgramContentLifecycleGuard>();
+        lifecycle.Setup(guard => guard.HasBlockingDeleteReference(content.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddScoped<IApplicationDbContext>(_ => context);
+        services.AddScoped<IProgramContentScheduleGuard>(_ => Mock.Of<IProgramContentScheduleGuard>());
+        services.AddScoped<IProgramContentLifecycleGuard>(_ => lifecycle.Object);
+        services.AddCqrs(typeof(RemoveProgramContentCommandHandler).Assembly);
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+
+        var handlers = scope.ServiceProvider
+            .GetServices<IRequestHandler<RemoveProgramContentCommand, bool>>()
+            .ToArray();
+
+        handlers.Should().ContainSingle()
+            .Which.Should().BeOfType<RemoveProgramContentCommandHandler>();
+        scope.ServiceProvider.GetServices<ICommandHandler<RemoveProgramContentCommand, bool>>()
+            .Should().ContainSingle()
+            .Which.Should().BeOfType<RemoveProgramContentCommandHandler>();
+
+        var act = () => handlers.Single().Handle(new RemoveProgramContentCommand(content.ProgramId, content.Id), CancellationToken.None);
 
         await act.Should().ThrowAsync<RequestValidationException>()
             .WithMessage("*assessment cue*");
