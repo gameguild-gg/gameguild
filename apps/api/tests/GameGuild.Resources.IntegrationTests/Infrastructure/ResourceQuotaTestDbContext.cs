@@ -1,6 +1,9 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging.Abstractions;
+using GameGuild.CQRS;
+using Moq;
 
 namespace GameGuild.Resources.IntegrationTests.Infrastructure;
 
@@ -49,4 +52,51 @@ public class ResourceQuotaTestDbContext : DbContext, IApplicationDbContext
 
         base.OnModelCreating(modelBuilder);
     }
+}
+
+public sealed class ResourceQuotaPostgreSqlScope : IAsyncDisposable
+{
+    private ResourceQuotaPostgreSqlScope(ResourceQuotaTestDbContext context)
+    {
+        Context = context;
+        Repository = new ResourceQuotaRepository(context);
+
+        var usageRepository = new UsageRecordRepository(context);
+        var publisher = Mock.Of<IPublisher>();
+        var management = new QuotaManagementService(
+            Repository,
+            usageRepository,
+            publisher,
+            NullLogger<QuotaManagementService>.Instance);
+        var enforcement = new QuotaEnforcementService(
+            Repository,
+            management,
+            publisher,
+            NullLogger<QuotaEnforcementService>.Instance);
+        var maintenance = new QuotaMaintenanceService(
+            Repository,
+            usageRepository,
+            management,
+            publisher,
+            NullLogger<QuotaMaintenanceService>.Instance);
+
+        Service = new ResourceQuotaService(management, enforcement, maintenance);
+    }
+
+    public ResourceQuotaTestDbContext Context { get; }
+
+    public IResourceQuotaRepository Repository { get; }
+
+    public IResourceQuotaService Service { get; }
+
+    public static ResourceQuotaPostgreSqlScope Create(string connectionString)
+    {
+        var options = new DbContextOptionsBuilder<ResourceQuotaTestDbContext>()
+            .UseNpgsql(connectionString)
+            .Options;
+
+        return new ResourceQuotaPostgreSqlScope(new ResourceQuotaTestDbContext(options));
+    }
+
+    public ValueTask DisposeAsync() => Context.DisposeAsync();
 }
