@@ -194,6 +194,10 @@ public class ResourcesSecurityTests : IAsyncLifetime, IDisposable
         
         var timings = new List<long>();
 
+        // Exclude one-time host, authorization, and database initialization from the comparison.
+        using var existingWarmupResponse = await client.GetAsync($"/v1/tenants/{existingTenant}/quotas");
+        using var nonExistentWarmupResponse = await client.GetAsync($"/v1/tenants/{nonExistentTenant}/quotas");
+
         // Act - Measure response times for different tenant IDs
         for (int i = 0; i < 5; i++)
         {
