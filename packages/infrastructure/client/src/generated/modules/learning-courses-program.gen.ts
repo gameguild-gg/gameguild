@@ -65,21 +65,6 @@ export class LearningCoursesProgramModule {
 
   /**
    */
-  async getCoursesPublic(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.LearningCoursesProgram>, ApiError>> {
-    const url = '/v1/courses/public';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Types.LearningCoursesProgram>, ApiError>;
-  }
-
-  /**
-   */
   async getCourses1(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
     const url = `/v1/courses/${id}`;
 
@@ -138,26 +123,6 @@ export class LearningCoursesProgramModule {
 
   /**
    */
-  async getCoursesWithContent(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
-    const url = `/v1/courses/${id}/with-content`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesProgramSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async postCoursesClone(id: string, body: Types.LearningCoursesCloneProgram): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
     const url = `/v1/courses/${id}:clone`;
 
@@ -182,13 +147,31 @@ export class LearningCoursesProgramModule {
 
   /**
    */
-  async getCoursesSlug(slug: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
-    const url = `/v1/courses/slug/${slug}`;
+  async postCoursesCreateProduct(id: string, body: Types.LearningCoursesCreateProductFromProgram): Promise<Result<string, ApiError>> {
+    const url = `/v1/courses/${id}:create-product`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCoursesCreateProductFromProgramSchema, body, 'request');
 
     const result = await this.client.request({
-      method: 'GET',
+      method: 'POST',
       path: url,
-      requiresAuth: false,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<string, ApiError>;
+  }
+
+  /**
+   */
+  async postCoursesDisableMonetization(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
+    const url = `/v1/courses/${id}:disable-monetization`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
     });
 
     // Validate response
@@ -202,215 +185,8 @@ export class LearningCoursesProgramModule {
 
   /**
    */
-  async postCoursesSelfEnroll(id: string): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
-    const url = `/v1/courses/${id}:self-enroll`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postCoursesContentReorder1(id: string, body: Types.LearningCoursesReorderContent): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${id}/content:reorder`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesReorderContentSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postCoursesUsers(id: string, userId: string): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
-    const url = `/v1/courses/${id}/users/${userId}`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async deleteCoursesUsers(id: string, userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${id}/users/${userId}`;
-
-    const result = await this.client.request({
-      method: 'DELETE',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getCoursesUsers(id: string, query?: { skip?: number; take?: number }): Promise<Result<Array<Types.LearningCoursesUserProgress>, ApiError>> {
-    const url = `/v1/courses/${id}/users`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesUserProgress>, ApiError>;
-  }
-
-  /**
-   */
-  async getCoursesUsersProgress(id: string, userId: string): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
-    const url = `/v1/courses/${id}/users/${userId}/progress`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async putCoursesUsersProgress(
-    id: string,
-    userId: string,
-    body: Types.LearningCoursesUpdateProgress,
-  ): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
-    const url = `/v1/courses/${id}/users/${userId}/progress`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdateProgressSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getCoursesMeProgress(id: string): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
-    const url = `/v1/courses/${id}/me/progress`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async putCoursesMeProgress(id: string, body: Types.LearningCoursesUpdateProgress): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
-    const url = `/v1/courses/${id}/me/progress`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdateProgressSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postCoursesUsersContentComplete(id: string, userId: string, contentId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${id}/users/${userId}/content/${contentId}:complete`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postCoursesMeContentComplete(id: string, contentId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${id}/me/content/${contentId}:complete`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postCoursesUsersReset(id: string, userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${id}/users/${userId}:reset`;
+  async postCoursesLinkProduct(id: string, productId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${id}:link-product/${productId}`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -447,8 +223,8 @@ export class LearningCoursesProgramModule {
 
   /**
    */
-  async postCoursesDisableMonetization(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
-    const url = `/v1/courses/${id}:disable-monetization`;
+  async postCoursesSelfEnroll(id: string): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
+    const url = `/v1/courses/${id}:self-enroll`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -458,7 +234,7 @@ export class LearningCoursesProgramModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesProgramSchema, result.data, 'response');
+      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -467,46 +243,16 @@ export class LearningCoursesProgramModule {
 
   /**
    */
-  async getCoursesPricing(id: string): Promise<Result<Types.LearningCoursesPricing, ApiError>> {
-    const url = `/v1/courses/${id}/pricing`;
+  async deleteCoursesUnlinkProduct(id: string, productId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${id}:unlink-product/${productId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesPricingSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async putCoursesPricing(id: string, body: Types.LearningCoursesUpdatePricing): Promise<Result<Types.LearningCoursesPricing, ApiError>> {
-    const url = `/v1/courses/${id}/pricing`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdatePricingSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesPricingSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<void, ApiError>;
   }
 
   /**
@@ -591,11 +337,11 @@ export class LearningCoursesProgramModule {
 
   /**
    */
-  async postCoursesCreateProduct(id: string, body: Types.LearningCoursesCreateProductFromProgram): Promise<Result<string, ApiError>> {
-    const url = `/v1/courses/${id}:create-product`;
+  async postCoursesContentReorder(id: string, body: Types.LearningCoursesReorderContent): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${id}/content:reorder`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCreateProductFromProgramSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCoursesReorderContentSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -604,13 +350,13 @@ export class LearningCoursesProgramModule {
       requiresAuth: true,
     });
 
-    return result as Result<string, ApiError>;
+    return result as Result<void, ApiError>;
   }
 
   /**
    */
-  async postCoursesLinkProduct(id: string, productId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${id}:link-product/${productId}`;
+  async postCoursesMeContentComplete(id: string, contentId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${id}/me/content/${contentId}:complete`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -623,16 +369,90 @@ export class LearningCoursesProgramModule {
 
   /**
    */
-  async deleteCoursesUnlinkProduct(id: string, productId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${id}:unlink-product/${productId}`;
+  async getCoursesMeProgress(id: string): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
+    const url = `/v1/courses/${id}/me/progress`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<void, ApiError>;
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putCoursesMeProgress(id: string, body: Types.LearningCoursesUpdateProgress): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
+    const url = `/v1/courses/${id}/me/progress`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCoursesUpdateProgressSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getCoursesPricing(id: string): Promise<Result<Types.LearningCoursesPricing, ApiError>> {
+    const url = `/v1/courses/${id}/pricing`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesPricingSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putCoursesPricing(id: string, body: Types.LearningCoursesUpdatePricing): Promise<Result<Types.LearningCoursesPricing, ApiError>> {
+    const url = `/v1/courses/${id}/pricing`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCoursesUpdatePricingSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesPricingSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
@@ -647,6 +467,186 @@ export class LearningCoursesProgramModule {
     });
 
     return result as Result<Array<string>, ApiError>;
+  }
+
+  /**
+   */
+  async getCoursesUsers(id: string, query?: { skip?: number; take?: number }): Promise<Result<Array<Types.LearningCoursesUserProgress>, ApiError>> {
+    const url = `/v1/courses/${id}/users`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesUserProgress>, ApiError>;
+  }
+
+  /**
+   */
+  async postCoursesUsers(id: string, userId: string): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
+    const url = `/v1/courses/${id}/users/${userId}`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteCoursesUsers(id: string, userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${id}/users/${userId}`;
+
+    const result = await this.client.request({
+      method: 'DELETE',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postCoursesUsersReset(id: string, userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${id}/users/${userId}:reset`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postCoursesUsersContentComplete(id: string, userId: string, contentId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${id}/users/${userId}/content/${contentId}:complete`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getCoursesUsersProgress(id: string, userId: string): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
+    const url = `/v1/courses/${id}/users/${userId}/progress`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putCoursesUsersProgress(
+    id: string,
+    userId: string,
+    body: Types.LearningCoursesUpdateProgress,
+  ): Promise<Result<Types.LearningCoursesUserProgress, ApiError>> {
+    const url = `/v1/courses/${id}/users/${userId}/progress`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCoursesUpdateProgressSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesUserProgressSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getCoursesWithContent(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
+    const url = `/v1/courses/${id}/with-content`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesProgramSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getCoursesPublic(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.LearningCoursesProgram>, ApiError>> {
+    const url = '/v1/courses/public';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Types.LearningCoursesProgram>, ApiError>;
+  }
+
+  /**
+   */
+  async getCoursesSlug(slug: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
+    const url = `/v1/courses/slug/${slug}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesProgramSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 }
 

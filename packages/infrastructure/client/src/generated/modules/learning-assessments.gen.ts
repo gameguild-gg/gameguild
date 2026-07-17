@@ -41,6 +41,85 @@ export class LearningAssessmentsModule {
 
   /**
    */
+  async getAssessmentsCanAttempt(assessmentId: string, enrollmentId: string): Promise<Result<Types.LearningAssessmentsCanAttemptOutput, ApiError>> {
+    const url = `/v1/assessments/${assessmentId}/can-attempt/${enrollmentId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsCanAttemptOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAssessmentsInteractiveVideoCuesContentEnrollments(
+    assessmentId: string,
+    contentId: string,
+    enrollmentId: string,
+  ): Promise<Result<Array<Types.LearningAssessmentsLearnerInteractiveVideoAssessmentCue>, ApiError>> {
+    const url = `/v1/assessments/${assessmentId}/interactive-video-cues/content/${contentId}/enrollments/${enrollmentId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningAssessmentsLearnerInteractiveVideoAssessmentCue>, ApiError>;
+  }
+
+  /**
+   */
+  async getAssessmentsSubmissions(assessmentId: string): Promise<Result<Array<Types.LearningAssessmentsAssessmentSubmission>, ApiError>> {
+    const url = `/v1/assessments/${assessmentId}/submissions`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningAssessmentsAssessmentSubmission>, ApiError>;
+  }
+
+  /**
+   */
+  async postAssessmentsSubmissionsStart(
+    assessmentId: string,
+    body: Types.LearningAssessmentsStartSubmissionInput,
+  ): Promise<Result<Types.LearningAssessmentsLearnerAssessmentSubmission, ApiError>> {
+    const url = `/v1/assessments/${assessmentId}/submissions/start`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsStartSubmissionInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsLearnerAssessmentSubmissionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getAssessments(id: string): Promise<Result<Types.LearningAssessmentsAssessment, ApiError>> {
     const url = `/v1/assessments/${id}`;
 
@@ -99,6 +178,88 @@ export class LearningAssessmentsModule {
 
   /**
    */
+  async putAssessmentsGroup(
+    id: string,
+    body: Types.LearningAssessmentsAssignAssessmentGroupInput,
+  ): Promise<Result<Types.LearningAssessmentsAssessment, ApiError>> {
+    const url = `/v1/assessments/${id}/group`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsAssignAssessmentGroupInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsAssessmentSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAssessmentsInteractiveVideoCues(id: string): Promise<Result<Array<Types.LearningAssessmentsInteractiveVideoAssessmentCue>, ApiError>> {
+    const url = `/v1/assessments/${id}/interactive-video-cues`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningAssessmentsInteractiveVideoAssessmentCue>, ApiError>;
+  }
+
+  /**
+   */
+  async postAssessmentsInteractiveVideoCues(
+    id: string,
+    body: Types.LearningAssessmentsLinkInteractiveVideoCueInput,
+  ): Promise<Result<Types.LearningAssessmentsInteractiveVideoAssessmentCue, ApiError>> {
+    const url = `/v1/assessments/${id}/interactive-video-cues`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsLinkInteractiveVideoCueInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsInteractiveVideoAssessmentCueSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteAssessmentsInteractiveVideoCues(id: string, cueId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/assessments/${id}/interactive-video-cues/${cueId}`;
+
+    const result = await this.client.request({
+      method: 'DELETE',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getAssessmentsCourse(courseId: string): Promise<Result<Array<Types.LearningAssessmentsAssessment>, ApiError>> {
     const url = `/v1/assessments/course/${courseId}`;
 
@@ -109,20 +270,6 @@ export class LearningAssessmentsModule {
     });
 
     return result as Result<Array<Types.LearningAssessmentsAssessment>, ApiError>;
-  }
-
-  /**
-   */
-  async getAssessmentsCourseGroups(courseId: string): Promise<Result<Array<Types.LearningAssessmentsAssessmentGroup>, ApiError>> {
-    const url = `/v1/assessments/course/${courseId}/groups`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningAssessmentsAssessmentGroup>, ApiError>;
   }
 
   /**
@@ -143,6 +290,20 @@ export class LearningAssessmentsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getAssessmentsCourseGroups(courseId: string): Promise<Result<Array<Types.LearningAssessmentsAssessmentGroup>, ApiError>> {
+    const url = `/v1/assessments/course/${courseId}/groups`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningAssessmentsAssessmentGroup>, ApiError>;
   }
 
   /**
@@ -212,76 +373,30 @@ export class LearningAssessmentsModule {
 
   /**
    */
-  async putAssessmentsGroup(
-    id: string,
-    body: Types.LearningAssessmentsAssignAssessmentGroupInput,
-  ): Promise<Result<Types.LearningAssessmentsAssessment, ApiError>> {
-    const url = `/v1/assessments/${id}/group`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsAssignAssessmentGroupInputSchema, body, 'request');
+  async getAssessmentsMySubmissions(enrollmentId: string): Promise<Result<Array<Types.LearningAssessmentsLearnerAssessmentSubmission>, ApiError>> {
+    const url = `/v1/assessments/my-submissions/${enrollmentId}`;
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: 'GET',
       path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningAssessmentsAssessmentSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<Array<Types.LearningAssessmentsLearnerAssessmentSubmission>, ApiError>;
   }
 
   /**
    */
-  async postAssessmentsSubmissionsStart(
-    assessmentId: string,
-    body: Types.LearningAssessmentsStartSubmissionInput,
-  ): Promise<Result<Types.LearningAssessmentsAssessmentSubmission, ApiError>> {
-    const url = `/v1/assessments/${assessmentId}/submissions/start`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsStartSubmissionInputSchema, body, 'request');
+  async getAssessmentsSubmissions1(submissionId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/assessments/submissions/${submissionId}`;
 
     const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningAssessmentsAssessmentSubmissionSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postAssessmentsSubmissionsSubmit(submissionId: string): Promise<Result<Types.LearningAssessmentsAssessmentSubmission, ApiError>> {
-    const url = `/v1/assessments/submissions/${submissionId}/submit`;
-
-    const result = await this.client.request({
-      method: 'POST',
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningAssessmentsAssessmentSubmissionSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<void, ApiError>;
   }
 
   /**
@@ -313,66 +428,25 @@ export class LearningAssessmentsModule {
 
   /**
    */
-  async getAssessmentsSubmissions(submissionId: string): Promise<Result<Types.LearningAssessmentsAssessmentSubmission, ApiError>> {
-    const url = `/v1/assessments/submissions/${submissionId}`;
+  async postAssessmentsSubmissionsSubmit(
+    submissionId: string,
+    body: Types.LearningAssessmentsSubmitAssessmentInput,
+  ): Promise<Result<Types.LearningAssessmentsLearnerAssessmentSubmission, ApiError>> {
+    const url = `/v1/assessments/submissions/${submissionId}/submit`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsSubmitAssessmentInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: 'GET',
+      method: 'POST',
       path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningAssessmentsAssessmentSubmissionSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getAssessmentsSubmissions1(assessmentId: string): Promise<Result<Array<Types.LearningAssessmentsAssessmentSubmission>, ApiError>> {
-    const url = `/v1/assessments/${assessmentId}/submissions`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningAssessmentsAssessmentSubmission>, ApiError>;
-  }
-
-  /**
-   */
-  async getAssessmentsMySubmissions(enrollmentId: string): Promise<Result<Array<Types.LearningAssessmentsAssessmentSubmission>, ApiError>> {
-    const url = `/v1/assessments/my-submissions/${enrollmentId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningAssessmentsAssessmentSubmission>, ApiError>;
-  }
-
-  /**
-   */
-  async getAssessmentsCanAttempt(assessmentId: string, enrollmentId: string): Promise<Result<Types.LearningAssessmentsCanAttemptOutput, ApiError>> {
-    const url = `/v1/assessments/${assessmentId}/can-attempt/${enrollmentId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningAssessmentsCanAttemptOutputSchema, result.data, 'response');
+      const validatedData = safeParse(Types.LearningAssessmentsLearnerAssessmentSubmissionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

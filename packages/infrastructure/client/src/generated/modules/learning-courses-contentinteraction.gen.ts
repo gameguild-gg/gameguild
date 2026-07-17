@@ -45,6 +45,35 @@ export class LearningCoursesContentinteractionModule {
 
   /**
    */
+  async postCourseInteractionsComplete(
+    interactionId: string,
+    body: Types.LearningCoursesCompleteContentInput,
+    query?: { programId?: string },
+  ): Promise<Result<Types.LearningCoursesContentInteraction, ApiError>> {
+    const url = `/v1/course-interactions/${interactionId}/complete`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCoursesCompleteContentInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      params: query,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesContentInteractionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async putCourseInteractionsProgress(
     interactionId: string,
     body: Types.LearningCoursesUpdateProgressInput,
@@ -103,18 +132,18 @@ export class LearningCoursesContentinteractionModule {
 
   /**
    */
-  async postCourseInteractionsComplete(
+  async putCourseInteractionsTimeSpent(
     interactionId: string,
-    body: Types.LearningCoursesCompleteContentInput,
+    body: Types.LearningCoursesUpdateTimeSpentInput,
     query?: { programId?: string },
   ): Promise<Result<Types.LearningCoursesContentInteraction, ApiError>> {
-    const url = `/v1/course-interactions/${interactionId}/complete`;
+    const url = `/v1/course-interactions/${interactionId}/time-spent`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCompleteContentInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCoursesUpdateTimeSpentInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: 'POST',
+      method: 'PUT',
       path: url,
       params: query,
       body: validatedBody,
@@ -132,12 +161,11 @@ export class LearningCoursesContentinteractionModule {
 
   /**
    */
-  async getCourseInteractionsUserContent(
-    programUserId: string,
+  async getCourseInteractionsContentReflectionResponses(
     contentId: string,
     query?: { programId?: string },
-  ): Promise<Result<Types.LearningCoursesContentInteraction, ApiError>> {
-    const url = `/v1/course-interactions/user/${programUserId}/content/${contentId}`;
+  ): Promise<Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>> {
+    const url = `/v1/course-interactions/content/${contentId}/reflection-responses`;
 
     const result = await this.client.request({
       method: 'GET',
@@ -146,13 +174,61 @@ export class LearningCoursesContentinteractionModule {
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesContentInteractionSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
+    return result as Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>;
+  }
 
-    return result;
+  /**
+   */
+  async getCourseInteractionsContentReflectionResponsesVisible(
+    contentId: string,
+    query?: { programId?: string },
+  ): Promise<Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>> {
+    const url = `/v1/course-interactions/content/${contentId}/reflection-responses/visible`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>;
+  }
+
+  /**
+   */
+  async getCourseInteractionsContentSurveyResults(
+    contentId: string,
+    query?: { programId?: string },
+  ): Promise<Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>> {
+    const url = `/v1/course-interactions/content/${contentId}/survey-results`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>;
+  }
+
+  /**
+   */
+  async getCourseInteractionsContentSurveyResultsVisible(
+    contentId: string,
+    query?: { programId?: string },
+  ): Promise<Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>> {
+    const url = `/v1/course-interactions/content/${contentId}/survey-results/visible`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>;
   }
 
   /**
@@ -175,21 +251,17 @@ export class LearningCoursesContentinteractionModule {
 
   /**
    */
-  async putCourseInteractionsTimeSpent(
-    interactionId: string,
-    body: Types.LearningCoursesUpdateTimeSpentInput,
+  async getCourseInteractionsUserContent(
+    programUserId: string,
+    contentId: string,
     query?: { programId?: string },
   ): Promise<Result<Types.LearningCoursesContentInteraction, ApiError>> {
-    const url = `/v1/course-interactions/${interactionId}/time-spent`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdateTimeSpentInputSchema, body, 'request');
+    const url = `/v1/course-interactions/user/${programUserId}/content/${contentId}`;
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: 'GET',
       path: url,
       params: query,
-      body: validatedBody,
       requiresAuth: true,
     });
 

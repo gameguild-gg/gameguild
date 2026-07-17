@@ -17,6 +17,74 @@ export class TestinglabTestingfeedbackModule {
 
   /**
    */
+  async postTestingFeedback(body: Types.TestingLabSubmitFeedback): Promise<Result<void, ApiError>> {
+    const url = '/v1/testing/feedback';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.TestingLabSubmitFeedbackSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postTestingFeedbackQuality(feedbackId: string, body: Types.TestingLabRateFeedbackQuality): Promise<Result<void, ApiError>> {
+    const url = `/v1/testing/feedback/${feedbackId}/quality`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.TestingLabRateFeedbackQualitySchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postTestingFeedbackReport(feedbackId: string, body: Types.TestingLabReportFeedback): Promise<Result<void, ApiError>> {
+    const url = `/v1/testing/feedback/${feedbackId}/report`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.TestingLabReportFeedbackSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getTestingFeedbackByUser(userId: string): Promise<Result<Array<Types.TestingLabTestingFeedback>, ApiError>> {
+    const url = `/v1/testing/feedback/by-user/${userId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.TestingLabTestingFeedback>, ApiError>;
+  }
+
+  /**
+   */
   async getTestingRequestsFeedback(requestId: string): Promise<Result<Array<Types.TestingLabTestingFeedback>, ApiError>> {
     const url = `/v1/testing/requests/${requestId}/feedback`;
 
@@ -51,74 +119,6 @@ export class TestinglabTestingfeedbackModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async getTestingFeedbackByUser(userId: string): Promise<Result<Array<Types.TestingLabTestingFeedback>, ApiError>> {
-    const url = `/v1/testing/feedback/by-user/${userId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.TestingLabTestingFeedback>, ApiError>;
-  }
-
-  /**
-   */
-  async postTestingFeedback(body: Types.TestingLabSubmitFeedback): Promise<Result<void, ApiError>> {
-    const url = '/v1/testing/feedback';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.TestingLabSubmitFeedbackSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postTestingFeedbackReport(feedbackId: string, body: Types.TestingLabReportFeedback): Promise<Result<void, ApiError>> {
-    const url = `/v1/testing/feedback/${feedbackId}/report`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.TestingLabReportFeedbackSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postTestingFeedbackQuality(feedbackId: string, body: Types.TestingLabRateFeedbackQuality): Promise<Result<void, ApiError>> {
-    const url = `/v1/testing/feedback/${feedbackId}/quality`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.TestingLabRateFeedbackQualitySchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 }
 

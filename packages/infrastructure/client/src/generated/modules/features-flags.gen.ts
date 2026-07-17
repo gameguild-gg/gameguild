@@ -35,24 +35,6 @@ export class FeaturesFlagsModule {
 
   /**
    */
-  async getFeaturesValue(
-    key: string,
-    query?: { defaultValue?: boolean; userId?: string; tenantId?: string; environment?: string },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/features/${key}/value`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async postFeaturesEvaluateBulk(body: Types.FeaturesBulkEvaluationInput): Promise<Result<void, ApiError>> {
     const url = '/v1/features/:evaluate-bulk';
 
@@ -63,6 +45,24 @@ export class FeaturesFlagsModule {
       method: 'POST',
       path: url,
       body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getFeaturesValue(
+    key: string,
+    query?: { defaultValue?: boolean; userId?: string; tenantId?: string; environment?: string },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/features/${key}/value`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
       requiresAuth: true,
     });
 

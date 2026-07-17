@@ -55,24 +55,6 @@ export class LearningExperienceSocialWishlistsModule {
 
   /**
    */
-  async getApiSocialWishlistMe(query?: {
-    skip?: number;
-    take?: number;
-  }): Promise<Result<Array<Types.LearningExperienceSocialServicesCourseWishlist>, ApiError>> {
-    const url = '/api/social/wishlist/me';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningExperienceSocialServicesCourseWishlist>, ApiError>;
-  }
-
-  /**
-   */
   async getApiSocialWishlistCheck(courseId: string): Promise<Result<boolean, ApiError>> {
     const url = `/api/social/wishlist/${courseId}/check`;
 
@@ -110,6 +92,24 @@ export class LearningExperienceSocialWishlistsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getApiSocialWishlistMe(query?: {
+    skip?: number;
+    take?: number;
+  }): Promise<Result<Array<Types.LearningExperienceSocialServicesCourseWishlist>, ApiError>> {
+    const url = '/api/social/wishlist/me';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningExperienceSocialServicesCourseWishlist>, ApiError>;
   }
 }
 

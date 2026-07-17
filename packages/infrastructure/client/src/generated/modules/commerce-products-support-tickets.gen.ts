@@ -91,14 +91,14 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
-  async postSupportTicketsMessages(
+  async postSupportTicketsAssign(
     ticketId: string,
-    body: Types.CommerceProductsAddSupportTicketMessageInput,
+    body: Types.CommerceProductsAssignSupportTicketInput,
   ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/support/tickets/${ticketId}/messages`;
+    const url = `/v1/support/tickets/${ticketId}:assign`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsAddSupportTicketMessageInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsAssignSupportTicketInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -118,14 +118,14 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
-  async postSupportTicketsAssign(
+  async postSupportTicketsClose(
     ticketId: string,
-    body: Types.CommerceProductsAssignSupportTicketInput,
+    body: Types.CommerceProductsCloseSupportTicketInput,
   ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/support/tickets/${ticketId}:assign`;
+    const url = `/v1/support/tickets/${ticketId}:close`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsAssignSupportTicketInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsCloseSupportTicketInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -172,14 +172,14 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
-  async postSupportTicketsClose(
+  async postSupportTicketsMessages(
     ticketId: string,
-    body: Types.CommerceProductsCloseSupportTicketInput,
+    body: Types.CommerceProductsAddSupportTicketMessageInput,
   ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/support/tickets/${ticketId}:close`;
+    const url = `/v1/support/tickets/${ticketId}/messages`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsCloseSupportTicketInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsAddSupportTicketMessageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
