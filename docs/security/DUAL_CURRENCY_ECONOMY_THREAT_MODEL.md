@@ -26,17 +26,19 @@ No web implementation can guarantee zero ad fraud. The security objective is to 
 
 ## Actors And Adversaries
 
-| Actor                   | Security concern                                                                  |
-| ----------------------- | --------------------------------------------------------------------------------- |
-| Normal user             | Accidental duplicate requests, compromised session, incorrect balance assumptions |
-| Malicious user          | Arbitrary wallet access, replay, double spend, forged client price, refund abuse  |
-| Colluding accounts      | Purchased-to-earned laundering, bounty self-dealing, ad farms, payout evasion     |
-| Malicious seller        | Fake delivery, refund evasion, rapid payout, related-account purchases            |
-| Bot or farm operator    | Automated playback, account/device rotation, proxy use, timing manipulation       |
-| Provider impersonator   | Forged or replayed Stripe/ad/KYC webhook                                          |
-| Malicious administrator | Unauthorized adjustment, hold release, payout override, evidence deletion         |
-| Database attacker       | Historical entry update/delete, chain-head rewrite, projection manipulation       |
-| Compromised worker      | Duplicate event handling, stale policy use, out-of-order transitions              |
+| Actor                   | Security concern                                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Normal user             | Accidental duplicate requests, compromised session, incorrect balance assumptions                                         |
+| Malicious user          | Arbitrary wallet access, replay, double spend, forged client price, refund abuse                                          |
+| Colluding accounts      | Purchased-to-earned laundering, bounty self-dealing, ad farms, payout evasion                                             |
+| Malicious seller        | Fake delivery, refund evasion, rapid payout, related-account purchases                                                    |
+| Bot or farm operator    | Automated playback, account/device rotation, proxy use, timing manipulation                                               |
+| Provider impersonator   | Forged or replayed Stripe/ad/KYC webhook                                                                                  |
+| Account takeover actor  | Changes credentials, MFA, payout destinations, ownership, or email before payout                                          |
+| Laundering ring         | Uses related accounts, projects, bounties, refunds, and marketplace sales to move source value into withdrawable proceeds |
+| Malicious administrator | Unauthorized adjustment, hold release, payout override, evidence deletion                                                 |
+| Database attacker       | Historical entry update/delete, chain-head rewrite, projection manipulation                                               |
+| Compromised worker      | Duplicate event handling, stale policy use, out-of-order transitions                                                      |
 
 ## Trust Boundaries
 
@@ -48,6 +50,8 @@ No web implementation can guarantee zero ad fraud. The security objective is to 
 6. GameGuild to KYC/risk providers.
 7. Platform administrator to privileged economy operations.
 8. Mutable projections to the immutable journal source of truth.
+9. Risk decision service to Economy Core posting authority.
+10. Trust/Safety and FinancialCrime case state to protected financial operations.
 
 ## Existing P0 Findings
 
@@ -60,6 +64,9 @@ These pre-existing conditions must be fixed before any economy feature is enable
 5. Payment amount, currency, tenant, product, order, and subscription must be resolved from authoritative server state, not trusted from the request.
 6. Legacy financial records are mutable and the runtime database role currently has broad update/delete capability.
 7. Provider calls and internal state changes lack a complete inbox/outbox and recovery contract.
+8. Protected financial operations need a single risk-decision contract; scattered local checks are not sufficient.
+9. Payout, ownership, email, MFA, and bank/payout-destination changes need transaction-bound reauthentication and cooldown enforcement.
+10. Related-account graph, aggregate exposure limits, and manual-review evidence must exist before marketplace settlement, bounty payout, ad issuance, or creator cash-out.
 
 These are security remediation tasks, not optional economy enhancements.
 
@@ -266,6 +273,60 @@ Controls:
 - Immutable audit events and alerts on every privileged adjustment.
 - Break-glass permission is time-bound, separately logged, and reviewed.
 
+### Account Takeover And Protected Changes
+
+Threats:
+
+- Attacker signs in with stolen credentials and changes payout destination before requesting withdrawal.
+- Attacker disables MFA, changes email, or transfers ownership to bypass later notifications.
+- Attacker waits for 120-day maturity, then drains old confirmed earned-hard fragments.
+- User session is valid but device, IP, ASN, credential age, or recent security-change context is high risk.
+
+Controls:
+
+- Payout, bank/payout-destination changes, account ownership transfer, email change, MFA reset, high-risk settlement, hold release, and administrative adjustment require transaction-bound reauthentication.
+- Passkey/WebAuthn or equivalent phishing-resistant verification is preferred for payout and destination changes; weaker factors require a higher risk score, longer cooldown, or manual review.
+- Protected-change cooldowns block payout reservation/dispatch and high-risk value movement after new device login, password reset, MFA reset, email change, ownership transfer, identity update, or payout destination change.
+- A notification is sent through verified out-of-band channels for protected changes. Notification delivery is not sufficient authority, but failed delivery can raise the risk outcome.
+- The risk decision binds user, session, device-risk token, destination, source-root set, amount, policy version, cooldown state, and reauthentication evidence. Any material change requires a new decision.
+- Support cannot override cooldown or step-up requirements without a time-bound, dual-approved, audited risk decision.
+
+### Transaction Risk Decision Bypass
+
+Threats:
+
+- A capability module calls the economy writer without going through Risk.
+- A stale `Allow` decision is replayed after policy, reserve, destination, or kill-switch state changes.
+- A decision for one amount, destination, source-root set, or user is reused for another.
+- Risk service outage causes fallback allow behavior.
+
+Controls:
+
+- Economy Core rejects every protected operation without a fresh immutable `RiskDecisionId`.
+- Core independently verifies the decision snapshot against the final actor, template, amount, currency legs, source roots, destination, provider reference, policy version, reserve version, feature flag, and kill-switch epoch.
+- Risk decisions expire quickly and are single-use where the operation consumes value, counter capacity, provider proof, or destination authority.
+- `Allow`, `Challenge`, `Hold`, `Review`, and `Deny` are terminal decision outcomes; only `Allow` can authorize value movement, and only `Hold` can authorize nonspendable protective holds.
+- Risk dependency failure, stale policy, unknown entity graph, unavailable aggregate counters, or unauditable decision evidence fails closed.
+- Integration tests assert that direct posting attempts without a decision, stale decisions, and mismatched decisions cannot reach the journal writer.
+
+### Related-Account Abuse And Wash Trading
+
+Threats:
+
+- Related accounts buy each other's products or bounty claims to turn purchased hard or promotional value into earned-hard proceeds.
+- Colluding accounts rotate payment instruments, payout destinations, devices, IP ranges, or referrals to stay below per-user caps.
+- A seller artificially inflates sales, refunds, ratings, or ad engagement to unlock payouts or visibility.
+- A ring splits value into many small fragments so no single wallet crosses a threshold.
+
+Controls:
+
+- Risk maintains a privacy-preserving entity graph across account, tenant, KYC identity, payment instrument, bank/payout destination, device-risk token, IP/prefix, ASN, referral, project, product, counterparty, and provider object.
+- Aggregate limits apply to wallet, identity cluster, source root, destination, counterparty pair, product, tenant, provider account, device/IP/ASN cluster, and global loss-budget dimensions.
+- Fragmentation does not reset limits. Limits and exposure follow root lineage and entity clusters, not just visible balances.
+- Self-purchase, controlled-account purchase, circular trade, refund-loop, bounty-cycling, and related-destination patterns are blocked or routed to manual review before settlement or payout.
+- Dynamic rolling reserves may hold earned-hard fragments beyond the 120-day minimum when seller, product, dispute, provider, jurisdiction, or entity-cluster risk requires it.
+- Risk holds are explicit, source-linked, and auditable. Hold release requires a fresh decision and cannot be implied by maturity alone.
+
 ### Ad Reward Farming
 
 Threats:
@@ -275,6 +336,7 @@ Threats:
 - Token is replayed across users or devices.
 - Many accounts share a device, IP, payment identity, or timing pattern.
 - Human farms stay just below simple caps.
+- Provider callback proves completion but not exact earned revenue for that video.
 
 Pre-reward controls:
 
@@ -288,6 +350,7 @@ Pre-reward controls:
 - Reward quote and policy snapshot generated only by the server.
 - Independent provider-side completion evidence is required for immediate issuance; networks without it remain disabled or defer minting until an independently verified report. Client milestones alone never authorize issuance.
 - Per-user, device, network, and global quota/loss-budget counters are consumed atomically with the reward posting.
+- Entity-graph and aggregate exposure checks include related accounts, payout destinations, payment instruments, device/IP/ASN clusters, referral clusters, and source-root history.
 - Issuance fails closed when provider evidence, fraud scoring, counters, reports, or funded budgets are unavailable or stale.
 
 Post-reward controls:
@@ -297,6 +360,7 @@ Post-reward controls:
 - Reward caps and daily loss budget.
 - Risk holds or account freeze on suspicious patterns.
 - Manual review queue with evidence and appeal path.
+- Provider-report variance, cluster-level yield, and invalid-traffic adjustments update future reward policy and may put high-risk clusters into hold/review without rewriting already posted rewards.
 
 Automatic containment:
 
@@ -366,6 +430,24 @@ Controls:
 - Monthly withdrawal allocates exact matured fee lots and checks post-withdrawal coverage.
 - Custody reconciliation blocks withdrawals when unexplained variance is nonzero.
 
+### Financial Crime And Platform Infractions
+
+Threats:
+
+- A sanctioned, blocked, underage, or unsupported-jurisdiction user receives payouts or sells products.
+- A product, project, bounty, or seller violates platform rules but still monetizes through the economy.
+- Compliance or Trust/Safety cases are ignored because the ledger sees only a valid balance.
+- Operators conflate financial-crime legal holds with general support or content moderation flags.
+
+Controls:
+
+- `GameGuild.Compliance.FinancialCrime` owns KYC aggregation, sanctions/PEP/adverse-media status, monitoring cases, jurisdiction restrictions, and compliance hold inputs.
+- `GameGuild.TrustSafety` owns platform abuse, prohibited products, content/project enforcement, marketplace integrity, and nonfinancial account restrictions.
+- `GameGuild.Economy.Risk` consumes both inputs and returns one protected-operation decision to Core. Neither Compliance nor Trust/Safety mutates journal state.
+- Payout and high-risk marketplace settlement require current financial-crime status. Product monetization and project/bounty settlement require current Trust/Safety status.
+- Compliance holds, Trust/Safety holds, and risk holds are typed separately, visible to authorized operators, and released only by the owning policy path plus a fresh risk decision.
+- Every compliance or Trust/Safety read that exposes protected personal or enforcement data is audited before data is released.
+
 ### Privacy And KYC
 
 Threats:
@@ -404,6 +486,11 @@ Controls:
 - Purchased hard cannot be selected for payout.
 - Policy versions are immutable and effective-date selection is deterministic.
 - Ad tokens reject bad signature, expiry, user mismatch, creative mismatch, and replay.
+- Protected-operation tests reject missing, expired, reused, stale-policy, stale-reserve, stale-kill-switch, actor-mismatched, destination-mismatched, amount-mismatched, source-root-mismatched, and wrong-outcome risk decisions.
+- Risk outcome tests prove `Challenge`, `Review`, and `Deny` cannot move value and `Hold` can only create or preserve nonspendable holds.
+- ATO tests enforce step-up reauthentication and cooldown after password reset, MFA reset, email change, ownership transfer, payout-destination change, new-device login, and high-risk session elevation.
+- Limit tests prove aggregate exposure is enforced across wallet, identity cluster, source root, destination, counterparty pair, product, tenant, provider account, device/IP/ASN cluster, and global loss budget.
+- Compliance/TrustSafety tests prove protected operations fail closed when required status is blocked, stale, unknown, or unauditable.
 
 ### PostgreSQL Integration Tests
 
@@ -419,6 +506,8 @@ Controls:
 - Independent signed-anchor mismatch or failure to cover the payout eligibility sequence blocks payout execution even when the latest anchor is recent.
 - Payout dispatch fails when the signed anchor does not bind the exact canonical eligibility snapshot or any protected field changed after anchoring.
 - Full recompute detects projection corruption and enforces the lower balance.
+- Risk-decision uniqueness and counter-consumption tests prove one decision cannot authorize two value movements and concurrent requests cannot overspend aggregate exposure.
+- Entity-graph integration tests prove fragment splitting, multi-wallet routing, related-destination changes, and circular counterparty pairs do not reset velocity or exposure limits.
 
 ### Provider Tests
 
@@ -439,6 +528,8 @@ Controls:
 - Complete an ad session once and verify replay receives no second reward.
 - Reconcile an ad batch below estimate and verify the user reward remains unchanged.
 - Verify split-versus-batched ad entitlement produces the same SC total and atomically consumes every quota/loss budget.
+- Attempt related-account self-purchase, bounty cycling, circular trade, refund loop, and shared payout-destination laundering; verify settlement or payout is blocked or sent to review before value leaves the platform.
+- Change payout destination, then attempt payout before cooldown expires; verify the payout is blocked even when fragments are older than 120 days.
 - Increase provider cost beyond the commercial margin and verify new service authorization fails while existing balances and parity remain unchanged.
 - Exercise exact margin equality, one-nano/one-SC-below boundaries, overflow, stale/unknown cost inputs, reserved-service mix, and worst-case unreserved-soft valuation.
 - Hold/freeze/reserve soft fragments and prove every confirmed unconsumed unit remains in face-value liability until authoritative burn/consumption.
@@ -454,6 +545,8 @@ Controls:
 - Quarantined refund/dispute obligations post only after integrity recovery and a verified anchor covering the recovery group.
 - No administrator or break-glass path can bypass the predicate-to-capability matrix.
 - Privileged KYC/risk read and bulk export return no protected data when durable audit acceptance or verification fails.
+- Risk service outage, stale entity graph, stale aggregate counters, or unavailable Compliance/TrustSafety status blocks protected operations while preserving safe reads and evidence intake.
+- Manual-review intake accepts evidence and creates holds without creating spendable value when a decision would otherwise be unknown.
 
 ## Operational Gates
 
@@ -461,6 +554,7 @@ Before soft issuance:
 
 - Ad-session verification and idempotency tests pass.
 - Per-user/device/network caps and global kill switch are configured.
+- Risk decision service, entity graph, cluster limits, fraud-loss budgets, and manual-review queues are healthy and fail closed.
 - Revenue report staleness and variance alerts are active.
 - Fixed-parity soft reserve, stressed redemption cost, minimum commercial margin, variance buffer, fraud-loss budget, provider/FX buffer, and liquidity buffer are computed and funded.
 - Provider evidence, fraud service, atomic counters, independent ledger anchor, and report freshness all fail closed.
@@ -477,6 +571,7 @@ Before payout:
 
 - Legal and Terms approval is recorded.
 - Connect/KYC onboarding and provider reconciliation pass in the target jurisdiction.
+- Transaction-bound reauthentication, payout-destination cooldown, protected-change alerts, sanctions/financial-crime status, related-account graph, and dynamic rolling reserve policies are active.
 - Maturity, holds, debt, reserve, and custody tests pass.
 - Payout fencing, stale-command cancellation, provider-object binding, and independent anchor checks pass.
 - Dual-control administration is enabled.
@@ -487,7 +582,8 @@ Before payout:
 - Sophisticated human ad farms cannot be eliminated completely.
 - Card disputes may arrive after the configured hold window.
 - Provider outages can make balance finality temporarily ambiguous.
+- Entity graphs can create false positives and false negatives; they must be governed with reason codes, appeal paths, and monitored precision/recall rather than treated as identity proof.
+- Legal classification for stored value, rewards, marketplace proceeds, and payout eligibility may require stronger KYC/AML controls or product changes in some jurisdictions.
 - A fully privileged database and application compromise may corrupt both data and chain head; independent anchors and backups reduce detection risk but do not replace infrastructure security.
-- Legal classification may require changes to product behavior or supported jurisdictions.
 
 These risks must be accepted explicitly with measurable loss limits and operational owners before activation.
