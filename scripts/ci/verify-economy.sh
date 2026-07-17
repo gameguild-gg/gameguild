@@ -1,0 +1,281 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+skip_whole_solution=false
+skip_provider_contracts=false
+skip_openapi=false
+skip_frontend=false
+skip_browser=false
+
+while (($#)); do
+  case "$1" in
+    --skip-whole-solution) skip_whole_solution=true ;;
+    --skip-provider-contracts) skip_provider_contracts=true ;;
+    --skip-openapi) skip_openapi=true ;;
+    --skip-frontend) skip_frontend=true ;;
+    --skip-browser) skip_browser=true ;;
+    *) printf 'Unknown argument: %s\n' "$1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repository_root="$(cd "$script_dir/../.." && pwd)"
+artifact_root="$repository_root/artifacts/test-results"
+manifest_path="$script_dir/economy-projects.json"
+
+# shellcheck source=economy-gate.sh
+source "$script_dir/economy-gate.sh"
+
+api_pid=''
+web_pid=''
+postgres_container=''
+
+cleanup() {
+  local status=$?
+  trap - EXIT INT TERM
+  set +e
+  stop_process_tree "$web_pid"
+  stop_process_tree "$api_pid"
+  if [[ -n "$postgres_container" ]]; then
+    docker rm --force "$postgres_container" >/dev/null 2>&1 || true
+  fi
+  exit "$status"
+}
+trap cleanup EXIT INT TERM
+
+run() {
+  printf '> '
+  printf '%q ' "$@"
+  printf '\n'
+  "$@"
+}
+
+native_path() {
+  if [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
+    cygpath -w "$1"
+  else
+    printf '%s\n' "$1"
+  fi
+}
+
+cd "$repository_root"
+rm -rf "$artifact_root"
+mkdir -p \
+  "$artifact_root/trx/whole-solution" \
+  "$artifact_root/trx/economy" \
+  "$artifact_root/trx/provider" \
+  "$artifact_root/coverage" \
+  "$artifact_root/openapi" \
+  "$artifact_root/api" \
+  "$artifact_root/vitest" \
+  "$artifact_root/playwright" \
+  "$artifact_root/postgres" \
+  "$artifact_root/publish"
+
+run bash "$script_dir/tests/verify-economy.sh"
+assert_economy_manifest "$repository_root" "$manifest_path"
+
+declare -a economy_production=()
+declare -a economy_tests=()
+declare -a economy_coverage_records=()
+declare -a provider_contracts=()
+while IFS=$'\t' read -r record_type first second; do
+  case "$record_type" in
+    production) economy_production+=("$first") ;;
+    test) economy_tests+=("$first") ;;
+    coverage) economy_coverage_records+=("$first"$'\t'"$second") ;;
+    provider) provider_contracts+=("$first"$'\t'"$second") ;;
+  esac
+done < <("$PYTHON_BIN" - "$manifest_path" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    manifest = json.load(handle)
+for entry in manifest.get("projects", []):
+    production = entry["productionProject"].replace("\\", "/")
+    print("production", production, sep="\t")
+    assemblies = ",".join(entry.get("coverageAssemblies", []))
+    for test in entry.get("testProjects", []):
+        normalized = test.replace("\\", "/")
+        print("test", normalized, sep="\t")
+        print("coverage", normalized, assemblies, sep="\t")
+for contract in manifest.get("providerContractProjects", []):
+    print("provider", contract["project"].replace("\\", "/"), contract["filter"], sep="\t")
+PY
+)
+
+postgres_container="gameguild-economy-ci-$$-$RANDOM"
+run docker run --detach --rm --name "$postgres_container" \
+  --env POSTGRES_DB=economy_ci \
+  --env POSTGRES_USER=postgres \
+  --env POSTGRES_PASSWORD=postgres \
+  --publish 127.0.0.1::5432 \
+  postgres:17-alpine >/dev/null
+
+postgres_probe() {
+  docker exec "$postgres_container" psql --username postgres --dbname economy_ci --tuples-only --command 'SELECT 1;' >/dev/null 2>&1
+}
+wait_for_consecutive_successes postgres_probe 2 90 1
+
+postgres_mapping="$(docker port "$postgres_container" '5432/tcp')"
+[[ "$postgres_mapping" =~ :([0-9]+)$ ]] || economy_gate_error "Could not resolve disposable PostgreSQL port from '$postgres_mapping'"
+postgres_port="${BASH_REMATCH[1]}"
+connection_string="Host=127.0.0.1;Port=$postgres_port;Database=economy_ci;Username=postgres;Password=postgres;Include Error Detail=true"
+export ECONOMY_POSTGRES_CONNECTION="$connection_string"
+export ConnectionStrings__DefaultConnection="$connection_string"
+export ConnectionStrings__AuthenticationDb="$connection_string"
+export ConnectionStrings__MigrationConnection="$connection_string"
+export Database__FailStartupOnMigrationFailure=true
+export SeedData__ImportSnapshotCourses=false
+
+probe_sql='SELECT 1;'
+[[ "${ECONOMY_CI_PROBE_POSTGRES_FAILURE:-0}" != '1' ]] || probe_sql='SELECT 1 / 0;'
+run docker exec "$postgres_container" psql --username postgres --dbname economy_ci --set ON_ERROR_STOP=1 --command "$probe_sql"
+printf 'database=economy_ci\nport=%s\n' "$postgres_port" > "$artifact_root/postgres/connection.txt"
+
+run dotnet restore apps/api/GameGuild.sln --nologo
+run dotnet build apps/api/GameGuild.sln -c Release --no-restore --nologo --verbosity minimal
+
+base_sha="${ECONOMY_BASE_SHA:-}"
+if [[ -z "$base_sha" ]]; then
+  base_sha="$(git merge-base HEAD develop 2>/dev/null || git rev-parse HEAD~1)"
+fi
+[[ -n "$base_sha" ]] || economy_gate_error 'Unable to determine warning-scope base SHA'
+
+mapfile -t changed_paths < <(git diff --name-only "$base_sha...HEAD")
+mapfile -t touched_commerce < <(get_touched_commerce_projects "$repository_root" "${changed_paths[@]}")
+warning_projects=("${economy_production[@]}" "${economy_tests[@]}" "${touched_commerce[@]}")
+
+if [[ "${ECONOMY_CI_PROBE_WARNING_FAILURE:-0}" == '1' ]]; then
+  warning_fixture="$artifact_root/warning-fixture"
+  mkdir -p "$warning_fixture"
+  printf '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>\n' > "$warning_fixture/WarningFixture.csproj"
+  printf 'namespace EconomyGateProbe; public static class WarningFixture { public static void Emit() { int intentionallyUnused = 1; } }\n' > "$warning_fixture/WarningFixture.cs"
+  run dotnet restore "$warning_fixture/WarningFixture.csproj" --nologo
+  warning_projects+=("$warning_fixture/WarningFixture.csproj")
+fi
+
+if ((${#warning_projects[@]} > 0)); then
+  mapfile -t warning_projects < <(printf '%s\n' "${warning_projects[@]}" | awk 'NF' | LC_ALL=C sort -u)
+  for project in "${warning_projects[@]}"; do
+    run dotnet build "$project" -c Release --no-restore --nologo \
+      -p:BuildProjectReferences=false \
+      -p:TreatWarningsAsErrors=true \
+      -p:EnableNETAnalyzers=true \
+      -p:EnforceCodeStyleInBuild=true
+  done
+fi
+
+for record in "${economy_coverage_records[@]}"; do
+  IFS=$'\t' read -r test_project assemblies_csv <<< "$record"
+  test_name="$(basename "${test_project%.csproj}")"
+  results="$artifact_root/trx/economy/$test_name"
+  mkdir -p "$results"
+  IFS=',' read -ra coverage_assemblies <<< "$assemblies_csv"
+  include=''
+  for assembly in "${coverage_assemblies[@]}"; do
+    [[ -z "$include" ]] || include+=','
+    include+="[$assembly]*"
+  done
+  run dotnet test "$test_project" -c Release --no-build --nologo \
+    --logger "trx;LogFileName=$test_name.trx" \
+    --results-directory "$results" \
+    --collect 'XPlat Code Coverage' -- \
+    'DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura' \
+    "DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=$include"
+  assert_trx_evidence "$results/$test_name.trx" >/dev/null
+  coverage_report="$(find "$results" -type f -name 'coverage.cobertura.xml' -print -quit)"
+  [[ -n "$coverage_report" ]] || economy_gate_error "Coverage report was not produced for $test_project"
+  coverage_destination="$artifact_root/coverage/$test_name.cobertura.xml"
+  cp "$coverage_report" "$coverage_destination"
+  for assembly in "${coverage_assemblies[@]}"; do
+    assert_cobertura_coverage "$coverage_destination" "$assembly" >> "$artifact_root/coverage/summary.jsonl"
+  done
+done
+
+if [[ "${ECONOMY_CI_PROBE_COVERAGE_FAILURE:-0}" == '1' ]]; then
+  lowered="$artifact_root/coverage/lowered.cobertura.xml"
+  printf '<coverage><packages><package name="GameGuild.Economy.Probe" line-rate="0.99" branch-rate="1"><classes><class name="Probe"><methods><method name="Covered"><lines><line number="1" hits="1" /></lines></method></methods></class></classes></package></packages></coverage>\n' > "$lowered"
+  assert_cobertura_coverage "$lowered" 'GameGuild.Economy.Probe' >/dev/null
+fi
+
+if [[ "$skip_whole_solution" == false ]]; then
+  whole_solution_results="$artifact_root/trx/whole-solution"
+  run dotnet test apps/api/GameGuild.sln -c Release --no-build --nologo --verbosity minimal -m:1 \
+    --logger 'trx;LogFilePrefix=whole-solution' \
+    --results-directory "$whole_solution_results"
+  shopt -s nullglob
+  whole_solution_trx=("$whole_solution_results"/*.trx)
+  shopt -u nullglob
+  ((${#whole_solution_trx[@]} > 0)) || economy_gate_error 'Whole-solution tests produced no TRX evidence'
+  for trx in "${whole_solution_trx[@]}"; do
+    assert_trx_evidence "$trx" >/dev/null
+  done
+fi
+
+if [[ "$skip_provider_contracts" == false ]]; then
+  for record in "${provider_contracts[@]}"; do
+    IFS=$'\t' read -r project filter <<< "$record"
+    name="$(basename "${project%.csproj}")"
+    results="$artifact_root/trx/provider/$name"
+    mkdir -p "$results"
+    run dotnet test "$project" -c Release --no-restore --nologo \
+      --filter "$filter" \
+      --logger "trx;LogFileName=$name.trx" \
+      --results-directory "$results"
+    assert_trx_evidence "$results/$name.trx" >/dev/null
+  done
+fi
+
+if [[ "$skip_openapi" == false ]]; then
+  publish_directory="$artifact_root/publish/api"
+  run dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --output "$publish_directory"
+  api_port="$(get_ephemeral_port)"
+  export ASPNETCORE_ENVIRONMENT=Development
+  export ASPNETCORE_URLS="http://127.0.0.1:$api_port"
+  dotnet "$publish_directory/GameGuild.API.dll" >"$artifact_root/api/stdout.log" 2>"$artifact_root/api/stderr.log" &
+  api_pid=$!
+  wait_http_ready "http://127.0.0.1:$api_port/live" "$api_pid" 90
+
+  raw_openapi="$artifact_root/openapi/openapi.raw.json"
+  captured_openapi="$artifact_root/openapi/openapi.json"
+  run curl --fail --silent --show-error "http://127.0.0.1:$api_port/swagger/v1/swagger.json" --output "$raw_openapi"
+  canonicalize_json "$raw_openapi" "$captured_openapi"
+  run pnpm --filter @game-guild/client generate -- --openapi "$captured_openapi" --force
+  run git diff --exit-code -- packages/infrastructure/client/src/generated
+fi
+
+if [[ "$skip_frontend" == false ]]; then
+  client_evidence="$artifact_root/vitest/client.json"
+  run pnpm --filter @game-guild/client exec vitest run --reporter=json "--outputFile=$client_evidence"
+  assert_vitest_evidence "$client_evidence" >/dev/null
+  run pnpm --filter @game-guild/client build
+
+  web_evidence="$artifact_root/vitest/web.json"
+  run pnpm --filter @game-guild/web exec vitest run --reporter=json "--outputFile=$web_evidence"
+  assert_vitest_evidence "$web_evidence" >/dev/null
+  run pnpm --filter @game-guild/web build
+fi
+
+if [[ "$skip_browser" == false ]]; then
+  web_port="$(get_ephemeral_port)"
+  playwright_evidence="$artifact_root/playwright/public-smoke.json"
+  export PORT="$web_port"
+  export HOSTNAME=127.0.0.1
+  export PUBLIC_E2E_BASE_URL="http://127.0.0.1:$web_port"
+  export PLAYWRIGHT_JSON_OUTPUT_NAME="$(native_path "$playwright_evidence")"
+  export AUTH_SECRET='economy-ci-browser-secret-not-for-production-use-2026'
+  node "$repository_root/apps/web/node_modules/next/dist/bin/next" start "$repository_root/apps/web" \
+    --hostname 127.0.0.1 --port "$web_port" \
+    >"$artifact_root/playwright/web.stdout.log" 2>"$artifact_root/playwright/web.stderr.log" &
+  web_pid=$!
+  wait_http_ready "http://127.0.0.1:$web_port/" "$web_pid" 90
+  run pnpm --filter @game-guild/web test:browser:public
+  assert_playwright_evidence "$playwright_evidence" >/dev/null
+fi
+
+evidence_count="$(find "$artifact_root" -type f | wc -l | tr -d ' ')"
+((evidence_count > 0)) || economy_gate_error "No verification evidence was written under $artifact_root"
+printf 'Economy verification passed with %s evidence files under %s\n' "$evidence_count" "$artifact_root"
