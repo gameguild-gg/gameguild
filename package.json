@@ -54,12 +54,17 @@
     "overrides": {
       "@babel/plugin-transform-modules-systemjs": "7.29.7",
       "@tootallnate/once": "2.0.1",
-      "dompurify": "3.4.10",
+      "@excalidraw/excalidraw>nanoid": "3.3.8",
+      "@excalidraw/mermaid-to-excalidraw>nanoid": "5.0.9",
+      "dompurify": "3.4.11",
+      "lodash-es": "4.18.0",
+      "syncpack>minimatch": "9.0.7",
       "icu-minify": "4.9.2",
       "next": "16.2.9",
       "postcss": "8.5.15",
       "prismjs": "1.30.0",
-      "ws": "8.20.1"
+      "tsup>esbuild": "0.28.1",
+      "ws": "8.21.0"
     }
   },
   "devDependencies": {
