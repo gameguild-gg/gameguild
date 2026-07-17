@@ -41,6 +41,24 @@ export class SocialFeedModule {
 
   /**
    */
+  async getApiSocialFeedUsers(
+    userId: string,
+    query?: { skip?: number; take?: number; includeRead?: boolean },
+  ): Promise<Result<Array<Types.SocialFeedFeedItem>, ApiError>> {
+    const url = `/api/social/feed/users/${userId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.SocialFeedFeedItem>, ApiError>;
+  }
+
+  /**
+   */
   async postApiSocialFeedHide(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/feed/${id}/hide`;
 
@@ -65,24 +83,6 @@ export class SocialFeedModule {
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getApiSocialFeedUsers(
-    userId: string,
-    query?: { skip?: number; take?: number; includeRead?: boolean },
-  ): Promise<Result<Array<Types.SocialFeedFeedItem>, ApiError>> {
-    const url = `/api/social/feed/users/${userId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.SocialFeedFeedItem>, ApiError>;
   }
 }
 

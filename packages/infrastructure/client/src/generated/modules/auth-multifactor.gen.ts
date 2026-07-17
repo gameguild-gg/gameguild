@@ -39,33 +39,6 @@ export class AuthMultifactorModule {
   }
 
   /**
-   * Disable MFA
-   *
-   * Disables multi-factor authentication for the current user after password verification.
-   */
-  async postAuthMfaDisable(body: Types.IdentityAuthenticationDisableMfaInput): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
-    const url = '/v1/auth/mfa:disable';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationDisableMfaInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationMfaSuccessOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Get backup codes
    *
    * Retrieves the user's backup codes status. Codes are not returned for security; use regenerate to get new codes.
@@ -263,6 +236,33 @@ export class AuthMultifactorModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.IdentityAuthenticationMfaVerificationOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Disable MFA
+   *
+   * Disables multi-factor authentication for the current user after password verification.
+   */
+  async postAuthMfaDisable(body: Types.IdentityAuthenticationDisableMfaInput): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
+    const url = '/v1/auth/mfa:disable';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationDisableMfaInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationMfaSuccessOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

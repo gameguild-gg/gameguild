@@ -39,6 +39,23 @@ export class CommercePaymentsWalletsModule {
   }
 
   /**
+   * Get user's wallet balance
+   *
+   * Retrieves the wallet balance for a specific user.
+   */
+  async getUsersWalletBalance(userId: string): Promise<Result<number, ApiError>> {
+    const url = `/api/v1/users/${userId}/wallet/balance`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<number, ApiError>;
+  }
+
+  /**
    * Add funds to user's wallet
    *
    * Adds funds to the wallet for the specified user.
@@ -161,23 +178,6 @@ export class CommercePaymentsWalletsModule {
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Get user's wallet balance
-   *
-   * Retrieves the wallet balance for a specific user.
-   */
-  async getUsersWalletBalance(userId: string): Promise<Result<number, ApiError>> {
-    const url = `/api/v1/users/${userId}/wallet/balance`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<number, ApiError>;
   }
 
   /**
@@ -304,6 +304,24 @@ export class CommercePaymentsWalletsModule {
   }
 
   /**
+   * Get wallet audit log
+   *
+   * Retrieves the audit log of all transactions and actions on a wallet.
+   */
+  async getWalletsAuditLog(walletId: string, query?: { page?: number; pageSize?: number }): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/wallets/${walletId}/audit-log`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Freeze wallet
    *
    * Freezes a wallet to prevent all transactions.
@@ -335,24 +353,6 @@ export class CommercePaymentsWalletsModule {
     const result = await this.client.request({
       method: 'POST',
       path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Get wallet audit log
-   *
-   * Retrieves the audit log of all transactions and actions on a wallet.
-   */
-  async getWalletsAuditLog(walletId: string, query?: { page?: number; pageSize?: number }): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/wallets/${walletId}/audit-log`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
       requiresAuth: true,
     });
 

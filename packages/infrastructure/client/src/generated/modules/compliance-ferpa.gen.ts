@@ -156,6 +156,20 @@ export class ComplianceFerpaModule {
 
   /**
    */
+  async getApiComplianceFerpaInspectionRequestsPending(): Promise<Result<Array<Types.ComplianceFERPAFerpaInspectionInput>, ApiError>> {
+    const url = '/api/compliance/ferpa/inspection-requests/pending';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.ComplianceFERPAFerpaInspectionInput>, ApiError>;
+  }
+
+  /**
+   */
   async postApiComplianceFerpaInspectionRequestsComplete(
     requestId: string,
     body: Types.ComplianceFERPACompleteFerpaInspectionRequestBody,
@@ -179,20 +193,6 @@ export class ComplianceFerpaModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async getApiComplianceFerpaInspectionRequestsPending(): Promise<Result<Array<Types.ComplianceFERPAFerpaInspectionInput>, ApiError>> {
-    const url = '/api/compliance/ferpa/inspection-requests/pending';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.ComplianceFERPAFerpaInspectionInput>, ApiError>;
   }
 
   /**

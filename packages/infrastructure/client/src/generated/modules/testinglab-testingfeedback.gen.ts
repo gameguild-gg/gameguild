@@ -35,6 +35,20 @@ export class TestinglabTestingfeedbackModule {
 
   /**
    */
+  async getTestingFeedbackByUser(userId: string): Promise<Result<Array<Types.TestingLabTestingFeedback>, ApiError>> {
+    const url = `/v1/testing/feedback/by-user/${userId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.TestingLabTestingFeedback>, ApiError>;
+  }
+
+  /**
+   */
   async postTestingFeedbackQuality(feedbackId: string, body: Types.TestingLabRateFeedbackQuality): Promise<Result<void, ApiError>> {
     const url = `/v1/testing/feedback/${feedbackId}/quality`;
 
@@ -67,20 +81,6 @@ export class TestinglabTestingfeedbackModule {
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getTestingFeedbackByUser(userId: string): Promise<Result<Array<Types.TestingLabTestingFeedback>, ApiError>> {
-    const url = `/v1/testing/feedback/by-user/${userId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.TestingLabTestingFeedback>, ApiError>;
   }
 
   /**
