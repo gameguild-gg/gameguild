@@ -58,7 +58,7 @@
       "@excalidraw/mermaid-to-excalidraw>nanoid": "5.0.9",
       "dompurify": "3.4.11",
       "lodash-es": "4.18.0",
-      "minimatch": "9.0.7",
+      "syncpack>minimatch": "9.0.7",
       "icu-minify": "4.9.2",
       "next": "16.2.9",
       "postcss": "8.5.15",
