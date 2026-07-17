@@ -2,6 +2,7 @@ using Asp.Versioning;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization.Utilities;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -43,6 +44,14 @@ public sealed class TenantQuotasController(
         
         // If actor's current tenant matches, allow access
         if (actor.TenantId.HasValue && actor.TenantId.Value == tenantId)
+            return true;
+
+        // JWT and API-key authentication carry the selected tenant in a trusted claim.
+        // Use it only when request-level tenant resolution did not produce a context.
+        if (!actor.TenantId.HasValue &&
+            Guid.TryParse(ClaimsExtractor.GetTenantId(User), out var claimedTenantId) &&
+            claimedTenantId != Guid.Empty &&
+            claimedTenantId == tenantId)
             return true;
         
         // Check actual tenant membership in database
