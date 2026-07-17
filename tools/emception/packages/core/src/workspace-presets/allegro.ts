@@ -1,6 +1,5 @@
 import type { WorkspaceConfig } from '../workspace-config.js';
 import { ToolchainPreset } from '../types.js';
-import { DEFAULT_IMAGE } from './defaults.js';
 
 export const ALLEGRO_DEMO_CODE = `// Allegro 5 interactive demo — compiled in the browser via Emscripten.
 // Click ▶ to build and render to the canvas tab.
@@ -118,6 +117,5 @@ export const CPP_ALLEGRO_PRESET: WorkspaceConfig = {
     },
     files: {
         'allegro-main.cpp': { encoding: 'text', content: ALLEGRO_DEMO_CODE },
-        'workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
     },
 };
