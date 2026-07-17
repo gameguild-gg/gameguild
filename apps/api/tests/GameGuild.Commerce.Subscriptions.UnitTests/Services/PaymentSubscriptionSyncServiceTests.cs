@@ -76,6 +76,30 @@ public sealed class PaymentSubscriptionSyncServiceTests
     }
 
     [Fact]
+    public async Task SyncSuccessfulPaymentAsync_ShouldActivatePendingSubscription()
+    {
+        var paymentId = Guid.NewGuid();
+        var subscription = CreatePendingSubscription(Guid.NewGuid());
+
+        _repository
+            .Setup(repository => repository.GetByIdAsync(subscription.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(subscription);
+        _repository
+            .Setup(repository => repository.UpdateAsync(subscription, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(subscription);
+
+        await _service.SyncSuccessfulPaymentAsync(
+            paymentId,
+            subscription.Id,
+            29.99m,
+            "USD",
+            DateTime.UtcNow);
+
+        subscription.Status.Should().Be(SubscriptionStatus.Active);
+        _repository.Verify(repository => repository.UpdateAsync(subscription, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task SyncSuccessfulPaymentAsync_ShouldNotUpdateAgain_WhenPaymentWasAlreadyProcessed()
     {
         var paymentId = Guid.NewGuid();
@@ -98,6 +122,14 @@ public sealed class PaymentSubscriptionSyncServiceTests
 
     private static Subscription CreateActiveSubscription(Guid id)
     {
+        var subscription = CreatePendingSubscription(id);
+        subscription.Activate();
+
+        return subscription;
+    }
+
+    private static Subscription CreatePendingSubscription(Guid id)
+    {
         var subscription = new Subscription(
             tenantId: Guid.NewGuid(),
             planId: Guid.NewGuid(),
@@ -108,7 +140,6 @@ public sealed class PaymentSubscriptionSyncServiceTests
             trialEndDate: null);
 
         typeof(Subscription).GetProperty(nameof(Subscription.Id))!.SetValue(subscription, id);
-        subscription.Activate();
 
         return subscription;
     }
