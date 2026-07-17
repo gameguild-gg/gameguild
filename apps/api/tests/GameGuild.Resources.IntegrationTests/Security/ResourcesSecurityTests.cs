@@ -233,7 +233,7 @@ public class ResourcesSecurityTests : IAsyncLifetime, IDisposable
         using var client = CreateAuthenticatedClient(UserA, TenantA, isSystemAdmin: false);
 
         // Act - Try to access admin-only endpoint (usage by type across tenants)
-        var response = await client.GetAsync("/v1/resources/usage-by-type/0?startDate=2024-01-01&endDate=2024-12-31");
+        var response = await client.GetAsync("/v1/resources/usage?type=0&startDate=2024-01-01&endDate=2024-12-31");
 
         // Assert - Should require admin role
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -250,7 +250,7 @@ public class ResourcesSecurityTests : IAsyncLifetime, IDisposable
         client.DefaultRequestHeaders.Add("X-System-Admin", "true");
 
         // Act
-        var response = await client.GetAsync("/v1/resources/usage-by-type/0?startDate=2024-01-01&endDate=2024-12-31");
+        var response = await client.GetAsync("/v1/resources/usage?type=0&startDate=2024-01-01&endDate=2024-12-31");
 
         // Assert - Headers should not grant admin access
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
