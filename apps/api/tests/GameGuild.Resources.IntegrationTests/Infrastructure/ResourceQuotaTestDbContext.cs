@@ -30,7 +30,19 @@ public class ResourceQuotaTestDbContext : DbContext, IApplicationDbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            foreach (var entry in exception.Entries)
+            {
+                entry.State = EntityState.Detached;
+            }
+
+            throw;
+        }
     }
 
     public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
@@ -49,6 +61,13 @@ public class ResourceQuotaTestDbContext : DbContext, IApplicationDbContext
                     type.GetInterfaces().Any(i =>
                         i.IsGenericType &&
                         i.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>)));
+
+        if (Database.IsNpgsql())
+        {
+            modelBuilder.Entity<ResourceQuota>()
+                .Property<uint>("xmin")
+                .IsRowVersion();
+        }
 
         base.OnModelCreating(modelBuilder);
     }
