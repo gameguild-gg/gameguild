@@ -30,6 +30,16 @@ public class ResourceQuotaTestDbContext : DbContext, IApplicationDbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.Entity is EntityBase<Guid> &&
+                entry.State is EntityState.Added or EntityState.Modified)
+            {
+                entry.Property(nameof(EntityBase<Guid>.Version)).CurrentValue =
+                    (int)entry.Property(nameof(EntityBase<Guid>.Version)).CurrentValue! + 1;
+            }
+        }
+
         try
         {
             return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -61,13 +71,6 @@ public class ResourceQuotaTestDbContext : DbContext, IApplicationDbContext
                     type.GetInterfaces().Any(i =>
                         i.IsGenericType &&
                         i.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>)));
-
-        if (Database.IsNpgsql())
-        {
-            modelBuilder.Entity<ResourceQuota>()
-                .Property<uint>("xmin")
-                .IsRowVersion();
-        }
 
         base.OnModelCreating(modelBuilder);
     }
