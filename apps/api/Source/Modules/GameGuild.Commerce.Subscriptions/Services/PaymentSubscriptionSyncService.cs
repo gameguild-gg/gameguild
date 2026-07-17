@@ -41,6 +41,11 @@ public sealed class PaymentSubscriptionSyncService(
 
         if (result.IsSuccess)
         {
+            if (subscription.Status == SubscriptionStatus.PendingActivation)
+            {
+                subscription.Activate();
+            }
+
             await subscriptionRepository.UpdateAsync(subscription, cancellationToken).ConfigureAwait(false);
             logger.LogInformation(
                 "Payment {PaymentId} synced to subscription {SubscriptionId}",
