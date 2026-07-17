@@ -1,6 +1,5 @@
 import type { WorkspaceConfig } from '../workspace-config.js';
 import { ToolchainPreset } from '../types.js';
-import { DEFAULT_IMAGE } from './defaults.js';
 
 export const SDL_DEMO_CODE = `// SDL3 + Dear ImGui demo — compiled in the browser via Emscripten
 // Click ▶ to build and render to the SDL Canvas tab.
@@ -135,6 +134,5 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
     },
     files: {
         'sdl-main.cpp': { encoding: 'text', content: SDL_DEMO_CODE },
-        'workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
     },
 };

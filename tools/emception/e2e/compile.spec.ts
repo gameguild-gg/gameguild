@@ -160,13 +160,13 @@ test.describe('Compile & Run', () => {
                     return true;
                 }
                 return false;
-            }, { path: '/user/main.cpp', code: helloCode });
+            }, { path: '/home/user/cpp-terminal/main.cpp', code: helloCode });
 
             // Verify the file was actually updated in React state
             const fileContent = await page.evaluate((path) => {
                 const filesRef = (window as any).__emception_filesRef__;
                 return filesRef?.current?.[path]?.content ?? null;
-            }, '/user/main.cpp');
+            }, '/home/user/cpp-terminal/main.cpp');
             console.log(`File content after __setFileContent (first 80 chars): "${fileContent?.substring(0, 80)}..."`);
             expect(fileContent, '__setFileContent should have updated the file').toContain('Hello from WebAssembly');
 
@@ -382,7 +382,7 @@ test.describe('Compile & Run', () => {
         await page.evaluate(({ path, code }) => {
             const setContent = (window as any).__setFileContent;
             if (setContent) setContent(path, code);
-        }, { path: '/user/main.cpp', code: stdinProgram });
+        }, { path: '/home/user/cpp-terminal/main.cpp', code: stdinProgram });
 
         // Wait for React state update to propagate
         await page.waitForTimeout(500);
@@ -511,7 +511,7 @@ test.describe('Compile & Run', () => {
         await page.evaluate(({ path, code }) => {
             const setContent = (window as any).__setFileContent;
             if (setContent) setContent(path, code);
-        }, { path: '/user/main.cpp', code: backspaceProgram });
+        }, { path: '/home/user/cpp-terminal/main.cpp', code: backspaceProgram });
 
         // Wait for React state update to propagate
         await page.waitForTimeout(500);

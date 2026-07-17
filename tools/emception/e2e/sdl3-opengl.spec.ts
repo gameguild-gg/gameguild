@@ -122,11 +122,11 @@ test.describe('SDL3 + OpenGL ES 3 canvas', () => {
         await page.waitForFunction(() => {
             const w = window as EmceptionWindow;
             const filesRef = w.__emception_filesRef__;
-            return !!filesRef?.current?.['/user/sdl-opengl.cpp']?.content;
+            return !!filesRef?.current?.['/home/user/cpp-sdl3-opengl/sdl-opengl.cpp']?.content;
         }, { timeout: 30_000 });
         const editorContent: string = await page.evaluate(() => {
             const w = window as EmceptionWindow;
-            return (w.__emception_filesRef__?.current?.['/user/sdl-opengl.cpp']?.content as string) ?? '';
+            return (w.__emception_filesRef__?.current?.['/home/user/cpp-sdl3-opengl/sdl-opengl.cpp']?.content as string) ?? '';
         });
         expect(editorContent).toContain('#include <GLES3/gl3.h>');
         expect(editorContent).toContain('SDL_GL_CreateContext');

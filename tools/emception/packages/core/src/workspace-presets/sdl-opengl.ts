@@ -1,6 +1,5 @@
 import type { WorkspaceConfig } from '../workspace-config.js';
 import { ToolchainPreset } from '../types.js';
-import { DEFAULT_IMAGE } from './defaults.js';
 
 export const SDL_OPENGL_DEMO_CODE = `// SDL3 + OpenGL ES 3 (WebGL2) demo — compiled in the browser via Emscripten.
 // Click \u25B6 to build, then interact with the SDL Canvas tab.
@@ -197,6 +196,5 @@ export const CPP_SDL3_OPENGL_PRESET: WorkspaceConfig = {
     features: { canvas: true, terminalInput: false, showTestButton: false },
     files: {
         'sdl-opengl.cpp': { encoding: 'text', content: SDL_OPENGL_DEMO_CODE },
-        'workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
     },
 };
