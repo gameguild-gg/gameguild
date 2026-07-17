@@ -87,7 +87,7 @@
     "cmdk": "^1.1.1",
     "d3-dsv": "^3.0.1",
     "date-fns": "^4.1.0",
-    "dompurify": "3.4.10",
+    "dompurify": "3.4.11",
     "embla-carousel-react": "^8.6.0",
     "esbuild-wasm": "^0.27.0",
     "input-otp": "^1.4.2",
@@ -132,6 +132,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@excalidraw/mermaid-to-excalidraw": "2.2.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -141,7 +142,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/coverage-v8": "^2.1.9",
+    "@vitest/coverage-v8": "^3.2.7",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
@@ -149,7 +150,7 @@
     "playwright": "1.59.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vite": "^5.4.21",
-    "vitest": "^2.1.9"
+    "vite": "^6.4.3",
+    "vitest": "^3.2.7"
   }
 }
