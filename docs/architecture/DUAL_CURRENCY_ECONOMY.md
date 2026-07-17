@@ -105,13 +105,16 @@ This keeps the ledger centralized without turning every economy feature into one
 
 ### New Modules
 
-| Module                        | Owns                                                                                                                                                                                                                           | Must never own                                                                                                      |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| `GameGuild.Economy`           | Wallet identities, accounts, posting groups, journal entries, credit lots, fragment lineage, projections, holds, authoritative reserve head/allocation locks, fee/rate policy versions, idempotent posting, chain verification | Stripe SDK calls, ad playback, product catalog, orders, KYC provider calls                                          |
-| `GameGuild.Economy.AdRewards` | Ad sessions, signed reward claims, network yield policies, reward quotes, fraud decisions, revenue batches, reconciliation                                                                                                     | Direct balance mutation, Stripe payouts, product fulfillment                                                        |
-| `GameGuild.Economy.Bounties`  | Bounty lifecycle, eligibility snapshots, escrow positions, claim and reclaim decisions                                                                                                                                         | Generic wallet mutation, product checkout, KYC                                                                      |
-| `GameGuild.Economy.Payouts`   | Payout requests, earned-lot reservation, connected-account status, payout lifecycle, dispute-to-hold orchestration, seller debt                                                                                                | Provider webhook ingress, journal table mutation outside core posting contracts                                     |
-| `GameGuild.Economy.Treasury`  | External-asset observations, reserve calculations proposed to Core, custody reconciliation, admin revenue maturity, monthly withdrawal runs, variance and shortfall reporting                                                  | User checkout, mutable wallet balances, ad playback verification, direct mutation of the authoritative reserve head |
+| Module                                | Owns                                                                                                                                                                                                                           | Must never own                                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `GameGuild.Economy`                   | Wallet identities, accounts, posting groups, journal entries, credit lots, fragment lineage, projections, holds, authoritative reserve head/allocation locks, fee/rate policy versions, idempotent posting, chain verification | Stripe SDK calls, ad playback, product catalog, orders, KYC provider calls, risk scoring                            |
+| `GameGuild.Economy.Risk`              | Versioned risk policies, transaction risk decisions, entity graph references, velocity/exposure limits, fraud holds, review queues, and risk-decision evidence                                                                 | Journal mutation, monetary balances, KYC document storage, sanctions screening ownership                            |
+| `GameGuild.Economy.AdRewards`         | Ad sessions, signed reward claims, network yield policies, reward quotes, provider proof checks, revenue batches, reconciliation                                                                                               | Direct balance mutation, Stripe payouts, product fulfillment, global risk-policy ownership                          |
+| `GameGuild.Economy.Bounties`          | Bounty lifecycle, eligibility snapshots, escrow positions, claim and reclaim decisions                                                                                                                                         | Generic wallet mutation, product checkout, KYC                                                                      |
+| `GameGuild.Economy.Payouts`           | Payout requests, earned-lot reservation, connected-account status, payout lifecycle, dispute-to-hold orchestration, seller debt                                                                                                | Provider webhook ingress, journal table mutation outside core posting contracts, KYC/sanctions policy ownership     |
+| `GameGuild.Economy.Treasury`          | External-asset observations, reserve calculations proposed to Core, custody reconciliation, admin revenue maturity, monthly withdrawal runs, variance and shortfall reporting                                                  | User checkout, mutable wallet balances, ad playback verification, direct mutation of the authoritative reserve head |
+| `GameGuild.Compliance.FinancialCrime` | KYC status aggregation, sanctions/PEP/adverse-media screening status, financial-crime monitoring cases, SAR/STR workflow references, and compliance hold inputs                                                                | Balance calculation, journal mutation, product trust/safety enforcement                                             |
+| `GameGuild.TrustSafety`               | Platform policy infractions, abuse reports, marketplace/project enforcement, content/product risk cases, and nonfinancial account restrictions                                                                                 | Ledger mutation, financial-crime legal determinations, reserve calculations                                         |
 
 ### Physical Package Map
 
@@ -125,18 +128,29 @@ apps/api/Source/Modules/
     Reserves/             authoritative reserve head, asset-allocation lock, epochs
     Persistence/          EF mappings and constrained writer integration
     Reconciliation/       chain, projection, and anchor verification
+  GameGuild.Economy.Risk/
+    Decisions/            versioned transaction risk decisions and reason codes
+    EntityGraph/          HMAC-tokenized relationship edges and exposure clusters
+    Limits/               velocity, aggregate, source-root, destination, and pair limits
+    Reviews/              risk holds, case links, appeals, and decision evidence
   GameGuild.Economy.AdRewards/
   GameGuild.Economy.Bounties/
   GameGuild.Economy.Payouts/
   GameGuild.Economy.Treasury/
+  GameGuild.Compliance.FinancialCrime/
+  GameGuild.TrustSafety/
 
 apps/api/tests/
   GameGuild.Economy.UnitTests/
   GameGuild.Economy.IntegrationTests/
+  GameGuild.Economy.Risk.UnitTests/
+  GameGuild.Economy.Risk.IntegrationTests/
   GameGuild.Economy.AdRewards.UnitTests/
   GameGuild.Economy.Bounties.UnitTests/
   GameGuild.Economy.Payouts.UnitTests/
   GameGuild.Economy.Treasury.UnitTests/
+  GameGuild.Compliance.FinancialCrime.UnitTests/
+  GameGuild.TrustSafety.UnitTests/
 ```
 
 Each project exposes a narrow `Contracts` namespace and keeps persistence internal. Capability modules submit typed requests to the core; they never reference core EF configurations, repositories, or journal entities.
@@ -162,18 +176,27 @@ flowchart LR
     Bounties[Economy.Bounties] --> Core
     Payouts[Economy.Payouts] --> Core
     Treasury[Economy.Treasury] --> Core
+    Risk[Economy.Risk] --> Core
+    Core --> Risk
     Payments[Commerce.Payments] --> Core
     Billing[Commerce.Billing] --> Payments
     Orders[Commerce.Orders] --> Core
     Orders --> Products[Commerce.Products]
     AI[GameGuild.AI] --> Core
-    Payouts --> KYC[Compliance.KYC]
+    Payouts --> Risk
+    Ads --> Risk
+    Orders --> Risk
+    AI --> Risk
+    Risk --> KYC[Compliance.KYC]
+    Risk --> FinCrime[Compliance.FinancialCrime]
+    Risk --> TS[TrustSafety]
+    Payouts --> KYC
     Payouts --> Payments
     Treasury --> Payments
     Treasury --> Ads
 ```
 
-The core never references Ads, Bounties, Payouts, Treasury, Products, Orders, Payments, Billing, AI, or KYC. Leaf modules depend inward through public contracts.
+The core never references Ads, Bounties, Payouts, Treasury, Products, Orders, Payments, Billing, AI, KYC provider adapters, or product Trust/Safety services. Leaf modules depend inward through public contracts. The one intentional cross-boundary is the protected-operation risk contract: Core requires a current `RiskDecisionId` for protected commands and verifies its immutable decision snapshot, but Risk cannot write journal state.
 
 ## Core Domain Model
 
@@ -549,11 +572,74 @@ A reserve snapshot classifies external assets as restricted backing. It does not
 
 Monthly platform withdrawal may select only matured, unheld, unswept platform-fee lots and only when post-withdrawal reserve coverage remains at or above policy.
 
+## Protected Operation Risk Contract
+
+Every protected financial operation must carry a versioned, immutable risk decision before it can reach the economy writer. Protected operations include minting, confirmation, hard-to-soft conversion, marketplace settlement, escrow deposit/release, ad reward issuance, bounty claim, service authorization, refund, hold release, payout reservation, payout dispatch, and administrative adjustment.
+
+The decision contract is deliberately separate from the ledger. `GameGuild.Economy.Risk` answers whether a requested operation may proceed, which constraints apply, and which evidence supports the answer. `GameGuild.Economy` remains the only monetary authority and validates that the decision matches the final operation shape before posting.
+
+Risk decisions use these terminal outcomes:
+
+| Outcome     | Meaning                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------- |
+| `Allow`     | Operation may proceed with the named limits, reserve version, and policy version.                 |
+| `Challenge` | User must complete stronger authentication or step-up verification before a new decision is made. |
+| `Hold`      | Operation may create or keep a nonspendable hold but may not release value.                       |
+| `Review`    | Operation is blocked until manual review creates a new signed decision.                           |
+| `Deny`      | Operation is blocked and the denial is retained for audit and aggregate-limit enforcement.        |
+
+Each accepted value-moving command validates:
+
+1. the authenticated actor and transaction-bound user authorization;
+2. the operation template, amount, currency, source roots, destination, counterparty, and provider reference named in the risk decision;
+3. the current policy version, feature flag, reserve version, kill-switch epoch, and aggregate-limit counters;
+4. account-takeover controls for protected changes, including passkey/WebAuthn or equivalent reauthentication before payout, bank, MFA, email, ownership, or high-risk destination changes;
+5. cooldown windows after payout destination, ownership, identity, credential, or MFA changes;
+6. KYC/sanctions/financial-crime status when required by jurisdiction, volume, product, or payout policy;
+7. Trust/Safety restrictions for prohibited products, abuse cases, marketplace enforcement, or account safety holds;
+8. immutable audit evidence and reason codes that are safe to expose internally without leaking bypass details.
+
+The risk decision is not reusable across material changes. A different amount, currency leg, source-root set, recipient, payout destination, product, device-risk token, provider object, policy version, reserve version, or kill-switch epoch requires a new decision.
+
+### Entity Graph, Limits, And Holds
+
+Risk maintains a privacy-preserving entity graph using KMS-keyed HMAC tokens and opaque references. Edges include account, tenant, KYC identity, payment instrument, bank account, payout destination, device-risk token, IP/prefix, ASN, referral, project, product, marketplace counterparty, and provider object. Raw identifiers stay in their owning modules or providers.
+
+Aggregate limits are evaluated across wallet, identity cluster, source root, destination, product, counterparty pair, device/IP/ASN cluster, tenant, provider account, and global loss-budget dimensions. Splitting value across wallets, roots, fragments, products, or related accounts must not reset exposure. A transaction can pass only if every relevant limit has sufficient remaining capacity and every consumed counter is committed atomically with the ledger decision or provider-proof consumption.
+
+Risk holds are explicit, source-linked, and auditable. A hold changes availability; it does not change liability or erase lineage. Holds may be attached to accounts, exact fragments, root ranges, destinations, products, entities, or operation classes. Release requires a fresh risk decision and, where configured, independent approval.
+
+### Marketplace Abuse And Wash Trading
+
+The economy treats marketplace purchases, bounties, project funding, referrals, reviews, and creator payouts as possible laundering paths. Risk blocks or reviews self-dealing and controlled-account loops using relationship edges, shared instruments, shared payout destinations, suspicious timing, circular trade graphs, refund patterns, and price/outcome anomalies.
+
+Purchased hard cannot become withdrawable through self-purchase, bounty cycling, refund games, project sales, or fee routing. If a transaction creates earned-hard proceeds, it creates a new source stamp, a new 120-day maturity clock, and an active risk exposure window. Dynamic rolling reserves may keep some earned-hard fragments held beyond the fixed 120-day minimum when the seller, product, provider, jurisdiction, or dispute history demands it.
+
+### Financial Crime And Trust/Safety Boundaries
+
+`GameGuild.Compliance.FinancialCrime` owns regulatory screening status, monitoring cases, required evidence, and compliance hold inputs. It does not decide balances or post journal entries. `GameGuild.TrustSafety` owns product, content, marketplace, and community enforcement. It does not decide KYC legality or mutate balances. `GameGuild.Economy.Risk` consumes both as inputs and returns one bounded risk decision to Core.
+
+No protected financial operation is recorded unless all of the following are true:
+
+```text
+user_authorization_valid
+AND transaction_risk_decision_valid
+AND current_policy_valid
+AND aggregate_limits_available
+AND reserve_and_margin_sufficient
+AND required_compliance_status_valid
+AND required_trust_safety_status_valid
+AND immutable_audit_evidence_accepted
+```
+
+If any predicate is false, unknown, stale, or unauditable, the operation fails closed or enters a nonmonetary/quarantined state according to the containment matrix.
+
 ## CQRS And API Rules
 
 - Controllers only authenticate, bind requests, and dispatch custom GameGuild CQRS commands/queries.
 - No controller or leaf module may access journal DbSets or repositories directly.
 - Every query and financial command requires a core-validated actor, tenant/context decision, object ownership or platform scope, idempotency key where relevant, opaque reference, and authorization policy. Controller checks are defense in depth, not authority.
+- Every protected financial command also requires a validated `RiskDecisionId`; Core rejects decisions that do not bind the exact operation, actor, source roots, destination, amount, policy version, reserve version, and kill-switch epoch.
 - Internal workers and capability modules receive narrow operation capabilities; they cannot impersonate a user, select an arbitrary wallet, or invoke unrelated posting templates.
 - User routes derive the wallet owner from the authenticated actor. They do not accept an arbitrary user ID.
 - Administrative adjustments require a specific permission, reason, ticket/reference, immutable audit event, and dual approval above a configured threshold.
@@ -620,6 +706,10 @@ Required metrics and alerts:
 - Stripe versus internal payment/refund/dispute mismatch
 - reserve coverage ratios and custody variance
 - ad reward completion rate, rejection reasons, reward velocity, and network variance
+- risk decision outcome rates, challenge/review/hold/deny reasons, decision freshness, stale decision rejects, entity-cluster exposure, velocity-limit consumption, cooldown blocks, and manual-review SLA
+- account-takeover signals for protected financial changes, including failed step-up, new-device payout attempts, payout-destination changes, MFA resets, ownership transfers, and session-risk elevation
+- marketplace abuse indicators: self-dealing blocks, circular-trade graphs, related-account purchase clusters, refund-rate anomalies, seller rolling reserve exposure, and unresolved Trust/Safety cases affecting financial operations
+- financial-crime gates: KYC/sanctions screening status, monitoring case backlog, compliance hold counts, jurisdiction blocks, and privileged compliance-data access audit health
 - soft face-value coverage, stressed redemption coverage, gross-margin floor, and remaining ad/fraud loss budgets
 - administrative adjustments and approval paths
 - payout maturity queue, failure rate, and unreconciled clearing
@@ -638,19 +728,25 @@ Every capability continuously evaluates positive readiness predicates at command
 - fixed-parity hard and soft reserve coverage, stressed service-cost coverage, and all safety buffers meet policy
 - custody reconciliation has zero unexplained variance
 - provider webhook backlog and reconciliation age remain within SLA
+- risk decision service is healthy, policy versions are current, aggregate-limit counters are strongly consistent, entity-graph inputs are fresh, and protected-operation decisions fail closed when any dependency is stale
+- transaction-bound reauthentication, cooldown enforcement, destination-change holds, and manual-review workflows are active for payout, ownership, MFA, email, and bank/payout-destination changes
+- financial-crime screening, monitoring-case ingestion, and compliance hold inputs are current for every jurisdiction and volume tier where hard-coin payout or marketplace settlement is enabled
+- Trust/Safety case inputs and prohibited-product enforcement are current for every marketplace, project, bounty, and creator payout path
 - legal, KYC, Terms, debt, maturity, and hold requirements are satisfied for payout
 - ad provider evidence, fraud controls, atomic counters, reports, reserve headroom, and funded loss budgets are current
 - privileged KYC/risk audit persistence and verification are healthy before any protected read/export
 
 Containment modes are explicit:
 
-| Failed predicate                                                                       | Allowed                                                                                                                                                                       | Blocked                                                                                                                                           |
-| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Provider/ad/KYC dependency unavailable, ledger integrity healthy                       | Safe reads, signed evidence ingestion, reconciliation, pre-dispatch reservation release, authoritative-terminal-failure release, quarantined refund/dispute obligation intake | Affected provider dispatch, issuance, service authorization, and release of any dispatching/ambiguous reservation                                 |
-| Privileged KYC/risk audit writer unavailable or unverifiable                           | Ordinary non-sensitive reads and quarantine intake                                                                                                                            | Every privileged KYC/risk read or export; protected data is never released before durable audit acceptance                                        |
-| Reserve/margin/custody input stale or insufficient, ledger integrity healthy           | Safe reads, evidence ingestion, reconciliation, liability-reducing reversal when its exact template remains provably safe                                                     | New issuance, conversion, settlement, payout, admin withdrawal, new cost-bearing authorization                                                    |
-| Projection mismatch with verified journal/lineage                                      | Safe reads using the lower recomputed amount, evidence ingestion, reconciliation and rebuild                                                                                  | All value authorization and provider dispatch for affected wallets/capabilities                                                                   |
-| Writer, chain, anchor, source evidence, lineage, or immutable-ledger integrity failure | Evidence intake into quarantine, forensic reads from last verified anchor, independent recovery workflow                                                                      | Every journal posting, reservation change, value authorization, and provider dispatch, including refunds, debt recovery, and incident adjustments |
+| Failed predicate                                                                                                     | Allowed                                                                                                                                                                       | Blocked                                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Provider/ad/KYC dependency unavailable, ledger integrity healthy                                                     | Safe reads, signed evidence ingestion, reconciliation, pre-dispatch reservation release, authoritative-terminal-failure release, quarantined refund/dispute obligation intake | Affected provider dispatch, issuance, service authorization, and release of any dispatching/ambiguous reservation                                                        |
+| Privileged KYC/risk audit writer unavailable or unverifiable                                                         | Ordinary non-sensitive reads and quarantine intake                                                                                                                            | Every privileged KYC/risk read or export; protected data is never released before durable audit acceptance                                                               |
+| Risk service, entity graph, aggregate counters, compliance status, or Trust/Safety input stale/unavailable           | Safe reads, nonmonetary evidence intake, challenge creation, manual-review intake, and stricter holds                                                                         | Every protected operation requiring a fresh risk decision, including issuance, conversion, settlement, service authorization, hold release, payout, and admin adjustment |
+| ATO/cooldown predicate failed after protected account, identity, MFA, email, ownership, or payout-destination change | Safe reads, challenge flow, support case intake, and nonmonetary evidence intake                                                                                              | Payout reservation/dispatch, destination change execution, ownership transfer execution, high-risk settlement, and hold release                                          |
+| Reserve/margin/custody input stale or insufficient, ledger integrity healthy                                         | Safe reads, evidence ingestion, reconciliation, liability-reducing reversal when its exact template remains provably safe                                                     | New issuance, conversion, settlement, payout, admin withdrawal, new cost-bearing authorization                                                                           |
+| Projection mismatch with verified journal/lineage                                                                    | Safe reads using the lower recomputed amount, evidence ingestion, reconciliation and rebuild                                                                                  | All value authorization and provider dispatch for affected wallets/capabilities                                                                                          |
+| Writer, chain, anchor, source evidence, lineage, or immutable-ledger integrity failure                               | Evidence intake into quarantine, forensic reads from last verified anchor, independent recovery workflow                                                                      | Every journal posting, reservation change, value authorization, and provider dispatch, including refunds, debt recovery, and incident adjustments                        |
 
 Quarantined obligations resume only after integrity is restored and a new verified anchor covers the recovery posting. No operator can bypass this matrix with a generic adjustment.
 
@@ -662,6 +758,7 @@ These do not block the core ledger but block relevant production features:
 - creator fee default: `either` or `hard_only`
 - whether GameGuild ever subsidizes a hard-only creator fee paid by a soft-coin user
 - numerical ad reward caps, verification thresholds, minimum commercial margin, and acceptable loss budgets
+- numerical velocity limits, entity-graph review thresholds, dynamic rolling-reserve percentages, protected-change cooldown durations, and manual-review SLA by risk tier
 - soft-coin expiration policy
 - minimum payout amount; the 120-day earned-hard maturity is fixed and has no accelerated-release exception
 - exact commercial allocation of irrecoverable reversal debt/loss after descendant-fragment recovery
@@ -677,5 +774,6 @@ This architecture is ready for implementation when stakeholders approve:
 3. Source-stamp schema, authoritative confirmation/mint semantics, fungible fragment-lineage model, root-reversal recovery, fixed 120-day earned-hard maturity, and FIFO allocation policy.
 4. Face-value reserves, stressed service-cost margin, safety buffers, and custody treatment.
 5. Provider saga and reconciliation model.
-6. Security preconditions and production gates.
-7. The branch/worktree implementation sequence in the associated plan.
+6. Risk-decision contract, entity graph, aggregate limits, ATO/cooldown gates, financial-crime boundaries, Trust/Safety boundaries, and protected-operation containment.
+7. Security preconditions and production gates.
+8. The branch/worktree implementation sequence in the associated plan.

@@ -29,6 +29,9 @@
 - A user-facing total is a rebuildable projection only, never monetary state. An observed external deposit is a nonmonetary pending claim; authoritative confirmation atomically creates the mint posting and root lot.
 - Spending and withdrawal allocate only eligible confirmed fragments in global FIFO order by `confirmed_at` then journal sequence. Payout burns the oldest at-least-120-day earned-hard fragments only after provider success.
 - Soft remains noncashable and has no reverse SC-to-HC conversion despite its fixed internal parity.
+- Every protected financial operation requires transaction-bound user authorization, a fresh `RiskDecisionId`, current policy, aggregate limits, sufficient reserve/margin, required Compliance/TrustSafety status, and immutable audit evidence.
+- `GameGuild.Economy.Risk` owns decisions, entity graph, velocity/exposure limits, cooldowns, review queues, and risk holds. `GameGuild.Economy` remains the only monetary authority and rejects mismatched or stale decisions.
+- Payout, ownership, email, MFA, identity, bank, and payout-destination changes require step-up reauthentication plus cooldown/risk review before protected value movement.
 - The general runtime role cannot write journal tables. Only the constrained `GameGuild.Economy` security-definer posting interface writes them through registered template versions.
 - Only the schema-rollup task edits centralized API migrations and the EF model snapshot during parallel feature rounds.
 - Features remain disabled until their schema, security, reconciliation, and operational gates pass.
@@ -55,7 +58,10 @@ Use ignored paths under `.tmp/`:
 .tmp/economy-foundation-schema-rollup
 .tmp/economy-balance-projections
 .tmp/economy-monetary-policy
+.tmp/economy-risk-engine
 .tmp/economy-core-reserve-authority
+.tmp/economy-financial-crime
+.tmp/economy-trust-safety
 .tmp/economy-hard-funding
 .tmp/economy-ad-rewards
 .tmp/economy-bounties
@@ -117,8 +123,9 @@ domain contracts
         -> persistence model and writer contract
             -> balance/lot projections
                 -> monetary policy and holds
-                    -> foundation schema/role rollup
-                        -> core reserve authority
+                    -> risk engine and protected-operation contract
+                        -> foundation schema/role rollup
+                            -> core reserve authority
 ```
 
 Independent review agents may run in parallel with implementation, but only one worker edits the core module at a time.
@@ -323,7 +330,7 @@ API activation begins only after integrated schema and security gates pass. Task
 - [ ] Define the registered posting-template catalog and procedure input/output contract.
 - [ ] Define separate migration, general runtime, and economy-writer role privileges.
 - [ ] Add SQL contract tests proving balanced but unauthorized shapes, absent/reused/mutated source stamps, unconfirmed external mint, cumulative provider over-credit, forged confirmation time, early maturity, over-allocation, overlapping root ranges, stale reversal epoch, and lineage nonconservation are rejected by the writer interface.
-- [ ] Leave all centralized migration and model-snapshot edits to Task 2.6.
+- [ ] Leave all centralized migration and model-snapshot edits to Task 2.7.
 
 ### Task 2.4: Balance And Lot Projections
 
@@ -356,20 +363,38 @@ API activation begins only after integrated schema and security gates pass. Task
 - [ ] Serialize hold, spend, refund, and payout operations on lot projections.
 - [ ] Add explicit account freeze and debt restrictions.
 
-### Task 2.6: Foundation Schema, Roles, And Immutability Rollup
+### Task 2.6: Risk Engine And Protected-Operation Contract
+
+**Branch:** `feat/economy-risk-engine`
+
+**Produces:** `GameGuild.Economy.Risk`, transaction risk decisions, entity graph contracts, aggregate limits, protected-change cooldowns, Trust/Safety and FinancialCrime input contracts, review queue, and Core decision-validation hooks.
+
+- [ ] Write tests for missing, expired, reused, wrong-outcome, actor-mismatched, destination-mismatched, source-root-mismatched, amount-mismatched, stale-policy, stale-reserve, stale-kill-switch, stale-counter, and stale-graph decisions.
+- [ ] Add explicit `Allow`, `Challenge`, `Hold`, `Review`, and `Deny` outcomes; prove only `Allow` can authorize value movement and `Hold` can only create or preserve nonspendable holds.
+- [ ] Define risk-decision snapshots that bind actor, operation template, amount, currency legs, source roots, destination, provider reference, policy version, reserve version, feature flag, kill-switch epoch, entity-cluster evidence, and reason codes.
+- [ ] Implement privacy-preserving entity graph contracts for account, tenant, KYC identity, payment instrument, bank account, payout destination, device-risk token, IP/prefix, ASN, referral, project, product, marketplace counterparty, and provider object using opaque or KMS-HMAC references.
+- [ ] Implement aggregate exposure and velocity limit contracts across wallet, identity cluster, source root, destination, counterparty pair, product, tenant, provider account, device/IP/ASN cluster, and global loss budget.
+- [ ] Implement protected-change cooldown policies for password reset, MFA reset, email change, ownership transfer, identity update, bank/payout-destination change, new-device login, and high-risk session elevation.
+- [ ] Add transaction-bound reauthentication evidence requirements for payout, destination change, ownership transfer, hold release, high-risk settlement, and administrative adjustment.
+- [ ] Add review-case, appeal, manual decision, dual-approval, and immutable audit contracts without exposing risk bypass details in user-facing responses.
+- [ ] Add `Compliance.FinancialCrime` and `TrustSafety` input contracts so Core can fail closed when required status is blocked, stale, unknown, or unauditable.
+- [ ] Wire Core protected posting commands to require and validate `RiskDecisionId`; keep all value-moving capabilities disabled until schema rollup verifies persistence and counters.
+
+### Task 2.7: Foundation Schema, Roles, And Immutability Rollup
 
 **Branch:** `feat/economy-foundation-schema-rollup`
 
-**Produces:** One additive foundation migration, database roles, constrained writer/transition procedures, mutation-denial triggers, immutable-anchor persistence, and real PostgreSQL verification after Tasks 2.1-2.5 are merged.
+**Produces:** One additive foundation migration, database roles, constrained writer/transition procedures, mutation-denial triggers, immutable-anchor persistence, risk-decision persistence/counter constraints, and real PostgreSQL verification after Tasks 2.1-2.6 are merged.
 
 - [ ] Generate the centralized migration and model snapshot from the current integrated `develop`.
 - [ ] Install grants so the general runtime role cannot directly mutate any immutable or integrity-bearing mutable economy table; the writer role can only execute registered procedures.
 - [ ] Harden security-definer ownership, explicit execute ACLs, pinned trusted `search_path`, schema-qualified references, caller capability validation, and absence of caller-selected SQL.
 - [ ] Add update/delete denial triggers plus source/provider uniqueness, cumulative provider amount, one-root-lot, maturity, allocation, lineage/root-range conservation, reversal-epoch, template-shape, limit, and reserve constraints.
+- [ ] Add risk-decision uniqueness, single-use consumption, decision-operation binding, aggregate-counter, cooldown, hold, review-case, and audit-evidence constraints.
 - [ ] Run migration up/down/current tests on disposable PostgreSQL.
-- [ ] Verify concurrent posting, rollback, role denial, procedure enforcement, chain anchoring, and projection rebuild behavior.
+- [ ] Verify concurrent posting, rollback, role denial, procedure enforcement, chain anchoring, projection rebuild, stale-decision rejection, and aggregate-counter oversubscription behavior.
 
-### Task 2.7: Core Reserve Authority
+### Task 2.8: Core Reserve Authority
 
 **Branch:** `feat/economy-core-reserve-authority`
 
@@ -378,7 +403,7 @@ API activation begins only after integrated schema and security gates pass. Task
 - [ ] Write reserve-version race, stale/unknown input, duplicate asset allocation, formula-boundary, and authorization-epoch tests first.
 - [ ] Implement guarded reserve proposal validation and atomic activation in Core; Treasury may propose observations/calculations but cannot mutate active state.
 - [ ] Define deterministic hard face-value and soft face-value/stressed-portfolio formula contracts, including open authorizations, worst-case unreserved service mix, checked ceiling arithmetic, and `0 <= margin_ppm < 1,000,000`.
-- [ ] Require every issuance, conversion, settlement, reversal, payout, and withdrawal template to name and lock an active reserve version even while production capabilities remain disabled.
+- [ ] Require every issuance, conversion, settlement, reversal, payout, and withdrawal template to name and lock an active reserve version and matching risk decision even while production capabilities remain disabled.
 - [ ] Provide test fixtures only, not a production reserve override. Real external observations and reconciliation arrive in Task 4.3.
 - [ ] Merge and delete this branch before Task 3.0.
 
@@ -389,6 +414,7 @@ API activation begins only after integrated schema and security gates pass. Task
 - [ ] Balanced but unauthorized issuance and conversion shapes fail at the database writer boundary.
 - [ ] Projection recompute and lower-value containment pass.
 - [ ] Core reserve authority rejects stale/invalid proposals and serializes every value capability against one active version.
+- [ ] Core rejects protected operations without a fresh matching risk decision, current aggregate counters, valid cooldown state, and current Compliance/TrustSafety inputs.
 - [ ] No provider or leaf module can write journal tables directly.
 - [ ] Core module coverage meets the repository's enforced threshold with all financial branches exercised.
 
@@ -398,9 +424,10 @@ API activation begins only after integrated schema and security gates pass. Task
 
 **Branch:** `feat/economy-capability-bootstrap`
 
-**Produces:** Disabled AdRewards, Bounties, Payouts, and Treasury projects plus test projects, API references, module registry entries, and shared composition hooks required by later parallel branches.
+**Produces:** Disabled AdRewards, Bounties, Payouts, Treasury, FinancialCrime, and TrustSafety projects plus test projects, API references, module registry entries, and shared composition hooks required by later parallel branches.
 
 - [ ] Create projects and references without enabling any value-moving route.
+- [ ] Register `GameGuild.Economy.Risk`, `GameGuild.Compliance.FinancialCrime`, and `GameGuild.TrustSafety` contracts in composition with value-moving decisions disabled by default.
 - [ ] Add disabled module entries and empty composition hooks following current modular-monolith conventions.
 - [ ] Add smoke tests proving the API composes with every capability disabled.
 - [ ] Merge and delete this branch before Task 3.1 is created; Tasks 3.2-3.5 wait for Task 3.1 to merge.
@@ -423,7 +450,7 @@ API activation begins only after integrated schema and security gates pass. Task
 - [ ] Implement full and partial top-up refund/chargeback templates that traverse hard and converted-soft descendants, balance each currency leg, never remint a retired root, and exactly partition root-equivalent recovery, responsible debt/receivable, and policy-versioned loss.
 - [ ] Implement exact principal conversion `1 HC = 1,000 SC`; retire the hard liability, reclassify backing to soft reserve, and post any configured hard fee separately.
 - [ ] Implement system-backed grants only from an approved platform hard debit in exact `1 HC = 1,000 SC` blocks.
-- [ ] Serialize issuance against fresh fixed-parity reserve headroom.
+- [ ] Serialize issuance against fresh fixed-parity reserve headroom, matching risk decision, aggregate limits, source-root exposure, and protected-change cooldown state.
 - [ ] Prove there is no soft-to-hard route or command.
 
 ### Task 3.2: Ad Rewards And Reconciliation
@@ -437,6 +464,7 @@ API activation begins only after integrated schema and security gates pass. Task
 - [ ] Implement signed short-lived single-use sessions.
 - [ ] Convert conservative USD nanos at exactly `100,000 SC/USD` through one rational numerator/final division, retaining the canonical-denominator remainder in an idempotent wallet-level accumulator that survives network/policy retirement.
 - [ ] Atomically consume completion token, user/device/network/global counters, fraud-loss budget, and reserve headroom before posting reward.
+- [ ] Require a matching `RiskDecisionId` and entity-graph exposure check before reward issuance; related-account/device/IP/ASN/referral clusters consume aggregate limits together.
 - [ ] Require independent provider-side completion proof for immediate mint; disable unsupported networks or defer minting until an independently verified report. Fail closed when proof, fraud service, counters, reports, loss budget, or reserve snapshot are unavailable/stale.
 - [ ] Implement report import and unique reconciliation versioning.
 - [ ] Update future eCPM/buffer/ranking without changing prior rewards.
@@ -452,6 +480,7 @@ API activation begins only after integrated schema and security gates pass. Task
 - [ ] Test repeated bounty credits with independent authoritative `confirmed_at`, exact `matures_at = confirmed_at + 120 days`, and no poster/payer maturity inheritance.
 - [ ] Preserve deposited lots and original provenance.
 - [ ] Validate claimant eligibility inside the locked terminal transaction.
+- [ ] Require risk approval against related-account, referral, device, payment, payout-destination, and counterparty-pair exposure before claim settlement.
 - [ ] Create earned proceeds on successful claim.
 - [ ] Create a new source stamp and independent 120-day earned-hard lot on a hard bounty claim.
 - [ ] Restore original provenance minus fee on reclaim.
@@ -467,6 +496,7 @@ API activation begins only after integrated schema and security gates pass. Task
 - [ ] Add versioned Product currency policy and prices.
 - [ ] Reactivate Orders only after its integration/security tests pass.
 - [ ] Snapshot all currency legs and fees on the order.
+- [ ] Require risk approval for settlement using product, seller, buyer, related-account, source-root, refund-pattern, and counterparty-pair limits.
 - [ ] Atomically settle all legs or none.
 - [ ] Preserve exact parent-fragment lineage across buyer debits, seller credits, platform fees, escrow, and entitlement settlement.
 - [ ] Create a source-stamped new 120-day earned-hard lot for each hard-paid seller proceeds credit; do not inherit buyer-lot maturity.
@@ -483,6 +513,7 @@ API activation begins only after integrated schema and security gates pass. Task
 - [ ] Persist exact token/model/provider cost for completed calls.
 - [ ] Compute and snapshot SC price from stressed provider cost, fixed `100,000 SC/USD` parity, and configured minimum gross margin.
 - [ ] Authorize and reserve charge before billable execution.
+- [ ] Require risk approval and aggregate-limit capacity before every billable service authorization.
 - [ ] Reject new authorization when the snapshotted price cannot meet the margin floor or the relevant cost feed is stale.
 - [ ] Finalize or release based on provider outcome.
 - [ ] Publish rate-card and trailing-cost facts to Treasury.
@@ -532,8 +563,10 @@ API activation begins only after integrated schema and security gates pass. Task
 
 - [ ] Write eligibility, maturity, hold, debt, refund/dispute precedence, fencing, stale-command, replay, timeout/ambiguous outcome, provider-binding, dispatch-snapshot tamper, failure, and reconciliation tests.
 - [ ] Integrate `Compliance.KYC` and Connect provider contracts.
+- [ ] Integrate `Compliance.FinancialCrime`, `TrustSafety`, protected-change cooldown, transaction-bound reauthentication, related-account graph, and dynamic rolling reserve policy inputs.
 - [ ] Select only source-stamped, authoritatively confirmed, at-least-120-day-old, unheld, unreserved earned-hard lots.
 - [ ] Allocate eligible fragments oldest-first by `confirmed_at` then journal sequence; explicitly reject purchased hard and every soft source even when old enough.
+- [ ] Require a fresh payout risk decision binding actor, payee, provider mapping, payout destination, exact fragments/root ranges, KYC/compliance status, Trust/Safety status, cooldown state, debt, reserve, and policy version.
 - [ ] Reserve lots before provider execution and assign an operation version, fencing token, and kill-switch epoch.
 - [ ] Under the same fragment locks used by refund/dispute, atomically CAS `reserved -> dispatching`, claim the outbox command, and record chain/reserve/command/kill-switch versions as the dispatch linearization point.
 - [ ] Canonically hash payee/provider mapping, amount, exact fragment/root ranges, provenance/lineage, holds, KYC, debt, reserve, chain, command, fencing, and kill-switch state; require a verified WORM/KMS anchor over both chain head and snapshot hash.
@@ -542,6 +575,7 @@ API activation begins only after integrated schema and security gates pass. Task
 - [ ] Keep fragments reserved through every ambiguous provider outcome; release only before dispatch linearization or after authoritative terminal failure/reconciliation.
 - [ ] Require a verified independent anchor covering the exact eligibility chain sequence, creating and verifying an on-demand anchor when necessary.
 - [ ] Complete, fail, or recover payout only through bound signed provider events and authoritative reconciliation.
+- [ ] Keep high-risk or newly changed payout destinations in review/hold until cooldown and manual review gates pass; maturity alone cannot release the hold.
 - [ ] Keep payout execution feature-flagged off pending external approval.
 
 ### Task 4.3: Treasury, Reserves, And Custody
@@ -643,11 +677,14 @@ API activation begins only after integrated schema and security gates pass. Task
 
 **Branch:** `feat/economy-operations-console`
 
-**Produces:** Reconciliation, reserve, holds, debt, webhook, provider, fraud, policy-version, and adjustment workflows.
+**Produces:** Reconciliation, reserve, holds, debt, webhook, provider, fraud, policy-version, risk-review, financial-crime, Trust/Safety, and adjustment workflows.
 
 - [ ] Require platform permissions and dual-control where applicable.
 - [ ] Surface kill switches and their impact.
 - [ ] Provide immutable audit timelines and export.
+- [ ] Add risk decision search, review queue, reason-code timeline, entity-cluster exposure, velocity-limit counters, protected-change cooldowns, and manual `Challenge`/`Hold`/`Review`/`Deny` outcomes.
+- [ ] Add financial-crime status, compliance holds, sanctions/KYC evidence references, monitoring cases, jurisdiction blocks, and audited protected-data reads.
+- [ ] Add Trust/Safety case inputs for prohibited products, project abuse, marketplace integrity, creator enforcement, and release/appeal workflows.
 - [ ] Durably audit every privileged KYC/risk read/export with actor, tenant, purpose, scope, and outcome before releasing protected data; require independent approval for bulk export and fail closed when audit persistence/verification is unhealthy.
 - [ ] Add incident-focused empty/error/stale states.
 - [ ] Add authenticated admin E2E coverage.
@@ -703,6 +740,8 @@ The dual-currency economy is complete only when:
 
 - every hard invariant is enforced by code and, where possible, the database
 - no public path can mint, convert, transfer, refund, or withdraw unauthorized value
+- every protected financial operation is bound to transaction authorization, a valid risk decision, aggregate limits, current Compliance/TrustSafety status, reserve/margin headroom, and durable audit evidence
+- account-takeover protections, protected-change cooldowns, entity-graph exposure, marketplace abuse detection, dynamic rolling reserves, case review, and appeal workflows are tested and operable
 - all value movements are balanced, append-only, idempotent, and provenance-preserving through exact fungible-fragment lineage
 - no scalar balance is authoritative; full/partial root reversals account for every descendant fragment as recovery, debt/receivable, or loss
 - ad rewards are verified, bounded, reconciled, and fail closed when provider evidence is stale
