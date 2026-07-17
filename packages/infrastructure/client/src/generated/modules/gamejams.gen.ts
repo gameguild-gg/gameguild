@@ -56,6 +56,33 @@ export class GamejamsModule {
 
   /**
    */
+  async postApiGameJamsSubmissionsScores(
+    submissionId: string,
+    body: Types.GameJamsScoreJamSubmissionInput,
+  ): Promise<Result<Types.GameJamsJamScoreDto, ApiError>> {
+    const url = `/api/game-jams/submissions/${submissionId}/scores`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.GameJamsScoreJamSubmissionInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.GameJamsJamScoreDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getApiGameJams1(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/game-jams/${id}`;
 
@@ -152,33 +179,6 @@ export class GamejamsModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.GameJamsJamSubmissionSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postApiGameJamsSubmissionsScores(
-    submissionId: string,
-    body: Types.GameJamsScoreJamSubmissionInput,
-  ): Promise<Result<Types.GameJamsJamScoreDto, ApiError>> {
-    const url = `/api/game-jams/submissions/${submissionId}/scores`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.GameJamsScoreJamSubmissionInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.GameJamsJamScoreDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

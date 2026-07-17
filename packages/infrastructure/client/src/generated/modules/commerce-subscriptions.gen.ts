@@ -63,23 +63,6 @@ export class CommerceSubscriptionsModule {
   }
 
   /**
-   * Get subscription metrics
-   *
-   * Retrieves subscription metrics and analytics.
-   */
-  async getSubscriptionsGetMetrics(): Promise<Result<void, ApiError>> {
-    const url = '/api/v1/subscriptions:get-metrics';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Get subscription by ID
    *
    * Retrieves detailed information for a specific subscription.
@@ -176,6 +159,64 @@ export class CommerceSubscriptionsModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get subscription billing history
+   *
+   * Retrieves billing history for a specific subscription.
+   */
+  async getSubscriptionsBillingHistory(subscriptionId: string): Promise<Result<Array<Types.CommerceSubscriptionsBillingHistory>, ApiError>> {
+    const url = `/api/v1/subscriptions/${subscriptionId}/billing-history`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.CommerceSubscriptionsBillingHistory>, ApiError>;
+  }
+
+  /**
+   * Get subscription invoices
+   *
+   * Retrieves the invoice history for a specific subscription.
+   */
+  async getSubscriptionsInvoices(subscriptionId: string, query?: { page?: number; pageSize?: number }): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/subscriptions/${subscriptionId}/invoices`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get subscription usage and limits
+   *
+   * Retrieves usage information and limits for a specific subscription.
+   */
+  async getSubscriptionsUsage(subscriptionId: string): Promise<Result<Types.CommerceSubscriptionsSubscriptionUsage, ApiError>> {
+    const url = `/api/v1/subscriptions/${subscriptionId}/usage`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceSubscriptionsSubscriptionUsageSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
@@ -475,61 +516,20 @@ export class CommerceSubscriptionsModule {
   }
 
   /**
-   * Get subscription billing history
+   * Get subscription metrics
    *
-   * Retrieves billing history for a specific subscription.
+   * Retrieves subscription metrics and analytics.
    */
-  async getSubscriptionsBillingHistory(subscriptionId: string): Promise<Result<Array<Types.CommerceSubscriptionsBillingHistory>, ApiError>> {
-    const url = `/api/v1/subscriptions/${subscriptionId}/billing-history`;
+  async getSubscriptionsGetMetrics(): Promise<Result<void, ApiError>> {
+    const url = '/api/v1/subscriptions:get-metrics';
 
     const result = await this.client.request({
       method: 'GET',
       path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.CommerceSubscriptionsBillingHistory>, ApiError>;
-  }
-
-  /**
-   * Get subscription invoices
-   *
-   * Retrieves the invoice history for a specific subscription.
-   */
-  async getSubscriptionsInvoices(subscriptionId: string, query?: { page?: number; pageSize?: number }): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscriptions/${subscriptionId}/invoices`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
       requiresAuth: true,
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Get subscription usage and limits
-   *
-   * Retrieves usage information and limits for a specific subscription.
-   */
-  async getSubscriptionsUsage(subscriptionId: string): Promise<Result<Types.CommerceSubscriptionsSubscriptionUsage, ApiError>> {
-    const url = `/api/v1/subscriptions/${subscriptionId}/usage`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.CommerceSubscriptionsSubscriptionUsageSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
   }
 }
 

@@ -61,15 +61,15 @@ export class LearningCoursesSupportticketsModule {
 
   /**
    */
-  async postCoursesSupportTicketsResolve(
+  async postCoursesSupportTicketsMessages(
     courseId: string,
     ticketId: string,
-    body: Types.LearningCoursesResolveCourseSupportTicketInput,
+    body: Types.LearningCoursesCourseSupportTicketMessageInput,
   ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/courses/${courseId}/support/tickets/${ticketId}:resolve`;
+    const url = `/v1/courses/${courseId}/support/tickets/${ticketId}/messages`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesResolveCourseSupportTicketInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCoursesCourseSupportTicketMessageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -89,15 +89,15 @@ export class LearningCoursesSupportticketsModule {
 
   /**
    */
-  async postCoursesSupportTicketsMessages(
+  async postCoursesSupportTicketsResolve(
     courseId: string,
     ticketId: string,
-    body: Types.LearningCoursesCourseSupportTicketMessageInput,
+    body: Types.LearningCoursesResolveCourseSupportTicketInput,
   ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/courses/${courseId}/support/tickets/${ticketId}/messages`;
+    const url = `/v1/courses/${courseId}/support/tickets/${ticketId}:resolve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCourseSupportTicketMessageInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCoursesResolveCourseSupportTicketInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

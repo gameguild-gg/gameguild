@@ -48,6 +48,15 @@ export interface AIAiConversationHistoryEntry {
   userId?: string | null;
 }
 
+export interface AIAiGenerateInput {
+  maxTokens?: number | null;
+  model?: string | null;
+  prompt?: string | null;
+  provider?: string | null;
+  systemPrompt?: string | null;
+  temperature?: number | null;
+}
+
 export interface AIAiGeneratedContentDraftInput {
   audience?: string | null;
   context?: string | null;
@@ -69,15 +78,6 @@ export interface AIAiGeneratedContentInput {
   provider?: string | null;
   subject?: string | null;
   tone?: string | null;
-}
-
-export interface AIAiGenerateInput {
-  maxTokens?: number | null;
-  model?: string | null;
-  prompt?: string | null;
-  provider?: string | null;
-  systemPrompt?: string | null;
-  temperature?: number | null;
 }
 
 export interface AIAiPromptTemplate {
@@ -274,9 +274,15 @@ export interface BulkOperationOutput {
   errors?: Array<BulkOperationError> | null;
   failedOperations?: number;
   isComplete?: boolean;
-  successfulOperations?: number;
   successRate?: number;
+  successfulOperations?: number;
   totalRequested?: number;
+}
+
+export interface CQRSIDomainEvent {
+  eventId?: string;
+  occurredAt?: string;
+  version?: number;
 }
 
 export interface CommerceBillingInvoicePaymentRetryResult {
@@ -290,6 +296,86 @@ export interface CommerceBillingInvoicePaymentRetryResult {
 }
 
 export type CommerceBillingInvoiceStatus = 'Draft' | 'Open' | 'Paid' | 'Void' | 'PastDue' | 'Uncollectible';
+
+export interface CommerceOrdersAddOrderItemInput {
+  productId?: string;
+  promoCode?: string | null;
+  quantity?: number;
+}
+
+export interface CommerceOrdersCancelOrderInput {
+  reason?: string | null;
+}
+
+export interface CommerceOrdersCaptureOrderInput {
+  amount?: number | null;
+}
+
+export interface CommerceOrdersCompleteOrderInput {
+  paymentId?: string | null;
+  paymentMethod?: string | null;
+  paymentProviderReference?: string | null;
+}
+
+export interface CommerceOrdersCreateOrderInput {
+  currency?: string | null;
+  idempotencyKey?: string | null;
+  tenantId?: string | null;
+  userId?: string;
+}
+
+export interface CommerceOrdersHoldOrderInput {
+  reason?: string | null;
+}
+
+export interface CommerceOrdersOrder {
+  createdAt?: string;
+  currency?: string | null;
+  discountTotal?: number;
+  id?: string;
+  idempotencyKey?: string | null;
+  lineItems?: Array<CommerceOrdersOrderLineItem> | null;
+  paidAt?: string | null;
+  paymentMethod?: string | null;
+  paymentProviderReference?: string | null;
+  refundAmount?: number | null;
+  refundReason?: string | null;
+  refundedAt?: string | null;
+  status?: CommerceOrdersOrderStatus;
+  subtotal?: number;
+  taxAmount?: number;
+  total?: number;
+  updatedAt?: string;
+  userId?: string;
+}
+
+export interface CommerceOrdersOrderLineItem {
+  basePrice?: number;
+  discountAmount?: number;
+  id?: string;
+  isSubscription?: boolean;
+  lineTotal?: number;
+  productId?: string;
+  productName?: string | null;
+  promoCodesApplied?: string | null;
+  quantity?: number;
+  salePrice?: number | null;
+  unitPrice?: number;
+}
+
+export type CommerceOrdersOrderStatus =
+  'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Refunded' | 'PartiallyRefunded' | 'Disputed' | 'Paid' | 'Fulfilled' | 'OnHold';
+
+export interface CommerceOrdersPatchOrderInput {
+  currency?: string | null;
+  metadata?: Record<string, string> | null;
+  notes?: string | null;
+}
+
+export interface CommerceOrdersRefundOrderInput {
+  amount?: number | null;
+  reason?: string | null;
+}
 
 export interface CommercePaymentsAddFundsInput {
   amount: number;
@@ -421,6 +507,8 @@ export interface CommercePaymentsPaymentRetryResult {
   success?: boolean;
 }
 
+export type CommercePaymentsPaymentStatus = 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'Cancelled' | 'RequiresAction' | 'Refunded' | 'Disputed';
+
 export interface CommercePaymentsPaymentsControllerCancelPaymentInput {
   canceledBy?: string | null;
   cancellationReason?: string | null;
@@ -459,8 +547,6 @@ export interface CommercePaymentsPaymentsControllerRefundInput {
   reason?: string | null;
 }
 
-export type CommercePaymentsPaymentStatus = 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'Cancelled' | 'RequiresAction' | 'Refunded' | 'Disputed';
-
 export interface CommercePaymentsProcessRefundResult {
   currency: string | null;
   errorMessage?: string | null;
@@ -472,8 +558,8 @@ export interface CommercePaymentsProcessRefundResult {
   processingFee?: number;
   reason: string | null;
   referenceNumber?: string | null;
-  refundedAmount: number;
   refundId: string;
+  refundedAmount: number;
   status: CommercePaymentsTransactionStatus;
 }
 
@@ -481,9 +567,9 @@ export interface CommercePaymentsTaxBreakdown {
   description?: string | null;
   jurisdictionCode?: string | null;
   rate?: number;
-  taxableAmount?: number;
   taxAmount?: number;
   taxType?: CommercePaymentsTaxType;
+  taxableAmount?: number;
 }
 
 export interface CommercePaymentsTaxCalculationResult {
@@ -505,9 +591,9 @@ export interface CommercePaymentsTaxExemptionValidationResult {
   exemptionRate?: number;
   exemptionType?: string | null;
   isValid?: boolean;
-  validationMessage?: string | null;
   validFrom?: string | null;
   validTo?: string | null;
+  validationMessage?: string | null;
   warnings?: Array<string> | null;
 }
 
@@ -1339,6 +1425,28 @@ export interface CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscrip
   sortOrder?: number | null;
 }
 
+export type CommerceSubscriptionsSubscriptionStatus = 'PendingActivation' | 'Active' | 'Trialing' | 'PastDue' | 'Suspended' | 'Cancelled' | 'Expired';
+
+export interface CommerceSubscriptionsSubscriptionUpgradeResult {
+  creditApplied?: Money;
+  failureReason?: string | null;
+  proratedAmount?: Money;
+  success?: boolean;
+  updatedSubscription?: CommerceSubscriptionsSubscription;
+}
+
+export interface CommerceSubscriptionsSubscriptionUsage {
+  apiCallsThisMonth?: number;
+  isOverLimit?: boolean;
+  limitWarnings?: Array<string> | null;
+  maxApiCallsPerMonth?: number | null;
+  maxStorageMb?: number | null;
+  maxUsers?: number | null;
+  storageUsedMb?: number;
+  subscriptionId?: string;
+  usersCount?: number;
+}
+
 export interface CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput {
   amount?: number;
   billingCycle?: BillingCycle;
@@ -1366,28 +1474,6 @@ export interface CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInpu
   externalCustomerId?: string | null;
   externalSubscriptionId?: string | null;
   planId?: string;
-}
-
-export type CommerceSubscriptionsSubscriptionStatus = 'PendingActivation' | 'Active' | 'Trialing' | 'PastDue' | 'Suspended' | 'Cancelled' | 'Expired';
-
-export interface CommerceSubscriptionsSubscriptionUpgradeResult {
-  creditApplied?: Money;
-  failureReason?: string | null;
-  proratedAmount?: Money;
-  success?: boolean;
-  updatedSubscription?: CommerceSubscriptionsSubscription;
-}
-
-export interface CommerceSubscriptionsSubscriptionUsage {
-  apiCallsThisMonth?: number;
-  isOverLimit?: boolean;
-  limitWarnings?: Array<string> | null;
-  maxApiCallsPerMonth?: number | null;
-  maxStorageMb?: number | null;
-  maxUsers?: number | null;
-  storageUsedMb?: number;
-  subscriptionId?: string;
-  usersCount?: number;
 }
 
 export interface ComplianceFERPACompleteFerpaInspectionRequestBody {
@@ -1518,6 +1604,10 @@ export interface ComplianceFERPAUpsertDirectoryInformationPolicyCommand {
   optOutEnabled?: boolean;
   tenantId?: string | null;
 }
+
+export type ContentStatus = 'Draft' | 'Review' | 'Published' | 'Archived' | 'Deleted';
+
+export type ContentVisibility = 'Private' | 'Internal' | 'Friends' | 'Protected' | 'Public';
 
 export interface ContentPagesContentResource {
   authorId?: string | null;
@@ -1798,16 +1888,6 @@ export interface ContentPagesUpdatePageSection {
   subheading?: string | null;
 }
 
-export type ContentStatus = 'Draft' | 'Review' | 'Published' | 'Archived' | 'Deleted';
-
-export type ContentVisibility = 'Private' | 'Internal' | 'Friends' | 'Protected' | 'Public';
-
-export interface CQRSIDomainEvent {
-  eventId?: string;
-  occurredAt?: string;
-  version?: number;
-}
-
 export interface FeaturesBulkEvaluationInput {
   context?: FeaturesFeatureContext;
   featureKeys?: Array<string> | null;
@@ -1815,10 +1895,10 @@ export interface FeaturesBulkEvaluationInput {
 
 export interface FeaturesCapabilityAuditLog {
   capabilityKey?: string | null;
-  changedAt?: string;
-  changedByUserId?: string | null;
   changeReason?: string | null;
   changeType?: string | null;
+  changedAt?: string;
+  changedByUserId?: string | null;
   id?: string;
   newSource?: string | null;
   newValue?: boolean;
@@ -2282,8 +2362,8 @@ export interface IdentityAuthenticationLocationInfo {
   displayLocation?: string | null;
   ipAddress?: string | null;
   isHosting?: boolean | null;
-  isp?: string | null;
   isProxy?: boolean | null;
+  isp?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   organization?: string | null;
@@ -3340,12 +3420,12 @@ export interface IdentityTenantsUsageTracking {
 export interface IdentityTenantsUserMembership {
   acceptedAt?: string | null;
   cancelledAt?: string | null;
+  inviteResendCount?: number;
+  inviteStatus?: string | null;
   invitedAt?: string | null;
   invitedByEmail?: string | null;
   inviteeEmail?: string | null;
   inviteeName?: string | null;
-  inviteResendCount?: number;
-  inviteStatus?: string | null;
   isActive?: boolean;
   joinedAt?: string;
   lastInviteSentAt?: string | null;
@@ -4172,8 +4252,8 @@ export interface LearningCertificatesCertificateVerificationResult {
   certificateNumber?: string | null;
   courseName?: string | null;
   expiresAt?: string | null;
-  issuedAt?: string;
   isValid?: boolean;
+  issuedAt?: string;
   message?: string | null;
   recipientName?: string | null;
   status?: LearningCertificatesCertificateStatus;
@@ -4420,8 +4500,8 @@ export interface LearningCoursesActivityGrade {
   createdAt?: string;
   feedback?: string | null;
   grade?: number;
-  gradedAt?: string;
   gradePercentage?: string | null;
+  gradedAt?: string;
   grader?: LearningCoursesGraderSummary;
   graderProgramUserId?: string | null;
   gradingDetails?: string | null;
@@ -4637,13 +4717,6 @@ export interface LearningCoursesEngagementMetrics {
 
 export type LearningCoursesEnrollmentStatus = 'Open' | 'Active' | 'Paused' | 'Cancelled' | 'Expired' | 'Completed' | 'Closed' | 'InviteOnly' | 'Waitlist';
 
-export interface LearningCoursesGraderSummary {
-  id?: string;
-  role?: string | null;
-  userDisplayName?: string | null;
-  userEmail?: string | null;
-}
-
 export interface LearningCoursesGradeStatistics {
   averageGrade?: number;
   averageGradeFormatted?: string | null;
@@ -4653,6 +4726,13 @@ export interface LearningCoursesGradeStatistics {
   passingRate?: number;
   passingRateFormatted?: string | null;
   totalGrades?: number;
+}
+
+export interface LearningCoursesGraderSummary {
+  id?: string;
+  role?: string | null;
+  userDisplayName?: string | null;
+  userEmail?: string | null;
 }
 
 export type LearningCoursesGradingMethod = 'None' | 'Instructor' | 'Peer' | 'Ai' | 'AutomatedTests';
@@ -4979,6 +5059,12 @@ export interface LearningCoursesUserProgress {
 
 export type LearningCoursesVisibility = 'Public' | 'Internal' | 'Private' | 'Restricted';
 
+export interface LearningEnrollmentsEnrollUserInput {
+  cohortId?: string | null;
+  courseId?: string;
+  userId?: string;
+}
+
 export interface LearningEnrollmentsEnrollment {
   cohortId?: string | null;
   completedAt?: string | null;
@@ -4993,12 +5079,6 @@ export interface LearningEnrollmentsEnrollment {
 }
 
 export type LearningEnrollmentsEnrollmentStatus = 'Active' | 'Paused' | 'Completed' | 'Dropped' | 'Expired';
-
-export interface LearningEnrollmentsEnrollUserInput {
-  cohortId?: string | null;
-  courseId?: string;
-  userId?: string;
-}
 
 export interface LearningEnrollmentsUpdateEnrollmentProgressInput {
   progress?: number;
@@ -5457,8 +5537,8 @@ export type ObjectsAttestationConveyancePreference = 'None' | 'Indirect' | 'Dire
 export type ObjectsAttestationStatementFormatIdentifier = 'Packed' | 'Tpm' | 'AndroidKey' | 'AndroidSafetyNet' | 'FidoU2f' | 'Apple' | 'None';
 
 export interface ObjectsAuthenticationExtensionsClientInputs {
-  credentialProtectionPolicy?: ObjectsCredentialProtectionPolicy;
   credProps?: boolean | null;
+  credentialProtectionPolicy?: ObjectsCredentialProtectionPolicy;
   enforceCredentialProtectionPolicy?: boolean | null;
   'example.extension.bool'?: boolean | null;
   exts?: boolean | null;
@@ -5949,11 +6029,11 @@ export interface ProjectsProjectRelease {
   isPrerelease?: boolean;
   project?: ProjectsProject;
   projectId?: string;
-  releasedAt?: string;
   releaseMetadata?: string | null;
   releaseNotes?: string | null;
   releaseType?: string | null;
   releaseVersion: string;
+  releasedAt?: string;
   status?: ContentStatus;
   supportedPlatforms?: string | null;
   systemRequirements?: string | null;
@@ -6874,11 +6954,11 @@ export interface TestingLabTestingFeedback {
   overallRating?: number | null;
   qualityRating?: TestingLabFeedbackQuality;
   qualityRatings?: Array<TestingLabFeedbackQualityRating> | null;
+  reportReason?: string | null;
   reportedAt?: string | null;
   reportedBy?: IdentityUsersUser;
   reportedById?: string | null;
   reportedByUserId?: string | null;
-  reportReason?: string | null;
   session?: TestingLabTestingSession;
   sessionId?: string | null;
   tenantId?: string | null;
@@ -7160,10 +7240,10 @@ export let AIAiChatMessageSchema: z.ZodType<AIAiChatMessage>;
 export let AIAiChatInputSchema: z.ZodType<AIAiChatInput>;
 export let AIAiCompletionOutputSchema: z.ZodType<AIAiCompletionOutput>;
 export let AIAiConversationHistoryEntrySchema: z.ZodType<AIAiConversationHistoryEntry>;
+export let AIAiGenerateInputSchema: z.ZodType<AIAiGenerateInput>;
 export let AIAiGeneratedContentDraftInputSchema: z.ZodType<AIAiGeneratedContentDraftInput>;
 export let AIAiGeneratedContentKindSchema: z.ZodType<AIAiGeneratedContentKind>;
 export let AIAiGeneratedContentInputSchema: z.ZodType<AIAiGeneratedContentInput>;
-export let AIAiGenerateInputSchema: z.ZodType<AIAiGenerateInput>;
 export let AIAiPromptTemplateSchema: z.ZodType<AIAiPromptTemplate>;
 export let AIAiPromptTemplateGenerateInputSchema: z.ZodType<AIAiPromptTemplateGenerateInput>;
 export let AIAiPromptTemplateRenderInputSchema: z.ZodType<AIAiPromptTemplateRenderInput>;
@@ -7189,8 +7269,20 @@ export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDe
 export let BillingCycleSchema: z.ZodType<BillingCycle>;
 export let BulkOperationErrorSchema: z.ZodType<BulkOperationError>;
 export let BulkOperationOutputSchema: z.ZodType<BulkOperationOutput>;
+export let CQRSIDomainEventSchema: z.ZodType<CQRSIDomainEvent>;
 export let CommerceBillingInvoicePaymentRetryResultSchema: z.ZodType<CommerceBillingInvoicePaymentRetryResult>;
 export let CommerceBillingInvoiceStatusSchema: z.ZodType<CommerceBillingInvoiceStatus>;
+export let CommerceOrdersAddOrderItemInputSchema: z.ZodType<CommerceOrdersAddOrderItemInput>;
+export let CommerceOrdersCancelOrderInputSchema: z.ZodType<CommerceOrdersCancelOrderInput>;
+export let CommerceOrdersCaptureOrderInputSchema: z.ZodType<CommerceOrdersCaptureOrderInput>;
+export let CommerceOrdersCompleteOrderInputSchema: z.ZodType<CommerceOrdersCompleteOrderInput>;
+export let CommerceOrdersCreateOrderInputSchema: z.ZodType<CommerceOrdersCreateOrderInput>;
+export let CommerceOrdersHoldOrderInputSchema: z.ZodType<CommerceOrdersHoldOrderInput>;
+export let CommerceOrdersOrderSchema: z.ZodType<CommerceOrdersOrder>;
+export let CommerceOrdersOrderLineItemSchema: z.ZodType<CommerceOrdersOrderLineItem>;
+export let CommerceOrdersOrderStatusSchema: z.ZodType<CommerceOrdersOrderStatus>;
+export let CommerceOrdersPatchOrderInputSchema: z.ZodType<CommerceOrdersPatchOrderInput>;
+export let CommerceOrdersRefundOrderInputSchema: z.ZodType<CommerceOrdersRefundOrderInput>;
 export let CommercePaymentsAddFundsInputSchema: z.ZodType<CommercePaymentsAddFundsInput>;
 export let CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCancelBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCreateBillingChargeInput>;
@@ -7209,13 +7301,13 @@ export let CommercePaymentsPatchTaxRuleInputSchema: z.ZodType<CommercePaymentsPa
 export let CommercePaymentsPaymentCancellationResultSchema: z.ZodType<CommercePaymentsPaymentCancellationResult>;
 export let CommercePaymentsPaymentResultSchema: z.ZodType<CommercePaymentsPaymentResult>;
 export let CommercePaymentsPaymentRetryResultSchema: z.ZodType<CommercePaymentsPaymentRetryResult>;
+export let CommercePaymentsPaymentStatusSchema: z.ZodType<CommercePaymentsPaymentStatus>;
 export let CommercePaymentsPaymentsControllerCancelPaymentInputSchema: z.ZodType<CommercePaymentsPaymentsControllerCancelPaymentInput>;
 export let CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInputSchema: z.ZodType<CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput>;
 export let CommercePaymentsPaymentsControllerCreateSetupIntentInputSchema: z.ZodType<CommercePaymentsPaymentsControllerCreateSetupIntentInput>;
 export let CommercePaymentsPaymentsControllerCreateSetupIntentOutputSchema: z.ZodType<CommercePaymentsPaymentsControllerCreateSetupIntentOutput>;
 export let CommercePaymentsPaymentsControllerProcessPaymentInputSchema: z.ZodType<CommercePaymentsPaymentsControllerProcessPaymentInput>;
 export let CommercePaymentsPaymentsControllerRefundInputSchema: z.ZodType<CommercePaymentsPaymentsControllerRefundInput>;
-export let CommercePaymentsPaymentStatusSchema: z.ZodType<CommercePaymentsPaymentStatus>;
 export let CommercePaymentsProcessRefundResultSchema: z.ZodType<CommercePaymentsProcessRefundResult>;
 export let CommercePaymentsTaxBreakdownSchema: z.ZodType<CommercePaymentsTaxBreakdown>;
 export let CommercePaymentsTaxCalculationResultSchema: z.ZodType<CommercePaymentsTaxCalculationResult>;
@@ -7303,12 +7395,12 @@ export let CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimi
 export let CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput>;
 export let CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput>;
 export let CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput>;
-export let CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput>;
-export let CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput>;
-export let CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput>;
 export let CommerceSubscriptionsSubscriptionStatusSchema: z.ZodType<CommerceSubscriptionsSubscriptionStatus>;
 export let CommerceSubscriptionsSubscriptionUpgradeResultSchema: z.ZodType<CommerceSubscriptionsSubscriptionUpgradeResult>;
 export let CommerceSubscriptionsSubscriptionUsageSchema: z.ZodType<CommerceSubscriptionsSubscriptionUsage>;
+export let CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput>;
+export let CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput>;
+export let CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput>;
 export let ComplianceFERPACompleteFerpaInspectionRequestBodySchema: z.ZodType<ComplianceFERPACompleteFerpaInspectionRequestBody>;
 export let ComplianceFERPAEducationRecordKindSchema: z.ZodType<ComplianceFERPAEducationRecordKind>;
 export let ComplianceFERPAFerpaDirectoryInformationPolicySchema: z.ZodType<ComplianceFERPAFerpaDirectoryInformationPolicy>;
@@ -7324,6 +7416,8 @@ export let ComplianceFERPARecordFerpaDisclosureCommandSchema: z.ZodType<Complian
 export let ComplianceFERPARegisterEducationRecordCommandSchema: z.ZodType<ComplianceFERPARegisterEducationRecordCommand>;
 export let ComplianceFERPASubmitFerpaInspectionRequestCommandSchema: z.ZodType<ComplianceFERPASubmitFerpaInspectionRequestCommand>;
 export let ComplianceFERPAUpsertDirectoryInformationPolicyCommandSchema: z.ZodType<ComplianceFERPAUpsertDirectoryInformationPolicyCommand>;
+export let ContentStatusSchema: z.ZodType<ContentStatus>;
+export let ContentVisibilitySchema: z.ZodType<ContentVisibility>;
 export let ContentPagesContentResourceSchema: z.ZodType<ContentPagesContentResource>;
 export let ContentPagesContentResourceStatusSchema: z.ZodType<ContentPagesContentResourceStatus>;
 export let ContentPagesContentResourceTypeSchema: z.ZodType<ContentPagesContentResourceType>;
@@ -7342,9 +7436,6 @@ export let ContentPagesSitemapEntrySchema: z.ZodType<ContentPagesSitemapEntry>;
 export let ContentPagesUpdateContentResourceSchema: z.ZodType<ContentPagesUpdateContentResource>;
 export let ContentPagesUpdatePageSchema: z.ZodType<ContentPagesUpdatePage>;
 export let ContentPagesUpdatePageSectionSchema: z.ZodType<ContentPagesUpdatePageSection>;
-export let ContentStatusSchema: z.ZodType<ContentStatus>;
-export let ContentVisibilitySchema: z.ZodType<ContentVisibility>;
-export let CQRSIDomainEventSchema: z.ZodType<CQRSIDomainEvent>;
 export let FeaturesBulkEvaluationInputSchema: z.ZodType<FeaturesBulkEvaluationInput>;
 export let FeaturesCapabilityAuditLogSchema: z.ZodType<FeaturesCapabilityAuditLog>;
 export let FeaturesCapabilityCheckOutputSchema: z.ZodType<FeaturesCapabilityCheckOutput>;
@@ -7666,8 +7757,8 @@ export let LearningCoursesCreateProgramContentSchema: z.ZodType<LearningCoursesC
 export let LearningCoursesCreateProgramSchema: z.ZodType<LearningCoursesCreateProgram>;
 export let LearningCoursesEngagementMetricsSchema: z.ZodType<LearningCoursesEngagementMetrics>;
 export let LearningCoursesEnrollmentStatusSchema: z.ZodType<LearningCoursesEnrollmentStatus>;
-export let LearningCoursesGraderSummarySchema: z.ZodType<LearningCoursesGraderSummary>;
 export let LearningCoursesGradeStatisticsSchema: z.ZodType<LearningCoursesGradeStatistics>;
+export let LearningCoursesGraderSummarySchema: z.ZodType<LearningCoursesGraderSummary>;
 export let LearningCoursesGradingMethodSchema: z.ZodType<LearningCoursesGradingMethod>;
 export let LearningCoursesLessonContentFormatSchema: z.ZodType<LearningCoursesLessonContentFormat>;
 export let LearningCoursesMonetizationSchema: z.ZodType<LearningCoursesMonetization>;
@@ -7711,9 +7802,9 @@ export let LearningCoursesUpdateProgressInputSchema: z.ZodType<LearningCoursesUp
 export let LearningCoursesUpdateTimeSpentInputSchema: z.ZodType<LearningCoursesUpdateTimeSpentInput>;
 export let LearningCoursesUserProgressSchema: z.ZodType<LearningCoursesUserProgress>;
 export let LearningCoursesVisibilitySchema: z.ZodType<LearningCoursesVisibility>;
+export let LearningEnrollmentsEnrollUserInputSchema: z.ZodType<LearningEnrollmentsEnrollUserInput>;
 export let LearningEnrollmentsEnrollmentSchema: z.ZodType<LearningEnrollmentsEnrollment>;
 export let LearningEnrollmentsEnrollmentStatusSchema: z.ZodType<LearningEnrollmentsEnrollmentStatus>;
-export let LearningEnrollmentsEnrollUserInputSchema: z.ZodType<LearningEnrollmentsEnrollUserInput>;
 export let LearningEnrollmentsUpdateEnrollmentProgressInputSchema: z.ZodType<LearningEnrollmentsUpdateEnrollmentProgressInput>;
 export let LearningExperienceDiscoveryCollectionTypeSchema: z.ZodType<LearningExperienceDiscoveryCollectionType>;
 export let LearningExperienceDiscoveryCourseCollectionSchema: z.ZodType<LearningExperienceDiscoveryCourseCollection>;
@@ -7980,6 +8071,16 @@ AIAiConversationHistoryEntrySchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
+/** Zod schema for AIAiGenerateInput */
+AIAiGenerateInputSchema = z.object({
+  maxTokens: z.number().int().nullable().optional(),
+  model: z.string().nullable().optional(),
+  prompt: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  systemPrompt: z.string().nullable().optional(),
+  temperature: z.number().nullable().optional(),
+});
+
 /** Zod schema for AIAiGeneratedContentDraftInput */
 AIAiGeneratedContentDraftInputSchema = z.object({
   audience: z.string().nullable().optional(),
@@ -8004,16 +8105,6 @@ AIAiGeneratedContentInputSchema = z.object({
   provider: z.string().nullable().optional(),
   subject: z.string().nullable().optional(),
   tone: z.string().nullable().optional(),
-});
-
-/** Zod schema for AIAiGenerateInput */
-AIAiGenerateInputSchema = z.object({
-  maxTokens: z.number().int().nullable().optional(),
-  model: z.string().nullable().optional(),
-  prompt: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
-  systemPrompt: z.string().nullable().optional(),
-  temperature: z.number().nullable().optional(),
 });
 
 /** Zod schema for AIAiPromptTemplate */
@@ -8253,9 +8344,16 @@ BulkOperationOutputSchema = z.object({
     .optional(),
   failedOperations: z.number().int().optional(),
   isComplete: z.boolean().optional(),
-  successfulOperations: z.number().int().optional(),
   successRate: z.number().optional(),
+  successfulOperations: z.number().int().optional(),
   totalRequested: z.number().int().optional(),
+});
+
+/** Zod schema for CQRSIDomainEvent */
+CQRSIDomainEventSchema = z.object({
+  eventId: z.string().uuid().optional(),
+  occurredAt: z.string().datetime().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for CommerceBillingInvoicePaymentRetryResult */
@@ -8271,6 +8369,111 @@ CommerceBillingInvoicePaymentRetryResultSchema = z.object({
 
 /** Zod schema for CommerceBillingInvoiceStatus */
 CommerceBillingInvoiceStatusSchema = z.enum(['Draft', 'Open', 'Paid', 'Void', 'PastDue', 'Uncollectible']);
+
+/** Zod schema for CommerceOrdersAddOrderItemInput */
+CommerceOrdersAddOrderItemInputSchema = z.object({
+  productId: z.string().uuid().optional(),
+  promoCode: z.string().nullable().optional(),
+  quantity: z.number().int().optional(),
+});
+
+/** Zod schema for CommerceOrdersCancelOrderInput */
+CommerceOrdersCancelOrderInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceOrdersCaptureOrderInput */
+CommerceOrdersCaptureOrderInputSchema = z.object({
+  amount: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommerceOrdersCompleteOrderInput */
+CommerceOrdersCompleteOrderInputSchema = z.object({
+  paymentId: z.string().uuid().nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  paymentProviderReference: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceOrdersCreateOrderInput */
+CommerceOrdersCreateOrderInputSchema = z.object({
+  currency: z.string().nullable().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommerceOrdersHoldOrderInput */
+CommerceOrdersHoldOrderInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceOrdersOrder */
+CommerceOrdersOrderSchema = z.object({
+  createdAt: z.string().datetime().optional(),
+  currency: z.string().nullable().optional(),
+  discountTotal: z.number().optional(),
+  id: z.string().uuid().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  lineItems: z
+    .array(z.lazy(() => CommerceOrdersOrderLineItemSchema))
+    .nullable()
+    .optional(),
+  paidAt: z.string().datetime().nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  paymentProviderReference: z.string().nullable().optional(),
+  refundAmount: z.number().nullable().optional(),
+  refundReason: z.string().nullable().optional(),
+  refundedAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => CommerceOrdersOrderStatusSchema).optional(),
+  subtotal: z.number().optional(),
+  taxAmount: z.number().optional(),
+  total: z.number().optional(),
+  updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommerceOrdersOrderLineItem */
+CommerceOrdersOrderLineItemSchema = z.object({
+  basePrice: z.number().optional(),
+  discountAmount: z.number().optional(),
+  id: z.string().uuid().optional(),
+  isSubscription: z.boolean().optional(),
+  lineTotal: z.number().optional(),
+  productId: z.string().uuid().optional(),
+  productName: z.string().nullable().optional(),
+  promoCodesApplied: z.string().nullable().optional(),
+  quantity: z.number().int().optional(),
+  salePrice: z.number().nullable().optional(),
+  unitPrice: z.number().optional(),
+});
+
+/** Zod schema for CommerceOrdersOrderStatus */
+CommerceOrdersOrderStatusSchema = z.enum([
+  'Pending',
+  'Processing',
+  'Completed',
+  'Failed',
+  'Cancelled',
+  'Refunded',
+  'PartiallyRefunded',
+  'Disputed',
+  'Paid',
+  'Fulfilled',
+  'OnHold',
+]);
+
+/** Zod schema for CommerceOrdersPatchOrderInput */
+CommerceOrdersPatchOrderInputSchema = z.object({
+  currency: z.string().nullable().optional(),
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceOrdersRefundOrderInput */
+CommerceOrdersRefundOrderInputSchema = z.object({
+  amount: z.number().nullable().optional(),
+  reason: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommercePaymentsAddFundsInput */
 CommercePaymentsAddFundsInputSchema = z.object({
@@ -8420,6 +8623,9 @@ CommercePaymentsPaymentRetryResultSchema = z.object({
   success: z.boolean().optional(),
 });
 
+/** Zod schema for CommercePaymentsPaymentStatus */
+CommercePaymentsPaymentStatusSchema = z.enum(['Pending', 'Processing', 'Succeeded', 'Failed', 'Cancelled', 'RequiresAction', 'Refunded', 'Disputed']);
+
 /** Zod schema for CommercePaymentsPaymentsControllerCancelPaymentInput */
 CommercePaymentsPaymentsControllerCancelPaymentInputSchema = z.object({
   canceledBy: z.string().uuid().nullable().optional(),
@@ -8464,9 +8670,6 @@ CommercePaymentsPaymentsControllerRefundInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsPaymentStatus */
-CommercePaymentsPaymentStatusSchema = z.enum(['Pending', 'Processing', 'Succeeded', 'Failed', 'Cancelled', 'RequiresAction', 'Refunded', 'Disputed']);
-
 /** Zod schema for CommercePaymentsProcessRefundResult */
 CommercePaymentsProcessRefundResultSchema = z.object({
   currency: z.string().nullable(),
@@ -8479,8 +8682,8 @@ CommercePaymentsProcessRefundResultSchema = z.object({
   processingFee: z.number().optional(),
   reason: z.string().nullable(),
   referenceNumber: z.string().nullable().optional(),
-  refundedAmount: z.number(),
   refundId: z.string().uuid(),
+  refundedAmount: z.number(),
   status: z.lazy(() => CommercePaymentsTransactionStatusSchema),
 });
 
@@ -8489,9 +8692,9 @@ CommercePaymentsTaxBreakdownSchema = z.object({
   description: z.string().nullable().optional(),
   jurisdictionCode: z.string().nullable().optional(),
   rate: z.number().optional(),
-  taxableAmount: z.number().optional(),
   taxAmount: z.number().optional(),
   taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
+  taxableAmount: z.number().optional(),
 });
 
 /** Zod schema for CommercePaymentsTaxCalculationResult */
@@ -8518,9 +8721,9 @@ CommercePaymentsTaxExemptionValidationResultSchema = z.object({
   exemptionRate: z.number().optional(),
   exemptionType: z.string().nullable().optional(),
   isValid: z.boolean().optional(),
-  validationMessage: z.string().nullable().optional(),
   validFrom: z.string().datetime().nullable().optional(),
   validTo: z.string().datetime().nullable().optional(),
+  validationMessage: z.string().nullable().optional(),
   warnings: z.array(z.string()).nullable().optional(),
 });
 
@@ -9492,6 +9695,31 @@ CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSche
   sortOrder: z.number().int().nullable().optional(),
 });
 
+/** Zod schema for CommerceSubscriptionsSubscriptionStatus */
+CommerceSubscriptionsSubscriptionStatusSchema = z.enum(['PendingActivation', 'Active', 'Trialing', 'PastDue', 'Suspended', 'Cancelled', 'Expired']);
+
+/** Zod schema for CommerceSubscriptionsSubscriptionUpgradeResult */
+CommerceSubscriptionsSubscriptionUpgradeResultSchema = z.object({
+  creditApplied: z.lazy(() => MoneySchema).optional(),
+  failureReason: z.string().nullable().optional(),
+  proratedAmount: z.lazy(() => MoneySchema).optional(),
+  success: z.boolean().optional(),
+  updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
+});
+
+/** Zod schema for CommerceSubscriptionsSubscriptionUsage */
+CommerceSubscriptionsSubscriptionUsageSchema = z.object({
+  apiCallsThisMonth: z.number().int().optional(),
+  isOverLimit: z.boolean().optional(),
+  limitWarnings: z.array(z.string()).nullable().optional(),
+  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  maxUsers: z.number().int().nullable().optional(),
+  storageUsedMb: z.number().int().optional(),
+  subscriptionId: z.string().uuid().optional(),
+  usersCount: z.number().int().optional(),
+});
+
 /** Zod schema for CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput */
 CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema = z.object({
   amount: z.number().optional(),
@@ -9522,31 +9750,6 @@ CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema = z.objec
   externalCustomerId: z.string().nullable().optional(),
   externalSubscriptionId: z.string().nullable().optional(),
   planId: z.string().uuid().optional(),
-});
-
-/** Zod schema for CommerceSubscriptionsSubscriptionStatus */
-CommerceSubscriptionsSubscriptionStatusSchema = z.enum(['PendingActivation', 'Active', 'Trialing', 'PastDue', 'Suspended', 'Cancelled', 'Expired']);
-
-/** Zod schema for CommerceSubscriptionsSubscriptionUpgradeResult */
-CommerceSubscriptionsSubscriptionUpgradeResultSchema = z.object({
-  creditApplied: z.lazy(() => MoneySchema).optional(),
-  failureReason: z.string().nullable().optional(),
-  proratedAmount: z.lazy(() => MoneySchema).optional(),
-  success: z.boolean().optional(),
-  updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
-});
-
-/** Zod schema for CommerceSubscriptionsSubscriptionUsage */
-CommerceSubscriptionsSubscriptionUsageSchema = z.object({
-  apiCallsThisMonth: z.number().int().optional(),
-  isOverLimit: z.boolean().optional(),
-  limitWarnings: z.array(z.string()).nullable().optional(),
-  maxApiCallsPerMonth: z.number().int().nullable().optional(),
-  maxStorageMb: z.number().int().nullable().optional(),
-  maxUsers: z.number().int().nullable().optional(),
-  storageUsedMb: z.number().int().optional(),
-  subscriptionId: z.string().uuid().optional(),
-  usersCount: z.number().int().optional(),
 });
 
 /** Zod schema for ComplianceFERPACompleteFerpaInspectionRequestBody */
@@ -9701,6 +9904,12 @@ ComplianceFERPAUpsertDirectoryInformationPolicyCommandSchema = z.object({
   optOutEnabled: z.boolean().optional(),
   tenantId: z.string().uuid().nullable().optional(),
 });
+
+/** Zod schema for ContentStatus */
+ContentStatusSchema = z.enum(['Draft', 'Review', 'Published', 'Archived', 'Deleted']);
+
+/** Zod schema for ContentVisibility */
+ContentVisibilitySchema = z.enum(['Private', 'Internal', 'Friends', 'Protected', 'Public']);
 
 /** Zod schema for ContentPagesContentResource */
 ContentPagesContentResourceSchema = z.object({
@@ -10003,19 +10212,6 @@ ContentPagesUpdatePageSectionSchema = z.object({
   subheading: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentStatus */
-ContentStatusSchema = z.enum(['Draft', 'Review', 'Published', 'Archived', 'Deleted']);
-
-/** Zod schema for ContentVisibility */
-ContentVisibilitySchema = z.enum(['Private', 'Internal', 'Friends', 'Protected', 'Public']);
-
-/** Zod schema for CQRSIDomainEvent */
-CQRSIDomainEventSchema = z.object({
-  eventId: z.string().uuid().optional(),
-  occurredAt: z.string().datetime().optional(),
-  version: z.number().int().optional(),
-});
-
 /** Zod schema for FeaturesBulkEvaluationInput */
 FeaturesBulkEvaluationInputSchema = z.object({
   context: z.lazy(() => FeaturesFeatureContextSchema).optional(),
@@ -10025,10 +10221,10 @@ FeaturesBulkEvaluationInputSchema = z.object({
 /** Zod schema for FeaturesCapabilityAuditLog */
 FeaturesCapabilityAuditLogSchema = z.object({
   capabilityKey: z.string().nullable().optional(),
-  changedAt: z.string().datetime().optional(),
-  changedByUserId: z.string().uuid().nullable().optional(),
   changeReason: z.string().nullable().optional(),
   changeType: z.string().nullable().optional(),
+  changedAt: z.string().datetime().optional(),
+  changedByUserId: z.string().uuid().nullable().optional(),
   id: z.string().uuid().optional(),
   newSource: z.string().nullable().optional(),
   newValue: z.boolean().optional(),
@@ -10571,8 +10767,8 @@ IdentityAuthenticationLocationInfoSchema = z.object({
   displayLocation: z.string().nullable().optional(),
   ipAddress: z.string().nullable().optional(),
   isHosting: z.boolean().nullable().optional(),
-  isp: z.string().nullable().optional(),
   isProxy: z.boolean().nullable().optional(),
+  isp: z.string().nullable().optional(),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
   organization: z.string().nullable().optional(),
@@ -11802,12 +11998,12 @@ IdentityTenantsUsageTrackingSchema = z.object({
 IdentityTenantsUserMembershipSchema = z.object({
   acceptedAt: z.string().datetime().nullable().optional(),
   cancelledAt: z.string().datetime().nullable().optional(),
+  inviteResendCount: z.number().int().optional(),
+  inviteStatus: z.string().nullable().optional(),
   invitedAt: z.string().datetime().nullable().optional(),
   invitedByEmail: z.string().nullable().optional(),
   inviteeEmail: z.string().nullable().optional(),
   inviteeName: z.string().nullable().optional(),
-  inviteResendCount: z.number().int().optional(),
-  inviteStatus: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
   joinedAt: z.string().datetime().optional(),
   lastInviteSentAt: z.string().datetime().nullable().optional(),
@@ -12793,8 +12989,8 @@ LearningCertificatesCertificateVerificationResultSchema = z.object({
   certificateNumber: z.string().nullable().optional(),
   courseName: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  issuedAt: z.string().datetime().optional(),
   isValid: z.boolean().optional(),
+  issuedAt: z.string().datetime().optional(),
   message: z.string().nullable().optional(),
   recipientName: z.string().nullable().optional(),
   status: z.lazy(() => LearningCertificatesCertificateStatusSchema).optional(),
@@ -13092,8 +13288,8 @@ LearningCoursesActivityGradeSchema = z.object({
   createdAt: z.string().datetime().optional(),
   feedback: z.string().nullable().optional(),
   grade: z.number().optional(),
-  gradedAt: z.string().datetime().optional(),
   gradePercentage: z.string().nullable().optional(),
+  gradedAt: z.string().datetime().optional(),
   grader: z.lazy(() => LearningCoursesGraderSummarySchema).optional(),
   graderProgramUserId: z.string().uuid().nullable().optional(),
   gradingDetails: z.string().nullable().optional(),
@@ -13355,14 +13551,6 @@ LearningCoursesEngagementMetricsSchema = z.object({
 /** Zod schema for LearningCoursesEnrollmentStatus */
 LearningCoursesEnrollmentStatusSchema = z.enum(['Open', 'Active', 'Paused', 'Cancelled', 'Expired', 'Completed', 'Closed', 'InviteOnly', 'Waitlist']);
 
-/** Zod schema for LearningCoursesGraderSummary */
-LearningCoursesGraderSummarySchema = z.object({
-  id: z.string().uuid().optional(),
-  role: z.string().nullable().optional(),
-  userDisplayName: z.string().nullable().optional(),
-  userEmail: z.string().nullable().optional(),
-});
-
 /** Zod schema for LearningCoursesGradeStatistics */
 LearningCoursesGradeStatisticsSchema = z.object({
   averageGrade: z.number().optional(),
@@ -13373,6 +13561,14 @@ LearningCoursesGradeStatisticsSchema = z.object({
   passingRate: z.number().optional(),
   passingRateFormatted: z.string().nullable().optional(),
   totalGrades: z.number().int().optional(),
+});
+
+/** Zod schema for LearningCoursesGraderSummary */
+LearningCoursesGraderSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  role: z.string().nullable().optional(),
+  userDisplayName: z.string().nullable().optional(),
+  userEmail: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesGradingMethod */
@@ -13765,6 +13961,13 @@ LearningCoursesUserProgressSchema = z.object({
 /** Zod schema for LearningCoursesVisibility */
 LearningCoursesVisibilitySchema = z.enum(['Public', 'Internal', 'Private', 'Restricted']);
 
+/** Zod schema for LearningEnrollmentsEnrollUserInput */
+LearningEnrollmentsEnrollUserInputSchema = z.object({
+  cohortId: z.string().uuid().nullable().optional(),
+  courseId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+});
+
 /** Zod schema for LearningEnrollmentsEnrollment */
 LearningEnrollmentsEnrollmentSchema = z.object({
   cohortId: z.string().uuid().nullable().optional(),
@@ -13781,13 +13984,6 @@ LearningEnrollmentsEnrollmentSchema = z.object({
 
 /** Zod schema for LearningEnrollmentsEnrollmentStatus */
 LearningEnrollmentsEnrollmentStatusSchema = z.enum(['Active', 'Paused', 'Completed', 'Dropped', 'Expired']);
-
-/** Zod schema for LearningEnrollmentsEnrollUserInput */
-LearningEnrollmentsEnrollUserInputSchema = z.object({
-  cohortId: z.string().uuid().nullable().optional(),
-  courseId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-});
 
 /** Zod schema for LearningEnrollmentsUpdateEnrollmentProgressInput */
 LearningEnrollmentsUpdateEnrollmentProgressInputSchema = z.object({
@@ -14326,8 +14522,8 @@ ObjectsAttestationStatementFormatIdentifierSchema = z.enum(['Packed', 'Tpm', 'An
 
 /** Zod schema for ObjectsAuthenticationExtensionsClientInputs */
 ObjectsAuthenticationExtensionsClientInputsSchema = z.object({
-  credentialProtectionPolicy: z.lazy(() => ObjectsCredentialProtectionPolicySchema).optional(),
   credProps: z.boolean().nullable().optional(),
+  credentialProtectionPolicy: z.lazy(() => ObjectsCredentialProtectionPolicySchema).optional(),
   enforceCredentialProtectionPolicy: z.boolean().nullable().optional(),
   'example.extension.bool': z.boolean().nullable().optional(),
   exts: z.boolean().nullable().optional(),
@@ -14957,11 +15153,11 @@ ProjectsProjectReleaseSchema = z.object({
   isPrerelease: z.boolean().optional(),
   project: z.lazy(() => ProjectsProjectSchema).optional(),
   projectId: z.string().uuid().optional(),
-  releasedAt: z.string().datetime().optional(),
   releaseMetadata: z.string().max(2000).nullable().optional(),
   releaseNotes: z.string().nullable().optional(),
   releaseType: z.string().max(50).nullable().optional(),
   releaseVersion: z.string().min(1).max(50),
+  releasedAt: z.string().datetime().optional(),
   status: z.lazy(() => ContentStatusSchema).optional(),
   supportedPlatforms: z.string().max(500).nullable().optional(),
   systemRequirements: z.string().max(1000).nullable().optional(),
@@ -16053,11 +16249,11 @@ TestingLabTestingFeedbackSchema = z.object({
     .array(z.lazy(() => TestingLabFeedbackQualityRatingSchema))
     .nullable()
     .optional(),
+  reportReason: z.string().max(500).nullable().optional(),
   reportedAt: z.string().datetime().nullable().optional(),
   reportedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
   reportedById: z.string().uuid().nullable().optional(),
   reportedByUserId: z.string().uuid().nullable().optional(),
-  reportReason: z.string().max(500).nullable().optional(),
   session: z.lazy(() => TestingLabTestingSessionSchema).optional(),
   sessionId: z.string().uuid().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),

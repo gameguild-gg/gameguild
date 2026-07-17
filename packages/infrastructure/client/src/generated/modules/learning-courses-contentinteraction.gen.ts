@@ -45,6 +45,121 @@ export class LearningCoursesContentinteractionModule {
 
   /**
    */
+  async getCourseInteractionsContentReflectionResponses(
+    contentId: string,
+    query?: { programId?: string },
+  ): Promise<Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>> {
+    const url = `/v1/course-interactions/content/${contentId}/reflection-responses`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>;
+  }
+
+  /**
+   */
+  async getCourseInteractionsContentReflectionResponsesVisible(
+    contentId: string,
+    query?: { programId?: string },
+  ): Promise<Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>> {
+    const url = `/v1/course-interactions/content/${contentId}/reflection-responses/visible`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>;
+  }
+
+  /**
+   */
+  async getCourseInteractionsContentSurveyResults(
+    contentId: string,
+    query?: { programId?: string },
+  ): Promise<Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>> {
+    const url = `/v1/course-interactions/content/${contentId}/survey-results`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>;
+  }
+
+  /**
+   */
+  async getCourseInteractionsContentSurveyResultsVisible(
+    contentId: string,
+    query?: { programId?: string },
+  ): Promise<Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>> {
+    const url = `/v1/course-interactions/content/${contentId}/survey-results/visible`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>;
+  }
+
+  /**
+   */
+  async getCourseInteractionsUser(
+    programUserId: string,
+    query?: { programId?: string },
+  ): Promise<Result<Array<Types.LearningCoursesContentInteraction>, ApiError>> {
+    const url = `/v1/course-interactions/user/${programUserId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesContentInteraction>, ApiError>;
+  }
+
+  /**
+   */
+  async getCourseInteractionsUserContent(
+    programUserId: string,
+    contentId: string,
+    query?: { programId?: string },
+  ): Promise<Result<Types.LearningCoursesContentInteraction, ApiError>> {
+    const url = `/v1/course-interactions/user/${programUserId}/content/${contentId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesContentInteractionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postCourseInteractionsComplete(
     interactionId: string,
     body: Types.LearningCoursesCompleteContentInput,
@@ -147,121 +262,6 @@ export class LearningCoursesContentinteractionModule {
       path: url,
       params: query,
       body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesContentInteractionSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getCourseInteractionsContentReflectionResponses(
-    contentId: string,
-    query?: { programId?: string },
-  ): Promise<Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>> {
-    const url = `/v1/course-interactions/content/${contentId}/reflection-responses`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>;
-  }
-
-  /**
-   */
-  async getCourseInteractionsContentReflectionResponsesVisible(
-    contentId: string,
-    query?: { programId?: string },
-  ): Promise<Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>> {
-    const url = `/v1/course-interactions/content/${contentId}/reflection-responses/visible`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesReflectionResponseResult>, ApiError>;
-  }
-
-  /**
-   */
-  async getCourseInteractionsContentSurveyResults(
-    contentId: string,
-    query?: { programId?: string },
-  ): Promise<Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>> {
-    const url = `/v1/course-interactions/content/${contentId}/survey-results`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>;
-  }
-
-  /**
-   */
-  async getCourseInteractionsContentSurveyResultsVisible(
-    contentId: string,
-    query?: { programId?: string },
-  ): Promise<Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>> {
-    const url = `/v1/course-interactions/content/${contentId}/survey-results/visible`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesSurveyResponseResult>, ApiError>;
-  }
-
-  /**
-   */
-  async getCourseInteractionsUser(
-    programUserId: string,
-    query?: { programId?: string },
-  ): Promise<Result<Array<Types.LearningCoursesContentInteraction>, ApiError>> {
-    const url = `/v1/course-interactions/user/${programUserId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesContentInteraction>, ApiError>;
-  }
-
-  /**
-   */
-  async getCourseInteractionsUserContent(
-    programUserId: string,
-    contentId: string,
-    query?: { programId?: string },
-  ): Promise<Result<Types.LearningCoursesContentInteraction, ApiError>> {
-    const url = `/v1/course-interactions/user/${programUserId}/content/${contentId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
       requiresAuth: true,
     });
 

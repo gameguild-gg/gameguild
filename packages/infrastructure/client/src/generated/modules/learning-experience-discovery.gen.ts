@@ -65,6 +65,63 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
+  async getDiscoveryCollectionsCurator(
+    curatorId: string,
+    query?: { includeUnpublished?: boolean; skip?: number; take?: number },
+  ): Promise<Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>> {
+    const url = `/v1/discovery/collections/curator/${curatorId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>;
+  }
+
+  /**
+   */
+  async getDiscoveryCollectionsFeatured(query?: {
+    tenantId?: string;
+    take?: number;
+  }): Promise<Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>> {
+    const url = '/v1/discovery/collections/featured';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>;
+  }
+
+  /**
+   */
+  async getDiscoveryCollectionsSlug(slug: string, query?: { tenantId?: string }): Promise<Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>> {
+    const url = `/v1/discovery/collections/slug/${slug}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningExperienceDiscoveryCourseCollectionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getDiscoveryCollections1(id: string): Promise<Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>> {
     const url = `/v1/discovery/collections/${id}`;
 
@@ -166,63 +223,6 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async getDiscoveryCollectionsCurator(
-    curatorId: string,
-    query?: { includeUnpublished?: boolean; skip?: number; take?: number },
-  ): Promise<Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>> {
-    const url = `/v1/discovery/collections/curator/${curatorId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>;
-  }
-
-  /**
-   */
-  async getDiscoveryCollectionsFeatured(query?: {
-    tenantId?: string;
-    take?: number;
-  }): Promise<Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>> {
-    const url = '/v1/discovery/collections/featured';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>;
-  }
-
-  /**
-   */
-  async getDiscoveryCollectionsSlug(slug: string, query?: { tenantId?: string }): Promise<Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>> {
-    const url = `/v1/discovery/collections/slug/${slug}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoveryCourseCollectionSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async getDiscoveryFeatured(query?: {
     tenantId?: string;
     skip?: number;
@@ -266,6 +266,24 @@ export class LearningExperienceDiscoveryModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getDiscoveryFeaturedType(
+    type: Types.LearningExperienceDiscoveryFeaturedContentType,
+    query?: { tenantId?: string; skip?: number; take?: number },
+  ): Promise<Result<Array<Types.LearningExperienceDiscoveryFeaturedContent>, ApiError>> {
+    const url = `/v1/discovery/featured/type/${type}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningExperienceDiscoveryFeaturedContent>, ApiError>;
   }
 
   /**
@@ -352,42 +370,6 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async getDiscoveryFeaturedType(
-    type: Types.LearningExperienceDiscoveryFeaturedContentType,
-    query?: { tenantId?: string; skip?: number; take?: number },
-  ): Promise<Result<Array<Types.LearningExperienceDiscoveryFeaturedContent>, ApiError>> {
-    const url = `/v1/discovery/featured/type/${type}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningExperienceDiscoveryFeaturedContent>, ApiError>;
-  }
-
-  /**
-   */
-  async postDiscoverySearchClick(searchId: string, body: Types.LearningExperienceDiscoveryRecordSearchClick): Promise<Result<void, ApiError>> {
-    const url = `/v1/discovery/search/${searchId}/click`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryRecordSearchClickSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getDiscoverySearchHistory(userId: string, query?: { take?: number }): Promise<Result<Array<Types.LearningExperienceDiscoverySearchHistory>, ApiError>> {
     const url = `/v1/discovery/search/history/${userId}`;
 
@@ -445,6 +427,24 @@ export class LearningExperienceDiscoveryModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async postDiscoverySearchClick(searchId: string, body: Types.LearningExperienceDiscoveryRecordSearchClick): Promise<Result<void, ApiError>> {
+    const url = `/v1/discovery/search/${searchId}/click`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningExperienceDiscoveryRecordSearchClickSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 }
 

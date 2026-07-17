@@ -41,6 +41,42 @@ export class LearningEnrollmentsModule {
 
   /**
    */
+  async getApiLearningEnrollmentsCourses(
+    courseId: string,
+    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
+  ): Promise<Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>> {
+    const url = `/api/learning/enrollments/courses/${courseId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>;
+  }
+
+  /**
+   */
+  async getApiLearningEnrollmentsUsers(
+    userId: string,
+    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
+  ): Promise<Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>> {
+    const url = `/api/learning/enrollments/users/${userId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>;
+  }
+
+  /**
+   */
   async getApiLearningEnrollments(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/learning/enrollments/${id}`;
 
@@ -83,42 +119,6 @@ export class LearningEnrollmentsModule {
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getApiLearningEnrollmentsCourses(
-    courseId: string,
-    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
-  ): Promise<Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>> {
-    const url = `/api/learning/enrollments/courses/${courseId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>;
-  }
-
-  /**
-   */
-  async getApiLearningEnrollmentsUsers(
-    userId: string,
-    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
-  ): Promise<Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>> {
-    const url = `/api/learning/enrollments/users/${userId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>;
   }
 }
 

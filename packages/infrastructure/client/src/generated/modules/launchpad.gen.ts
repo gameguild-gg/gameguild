@@ -56,8 +56,8 @@ export class LaunchpadModule {
 
   /**
    */
-  async getLaunchPad1(id: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
-    const url = `/v1/launch-pad/${id}`;
+  async getLaunchPadProjects(projectId: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
+    const url = `/v1/launch-pad/projects/${projectId}`;
 
     const result = await this.client.request({
       method: 'GET',
@@ -76,11 +76,11 @@ export class LaunchpadModule {
 
   /**
    */
-  async postLaunchPadPublish(id: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
-    const url = `/v1/launch-pad/${id}:publish`;
+  async getLaunchPad1(id: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
+    const url = `/v1/launch-pad/${id}`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
@@ -116,11 +116,11 @@ export class LaunchpadModule {
 
   /**
    */
-  async getLaunchPadProjects(projectId: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
-    const url = `/v1/launch-pad/projects/${projectId}`;
+  async postLaunchPadPublish(id: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
+    const url = `/v1/launch-pad/${id}:publish`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });

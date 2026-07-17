@@ -17,60 +17,6 @@ export class SocialProfilesModule {
 
   /**
    */
-  async postApiSocialProfilesPortfolio(
-    profileId: string,
-    body: Types.SocialProfilesAddProfilePortfolioItemBody,
-  ): Promise<Result<Types.SocialProfilesProfilePortfolioItem, ApiError>> {
-    const url = `/api/social/profiles/${profileId}/portfolio`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.SocialProfilesAddProfilePortfolioItemBodySchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.SocialProfilesProfilePortfolioItemSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postApiSocialProfilesSkills(
-    profileId: string,
-    body: Types.SocialProfilesAddProfileSkillBody,
-  ): Promise<Result<Types.SocialProfilesProfileSkill, ApiError>> {
-    const url = `/api/social/profiles/${profileId}/skills`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.SocialProfilesAddProfileSkillBodySchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.SocialProfilesProfileSkillSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async getApiSocialProfiles(handle: string): Promise<Result<Types.SocialProfilesSocialProfile, ApiError>> {
     const url = `/api/social/profiles/@${handle}`;
 
@@ -254,6 +200,60 @@ export class SocialProfilesModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.SocialProfilesSocialProfileSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postApiSocialProfilesPortfolio(
+    profileId: string,
+    body: Types.SocialProfilesAddProfilePortfolioItemBody,
+  ): Promise<Result<Types.SocialProfilesProfilePortfolioItem, ApiError>> {
+    const url = `/api/social/profiles/${profileId}/portfolio`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.SocialProfilesAddProfilePortfolioItemBodySchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.SocialProfilesProfilePortfolioItemSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postApiSocialProfilesSkills(
+    profileId: string,
+    body: Types.SocialProfilesAddProfileSkillBody,
+  ): Promise<Result<Types.SocialProfilesProfileSkill, ApiError>> {
+    const url = `/api/social/profiles/${profileId}/skills`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.SocialProfilesAddProfileSkillBodySchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.SocialProfilesProfileSkillSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

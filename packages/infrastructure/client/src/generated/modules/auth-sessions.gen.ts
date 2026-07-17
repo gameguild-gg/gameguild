@@ -33,6 +33,29 @@ export class AuthSessionsModule {
   }
 
   /**
+   * Terminate a session
+   *
+   * Terminates a specific session by its identifier. The session must belong to the current user.
+   */
+  async deleteAuthSessions(sessionId: string): Promise<Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>> {
+    const url = `/v1/auth/sessions/${sessionId}`;
+
+    const result = await this.client.request({
+      method: 'DELETE',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationSessionSuccessOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Analyze session security
    *
    * Analyzes the current session for security risks and provides recommendations.
@@ -118,29 +141,6 @@ export class AuthSessionsModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.IdentityAuthenticationSessionTerminationOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Terminate a session
-   *
-   * Terminates a specific session by its identifier. The session must belong to the current user.
-   */
-  async deleteAuthSessions(sessionId: string): Promise<Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>> {
-    const url = `/v1/auth/sessions/${sessionId}`;
-
-    const result = await this.client.request({
-      method: 'DELETE',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSessionSuccessOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

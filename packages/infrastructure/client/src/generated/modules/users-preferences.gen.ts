@@ -75,21 +75,6 @@ export class UsersPreferencesModule {
   }
 
   /**
-   * Reset user preferences to defaults
-   */
-  async postUsersPreferencesReset(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences:reset`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Get accessibility settings for user
    */
   async getUsersPreferencesAccessibility(userId: string): Promise<Result<Types.IdentityUsersUserAccessibilityPreferences, ApiError>> {
@@ -435,6 +420,21 @@ export class UsersPreferencesModule {
    */
   async postUsersPreferencesPrivacyReset(userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/privacy:reset`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Reset user preferences to defaults
+   */
+  async postUsersPreferencesReset(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences:reset`;
 
     const result = await this.client.request({
       method: 'POST',

@@ -394,33 +394,6 @@ export class AuthModule {
   }
 
   /**
-   * Verify Web3 signature
-   *
-   * Verifies a Web3 wallet signature against a previously issued challenge and returns authentication tokens.
-   */
-  async postAuthWeb3Verify(body: Types.IdentityAuthenticationWeb3VerifyInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = '/v1/auth/web3:verify';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationWeb3VerifyInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Generate Web3 authentication challenge
    *
    * Generates a cryptographic challenge that must be signed by the user's wallet to prove ownership.
@@ -443,6 +416,33 @@ export class AuthModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.IdentityAuthenticationWeb3ChallengeOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Verify Web3 signature
+   *
+   * Verifies a Web3 wallet signature against a previously issued challenge and returns authentication tokens.
+   */
+  async postAuthWeb3Verify(body: Types.IdentityAuthenticationWeb3VerifyInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/web3:verify';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationWeb3VerifyInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
