@@ -66,6 +66,7 @@ public sealed class SocialProfileService(
 
     public async Task<ProfileSkillDto> AddOrUpdateSkillAsync(AddProfileSkillCommand command, CancellationToken ct = default)
     {
+        var profile = await GetProfileOrThrowAsync(command.ProfileId, ct).ConfigureAwait(false);
         var normalized = command.Name.Trim();
         var existing = await skillRepository.GetByProfileAndNameAsync(command.ProfileId, normalized, ct).ConfigureAwait(false);
         if (existing is not null)
@@ -83,6 +84,8 @@ public sealed class SocialProfileService(
             DisplayOrder = command.DisplayOrder
         };
 
+        profile.Skills.Add(skill);
+        profile.RecalculateCompleteness();
         return (await skillRepository.AddAsync(skill, ct).ConfigureAwait(false)).ToDto();
     }
 
@@ -94,12 +97,16 @@ public sealed class SocialProfileService(
             return false;
         }
 
+        var profile = await GetProfileOrThrowAsync(skill.ProfileId, ct).ConfigureAwait(false);
+        profile.Skills.Remove(skill);
+        profile.RecalculateCompleteness();
         await skillRepository.DeleteAsync(skill, ct).ConfigureAwait(false);
         return true;
     }
 
     public async Task<ProfilePortfolioItemDto> AddPortfolioItemAsync(AddProfilePortfolioItemCommand command, CancellationToken ct = default)
     {
+        var profile = await GetProfileOrThrowAsync(command.ProfileId, ct).ConfigureAwait(false);
         var item = new ProfilePortfolioItem
         {
             ProfileId = command.ProfileId,
@@ -112,6 +119,8 @@ public sealed class SocialProfileService(
             DisplayOrder = command.DisplayOrder
         };
 
+        profile.PortfolioItems.Add(item);
+        profile.RecalculateCompleteness();
         return (await portfolioRepository.AddAsync(item, ct).ConfigureAwait(false)).ToDto();
     }
 
@@ -133,7 +142,14 @@ public sealed class SocialProfileService(
             return false;
         }
 
+        var profile = await GetProfileOrThrowAsync(item.ProfileId, ct).ConfigureAwait(false);
+        profile.PortfolioItems.Remove(item);
+        profile.RecalculateCompleteness();
         await portfolioRepository.DeleteAsync(item, ct).ConfigureAwait(false);
         return true;
     }
+
+    private async Task<SocialProfile> GetProfileOrThrowAsync(Guid profileId, CancellationToken ct)
+        => await profileRepository.GetByIdAsync(profileId, ct).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException($"Social profile {profileId} was not found.");
 }
