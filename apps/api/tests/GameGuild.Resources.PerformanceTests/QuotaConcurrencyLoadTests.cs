@@ -7,6 +7,7 @@ using GameGuild.Resources.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Npgsql;
 using Xunit;
 
 namespace GameGuild.Resources.PerformanceTests;
@@ -21,7 +22,8 @@ namespace GameGuild.Resources.PerformanceTests;
 /// </summary>
 [Trait("Category", "Performance")]
 [Trait("LoadTest", "QuotaOperations")]
-public class QuotaConcurrencyLoadTests
+[Collection(QuotaConcurrencyPostgreSqlCollection.Name)]
+public class QuotaConcurrencyLoadTests(PostgreSqlTestFixture fixture)
 {
     private readonly Guid _testTenantId = Guid.NewGuid();
 
@@ -36,25 +38,15 @@ public class QuotaConcurrencyLoadTests
     public async Task ConcurrentAtomicConsume_EnforcesHardLimit_UnderLoad(int concurrentRequests, int hardLimit)
     {
         // Arrange
-        var options = new DbContextOptionsBuilder<ResourceQuotaTestDbContext>()
-            .UseInMemoryDatabase($"LoadTestDb_{Guid.NewGuid()}")
-            .Options;
-
-        await using var context = new ResourceQuotaTestDbContext(options);
-        var repository = new ResourceQuotaRepository(context);
-        var usageRepository = new UsageRecordRepository(context);
-        var publisherMock = new Mock<IPublisher>();
-        var service = CreateResourceQuotaService(repository, usageRepository, publisherMock.Object);
+        await using var database = await fixture.CreateDatabaseAsync("quota_load");
+        var connectionString = CreatePooledConnectionString(database.ConnectionString);
 
         // Set up quota with hard limit
-        await service.SetQuotaAsync(
-            _testTenantId,
-            ResourceUsageType.ApiCalls,
-            softLimit: hardLimit - 10,
-            hardLimit: hardLimit);
+        await SetQuotaAsync(connectionString, _testTenantId, ResourceUsageType.ApiCalls, hardLimit - 10, hardLimit);
 
         var successCount = 0;
         var failureCount = 0;
+        var exceptions = new ConcurrentQueue<Exception>();
         var stopwatch = Stopwatch.StartNew();
 
         // Act - Fire concurrent requests
@@ -63,19 +55,16 @@ public class QuotaConcurrencyLoadTests
             {
                 try
                 {
-                    var (success, _, _) = await service.TryAtomicConsumeAsync(
-                        _testTenantId,
-                        ResourceUsageType.ApiCalls,
-                        amount: 1);
+                    var success = await ConsumeAsync(connectionString, _testTenantId, ResourceUsageType.ApiCalls);
 
                     if (success)
                         Interlocked.Increment(ref successCount);
                     else
                         Interlocked.Increment(ref failureCount);
                 }
-                catch
+                catch (Exception exception)
                 {
-                    Interlocked.Increment(ref failureCount);
+                    exceptions.Enqueue(exception);
                 }
             }))
             .ToArray();
@@ -84,8 +73,10 @@ public class QuotaConcurrencyLoadTests
         stopwatch.Stop();
 
         // Assert
-        successCount.Should().BeLessOrEqualTo(hardLimit,
-            $"Hard limit of {hardLimit} must not be exceeded under {concurrentRequests} concurrent requests");
+        exceptions.Should().BeEmpty("concurrent quota rejection must not be represented by infrastructure exceptions");
+        successCount.Should().Be(hardLimit,
+            $"exactly the hard limit of {hardLimit} should be consumable under {concurrentRequests} concurrent requests");
+        failureCount.Should().Be(concurrentRequests - hardLimit);
 
         var totalProcessed = successCount + failureCount;
         totalProcessed.Should().Be(concurrentRequests,
@@ -113,37 +104,35 @@ public class QuotaConcurrencyLoadTests
     public async Task ConcurrentQuotaChecks_MultiTenant_NoInterference()
     {
         // Arrange
-        var options = new DbContextOptionsBuilder<ResourceQuotaTestDbContext>()
-            .UseInMemoryDatabase($"MultiTenantLoadTestDb_{Guid.NewGuid()}")
-            .Options;
-
-        await using var context = new ResourceQuotaTestDbContext(options);
-        var repository = new ResourceQuotaRepository(context);
-        var usageRepository = new UsageRecordRepository(context);
-        var publisherMock = new Mock<IPublisher>();
-        var service = CreateResourceQuotaService(repository, usageRepository, publisherMock.Object);
+        await using var database = await fixture.CreateDatabaseAsync("quota_multi_tenant");
+        var connectionString = CreatePooledConnectionString(database.ConnectionString);
 
         // Create 10 tenants with different quotas
         var tenants = Enumerable.Range(0, 10).Select(_ => Guid.NewGuid()).ToArray();
         foreach (var tenantId in tenants)
         {
-            await service.SetQuotaAsync(tenantId, ResourceUsageType.Storage, softLimit: 90, hardLimit: 100);
+            await SetQuotaAsync(connectionString, tenantId, ResourceUsageType.Storage, 90, 100);
         }
 
         var tenantSuccessCounts = new ConcurrentDictionary<Guid, int>();
+        var exceptions = new ConcurrentQueue<Exception>();
         var stopwatch = Stopwatch.StartNew();
 
         // Act - 100 concurrent requests per tenant (1000 total)
         var tasks = tenants.SelectMany(tenantId =>
             Enumerable.Range(0, 100).Select(_ => Task.Run(async () =>
             {
-                var (success, _, _) = await service.TryAtomicConsumeAsync(
-                    tenantId,
-                    ResourceUsageType.Storage,
-                    amount: 1);
+                try
+                {
+                    var success = await ConsumeAsync(connectionString, tenantId, ResourceUsageType.Storage);
 
-                if (success)
-                    tenantSuccessCounts.AddOrUpdate(tenantId, 1, (_, count) => count + 1);
+                    if (success)
+                        tenantSuccessCounts.AddOrUpdate(tenantId, 1, (_, count) => count + 1);
+                }
+                catch (Exception exception)
+                {
+                    exceptions.Enqueue(exception);
+                }
             })))
             .ToArray();
 
@@ -151,11 +140,12 @@ public class QuotaConcurrencyLoadTests
         stopwatch.Stop();
 
         // Assert - Each tenant should have exactly their limit consumed
+        exceptions.Should().BeEmpty("tenants must not interfere through shared EF state or database errors");
         foreach (var tenantId in tenants)
         {
             var successCount = tenantSuccessCounts.GetValueOrDefault(tenantId, 0);
-            successCount.Should().BeLessOrEqualTo(100,
-                $"Tenant {tenantId} should not exceed its hard limit of 100");
+            successCount.Should().Be(100,
+                $"Tenant {tenantId} should consume exactly its independent hard limit of 100");
         }
 
         Console.WriteLine($"=== Multi-Tenant Load Test Results ===");
@@ -173,20 +163,13 @@ public class QuotaConcurrencyLoadTests
     public async Task BurstPattern_QuotaEnforcement_Stable()
     {
         // Arrange
-        var options = new DbContextOptionsBuilder<ResourceQuotaTestDbContext>()
-            .UseInMemoryDatabase($"BurstTestDb_{Guid.NewGuid()}")
-            .Options;
-
-        await using var context = new ResourceQuotaTestDbContext(options);
-        var repository = new ResourceQuotaRepository(context);
-        var usageRepository = new UsageRecordRepository(context);
-        var publisherMock = new Mock<IPublisher>();
-        var service = CreateResourceQuotaService(repository, usageRepository, publisherMock.Object);
-
-        await service.SetQuotaAsync(_testTenantId, ResourceUsageType.Projects, softLimit: 40, hardLimit: 50);
+        await using var database = await fixture.CreateDatabaseAsync("quota_burst");
+        var connectionString = CreatePooledConnectionString(database.ConnectionString);
+        await SetQuotaAsync(connectionString, _testTenantId, ResourceUsageType.Projects, 40, 50);
 
         var totalSuccess = 0;
         var burstResults = new List<(int BurstNumber, int SuccessCount, double DurationMs)>();
+        var exceptions = new ConcurrentQueue<Exception>();
 
         // Act - 5 bursts of 200 requests each
         for (int burst = 0; burst < 5; burst++)
@@ -197,12 +180,16 @@ public class QuotaConcurrencyLoadTests
             var tasks = Enumerable.Range(0, 200)
                 .Select(_ => Task.Run(async () =>
                 {
-                    var (success, _, _) = await service.TryAtomicConsumeAsync(
-                        _testTenantId,
-                        ResourceUsageType.Projects,
-                        amount: 1);
+                    try
+                    {
+                        var success = await ConsumeAsync(connectionString, _testTenantId, ResourceUsageType.Projects);
 
-                    if (success) Interlocked.Increment(ref burstSuccess);
+                        if (success) Interlocked.Increment(ref burstSuccess);
+                    }
+                    catch (Exception exception)
+                    {
+                        exceptions.Enqueue(exception);
+                    }
                 }))
                 .ToArray();
 
@@ -217,8 +204,9 @@ public class QuotaConcurrencyLoadTests
         }
 
         // Assert
-        totalSuccess.Should().BeLessOrEqualTo(50,
-            "Total successful consumes across all bursts should not exceed hard limit");
+        exceptions.Should().BeEmpty("burst rejection must be a quota result, not an infrastructure exception");
+        totalSuccess.Should().Be(50,
+            "all available quota should be consumed exactly once across bursts");
 
         Console.WriteLine($"=== Burst Pattern Test Results ===");
         foreach (var (burstNumber, successCount, durationMs) in burstResults)
@@ -254,6 +242,47 @@ public class QuotaConcurrencyLoadTests
 
         return new ResourceQuotaService(management, enforcement, maintenance);
     }
+
+    private static async Task SetQuotaAsync(
+        string connectionString,
+        Guid tenantId,
+        ResourceUsageType type,
+        long softLimit,
+        long hardLimit)
+    {
+        await using var scope = ResourceQuotaPostgreSqlScope.Create(connectionString);
+        await scope.Context.Database.EnsureCreatedAsync();
+        await scope.Service.SetQuotaAsync(tenantId, type, softLimit, hardLimit);
+    }
+
+    private static async Task<bool> ConsumeAsync(
+        string connectionString,
+        Guid tenantId,
+        ResourceUsageType type)
+    {
+        await using var scope = ResourceQuotaPostgreSqlScope.Create(connectionString);
+        var (success, _, _) = await scope.Service.TryAtomicConsumeAsync(tenantId, type, 1);
+        return success;
+    }
+
+    private static string CreatePooledConnectionString(string connectionString)
+    {
+        var builder = new NpgsqlConnectionStringBuilder(connectionString)
+        {
+            Pooling = true,
+            MaxPoolSize = 50,
+            Timeout = 30,
+            CommandTimeout = 60
+        };
+
+        return builder.ConnectionString;
+    }
+}
+
+[CollectionDefinition(Name)]
+public sealed class QuotaConcurrencyPostgreSqlCollection : ICollectionFixture<PostgreSqlTestFixture>
+{
+    public const string Name = "ResourceQuotaPerformancePostgreSql";
 }
 
 /// <summary>
