@@ -40,7 +40,12 @@
     "sync:fix": "syncpack fix-mismatches",
     "smoke": "node scripts/devops/smoke-check.mjs",
     "smoke:live": "node scripts/devops/smoke-check.mjs --live",
-    "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo pnpm-lock.yaml",
+    "ci:economy": "pwsh -NoProfile -File scripts/ci/verify-economy.ps1",
+    "ci:api:publish": "dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo -o artifacts/test-results/publish/api",
+    "ci:provider-contracts": "dotnet test apps/api/tests/GameGuild.Commerce.Billing.UnitTests/GameGuild.Commerce.Billing.UnitTests.csproj -c Release --no-build --filter \"FullyQualifiedName~Stripe|FullyQualifiedName~Webhook\" && dotnet test apps/api/tests/GameGuild.Commerce.Payments.UnitTests/GameGuild.Commerce.Payments.UnitTests.csproj -c Release --no-build --filter \"FullyQualifiedName~Stripe\"",
+    "ci:web:build": "pnpm --filter @game-guild/web build",
+    "ci:playwright:smoke": "pnpm --filter @game-guild/web test:browser:public",
+    "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "turbo run build && changeset publish"
