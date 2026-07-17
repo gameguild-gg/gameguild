@@ -17,6 +17,7 @@ using Xunit;
 
 namespace GameGuild.API.UnitTests.Database;
 
+[Collection(PostgreSqlTestCollection.Name)]
 public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()

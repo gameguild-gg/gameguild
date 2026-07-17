@@ -1,11 +1,6 @@
 using FluentAssertions;
 using GameGuild.API.Controllers;
-using GameGuild.API.Database;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using GameGuild.API.IntegrationTests.Infrastructure;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -14,62 +9,29 @@ namespace GameGuild.API.IntegrationTests;
 /// <summary>
 /// Integration tests for API HealthController endpoints
 /// </summary>
-public class HealthControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
+[Collection(ApiPostgreSqlCollection.Name)]
+public class HealthControllerIntegrationTests : IDisposable
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private HttpClient _client;
+    private readonly HttpClient _client;
 
-    public HealthControllerIntegrationTests(WebApplicationFactory<Program> factory)
+    public HealthControllerIntegrationTests(ApiPostgreSqlFixture fixture)
     {
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
-
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Testing");
-            builder.ConfigureTestServices(services =>
-            {
-                // Add HttpLogging service required by the pipeline
-                services.AddHttpLogging(_ => { });
-
-                // Remove ALL EF Core and database provider services
-                var descriptorsToRemove = services
-                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                                d.ServiceType == typeof(ApplicationDbContext) ||
-                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
-                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
-                    .ToList();
-
-                foreach (var descriptor in descriptorsToRemove)
-                {
-                    services.Remove(descriptor);
-                }
-
-                // Add in-memory database
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase($"HealthControllerTestDb_{Guid.NewGuid()}");
-                });
-                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-            });
-        });
-
-        _client = _factory.CreateClient();
+        _client = fixture.Factory.CreateClient();
     }
 
     [Fact]
-    public async Task GetHealth_ShouldReturn200OrHealthyStatus()
+    public async Task GetHealth_ShouldReturn200WithHealthyDatabaseStatus()
     {
         // Act
         var response = await _client.GetAsync("/health");
 
         // Assert
-        // Health endpoint returns 200 when healthy or 503 when unhealthy
-        var statusCode = response.StatusCode;
-        (statusCode == HttpStatusCode.OK || statusCode == HttpStatusCode.ServiceUnavailable).Should().BeTrue(
-            $"Health endpoint should return either 200 or 503, but returned {(int)statusCode}");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
-        content.Should().NotBeNullOrEmpty();
+        var result = await response.Content.ReadFromJsonAsync<HealthinessResponse>();
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("Healthy");
+        result.Checks.Should().ContainKey("database").WhoseValue.Status.Should().Be("Healthy");
     }
 
     [Fact]
@@ -108,6 +70,7 @@ public class HealthControllerIntegrationTests : IClassFixture<WebApplicationFact
         result.Should().NotBeNull();
         result!.Status.Should().Be("Healthy");
         result.Ready.Should().BeTrue();
+        result.Services.Should().ContainKey("database").WhoseValue.Should().BeTrue();
     }
 
     [Fact]

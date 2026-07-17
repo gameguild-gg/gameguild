@@ -1,57 +1,22 @@
 using FluentAssertions;
-using GameGuild.API.Database;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using GameGuild.API.Controllers;
+using GameGuild.API.IntegrationTests.Infrastructure;
 using System.Net;
+using System.Net.Http.Json;
 
 namespace GameGuild.API.IntegrationTests;
 
 /// <summary>
 /// Integration tests for API health endpoints
 /// </summary>
-public class HealthEndpointIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
+[Collection(ApiPostgreSqlCollection.Name)]
+public class HealthEndpointIntegrationTests : IDisposable
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private HttpClient _client;
+    private readonly HttpClient _client;
 
-    public HealthEndpointIntegrationTests(WebApplicationFactory<Program> factory)
+    public HealthEndpointIntegrationTests(ApiPostgreSqlFixture fixture)
     {
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
-
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Testing");
-            builder.ConfigureTestServices(services =>
-            {
-                // Remove ALL existing DbContext and EF Core registrations
-                var descriptorsToRemove = services
-                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                                d.ServiceType == typeof(ApplicationDbContext) ||
-                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
-                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
-                    .ToList();
-
-                foreach (var descriptor in descriptorsToRemove)
-                {
-                    services.Remove(descriptor);
-                }
-
-                // Add in-memory database
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase($"HealthTestDb_{Guid.NewGuid()}");
-                });
-                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-
-                // Add HTTP logging services (required by the pipeline)
-                services.AddHttpLogging(_ => { });
-            });
-        });
-
-        _client = _factory.CreateClient();
+        _client = fixture.Factory.CreateClient();
     }
 
     [Fact]
@@ -63,9 +28,10 @@ public class HealthEndpointIntegrationTests : IClassFixture<WebApplicationFactor
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         
-        var content = await response.Content.ReadAsStringAsync();
-        content.Should().NotBeNullOrEmpty();
-        content.Should().Contain("Healthy");
+        var result = await response.Content.ReadFromJsonAsync<HealthinessResponse>();
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("Healthy");
+        result.Checks.Should().ContainKey("database").WhoseValue.Status.Should().Be("Healthy");
     }
 
     [Fact]
