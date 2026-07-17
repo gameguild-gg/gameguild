@@ -30,10 +30,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm ci:dependencies
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@v4
@@ -107,10 +106,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm ci:dependencies
 
       - name: Create Release Pull Request or Publish
         uses: changesets/action@v1
