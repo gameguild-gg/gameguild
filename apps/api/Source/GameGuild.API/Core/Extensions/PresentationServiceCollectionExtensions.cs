@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using GameGuild.AI;
 using GameGuild.Commerce.Billing;
+using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Products;
 using GameGuild.Commerce.Subscriptions;
@@ -99,6 +100,11 @@ public static class PresentationServiceCollectionExtensions
         services.AddControllers()
             .AddApplicationPart(typeof(Resources.ResourcesController).Assembly); // Resources module
         LogControllersFromAssembly(typeof(Resources.ResourcesController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(OrdersController).Assembly); // Orders module
+        LogControllersFromAssembly(typeof(OrdersController).Assembly, logger, controllerStopwatch);
         
         controllerStopwatch.Restart();
         services.AddControllers()
