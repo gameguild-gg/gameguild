@@ -16,244 +16,6 @@ export class AuthModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Register a new user
-   *
-   * Creates a new user account with email and password credentials, returning authentication tokens on success.
-   */
-  async postAuthSignUp(body: Types.IdentityAuthenticationLocalSignUpInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = '/v1/auth/sign-up';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationLocalSignUpInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Sign in with email and password
-   *
-   * Authenticates a user with email and password credentials, returning access and refresh tokens.
-   */
-  async postAuthSignIn(body: Types.IdentityAuthenticationLocalSignInInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = '/v1/auth/sign-in';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationLocalSignInInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Sign in with Google ID Token
-   *
-   * Authenticates a user using a Google ID Token (for NextAuth.js integration), returning access and refresh tokens.
-   */
-  async postAuthGoogle(body: Types.IdentityAuthenticationGoogleIdTokenInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = '/v1/auth/google';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationGoogleIdTokenInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Request magic sign-in link
-   *
-   * Generates a short-lived one-time sign-in token and dispatches the magic-link notification. Always returns a generic success response to prevent user enumeration.
-   */
-  async postAuthMagicLinkRequest(
-    body: Types.IdentityAuthenticationRequestMagicLinkInput,
-  ): Promise<Result<Types.IdentityAuthenticationMagicLinkRequestResult, ApiError>> {
-    const url = '/v1/auth/magic-link:request';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRequestMagicLinkInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationMagicLinkRequestResultSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Consume magic sign-in link
-   *
-   * Consumes a short-lived one-time magic-link token and returns access and refresh tokens.
-   */
-  async postAuthMagicLinkConsume(body: Types.IdentityAuthenticationConsumeMagicLinkInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = '/v1/auth/magic-link:consume';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationConsumeMagicLinkInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Initiate GitHub OAuth sign-in
-   *
-   * Initiates GitHub OAuth authentication flow and returns the authorization URL.
-   */
-  async getAuthGithubAuthorize(query?: { redirectUri?: string }): Promise<Result<Types.IdentityAuthenticationGitHubSignInOutput, ApiError>> {
-    const url = '/v1/auth/github:authorize';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationGitHubSignInOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Refresh access token
-   *
-   * Exchanges a valid refresh token for a new access token and refresh token pair.
-   */
-  async postAuthTokensRefresh(body: Types.IdentityAuthenticationRefreshTokenInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = '/v1/auth/tokens:refresh';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRefreshTokenInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Revoke refresh token
-   *
-   * Invalidates a refresh token, preventing it from being used to obtain new access tokens.
-   */
-  async postAuthTokensRevoke(body: Types.IdentityAuthenticationRevokeRefreshTokenInput): Promise<Result<void, ApiError>> {
-    const url = '/v1/auth/tokens:revoke';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRevokeRefreshTokenInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Generate Web3 authentication challenge
-   *
-   * Generates a cryptographic challenge that must be signed by the user's wallet to prove ownership.
-   */
-  async postAuthWeb3Challenge(
-    body: Types.IdentityAuthenticationWeb3ChallengeInput,
-  ): Promise<Result<Types.IdentityAuthenticationWeb3ChallengeOutput, ApiError>> {
-    const url = '/v1/auth/web3/challenge';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationWeb3ChallengeInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationWeb3ChallengeOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Send email verification
    *
    * Sends a verification email to the specified email address to confirm ownership.
@@ -312,28 +74,23 @@ export class AuthModule {
   }
 
   /**
-   * Request password reset
+   * Initiate GitHub OAuth sign-in
    *
-   * Sends a password reset link to the specified email address. Always returns success for security.
+   * Initiates GitHub OAuth authentication flow and returns the authorization URL.
    */
-  async postAuthPasswordResetRequest(
-    body: Types.IdentityAuthenticationRequestPasswordResetInput,
-  ): Promise<Result<Types.IdentityAuthenticationPasswordResetRequestResult, ApiError>> {
-    const url = '/v1/auth/password:reset-request';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRequestPasswordResetInputSchema, body, 'request');
+  async getAuthGithubAuthorize(query?: { redirectUri?: string }): Promise<Result<Types.IdentityAuthenticationGitHubSignInOutput, ApiError>> {
+    const url = '/v1/auth/github:authorize';
 
     const result = await this.client.request({
-      method: 'POST',
+      method: 'GET',
       path: url,
-      body: validatedBody,
+      params: query,
       requiresAuth: false,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationPasswordResetRequestResultSchema, result.data, 'response');
+      const validatedData = safeParse(Types.IdentityAuthenticationGitHubSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -341,17 +98,39 @@ export class AuthModule {
   }
 
   /**
-   * Complete password reset
+   * GitHub OAuth callback
    *
-   * Resets the user's password using a token received via email.
+   * Handles the GitHub OAuth callback, exchanging the authorization code for tokens.
    */
-  async postAuthPasswordReset(
-    body: Types.IdentityAuthenticationCompletePasswordResetInput,
-  ): Promise<Result<Types.IdentityAuthenticationPasswordResetResult, ApiError>> {
-    const url = '/v1/auth/password:reset';
+  async getAuthGithubCallback(query?: { code?: string; state?: string }): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/github:callback';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Sign in with Google ID Token
+   *
+   * Authenticates a user using a Google ID Token (for NextAuth.js integration), returning access and refresh tokens.
+   */
+  async postAuthGoogle(body: Types.IdentityAuthenticationGoogleIdTokenInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/google';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCompletePasswordResetInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthenticationGoogleIdTokenInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -362,7 +141,63 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationPasswordResetResultSchema, result.data, 'response');
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Consume magic sign-in link
+   *
+   * Consumes a short-lived one-time magic-link token and returns access and refresh tokens.
+   */
+  async postAuthMagicLinkConsume(body: Types.IdentityAuthenticationConsumeMagicLinkInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/magic-link:consume';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationConsumeMagicLinkInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Request magic sign-in link
+   *
+   * Generates a short-lived one-time sign-in token and dispatches the magic-link notification. Always returns a generic success response to prevent user enumeration.
+   */
+  async postAuthMagicLinkRequest(
+    body: Types.IdentityAuthenticationRequestMagicLinkInput,
+  ): Promise<Result<Types.IdentityAuthenticationMagicLinkRequestResult, ApiError>> {
+    const url = '/v1/auth/magic-link:request';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationRequestMagicLinkInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationMagicLinkRequestResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -399,17 +234,78 @@ export class AuthModule {
   }
 
   /**
-   * GitHub OAuth callback
+   * Complete password reset
    *
-   * Handles the GitHub OAuth callback, exchanging the authorization code for tokens.
+   * Resets the user's password using a token received via email.
    */
-  async getAuthGithubCallback(query?: { code?: string; state?: string }): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = '/v1/auth/github:callback';
+  async postAuthPasswordReset(
+    body: Types.IdentityAuthenticationCompletePasswordResetInput,
+  ): Promise<Result<Types.IdentityAuthenticationPasswordResetResult, ApiError>> {
+    const url = '/v1/auth/password:reset';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationCompletePasswordResetInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: 'GET',
+      method: 'POST',
       path: url,
-      params: query,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationPasswordResetResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Request password reset
+   *
+   * Sends a password reset link to the specified email address. Always returns success for security.
+   */
+  async postAuthPasswordResetRequest(
+    body: Types.IdentityAuthenticationRequestPasswordResetInput,
+  ): Promise<Result<Types.IdentityAuthenticationPasswordResetRequestResult, ApiError>> {
+    const url = '/v1/auth/password:reset-request';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationRequestPasswordResetInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationPasswordResetRequestResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Sign in with email and password
+   *
+   * Authenticates a user with email and password credentials, returning access and refresh tokens.
+   */
+  async postAuthSignIn(body: Types.IdentityAuthenticationLocalSignInInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/sign-in';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationLocalSignInInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
       requiresAuth: false,
     });
 
@@ -420,6 +316,81 @@ export class AuthModule {
     }
 
     return result;
+  }
+
+  /**
+   * Register a new user
+   *
+   * Creates a new user account with email and password credentials, returning authentication tokens on success.
+   */
+  async postAuthSignUp(body: Types.IdentityAuthenticationLocalSignUpInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/sign-up';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationLocalSignUpInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Refresh access token
+   *
+   * Exchanges a valid refresh token for a new access token and refresh token pair.
+   */
+  async postAuthTokensRefresh(body: Types.IdentityAuthenticationRefreshTokenInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/tokens:refresh';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationRefreshTokenInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Revoke refresh token
+   *
+   * Invalidates a refresh token, preventing it from being used to obtain new access tokens.
+   */
+  async postAuthTokensRevoke(body: Types.IdentityAuthenticationRevokeRefreshTokenInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/auth/tokens:revoke';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationRevokeRefreshTokenInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 
   /**
@@ -443,6 +414,35 @@ export class AuthModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Generate Web3 authentication challenge
+   *
+   * Generates a cryptographic challenge that must be signed by the user's wallet to prove ownership.
+   */
+  async postAuthWeb3Challenge(
+    body: Types.IdentityAuthenticationWeb3ChallengeInput,
+  ): Promise<Result<Types.IdentityAuthenticationWeb3ChallengeOutput, ApiError>> {
+    const url = '/v1/auth/web3/challenge';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationWeb3ChallengeInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationWeb3ChallengeOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

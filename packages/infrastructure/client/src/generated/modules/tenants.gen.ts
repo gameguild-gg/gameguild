@@ -16,369 +16,6 @@ export class TenantsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Bulk create tenants
-   *
-   * Creates multiple tenant organizations at once.
-   */
-  async postTenantsCreate(body: Types.IdentityTenantsBulkCreateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
-    const url = '/v1/tenants:create';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsBulkCreateTenantsCommandSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk partial update tenants
-   *
-   * Updates multiple tenants with partial data.
-   */
-  async postTenantsUpdate(body: Types.IdentityTenantsBulkUpdateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
-    const url = '/v1/tenants:update';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsBulkUpdateTenantsCommandSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk full update tenants
-   *
-   * Updates multiple tenants with complete data.
-   */
-  async postTenantsReplace(body: Types.IdentityTenantsBulkUpdateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
-    const url = '/v1/tenants:replace';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsBulkUpdateTenantsCommandSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk soft delete tenants
-   *
-   * Soft deletes multiple tenants at once.
-   */
-  async postTenantsDelete(body: Types.IdentityTenantsBulkDeleteTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
-    const url = '/v1/tenants:delete';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsBulkDeleteTenantsCommandSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk activate tenant accounts
-   *
-   * Activates multiple tenant accounts at once.
-   */
-  async postTenantsActivate(body: Types.IdentityTenantsBulkActivateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
-    const url = '/v1/tenants:activate';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsBulkActivateTenantsCommandSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk deactivate tenant accounts
-   *
-   * Deactivates multiple tenant accounts at once.
-   */
-  async postTenantsDeactivate(body: Types.IdentityTenantsBulkDeactivateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
-    const url = '/v1/tenants:deactivate';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsBulkDeactivateTenantsCommandSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk archive tenant accounts
-   *
-   * Archives multiple tenant accounts at once.
-   */
-  async postTenantsArchive(body: Types.IdentityTenantsBulkArchiveTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
-    const url = '/v1/tenants:archive';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsBulkArchiveTenantsCommandSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk undelete soft-deleted tenants
-   *
-   * Restores multiple soft-deleted tenants at once.
-   */
-  async postTenantsUndelete(body: Types.IdentityTenantsBulkUndeleteTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
-    const url = '/v1/tenants:undelete';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsBulkUndeleteTenantsCommandSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk hard delete tenants (irreversible purge)
-   *
-   * Permanently deletes multiple tenants. Admin operation requiring proper authorization.
-   */
-  async postTenantsPurge(body: Types.IdentityTenantsBulkPurgeTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
-    const url = '/v1/tenants:purge';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsBulkPurgeTenantsCommandSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Activate tenant account
-   *
-   * Activates a tenant organization by ID.
-   */
-  async postTenantsActivate1(tenantId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/tenants/${tenantId}:activate`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Deactivate tenant account
-   *
-   * Deactivates a tenant organization by ID.
-   */
-  async postTenantsDeactivate1(tenantId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/tenants/${tenantId}:deactivate`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Archive (soft delete) tenant account
-   *
-   * Archives a tenant organization by ID.
-   */
-  async postTenantsArchive1(tenantId: string, body: Types.IdentityTenantsArchiveInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/tenants/${tenantId}:archive`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsArchiveInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Undelete a soft-deleted tenant account
-   *
-   * Undeletes a previously soft-deleted (archived) tenant organization.
-   */
-  async postTenantsUndelete1(tenantId: string, body: Types.IdentityTenantsRecoverInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/tenants/${tenantId}:undelete`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsRecoverInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Permanently delete (hard delete) tenant account
-   *
-   * Permanently and irreversibly deletes a tenant organization. Admin operation requiring proper authorization.
-   */
-  async postTenantsPurge1(tenantId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/tenants/${tenantId}:purge`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Get tenant audit log
-   *
-   * Retrieves the audit log for a tenant showing all changes, actions, and who performed them.
-   */
-  async getTenantsAuditLog(
-    tenantId: string,
-    query?: { startDate?: string; endDate?: string; action?: string; actorId?: string; page?: number; pageSize?: number },
-  ): Promise<Result<Types.PagedResultOfGameGuildIdentityTenantsTenantAuditLogEntry, ApiError>> {
-    const url = `/v1/tenants/${tenantId}/audit-log`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultOfGameGuildIdentityTenantsTenantAuditLogEntrySchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Get tenants with pagination, search, and sorting
    *
    * Retrieves a paginated list of all tenant organizations accessible to the requesting user.
@@ -429,24 +66,246 @@ export class TenantsModule {
   }
 
   /**
-   * Get payment history for tenant
+   * Bulk activate tenant accounts
    *
-   * Retrieves payment history for a specific tenant with optional date filtering.
+   * Activates multiple tenant accounts at once.
    */
-  async getTenantsPayments(
-    tenantId: string,
-    query?: { startDate?: string; endDate?: string },
-  ): Promise<Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>> {
-    const url = `/v1/tenants/${tenantId}/payments`;
+  async postTenantsActivate(body: Types.IdentityTenantsBulkActivateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+    const url = '/v1/tenants:activate';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsBulkActivateTenantsCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: 'GET',
+      method: 'POST',
       path: url,
-      params: query,
+      body: validatedBody,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>;
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk archive tenant accounts
+   *
+   * Archives multiple tenant accounts at once.
+   */
+  async postTenantsArchive(body: Types.IdentityTenantsBulkArchiveTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+    const url = '/v1/tenants:archive';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsBulkArchiveTenantsCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk create tenants
+   *
+   * Creates multiple tenant organizations at once.
+   */
+  async postTenantsCreate(body: Types.IdentityTenantsBulkCreateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+    const url = '/v1/tenants:create';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsBulkCreateTenantsCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk deactivate tenant accounts
+   *
+   * Deactivates multiple tenant accounts at once.
+   */
+  async postTenantsDeactivate(body: Types.IdentityTenantsBulkDeactivateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+    const url = '/v1/tenants:deactivate';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsBulkDeactivateTenantsCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk soft delete tenants
+   *
+   * Soft deletes multiple tenants at once.
+   */
+  async postTenantsDelete(body: Types.IdentityTenantsBulkDeleteTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+    const url = '/v1/tenants:delete';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsBulkDeleteTenantsCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk hard delete tenants (irreversible purge)
+   *
+   * Permanently deletes multiple tenants. Admin operation requiring proper authorization.
+   */
+  async postTenantsPurge(body: Types.IdentityTenantsBulkPurgeTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+    const url = '/v1/tenants:purge';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsBulkPurgeTenantsCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk full update tenants
+   *
+   * Updates multiple tenants with complete data.
+   */
+  async postTenantsReplace(body: Types.IdentityTenantsBulkUpdateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+    const url = '/v1/tenants:replace';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsBulkUpdateTenantsCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk undelete soft-deleted tenants
+   *
+   * Restores multiple soft-deleted tenants at once.
+   */
+  async postTenantsUndelete(body: Types.IdentityTenantsBulkUndeleteTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+    const url = '/v1/tenants:undelete';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsBulkUndeleteTenantsCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk partial update tenants
+   *
+   * Updates multiple tenants with partial data.
+   */
+  async postTenantsUpdate(body: Types.IdentityTenantsBulkUpdateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+    const url = '/v1/tenants:update';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsBulkUpdateTenantsCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.BulkOperationOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
@@ -577,6 +436,147 @@ export class TenantsModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Activate tenant account
+   *
+   * Activates a tenant organization by ID.
+   */
+  async postTenantsActivate1(tenantId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/tenants/${tenantId}:activate`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Archive (soft delete) tenant account
+   *
+   * Archives a tenant organization by ID.
+   */
+  async postTenantsArchive1(tenantId: string, body: Types.IdentityTenantsArchiveInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/tenants/${tenantId}:archive`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsArchiveInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Deactivate tenant account
+   *
+   * Deactivates a tenant organization by ID.
+   */
+  async postTenantsDeactivate1(tenantId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/tenants/${tenantId}:deactivate`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Permanently delete (hard delete) tenant account
+   *
+   * Permanently and irreversibly deletes a tenant organization. Admin operation requiring proper authorization.
+   */
+  async postTenantsPurge1(tenantId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/tenants/${tenantId}:purge`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Undelete a soft-deleted tenant account
+   *
+   * Undeletes a previously soft-deleted (archived) tenant organization.
+   */
+  async postTenantsUndelete1(tenantId: string, body: Types.IdentityTenantsRecoverInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/tenants/${tenantId}:undelete`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsRecoverInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get tenant audit log
+   *
+   * Retrieves the audit log for a tenant showing all changes, actions, and who performed them.
+   */
+  async getTenantsAuditLog(
+    tenantId: string,
+    query?: { startDate?: string; endDate?: string; action?: string; actorId?: string; page?: number; pageSize?: number },
+  ): Promise<Result<Types.PagedResultOfGameGuildIdentityTenantsTenantAuditLogEntry, ApiError>> {
+    const url = `/v1/tenants/${tenantId}/audit-log`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.PagedResultOfGameGuildIdentityTenantsTenantAuditLogEntrySchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Get payment history for tenant
+   *
+   * Retrieves payment history for a specific tenant with optional date filtering.
+   */
+  async getTenantsPayments(
+    tenantId: string,
+    query?: { startDate?: string; endDate?: string },
+  ): Promise<Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>> {
+    const url = `/v1/tenants/${tenantId}/payments`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>;
   }
 }
 

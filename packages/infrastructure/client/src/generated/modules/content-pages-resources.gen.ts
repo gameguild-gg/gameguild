@@ -123,13 +123,13 @@ export class ContentPagesResourcesModule {
 
   /**
    */
-  async getContentResourcesBySlug(slug: string): Promise<Result<Types.ContentPagesContentResource, ApiError>> {
-    const url = `/v1/content-resources/by-slug/${slug}`;
+  async postContentResourcesPublish(id: string): Promise<Result<Types.ContentPagesContentResource, ApiError>> {
+    const url = `/v1/content-resources/${id}/publish`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: 'POST',
       path: url,
-      requiresAuth: false,
+      requiresAuth: true,
     });
 
     // Validate response
@@ -143,13 +143,13 @@ export class ContentPagesResourcesModule {
 
   /**
    */
-  async postContentResourcesPublish(id: string): Promise<Result<Types.ContentPagesContentResource, ApiError>> {
-    const url = `/v1/content-resources/${id}/publish`;
+  async getContentResourcesBySlug(slug: string): Promise<Result<Types.ContentPagesContentResource, ApiError>> {
+    const url = `/v1/content-resources/by-slug/${slug}`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: 'GET',
       path: url,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     // Validate response

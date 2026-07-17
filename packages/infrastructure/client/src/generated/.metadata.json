@@ -1,6 +1,5 @@
 {
-  "hash": "42216a98d493b2a8c15161f49fd1ba9026549f97858b5fda1b021c3537ed8198",
-  "timestamp": "2026-07-14T14:59:51.131Z",
+  "hash": "6f4e27bdb9f92766b00c9deb16c75f49c22edf21c5f4801080deecd8ebd94a88",
   "apiVersion": "1.0",
-  "specUrl": "http://localhost:5295/swagger/v1/swagger.json"
+  "source": "captured-openapi"
 }
