@@ -68,38 +68,199 @@ public class ResourceQuotaIntegrationTests : IDisposable
         var tenantId = Guid.NewGuid();
         await setupScope.Service.SetQuotaAsync(tenantId, ResourceUsageType.Users, softLimit: 8, hardLimit: 10);
 
+        var start = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         // Simulate 20 concurrent create requests
         var tasks = Enumerable.Range(0, 20)
-            .Select(_ => Task.Run(async () =>
+            .Select(async _ =>
             {
+                await start.Task;
                 await using var operationScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
-                try
-                {
-                    var (success, _, _) = await operationScope.Service.TryAtomicConsumeAsync(
-                        tenantId,
-                        ResourceUsageType.Users,
-                        amount: 1);
-                    return success;
-                }
-                catch
-                {
-                    return false;
-                }
-            }))
+                var (success, _, _) = await operationScope.Service.TryAtomicConsumeAsync(
+                    tenantId,
+                    ResourceUsageType.Users,
+                    amount: 1);
+                return success;
+            })
             .ToArray();
 
         // Act
+        start.SetResult(true);
         var results = await Task.WhenAll(tasks);
         var successCount = results.Count(r => r);
 
         // Assert
-        successCount.Should().BeLessOrEqualTo(10, "quota enforcement should prevent more than 10 successful increments");
+        successCount.Should().Be(10, "all ten available quota units should be consumed exactly once");
+        results.Count(result => !result).Should().Be(10, "the remaining requests should receive quota rejection results");
 
         await using var assertionScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
         var quota = await assertionScope.Service.GetQuotaAsync(tenantId, ResourceUsageType.Users);
         quota.Should().NotBeNull();
-        quota!.CurrentUsage.Should().BeLessOrEqualTo(10, "final usage must not exceed hard limit");
+        quota!.CurrentUsage.Should().Be(10, "final usage should equal the hard limit");
         quota.CurrentUsage.Should().Be(successCount, "usage should match number of successful operations");
+    }
+
+    [Fact]
+    public async Task ConcurrentCreates_ResetExpiredQuota_AndConsumeExactCapacity()
+    {
+        await using var database = await _postgreSqlFixture.CreateDatabaseAsync("quota_expired_race");
+        await using var setupScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        await setupScope.Context.Database.EnsureCreatedAsync();
+
+        var tenantId = Guid.NewGuid();
+        var quota = await setupScope.Service.SetQuotaAsync(
+            tenantId,
+            ResourceUsageType.ApiCalls,
+            softLimit: 8,
+            hardLimit: 10,
+            period: ResourceQuotaPeriod.Daily);
+        var expiredReset = SystemClock.UtcNow.AddDays(-2);
+        quota.CurrentUsage = 10;
+        quota.LastReset = expiredReset;
+        await setupScope.Repository.UpdateAsync(quota);
+
+        var start = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tasks = Enumerable.Range(0, 20)
+            .Select(async _ =>
+            {
+                await start.Task;
+                await using var operationScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+                var (success, _, _) = await operationScope.Service.TryAtomicConsumeAsync(
+                    tenantId,
+                    ResourceUsageType.ApiCalls,
+                    1);
+                return success;
+            })
+            .ToArray();
+
+        start.SetResult(true);
+        var results = await Task.WhenAll(tasks);
+
+        results.Count(result => result).Should().Be(10);
+        results.Count(result => !result).Should().Be(10);
+
+        await using var assertionScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        var finalQuota = await assertionScope.Repository.GetByTenantAndTypeAsync(tenantId, ResourceUsageType.ApiCalls);
+        finalQuota!.CurrentUsage.Should().Be(10);
+        finalQuota.LastReset.Should().BeAfter(expiredReset);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task AtomicConsume_RejectsNonPositiveAmounts(long amount)
+    {
+        var action = () => _repository.TryIncrementUsageAsync(
+            Guid.NewGuid(),
+            ResourceUsageType.ApiCalls,
+            amount);
+
+        await action.Should().ThrowAsync<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public async Task AtomicConsume_ThrowsOnUnlimitedQuotaOverflow_WithoutChangingUsage()
+    {
+        await using var database = await _postgreSqlFixture.CreateDatabaseAsync("quota_overflow");
+        await using var setupScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        await setupScope.Context.Database.EnsureCreatedAsync();
+
+        var tenantId = Guid.NewGuid();
+        var quota = await setupScope.Service.SetQuotaAsync(
+            tenantId,
+            ResourceUsageType.Storage,
+            softLimit: null,
+            hardLimit: null,
+            period: ResourceQuotaPeriod.Unlimited);
+        quota.CurrentUsage = long.MaxValue;
+        await setupScope.Repository.UpdateAsync(quota);
+
+        await using var operationScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        var action = () => operationScope.Repository.TryIncrementUsageAsync(
+            tenantId,
+            ResourceUsageType.Storage,
+            1);
+
+        await action.Should().ThrowAsync<OverflowException>();
+
+        await using var assertionScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        var persisted = await assertionScope.Repository.GetByTenantAndTypeAsync(tenantId, ResourceUsageType.Storage);
+        persisted!.CurrentUsage.Should().Be(long.MaxValue);
+    }
+
+    [Fact]
+    public async Task AtomicConsume_DoesNotSaveUnrelatedTrackedChanges()
+    {
+        await using var database = await _postgreSqlFixture.CreateDatabaseAsync("quota_tracker_isolation");
+        await using var setupScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        await setupScope.Context.Database.EnsureCreatedAsync();
+
+        var pendingTenantId = Guid.NewGuid();
+        var consumedTenantId = Guid.NewGuid();
+        await setupScope.Service.SetQuotaAsync(pendingTenantId, ResourceUsageType.Users, null, 10);
+        await setupScope.Service.SetQuotaAsync(consumedTenantId, ResourceUsageType.Users, null, 10);
+
+        await using var operationScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        var pendingQuota = await operationScope.Repository.GetByTenantAndTypeAsync(
+            pendingTenantId,
+            ResourceUsageType.Users);
+        pendingQuota!.Description = "pending-change";
+
+        var (success, _, _) = await operationScope.Service.TryAtomicConsumeAsync(
+            consumedTenantId,
+            ResourceUsageType.Users,
+            1);
+
+        success.Should().BeTrue();
+        operationScope.Context.Entry(pendingQuota).State.Should().Be(EntityState.Modified);
+
+        await using (var beforeSaveScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString))
+        {
+            var beforeSave = await beforeSaveScope.Repository.GetByTenantAndTypeAsync(
+                pendingTenantId,
+                ResourceUsageType.Users);
+            beforeSave!.Description.Should().BeNull();
+        }
+
+        await operationScope.Context.SaveChangesAsync();
+
+        await using var afterSaveScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        var afterSave = await afterSaveScope.Repository.GetByTenantAndTypeAsync(
+            pendingTenantId,
+            ResourceUsageType.Users);
+        afterSave!.Description.Should().Be("pending-change");
+    }
+
+    [Fact]
+    public async Task AtomicConsume_CancellationLeavesQuotaUnchangedAndUntracked()
+    {
+        await using var database = await _postgreSqlFixture.CreateDatabaseAsync("quota_cancellation");
+        await using var setupScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        await setupScope.Context.Database.EnsureCreatedAsync();
+
+        var tenantId = Guid.NewGuid();
+        var quota = await setupScope.Service.SetQuotaAsync(tenantId, ResourceUsageType.Users, null, 10);
+
+        await using var lockScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        await using var transaction = await lockScope.Context.Database.BeginTransactionAsync();
+        await lockScope.Context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE resources.resource_quotas SET \"CurrentUsage\" = \"CurrentUsage\" WHERE \"Id\" = {quota.Id}");
+
+        await using var operationScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(250));
+        var action = () => operationScope.Repository.TryIncrementUsageAsync(
+            tenantId,
+            ResourceUsageType.Users,
+            1,
+            cancellation.Token);
+
+        await action.Should().ThrowAsync<OperationCanceledException>();
+        operationScope.Context.ChangeTracker.Entries<ResourceQuota>().Should().BeEmpty();
+        await transaction.RollbackAsync();
+
+        await using var assertionScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        var persisted = await assertionScope.Repository.GetByTenantAndTypeAsync(tenantId, ResourceUsageType.Users);
+        persisted!.CurrentUsage.Should().Be(0);
     }
 
     [Fact]
