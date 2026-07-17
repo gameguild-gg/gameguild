@@ -73,6 +73,26 @@ public class Payment : EntityBase
     [MaxLength(255)]
     public string? ExternalCustomerId { get; private set; }
 
+    /// <summary>Provider environment associated with the external payment object.</summary>
+    [MaxLength(32)]
+    public string? ProviderEnvironment { get; private set; }
+
+    /// <summary>Connected or merchant account that owns the external payment object.</summary>
+    [MaxLength(255)]
+    public string? ProviderAccountId { get; private set; }
+
+    /// <summary>Canonical provider object ID once a scoped provider mapping has been verified.</summary>
+    [MaxLength(255)]
+    public string? ProviderObjectId { get; private set; }
+
+    /// <summary>Provider object kind, such as payment_intent or charge.</summary>
+    [MaxLength(100)]
+    public string? ProviderObjectType { get; private set; }
+
+    /// <summary>Monetary leg represented by the provider object, such as capture or refund.</summary>
+    [MaxLength(100)]
+    public string? ProviderMonetaryLeg { get; private set; }
+
     /// <summary>Payment method ID used for this payment</summary>
     [MaxLength(255)]
     public string? PaymentMethodId { get; private set; }
@@ -301,6 +321,12 @@ public class Payment : EntityBase
         Metadata = metadata;
         Touch();
     }
+
+    /// <summary>
+    ///     Returns a legacy external reference for compatibility reads only.
+    ///     This value is not a scoped provider identity and must never authorize value movement.
+    /// </summary>
+    public string? ResolveUnverifiedLegacyProviderObjectId() => ExternalPaymentId ?? ExternalTransactionId;
 
     /// <summary>Whether the payment can be retried</summary>
     public bool CanRetry => Status == PaymentStatus.Failed && RetryCount < MaxRetries;
