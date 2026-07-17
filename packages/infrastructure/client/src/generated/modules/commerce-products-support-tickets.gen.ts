@@ -91,6 +91,33 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
+  async postSupportTicketsMessages(
+    ticketId: string,
+    body: Types.CommerceProductsAddSupportTicketMessageInput,
+  ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
+    const url = `/v1/support/tickets/${ticketId}/messages`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommerceProductsAddSupportTicketMessageInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceProductsSupportTicketSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postSupportTicketsAssign(
     ticketId: string,
     body: Types.CommerceProductsAssignSupportTicketInput,
@@ -153,33 +180,6 @@ export class CommerceProductsSupportTicketsModule {
 
     // Validate request body
     const validatedBody = safeParse(Types.CommerceProductsResolveSupportTicketInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsSupportTicketSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postSupportTicketsMessages(
-    ticketId: string,
-    body: Types.CommerceProductsAddSupportTicketMessageInput,
-  ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/support/tickets/${ticketId}/messages`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsAddSupportTicketMessageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

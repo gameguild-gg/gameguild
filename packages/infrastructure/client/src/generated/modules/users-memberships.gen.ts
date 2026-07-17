@@ -85,27 +85,6 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Get count of user's active tenant memberships
-   */
-  async getUsersMembershipsCount(userId: string): Promise<Result<Types.IdentityTenantsMembershipCountOutput, ApiError>> {
-    const url = `/v1/users/${userId}/memberships:count`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityTenantsMembershipCountOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Accept tenant membership invite
    */
   async postUsersMembershipsInviteAccept(
@@ -217,6 +196,27 @@ export class UsersMembershipsModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.IdentityTenantsUpdateTenantMemberRoleOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Get count of user's active tenant memberships
+   */
+  async getUsersMembershipsCount(userId: string): Promise<Result<Types.IdentityTenantsMembershipCountOutput, ApiError>> {
+    const url = `/v1/users/${userId}/memberships:count`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityTenantsMembershipCountOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
