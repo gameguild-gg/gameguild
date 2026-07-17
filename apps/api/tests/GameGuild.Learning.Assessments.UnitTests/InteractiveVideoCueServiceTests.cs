@@ -8,6 +8,10 @@ using Xunit;
 
 namespace GameGuild.Learning.Assessments.Tests;
 
+[CollectionDefinition(nameof(SystemClockCollection), DisableParallelization = true)]
+public sealed class SystemClockCollection;
+
+[Collection(nameof(SystemClockCollection))]
 public sealed class InteractiveVideoCueServiceTests
 {
     private static readonly SemaphoreSlim ClockGate = new(1, 1);
