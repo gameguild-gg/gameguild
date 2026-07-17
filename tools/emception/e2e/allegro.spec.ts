@@ -120,11 +120,11 @@ test.describe('Allegro 5 C++ canvas', () => {
         await page.waitForFunction(() => {
             const w = window as EmceptionWindow;
             const filesRef = w.__emception_filesRef__;
-            return !!filesRef?.current?.['/user/allegro-main.cpp']?.content;
+            return !!filesRef?.current?.['/home/user/cpp-allegro/allegro-main.cpp']?.content;
         }, { timeout: 30_000 });
         const editorContent: string = await page.evaluate(() => {
             const w = window as EmceptionWindow;
-            return (w.__emception_filesRef__?.current?.['/user/allegro-main.cpp']?.content as string) ?? '';
+            return (w.__emception_filesRef__?.current?.['/home/user/cpp-allegro/allegro-main.cpp']?.content as string) ?? '';
         });
         expect(editorContent).toContain('#include <allegro5/allegro.h>');
         console.log('Allegro 5 demo code confirmed in workspace files.');
