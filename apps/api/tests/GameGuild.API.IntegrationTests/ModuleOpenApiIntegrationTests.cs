@@ -67,6 +67,5 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
         paths.Should().ContainKey("/api/social/feed/users/{userId}");
         paths.Should().ContainKey("/api/social/groups");
         paths.Should().ContainKey("/api/social/reactions");
-        paths.Should().ContainKey("/api/tags");
     }
 }

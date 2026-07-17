@@ -109,7 +109,10 @@ if (importSnapshotCourses)
     return;
 }
 
-StartDatabaseInitialization(app);
+if (app.Configuration.GetValue<bool?>("Database:RunStartupInitialization") ?? true)
+{
+    StartDatabaseInitialization(app);
+}
 
 // Configure the HTTP request pipeline (middleware, routing, endpoints)
 app.ConfigurePipeline();

@@ -240,8 +240,15 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RenewSubscription(Guid subscriptionId, CancellationToken ct)
     {
-        await sender.Send(new ProcessSubscriptionRenewalCommand(subscriptionId), ct).ConfigureAwait(false);
-        return NoContent();
+        try
+        {
+            await sender.Send(new ProcessSubscriptionRenewalCommand(subscriptionId), ct).ConfigureAwait(false);
+            return NoContent();
+        }
+        catch (RequestValidationException exception)
+        {
+            return BadRequest(new { errors = exception.Errors });
+        }
     }
 
     /// <summary>

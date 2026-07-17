@@ -19,7 +19,11 @@ public sealed class GetAllPaymentsQueryHandler(IApplicationDbContext context) : 
 
         if (!string.IsNullOrWhiteSpace(request.Status))
         {
-            if (!Enum.TryParse<PaymentStatus>(request.Status, true, out var status))
+            var normalizedStatus = request.Status.Equals("completed", StringComparison.OrdinalIgnoreCase)
+                ? nameof(PaymentStatus.Succeeded)
+                : request.Status;
+
+            if (!Enum.TryParse<PaymentStatus>(normalizedStatus, true, out var status))
             {
                 throw new ArgumentException($"Unknown payment status '{request.Status}'.", nameof(request));
             }

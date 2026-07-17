@@ -200,14 +200,15 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
 
         // Cancel the subscription
         var cancelRequest = new { Reason = "UserRequested", Note = (string?)null, EffectiveDate = (DateTime?)null };
-        await _client.PostAsJsonAsync($"/api/v1/subscriptions/{subscriptionId}:cancel", cancelRequest);
+        var cancelResponse = await _client.PostAsJsonAsync($"/api/v1/subscriptions/{subscriptionId}:cancel", cancelRequest);
+        cancelResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         // Try to renew the cancelled subscription
         // Act
         var response = await _client.PostAsync($"/api/v1/subscriptions/{subscriptionId}:renew", null);
 
         // Assert - Renewal should fail for cancelled subscription
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.BadRequest, HttpStatusCode.Conflict, HttpStatusCode.UnprocessableEntity, HttpStatusCode.NoContent, HttpStatusCode.OK);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     #endregion

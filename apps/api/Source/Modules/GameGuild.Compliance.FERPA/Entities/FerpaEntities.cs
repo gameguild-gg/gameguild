@@ -224,6 +224,7 @@ public class FerpaInspectionRequest : EntityBase
 
     public void Complete(Guid processedByUserId, string? notes)
     {
+        EnsureCanBeProcessed();
         Status = FerpaRequestStatus.Completed;
         ProcessedByUserId = processedByUserId;
         ProcessedAt = SystemClock.UtcNow;
@@ -233,11 +234,20 @@ public class FerpaInspectionRequest : EntityBase
 
     public void Deny(Guid processedByUserId, string reason)
     {
+        EnsureCanBeProcessed();
         Status = FerpaRequestStatus.Denied;
         ProcessedByUserId = processedByUserId;
         ProcessedAt = SystemClock.UtcNow;
         ProcessingNotes = reason;
         Touch();
+    }
+
+    private void EnsureCanBeProcessed()
+    {
+        if (Status is not (FerpaRequestStatus.Pending or FerpaRequestStatus.InReview))
+        {
+            throw new InvalidOperationException($"FERPA inspection request cannot be processed in {Status} status.");
+        }
     }
 
     public FerpaInspectionRequestDto ToDto() => new(

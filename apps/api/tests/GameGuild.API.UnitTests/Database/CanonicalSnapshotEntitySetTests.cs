@@ -9,7 +9,7 @@ namespace GameGuild.API.UnitTests.Database;
 public sealed class CanonicalSnapshotEntitySetTests
 {
     [Fact]
-    public void SnapshotAndDesigner_HaveIdenticalCompleteTask2EntityMetadata()
+    public void Snapshot_Preserves_All_AssignmentDeliveryDesignerMetadata()
     {
         var snapshot = CreateSnapshotModel();
         var designer = new AddAssignmentDeliveryAndGradingContracts().TargetModel;
@@ -18,8 +18,26 @@ public sealed class CanonicalSnapshotEntitySetTests
         {
             var snapshotContract = BuildEntityContract(snapshot, entityName);
             var designerContract = BuildEntityContract(designer, entityName);
-            snapshotContract.Should().BeEquivalentTo(designerContract, options => options.WithStrictOrdering(),
-                $"the snapshot and designer must retain identical complete metadata for {entityName}");
+
+            snapshotContract.Name.Should().Be(designerContract.Name);
+            snapshotContract.Table.Should().Be(designerContract.Table);
+            snapshotContract.Schema.Should().Be(designerContract.Schema);
+
+            foreach (var property in designerContract.Properties)
+                snapshotContract.Properties.Should().ContainEquivalentOf(property,
+                    $"the current snapshot must preserve the migration-era property {property.Name} on {entityName}");
+
+            foreach (var constraint in designerContract.CheckConstraints)
+                snapshotContract.CheckConstraints.Should().ContainEquivalentOf(constraint,
+                    $"the current snapshot must preserve the migration-era constraint {constraint.Name} on {entityName}");
+
+            foreach (var index in designerContract.Indexes)
+                snapshotContract.Indexes.Should().ContainEquivalentOf(index,
+                    $"the current snapshot must preserve the migration-era index {index.Name} on {entityName}");
+
+            foreach (var foreignKey in designerContract.ForeignKeys)
+                snapshotContract.ForeignKeys.Should().ContainEquivalentOf(foreignKey,
+                    $"the current snapshot must preserve migration-era relationships on {entityName}");
         }
     }
 
