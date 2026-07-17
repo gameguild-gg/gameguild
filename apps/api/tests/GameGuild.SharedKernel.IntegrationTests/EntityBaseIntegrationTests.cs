@@ -81,7 +81,8 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
         user.CreatedAt.Should().BeOnOrBefore(afterCreate);
         user.UpdatedAt.Should().BeOnOrAfter(beforeCreate);
         user.UpdatedAt.Should().BeOnOrBefore(afterCreate);
-        user.Version.Should().Be(0);
+        user.Version.Should().Be(1);
+        user.IsNew.Should().BeFalse();
     }
 
     [Fact]
@@ -142,6 +143,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
         user.DeletedAt!.Value.Should().BeOnOrAfter(beforeDelete);
         user.DeletedAt.Value.Should().BeOnOrBefore(afterDelete);
         user.IsDeleted.Should().BeTrue();
+        user.Version.Should().Be(2);
     }
 
     [Fact]
@@ -163,9 +165,10 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Name = "Deleted User",
             IsActive = true
         };
-        deletedUser.SoftDelete();
-
         await _dbContext.Set<User>().AddRangeAsync(activeUser, deletedUser);
+        await _dbContext.SaveChangesAsync();
+
+        deletedUser.SoftDelete();
         await _dbContext.SaveChangesAsync();
 
         // Act
@@ -197,9 +200,10 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             Name = "Deleted User 2",
             IsActive = true
         };
-        deletedUser.SoftDelete();
-
         await _dbContext.Set<User>().AddRangeAsync(activeUser, deletedUser);
+        await _dbContext.SaveChangesAsync();
+
+        deletedUser.SoftDelete();
         await _dbContext.SaveChangesAsync();
 
         // Act
@@ -297,7 +301,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
     }
 
     [Fact]
-    public async Task Entity_Version_ShouldStartAtZero()
+    public async Task Entity_Version_ShouldStartAtZero_AndIncrementWhenPersisted()
     {
         // Arrange
         var user = new User
@@ -308,13 +312,17 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
             IsActive = true
         };
 
+        // Assert new entity state
+        user.Version.Should().Be(0);
+        user.IsNew.Should().BeTrue();
+
         // Act
         await _dbContext.Set<User>().AddAsync(user);
         await _dbContext.SaveChangesAsync();
 
-        // Assert
-        user.Version.Should().Be(0);
-        user.IsNew.Should().BeTrue();
+        // Assert persisted entity state
+        user.Version.Should().Be(1);
+        user.IsNew.Should().BeFalse();
     }
 
     [Fact]
