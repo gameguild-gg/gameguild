@@ -32,7 +32,6 @@ nul
 !.yarn/versions
 package-lock.json
 yarn.lock
-pnpm-lock.yaml
 .pnpm-store/
 
 # Environment files
@@ -57,6 +56,7 @@ coverage/
 test-results/
 playwright-report/
 playwright-report-react/
+artifacts/
 *.tsbuildinfo
 apps/web/test-results/
 

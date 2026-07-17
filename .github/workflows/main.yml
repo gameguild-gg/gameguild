@@ -4,21 +4,28 @@ on:
   push:
     branches:
       - main
+      - develop
+  pull_request:
+    branches:
+      - develop
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-web:
-    name: Build Web
+  economy-gate:
+    name: Economy CI Gate
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10.0.0
 
       - uses: actions/setup-node@v4
         with:
@@ -28,36 +35,33 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build web app
-        run: pnpm turbo run build --filter=@gameguild/web
-
-  build-api:
-    name: Build API
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
       - name: Install .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: "10.0.103"
 
-      - name: Restore NuGet packages
-        run: dotnet restore apps/api/GameGuild.sln
+      - name: Install Playwright Chromium
+        run: pnpm --filter @game-guild/web exec playwright install --with-deps chromium
 
-      - name: Build API
-        run: dotnet build apps/api/GameGuild.sln -c Release --no-restore
+      - name: Verify economy baseline
+        shell: pwsh
+        env:
+          ECONOMY_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: ./scripts/ci/verify-economy.ps1
 
-      - name: Run API tests
-        run: dotnet test apps/api/GameGuild.sln -c Release --no-build --verbosity minimal
-
-      - name: Publish API
-        run: dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-build -o publish/
+      - name: Upload economy evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: economy-test-results-${{ github.sha }}
+          path: artifacts/test-results
+          if-no-files-found: error
 
   contributors:
     name: Contributors Visualization
     runs-on: ubuntu-latest
-    needs: [build-web, build-api]
+    needs: [economy-gate]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -86,7 +90,8 @@ jobs:
   release:
     name: Changesets Release
     runs-on: ubuntu-latest
-    needs: [build-web, build-api]
+    needs: [economy-gate]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: write
       pull-requests: write
@@ -97,7 +102,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10.0.0
 
       - uses: actions/setup-node@v4
         with:
