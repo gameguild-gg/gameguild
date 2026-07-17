@@ -156,21 +156,22 @@ public class ResourceQuotaIsolationTests : IDisposable
                 hardLimit: 50);
         }
 
-        var operations = tenants
-            .SelectMany(tenant => Enumerable.Range(0, checked((int)tenant.ExpectedUsage))
-                .Select(_ => tenant.Id))
-            .Select(async tenantId =>
+        var operations = tenants.Select(async tenant =>
+        {
+            await using var operationScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+
+            for (var operation = 0; operation < tenant.ExpectedUsage; operation++)
             {
-                await using var operationScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
                 var (success, _, _) = await operationScope.Service.TryAtomicConsumeAsync(
-                    tenantId,
+                    tenant.Id,
                     ResourceUsageType.Users,
                     amount: 1);
-                return success;
-            });
 
-        var results = await Task.WhenAll(operations);
-        results.Should().OnlyContain(success => success, "all operations are below their tenant's hard limit");
+                success.Should().BeTrue("every operation remains below that tenant's hard limit");
+            }
+        });
+
+        await Task.WhenAll(operations);
 
         await using var assertionScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
         foreach (var tenant in tenants)
