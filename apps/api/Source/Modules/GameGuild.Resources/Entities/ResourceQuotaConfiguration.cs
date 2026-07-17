@@ -52,6 +52,10 @@ public class ResourceQuotaConfiguration : IEntityTypeConfiguration<ResourceQuota
 
         builder.Property(x => x.UpdatedAt).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP").HasComment("When the quota was last updated");
 
+        // ApplicationDbContext increments Version on tracked writes. Direct atomic quota
+        // updates do the same, so tracked maintenance writes cannot overwrite consumption.
+        builder.Property(x => x.Version).IsConcurrencyToken();
+
         // Configure Metadata as JSON with strongly-typed serialization
         // This provides type safety while storing as JSON in the database
         builder.Property(x => x.Metadata)
