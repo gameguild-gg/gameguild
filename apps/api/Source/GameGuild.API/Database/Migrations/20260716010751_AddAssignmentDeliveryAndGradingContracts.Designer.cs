@@ -7237,6 +7237,8 @@ namespace GameGuild.API.Database.Migrations
 
                             t.HasCheckConstraint("CK_Assessments_PresentationMode", "\"PresentationMode\" IN (0, 1)");
 
+                            t.HasCheckConstraint("CK_Assessments_ScoreRange", "\"MaxScore\" > 0 AND \"PassingScore\" >= 0 AND \"PassingScore\" <= \"MaxScore\"");
+
                             t.HasCheckConstraint("CK_Assessments_SubmissionModalities", "\"SubmissionModalities\" > 0 AND (\"SubmissionModalities\" & ~127) = 0");
                         });
                 });
@@ -7388,9 +7390,17 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("AssessmentId", "EnrollmentId", "AttemptNumber")
+                        .IsUnique()
+                        .HasDatabaseName("UX_AssessmentSubmissions_Assessment_Enrollment_Attempt");
+
                     b.ToTable("AssessmentSubmissions", null, t =>
                         {
+                            t.HasCheckConstraint("CK_AssessmentSubmissions_AttemptNumberPositive", "\"AttemptNumber\" > 0");
+
                             t.HasCheckConstraint("CK_AssessmentSubmissions_PayloadConsistency", "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 64) = 0 OR \"StructuredAnswerPayload\" IS NOT NULL) AND (\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND (\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND (\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND (\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND (\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND (\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0) AND (\"StructuredAnswerPayload\" IS NULL OR (\"SubmittedModalities\" & 64) <> 0)");
+
+                            t.HasCheckConstraint("CK_AssessmentSubmissions_ScoreNonNegative", "\"Score\" IS NULL OR \"Score\" >= 0");
 
                             t.HasCheckConstraint("CK_AssessmentSubmissions_SubmittedModalities", "\"SubmittedModalities\" >= 0 AND (\"SubmittedModalities\" & ~127) = 0");
                         });
