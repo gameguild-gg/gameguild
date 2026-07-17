@@ -18,7 +18,7 @@ const wasmerSdkCandidates = [
 const standaloneToolNames = [
     'clang', 'lld', 'python',
     'wasm-opt', 'wasm-as', 'wasm-ctor-eval', 'wasm-emscripten-finalize', 'wasm-metadce',
-    'ninja', 'cmake',
+    'cmake',
 ];
 
 const requestedDemoDirs = process.argv.slice(2);
