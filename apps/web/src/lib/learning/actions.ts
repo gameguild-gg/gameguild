@@ -204,7 +204,7 @@ export async function reorderContent(courseId: string, contentIds: string[]): Pr
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { programs } = createCourseModules();
-    const result = await programs.postCoursesContentReorder1(resolvedCourseId, { contentIds });
+    const result = await programs.postCoursesContentReorder(resolvedCourseId, { contentIds });
 
     if (result.ok) {
       revalidateCourseContentPaths(courseId, resolvedCourseId);
