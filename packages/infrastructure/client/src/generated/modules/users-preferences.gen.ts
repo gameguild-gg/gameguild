@@ -90,95 +90,6 @@ export class UsersPreferencesModule {
   }
 
   /**
-   * Get notification settings for user
-   */
-  async getUsersPreferencesNotifications(userId: string): Promise<Result<Types.IdentityUsersUserNotificationPreferences, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/notifications`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserNotificationPreferencesSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Replace notification preferences for user (full update)
-   */
-  async putUsersPreferencesNotifications(userId: string, body: Types.IdentityUsersReplaceUserNotificationPreferencesInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/notifications`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersReplaceUserNotificationPreferencesInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Partially update notification preferences for user
-   */
-  async patchUsersPreferencesNotifications(userId: string, body: Types.IdentityUsersUpdateUserNotificationPreferencesInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/notifications`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersUpdateUserNotificationPreferencesInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PATCH',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Check if notification preferences exist
-   */
-  async headUsersPreferencesNotifications(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/notifications`;
-
-    const result = await this.client.request({
-      method: 'HEAD',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Reset notification preferences to defaults
-   */
-  async postUsersPreferencesNotificationsReset(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/notifications:reset`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Get accessibility settings for user
    */
   async getUsersPreferencesAccessibility(userId: string): Promise<Result<Types.IdentityUsersUserAccessibilityPreferences, ApiError>> {
@@ -268,95 +179,6 @@ export class UsersPreferencesModule {
   }
 
   /**
-   * Get privacy settings for user
-   */
-  async getUsersPreferencesPrivacy(userId: string): Promise<Result<Types.IdentityUsersUserPrivacyPreferences, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/privacy`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserPrivacyPreferencesSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Replace privacy preferences for user (full update)
-   */
-  async putUsersPreferencesPrivacy(userId: string, body: Types.IdentityUsersReplaceUserPrivacyPreferencesInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/privacy`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersReplaceUserPrivacyPreferencesInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Partially update privacy preferences for user
-   */
-  async patchUsersPreferencesPrivacy(userId: string, body: Types.IdentityUsersUpdateUserPrivacyPreferencesInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/privacy`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersUpdateUserPrivacyPreferencesInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PATCH',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Check if privacy preferences exist
-   */
-  async headUsersPreferencesPrivacy(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/privacy`;
-
-    const result = await this.client.request({
-      method: 'HEAD',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Reset privacy preferences to defaults
-   */
-  async postUsersPreferencesPrivacyReset(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/privacy:reset`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Get localization settings for user
    */
   async getUsersPreferencesLocalization(userId: string): Promise<Result<Types.IdentityUsersUserLocalizationPreferences, ApiError>> {
@@ -435,6 +257,184 @@ export class UsersPreferencesModule {
    */
   async postUsersPreferencesLocalizationReset(userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/localization:reset`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get notification settings for user
+   */
+  async getUsersPreferencesNotifications(userId: string): Promise<Result<Types.IdentityUsersUserNotificationPreferences, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/notifications`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityUsersUserNotificationPreferencesSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Replace notification preferences for user (full update)
+   */
+  async putUsersPreferencesNotifications(userId: string, body: Types.IdentityUsersReplaceUserNotificationPreferencesInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/notifications`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersReplaceUserNotificationPreferencesInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Partially update notification preferences for user
+   */
+  async patchUsersPreferencesNotifications(userId: string, body: Types.IdentityUsersUpdateUserNotificationPreferencesInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/notifications`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserNotificationPreferencesInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PATCH',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Check if notification preferences exist
+   */
+  async headUsersPreferencesNotifications(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/notifications`;
+
+    const result = await this.client.request({
+      method: 'HEAD',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Reset notification preferences to defaults
+   */
+  async postUsersPreferencesNotificationsReset(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/notifications:reset`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get privacy settings for user
+   */
+  async getUsersPreferencesPrivacy(userId: string): Promise<Result<Types.IdentityUsersUserPrivacyPreferences, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/privacy`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityUsersUserPrivacyPreferencesSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Replace privacy preferences for user (full update)
+   */
+  async putUsersPreferencesPrivacy(userId: string, body: Types.IdentityUsersReplaceUserPrivacyPreferencesInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/privacy`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersReplaceUserPrivacyPreferencesInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Partially update privacy preferences for user
+   */
+  async patchUsersPreferencesPrivacy(userId: string, body: Types.IdentityUsersUpdateUserPrivacyPreferencesInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/privacy`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserPrivacyPreferencesInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PATCH',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Check if privacy preferences exist
+   */
+  async headUsersPreferencesPrivacy(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/privacy`;
+
+    const result = await this.client.request({
+      method: 'HEAD',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Reset privacy preferences to defaults
+   */
+  async postUsersPreferencesPrivacyReset(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/privacy:reset`;
 
     const result = await this.client.request({
       method: 'POST',

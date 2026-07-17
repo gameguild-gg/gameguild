@@ -113,20 +113,6 @@ export class LearningCoursesPrerequisitesModule {
 
   /**
    */
-  async getApiPrerequisitesDependents(courseId: string): Promise<Result<Array<Types.LearningCoursesPrerequisite>, ApiError>> {
-    const url = `/api/prerequisites/dependents/${courseId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesPrerequisite>, ApiError>;
-  }
-
-  /**
-   */
   async getApiPrerequisitesCourseChain(courseId: string): Promise<Result<Array<Types.LearningCoursesPrerequisite>, ApiError>> {
     const url = `/api/prerequisites/course/${courseId}/chain`;
 
@@ -218,6 +204,20 @@ export class LearningCoursesPrerequisitesModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getApiPrerequisitesDependents(courseId: string): Promise<Result<Array<Types.LearningCoursesPrerequisite>, ApiError>> {
+    const url = `/api/prerequisites/dependents/${courseId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesPrerequisite>, ApiError>;
   }
 }
 

@@ -17,7 +17,80 @@ export class CommerceProductsModule {
 
   /**
    */
-  async getProducts(
+  async getProducts(query?: {
+    type?: Types.CommerceProductsProductType;
+    creatorId?: string;
+    searchTerm?: string;
+    isBundle?: boolean;
+    includeUnpublished?: boolean;
+    skip?: number;
+    take?: number;
+    sortBy?: string;
+    sortDirection?: string;
+  }): Promise<Result<Types.PagedResultOfGameGuildCommerceProductsProductDto, ApiError>> {
+    const url = '/v1/products';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.PagedResultOfGameGuildCommerceProductsProductDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postProducts(body: Types.CommerceProductsCreateProductInput): Promise<Result<Types.CommerceProductsProduct, ApiError>> {
+    const url = '/v1/products';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommerceProductsCreateProductInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceProductsProductSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postProductsBatchCreate(body: Types.CommerceProductsBatchCreateProductsInput): Promise<Result<Array<Types.CommerceProductsProduct>, ApiError>> {
+    const url = '/v1/products/:batch-create';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommerceProductsBatchCreateProductsInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.CommerceProductsProduct>, ApiError>;
+  }
+
+  /**
+   */
+  async getProducts1(
     productId: string,
     query?: { includePricing?: boolean; includeUnpublished?: boolean },
   ): Promise<Result<Types.CommerceProductsProduct, ApiError>> {
@@ -119,65 +192,12 @@ export class CommerceProductsModule {
 
   /**
    */
-  async getProductsPricing(
-    productId: string,
-    query?: { includeUnpublished?: boolean },
-  ): Promise<Result<Array<Types.CommerceProductsProductPricing>, ApiError>> {
-    const url = `/v1/products/${productId}/pricing`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Types.CommerceProductsProductPricing>, ApiError>;
-  }
-
-  /**
-   */
-  async getProducts1(query?: {
-    type?: Types.CommerceProductsProductType;
-    creatorId?: string;
-    searchTerm?: string;
-    isBundle?: boolean;
-    includeUnpublished?: boolean;
-    skip?: number;
-    take?: number;
-    sortBy?: string;
-    sortDirection?: string;
-  }): Promise<Result<Types.PagedResultOfGameGuildCommerceProductsProductDto, ApiError>> {
-    const url = '/v1/products';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultOfGameGuildCommerceProductsProductDtoSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postProducts(body: Types.CommerceProductsCreateProductInput): Promise<Result<Types.CommerceProductsProduct, ApiError>> {
-    const url = '/v1/products';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsCreateProductInputSchema, body, 'request');
+  async postProductsActivate(productId: string): Promise<Result<Types.CommerceProductsProduct, ApiError>> {
+    const url = `/v1/products/${productId}:activate`;
 
     const result = await this.client.request({
       method: 'POST',
       path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 
@@ -192,26 +212,8 @@ export class CommerceProductsModule {
 
   /**
    */
-  async postProductsBatchCreate(body: Types.CommerceProductsBatchCreateProductsInput): Promise<Result<Array<Types.CommerceProductsProduct>, ApiError>> {
-    const url = '/v1/products/:batch-create';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsBatchCreateProductsInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.CommerceProductsProduct>, ApiError>;
-  }
-
-  /**
-   */
-  async postProductsActivate(productId: string): Promise<Result<Types.CommerceProductsProduct, ApiError>> {
-    const url = `/v1/products/${productId}:activate`;
+  async postProductsArchive(productId: string): Promise<Result<Types.CommerceProductsProduct, ApiError>> {
+    const url = `/v1/products/${productId}:archive`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -250,22 +252,20 @@ export class CommerceProductsModule {
 
   /**
    */
-  async postProductsArchive(productId: string): Promise<Result<Types.CommerceProductsProduct, ApiError>> {
-    const url = `/v1/products/${productId}:archive`;
+  async getProductsPricing(
+    productId: string,
+    query?: { includeUnpublished?: boolean },
+  ): Promise<Result<Array<Types.CommerceProductsProductPricing>, ApiError>> {
+    const url = `/v1/products/${productId}/pricing`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: 'GET',
       path: url,
-      requiresAuth: true,
+      params: query,
+      requiresAuth: false,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsProductSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<Array<Types.CommerceProductsProductPricing>, ApiError>;
   }
 }
 

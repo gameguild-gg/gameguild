@@ -99,50 +99,8 @@ export class LearningCohortsModule {
 
   /**
    */
-  async getApiCohortsCourse(courseId: string): Promise<Result<Array<Types.LearningCohortsCohort>, ApiError>> {
-    const url = `/api/cohorts/course/${courseId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCohortsCohort>, ApiError>;
-  }
-
-  /**
-   */
-  async getApiCohortsCourseActive(courseId: string): Promise<Result<Array<Types.LearningCohortsCohort>, ApiError>> {
-    const url = `/api/cohorts/course/${courseId}/active`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCohortsCohort>, ApiError>;
-  }
-
-  /**
-   */
-  async getApiCohortsCourseEnrollable(courseId: string): Promise<Result<Array<Types.LearningCohortsCohort>, ApiError>> {
-    const url = `/api/cohorts/course/${courseId}/enrollable`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCohortsCohort>, ApiError>;
-  }
-
-  /**
-   */
-  async postApiCohortsOpen(id: string): Promise<Result<Types.LearningCohortsCohort, ApiError>> {
-    const url = `/api/cohorts/${id}/open`;
+  async postApiCohortsCancel(id: string): Promise<Result<Types.LearningCohortsCohort, ApiError>> {
+    const url = `/api/cohorts/${id}/cancel`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -201,8 +159,8 @@ export class LearningCohortsModule {
 
   /**
    */
-  async postApiCohortsCancel(id: string): Promise<Result<Types.LearningCohortsCohort, ApiError>> {
-    const url = `/api/cohorts/${id}/cancel`;
+  async postApiCohortsOpen(id: string): Promise<Result<Types.LearningCohortsCohort, ApiError>> {
+    const url = `/api/cohorts/${id}/open`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -217,6 +175,48 @@ export class LearningCohortsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getApiCohortsCourse(courseId: string): Promise<Result<Array<Types.LearningCohortsCohort>, ApiError>> {
+    const url = `/api/cohorts/course/${courseId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCohortsCohort>, ApiError>;
+  }
+
+  /**
+   */
+  async getApiCohortsCourseActive(courseId: string): Promise<Result<Array<Types.LearningCohortsCohort>, ApiError>> {
+    const url = `/api/cohorts/course/${courseId}/active`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCohortsCohort>, ApiError>;
+  }
+
+  /**
+   */
+  async getApiCohortsCourseEnrollable(courseId: string): Promise<Result<Array<Types.LearningCohortsCohort>, ApiError>> {
+    const url = `/api/cohorts/course/${courseId}/enrollable`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCohortsCohort>, ApiError>;
   }
 }
 

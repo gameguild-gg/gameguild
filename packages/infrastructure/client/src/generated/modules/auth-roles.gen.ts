@@ -50,6 +50,42 @@ export class AuthRolesModule {
 
   /**
    */
+  async postRolesAssign(body: Types.IdentityAuthenticationAssignRoleToUserInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/roles/:assign';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationAssignRoleToUserInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postRolesRemove(body: Types.IdentityAuthenticationRemoveRoleFromUserInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/roles/:remove';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationRemoveRoleFromUserInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getRoles1(roleId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/roles/${roleId}`;
 
@@ -103,42 +139,6 @@ export class AuthRolesModule {
       method: 'GET',
       path: url,
       params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postRolesAssign(body: Types.IdentityAuthenticationAssignRoleToUserInput): Promise<Result<void, ApiError>> {
-    const url = '/v1/roles/:assign';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationAssignRoleToUserInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postRolesRemove(body: Types.IdentityAuthenticationRemoveRoleFromUserInput): Promise<Result<void, ApiError>> {
-    const url = '/v1/roles/:remove';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRemoveRoleFromUserInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 

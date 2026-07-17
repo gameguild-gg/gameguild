@@ -6,6 +6,7 @@
  * Usage:
  *   pnpm generate                    # Generate from default API URL
  *   OPENAPI_URL=... pnpm generate    # Generate from custom URL
+ *   pnpm generate -- --openapi spec.json # Generate from captured artifact
  *   pnpm generate --watch            # Watch mode (re-generate on spec changes)
  */
 
@@ -22,24 +23,26 @@ import { generateErrors } from './codegen/errors.js';
 import { generateModules } from './codegen/modules.js';
 import { formatOutput } from './utils/formatting.js';
 import { cleanGeneratedOutput } from './utils/clean-generated-output.js';
+import { resolveGeneratorConfig } from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Configuration
+const generatorConfig = resolveGeneratorConfig(process.argv.slice(2), process.env);
+
 const CONFIG = {
-  apiUrl: process.env.OPENAPI_URL || 'http://localhost:5295/swagger/v1/swagger.json',
+  openApiSource: generatorConfig.openApiSource,
+  generatedSourceLabel: generatorConfig.generatedSourceLabel,
   outputDir: join(__dirname, '..', 'src', 'generated'),
   metadataFile: join(__dirname, '..', 'src', 'generated', '.metadata.json'),
-  watch: process.argv.includes('--watch'),
-  force: process.argv.includes('--force'),
+  watch: generatorConfig.watch,
+  force: generatorConfig.force,
 };
 
 interface GeneratorMetadata {
   hash: string;
-  timestamp: string;
   apiVersion: string | undefined;
-  specUrl: string;
+  source: string;
 }
 
 /**
@@ -71,9 +74,8 @@ function loadMetadata(): GeneratorMetadata | null {
 function saveMetadata(hash: string, spec: OpenApiSpec): void {
   const metadata: GeneratorMetadata = {
     hash,
-    timestamp: new Date().toISOString(),
     apiVersion: spec.info?.version,
-    specUrl: CONFIG.apiUrl,
+    source: CONFIG.generatedSourceLabel,
   };
 
   if (!existsSync(dirname(CONFIG.metadataFile))) {
@@ -113,11 +115,11 @@ async function writeGeneratedFile(filename: string, content: string): Promise<vo
  */
 async function generate(): Promise<void> {
   console.log('🚀 @game-guild/client Code Generator\n');
-  console.log(`📡 Fetching OpenAPI spec from: ${CONFIG.apiUrl}`);
+  console.log(`📡 Fetching OpenAPI spec from: ${CONFIG.openApiSource}`);
 
   try {
     // Step 1: Fetch OpenAPI specification
-    const rawSpec = await fetchOpenApiSpec(CONFIG.apiUrl);
+    const rawSpec = await fetchOpenApiSpec(CONFIG.openApiSource);
     const currentHash = calculateHash(rawSpec);
 
     // Step 2: Check if regeneration is needed
@@ -186,8 +188,7 @@ function generateIndex(moduleNames: string[]): string {
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
- * Generated from: ${CONFIG.apiUrl}
- * Generated at: ${new Date().toISOString()}
+ * Generated from: ${CONFIG.generatedSourceLabel}
  *
  * To regenerate, run: pnpm generate
  */

@@ -133,17 +133,13 @@ export class ProjectsModule {
 
   /**
    */
-  async getProjectsSlug(
-    slug: string,
-    query?: { includeTeam?: boolean; includeReleases?: boolean; includeCollaborators?: boolean },
-  ): Promise<Result<Types.ProjectsProject, ApiError>> {
-    const url = `/v1/projects/slug/${slug}`;
+  async postProjectsArchive(id: string): Promise<Result<Types.ProjectsProject, ApiError>> {
+    const url = `/v1/projects/${id}:archive`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: 'POST',
       path: url,
-      params: query,
-      requiresAuth: false,
+      requiresAuth: true,
     });
 
     // Validate response
@@ -177,6 +173,30 @@ export class ProjectsModule {
 
   /**
    */
+  async postProjectsShare(id: string, body: Types.ProjectsShareProjectInput): Promise<Result<Types.ProjectsCollaborator, ApiError>> {
+    const url = `/v1/projects/${id}:share`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.ProjectsShareProjectInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ProjectsCollaboratorSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postProjectsUnpublish(id: string): Promise<Result<Types.ProjectsProject, ApiError>> {
     const url = `/v1/projects/${id}:unpublish`;
 
@@ -189,235 +209,6 @@ export class ProjectsModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.ProjectsProjectSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postProjectsArchive(id: string): Promise<Result<Types.ProjectsProject, ApiError>> {
-    const url = `/v1/projects/${id}:archive`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.ProjectsProjectSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getProjectsSearch(query?: {
-    searchTerm?: string;
-    type?: Types.ProjectsProjectType;
-    categoryId?: string;
-    status?: Types.ContentStatus;
-    visibility?: Types.ContentVisibility;
-    skip?: number;
-    take?: number;
-    sortBy?: string;
-    sortDirection?: string;
-  }): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
-    const url = '/v1/projects/search';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Types.ProjectsProject>, ApiError>;
-  }
-
-  /**
-   */
-  async getProjectsPopular(query?: { type?: Types.ProjectsProjectType; take?: number }): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
-    const url = '/v1/projects/popular';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Types.ProjectsProject>, ApiError>;
-  }
-
-  /**
-   */
-  async getProjectsRecent(query?: { type?: Types.ProjectsProjectType; take?: number }): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
-    const url = '/v1/projects/recent';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Types.ProjectsProject>, ApiError>;
-  }
-
-  /**
-   */
-  async getProjectsFeatured(query?: { type?: Types.ProjectsProjectType; take?: number }): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
-    const url = '/v1/projects/featured';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Types.ProjectsProject>, ApiError>;
-  }
-
-  /**
-   */
-  async getProjectsStatistics(id: string, query?: { fromDate?: string; toDate?: string }): Promise<Result<Types.ProjectsProjectStatistics, ApiError>> {
-    const url = `/v1/projects/${id}/statistics`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.ProjectsProjectStatisticsSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getProjectsCategory(
-    categoryId: string,
-    query?: { status?: Types.ContentStatus; skip?: number; take?: number },
-  ): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
-    const url = `/v1/projects/category/${categoryId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Types.ProjectsProject>, ApiError>;
-  }
-
-  /**
-   */
-  async getProjectsCreator(
-    creatorId: string,
-    query?: { status?: Types.ContentStatus; skip?: number; take?: number },
-  ): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
-    const url = `/v1/projects/creator/${creatorId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Types.ProjectsProject>, ApiError>;
-  }
-
-  /**
-   */
-  async getProjectsRoleTemplates(): Promise<Result<Array<Record<string, unknown>>, ApiError>> {
-    const url = '/v1/projects/role-templates';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Record<string, unknown>>, ApiError>;
-  }
-
-  /**
-   */
-  async getProjectsMyInvitations(): Promise<Result<Array<Types.ProjectsProjectInvitation>, ApiError>> {
-    const url = '/v1/projects/my-invitations';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.ProjectsProjectInvitation>, ApiError>;
-  }
-
-  /**
-   */
-  async getProjectsRolesPermissions(roleName: string): Promise<Result<Array<Types.IdentityAuthorizationPermissionType>, ApiError>> {
-    const url = `/v1/projects/roles/${roleName}/permissions`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Types.IdentityAuthorizationPermissionType>, ApiError>;
-  }
-
-  /**
-   */
-  async postProjectsInvitationsAccept(invitationToken: string): Promise<Result<Types.ProjectsProjectInvitation, ApiError>> {
-    const url = `/v1/projects/invitations/${invitationToken}:accept`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.ProjectsProjectInvitationSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postProjectsInvitationsDecline(invitationToken: string): Promise<Result<Types.ProjectsProjectInvitation, ApiError>> {
-    const url = `/v1/projects/invitations/${invitationToken}:decline`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.ProjectsProjectInvitationSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -506,30 +297,6 @@ export class ProjectsModule {
 
   /**
    */
-  async postProjectsShare(id: string, body: Types.ProjectsShareProjectInput): Promise<Result<Types.ProjectsCollaborator, ApiError>> {
-    const url = `/v1/projects/${id}:share`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.ProjectsShareProjectInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.ProjectsCollaboratorSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async postProjectsInvitations(id: string, body: Types.ProjectsInviteProjectCollaboratorInput): Promise<Result<Types.ProjectsProjectInvitation, ApiError>> {
     const url = `/v1/projects/${id}/invitations`;
 
@@ -546,6 +313,239 @@ export class ProjectsModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.ProjectsProjectInvitationSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getProjectsStatistics(id: string, query?: { fromDate?: string; toDate?: string }): Promise<Result<Types.ProjectsProjectStatistics, ApiError>> {
+    const url = `/v1/projects/${id}/statistics`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ProjectsProjectStatisticsSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getProjectsCategory(
+    categoryId: string,
+    query?: { status?: Types.ContentStatus; skip?: number; take?: number },
+  ): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
+    const url = `/v1/projects/category/${categoryId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Types.ProjectsProject>, ApiError>;
+  }
+
+  /**
+   */
+  async getProjectsCreator(
+    creatorId: string,
+    query?: { status?: Types.ContentStatus; skip?: number; take?: number },
+  ): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
+    const url = `/v1/projects/creator/${creatorId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Types.ProjectsProject>, ApiError>;
+  }
+
+  /**
+   */
+  async getProjectsFeatured(query?: { type?: Types.ProjectsProjectType; take?: number }): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
+    const url = '/v1/projects/featured';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Types.ProjectsProject>, ApiError>;
+  }
+
+  /**
+   */
+  async postProjectsInvitationsAccept(invitationToken: string): Promise<Result<Types.ProjectsProjectInvitation, ApiError>> {
+    const url = `/v1/projects/invitations/${invitationToken}:accept`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ProjectsProjectInvitationSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postProjectsInvitationsDecline(invitationToken: string): Promise<Result<Types.ProjectsProjectInvitation, ApiError>> {
+    const url = `/v1/projects/invitations/${invitationToken}:decline`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ProjectsProjectInvitationSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getProjectsMyInvitations(): Promise<Result<Array<Types.ProjectsProjectInvitation>, ApiError>> {
+    const url = '/v1/projects/my-invitations';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.ProjectsProjectInvitation>, ApiError>;
+  }
+
+  /**
+   */
+  async getProjectsPopular(query?: { type?: Types.ProjectsProjectType; take?: number }): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
+    const url = '/v1/projects/popular';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Types.ProjectsProject>, ApiError>;
+  }
+
+  /**
+   */
+  async getProjectsRecent(query?: { type?: Types.ProjectsProjectType; take?: number }): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
+    const url = '/v1/projects/recent';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Types.ProjectsProject>, ApiError>;
+  }
+
+  /**
+   */
+  async getProjectsRoleTemplates(): Promise<Result<Array<Record<string, unknown>>, ApiError>> {
+    const url = '/v1/projects/role-templates';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Record<string, unknown>>, ApiError>;
+  }
+
+  /**
+   */
+  async getProjectsRolesPermissions(roleName: string): Promise<Result<Array<Types.IdentityAuthorizationPermissionType>, ApiError>> {
+    const url = `/v1/projects/roles/${roleName}/permissions`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Types.IdentityAuthorizationPermissionType>, ApiError>;
+  }
+
+  /**
+   */
+  async getProjectsSearch(query?: {
+    searchTerm?: string;
+    type?: Types.ProjectsProjectType;
+    categoryId?: string;
+    status?: Types.ContentStatus;
+    visibility?: Types.ContentVisibility;
+    skip?: number;
+    take?: number;
+    sortBy?: string;
+    sortDirection?: string;
+  }): Promise<Result<Array<Types.ProjectsProject>, ApiError>> {
+    const url = '/v1/projects/search';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Types.ProjectsProject>, ApiError>;
+  }
+
+  /**
+   */
+  async getProjectsSlug(
+    slug: string,
+    query?: { includeTeam?: boolean; includeReleases?: boolean; includeCollaborators?: boolean },
+  ): Promise<Result<Types.ProjectsProject, ApiError>> {
+    const url = `/v1/projects/slug/${slug}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ProjectsProjectSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

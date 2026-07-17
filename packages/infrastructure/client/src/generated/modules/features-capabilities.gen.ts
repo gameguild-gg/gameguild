@@ -84,20 +84,6 @@ export class FeaturesCapabilitiesModule {
 
   /**
    */
-  async postTenantsCapabilitiesSync(tenantId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/tenants/${tenantId}/capabilities/sync`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getTenantsCapabilitiesAuditLog(
     tenantId: string,
     query?: { capability?: string; fromDate?: string; toDate?: string },
@@ -112,6 +98,20 @@ export class FeaturesCapabilitiesModule {
     });
 
     return result as Result<Array<Types.FeaturesCapabilityAuditLog>, ApiError>;
+  }
+
+  /**
+   */
+  async postTenantsCapabilitiesSync(tenantId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/tenants/${tenantId}/capabilities/sync`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 }
 

@@ -17,6 +17,48 @@ export class SocialReactionsModule {
 
   /**
    */
+  async putApiSocialReactions(body: Types.SocialReactionsSetReactionInput): Promise<Result<Types.SocialReactionsReaction, ApiError>> {
+    const url = '/api/social/reactions';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.SocialReactionsSetReactionInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.SocialReactionsReactionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteApiSocialReactions(body: Types.SocialReactionsRemoveReactionInput): Promise<Result<void, ApiError>> {
+    const url = '/api/social/reactions';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.SocialReactionsRemoveReactionInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'DELETE',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getApiSocialReactionsTarget(
     targetType: Types.SocialReactionsReactionTargetType,
     targetId: string,
@@ -60,48 +102,6 @@ export class SocialReactionsModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async putApiSocialReactions(body: Types.SocialReactionsSetReactionInput): Promise<Result<Types.SocialReactionsReaction, ApiError>> {
-    const url = '/api/social/reactions';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.SocialReactionsSetReactionInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.SocialReactionsReactionSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async deleteApiSocialReactions(body: Types.SocialReactionsRemoveReactionInput): Promise<Result<void, ApiError>> {
-    const url = '/api/social/reactions';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.SocialReactionsRemoveReactionInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'DELETE',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 }
 

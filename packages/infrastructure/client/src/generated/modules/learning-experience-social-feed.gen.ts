@@ -17,6 +17,46 @@ export class LearningExperienceSocialFeedModule {
 
   /**
    */
+  async postApiSocialFeedDismiss(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>> {
+    const url = `/api/social/feed/${id}/dismiss`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningExperienceSocialServicesPersonalizedFeedItemSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postApiSocialFeedViewed(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>> {
+    const url = `/api/social/feed/${id}/viewed`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningExperienceSocialServicesPersonalizedFeedItemSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getApiSocialFeedMe(query?: {
     skip?: number;
     take?: number;
@@ -46,46 +86,6 @@ export class LearningExperienceSocialFeedModule {
     });
 
     return result as Result<number, ApiError>;
-  }
-
-  /**
-   */
-  async postApiSocialFeedViewed(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>> {
-    const url = `/api/social/feed/${id}/viewed`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceSocialServicesPersonalizedFeedItemSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postApiSocialFeedDismiss(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>> {
-    const url = `/api/social/feed/${id}/dismiss`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceSocialServicesPersonalizedFeedItemSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
   }
 }
 

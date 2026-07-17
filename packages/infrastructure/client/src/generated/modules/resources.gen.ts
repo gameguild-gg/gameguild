@@ -16,6 +16,48 @@ export class ResourcesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Archive old resource usage records
+   *
+   * Archives resource usage records older than the specified date for storage optimization.
+   */
+  async postResourcesArchive(body: Types.ResourcesArchiveResourceUsageRecordsInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/resources:archive';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.ResourcesArchiveResourceUsageRecordsInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Cleanup orphaned resources
+   *
+   * Identifies and removes orphaned resources that are no longer associated with any tenant or user.
+   */
+  async postResourcesCleanup(body: Types.ResourcesCleanupOrphanedResourcesInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/resources:cleanup';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.ResourcesCleanupOrphanedResourcesInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Get resource usage by type
    *
    * Retrieves aggregated resource usage across all tenants within the specified date range for the given resource type.
@@ -64,48 +106,6 @@ export class ResourcesModule {
     }
 
     return result;
-  }
-
-  /**
-   * Archive old resource usage records
-   *
-   * Archives resource usage records older than the specified date for storage optimization.
-   */
-  async postResourcesArchive(body: Types.ResourcesArchiveResourceUsageRecordsInput): Promise<Result<void, ApiError>> {
-    const url = '/v1/resources:archive';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.ResourcesArchiveResourceUsageRecordsInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Cleanup orphaned resources
-   *
-   * Identifies and removes orphaned resources that are no longer associated with any tenant or user.
-   */
-  async postResourcesCleanup(body: Types.ResourcesCleanupOrphanedResourcesInput): Promise<Result<void, ApiError>> {
-    const url = '/v1/resources:cleanup';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.ResourcesCleanupOrphanedResourcesInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 }
 

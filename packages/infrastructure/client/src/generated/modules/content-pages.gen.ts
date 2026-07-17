@@ -121,41 +121,6 @@ export class ContentPagesModule {
 
   /**
    */
-  async getPagesBySlug(slug: string): Promise<Result<Types.ContentPagesPage, ApiError>> {
-    const url = `/v1/pages/by-slug/${slug}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.ContentPagesPageSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getPagesSitemap(query?: { locale?: string }): Promise<Result<Array<Types.ContentPagesSitemapEntry>, ApiError>> {
-    const url = '/v1/pages/sitemap';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Types.ContentPagesSitemapEntry>, ApiError>;
-  }
-
-  /**
-   */
   async postPagesPublish(id: string): Promise<Result<Types.ContentPagesPage, ApiError>> {
     const url = `/v1/pages/${id}/publish`;
 
@@ -307,6 +272,41 @@ export class ContentPagesModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getPagesBySlug(slug: string): Promise<Result<Types.ContentPagesPage, ApiError>> {
+    const url = `/v1/pages/by-slug/${slug}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ContentPagesPageSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getPagesSitemap(query?: { locale?: string }): Promise<Result<Array<Types.ContentPagesSitemapEntry>, ApiError>> {
+    const url = '/v1/pages/sitemap';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Types.ContentPagesSitemapEntry>, ApiError>;
   }
 }
 
