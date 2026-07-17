@@ -12,15 +12,18 @@ namespace GameGuild.Resources.IntegrationTests;
 /// Integration tests for resource quota functionality with concurrency scenarios.
 /// Constructs real sub-services (management → enforcement → maintenance → facade).
 /// </summary>
+[Collection("PostgreSql")]
 public class ResourceQuotaIntegrationTests : IDisposable
 {
+    private readonly PostgreSqlTestFixture _postgreSqlFixture;
     private readonly ResourceQuotaTestDbContext _context;
     private readonly IResourceQuotaRepository _repository;
     private readonly IResourceQuotaService _service;
     private readonly Mock<IPublisher> _publisherMock;
 
-    public ResourceQuotaIntegrationTests()
+    public ResourceQuotaIntegrationTests(PostgreSqlTestFixture postgreSqlFixture)
     {
+        _postgreSqlFixture = postgreSqlFixture;
         var options = new DbContextOptionsBuilder<ResourceQuotaTestDbContext>()
             .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
             .Options;
@@ -54,23 +57,25 @@ public class ResourceQuotaIntegrationTests : IDisposable
         _service = new ResourceQuotaService(management, enforcement, maintenance);
     }
 
-    [Fact(Skip = "In-memory DbContext is not thread-safe. Use real database for concurrency testing.")]
+    [Fact]
     public async Task ConcurrentCreates_DoNotExceedQuota_WithRaceCondition()
     {
-        // Note: This test requires a real database with proper concurrency support.
-        // In-memory provider doesn't support concurrent access from multiple threads.
+        await using var database = await _postgreSqlFixture.CreateDatabaseAsync("quota_concurrency");
+        await using var setupScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        await setupScope.Context.Database.EnsureCreatedAsync();
 
         // Arrange: Create a quota with limit of 10
         var tenantId = Guid.NewGuid();
-        await _service.SetQuotaAsync(tenantId, ResourceUsageType.Users, softLimit: 8, hardLimit: 10);
+        await setupScope.Service.SetQuotaAsync(tenantId, ResourceUsageType.Users, softLimit: 8, hardLimit: 10);
 
         // Simulate 20 concurrent create requests
         var tasks = Enumerable.Range(0, 20)
             .Select(_ => Task.Run(async () =>
             {
+                await using var operationScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
                 try
                 {
-                    var (success, _, _) = await _service.TryAtomicConsumeAsync(
+                    var (success, _, _) = await operationScope.Service.TryAtomicConsumeAsync(
                         tenantId,
                         ResourceUsageType.Users,
                         amount: 1);
@@ -90,7 +95,8 @@ public class ResourceQuotaIntegrationTests : IDisposable
         // Assert
         successCount.Should().BeLessOrEqualTo(10, "quota enforcement should prevent more than 10 successful increments");
 
-        var quota = await _service.GetQuotaAsync(tenantId, ResourceUsageType.Users);
+        await using var assertionScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        var quota = await assertionScope.Service.GetQuotaAsync(tenantId, ResourceUsageType.Users);
         quota.Should().NotBeNull();
         quota!.CurrentUsage.Should().BeLessOrEqualTo(10, "final usage must not exceed hard limit");
         quota.CurrentUsage.Should().Be(successCount, "usage should match number of successful operations");
@@ -206,26 +212,27 @@ public class ResourceQuotaIntegrationTests : IDisposable
         finalQuota!.CurrentUsage.Should().Be(25, "final usage should be accurate after multiple create/delete cycles");
     }
 
-    [Fact(Skip = "In-memory database does not support transactions. This test should run against a real database.")]
+    [Fact]
     public async Task RollbackOnFailure_DoesNotIncrementQuota()
     {
-        // Note: This test requires a real database with transaction support.
-        // The in-memory provider ignores transactions.
+        await using var database = await _postgreSqlFixture.CreateDatabaseAsync("quota_rollback");
+        await using var scope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        await scope.Context.Database.EnsureCreatedAsync();
 
         // Arrange
         var tenantId = Guid.NewGuid();
-        await _service.SetQuotaAsync(tenantId, ResourceUsageType.Users, softLimit: null, hardLimit: 10);
+        await scope.Service.SetQuotaAsync(tenantId, ResourceUsageType.Users, softLimit: null, hardLimit: 10);
 
-        var initialQuota = await _service.GetQuotaAsync(tenantId, ResourceUsageType.Users);
+        var initialQuota = await scope.Service.GetQuotaAsync(tenantId, ResourceUsageType.Users);
         var initialUsage = initialQuota!.CurrentUsage;
 
         // Act: Simulate a transaction that would increment quota but then fail
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        await using var transaction = await scope.Context.Database.BeginTransactionAsync();
 
         try
         {
             // Try to consume quota
-            var (success, currentUsage, hardLimit) = await _service.TryAtomicConsumeAsync(
+            var (success, _, _) = await scope.Service.TryAtomicConsumeAsync(
                 tenantId,
                 ResourceUsageType.Users,
                 amount: 1);
@@ -241,8 +248,8 @@ public class ResourceQuotaIntegrationTests : IDisposable
         }
 
         // Assert: Quota should not have been incremented
-        _context.ChangeTracker.Clear(); // Clear tracking to force fresh read
-        var quotaAfterRollback = await _service.GetQuotaAsync(tenantId, ResourceUsageType.Users);
+        scope.Context.ChangeTracker.Clear(); // Clear tracking to force fresh read
+        var quotaAfterRollback = await scope.Service.GetQuotaAsync(tenantId, ResourceUsageType.Users);
         quotaAfterRollback!.CurrentUsage.Should().Be(initialUsage, "quota should not change after rollback");
     }
 
