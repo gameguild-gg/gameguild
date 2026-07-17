@@ -5,6 +5,7 @@ import path from "node:path";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   output: "standalone",
+  outputFileTracingRoot: path.resolve(__dirname, "../.."),
   transpilePackages: [
     "@game-guild/ui",
     "@game-guild/auth-components",

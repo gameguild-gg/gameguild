@@ -16,51 +16,6 @@ export class CommercePaymentsWalletsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * List all wallets
-   *
-   * Retrieves a paginated list of all wallets. Admin only.
-   */
-  async getWallets(query?: { page?: number; pageSize?: number; currency?: string; isFrozen?: boolean }): Promise<Result<void, ApiError>> {
-    const url = '/api/v1/wallets';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Create a new wallet
-   *
-   * Creates a new wallet for the specified user.
-   */
-  async postWallets(body: Types.CommercePaymentsCreateWalletInput): Promise<Result<Types.CommercePaymentsUserWallet, ApiError>> {
-    const url = '/api/v1/wallets';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsCreateWalletInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsUserWalletSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Get user's wallet
    *
    * Retrieves the wallet for a specific user.
@@ -158,6 +113,27 @@ export class CommercePaymentsWalletsModule {
   }
 
   /**
+   * Lock user's wallet
+   *
+   * Locks a user's wallet to prevent transactions.
+   */
+  async postUsersWalletLock(userId: string, body: Types.CommercePaymentsLockWalletInput): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/users/${userId}/wallet:lock`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommercePaymentsLockWalletInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Transfer funds to another user's wallet
    *
    * Transfers funds from this user's wallet to another user's wallet.
@@ -188,27 +164,6 @@ export class CommercePaymentsWalletsModule {
   }
 
   /**
-   * Lock user's wallet
-   *
-   * Locks a user's wallet to prevent transactions.
-   */
-  async postUsersWalletLock(userId: string, body: Types.CommercePaymentsLockWalletInput): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/users/${userId}/wallet:lock`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsLockWalletInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Unlock user's wallet
    *
    * Unlocks a user's wallet to allow transactions.
@@ -223,6 +178,51 @@ export class CommercePaymentsWalletsModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   * List all wallets
+   *
+   * Retrieves a paginated list of all wallets. Admin only.
+   */
+  async getWallets(query?: { page?: number; pageSize?: number; currency?: string; isFrozen?: boolean }): Promise<Result<void, ApiError>> {
+    const url = '/api/v1/wallets';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Create a new wallet
+   *
+   * Creates a new wallet for the specified user.
+   */
+  async postWallets(body: Types.CommercePaymentsCreateWalletInput): Promise<Result<Types.CommercePaymentsUserWallet, ApiError>> {
+    const url = '/api/v1/wallets';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommercePaymentsCreateWalletInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsUserWalletSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
@@ -304,6 +304,24 @@ export class CommercePaymentsWalletsModule {
   }
 
   /**
+   * Get wallet audit log
+   *
+   * Retrieves the audit log of all transactions and actions on a wallet.
+   */
+  async getWalletsAuditLog(walletId: string, query?: { page?: number; pageSize?: number }): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/wallets/${walletId}/audit-log`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Freeze wallet
    *
    * Freezes a wallet to prevent all transactions.
@@ -335,24 +353,6 @@ export class CommercePaymentsWalletsModule {
     const result = await this.client.request({
       method: 'POST',
       path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Get wallet audit log
-   *
-   * Retrieves the audit log of all transactions and actions on a wallet.
-   */
-  async getWalletsAuditLog(walletId: string, query?: { page?: number; pageSize?: number }): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/wallets/${walletId}/audit-log`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
       requiresAuth: true,
     });
 

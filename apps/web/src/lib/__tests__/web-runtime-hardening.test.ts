@@ -27,7 +27,10 @@ function readSourceFiles(relativePath: string): Array<{ file: string; source: st
 
 describe('web runtime hardening', () => {
   it('keeps React Compiler enabled while giving the Docker build enough heap', () => {
-    expect(readRepoFile('apps/web/next.config.ts')).toContain('reactCompiler: true');
+    const nextConfig = readRepoFile('apps/web/next.config.ts');
+
+    expect(nextConfig).toContain('reactCompiler: true');
+    expect(nextConfig).toContain('outputFileTracingRoot: path.resolve(__dirname, "../..")');
     expect(readRepoFile('apps/web/Dockerfile')).toContain('NODE_OPTIONS=--max-old-space-size=4096');
   });
 

@@ -57,6 +57,7 @@ coverage/
 test-results/
 playwright-report/
 playwright-report-react/
+artifacts/
 *.tsbuildinfo
 apps/web/test-results/
 
