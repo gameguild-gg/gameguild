@@ -473,22 +473,8 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
     {
         public DockerFactAttribute()
         {
-            try
-            {
-                using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "docker",
-                    Arguments = "version --format {{.Server.Version}}",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                });
-                if (process == null || !process.WaitForExit(3000) || process.ExitCode != 0) Skip = "Docker is unavailable; PostgreSQL migration execution test was not run.";
-            }
-            catch
-            {
-                Skip = "Docker is unavailable; PostgreSQL migration execution test was not run.";
-            }
+            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
+                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
         }
     }
 }
