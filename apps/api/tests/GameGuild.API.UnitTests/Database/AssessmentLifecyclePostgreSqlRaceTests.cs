@@ -11,6 +11,7 @@ using Xunit;
 
 namespace GameGuild.API.UnitTests.Database;
 
+[Collection(PostgreSqlTestCollection.Name)]
 public sealed class AssessmentLifecyclePostgreSqlRaceTests
 {
     [Fact]
