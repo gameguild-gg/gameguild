@@ -1,3 +1,4 @@
+using Npgsql;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -45,6 +46,58 @@ public class PostgreSqlTestFixture : IAsyncLifetime
     {
         IsRunning = false;
         await _container.DisposeAsync();
+    }
+
+    public async Task<PostgreSqlTestDatabase> CreateDatabaseAsync(string prefix)
+    {
+        var safePrefix = new string(prefix
+            .Where(character => char.IsLetterOrDigit(character) || character == '_')
+            .Select(char.ToLowerInvariant)
+            .ToArray());
+        var databaseName = $"{safePrefix}_{Guid.NewGuid():N}";
+
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"CREATE DATABASE \"{databaseName}\"";
+        await command.ExecuteNonQueryAsync();
+
+        var connectionStringBuilder = new NpgsqlConnectionStringBuilder(ConnectionString)
+        {
+            Database = databaseName,
+            Pooling = false
+        };
+
+        return new PostgreSqlTestDatabase(ConnectionString, connectionStringBuilder.ConnectionString, databaseName);
+    }
+}
+
+public sealed class PostgreSqlTestDatabase(
+    string adminConnectionString,
+    string connectionString,
+    string databaseName) : IAsyncDisposable
+{
+    public string ConnectionString { get; } = connectionString;
+
+    public async ValueTask DisposeAsync()
+    {
+        NpgsqlConnection.ClearAllPools();
+
+        await using var connection = new NpgsqlConnection(adminConnectionString);
+        await connection.OpenAsync();
+
+        await using (var terminateConnections = connection.CreateCommand())
+        {
+            terminateConnections.CommandText =
+                "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = @databaseName AND pid <> pg_backend_pid()";
+            terminateConnections.Parameters.AddWithValue("databaseName", databaseName);
+            await terminateConnections.ExecuteNonQueryAsync();
+        }
+
+        await using var dropDatabase = connection.CreateCommand();
+        dropDatabase.CommandText = $"DROP DATABASE IF EXISTS \"{databaseName}\"";
+        await dropDatabase.ExecuteNonQueryAsync();
     }
 }
 

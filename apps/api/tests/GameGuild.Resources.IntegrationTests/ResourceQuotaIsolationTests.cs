@@ -12,14 +12,17 @@ namespace GameGuild.Resources.IntegrationTests;
 /// Integration tests verifying cross-tenant quota isolation.
 /// Constructs real sub-services (management → enforcement → maintenance → facade).
 /// </summary>
+[Collection("PostgreSql")]
 public class ResourceQuotaIsolationTests : IDisposable
 {
+    private readonly PostgreSqlTestFixture _postgreSqlFixture;
     private readonly ResourceQuotaTestDbContext _context;
     private readonly IResourceQuotaRepository _repository;
     private readonly IResourceQuotaService _service;
 
-    public ResourceQuotaIsolationTests()
+    public ResourceQuotaIsolationTests(PostgreSqlTestFixture postgreSqlFixture)
     {
+        _postgreSqlFixture = postgreSqlFixture;
         var options = new DbContextOptionsBuilder<ResourceQuotaTestDbContext>()
             .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
             .Options;
@@ -130,12 +133,55 @@ public class ResourceQuotaIsolationTests : IDisposable
         unchangedQuotaB!.HardLimit.Should().Be(2000, "Tenant B's quota should be unaffected");
     }
 
-    [Fact(Skip = "In-memory DbContext is not thread-safe for concurrent access. Use SequentialOperations_OnDifferentTenants_AreFullyIsolated instead.")]
+    [Fact]
     public async Task ConcurrentOperations_OnDifferentTenants_AreFullyIsolated()
     {
-        // Note: This test requires a real database with thread-safe concurrent access.
-        // The in-memory provider's DbContext is not thread-safe.
-        await Task.CompletedTask;
+        await using var database = await _postgreSqlFixture.CreateDatabaseAsync("quota_isolation");
+        await using var setupScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        await setupScope.Context.Database.EnsureCreatedAsync();
+
+        var tenants = new[]
+        {
+            (Id: Guid.NewGuid(), ExpectedUsage: 30L),
+            (Id: Guid.NewGuid(), ExpectedUsage: 25L),
+            (Id: Guid.NewGuid(), ExpectedUsage: 40L)
+        };
+
+        foreach (var tenant in tenants)
+        {
+            await setupScope.Service.SetQuotaAsync(
+                tenant.Id,
+                ResourceUsageType.Users,
+                softLimit: null,
+                hardLimit: 50);
+        }
+
+        var operations = tenants.Select(async tenant =>
+        {
+            await using var operationScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+
+            for (var operation = 0; operation < tenant.ExpectedUsage; operation++)
+            {
+                var (success, _, _) = await operationScope.Service.TryAtomicConsumeAsync(
+                    tenant.Id,
+                    ResourceUsageType.Users,
+                    amount: 1);
+
+                success.Should().BeTrue("every operation remains below that tenant's hard limit");
+            }
+        });
+
+        await Task.WhenAll(operations);
+
+        await using var assertionScope = ResourceQuotaPostgreSqlScope.Create(database.ConnectionString);
+        foreach (var tenant in tenants)
+        {
+            var quota = await assertionScope.Service.GetQuotaAsync(tenant.Id, ResourceUsageType.Users);
+            quota.Should().NotBeNull();
+            quota!.CurrentUsage.Should().Be(
+                tenant.ExpectedUsage,
+                $"tenant {tenant.Id} must only contain its own operations");
+        }
     }
 
     [Fact]
