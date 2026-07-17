@@ -120,11 +120,11 @@ test.describe('raylib C++ canvas', () => {
         await page.waitForFunction(() => {
             const w = window as EmceptionWindow;
             const filesRef = w.__emception_filesRef__;
-            return !!filesRef?.current?.['/user/raylib-main.cpp']?.content;
+            return !!filesRef?.current?.['/home/user/cpp-raylib/raylib-main.cpp']?.content;
         }, { timeout: 30_000 });
         const editorContent: string = await page.evaluate(() => {
             const w = window as EmceptionWindow;
-            return (w.__emception_filesRef__?.current?.['/user/raylib-main.cpp']?.content as string) ?? '';
+            return (w.__emception_filesRef__?.current?.['/home/user/cpp-raylib/raylib-main.cpp']?.content as string) ?? '';
         });
         expect(editorContent).toContain('#include <raylib.h>');
         console.log('raylib demo code confirmed in workspace files.');
