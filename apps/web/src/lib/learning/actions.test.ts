@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
   resolveCourseId: vi.fn(),
   postCoursesContent: vi.fn(),
+  postCoursesContentReorder: vi.fn(),
   deleteCoursesContent: vi.fn(),
   postAssessments: vi.fn(),
   putAssessments: vi.fn(),
@@ -45,6 +46,7 @@ vi.mock('@game-guild/client', () => ({
       putCourses = mocks.putCourses;
       postCoursesUsers = mocks.postCoursesUsers;
       deleteCoursesUsers = mocks.deleteCoursesUsers;
+      postCoursesContentReorder = mocks.postCoursesContentReorder;
     },
     LearningCoursesProgramcontentModule: class {
       postCoursesContent = mocks.postCoursesContent;
@@ -77,6 +79,7 @@ const {
   updateCertificateTemplate,
   deleteCertificateTemplate,
   deleteContent,
+  reorderContent,
   createCourseDiscussion,
   createDiscussionReply,
   addCourseSupportTicketMessage,
@@ -103,6 +106,7 @@ describe('learning server actions', () => {
     mocks.getToken.mockResolvedValue('access-token');
     mocks.resolveCourseId.mockImplementation(async (courseId: string) => courseId);
     mocks.postCoursesContent.mockResolvedValue({ ok: true, data: { id: 'content-1' } });
+    mocks.postCoursesContentReorder.mockResolvedValue({ ok: true, data: undefined });
     mocks.deleteCoursesContent.mockResolvedValue({ ok: true, data: undefined });
     mocks.postAssessments.mockResolvedValue({ ok: true, data: { id: 'assessment-1' } });
     mocks.putAssessments.mockResolvedValue({ ok: true, data: undefined });
@@ -460,6 +464,20 @@ describe('learning server actions', () => {
         title: 'Gesture foundations',
         type: 'Lesson',
       }),
+    );
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin/content');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content');
+  });
+
+  it('uses the generated program contract to reorder course content', async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce('1caa16bb-6810-4e53-bb0d-91f0d5702333');
+
+    const result = await reorderContent('creature-design-by-admin', ['module-2', 'module-1']);
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.postCoursesContentReorder).toHaveBeenCalledWith(
+      '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+      { contentIds: ['module-2', 'module-1'] },
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin/content');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content');
