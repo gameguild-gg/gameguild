@@ -73,6 +73,7 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
                     ["ConnectionStrings:MigrationConnection"] = connectionString,
                     ["Database:FailStartupOnMigrationFailure"] = "true",
                     ["Database:GrantRuntimeRoleAfterMigrations"] = "false",
+                    ["Database:RunStartupInitialization"] = "false",
                     ["POSTGRES_HOST"] = connection.Host,
                     ["POSTGRES_PORT"] = connection.Port.ToString(),
                     ["POSTGRES_DB"] = connection.Database,
