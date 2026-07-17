@@ -104,8 +104,7 @@ public class SocialProfile : EntityBase
         WebsiteUrl = command.WebsiteUrl;
         SocialLinksJson = command.SocialLinksJson;
         AvailabilityStatus = command.AvailabilityStatus;
-        CompletenessScore = CalculateCompleteness();
-        Touch();
+        RecalculateCompleteness();
     }
 
     public void UpdatePrivacy(ProfileVisibility visibility, bool showActivity, bool showPortfolio, bool showSkills)
@@ -138,6 +137,12 @@ public class SocialProfile : EntityBase
         if (Skills.Count > 0) score += 5;
         if (PortfolioItems.Count > 0) score += 5;
         return Math.Min(100, score);
+    }
+
+    public void RecalculateCompleteness()
+    {
+        CompletenessScore = CalculateCompleteness();
+        Touch();
     }
 
     public SocialProfileDto ToDto() => new(

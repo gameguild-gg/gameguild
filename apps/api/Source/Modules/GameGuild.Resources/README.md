@@ -40,7 +40,7 @@ Pipeline Behaviors:
 
 | Controller | Auth | Access Control |
 |------------|------|----------------|
-| `ResourcesController` | `[Authorize(Policy = "RequireAdminRole")]` | System admins only |
+| `ResourcesController` | `[Authorize(Policy = "SystemAdmin")]` | System admins only |
 | `TenantQuotasController` | `[Authorize]` + `ValidateTenantMembershipAsync()` | Tenant members |
 | `TenantResourcesController` | `[Authorize]` + `ValidateTenantMembershipAsync()` | Tenant members |
 | `UserQuotasController` | `[Authorize]` + `ValidateUserOwnership()` | User owns resource or admin |

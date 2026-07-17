@@ -4,6 +4,7 @@ using GameGuild.AI;
 using GameGuild.API.Context;
 using GameGuild.API.Database;
 using GameGuild.Commerce.Billing;
+using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Subscriptions;
 using GameGuild.Compliance.FERPA;
@@ -241,12 +242,17 @@ public static class InfrastructureLayerExtensions
         services.AddBillingModule(configuration);
         logger.LogInformation("Billing Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10d. Commerce Payments Module (payment gateway, payment services)
+        // 10d. Commerce Orders Module
+        stepStopwatch.Restart();
+        services.AddOrdersModule();
+        logger.LogInformation("Orders Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10e. Commerce Payments Module (payment gateway, payment services)
         stepStopwatch.Restart();
         services.AddPaymentsModule(configuration);
         logger.LogInformation("Payments Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10e. Features Module (feature flags, OpenFeature provider, analytics)
+        // 10f. Features Module (feature flags, OpenFeature provider, analytics)
         stepStopwatch.Restart();
         services.AddFeaturesModule();
         logger.LogInformation("Features Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
