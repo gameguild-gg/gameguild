@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +17,7 @@ namespace GameGuild.Resources;
 /// </remarks>
 [ApiVersion("1.0")]
 [Microsoft.AspNetCore.Http.Tags("resources")]
-[Authorize(Policy = "RequireAdminRole")]
+[Authorize(Policy = AuthorizationPolicies.SystemAdmin)]
 [EnableRateLimiting(RateLimitPolicies.Internal)]
 public sealed class ResourcesController(ISender sender) : BaseApiController
 {
