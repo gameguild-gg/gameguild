@@ -55,11 +55,6 @@ export const TOOL_REGISTRY = {
     bundles: ['cmake'],
     description: 'Cross-platform build-system generator.',
   },
-  ninja: {
-    name: 'ninja',
-    bundles: ['ninja'],
-    description: 'Small, fast build system.',
-  },
   python3: {
     name: 'python3',
     bundles: ['cpython'],
