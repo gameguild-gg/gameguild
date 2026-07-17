@@ -79,7 +79,8 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
         savedUser.IsActive.Should().BeTrue();
         savedUser.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
         savedUser.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
-        savedUser.Version.Should().Be(0);
+        savedUser.Version.Should().Be(1);
+        savedUser.IsNew.Should().BeFalse();
         savedUser.IsDeleted.Should().BeFalse();
     }
 
