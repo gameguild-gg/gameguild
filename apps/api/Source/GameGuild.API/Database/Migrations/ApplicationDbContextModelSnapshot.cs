@@ -225,10 +225,17 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("EventSchemaVersion")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("Headers")
                         .HasColumnType("text");
 
                     b.Property<bool>("IsFailed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("IsLiveMode")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsProcessed")
@@ -249,6 +256,26 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("ProviderAccountId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ProviderEnvironment")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ProviderMonetaryLeg")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ProviderObjectId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ProviderObjectType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<Guid?>("SubscriptionId")
                         .HasColumnType("uuid");
 
@@ -261,6 +288,10 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<int>("Version")
                         .IsConcurrencyToken()
                         .HasColumnType("integer");
+
+                    b.Property<string>("WebhookEndpointId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("Id");
 
@@ -285,6 +316,16 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("ExternalEventId", "Provider")
                         .IsUnique()
                         .HasDatabaseName("ix_billing_webhook_events_external_id_provider");
+
+                    b.HasIndex("Provider", "ProviderEnvironment", "ProviderAccountId", "ProviderObjectId", "ProviderMonetaryLeg")
+                        .HasDatabaseName("ix_billing_webhook_events_provider_object_leg")
+                        .HasFilter("\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"ProviderObjectId\" IS NOT NULL AND \"ProviderMonetaryLeg\" IS NOT NULL")
+                        .HasAnnotation("Npgsql:CreatedConcurrently", true);
+
+                    b.HasIndex("Provider", "ProviderEnvironment", "ProviderAccountId", "WebhookEndpointId", "ExternalEventId")
+                        .HasDatabaseName("ix_billing_webhook_events_provider_scope_event")
+                        .HasFilter("\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"WebhookEndpointId\" IS NOT NULL")
+                        .HasAnnotation("Npgsql:CreatedConcurrently", true);
 
                     b.ToTable("billing_webhook_events", (string)null);
                 });
@@ -449,6 +490,26 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("ProviderAccountId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ProviderEnvironment")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ProviderMonetaryLeg")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ProviderObjectId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ProviderObjectType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("ExternalPaymentId")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -533,6 +594,11 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("IdempotencyKey")
                         .IsUnique();
+
+                    b.HasIndex("Provider", "ProviderEnvironment", "ProviderAccountId", "ProviderObjectId", "ProviderMonetaryLeg")
+                        .HasDatabaseName("ix_payments_provider_object_leg")
+                        .HasFilter("\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"ProviderObjectId\" IS NOT NULL AND \"ProviderMonetaryLeg\" IS NOT NULL")
+                        .HasAnnotation("Npgsql:CreatedConcurrently", true);
 
                     b.HasIndex("SubscriptionId");
 
