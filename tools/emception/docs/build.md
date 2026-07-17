@@ -39,18 +39,17 @@ The demos sync CDN assets from the built CDN payload via a `predev`/`prebuild` h
 | 4   | `build:cpython`      | Cross-compiled standalone CPython WASM                                     |
 | 5   | `build:llvm`         | `clang`, `lld`, `llvm-nm`, `llvm-ar`, `llvm-objcopy`, `llc`                |
 | 6   | `build:libcurl-lite` | Minimal `libcurl.a` for tools that need HTTP                               |
-| 7   | `build:ninja`        | `ninja.wasm`                                                               |
-| 8   | `build:cmake`        | `cmake.wasm`                                                               |
-| 9   | `build:sdl3`         | `libSDL3.a` + `sdl3-runtime.mjs`                                           |
-| 10  | `build:raylib`       | `libraylib.a` + companions + `raylib-runtime.mjs` (USE_GLFW=3, WebGL2)     |
-| 11  | `build:imgui`        | `libimgui.a`                                                               |
-| 12  | `build:sysroot`      | Populates `/usr/{include,lib,bin}` + emscripten runtime                    |
-| 13  | `build:brotli`       | Native Brotli CLI (build-time) + WASM decoder (runtime)                    |
-| 14  | `patch:glue`         | Patches Emscripten `.mjs` glue for VFS + async bridge                      |
-| 15  | `build:manifest`     | `manifest.json` + raw CDN staging                                          |
-| 16  | `build:bundles`      | Brotli-compressed `.tar.br` bundles (≈ 29 files, ≈ 182 MB)                 |
-| 17  | `build:lib`          | Publishable library (`tsup` + `tsc -p tsconfig.lib.json`)                  |
-| 18  | `deploy:cdn`         | Copies CDN to `apps/ide-react/public/cdn/` and `apps/ide-next/public/cdn/` |
+| 7   | `build:cmake`        | `cmake.wasm`                                                               |
+| 8   | `build:sdl3`         | `libSDL3.a` + `sdl3-runtime.mjs`                                           |
+| 9   | `build:raylib`       | `libraylib.a` + companions + `raylib-runtime.mjs` (USE_GLFW=3, WebGL2)     |
+| 10  | `build:imgui`        | `libimgui.a`                                                               |
+| 11  | `build:sysroot`      | Populates `/usr/{include,lib,bin}` + emscripten runtime                    |
+| 12  | `build:brotli`       | Native Brotli CLI (build-time) + WASM decoder (runtime)                    |
+| 13  | `patch:glue`         | Patches Emscripten `.mjs` glue for VFS + async bridge                      |
+| 14  | `build:manifest`     | `manifest.json` + raw CDN staging                                          |
+| 15  | `build:bundles`      | Brotli-compressed `.tar.br` bundles (≈ 29 files, ≈ 182 MB)                 |
+| 16  | `build:lib`          | Publishable library (`tsup` + `tsc -p tsconfig.lib.json`)                  |
+| 17  | `deploy:cdn`         | Copies CDN to `apps/ide-react/public/cdn/` and `apps/ide-next/public/cdn/` |
 
 Convenience aggregates:
 

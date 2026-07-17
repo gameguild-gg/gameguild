@@ -129,9 +129,7 @@ const TOOL_REGISTRY: Record<string, ToolDescriptor> = {
   'wasm-metadce': {
     modulePath: '/usr/lib/wasm-metadce.wasm',
   },
-  ninja: {
-    modulePath: '/usr/lib/ninja.wasm',
-  },
+  // Note: ninja.wasm removed - handled inline via special case
   cmake: {
     modulePath: '/usr/lib/cmake.wasm',
     env: {
@@ -490,10 +488,17 @@ export class ToolRunner {
     if (toolBasename === 'ninja') {
       const isInfoQuery = options.isInfoQuery || argv.some((a) => a === '--version' || a === '-v');
       const isToolQuery = argv.some((a) => a === '-t');
-      if (!isInfoQuery && !isToolQuery) {
-        console.log(`${LOG_PREFIX}   Dispatching to ninjaBuildBypass (JS-side build.ninja executor)`);
-        return this.ninjaBuildBypass(argv, options);
+      if (isInfoQuery) {
+        console.log(`${LOG_PREFIX}   [ninja] info query → fake version 1.12.1`);
+        options.onStdout?.('1.12.1\n');
+        return { exitCode: 0, stdout: '1.12.1\n', stderr: '' };
       }
+      if (isToolQuery) {
+        console.log(`${LOG_PREFIX}   [ninja] tool query (-t) → no-op`);
+        return { exitCode: 0, stdout: '', stderr: '' };
+      }
+      console.log(`${LOG_PREFIX}   Dispatching to ninjaBuildBypass (JS-side build.ninja executor)`);
+      return this.ninjaBuildBypass(argv, options);
     }
 
     // For emcc/em++: inject the actual emcc.py script path

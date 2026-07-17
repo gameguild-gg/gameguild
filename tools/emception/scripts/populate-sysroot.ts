@@ -233,8 +233,8 @@ try {
 } catch (e) { }
 fs.symlinkSync('/usr/lib/python.wasm', pythonDest);
 
-// 6b. Symlinks for build tools (ninja, cmake, curl)
-const buildTools = ['ninja', 'cmake', 'curl'];
+  // 6b. Symlinks for build tools (cmake, curl)
+  const buildTools = ['cmake', 'curl'];
 buildTools.forEach(tool => {
     const dest = path.join(SYSROOT, 'usr/bin', tool);
     try {
