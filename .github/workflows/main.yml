@@ -47,7 +47,7 @@ jobs:
         shell: pwsh
         env:
           ECONOMY_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: ./scripts/ci/verify-economy.ps1
+        run: pwsh -NoProfile -File scripts/ci/verify-economy.ps1
 
       - name: Upload economy evidence
         if: always()
