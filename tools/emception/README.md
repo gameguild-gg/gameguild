@@ -138,7 +138,7 @@ flowchart TD
   subgraph Build1["Step 1 - build:toolchain"]
     direction LR
     EMSDK[emsdk] --> EmCC[emcc / em++]
-    EmCC --> P1Out["clang.wasm  lld.wasm  python.wasm<br/>wasm-opt.wasm  ninja.wasm  cmake.wasm"]
+    EmCC --> P1Out["clang.wasm  lld.wasm  python.wasm<br/>wasm-opt.wasm  cmake.wasm"]
   end
 
   subgraph Build2["Step 2 - build:sdl3 + build:raylib + build:imgui"]

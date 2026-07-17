@@ -25,8 +25,8 @@ int main(void) {
 
     printf("%-12s -> %s\\n", "42",       type_name(i));
     printf("%-12s -> %s\\n", "3.14f",    type_name(f));
-    printf("%-12s -> %s\\n", "\\'A\\'",  type_name(c));
-    printf("%-12s -> %s\\n", "\"hello\"",type_name(s));
+    printf("%-12s -> %s\\n", "'A'",      type_name(c));
+    printf("%-12s -> %s\\n", "'hello'",   type_name(s));
     printf("%-12s -> %s\\n", "true",     type_name(b));
     return 0;
 }

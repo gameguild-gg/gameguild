@@ -1,6 +1,5 @@
 import type { WorkspaceConfig } from '../workspace-config.js';
 import { ToolchainPreset } from '../types.js';
-import { DEFAULT_IMAGE } from './defaults.js';
 
 export const RAYLIB_DEMO_CODE = `// raylib interactive demo — compiled in the browser via Emscripten.
 // Click ▶ to build and render to the canvas tab.
@@ -94,6 +93,5 @@ export const CPP_RAYLIB_PRESET: WorkspaceConfig = {
     },
     files: {
         'raylib-main.cpp': { encoding: 'text', content: RAYLIB_DEMO_CODE },
-        'workspace-preview.svg': { encoding: 'text', content: DEFAULT_IMAGE },
     },
 };

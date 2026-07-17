@@ -42,7 +42,6 @@ defineBuildScript({
                 'cpython/build-wasm', 'cpython/build-native', 'cpython/cpython-*', 'cpython/sysroot-staging', 'cpython/v*',
                 'imgui/imgui-*',
                 'llvm/build-wasm', 'llvm/build-native', 'llvm/llvm-project-*', 'llvm/gh-actions-bin',
-                'ninja/ninja-*',
                 'raylib/raylib-*', 'raylib/raygui-*', 'raylib/physac-*', 'raylib/rlights-*',
                 'runtime/build',
             ];
