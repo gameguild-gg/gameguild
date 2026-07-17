@@ -43,10 +43,10 @@ jobs:
         run: pnpm --filter @game-guild/web exec playwright install --with-deps chromium
 
       - name: Verify economy baseline
-        shell: pwsh
+        shell: bash
         env:
           ECONOMY_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: pwsh -NoProfile -File scripts/ci/verify-economy.ps1
+        run: bash scripts/ci/verify-economy.sh
 
       - name: Upload economy evidence
         if: always()
