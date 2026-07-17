@@ -29,6 +29,7 @@ public sealed class ModuleConfiguration
         "Learning.Experience.Recommendations",
         "Learning.Experience.Social",
         "Notifications",
+        "Orders",
         "Payments",
         "Products",
         "Projects",

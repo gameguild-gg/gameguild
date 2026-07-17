@@ -70,7 +70,7 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/orders", request);
+        var response = await _client.PostAsJsonAsync("/v1/orders", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -83,7 +83,7 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
         var orderId = Guid.NewGuid();
 
         // Act
-        var response = await _client.GetAsync($"/api/orders/{orderId}");
+        var response = await _client.GetAsync($"/v1/orders/{orderId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -101,7 +101,7 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync($"/api/orders/{orderId}/complete", request);
+        var response = await _client.PostAsJsonAsync($"/v1/orders/{orderId}:complete", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -115,7 +115,7 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
         var request = new { Reason = "Test cancellation" };
 
         // Act
-        var response = await _client.PostAsJsonAsync($"/api/orders/{orderId}/cancel", request);
+        var response = await _client.PostAsJsonAsync($"/v1/orders/{orderId}:cancel", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -133,7 +133,7 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync($"/api/orders/{orderId}/refund", request);
+        var response = await _client.PostAsJsonAsync($"/v1/orders/{orderId}:refund", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -151,7 +151,7 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync($"/api/orders/{orderId}/items", request);
+        var response = await _client.PostAsJsonAsync($"/v1/orders/{orderId}/items", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
