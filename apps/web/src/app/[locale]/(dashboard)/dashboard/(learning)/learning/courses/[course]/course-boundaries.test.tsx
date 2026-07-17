@@ -66,7 +66,7 @@ describe('course-management loading and boundary screens', () => {
     expect(document.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
 
     rerender(<ClassesLoading />);
-    expect(screen.getByText('Loading class schedule...')).toBeInTheDocument();
+    expect(screen.getByLabelText('Loading classes')).toBeInTheDocument();
 
     rerender(<StudentsLoading />);
     expect(document.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
@@ -84,7 +84,7 @@ describe('course-management loading and boundary screens', () => {
     expect(screen.getByText('Error loading class details. Please try again.')).toBeInTheDocument();
 
     rerender(<ClassDetailLoading />);
-    expect(screen.getByText('Loading class details...')).toBeInTheDocument();
+    expect(screen.getByLabelText('Loading class workspace')).toBeInTheDocument();
 
     rerender(<ClassDetailNotFound />);
     expect(screen.getByText('Class not found.')).toBeInTheDocument();
