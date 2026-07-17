@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 import { chromium } from 'playwright';
+import { writeBrowserEvidence } from './browser-smoke-evidence.mjs';
 
 const baseUrl = (process.env.PUBLIC_E2E_BASE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3011').replace(/\/$/, '');
 const runAuthFlow = ['1', 'true', 'yes'].includes((process.env.PUBLIC_E2E_AUTH_FLOW ?? '').toLowerCase());
+const evidencePath = process.env.PLAYWRIGHT_JSON_OUTPUT_NAME;
 
 const publicRoutes = [
   ['Home', '/'],
@@ -111,6 +113,7 @@ async function main() {
   });
   const page = await context.newPage();
   const consoleErrors = [];
+  const requestErrors = [];
 
   page.on('console', (message) => {
     if (message.type() === 'error') {
@@ -119,6 +122,17 @@ async function main() {
   });
   page.on('pageerror', (error) => {
     consoleErrors.push(error.message);
+  });
+  page.on('requestfailed', (request) => {
+    const failure = request.failure()?.errorText ?? 'unknown request failure';
+    if (!/ERR_ABORTED/i.test(failure)) {
+      requestErrors.push(`${request.method()} ${request.url()}: ${failure}`);
+    }
+  });
+  page.on('response', (response) => {
+    if (response.status() >= 500) {
+      requestErrors.push(`${response.request().method()} ${response.url()}: HTTP ${response.status()}`);
+    }
   });
 
   try {
@@ -169,13 +183,20 @@ async function main() {
       }
     }
 
+    if (requestErrors.length > 0) {
+      throw new Error(`Failed browser requests detected:\n${requestErrors.join('\n')}`);
+    }
+
+    await writeBrowserEvidence(evidencePath, { passed: true, errors: [] });
     console.log(`Public browser smoke passed against ${baseUrl}`);
   } finally {
     await browser.close();
   }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
+main().catch(async (error) => {
+  const message = error instanceof Error ? error.message : String(error);
+  await writeBrowserEvidence(evidencePath, { passed: false, errors: [message] });
+  console.error(message);
+  process.exitCode = 1;
 });

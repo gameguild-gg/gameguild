@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "projects": [],
+  "providerContractProjects": [
+    {
+      "project": "apps/api/tests/GameGuild.Commerce.Billing.UnitTests/GameGuild.Commerce.Billing.UnitTests.csproj",
+      "filter": "FullyQualifiedName~Stripe|FullyQualifiedName~Webhook"
+    },
+    {
+      "project": "apps/api/tests/GameGuild.Commerce.Payments.UnitTests/GameGuild.Commerce.Payments.UnitTests.csproj",
+      "filter": "FullyQualifiedName~Stripe"
+    }
+  ]
+}

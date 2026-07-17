@@ -90,11 +90,11 @@ Do not install dependencies independently in every worktree unless required. Reu
 
 Task 0.2 wires these commands into CI for both `develop` and pull requests. The gate discovers Economy projects that exist in the candidate commit and compares them to a checked-in required-project manifest; the commit that introduces an assembly must introduce its test project and manifest entry in the same change. The existing whole-solution suite always runs.
 
-```powershell
-pwsh -NoProfile -File scripts/ci/verify-economy.ps1
+```bash
+bash scripts/ci/verify-economy.sh
 ```
 
-Task 0.2 creates that fail-fast script with strict PowerShell error handling and an `Invoke-Native` wrapper that throws after every nonzero native exit code. It restores/builds/tests the whole solution, discovers required Economy unit/integration projects, writes every TRX/Cobertura/Vitest/Playwright result under `artifacts/test-results`, publishes the API, starts the published API against disposable PostgreSQL on an ephemeral port, waits for readiness, captures a deterministic OpenAPI artifact, regenerates the client from that artifact, diff-checks generated output, builds/tests the client and web, and finally parses all evidence for skips/zero-test suites.
+Task 0.2 creates that fail-fast Bash script with strict error handling and a `run` wrapper that propagates every nonzero native exit code. It restores/builds/tests the whole solution, discovers required Economy unit/integration projects, writes every TRX/Cobertura/Vitest/Playwright result under `artifacts/test-results`, publishes the API, starts the published API against disposable PostgreSQL on an ephemeral port, waits for readiness, captures a deterministic OpenAPI artifact, regenerates the client from that artifact, diff-checks generated output, builds/tests the client and web, and finally parses all evidence for skips/zero-test suites.
 
 Expected result at a merge gate: every step exits `0`; the required-project manifest has no missing or zero-test project; TRX/Vitest/Playwright parsing reports no skipped, pending, todo, or undiscovered required suite; generated-client output is clean; each new Economy coverage report states 100% line/branch/method; PostgreSQL role/concurrency tests use a fresh database; and browser journeys produce no failed request or console error attributable to the economy flow. The script always stops the ephemeral API/database in `finally`.
 

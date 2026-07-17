@@ -54,15 +54,14 @@ describe('ContentItemEditor', () => {
     vi.mocked(updateContent).mockResolvedValue({ success: true, data: { id: 'content-1' } });
   });
 
-  it('renders lesson-publication copy and normalizes questionnaire to quiz', () => {
+  it('renders quiz-publication copy and normalizes questionnaire to quiz', () => {
     render(<ContentItemEditor courseId="course-1" item={item} courseTitle="Advanced Game AI" />);
 
     expect(screen.getByRole('heading', { name: 'Intro quiz' })).toBeInTheDocument();
     expect(screen.getByText('Advanced Game AI')).toBeInTheDocument();
     expect(screen.getByText('Quiz')).toBeInTheDocument();
-    expect(screen.getByText('Lesson content')).toBeInTheDocument();
-    expect(screen.getByText('Lesson publication')).toBeInTheDocument();
-    expect(screen.getByText(/Course marketing copy belongs in Listing/i)).toBeInTheDocument();
+    expect(screen.getByText('Quiz content')).toBeInTheDocument();
+    expect(screen.getByText('Quiz publication')).toBeInTheDocument();
     expect(screen.getByText(/Public course landing-page visibility is managed in Listing/i)).toBeInTheDocument();
   });
 
@@ -77,14 +76,13 @@ describe('ContentItemEditor', () => {
     expect(updateContent).not.toHaveBeenCalled();
   });
 
-  it('saves edited lesson content and refreshes the dashboard route', async () => {
+  it('saves edited quiz metadata and refreshes the dashboard route', async () => {
     const user = userEvent.setup();
     render(<ContentItemEditor courseId="course-1" item={item} courseTitle="Advanced Game AI" />);
 
     await user.clear(screen.getByLabelText(/^title$/i));
     await user.type(screen.getByLabelText(/^title$/i), 'Updated quiz');
     fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Updated description.' } });
-    fireEvent.change(screen.getByLabelText(/^body$/i), { target: { value: '<p>Updated body.</p>' } });
     fireEvent.change(screen.getByLabelText(/estimated minutes/i), { target: { value: '35' } });
 
     await user.click(screen.getByRole('button', { name: /save changes/i }));
@@ -95,7 +93,7 @@ describe('ContentItemEditor', () => {
         contentId: 'content-1',
         title: 'Updated quiz',
         description: 'Updated description.',
-        body: '<p>Updated body.</p>',
+        body: undefined,
         visibility: 'Public',
         isRequired: true,
         estimatedMinutes: 35,
