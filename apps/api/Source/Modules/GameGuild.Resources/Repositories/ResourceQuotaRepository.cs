@@ -134,60 +134,170 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
         long amount,
         CancellationToken cancellationToken = default)
     {
-        const int maxRetries = 3;
+        if (amount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Usage amount must be greater than zero.");
 
-        for (var retryCount = 0; retryCount < maxRetries; retryCount++)
+        if (context is not DbContext dbContext || !dbContext.Database.IsRelational())
+            return await TryIncrementTrackedAsync(tenantId, type, amount, cancellationToken).ConfigureAwait(false);
+
+        await using var ownedTransaction = dbContext.Database.CurrentTransaction is null
+            ? await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
+            : null;
+
+        async Task<(bool Success, ResourceQuota? Quota)> CompleteAsync(bool success, ResourceQuota? quota)
         {
-            // Fresh query each retry to get latest state
+            if (ownedTransaction is not null)
+                await ownedTransaction.CommitAsync(CancellationToken.None).ConfigureAwait(false);
+
+            return (success, quota);
+        }
+
+        var maximumStartingUsage = long.MaxValue - amount;
+
+        // Two attempts cover the only expected state transition between read and write:
+        // another request resetting an expired quota before this request updates it.
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
             var quota = await ResourceQuotas
-                .FirstOrDefaultAsync(q => q.TenantId!.Value == tenantId && q.Type == type, cancellationToken).ConfigureAwait(false);
+                .AsNoTracking()
+                .SingleOrDefaultAsync(q => q.TenantId!.Value == tenantId && q.Type == type, cancellationToken)
+                .ConfigureAwait(false);
 
-            // No quota means unlimited - allow operation
             if (quota == null)
-                return (true, null);
+                return await CompleteAsync(true, null).ConfigureAwait(false);
 
-            // Inactive quota - allow operation
             if (!quota.IsActive)
-                return (true, quota);
+                return await CompleteAsync(true, quota).ConfigureAwait(false);
 
-            // Check if quota needs reset
+            var observedLastReset = quota.LastReset;
+            var observedVersion = quota.Version;
+            var observedPeriod = quota.Period;
+            var observedResetTime = quota.ResetTime;
+            var observedResetDayOfWeek = quota.ResetDayOfWeek;
+            var observedResetDayOfMonth = quota.ResetDayOfMonth;
+            var updatedAt = SystemClock.UtcNow;
+            int affectedRows;
+
             if (quota.ShouldReset())
             {
-                quota.ResetUsage();
+                if (quota.HardLimit.HasValue && amount > quota.HardLimit.Value)
+                    return await CompleteAsync(false, quota).ConfigureAwait(false);
+
+                affectedRows = await ResourceQuotas
+                    .Where(candidate =>
+                        candidate.Id == quota.Id &&
+                        candidate.IsActive &&
+                        candidate.Version == observedVersion &&
+                        candidate.LastReset == observedLastReset &&
+                        candidate.Period == observedPeriod &&
+                        candidate.ResetTime == observedResetTime &&
+                        candidate.ResetDayOfWeek == observedResetDayOfWeek &&
+                        candidate.ResetDayOfMonth == observedResetDayOfMonth &&
+                        (!candidate.HardLimit.HasValue || candidate.HardLimit.Value >= amount))
+                    .ExecuteUpdateAsync(
+                        setters => setters
+                            .SetProperty(candidate => candidate.CurrentUsage, amount)
+                            .SetProperty(candidate => candidate.LastReset, updatedAt)
+                            .SetProperty(candidate => candidate.UpdatedAt, updatedAt)
+                            .SetProperty(candidate => candidate.Version, candidate => candidate.Version + 1),
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                if (quota.CurrentUsage > maximumStartingUsage)
+                    throw new OverflowException("Resource quota usage cannot exceed Int64.MaxValue.");
+
+                if (quota.HardLimit.HasValue &&
+                    (amount > quota.HardLimit.Value || quota.CurrentUsage > quota.HardLimit.Value - amount))
+                    return await CompleteAsync(false, quota).ConfigureAwait(false);
+
+                // Do not compare Version here: every successful consumer increments it.
+                // PostgreSQL serializes writers and re-evaluates these live limit and
+                // reset predicates after waiting, so all remaining capacity is usable.
+                affectedRows = await ResourceQuotas
+                    .Where(candidate =>
+                        candidate.Id == quota.Id &&
+                        candidate.IsActive &&
+                        candidate.LastReset == observedLastReset &&
+                        candidate.Period == observedPeriod &&
+                        candidate.ResetTime == observedResetTime &&
+                        candidate.ResetDayOfWeek == observedResetDayOfWeek &&
+                        candidate.ResetDayOfMonth == observedResetDayOfMonth &&
+                        candidate.CurrentUsage <= maximumStartingUsage &&
+                        (!candidate.HardLimit.HasValue || candidate.CurrentUsage <= candidate.HardLimit.Value - amount))
+                    .ExecuteUpdateAsync(
+                        setters => setters
+                            .SetProperty(candidate => candidate.CurrentUsage, candidate => candidate.CurrentUsage + amount)
+                            .SetProperty(candidate => candidate.UpdatedAt, updatedAt)
+                            .SetProperty(candidate => candidate.Version, candidate => candidate.Version + 1),
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
 
-            // Validate against hard limit
-            var projectedUsage = quota.CurrentUsage + amount;
-            if (quota.HardLimit.HasValue && projectedUsage > quota.HardLimit.Value)
+            if (affectedRows == 1)
             {
-                return (false, quota);
-            }
+                var updatedQuota = await ResourceQuotas
+                    .AsNoTracking()
+                    .SingleAsync(candidate => candidate.Id == quota.Id, cancellationToken)
+                    .ConfigureAwait(false);
 
-            // Increment usage
-            quota.CurrentUsage = projectedUsage;
-            quota.Touch();
-
-            try
-            {
-                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-                return (true, quota);
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                // Another request modified the quota concurrently
-                // The entity is already detached after SaveChanges failure, just retry
-                if (retryCount >= maxRetries - 1)
-                {
-                    throw new InvalidOperationException(
-                        $"Failed to increment quota after {maxRetries} retries due to concurrent modifications. " +
-                        $"Tenant: {tenantId}, Type: {type}, Amount: {amount}");
-                }
-                // Continue to next iteration with fresh query
+                return await CompleteAsync(true, updatedQuota).ConfigureAwait(false);
             }
         }
 
-        // Should not reach here
-        return (false, null);
+        var latestQuota = await ResourceQuotas
+            .AsNoTracking()
+            .SingleOrDefaultAsync(q => q.TenantId!.Value == tenantId && q.Type == type, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (latestQuota == null)
+            return await CompleteAsync(true, null).ConfigureAwait(false);
+
+        if (!latestQuota.IsActive)
+            return await CompleteAsync(true, latestQuota).ConfigureAwait(false);
+
+        if (!latestQuota.ShouldReset() && latestQuota.HardLimit.HasValue &&
+            (amount > latestQuota.HardLimit.Value || latestQuota.CurrentUsage > latestQuota.HardLimit.Value - amount))
+            return await CompleteAsync(false, latestQuota).ConfigureAwait(false);
+
+        if (!latestQuota.ShouldReset() &&
+            !latestQuota.HardLimit.HasValue &&
+            latestQuota.CurrentUsage > maximumStartingUsage)
+            throw new OverflowException("Resource quota usage cannot exceed Int64.MaxValue.");
+
+        throw new DbUpdateConcurrencyException(
+            $"Resource quota changed repeatedly while consuming usage. Tenant: {tenantId}, Type: {type}.");
+    }
+
+    private async Task<(bool Success, ResourceQuota? Quota)> TryIncrementTrackedAsync(
+        Guid tenantId,
+        ResourceUsageType type,
+        long amount,
+        CancellationToken cancellationToken)
+    {
+        var quota = await ResourceQuotas
+            .SingleOrDefaultAsync(q => q.TenantId!.Value == tenantId && q.Type == type, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (quota == null)
+            return (true, null);
+
+        if (!quota.IsActive)
+            return (true, quota);
+
+        if (quota.ShouldReset())
+            quota.ResetUsage();
+
+        var projectedUsage = checked(quota.CurrentUsage + amount);
+        if (quota.HardLimit.HasValue && projectedUsage > quota.HardLimit.Value)
+            return (false, quota);
+
+        quota.CurrentUsage = projectedUsage;
+        quota.Touch();
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return (true, quota);
     }
 
     /// <inheritdoc/>
