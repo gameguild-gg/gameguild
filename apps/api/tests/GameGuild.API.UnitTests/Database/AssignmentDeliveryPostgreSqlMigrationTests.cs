@@ -13,6 +13,7 @@ using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
+[Collection(PostgreSqlTestCollection.Name)]
 public sealed class AssignmentDeliveryPostgreSqlMigrationTests
 {
     [DockerFact]
