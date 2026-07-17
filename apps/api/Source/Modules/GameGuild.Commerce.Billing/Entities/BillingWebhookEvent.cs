@@ -24,6 +24,54 @@ public class BillingWebhookEvent : EntityBase
     public string ExternalEventId { get; set; } = string.Empty;
 
     /// <summary>
+    ///     Provider environment that emitted the event, such as test or live.
+    ///     Nullable while legacy inbox rows are backfilled.
+    /// </summary>
+    [MaxLength(32)]
+    public string? ProviderEnvironment { get; set; }
+
+    /// <summary>
+    ///     Connected or merchant account that owns the provider event.
+    /// </summary>
+    [MaxLength(255)]
+    public string? ProviderAccountId { get; set; }
+
+    /// <summary>
+    ///     Provider webhook endpoint that accepted the event.
+    /// </summary>
+    [MaxLength(255)]
+    public string? WebhookEndpointId { get; set; }
+
+    /// <summary>
+    ///     Immutable provider object referenced by the event.
+    /// </summary>
+    [MaxLength(255)]
+    public string? ProviderObjectId { get; set; }
+
+    /// <summary>
+    ///     Provider object kind, such as payment_intent or charge.
+    /// </summary>
+    [MaxLength(100)]
+    public string? ProviderObjectType { get; set; }
+
+    /// <summary>
+    ///     Monetary leg represented by the provider object, such as capture or refund.
+    /// </summary>
+    [MaxLength(100)]
+    public string? ProviderMonetaryLeg { get; set; }
+
+    /// <summary>
+    ///     Provider livemode marker. Nullable for providers or legacy rows without the signal.
+    /// </summary>
+    public bool? IsLiveMode { get; set; }
+
+    /// <summary>
+    ///     Version of the provider event schema used to parse this event.
+    /// </summary>
+    [MaxLength(50)]
+    public string? EventSchemaVersion { get; set; }
+
+    /// <summary>
     ///     Type of webhook event (subscription.created, payment.succeeded, etc.)
     /// </summary>
     [Required]

@@ -25,6 +25,29 @@ public class BillingWebhookEventConfiguration : IEntityTypeConfiguration<Billing
             .HasMaxLength(255)
             .IsRequired();
 
+        builder.Property(x => x.ProviderEnvironment)
+            .HasMaxLength(32);
+
+        builder.Property(x => x.ProviderAccountId)
+            .HasMaxLength(255);
+
+        builder.Property(x => x.WebhookEndpointId)
+            .HasMaxLength(255);
+
+        builder.Property(x => x.ProviderObjectId)
+            .HasMaxLength(255);
+
+        builder.Property(x => x.ProviderObjectType)
+            .HasMaxLength(100);
+
+        builder.Property(x => x.ProviderMonetaryLeg)
+            .HasMaxLength(100);
+
+        builder.Property(x => x.IsLiveMode);
+
+        builder.Property(x => x.EventSchemaVersion)
+            .HasMaxLength(50);
+
         builder.Property(x => x.EventType)
             .HasMaxLength(100)
             .IsRequired();
@@ -39,6 +62,30 @@ public class BillingWebhookEventConfiguration : IEntityTypeConfiguration<Billing
         builder.HasIndex(x => new { x.ExternalEventId, x.Provider })
             .IsUnique()
             .HasDatabaseName("ix_billing_webhook_events_external_id_provider");
+
+        builder.HasIndex(x => new
+            {
+                x.Provider,
+                x.ProviderEnvironment,
+                x.ProviderAccountId,
+                x.WebhookEndpointId,
+                x.ExternalEventId
+            })
+            .HasFilter("\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"WebhookEndpointId\" IS NOT NULL")
+            .IsCreatedConcurrently()
+            .HasDatabaseName("ix_billing_webhook_events_provider_scope_event");
+
+        builder.HasIndex(x => new
+            {
+                x.Provider,
+                x.ProviderEnvironment,
+                x.ProviderAccountId,
+                x.ProviderObjectId,
+                x.ProviderMonetaryLeg
+            })
+            .HasFilter("\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"ProviderObjectId\" IS NOT NULL AND \"ProviderMonetaryLeg\" IS NOT NULL")
+            .IsCreatedConcurrently()
+            .HasDatabaseName("ix_billing_webhook_events_provider_object_leg");
         
         builder.HasIndex(x => x.EventType)
             .HasDatabaseName("ix_billing_webhook_events_event_type");
