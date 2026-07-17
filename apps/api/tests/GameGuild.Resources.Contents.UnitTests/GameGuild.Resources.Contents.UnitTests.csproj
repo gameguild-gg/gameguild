@@ -24,7 +24,6 @@
         <PackageReference Include="coverlet.msbuild" />
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
         <PackageReference Include="MockQueryable.Moq" />
         <PackageReference Include="Moq" />
         <PackageReference Include="xunit" />
