@@ -33,10 +33,19 @@ public sealed class PaymentSubscriptionSyncService(
         Guid? subscriptionId,
         decimal amount,
         string currency,
+        int? billingCycleNumber,
         DateTime processedAt,
-        int billingCycleNumber,
         CancellationToken cancellationToken = default)
     {
+        if (!billingCycleNumber.HasValue)
+        {
+            logger.LogWarning(
+                "Payment {PaymentId} cannot be synced to subscription {SubscriptionId} without a billing cycle identity",
+                paymentId,
+                subscriptionId);
+            return;
+        }
+
         if (!subscriptionId.HasValue)
         {
             logger.LogDebug("Payment {PaymentId} has no subscription link; skipping subscription sync", paymentId);
@@ -61,7 +70,7 @@ public sealed class PaymentSubscriptionSyncService(
             currency,
             processedAt,
             idempotencyKey,
-            billingCycleNumber);
+            billingCycleNumber.Value);
 
         if (result.IsSuccess)
         {
