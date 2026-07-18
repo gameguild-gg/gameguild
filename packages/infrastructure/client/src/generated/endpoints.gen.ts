@@ -3571,132 +3571,76 @@ export const postTaxesValidateVatEndpoint = {
 } as const;
 
 /**
- * Get user's wallet
- *
- * Retrieves the wallet for a specific user.
+ * Get my wallet
  */
-export interface GetUsersWalletInput {
-  userId: string;
-}
-export type GetUsersWalletOutput = Types.CommercePaymentsUserWallet;
-export const getUsersWalletEndpoint = {
-  operationId: 'getUsersWallet' as const,
+export type GetWalletInput = void;
+export type GetWalletOutput = Types.CommercePaymentsUserWallet;
+export const getWalletEndpoint = {
+  operationId: 'getWallet' as const,
   method: 'GET' as const,
-  path: '/api/v1/users/{userId}/wallet' as const,
+  path: '/api/v1/wallet' as const,
   tags: ['Commerce/payments/wallets'] as const,
   requiresAuth: true,
 } as const;
 
 /**
- * Get user's wallet balance
- *
- * Retrieves the wallet balance for a specific user.
+ * Create my wallet
  */
-export interface GetUsersWalletBalanceInput {
-  userId: string;
+export interface PostWalletInput {
+  body?: Types.CommercePaymentsCreateWalletInput;
 }
-export type GetUsersWalletBalanceOutput = number;
-export const getUsersWalletBalanceEndpoint = {
-  operationId: 'getUsersWalletBalance' as const,
+export type PostWalletOutput = Types.CommercePaymentsUserWallet;
+export const postWalletEndpoint = {
+  operationId: 'postWallet' as const,
+  method: 'POST' as const,
+  path: '/api/v1/wallet' as const,
+  tags: ['Commerce/payments/wallets'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get my wallet balance
+ */
+export type GetWalletBalanceInput = void;
+export type GetWalletBalanceOutput = void;
+export const getWalletBalanceEndpoint = {
+  operationId: 'getWalletBalance' as const,
   method: 'GET' as const,
-  path: '/api/v1/users/{userId}/wallet/balance' as const,
+  path: '/api/v1/wallet/balance' as const,
   tags: ['Commerce/payments/wallets'] as const,
   requiresAuth: true,
 } as const;
 
 /**
- * Add funds to user's wallet
- *
- * Adds funds to the wallet for the specified user.
+ * Lock my wallet
  */
-export interface PostUsersWalletAddFundsInput {
-  userId: string;
-  body?: Types.CommercePaymentsAddFundsInput;
-}
-export type PostUsersWalletAddFundsOutput = Types.CommercePaymentsWalletTransaction;
-export const postUsersWalletAddFundsEndpoint = {
-  operationId: 'postUsersWalletAddFunds' as const,
-  method: 'POST' as const,
-  path: '/api/v1/users/{userId}/wallet:add-funds' as const,
-  tags: ['Commerce/payments/wallets'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
- * Deduct funds from user's wallet
- *
- * Deducts funds from the wallet for the specified user.
- */
-export interface PostUsersWalletDeductFundsInput {
-  userId: string;
-  body?: Types.CommercePaymentsDeductFundsInput;
-}
-export type PostUsersWalletDeductFundsOutput = Types.CommercePaymentsWalletTransaction;
-export const postUsersWalletDeductFundsEndpoint = {
-  operationId: 'postUsersWalletDeductFunds' as const,
-  method: 'POST' as const,
-  path: '/api/v1/users/{userId}/wallet:deduct-funds' as const,
-  tags: ['Commerce/payments/wallets'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
- * Lock user's wallet
- *
- * Locks a user's wallet to prevent transactions.
- */
-export interface PostUsersWalletLockInput {
-  userId: string;
+export interface PostWalletLockInput {
   body?: Types.CommercePaymentsLockWalletInput;
 }
-export type PostUsersWalletLockOutput = void;
-export const postUsersWalletLockEndpoint = {
-  operationId: 'postUsersWalletLock' as const,
+export type PostWalletLockOutput = void;
+export const postWalletLockEndpoint = {
+  operationId: 'postWalletLock' as const,
   method: 'POST' as const,
-  path: '/api/v1/users/{userId}/wallet:lock' as const,
+  path: '/api/v1/wallet:lock' as const,
   tags: ['Commerce/payments/wallets'] as const,
   requiresAuth: true,
 } as const;
 
 /**
- * Transfer funds to another user's wallet
- *
- * Transfers funds from this user's wallet to another user's wallet.
+ * Unlock my wallet
  */
-export interface PostUsersWalletTransferInput {
-  userId: string;
-  body?: Types.CommercePaymentsTransferFundsInput;
-}
-export type PostUsersWalletTransferOutput = Types.CommercePaymentsTransferResult;
-export const postUsersWalletTransferEndpoint = {
-  operationId: 'postUsersWalletTransfer' as const,
+export type PostWalletUnlockInput = void;
+export type PostWalletUnlockOutput = void;
+export const postWalletUnlockEndpoint = {
+  operationId: 'postWalletUnlock' as const,
   method: 'POST' as const,
-  path: '/api/v1/users/{userId}/wallet:transfer' as const,
-  tags: ['Commerce/payments/wallets'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
- * Unlock user's wallet
- *
- * Unlocks a user's wallet to allow transactions.
- */
-export interface PostUsersWalletUnlockInput {
-  userId: string;
-}
-export type PostUsersWalletUnlockOutput = void;
-export const postUsersWalletUnlockEndpoint = {
-  operationId: 'postUsersWalletUnlock' as const,
-  method: 'POST' as const,
-  path: '/api/v1/users/{userId}/wallet:unlock' as const,
+  path: '/api/v1/wallet:unlock' as const,
   tags: ['Commerce/payments/wallets'] as const,
   requiresAuth: true,
 } as const;
 
 /**
  * List all wallets
- *
- * Retrieves a paginated list of all wallets. Admin only.
  */
 export interface GetWalletsInput {
   query?: {
@@ -3716,31 +3660,12 @@ export const getWalletsEndpoint = {
 } as const;
 
 /**
- * Create a new wallet
- *
- * Creates a new wallet for the specified user.
- */
-export interface PostWalletsInput {
-  body?: Types.CommercePaymentsCreateWalletInput;
-}
-export type PostWalletsOutput = Types.CommercePaymentsUserWallet;
-export const postWalletsEndpoint = {
-  operationId: 'postWallets' as const,
-  method: 'POST' as const,
-  path: '/api/v1/wallets' as const,
-  tags: ['Commerce/payments/wallets'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
  * Get wallet by ID
- *
- * Retrieves detailed information for a specific wallet.
  */
 export interface GetWallets1Input {
   walletId: string;
 }
-export type GetWallets1Output = Types.CommercePaymentsUserWallet;
+export type GetWallets1Output = void;
 export const getWallets1Endpoint = {
   operationId: 'getWallets1' as const,
   method: 'GET' as const,
@@ -3751,8 +3676,6 @@ export const getWallets1Endpoint = {
 
 /**
  * Close wallet
- *
- * Closes a wallet. Requires zero balance and admin permissions.
  */
 export interface DeleteWalletsInput {
   walletId: string;
@@ -3768,8 +3691,6 @@ export const deleteWalletsEndpoint = {
 
 /**
  * Update wallet settings
- *
- * Updates specific settings of a wallet.
  */
 export interface PatchWalletsInput {
   walletId: string;
@@ -3786,8 +3707,6 @@ export const patchWalletsEndpoint = {
 
 /**
  * Check if wallet exists
- *
- * Checks if a wallet exists without returning the body.
  */
 export interface HeadWalletsInput {
   walletId: string;
@@ -3803,8 +3722,6 @@ export const headWalletsEndpoint = {
 
 /**
  * Get wallet audit log
- *
- * Retrieves the audit log of all transactions and actions on a wallet.
  */
 export interface GetWalletsAuditLogInput {
   walletId: string;
@@ -3824,8 +3741,6 @@ export const getWalletsAuditLogEndpoint = {
 
 /**
  * Freeze wallet
- *
- * Freezes a wallet to prevent all transactions.
  */
 export interface PostWalletsFreezeInput {
   walletId: string;
@@ -3842,8 +3757,6 @@ export const postWalletsFreezeEndpoint = {
 
 /**
  * Unfreeze wallet
- *
- * Unfreezes a wallet to allow transactions.
  */
 export interface PostWalletsUnfreezeInput {
   walletId: string;
@@ -13730,15 +13643,12 @@ export const endpoints = {
   postTaxesCalculate: postTaxesCalculateEndpoint,
   postTaxesValidateExemption: postTaxesValidateExemptionEndpoint,
   postTaxesValidateVat: postTaxesValidateVatEndpoint,
-  getUsersWallet: getUsersWalletEndpoint,
-  getUsersWalletBalance: getUsersWalletBalanceEndpoint,
-  postUsersWalletAddFunds: postUsersWalletAddFundsEndpoint,
-  postUsersWalletDeductFunds: postUsersWalletDeductFundsEndpoint,
-  postUsersWalletLock: postUsersWalletLockEndpoint,
-  postUsersWalletTransfer: postUsersWalletTransferEndpoint,
-  postUsersWalletUnlock: postUsersWalletUnlockEndpoint,
+  getWallet: getWalletEndpoint,
+  postWallet: postWalletEndpoint,
+  getWalletBalance: getWalletBalanceEndpoint,
+  postWalletLock: postWalletLockEndpoint,
+  postWalletUnlock: postWalletUnlockEndpoint,
   getWallets: getWalletsEndpoint,
-  postWallets: postWalletsEndpoint,
   getWallets1: getWallets1Endpoint,
   deleteWallets: deleteWalletsEndpoint,
   patchWallets: patchWalletsEndpoint,
