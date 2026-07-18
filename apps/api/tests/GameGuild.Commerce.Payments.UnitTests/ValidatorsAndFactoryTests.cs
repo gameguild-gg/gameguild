@@ -708,14 +708,14 @@ public class CreateWalletRequestTests
     [Fact]
     public void ShouldBeCreatable()
     {
-        var r = new CreateWalletRequest { UserId = Guid.NewGuid(), Currency = "EUR" };
+        var r = new CreateWalletRequest { Currency = "EUR" };
         r.Currency.Should().Be("EUR");
     }
 
     [Fact]
     public void Currency_ShouldBeOptional()
     {
-        var r = new CreateWalletRequest { UserId = Guid.NewGuid() };
+        var r = new CreateWalletRequest();
         r.Currency.Should().BeNull();
     }
 }
