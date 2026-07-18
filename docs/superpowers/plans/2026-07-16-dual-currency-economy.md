@@ -354,15 +354,17 @@ Verification: persistence mappings and constrained-writer contracts are integrat
 
 **Produces:** Fast pending-claim/confirmed-fragment reads, confirmed-fragment FIFO availability, full recomputation, mismatch containment, and wallet query contracts.
 
-- [ ] Test total, pending-confirmation, confirmed, immature-earned, held, spendable, and withdrawable calculations.
-- [ ] Prove pending funding is visible as a nonmonetary claim, creates no journal credit/lot, and contributes zero to spend, transfer, conversion, escrow, and payout authorization.
+- [x] Test total, pending-confirmation, confirmed, immature-earned, held, spendable, and withdrawable calculations.
+- [x] Prove pending funding is visible as a nonmonetary claim, creates no journal credit/lot, and contributes zero to spend, transfer, conversion, escrow, and payout authorization.
 - [ ] Prove FIFO uses `confirmed_at` then journal sequence, preserves residual-fragment rank, skips ineligible fragments, and serializes concurrent spend/payout allocators; pending claims never enter selection.
-- [ ] Implement synchronous projection updates inside posting transactions.
-- [ ] Implement full journal recomputation and comparison.
-- [ ] Rebuild aggregate views exclusively from source evidence, lots, lineage, allocations, holds, and retirements; expose no scalar monetary setter.
-- [ ] Enforce lower available/withdrawable value on disagreement.
-- [ ] Add wallet review state and reconciliation alerts.
+- [x] Implement synchronous projection updates inside posting transactions.
+- [x] Implement full journal recomputation and comparison.
+- [x] Rebuild aggregate views exclusively from source evidence, lots, lineage, allocations, holds, and retirements; expose no scalar monetary setter.
+- [x] Enforce lower available/withdrawable value on disagreement.
+- [x] Add wallet review state and reconciliation alerts.
 - [ ] Add projection corruption and recovery PostgreSQL tests.
+
+Verification: immutable-fact wallet rebuilding, journal recomputation, lower-value containment, review alerts, atomic projection updates, and concurrent source-fragment transfer allocation are integrated on `develop` SHA `dadf79e28`. `GameGuild.Economy.UnitTests` passes `170/170` tests with zero skips and `100%` line, branch, and method coverage; strict Release Economy/API builds and API publish complete with zero warnings and zero errors. The FIFO requirement remains open only for the future payout allocator, and PostgreSQL corruption/recovery remains open until Task 2.7 installs the integrated schema and writer procedure.
 
 ### Task 2.5: Monetary Policy, Holds, And Maturity
 
