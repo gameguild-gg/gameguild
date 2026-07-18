@@ -142,7 +142,12 @@ public class SubscriptionStateMachineTests
         subscription.Status.Should().Be(SubscriptionStatus.PastDue);
 
         // Act - Record payment, then reactivate (two-step process)
-        var paymentResult = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "recovery_payment_key");
+        var paymentResult = subscription.RecordPayment(
+            29.99m,
+            "USD",
+            DateTime.UtcNow,
+            "recovery_payment_key",
+            forBillingCycle: 1);
         paymentResult.IsSuccess.Should().BeTrue("payment should be recorded successfully");
         subscription.Reactivate();
 

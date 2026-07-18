@@ -463,9 +463,9 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
     }
 
     /// <summary>
-    ///     Processes a renewal with idempotency key (prevents duplicate charges)
+    ///     Returns the amount due for a renewal without mutating paid subscription state.
     /// </summary>
-    /// <param name="newAmount">The amount for the new billing period</param>
+    /// <param name="newAmount">The quoted amount for the new billing period</param>
     /// <param name="idempotencyKey">Unique key for this renewal (e.g., "{subscriptionId}:{billingCycle}:{periodStart}")</param>
     /// <returns>Result indicating success or failure with reason</returns>
     public SubscriptionRenewalResult ProcessRenewal(Money newAmount, string idempotencyKey)
@@ -473,28 +473,15 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
         if (string.IsNullOrEmpty(idempotencyKey))
             return SubscriptionRenewalResult.Failed(Id, "Idempotency key is required for renewal processing");
 
-        // Idempotency check - if same key was already processed, return success (idempotent)
-        if (LastRenewalIdempotencyKey == idempotencyKey)
-            return SubscriptionRenewalResult.CreateSuccess(Id, BillingCycleCount, Amount);
-
         if (Status != SubscriptionStatus.Active)
             return SubscriptionRenewalResult.Failed(Id, "Subscription is not active");
 
         if (!AutoRenew)
             return SubscriptionRenewalResult.Failed(Id, "Auto-renewal is disabled");
 
-        Amount = newAmount;
-        BillingCycleCount++;
-        LastRenewalIdempotencyKey = idempotencyKey;
-
-        (var periodStart, var periodEnd, var nextBilling) = CalculateBillingDates(NextBillingDate, BillingCycle);
-        CurrentPeriodStart = periodStart;
-        CurrentPeriodEnd = periodEnd;
-        NextBillingDate = nextBilling;
-
-        Raise(new SubscriptionRenewedEvent(Id, TenantId ?? Guid.Empty, BillingCycleCount, newAmount));
-
-        return SubscriptionRenewalResult.CreateSuccess(Id, BillingCycleCount, newAmount);
+        return SubscriptionRenewalResult.Failed(
+            Id,
+            $"Provider payment confirmation is required for billing cycle {LastProcessedBillingCycle + 1}; renewal quote is {Amount}");
     }
 
     /// <summary>
@@ -548,7 +535,7 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
     /// <param name="currency">Currency code</param>
     /// <param name="paymentDate">When payment was processed</param>
     /// <param name="idempotencyKey">Unique payment key (e.g., external payment ID from provider)</param>
-    /// <param name="forBillingCycle">Optional billing cycle this payment is for (prevents out-of-order issues)</param>
+    /// <param name="forBillingCycle">Specific billing cycle this payment is for</param>
     /// <returns>PaymentRecordResult indicating success, already processed, or rejected</returns>
     public PaymentRecordResult RecordPayment(decimal amount, string currency, DateTime paymentDate, string idempotencyKey, int? forBillingCycle = null)
     {
@@ -567,68 +554,69 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
             return PaymentRecordResult.RejectedCancelled(
                 $"Cannot record payment for expired subscription {Id}. Renewal required.");
 
-        // Idempotency check - if same payment already recorded, skip (idempotent)
-        if (LastPaymentIdempotencyKey == idempotencyKey)
-            return PaymentRecordResult.AlreadyProcessed(idempotencyKey, LastProcessedBillingCycle);
-
-        // Out-of-order protection: If billing cycle is specified, validate it
-        if (forBillingCycle.HasValue)
+        if (!forBillingCycle.HasValue)
         {
-            // Reject payments for billing cycles we've already processed
-            if (forBillingCycle.Value < LastProcessedBillingCycle)
-            {
-                return PaymentRecordResult.RejectedOutOfOrder(
-                    forBillingCycle.Value, 
-                    LastProcessedBillingCycle,
-                    $"Payment for billing cycle {forBillingCycle.Value} rejected: already processed through cycle {LastProcessedBillingCycle}");
-            }
-
-            // If payment is for a future cycle, only update LastPaymentAt if it's more recent
-            if (forBillingCycle.Value == LastProcessedBillingCycle)
-            {
-                // Same cycle - idempotent, already handled above by idempotency key
-                // This is a different payment for the same cycle - could be a retry
-                // Update payment date only if newer
-                if (paymentDate > (LastPaymentAt ?? DateTime.MinValue))
-                {
-                    LastPaymentAt = paymentDate;
-                }
-                LastPaymentIdempotencyKey = idempotencyKey;
-                return PaymentRecordResult.AlreadyProcessed(idempotencyKey, LastProcessedBillingCycle);
-            }
+            return PaymentRecordResult.RejectedOutOfOrder(
+                -1,
+                LastProcessedBillingCycle,
+                $"A specific billing cycle is required; expected cycle {LastProcessedBillingCycle + 1}");
         }
 
-        // Record the payment
+        var requestedCycle = forBillingCycle.Value;
+        if (amount != Amount.Amount)
+        {
+            return PaymentRecordResult.RejectedMoney(
+                idempotencyKey,
+                requestedCycle,
+                LastProcessedBillingCycle,
+                $"Payment amount {amount} does not match authoritative amount {Amount.Amount}");
+        }
+
+        if (!string.Equals(currency, Amount.Currency, StringComparison.OrdinalIgnoreCase))
+        {
+            return PaymentRecordResult.RejectedMoney(
+                idempotencyKey,
+                requestedCycle,
+                LastProcessedBillingCycle,
+                $"Payment currency {currency} does not match authoritative currency {Amount.Currency}");
+        }
+
+        if (requestedCycle == LastProcessedBillingCycle)
+        {
+            if (LastPaymentIdempotencyKey == idempotencyKey)
+                return PaymentRecordResult.AlreadyProcessed(idempotencyKey, LastProcessedBillingCycle);
+
+            return PaymentRecordResult.RejectedOutOfOrder(
+                requestedCycle,
+                LastProcessedBillingCycle,
+                $"Billing cycle {requestedCycle} was already confirmed by a different payment");
+        }
+
+        var expectedCycle = LastProcessedBillingCycle + 1;
+        if (requestedCycle != expectedCycle)
+        {
+            return PaymentRecordResult.RejectedOutOfOrder(
+                requestedCycle,
+                LastProcessedBillingCycle,
+                $"Payment for billing cycle {requestedCycle} rejected: expected cycle {expectedCycle}");
+        }
+
+        if (requestedCycle > 1)
+        {
+            (var periodStart, var periodEnd, var nextBilling) = CalculateBillingDates(NextBillingDate, BillingCycle);
+            CurrentPeriodStart = periodStart;
+            CurrentPeriodEnd = periodEnd;
+            NextBillingDate = nextBilling;
+            Raise(new SubscriptionRenewedEvent(Id, TenantId ?? Guid.Empty, requestedCycle, Amount));
+        }
+
         LastPaymentAt = paymentDate;
         LastPaymentIdempotencyKey = idempotencyKey;
+        LastProcessedBillingCycle = requestedCycle;
+        BillingCycleCount = requestedCycle;
 
-        // Update billing cycle tracking
-        if (forBillingCycle.HasValue)
-        {
-            LastProcessedBillingCycle = forBillingCycle.Value;
-        }
-        else
-        {
-            LastProcessedBillingCycle = BillingCycleCount; // Use current cycle if not specified
-        }
-
-        // Calculate next billing date based on billing cycle
-        #pragma warning disable CS8524 // Switch expression handles all named enum values
-        NextBillingDate = BillingCycle switch
-        {
-            BillingCycle.Weekly => paymentDate.AddDays(7),
-            BillingCycle.Monthly => paymentDate.AddMonths(1),
-            BillingCycle.Quarterly => paymentDate.AddMonths(3),
-            BillingCycle.SemiAnnually => paymentDate.AddMonths(6),
-            BillingCycle.Annually => paymentDate.AddYears(1),
-            BillingCycle.Biannually => paymentDate.AddYears(2)
-        };
-        #pragma warning restore CS8524
-
-        BillingCycleCount++;
-
-        Raise(new SubscriptionPaymentProcessedEvent(Id, TenantId ?? Guid.Empty, amount, currency, paymentDate));
-        return PaymentRecordResult.Success(idempotencyKey, BillingCycleCount);
+        Raise(new SubscriptionPaymentProcessedEvent(Id, TenantId ?? Guid.Empty, Amount.Amount, Amount.Currency, paymentDate));
+        return PaymentRecordResult.Success(idempotencyKey, requestedCycle);
     }
 
     /// <summary>
