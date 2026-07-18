@@ -377,13 +377,6 @@ export interface CommerceOrdersRefundOrderInput {
   reason?: string | null;
 }
 
-export interface CommercePaymentsAddFundsInput {
-  amount: number;
-  description: string | null;
-  referenceId?: string | null;
-  userId: string;
-}
-
 export interface CommercePaymentsBillingChargesControllerCancelBillingChargeInput {
   canceledBy?: string | null;
   cancellationReason?: string | null;
@@ -434,17 +427,9 @@ export interface CommercePaymentsCreateTaxRuleInput {
 
 export interface CommercePaymentsCreateWalletInput {
   currency?: string | null;
-  userId: string;
 }
 
 export type CommercePaymentsCustomerType = 'B2C' | 'B2B';
-
-export interface CommercePaymentsDeductFundsInput {
-  amount: number;
-  description: string | null;
-  referenceId?: string | null;
-  userId: string;
-}
 
 export interface CommercePaymentsLockWalletInput {
   reason: string | null;
@@ -705,19 +690,6 @@ export type CommercePaymentsTaxRuleType = 'Standard' | 'Reduced' | 'ZeroRated' |
 export type CommercePaymentsTaxType = 'VAT' | 'GST' | 'SalesTax' | 'ServiceTax' | 'WithholdingTax' | 'ExciseTax' | 'CustomsDuty' | 'Other';
 
 export type CommercePaymentsTransactionStatus = 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Reversed';
-
-export interface CommercePaymentsTransferFundsInput {
-  amount: number;
-  description: string | null;
-  fromUserId: string;
-  referenceId?: string | null;
-  toUserId: string;
-}
-
-export interface CommercePaymentsTransferResult {
-  creditTransaction?: CommercePaymentsWalletTransaction;
-  debitTransaction?: CommercePaymentsWalletTransaction;
-}
 
 export interface CommercePaymentsUserWallet {
   balance?: number;
@@ -7283,7 +7255,6 @@ export let CommerceOrdersOrderLineItemSchema: z.ZodType<CommerceOrdersOrderLineI
 export let CommerceOrdersOrderStatusSchema: z.ZodType<CommerceOrdersOrderStatus>;
 export let CommerceOrdersPatchOrderInputSchema: z.ZodType<CommerceOrdersPatchOrderInput>;
 export let CommerceOrdersRefundOrderInputSchema: z.ZodType<CommerceOrdersRefundOrderInput>;
-export let CommercePaymentsAddFundsInputSchema: z.ZodType<CommercePaymentsAddFundsInput>;
 export let CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCancelBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCreateBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerRefundBillingChargeInput>;
@@ -7292,7 +7263,6 @@ export let CommercePaymentsCreateTaxJurisdictionInputSchema: z.ZodType<CommerceP
 export let CommercePaymentsCreateTaxRuleInputSchema: z.ZodType<CommercePaymentsCreateTaxRuleInput>;
 export let CommercePaymentsCreateWalletInputSchema: z.ZodType<CommercePaymentsCreateWalletInput>;
 export let CommercePaymentsCustomerTypeSchema: z.ZodType<CommercePaymentsCustomerType>;
-export let CommercePaymentsDeductFundsInputSchema: z.ZodType<CommercePaymentsDeductFundsInput>;
 export let CommercePaymentsLockWalletInputSchema: z.ZodType<CommercePaymentsLockWalletInput>;
 export let CommercePaymentsModelsFreezeWalletInputSchema: z.ZodType<CommercePaymentsModelsFreezeWalletInput>;
 export let CommercePaymentsModelsPatchWalletInputSchema: z.ZodType<CommercePaymentsModelsPatchWalletInput>;
@@ -7321,8 +7291,6 @@ export let CommercePaymentsTaxRuleDtoSchema: z.ZodType<CommercePaymentsTaxRuleDt
 export let CommercePaymentsTaxRuleTypeSchema: z.ZodType<CommercePaymentsTaxRuleType>;
 export let CommercePaymentsTaxTypeSchema: z.ZodType<CommercePaymentsTaxType>;
 export let CommercePaymentsTransactionStatusSchema: z.ZodType<CommercePaymentsTransactionStatus>;
-export let CommercePaymentsTransferFundsInputSchema: z.ZodType<CommercePaymentsTransferFundsInput>;
-export let CommercePaymentsTransferResultSchema: z.ZodType<CommercePaymentsTransferResult>;
 export let CommercePaymentsUserWalletSchema: z.ZodType<CommercePaymentsUserWallet>;
 export let CommercePaymentsValidateTaxExemptionInputSchema: z.ZodType<CommercePaymentsValidateTaxExemptionInput>;
 export let CommercePaymentsWalletTransactionSchema: z.ZodType<CommercePaymentsWalletTransaction>;
@@ -8475,14 +8443,6 @@ CommerceOrdersRefundOrderInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsAddFundsInput */
-CommercePaymentsAddFundsInputSchema = z.object({
-  amount: z.number(),
-  description: z.string().nullable(),
-  referenceId: z.string().nullable().optional(),
-  userId: z.string().uuid(),
-});
-
 /** Zod schema for CommercePaymentsBillingChargesControllerCancelBillingChargeInput */
 CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema = z.object({
   canceledBy: z.string().uuid().nullable().optional(),
@@ -8540,19 +8500,10 @@ CommercePaymentsCreateTaxRuleInputSchema = z.object({
 /** Zod schema for CommercePaymentsCreateWalletInput */
 CommercePaymentsCreateWalletInputSchema = z.object({
   currency: z.string().nullable().optional(),
-  userId: z.string().uuid(),
 });
 
 /** Zod schema for CommercePaymentsCustomerType */
 CommercePaymentsCustomerTypeSchema = z.enum(['B2C', 'B2B']);
-
-/** Zod schema for CommercePaymentsDeductFundsInput */
-CommercePaymentsDeductFundsInputSchema = z.object({
-  amount: z.number(),
-  description: z.string().nullable(),
-  referenceId: z.string().nullable().optional(),
-  userId: z.string().uuid(),
-});
 
 /** Zod schema for CommercePaymentsLockWalletInput */
 CommercePaymentsLockWalletInputSchema = z.object({
@@ -8859,21 +8810,6 @@ CommercePaymentsTaxTypeSchema = z.enum(['VAT', 'GST', 'SalesTax', 'ServiceTax', 
 
 /** Zod schema for CommercePaymentsTransactionStatus */
 CommercePaymentsTransactionStatusSchema = z.enum(['Pending', 'Processing', 'Completed', 'Failed', 'Cancelled', 'Reversed']);
-
-/** Zod schema for CommercePaymentsTransferFundsInput */
-CommercePaymentsTransferFundsInputSchema = z.object({
-  amount: z.number(),
-  description: z.string().nullable(),
-  fromUserId: z.string().uuid(),
-  referenceId: z.string().nullable().optional(),
-  toUserId: z.string().uuid(),
-});
-
-/** Zod schema for CommercePaymentsTransferResult */
-CommercePaymentsTransferResultSchema = z.object({
-  creditTransaction: z.lazy(() => CommercePaymentsWalletTransactionSchema).optional(),
-  debitTransaction: z.lazy(() => CommercePaymentsWalletTransactionSchema).optional(),
-});
 
 /** Zod schema for CommercePaymentsUserWallet */
 CommercePaymentsUserWalletSchema = z.object({
