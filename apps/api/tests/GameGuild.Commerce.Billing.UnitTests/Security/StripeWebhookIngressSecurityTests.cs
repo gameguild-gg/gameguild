@@ -45,7 +45,6 @@ public sealed class StripeWebhookIngressSecurityTests
         repository
             .Setup(candidate => candidate.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BillingWebhookEvent candidate, CancellationToken _) => candidate);
-
         var verifier = new Mock<IStripeWebhookVerifier>();
         verifier.Setup(candidate => candidate.Verify(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(CreateVerifiedEvent("evt_database_failure", "unhandled.event"));
@@ -175,6 +174,12 @@ public sealed class StripeWebhookIngressSecurityTests
         repository
             .Setup(candidate => candidate.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BillingWebhookEvent candidate, CancellationToken _) => candidate);
+        repository
+            .Setup(candidate => candidate.TryClaimProcessingAsync(
+                It.IsAny<BillingWebhookEvent>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var verifiedEvent = CreateVerifiedEvent("evt_payment_binding", "payment_intent.succeeded", tenantId, 100m, "USD") with
         {

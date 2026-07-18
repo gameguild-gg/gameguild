@@ -27,15 +27,19 @@ internal sealed class PaymentProviderReadinessHealthCheck(
                                       options.PublishableKey.StartsWith("pk_live_", StringComparison.Ordinal));
             var webhookConfigured = !string.IsNullOrWhiteSpace(stripeIngress.WebhookSecret) &&
                                     !string.IsNullOrWhiteSpace(stripeIngress.WebhookEndpointId) &&
+                                    !string.IsNullOrWhiteSpace(stripeIngress.AccountId) &&
                                     !string.IsNullOrWhiteSpace(stripeIngress.ApiVersion);
             var signatureVerificationEnabled = billing.Webhook.VerifySignatures;
             var providerEnvironment = stripeIngress.LiveMode ? "live" : "test";
             var providerEnvironmentReady = !environment.IsProduction() || stripeIngress.LiveMode;
+            var providerIdentityReady = string.Equals(options.AccountId, stripeIngress.AccountId, StringComparison.Ordinal) &&
+                                        string.Equals(options.ConnectedAccountId, stripeIngress.ConnectedAccountId, StringComparison.Ordinal) &&
+                                        options.LiveMode == stripeIngress.LiveMode;
             var isReady = options.IsEnabled &&
                           (options.UseSimulation
                               ? simulationAllowed
                               : outboundConfigured && webhookConfigured && signatureVerificationEnabled &&
-                                providerEnvironmentReady);
+                                providerEnvironmentReady && providerIdentityReady);
 
             var data = new Dictionary<string, object>
             {
@@ -45,7 +49,8 @@ internal sealed class PaymentProviderReadinessHealthCheck(
                 ["outboundConfigured"] = outboundConfigured,
                 ["webhookConfigured"] = webhookConfigured,
                 ["signatureVerificationEnabled"] = signatureVerificationEnabled,
-                ["providerEnvironment"] = providerEnvironment
+                ["providerEnvironment"] = providerEnvironment,
+                ["providerIdentityReady"] = providerIdentityReady
             };
 
             return Task.FromResult(isReady

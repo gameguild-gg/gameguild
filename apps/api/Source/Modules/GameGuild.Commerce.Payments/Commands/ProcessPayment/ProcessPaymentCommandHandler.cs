@@ -102,6 +102,7 @@ public sealed class ProcessPaymentCommandHandler(
 
         var gatewayResult = await paymentGateway.ProcessPaymentAsync(gatewayRequest, cancellationToken)
             .ConfigureAwait(false);
+        GatewayPaymentResultBinder.BindVerifiedProviderMapping(payment, paymentGateway.ProviderId, gatewayResult);
 
         // 5. Update payment based on gateway result
         if (gatewayResult.Success)

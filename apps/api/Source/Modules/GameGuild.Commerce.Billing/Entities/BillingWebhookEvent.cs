@@ -153,4 +153,26 @@ public class BillingWebhookEvent : EntityBase
         ProcessingAttempts++;
         Touch();
     }
+
+    /// <summary>
+    ///     Attempts to acquire the processing lease for this durable inbox row.
+    ///     Failed or stale attempts may be reclaimed; active attempts may not.
+    /// </summary>
+    public bool TryBeginProcessing(DateTime staleBefore)
+    {
+        if (IsProcessed)
+            return false;
+
+        var hasActiveLease = ProcessingAttempts > 0 &&
+                             !IsFailed &&
+                             UpdatedAt > staleBefore;
+        if (hasActiveLease)
+            return false;
+
+        ProcessingAttempts++;
+        IsFailed = false;
+        ErrorMessage = null;
+        Touch();
+        return true;
+    }
 }

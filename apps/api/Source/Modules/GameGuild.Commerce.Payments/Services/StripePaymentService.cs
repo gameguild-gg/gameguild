@@ -58,13 +58,18 @@ public class StripePaymentService(
                 "Additional authentication is required.",
                 PaymentStatus.RequiresAction,
                 SystemClock.UtcNow,
-                $"{externalTransactionId}_secret_simulated");
+                $"{externalTransactionId}_secret_simulated",
+                CreateProviderMapping(externalTransactionId));
         }
 
         try
         {
             var paymentIntent = await _paymentIntentService
-                .GetAsync(externalTransactionId, cancellationToken: cancellationToken)
+                .GetAsync(
+                    externalTransactionId,
+                    options: null,
+                    requestOptions: CreateRequestOptions(),
+                    cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             return MapPaymentIntent(paymentIntent);
         }
@@ -92,7 +97,11 @@ public class StripePaymentService(
         try
         {
             var current = await _paymentIntentService
-                .GetAsync(externalTransactionId, cancellationToken: cancellationToken)
+                .GetAsync(
+                    externalTransactionId,
+                    options: null,
+                    requestOptions: CreateRequestOptions(),
+                    cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             if (string.Equals(current.Status, "canceled", StringComparison.Ordinal))
                 return new GatewayPaymentCancellationResult(true, false, null, null);
@@ -106,7 +115,10 @@ public class StripePaymentService(
             }
 
             var paymentIntent = await _paymentIntentService
-                .CancelAsync(externalTransactionId, cancellationToken: cancellationToken)
+                .CancelAsync(
+                    externalTransactionId,
+                    requestOptions: CreateRequestOptions(),
+                    cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             return new GatewayPaymentCancellationResult(
                 string.Equals(paymentIntent.Status, "canceled", StringComparison.Ordinal),
@@ -198,7 +210,8 @@ public class StripePaymentService(
 
             var requestOptions = new RequestOptions
             {
-                IdempotencyKey = request.IdempotencyKey
+                IdempotencyKey = request.IdempotencyKey,
+                StripeAccount = ResolveConnectedAccountId()
             };
 
             var paymentIntent = await _paymentIntentService.CreateAsync(
@@ -224,7 +237,7 @@ public class StripePaymentService(
         }
     }
 
-    private static GatewayPaymentResult MapPaymentIntent(PaymentIntent paymentIntent)
+    private GatewayPaymentResult MapPaymentIntent(PaymentIntent paymentIntent)
     {
         var status = StripeStatusMapper.MapPaymentStatus(paymentIntent.Status);
         return new GatewayPaymentResult(
@@ -235,8 +248,22 @@ public class StripePaymentService(
             ErrorMessage: status == PaymentStatus.RequiresAction ? "Additional authentication is required." : null,
             Status: status,
             ProcessedAt: SystemClock.UtcNow,
-            ClientActionToken: status == PaymentStatus.RequiresAction ? paymentIntent.ClientSecret : null);
+            ClientActionToken: status == PaymentStatus.RequiresAction ? paymentIntent.ClientSecret : null,
+            ProviderMapping: CreateProviderMapping(paymentIntent.Id));
     }
+
+    private GatewayProviderMapping CreateProviderMapping(string paymentIntentId) =>
+        new(
+            _options.UseSimulation || !_options.LiveMode ? "test" : "live",
+            _options.UseSimulation ? "acct_simulated" : ResolveProviderObjectAccountId(_options),
+            paymentIntentId,
+            "payment_intent",
+            "capture");
+
+    internal static string ResolveProviderObjectAccountId(StripeGatewayOptions options) =>
+        string.IsNullOrWhiteSpace(options.ConnectedAccountId)
+            ? options.AccountId
+            : options.ConnectedAccountId;
 
     private GatewayPaymentResult MapStripeException(StripeException exception, string operation)
     {
@@ -307,7 +334,8 @@ public class StripePaymentService(
 
             var requestOptions = new RequestOptions
             {
-                IdempotencyKey = request.IdempotencyKey
+                IdempotencyKey = request.IdempotencyKey,
+                StripeAccount = ResolveConnectedAccountId()
             };
 
             var refund = await _refundService.CreateAsync(
@@ -358,6 +386,16 @@ public class StripePaymentService(
         logger.LogDebug("Using simulated refund response for development/testing");
         return SimulatedPaymentResultFactory.RefundSuccess(request.Amount ?? 0, logger);
     }
+
+    private RequestOptions CreateRequestOptions() => new()
+    {
+        StripeAccount = ResolveConnectedAccountId()
+    };
+
+    private string? ResolveConnectedAccountId() =>
+        string.IsNullOrWhiteSpace(_options.ConnectedAccountId)
+            ? null
+            : _options.ConnectedAccountId;
 
     #endregion
 
