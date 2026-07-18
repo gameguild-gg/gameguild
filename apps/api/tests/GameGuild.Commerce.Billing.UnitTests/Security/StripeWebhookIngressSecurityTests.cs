@@ -150,19 +150,85 @@ public sealed class StripeWebhookIngressSecurityTests
         }
     }
 
+    [Fact]
+    public async Task ProcessStripeWebhookAsync_BindsMonetaryEventBeforeDurableAcceptance()
+    {
+        var tenantId = Guid.NewGuid();
+        BillingWebhookEvent? acceptedEvent = null;
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(candidate => candidate.GetByProviderScopeAsync(
+                PaymentProviders.Stripe,
+                "test",
+                "platform",
+                "we_test",
+                "evt_payment_binding",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent?)null);
+        repository
+            .Setup(candidate => candidate.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent candidate, CancellationToken _) =>
+            {
+                acceptedEvent = candidate;
+                return candidate;
+            });
+        repository
+            .Setup(candidate => candidate.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent candidate, CancellationToken _) => candidate);
+
+        var verifiedEvent = CreateVerifiedEvent("evt_payment_binding", "payment_intent.succeeded", tenantId, 100m, "USD") with
+        {
+            ProviderObjectId = "pi_bound",
+            ProviderObjectType = "payment_intent",
+            ProviderMonetaryLeg = "capture"
+        };
+        var verifier = new Mock<IStripeWebhookVerifier>();
+        verifier.Setup(candidate => candidate.Verify(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(verifiedEvent);
+        var bindingValidator = new Mock<IStripeProviderObjectBindingValidator>(MockBehavior.Strict);
+        bindingValidator
+            .Setup(candidate => candidate.ValidateAsync(verifiedEvent, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new StripeWebhookPaymentBinding(Guid.NewGuid(), tenantId));
+        var service = CreateService(
+            repository.Object,
+            verifier.Object,
+            providerObjectBindingValidator: bindingValidator.Object);
+
+        var result = await service.ProcessStripeWebhookAsync("{}", "signature", CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+        acceptedEvent.Should().NotBeNull();
+        acceptedEvent!.TenantId.Should().Be(tenantId);
+        acceptedEvent.ProviderObjectId.Should().Be("pi_bound");
+        bindingValidator.VerifyAll();
+    }
+
     private static StripeBillingWebhookService CreateService(
         IBillingWebhookRepository repository,
         IStripeWebhookVerifier verifier,
-        ISubscriptionQueryService? queryService = null)
+        ISubscriptionQueryService? queryService = null,
+        IStripeProviderObjectBindingValidator? providerObjectBindingValidator = null)
     {
         return new StripeBillingWebhookService(
             repository,
             verifier,
+            providerObjectBindingValidator ?? CreateNoOpProviderObjectBindingValidator(),
             NullLogger<StripeBillingWebhookService>.Instance,
             Mock.Of<ISubscriptionLifecycleService>(),
             queryService ?? Mock.Of<ISubscriptionQueryService>(),
             Mock.Of<ISubscriptionBillingService>(),
             Mock.Of<ISubscriptionExternalIdService>());
+    }
+
+    private static IStripeProviderObjectBindingValidator CreateNoOpProviderObjectBindingValidator()
+    {
+        var validator = new Mock<IStripeProviderObjectBindingValidator>();
+        validator
+            .Setup(candidate => candidate.ValidateAsync(
+                It.IsAny<VerifiedStripeWebhookEvent>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((StripeWebhookPaymentBinding?)null);
+        return validator.Object;
     }
 
     private static VerifiedStripeWebhookEvent CreateVerifiedEvent(

@@ -18,7 +18,10 @@ public static class ServiceCollectionExtensions
         services.AddCqrs(typeof(ServiceCollectionExtensions).Assembly);
 
         // Register configuration
-        services.Configure<BillingConfiguration>(configuration.GetSection(BillingConfiguration.SectionName));
+        services.AddOptions<BillingConfiguration>()
+            .Bind(configuration.GetSection(BillingConfiguration.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
         services.Configure<PayPalSettings>(configuration.GetSection($"{BillingConfiguration.SectionName}:PayPal"));
         services.Configure<ApplePaySettings>(configuration.GetSection($"{BillingConfiguration.SectionName}:ApplePay"));
 
@@ -33,6 +36,7 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<IPayPalSignatureVerificationService, PayPalSignatureVerificationService>();
         services.AddHttpClient<IApplePayReceiptValidationService, ApplePayReceiptValidationService>();
         services.AddSingleton<IStripeWebhookVerifier, StripeWebhookVerifier>();
+        services.AddScoped<IStripeProviderObjectBindingValidator, StripeProviderObjectBindingValidator>();
 
         // Register webhook services for each payment provider
         services.AddScoped<IBillingWebhookService, StripeBillingWebhookService>();
@@ -53,6 +57,7 @@ public static class ServiceCollectionExtensions
         // Register webhook-specific services
         services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
         services.AddSingleton<IStripeWebhookVerifier, StripeWebhookVerifier>();
+        services.AddScoped<IStripeProviderObjectBindingValidator, StripeProviderObjectBindingValidator>();
         
         // Register all webhook service implementations
         services.AddScoped<IBillingWebhookService, StripeBillingWebhookService>();
