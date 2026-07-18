@@ -1,11 +1,226 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace GameGuild.Commerce.Payments.UnitTests.Entities;
 
 public sealed class PaymentProviderSecurityExpansionTests
 {
+    [Fact]
+    public void BindProviderMapping_Binds_Provider_Identity_Once()
+    {
+        var payment = Payment.Create(Guid.NewGuid(), 100m, "USD", "provider-binding");
+
+        payment.BindProviderMapping(
+            "stripe",
+            "live",
+            "acct_merchant",
+            "pi_bound",
+            "payment_intent",
+            "capture");
+
+        payment.Provider.Should().Be("stripe");
+        payment.ProviderEnvironment.Should().Be("live");
+        payment.ProviderAccountId.Should().Be("acct_merchant");
+        payment.ProviderObjectId.Should().Be("pi_bound");
+        payment.ProviderObjectType.Should().Be("payment_intent");
+        payment.ProviderMonetaryLeg.Should().Be("capture");
+    }
+
+    [Fact]
+    public void BindProviderMapping_With_Identical_Identity_Is_Idempotent()
+    {
+        var payment = Payment.Create(Guid.NewGuid(), 100m, "USD", "provider-rebinding");
+        payment.BindProviderMapping(
+            "stripe",
+            "test",
+            "acct_merchant",
+            "pi_replayed",
+            "payment_intent",
+            "capture");
+        payment.UpdatedAt = DateTime.UnixEpoch;
+
+        payment.BindProviderMapping(
+            "stripe",
+            "test",
+            "acct_merchant",
+            "pi_replayed",
+            "payment_intent",
+            "capture");
+
+        payment.UpdatedAt.Should().Be(DateTime.UnixEpoch);
+    }
+
+    [Theory]
+    [InlineData("paypal", "test", "acct_merchant", "pi_bound", "payment_intent", "capture")]
+    [InlineData("stripe", "live", "acct_merchant", "pi_bound", "payment_intent", "capture")]
+    [InlineData("stripe", "test", "acct_other", "pi_bound", "payment_intent", "capture")]
+    [InlineData("stripe", "test", "acct_merchant", "pi_other", "payment_intent", "capture")]
+    [InlineData("stripe", "test", "acct_merchant", "pi_bound", "charge", "capture")]
+    [InlineData("stripe", "test", "acct_merchant", "pi_bound", "payment_intent", "refund")]
+    public void BindProviderMapping_With_Mismatched_Identity_Is_Rejected(
+        string provider,
+        string environment,
+        string accountId,
+        string objectId,
+        string objectType,
+        string monetaryLeg)
+    {
+        var payment = Payment.Create(Guid.NewGuid(), 100m, "USD", "provider-mismatch");
+        payment.BindProviderMapping(
+            "stripe",
+            "test",
+            "acct_merchant",
+            "pi_bound",
+            "payment_intent",
+            "capture");
+
+        var act = () => payment.BindProviderMapping(
+            provider,
+            environment,
+            accountId,
+            objectId,
+            objectType,
+            monetaryLeg);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*provider mapping*already bound*");
+        payment.ProviderObjectId.Should().Be("pi_bound");
+    }
+
+    [Theory]
+    [InlineData(null, "test", "acct_merchant", "pi_bound", "payment_intent", "capture")]
+    [InlineData("stripe", "", "acct_merchant", "pi_bound", "payment_intent", "capture")]
+    [InlineData("stripe", "test", "", "pi_bound", "payment_intent", "capture")]
+    [InlineData("stripe", "test", "acct_merchant", "", "payment_intent", "capture")]
+    [InlineData("stripe", "test", "acct_merchant", "pi_bound", "", "capture")]
+    [InlineData("stripe", "test", "acct_merchant", "pi_bound", "payment_intent", " ")]
+    public void BindProviderMapping_Requires_Every_Provider_Identity_Component(
+        string? provider,
+        string environment,
+        string accountId,
+        string objectId,
+        string objectType,
+        string monetaryLeg)
+    {
+        var payment = Payment.Create(Guid.NewGuid(), 100m, "USD", "provider-required-values");
+
+        var act = () => payment.BindProviderMapping(
+            provider!,
+            environment,
+            accountId,
+            objectId,
+            objectType,
+            monetaryLeg);
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public async Task GetByProviderMappingAsync_Requires_The_Complete_Provider_Scope()
+    {
+        var options = new DbContextOptionsBuilder<PaymentsPersistenceTestDbContext>()
+            .UseInMemoryDatabase($"payment-provider-scope-{Guid.NewGuid()}")
+            .Options;
+        await using var context = new PaymentsPersistenceTestDbContext(options);
+        var payment = Payment.Create(Guid.NewGuid(), 100m, "USD", "provider-lookup");
+        payment.BindProviderMapping(
+            "stripe",
+            "live",
+            "acct_merchant",
+            "pi_scoped",
+            "payment_intent",
+            "capture");
+        context.Set<Payment>().Add(payment);
+        await context.SaveChangesAsync();
+        IPaymentRepository repository = new PaymentRepository(
+            context,
+            NullLogger<PaymentRepository>.Instance);
+
+        var found = await repository.GetByProviderMappingAsync(
+            "stripe",
+            "live",
+            "acct_merchant",
+            "pi_scoped",
+            "payment_intent",
+            "capture");
+
+        found.Should().BeSameAs(payment);
+        (await repository.GetByProviderMappingAsync("paypal", "live", "acct_merchant", "pi_scoped", "payment_intent", "capture"))
+            .Should().BeNull();
+        (await repository.GetByProviderMappingAsync("stripe", "test", "acct_merchant", "pi_scoped", "payment_intent", "capture"))
+            .Should().BeNull();
+        (await repository.GetByProviderMappingAsync("stripe", "live", "acct_other", "pi_scoped", "payment_intent", "capture"))
+            .Should().BeNull();
+        (await repository.GetByProviderMappingAsync("stripe", "live", "acct_merchant", "pi_other", "payment_intent", "capture"))
+            .Should().BeNull();
+        (await repository.GetByProviderMappingAsync("stripe", "live", "acct_merchant", "pi_scoped", "charge", "capture"))
+            .Should().BeNull();
+        (await repository.GetByProviderMappingAsync("stripe", "live", "acct_merchant", "pi_scoped", "payment_intent", "refund"))
+            .Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData(0, 0, 0)]
+    [InlineData(100, 100, 0)]
+    [InlineData(100, 0, 100)]
+    [InlineData(100, 40, 60)]
+    public void ValidateProviderMonetaryBounds_Accepts_Values_Within_Payment_Bounds(
+        decimal cumulativeConfirmedAmount,
+        decimal cumulativeRefundedAmount,
+        decimal cumulativeDisputedAmount)
+    {
+        var payment = Payment.Create(Guid.NewGuid(), 100m, "USD", "provider-bounds-valid");
+
+        payment.ValidateProviderMonetaryBounds(
+            cumulativeConfirmedAmount,
+            cumulativeRefundedAmount,
+            cumulativeDisputedAmount);
+
+        payment.Status.Should().Be(PaymentStatus.Pending);
+        payment.RefundedAmount.Should().Be(0m);
+    }
+
+    [Theory]
+    [InlineData(-1, 0, 0)]
+    [InlineData(100, -1, 0)]
+    [InlineData(100, 0, -1)]
+    public void ValidateProviderMonetaryBounds_Rejects_Negative_Cumulative_Values(
+        decimal cumulativeConfirmedAmount,
+        decimal cumulativeRefundedAmount,
+        decimal cumulativeDisputedAmount)
+    {
+        var payment = Payment.Create(Guid.NewGuid(), 100m, "USD", "provider-bounds-negative");
+
+        var act = () => payment.ValidateProviderMonetaryBounds(
+            cumulativeConfirmedAmount,
+            cumulativeRefundedAmount,
+            cumulativeDisputedAmount);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Theory]
+    [InlineData(101, 0, 0)]
+    [InlineData(50, 51, 0)]
+    [InlineData(50, 0, 51)]
+    [InlineData(100, 60, 41)]
+    public void ValidateProviderMonetaryBounds_Rejects_Cumulative_Values_Above_Authoritative_Bounds(
+        decimal cumulativeConfirmedAmount,
+        decimal cumulativeRefundedAmount,
+        decimal cumulativeDisputedAmount)
+    {
+        var payment = Payment.Create(Guid.NewGuid(), 100m, "USD", "provider-bounds-exceeded");
+
+        var act = () => payment.ValidateProviderMonetaryBounds(
+            cumulativeConfirmedAmount,
+            cumulativeRefundedAmount,
+            cumulativeDisputedAmount);
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
     [Fact]
     public void Payment_Model_Exposes_Nullable_Provider_Mapping_Fields_And_Scoped_Index()
     {
