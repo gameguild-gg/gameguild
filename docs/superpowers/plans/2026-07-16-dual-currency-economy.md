@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILLS: use `superpowers:test-driven-development`, `superpowers:subagent-driven-development`, and `superpowers:verification-before-completion`. Every implementation task runs in a dedicated worktree from the latest verified `develop`.
 
-**Status:** Proposed. Do not start production implementation until the architecture and threat model are approved.
+**Status:** In progress. Architecture and threat model are approved; Phase 1 security prerequisites are being delivered in dependency order.
 
 **Goal:** Implement GameGuild's internal hard-coin and soft-coin economy with immutable accounting, provenance-safe settlement, estimated and reconciled ad rewards, fraud controls, marketplace integration, payouts, and custody reporting.
 
@@ -170,14 +170,14 @@ API activation begins only after integrated schema and security gates pass. Task
 
 **Produces:** Repository copy of the source whitepaper, architecture, threat model, documentation index, and this plan.
 
-- [ ] Preserve the source whitepaper byte-for-byte.
-- [ ] Document `100 HC/USD`, `100,000 SC/USD`, exact `1 HC = 1,000 SC` principal conversion, and noncashable soft status.
-- [ ] Document package ownership and dependency direction.
-- [ ] Document confirmed-mint semantics, fungible fragment lineage, global FIFO allocation, root reversal recovery, reserve-unit correction, and custody separation.
-- [ ] Document fraud controls and production gates.
-- [ ] Run independent architecture, security, and plan reviews.
-- [ ] Commit, merge into `develop`, push, remove worktree, and delete branch.
-- [ ] Obtain stakeholder approval before Task 1.1.
+- [x] Preserve the source whitepaper byte-for-byte.
+- [x] Document `100 HC/USD`, `100,000 SC/USD`, exact `1 HC = 1,000 SC` principal conversion, and noncashable soft status.
+- [x] Document package ownership and dependency direction.
+- [x] Document confirmed-mint semantics, fungible fragment lineage, global FIFO allocation, root reversal recovery, reserve-unit correction, and custody separation.
+- [x] Document fraud controls and production gates.
+- [x] Run independent architecture, security, and plan reviews.
+- [x] Commit, merge into `develop`, push, remove worktree, and delete branch.
+- [x] Obtain stakeholder approval before Task 1.1.
 
 ### Task 0.2: CI And Runtime Baseline
 
@@ -185,17 +185,17 @@ API activation begins only after integrated schema and security gates pass. Task
 
 **Produces:** A .NET 10, warning-clean, PostgreSQL-backed, coverage-enforced CI baseline capable of proving every later economy gate.
 
-- [ ] Update CI setup to the repository's pinned .NET 10 SDK and fail on compiler/analyzer warnings for Economy and touched Commerce assemblies.
-- [ ] Run CI for `develop` and pull requests, align pnpm with the repository-declared `pnpm@10.0.0`, and remove the workflow's current .NET 9/pnpm 9 drift.
-- [ ] Enable deterministic coverage collection and fail any new Economy assembly below 100% line, branch, or method coverage.
-- [ ] Add a checked-in required-project manifest, dynamic discovery for Economy projects present in each commit, and fail on missing, zero-test, skipped, pending, or todo suites.
-- [ ] Preserve the existing whole-solution API test run in addition to focused Economy coverage gates.
-- [ ] Add disposable PostgreSQL service execution for migration, role, trigger, and concurrency tests.
-- [ ] Add one strict fail-fast verification script that checks every native exit code and writes all test/coverage/browser evidence under one asserted artifact tree.
-- [ ] Extend the client generator to accept a captured OpenAPI artifact; start the published API on an ephemeral port with readiness handling, capture that artifact, regenerate, and diff-check deterministically.
-- [ ] Add exact API publish, provider-contract, frontend build, and Playwright smoke commands.
-- [ ] Prove the gate fails with one intentional warning, one lowered coverage result, and one PostgreSQL test failure before restoring green state.
-- [ ] Merge and delete this branch before any Phase 1 branch is created.
+- [x] Update CI setup to the repository's pinned .NET 10 SDK and fail on compiler/analyzer warnings for Economy and touched Commerce assemblies.
+- [x] Run CI for `develop` and pull requests, align pnpm with the repository-declared `pnpm@10.0.0`, and remove the workflow's current .NET 9/pnpm 9 drift.
+- [x] Enable deterministic coverage collection and fail any new Economy assembly below 100% line, branch, or method coverage.
+- [x] Add a checked-in required-project manifest, dynamic discovery for Economy projects present in each commit, and fail on missing, zero-test, skipped, pending, or todo suites.
+- [x] Preserve the existing whole-solution API test run in addition to focused Economy coverage gates.
+- [x] Add disposable PostgreSQL service execution for migration, role, trigger, and concurrency tests.
+- [x] Add one strict fail-fast verification script that checks every native exit code and writes all test/coverage/browser evidence under one asserted artifact tree.
+- [x] Extend the client generator to accept a captured OpenAPI artifact; start the published API on an ephemeral port with readiness handling, capture that artifact, regenerate, and diff-check deterministically.
+- [x] Add exact API publish, provider-contract, frontend build, and Playwright smoke commands.
+- [x] Prove the gate fails with one intentional warning, one lowered coverage result, and one PostgreSQL test failure before restoring green state.
+- [x] Merge and delete this branch before any Phase 1 branch is created.
 
 ## Phase 1: Existing Security Preconditions
 
@@ -205,10 +205,10 @@ API activation begins only after integrated schema and security gates pass. Task
 
 **Produces:** Additive nullable inbox/provider mapping fields, scoped indexes, and compatibility reads required before webhook and pricing consumers deploy.
 
-- [ ] Add the centralized expand migration before Tasks 1.1-1.4 branches are created.
-- [ ] Preserve compatibility with current code and data; add no destructive or prematurely non-null constraint.
-- [ ] Test migration up/down/current paths on real PostgreSQL.
-- [ ] Merge, verify, and delete the branch before parallel Phase 1 work begins.
+- [x] Add the centralized expand migration before Tasks 1.1-1.4 branches are created.
+- [x] Preserve compatibility with current code and data; add no destructive or prematurely non-null constraint.
+- [x] Test migration up/down/current paths on real PostgreSQL.
+- [x] Merge, verify, and delete the branch before parallel Phase 1 work begins.
 
 ### Task 1.1: Wallet Object-Level Authorization
 
@@ -229,15 +229,17 @@ API activation begins only after integrated schema and security gates pass. Task
 
 **Produces:** Valid signatures are durably accepted exactly once and bound to the correct local financial object; invalid or unpersisted events fail correctly.
 
-- [ ] Write forged, stale, wrong-secret, malformed, duplicate, and database-failure tests.
-- [ ] Verify Stripe signature and timestamp before processing.
-- [ ] Persist a valid event to the durable inbox before returning 2xx.
-- [ ] Scope idempotency by provider account, environment, endpoint, and event ID.
-- [ ] Bind events to immutable provider-object mappings and validate livemode/environment, Connect account, tenant, amount, currency, cumulative refund/dispute totals, and supported schema versions.
-- [ ] Enforce provider/environment/account/object/monetary-leg uniqueness and cumulative confirmed/refunded/disputed amount bounds without trusting internal IDs alone.
-- [ ] Preserve retryable status for processing failures.
-- [ ] Minimize and classify retained payload data.
-- [ ] Run Billing and Payments tests plus provider contract tests.
+- [x] Write forged, stale, wrong-secret, malformed, duplicate, and database-failure tests.
+- [x] Verify Stripe signature and timestamp before processing.
+- [x] Persist a valid event to the durable inbox before returning 2xx.
+- [x] Scope idempotency by provider account, environment, endpoint, and event ID.
+- [x] Bind events to immutable provider-object mappings and validate livemode/environment, Connect account, tenant, amount, currency, cumulative refund/dispute totals, and supported schema versions.
+- [x] Enforce application-level provider/environment/account/object/monetary-leg uniqueness and cumulative confirmed/refunded/disputed amount bounds without trusting internal IDs alone; Task 1.5 owns the post-backfill atomic database constraints.
+- [x] Preserve retryable status for processing failures.
+- [x] Minimize and classify retained payload data.
+- [x] Run Billing and Payments tests plus provider contract tests.
+
+**Verification:** Billing unit `259/259`, Billing endpoint integration `7/7`, Payments unit `829/829`, Payments integration `40/40`, and strict API build `0` warnings/errors.
 
 ### Task 1.3: Authoritative Payment Pricing
 
