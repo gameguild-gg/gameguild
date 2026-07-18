@@ -174,6 +174,7 @@ mkdir -p \
   "$artifact_root/publish"
 
 run bash "$script_dir/tests/verify-economy.sh"
+run pnpm test:smoke
 assert_economy_manifest "$repository_root" "$manifest_path"
 
 declare -a economy_production=()
@@ -333,9 +334,13 @@ if [[ "$skip_openapi" == false ]]; then
   api_port="$(get_ephemeral_port)"
   export ASPNETCORE_ENVIRONMENT=Development
   export ASPNETCORE_URLS="http://127.0.0.1:$api_port"
-  dotnet "$publish_directory/GameGuild.API.dll" >"$artifact_root/api/stdout.log" 2>"$artifact_root/api/stderr.log" &
+  export PaymentGateways__Stripe__IsEnabled=true
+  export PaymentGateways__Stripe__UseSimulation=true
+  dotnet "$publish_directory/GameGuild.API.dll" --contentRoot "$publish_directory" \
+    >"$artifact_root/api/stdout.log" 2>"$artifact_root/api/stderr.log" &
   api_pid=$!
   wait_http_ready "http://127.0.0.1:$api_port/live" "$api_pid" 90
+  run curl --fail --silent --show-error "http://127.0.0.1:$api_port/ready" --output "$artifact_root/api/ready.json"
 
   raw_openapi="$artifact_root/openapi/openapi.raw.json"
   captured_openapi="$artifact_root/openapi/openapi.json"

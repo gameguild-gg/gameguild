@@ -9,17 +9,22 @@
 #
 # Required env vars (set in Coolify -> Resource -> Environment Variables):
 #   POSTGRES_HOST, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD,
+#   POSTGRES_MIGRATION_CONNECTION,
 #   JWT_SECRET_KEY, ENCRYPTION_KEY,
-#   AUTH_SECRET, API_PUBLIC_URL, WEB_PUBLIC_URL, LEARNING_PUBLIC_URL
+#   AUTH_SECRET, API_PUBLIC_URL, WEB_PUBLIC_URL, LEARNING_PUBLIC_URL,
+#   PaymentGateways__Stripe__ApiKey,
+#   PaymentGateways__Stripe__PublishableKey,
+#   Billing__Stripe__WebhookSecret, Billing__Stripe__WebhookEndpointId,
+#   Billing__Stripe__ApiVersion, Billing__Stripe__LiveMode
 #
 # Recommended env vars:
 #   JWT_ISSUER, JWT_AUDIENCE
 #
-# Optional migration env vars:
+# Migration env var:
 #   POSTGRES_MIGRATION_CONNECTION
 #     Full PostgreSQL connection string for a DDL-capable migration role.
-#     When set, startup migrations use this connection and then grant runtime
-#     DML privileges to POSTGRES_USER. Runtime traffic still uses POSTGRES_USER.
+#     Its username must differ from POSTGRES_USER. Startup initialization uses
+#     this connection; runtime traffic always uses POSTGRES_USER.
 #
 # Coolify owns SERVICE_FQDN_* / SERVICE_URL_* variables and service routing.
 # Application containers consume explicit public URLs only. Do not pass
@@ -43,10 +48,9 @@ services:
       # Shared Coolify Postgres
       - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Gss Encryption Mode=Disable;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
       - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Gss Encryption Mode=Disable;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
-      - ConnectionStrings__MigrationConnection=${POSTGRES_MIGRATION_CONNECTION:-}
-      - Database__GrantRuntimeRoleAfterMigrations=${DATABASE_GRANT_RUNTIME_ROLE_AFTER_MIGRATIONS:-true}
-      - Database__FailStartupOnMigrationFailure=${DATABASE_FAIL_STARTUP_ON_MIGRATION_FAILURE:-true}
-      - Database__FailStartupOnGrantFailure=${DATABASE_FAIL_STARTUP_ON_GRANT_FAILURE:-false}
+      - ConnectionStrings__MigrationConnection=${POSTGRES_MIGRATION_CONNECTION:?set POSTGRES_MIGRATION_CONNECTION with a role distinct from POSTGRES_USER}
+      - Database__RunStartupInitialization=true
+      - Database__FailStartupOnMigrationFailure=true
       # JWT configuration consumed by the API and auth services
       - Jwt__SecretKey=${JWT_SECRET_KEY:?set JWT_SECRET_KEY}
       - Jwt__Issuer=${JWT_ISSUER:-GameGuild}
@@ -57,6 +61,17 @@ services:
       - Authentication__JwtExpiration=${JWT_EXPIRATION:-24:00:00}
       - Encryption__Key=${ENCRYPTION_KEY:?set ENCRYPTION_KEY}
       - Encryption__EncryptionKey=${ENCRYPTION_KEY:?set ENCRYPTION_KEY}
+      # Canonical Stripe sections consumed by Payments and Billing.
+      - PaymentGateways__Stripe__IsEnabled=true
+      - PaymentGateways__Stripe__UseSimulation=false
+      - PaymentGateways__Stripe__ApiKey=${PaymentGateways__Stripe__ApiKey:?set PaymentGateways__Stripe__ApiKey}
+      - PaymentGateways__Stripe__PublishableKey=${PaymentGateways__Stripe__PublishableKey:?set PaymentGateways__Stripe__PublishableKey}
+      - Billing__Stripe__WebhookSecret=${Billing__Stripe__WebhookSecret:?set Billing__Stripe__WebhookSecret}
+      - Billing__Stripe__WebhookEndpointId=${Billing__Stripe__WebhookEndpointId:?set Billing__Stripe__WebhookEndpointId}
+      - Billing__Stripe__ApiVersion=${Billing__Stripe__ApiVersion:?set Billing__Stripe__ApiVersion}
+      - Billing__Stripe__ConnectedAccountId=${Billing__Stripe__ConnectedAccountId:-}
+      - Billing__Stripe__LiveMode=${Billing__Stripe__LiveMode:?set Billing__Stripe__LiveMode to false for Staging or true for Production}
+      - Billing__Stripe__WebhookToleranceSeconds=${Billing__Stripe__WebhookToleranceSeconds:-300}
     volumes:
       - dataprotection-keys-v2:/app/.aspnet/DataProtection-Keys
     security_opt:

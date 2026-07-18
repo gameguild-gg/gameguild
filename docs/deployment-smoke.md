@@ -1,6 +1,6 @@
 # Deployment Smoke Checks
 
-Date: 2026-06-19
+Date: 2026-07-17
 
 Run the smoke gate after starting local services or after a Coolify redeploy:
 
@@ -21,11 +21,40 @@ Coolify is configured to deploy this branch from the Git push webhook. A normal 
 
 Never trigger the manual deploy API immediately after a push; that creates two deployments for the same commit and can replace a healthy container while the live smoke is running.
 
-The script verifies:
+The API checks verify:
 
-- API `/live`, `/health`, and documentation.
+- Liveness on `/live` and deployment readiness on `/ready`.
+- The Swagger document is reachable and exposes exactly these five Orders operations:
+  - `POST /v1/orders`
+  - `GET /v1/orders/{orderId}`
+  - `POST /v1/orders/{orderId}/items`
+  - `POST /v1/orders/{orderId}:capture`
+  - `POST /v1/orders/{orderId}:complete`
+- API documentation and administrator authentication.
+
+The remaining checks verify:
+
 - Web app health, root, courses, programs, and learning dashboard routes.
 - Learning app root and sign-in route.
+
+## Coolify startup configuration
+
+Set `POSTGRES_MIGRATION_CONNECTION` to a full PostgreSQL connection string for a DDL-capable migration role. Its username must differ from `POSTGRES_USER`; the API fails startup initialization when the migration connection is absent or resolves to the runtime role. Do not grant blanket table privileges to the runtime role after migrations.
+
+Set the canonical ASP.NET Core Stripe variables in Coolify:
+
+```dotenv
+PaymentGateways__Stripe__ApiKey=...
+PaymentGateways__Stripe__PublishableKey=...
+Billing__Stripe__WebhookSecret=...
+Billing__Stripe__WebhookEndpointId=...
+Billing__Stripe__ApiVersion=...
+Billing__Stripe__ConnectedAccountId=
+Billing__Stripe__LiveMode=false
+Billing__Stripe__WebhookToleranceSeconds=300
+```
+
+Compose pins `PaymentGateways__Stripe__IsEnabled=true` and `PaymentGateways__Stripe__UseSimulation=false`. Use Stripe test-mode keys and `Billing__Stripe__LiveMode=false` in Staging. Production requires live-mode keys and `Billing__Stripe__LiveMode=true`.
 
 After the infrastructure smoke passes, run the authenticated product journeys:
 
