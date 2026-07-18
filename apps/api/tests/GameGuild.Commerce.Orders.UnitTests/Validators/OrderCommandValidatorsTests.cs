@@ -77,10 +77,15 @@ public class AddProductToOrderCommandValidatorTests
     [Fact]
     public void ShouldValidateOrderProductAndQuantity()
     {
-        _sut.TestValidate(new AddProductToOrderCommand(Guid.Empty, Guid.NewGuid(), 1)).ShouldHaveValidationErrorFor(command => command.OrderId);
-        _sut.TestValidate(new AddProductToOrderCommand(Guid.NewGuid(), Guid.Empty, 1)).ShouldHaveValidationErrorFor(command => command.ProductId);
-        _sut.TestValidate(new AddProductToOrderCommand(Guid.NewGuid(), Guid.NewGuid(), 0)).ShouldHaveValidationErrorFor(command => command.Quantity);
-        _sut.TestValidate(new AddProductToOrderCommand(Guid.NewGuid(), Guid.NewGuid(), 5)).ShouldNotHaveAnyValidationErrors();
+        var productId = Guid.NewGuid();
+        var pricingId = Guid.NewGuid();
+        var pricingVersionId = Guid.NewGuid();
+        _sut.TestValidate(new AddProductToOrderCommand(Guid.Empty, productId, pricingId, pricingVersionId, 1)).ShouldHaveValidationErrorFor(command => command.OrderId);
+        _sut.TestValidate(new AddProductToOrderCommand(Guid.NewGuid(), Guid.Empty, pricingId, pricingVersionId, 1)).ShouldHaveValidationErrorFor(command => command.ProductId);
+        _sut.TestValidate(new AddProductToOrderCommand(Guid.NewGuid(), productId, Guid.Empty, pricingVersionId, 1)).ShouldHaveValidationErrorFor(command => command.ProductPricingId);
+        _sut.TestValidate(new AddProductToOrderCommand(Guid.NewGuid(), productId, pricingId, Guid.Empty, 1)).ShouldHaveValidationErrorFor(command => command.ProductPricingVersionId);
+        _sut.TestValidate(new AddProductToOrderCommand(Guid.NewGuid(), productId, pricingId, pricingVersionId, 0)).ShouldHaveValidationErrorFor(command => command.Quantity);
+        _sut.TestValidate(new AddProductToOrderCommand(Guid.NewGuid(), productId, pricingId, pricingVersionId, 5)).ShouldNotHaveAnyValidationErrors();
     }
 }
 
@@ -89,17 +94,13 @@ public class CreateOrderCommandValidatorTests
     private readonly CreateOrderCommandValidator _sut = new();
 
     [Fact]
-    public void ShouldValidateUserIdempotencyAndCurrency()
+    public void ShouldValidateIdempotencyKey()
     {
-        _sut.TestValidate(new CreateOrderCommand(Guid.Empty, "valid-key-12", "USD")).ShouldHaveValidationErrorFor(command => command.UserId);
-        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), string.Empty, "USD")).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
-        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "short", "USD")).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
-        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), new string('a', 101), "USD")).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
-        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "invalid key!", "USD")).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
-        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "valid-key_123", "USD")).ShouldNotHaveValidationErrorFor(command => command.IdempotencyKey);
-        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", string.Empty)).ShouldHaveValidationErrorFor(command => command.Currency);
-        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", "usd")).ShouldHaveValidationErrorFor(command => command.Currency);
-        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", "US")).ShouldHaveValidationErrorFor(command => command.Currency);
-        _sut.TestValidate(new CreateOrderCommand(Guid.NewGuid(), "valid-key-12", "USD")).ShouldNotHaveAnyValidationErrors();
+        _sut.TestValidate(new CreateOrderCommand(string.Empty)).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
+        _sut.TestValidate(new CreateOrderCommand("short")).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
+        _sut.TestValidate(new CreateOrderCommand(new string('a', 101))).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
+        _sut.TestValidate(new CreateOrderCommand("invalid key!")).ShouldHaveValidationErrorFor(command => command.IdempotencyKey);
+        _sut.TestValidate(new CreateOrderCommand("valid-key_123")).ShouldNotHaveValidationErrorFor(command => command.IdempotencyKey);
+        _sut.TestValidate(new CreateOrderCommand("valid-key-12")).ShouldNotHaveAnyValidationErrors();
     }
 }

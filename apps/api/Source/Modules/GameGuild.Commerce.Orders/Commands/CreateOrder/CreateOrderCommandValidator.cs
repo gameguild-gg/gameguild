@@ -9,10 +9,6 @@ public sealed class CreateOrderCommandValidator : AbstractValidator<CreateOrderC
 {
     public CreateOrderCommandValidator()
     {
-        RuleFor(x => x.UserId)
-            .NotEmpty()
-            .WithMessage("User ID is required.");
-
         RuleFor(x => x.IdempotencyKey)
             .NotEmpty()
             .WithMessage("Idempotency key is required for duplicate prevention.")
@@ -23,12 +19,5 @@ public sealed class CreateOrderCommandValidator : AbstractValidator<CreateOrderC
             .Matches(@"^[A-Za-z0-9_\-]+$")
             .WithMessage("Idempotency key can only contain letters, numbers, hyphens, and underscores.");
 
-        RuleFor(x => x.Currency)
-            .NotEmpty()
-            .WithMessage("Currency is required.")
-            .Length(3)
-            .WithMessage("Currency must be a 3-letter ISO 4217 code.")
-            .Matches(@"^[A-Z]{3}$")
-            .WithMessage("Currency must be uppercase letters only (e.g., USD, EUR, BRL).");
     }
 }

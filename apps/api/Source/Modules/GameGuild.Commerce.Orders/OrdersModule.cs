@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GameGuild.Commerce.Orders;
 
@@ -15,6 +16,7 @@ public static class OrdersModule
     {
         // Register repositories
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.TryAddScoped<IOrderPaymentAuthority, DenyOrderPaymentAuthority>();
 
         // IOrderService removed — all operations now use CQRS commands/queries dispatched via ISender.
         // CQRS handlers are automatically registered by assembly scanning in ApplicationLayerExtensions
@@ -64,9 +66,13 @@ public static class OrdersModule
             entity.Property(e => e.UnitPriceSnapshot).HasPrecision(10, 2);
             entity.Property(e => e.BasePriceSnapshot).HasPrecision(10, 2);
             entity.Property(e => e.SalePriceSnapshot).HasPrecision(10, 2);
+            entity.Property(e => e.CurrencySnapshot).IsRequired().HasMaxLength(3);
             entity.Property(e => e.DiscountAmount).HasPrecision(10, 2);
             entity.Property(e => e.LineTotal).HasPrecision(10, 2);
             entity.Property(e => e.PromoCodesApplied).HasMaxLength(500);
+            entity.Property(e => e.ProductPricingId).IsRequired();
+            entity.Property(e => e.ProductPricingVersionId).IsRequired();
+            entity.Property(e => e.PriceVersionSnapshot).IsRequired();
             entity.Property(e => e.PricingTierNameSnapshot).HasMaxLength(100);
             entity.Property(e => e.BillingIntervalSnapshot).HasMaxLength(20);
 

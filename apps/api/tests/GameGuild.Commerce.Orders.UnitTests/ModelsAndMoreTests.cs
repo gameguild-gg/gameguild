@@ -7,54 +7,37 @@ namespace GameGuild.Commerce.Orders.UnitTests;
 public class OrderLineItemTests
 {
     [Fact]
-    public void Constructor_ShouldSetDefaults()
+    public void Constructor_IsNotPublic()
     {
-        var item = new OrderLineItem();
-
-        item.ProductNameSnapshot.Should().BeEmpty();
-        item.UnitPriceSnapshot.Should().Be(0);
-        item.BasePriceSnapshot.Should().Be(0);
-        item.SalePriceSnapshot.Should().BeNull();
-        item.Quantity.Should().Be(1);
-        item.DiscountAmount.Should().Be(0);
-        item.LineTotal.Should().Be(0);
-        item.PricingTierId.Should().BeNull();
-        item.PricingTierNameSnapshot.Should().BeNull();
-        item.IsSubscription.Should().BeFalse();
-        item.SubscriptionPlanId.Should().BeNull();
-        item.BillingIntervalSnapshot.Should().BeNull();
-        item.UserProductId.Should().BeNull();
-        item.PromoCodesApplied.Should().BeNull();
+        typeof(OrderLineItem).GetConstructors().Should().BeEmpty();
     }
 
     [Fact]
-    public void Properties_ShouldBeSettable()
+    public void PricingProperties_ShouldBeCapturedByOrder()
     {
-        var item = new OrderLineItem
-        {
-            OrderId = Guid.NewGuid(),
-            ProductId = Guid.NewGuid(),
-            ProductNameSnapshot = "Product A",
-            UnitPriceSnapshot = 29.99m,
-            BasePriceSnapshot = 39.99m,
-            SalePriceSnapshot = 29.99m,
-            Quantity = 3,
-            DiscountAmount = 5.00m,
-            LineTotal = 84.97m,
-            PricingTierId = Guid.NewGuid(),
-            PricingTierNameSnapshot = "Premium",
-            IsSubscription = true,
-            SubscriptionPlanId = Guid.NewGuid(),
-            BillingIntervalSnapshot = "monthly",
-            UserProductId = Guid.NewGuid(),
-            PromoCodesApplied = "[\"SAVE10\"]"
-        };
+        var order = Order.Create(Guid.NewGuid(), "snapshot-properties", Guid.NewGuid());
+        var snapshot = new OrderLineItemPricingSnapshot(
+            Guid.NewGuid(), Guid.NewGuid(), 3, 39.99m, 29.99m, 29.99m, "USD");
+
+        var item = order.AddLineItem(
+            Guid.NewGuid(),
+            "Product A",
+            snapshot,
+            quantity: 3,
+            discountAmount: 5m,
+            promoCodesApplied: "[\"SAVE10\"]",
+            pricingTierName: "Premium",
+            isSubscription: true);
 
         item.ProductNameSnapshot.Should().Be("Product A");
         item.UnitPriceSnapshot.Should().Be(29.99m);
+        item.ProductPricingId.Should().Be(snapshot.ProductPricingId);
+        item.ProductPricingVersionId.Should().Be(snapshot.ProductPricingVersionId);
+        item.PriceVersionSnapshot.Should().Be(3);
+        item.CurrencySnapshot.Should().Be("USD");
         item.Quantity.Should().Be(3);
         item.IsSubscription.Should().BeTrue();
-        item.BillingIntervalSnapshot.Should().Be("monthly");
+        item.PricingTierNameSnapshot.Should().Be("Premium");
     }
 }
 
@@ -221,7 +204,7 @@ public class OrderAdditionalMethodTests
     {
         var order = CreateTestOrder();
 
-        var item = order.AddLineItem(Guid.NewGuid(), "Product A", 25.00m, 2, 5.00m);
+        var item = OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Product A", 25.00m, 2, 5.00m);
 
         item.ProductNameSnapshot.Should().Be("Product A");
         item.UnitPriceSnapshot.Should().Be(25.00m);
@@ -345,8 +328,7 @@ public class OrderAdditionalMethodTests
         {
             Id = Guid.NewGuid(),
             UserId = Guid.NewGuid(),
-            IdempotencyKey = Guid.NewGuid().ToString("N"),
-            Currency = "USD"
+            IdempotencyKey = Guid.NewGuid().ToString("N")
         };
 
         order.Cancel("missing tenant");
