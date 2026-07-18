@@ -152,6 +152,30 @@ XML
   assert_throws 'zero tests' assert_trx_evidence "$empty"
 }
 
+test_whole_solution_allows_only_source_empty_scaffolds() {
+  local root="$fixture_root/whole-solution"
+  local project='apps/api/tests/GameGuild.Localization.IntegrationTests/GameGuild.Localization.IntegrationTests.csproj'
+  local project_directory="$root/$(dirname "$project")"
+  local trx="$root/localization-empty.trx"
+  local log="$root/dotnet-test.log"
+  mkdir -p "$project_directory"
+  printf '<Project Sdk="Microsoft.NET.Sdk" />\n' > "$root/$project"
+  printf '<TestRun><ResultSummary><Counters total="0" executed="0" passed="0" failed="0" /></ResultSummary></TestRun>\n' > "$trx"
+  printf 'Test run for %s/bin/Release/net10.0/GameGuild.Localization.IntegrationTests.dll (.NETCoreApp,Version=v10.0)\nResults File: %s\n' \
+    "$project_directory" "$trx" > "$log"
+
+  bash "$ci_dir/verify-economy.sh" --validate-whole-solution-evidence "$root" "$log" "$trx" >/dev/null || return 1
+
+  sed -i 's/GameGuild\.Localization\.IntegrationTests/GameGuild.Unlisted.IntegrationTests/g' "$log"
+  assert_throws 'zero tests' bash "$ci_dir/verify-economy.sh" \
+    --validate-whole-solution-evidence "$root" "$log" "$trx" || return 1
+
+  sed -i 's/GameGuild\.Unlisted\.IntegrationTests/GameGuild.Localization.IntegrationTests/g' "$log"
+  printf 'public sealed class Tests {}\n' > "$project_directory/Tests.cs"
+  assert_throws 'contains C# source' bash "$ci_dir/verify-economy.sh" \
+    --validate-whole-solution-evidence "$root" "$log" "$trx"
+}
+
 test_cobertura_requires_full_method_coverage() {
   local coverage="$fixture_root/coverage.cobertura.xml"
   cat > "$coverage" <<'XML'
@@ -190,6 +214,7 @@ run_test 'warning scope resolves touched Commerce projects' test_warning_scope_f
 run_test 'readiness requires consecutive successful probes' test_readiness_requires_consecutive_successes
 run_test 'process cleanup terminates Bash background processes' test_process_cleanup_stops_background_process
 run_test 'TRX evidence rejects skipped and zero-test suites' test_trx_rejects_skips_and_empty_suites
+run_test 'whole-solution evidence allows only named source-empty scaffolds' test_whole_solution_allows_only_source_empty_scaffolds
 run_test 'Cobertura enforces line, branch, and method coverage' test_cobertura_requires_full_method_coverage
 run_test 'Vitest and Playwright reject pending or skipped tests' test_json_evidence_rejects_pending_and_skipped
 run_test 'canonical JSON is deterministic and preserves arrays' test_canonical_json_preserves_arrays
