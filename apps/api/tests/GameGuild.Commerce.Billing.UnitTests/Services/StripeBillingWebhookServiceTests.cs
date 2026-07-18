@@ -41,6 +41,53 @@ public class StripeBillingWebhookServiceTests
     }
 
     [Fact]
+    public async Task ProcessStripeWebhookAsync_Should_Retry_Failed_Durable_Event_On_Redelivery()
+    {
+        var failedEvent = new BillingWebhookEvent
+        {
+            ExternalEventId = "evt_retry",
+            Provider = PaymentProviders.Stripe,
+            ProviderEnvironment = "test",
+            ProviderAccountId = "platform",
+            WebhookEndpointId = "we_test",
+            EventType = "unknown.event",
+            Payload = "{}",
+            IsFailed = true,
+            ProcessingAttempts = 1
+        };
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(r => r.GetByProviderScopeAsync(
+                PaymentProviders.Stripe,
+                "test",
+                "platform",
+                "we_test",
+                "evt_retry",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(failedEvent);
+        repository
+            .Setup(r => r.UpdateAsync(failedEvent, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(failedEvent);
+        var service = CreateService(
+            repository,
+            Mock.Of<ISubscriptionQueryService>(),
+            Mock.Of<ISubscriptionBillingService>(),
+            Mock.Of<ISubscriptionLifecycleService>(),
+            Mock.Of<ISubscriptionExternalIdService>());
+
+        var result = await service.ProcessStripeWebhookAsync(
+            "{\"id\":\"evt_retry\",\"type\":\"unknown.event\",\"data\":{\"object\":{\"id\":\"obj\"}}}",
+            "sig",
+            CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+        result.WasAlreadyProcessed.Should().BeFalse();
+        failedEvent.ProcessingAttempts.Should().Be(2);
+        failedEvent.IsProcessed.Should().BeTrue();
+        failedEvent.IsFailed.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task ProcessStripeWebhookAsync_Should_Activate_Subscription_On_Status_Change()
     {
         var repository = new Mock<IBillingWebhookRepository>();
@@ -205,11 +252,23 @@ public class StripeBillingWebhookServiceTests
         return new StripeBillingWebhookService(
             repository.Object,
             verifier.Object,
+            CreateNoOpProviderObjectBindingValidator(),
             NullLogger<StripeBillingWebhookService>.Instance,
             lifecycleService,
             queryService,
             billingService,
             externalIdService);
+    }
+
+    private static IStripeProviderObjectBindingValidator CreateNoOpProviderObjectBindingValidator()
+    {
+        var validator = new Mock<IStripeProviderObjectBindingValidator>();
+        validator
+            .Setup(candidate => candidate.ValidateAsync(
+                It.IsAny<VerifiedStripeWebhookEvent>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((StripeWebhookPaymentBinding?)null);
+        return validator.Object;
     }
 
     private static VerifiedStripeWebhookEvent CreateVerifiedEvent(string payload)

@@ -156,7 +156,7 @@ public sealed class StripeWebhookVerifier(IOptions<BillingConfiguration> options
 
     private static string ResolveMonetaryLeg(string eventType) => eventType switch
     {
-        "invoice.payment_succeeded" or "payment_intent.succeeded" or "charge.succeeded" => "confirmation",
+        "invoice.payment_succeeded" or "payment_intent.succeeded" or "charge.succeeded" => "capture",
         "charge.refunded" or "refund.created" or "refund.updated" => "refund",
         "charge.dispute.created" or "charge.dispute.updated" or "charge.dispute.closed" => "dispute",
         "invoice.payment_failed" or "payment_intent.payment_failed" => "failure",

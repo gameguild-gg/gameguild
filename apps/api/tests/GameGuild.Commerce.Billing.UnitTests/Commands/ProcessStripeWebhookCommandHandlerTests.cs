@@ -89,11 +89,23 @@ public class ProcessStripeWebhookCommandHandlerTests
         return new StripeBillingWebhookService(
             repository,
             verifier.Object,
+            CreateNoOpProviderObjectBindingValidator(),
             NullLogger<StripeBillingWebhookService>.Instance,
             Mock.Of<ISubscriptionLifecycleService>(),
             Mock.Of<ISubscriptionQueryService>(),
             Mock.Of<ISubscriptionBillingService>(),
             Mock.Of<ISubscriptionExternalIdService>());
+    }
+
+    private static IStripeProviderObjectBindingValidator CreateNoOpProviderObjectBindingValidator()
+    {
+        var validator = new Mock<IStripeProviderObjectBindingValidator>();
+        validator
+            .Setup(candidate => candidate.ValidateAsync(
+                It.IsAny<VerifiedStripeWebhookEvent>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((StripeWebhookPaymentBinding?)null);
+        return validator.Object;
     }
 
     private static VerifiedStripeWebhookEvent CreateVerifiedEvent(string payload)

@@ -57,6 +57,27 @@ public class BillingWebhookRepositoryTests
     }
 
     [Fact]
+    public async Task GetByProviderScopeAsync_Should_Not_Collapse_Different_Accounts_Or_Endpoints()
+    {
+        await using var context = CreateContext();
+        var repository = new BillingWebhookRepository(context, NullLogger<BillingWebhookRepository>.Instance);
+        var accountEvent = CreateScopedEvent("acct_a", "we_a");
+        var endpointEvent = CreateScopedEvent("acct_b", "we_b");
+        context.BillingWebhookEvents.AddRange(accountEvent, endpointEvent);
+        await context.SaveChangesAsync();
+
+        var found = await repository.GetByProviderScopeAsync(
+            PaymentProviders.Stripe,
+            "live",
+            "acct_b",
+            "we_b",
+            "evt_shared");
+
+        found.Should().BeSameAs(endpointEvent);
+        found.Should().NotBeSameAs(accountEvent);
+    }
+
+    [Fact]
     public async Task ExistsAsync_Should_Return_True_For_Match()
     {
         await using var context = CreateContext();
@@ -105,6 +126,17 @@ public class BillingWebhookRepositoryTests
 
         return new TestBillingDbContext(options);
     }
+
+    private static BillingWebhookEvent CreateScopedEvent(string accountId, string endpointId) => new()
+    {
+        ExternalEventId = "evt_shared",
+        Provider = PaymentProviders.Stripe,
+        ProviderEnvironment = "live",
+        ProviderAccountId = accountId,
+        WebhookEndpointId = endpointId,
+        EventType = "customer.created",
+        Payload = "{}"
+    };
 
     private sealed class TestBillingDbContext(DbContextOptions<TestBillingDbContext> options)
         : DbContext(options), IApplicationDbContext

@@ -12,11 +12,13 @@ public class StripeBillingWebhookService : BillingWebhookService
     private readonly IBillingWebhookRepository _webhookRepository;
     private readonly ILogger<StripeBillingWebhookService> _logger;
     private readonly IStripeWebhookVerifier _webhookVerifier;
+    private readonly IStripeProviderObjectBindingValidator _providerObjectBindingValidator;
     private readonly ISubscriptionQueryService _subscriptionQueryService;
 
     public StripeBillingWebhookService(
         IBillingWebhookRepository webhookRepository,
         IStripeWebhookVerifier webhookVerifier,
+        IStripeProviderObjectBindingValidator providerObjectBindingValidator,
         ILogger<StripeBillingWebhookService> logger,
         ISubscriptionLifecycleService lifecycleService,
         ISubscriptionQueryService queryService,
@@ -26,6 +28,7 @@ public class StripeBillingWebhookService : BillingWebhookService
     {
         _webhookRepository = webhookRepository;
         _webhookVerifier = webhookVerifier;
+        _providerObjectBindingValidator = providerObjectBindingValidator;
         _subscriptionQueryService = queryService;
         _logger = logger;
     }
@@ -63,6 +66,9 @@ public class StripeBillingWebhookService : BillingWebhookService
         }
 
         var binding = await ValidateSubscriptionBindingAsync(verifiedEvent, cancellationToken).ConfigureAwait(false);
+        var paymentBinding = await _providerObjectBindingValidator
+            .ValidateAsync(verifiedEvent, cancellationToken)
+            .ConfigureAwait(false);
 
         var webhookEvent = existingEvent ?? new BillingWebhookEvent
         {
@@ -84,7 +90,7 @@ public class StripeBillingWebhookService : BillingWebhookService
                 payloadSha256 = verifiedEvent.PayloadSha256,
                 signatureRetained = false
             }),
-            TenantId = binding?.TenantId ?? verifiedEvent.TenantId,
+            TenantId = binding?.TenantId ?? paymentBinding?.TenantId ?? verifiedEvent.TenantId,
             SubscriptionId = binding?.SubscriptionId
         };
 
