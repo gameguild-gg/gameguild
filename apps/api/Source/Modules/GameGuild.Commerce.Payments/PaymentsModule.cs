@@ -2,6 +2,7 @@ using GameGuild.CQRS;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -31,6 +32,8 @@ public static class PaymentsModule
         services.AddScoped<IRevenueAuditService, RevenueAuditService>();
         services.AddScoped<ITaxCalculationService, TaxCalculationService>();
         services.AddScoped<IWalletService, WalletService>();
+        services.Replace(ServiceDescriptor.Scoped<IOrderPaymentProcessor, OrderPaymentService>());
+        services.Replace(ServiceDescriptor.Scoped<IOrderPaymentAuthority, OrderPaymentService>());
 
         // Register payment gateway and sub-services
         services.Configure<StripeGatewayOptions>(options =>
