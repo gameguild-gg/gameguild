@@ -297,18 +297,18 @@ export interface CommerceBillingInvoicePaymentRetryResult {
 
 export type CommerceBillingInvoiceStatus = 'Draft' | 'Open' | 'Paid' | 'Void' | 'PastDue' | 'Uncollectible';
 
+export type CommerceOrderChargeState = 'Succeeded' | 'Failed' | 'Processing' | 'RequiresAction' | 'RequiresReconciliation';
+
 export interface CommerceOrdersAddOrderItemInput {
   productId?: string;
+  productPricingId?: string;
+  productPricingVersionId?: string;
   promoCode?: string | null;
   quantity?: number;
 }
 
-export interface CommerceOrdersCancelOrderInput {
-  reason?: string | null;
-}
-
 export interface CommerceOrdersCaptureOrderInput {
-  amount?: number | null;
+  paymentMethodId?: string | null;
 }
 
 export interface CommerceOrdersCompleteOrderInput {
@@ -318,14 +318,32 @@ export interface CommerceOrdersCompleteOrderInput {
 }
 
 export interface CommerceOrdersCreateOrderInput {
-  currency?: string | null;
   idempotencyKey?: string | null;
-  tenantId?: string | null;
-  userId?: string;
 }
 
-export interface CommerceOrdersHoldOrderInput {
-  reason?: string | null;
+export interface CommerceOrdersOrderCapture {
+  clientActionToken?: string | null;
+  createdAt?: string;
+  currency?: string | null;
+  discountTotal?: number;
+  id?: string;
+  idempotencyKey?: string | null;
+  lineItems?: Array<CommerceOrdersOrderLineItem> | null;
+  paidAt?: string | null;
+  paymentId?: string | null;
+  paymentMessage?: string | null;
+  paymentMethod?: string | null;
+  paymentProviderReference?: string | null;
+  paymentState?: CommerceOrderChargeState;
+  refundAmount?: number | null;
+  refundReason?: string | null;
+  refundedAt?: string | null;
+  status?: CommerceOrdersOrderStatus;
+  subtotal?: number;
+  taxAmount?: number;
+  total?: number;
+  updatedAt?: string;
+  userId?: string;
 }
 
 export interface CommerceOrdersOrder {
@@ -351,12 +369,16 @@ export interface CommerceOrdersOrder {
 
 export interface CommerceOrdersOrderLineItem {
   basePrice?: number;
+  currency?: string | null;
   discountAmount?: number;
   id?: string;
   isSubscription?: boolean;
   lineTotal?: number;
+  priceVersion?: number;
   productId?: string;
   productName?: string | null;
+  productPricingId?: string;
+  productPricingVersionId?: string;
   promoCodesApplied?: string | null;
   quantity?: number;
   salePrice?: number | null;
@@ -365,17 +387,6 @@ export interface CommerceOrdersOrderLineItem {
 
 export type CommerceOrdersOrderStatus =
   'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Refunded' | 'PartiallyRefunded' | 'Disputed' | 'Paid' | 'Fulfilled' | 'OnHold';
-
-export interface CommerceOrdersPatchOrderInput {
-  currency?: string | null;
-  metadata?: Record<string, string> | null;
-  notes?: string | null;
-}
-
-export interface CommerceOrdersRefundOrderInput {
-  amount?: number | null;
-  reason?: string | null;
-}
 
 export interface CommercePaymentsBillingChargesControllerCancelBillingChargeInput {
   canceledBy?: string | null;
@@ -480,6 +491,7 @@ export interface CommercePaymentsPaymentResult {
   processedAt?: string | null;
   status?: CommercePaymentsPaymentStatus;
   success?: boolean;
+  tenantId?: string;
   transactionId?: string | null;
 }
 
@@ -7244,17 +7256,15 @@ export let BulkOperationOutputSchema: z.ZodType<BulkOperationOutput>;
 export let CQRSIDomainEventSchema: z.ZodType<CQRSIDomainEvent>;
 export let CommerceBillingInvoicePaymentRetryResultSchema: z.ZodType<CommerceBillingInvoicePaymentRetryResult>;
 export let CommerceBillingInvoiceStatusSchema: z.ZodType<CommerceBillingInvoiceStatus>;
+export let CommerceOrderChargeStateSchema: z.ZodType<CommerceOrderChargeState>;
 export let CommerceOrdersAddOrderItemInputSchema: z.ZodType<CommerceOrdersAddOrderItemInput>;
-export let CommerceOrdersCancelOrderInputSchema: z.ZodType<CommerceOrdersCancelOrderInput>;
 export let CommerceOrdersCaptureOrderInputSchema: z.ZodType<CommerceOrdersCaptureOrderInput>;
 export let CommerceOrdersCompleteOrderInputSchema: z.ZodType<CommerceOrdersCompleteOrderInput>;
 export let CommerceOrdersCreateOrderInputSchema: z.ZodType<CommerceOrdersCreateOrderInput>;
-export let CommerceOrdersHoldOrderInputSchema: z.ZodType<CommerceOrdersHoldOrderInput>;
+export let CommerceOrdersOrderCaptureSchema: z.ZodType<CommerceOrdersOrderCapture>;
 export let CommerceOrdersOrderSchema: z.ZodType<CommerceOrdersOrder>;
 export let CommerceOrdersOrderLineItemSchema: z.ZodType<CommerceOrdersOrderLineItem>;
 export let CommerceOrdersOrderStatusSchema: z.ZodType<CommerceOrdersOrderStatus>;
-export let CommerceOrdersPatchOrderInputSchema: z.ZodType<CommerceOrdersPatchOrderInput>;
-export let CommerceOrdersRefundOrderInputSchema: z.ZodType<CommerceOrdersRefundOrderInput>;
 export let CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCancelBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCreateBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerRefundBillingChargeInput>;
@@ -8338,21 +8348,21 @@ CommerceBillingInvoicePaymentRetryResultSchema = z.object({
 /** Zod schema for CommerceBillingInvoiceStatus */
 CommerceBillingInvoiceStatusSchema = z.enum(['Draft', 'Open', 'Paid', 'Void', 'PastDue', 'Uncollectible']);
 
+/** Zod schema for CommerceOrderChargeState */
+CommerceOrderChargeStateSchema = z.enum(['Succeeded', 'Failed', 'Processing', 'RequiresAction', 'RequiresReconciliation']);
+
 /** Zod schema for CommerceOrdersAddOrderItemInput */
 CommerceOrdersAddOrderItemInputSchema = z.object({
   productId: z.string().uuid().optional(),
+  productPricingId: z.string().uuid().optional(),
+  productPricingVersionId: z.string().uuid().optional(),
   promoCode: z.string().nullable().optional(),
   quantity: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceOrdersCancelOrderInput */
-CommerceOrdersCancelOrderInputSchema = z.object({
-  reason: z.string().nullable().optional(),
-});
-
 /** Zod schema for CommerceOrdersCaptureOrderInput */
 CommerceOrdersCaptureOrderInputSchema = z.object({
-  amount: z.number().nullable().optional(),
+  paymentMethodId: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceOrdersCompleteOrderInput */
@@ -8364,15 +8374,36 @@ CommerceOrdersCompleteOrderInputSchema = z.object({
 
 /** Zod schema for CommerceOrdersCreateOrderInput */
 CommerceOrdersCreateOrderInputSchema = z.object({
-  currency: z.string().nullable().optional(),
   idempotencyKey: z.string().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceOrdersHoldOrderInput */
-CommerceOrdersHoldOrderInputSchema = z.object({
-  reason: z.string().nullable().optional(),
+/** Zod schema for CommerceOrdersOrderCapture */
+CommerceOrdersOrderCaptureSchema = z.object({
+  clientActionToken: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  currency: z.string().nullable().optional(),
+  discountTotal: z.number().optional(),
+  id: z.string().uuid().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  lineItems: z
+    .array(z.lazy(() => CommerceOrdersOrderLineItemSchema))
+    .nullable()
+    .optional(),
+  paidAt: z.string().datetime().nullable().optional(),
+  paymentId: z.string().uuid().nullable().optional(),
+  paymentMessage: z.string().nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  paymentProviderReference: z.string().nullable().optional(),
+  paymentState: z.lazy(() => CommerceOrderChargeStateSchema).optional(),
+  refundAmount: z.number().nullable().optional(),
+  refundReason: z.string().nullable().optional(),
+  refundedAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => CommerceOrdersOrderStatusSchema).optional(),
+  subtotal: z.number().optional(),
+  taxAmount: z.number().optional(),
+  total: z.number().optional(),
+  updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceOrdersOrder */
@@ -8403,12 +8434,16 @@ CommerceOrdersOrderSchema = z.object({
 /** Zod schema for CommerceOrdersOrderLineItem */
 CommerceOrdersOrderLineItemSchema = z.object({
   basePrice: z.number().optional(),
+  currency: z.string().nullable().optional(),
   discountAmount: z.number().optional(),
   id: z.string().uuid().optional(),
   isSubscription: z.boolean().optional(),
   lineTotal: z.number().optional(),
+  priceVersion: z.number().int().optional(),
   productId: z.string().uuid().optional(),
   productName: z.string().nullable().optional(),
+  productPricingId: z.string().uuid().optional(),
+  productPricingVersionId: z.string().uuid().optional(),
   promoCodesApplied: z.string().nullable().optional(),
   quantity: z.number().int().optional(),
   salePrice: z.number().nullable().optional(),
@@ -8429,19 +8464,6 @@ CommerceOrdersOrderStatusSchema = z.enum([
   'Fulfilled',
   'OnHold',
 ]);
-
-/** Zod schema for CommerceOrdersPatchOrderInput */
-CommerceOrdersPatchOrderInputSchema = z.object({
-  currency: z.string().nullable().optional(),
-  metadata: z.record(z.string(), z.string()).nullable().optional(),
-  notes: z.string().nullable().optional(),
-});
-
-/** Zod schema for CommerceOrdersRefundOrderInput */
-CommerceOrdersRefundOrderInputSchema = z.object({
-  amount: z.number().nullable().optional(),
-  reason: z.string().nullable().optional(),
-});
 
 /** Zod schema for CommercePaymentsBillingChargesControllerCancelBillingChargeInput */
 CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema = z.object({
@@ -8561,6 +8583,7 @@ CommercePaymentsPaymentResultSchema = z.object({
   processedAt: z.string().datetime().nullable().optional(),
   status: z.lazy(() => CommercePaymentsPaymentStatusSchema).optional(),
   success: z.boolean().optional(),
+  tenantId: z.string().uuid().optional(),
   transactionId: z.string().nullable().optional(),
 });
 

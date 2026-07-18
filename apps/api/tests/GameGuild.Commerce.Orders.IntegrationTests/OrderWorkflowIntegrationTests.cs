@@ -136,7 +136,7 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
     }
 
     [Fact]
-    public async Task CancelOrder_ShouldReturnUnauthorized_WithoutAuthentication()
+    public async Task CancelOrder_ShouldReturnNotFound_WhenRouteIsOutsideMinimumSurface()
     {
         // Arrange
         var orderId = Guid.NewGuid();
@@ -146,11 +146,11 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
         var response = await _client.PostAsJsonAsync($"/v1/orders/{orderId}:cancel", request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
-    public async Task RefundOrder_ShouldReturnUnauthorized_WithoutAuthentication()
+    public async Task RefundOrder_ShouldReturnNotFound_WhenRouteIsOutsideMinimumSurface()
     {
         // Arrange
         var orderId = Guid.NewGuid();
@@ -164,7 +164,7 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
         var response = await _client.PostAsJsonAsync($"/v1/orders/{orderId}:refund", request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
