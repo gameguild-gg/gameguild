@@ -35,6 +35,36 @@ public class PaymentRepository(
             .ConfigureAwait(false);
     }
 
+    public async Task<Payment?> GetByProviderMappingAsync(
+        string provider,
+        string providerEnvironment,
+        string providerAccountId,
+        string providerObjectId,
+        string providerObjectType,
+        string providerMonetaryLeg,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug(
+            "Getting payment by provider mapping: {Provider}/{ProviderEnvironment}/{ProviderAccountId}/{ProviderObjectType}/{ProviderObjectId}/{ProviderMonetaryLeg}",
+            provider,
+            providerEnvironment,
+            providerAccountId,
+            providerObjectType,
+            providerObjectId,
+            providerMonetaryLeg);
+
+        return await Query
+            .FirstOrDefaultAsync(
+                payment => payment.Provider == provider
+                           && payment.ProviderEnvironment == providerEnvironment
+                           && payment.ProviderAccountId == providerAccountId
+                           && payment.ProviderObjectId == providerObjectId
+                           && payment.ProviderObjectType == providerObjectType
+                           && payment.ProviderMonetaryLeg == providerMonetaryLeg,
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public async Task<IEnumerable<Payment>> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Getting payments for tenant: {TenantId}", tenantId);

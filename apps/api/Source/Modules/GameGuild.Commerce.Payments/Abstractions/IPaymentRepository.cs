@@ -21,6 +21,18 @@ public interface IPaymentRepository
     Task<Payment?> GetByExternalPaymentIdAsync(string externalPaymentId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Gets a payment by its complete immutable provider mapping.
+    /// </summary>
+    Task<Payment?> GetByProviderMappingAsync(
+        string provider,
+        string providerEnvironment,
+        string providerAccountId,
+        string providerObjectId,
+        string providerObjectType,
+        string providerMonetaryLeg,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Gets all payments for a tenant
     /// </summary>
     Task<IEnumerable<Payment>> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default);
