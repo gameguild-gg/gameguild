@@ -247,13 +247,15 @@ API activation begins only after integrated schema and security gates pass. Task
 
 **Produces:** Client requests cannot control charged amount, currency, tenant, product, order, or subscription state; the minimum secure Orders path is active before order charging is allowed.
 
-- [ ] Write underpayment, currency substitution, tenant mismatch, stale-price, and invalid-order tests.
-- [ ] Implement and integration-test the minimum Orders payment path inside Orders/Products ownership; keep unrelated Orders capabilities disabled and leave shared API composition to Task 1.4.
-- [ ] Resolve order totals from immutable server-side price snapshots and reject any order charge without an authoritative payable order.
-- [ ] Resolve subscription charges from immutable server-side invoice/subscription snapshots without requiring an Order ID.
-- [ ] Validate subscription payment amount and billing period.
-- [ ] Ensure refund/cancel/retry operations enforce ownership and state.
-- [ ] Run Orders, Products, Payments, Billing, and Subscriptions tests.
+- [x] Write underpayment, currency substitution, tenant mismatch, stale-price, and invalid-order tests.
+- [x] Implement and integration-test the minimum Orders payment path inside Orders/Products ownership; keep unrelated Orders capabilities disabled and leave shared API composition to Task 1.4.
+- [x] Resolve order totals from immutable server-side price snapshots and reject any order charge without an authoritative payable order.
+- [x] Resolve subscription charges from immutable server-side invoice/subscription snapshots without requiring an Order ID.
+- [x] Validate subscription payment amount and billing period.
+- [x] Ensure refund/cancel/retry operations enforce ownership and state.
+- [x] Run Orders, Products, Payments, Billing, and Subscriptions tests.
+
+**Verification:** Orders unit `180/180`, Orders integration `7/7`, Products unit `554/554`, Products integration `10/10`, Payments unit `851/851`, Payments integration `41/41`, Billing unit `259/259`, Billing integration `7/7`, Subscriptions unit `739/739`, Subscriptions integration `62/62`, and strict API build `0` warnings/errors. Total focused tests: `2,710/2,710`.
 
 ### Task 1.4: Production Fail-Closed Configuration
 
