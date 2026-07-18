@@ -29,7 +29,8 @@ public class RecordSubscriptionPaymentCommandHandlerTests
             Amount: 29.99m,
             Currency: "USD",
             PaymentDate: DateTime.UtcNow,
-            IdempotencyKey: "pay_12345"
+            IdempotencyKey: "pay_12345",
+            ForBillingCycle: 1
         );
 
         _mockRepository
@@ -57,14 +58,15 @@ public class RecordSubscriptionPaymentCommandHandlerTests
         var idempotencyKey = "pay_12345";
         
         // First payment
-        subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, idempotencyKey);
+        subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, idempotencyKey, forBillingCycle: 1);
 
         var command = new RecordSubscriptionPaymentCommand(
             subscriptionId,
             Amount: 29.99m,
             Currency: "USD",
             PaymentDate: DateTime.UtcNow,
-            IdempotencyKey: idempotencyKey
+            IdempotencyKey: idempotencyKey,
+            ForBillingCycle: 1
         );
 
         _mockRepository
@@ -119,7 +121,8 @@ public class RecordSubscriptionPaymentCommandHandlerTests
             Amount: 29.99m,
             Currency: "USD",
             PaymentDate: DateTime.UtcNow,
-            IdempotencyKey: "pay_12345"
+            IdempotencyKey: "pay_12345",
+            ForBillingCycle: 1
         );
 
         _mockRepository
@@ -158,7 +161,7 @@ public class RecordSubscriptionPaymentCommandHandlerTests
     }
 
     [Fact]
-    public void Command_ShouldHaveDefaultNullBillingCycle()
+    public void Command_ShouldDefaultToInvalidBillingCycleIdentity()
     {
         // Arrange & Act
         var command = new RecordSubscriptionPaymentCommand(
@@ -170,7 +173,7 @@ public class RecordSubscriptionPaymentCommandHandlerTests
         );
 
         // Assert
-        command.ForBillingCycle.Should().BeNull();
+        command.ForBillingCycle.Should().Be(0);
     }
 
     private static Subscription CreateActiveSubscription(Guid id)
@@ -180,7 +183,7 @@ public class RecordSubscriptionPaymentCommandHandlerTests
             planId: Guid.NewGuid(),
             createdByUserId: Guid.NewGuid(),
             billingCycle: BillingCycle.Monthly,
-            amount: new Money(2999),
+            amount: new Money(29.99m, "USD"),
             startDate: DateTime.UtcNow,
             trialEndDate: null
         );

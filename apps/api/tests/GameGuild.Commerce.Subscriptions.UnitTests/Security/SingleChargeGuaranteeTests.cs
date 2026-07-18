@@ -14,7 +14,7 @@ public class SingleChargeGuaranteeTests
     #region Renewal Idempotency Tests (P0)
 
     [Fact]
-    public void ProcessRenewal_WithSameIdempotencyKey_ShouldReturnCachedResult()
+    public void ProcessRenewal_WithSameIdempotencyKey_ShouldNeverClaimUnconfirmedCharge()
     {
         // Arrange - Attack Scenario: Webhook retry with same idempotency key
         var subscription = CreateActiveSubscription();
@@ -27,11 +27,12 @@ public class SingleChargeGuaranteeTests
         // Act - Retry with same key (should be idempotent)
         var secondResult = subscription.ProcessRenewal(renewalAmount, idempotencyKey);
 
-        // Assert
-        firstResult.Success.Should().BeTrue("first renewal should succeed");
-        secondResult.Success.Should().BeTrue("idempotent retry should return success");
-        subscription.BillingCycleCount.Should().Be(billingCycleAfterFirst, "billing cycle should NOT increment on duplicate");
-        subscription.LastRenewalIdempotencyKey.Should().Be(idempotencyKey);
+        firstResult.Success.Should().BeFalse();
+        secondResult.Success.Should().BeFalse();
+        firstResult.ChargedAmount.Should().BeNull();
+        secondResult.ChargedAmount.Should().BeNull();
+        subscription.BillingCycleCount.Should().Be(billingCycleAfterFirst);
+        subscription.LastRenewalIdempotencyKey.Should().BeNull();
     }
 
     [Fact]
@@ -41,10 +42,10 @@ public class SingleChargeGuaranteeTests
         var subscription = CreateActiveSubscription();
         var idempotencyKey = "payment_ext_ch_12345";
         
-        var firstResult = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, idempotencyKey);
+        var firstResult = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, idempotencyKey, forBillingCycle: 1);
 
         // Act - Try to record same payment again
-        var secondResult = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, idempotencyKey);
+        var secondResult = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, idempotencyKey, forBillingCycle: 1);
 
         // Assert
         firstResult.IsSuccess.Should().BeTrue("first payment should succeed");
@@ -53,24 +54,23 @@ public class SingleChargeGuaranteeTests
     }
 
     [Fact]
-    public void RecordPayment_WithDifferentAmount_SameIdempotencyKey_ShouldStillReject()
+    public void RecordPayment_WithDifferentAmount_SameIdempotencyKey_ShouldRejectMoneyMismatch()
     {
         // Arrange - Attack: Try to charge different amount with same key
         var subscription = CreateActiveSubscription();
         var idempotencyKey = "payment_attack_attempt";
         
-        subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, idempotencyKey);
+        subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, idempotencyKey, forBillingCycle: 1);
 
         // Act - Try with different amount
-        var result = subscription.RecordPayment(99.99m, "USD", DateTime.UtcNow, idempotencyKey);
+        var result = subscription.RecordPayment(99.99m, "USD", DateTime.UtcNow, idempotencyKey, forBillingCycle: 1);
 
-        // Assert - Idempotency key should block regardless of amount
         result.IsSuccess.Should().BeFalse();
-        result.IsAlreadyProcessed.Should().BeTrue();
+        result.IsRejectedMoney.Should().BeTrue();
     }
 
     [Fact]
-    public void ProcessRenewal_ConcurrentCalls_ShouldProduceSingleCharge()
+    public void ProcessRenewal_ConcurrentCalls_ShouldProduceNoUnconfirmedCharge()
     {
         // Arrange - Simulate concurrent renewal attempts
         var subscription = CreateActiveSubscription();
@@ -85,10 +85,11 @@ public class SingleChargeGuaranteeTests
         var result1 = subscription.ProcessRenewal(renewalAmount, key1);
         var result2 = subscription.ProcessRenewal(renewalAmount, key2);
 
-        // Assert - Only one charge should occur
-        result1.Success.Should().BeTrue();
-        result2.Success.Should().BeTrue("idempotent call returns success");
-        subscription.BillingCycleCount.Should().Be(initialBillingCycle + 1, "only one increment");
+        result1.Success.Should().BeFalse();
+        result2.Success.Should().BeFalse();
+        result1.ChargedAmount.Should().BeNull();
+        result2.ChargedAmount.Should().BeNull();
+        subscription.BillingCycleCount.Should().Be(initialBillingCycle);
     }
 
     [Fact]
@@ -143,7 +144,7 @@ public class SingleChargeGuaranteeTests
     }
 
     [Fact]
-    public void RecordPayment_AfterMultipleRenewals_ShouldTrackCorrectCycle()
+    public void RecordPayment_AfterMultipleUnconfirmedRenewals_ShouldConfirmFirstCycleOnly()
     {
         // Arrange
         var subscription = CreateActiveSubscription();
@@ -153,11 +154,15 @@ public class SingleChargeGuaranteeTests
         subscription.ProcessRenewal(new Money(29.99m, "USD"), "renewal_2");
         subscription.ProcessRenewal(new Money(29.99m, "USD"), "renewal_3");
 
-        // Act - Record payment for current cycle
-        var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "payment_cycle_3");
+        var result = subscription.RecordPayment(
+            29.99m,
+            "USD",
+            DateTime.UtcNow,
+            "payment_cycle_1",
+            forBillingCycle: 1);
 
-        // Assert
         result.IsSuccess.Should().BeTrue();
+        subscription.BillingCycleCount.Should().Be(1);
     }
 
     #endregion
