@@ -33,6 +33,21 @@ public class SubscriptionRenewalResult
     public Money? ChargedAmount { get; init; }
 
     /// <summary>
+    ///     Whether provider payment confirmation is required before renewal can complete.
+    /// </summary>
+    public bool PaymentRequired { get; init; }
+
+    /// <summary>
+    ///     Specific billing cycle that the provider payment must confirm.
+    /// </summary>
+    public int? RequiredBillingCycle { get; init; }
+
+    /// <summary>
+    ///     Authoritative amount due for the required billing cycle. This is not recognized revenue.
+    /// </summary>
+    public Money? AmountDue { get; init; }
+
+    /// <summary>
     ///     Current billing cycle count
     /// </summary>
     public int BillingCycleCount { get; init; }
@@ -53,6 +68,27 @@ public class SubscriptionRenewalResult
     public static SubscriptionRenewalResult CreateSuccess(Guid subscriptionId, int billingCycleCount, Money chargedAmount)
     {
         return new SubscriptionRenewalResult { Success = true, SubscriptionId = subscriptionId, BillingCycleCount = billingCycleCount, ChargedAmount = chargedAmount };
+    }
+
+    /// <summary>
+    ///     Creates a non-mutating renewal preparation result awaiting provider payment confirmation.
+    /// </summary>
+    public static SubscriptionRenewalResult RequiresPayment(
+        Guid subscriptionId,
+        int billingCycleCount,
+        int requiredBillingCycle,
+        Money amountDue)
+    {
+        return new SubscriptionRenewalResult
+        {
+            Success = false,
+            SubscriptionId = subscriptionId,
+            BillingCycleCount = billingCycleCount,
+            PaymentRequired = true,
+            RequiredBillingCycle = requiredBillingCycle,
+            AmountDue = amountDue,
+            FailureReason = $"Provider payment confirmation is required for billing cycle {requiredBillingCycle}; renewal quote is {amountDue}"
+        };
     }
 
     /// <summary>

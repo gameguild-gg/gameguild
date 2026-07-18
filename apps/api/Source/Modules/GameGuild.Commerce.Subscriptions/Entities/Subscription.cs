@@ -470,6 +470,14 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
     /// <returns>Result indicating success or failure with reason</returns>
     public SubscriptionRenewalResult ProcessRenewal(Money newAmount, string idempotencyKey)
     {
+        return PrepareRenewal(idempotencyKey);
+    }
+
+    /// <summary>
+    ///     Prepares the next renewal quote without advancing billing state or recognizing revenue.
+    /// </summary>
+    public SubscriptionRenewalResult PrepareRenewal(string idempotencyKey)
+    {
         if (string.IsNullOrEmpty(idempotencyKey))
             return SubscriptionRenewalResult.Failed(Id, "Idempotency key is required for renewal processing");
 
@@ -479,9 +487,11 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
         if (!AutoRenew)
             return SubscriptionRenewalResult.Failed(Id, "Auto-renewal is disabled");
 
-        return SubscriptionRenewalResult.Failed(
+        return SubscriptionRenewalResult.RequiresPayment(
             Id,
-            $"Provider payment confirmation is required for billing cycle {LastProcessedBillingCycle + 1}; renewal quote is {Amount}");
+            BillingCycleCount,
+            LastProcessedBillingCycle + 1,
+            Amount);
     }
 
     /// <summary>
