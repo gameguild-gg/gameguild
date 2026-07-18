@@ -12,6 +12,40 @@ namespace GameGuild.Commerce.Payments.UnitTests.Controllers;
 public sealed class BillingChargesControllerTests
 {
     [Fact]
+    public async Task GetCharges_ShouldScopeAuthenticatedActorToOwnTenant()
+    {
+        var tenantId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(service => service.Send(
+                It.Is<GetAllPaymentsQuery>(query => query.TenantId == tenantId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        var controller = CreateController(sender.Object, CreateAuthenticatedActorContext(tenantId));
+
+        var result = await controller.GetCharges(null, null, null, null, ct: CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
+        sender.VerifyAll();
+    }
+
+    [Fact]
+    public async Task RetryCharge_ShouldRejectPaymentFromAnotherTenantBeforeMutation()
+    {
+        var paymentId = Guid.NewGuid();
+        var sender = CreateSenderWithPayment(paymentId, Guid.NewGuid());
+        var controller = CreateController(sender.Object, CreateAuthenticatedActorContext(Guid.NewGuid()));
+
+        var result = await controller.RetryCharge(paymentId, CancellationToken.None);
+
+        result.Should().BeOfType<ObjectResult>()
+            .Which.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        sender.Verify(
+            service => service.Send(It.IsAny<RetryPaymentCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task GetCharges_ShouldDispatchPaymentQueryUsingBillingRouteContract()
     {
         var tenantId = Guid.NewGuid();
@@ -109,6 +143,24 @@ public sealed class BillingChargesControllerTests
                 HttpContext = new DefaultHttpContext()
             }
         };
+    }
+
+    private static Mock<ISender> CreateSenderWithPayment(Guid paymentId, Guid tenantId)
+    {
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(service => service.Send(
+                It.Is<GetPaymentByIdQuery>(query => query.PaymentId == paymentId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaymentResult
+            {
+                PaymentId = paymentId.ToString(),
+                TenantId = tenantId,
+                Amount = new Money(25m, "USD"),
+                Status = PaymentStatus.Failed
+            });
+
+        return sender;
     }
 
     private static ActorContext CreateAuthenticatedActorContext(Guid? tenantId)

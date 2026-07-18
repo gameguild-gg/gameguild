@@ -80,6 +80,16 @@ public sealed class PaymentsController(
         if (page < 1) page = 1;
         if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
+        var actorContext = actorContextAccessor.ActorContext;
+        if (actorContext.IsAuthenticated && !actorContext.IsSystemAdmin)
+        {
+            var requestedTenantId = tenantId ?? actorContext.TenantId ?? Guid.Empty;
+            var validationError = ValidateTenantAccess(requestedTenantId, "list payments");
+            if (validationError != null) return validationError;
+
+            tenantId = actorContext.TenantId;
+        }
+
         return Ok(await sender.Send(new GetAllPaymentsQuery(tenantId, status, startDate, endDate, page, pageSize), ct).ConfigureAwait(false));
     }
 
@@ -330,6 +340,9 @@ public sealed class PaymentsController(
 
         if (r == null) return NotFound();
 
+        var validationError = ValidateTenantAccess(r.TenantId, "read payment");
+        if (validationError != null) return validationError;
+
         return Ok(r);
     }
 
@@ -377,6 +390,12 @@ public sealed class PaymentsController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Cancel(Guid paymentId, [FromBody] CancelPaymentRequest body, CancellationToken ct)
     {
+        var payment = await sender.Send(new GetPaymentByIdQuery(paymentId), ct).ConfigureAwait(false);
+        if (payment == null) return NotFound();
+
+        var validationError = ValidateTenantAccess(payment.TenantId, "cancel payment");
+        if (validationError != null) return validationError;
+
         var result = await sender.Send(new CancelPaymentCommand(paymentId, body.CancellationReason, body.CanceledBy), ct).ConfigureAwait(false);
 
         return Ok(result);
@@ -418,6 +437,12 @@ public sealed class PaymentsController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Refund(Guid paymentId, [FromBody] RefundRequest body, CancellationToken ct)
     {
+        var payment = await sender.Send(new GetPaymentByIdQuery(paymentId), ct).ConfigureAwait(false);
+        if (payment == null) return NotFound();
+
+        var validationError = ValidateTenantAccess(payment.TenantId, "refund payment");
+        if (validationError != null) return validationError;
+
         var r = await sender.Send(new ProcessRefundCommand(paymentId, body.Amount ?? 0, body.Reason ?? "No reason provided"), ct).ConfigureAwait(false);
 
         return Ok(r);
@@ -457,6 +482,12 @@ public sealed class PaymentsController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Retry(Guid paymentId, CancellationToken ct)
     {
+        var payment = await sender.Send(new GetPaymentByIdQuery(paymentId), ct).ConfigureAwait(false);
+        if (payment == null) return NotFound();
+
+        var validationError = ValidateTenantAccess(payment.TenantId, "retry payment");
+        if (validationError != null) return validationError;
+
         var r = await sender.Send(new RetryPaymentCommand(paymentId), ct).ConfigureAwait(false);
 
         return Ok(r);
@@ -481,7 +512,9 @@ public sealed class PaymentsController(
     ///     Uses shared TenantValidationExtensions for DRY compliance.
     /// </summary>
     private IActionResult? ValidateTenantAccess(Guid requestedTenantId, string operation)
-        => actorContextAccessor.ValidateTenantAccessAsActionResult(requestedTenantId, operation);
+        => actorContextAccessor.ActorContext.IsSystemAdmin
+            ? null
+            : actorContextAccessor.ValidateTenantAccessAsActionResult(requestedTenantId, operation);
 
     #endregion
 }
