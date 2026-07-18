@@ -15,12 +15,27 @@ public class StripeBillingWebhookServiceTests
     {
         var repository = new Mock<IBillingWebhookRepository>();
         repository
-            .Setup(r => r.GetByExternalEventIdAsync("evt_1", PaymentProviders.Stripe, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new BillingWebhookEvent { ExternalEventId = "evt_1", Provider = PaymentProviders.Stripe, ProcessedAt = DateTime.UtcNow });
+            .Setup(r => r.GetByProviderScopeAsync(
+                PaymentProviders.Stripe,
+                "test",
+                "platform",
+                "we_test",
+                "evt_1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BillingWebhookEvent
+            {
+                ExternalEventId = "evt_1",
+                Provider = PaymentProviders.Stripe,
+                IsProcessed = true,
+                ProcessedAt = DateTime.UtcNow
+            });
 
         var service = CreateService(repository, Mock.Of<ISubscriptionQueryService>(), Mock.Of<ISubscriptionBillingService>(), Mock.Of<ISubscriptionLifecycleService>(), Mock.Of<ISubscriptionExternalIdService>());
 
-        var result = await service.ProcessStripeWebhookAsync("evt_1", "invoice.payment_succeeded", "{}", "sig", CancellationToken.None);
+        var result = await service.ProcessStripeWebhookAsync(
+            "{\"id\":\"evt_1\",\"type\":\"unknown.event\",\"data\":{\"object\":{\"id\":\"in_1\"}}}",
+            "sig",
+            CancellationToken.None);
 
         result.WasAlreadyProcessed.Should().BeTrue();
     }
@@ -51,7 +66,7 @@ public class StripeBillingWebhookServiceTests
 
         var payload = "{\"id\":\"evt_2\",\"type\":\"customer.subscription.updated\",\"data\":{\"object\":{\"id\":\"sub_123\",\"status\":\"active\"}}}";
 
-        var result = await service.ProcessStripeWebhookAsync("evt_2", "customer.subscription.updated", payload, "sig", CancellationToken.None);
+        var result = await service.ProcessStripeWebhookAsync(payload, "sig", CancellationToken.None);
 
         result.Processed.Should().BeTrue();
         lifecycle.Verify(l => l.ActivateAsync(subscription.Id, It.IsAny<CancellationToken>()), Times.Once);
@@ -71,7 +86,7 @@ public class StripeBillingWebhookServiceTests
             .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
 
-        var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(10m, "USD"), DateTime.UtcNow);
+        var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(50m, "USD"), DateTime.UtcNow);
         var queryService = new Mock<ISubscriptionQueryService>();
         queryService
             .Setup(q => q.GetByExternalIdAsync("sub_456", It.IsAny<CancellationToken>()))
@@ -83,7 +98,7 @@ public class StripeBillingWebhookServiceTests
 
         var payload = "{\"id\":\"evt_3\",\"type\":\"invoice.payment_succeeded\",\"data\":{\"object\":{\"subscription\":\"sub_456\",\"amount_paid\":5000,\"currency\":\"usd\"}}}";
 
-        var result = await service.ProcessStripeWebhookAsync("evt_3", "invoice.payment_succeeded", payload, "sig", CancellationToken.None);
+        var result = await service.ProcessStripeWebhookAsync(payload, "sig", CancellationToken.None);
 
         result.Processed.Should().BeTrue();
         billingService.Verify(b => b.RecordPaymentAsync(subscription.Id, 50m, "USD", It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -113,9 +128,9 @@ public class StripeBillingWebhookServiceTests
 
             var service = CreateService(repository, queryService.Object, billingService.Object, Mock.Of<ISubscriptionLifecycleService>(), Mock.Of<ISubscriptionExternalIdService>());
 
-            var payload = "{\"id\":\"evt_4\",\"type\":\"invoice.payment_failed\",\"data\":{\"object\":{\"subscription\":\"sub_456\"}}}";
+            var payload = "{\"id\":\"evt_4\",\"type\":\"invoice.payment_failed\",\"data\":{\"object\":{\"subscription\":\"sub_456\",\"amount_due\":1000,\"currency\":\"usd\"}}}";
 
-            var result = await service.ProcessStripeWebhookAsync("evt_4", "invoice.payment_failed", payload, "sig", CancellationToken.None);
+            var result = await service.ProcessStripeWebhookAsync(payload, "sig", CancellationToken.None);
 
             result.Processed.Should().BeTrue();
             billingService.Verify(b => b.RecordPaymentFailureAsync(subscription.Id, It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -147,7 +162,7 @@ public class StripeBillingWebhookServiceTests
 
             var payload = "{\"id\":\"evt_5\",\"type\":\"customer.subscription.deleted\",\"data\":{\"object\":{\"id\":\"sub_789\"}}}";
 
-            var result = await service.ProcessStripeWebhookAsync("evt_5", "customer.subscription.deleted", payload, "sig", CancellationToken.None);
+            var result = await service.ProcessStripeWebhookAsync(payload, "sig", CancellationToken.None);
 
             result.Processed.Should().BeTrue();
             lifecycle.Verify(l => l.CancelAsync(subscription.Id, CancellationReason.Custom, It.IsAny<string>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -170,7 +185,7 @@ public class StripeBillingWebhookServiceTests
             var service = CreateService(repository, Mock.Of<ISubscriptionQueryService>(), Mock.Of<ISubscriptionBillingService>(), Mock.Of<ISubscriptionLifecycleService>(), Mock.Of<ISubscriptionExternalIdService>());
 
             var payload = "{\"id\":\"evt_6\",\"type\":\"unknown.event\",\"data\":{\"object\":{}}}";
-            var result = await service.ProcessStripeWebhookAsync("evt_6", "unknown.event", payload, "sig", CancellationToken.None);
+            var result = await service.ProcessStripeWebhookAsync(payload, "sig", CancellationToken.None);
 
             result.Processed.Should().BeTrue();
         }
@@ -182,12 +197,59 @@ public class StripeBillingWebhookServiceTests
         ISubscriptionLifecycleService lifecycleService,
         ISubscriptionExternalIdService externalIdService)
     {
+        var verifier = new Mock<IStripeWebhookVerifier>();
+        verifier
+            .Setup(candidate => candidate.Verify(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns((string payload, string _) => CreateVerifiedEvent(payload));
+
         return new StripeBillingWebhookService(
             repository.Object,
+            verifier.Object,
             NullLogger<StripeBillingWebhookService>.Instance,
             lifecycleService,
             queryService,
             billingService,
             externalIdService);
+    }
+
+    private static VerifiedStripeWebhookEvent CreateVerifiedEvent(string payload)
+    {
+        using var document = System.Text.Json.JsonDocument.Parse(payload);
+        var root = document.RootElement;
+        var eventId = root.GetProperty("id").GetString()!;
+        var eventType = root.GetProperty("type").GetString()!;
+        var providerObject = root.GetProperty("data").GetProperty("object");
+        var externalSubscriptionId = providerObject.TryGetProperty("subscription", out var subscriptionProperty)
+            ? subscriptionProperty.GetString()
+            : eventType.StartsWith("customer.subscription.", StringComparison.Ordinal) &&
+              providerObject.TryGetProperty("id", out var objectIdProperty)
+                ? objectIdProperty.GetString()
+                : null;
+        decimal? amount = providerObject.TryGetProperty("amount_paid", out var amountPaid)
+            ? amountPaid.GetDecimal() / 100m
+            : providerObject.TryGetProperty("amount_due", out var amountDue)
+                ? amountDue.GetDecimal() / 100m
+                : null;
+
+        return new VerifiedStripeWebhookEvent
+        {
+            EventId = eventId,
+            EventType = eventType,
+            ProviderEnvironment = "test",
+            ProviderAccountId = "platform",
+            WebhookEndpointId = "we_test",
+            EventSchemaVersion = "2023-10-16",
+            ProviderObjectId = "obj_test",
+            ProviderObjectType = "test_object",
+            ProviderMonetaryLeg = "nonmonetary",
+            ExternalSubscriptionId = externalSubscriptionId,
+            Amount = amount,
+            Currency = providerObject.TryGetProperty("currency", out var currencyProperty)
+                ? currencyProperty.GetString()?.ToUpperInvariant()
+                : null,
+            VerifiedPayload = payload,
+            RetainedPayload = payload,
+            PayloadSha256 = new string('0', 64)
+        };
     }
 }

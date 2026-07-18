@@ -88,7 +88,7 @@ public class BillingWebhookEventEntityTests
         // Arrange
         var webhookEvent = new BillingWebhookEvent
         {
-            ProcessingAttempts = 0
+            ProcessingAttempts = 1
         };
         var errorMessage = "Connection timeout";
 
@@ -102,10 +102,10 @@ public class BillingWebhookEventEntityTests
     }
 
     [Fact]
-    public void MarkAsFailed_CalledMultipleTimes_ShouldIncrementAttempts()
+    public void MarkAsFailed_CalledMultipleTimes_ShouldNotDoubleCountAttempts()
     {
         // Arrange
-        var webhookEvent = new BillingWebhookEvent();
+        var webhookEvent = new BillingWebhookEvent { ProcessingAttempts = 1 };
 
         // Act
         webhookEvent.MarkAsFailed("Error 1");
@@ -113,7 +113,7 @@ public class BillingWebhookEventEntityTests
         webhookEvent.MarkAsFailed("Error 3");
 
         // Assert
-        webhookEvent.ProcessingAttempts.Should().Be(3);
+        webhookEvent.ProcessingAttempts.Should().Be(1);
         webhookEvent.ErrorMessage.Should().Be("Error 3");
     }
 

@@ -174,15 +174,26 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
                 return BadRequest(new { error = "Missing signature" });
             }
 
-            _ = await sender.Send(new ProcessStripeWebhookCommand(payload, signature), ct).ConfigureAwait(false);
+            var result = await sender.Send(new ProcessStripeWebhookCommand(payload, signature), ct).ConfigureAwait(false);
 
-            return Ok(new { received = true });
+            return result.Processed || result.WasAlreadyProcessed
+                ? Ok(new { received = true, processed = result.Processed, eventId = result.EventId })
+                : StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    error = result.ErrorMessage,
+                    requiresRetry = result.RequiresRetry
+                });
         }
         catch (InvalidWebhookSignatureException)
         {
             logger.LogWarning("Invalid Stripe webhook signature");
 
             return BadRequest(new { error = "Invalid signature" });
+        }
+        catch (InvalidWebhookPayloadException exception)
+        {
+            logger.LogWarning("Invalid Stripe webhook payload: {Message}", exception.Message);
+            return BadRequest(new { error = "Invalid payload" });
         }
     }
 

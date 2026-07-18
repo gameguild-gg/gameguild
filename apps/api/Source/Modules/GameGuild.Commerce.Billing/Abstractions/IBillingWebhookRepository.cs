@@ -15,6 +15,15 @@ public interface IBillingWebhookRepository
     /// </summary>
     Task<BillingWebhookEvent?> GetByExternalEventIdAsync(string externalEventId, string provider, CancellationToken cancellationToken = default);
 
+    /// <summary>Get an event by its provider-scoped idempotency identity.</summary>
+    Task<BillingWebhookEvent?> GetByProviderScopeAsync(
+        string provider,
+        string providerEnvironment,
+        string providerAccountId,
+        string webhookEndpointId,
+        string externalEventId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     ///     Get all webhook events for a provider
     /// </summary>

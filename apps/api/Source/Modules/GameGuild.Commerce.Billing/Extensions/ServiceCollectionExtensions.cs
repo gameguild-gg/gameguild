@@ -32,6 +32,7 @@ public static class ServiceCollectionExtensions
         // Register verification services
         services.AddHttpClient<IPayPalSignatureVerificationService, PayPalSignatureVerificationService>();
         services.AddHttpClient<IApplePayReceiptValidationService, ApplePayReceiptValidationService>();
+        services.AddSingleton<IStripeWebhookVerifier, StripeWebhookVerifier>();
 
         // Register webhook services for each payment provider
         services.AddScoped<IBillingWebhookService, StripeBillingWebhookService>();
@@ -47,8 +48,11 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddBillingWebhooks(this IServiceCollection services)
     {
+        services.AddOptions<BillingConfiguration>();
+
         // Register webhook-specific services
         services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
+        services.AddSingleton<IStripeWebhookVerifier, StripeWebhookVerifier>();
         
         // Register all webhook service implementations
         services.AddScoped<IBillingWebhookService, StripeBillingWebhookService>();
