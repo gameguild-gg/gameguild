@@ -9,6 +9,152 @@ namespace GameGuild.Commerce.Payments.UnitTests.Commands;
 public class ProcessPaymentCommandHandlerTests
 {
     [Fact]
+    public async Task Handle_ShouldFailClosed_WhenSubscriptionDoesNotExist()
+    {
+        var fixture = CreateFixture();
+        fixture.PaymentContextService
+            .Setup(service => service.GetPaymentContextAsync(fixture.SubscriptionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((SubscriptionPaymentContext?)null);
+
+        var act = () => fixture.Handler.Handle(
+            new ProcessPaymentCommand(fixture.TenantId, fixture.SubscriptionId, 25m, "pm_test"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*subscription*not found*");
+        fixture.PaymentGateway.Verify(
+            gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldRejectTenantMismatch_BeforeCallingGateway()
+    {
+        var fixture = CreateFixture();
+        fixture.PaymentContextService
+            .Setup(service => service.GetPaymentContextAsync(fixture.SubscriptionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SubscriptionPaymentContext(
+                fixture.SubscriptionId,
+                Guid.NewGuid(),
+                25m,
+                "USD",
+                "cus_123"));
+
+        var act = () => fixture.Handler.Handle(
+            new ProcessPaymentCommand(fixture.TenantId, fixture.SubscriptionId, 25m, "pm_test"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("*tenant*");
+        fixture.PaymentGateway.Verify(
+            gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldRejectAmountMismatch_BeforeCallingGateway()
+    {
+        var fixture = CreateFixture();
+        fixture.PaymentContextService
+            .Setup(service => service.GetPaymentContextAsync(fixture.SubscriptionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SubscriptionPaymentContext(
+                fixture.SubscriptionId,
+                fixture.TenantId,
+                50m,
+                "USD",
+                "cus_123"));
+
+        var act = () => fixture.Handler.Handle(
+            new ProcessPaymentCommand(fixture.TenantId, fixture.SubscriptionId, 25m, "pm_test"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*amount*");
+        fixture.PaymentGateway.Verify(
+            gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldUseAuthoritativeSubscriptionCurrency()
+    {
+        var fixture = CreateFixture();
+        fixture.PaymentContextService
+            .Setup(service => service.GetPaymentContextAsync(fixture.SubscriptionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SubscriptionPaymentContext(
+                fixture.SubscriptionId,
+                fixture.TenantId,
+                25m,
+                "EUR",
+                "cus_123"));
+        fixture.PaymentGateway
+            .Setup(gateway => gateway.ProcessPaymentAsync(
+                It.IsAny<GatewayPaymentRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentResult(
+                Success: false,
+                TransactionId: null,
+                ExternalPaymentId: null,
+                ErrorCode: "declined",
+                ErrorMessage: "Declined",
+                Status: PaymentStatus.Failed,
+                ProcessedAt: SystemClock.UtcNow));
+
+        await fixture.Handler.Handle(
+            new ProcessPaymentCommand(fixture.TenantId, fixture.SubscriptionId, 25m, "pm_test"),
+            CancellationToken.None);
+
+        fixture.PaymentGateway.Verify(
+            gateway => gateway.ProcessPaymentAsync(
+                It.Is<GatewayPaymentRequest>(request => request.Amount == 25m && request.Currency == "EUR"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldUseDeterministicSubscriptionCycleIdempotencyKey()
+    {
+        var fixture = CreateFixture();
+        fixture.PaymentContextService
+            .Setup(service => service.GetPaymentContextAsync(fixture.SubscriptionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SubscriptionPaymentContext(
+                fixture.SubscriptionId,
+                fixture.TenantId,
+                25m,
+                "USD",
+                "cus_123"));
+        fixture.PaymentGateway
+            .Setup(gateway => gateway.ProcessPaymentAsync(
+                It.IsAny<GatewayPaymentRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentResult(
+                Success: false,
+                TransactionId: null,
+                ExternalPaymentId: null,
+                ErrorCode: "declined",
+                ErrorMessage: "Declined",
+                Status: PaymentStatus.Failed,
+                ProcessedAt: SystemClock.UtcNow));
+
+        await fixture.Handler.Handle(
+            new ProcessPaymentCommand(fixture.TenantId, fixture.SubscriptionId, 25m, "pm_test"),
+            CancellationToken.None);
+
+        var expectedKey = $"subscription:{fixture.TenantId:N}:{fixture.SubscriptionId:N}:cycle:1:charge";
+        fixture.PaymentRepository.Verify(
+            repository => repository.GetByIdempotencyKeyAsync(expectedKey, It.IsAny<CancellationToken>()),
+            Times.Once);
+        fixture.PaymentGateway.Verify(
+            gateway => gateway.ProcessPaymentAsync(
+                It.Is<GatewayPaymentRequest>(request =>
+                    request.IdempotencyKey == expectedKey &&
+                    request.Metadata != null &&
+                    request.Metadata["billing_cycle"] == "1"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task Handle_ShouldPropagateSubscriptionExternalCustomerIdIntoGatewayRequestAndPaymentRecord()
     {
         var tenantId = Guid.NewGuid();
@@ -53,6 +199,7 @@ public class ProcessPaymentCommandHandlerTests
                 subscriptionId,
                 25m,
                 "USD",
+                1,
                 It.IsAny<DateTime>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -72,4 +219,47 @@ public class ProcessPaymentCommandHandlerTests
         addedPayment.Should().NotBeNull();
         addedPayment!.ExternalCustomerId.Should().Be("cus_123");
     }
+
+    private static PaymentHandlerFixture CreateFixture()
+    {
+        var paymentRepository = new Mock<IPaymentRepository>();
+        var paymentGateway = new Mock<IPaymentGateway>();
+        var syncService = new Mock<IPaymentSubscriptionSyncService>();
+        var contextService = new Mock<ISubscriptionPaymentContextService>();
+
+        paymentRepository
+            .Setup(repository => repository.GetByIdempotencyKeyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Payment?)null);
+        paymentRepository
+            .Setup(repository => repository.AddAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Payment payment, CancellationToken _) => payment);
+        paymentRepository
+            .Setup(repository => repository.UpdateAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Payment payment, CancellationToken _) => payment);
+
+        var handler = new ProcessPaymentCommandHandler(
+            paymentRepository.Object,
+            paymentGateway.Object,
+            syncService.Object,
+            contextService.Object,
+            Mock.Of<ILogger<ProcessPaymentCommandHandler>>());
+
+        return new PaymentHandlerFixture(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            paymentRepository,
+            paymentGateway,
+            syncService,
+            contextService,
+            handler);
+    }
+
+    private sealed record PaymentHandlerFixture(
+        Guid TenantId,
+        Guid SubscriptionId,
+        Mock<IPaymentRepository> PaymentRepository,
+        Mock<IPaymentGateway> PaymentGateway,
+        Mock<IPaymentSubscriptionSyncService> SyncService,
+        Mock<ISubscriptionPaymentContextService> PaymentContextService,
+        ProcessPaymentCommandHandler Handler);
 }
