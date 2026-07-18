@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Stripe;
@@ -38,6 +39,44 @@ public class StripePaymentService(
         }
 
         return await ProcessPaymentRealAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<GatewayPaymentResult> GetPaymentAsync(
+        string externalTransactionId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(externalTransactionId);
+
+        if (_options.UseSimulation)
+        {
+            return new GatewayPaymentResult(
+                false,
+                externalTransactionId,
+                null,
+                null,
+                "Additional authentication is required.",
+                PaymentStatus.RequiresAction,
+                SystemClock.UtcNow,
+                $"{externalTransactionId}_secret_simulated");
+        }
+
+        try
+        {
+            var paymentIntent = await _paymentIntentService
+                .GetAsync(externalTransactionId, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+            return MapPaymentIntent(paymentIntent);
+        }
+        catch (StripeException ex)
+        {
+            return MapStripeException(ex, $"retrieving payment intent {externalTransactionId}");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Payment state is unknown for Stripe payment intent {PaymentIntentId}", externalTransactionId);
+            return UnknownPaymentResult(ex.Message);
+        }
     }
 
     /// <inheritdoc />
@@ -109,38 +148,71 @@ public class StripePaymentService(
                 "Stripe payment processed: {PaymentIntentId} with status {Status}",
                 paymentIntent.Id, paymentIntent.Status);
 
-            return new GatewayPaymentResult(
-                Success: paymentIntent.Status == "succeeded",
-                TransactionId: paymentIntent.Id,
-                ExternalPaymentId: paymentIntent.LatestChargeId,
-                ErrorCode: null,
-                ErrorMessage: null,
-                Status: StripeStatusMapper.MapPaymentStatus(paymentIntent.Status),
-                ProcessedAt: SystemClock.UtcNow);
+            return MapPaymentIntent(paymentIntent);
         }
         catch (StripeException ex)
         {
-            logger.LogError(ex,
-                "Stripe payment failed for idempotency key {IdempotencyKey}: {ErrorCode} - {ErrorMessage}",
-                request.IdempotencyKey, ex.StripeError?.Code, ex.StripeError?.Message);
-
-            return new GatewayPaymentResult(
-                Success: false,
-                TransactionId: null,
-                ExternalPaymentId: null,
-                ErrorCode: ex.StripeError?.Code ?? "stripe_error",
-                ErrorMessage: ex.StripeError?.Message ?? ex.Message,
-                Status: PaymentStatus.Failed,
-                ProcessedAt: SystemClock.UtcNow);
+            return MapStripeException(ex, $"processing idempotency key {request.IdempotencyKey}");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error during Stripe payment for idempotency key {IdempotencyKey}",
+            logger.LogError(ex, "Stripe payment outcome is unknown for idempotency key {IdempotencyKey}",
                 request.IdempotencyKey);
-
-            return SimulatedPaymentResultFactory.PaymentFailure(ex.Message, "unexpected_error");
+            return UnknownPaymentResult(ex.Message);
         }
     }
+
+    private static GatewayPaymentResult MapPaymentIntent(PaymentIntent paymentIntent)
+    {
+        var status = StripeStatusMapper.MapPaymentStatus(paymentIntent.Status);
+        return new GatewayPaymentResult(
+            Success: status == PaymentStatus.Succeeded,
+            TransactionId: paymentIntent.Id,
+            ExternalPaymentId: paymentIntent.LatestChargeId,
+            ErrorCode: null,
+            ErrorMessage: status == PaymentStatus.RequiresAction ? "Additional authentication is required." : null,
+            Status: status,
+            ProcessedAt: SystemClock.UtcNow,
+            ClientActionToken: status == PaymentStatus.RequiresAction ? paymentIntent.ClientSecret : null);
+    }
+
+    private GatewayPaymentResult MapStripeException(StripeException exception, string operation)
+    {
+        var outcomeIsUnknown = IsOutcomeUnknown(exception);
+        logger.LogError(
+            exception,
+            "Stripe error while {Operation}: {ErrorCode} - {ErrorMessage}. Outcome known: {OutcomeKnown}",
+            operation,
+            exception.StripeError?.Code,
+            exception.StripeError?.Message,
+            !outcomeIsUnknown);
+
+        return outcomeIsUnknown
+            ? UnknownPaymentResult(exception.StripeError?.Message ?? exception.Message)
+            : new GatewayPaymentResult(
+                false,
+                null,
+                null,
+                exception.StripeError?.Code ?? "stripe_error",
+                exception.StripeError?.Message ?? exception.Message,
+                PaymentStatus.Failed,
+                SystemClock.UtcNow);
+    }
+
+    internal static bool IsOutcomeUnknown(StripeException exception) =>
+        exception.StripeError is null ||
+        exception.HttpStatusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests ||
+        (int)exception.HttpStatusCode >= 500;
+
+    private static GatewayPaymentResult UnknownPaymentResult(string message) =>
+        new(
+            false,
+            null,
+            null,
+            "stripe_outcome_unknown",
+            $"Payment outcome is pending provider reconciliation: {message}",
+            PaymentStatus.Processing,
+            SystemClock.UtcNow);
 
     private async Task<GatewayPaymentResult> ProcessPaymentSimulatedAsync(
         CancellationToken cancellationToken)

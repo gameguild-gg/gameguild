@@ -32,6 +32,13 @@ public interface IPaymentGateway
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Retrieves the provider's authoritative state for an existing payment attempt.
+    /// </summary>
+    Task<GatewayPaymentResult> GetPaymentAsync(
+        string externalTransactionId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Processes a refund through this gateway
     /// </summary>
     /// <param name="request">Refund request details</param>
@@ -105,7 +112,8 @@ public sealed record GatewayPaymentResult(
     string? ErrorCode,
     string? ErrorMessage,
     PaymentStatus Status,
-    DateTime ProcessedAt);
+    DateTime ProcessedAt,
+    string? ClientActionToken = null);
 
 /// <summary>
 ///     Request for processing a refund

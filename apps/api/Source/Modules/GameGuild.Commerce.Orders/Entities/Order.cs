@@ -326,6 +326,15 @@ public class Order : StatefulEntity<OrderStatus>
         Touch();
     }
 
+    public void ReleasePaymentReservation()
+    {
+        if (Status != OrderStatus.Processing)
+            throw new InvalidOperationException($"Cannot release payment reservation for order in {Status} status");
+
+        Status = OrderStatus.Pending;
+        Touch();
+    }
+
     /// <summary>
     ///     Mark order as fulfilled after entitlements are granted.
     ///     Must be in Paid or Completed status.

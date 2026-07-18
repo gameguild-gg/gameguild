@@ -10,6 +10,14 @@ public sealed record AuthoritativeOrderCharge(
     string Currency,
     string PaymentMethodId);
 
+public enum OrderChargeState
+{
+    Succeeded,
+    Failed,
+    Processing,
+    RequiresAction
+}
+
 /// <summary>
 /// Result returned by the payment authority without exposing provider-controlled pricing.
 /// </summary>
@@ -17,13 +25,21 @@ public sealed record OrderChargeResult(
     bool Success,
     Guid? PaymentId,
     string? ExternalPaymentId,
-    string? FailureReason)
+    string? FailureReason,
+    OrderChargeState State,
+    string? ClientActionToken = null)
 {
     public static OrderChargeResult Succeeded(Guid paymentId, string? externalPaymentId) =>
-        new(true, paymentId, externalPaymentId, null);
+        new(true, paymentId, externalPaymentId, null, OrderChargeState.Succeeded);
 
     public static OrderChargeResult Failed(Guid? paymentId, string failureReason) =>
-        new(false, paymentId, null, failureReason);
+        new(false, paymentId, null, failureReason, OrderChargeState.Failed);
+
+    public static OrderChargeResult Processing(Guid paymentId, string message) =>
+        new(false, paymentId, null, message, OrderChargeState.Processing);
+
+    public static OrderChargeResult RequiresAction(Guid paymentId, string message, string? clientActionToken) =>
+        new(false, paymentId, null, message, OrderChargeState.RequiresAction, clientActionToken);
 }
 
 /// <summary>

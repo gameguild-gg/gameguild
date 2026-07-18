@@ -111,9 +111,35 @@ public sealed class CaptureOrderCommandHandler(
                     "Orders.PaymentConflict",
                     "The existing payment no longer matches the authoritative order snapshot."));
         }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure<OrderOperationResult>(
+                Error.Conflict(
+                    "Orders.PaymentConcurrentModification",
+                    "Another payment capture is already processing this order. Reload the order before retrying."));
+        }
+
+        if (chargeResult.State is OrderChargeState.Processing or OrderChargeState.RequiresAction)
+        {
+            return Result.Success(OrderOperationResult.FromPendingPayment(order, chargeResult));
+        }
 
         if (!chargeResult.Success || !chargeResult.PaymentId.HasValue)
         {
+            order.ReleasePaymentReservation();
+            await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result.Failure<OrderOperationResult>(
+                    Error.Conflict(
+                        "Orders.ConcurrentModification",
+                        "The order changed while its failed payment reservation was being released."));
+            }
+
             return Result.Failure<OrderOperationResult>(
                 Error.Failure(
                     "Orders.PaymentFailed",

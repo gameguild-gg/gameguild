@@ -42,6 +42,12 @@ public class StripePaymentGateway(
         paymentService.ProcessPaymentAsync(request, cancellationToken);
 
     /// <inheritdoc />
+    public Task<GatewayPaymentResult> GetPaymentAsync(
+        string externalTransactionId,
+        CancellationToken cancellationToken = default) =>
+        paymentService.GetPaymentAsync(externalTransactionId, cancellationToken);
+
+    /// <inheritdoc />
     public Task<GatewayRefundResult> ProcessRefundAsync(
         GatewayRefundRequest request,
         CancellationToken cancellationToken = default) =>
