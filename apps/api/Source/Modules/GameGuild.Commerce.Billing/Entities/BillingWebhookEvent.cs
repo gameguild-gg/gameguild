@@ -142,7 +142,6 @@ public class BillingWebhookEvent : EntityBase
     {
         IsFailed = true;
         ErrorMessage = errorMessage;
-        ProcessingAttempts++;
         Touch();
     }
 

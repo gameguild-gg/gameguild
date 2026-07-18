@@ -10,17 +10,16 @@ namespace GameGuild.Commerce.Billing.UnitTests.Commands;
 public class ProcessStripeWebhookCommandHandlerTests
 {
     [Fact]
-    public async Task Handle_Should_Return_Failed_When_EventId_Missing()
+    public async Task Handle_Should_Reject_When_Verified_EventId_Is_Missing()
     {
         var handler = new ProcessStripeWebhookCommandHandler(
             CreateService(Mock.Of<IBillingWebhookRepository>()),
             NullLogger<ProcessStripeWebhookCommandHandler>.Instance);
 
         var payload = "{\"type\":\"invoice.payment_succeeded\"}";
-        var result = await handler.Handle(new ProcessStripeWebhookCommand(payload, "sig"), CancellationToken.None);
+        var act = () => handler.Handle(new ProcessStripeWebhookCommand(payload, "sig"), CancellationToken.None);
 
-        result.Processed.Should().BeFalse();
-        result.ErrorMessage.Should().Contain("Missing event ID");
+        await act.Should().ThrowAsync<InvalidWebhookPayloadException>();
     }
 
     [Fact]
@@ -35,14 +34,21 @@ public class ProcessStripeWebhookCommandHandlerTests
 
         var repository = new Mock<IBillingWebhookRepository>();
         repository
-            .Setup(r => r.GetByExternalEventIdAsync("evt_123", PaymentProviders.Stripe, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByProviderScopeAsync(
+                PaymentProviders.Stripe,
+                "test",
+                "platform",
+                "we_test",
+                "evt_123",
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingEvent);
+        existingEvent.IsProcessed = true;
 
         var handler = new ProcessStripeWebhookCommandHandler(
             CreateService(repository.Object),
             NullLogger<ProcessStripeWebhookCommandHandler>.Instance);
 
-        var payload = "{\"id\":\"evt_123\",\"type\":\"invoice.payment_succeeded\"}";
+        var payload = "{\"id\":\"evt_123\",\"type\":\"unhandled.event\"}";
         var result = await handler.Handle(new ProcessStripeWebhookCommand(payload, "sig"), CancellationToken.None);
 
         result.Processed.Should().BeTrue();
@@ -51,7 +57,7 @@ public class ProcessStripeWebhookCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_Should_Return_Failed_When_Service_Throws()
+    public async Task Handle_Should_Return_RetryableFailure_WithoutLeakingDatabaseDetails()
     {
         var repository = new Mock<IBillingWebhookRepository>();
         repository
@@ -65,21 +71,54 @@ public class ProcessStripeWebhookCommandHandlerTests
             CreateService(repository.Object),
             NullLogger<ProcessStripeWebhookCommandHandler>.Instance);
 
-        var payload = "{\"id\":\"evt_123\",\"type\":\"invoice.payment_succeeded\"}";
+        var payload = "{\"id\":\"evt_123\",\"type\":\"unhandled.event\"}";
         var result = await handler.Handle(new ProcessStripeWebhookCommand(payload, "sig"), CancellationToken.None);
 
         result.Processed.Should().BeFalse();
-        result.ErrorMessage.Should().Contain("boom");
+        result.RequiresRetry.Should().BeTrue();
+        result.ErrorMessage.Should().Be("Webhook inbox persistence failed.");
     }
 
     private static StripeBillingWebhookService CreateService(IBillingWebhookRepository repository)
     {
+        var verifier = new Mock<IStripeWebhookVerifier>();
+        verifier
+            .Setup(candidate => candidate.Verify(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns((string payload, string _) => CreateVerifiedEvent(payload));
+
         return new StripeBillingWebhookService(
             repository,
+            verifier.Object,
             NullLogger<StripeBillingWebhookService>.Instance,
             Mock.Of<ISubscriptionLifecycleService>(),
             Mock.Of<ISubscriptionQueryService>(),
             Mock.Of<ISubscriptionBillingService>(),
             Mock.Of<ISubscriptionExternalIdService>());
+    }
+
+    private static VerifiedStripeWebhookEvent CreateVerifiedEvent(string payload)
+    {
+        using var document = System.Text.Json.JsonDocument.Parse(payload);
+        var root = document.RootElement;
+        if (!root.TryGetProperty("id", out var idProperty) || string.IsNullOrWhiteSpace(idProperty.GetString()))
+        {
+            throw new InvalidWebhookPayloadException("Missing event ID in payload");
+        }
+
+        return new VerifiedStripeWebhookEvent
+        {
+            EventId = idProperty.GetString()!,
+            EventType = root.GetProperty("type").GetString()!,
+            ProviderEnvironment = "test",
+            ProviderAccountId = "platform",
+            WebhookEndpointId = "we_test",
+            EventSchemaVersion = "2023-10-16",
+            ProviderObjectId = "obj_test",
+            ProviderObjectType = "test_object",
+            ProviderMonetaryLeg = "nonmonetary",
+            VerifiedPayload = payload,
+            RetainedPayload = payload,
+            PayloadSha256 = new string('0', 64)
+        };
     }
 }
