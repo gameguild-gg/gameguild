@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Economy.Contracts;
+using GameGuild.Economy.Policy;
 
 namespace GameGuild.Economy.Ledger;
 
@@ -105,12 +106,38 @@ public static class ConfirmedCreditFactory
         CoinAmount amount,
         ProvenanceKind provenance,
         SourceEvidence source,
+        long journalSequence)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        if (source.State != SourceConfirmationState.Confirmed || source.ConfirmedAt is null)
+            throw new InvalidOperationException("Root credits require confirmed source evidence.");
+        return CreateRootLot(
+            lotId,
+            walletId,
+            amount,
+            provenance,
+            source,
+            CreditLotMaturity.Assign(amount.Currency, provenance, source.ConfirmedAt.Value),
+            journalSequence);
+    }
+
+    public static CreditLot CreateRootLot(
+        CreditLotId lotId,
+        WalletId walletId,
+        CoinAmount amount,
+        ProvenanceKind provenance,
+        SourceEvidence source,
         DateTimeOffset originalMaturesAt,
         long journalSequence)
     {
         ArgumentNullException.ThrowIfNull(source);
         if (source.State != SourceConfirmationState.Confirmed || source.ConfirmedAt is null)
             throw new InvalidOperationException("Root credits require confirmed source evidence.");
+        CreditLotMaturity.EnsureExactEarnedHard(
+            amount.Currency,
+            provenance,
+            source.ConfirmedAt.Value,
+            originalMaturesAt);
 
         var traceUnitsPerCoinUnit = CurrencyTraceScale.For(amount.Currency);
         return new CreditLot(
