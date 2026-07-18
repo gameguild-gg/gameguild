@@ -27,7 +27,8 @@ public class RecordSubscriptionPaymentCommandValidatorTests
             Amount: 99.99m,
             Currency: "USD",
             PaymentDate: DateTime.UtcNow.AddMinutes(-5),
-            IdempotencyKey: "payment-key-123"
+            IdempotencyKey: "payment-key-123",
+            ForBillingCycle: 1
         );
 
         // Act
@@ -72,7 +73,8 @@ public class RecordSubscriptionPaymentCommandValidatorTests
             Amount: 100m,
             Currency: currency,
             PaymentDate: DateTime.UtcNow.AddMinutes(-1),
-            IdempotencyKey: Guid.NewGuid().ToString()
+            IdempotencyKey: Guid.NewGuid().ToString(),
+            ForBillingCycle: 1
         );
 
         // Act
@@ -168,7 +170,8 @@ public class RecordSubscriptionPaymentCommandValidatorTests
             Amount: amount,
             Currency: "USD",
             PaymentDate: DateTime.UtcNow.AddMinutes(-1),
-            IdempotencyKey: Guid.NewGuid().ToString()
+            IdempotencyKey: Guid.NewGuid().ToString(),
+            ForBillingCycle: 1
         );
 
         // Act
@@ -290,7 +293,8 @@ public class RecordSubscriptionPaymentCommandValidatorTests
             Amount: 99.99m,
             Currency: "USD",
             PaymentDate: DateTime.UtcNow.AddSeconds(secondsAgo),
-            IdempotencyKey: Guid.NewGuid().ToString()
+            IdempotencyKey: Guid.NewGuid().ToString(),
+            ForBillingCycle: 1
         );
 
         // Act
@@ -366,6 +370,28 @@ public class RecordSubscriptionPaymentCommandValidatorTests
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => 
             e.PropertyName == nameof(RecordSubscriptionPaymentCommand.IdempotencyKey));
+    }
+
+    #endregion
+
+    #region Billing Cycle Identity Validation
+
+    [Fact]
+    public void Validate_ShouldFail_WhenBillingCycleIdentityIsNotPositive()
+    {
+        var command = new RecordSubscriptionPaymentCommand(
+            SubscriptionId: Guid.NewGuid(),
+            Amount: 99.99m,
+            Currency: "USD",
+            PaymentDate: DateTime.UtcNow,
+            IdempotencyKey: "payment-1",
+            ForBillingCycle: 0);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error =>
+            error.PropertyName == nameof(RecordSubscriptionPaymentCommand.ForBillingCycle));
     }
 
     #endregion

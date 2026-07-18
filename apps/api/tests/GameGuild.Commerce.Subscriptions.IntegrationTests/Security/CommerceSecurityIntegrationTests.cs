@@ -89,38 +89,26 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
     #region Subscription Renewal Flow - Single Charge Guarantee (P0)
 
     [Fact]
-    public async Task RenewalFlow_DuplicateIdempotencyKey_ShouldReturnCachedResult()
+    public async Task RenewalFlow_RepeatedRequests_ShouldRemainBlockedWithoutPayment()
     {
         // Arrange
         var subscriptionId = await SeedActiveSubscriptionAsync();
-        var idempotencyKey = $"renewal_{subscriptionId}_{DateTime.UtcNow:yyyyMMdd}";
-
-        // Act - Send first request
         var response1 = await _client.PostAsync($"/api/v1/subscriptions/{subscriptionId}:renew", null);
-        var content1 = await response1.Content.ReadAsStringAsync();
-
-        // Act - Send duplicate request
         var response2 = await _client.PostAsync($"/api/v1/subscriptions/{subscriptionId}:renew", null);
-        var content2 = await response2.Content.ReadAsStringAsync();
 
-        // Assert - Both should succeed with same result
-        response1.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Created, HttpStatusCode.Accepted, HttpStatusCode.NoContent);
-        response2.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Created, HttpStatusCode.Accepted, HttpStatusCode.NoContent);
-
-        // Parse and compare transaction IDs if present
-        // The second response should return the cached result, not create a new charge
+        response1.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response2.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
-    public async Task RenewalFlow_WithValidSubscription_ShouldCreatePaymentRecord()
+    public async Task RenewalFlow_WithValidSubscription_ShouldRequireProviderPayment()
     {
         // Arrange
         var subscriptionId = await SeedActiveSubscriptionAsync();
         // Act
         var response = await _client.PostAsync($"/api/v1/subscriptions/{subscriptionId}:renew", null);
 
-        // Assert
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Created, HttpStatusCode.Accepted, HttpStatusCode.NoContent);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     #endregion

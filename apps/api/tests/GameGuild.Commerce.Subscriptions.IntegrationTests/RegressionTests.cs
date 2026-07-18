@@ -70,21 +70,38 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
     #region E.3 Tests: ProcessRenewal - Previously Stubbed
 
     /// <summary>
-    /// E.3 Test: ProcessRenewal_CreatesPayment_And_AdvancesBillingPeriod
-    /// Verifies that the previously stubbed ProcessRenewal now creates payment and advances billing
+    /// E.3 Test: ProcessRenewal_RequiresPayment_And_DoesNotAdvanceBillingPeriod
+    /// Verifies that renewal cannot advance paid state before provider confirmation.
     /// </summary>
     [Fact]
-    public async Task ProcessRenewal_CreatesPayment_And_AdvancesBillingPeriod()
+    public async Task ProcessRenewal_RequiresPayment_And_DoesNotAdvanceBillingPeriod()
     {
         // Arrange
         var subscriptionId = await SeedActiveSubscriptionAsync();
-        var idempotencyKey = $"renewal_{subscriptionId}_{DateTime.UtcNow:yyyyMMddHH}_{Guid.NewGuid()}";
+        DateTime initialPeriodStart;
+        DateTime initialPeriodEnd;
+        DateTime initialNextBillingDate;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var subscription = await dbContext.Set<Subscription>().AsNoTracking().SingleAsync(item => item.Id == subscriptionId);
+            initialPeriodStart = subscription.CurrentPeriodStart;
+            initialPeriodEnd = subscription.CurrentPeriodEnd;
+            initialNextBillingDate = subscription.NextBillingDate;
+        }
 
         // Act
         var response = await _client.PostAsync($"/api/v1/subscriptions/{subscriptionId}:renew", null);
 
-        // Assert - Should succeed (previously threw NotImplementedException)
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Created, HttpStatusCode.Accepted, HttpStatusCode.NoContent);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        using var verificationScope = _factory.Services.CreateScope();
+        var verificationContext = verificationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var persisted = await verificationContext.Set<Subscription>().AsNoTracking().SingleAsync(item => item.Id == subscriptionId);
+        persisted.BillingCycleCount.Should().Be(0);
+        persisted.CurrentPeriodStart.Should().Be(initialPeriodStart);
+        persisted.CurrentPeriodEnd.Should().Be(initialPeriodEnd);
+        persisted.NextBillingDate.Should().Be(initialNextBillingDate);
     }
 
     /// <summary>
@@ -215,7 +232,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
     /// E.3 Unit Test: Subscription.ProcessRenewal - Previously Stubbed
     /// </summary>
     [Fact]
-    public void Subscription_ProcessRenewal_CreatesSuccessResult()
+    public void Subscription_ProcessRenewal_RequiresPaymentConfirmation()
     {
         // Arrange
         var subscription = CreateActiveSubscription();
@@ -226,9 +243,10 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
         // Act
         var result = subscription.ProcessRenewal(newAmount, idempotencyKey);
 
-        // Assert - Previously threw NotImplementedException
-        result.Success.Should().BeTrue();
-        subscription.BillingCycleCount.Should().Be(initialCycleCount + 1);
+        result.Success.Should().BeFalse();
+        result.FailureReason.Should().Contain("payment confirmation");
+        result.ChargedAmount.Should().BeNull();
+        subscription.BillingCycleCount.Should().Be(initialCycleCount);
     }
 
     /// <summary>
@@ -243,7 +261,12 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
         var idempotencyKey = $"payment_{Guid.NewGuid()}";
 
         // Act
-        var result = subscription.RecordPayment(29.99m, "USD", paymentDate, idempotencyKey);
+        var result = subscription.RecordPayment(
+            29.99m,
+            "USD",
+            paymentDate,
+            idempotencyKey,
+            forBillingCycle: 1);
 
         // Assert - Previously threw NotImplementedException
         result.IsSuccess.Should().BeTrue();

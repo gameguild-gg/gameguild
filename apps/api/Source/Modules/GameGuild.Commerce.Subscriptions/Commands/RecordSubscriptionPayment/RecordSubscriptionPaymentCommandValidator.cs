@@ -20,5 +20,9 @@ public sealed class RecordSubscriptionPaymentCommandValidator : AbstractValidato
         RuleFor(x => x.IdempotencyKey)
             .NotEmpty()
             .WithMessage("IdempotencyKey is required for duplicate payment prevention");
+
+        RuleFor(x => x.ForBillingCycle)
+            .GreaterThan(0)
+            .WithMessage("ForBillingCycle must identify a positive billing cycle");
     }
 }

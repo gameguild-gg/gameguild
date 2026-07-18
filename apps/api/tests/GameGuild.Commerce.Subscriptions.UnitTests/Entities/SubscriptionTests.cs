@@ -170,7 +170,7 @@ public class SubscriptionTests
         var idempotencyKey = Guid.NewGuid().ToString();
 
         // Act
-        subscription.RecordPayment(amount, "USD", paymentDate, idempotencyKey);
+        subscription.RecordPayment(amount, "USD", paymentDate, idempotencyKey, forBillingCycle: 1);
 
         // Assert
         subscription.LastPaymentAt.Should().Be(paymentDate);
@@ -340,11 +340,11 @@ public class SubscriptionTests
         var paymentDate = DateTime.UtcNow;
 
         // Act - First payment
-        var result1 = subscription.RecordPayment(amount, "USD", paymentDate, idempotencyKey);
+        var result1 = subscription.RecordPayment(amount, "USD", paymentDate, idempotencyKey, forBillingCycle: 1);
         var initialBillingCycle = subscription.BillingCycleCount;
 
         // Act - Duplicate payment with same idempotency key
-        var result2 = subscription.RecordPayment(amount, "USD", paymentDate, idempotencyKey);
+        var result2 = subscription.RecordPayment(amount, "USD", paymentDate, idempotencyKey, forBillingCycle: 1);
 
         // Assert
         result1.IsSuccess.Should().BeTrue();
@@ -354,12 +354,12 @@ public class SubscriptionTests
     }
 
     /// <summary>
-    /// E.1 Test: Subscription.RecordPayment_AdvancesBillingCycle_Correctly
-    /// Verifies that recording a payment advances the billing cycle count
-    /// and updates the next billing date appropriately
+    /// E.1 Test: Subscription.RecordPayment_ConfirmsBillingCycle_Correctly
+    /// Verifies that recording a payment confirms the billing cycle count
+    /// without moving the period for the initial cycle.
     /// </summary>
     [Fact]
-    public void RecordPayment_AdvancesBillingCycle_Correctly()
+    public void RecordPayment_ConfirmsBillingCycle_Correctly()
     {
         // Arrange
         var subscription = CreateValidSubscription();
@@ -369,12 +369,17 @@ public class SubscriptionTests
         var paymentDate = DateTime.UtcNow;
 
         // Act
-        var result = subscription.RecordPayment(29.99m, "USD", paymentDate, "unique_payment_key_1");
+        var result = subscription.RecordPayment(
+            29.99m,
+            "USD",
+            paymentDate,
+            "unique_payment_key_1",
+            forBillingCycle: 1);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         subscription.BillingCycleCount.Should().Be(initialBillingCycle + 1);
-        subscription.NextBillingDate.Should().BeAfter(initialNextBillingDate);
+        subscription.NextBillingDate.Should().Be(initialNextBillingDate);
         subscription.LastPaymentAt.Should().Be(paymentDate);
     }
 
@@ -549,7 +554,7 @@ public class SubscriptionTests
     #region Renewal Processing Tests
 
     [Fact]
-    public void ProcessRenewal_ShouldSucceed_WhenSubscriptionIsActive()
+    public void ProcessRenewal_ShouldRequirePaymentConfirmation_WhenSubscriptionIsActive()
     {
         // Arrange
         var subscription = CreateValidSubscription();
@@ -561,8 +566,10 @@ public class SubscriptionTests
         var result = subscription.ProcessRenewal(newAmount, idempotencyKey);
 
         // Assert
-        result.Success.Should().BeTrue();
-        subscription.BillingCycleCount.Should().BeGreaterThan(0);
+        result.Success.Should().BeFalse();
+        result.FailureReason.Should().Contain("payment confirmation");
+        result.ChargedAmount.Should().BeNull();
+        subscription.BillingCycleCount.Should().Be(0);
     }
 
     [Fact]
@@ -597,7 +604,7 @@ public class SubscriptionTests
     }
 
     [Fact]
-    public void ProcessRenewal_ShouldBeIdempotent_WithSameKey()
+    public void ProcessRenewal_ShouldRemainNonMutating_WithSameKey()
     {
         // Arrange
         var subscription = CreateValidSubscription();
@@ -611,9 +618,11 @@ public class SubscriptionTests
         var result2 = subscription.ProcessRenewal(newAmount, idempotencyKey);
 
         // Assert
-        result1.Success.Should().BeTrue();
-        result2.Success.Should().BeTrue(); // Idempotent
-        subscription.BillingCycleCount.Should().Be(cycleAfterFirst); // Not incremented again
+        result1.Success.Should().BeFalse();
+        result2.Success.Should().BeFalse();
+        result1.ChargedAmount.Should().BeNull();
+        result2.ChargedAmount.Should().BeNull();
+        subscription.BillingCycleCount.Should().Be(cycleAfterFirst);
     }
 
     [Fact]
@@ -910,7 +919,7 @@ public class SubscriptionTests
         var paymentDate = DateTime.UtcNow;
 
         // Act
-        subscription.RecordPayment(29.99m, "USD", paymentDate, "payment_123");
+        subscription.RecordPayment(29.99m, "USD", paymentDate, "payment_123", forBillingCycle: 1);
 
         // Assert - Monthly cycle should advance by 1 month
         subscription.NextBillingDate.Should().BeCloseTo(paymentDate.AddMonths(1), TimeSpan.FromHours(1));
@@ -983,7 +992,7 @@ public class SubscriptionTests
     }
 
     [Fact]
-    public void RecordPayment_WithSameBillingCycle_ShouldReturnAlreadyProcessed()
+    public void RecordPayment_WithSameBillingCycleAndDifferentPayment_ShouldReject()
     {
         // Arrange
         var subscription = CreateValidSubscription();
@@ -995,12 +1004,11 @@ public class SubscriptionTests
         // Act - Try to record another payment for same billing cycle (different idempotency key)
         var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow.AddMinutes(5), "payment_1_retry", forBillingCycle: 1);
 
-        // Assert
-        result.IsAlreadyProcessed.Should().BeTrue();
+        result.IsRejectedOutOfOrder.Should().BeTrue();
     }
 
     [Fact]
-    public void RecordPayment_WithSameBillingCycle_ShouldUpdatePaymentDateIfNewer()
+    public void RecordPayment_WithSameBillingCycleAndDifferentPayment_ShouldPreserveOriginalPaymentDate()
     {
         // Arrange
         var subscription = CreateValidSubscription();
@@ -1015,7 +1023,7 @@ public class SubscriptionTests
         subscription.RecordPayment(29.99m, "USD", secondPaymentDate, "payment_1_retry", forBillingCycle: 1);
 
         // Assert
-        subscription.LastPaymentAt.Should().Be(secondPaymentDate);
+        subscription.LastPaymentAt.Should().Be(firstPaymentDate);
     }
 
     [Fact]
@@ -1055,7 +1063,7 @@ public class SubscriptionTests
             planId: Guid.NewGuid(),
             createdByUserId: Guid.NewGuid(),
             billingCycle: cycle,
-            amount: new Money(2999),
+            amount: new Money(29.99m, "USD"),
             startDate: DateTime.UtcNow,
             trialEndDate: null
         );
@@ -1063,7 +1071,7 @@ public class SubscriptionTests
         var paymentDate = DateTime.UtcNow;
 
         // Act
-        subscription.RecordPayment(29.99m, "USD", paymentDate, $"payment_{cycle}");
+        subscription.RecordPayment(29.99m, "USD", paymentDate, $"payment_{cycle}", forBillingCycle: 1);
 
         // Assert - Next billing should be approximately the expected days away
         var daysDiff = (subscription.NextBillingDate - paymentDate).TotalDays;
@@ -1424,7 +1432,7 @@ public class SubscriptionTests
     #region RecordPaymentLegacy Tests
 
     [Fact]
-    public void RecordPaymentLegacy_ShouldReturnTrue_WhenPaymentRecorded()
+    public void RecordPaymentLegacy_ShouldReturnFalse_WhenBillingCycleIdentityIsUnavailable()
     {
         // Arrange
         var subscription = CreateValidSubscription();
@@ -1436,7 +1444,7 @@ public class SubscriptionTests
         var result = subscription.RecordPaymentLegacy(29.99m, "USD", DateTime.UtcNow, idempotencyKey);
 
         // Assert
-        result.Should().BeTrue();
+        result.Should().BeFalse();
 #pragma warning restore CS0618
     }
 
@@ -1522,14 +1530,19 @@ public class SubscriptionTests
             planId: Guid.NewGuid(),
             createdByUserId: Guid.NewGuid(),
             billingCycle: BillingCycle.Biannually,
-            amount: new Money(59999),
+            amount: new Money(599.99m, "USD"),
             startDate: startDate
         );
         subscription.Activate();
         var paymentDate = DateTime.UtcNow;
 
         // Act
-        var result = subscription.RecordPayment(599.99m, "USD", paymentDate, Guid.NewGuid().ToString());
+        var result = subscription.RecordPayment(
+            599.99m,
+            "USD",
+            paymentDate,
+            Guid.NewGuid().ToString(),
+            forBillingCycle: 1);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -1537,7 +1550,7 @@ public class SubscriptionTests
     }
 
     [Fact]
-    public void RecordPayment_WithWeeklyBillingCycle_ShouldSetNextBillingDateSevenDaysLater()
+    public void RecordPayment_WithWeeklyBillingCycle_ShouldNotMoveInitialPeriod()
     {
         // Arrange - Create a Monthly subscription and then use reflection to set it to Weekly
         // (Weekly is not supported in CalculateBillingDates but IS handled in RecordPayment switch)
@@ -1547,7 +1560,7 @@ public class SubscriptionTests
             planId: Guid.NewGuid(),
             createdByUserId: Guid.NewGuid(),
             billingCycle: BillingCycle.Monthly, // Start with Monthly
-            amount: new Money(999),
+            amount: new Money(9.99m, "USD"),
             startDate: startDate
         );
         subscription.Activate();
@@ -1557,13 +1570,19 @@ public class SubscriptionTests
         billingCycleProperty!.SetValue(subscription, BillingCycle.Weekly);
 
         var paymentDate = DateTime.UtcNow;
+        var initialNextBillingDate = subscription.NextBillingDate;
 
         // Act
-        var result = subscription.RecordPayment(9.99m, "USD", paymentDate, Guid.NewGuid().ToString());
+        var result = subscription.RecordPayment(
+            9.99m,
+            "USD",
+            paymentDate,
+            Guid.NewGuid().ToString(),
+            forBillingCycle: 1);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        subscription.NextBillingDate.Should().BeCloseTo(paymentDate.AddDays(7), TimeSpan.FromSeconds(5));
+        subscription.NextBillingDate.Should().Be(initialNextBillingDate);
     }
 
     #endregion
@@ -1611,7 +1630,7 @@ public class SubscriptionTests
             planId: Guid.NewGuid(),
             createdByUserId: Guid.NewGuid(),
             billingCycle: BillingCycle.Monthly,
-            amount: new Money(2999),
+            amount: new Money(29.99m, "USD"),
             startDate: DateTime.UtcNow,
             trialEndDate: null
         );

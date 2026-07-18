@@ -28,6 +28,11 @@ public sealed record PaymentRecordResult
     public bool IsRejectedCancelled { get; init; }
 
     /// <summary>
+    ///     Whether the payment was rejected because it did not match the subscription's authoritative money.
+    /// </summary>
+    public bool IsRejectedMoney { get; init; }
+
+    /// <summary>
     ///     The idempotency key for this payment
     /// </summary>
     public string? IdempotencyKey { get; init; }
@@ -103,6 +108,23 @@ public sealed record PaymentRecordResult
             IsAlreadyProcessed = false,
             IsRejectedOutOfOrder = false,
             IsRejectedCancelled = true,
+            Message = message
+        };
+
+    /// <summary>
+    ///     Creates a rejection result for a payment that does not exactly match the amount due.
+    /// </summary>
+    public static PaymentRecordResult RejectedMoney(string idempotencyKey, int requestedCycle, int lastProcessedCycle, string message)
+        => new()
+        {
+            IsSuccess = false,
+            IsAlreadyProcessed = false,
+            IsRejectedOutOfOrder = false,
+            IsRejectedCancelled = false,
+            IsRejectedMoney = true,
+            IdempotencyKey = idempotencyKey,
+            RequestedBillingCycle = requestedCycle,
+            LastProcessedBillingCycle = lastProcessedCycle,
             Message = message
         };
 }

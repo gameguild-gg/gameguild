@@ -24,10 +24,10 @@ public class SubscriptionIdempotencyTests
         var paymentDate = DateTime.UtcNow;
 
         // First payment
-        var firstResult = subscription.RecordPayment(29.99m, "USD", paymentDate, idempotencyKey);
+        var firstResult = subscription.RecordPayment(29.99m, "USD", paymentDate, idempotencyKey, forBillingCycle: 1);
 
         // Act - Second payment with same key (simulates webhook retry)
-        var secondResult = subscription.RecordPayment(29.99m, "USD", paymentDate, idempotencyKey);
+        var secondResult = subscription.RecordPayment(29.99m, "USD", paymentDate, idempotencyKey, forBillingCycle: 1);
 
         // Assert
         firstResult.IsSuccess.Should().BeTrue();
@@ -44,7 +44,7 @@ public class SubscriptionIdempotencyTests
         var paymentDate = DateTime.UtcNow;
 
         // Act
-        var firstResult = subscription.RecordPayment(29.99m, "USD", paymentDate, "key_1");
+        var firstResult = subscription.RecordPayment(29.99m, "USD", paymentDate, "key_1", forBillingCycle: 1);
         var secondResult = subscription.RecordPayment(29.99m, "USD", paymentDate.AddMonths(1), "key_2", forBillingCycle: 2);
 
         // Assert
@@ -101,7 +101,7 @@ public class SubscriptionIdempotencyTests
     }
 
     [Fact]
-    public void RecordPayment_ForCurrentBillingCycle_WithDifferentKey_ShouldUpdateIdempotencyKey()
+    public void RecordPayment_ForCurrentBillingCycle_WithDifferentKey_ShouldRejectDifferentPayment()
     {
         // Arrange - Edge case: same cycle, different key (could be retry with new payment attempt)
         var subscription = CreateActiveSubscription();
@@ -112,24 +112,21 @@ public class SubscriptionIdempotencyTests
         // Act - Same cycle, different key
         var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "key_attempt_2", forBillingCycle: 1);
 
-        // Assert - Should be treated as already processed for this cycle
-        result.IsAlreadyProcessed.Should().BeTrue();
+        result.IsRejectedOutOfOrder.Should().BeTrue();
+        subscription.LastPaymentIdempotencyKey.Should().Be("key_attempt_1");
     }
 
     [Fact]
-    public void RecordPayment_WithoutBillingCycle_ShouldUseCurrentCycleCount()
+    public void RecordPayment_WithoutBillingCycle_ShouldReject()
     {
         // Arrange
         var subscription = CreateActiveSubscription();
-        var initialCycle = subscription.BillingCycleCount;
-
-        // Act
         var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "key_1");
 
-        // Assert - Payment should be recorded and LastProcessedBillingCycle updated
-        result.IsSuccess.Should().BeTrue();
-        // After RecordPayment, BillingCycleCount is incremented, and LastProcessedBillingCycle is set to the cycle before increment
-        subscription.LastProcessedBillingCycle.Should().Be(initialCycle);
+        result.IsSuccess.Should().BeFalse();
+        result.IsRejectedOutOfOrder.Should().BeTrue();
+        subscription.BillingCycleCount.Should().Be(0);
+        subscription.LastProcessedBillingCycle.Should().Be(0);
     }
 
     #endregion
@@ -151,33 +148,31 @@ public class SubscriptionIdempotencyTests
         // Act - Second renewal with same key (simulates webhook retry)
         var secondResult = subscription.ProcessRenewal(renewalAmount, idempotencyKey);
 
-        // Assert
-        firstResult.Success.Should().BeTrue();
-        secondResult.Success.Should().BeTrue();
+        firstResult.Success.Should().BeFalse();
+        secondResult.Success.Should().BeFalse();
+        firstResult.FailureReason.Should().Contain("payment confirmation");
         secondResult.SubscriptionId.Should().Be(firstResult.SubscriptionId);
         subscription.BillingCycleCount.Should().Be(cycleAfterFirst, "duplicate renewal should not increment cycle twice");
     }
 
     [Fact]
-    public void ProcessRenewal_WithDifferentIdempotencyKey_ShouldProcessNewRenewal()
+    public void ProcessRenewal_WithDifferentIdempotencyKey_ShouldNotAdvanceWithoutPayment()
     {
         // Arrange
         var subscription = CreateActiveSubscription();
         var renewalAmount = new Money(29.99m, "USD");
         var initialCycle = subscription.BillingCycleCount;
 
-        // Act - Two renewals with different keys should both process
         var firstResult = subscription.ProcessRenewal(renewalAmount, "key_1");
         var secondResult = subscription.ProcessRenewal(renewalAmount, "key_2");
 
-        // Assert
-        firstResult.Success.Should().BeTrue();
-        secondResult.Success.Should().BeTrue();
-        subscription.BillingCycleCount.Should().Be(initialCycle + 2);
+        firstResult.Success.Should().BeFalse();
+        secondResult.Success.Should().BeFalse();
+        subscription.BillingCycleCount.Should().Be(initialCycle);
     }
 
     [Fact]
-    public void ProcessRenewal_ShouldUpdateLastRenewalIdempotencyKey()
+    public void ProcessRenewal_ShouldNotClaimRenewalIdempotencyKeyWithoutPayment()
     {
         // Arrange
         var subscription = CreateActiveSubscription();
@@ -188,7 +183,7 @@ public class SubscriptionIdempotencyTests
         subscription.ProcessRenewal(renewalAmount, idempotencyKey);
 
         // Assert
-        subscription.LastRenewalIdempotencyKey.Should().Be(idempotencyKey);
+        subscription.LastRenewalIdempotencyKey.Should().BeNull();
     }
 
     #endregion
