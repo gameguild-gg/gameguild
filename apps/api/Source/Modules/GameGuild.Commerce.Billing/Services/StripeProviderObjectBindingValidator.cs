@@ -28,8 +28,8 @@ public sealed class StripeProviderObjectBindingValidator(IPaymentRepository paym
                 verifiedEvent.ProviderEnvironment,
                 verifiedEvent.ProviderAccountId,
                 verifiedEvent.ProviderObjectId,
-                verifiedEvent.ProviderObjectType,
-                verifiedEvent.ProviderMonetaryLeg,
+                "payment_intent",
+                "capture",
                 cancellationToken)
             .ConfigureAwait(false);
         if (payment is null)

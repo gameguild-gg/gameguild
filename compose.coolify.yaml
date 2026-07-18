@@ -14,6 +14,7 @@
 #   AUTH_SECRET, API_PUBLIC_URL, WEB_PUBLIC_URL, LEARNING_PUBLIC_URL,
 #   PaymentGateways__Stripe__ApiKey,
 #   PaymentGateways__Stripe__PublishableKey,
+#   PaymentGateways__Stripe__AccountId,
 #   Billing__Stripe__WebhookSecret, Billing__Stripe__WebhookEndpointId,
 #   Billing__Stripe__ApiVersion, Billing__Stripe__LiveMode
 #
@@ -66,8 +67,12 @@ services:
       - PaymentGateways__Stripe__UseSimulation=false
       - PaymentGateways__Stripe__ApiKey=${PaymentGateways__Stripe__ApiKey:?set PaymentGateways__Stripe__ApiKey}
       - PaymentGateways__Stripe__PublishableKey=${PaymentGateways__Stripe__PublishableKey:?set PaymentGateways__Stripe__PublishableKey}
+      - PaymentGateways__Stripe__AccountId=${PaymentGateways__Stripe__AccountId:?set PaymentGateways__Stripe__AccountId}
+      - PaymentGateways__Stripe__ConnectedAccountId=${Billing__Stripe__ConnectedAccountId:-}
+      - PaymentGateways__Stripe__LiveMode=${Billing__Stripe__LiveMode:?set Billing__Stripe__LiveMode to false for Staging or true for Production}
       - Billing__Stripe__WebhookSecret=${Billing__Stripe__WebhookSecret:?set Billing__Stripe__WebhookSecret}
       - Billing__Stripe__WebhookEndpointId=${Billing__Stripe__WebhookEndpointId:?set Billing__Stripe__WebhookEndpointId}
+      - Billing__Stripe__AccountId=${PaymentGateways__Stripe__AccountId:?set PaymentGateways__Stripe__AccountId}
       - Billing__Stripe__ApiVersion=${Billing__Stripe__ApiVersion:?set Billing__Stripe__ApiVersion}
       - Billing__Stripe__ConnectedAccountId=${Billing__Stripe__ConnectedAccountId:-}
       - Billing__Stripe__LiveMode=${Billing__Stripe__LiveMode:?set Billing__Stripe__LiveMode to false for Staging or true for Production}
