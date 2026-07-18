@@ -254,12 +254,23 @@ public class SubscriptionQueryAndExternalIdService(
                        ?? throw new InvalidOperationException(
                            "TenantId is required for subscription entities but was null. This indicates a data integrity issue.");
 
+        var billingCycleNumber = subscription.LastProcessedBillingCycle + 1;
+        var billingPeriodStart = billingCycleNumber == 1
+            ? subscription.CurrentPeriodStart
+            : subscription.NextBillingDate;
+        var billingPeriodEnd = billingCycleNumber == 1
+            ? subscription.CurrentPeriodEnd
+            : subscription.BillingCycle.CalculateNextBillingDate(billingPeriodStart).AddDays(-1);
+
         return new SubscriptionPaymentContext(
             subscription.Id,
             tenantId,
             subscription.Amount.Amount,
             subscription.Amount.Currency,
-            subscription.ExternalCustomerId);
+            subscription.ExternalCustomerId,
+            billingCycleNumber,
+            billingPeriodStart,
+            billingPeriodEnd);
     }
 
     public async Task SetExternalCustomerIdAsync(Guid subscriptionId, string externalCustomerId, CancellationToken cancellationToken = default)
