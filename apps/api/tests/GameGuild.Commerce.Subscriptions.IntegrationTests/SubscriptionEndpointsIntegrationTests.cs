@@ -153,7 +153,7 @@ public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicatio
     }
 
     [Fact]
-    public async Task ProcessPayment_ShouldActivateSubscription_AndRecordLastPaymentAt()
+    public async Task ProcessPayment_WithoutBillingCycle_ShouldNotActivateSubscription()
     {
         // Arrange
         var planId = await SeedSubscriptionPlanAsync();
@@ -196,9 +196,9 @@ public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicatio
                 && lastPaymentPropCap.ValueKind != System.Text.Json.JsonValueKind.Null
                 && lastPaymentPropCap.ValueKind != System.Text.Json.JsonValueKind.Undefined;
 
-        status.Should().Be("Active");
-        isActive.Should().BeTrue();
-        lastPaymentAtPresent.Should().BeTrue();
+        status.Should().Be("PendingActivation");
+        isActive.Should().BeFalse();
+        lastPaymentAtPresent.Should().BeFalse();
     }
 
     [Fact]
