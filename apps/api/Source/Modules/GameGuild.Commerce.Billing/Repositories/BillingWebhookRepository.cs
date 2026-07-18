@@ -27,6 +27,25 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
     }
 
     /// <inheritdoc />
+    public async Task<BillingWebhookEvent?> GetByProviderScopeAsync(
+        string provider,
+        string providerEnvironment,
+        string providerAccountId,
+        string webhookEndpointId,
+        string externalEventId,
+        CancellationToken cancellationToken = default)
+    {
+        return await Entities.FirstOrDefaultAsync(
+                webhookEvent => webhookEvent.Provider == provider &&
+                                webhookEvent.ProviderEnvironment == providerEnvironment &&
+                                webhookEvent.ProviderAccountId == providerAccountId &&
+                                webhookEvent.WebhookEndpointId == webhookEndpointId &&
+                                webhookEvent.ExternalEventId == externalEventId,
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
     public async Task<IEnumerable<BillingWebhookEvent>> GetByProviderAsync(string provider, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Getting webhook events for provider: {Provider}", provider);
@@ -53,8 +72,19 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
     {
         ArgumentNullException.ThrowIfNull(webhookEvent);
         
-        // Idempotency check: prevent duplicate event processing
-        var existingEvent = await GetByExternalEventIdAsync(webhookEvent.ExternalEventId, webhookEvent.Provider, cancellationToken).ConfigureAwait(false);
+        var existingEvent = webhookEvent.ProviderEnvironment is not null &&
+                            webhookEvent.ProviderAccountId is not null &&
+                            webhookEvent.WebhookEndpointId is not null
+            ? await GetByProviderScopeAsync(
+                    webhookEvent.Provider,
+                    webhookEvent.ProviderEnvironment,
+                    webhookEvent.ProviderAccountId,
+                    webhookEvent.WebhookEndpointId,
+                    webhookEvent.ExternalEventId,
+                    cancellationToken)
+                .ConfigureAwait(false)
+            : await GetByExternalEventIdAsync(webhookEvent.ExternalEventId, webhookEvent.Provider, cancellationToken)
+                .ConfigureAwait(false);
         if (existingEvent is not null)
         {
             logger.LogWarning("Duplicate webhook event detected: {ExternalEventId} for provider: {Provider}. Returning existing event.", 
