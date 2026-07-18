@@ -59,7 +59,32 @@ public sealed class OrderPaymentService(
 
         if (payment.Status == PaymentStatus.RequiresAction)
         {
-            payment.MarkAsFailed("Additional payment action was not completed before retry.", "requires_action_replaced");
+            if (string.IsNullOrWhiteSpace(payment.ExternalTransactionId))
+            {
+                return OrderChargeResult.RequiresAction(
+                    payment.Id,
+                    "Additional payment action is required.",
+                    clientActionToken: null);
+            }
+
+            var providerResult = await paymentGateway
+                .GetPaymentAsync(payment.ExternalTransactionId, cancellationToken)
+                .ConfigureAwait(false);
+            return await ApplyGatewayResultAsync(payment, providerResult, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (payment.Status == PaymentStatus.Processing)
+        {
+            var originalCharge = charge with
+            {
+                PaymentMethodId = payment.PaymentMethodId ?? charge.PaymentMethodId
+            };
+            return await ProcessAttemptAsync(
+                    payment,
+                    originalCharge,
+                    payment.IdempotencyKey,
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
 
         if (payment.Status == PaymentStatus.Failed && payment.CanRetry)
@@ -85,8 +110,15 @@ public sealed class OrderPaymentService(
         string gatewayIdempotencyKey,
         CancellationToken cancellationToken)
     {
-        payment.MarkAsProcessing();
-        await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+        if (payment.Status == PaymentStatus.Pending)
+        {
+            payment.MarkAsProcessing();
+            await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+        }
+        else if (payment.Status != PaymentStatus.Processing)
+        {
+            throw new InvalidOperationException($"Cannot process payment in {payment.Status} status.");
+        }
 
         var gatewayResult = await paymentGateway.ProcessPaymentAsync(
             new GatewayPaymentRequest(
@@ -103,33 +135,70 @@ public sealed class OrderPaymentService(
                 }),
             cancellationToken).ConfigureAwait(false);
 
-        if (gatewayResult.Success)
+        return await ApplyGatewayResultAsync(payment, gatewayResult, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<OrderChargeResult> ApplyGatewayResultAsync(
+        Payment payment,
+        GatewayPaymentResult gatewayResult,
+        CancellationToken cancellationToken)
+    {
+        var stateChanged = false;
+
+        if (gatewayResult.Success || gatewayResult.Status == PaymentStatus.Succeeded)
         {
             payment.MarkAsSucceeded(
                 gatewayResult.ExternalPaymentId ?? gatewayResult.TransactionId ?? Guid.NewGuid().ToString(),
                 gatewayResult.TransactionId);
+            stateChanged = true;
         }
         else if (gatewayResult.Status == PaymentStatus.RequiresAction)
         {
-            payment.MarkAsRequiresAction(gatewayResult.TransactionId);
+            if (payment.Status != PaymentStatus.RequiresAction)
+            {
+                payment.MarkAsRequiresAction(gatewayResult.TransactionId);
+                stateChanged = true;
+            }
+        }
+        else if (gatewayResult.Status is PaymentStatus.Pending or PaymentStatus.Processing)
+        {
+            if (payment.Status != PaymentStatus.Processing)
+            {
+                payment.MarkAsProcessing(gatewayResult.TransactionId);
+                stateChanged = true;
+            }
         }
         else
         {
             payment.MarkAsFailed(
                 gatewayResult.ErrorMessage ?? "Order payment failed.",
                 gatewayResult.ErrorCode);
+            stateChanged = true;
         }
 
-        await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+        if (stateChanged)
+            await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+
         logger.LogInformation(
             "Order payment {PaymentId} for order {OrderId} finished with status {Status}",
             payment.Id,
-            charge.OrderId,
+            payment.OrderId,
             payment.Status);
 
-        return gatewayResult.Success
-            ? OrderChargeResult.Succeeded(payment.Id, payment.ExternalPaymentId)
-            : OrderChargeResult.Failed(payment.Id, payment.FailureReason ?? gatewayResult.ErrorMessage ?? "Order payment failed.");
+        return payment.Status switch
+        {
+            PaymentStatus.Succeeded => OrderChargeResult.Succeeded(payment.Id, payment.ExternalPaymentId),
+            PaymentStatus.RequiresAction => OrderChargeResult.RequiresAction(
+                payment.Id,
+                gatewayResult.ErrorMessage ?? "Additional payment action is required.",
+                gatewayResult.ClientActionToken),
+            PaymentStatus.Pending or PaymentStatus.Processing => OrderChargeResult.Processing(
+                payment.Id,
+                gatewayResult.ErrorMessage ?? "Payment is pending provider reconciliation."),
+            _ => OrderChargeResult.Failed(
+                payment.Id,
+                payment.FailureReason ?? gatewayResult.ErrorMessage ?? "Order payment failed.")
+        };
     }
 
     public async Task<bool> IsSettledAsync(
