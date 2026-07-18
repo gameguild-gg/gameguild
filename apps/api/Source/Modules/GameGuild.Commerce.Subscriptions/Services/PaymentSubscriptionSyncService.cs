@@ -10,12 +10,31 @@ public sealed class PaymentSubscriptionSyncService(
     ISubscriptionRepository subscriptionRepository,
     ILogger<PaymentSubscriptionSyncService> logger) : IPaymentSubscriptionSyncService
 {
+    public Task SyncSuccessfulPaymentAsync(
+        Guid paymentId,
+        Guid? subscriptionId,
+        decimal amount,
+        string currency,
+        DateTime processedAt,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogWarning(
+            "Payment {PaymentId} cannot be synced to subscription {SubscriptionId} without a billing cycle identity",
+            paymentId,
+            subscriptionId);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    ///     Synchronizes a provider-confirmed payment for one explicit subscription billing cycle.
+    /// </summary>
     public async Task SyncSuccessfulPaymentAsync(
         Guid paymentId,
         Guid? subscriptionId,
         decimal amount,
         string currency,
         DateTime processedAt,
+        int billingCycleNumber,
         CancellationToken cancellationToken = default)
     {
         if (!subscriptionId.HasValue)
@@ -37,7 +56,12 @@ public sealed class PaymentSubscriptionSyncService(
         }
 
         var idempotencyKey = $"payment:{paymentId}";
-        var result = subscription.RecordPayment(amount, currency, processedAt, idempotencyKey);
+        var result = subscription.RecordPayment(
+            amount,
+            currency,
+            processedAt,
+            idempotencyKey,
+            billingCycleNumber);
 
         if (result.IsSuccess)
         {

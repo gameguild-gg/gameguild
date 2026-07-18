@@ -25,7 +25,8 @@ public sealed class PaymentSubscriptionSyncServiceTests
             subscriptionId: null,
             amount: 29.99m,
             currency: "USD",
-            processedAt: DateTime.UtcNow);
+            processedAt: DateTime.UtcNow,
+            billingCycleNumber: 1);
 
         _repository.Verify(repository => repository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         _repository.Verify(repository => repository.UpdateAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -44,7 +45,8 @@ public sealed class PaymentSubscriptionSyncServiceTests
             subscriptionId,
             29.99m,
             "USD",
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            billingCycleNumber: 1);
 
         _repository.Verify(repository => repository.UpdateAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -68,7 +70,8 @@ public sealed class PaymentSubscriptionSyncServiceTests
             subscription.Id,
             29.99m,
             "USD",
-            processedAt);
+            processedAt,
+            billingCycleNumber: 1);
 
         subscription.LastPaymentIdempotencyKey.Should().Be($"payment:{paymentId}");
         subscription.LastPaymentAt.Should().Be(processedAt);
@@ -93,7 +96,8 @@ public sealed class PaymentSubscriptionSyncServiceTests
             subscription.Id,
             29.99m,
             "USD",
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            billingCycleNumber: 1);
 
         subscription.Status.Should().Be(SubscriptionStatus.Active);
         _repository.Verify(repository => repository.UpdateAsync(subscription, It.IsAny<CancellationToken>()), Times.Once);
@@ -104,7 +108,7 @@ public sealed class PaymentSubscriptionSyncServiceTests
     {
         var paymentId = Guid.NewGuid();
         var subscription = CreateActiveSubscription(Guid.NewGuid());
-        subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, $"payment:{paymentId}");
+        subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, $"payment:{paymentId}", forBillingCycle: 1);
 
         _repository
             .Setup(repository => repository.GetByIdAsync(subscription.Id, It.IsAny<CancellationToken>()))
@@ -115,8 +119,56 @@ public sealed class PaymentSubscriptionSyncServiceTests
             subscription.Id,
             29.99m,
             "USD",
-            DateTime.UtcNow.AddMinutes(5));
+            DateTime.UtcNow.AddMinutes(5),
+            billingCycleNumber: 1);
 
+        _repository.Verify(repository => repository.UpdateAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(29.98, "USD")]
+    [InlineData(30.00, "USD")]
+    [InlineData(29.99, "EUR")]
+    public async Task SyncSuccessfulPaymentAsync_ShouldNotActivatePendingSubscription_WhenMoneyIsNotExact(
+        decimal amount,
+        string currency)
+    {
+        var subscription = CreatePendingSubscription(Guid.NewGuid());
+        _repository
+            .Setup(repository => repository.GetByIdAsync(subscription.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(subscription);
+
+        await _service.SyncSuccessfulPaymentAsync(
+            Guid.NewGuid(),
+            subscription.Id,
+            amount,
+            currency,
+            DateTime.UtcNow,
+            billingCycleNumber: 1);
+
+        subscription.Status.Should().Be(SubscriptionStatus.PendingActivation);
+        subscription.BillingCycleCount.Should().Be(0);
+        _repository.Verify(repository => repository.UpdateAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SyncSuccessfulPaymentAsync_WithoutBillingCycle_ShouldFailClosed()
+    {
+        var subscription = CreatePendingSubscription(Guid.NewGuid());
+        _repository
+            .Setup(repository => repository.GetByIdAsync(subscription.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(subscription);
+
+        await _service.SyncSuccessfulPaymentAsync(
+            Guid.NewGuid(),
+            subscription.Id,
+            29.99m,
+            "USD",
+            DateTime.UtcNow);
+
+        subscription.Status.Should().Be(SubscriptionStatus.PendingActivation);
+        subscription.BillingCycleCount.Should().Be(0);
+        _repository.Verify(repository => repository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         _repository.Verify(repository => repository.UpdateAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -135,7 +187,7 @@ public sealed class PaymentSubscriptionSyncServiceTests
             planId: Guid.NewGuid(),
             createdByUserId: Guid.NewGuid(),
             billingCycle: BillingCycle.Monthly,
-            amount: new Money(2999),
+            amount: new Money(29.99m, "USD"),
             startDate: DateTime.UtcNow,
             trialEndDate: null);
 
