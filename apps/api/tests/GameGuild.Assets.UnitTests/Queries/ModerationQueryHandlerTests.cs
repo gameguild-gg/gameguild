@@ -269,9 +269,11 @@ public class GetModerationQueueQueryHandlerTests
         // Assert
         result.Should().HaveCount(1);
         result[0].Asset.Should().NotBeNull();
-        result[0].Asset!.Content.Should().NotBeNull();
-        result[0].Asset.Content!.Id.Should().Be(contentId);
-        result[0].Asset.Content.MimeType.Should().Be("image/png");
+        var asset = result[0].Asset!;
+        asset.Content.Should().NotBeNull();
+        var content = asset.Content!;
+        content.Id.Should().Be(contentId);
+        content.MimeType.Should().Be("image/png");
     }
 
     [Fact]
