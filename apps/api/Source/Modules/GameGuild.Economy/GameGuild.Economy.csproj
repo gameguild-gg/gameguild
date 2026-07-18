@@ -7,4 +7,13 @@
   <ItemGroup>
     <Using Remove="Microsoft.EntityFrameworkCore" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="GameGuild.Economy.UnitTests" />
+  </ItemGroup>
 </Project>
