@@ -8,6 +8,9 @@ internal sealed class DenyOrderPaymentAuthority : IOrderPaymentAuthority
 
 internal sealed class DenyOrderPaymentProcessor : IOrderPaymentProcessor
 {
+    public string? GetPaymentMethodValidationError(string paymentMethodId) =>
+        "Payments is not configured for order charging.";
+
     public Task<OrderChargeResult> ProcessAsync(
         AuthoritativeOrderCharge charge,
         CancellationToken cancellationToken = default) =>

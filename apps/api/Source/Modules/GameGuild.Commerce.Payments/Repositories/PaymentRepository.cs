@@ -210,7 +210,24 @@ public class PaymentRepository(
         }
 
         await Entities.AddAsync(payment, cancellationToken).ConfigureAwait(false);
-        await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (DbUpdateException)
+        {
+            Entities.Remove(payment);
+            var concurrentWinner = await GetByIdempotencyKeyAsync(payment.IdempotencyKey, cancellationToken)
+                .ConfigureAwait(false);
+            if (concurrentWinner is null)
+                throw;
+
+            logger.LogInformation(
+                "Concurrent payment reservation won idempotency key {IdempotencyKey}; replaying payment {PaymentId}",
+                payment.IdempotencyKey,
+                concurrentWinner.Id);
+            return concurrentWinner;
+        }
 
         logger.LogInformation("Successfully added payment {PaymentId}", payment.Id);
         return payment;

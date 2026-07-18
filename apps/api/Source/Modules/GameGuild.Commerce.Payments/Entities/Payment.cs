@@ -336,7 +336,7 @@ public class Payment : EntityBase
     }
 
     /// <summary>Increments retry count and resets for retry</summary>
-    public void PrepareForRetry()
+    public void PrepareForRetry(string? paymentMethodId = null)
     {
         if (Status != PaymentStatus.Failed)
             throw new InvalidOperationException("Can only retry failed payments");
@@ -349,6 +349,8 @@ public class Payment : EntityBase
         FailureReason = null;
         ErrorCode = null;
         NextRetryAt = null;
+        if (!string.IsNullOrWhiteSpace(paymentMethodId))
+            PaymentMethodId = paymentMethodId;
         Touch();
     }
 

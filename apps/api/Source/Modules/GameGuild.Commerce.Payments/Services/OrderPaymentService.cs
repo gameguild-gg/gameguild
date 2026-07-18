@@ -11,6 +11,11 @@ public sealed class OrderPaymentService(
     IPaymentGateway paymentGateway,
     ILogger<OrderPaymentService> logger) : IOrderPaymentProcessor, IOrderPaymentAuthority
 {
+    public string? GetPaymentMethodValidationError(string paymentMethodId) =>
+        StripePaymentMethodIdentifier.IsValid(paymentMethodId)
+            ? null
+            : StripePaymentMethodIdentifier.ValidationMessage;
+
     public async Task<OrderChargeResult> ProcessAsync(
         AuthoritativeOrderCharge charge,
         CancellationToken cancellationToken = default)
@@ -23,13 +28,10 @@ public sealed class OrderPaymentService(
 
         if (existingPayment is not null)
         {
-            EnsureMatches(existingPayment, charge);
-            return existingPayment.Status == PaymentStatus.Succeeded
-                ? OrderChargeResult.Succeeded(existingPayment.Id, existingPayment.ExternalPaymentId)
-                : OrderChargeResult.Failed(existingPayment.Id, existingPayment.FailureReason ?? $"Payment is {existingPayment.Status}.");
+            return await ProcessExistingAsync(existingPayment, charge, cancellationToken).ConfigureAwait(false);
         }
 
-        var payment = Payment.Create(
+        var proposedPayment = Payment.Create(
             charge.TenantId,
             charge.Amount,
             charge.Currency,
@@ -38,14 +40,57 @@ public sealed class OrderPaymentService(
             orderId: charge.OrderId,
             paymentMethodId: charge.PaymentMethodId,
             description: $"Payment for order {charge.OrderId}");
-        await paymentRepository.AddAsync(payment, cancellationToken).ConfigureAwait(false);
+        var payment = await paymentRepository.AddAsync(proposedPayment, cancellationToken).ConfigureAwait(false);
+        if (payment.Id != proposedPayment.Id)
+            return await ProcessExistingAsync(payment, charge, cancellationToken).ConfigureAwait(false);
 
+        return await ProcessAttemptAsync(payment, charge, idempotencyKey, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<OrderChargeResult> ProcessExistingAsync(
+        Payment payment,
+        AuthoritativeOrderCharge charge,
+        CancellationToken cancellationToken)
+    {
+        EnsureMatches(payment, charge);
+
+        if (payment.Status == PaymentStatus.Succeeded)
+            return OrderChargeResult.Succeeded(payment.Id, payment.ExternalPaymentId);
+
+        if (payment.Status == PaymentStatus.RequiresAction)
+        {
+            payment.MarkAsFailed("Additional payment action was not completed before retry.", "requires_action_replaced");
+        }
+
+        if (payment.Status == PaymentStatus.Failed && payment.CanRetry)
+        {
+            payment.PrepareForRetry(charge.PaymentMethodId);
+            await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+            return await ProcessAttemptAsync(
+                    payment,
+                    charge,
+                    $"{payment.IdempotencyKey}:retry:{payment.RetryCount}",
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        return OrderChargeResult.Failed(
+            payment.Id,
+            payment.FailureReason ?? $"Payment is {payment.Status}; retry after its state changes.");
+    }
+
+    private async Task<OrderChargeResult> ProcessAttemptAsync(
+        Payment payment,
+        AuthoritativeOrderCharge charge,
+        string gatewayIdempotencyKey,
+        CancellationToken cancellationToken)
+    {
         payment.MarkAsProcessing();
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
 
         var gatewayResult = await paymentGateway.ProcessPaymentAsync(
             new GatewayPaymentRequest(
-                idempotencyKey,
+                gatewayIdempotencyKey,
                 charge.Amount,
                 charge.Currency,
                 CustomerId: null,
@@ -111,8 +156,11 @@ public sealed class OrderPaymentService(
             throw new ArgumentOutOfRangeException(nameof(charge), "Order amount must be positive.");
         if (charge.Currency.Length != 3 || !charge.Currency.All(char.IsAsciiLetterUpper))
             throw new ArgumentException("Currency must be a three-letter uppercase code.", nameof(charge));
-        if (!StripePaymentMethodIdentifier.IsValid(charge.PaymentMethodId))
-            throw new ArgumentException(StripePaymentMethodIdentifier.ValidationMessage, nameof(charge));
+        var paymentMethodError = StripePaymentMethodIdentifier.IsValid(charge.PaymentMethodId)
+            ? null
+            : StripePaymentMethodIdentifier.ValidationMessage;
+        if (paymentMethodError is not null)
+            throw new ArgumentException(paymentMethodError, nameof(charge));
     }
 
     private static void EnsureMatches(Payment payment, AuthoritativeOrderCharge charge)

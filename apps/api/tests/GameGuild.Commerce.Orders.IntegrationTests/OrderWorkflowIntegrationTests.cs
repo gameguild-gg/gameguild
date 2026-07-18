@@ -223,6 +223,43 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
         captured.RootElement.GetProperty("status").GetString().Should().Be(nameof(OrderStatus.Paid));
         captured.RootElement.GetProperty("total").GetDecimal().Should().Be(45m);
     }
+
+    [Fact]
+    public async Task OrderVersion_ShouldRejectConcurrentMutationAfterPaymentReservation()
+    {
+        var order = Order.Create(TestUserIdValue, $"concurrency-{Guid.NewGuid():N}", TestTenantIdValue);
+        using (var seedScope = _factory.Services.CreateScope())
+        {
+            var seedContext = seedScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            seedContext.Set<Order>().Add(order);
+            await seedContext.SaveChangesAsync();
+        }
+
+        using var reservationScope = _factory.Services.CreateScope();
+        using var mutationScope = _factory.Services.CreateScope();
+        var reservationContext = reservationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var mutationContext = mutationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var reservationRepository = new OrderRepository(reservationContext);
+        var mutationRepository = new OrderRepository(mutationContext);
+        var reservedOrder = await reservationRepository.GetWithLineItemsAsync(order.Id);
+        var staleOrder = await mutationRepository.GetWithLineItemsAsync(order.Id);
+
+        reservedOrder!.StartPaymentProcessing();
+        await reservationRepository.UpdateAsync(reservedOrder);
+        await reservationRepository.SaveChangesAsync();
+
+        staleOrder!.Cancel("stale concurrent cancellation");
+        await mutationRepository.UpdateAsync(staleOrder);
+        var staleSave = () => mutationRepository.SaveChangesAsync();
+
+        await staleSave.Should().ThrowAsync<DbUpdateConcurrencyException>();
+
+        using var verificationScope = _factory.Services.CreateScope();
+        var verificationContext = verificationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var persisted = await verificationContext.Set<Order>().SingleAsync(item => item.Id == order.Id);
+        persisted.Status.Should().Be(OrderStatus.Processing);
+        persisted.Version.Should().Be(2);
+    }
 }
 
 internal sealed class OrdersTestAuthHandler(
@@ -251,6 +288,8 @@ internal sealed class OrdersTestAuthHandler(
 
 internal sealed class SuccessfulOrderPaymentProcessor : IOrderPaymentProcessor
 {
+    public string? GetPaymentMethodValidationError(string paymentMethodId) => null;
+
     public Task<OrderChargeResult> ProcessAsync(
         AuthoritativeOrderCharge charge,
         CancellationToken cancellationToken = default) =>

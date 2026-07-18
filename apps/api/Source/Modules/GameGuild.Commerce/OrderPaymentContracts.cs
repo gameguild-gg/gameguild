@@ -31,6 +31,11 @@ public sealed record OrderChargeResult(
 /// </summary>
 public interface IOrderPaymentProcessor
 {
+    /// <summary>
+    /// Returns a client-safe validation error, or <see langword="null"/> when the reference is supported.
+    /// </summary>
+    string? GetPaymentMethodValidationError(string paymentMethodId);
+
     Task<OrderChargeResult> ProcessAsync(
         AuthoritativeOrderCharge charge,
         CancellationToken cancellationToken = default);

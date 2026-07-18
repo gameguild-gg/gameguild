@@ -128,6 +128,185 @@ public sealed class OrderPaymentServiceTests
     }
 
     [Fact]
+    public async Task ProcessAsync_ShouldUseConcurrentInsertWinnerWithoutChargingAgain()
+    {
+        var orderId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var charge = new AuthoritativeOrderCharge(orderId, tenantId, 75m, "USD", "pm_order");
+        var winner = Payment.Create(
+            tenantId,
+            charge.Amount,
+            charge.Currency,
+            OrderPaymentService.CreateIdempotencyKey(tenantId, orderId),
+            orderId: orderId,
+            paymentMethodId: charge.PaymentMethodId);
+        winner.MarkAsProcessing();
+        winner.MarkAsSucceeded("pi_winner", "txn_winner");
+
+        var repository = new Mock<IPaymentRepository>();
+        repository.Setup(repo => repo.GetByIdempotencyKeyAsync(winner.IdempotencyKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Payment?)null);
+        repository.Setup(repo => repo.AddAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(winner);
+        var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
+        var service = new OrderPaymentService(
+            repository.Object,
+            gateway.Object,
+            Mock.Of<ILogger<OrderPaymentService>>());
+
+        var result = await service.ProcessAsync(charge);
+
+        result.Success.Should().BeTrue();
+        result.PaymentId.Should().Be(winner.Id);
+        result.ExternalPaymentId.Should().Be("pi_winner");
+        gateway.Verify(
+            item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ShouldRetryFailedOrderPaymentWithLatestMethod()
+    {
+        var orderId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var charge = new AuthoritativeOrderCharge(orderId, tenantId, 75m, "USD", "pm_replacement");
+        var payment = Payment.Create(
+            tenantId,
+            charge.Amount,
+            charge.Currency,
+            OrderPaymentService.CreateIdempotencyKey(tenantId, orderId),
+            orderId: orderId,
+            paymentMethodId: "pm_declined");
+        payment.MarkAsProcessing();
+        payment.MarkAsFailed("Card declined", "card_declined");
+
+        var repository = new Mock<IPaymentRepository>();
+        repository.Setup(repo => repo.GetByIdempotencyKeyAsync(payment.IdempotencyKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(payment);
+        repository.Setup(repo => repo.UpdateAsync(payment, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(payment);
+        var gateway = new Mock<IPaymentGateway>();
+        gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentResult(
+                true,
+                "txn_retry",
+                "pi_retry",
+                null,
+                null,
+                PaymentStatus.Succeeded,
+                SystemClock.UtcNow));
+        var service = new OrderPaymentService(
+            repository.Object,
+            gateway.Object,
+            Mock.Of<ILogger<OrderPaymentService>>());
+
+        var result = await service.ProcessAsync(charge);
+
+        result.Success.Should().BeTrue();
+        payment.RetryCount.Should().Be(1);
+        payment.PaymentMethodId.Should().Be("pm_replacement");
+        gateway.Verify(item => item.ProcessPaymentAsync(
+            It.Is<GatewayPaymentRequest>(request =>
+                request.IdempotencyKey.EndsWith(":retry:1", StringComparison.Ordinal) &&
+                request.PaymentMethodId == "pm_replacement"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ShouldReplaceRequiresActionWithAnExplicitRetry()
+    {
+        var orderId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var charge = new AuthoritativeOrderCharge(orderId, tenantId, 75m, "USD", "pm_replacement");
+        var payment = Payment.Create(
+            tenantId,
+            charge.Amount,
+            charge.Currency,
+            OrderPaymentService.CreateIdempotencyKey(tenantId, orderId),
+            orderId: orderId,
+            paymentMethodId: "pm_requires_action");
+        payment.MarkAsProcessing();
+        payment.MarkAsRequiresAction("pi_requires_action");
+
+        var repository = new Mock<IPaymentRepository>();
+        repository.Setup(repo => repo.GetByIdempotencyKeyAsync(payment.IdempotencyKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(payment);
+        repository.Setup(repo => repo.UpdateAsync(payment, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(payment);
+        var gateway = new Mock<IPaymentGateway>();
+        gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentResult(
+                true,
+                "txn_retry",
+                "pi_retry",
+                null,
+                null,
+                PaymentStatus.Succeeded,
+                SystemClock.UtcNow));
+        var service = new OrderPaymentService(
+            repository.Object,
+            gateway.Object,
+            Mock.Of<ILogger<OrderPaymentService>>());
+
+        var result = await service.ProcessAsync(charge);
+
+        result.Success.Should().BeTrue();
+        payment.RetryCount.Should().Be(1);
+        payment.Status.Should().Be(PaymentStatus.Succeeded);
+        payment.PaymentMethodId.Should().Be("pm_replacement");
+        gateway.Verify(item => item.ProcessPaymentAsync(
+            It.Is<GatewayPaymentRequest>(request => request.IdempotencyKey.EndsWith(":retry:1", StringComparison.Ordinal)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ShouldNotChargeAgainWhileExistingPaymentIsProcessing()
+    {
+        var orderId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var charge = new AuthoritativeOrderCharge(orderId, tenantId, 75m, "USD", "pm_order");
+        var payment = Payment.Create(
+            tenantId,
+            charge.Amount,
+            charge.Currency,
+            OrderPaymentService.CreateIdempotencyKey(tenantId, orderId),
+            orderId: orderId,
+            paymentMethodId: charge.PaymentMethodId);
+        payment.MarkAsProcessing();
+
+        var repository = new Mock<IPaymentRepository>();
+        repository.Setup(repo => repo.GetByIdempotencyKeyAsync(payment.IdempotencyKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(payment);
+        var gateway = new Mock<IPaymentGateway>();
+        var service = new OrderPaymentService(
+            repository.Object,
+            gateway.Object,
+            Mock.Of<ILogger<OrderPaymentService>>());
+
+        var result = await service.ProcessAsync(charge);
+
+        result.Success.Should().BeFalse();
+        result.PaymentId.Should().Be(payment.Id);
+        result.FailureReason.Should().Contain("Processing");
+        gateway.VerifyNoOtherCalls();
+        repository.Verify(repo => repo.UpdateAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void GetPaymentMethodValidationError_ShouldRejectMalformedIdentifierWithoutThrowing()
+    {
+        var service = new OrderPaymentService(
+            Mock.Of<IPaymentRepository>(),
+            Mock.Of<IPaymentGateway>(),
+            Mock.Of<ILogger<OrderPaymentService>>());
+
+        service.GetPaymentMethodValidationError("attacker-controlled")
+            .Should().Be(StripePaymentMethodIdentifier.ValidationMessage);
+        service.GetPaymentMethodValidationError("pm_valid").Should().BeNull();
+    }
+
+    [Fact]
     public async Task ProcessAsync_ShouldRejectIdempotencyKeyBoundToDifferentSnapshot()
     {
         var orderId = Guid.NewGuid();
