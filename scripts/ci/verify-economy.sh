@@ -354,7 +354,7 @@ if [[ "$skip_frontend" == false ]]; then
   web_evidence="$artifact_root/vitest/web.json"
   run pnpm --filter @game-guild/web exec vitest run --reporter=json "--outputFile=$web_evidence"
   assert_vitest_evidence "$web_evidence" >/dev/null
-  run pnpm --filter @game-guild/web build
+  GAMEGUILD_DISABLE_WEBPACK_CACHE=1 run pnpm --filter @game-guild/web build
 fi
 
 if [[ "$skip_browser" == false ]]; then
