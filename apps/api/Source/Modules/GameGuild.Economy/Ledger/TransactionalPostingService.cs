@@ -116,6 +116,11 @@ public sealed class TransactionalPostingService
             var available = transaction.GetAvailableLots(command.SourceWalletId, command.Amount.Currency)
                 .Where(lot => lot.Provenance == command.Provenance)
                 .ToArray();
+            var availableUnits = available.Aggregate(0L, static (total, lot) => checked(total + lot.Amount.Units));
+            var heldUnits = transaction.ActiveHoldUnits(command.SourceWalletId, command.Amount.Currency);
+            var spendableUnits = Math.Max(0, availableUnits - heldUnits);
+            if (command.Amount.Units > spendableUnits)
+                throw new InsufficientFragmentsException(command.Amount.Units - spendableUnits);
             var selected = FifoFragmentSelector.Select(available, command.Amount);
             var roots = selected.Selections.SelectMany(selection => selection.SelectedRanges).Select(range => range.Root).Distinct().ToArray();
             var snapshot = _fences.Capture(roots);
