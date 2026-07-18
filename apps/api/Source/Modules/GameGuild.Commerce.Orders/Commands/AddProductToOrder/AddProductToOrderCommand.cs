@@ -8,5 +8,7 @@ namespace GameGuild.Commerce.Orders;
 public sealed record AddProductToOrderCommand(
     Guid OrderId,
     Guid ProductId,
+    Guid ProductPricingId,
+    Guid ProductPricingVersionId,
     int Quantity = 1,
     string? PromoCode = null) : ICommand<Result<Order>>;

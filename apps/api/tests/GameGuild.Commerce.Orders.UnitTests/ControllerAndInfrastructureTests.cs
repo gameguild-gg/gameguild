@@ -52,16 +52,13 @@ public class OrdersControllerTests
         var order = CreateTestOrder();
         _senderMock.Setup(sender => sender.Send<Result<OrderOperationResult>>(
                 It.Is<CreateOrderCommand>(command =>
-                    command.UserId == _userId &&
                     command.IdempotencyKey == "idem-key-123" &&
-                    command.Currency == "USD" &&
-                    command.TenantId == _tenantId &&
                     command.IpAddress == "127.0.0.1" &&
                     command.UserAgent == "OrdersUnitTests/1.0"),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(OrderOperationResult.FromOrder(order)));
 
-        var result = await _sut.CreateOrder(new CreateOrderRequest(_userId, "idem-key-123", "USD", _tenantId));
+        var result = await _sut.CreateOrder(new CreateOrderRequest("idem-key-123"));
 
         var created = result.Result.Should().BeOfType<CreatedAtActionResult>().Subject;
         var dto = created.Value.Should().BeOfType<OrderDto>().Subject;
@@ -76,7 +73,7 @@ public class OrdersControllerTests
         _senderMock.Setup(sender => sender.Send<Result<OrderOperationResult>>(It.IsAny<CreateOrderCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(OrderOperationResult.FromOrder(order, wasDuplicate: true)));
 
-        var result = await _sut.CreateOrder(new CreateOrderRequest(_userId, "dup-key-123", "BRL", _tenantId));
+        var result = await _sut.CreateOrder(new CreateOrderRequest("dup-key-123"));
 
         result.Result.Should().BeOfType<OkObjectResult>();
     }
@@ -87,7 +84,7 @@ public class OrdersControllerTests
         _senderMock.Setup(sender => sender.Send<Result<OrderOperationResult>>(It.IsAny<CreateOrderCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<OrderOperationResult>(Error.Failure("Orders.CreateFailed", "failed")));
 
-        var result = await _sut.CreateOrder(new CreateOrderRequest(_userId, "bad-key-123"));
+        var result = await _sut.CreateOrder(new CreateOrderRequest("bad-key-123"));
 
         result.Result.Should().BeOfType<BadRequestObjectResult>();
     }
@@ -102,7 +99,7 @@ public class OrdersControllerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(OrderOperationResult.FromOrder(order)));
 
-        var result = await _sut.CreateOrder(new CreateOrderRequest(_userId, "idem-null-ip", "USD", _tenantId));
+        var result = await _sut.CreateOrder(new CreateOrderRequest("idem-null-ip"));
 
         result.Result.Should().BeOfType<CreatedAtActionResult>();
     }
@@ -112,16 +109,22 @@ public class OrdersControllerTests
     {
         var order = CreateTestOrder();
         var productId = Guid.NewGuid();
+        var pricingId = Guid.NewGuid();
+        var pricingVersionId = Guid.NewGuid();
         _senderMock.Setup(sender => sender.Send<Result<Order>>(
                 It.Is<AddProductToOrderCommand>(command =>
                     command.OrderId == order.Id &&
                     command.ProductId == productId &&
+                    command.ProductPricingId == pricingId &&
+                    command.ProductPricingVersionId == pricingVersionId &&
                     command.Quantity == 2 &&
                     command.PromoCode == "PROMO10"),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(order));
 
-        var result = await _sut.AddProductToOrder(order.Id, new AddOrderItemRequest(productId, 2, "PROMO10"));
+        var result = await _sut.AddProductToOrder(
+            order.Id,
+            new AddOrderItemRequest(productId, pricingId, pricingVersionId, 2, "PROMO10"));
 
         result.Result.Should().BeOfType<OkObjectResult>();
     }
@@ -132,7 +135,9 @@ public class OrdersControllerTests
         _senderMock.Setup(sender => sender.Send<Result<Order>>(It.IsAny<AddProductToOrderCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<Order>(Error.Failure("Orders.AddItemFailed", "failed")));
 
-        var result = await _sut.AddProductToOrder(Guid.NewGuid(), new AddOrderItemRequest(Guid.NewGuid()));
+        var result = await _sut.AddProductToOrder(
+            Guid.NewGuid(),
+            new AddOrderItemRequest(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()));
 
         result.Result.Should().BeOfType<BadRequestObjectResult>();
     }
@@ -334,7 +339,7 @@ public class OrdersControllerTests
     private Order CreateTestOrder()
     {
         var order = Order.Create(_userId, "idem-" + Guid.NewGuid().ToString("N")[..12], _tenantId);
-        order.AddLineItem(Guid.NewGuid(), "Product", 10m, quantity: 2, discountAmount: 1m, promoCodesApplied: "PROMO10");
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Product", 10m, quantity: 2, discountAmount: 1m, promoCodesApplied: "PROMO10");
         return order;
     }
 }
@@ -350,19 +355,20 @@ public class OrdersInfrastructureTests
         var promoService = Mock.Of<IPromoCodeService>();
         var entitlementService = Mock.Of<IEntitlementService>();
         var dbContext = Mock.Of<IApplicationDbContext>();
+        var actor = OrderTestFactory.CreateActor();
 
         var handlers = new object[]
         {
-            new CreateOrderCommandHandler(orderRepo),
-            new AddProductToOrderCommandHandler(orderRepo, productRepo, pricingRepo, promoService),
+            new CreateOrderCommandHandler(orderRepo, actor),
+            new AddProductToOrderCommandHandler(orderRepo, productRepo, pricingRepo, promoService, dbContext, actor),
             new CancelOrderCommandHandler(orderRepo),
-            new CaptureOrderCommandHandler(orderRepo),
-            new CompleteOrderCommandHandler(orderRepo, entitlementService, dbContext),
+            new CaptureOrderCommandHandler(orderRepo, actor),
+            new CompleteOrderCommandHandler(orderRepo, entitlementService, dbContext, OrderTestFactory.CreatePaymentAuthority(), actor),
             new DeleteOrderCommandHandler(orderRepo),
             new HoldOrderCommandHandler(orderRepo),
             new RefundOrderCommandHandler(orderRepo, entitlementService),
             new ReleaseOrderCommandHandler(orderRepo),
-            new UpdateOrderCommandHandler(orderRepo)
+            new UpdateOrderCommandHandler(orderRepo, actor)
         };
 
         handlers.Should().AllSatisfy(handler => handler.Should().NotBeNull());
@@ -418,6 +424,21 @@ public class OrdersInfrastructureTests
     }
 
     [Fact]
+    public async Task AddOrdersModule_RegistersFailClosedPaymentAuthority()
+    {
+        var services = new ServiceCollection();
+        services.AddOrdersModule();
+        var provider = services.BuildServiceProvider();
+        var authority = provider.GetRequiredService<IOrderPaymentAuthority>();
+        var binding = new OrderPaymentBinding(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 10m, "USD");
+
+        var isSettled = await authority.IsSettledAsync(binding);
+
+        isSettled.Should().BeFalse();
+    }
+
+    [Fact]
     public void AddOrdersModule_ReturnsSameCollection()
     {
         var services = new ServiceCollection();
@@ -456,10 +477,10 @@ public class OrdersInfrastructureTests
             100m, 10m, 5m, 95m, "USD", null, null, null, null, null, null,
             DateTime.UtcNow, DateTime.UtcNow, []);
         var lineItemDto = new OrderLineItemDto(
-            Guid.NewGuid(), Guid.NewGuid(), "Product", 10m, 12m, 10m,
-            2, 4m, "PROMO10", 16m, false);
-        var create = new CreateOrderRequest(Guid.NewGuid(), "key-12345678", "USD", Guid.NewGuid());
-        var addItem = new AddOrderItemRequest(Guid.NewGuid(), 2, "PROMO");
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1,
+            "Product", 10m, 12m, 10m, "USD", 2, 4m, "PROMO10", 16m, false);
+        var create = new CreateOrderRequest("key-12345678");
+        var addItem = new AddOrderItemRequest(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 2, "PROMO");
         var complete = new CompleteOrderRequest(Guid.NewGuid(), "ref-123", "card");
         var cancel = new CancelOrderRequest("reason");
         var refund = new RefundOrderRequest(10m, "refund");
@@ -469,7 +490,7 @@ public class OrdersInfrastructureTests
 
         orderDto.Status.Should().Be(OrderStatus.Pending);
         lineItemDto.Quantity.Should().Be(2);
-        create.Currency.Should().Be("USD");
+        create.IdempotencyKey.Should().Be("key-12345678");
         addItem.Quantity.Should().Be(2);
         complete.PaymentMethod.Should().Be("card");
         cancel.Reason.Should().Be("reason");
@@ -480,8 +501,8 @@ public class OrdersInfrastructureTests
     }
 
     [Fact]
-    public void OrderLineItem_PartialConstructor_CanBeCreated()
+    public void OrderLineItem_PartialConstructor_IsNotExposed()
     {
-        new OrderLineItem(new object()).Should().NotBeNull();
+        typeof(OrderLineItem).GetConstructor([typeof(object)]).Should().BeNull();
     }
 }

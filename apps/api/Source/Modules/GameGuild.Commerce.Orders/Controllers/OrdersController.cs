@@ -64,10 +64,7 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
         CancellationToken cancellationToken = default)
     {
         var command = new CreateOrderCommand(
-            request.UserId,
             request.IdempotencyKey,
-            request.Currency,
-            request.TenantId,
             GetIpAddress(),
             GetUserAgent());
 
@@ -93,7 +90,13 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
         [FromBody] AddOrderItemRequest request,
         CancellationToken cancellationToken = default)
     {
-        var command = new AddProductToOrderCommand(orderId, request.ProductId, request.Quantity, request.PromoCode);
+        var command = new AddProductToOrderCommand(
+            orderId,
+            request.ProductId,
+            request.ProductPricingId,
+            request.ProductPricingVersionId,
+            request.Quantity,
+            request.PromoCode);
         var result = await sender.Send<Result<Order>>(command, cancellationToken).ConfigureAwait(false);
 
         if (result.IsFailure)
@@ -326,10 +329,14 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
         order.LineItems.Select(li => new OrderLineItemDto(
             li.Id,
             li.ProductId,
+            li.ProductPricingId,
+            li.ProductPricingVersionId,
+            li.PriceVersionSnapshot,
             li.ProductNameSnapshot,
             li.UnitPriceSnapshot,
             li.BasePriceSnapshot,
             li.SalePriceSnapshot,
+            li.CurrencySnapshot,
             li.Quantity,
             li.DiscountAmount,
             li.PromoCodesApplied,
@@ -341,14 +348,13 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
 
 /// <summary>Request to create a new order</summary>
 public sealed record CreateOrderRequest(
-    Guid UserId,
-    string IdempotencyKey,
-    string Currency = "USD",
-    Guid? TenantId = null);
+    string IdempotencyKey);
 
 /// <summary>Request to add an item to an order</summary>
 public sealed record AddOrderItemRequest(
     Guid ProductId,
+    Guid ProductPricingId,
+    Guid ProductPricingVersionId,
     int Quantity = 1,
     string? PromoCode = null);
 
@@ -392,10 +398,14 @@ public sealed record OrderDto(
 public sealed record OrderLineItemDto(
     Guid Id,
     Guid ProductId,
+    Guid ProductPricingId,
+    Guid ProductPricingVersionId,
+    int PriceVersion,
     string ProductName,
     decimal UnitPrice,
     decimal BasePrice,
     decimal? SalePrice,
+    string Currency,
     int Quantity,
     decimal DiscountAmount,
     string? PromoCodesApplied,

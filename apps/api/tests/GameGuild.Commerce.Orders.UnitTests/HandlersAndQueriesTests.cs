@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
 using GameGuild.Commerce.Products;
+using GameGuild.Identity.Context.Actors;
 using Moq;
 using System.Collections;
 using System.Linq.Expressions;
@@ -124,10 +125,10 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetByIdempotencyKeyAsync(existingOrder.IdempotencyKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingOrder);
 
-        var handler = new CreateOrderCommandHandler(repository.Object);
+        var handler = new CreateOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(existingOrder));
 
         var result = await handler.Handle(
-            new CreateOrderCommand(existingOrder.UserId, existingOrder.IdempotencyKey, "USD", existingOrder.TenantId),
+            new CreateOrderCommand(existingOrder.IdempotencyKey),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -152,34 +153,35 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var handler = new CreateOrderCommandHandler(repository.Object);
+        var handler = new CreateOrderCommandHandler(
+            repository.Object,
+            OrderTestFactory.CreateActor(userId: userId, tenantId: tenantId));
 
         var result = await handler.Handle(
-            new CreateOrderCommand(userId, "new-key", "BRL", tenantId, "127.0.0.1", "unit-test"),
+            new CreateOrderCommand("new-key", "127.0.0.1", "unit-test"),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         addedOrder.Should().NotBeNull();
         addedOrder!.UserId.Should().Be(userId);
-        addedOrder.Currency.Should().Be("BRL");
+        addedOrder.Currency.Should().Be("USD");
         addedOrder.TenantId.Should().Be(tenantId);
         repository.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task CreateOrderCommandHandler_ThrowsWhenTenantIdIsMissing()
+    public async Task CreateOrderCommandHandler_RejectsMissingActorContext()
     {
         var repository = new Mock<IOrderRepository>();
         repository.Setup(mock => mock.GetByIdempotencyKeyAsync("missing-tenant", It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new CreateOrderCommandHandler(repository.Object);
+        var handler = new CreateOrderCommandHandler(repository.Object, Mock.Of<IActorContextAccessor>());
 
-        var act = () => handler.Handle(
-            new CreateOrderCommand(Guid.NewGuid(), "missing-tenant", "USD", null),
-            CancellationToken.None);
+        var result = await handler.Handle(new CreateOrderCommand("missing-tenant"), CancellationToken.None);
 
-        await act.Should().ThrowAsync<ArgumentException>().WithParameterName("tenantId");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.Unauthenticated");
         repository.Verify(mock => mock.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -194,9 +196,13 @@ public sealed class OrderCommandHandlerTests
             repository.Object,
             Mock.Of<IProductRepository>(),
             Mock.Of<IProductPricingRepository>(),
-            Mock.Of<IPromoCodeService>());
+            Mock.Of<IPromoCodeService>(),
+            Mock.Of<IApplicationDbContext>(),
+            OrderTestFactory.CreateActor());
 
-        var result = await handler.Handle(new AddProductToOrderCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None);
+        var result = await handler.Handle(
+            new AddProductToOrderCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()),
+            CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Orders.NotFound");
@@ -208,7 +214,8 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         var product = Product.Create("Premium plan", ProductType.Subscription, tenantId: order.TenantId);
         product.Id = Guid.NewGuid();
-        var pricing = ProductPricing.CreateWithVersion(product.Id, "Default", 120m, 90m, isDefault: true, tenantId: order.TenantId).Pricing;
+        var (pricing, pricingVersion) = ProductPricing.CreateWithVersion(
+            product.Id, "Default", 120m, 90m, isDefault: true, tenantId: order.TenantId);
         var promo = new PromoCode
         {
             Id = Guid.NewGuid(),
@@ -233,8 +240,8 @@ public sealed class OrderCommandHandlerTests
             .ReturnsAsync(product);
 
         var pricingRepository = new Mock<IProductPricingRepository>();
-        pricingRepository.Setup(mock => mock.GetByProductIdAsync(product.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { pricing });
+        pricingRepository.Setup(mock => mock.GetByIdAsync(pricing.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(pricing);
 
         var promoCodeService = new Mock<IPromoCodeService>();
         promoCodeService.Setup(mock => mock.GetPromoCodeByCodeAsync("SAVE10"))
@@ -246,9 +253,13 @@ public sealed class OrderCommandHandlerTests
             orderRepository.Object,
             productRepository.Object,
             pricingRepository.Object,
-            promoCodeService.Object);
+            promoCodeService.Object,
+            CreatePricingDbContext(pricingVersion).Object,
+            OrderTestFactory.CreateActor(order));
 
-        var result = await handler.Handle(new AddProductToOrderCommand(order.Id, product.Id, 2, "SAVE10"), CancellationToken.None);
+        var result = await handler.Handle(
+            new AddProductToOrderCommand(order.Id, product.Id, pricing.Id, pricingVersion.Id, 2, "SAVE10"),
+            CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         order.LineItems.Should().ContainSingle();
@@ -276,9 +287,13 @@ public sealed class OrderCommandHandlerTests
             repository.Object,
             Mock.Of<IProductRepository>(),
             Mock.Of<IProductPricingRepository>(),
-            Mock.Of<IPromoCodeService>());
+            Mock.Of<IPromoCodeService>(),
+            Mock.Of<IApplicationDbContext>(),
+            OrderTestFactory.CreateActor(order));
 
-        var result = await handler.Handle(new AddProductToOrderCommand(order.Id, Guid.NewGuid()), CancellationToken.None);
+        var result = await handler.Handle(
+            new AddProductToOrderCommand(order.Id, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()),
+            CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Orders.InvalidStatus");
@@ -300,22 +315,25 @@ public sealed class OrderCommandHandlerTests
             orderRepository.Object,
             productRepository.Object,
             Mock.Of<IProductPricingRepository>(),
-            Mock.Of<IPromoCodeService>());
+            Mock.Of<IPromoCodeService>(),
+            Mock.Of<IApplicationDbContext>(),
+            OrderTestFactory.CreateActor(order));
 
-        var result = await handler.Handle(new AddProductToOrderCommand(order.Id, Guid.NewGuid()), CancellationToken.None);
+        var result = await handler.Handle(
+            new AddProductToOrderCommand(order.Id, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()),
+            CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("Products.NotFound");
+        result.Error.Code.Should().Be("Products.Unavailable");
         orderRepository.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task AddProductToOrderCommandHandler_UsesFirstPricingAndIgnoresInvalidPromo()
+    public async Task AddProductToOrderCommandHandler_UsesExplicitPricingAndIgnoresInvalidPromo()
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var product = Product.Create("Consulting session", ProductType.Program, tenantId: order.TenantId);
-        var firstPricing = ProductPricing.CreateWithVersion(product.Id, "Standard", 50m, "USD", null, null, null, false, tenantId: order.TenantId).Pricing;
-        var secondPricing = ProductPricing.CreateWithVersion(product.Id, "Premium", 75m, "USD", null, null, null, false, tenantId: order.TenantId).Pricing;
+        var (firstPricing, firstVersion) = ProductPricing.CreateWithVersion(product.Id, "Standard", 50m, "USD", null, null, null, false, tenantId: order.TenantId);
         var promo = new PromoCode
         {
             Id = Guid.NewGuid(),
@@ -333,8 +351,8 @@ public sealed class OrderCommandHandlerTests
             .ReturnsAsync(product);
 
         var pricingRepository = new Mock<IProductPricingRepository>();
-        pricingRepository.Setup(mock => mock.GetByProductIdAsync(product.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { firstPricing, secondPricing });
+        pricingRepository.Setup(mock => mock.GetByIdAsync(firstPricing.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(firstPricing);
 
         var promoCodeService = new Mock<IPromoCodeService>();
         promoCodeService.Setup(mock => mock.GetPromoCodeByCodeAsync("SAVE5"))
@@ -346,15 +364,19 @@ public sealed class OrderCommandHandlerTests
             orderRepository.Object,
             productRepository.Object,
             pricingRepository.Object,
-            promoCodeService.Object);
+            promoCodeService.Object,
+            CreatePricingDbContext(firstVersion).Object,
+            OrderTestFactory.CreateActor(order));
 
-        var result = await handler.Handle(new AddProductToOrderCommand(order.Id, product.Id, 2, "SAVE5"), CancellationToken.None);
+        var result = await handler.Handle(
+            new AddProductToOrderCommand(order.Id, product.Id, firstPricing.Id, firstVersion.Id, 2, "SAVE5"),
+            CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         var lineItem = order.LineItems.Should().ContainSingle().Subject;
         lineItem.UnitPriceSnapshot.Should().Be(50m);
         lineItem.BasePriceSnapshot.Should().Be(50m);
-        lineItem.PricingTierId.Should().Be(firstPricing.Id);
+        lineItem.ProductPricingId.Should().Be(firstPricing.Id);
         lineItem.PricingTierNameSnapshot.Should().Be("Standard");
         lineItem.DiscountAmount.Should().Be(0m);
         lineItem.PromoCodesApplied.Should().BeNull();
@@ -366,7 +388,7 @@ public sealed class OrderCommandHandlerTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var product = Product.Create("Coaching", ProductType.Program, tenantId: order.TenantId);
-        var pricing = ProductPricing.CreateWithVersion(product.Id, "Base", 30m, "USD", null, null, null, true, tenantId: order.TenantId).Pricing;
+        var (pricing, pricingVersion) = ProductPricing.CreateWithVersion(product.Id, "Base", 30m, "USD", null, null, null, true, tenantId: order.TenantId);
         var promo = new PromoCode
         {
             Id = Guid.NewGuid(),
@@ -384,8 +406,8 @@ public sealed class OrderCommandHandlerTests
             .ReturnsAsync(product);
 
         var pricingRepository = new Mock<IProductPricingRepository>();
-        pricingRepository.Setup(mock => mock.GetByProductIdAsync(product.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { pricing });
+        pricingRepository.Setup(mock => mock.GetByIdAsync(pricing.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(pricing);
 
         var promoCodeService = new Mock<IPromoCodeService>();
         promoCodeService.Setup(mock => mock.GetPromoCodeByCodeAsync("LESS5"))
@@ -397,9 +419,13 @@ public sealed class OrderCommandHandlerTests
             orderRepository.Object,
             productRepository.Object,
             pricingRepository.Object,
-            promoCodeService.Object);
+            promoCodeService.Object,
+            CreatePricingDbContext(pricingVersion).Object,
+            OrderTestFactory.CreateActor(order));
 
-        var result = await handler.Handle(new AddProductToOrderCommand(order.Id, product.Id, 3, "LESS5"), CancellationToken.None);
+        var result = await handler.Handle(
+            new AddProductToOrderCommand(order.Id, product.Id, pricing.Id, pricingVersion.Id, 3, "LESS5"),
+            CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         var lineItem = order.LineItems.Should().ContainSingle().Subject;
@@ -410,7 +436,7 @@ public sealed class OrderCommandHandlerTests
     }
 
     [Fact]
-    public async Task AddProductToOrderCommandHandler_UsesZeroPriceWhenNoPricingExists()
+    public async Task AddProductToOrderCommandHandler_RejectsMissingExplicitPricing()
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var product = Product.Create("Free guide", ProductType.Program, tenantId: order.TenantId);
@@ -428,16 +454,17 @@ public sealed class OrderCommandHandlerTests
             orderRepository.Object,
             productRepository.Object,
             pricingRepository.Object,
-            Mock.Of<IPromoCodeService>());
+            Mock.Of<IPromoCodeService>(),
+            Mock.Of<IApplicationDbContext>(),
+            OrderTestFactory.CreateActor(order));
 
-        var result = await handler.Handle(new AddProductToOrderCommand(order.Id, product.Id), CancellationToken.None);
+        var result = await handler.Handle(
+            new AddProductToOrderCommand(order.Id, product.Id, Guid.NewGuid(), Guid.NewGuid()),
+            CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        var lineItem = order.LineItems.Should().ContainSingle().Subject;
-        lineItem.UnitPriceSnapshot.Should().Be(0m);
-        lineItem.BasePriceSnapshot.Should().Be(0m);
-        lineItem.SalePriceSnapshot.Should().BeNull();
-        lineItem.PricingTierId.Should().BeNull();
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.PricingNotFound");
+        order.LineItems.Should().BeEmpty();
     }
 
     [Fact]
@@ -485,7 +512,7 @@ public sealed class OrderCommandHandlerTests
     }
 
     [Fact]
-    public async Task CaptureOrderCommandHandler_CompletesPendingOrder()
+    public async Task CaptureOrderCommandHandler_RequiresPaymentAuthority()
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var repository = new Mock<IOrderRepository>();
@@ -496,13 +523,14 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var handler = new CaptureOrderCommandHandler(repository.Object);
+        var handler = new CaptureOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new CaptureOrderCommand(order.Id), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        order.Status.Should().Be(OrderStatus.Completed);
-        order.PaidAt.Should().NotBeNull();
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.PaymentAuthorityRequired");
+        order.Status.Should().Be(OrderStatus.Pending);
+        order.PaidAt.Should().BeNull();
     }
 
     [Fact]
@@ -512,7 +540,7 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetWithLineItemsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new CaptureOrderCommandHandler(repository.Object);
+        var handler = new CaptureOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor());
 
         var result = await handler.Handle(new CaptureOrderCommand(Guid.NewGuid()), CancellationToken.None);
 
@@ -521,7 +549,7 @@ public sealed class OrderCommandHandlerTests
     }
 
     [Fact]
-    public async Task CaptureOrderCommandHandler_ReturnsInvalidStatusWhenOrderIsNotPending()
+    public async Task CaptureOrderCommandHandler_RemainsDisabledWhenOrderIsNotPending()
     {
         var order = OrderTestFactory.CreatePendingOrder();
         order.Cancel("customer request");
@@ -529,16 +557,16 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
 
-        var handler = new CaptureOrderCommandHandler(repository.Object);
+        var handler = new CaptureOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new CaptureOrderCommand(order.Id), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("Orders.InvalidStatus");
+        result.Error.Code.Should().Be("Orders.PaymentAuthorityRequired");
     }
 
     [Fact]
-    public async Task CompleteOrderCommandHandler_ReturnsDuplicateForAlreadyCompletedOrder()
+    public async Task CompleteOrderCommandHandler_RejectsLegacyCompletedOrder()
     {
         var order = OrderTestFactory.CreatePendingOrder();
         order.MarkAsPaid("provider-ref", "card", "ext-123");
@@ -546,12 +574,17 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
 
-        var handler = new CompleteOrderCommandHandler(repository.Object, Mock.Of<IEntitlementService>(), Mock.Of<IApplicationDbContext>());
+        var handler = new CompleteOrderCommandHandler(
+            repository.Object,
+            Mock.Of<IEntitlementService>(),
+            Mock.Of<IApplicationDbContext>(),
+            OrderTestFactory.CreatePaymentAuthority(),
+            OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new CompleteOrderCommand(order.Id), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.WasDuplicate.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.PaymentAuthorityRequired");
     }
 
     [Fact]
@@ -561,7 +594,12 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetWithLineItemsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new CompleteOrderCommandHandler(repository.Object, Mock.Of<IEntitlementService>(), Mock.Of<IApplicationDbContext>());
+        var handler = new CompleteOrderCommandHandler(
+            repository.Object,
+            Mock.Of<IEntitlementService>(),
+            Mock.Of<IApplicationDbContext>(),
+            OrderTestFactory.CreatePaymentAuthority(),
+            OrderTestFactory.CreateActor());
 
         var result = await handler.Handle(new CompleteOrderCommand(Guid.NewGuid()), CancellationToken.None);
 
@@ -580,7 +618,12 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
 
-        var handler = new CompleteOrderCommandHandler(repository.Object, Mock.Of<IEntitlementService>(), Mock.Of<IApplicationDbContext>());
+        var handler = new CompleteOrderCommandHandler(
+            repository.Object,
+            Mock.Of<IEntitlementService>(),
+            Mock.Of<IApplicationDbContext>(),
+            OrderTestFactory.CreatePaymentAuthority(),
+            OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new CompleteOrderCommand(order.Id), CancellationToken.None);
 
@@ -589,7 +632,7 @@ public sealed class OrderCommandHandlerTests
     }
 
     [Fact]
-    public async Task CompleteOrderCommandHandler_ReturnsInvalidStatusWhenOrderCannotBeCompleted()
+    public async Task CompleteOrderCommandHandler_RequiresAuthoritativePaymentState()
     {
         var order = OrderTestFactory.CreatePendingOrder();
         order.Cancel("cancelled");
@@ -598,21 +641,25 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
 
-        var handler = new CompleteOrderCommandHandler(repository.Object, Mock.Of<IEntitlementService>(), Mock.Of<IApplicationDbContext>());
+        var handler = new CompleteOrderCommandHandler(
+            repository.Object,
+            Mock.Of<IEntitlementService>(),
+            Mock.Of<IApplicationDbContext>(),
+            OrderTestFactory.CreatePaymentAuthority(),
+            OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new CompleteOrderCommand(order.Id), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("Orders.InvalidStatus");
+        result.Error.Code.Should().Be("Orders.PaymentAuthorityRequired");
     }
 
     [Fact]
     public async Task CompleteOrderCommandHandler_GrantsEntitlementsAndCommitsWhenOrderIsPaid()
     {
         var order = OrderTestFactory.CreatePendingOrder();
-        var purchaseLine = order.AddLineItem(Guid.NewGuid(), "Starter course", 40m);
-        var subscriptionLine = order.AddLineItem(Guid.NewGuid(), "Membership", 25m);
-        subscriptionLine.IsSubscription = true;
+        var purchaseLine = OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Starter course", 40m);
+        var addOnLine = OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Course add-on", 25m);
         order.MarkAsPaidPendingFulfillment(Guid.NewGuid(), "ext-234");
 
         var repository = new Mock<IOrderRepository>();
@@ -649,7 +696,12 @@ public sealed class OrderCommandHandlerTests
         dbContext.Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(transaction);
 
-        var handler = new CompleteOrderCommandHandler(repository.Object, entitlementService.Object, dbContext.Object);
+        var handler = new CompleteOrderCommandHandler(
+            repository.Object,
+            entitlementService.Object,
+            dbContext.Object,
+            OrderTestFactory.CreatePaymentAuthority(),
+            OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new CompleteOrderCommand(order.Id), CancellationToken.None);
 
@@ -657,7 +709,7 @@ public sealed class OrderCommandHandlerTests
         order.Status.Should().Be(OrderStatus.Fulfilled);
         order.FulfilledAt.Should().NotBeNull();
         purchaseLine.UserProductId.Should().NotBeNull();
-        subscriptionLine.UserProductId.Should().NotBeNull();
+        addOnLine.UserProductId.Should().NotBeNull();
         transaction.CommitCalled.Should().BeTrue();
     }
 
@@ -665,7 +717,7 @@ public sealed class OrderCommandHandlerTests
     public async Task CompleteOrderCommandHandler_RollsBackAndRethrowsWhenEntitlementGrantFails()
     {
         var order = OrderTestFactory.CreatePendingOrder();
-        order.AddLineItem(Guid.NewGuid(), "Starter course", 40m);
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Starter course", 40m);
         order.MarkAsPaidPendingFulfillment(Guid.NewGuid(), "ext-999");
 
         var repository = new Mock<IOrderRepository>();
@@ -689,7 +741,12 @@ public sealed class OrderCommandHandlerTests
         dbContext.Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(transaction);
 
-        var handler = new CompleteOrderCommandHandler(repository.Object, entitlementService.Object, dbContext.Object);
+        var handler = new CompleteOrderCommandHandler(
+            repository.Object,
+            entitlementService.Object,
+            dbContext.Object,
+            OrderTestFactory.CreatePaymentAuthority(),
+            OrderTestFactory.CreateActor(order));
 
         var act = () => handler.Handle(new CompleteOrderCommand(order.Id), CancellationToken.None);
 
@@ -699,11 +756,12 @@ public sealed class OrderCommandHandlerTests
     }
 
     [Fact]
-    public async Task CompleteOrderCommandHandler_AssociatesPaymentIdAndLeavesUserProductUnsetWhenServiceReturnsNoUserProduct()
+    public async Task CompleteOrderCommandHandler_PreservesAuthoritativePaymentBindingWhenServiceReturnsNoUserProduct()
     {
         var order = OrderTestFactory.CreatePendingOrder();
-        var lineItem = order.AddLineItem(Guid.NewGuid(), "Course", 30m);
+        var lineItem = OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Course", 30m);
         var paymentId = Guid.NewGuid();
+        order.MarkAsPaidPendingFulfillment(paymentId, "provider-ref");
 
         var repository = new Mock<IOrderRepository>();
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
@@ -730,11 +788,14 @@ public sealed class OrderCommandHandlerTests
         dbContext.Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(transaction);
 
-        var handler = new CompleteOrderCommandHandler(repository.Object, entitlementService.Object, dbContext.Object);
+        var handler = new CompleteOrderCommandHandler(
+            repository.Object,
+            entitlementService.Object,
+            dbContext.Object,
+            OrderTestFactory.CreatePaymentAuthority(),
+            OrderTestFactory.CreateActor(order));
 
-        var result = await handler.Handle(
-            new CompleteOrderCommand(order.Id, paymentId, "provider-ref", "card"),
-            CancellationToken.None);
+        var result = await handler.Handle(new CompleteOrderCommand(order.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         order.Status.Should().Be(OrderStatus.Fulfilled);
@@ -745,10 +806,10 @@ public sealed class OrderCommandHandlerTests
     }
 
     [Fact]
-    public async Task CompleteOrderCommandHandler_CompletesLegacyPathWhenNoPaymentIdIsProvided()
+    public async Task CompleteOrderCommandHandler_RejectsLegacyProviderReferencePath()
     {
         var order = OrderTestFactory.CreatePendingOrder();
-        var lineItem = order.AddLineItem(Guid.NewGuid(), "Course", 25m);
+        var lineItem = OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Course", 25m);
 
         var repository = new Mock<IOrderRepository>();
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
@@ -775,19 +836,25 @@ public sealed class OrderCommandHandlerTests
         dbContext.Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(transaction);
 
-        var handler = new CompleteOrderCommandHandler(repository.Object, entitlementService.Object, dbContext.Object);
+        var handler = new CompleteOrderCommandHandler(
+            repository.Object,
+            entitlementService.Object,
+            dbContext.Object,
+            OrderTestFactory.CreatePaymentAuthority(),
+            OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(
             new CompleteOrderCommand(order.Id, null, "ext-legacy", "pix"),
             CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        order.Status.Should().Be(OrderStatus.Completed);
-        order.FulfilledAt.Should().NotBeNull();
-        order.PaymentMethod.Should().Be("pix");
-        order.ExternalPaymentId.Should().Be("ext-legacy");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.PaymentAuthorityRequired");
+        order.Status.Should().Be(OrderStatus.Pending);
+        order.FulfilledAt.Should().BeNull();
+        order.PaymentMethod.Should().BeNull();
+        order.ExternalPaymentId.Should().BeNull();
         lineItem.UserProductId.Should().BeNull();
-        transaction.CommitCalled.Should().BeTrue();
+        transaction.CommitCalled.Should().BeFalse();
     }
 
     [Fact]
@@ -906,8 +973,8 @@ public sealed class OrderCommandHandlerTests
     public async Task RefundOrderCommandHandler_FullRefundRevokesEntitlements()
     {
         var order = OrderTestFactory.CreatePendingOrder();
-        order.AddLineItem(Guid.NewGuid(), "Starter course", 40m);
-        order.AddLineItem(Guid.NewGuid(), "Add-on", 10m);
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Starter course", 40m);
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Add-on", 10m);
         order.MarkAsPaid("provider-ref", "card", "ext-456");
 
         var repository = new Mock<IOrderRepository>();
@@ -968,7 +1035,7 @@ public sealed class OrderCommandHandlerTests
     public async Task RefundOrderCommandHandler_PartialRefundDoesNotRevokeEntitlements()
     {
         var order = OrderTestFactory.CreatePendingOrder();
-        order.AddLineItem(Guid.NewGuid(), "Starter course", 40m);
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Starter course", 40m);
         order.MarkAsPaid("provider-ref", "card", "ext-457");
 
         var repository = new Mock<IOrderRepository>();
@@ -996,7 +1063,7 @@ public sealed class OrderCommandHandlerTests
     public async Task RefundOrderCommandHandler_DefaultsNullAmountToOrderTotalForPartiallyRefundedOrders()
     {
         var order = OrderTestFactory.CreatePendingOrder();
-        order.AddLineItem(Guid.NewGuid(), "Starter course", 40m);
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Starter course", 40m);
         order.MarkAsPaid("provider-ref", "card", "ext-458");
         order.ProcessRefund(10m, "partial");
 
@@ -1067,16 +1134,18 @@ public sealed class OrderCommandHandlerTests
     }
 
     [Fact]
-    public async Task UpdateOrderCommandHandler_UpdatesPendingOrderCurrency()
+    public async Task UpdateOrderCommandHandler_RejectsPendingOrderCurrencyMutation()
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new UpdateOrderCommandHandler(repository.Object);
+        var handler = new UpdateOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new UpdateOrderCommand(order.Id, "EUR"), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        order.Currency.Should().Be("EUR");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.CurrencyImmutable");
+        order.Currency.Should().Be("USD");
+        repository.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -1086,7 +1155,7 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new UpdateOrderCommandHandler(repository.Object);
+        var handler = new UpdateOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor());
 
         var result = await handler.Handle(new UpdateOrderCommand(Guid.NewGuid(), "EUR"), CancellationToken.None);
 
@@ -1100,7 +1169,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         order.MarkAsPaid("provider-ref", "card", "ext-105");
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new UpdateOrderCommandHandler(repository.Object);
+        var handler = new UpdateOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new UpdateOrderCommand(order.Id, "EUR"), CancellationToken.None);
 
@@ -1113,7 +1182,7 @@ public sealed class OrderCommandHandlerTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new UpdateOrderCommandHandler(repository.Object);
+        var handler = new UpdateOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new UpdateOrderCommand(order.Id, null), CancellationToken.None);
 
@@ -1141,6 +1210,14 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         return repository;
+    }
+
+    private static Mock<IApplicationDbContext> CreatePricingDbContext(params ProductPricingVersion[] versions)
+    {
+        var dbContext = new Mock<IApplicationDbContext>();
+        dbContext.Setup(mock => mock.Set<ProductPricingVersion>())
+            .Returns(new TestAsyncDbSet<ProductPricingVersion>(versions));
+        return dbContext;
     }
 
     private static void SetOrderStatus(Order order, OrderStatus status)
@@ -1172,7 +1249,13 @@ public sealed class OrderRepositoryTests
         byIdempotencyKey!.LineItems.Should().ContainSingle();
         withLineItems.Should().NotBeNull();
         withLineItems!.LineItems.Should().ContainSingle();
-        withLineItems.LineItems.Single().Product.Name.Should().Be("Stored product");
+        var persistedLineItem = withLineItems.LineItems.Single();
+        persistedLineItem.Product.Name.Should().Be("Stored product");
+        persistedLineItem.ProductPricingId.Should().NotBeEmpty();
+        persistedLineItem.ProductPricingVersionId.Should().NotBeEmpty();
+        persistedLineItem.PriceVersionSnapshot.Should().Be(1);
+        persistedLineItem.UnitPriceSnapshot.Should().Be(19m);
+        persistedLineItem.CurrencySnapshot.Should().Be("USD");
     }
 
     [Fact]
@@ -1269,11 +1352,11 @@ public sealed class OrderRepositoryTests
 
         context.Orders.Should().ContainSingle().Which.Should().Be(order);
 
-        order.Currency = "EUR";
+        order.Metadata = "{\"updated\":true}";
         await repository.UpdateAsync(order);
         await repository.SaveChangesAsync();
 
-        context.Orders.Single().Currency.Should().Be("EUR");
+        context.Orders.Single().Metadata.Should().Be("{\"updated\":true}");
 
         await repository.DeleteAsync(order);
         await repository.SaveChangesAsync();
@@ -1293,7 +1376,7 @@ public sealed class OrderRepositoryTests
     private static Order CreateOrderWithProduct(Product product, string idempotencyKey)
     {
         var order = Order.Create(Guid.NewGuid(), idempotencyKey, product.TenantId!.Value);
-        var lineItem = order.AddLineItem(product.Id, product.Name, 19m, quantity: 1);
+        var lineItem = OrderTestFactory.AddLineItem(order, product.Id, product.Name, 19m, quantity: 1);
         lineItem.Product = product;
         return order;
     }
@@ -1519,5 +1602,66 @@ internal static class OrderTestFactory
             Guid.NewGuid(),
             idempotencyKey ?? $"order-{Guid.NewGuid():N}",
             tenantId ?? Guid.NewGuid());
+    }
+
+    public static IActorContextAccessor CreateActor(Order? order = null, Guid? userId = null, Guid? tenantId = null)
+    {
+        var accessor = new Mock<IActorContextAccessor>();
+        accessor.SetupGet(mock => mock.ActorContext).Returns(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = (userId ?? order?.UserId ?? Guid.NewGuid()).ToString(),
+            TenantId = tenantId ?? order?.TenantId ?? Guid.NewGuid(),
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = true
+        });
+        return accessor.Object;
+    }
+
+    public static OrderLineItemPricingSnapshot CreatePricingSnapshot(
+        decimal unitPrice,
+        string currency = "USD",
+        decimal? basePrice = null,
+        decimal? salePrice = null)
+    {
+        return new OrderLineItemPricingSnapshot(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            1,
+            basePrice ?? unitPrice,
+            salePrice,
+            unitPrice,
+            currency);
+    }
+
+    public static IOrderPaymentAuthority CreatePaymentAuthority(bool isSettled = true)
+    {
+        var authority = new Mock<IOrderPaymentAuthority>();
+        authority.Setup(mock => mock.IsSettledAsync(
+                It.IsAny<OrderPaymentBinding>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(isSettled);
+        return authority.Object;
+    }
+
+    public static OrderLineItem AddLineItem(
+        Order order,
+        Guid productId,
+        string productName,
+        decimal unitPrice,
+        int quantity = 1,
+        decimal discountAmount = 0,
+        string? promoCodesApplied = null,
+        bool isSubscription = false)
+    {
+        return order.AddLineItem(
+            productId,
+            productName,
+            CreatePricingSnapshot(unitPrice, order.Currency),
+            quantity,
+            discountAmount,
+            promoCodesApplied,
+            isSubscription: isSubscription);
     }
 }

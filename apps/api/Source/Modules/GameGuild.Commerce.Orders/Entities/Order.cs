@@ -57,24 +57,24 @@ public class Order : StatefulEntity<OrderStatus>
 
     /// <summary>Subtotal before discounts and taxes</summary>
     [Column(TypeName = "decimal(10,2)")]
-    public decimal Subtotal { get; set; }
+    public decimal Subtotal { get; private set; }
 
     /// <summary>Total discount amount applied</summary>
     [Column(TypeName = "decimal(10,2)")]
-    public decimal DiscountTotal { get; set; }
+    public decimal DiscountTotal { get; private set; }
 
     /// <summary>Tax amount</summary>
     [Column(TypeName = "decimal(10,2)")]
-    public decimal TaxAmount { get; set; }
+    public decimal TaxAmount { get; private set; }
 
     /// <summary>Final total charged</summary>
     [Column(TypeName = "decimal(10,2)")]
-    public decimal Total { get; set; }
+    public decimal Total { get; private set; }
 
     /// <summary>Currency code (ISO 4217)</summary>
     [Required]
     [MaxLength(3)]
-    public string Currency { get; set; } = "USD";
+    public string Currency { get; private set; } = "USD";
 
     /// <summary>External payment provider reference</summary>
     [MaxLength(200)]
@@ -216,29 +216,54 @@ public class Order : StatefulEntity<OrderStatus>
     public OrderLineItem AddLineItem(
         Guid productId,
         string productName,
-        decimal unitPrice,
+        OrderLineItemPricingSnapshot pricing,
         int quantity = 1,
         decimal discountAmount = 0,
-        string? promoCodesApplied = null)
+        string? promoCodesApplied = null,
+        string pricingTierName = "",
+        bool isSubscription = false)
     {
-        var lineItem = new OrderLineItem
+        ArgumentNullException.ThrowIfNull(pricing);
+
+        if (Status != OrderStatus.Pending)
+            throw new InvalidOperationException($"Cannot add line items to an order in {Status} status.");
+        if (TenantId is null || TenantId == Guid.Empty)
+            throw new InvalidOperationException("A tenant is required before adding order line items.");
+        if (productId == Guid.Empty || pricing.ProductPricingId == Guid.Empty || pricing.ProductPricingVersionId == Guid.Empty)
+            throw new ArgumentException("Product and pricing identifiers are required.", nameof(pricing));
+        if (pricing.PriceVersion < 1)
+            throw new ArgumentOutOfRangeException(nameof(pricing), "Price version must be positive.");
+        if (pricing.BasePrice <= 0 || pricing.UnitPrice <= 0)
+            throw new ArgumentOutOfRangeException(nameof(pricing), "Authoritative prices must be positive.");
+        if (quantity < 1)
+            throw new ArgumentOutOfRangeException(nameof(quantity));
+        if (discountAmount < 0 || discountAmount >= pricing.UnitPrice * quantity)
+            throw new ArgumentOutOfRangeException(nameof(discountAmount), "Discount must leave a positive line total.");
+        if (pricing.Currency.Length != 3 || !pricing.Currency.All(char.IsAsciiLetterUpper))
+            throw new ArgumentException("Currency must be a three-letter uppercase code.", nameof(pricing));
+
+        if (LineItems.Count == 0)
         {
-            Id = Guid.NewGuid(),
-            OrderId = Id,
-            ProductId = productId,
-            ProductNameSnapshot = productName,
-            UnitPriceSnapshot = unitPrice,
-            Quantity = quantity,
-            DiscountAmount = discountAmount,
-            PromoCodesApplied = promoCodesApplied,
-            LineTotal = (unitPrice * quantity) - discountAmount
-        };
+            Currency = pricing.Currency;
+        }
+        else if (Currency != pricing.Currency || LineItems.Any(item => item.CurrencySnapshot != pricing.Currency))
+        {
+            throw new InvalidOperationException("All order line items must use the same currency.");
+        }
+
+        var lineItem = OrderLineItem.Create(
+            Id,
+            TenantId.Value,
+            productId,
+            productName,
+            pricingTierName,
+            pricing,
+            quantity,
+            discountAmount,
+            promoCodesApplied,
+            isSubscription);
 
         lineItem.Touch();
-
-        // Set TenantId via reflection to bypass protected setter
-        typeof(OrderLineItem).GetProperty(nameof(TenantId))!
-            .SetValue(lineItem, TenantId);
 
         LineItems.Add(lineItem);
         RecalculateTotals();

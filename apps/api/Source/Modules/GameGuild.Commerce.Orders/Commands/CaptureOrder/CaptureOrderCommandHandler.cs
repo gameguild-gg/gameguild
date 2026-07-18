@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Commerce.Orders;
 
@@ -6,7 +7,8 @@ namespace GameGuild.Commerce.Orders;
 /// Handler for capturing payment for an authorized order
 /// </summary>
 public sealed class CaptureOrderCommandHandler(
-    IOrderRepository orderRepository)
+    IOrderRepository orderRepository,
+    IActorContextAccessor actorContextAccessor)
     : ICommandHandler<CaptureOrderCommand, Result<OrderOperationResult>>
 {
     public async Task<Result<OrderOperationResult>> Handle(
@@ -19,15 +21,13 @@ public sealed class CaptureOrderCommandHandler(
             return Result.Failure<OrderOperationResult>(Error.NotFound("Orders.NotFound", $"Order {request.OrderId} not found"));
         }
 
-        if (order.Status != OrderStatus.Pending)
-        {
-            return Result.Failure<OrderOperationResult>(Error.Failure("Orders.InvalidStatus", $"Cannot capture order in {order.Status} status"));
-        }
+        var authorizationError = OrderActorContext.Authorize(order, actorContextAccessor);
+        if (authorizationError is not null)
+            return Result.Failure<OrderOperationResult>(authorizationError);
 
-        order.MarkAsPaid(null, null, null);
-        await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
-        await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        return Result.Success(OrderOperationResult.FromOrder(order));
+        return Result.Failure<OrderOperationResult>(
+            Error.Forbidden(
+                "Orders.PaymentAuthorityRequired",
+                "Order capture is disabled until Payments supplies an authoritative order binding."));
     }
 }
