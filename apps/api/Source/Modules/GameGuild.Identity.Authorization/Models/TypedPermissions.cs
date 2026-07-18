@@ -595,3 +595,23 @@ public sealed class AssetsPermission : Permission
     /// <summary>Report assets for moderation</summary>
     public static readonly AssetsPermission Report = new(Keys.Report, "Report assets for moderation");
 }
+
+/// <summary>Strongly-typed permission for platform-level wallet administration.</summary>
+public sealed class WalletsPermission : Permission
+{
+    private WalletsPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Split(':')[1],
+            scope: null,
+            description: description)
+    {
+    }
+
+    public static class Keys
+    {
+        public const string Admin = "wallets:admin";
+    }
+
+    public static readonly WalletsPermission Admin = new(Keys.Admin, "Administer wallets across the platform");
+}
