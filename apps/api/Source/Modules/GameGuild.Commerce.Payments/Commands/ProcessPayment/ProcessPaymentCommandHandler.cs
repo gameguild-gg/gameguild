@@ -16,8 +16,29 @@ public sealed class ProcessPaymentCommandHandler(
 {
     public async Task<PaymentResult> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken)
     {
-        // Generate idempotency key from request parameters
-        var idempotencyKey = $"pay_{request.TenantId}_{request.SubscriptionId}_{request.Amount}_{SystemClock.UtcNow:yyyyMMddHH}";
+        var subscription = await subscriptionPaymentContextService.GetPaymentContextAsync(request.SubscriptionId, cancellationToken)
+            .ConfigureAwait(false)
+            ?? throw new InvalidOperationException($"Payment subscription {request.SubscriptionId} was not found.");
+
+        if (subscription.TenantId != request.TenantId)
+        {
+            throw new UnauthorizedAccessException("The payment subscription does not belong to the requested tenant.");
+        }
+
+        if (subscription.Amount != request.Amount)
+        {
+            throw new InvalidOperationException("The requested payment amount does not match the authoritative subscription amount.");
+        }
+
+        if (subscription.Amount <= 0m || string.IsNullOrWhiteSpace(subscription.Currency))
+        {
+            throw new InvalidOperationException("The subscription does not contain valid authoritative pricing.");
+        }
+
+        var idempotencyKey = SubscriptionPaymentIdentity.CreateIdempotencyKey(
+            subscription.TenantId,
+            subscription.SubscriptionId,
+            subscription.BillingCycleNumber);
 
         logger.LogInformation(
             "Processing payment for tenant {TenantId}, subscription {SubscriptionId}, amount {Amount}",
@@ -34,6 +55,7 @@ public sealed class ProcessPaymentCommandHandler(
 
             return new PaymentResult
             {
+                TenantId = existingPayment.TenantId,
                 Success = existingPayment.Status == PaymentStatus.Succeeded,
                 TransactionId = existingPayment.ExternalTransactionId,
                 PaymentId = existingPayment.Id.ToString(),
@@ -44,15 +66,13 @@ public sealed class ProcessPaymentCommandHandler(
             };
         }
 
-        var subscription = await subscriptionPaymentContextService.GetPaymentContextAsync(request.SubscriptionId, cancellationToken)
-            .ConfigureAwait(false);
-        var externalCustomerId = subscription?.ExternalCustomerId;
+        var externalCustomerId = subscription.ExternalCustomerId;
 
         // 2. Create payment record
         var payment = Payment.Create(
-            tenantId: request.TenantId,
-            amount: request.Amount,
-            currency: "USD",
+            tenantId: subscription.TenantId,
+            amount: subscription.Amount,
+            currency: subscription.Currency,
             idempotencyKey: idempotencyKey,
             provider: paymentGateway.ProviderId,
             subscriptionId: request.SubscriptionId,
@@ -68,15 +88,16 @@ public sealed class ProcessPaymentCommandHandler(
         // 4. Process through payment gateway
         var gatewayRequest = new GatewayPaymentRequest(
             IdempotencyKey: idempotencyKey,
-            Amount: request.Amount,
-            Currency: "USD",
+            Amount: subscription.Amount,
+            Currency: subscription.Currency,
             CustomerId: externalCustomerId,
             PaymentMethodId: request.PaymentMethodId,
             Description: $"Payment for subscription {request.SubscriptionId}",
             Metadata: new Dictionary<string, string>
             {
-                ["tenant_id"] = request.TenantId.ToString(),
-                ["subscription_id"] = request.SubscriptionId.ToString()
+                ["tenant_id"] = subscription.TenantId.ToString(),
+                ["subscription_id"] = request.SubscriptionId.ToString(),
+                ["billing_cycle"] = subscription.BillingCycleNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)
             });
 
         var gatewayResult = await paymentGateway.ProcessPaymentAsync(gatewayRequest, cancellationToken)
@@ -116,6 +137,7 @@ public sealed class ProcessPaymentCommandHandler(
                 payment.SubscriptionId,
                 payment.Amount,
                 payment.Currency,
+                subscription.BillingCycleNumber,
                 payment.ProcessedAt.Value,
                 cancellationToken).ConfigureAwait(false);
         }
@@ -123,6 +145,7 @@ public sealed class ProcessPaymentCommandHandler(
         // 6. Return result
         return new PaymentResult
         {
+            TenantId = payment.TenantId,
             Success = gatewayResult.Success,
             TransactionId = gatewayResult.TransactionId,
             PaymentId = payment.Id.ToString(),

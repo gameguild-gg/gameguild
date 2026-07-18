@@ -91,6 +91,7 @@ public sealed class RetryPaymentCommandHandler(
 
             paymentResult = new PaymentResult
             {
+                TenantId = payment.TenantId,
                 Success = true,
                 TransactionId = gatewayResult.TransactionId,
                 PaymentId = payment.Id.ToString(),
@@ -115,13 +116,24 @@ public sealed class RetryPaymentCommandHandler(
 
         if (gatewayResult.Success && payment.ProcessedAt.HasValue)
         {
-            await paymentSubscriptionSyncService.SyncSuccessfulPaymentAsync(
-                payment.Id,
-                payment.SubscriptionId,
-                payment.Amount,
-                payment.Currency,
-                payment.ProcessedAt.Value,
-                cancellationToken).ConfigureAwait(false);
+            var billingCycleNumber = SubscriptionPaymentIdentity.TryGetBillingCycleNumber(payment.IdempotencyKey);
+            if (billingCycleNumber.HasValue)
+            {
+                await paymentSubscriptionSyncService.SyncSuccessfulPaymentAsync(
+                    payment.Id,
+                    payment.SubscriptionId,
+                    payment.Amount,
+                    payment.Currency,
+                    billingCycleNumber,
+                    payment.ProcessedAt.Value,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                logger.LogWarning(
+                    "Payment {PaymentId} succeeded on retry but has no authoritative billing-cycle identity; subscription synchronization was blocked",
+                    payment.Id);
+            }
         }
 
         // 7. Return retry result

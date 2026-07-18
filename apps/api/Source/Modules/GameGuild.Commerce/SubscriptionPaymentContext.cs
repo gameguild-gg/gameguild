@@ -9,7 +9,10 @@ public sealed record SubscriptionPaymentContext(
     Guid TenantId,
     decimal Amount,
     string Currency,
-    string? ExternalCustomerId);
+    string? ExternalCustomerId,
+    int BillingCycleNumber = 1,
+    DateTime? BillingPeriodStart = null,
+    DateTime? BillingPeriodEnd = null);
 
 /// <summary>
 ///     Provides the payment-facing subscription data needed by the Payments module.
