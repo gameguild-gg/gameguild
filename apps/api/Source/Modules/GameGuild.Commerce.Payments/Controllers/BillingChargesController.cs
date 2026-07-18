@@ -33,6 +33,16 @@ public sealed class BillingChargesController(ISender sender, IActorContextAccess
     {
         NormalizePaging(ref page, ref pageSize);
 
+        var actorContext = actorContextAccessor.ActorContext;
+        if (actorContext.IsAuthenticated && !actorContext.IsSystemAdmin)
+        {
+            var requestedTenantId = tenantId ?? actorContext.TenantId ?? Guid.Empty;
+            var validationError = ValidateTenantAccess(requestedTenantId, "list billing charges");
+            if (validationError != null) return validationError;
+
+            tenantId = actorContext.TenantId;
+        }
+
         var result = await sender.Send(new GetAllPaymentsQuery(tenantId, status, startDate, endDate, page, pageSize), ct).ConfigureAwait(false);
         return Ok(result);
     }
@@ -45,7 +55,10 @@ public sealed class BillingChargesController(ISender sender, IActorContextAccess
     public async Task<IActionResult> GetChargeById(Guid chargeId, CancellationToken ct)
     {
         var result = await sender.Send(new GetPaymentByIdQuery(chargeId), ct).ConfigureAwait(false);
-        return result is null ? NotFound() : Ok(result);
+        if (result is null) return NotFound();
+
+        var validationError = ValidateTenantAccess(result.TenantId, "read billing charge");
+        return validationError ?? Ok(result);
     }
 
     [HttpPost]
@@ -63,7 +76,7 @@ public sealed class BillingChargesController(ISender sender, IActorContextAccess
         if (body.Amount <= 0) return BadRequest(new { error = "Amount must be greater than zero" });
         if (string.IsNullOrWhiteSpace(body.PaymentMethodId)) return BadRequest(new { error = "PaymentMethodId is required" });
 
-        var validationError = actorContextAccessor.ValidateTenantAccessAsActionResult(body.TenantId, "create billing charge");
+        var validationError = ValidateTenantAccess(body.TenantId, "create billing charge");
         if (validationError != null) return validationError;
 
         var result = await sender.Send(new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, body.Amount, body.PaymentMethodId), ct).ConfigureAwait(false);
@@ -75,6 +88,12 @@ public sealed class BillingChargesController(ISender sender, IActorContextAccess
     [ProducesResponseType<PaymentRetryResult>(StatusCodes.Status200OK)]
     public async Task<IActionResult> RetryCharge(Guid chargeId, CancellationToken ct)
     {
+        var payment = await sender.Send(new GetPaymentByIdQuery(chargeId), ct).ConfigureAwait(false);
+        if (payment is null) return NotFound();
+
+        var validationError = ValidateTenantAccess(payment.TenantId, "retry billing charge");
+        if (validationError != null) return validationError;
+
         var result = await sender.Send(new RetryPaymentCommand(chargeId), ct).ConfigureAwait(false);
         return Ok(result);
     }
@@ -85,6 +104,12 @@ public sealed class BillingChargesController(ISender sender, IActorContextAccess
     public async Task<IActionResult> RefundCharge(Guid chargeId, [FromBody] RefundBillingChargeRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
+        var payment = await sender.Send(new GetPaymentByIdQuery(chargeId), ct).ConfigureAwait(false);
+        if (payment is null) return NotFound();
+
+        var validationError = ValidateTenantAccess(payment.TenantId, "refund billing charge");
+        if (validationError != null) return validationError;
+
         var result = await sender.Send(new ProcessRefundCommand(chargeId, body.Amount ?? 0, body.Reason ?? "No reason provided"), ct).ConfigureAwait(false);
         return Ok(result);
     }
@@ -95,6 +120,12 @@ public sealed class BillingChargesController(ISender sender, IActorContextAccess
     public async Task<IActionResult> CancelCharge(Guid chargeId, [FromBody] CancelBillingChargeRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
+        var payment = await sender.Send(new GetPaymentByIdQuery(chargeId), ct).ConfigureAwait(false);
+        if (payment is null) return NotFound();
+
+        var validationError = ValidateTenantAccess(payment.TenantId, "cancel billing charge");
+        if (validationError != null) return validationError;
+
         var result = await sender.Send(new CancelPaymentCommand(chargeId, body.CancellationReason, body.CanceledBy), ct).ConfigureAwait(false);
         return Ok(result);
     }
@@ -105,6 +136,11 @@ public sealed class BillingChargesController(ISender sender, IActorContextAccess
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
     }
+
+    private IActionResult? ValidateTenantAccess(Guid tenantId, string operation)
+        => actorContextAccessor.ActorContext.IsSystemAdmin
+            ? null
+            : actorContextAccessor.ValidateTenantAccessAsActionResult(tenantId, operation);
 
     public sealed record CreateBillingChargeRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId);
 

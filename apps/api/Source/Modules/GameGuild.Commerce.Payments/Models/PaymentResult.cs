@@ -6,6 +6,11 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 public class PaymentResult
 {
+    /// <summary>
+    ///     Tenant that owns the payment. Required for authorization at API boundaries.
+    /// </summary>
+    public Guid TenantId { get; init; }
+
     public bool Success { get; init; }
 
     public string? TransactionId { get; init; }

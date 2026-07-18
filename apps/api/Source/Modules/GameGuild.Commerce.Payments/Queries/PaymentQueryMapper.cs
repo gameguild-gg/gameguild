@@ -9,6 +9,7 @@ internal static class PaymentQueryMapper
     {
         return new PaymentResult
         {
+            TenantId = payment.TenantId,
             Success = payment.Status == PaymentStatus.Succeeded,
             TransactionId = payment.ExternalTransactionId,
             PaymentId = payment.ExternalPaymentId ?? payment.Id.ToString("D", CultureInfo.InvariantCulture),
