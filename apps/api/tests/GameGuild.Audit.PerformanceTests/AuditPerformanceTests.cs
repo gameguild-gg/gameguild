@@ -4,6 +4,8 @@ using GameGuild.API.Database;
 using GameGuild.Compliance.Audit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -22,16 +24,20 @@ public class AuditPerformanceTests : IDisposable
     private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
     private readonly Mock<ILogger<AuditService>> _mockLogger;
     private readonly AuditService _auditService;
+    private readonly DbContextOptions<ApplicationDbContext> _contextOptions;
+    private readonly ServiceProvider _serviceProvider;
 
     public AuditPerformanceTests(ITestOutputHelper output)
     {
         _output = output;
 
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
+        var databaseRoot = new InMemoryDatabaseRoot();
+        _contextOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}", databaseRoot)
             .Options;
 
-        _context = new TestApplicationDbContext(options);
+        _context = new TestApplicationDbContext(_contextOptions);
+        _ = _context.Model;
         _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
         _mockLogger = new Mock<ILogger<AuditService>>();
 
@@ -39,9 +45,12 @@ public class AuditPerformanceTests : IDisposable
         httpContext.Request.Headers.UserAgent = "Performance Test User Agent";
         httpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("192.168.1.1");
         _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
+        _serviceProvider = new ServiceCollection()
+            .AddScoped<IApplicationDbContext>(_ => new TestApplicationDbContext(_contextOptions))
+            .BuildServiceProvider();
 
         _auditService = new AuditService(
-            _context,
+            _serviceProvider.GetRequiredService<IServiceScopeFactory>(),
             _mockHttpContextAccessor.Object,
             _mockLogger.Object);
     }
@@ -309,7 +318,7 @@ public class AuditPerformanceTests : IDisposable
         _output.WriteLine($"Average per call: {stopwatch.ElapsedMilliseconds / (double)iterations:F2}ms");
 
         var auditLogs = await _context.Set<AuditLog>()
-            .Where(log => log.Category == AuditCategory.Authorization)
+            .Where(log => log.Category == AuditCategory.Permission)
             .CountAsync();
 
         auditLogs.Should().Be(iterations);
@@ -371,6 +380,7 @@ public class AuditPerformanceTests : IDisposable
 
     public void Dispose()
     {
+        _serviceProvider.Dispose();
         _context.Dispose();
     }
 }

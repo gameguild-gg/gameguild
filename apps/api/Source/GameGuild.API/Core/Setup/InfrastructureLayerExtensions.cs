@@ -7,6 +7,7 @@ using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Subscriptions;
+using GameGuild.Compliance.Audit;
 using GameGuild.Compliance.FERPA;
 using GameGuild.Features;
 using GameGuild.Identity.Authentication;
@@ -209,17 +210,22 @@ public static class InfrastructureLayerExtensions
         services.AddAiModule(configuration);
         logger.LogInformation("AI Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10a.2. FERPA Compliance Module (education record protection and disclosure workflows)
+        // 10a.2. Audit Compliance Module (audit logging, querying, reporting)
+        stepStopwatch.Restart();
+        services.AddAuditServices();
+        logger.LogInformation("Audit Compliance Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10a.3. FERPA Compliance Module (education record protection and disclosure workflows)
         stepStopwatch.Restart();
         services.AddFerpaModule();
         logger.LogInformation("FERPA Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10a.3. Social Profiles Module (public profiles, skills, portfolio, privacy)
+        // 10a.4. Social Profiles Module (public profiles, skills, portfolio, privacy)
         stepStopwatch.Restart();
         services.AddSocialProfilesModule();
         logger.LogInformation("Social Profiles Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10a.3a. Social modules (blog, feed, groups, reactions)
+        // 10a.4a. Social modules (blog, feed, groups, reactions)
         stepStopwatch.Restart();
         services.AddSocialBlogModule();
         services.AddSocialFeedModule();
@@ -227,7 +233,7 @@ public static class InfrastructureLayerExtensions
         services.AddSocialReactionsModule();
         logger.LogInformation("Social Blog/Feed/Groups/Reactions Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10a.4. Notifications Module (delivery facade required by billing/subscription workflows)
+        // 10a.5. Notifications Module (delivery facade required by billing/subscription workflows)
         stepStopwatch.Restart();
         services.AddNotificationsModule();
         logger.LogInformation("Notifications Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
