@@ -372,14 +372,16 @@ Verification: immutable-fact wallet rebuilding, journal recomputation, lower-val
 
 **Produces:** Immutable effective-dated fee/rate policy, fixed 120-day earned-hard maturity, hold state machine, and account/debt restrictions.
 
-- [ ] Write effective-date, source-stamp, confirmation, exact-120-day-boundary, new-lot-clock, rounding, hold-race, and maturity tests.
-- [ ] Implement versioned conversion fees, ad-reward inputs, service prices/margins, limits, and maturity settings; fixed parity is a non-configurable domain invariant.
-- [ ] Set every new earned-hard lot to `matures_at = confirmed_at + 120 days`; purchased hard and all soft remain permanently noncashable.
-- [ ] Provide no accelerated-release command or permission. Correct bad stamps/times only through reversal and a new correctly stamped lot.
-- [ ] Implement partial and full holds with append-only hold events.
-- [ ] Prove an active hold remains effective and payout-blocking before, at, and after the 120-day boundary; maturity never releases or shortens a hold.
+- [x] Write effective-date, source-stamp, confirmation, exact-120-day-boundary, new-lot-clock, rounding, hold-race, and maturity tests.
+- [x] Implement versioned conversion fees, ad-reward inputs, service prices/margins, limits, and maturity settings; fixed parity is a non-configurable domain invariant.
+- [x] Set every new earned-hard lot to `matures_at = confirmed_at + 120 days`; purchased hard and all soft remain permanently noncashable.
+- [x] Provide no accelerated-release command or permission. Correct bad stamps/times only through reversal and a new correctly stamped lot.
+- [x] Implement partial and full holds with append-only hold events.
+- [x] Prove an active hold remains effective and payout-blocking before, at, and after the 120-day boundary; maturity never releases or shortens a hold.
 - [ ] Serialize hold, spend, refund, and payout operations on lot projections.
-- [ ] Add explicit account freeze and debt restrictions.
+- [x] Add explicit account freeze and debt restrictions.
+
+Verification: immutable effective-dated policy, fixed `100 HC/USD` and `100,000 SC/USD` parity, estimated ad-reward safety reserves, stressed service-margin validation, exact source-confirmed 120-day earned-hard maturity, append-only partial/full holds, account/debt restrictions, and shared hold/transfer serialization are integrated on `develop` SHA `f12665372`. `GameGuild.Economy.UnitTests` passes `190/190` tests with zero skips and `100%` line, branch, and method coverage; strict Release Economy/API builds and API publish complete with zero warnings and zero errors. The shared serialization item remains open only for refund and payout operations, which do not exist until their later scheduled tasks.
 
 ### Task 2.6: Risk Engine And Protected-Operation Contract
 
