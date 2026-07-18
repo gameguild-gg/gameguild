@@ -119,7 +119,9 @@ public sealed class CaptureOrderCommandHandler(
                     "Another payment capture is already processing this order. Reload the order before retrying."));
         }
 
-        if (chargeResult.State is OrderChargeState.Processing or OrderChargeState.RequiresAction)
+        if (chargeResult.State is OrderChargeState.Processing or
+            OrderChargeState.RequiresAction or
+            OrderChargeState.RequiresReconciliation)
         {
             return Result.Success(OrderOperationResult.FromPendingPayment(order, chargeResult));
         }

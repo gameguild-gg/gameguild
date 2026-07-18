@@ -50,4 +50,17 @@ public sealed class StripePaymentSafetyTests
         result.Status.Should().Be(PaymentStatus.RequiresAction);
         result.ClientActionToken.Should().Be("pi_requires_action_secret_simulated");
     }
+
+    [Fact]
+    public async Task CancelPaymentAsync_ShouldConfirmCancellationInSimulation()
+    {
+        var service = new StripePaymentService(
+            Options.Create(new StripeGatewayOptions { UseSimulation = true }),
+            NullLogger<StripePaymentService>.Instance);
+
+        var result = await service.CancelPaymentAsync("pi_failed");
+
+        result.Success.Should().BeTrue();
+        result.OutcomeUnknown.Should().BeFalse();
+    }
 }

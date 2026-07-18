@@ -282,7 +282,7 @@ public class Payment : EntityBase
     public void MarkAsProcessing(string? externalTransactionId = null)
     {
         TransitionTo(PaymentStatus.Processing);
-        ExternalTransactionId = externalTransactionId;
+        BindExternalTransactionId(externalTransactionId);
     }
 
     /// <summary>Marks the payment as succeeded</summary>
@@ -323,7 +323,26 @@ public class Payment : EntityBase
     public void MarkAsRequiresAction(string? externalTransactionId = null)
     {
         TransitionTo(PaymentStatus.RequiresAction);
-        ExternalTransactionId = externalTransactionId;
+        BindExternalTransactionId(externalTransactionId);
+    }
+
+    /// <summary>Binds the immutable provider transaction reference when it becomes available.</summary>
+    public bool BindExternalTransactionId(string? externalTransactionId)
+    {
+        if (string.IsNullOrWhiteSpace(externalTransactionId))
+            return false;
+
+        if (ExternalTransactionId is null)
+        {
+            ExternalTransactionId = externalTransactionId;
+            Touch();
+            return true;
+        }
+
+        if (string.Equals(ExternalTransactionId, externalTransactionId, StringComparison.Ordinal))
+            return false;
+
+        throw new InvalidOperationException("A payment cannot be rebound to a different provider transaction.");
     }
 
     /// <summary>Cancels the payment</summary>
@@ -349,6 +368,7 @@ public class Payment : EntityBase
         FailureReason = null;
         ErrorCode = null;
         NextRetryAt = null;
+        ExternalTransactionId = null;
         if (!string.IsNullOrWhiteSpace(paymentMethodId))
             PaymentMethodId = paymentMethodId;
         Touch();

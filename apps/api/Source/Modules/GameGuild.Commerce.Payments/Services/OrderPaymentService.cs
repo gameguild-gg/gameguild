@@ -11,6 +11,8 @@ public sealed class OrderPaymentService(
     IPaymentGateway paymentGateway,
     ILogger<OrderPaymentService> logger) : IOrderPaymentProcessor, IOrderPaymentAuthority
 {
+    internal static readonly TimeSpan SafeProviderReplayWindow = TimeSpan.FromHours(23);
+
     public string? GetPaymentMethodValidationError(string paymentMethodId) =>
         StripePaymentMethodIdentifier.IsValid(paymentMethodId)
             ? null
@@ -57,6 +59,20 @@ public sealed class OrderPaymentService(
         if (payment.Status == PaymentStatus.Succeeded)
             return OrderChargeResult.Succeeded(payment.Id, payment.ExternalPaymentId);
 
+        if (payment.Status == PaymentStatus.Pending)
+        {
+            var originalCharge = charge with
+            {
+                PaymentMethodId = payment.PaymentMethodId ?? charge.PaymentMethodId
+            };
+            return await ProcessAttemptAsync(
+                    payment,
+                    originalCharge,
+                    CreateActiveAttemptIdempotencyKey(payment),
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         if (payment.Status == PaymentStatus.RequiresAction)
         {
             if (string.IsNullOrWhiteSpace(payment.ExternalTransactionId))
@@ -75,6 +91,21 @@ public sealed class OrderPaymentService(
 
         if (payment.Status == PaymentStatus.Processing)
         {
+            if (!string.IsNullOrWhiteSpace(payment.ExternalTransactionId))
+            {
+                var providerResult = await paymentGateway
+                    .GetPaymentAsync(payment.ExternalTransactionId, cancellationToken)
+                    .ConfigureAwait(false);
+                return await ApplyGatewayResultAsync(payment, providerResult, cancellationToken).ConfigureAwait(false);
+            }
+
+            if (payment.UpdatedAt < SystemClock.UtcNow.Subtract(SafeProviderReplayWindow))
+            {
+                return OrderChargeResult.RequiresReconciliation(
+                    payment.Id,
+                    "The provider outcome is unknown and the safe idempotency replay window has expired.");
+            }
+
             var originalCharge = charge with
             {
                 PaymentMethodId = payment.PaymentMethodId ?? charge.PaymentMethodId
@@ -82,21 +113,30 @@ public sealed class OrderPaymentService(
             return await ProcessAttemptAsync(
                     payment,
                     originalCharge,
-                    payment.IdempotencyKey,
+                    CreateActiveAttemptIdempotencyKey(payment),
                     cancellationToken)
                 .ConfigureAwait(false);
         }
 
         if (payment.Status == PaymentStatus.Failed && payment.CanRetry)
         {
+            var reconciliation = await CloseFailedProviderAttemptAsync(payment, cancellationToken).ConfigureAwait(false);
+            if (reconciliation is not null)
+                return reconciliation;
+
             payment.PrepareForRetry(charge.PaymentMethodId);
             await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
             return await ProcessAttemptAsync(
                     payment,
                     charge,
-                    $"{payment.IdempotencyKey}:retry:{payment.RetryCount}",
+                    CreateActiveAttemptIdempotencyKey(payment),
                     cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        if (payment.Status == PaymentStatus.Failed)
+        {
+            return await ProcessReplacementGenerationAsync(payment, charge, cancellationToken).ConfigureAwait(false);
         }
 
         return OrderChargeResult.Failed(
@@ -159,12 +199,20 @@ public sealed class OrderPaymentService(
                 payment.MarkAsRequiresAction(gatewayResult.TransactionId);
                 stateChanged = true;
             }
+            else if (payment.BindExternalTransactionId(gatewayResult.TransactionId))
+            {
+                stateChanged = true;
+            }
         }
         else if (gatewayResult.Status is PaymentStatus.Pending or PaymentStatus.Processing)
         {
             if (payment.Status != PaymentStatus.Processing)
             {
                 payment.MarkAsProcessing(gatewayResult.TransactionId);
+                stateChanged = true;
+            }
+            else if (payment.BindExternalTransactionId(gatewayResult.TransactionId))
+            {
                 stateChanged = true;
             }
         }
@@ -201,6 +249,58 @@ public sealed class OrderPaymentService(
         };
     }
 
+    private async Task<OrderChargeResult> ProcessReplacementGenerationAsync(
+        Payment exhaustedPayment,
+        AuthoritativeOrderCharge charge,
+        CancellationToken cancellationToken)
+    {
+        var replacementKey = CreateReplacementIdempotencyKey(charge.TenantId, charge.OrderId, exhaustedPayment.Id);
+        var existingReplacement = await paymentRepository
+            .GetByIdempotencyKeyAsync(replacementKey, cancellationToken)
+            .ConfigureAwait(false);
+        if (existingReplacement is not null)
+            return await ProcessExistingAsync(existingReplacement, charge, cancellationToken).ConfigureAwait(false);
+
+        var reconciliation = await CloseFailedProviderAttemptAsync(exhaustedPayment, cancellationToken).ConfigureAwait(false);
+        if (reconciliation is not null)
+            return reconciliation;
+
+        var proposedPayment = Payment.Create(
+            charge.TenantId,
+            charge.Amount,
+            charge.Currency,
+            replacementKey,
+            paymentGateway.ProviderId,
+            orderId: charge.OrderId,
+            paymentMethodId: charge.PaymentMethodId,
+            description: $"Replacement payment for order {charge.OrderId}");
+        var payment = await paymentRepository.AddAsync(proposedPayment, cancellationToken).ConfigureAwait(false);
+        if (payment.Id != proposedPayment.Id)
+            return await ProcessExistingAsync(payment, charge, cancellationToken).ConfigureAwait(false);
+
+        return await ProcessAttemptAsync(payment, charge, replacementKey, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<OrderChargeResult?> CloseFailedProviderAttemptAsync(
+        Payment payment,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(payment.ExternalTransactionId))
+            return null;
+
+        var cancellation = await paymentGateway
+            .CancelPaymentAsync(payment.ExternalTransactionId, cancellationToken)
+            .ConfigureAwait(false);
+        if (cancellation.Success)
+            return null;
+
+        return OrderChargeResult.RequiresReconciliation(
+            payment.Id,
+            cancellation.OutcomeUnknown
+                ? "The previous provider attempt cancellation outcome is unknown."
+                : "The previous provider attempt could not be closed safely.");
+    }
+
     public async Task<bool> IsSettledAsync(
         OrderPaymentBinding binding,
         CancellationToken cancellationToken = default)
@@ -216,6 +316,14 @@ public sealed class OrderPaymentService(
 
     internal static string CreateIdempotencyKey(Guid tenantId, Guid orderId) =>
         $"order:{tenantId:N}:{orderId:N}:charge";
+
+    internal static string CreateReplacementIdempotencyKey(Guid tenantId, Guid orderId, Guid exhaustedPaymentId) =>
+        $"{CreateIdempotencyKey(tenantId, orderId)}:after:{exhaustedPaymentId:N}";
+
+    private static string CreateActiveAttemptIdempotencyKey(Payment payment) =>
+        payment.RetryCount == 0
+            ? payment.IdempotencyKey
+            : $"{payment.IdempotencyKey}:retry:{payment.RetryCount}";
 
     private static void Validate(AuthoritativeOrderCharge charge)
     {

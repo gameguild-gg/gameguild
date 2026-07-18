@@ -324,6 +324,50 @@ public class OrdersControllerTests
     }
 
     [Fact]
+    public async Task CaptureOrder_ReturnsPaymentActionContract()
+    {
+        var order = CreateTestOrder();
+        var paymentId = Guid.NewGuid();
+        _senderMock.Setup(sender => sender.Send<Result<OrderOperationResult>>(
+                It.IsAny<CaptureOrderCommand>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(new OrderOperationResult(
+                order,
+                PaymentState: OrderChargeState.RequiresAction,
+                PaymentId: paymentId,
+                ClientActionToken: "pi_secret_test",
+                PaymentMessage: "Additional authentication is required.")));
+
+        var result = await _sut.CaptureOrder(order.Id, new CaptureOrderRequest("pm_test"));
+
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = ok.Value.Should().BeOfType<OrderCaptureDto>().Subject;
+        response.PaymentState.Should().Be(OrderChargeState.RequiresAction);
+        response.PaymentId.Should().Be(paymentId);
+        response.ClientActionToken.Should().Be("pi_secret_test");
+    }
+
+    [Fact]
+    public async Task CaptureOrder_ReturnsSucceededStateForSettledOrder()
+    {
+        var order = CreateTestOrder();
+        var paymentId = Guid.NewGuid();
+        order.StartPaymentProcessing();
+        order.MarkAsPaidPendingFulfillment(paymentId, "pi_settled");
+        _senderMock.Setup(sender => sender.Send<Result<OrderOperationResult>>(
+                It.IsAny<CaptureOrderCommand>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(OrderOperationResult.FromOrder(order, wasDuplicate: true)));
+
+        var result = await _sut.CaptureOrder(order.Id, new CaptureOrderRequest("pm_test"));
+
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = ok.Value.Should().BeOfType<OrderCaptureDto>().Subject;
+        response.PaymentState.Should().Be(OrderChargeState.Succeeded);
+        response.PaymentId.Should().Be(paymentId);
+    }
+
+    [Fact]
     public async Task ReleaseOrder_ReturnsBadRequestWithDefaultProblemDetailsWhenDescriptionIsNull()
     {
         _senderMock.Setup(sender => sender.Send<Result<OrderOperationResult>>(It.IsAny<ReleaseOrderCommand>(), It.IsAny<CancellationToken>()))
