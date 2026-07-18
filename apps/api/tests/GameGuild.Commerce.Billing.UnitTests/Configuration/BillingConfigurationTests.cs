@@ -77,4 +77,47 @@ public class BillingConfigurationTests
 
         errors.Should().NotBeEmpty();
     }
+
+    [Fact]
+    public void Validate_Should_Reject_Partial_Stripe_Webhook_Configuration()
+    {
+        var config = new BillingConfiguration
+        {
+            Stripe = new StripeSettings
+            {
+                WebhookSecret = "whsec_configured",
+                WebhookEndpointId = string.Empty,
+                ApiVersion = string.Empty,
+                WebhookToleranceSeconds = 0
+            }
+        };
+
+        var errors = config.Validate(new ValidationContext(config)).ToList();
+
+        errors.Should().Contain(error => error.ErrorMessage!.Contains(nameof(StripeSettings.WebhookEndpointId)));
+        errors.Should().Contain(error => error.ErrorMessage!.Contains(nameof(StripeSettings.ApiVersion)));
+        errors.Should().Contain(error => error.ErrorMessage!.Contains(nameof(StripeSettings.WebhookToleranceSeconds)));
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(300)]
+    [InlineData(900)]
+    public void Validate_Should_Accept_Supported_Stripe_Webhook_Tolerance(long toleranceSeconds)
+    {
+        var config = new BillingConfiguration
+        {
+            Stripe = new StripeSettings
+            {
+                WebhookSecret = "whsec_configured",
+                WebhookEndpointId = "we_configured",
+                ApiVersion = "2023-10-16",
+                WebhookToleranceSeconds = toleranceSeconds
+            }
+        };
+
+        var errors = config.Validate(new ValidationContext(config)).ToList();
+
+        errors.Should().BeEmpty();
+    }
 }
