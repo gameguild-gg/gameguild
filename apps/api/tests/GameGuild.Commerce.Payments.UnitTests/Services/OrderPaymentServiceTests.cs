@@ -21,6 +21,7 @@ public sealed class OrderPaymentServiceTests
 
         var gateway = new Mock<IPaymentGateway>();
         gateway.SetupGet(item => item.ProviderId).Returns("stripe");
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentResult(
                 true,
@@ -29,7 +30,7 @@ public sealed class OrderPaymentServiceTests
                 null,
                 null,
                 PaymentStatus.Succeeded,
-                SystemClock.UtcNow));
+                SystemClock.UtcNow).WithVerifiedMapping());
 
         var service = new OrderPaymentService(
             repository.Object,
@@ -113,6 +114,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.GetByIdempotencyKeyAsync(payment.IdempotencyKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -149,6 +151,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.AddAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(winner);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         var service = new OrderPaymentService(
             repository.Object,
@@ -187,6 +190,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.UpdateAsync(payment, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentResult(
                 true,
@@ -195,7 +199,7 @@ public sealed class OrderPaymentServiceTests
                 null,
                 null,
                 PaymentStatus.Succeeded,
-                SystemClock.UtcNow));
+                SystemClock.UtcNow).WithVerifiedMapping());
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -235,6 +239,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.UpdateAsync(payment, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.CancelPaymentAsync("pi_declined", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentCancellationResult(true, false, null, null));
         gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
@@ -245,7 +250,7 @@ public sealed class OrderPaymentServiceTests
                 null,
                 null,
                 PaymentStatus.Succeeded,
-                SystemClock.UtcNow));
+                SystemClock.UtcNow).WithVerifiedMapping());
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -277,6 +282,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.GetByIdempotencyKeyAsync(payment.IdempotencyKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.CancelPaymentAsync("pi_declined", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentCancellationResult(
                 false,
@@ -318,6 +324,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.GetByIdempotencyKeyAsync(payment.IdempotencyKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.GetPaymentAsync("pi_requires_action", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentResult(
                 true,
@@ -326,7 +333,7 @@ public sealed class OrderPaymentServiceTests
                 null,
                 null,
                 PaymentStatus.Succeeded,
-                SystemClock.UtcNow));
+                SystemClock.UtcNow).WithVerifiedMapping());
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -362,6 +369,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.GetByIdempotencyKeyAsync(payment.IdempotencyKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentResult(
                 false,
@@ -370,7 +378,7 @@ public sealed class OrderPaymentServiceTests
                 "stripe_outcome_unknown",
                 "Payment outcome is pending provider reconciliation.",
                 PaymentStatus.Processing,
-                SystemClock.UtcNow));
+                SystemClock.UtcNow).WithVerifiedMapping());
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -408,6 +416,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.UpdateAsync(payment, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentResult(
                 true,
@@ -416,7 +425,7 @@ public sealed class OrderPaymentServiceTests
                 null,
                 null,
                 PaymentStatus.Succeeded,
-                SystemClock.UtcNow));
+                SystemClock.UtcNow).WithVerifiedMapping());
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -455,6 +464,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.GetByIdempotencyKeyAsync(idempotencyKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentResult(
                 false,
@@ -463,7 +473,7 @@ public sealed class OrderPaymentServiceTests
                 "stripe_outcome_unknown",
                 "Payment outcome remains unknown.",
                 PaymentStatus.Processing,
-                SystemClock.UtcNow));
+                SystemClock.UtcNow).WithVerifiedMapping());
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -500,6 +510,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.UpdateAsync(payment, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentResult(
                 true,
@@ -508,7 +519,7 @@ public sealed class OrderPaymentServiceTests
                 null,
                 null,
                 PaymentStatus.Succeeded,
-                SystemClock.UtcNow));
+                SystemClock.UtcNow).WithVerifiedMapping());
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -545,6 +556,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.GetByIdempotencyKeyAsync(idempotencyKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.GetPaymentAsync("pi_requires_action", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentResult(
                 false,
@@ -554,7 +566,7 @@ public sealed class OrderPaymentServiceTests
                 "Additional authentication is required.",
                 PaymentStatus.RequiresAction,
                 SystemClock.UtcNow,
-                "pi_requires_action_secret_test"));
+                "pi_requires_action_secret_test").WithVerifiedMapping());
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -593,6 +605,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.GetByIdempotencyKeyAsync(idempotencyKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -627,6 +640,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.UpdateAsync(payment, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentResult(
                 false,
@@ -635,7 +649,7 @@ public sealed class OrderPaymentServiceTests
                 null,
                 "Provider is still processing.",
                 PaymentStatus.Processing,
-                SystemClock.UtcNow));
+                SystemClock.UtcNow).WithVerifiedMapping());
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -680,6 +694,7 @@ public sealed class OrderPaymentServiceTests
             .ReturnsAsync((Payment payment, CancellationToken _) => payment);
         var gateway = new Mock<IPaymentGateway>();
         gateway.SetupGet(item => item.ProviderId).Returns("stripe");
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentResult(
                 true,
@@ -688,7 +703,7 @@ public sealed class OrderPaymentServiceTests
                 null,
                 null,
                 PaymentStatus.Succeeded,
-                SystemClock.UtcNow));
+                SystemClock.UtcNow).WithVerifiedMapping());
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -751,6 +766,7 @@ public sealed class OrderPaymentServiceTests
                 _ => null
             });
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -795,6 +811,7 @@ public sealed class OrderPaymentServiceTests
         repository.Setup(repo => repo.GetByIdempotencyKeyAsync(existing.IdempotencyKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existing);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -822,6 +839,7 @@ public sealed class OrderPaymentServiceTests
             .ReturnsAsync((Payment payment, CancellationToken _) => payment);
         var gateway = new Mock<IPaymentGateway>();
         gateway.SetupGet(item => item.ProviderId).Returns("stripe");
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         gateway.Setup(item => item.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayPaymentResult(
                 false,
@@ -830,7 +848,7 @@ public sealed class OrderPaymentServiceTests
                 "card_declined",
                 "Card declined",
                 PaymentStatus.Failed,
-                SystemClock.UtcNow));
+                SystemClock.UtcNow).WithVerifiedMapping());
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
@@ -844,5 +862,24 @@ public sealed class OrderPaymentServiceTests
         persisted.Should().NotBeNull();
         persisted!.Status.Should().Be(PaymentStatus.Failed);
         persisted.ErrorCode.Should().Be("card_declined");
+    }
+
+}
+internal static class OrderPaymentGatewayResultTestExtensions
+{
+    public static GatewayPaymentResult WithVerifiedMapping(this GatewayPaymentResult result)
+    {
+        if (string.IsNullOrWhiteSpace(result.TransactionId))
+            return result;
+
+        return result with
+        {
+            ProviderMapping = new GatewayProviderMapping(
+                "test",
+                "acct_platform",
+                result.TransactionId,
+                "payment_intent",
+                "capture")
+        };
     }
 }

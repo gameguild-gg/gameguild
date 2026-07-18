@@ -16,6 +16,7 @@ public sealed class PaymentCycleSynchronizationTests
 
         var repository = CreateRepository(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         var syncService = new Mock<IPaymentSubscriptionSyncService>();
         gateway
             .Setup(service => service.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
@@ -81,6 +82,7 @@ public sealed class PaymentCycleSynchronizationTests
 
         var repository = CreateRepository(payment);
         var gateway = new Mock<IPaymentGateway>();
+        gateway.SetupGet(item => item.ProviderId).Returns("stripe");
         var syncService = new Mock<IPaymentSubscriptionSyncService>();
         gateway
             .Setup(service => service.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
@@ -181,6 +183,12 @@ public sealed class PaymentCycleSynchronizationTests
             ErrorCode: null,
             ErrorMessage: null,
             Status: PaymentStatus.Succeeded,
-            ProcessedAt: SystemClock.UtcNow);
+            ProcessedAt: SystemClock.UtcNow,
+            ProviderMapping: new GatewayProviderMapping(
+                "test",
+                "acct_platform",
+                "pi_123",
+                "payment_intent",
+                "capture"));
     }
 }

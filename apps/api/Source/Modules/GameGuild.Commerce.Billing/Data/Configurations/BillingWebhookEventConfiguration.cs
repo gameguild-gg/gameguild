@@ -11,7 +11,18 @@ public class BillingWebhookEventConfiguration : IEntityTypeConfiguration<Billing
     public void Configure(EntityTypeBuilder<BillingWebhookEvent> builder)
     {
         // Configure table
-        builder.ToTable("billing_webhook_events");
+        builder.ToTable("billing_webhook_events", tableBuilder =>
+        {
+            tableBuilder.HasCheckConstraint(
+                "ck_billing_webhook_events_provider_scope_complete",
+                """(("ProviderEnvironment" IS NULL AND "ProviderAccountId" IS NULL AND "WebhookEndpointId" IS NULL AND "IsLiveMode" IS NULL) OR ("ProviderEnvironment" IS NOT NULL AND "ProviderAccountId" IS NOT NULL AND "WebhookEndpointId" IS NOT NULL AND "IsLiveMode" IS NOT NULL))""");
+            tableBuilder.HasCheckConstraint(
+                "ck_billing_webhook_events_provider_environment",
+                """("ProviderEnvironment" IS NULL OR ("ProviderEnvironment" = 'live' AND "IsLiveMode" = true) OR ("ProviderEnvironment" = 'test' AND "IsLiveMode" = false))""");
+            tableBuilder.HasCheckConstraint(
+                "ck_billing_webhook_events_provider_object_complete",
+                """(("ProviderObjectId" IS NULL AND "ProviderObjectType" IS NULL AND "ProviderMonetaryLeg" IS NULL) OR ("ProviderObjectId" IS NOT NULL AND "ProviderObjectType" IS NOT NULL AND "ProviderMonetaryLeg" IS NOT NULL AND "ProviderEnvironment" IS NOT NULL AND "ProviderAccountId" IS NOT NULL))""");
+        });
 
         // Configure primary key
         builder.HasKey(x => x.Id);
@@ -58,9 +69,13 @@ public class BillingWebhookEventConfiguration : IEntityTypeConfiguration<Billing
         builder.Property(x => x.ErrorMessage)
             .HasMaxLength(2000);
 
+        builder.Property(x => x.ProcessingAttempts)
+            .IsConcurrencyToken();
+
         // Configure indexes for performance and idempotency
         builder.HasIndex(x => new { x.ExternalEventId, x.Provider })
             .IsUnique()
+            .HasFilter("""("ProviderEnvironment" IS NULL AND "ProviderAccountId" IS NULL AND "WebhookEndpointId" IS NULL)""")
             .HasDatabaseName("ix_billing_webhook_events_external_id_provider");
 
         builder.HasIndex(x => new
@@ -72,6 +87,7 @@ public class BillingWebhookEventConfiguration : IEntityTypeConfiguration<Billing
                 x.ExternalEventId
             })
             .HasFilter("\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"WebhookEndpointId\" IS NOT NULL")
+            .IsUnique()
             .IsCreatedConcurrently()
             .HasDatabaseName("ix_billing_webhook_events_provider_scope_event");
 

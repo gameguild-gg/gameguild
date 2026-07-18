@@ -237,6 +237,57 @@ public class StripeBillingWebhookServiceTests
             result.Processed.Should().BeTrue();
         }
 
+    [Fact]
+    public async Task ProcessStripeWebhookAsync_Should_Request_Retry_When_Another_Worker_Owns_Claim()
+    {
+        var activeEvent = new BillingWebhookEvent
+        {
+            ExternalEventId = "evt_active",
+            Provider = PaymentProviders.Stripe,
+            ProviderEnvironment = "test",
+            ProviderAccountId = "platform",
+            WebhookEndpointId = "we_test",
+            EventType = "unknown.event",
+            Payload = "{}",
+            ProcessingAttempts = 1,
+            UpdatedAt = DateTime.UtcNow
+        };
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(candidate => candidate.GetByProviderScopeAsync(
+                PaymentProviders.Stripe,
+                "test",
+                "platform",
+                "we_test",
+                "evt_active",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activeEvent);
+        repository
+            .Setup(candidate => candidate.TryClaimProcessingAsync(
+                activeEvent,
+                It.IsAny<DateTime>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var service = CreateService(
+            repository,
+            Mock.Of<ISubscriptionQueryService>(),
+            Mock.Of<ISubscriptionBillingService>(),
+            Mock.Of<ISubscriptionLifecycleService>(),
+            Mock.Of<ISubscriptionExternalIdService>());
+
+        var result = await service.ProcessStripeWebhookAsync(
+            "{\"id\":\"evt_active\",\"type\":\"unknown.event\",\"data\":{\"object\":{\"id\":\"obj\"}}}",
+            "sig",
+            CancellationToken.None);
+
+        result.Processed.Should().BeFalse();
+        result.RequiresRetry.Should().BeTrue();
+        repository.Verify(
+            candidate => candidate.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     private static StripeBillingWebhookService CreateService(
         Mock<IBillingWebhookRepository> repository,
         ISubscriptionQueryService queryService,
@@ -244,6 +295,14 @@ public class StripeBillingWebhookServiceTests
         ISubscriptionLifecycleService lifecycleService,
         ISubscriptionExternalIdService externalIdService)
     {
+        repository
+            .Setup(candidate => candidate.TryClaimProcessingAsync(
+                It.IsAny<BillingWebhookEvent>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent webhookEvent, DateTime staleBefore, CancellationToken _) =>
+                webhookEvent.TryBeginProcessing(staleBefore));
+
         var verifier = new Mock<IStripeWebhookVerifier>();
         verifier
             .Setup(candidate => candidate.Verify(It.IsAny<string>(), It.IsAny<string>()))

@@ -20,12 +20,16 @@ public sealed class BillingConfigurationProductionValidator(IHostEnvironment env
             failures.Add($"Stripe.{nameof(StripeSettings.WebhookSecret)} is required outside Development and Test environments.");
         if (string.IsNullOrWhiteSpace(stripe.WebhookEndpointId))
             failures.Add($"Stripe.{nameof(StripeSettings.WebhookEndpointId)} is required outside Development and Test environments.");
+        if (string.IsNullOrWhiteSpace(stripe.AccountId))
+            failures.Add($"Stripe.{nameof(StripeSettings.AccountId)} is required outside Development and Test environments.");
         if (string.IsNullOrWhiteSpace(stripe.ApiVersion))
             failures.Add($"Stripe.{nameof(StripeSettings.ApiVersion)} is required outside Development and Test environments.");
         if (!options.Webhook.VerifySignatures)
             failures.Add($"Webhook.{nameof(WebhookSettings.VerifySignatures)} must be true outside Development and Test environments.");
         if (string.Equals(environment.EnvironmentName, Environments.Production, StringComparison.OrdinalIgnoreCase) && !stripe.LiveMode)
             failures.Add($"Stripe.{nameof(StripeSettings.LiveMode)} must be true in Production.");
+        if (string.Equals(environment.EnvironmentName, Environments.Staging, StringComparison.OrdinalIgnoreCase) && stripe.LiveMode)
+            failures.Add($"Stripe.{nameof(StripeSettings.LiveMode)} must be false in Staging.");
 
         return failures.Count == 0
             ? ValidateOptionsResult.Success

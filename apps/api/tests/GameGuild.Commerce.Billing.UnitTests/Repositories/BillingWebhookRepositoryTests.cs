@@ -1,3 +1,5 @@
+using System.Data.Common;
+
 using FluentAssertions;
 
 using GameGuild.Commerce;
@@ -78,6 +80,56 @@ public class BillingWebhookRepositoryTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldReloadWinner_WhenConcurrentInsertWinsUniqueConstraint()
+    {
+        await using var context = CreateRaceContext();
+        var repository = new BillingWebhookRepository(context, NullLogger<BillingWebhookRepository>.Instance);
+        var contender = CreateScopedEvent("acct_platform", "we_primary");
+        context.ConcurrentWinner = CreateScopedEvent("acct_platform", "we_primary");
+        context.SqlStateOnNextSave = "23505";
+        context.ConstraintNameOnNextSave = "ix_billing_webhook_events_provider_scope_event";
+
+        var created = await repository.CreateAsync(contender);
+
+        created.Id.Should().Be(context.ConcurrentWinner.Id);
+        created.Id.Should().NotBe(contender.Id);
+        (await context.BillingWebhookEvents.CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldRethrowNonUniqueDatabaseFailure_EvenWhenMatchingRowExists()
+    {
+        await using var context = CreateRaceContext();
+        var repository = new BillingWebhookRepository(context, NullLogger<BillingWebhookRepository>.Instance);
+        var contender = CreateScopedEvent("acct_platform", "we_primary");
+        context.ConcurrentWinner = CreateScopedEvent("acct_platform", "we_primary");
+        context.SqlStateOnNextSave = "23514";
+
+        var action = () => repository.CreateAsync(contender);
+
+        var exception = await action.Should().ThrowAsync<DbUpdateException>();
+        exception.Which.InnerException.Should().BeOfType<SimulatedDbException>()
+            .Which.SqlState.Should().Be("23514");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldRethrowUniqueViolation_FromUnrelatedConstraint()
+    {
+        await using var context = CreateRaceContext();
+        var repository = new BillingWebhookRepository(context, NullLogger<BillingWebhookRepository>.Instance);
+        var contender = CreateScopedEvent("acct_platform", "we_primary");
+        context.ConcurrentWinner = CreateScopedEvent("acct_platform", "we_primary");
+        context.SqlStateOnNextSave = "23505";
+        context.ConstraintNameOnNextSave = "ux_unrelated_table_key";
+
+        var action = () => repository.CreateAsync(contender);
+
+        var exception = await action.Should().ThrowAsync<DbUpdateException>();
+        exception.Which.InnerException.Should().BeOfType<SimulatedDbException>()
+            .Which.ConstraintName.Should().Be("ux_unrelated_table_key");
+    }
+
+    [Fact]
     public async Task ExistsAsync_Should_Return_True_For_Match()
     {
         await using var context = CreateContext();
@@ -127,6 +179,15 @@ public class BillingWebhookRepositoryTests
         return new TestBillingDbContext(options);
     }
 
+    private static RaceBillingDbContext CreateRaceContext()
+    {
+        var options = new DbContextOptionsBuilder<TestBillingDbContext>()
+            .UseInMemoryDatabase($"BillingRace_{Guid.NewGuid()}")
+            .Options;
+
+        return new RaceBillingDbContext(options);
+    }
+
     private static BillingWebhookEvent CreateScopedEvent(string accountId, string endpointId) => new()
     {
         ExternalEventId = "evt_shared",
@@ -138,7 +199,7 @@ public class BillingWebhookRepositoryTests
         Payload = "{}"
     };
 
-    private sealed class TestBillingDbContext(DbContextOptions<TestBillingDbContext> options)
+    private class TestBillingDbContext(DbContextOptions<TestBillingDbContext> options)
         : DbContext(options), IApplicationDbContext
     {
         public DbSet<BillingWebhookEvent> BillingWebhookEvents { get; set; } = null!;
@@ -147,5 +208,40 @@ public class BillingWebhookRepositoryTests
         {
             return Task.FromResult(Mock.Of<IDbContextTransaction>());
         }
+    }
+
+    private sealed class RaceBillingDbContext(DbContextOptions<TestBillingDbContext> options)
+        : TestBillingDbContext(options)
+    {
+        public BillingWebhookEvent ConcurrentWinner { get; set; } = null!;
+        public string? SqlStateOnNextSave { get; set; }
+        public string? ConstraintNameOnNextSave { get; set; }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            if (SqlStateOnNextSave is null)
+                return await base.SaveChangesAsync(cancellationToken);
+
+            var sqlState = SqlStateOnNextSave;
+            SqlStateOnNextSave = null;
+            var contender = ChangeTracker.Entries<BillingWebhookEvent>()
+                .Single(entry => entry.State == EntityState.Added);
+            contender.State = EntityState.Detached;
+            BillingWebhookEvents.Add(ConcurrentWinner);
+            await base.SaveChangesAsync(cancellationToken);
+            contender.State = EntityState.Added;
+
+            throw new DbUpdateException(
+                "Simulated database failure.",
+                new SimulatedDbException(sqlState, ConstraintNameOnNextSave));
+        }
+    }
+
+    private sealed class SimulatedDbException(
+        string sqlState,
+        string? constraintName) : DbException("Simulated PostgreSQL failure.")
+    {
+        public override string? SqlState => sqlState;
+        public string? ConstraintName { get; } = constraintName;
     }
 }

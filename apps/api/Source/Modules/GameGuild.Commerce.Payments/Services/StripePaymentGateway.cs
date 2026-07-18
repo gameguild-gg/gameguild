@@ -118,6 +118,22 @@ public class StripeGatewayOptions
     public string PublishableKey { get; set; } = string.Empty;
 
     /// <summary>
+    ///     Platform/default Stripe account used when no Connect account is configured.
+    /// </summary>
+    public string AccountId { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     Optional Stripe Connect account used for outbound API requests and as the payment-object owner.
+    ///     Empty means requests target the platform account.
+    /// </summary>
+    public string ConnectedAccountId { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     Whether configured credentials address Stripe live mode.
+    /// </summary>
+    public bool LiveMode { get; set; }
+
+    /// <summary>
     ///     Webhook signing secret.
     ///     Required for webhook signature verification.
     /// </summary>

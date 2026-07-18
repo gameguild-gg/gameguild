@@ -37,6 +37,7 @@ public class BillingWebhookEndpointsIntegrationTests : IClassFixture<WebApplicat
                 {
                     ["Billing:Stripe:WebhookSecret"] = StripeWebhookSecret,
                     ["Billing:Stripe:WebhookEndpointId"] = "we_billing_integration",
+                    ["Billing:Stripe:AccountId"] = "acct_platform",
                     ["Billing:Stripe:ApiVersion"] = "2023-10-16",
                     ["Billing:Stripe:LiveMode"] = "false",
                     ["Billing:Stripe:WebhookToleranceSeconds"] = "300"
