@@ -147,9 +147,9 @@ public static class EconomyWriterContractValidator
     {
         if (maturity is not { Currency: CurrencyCode.HardCoin, Provenance: ProvenanceKind.EarnedHard }) return;
 
-        if (maturity.MaturesAt - maturity.ConfirmedAt < TimeSpan.FromDays(EarnedHardMaturityDays))
+        if (maturity.MaturesAt - maturity.ConfirmedAt != TimeSpan.FromDays(EarnedHardMaturityDays))
             Add(errors, EconomyWriterRejectionCode.EarlyMaturity,
-                "Earned hard currency cannot mature before the 120-day confirmation window.");
+                "Earned hard currency must mature exactly 120 days after confirmation.");
     }
 
     private static void ValidateAllocations(

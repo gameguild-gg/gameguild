@@ -142,6 +142,9 @@ public sealed class EconomyWriterContractTests
             valid with { Maturity = valid.Maturity! with { MaturesAt = ConfirmedAt.AddDays(119) } },
             EconomyWriterRejectionCode.EarlyMaturity);
         AssertRejected(
+            valid with { Maturity = valid.Maturity! with { MaturesAt = ConfirmedAt.AddDays(121) } },
+            EconomyWriterRejectionCode.EarlyMaturity);
+        AssertRejected(
             valid with { Allocations = [new WriterAllocationFact(101, 100)] },
             EconomyWriterRejectionCode.OverAllocation);
         AssertRejected(

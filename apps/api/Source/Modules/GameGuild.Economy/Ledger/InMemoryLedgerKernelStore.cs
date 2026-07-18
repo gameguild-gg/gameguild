@@ -1,4 +1,5 @@
 using GameGuild.Economy.Contracts;
+using GameGuild.Economy.Policy;
 
 namespace GameGuild.Economy.Ledger;
 
@@ -16,6 +17,18 @@ public sealed class InMemoryLedgerKernelStore
     public IReadOnlyList<IdempotencyRecord> IdempotencyRecords => Read(state => state.Idempotency.Values.ToArray());
     public IReadOnlyList<ImmutableOutboxMessage> OutboxMessages => Read(state => state.Outbox.ToArray());
     public IReadOnlyList<ChainAnchor> ChainAnchors => Read(state => state.Anchors.ToArray());
+    public IReadOnlyList<HoldEvent> HoldEvents => Read(state => state.HoldEvents.ToArray());
+    public IReadOnlyList<HoldContract> Holds => Read(state => state.Holds.Values.ToArray());
+    public HoldContract GetHold(HoldId id) => Read(state =>
+        state.Holds.TryGetValue(id, out var hold)
+            ? hold
+            : throw new KeyNotFoundException($"Hold {id.Value:N} was not found."));
+    public IReadOnlyList<HoldContract> GetActiveHolds(WalletId walletId) => Read(state =>
+        state.Holds.Values
+            .Where(hold => hold.WalletId == walletId && hold.Status == HoldStatus.Active)
+            .OrderBy(hold => hold.EffectiveAt)
+            .ThenBy(hold => hold.Id.Value)
+            .ToArray());
 
     public T Execute<T>(Func<LedgerKernelTransaction, T> operation)
     {
@@ -59,6 +72,8 @@ internal sealed class LedgerKernelState
     internal Dictionary<string, IdempotencyRecord> Idempotency { get; } = new(StringComparer.Ordinal);
     internal List<ImmutableOutboxMessage> Outbox { get; } = [];
     internal List<ChainAnchor> Anchors { get; } = [];
+    internal List<HoldEvent> HoldEvents { get; } = [];
+    internal Dictionary<HoldId, HoldContract> Holds { get; } = [];
 
     internal LedgerKernelState Clone()
     {
@@ -71,6 +86,8 @@ internal sealed class LedgerKernelState
         foreach (var pair in Idempotency) clone.Idempotency.Add(pair.Key, pair.Value);
         clone.Outbox.AddRange(Outbox);
         clone.Anchors.AddRange(Anchors);
+        clone.HoldEvents.AddRange(HoldEvents);
+        foreach (var pair in Holds) clone.Holds.Add(pair.Key, pair.Value);
         return clone;
     }
 }
@@ -107,7 +124,72 @@ public sealed class LedgerKernelTransaction
     public void AddProjectionUpdate(WalletProjectionUpdate update) => _state.ProjectionUpdates.Add(update);
     public void AddOutbox(ImmutableOutboxMessage message) => _state.Outbox.Add(message);
     public void AddAnchor(ChainAnchor anchor) => _state.Anchors.Add(anchor);
+    public HoldContract PlaceHold(
+        HoldId id,
+        WalletId walletId,
+        CoinAmount amount,
+        HoldReason reason,
+        DateTimeOffset effectiveAt)
+    {
+        if (_state.Holds.ContainsKey(id)) throw new InvalidOperationException($"Hold {id.Value:N} already exists.");
+        var available = GetAvailableLots(walletId, amount.Currency)
+            .Aggregate(0L, static (total, lot) => checked(total + lot.Amount.Units));
+        var alreadyHeld = ActiveHoldUnits(walletId, amount.Currency);
+        var unheld = Math.Max(0, available - alreadyHeld);
+        if (amount.Units > unheld) throw new InsufficientFragmentsException(amount.Units - unheld);
+
+        var hold = new HoldContract(id, walletId, amount, reason, HoldStatus.Active, effectiveAt, null);
+        _state.Holds.Add(id, hold);
+        AppendHoldEvent(HoldEventKind.Placed, hold, effectiveAt);
+        return hold;
+    }
+
+    public HoldContract TransitionHold(
+        HoldId id,
+        HoldStatus status,
+        HoldEventKind kind,
+        DateTimeOffset occurredAt)
+    {
+        var current = CurrentHold(id);
+        if (current.Status != HoldStatus.Active)
+            throw new InvalidOperationException("Only an active hold can enter a terminal state.");
+        if (occurredAt < current.EffectiveAt)
+            throw new ArgumentException("A hold transition cannot precede placement.", nameof(occurredAt));
+        var terminal = new HoldContract(
+            current.Id,
+            current.WalletId,
+            current.Amount,
+            current.Reason,
+            status,
+            current.EffectiveAt,
+            occurredAt);
+        _state.Holds[id] = terminal;
+        AppendHoldEvent(kind, terminal, occurredAt);
+        return terminal;
+    }
+
+    public HoldContract CurrentHold(HoldId id) =>
+        _state.Holds.TryGetValue(id, out var hold)
+            ? hold
+            : throw new KeyNotFoundException($"Hold {id.Value:N} was not found.");
+
+    public long ActiveHoldUnits(WalletId walletId, CurrencyCode currency) =>
+        _state.Holds.Values
+            .Where(hold => hold.WalletId == walletId && hold.Status == HoldStatus.Active &&
+                           hold.Amount.Currency == currency)
+            .Aggregate(0L, static (total, hold) => checked(total + hold.Amount.Units));
+
     public JournalEntry? JournalHead => _state.JournalEntries.Count == 0 ? null : _state.JournalEntries[^1];
+
+    private void AppendHoldEvent(HoldEventKind kind, HoldContract hold, DateTimeOffset occurredAt) =>
+        _state.HoldEvents.Add(new HoldEvent(
+            checked(_state.HoldEvents.Count + 1L),
+            kind,
+            hold.Id,
+            hold.WalletId,
+            hold.Amount,
+            hold.Reason,
+            occurredAt));
 
     public PostingResult? FindIdempotent(IdempotencyKey key, string requestHash)
     {
