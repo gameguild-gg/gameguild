@@ -7860,21 +7860,6 @@ export const getOgEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetOrdersInput {
-  query?: {
-    owner?: string;
-    status?: Types.CommerceOrdersOrderStatus;
-  };
-}
-export type GetOrdersOutput = Array<Types.CommerceOrdersOrder>;
-export const getOrdersEndpoint = {
-  operationId: 'getOrders' as const,
-  method: 'GET' as const,
-  path: '/v1/orders' as const,
-  tags: ['Commerce/orders'] as const,
-  requiresAuth: true,
-} as const;
-
 export interface PostOrdersInput {
   body?: Types.CommerceOrdersCreateOrderInput;
 }
@@ -7887,53 +7872,13 @@ export const postOrdersEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetOrders1Input {
+export interface GetOrdersInput {
   orderId: string;
 }
-export type GetOrders1Output = Types.CommerceOrdersOrder;
-export const getOrders1Endpoint = {
-  operationId: 'getOrders1' as const,
+export type GetOrdersOutput = Types.CommerceOrdersOrder;
+export const getOrdersEndpoint = {
+  operationId: 'getOrders' as const,
   method: 'GET' as const,
-  path: '/v1/orders/{orderId}' as const,
-  tags: ['Commerce/orders'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface DeleteOrdersInput {
-  orderId: string;
-  query?: {
-    reason?: string;
-  };
-}
-export type DeleteOrdersOutput = void;
-export const deleteOrdersEndpoint = {
-  operationId: 'deleteOrders' as const,
-  method: 'DELETE' as const,
-  path: '/v1/orders/{orderId}' as const,
-  tags: ['Commerce/orders'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface PatchOrdersInput {
-  orderId: string;
-  body?: Types.CommerceOrdersPatchOrderInput;
-}
-export type PatchOrdersOutput = Types.CommerceOrdersOrder;
-export const patchOrdersEndpoint = {
-  operationId: 'patchOrders' as const,
-  method: 'PATCH' as const,
-  path: '/v1/orders/{orderId}' as const,
-  tags: ['Commerce/orders'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface HeadOrdersInput {
-  orderId: string;
-}
-export type HeadOrdersOutput = void;
-export const headOrdersEndpoint = {
-  operationId: 'headOrders' as const,
-  method: 'HEAD' as const,
   path: '/v1/orders/{orderId}' as const,
   tags: ['Commerce/orders'] as const,
   requiresAuth: true,
@@ -7952,24 +7897,11 @@ export const postOrdersItemsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface PostOrdersCancelInput {
-  orderId: string;
-  body?: Types.CommerceOrdersCancelOrderInput;
-}
-export type PostOrdersCancelOutput = void;
-export const postOrdersCancelEndpoint = {
-  operationId: 'postOrdersCancel' as const,
-  method: 'POST' as const,
-  path: '/v1/orders/{orderId}:cancel' as const,
-  tags: ['Commerce/orders'] as const,
-  requiresAuth: true,
-} as const;
-
 export interface PostOrdersCaptureInput {
   orderId: string;
   body?: Types.CommerceOrdersCaptureOrderInput;
 }
-export type PostOrdersCaptureOutput = Types.CommerceOrdersOrder;
+export type PostOrdersCaptureOutput = Types.CommerceOrdersOrderCapture;
 export const postOrdersCaptureEndpoint = {
   operationId: 'postOrdersCapture' as const,
   method: 'POST' as const,
@@ -7987,44 +7919,6 @@ export const postOrdersCompleteEndpoint = {
   operationId: 'postOrdersComplete' as const,
   method: 'POST' as const,
   path: '/v1/orders/{orderId}:complete' as const,
-  tags: ['Commerce/orders'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface PostOrdersHoldInput {
-  orderId: string;
-  body?: Types.CommerceOrdersHoldOrderInput;
-}
-export type PostOrdersHoldOutput = Types.CommerceOrdersOrder;
-export const postOrdersHoldEndpoint = {
-  operationId: 'postOrdersHold' as const,
-  method: 'POST' as const,
-  path: '/v1/orders/{orderId}:hold' as const,
-  tags: ['Commerce/orders'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface PostOrdersRefundInput {
-  orderId: string;
-  body?: Types.CommerceOrdersRefundOrderInput;
-}
-export type PostOrdersRefundOutput = Types.CommerceOrdersOrder;
-export const postOrdersRefundEndpoint = {
-  operationId: 'postOrdersRefund' as const,
-  method: 'POST' as const,
-  path: '/v1/orders/{orderId}:refund' as const,
-  tags: ['Commerce/orders'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface PostOrdersReleaseInput {
-  orderId: string;
-}
-export type PostOrdersReleaseOutput = Types.CommerceOrdersOrder;
-export const postOrdersReleaseEndpoint = {
-  operationId: 'postOrdersRelease' as const,
-  method: 'POST' as const,
-  path: '/v1/orders/{orderId}:release' as const,
   tags: ['Commerce/orders'] as const,
   requiresAuth: true,
 } as const;
@@ -13949,19 +13843,11 @@ export const endpoints = {
   getMarketingLeadById: getMarketingLeadByIdEndpoint,
   postOauthToken: postOauthTokenEndpoint,
   getOg: getOgEndpoint,
-  getOrders: getOrdersEndpoint,
   postOrders: postOrdersEndpoint,
-  getOrders1: getOrders1Endpoint,
-  deleteOrders: deleteOrdersEndpoint,
-  patchOrders: patchOrdersEndpoint,
-  headOrders: headOrdersEndpoint,
+  getOrders: getOrdersEndpoint,
   postOrdersItems: postOrdersItemsEndpoint,
-  postOrdersCancel: postOrdersCancelEndpoint,
   postOrdersCapture: postOrdersCaptureEndpoint,
   postOrdersComplete: postOrdersCompleteEndpoint,
-  postOrdersHold: postOrdersHoldEndpoint,
-  postOrdersRefund: postOrdersRefundEndpoint,
-  postOrdersRelease: postOrdersReleaseEndpoint,
   getPages: getPagesEndpoint,
   postPages: postPagesEndpoint,
   getPagesBySlug: getPagesBySlugEndpoint,

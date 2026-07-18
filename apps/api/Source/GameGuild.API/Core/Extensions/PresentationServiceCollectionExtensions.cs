@@ -51,6 +51,8 @@ public static class PresentationServiceCollectionExtensions
         var controllerStopwatch = Stopwatch.StartNew();
         services.AddControllers(mvcOptions =>
             {
+                mvcOptions.Conventions.Add(new MinimumOrderRouteApplicationModelConvention());
+
                 if (options.UseKebabCaseRoutes)
                 {
                     mvcOptions.Conventions.Add(

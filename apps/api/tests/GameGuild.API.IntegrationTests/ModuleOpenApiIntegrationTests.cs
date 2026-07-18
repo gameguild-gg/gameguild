@@ -68,4 +68,44 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
         paths.Should().ContainKey("/api/social/groups");
         paths.Should().ContainKey("/api/social/reactions");
     }
+
+    [Fact]
+    public async Task Swagger_ShouldExposeOnlyTheVerifiedMinimumOrderSurface()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var document = JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsObject();
+        var orderOperations = document["paths"]!.AsObject()
+            .Where(path => path.Key.StartsWith("/v1/orders", StringComparison.Ordinal))
+            .SelectMany(path => path.Value!.AsObject().Select(operation => $"{operation.Key} {path.Key}"))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        orderOperations.Should().Equal(
+            "get /v1/orders/{orderId}",
+            "post /v1/orders",
+            "post /v1/orders/{orderId}/items",
+            "post /v1/orders/{orderId}:capture",
+            "post /v1/orders/{orderId}:complete");
+    }
+
+    [Fact]
+    public async Task Runtime_ShouldNotRouteUnverifiedOrderOperations()
+    {
+        using var client = _factory.CreateClient();
+        var orderId = Guid.NewGuid();
+
+        var listResponse = await client.GetAsync("/v1/orders");
+        var cancelResponse = await client.PostAsync($"/v1/orders/{orderId}:cancel", content: null);
+        var verifiedResponse = await client.GetAsync($"/v1/orders/{orderId}");
+
+        listResponse.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
+        cancelResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        verifiedResponse.StatusCode.Should().NotBe(HttpStatusCode.NotFound);
+        verifiedResponse.StatusCode.Should().NotBe(HttpStatusCode.MethodNotAllowed);
+    }
 }
