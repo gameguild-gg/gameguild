@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Money;
+using GameGuild.Economy.Persistence;
 
 namespace GameGuild.Economy.UnitTests.Contracts;
 
@@ -230,12 +231,11 @@ public sealed class ContractTests
     }
 
     [Fact]
-    public void EconomyAssembly_HasNoPersistenceOrHttpSurface()
+    public void EconomyAssembly_OwnsPersistenceMappingsButNoHttpSurface()
     {
         var assembly = typeof(EconomyModule).Assembly;
 
-        assembly.GetReferencedAssemblies().Select(reference => reference.Name)
-            .Should().NotContain(name => name != null && name.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal));
+        assembly.GetExportedTypes().Should().Contain(typeof(EconomyModelConfiguration));
         assembly.GetExportedTypes()
             .Should().NotContain(type => type.Name.EndsWith("Controller", StringComparison.Ordinal) || type.Name.EndsWith("Endpoint", StringComparison.Ordinal));
     }
