@@ -339,12 +339,14 @@ Verification: the immutable ledger kernel and its atomic in-memory transaction b
 
 **Produces:** Complete EF mappings and a versioned security-definer posting-interface contract without editing centralized migrations.
 
-- [ ] Map all foundation models and indexes, including root ranges/reversal state and dispatch snapshot/external anchors, without generating a migration in this branch.
-- [ ] Add indexes and unique constraints for idempotency, sequence, internal source leg, provider monetary leg, reference, allocation, lineage/root ranges, reversal epochs, and root confirmed lot.
-- [ ] Define the registered posting-template catalog and procedure input/output contract.
-- [ ] Define separate migration, general runtime, and economy-writer role privileges.
+- [x] Map all foundation models and indexes, including root ranges/reversal state and dispatch snapshot/external anchors, without generating a migration in this branch.
+- [x] Add indexes and unique constraints for idempotency, sequence, internal source leg, provider monetary leg, reference, allocation, lineage/root ranges, reversal epochs, and root confirmed lot.
+- [x] Define the registered posting-template catalog and procedure input/output contract.
+- [x] Define separate migration, general runtime, and economy-writer role privileges.
 - [ ] Add SQL contract tests proving balanced but unauthorized shapes, absent/reused/mutated source stamps, unconfirmed external mint, cumulative provider over-credit, forged confirmation time, early maturity, over-allocation, overlapping root ranges, stale reversal epoch, and lineage nonconservation are rejected by the writer interface.
-- [ ] Leave all centralized migration and model-snapshot edits to Task 2.7.
+- [x] Leave all centralized migration and model-snapshot edits to Task 2.7.
+
+Verification: persistence mappings and constrained-writer contracts are integrated on `develop` SHA `29033bbbf`. `GameGuild.Economy.UnitTests` passes `149/149` tests with zero skips and `100%` line, branch, and method coverage. The strict Release API build and publish complete with zero warnings and zero errors. Executable PostgreSQL rejection tests remain open as the final Task 2.3 item; no migration or centralized model snapshot was changed.
 
 ### Task 2.4: Balance And Lot Projections
 
