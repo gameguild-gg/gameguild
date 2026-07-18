@@ -279,18 +279,22 @@ Verification: targeted API/Commerce suites, strict touched-project builds, API p
 
 **Produces:** Backfill, uniqueness/non-null enforcement, and safe contract cleanup after the Task 1.0 expansion and verified application cutover.
 
-- [ ] Generate the centralized constraint/backfill migration only after Tasks 1.1-1.4 are merged.
-- [ ] Verify Task 1.0 columns/indexes are populated before enforcing non-null or uniqueness constraints.
-- [ ] Test migration up/down/current paths and duplicate provider events against real PostgreSQL.
-- [ ] Run strict API publish and the full Commerce security suite on the exact post-migration `develop` SHA.
-- [ ] Keep destructive contract steps in a later release after production compatibility is proven.
+- [x] Generate the centralized constraint/backfill migration only after Tasks 1.1-1.4 are merged.
+- [x] Verify Task 1.0 columns/indexes are populated before enforcing non-null or uniqueness constraints.
+- [x] Test migration up/down/current paths and duplicate provider events against real PostgreSQL.
+- [x] Run strict API publish and the full Commerce security suite on the exact post-migration `develop` SHA.
+- [x] Keep destructive contract steps in a later release after production compatibility is proven.
+
+Verification: the additive `20260718171325_RollupProviderSecurityConstraints` migration passed up/down/current, duplicate-event, partial-mapping, and concurrent-claim tests against PostgreSQL. Commerce and API regression suites passed `2,917/2,917`, deployment smoke passed `3/3`, the shell evidence gate passed `16/16`, and strict API build/publish completed with zero warnings and zero errors on integrated `develop` SHA `cc623d358`.
 
 ### Phase 1 Gate
 
-- [ ] Tasks 1.0-1.5 are merged in dependency order, verified, and deleted.
-- [ ] Full Commerce security regression passes.
-- [ ] API strict build has zero warnings/errors.
-- [ ] No public endpoint can directly mint or arbitrarily debit wallet value.
+- [x] Tasks 1.0-1.5 are merged in dependency order, verified, and deleted.
+- [x] Full Commerce security regression passes.
+- [x] API strict build has zero warnings/errors.
+- [x] No public endpoint can directly mint or arbitrarily debit wallet value.
+
+Phase 1 endpoint audit: wallet controllers expose self-service creation/read/lock operations and permission-gated administration of settings, closure, freeze, and audit reads. Legacy add, deduct, transfer, and ledger commands are internal-only and have no public controller or minimal-API route.
 
 ## Phase 2: Economy Foundation
 
