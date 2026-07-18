@@ -1,6 +1,101 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repository_root="$(cd "$script_dir/../.." && pwd)"
+artifact_root="$repository_root/artifacts/test-results"
+manifest_path="$script_dir/economy-projects.json"
+
+# shellcheck source=economy-gate.sh
+source "$script_dir/economy-gate.sh"
+
+whole_solution_scaffold_project() {
+  case "$1" in
+    GameGuild.Localization.IntegrationTests.dll)
+      printf '%s\n' 'apps/api/tests/GameGuild.Localization.IntegrationTests/GameGuild.Localization.IntegrationTests.csproj'
+      ;;
+    GameGuild.Contents.IntegrationTests.dll)
+      printf '%s\n' 'apps/api/tests/GameGuild.Contents.IntegrationTests/GameGuild.Contents.IntegrationTests.csproj'
+      ;;
+    GameGuild.UserProfiles.IntegrationTests.dll)
+      printf '%s\n' 'apps/api/tests/GameGuild.UserProfiles.IntegrationTests/GameGuild.UserProfiles.IntegrationTests.csproj'
+      ;;
+    *) return 1 ;;
+  esac
+}
+
+test_assembly_for_trx() {
+  local output_log="$1" trx_path="$2"
+  local target_name="${trx_path//\\//}"
+  local line current_assembly='' result_path result_name matched_assembly=''
+  target_name="${target_name##*/}"
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    case "$line" in
+      'Test run for '*)
+        current_assembly="${line#Test run for }"
+        current_assembly="${current_assembly%% (*}"
+        ;;
+      'Results File: '*)
+        result_path="${line#Results File: }"
+        result_path="${result_path//\\//}"
+        result_name="${result_path##*/}"
+        if [[ "$result_name" == "$target_name" ]]; then
+          [[ -z "$matched_assembly" ]] || economy_gate_error "TRX evidence is reported more than once in dotnet output: $trx_path"
+          matched_assembly="$current_assembly"
+        fi
+        ;;
+    esac
+  done < "$output_log"
+
+  [[ -n "$matched_assembly" ]] || economy_gate_error "Could not identify the test assembly for TRX evidence: $trx_path"
+  printf '%s\n' "$matched_assembly"
+}
+
+assert_whole_solution_evidence() {
+  local root="$1" output_log="$2"
+  shift 2
+  local trx output assembly_path assembly_name project_path project_directory source_file
+
+  (($# > 0)) || economy_gate_error 'Whole-solution tests produced no TRX evidence'
+  [[ -f "$output_log" ]] || economy_gate_error "Whole-solution test output is missing: $output_log"
+
+  for trx in "$@"; do
+    if output="$(assert_trx_evidence "$trx" 2>&1)"; then
+      continue
+    fi
+    [[ "$output" == *'TRX suite contains zero tests:'* ]] || economy_gate_error "$output"
+
+    assembly_path="$(test_assembly_for_trx "$output_log" "$trx")"
+    assembly_path="${assembly_path//\\//}"
+    assembly_name="${assembly_path##*/}"
+    if ! project_path="$(whole_solution_scaffold_project "$assembly_name")"; then
+      printf '%s\n' "$output" >&2
+      economy_gate_error "Zero-test TRX came from a non-scaffold test assembly: $assembly_name"
+    fi
+
+    [[ -f "$root/$project_path" ]] || economy_gate_error "Known whole-solution scaffold is missing: $project_path"
+    project_directory="$(dirname "$root/$project_path")"
+    source_file="$(find "$project_directory" -type f -name '*.cs' \
+      ! -path '*/bin/*' ! -path '*/obj/*' -print -quit)"
+    if [[ -n "$source_file" ]] || grep -qE '<Compile([[:space:]>])' "$root/$project_path"; then
+      economy_gate_error "Known whole-solution scaffold contains C# source but produced zero tests: $project_path"
+    fi
+    printf 'Accepted zero-test evidence from source-empty scaffold: %s\n' "$project_path"
+  done
+}
+
+if [[ "${1:-}" == '--validate-whole-solution-evidence' ]]; then
+  shift
+  (($# >= 3)) || economy_gate_error 'Usage: --validate-whole-solution-evidence REPOSITORY_ROOT OUTPUT_LOG TRX...'
+  validation_root="$1"
+  validation_log="$2"
+  shift 2
+  assert_whole_solution_evidence "$validation_root" "$validation_log" "$@"
+  exit
+fi
+
 skip_whole_solution=false
 skip_provider_contracts=false
 skip_openapi=false
@@ -18,14 +113,6 @@ while (($#)); do
   esac
   shift
 done
-
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repository_root="$(cd "$script_dir/../.." && pwd)"
-artifact_root="$repository_root/artifacts/test-results"
-manifest_path="$script_dir/economy-projects.json"
-
-# shellcheck source=economy-gate.sh
-source "$script_dir/economy-gate.sh"
 
 api_pid=''
 web_pid=''
@@ -49,6 +136,19 @@ run() {
   printf '%q ' "$@"
   printf '\n'
   "$@"
+}
+
+run_logged() {
+  local output_path="$1"
+  shift
+  printf '> '
+  printf '%q ' "$@"
+  printf '\n'
+  set +e
+  "$@" 2>&1 | tee "$output_path"
+  local command_status=${PIPESTATUS[0]}
+  set -e
+  return "$command_status"
 }
 
 native_path() {
@@ -203,16 +303,14 @@ fi
 
 if [[ "$skip_whole_solution" == false ]]; then
   whole_solution_results="$artifact_root/trx/whole-solution"
-  run dotnet test apps/api/GameGuild.sln -c Release --no-build --nologo --verbosity minimal -m:1 \
+  whole_solution_log="$whole_solution_results/dotnet-test.log"
+  run_logged "$whole_solution_log" dotnet test apps/api/GameGuild.sln -c Release --no-build --nologo --verbosity minimal -m:1 \
     --logger 'trx;LogFilePrefix=whole-solution' \
     --results-directory "$whole_solution_results"
   shopt -s nullglob
   whole_solution_trx=("$whole_solution_results"/*.trx)
   shopt -u nullglob
-  ((${#whole_solution_trx[@]} > 0)) || economy_gate_error 'Whole-solution tests produced no TRX evidence'
-  for trx in "${whole_solution_trx[@]}"; do
-    assert_trx_evidence "$trx" >/dev/null
-  done
+  assert_whole_solution_evidence "$repository_root" "$whole_solution_log" "${whole_solution_trx[@]}" >/dev/null
 fi
 
 if [[ "$skip_provider_contracts" == false ]]; then
