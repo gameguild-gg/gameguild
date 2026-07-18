@@ -246,8 +246,11 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
             ["PaymentGateways:Stripe:UseSimulation"] = "false",
             ["PaymentGateways:Stripe:ApiKey"] = environmentName == "Production" ? "sk_live_startup_test" : "sk_test_startup_test",
             ["PaymentGateways:Stripe:PublishableKey"] = environmentName == "Production" ? "pk_live_startup_test" : "pk_test_startup_test",
+            ["PaymentGateways:Stripe:AccountId"] = "acct_startup_test",
+            ["PaymentGateways:Stripe:LiveMode"] = environmentName == "Production" ? "true" : "false",
             ["Billing:Stripe:WebhookSecret"] = "whsec_startup_test",
             ["Billing:Stripe:WebhookEndpointId"] = "we_startup_test",
+            ["Billing:Stripe:AccountId"] = "acct_startup_test",
             ["Billing:Stripe:ApiVersion"] = "2023-10-16",
             ["Billing:Stripe:LiveMode"] = environmentName == "Production" ? "true" : "false",
             ["SeedData:ImportSnapshotCourses"] = "false"
