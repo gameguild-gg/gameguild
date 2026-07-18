@@ -80,7 +80,7 @@ public class WebhookIdempotencyTests
     #region Webhook Failure and Retry Tests (P0)
 
     [Fact]
-    public void BillingWebhookEvent_MarkAsFailed_ShouldStoreErrorAndIncrementAttempts()
+    public void BillingWebhookEvent_MarkAsFailed_ShouldStoreErrorWithoutDoubleCountingAttempt()
     {
         // Arrange
         var webhookEvent = CreateWebhookEvent("evt_failed_123");
@@ -92,7 +92,7 @@ public class WebhookIdempotencyTests
         // Assert
         webhookEvent.IsFailed.Should().BeTrue();
         webhookEvent.ErrorMessage.Should().Be("Connection timeout");
-        webhookEvent.ProcessingAttempts.Should().Be(2);
+        webhookEvent.ProcessingAttempts.Should().Be(1);
     }
 
     [Fact]
@@ -100,6 +100,7 @@ public class WebhookIdempotencyTests
     {
         // Arrange
         var webhookEvent = CreateWebhookEvent("evt_retryable_123");
+        webhookEvent.IncrementAttempts();
         webhookEvent.MarkAsFailed("First attempt failed");
 
         // Act - Simulate retry
@@ -144,7 +145,7 @@ public class WebhookIdempotencyTests
 
         // Assert
         webhookEvent.IsProcessed.Should().BeTrue();
-        webhookEvent.ProcessingAttempts.Should().Be(3);
+        webhookEvent.ProcessingAttempts.Should().Be(2);
         // IsFailed may still be true from first attempt, but IsProcessed takes precedence
     }
 

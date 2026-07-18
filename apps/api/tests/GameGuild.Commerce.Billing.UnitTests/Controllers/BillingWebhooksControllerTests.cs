@@ -121,6 +121,40 @@ public class BillingWebhooksControllerTests
     }
 
     [Fact]
+    public async Task HandleStripeWebhook_Should_Return_BadRequest_When_Verified_Payload_Is_Invalid()
+    {
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(It.IsAny<ProcessStripeWebhookCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidWebhookPayloadException("mismatch"));
+        var controller = CreateController(sender.Object, "{}", new Dictionary<string, string>
+        {
+            ["Stripe-Signature"] = "sig"
+        });
+
+        var result = await controller.HandleStripeWebhook(CancellationToken.None);
+
+        result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task HandleStripeWebhook_Should_Return_500_When_Inbox_Or_Processing_Fails()
+    {
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(It.IsAny<ProcessStripeWebhookCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(WebhookProcessingResult.Failed("evt", "retry"));
+        var controller = CreateController(sender.Object, "{}", new Dictionary<string, string>
+        {
+            ["Stripe-Signature"] = "sig"
+        });
+
+        var result = await controller.HandleStripeWebhook(CancellationToken.None);
+
+        result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+    }
+
+    [Fact]
     public async Task HandlePayPalWebhook_Should_Reject_Missing_Headers()
     {
         var sender = new Mock<ISender>();

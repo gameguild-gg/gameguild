@@ -11,9 +11,14 @@ public class StripeBillingWebhookService : BillingWebhookService
 {
     private readonly IBillingWebhookRepository _webhookRepository;
     private readonly ILogger<StripeBillingWebhookService> _logger;
+    private readonly IStripeWebhookVerifier _webhookVerifier;
+    private readonly IStripeProviderObjectBindingValidator _providerObjectBindingValidator;
+    private readonly ISubscriptionQueryService _subscriptionQueryService;
 
     public StripeBillingWebhookService(
         IBillingWebhookRepository webhookRepository,
+        IStripeWebhookVerifier webhookVerifier,
+        IStripeProviderObjectBindingValidator providerObjectBindingValidator,
         ILogger<StripeBillingWebhookService> logger,
         ISubscriptionLifecycleService lifecycleService,
         ISubscriptionQueryService queryService,
@@ -22,82 +27,167 @@ public class StripeBillingWebhookService : BillingWebhookService
         : base(logger, lifecycleService, queryService, billingService, externalIdService)
     {
         _webhookRepository = webhookRepository;
+        _webhookVerifier = webhookVerifier;
+        _providerObjectBindingValidator = providerObjectBindingValidator;
+        _subscriptionQueryService = queryService;
         _logger = logger;
     }
 
     /// <summary>
     ///     Process a raw Stripe webhook event with idempotency checking.
     /// </summary>
-    /// <param name="eventId">Stripe event ID (used as idempotency key)</param>
-    /// <param name="eventType">Stripe event type (e.g., invoice.payment_succeeded)</param>
     /// <param name="payload">Raw JSON payload</param>
     /// <param name="signature">Stripe signature header</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Processing result</returns>
     public async Task<WebhookProcessingResult> ProcessStripeWebhookAsync(
-        string eventId,
-        string eventType,
         string payload,
         string signature,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Processing Stripe webhook: {EventType} with ID {EventId}", eventType, eventId);
+        var verifiedEvent = _webhookVerifier.Verify(payload, signature);
+        _logger.LogInformation(
+            "Processing verified Stripe webhook: {EventType} with ID {EventId}",
+            verifiedEvent.EventType,
+            verifiedEvent.EventId);
 
-        // Check for duplicate event (idempotency)
-        var existingEvent = await _webhookRepository.GetByExternalEventIdAsync(eventId, PaymentProviders.Stripe, cancellationToken).ConfigureAwait(false);
-        if (existingEvent != null)
+        var existingEvent = await _webhookRepository.GetByProviderScopeAsync(
+                PaymentProviders.Stripe,
+                verifiedEvent.ProviderEnvironment,
+                verifiedEvent.ProviderAccountId,
+                verifiedEvent.WebhookEndpointId,
+                verifiedEvent.EventId,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (existingEvent?.IsProcessed == true)
         {
-            _logger.LogInformation("Duplicate Stripe webhook detected: {EventId}. Returning success.", eventId);
-            return WebhookProcessingResult.AlreadyProcessed(eventId, existingEvent.ProcessedAt);
+            _logger.LogInformation("Duplicate Stripe webhook detected: {EventId}. Returning success.", verifiedEvent.EventId);
+            return WebhookProcessingResult.AlreadyProcessed(verifiedEvent.EventId, existingEvent.ProcessedAt);
         }
 
-        // Create webhook event record
-        // Note: CreatedAt is set automatically by EntityBase
-        var webhookEvent = new BillingWebhookEvent
+        var binding = await ValidateSubscriptionBindingAsync(verifiedEvent, cancellationToken).ConfigureAwait(false);
+        var paymentBinding = await _providerObjectBindingValidator
+            .ValidateAsync(verifiedEvent, cancellationToken)
+            .ConfigureAwait(false);
+
+        var webhookEvent = existingEvent ?? new BillingWebhookEvent
         {
-            ExternalEventId = eventId,
+            ExternalEventId = verifiedEvent.EventId,
             Provider = PaymentProviders.Stripe,
-            EventType = eventType,
-            Payload = payload,
-            ProcessingAttempts = 1
+            ProviderEnvironment = verifiedEvent.ProviderEnvironment,
+            ProviderAccountId = verifiedEvent.ProviderAccountId,
+            WebhookEndpointId = verifiedEvent.WebhookEndpointId,
+            ProviderObjectId = verifiedEvent.ProviderObjectId,
+            ProviderObjectType = verifiedEvent.ProviderObjectType,
+            ProviderMonetaryLeg = verifiedEvent.ProviderMonetaryLeg,
+            IsLiveMode = verifiedEvent.IsLiveMode,
+            EventSchemaVersion = verifiedEvent.EventSchemaVersion,
+            EventType = verifiedEvent.EventType,
+            Payload = verifiedEvent.RetainedPayload,
+            Headers = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                classification = "stripe-financial-event-minimized",
+                payloadSha256 = verifiedEvent.PayloadSha256,
+                signatureRetained = false
+            }),
+            TenantId = binding?.TenantId ?? paymentBinding?.TenantId ?? verifiedEvent.TenantId,
+            SubscriptionId = binding?.SubscriptionId
         };
 
+        if (existingEvent is null)
+        {
+            try
+            {
+                webhookEvent = await _webhookRepository.CreateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Could not durably accept Stripe webhook {EventId}", verifiedEvent.EventId);
+                return WebhookProcessingResult.Failed(verifiedEvent.EventId, "Webhook inbox persistence failed.");
+            }
+
+            if (webhookEvent.IsProcessed)
+            {
+                return WebhookProcessingResult.AlreadyProcessed(verifiedEvent.EventId, webhookEvent.ProcessedAt);
+            }
+        }
+
+        webhookEvent.IncrementAttempts();
         try
         {
-            // Store the event first (before processing) to handle concurrent retries
-            webhookEvent = await _webhookRepository.CreateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
+            await RouteStripeEventAsync(verifiedEvent, cancellationToken).ConfigureAwait(false);
 
-            // Route to appropriate handler based on event type
-            await RouteStripeEventAsync(eventType, payload, cancellationToken).ConfigureAwait(false);
-
-            // Mark as processed
             webhookEvent.MarkAsProcessed();
             await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
 
-            _logger.LogInformation("Successfully processed Stripe webhook: {EventId}", eventId);
-            return WebhookProcessingResult.Success(eventId);
+            _logger.LogInformation("Successfully processed Stripe webhook: {EventId}", verifiedEvent.EventId);
+            return WebhookProcessingResult.Success(verifiedEvent.EventId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to process Stripe webhook: {EventId}", eventId);
+            _logger.LogError(ex, "Failed to process Stripe webhook: {EventId}", verifiedEvent.EventId);
 
             webhookEvent.MarkAsFailed(ex.Message);
             await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
 
-            return WebhookProcessingResult.Failed(eventId, ex.Message);
+            return WebhookProcessingResult.Failed(verifiedEvent.EventId, ex.Message);
         }
+    }
+
+    private async Task<StripeWebhookSubscriptionBinding?> ValidateSubscriptionBindingAsync(
+        VerifiedStripeWebhookEvent verifiedEvent,
+        CancellationToken cancellationToken)
+    {
+        var requiresSubscriptionBinding = verifiedEvent.EventType.StartsWith("invoice.", StringComparison.Ordinal) ||
+                                          verifiedEvent.EventType.StartsWith("customer.subscription.", StringComparison.Ordinal);
+        if (!requiresSubscriptionBinding)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(verifiedEvent.ExternalSubscriptionId))
+        {
+            throw new InvalidWebhookPayloadException("Stripe event is missing its external subscription binding.");
+        }
+
+        var subscription = await _subscriptionQueryService
+            .GetByExternalIdAsync(verifiedEvent.ExternalSubscriptionId, cancellationToken)
+            .ConfigureAwait(false);
+        if (subscription is null)
+        {
+            throw new InvalidWebhookPayloadException("Stripe event references an unknown subscription.");
+        }
+
+        var localTenantId = ((ISubscription)subscription).TenantId;
+        if (verifiedEvent.TenantId.HasValue && verifiedEvent.TenantId.Value != localTenantId)
+        {
+            throw new InvalidWebhookPayloadException("Stripe event tenant does not match the subscription owner.");
+        }
+
+        if (verifiedEvent.EventType.StartsWith("invoice.payment_", StringComparison.Ordinal))
+        {
+            if (!verifiedEvent.Amount.HasValue || verifiedEvent.Amount.Value != subscription.Amount.Amount)
+            {
+                throw new InvalidWebhookPayloadException("Stripe invoice amount does not match the authoritative subscription price.");
+            }
+
+            if (!string.Equals(verifiedEvent.Currency, subscription.Amount.Currency, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidWebhookPayloadException("Stripe invoice currency does not match the authoritative subscription currency.");
+            }
+        }
+
+        return new StripeWebhookSubscriptionBinding(subscription.Id, localTenantId);
     }
 
     /// <summary>
     ///     Routes a Stripe event to the appropriate handler based on event type.
     /// </summary>
-    private async Task RouteStripeEventAsync(string eventType, string payload, CancellationToken cancellationToken)
+    private async Task RouteStripeEventAsync(VerifiedStripeWebhookEvent verifiedEvent, CancellationToken cancellationToken)
     {
-        // Parse payload to extract relevant data
-        // In production, use Stripe.NET SDK to deserialize properly
-        var webhookPayload = ParseStripePayload(eventType, payload);
+        var webhookPayload = ParseStripePayload(verifiedEvent.EventType, verifiedEvent.VerifiedPayload);
 
-        switch (eventType)
+        switch (verifiedEvent.EventType)
         {
             case "customer.subscription.created":
                 await HandleSubscriptionCreatedAsync(webhookPayload.ToSubscriptionPayload()).ConfigureAwait(false);
@@ -120,7 +210,7 @@ public class StripeBillingWebhookService : BillingWebhookService
                 break;
 
             default:
-                _logger.LogDebug("Unhandled Stripe event type: {EventType}", eventType);
+                _logger.LogDebug("Unhandled Stripe event type: {EventType}", verifiedEvent.EventType);
                 break;
         }
     }
@@ -219,6 +309,8 @@ public class StripeBillingWebhookService : BillingWebhookService
         return result;
     }
 }
+
+internal sealed record StripeWebhookSubscriptionBinding(Guid SubscriptionId, Guid TenantId);
 
 /// <summary>
 ///     Internal class for parsing Stripe webhook payloads

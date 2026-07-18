@@ -160,6 +160,10 @@ const nextConfig: NextConfig = {
     ];
   },
   webpack: (config, { isServer, webpack }) => {
+    if (process.env.GAMEGUILD_DISABLE_WEBPACK_CACHE === "1") {
+      config.cache = false;
+    }
+
     const resolvePackageDir = (pkg: string): string => {
       try {
         return path.dirname(require.resolve(`${pkg}/package.json`));

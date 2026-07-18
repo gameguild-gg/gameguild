@@ -90,6 +90,30 @@ public class BillingConfiguration : IValidatableObject
                 new[] { $"{nameof(Stripe)}.{nameof(Stripe.PublishableKey)}" });
         }
 
+        if (!string.IsNullOrWhiteSpace(Stripe.WebhookSecret))
+        {
+            if (string.IsNullOrWhiteSpace(Stripe.WebhookEndpointId))
+            {
+                yield return new ValidationResult(
+                    "WebhookEndpointId is required when Stripe webhook verification is enabled",
+                    new[] { $"{nameof(Stripe)}.{nameof(Stripe.WebhookEndpointId)}" });
+            }
+
+            if (string.IsNullOrWhiteSpace(Stripe.ApiVersion))
+            {
+                yield return new ValidationResult(
+                    "ApiVersion is required when Stripe webhook verification is enabled",
+                    new[] { $"{nameof(Stripe)}.{nameof(Stripe.ApiVersion)}" });
+            }
+        }
+
+        if (Stripe.WebhookToleranceSeconds is < 1 or > 900)
+        {
+            yield return new ValidationResult(
+                "WebhookToleranceSeconds must be between 1 and 900 seconds",
+                new[] { $"{nameof(Stripe)}.{nameof(Stripe.WebhookToleranceSeconds)}" });
+        }
+
         // PayPal validation: ClientSecret required when ClientId is set
         if (!string.IsNullOrEmpty(PayPal.ClientId) && string.IsNullOrEmpty(PayPal.ClientSecret))
         {
