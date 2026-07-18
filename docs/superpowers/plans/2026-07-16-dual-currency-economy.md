@@ -304,13 +304,15 @@ Phase 1 endpoint audit: wallet controllers expose self-service creation/read/loc
 
 **Produces:** `GameGuild.Economy` project skeleton, fixed-parity integer amount types, explicit enums, fungible-fragment contracts, typed posting requests/results, and exhaustive posting-matrix tests.
 
-- [ ] Add checked `HardCoinAmount`, `SoftCoinAmount`, `UsdNanoAmount`, fixed parity constants, currency/provenance/account-code types, and overflow/property tests.
-- [ ] Define wallet, root mint, posting, fragment allocation/lineage, hold, reserve, policy, and idempotency contracts.
-- [ ] Expose no authoritative mutable balance setter; displayed quantities are rebuildable projections over source-stamped lots, fragment lineage, and exact partial allocations.
-- [ ] Encode exact principal `1 HC = 1,000 SC` hard-to-soft conversion only; fees are separate and no reverse contract exists.
-- [ ] Add immutable type/version posting/transition templates for confirmed top-up mint, full/partial provider reversal, spend, conversion, system-backed grant, burn, escrow, reclaim, refund, payout reservation/success/failure, and admin-withdrawal reservation/success/failure. Observation/failure before confirmation has source evidence but no monetary posting.
-- [ ] Test zero-sum behavior, exact account shape/sign/provenance/authority/caps, stable serialization/hash input, and rejection of balanced but invalid groups.
-- [ ] Add module project references without enabling routes or persistence.
+- [x] Add checked `HardCoinAmount`, `SoftCoinAmount`, `UsdNanoAmount`, fixed parity constants, currency/provenance/account-code types, and overflow/property tests.
+- [x] Define wallet, root mint, posting, fragment allocation/lineage, hold, reserve, policy, and idempotency contracts.
+- [x] Expose no authoritative mutable balance setter; displayed quantities are rebuildable projections over source-stamped lots, fragment lineage, and exact partial allocations.
+- [x] Encode exact principal `1 HC = 1,000 SC` hard-to-soft conversion only; fees are separate and no reverse contract exists.
+- [x] Add immutable type/version posting/transition templates for confirmed top-up mint, full/partial provider reversal, spend, conversion, system-backed grant, burn, escrow, reclaim, refund, payout reservation/success/failure, and admin-withdrawal reservation/success/failure. Observation/failure before confirmation has source evidence but no monetary posting.
+- [x] Test zero-sum behavior, exact account shape/sign/provenance/authority/caps, stable serialization/hash input, and rejection of balanced but invalid groups.
+- [x] Add module project references without enabling routes or persistence.
+
+Verification: `GameGuild.Economy` is a domain-only assembly with no EF Core reference, controller, endpoint, mutable balance setter, or reverse soft-to-hard contract. Its `60/60` tests pass at `100%` line, branch, and method coverage; strict API build and Release publish complete with zero warnings and zero errors on integrated `develop` SHA `70299dfd1`.
 
 ### Task 2.2: Immutable Ledger Kernel
 
