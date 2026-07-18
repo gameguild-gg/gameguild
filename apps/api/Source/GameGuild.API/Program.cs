@@ -109,8 +109,12 @@ if (importSnapshotCourses)
 }
 
 // Trigger fail-closed value-movement option validation before migrations or HTTP listeners.
-_ = app.Services.GetRequiredService<IOptions<StripeGatewayOptions>>().Value;
-_ = app.Services.GetRequiredService<IOptions<BillingConfiguration>>().Value;
+var stripeGatewayOptions = app.Services.GetRequiredService<IOptions<StripeGatewayOptions>>().Value;
+var billingConfiguration = app.Services.GetRequiredService<IOptions<BillingConfiguration>>().Value;
+StripeProviderConfigurationGuard.ThrowIfInvalid(
+    stripeGatewayOptions,
+    billingConfiguration,
+    app.Environment.EnvironmentName);
 
 if (app.Configuration.GetValue<bool?>("Database:RunStartupInitialization") ?? true)
 {

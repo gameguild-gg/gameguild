@@ -39,6 +39,7 @@ public sealed class StripeGatewayOptionsValidatorTests
         result.Failed.Should().BeTrue();
         result.Failures.Should().Contain(message => message.Contains(nameof(StripeGatewayOptions.ApiKey), StringComparison.Ordinal));
         result.Failures.Should().Contain(message => message.Contains(nameof(StripeGatewayOptions.PublishableKey), StringComparison.Ordinal));
+        result.Failures.Should().Contain(message => message.Contains(nameof(StripeGatewayOptions.AccountId), StringComparison.Ordinal));
     }
 
     [Theory]
@@ -97,6 +98,31 @@ public sealed class StripeGatewayOptionsValidatorTests
         result.Succeeded.Should().BeTrue();
     }
 
+    [Fact]
+    public void Validate_RejectsLiveCredentialsInStaging()
+    {
+        var validator = CreateValidator(Environments.Staging);
+
+        var result = validator.Validate(Options.DefaultName, CreateConfiguredOptions());
+
+        result.Failed.Should().BeTrue();
+        result.Failures.Should().Contain(message => message.Contains("Staging", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Validate_AcceptsTestCredentialsInStaging()
+    {
+        var validator = CreateValidator(Environments.Staging);
+        var options = CreateConfiguredOptions();
+        options.ApiKey = "sk_test_example";
+        options.PublishableKey = "pk_test_example";
+        options.LiveMode = false;
+
+        var result = validator.Validate(Options.DefaultName, options);
+
+        result.Succeeded.Should().BeTrue();
+    }
+
     private static StripeGatewayOptionsValidator CreateValidator(string environmentName)
     {
         var environment = new Mock<IHostEnvironment>();
@@ -110,6 +136,8 @@ public sealed class StripeGatewayOptionsValidatorTests
         UseSimulation = false,
         ApiKey = "sk_live_test",
         PublishableKey = "pk_live_test",
+        AccountId = "acct_platform",
+        LiveMode = true,
         WebhookSecret = string.Empty
     };
 }

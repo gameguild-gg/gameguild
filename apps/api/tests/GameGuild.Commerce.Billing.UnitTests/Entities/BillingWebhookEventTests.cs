@@ -118,6 +118,45 @@ public class BillingWebhookEventEntityTests
     }
 
     [Fact]
+    public void TryBeginProcessing_Should_Reject_Processed_Or_Active_Lease()
+    {
+        var processed = new BillingWebhookEvent { IsProcessed = true };
+        var active = new BillingWebhookEvent
+        {
+            ProcessingAttempts = 1,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        processed.TryBeginProcessing(DateTime.UtcNow.AddMinutes(-1)).Should().BeFalse();
+        active.TryBeginProcessing(DateTime.UtcNow.AddMinutes(-1)).Should().BeFalse();
+    }
+
+    [Fact]
+    public void TryBeginProcessing_Should_Reclaim_Failed_Or_Stale_Lease()
+    {
+        var failed = new BillingWebhookEvent
+        {
+            ProcessingAttempts = 1,
+            IsFailed = true,
+            ErrorMessage = "temporary",
+            UpdatedAt = DateTime.UtcNow
+        };
+        var stale = new BillingWebhookEvent
+        {
+            ProcessingAttempts = 2,
+            UpdatedAt = DateTime.UtcNow.AddMinutes(-5)
+        };
+
+        failed.TryBeginProcessing(DateTime.UtcNow.AddMinutes(-1)).Should().BeTrue();
+        stale.TryBeginProcessing(DateTime.UtcNow.AddMinutes(-1)).Should().BeTrue();
+
+        failed.ProcessingAttempts.Should().Be(2);
+        failed.IsFailed.Should().BeFalse();
+        failed.ErrorMessage.Should().BeNull();
+        stale.ProcessingAttempts.Should().Be(3);
+    }
+
+    [Fact]
     public void Payload_ShouldAcceptJsonPayload()
     {
         // Arrange

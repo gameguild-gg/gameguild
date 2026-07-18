@@ -44,6 +44,7 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
                 {
                     ["Billing:Stripe:WebhookSecret"] = StripeWebhookSecret,
                     ["Billing:Stripe:WebhookEndpointId"] = "we_subscriptions_security",
+                    ["Billing:Stripe:AccountId"] = "acct_platform",
                     ["Billing:Stripe:ApiVersion"] = "2023-10-16",
                     ["Billing:Stripe:LiveMode"] = "false",
                     ["Billing:Stripe:WebhookToleranceSeconds"] = "300"

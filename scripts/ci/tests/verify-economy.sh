@@ -86,6 +86,18 @@ test_local_api_readiness_enables_simulation_explicitly() {
   [[ "$enabled_line" -lt "$launch_line" && "$simulation_line" -lt "$launch_line" ]]
 }
 
+test_coolify_compose_forwards_stripe_gateway_identity() {
+  local compose="$repository_root/compose.coolify.yaml"
+  local deployment_docs="$repository_root/docs/deployment-smoke.md"
+
+  grep -Fq -- '- PaymentGateways__Stripe__AccountId=${PaymentGateways__Stripe__AccountId:?set PaymentGateways__Stripe__AccountId}' "$compose" || return 1
+  grep -Fq -- '- Billing__Stripe__AccountId=${PaymentGateways__Stripe__AccountId:?set PaymentGateways__Stripe__AccountId}' "$compose" || return 1
+  grep -Fq -- '- PaymentGateways__Stripe__ConnectedAccountId=${Billing__Stripe__ConnectedAccountId:-}' "$compose" || return 1
+  grep -Fq -- '- PaymentGateways__Stripe__LiveMode=${Billing__Stripe__LiveMode:?set Billing__Stripe__LiveMode to false for Staging or true for Production}' "$compose" || return 1
+  grep -Fq 'PaymentGateways__Stripe__AccountId=acct_' "$deployment_docs" || return 1
+  grep -Fq 'Billing__Stripe__LiveMode=false' "$deployment_docs"
+}
+
 test_published_api_uses_published_content_root() {
   grep -Fq 'dotnet "$publish_directory/GameGuild.API.dll" --contentRoot "$publish_directory"' \
     "$ci_dir/verify-economy.sh"
@@ -225,6 +237,7 @@ run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
 run_test 'local API readiness enables payment simulation explicitly' test_local_api_readiness_enables_simulation_explicitly
+run_test 'Coolify forwards Stripe gateway identity and mode' test_coolify_compose_forwards_stripe_gateway_identity
 run_test 'published API uses its published content root' test_published_api_uses_published_content_root
 run_test 'manifest rejects undeclared Economy projects' test_manifest_rejects_undeclared_project
 run_test 'manifest accepts declared Economy projects and tests' test_manifest_accepts_declared_projects

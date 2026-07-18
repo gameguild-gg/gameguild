@@ -165,6 +165,7 @@ public class ProcessPaymentCommandHandlerTests
         var paymentSubscriptionSyncService = new Mock<IPaymentSubscriptionSyncService>();
         var paymentContextService = new Mock<ISubscriptionPaymentContextService>();
         var logger = Mock.Of<ILogger<ProcessPaymentCommandHandler>>();
+        paymentGateway.SetupGet(gateway => gateway.ProviderId).Returns("stripe");
 
         Payment? addedPayment = null;
 
@@ -191,7 +192,13 @@ public class ProcessPaymentCommandHandlerTests
                 ErrorCode: null,
                 ErrorMessage: null,
                 Status: PaymentStatus.Succeeded,
-                ProcessedAt: SystemClock.UtcNow));
+                ProcessedAt: SystemClock.UtcNow,
+                ProviderMapping: new GatewayProviderMapping(
+                    "test",
+                    "acct_platform",
+                    "pi_123",
+                    "payment_intent",
+                    "capture")));
 
         paymentSubscriptionSyncService
             .Setup(service => service.SyncSuccessfulPaymentAsync(
@@ -218,6 +225,47 @@ public class ProcessPaymentCommandHandlerTests
         result.Success.Should().BeTrue();
         addedPayment.Should().NotBeNull();
         addedPayment!.ExternalCustomerId.Should().Be("cus_123");
+        addedPayment.ProviderEnvironment.Should().Be("test");
+        addedPayment.ProviderAccountId.Should().Be("acct_platform");
+        addedPayment.ProviderObjectId.Should().Be("pi_123");
+        addedPayment.ProviderObjectType.Should().Be("payment_intent");
+        addedPayment.ProviderMonetaryLeg.Should().Be("capture");
+    }
+
+    [Fact]
+    public async Task Handle_ShouldFailClosed_WhenSuccessfulGatewayResultHasNoProviderMapping()
+    {
+        var fixture = CreateFixture();
+        fixture.PaymentContextService
+            .Setup(service => service.GetPaymentContextAsync(fixture.SubscriptionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SubscriptionPaymentContext(
+                fixture.SubscriptionId,
+                fixture.TenantId,
+                25m,
+                "USD",
+                "cus_123"));
+        fixture.PaymentGateway
+            .SetupGet(gateway => gateway.ProviderId)
+            .Returns("stripe");
+        fixture.PaymentGateway
+            .Setup(gateway => gateway.ProcessPaymentAsync(
+                It.IsAny<GatewayPaymentRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentResult(
+                true,
+                "pi_unbound",
+                "ch_unbound",
+                null,
+                null,
+                PaymentStatus.Succeeded,
+                SystemClock.UtcNow));
+
+        var act = () => fixture.Handler.Handle(
+            new ProcessPaymentCommand(fixture.TenantId, fixture.SubscriptionId, 25m, "pm_test"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*provider mapping*");
     }
 
     private static PaymentHandlerFixture CreateFixture()
@@ -226,6 +274,7 @@ public class ProcessPaymentCommandHandlerTests
         var paymentGateway = new Mock<IPaymentGateway>();
         var syncService = new Mock<IPaymentSubscriptionSyncService>();
         var contextService = new Mock<ISubscriptionPaymentContextService>();
+        paymentGateway.SetupGet(gateway => gateway.ProviderId).Returns("stripe");
 
         paymentRepository
             .Setup(repository => repository.GetByIdempotencyKeyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))

@@ -50,5 +50,20 @@ public class BillingWebhookEventConfigurationTests
             "ix_billing_webhook_events_provider_scope_event");
         entity.GetIndexes().Select(index => index.GetDatabaseName()).Should().Contain(
             "ix_billing_webhook_events_provider_object_leg");
+        entity.GetIndexes().Single(index =>
+                index.GetDatabaseName() == "ix_billing_webhook_events_provider_scope_event")
+            .IsUnique.Should().BeTrue();
+        entity.GetIndexes().Single(index =>
+                index.GetDatabaseName() == "ix_billing_webhook_events_external_id_provider")
+            .GetFilter().Should().Contain("\"ProviderEnvironment\" IS NULL");
+        entity.FindProperty(nameof(BillingWebhookEvent.ProcessingAttempts))!
+            .IsConcurrencyToken.Should().BeTrue();
+
+        entity.GetCheckConstraints().Select(constraint => constraint.Name).Should().Contain(
+            "ck_billing_webhook_events_provider_scope_complete");
+        entity.GetCheckConstraints().Select(constraint => constraint.Name).Should().Contain(
+            "ck_billing_webhook_events_provider_object_complete");
+        entity.GetCheckConstraints().Select(constraint => constraint.Name).Should().Contain(
+            "ck_billing_webhook_events_provider_environment");
     }
 }

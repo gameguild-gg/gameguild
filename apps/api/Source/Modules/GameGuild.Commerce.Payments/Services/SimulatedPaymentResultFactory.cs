@@ -47,7 +47,13 @@ public static class SimulatedPaymentResultFactory
             ErrorCode: null,
             ErrorMessage: null,
             Status: PaymentStatus.Succeeded,
-            ProcessedAt: SystemClock.UtcNow);
+            ProcessedAt: SystemClock.UtcNow,
+            ProviderMapping: new GatewayProviderMapping(
+                "test",
+                "acct_simulated",
+                transactionId,
+                "payment_intent",
+                "capture"));
     }
 
     /// <summary>

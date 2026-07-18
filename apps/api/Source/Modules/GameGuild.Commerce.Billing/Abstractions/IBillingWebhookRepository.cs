@@ -40,6 +40,14 @@ public interface IBillingWebhookRepository
     Task<BillingWebhookEvent> CreateAsync(BillingWebhookEvent webhookEvent, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Atomically claims an accepted webhook for processing.
+    /// </summary>
+    Task<bool> TryClaimProcessingAsync(
+        BillingWebhookEvent webhookEvent,
+        DateTime staleBefore,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Update an existing webhook event
     /// </summary>
     Task<BillingWebhookEvent> UpdateAsync(BillingWebhookEvent webhookEvent, CancellationToken cancellationToken = default);

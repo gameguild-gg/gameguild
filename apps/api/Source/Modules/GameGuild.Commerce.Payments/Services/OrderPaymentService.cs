@@ -183,7 +183,8 @@ public sealed class OrderPaymentService(
         GatewayPaymentResult gatewayResult,
         CancellationToken cancellationToken)
     {
-        var stateChanged = false;
+        GatewayPaymentResultBinder.BindVerifiedProviderMapping(payment, paymentGateway.ProviderId, gatewayResult);
+        var stateChanged = gatewayResult.ProviderMapping is not null;
 
         if (gatewayResult.Success || gatewayResult.Status == PaymentStatus.Succeeded)
         {

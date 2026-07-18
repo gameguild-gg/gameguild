@@ -28,7 +28,10 @@ public class StripeSettings
     /// <summary>Stable identifier for the Stripe webhook endpoint receiving the event.</summary>
     public string WebhookEndpointId { get; set; } = string.Empty;
 
-    /// <summary>Expected Stripe Connect account. Empty identifies the platform account endpoint.</summary>
+    /// <summary>Platform/default Stripe account used when this endpoint has no Connect account context.</summary>
+    public string AccountId { get; set; } = string.Empty;
+
+    /// <summary>Expected Stripe Connect account and provider-object owner. Empty identifies the platform account endpoint.</summary>
     public string ConnectedAccountId { get; set; } = string.Empty;
 
     /// <summary>Whether this endpoint accepts live-mode events.</summary>

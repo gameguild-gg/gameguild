@@ -23,12 +23,27 @@ public sealed class StripeWebhookAuthenticityContractTests
 
         result.EventId.Should().Be("evt_valid");
         result.ProviderEnvironment.Should().Be("test");
-        result.ProviderAccountId.Should().Be("platform");
+        result.ProviderAccountId.Should().Be("acct_platform");
         result.WebhookEndpointId.Should().Be("we_contract_test");
-        result.ProviderObjectId.Should().Be("in_contract");
+        result.ProviderObjectId.Should().Be("pi_contract");
+        result.ProviderObjectType.Should().Be("payment_intent");
         result.TenantId.Should().Be(tenantId);
         result.Amount.Should().Be(10m);
         result.Currency.Should().Be("USD");
+    }
+
+    [Fact]
+    public void Verify_UsesConnectedAccountAsProviderObjectOwner()
+    {
+        var payload = CreatePayload(
+            "evt_connected",
+            Guid.NewGuid(),
+            account: "acct_connected");
+        var verifier = CreateVerifier(connectedAccountId: "acct_connected");
+
+        var result = verifier.Verify(payload, Sign(payload));
+
+        result.ProviderAccountId.Should().Be("acct_connected");
     }
 
     [Fact]
@@ -110,6 +125,7 @@ public sealed class StripeWebhookAuthenticityContractTests
             {
                 WebhookSecret = Secret,
                 WebhookEndpointId = "we_contract_test",
+                AccountId = "acct_platform",
                 ConnectedAccountId = connectedAccountId,
                 ApiVersion = ApiVersion,
                 LiveMode = false,
@@ -138,6 +154,7 @@ public sealed class StripeWebhookAuthenticityContractTests
                     id = "in_contract",
                     @object = "invoice",
                     subscription = "sub_contract",
+                    payment_intent = "pi_contract",
                     amount_paid = 1000,
                     currency = "usd",
                     customer_email = "private@example.com",

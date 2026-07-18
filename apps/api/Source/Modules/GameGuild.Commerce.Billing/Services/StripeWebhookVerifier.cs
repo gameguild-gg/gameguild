@@ -8,13 +8,13 @@ namespace GameGuild.Commerce.Billing;
 
 public sealed class StripeWebhookVerifier(IOptions<BillingConfiguration> options) : IStripeWebhookVerifier
 {
-    private const string PlatformAccount = "platform";
     private readonly StripeSettings _settings = options.Value.Stripe;
 
     public VerifiedStripeWebhookEvent Verify(string payload, string signature)
     {
         if (string.IsNullOrWhiteSpace(_settings.WebhookSecret) ||
-            string.IsNullOrWhiteSpace(_settings.WebhookEndpointId))
+            string.IsNullOrWhiteSpace(_settings.WebhookEndpointId) ||
+            string.IsNullOrWhiteSpace(_settings.AccountId))
         {
             throw new InvalidOperationException("Stripe webhook verification is not configured.");
         }
@@ -79,6 +79,12 @@ public sealed class StripeWebhookVerifier(IOptions<BillingConfiguration> options
 
             var objectId = GetRequiredString(providerObject, "id");
             var objectType = GetRequiredString(providerObject, "object");
+            var monetaryLeg = ResolveMonetaryLeg(stripeEvent.Type);
+            var providerIdentity = ResolveProviderObjectIdentity(
+                providerObject,
+                objectId,
+                objectType,
+                monetaryLeg);
             var tenantId = ReadTenantId(providerObject);
             var amount = ReadMoney(providerObject, "amount_paid")
                          ?? ReadMoney(providerObject, "amount_due")
@@ -91,12 +97,12 @@ public sealed class StripeWebhookVerifier(IOptions<BillingConfiguration> options
                 EventType = stripeEvent.Type,
                 IsLiveMode = stripeEvent.Livemode,
                 ProviderEnvironment = stripeEvent.Livemode ? "live" : "test",
-                ProviderAccountId = expectedAccount ?? PlatformAccount,
+                ProviderAccountId = ResolveProviderObjectAccountId(),
                 WebhookEndpointId = _settings.WebhookEndpointId,
                 EventSchemaVersion = schemaVersion,
-                ProviderObjectId = objectId,
-                ProviderObjectType = objectType,
-                ProviderMonetaryLeg = ResolveMonetaryLeg(stripeEvent.Type),
+                ProviderObjectId = providerIdentity.ObjectId,
+                ProviderObjectType = providerIdentity.ObjectType,
+                ProviderMonetaryLeg = monetaryLeg,
                 TenantId = tenantId,
                 ExternalSubscriptionId = ReadString(providerObject, "subscription") ??
                                          (objectType == "subscription" ? objectId : null),
@@ -118,6 +124,11 @@ public sealed class StripeWebhookVerifier(IOptions<BillingConfiguration> options
             throw new InvalidWebhookPayloadException("Stripe webhook payload is malformed.", exception);
         }
     }
+
+    private string ResolveProviderObjectAccountId() =>
+        string.IsNullOrWhiteSpace(_settings.ConnectedAccountId)
+            ? _settings.AccountId
+            : _settings.ConnectedAccountId;
 
     private static string GetRequiredString(JsonElement element, string propertyName)
     {
@@ -164,6 +175,27 @@ public sealed class StripeWebhookVerifier(IOptions<BillingConfiguration> options
         _ => "nonmonetary"
     };
 
+    private static StripeProviderObjectIdentity ResolveProviderObjectIdentity(
+        JsonElement providerObject,
+        string objectId,
+        string objectType,
+        string monetaryLeg)
+    {
+        if (monetaryLeg is "nonmonetary" or "subscription")
+            return new StripeProviderObjectIdentity(objectId, objectType);
+
+        var paymentIntentId = string.Equals(objectType, "payment_intent", StringComparison.Ordinal)
+            ? objectId
+            : ReadString(providerObject, "payment_intent");
+        if (string.IsNullOrWhiteSpace(paymentIntentId))
+        {
+            throw new InvalidWebhookPayloadException(
+                "Stripe monetary event must reference its canonical payment_intent.");
+        }
+
+        return new StripeProviderObjectIdentity(paymentIntentId, "payment_intent");
+    }
+
     private static string MinimizePayload(JsonElement root, JsonElement providerObject)
     {
         var retainedObject = new Dictionary<string, object?>();
@@ -201,3 +233,5 @@ public sealed class StripeWebhookVerifier(IOptions<BillingConfiguration> options
         });
     }
 }
+
+internal sealed record StripeProviderObjectIdentity(string ObjectId, string ObjectType);
