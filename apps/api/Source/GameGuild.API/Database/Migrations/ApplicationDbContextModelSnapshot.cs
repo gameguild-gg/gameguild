@@ -249,6 +249,7 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ProcessingAttempts")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer");
 
                     b.Property<string>("Provider")
@@ -315,7 +316,8 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("ExternalEventId", "Provider")
                         .IsUnique()
-                        .HasDatabaseName("ix_billing_webhook_events_external_id_provider");
+                        .HasDatabaseName("ix_billing_webhook_events_external_id_provider")
+                        .HasFilter("(\"ProviderEnvironment\" IS NULL AND \"ProviderAccountId\" IS NULL AND \"WebhookEndpointId\" IS NULL)");
 
                     b.HasIndex("Provider", "ProviderEnvironment", "ProviderAccountId", "ProviderObjectId", "ProviderMonetaryLeg")
                         .HasDatabaseName("ix_billing_webhook_events_provider_object_leg")
@@ -323,11 +325,19 @@ namespace GameGuild.API.Database.Migrations
                         .HasAnnotation("Npgsql:CreatedConcurrently", true);
 
                     b.HasIndex("Provider", "ProviderEnvironment", "ProviderAccountId", "WebhookEndpointId", "ExternalEventId")
+                        .IsUnique()
                         .HasDatabaseName("ix_billing_webhook_events_provider_scope_event")
                         .HasFilter("\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"WebhookEndpointId\" IS NOT NULL")
                         .HasAnnotation("Npgsql:CreatedConcurrently", true);
 
-                    b.ToTable("billing_webhook_events", (string)null);
+                    b.ToTable("billing_webhook_events", (string)null, t =>
+                        {
+                            t.HasCheckConstraint("ck_billing_webhook_events_provider_environment", "(\"ProviderEnvironment\" IS NULL OR (\"ProviderEnvironment\" = 'live' AND \"IsLiveMode\" = true) OR (\"ProviderEnvironment\" = 'test' AND \"IsLiveMode\" = false))");
+
+                            t.HasCheckConstraint("ck_billing_webhook_events_provider_object_complete", "((\"ProviderObjectId\" IS NULL AND \"ProviderObjectType\" IS NULL AND \"ProviderMonetaryLeg\" IS NULL) OR (\"ProviderObjectId\" IS NOT NULL AND \"ProviderObjectType\" IS NOT NULL AND \"ProviderMonetaryLeg\" IS NOT NULL AND \"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL))");
+
+                            t.HasCheckConstraint("ck_billing_webhook_events_provider_scope_complete", "((\"ProviderEnvironment\" IS NULL AND \"ProviderAccountId\" IS NULL AND \"WebhookEndpointId\" IS NULL AND \"IsLiveMode\" IS NULL) OR (\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"WebhookEndpointId\" IS NOT NULL AND \"IsLiveMode\" IS NOT NULL))");
+                        });
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Billing.Invoice", b =>
@@ -596,6 +606,7 @@ namespace GameGuild.API.Database.Migrations
                         .IsUnique();
 
                     b.HasIndex("Provider", "ProviderEnvironment", "ProviderAccountId", "ProviderObjectId", "ProviderMonetaryLeg")
+                        .IsUnique()
                         .HasDatabaseName("ix_payments_provider_object_leg")
                         .HasFilter("\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"ProviderObjectId\" IS NOT NULL AND \"ProviderMonetaryLeg\" IS NOT NULL")
                         .HasAnnotation("Npgsql:CreatedConcurrently", true);
@@ -604,7 +615,14 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId", "Status");
 
-                    b.ToTable("payments");
+                    b.ToTable("payments", t =>
+                        {
+                            t.HasCheckConstraint("ck_payments_provider_environment", "\"ProviderEnvironment\" IS NULL OR \"ProviderEnvironment\" IN ('test', 'live')");
+
+                            t.HasCheckConstraint("ck_payments_provider_mapping_complete", "((\"ProviderEnvironment\" IS NULL AND \"ProviderAccountId\" IS NULL AND \"ProviderObjectId\" IS NULL AND \"ProviderObjectType\" IS NULL AND \"ProviderMonetaryLeg\" IS NULL) OR (\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"ProviderObjectId\" IS NOT NULL AND \"ProviderObjectType\" IS NOT NULL AND \"ProviderMonetaryLeg\" IS NOT NULL))");
+
+                            t.HasCheckConstraint("ck_payments_stripe_value_mapping_required", "(lower(\"Provider\") <> 'stripe' OR \"Status\" NOT IN (1, 2, 5, 6, 7) OR (\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"ProviderObjectId\" IS NOT NULL AND \"ProviderObjectType\" IS NOT NULL AND \"ProviderMonetaryLeg\" IS NOT NULL))");
+                        });
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Payments.TaxJurisdiction", b =>
