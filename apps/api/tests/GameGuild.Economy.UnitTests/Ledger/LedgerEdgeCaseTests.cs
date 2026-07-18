@@ -77,6 +77,29 @@ public sealed class LedgerEdgeCaseTests
     }
 
     [Fact]
+    public void AvailableLots_SubtractsConsumptionThatReachesTheEndOfTheLot()
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var wallet = WalletId.New();
+        var root = SourceStampId.New();
+        var lot = new CreditLot(
+            CreditLotId.New(), wallet, new CoinAmount(CurrencyCode.SoftCoin, 10),
+            ProvenanceKind.AdRewardSoft, Time, Time, 1, CreditLotState.Active,
+            [new RootTraceRange(root, 0, 10, 0)]);
+        store.Execute(transaction =>
+        {
+            transaction.AddCreditLot(lot);
+            transaction.AddConsumption(new FragmentConsumption(
+                PostingId.New(), lot.Id, new CoinAmount(CurrencyCode.SoftCoin, 6),
+                [new RootTraceRange(root, 4, 6, 0)]));
+            return true;
+        });
+
+        store.GetAvailableLots(wallet, CurrencyCode.SoftCoin).Single().Ranges.Should().Equal(
+            new RootTraceRange(root, 0, 4, 0));
+    }
+
+    [Fact]
     public void AvailableLots_RejectsConsumptionThatLeavesFractionalCoinTrace()
     {
         var store = new InMemoryLedgerKernelStore();
@@ -172,6 +195,25 @@ public sealed class LedgerEdgeCaseTests
 
         selection.NewFragments.SelectMany(fragment => fragment.Ranges)
             .Should().Equal(new RootTraceRange(root, 0, 2, 0));
+    }
+
+    [Fact]
+    public void ReversalSelector_PreservesAvailablePrefixBeforeHistoryThatReachesTheEnd()
+    {
+        var root = SourceStampId.New();
+        var lot = new CreditLot(
+            CreditLotId.New(), WalletId.New(), new CoinAmount(CurrencyCode.HardCoin, 10),
+            ProvenanceKind.EarnedHard, Time, Time.AddDays(120), 1, CreditLotState.Active,
+            [new RootTraceRange(root, 0, 10, 0)]);
+
+        var selection = RootReversalSelector.Select(
+            root,
+            7,
+            [new RootTraceRange(root, 4, 6, 0)],
+            [lot]);
+
+        selection.NewFragments.SelectMany(fragment => fragment.Ranges)
+            .Should().Equal(new RootTraceRange(root, 0, 1, 0));
     }
 
     [Fact]
