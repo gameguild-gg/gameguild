@@ -1,5 +1,6 @@
 using GameGuild.Commerce.Subscriptions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Commerce.Billing;
 
@@ -14,6 +15,7 @@ public class StripeBillingWebhookService : BillingWebhookService
     private readonly IStripeWebhookVerifier _webhookVerifier;
     private readonly IStripeProviderObjectBindingValidator _providerObjectBindingValidator;
     private readonly ISubscriptionQueryService _subscriptionQueryService;
+    private readonly WebhookSettings _webhookSettings;
 
     public StripeBillingWebhookService(
         IBillingWebhookRepository webhookRepository,
@@ -23,7 +25,8 @@ public class StripeBillingWebhookService : BillingWebhookService
         ISubscriptionLifecycleService lifecycleService,
         ISubscriptionQueryService queryService,
         ISubscriptionBillingService billingService,
-        ISubscriptionExternalIdService externalIdService) 
+        ISubscriptionExternalIdService externalIdService,
+        IOptions<BillingConfiguration>? configuration = null)
         : base(logger, lifecycleService, queryService, billingService, externalIdService)
     {
         _webhookRepository = webhookRepository;
@@ -31,6 +34,7 @@ public class StripeBillingWebhookService : BillingWebhookService
         _providerObjectBindingValidator = providerObjectBindingValidator;
         _subscriptionQueryService = queryService;
         _logger = logger;
+        _webhookSettings = configuration?.Value.Webhook ?? new WebhookSettings();
     }
 
     /// <summary>
@@ -66,9 +70,11 @@ public class StripeBillingWebhookService : BillingWebhookService
         }
 
         var binding = await ValidateSubscriptionBindingAsync(verifiedEvent, cancellationToken).ConfigureAwait(false);
-        var paymentBinding = await _providerObjectBindingValidator
-            .ValidateAsync(verifiedEvent, cancellationToken)
-            .ConfigureAwait(false);
+        var paymentBinding = verifiedEvent.EventType.StartsWith("invoice.", StringComparison.Ordinal)
+            ? null
+            : await _providerObjectBindingValidator
+                .ValidateAsync(verifiedEvent, cancellationToken)
+                .ConfigureAwait(false);
 
         var webhookEvent = existingEvent ?? new BillingWebhookEvent
         {
@@ -112,7 +118,21 @@ public class StripeBillingWebhookService : BillingWebhookService
             }
         }
 
-        webhookEvent.IncrementAttempts();
+        var staleBefore = SystemClock.UtcNow.AddSeconds(-_webhookSettings.ProcessingTimeoutSeconds);
+        var claimed = await _webhookRepository
+            .TryClaimProcessingAsync(webhookEvent, staleBefore, cancellationToken)
+            .ConfigureAwait(false);
+        if (!claimed)
+        {
+            _logger.LogInformation(
+                "Stripe webhook {EventId} is already being processed by another worker.",
+                verifiedEvent.EventId);
+            return WebhookProcessingResult.Failed(
+                verifiedEvent.EventId,
+                "Webhook is already being processed.",
+                requiresRetry: true);
+        }
+
         try
         {
             await RouteStripeEventAsync(verifiedEvent, cancellationToken).ConfigureAwait(false);

@@ -120,7 +120,18 @@ public sealed record GatewayPaymentResult(
     string? ErrorMessage,
     PaymentStatus Status,
     DateTime ProcessedAt,
-    string? ClientActionToken = null);
+    string? ClientActionToken = null,
+    GatewayProviderMapping? ProviderMapping = null);
+
+/// <summary>
+///     Immutable provider identity for one payment object and monetary leg.
+/// </summary>
+public sealed record GatewayProviderMapping(
+    string ProviderEnvironment,
+    string ProviderAccountId,
+    string ProviderObjectId,
+    string ProviderObjectType,
+    string ProviderMonetaryLeg);
 
 /// <summary>Result of closing a provider payment attempt.</summary>
 public sealed record GatewayPaymentCancellationResult(

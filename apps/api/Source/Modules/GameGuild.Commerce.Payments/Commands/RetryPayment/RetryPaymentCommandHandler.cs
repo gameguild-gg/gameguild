@@ -76,6 +76,7 @@ public sealed class RetryPaymentCommandHandler(
 
         var gatewayResult = await paymentGateway.ProcessPaymentAsync(gatewayRequest, cancellationToken)
             .ConfigureAwait(false);
+        GatewayPaymentResultBinder.BindVerifiedProviderMapping(payment, paymentGateway.ProviderId, gatewayResult);
 
         // 6. Update payment based on gateway result
         PaymentResult? paymentResult = null;

@@ -34,7 +34,7 @@ public sealed class BillingConfigurationProductionValidatorTests
     }
 
     [Fact]
-    public void Validate_AllowsNonLiveWebhookInStaging()
+    public void Validate_AllowsTestModeWebhookInStaging()
     {
         var validator = CreateValidator(Environments.Staging);
         var configuration = CreateCompleteConfiguration();
@@ -43,6 +43,19 @@ public sealed class BillingConfigurationProductionValidatorTests
         var result = validator.Validate(Options.DefaultName, configuration);
 
         result.Succeeded.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Validate_RejectsLiveWebhookInStaging()
+    {
+        var validator = CreateValidator(Environments.Staging);
+        var configuration = CreateCompleteConfiguration();
+        configuration.Stripe.LiveMode = true;
+
+        var result = validator.Validate(Options.DefaultName, configuration);
+
+        result.Failed.Should().BeTrue();
+        result.Failures.Should().Contain(message => message.Contains("Staging", StringComparison.Ordinal));
     }
 
     [Theory]
@@ -75,6 +88,7 @@ public sealed class BillingConfigurationProductionValidatorTests
     {
         var validator = CreateValidator(Environments.Production);
         var configuration = CreateCompleteConfiguration();
+        configuration.Stripe.LiveMode = true;
 
         var result = validator.Validate(Options.DefaultName, configuration);
 
@@ -94,8 +108,9 @@ public sealed class BillingConfigurationProductionValidatorTests
         {
             WebhookSecret = "whsec_test",
             WebhookEndpointId = "we_test",
+            AccountId = "acct_platform",
             ApiVersion = "2023-10-16",
-            LiveMode = true
+            LiveMode = false
         }
     };
 }

@@ -1,3 +1,5 @@
+using System.Data.Common;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -10,6 +12,11 @@ namespace GameGuild.Commerce.Billing;
 public class BillingWebhookRepository(IApplicationDbContext context, ILogger<BillingWebhookRepository> logger) 
     : CommerceRepositoryBase<BillingWebhookEvent>(context), IBillingWebhookRepository
 {
+    private static readonly HashSet<string> WebhookIdempotencyIndexes = new(StringComparer.Ordinal)
+    {
+        "ix_billing_webhook_events_external_id_provider",
+        "ix_billing_webhook_events_provider_scope_event"
+    };
     /// <inheritdoc />
     public new async Task<BillingWebhookEvent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -94,8 +101,69 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
         
         logger.LogInformation("Creating webhook event: {ExternalEventId} for provider: {Provider}", webhookEvent.ExternalEventId, webhookEvent.Provider);
         await Entities.AddAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
-        await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return webhookEvent;
+        try
+        {
+            await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return webhookEvent;
+        }
+        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        {
+            Entities.Remove(webhookEvent);
+            var concurrentWinner = webhookEvent.ProviderEnvironment is not null &&
+                                   webhookEvent.ProviderAccountId is not null &&
+                                   webhookEvent.WebhookEndpointId is not null
+                ? await GetByProviderScopeAsync(
+                        webhookEvent.Provider,
+                        webhookEvent.ProviderEnvironment,
+                        webhookEvent.ProviderAccountId,
+                        webhookEvent.WebhookEndpointId,
+                        webhookEvent.ExternalEventId,
+                        cancellationToken)
+                    .ConfigureAwait(false)
+                : await GetByExternalEventIdAsync(
+                        webhookEvent.ExternalEventId,
+                        webhookEvent.Provider,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+
+            if (concurrentWinner is not null)
+            {
+                logger.LogWarning(
+                    "Concurrent duplicate webhook event detected: {ExternalEventId} for provider: {Provider}. Returning winner.",
+                    webhookEvent.ExternalEventId,
+                    webhookEvent.Provider);
+                return concurrentWinner;
+            }
+
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> TryClaimProcessingAsync(
+        BillingWebhookEvent webhookEvent,
+        DateTime staleBefore,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(webhookEvent);
+
+        if (!webhookEvent.TryBeginProcessing(staleBefore))
+            return false;
+
+        Entities.Update(webhookEvent);
+        try
+        {
+            await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return true;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            logger.LogInformation(
+                "Webhook processing claim lost for {ExternalEventId} from {Provider}.",
+                webhookEvent.ExternalEventId,
+                webhookEvent.Provider);
+            return false;
+        }
     }
 
     /// <inheritdoc />
@@ -129,5 +197,22 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
         return await Entities
             .AnyAsync(e => e.ExternalEventId == externalEventId && e.Provider == provider, cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    private static bool IsUniqueConstraintViolation(DbUpdateException exception)
+    {
+        for (var current = exception.InnerException; current is not null; current = current.InnerException)
+        {
+            if (current is not DbException { SqlState: "23505" } databaseException)
+                continue;
+
+            var constraintName = databaseException.GetType()
+                .GetProperty("ConstraintName")
+                ?.GetValue(databaseException) as string;
+            return constraintName is not null &&
+                   WebhookIdempotencyIndexes.Contains(constraintName);
+        }
+
+        return false;
     }
 }
