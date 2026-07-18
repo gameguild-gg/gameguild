@@ -4,6 +4,8 @@ using GameGuild.API.Database;
 using GameGuild.Compliance.Audit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -20,25 +22,32 @@ public class AuditServiceTests : IDisposable
     private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
     private readonly Mock<ILogger<AuditService>> _mockLogger;
     private readonly AuditService _auditService;
+    private readonly ServiceProvider _serviceProvider;
+    private readonly DbContextOptions<ApplicationDbContext> _contextOptions;
 
     public AuditServiceTests()
     {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
+        var databaseRoot = new InMemoryDatabaseRoot();
+        _contextOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}", databaseRoot)
             .Options;
 
-        _context = new TestApplicationDbContext(options);
+        _context = new TestApplicationDbContext(_contextOptions);
         _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
         _mockLogger = new Mock<ILogger<AuditService>>();
+        _serviceProvider = new ServiceCollection()
+            .AddScoped<IApplicationDbContext>(_ => new TestApplicationDbContext(_contextOptions))
+            .BuildServiceProvider();
 
         _auditService = new AuditService(
-            _context,
+            _serviceProvider.GetRequiredService<IServiceScopeFactory>(),
             _mockHttpContextAccessor.Object,
             _mockLogger.Object);
     }
 
     public void Dispose()
     {
+        _serviceProvider.Dispose();
         _context.Dispose();
     }
 
