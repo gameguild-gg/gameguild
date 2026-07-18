@@ -8,6 +8,7 @@ namespace GameGuild.Commerce.Orders;
 /// </summary>
 public sealed class CaptureOrderCommandHandler(
     IOrderRepository orderRepository,
+    IOrderPaymentProcessor paymentProcessor,
     IActorContextAccessor actorContextAccessor)
     : ICommandHandler<CaptureOrderCommand, Result<OrderOperationResult>>
 {
@@ -25,9 +26,63 @@ public sealed class CaptureOrderCommandHandler(
         if (authorizationError is not null)
             return Result.Failure<OrderOperationResult>(authorizationError);
 
-        return Result.Failure<OrderOperationResult>(
-            Error.Forbidden(
-                "Orders.PaymentAuthorityRequired",
-                "Order capture is disabled until Payments supplies an authoritative order binding."));
+        if (order.Status != OrderStatus.Pending)
+        {
+            return Result.Failure<OrderOperationResult>(
+                Error.Conflict("Orders.InvalidStatus", $"Cannot capture an order in {order.Status} status."));
+        }
+
+        if (string.IsNullOrWhiteSpace(request.PaymentMethodId))
+        {
+            return Result.Failure<OrderOperationResult>(
+                Error.Validation("Orders.PaymentMethodRequired", "A payment method is required."));
+        }
+
+        if (order.Total <= 0 ||
+            order.LineItems.Count == 0 ||
+            order.LineItems.Any(lineItem =>
+                lineItem.ProductPricingId == Guid.Empty ||
+                lineItem.ProductPricingVersionId == Guid.Empty ||
+                lineItem.PriceVersionSnapshot < 1 ||
+                lineItem.UnitPriceSnapshot <= 0 ||
+                lineItem.LineTotal <= 0 ||
+                lineItem.CurrencySnapshot != order.Currency))
+        {
+            return Result.Failure<OrderOperationResult>(
+                Error.Validation(
+                    "Orders.InvalidPayableOrder",
+                    "The order does not contain authoritative payable line-item snapshots."));
+        }
+
+        if (order.LineItems.Any(lineItem => lineItem.IsSubscription))
+        {
+            return Result.Failure<OrderOperationResult>(
+                Error.Forbidden(
+                    "Orders.SubscriptionAuthorityRequired",
+                    "Subscription products require the authoritative subscription checkout."));
+        }
+
+        var chargeResult = await paymentProcessor.ProcessAsync(
+            new AuthoritativeOrderCharge(
+                order.Id,
+                order.TenantId!.Value,
+                order.Total,
+                order.Currency,
+                request.PaymentMethodId),
+            cancellationToken).ConfigureAwait(false);
+
+        if (!chargeResult.Success || !chargeResult.PaymentId.HasValue)
+        {
+            return Result.Failure<OrderOperationResult>(
+                Error.Failure(
+                    "Orders.PaymentFailed",
+                    chargeResult.FailureReason ?? "The payment provider did not settle the order."));
+        }
+
+        order.MarkAsPaidPendingFulfillment(chargeResult.PaymentId.Value, chargeResult.ExternalPaymentId);
+        await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
+        await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return Result.Success(OrderOperationResult.FromOrder(order));
     }
 }

@@ -302,7 +302,7 @@ public class OrdersControllerTests
     {
         var order = CreateTestOrder();
         _senderMock.Setup(sender => sender.Send<Result<OrderOperationResult>>(
-                It.Is<CaptureOrderCommand>(command => command.OrderId == order.Id && command.Amount == 50m),
+                It.Is<CaptureOrderCommand>(command => command.OrderId == order.Id && command.PaymentMethodId == "pm_test"),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(OrderOperationResult.FromOrder(order)));
         _senderMock.Setup(sender => sender.Send<Result<OrderOperationResult>>(
@@ -314,7 +314,7 @@ public class OrdersControllerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(OrderOperationResult.FromOrder(order)));
 
-        var capture = await _sut.CaptureOrder(order.Id, new CaptureOrderRequest(50m));
+        var capture = await _sut.CaptureOrder(order.Id, new CaptureOrderRequest("pm_test"));
         var hold = await _sut.HoldOrder(order.Id, new HoldOrderRequest("manual review"));
         var release = await _sut.ReleaseOrder(order.Id);
 
@@ -347,6 +347,24 @@ public class OrdersControllerTests
 public class OrdersInfrastructureTests
 {
     [Fact]
+    public void OrdersController_ExposesOnlyVerifiedCheckoutActionsToMinimumComposition()
+    {
+        var markedActions = typeof(OrdersController)
+            .GetMethods()
+            .Where(method => method.GetCustomAttributes(typeof(MinimumOrderRouteAttribute), inherit: true).Length > 0)
+            .Select(method => method.Name)
+            .OrderBy(name => name)
+            .ToArray();
+
+        markedActions.Should().Equal(
+            nameof(OrdersController.AddProductToOrder),
+            nameof(OrdersController.CaptureOrder),
+            nameof(OrdersController.CompleteOrder),
+            nameof(OrdersController.CreateOrder),
+            nameof(OrdersController.GetOrder));
+    }
+
+    [Fact]
     public void CommandHandlers_CanBeInstantiated()
     {
         var orderRepo = Mock.Of<IOrderRepository>();
@@ -362,7 +380,7 @@ public class OrdersInfrastructureTests
             new CreateOrderCommandHandler(orderRepo, actor),
             new AddProductToOrderCommandHandler(orderRepo, productRepo, pricingRepo, promoService, dbContext, actor),
             new CancelOrderCommandHandler(orderRepo),
-            new CaptureOrderCommandHandler(orderRepo, actor),
+            new CaptureOrderCommandHandler(orderRepo, Mock.Of<IOrderPaymentProcessor>(), actor),
             new CompleteOrderCommandHandler(orderRepo, entitlementService, dbContext, OrderTestFactory.CreatePaymentAuthority(), actor),
             new DeleteOrderCommandHandler(orderRepo),
             new HoldOrderCommandHandler(orderRepo),
@@ -431,7 +449,7 @@ public class OrdersInfrastructureTests
         var provider = services.BuildServiceProvider();
         var authority = provider.GetRequiredService<IOrderPaymentAuthority>();
         var binding = new OrderPaymentBinding(
-            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 10m, "USD");
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 10m, "USD");
 
         var isSettled = await authority.IsSettledAsync(binding);
 
@@ -485,7 +503,7 @@ public class OrdersInfrastructureTests
         var cancel = new CancelOrderRequest("reason");
         var refund = new RefundOrderRequest(10m, "refund");
         var patch = new PatchOrderRequest("EUR", "notes", new Dictionary<string, string> { ["k"] = "v" });
-        var capture = new CaptureOrderRequest(50m);
+        var capture = new CaptureOrderRequest("pm_test");
         var hold = new HoldOrderRequest("hold reason");
 
         orderDto.Status.Should().Be(OrderStatus.Pending);
@@ -496,7 +514,7 @@ public class OrdersInfrastructureTests
         cancel.Reason.Should().Be("reason");
         refund.Amount.Should().Be(10m);
         patch.Currency.Should().Be("EUR");
-        capture.Amount.Should().Be(50m);
+        capture.PaymentMethodId.Should().Be("pm_test");
         hold.Reason.Should().Be("hold reason");
     }
 

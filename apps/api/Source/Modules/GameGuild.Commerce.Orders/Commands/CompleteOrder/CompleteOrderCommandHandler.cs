@@ -73,7 +73,6 @@ public sealed class CompleteOrderCommandHandler(
         var binding = new OrderPaymentBinding(
             order.Id,
             order.PaymentId.Value,
-            order.UserId,
             order.TenantId!.Value,
             order.Total,
             order.Currency);
