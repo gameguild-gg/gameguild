@@ -9,6 +9,7 @@ using GameGuild.Configuration.PresentationLayer.RequestContext;
 using GameGuild.Configuration.PresentationLayer.ResponseCompression;
 using GameGuild.Configuration.PresentationLayer.SignalR;
 using GameGuild.API.Database;
+using GameGuild.API.HealthChecks;
 using GameGuild.Features;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Localization;
@@ -199,6 +200,12 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddHealthChecks()
             .AddCheck<DatabaseReadinessHealthCheck>(
                 "database",
+                tags: ["ready", "dependency"])
+            .AddCheck<PaymentProviderReadinessHealthCheck>(
+                "payment-provider",
+                tags: ["ready", "dependency"])
+            .AddCheck<BillingInboxReadinessHealthCheck>(
+                "billing-inbox",
                 tags: ["ready", "dependency"]);
 
         return services;
