@@ -12,6 +12,19 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
     {
         modelBuilder.Entity<Payment>(builder =>
         {
+            builder.ToTable("payments", tableBuilder =>
+            {
+                tableBuilder.HasCheckConstraint(
+                    "ck_payments_provider_mapping_complete",
+                    """(("ProviderEnvironment" IS NULL AND "ProviderAccountId" IS NULL AND "ProviderObjectId" IS NULL AND "ProviderObjectType" IS NULL AND "ProviderMonetaryLeg" IS NULL) OR ("ProviderEnvironment" IS NOT NULL AND "ProviderAccountId" IS NOT NULL AND "ProviderObjectId" IS NOT NULL AND "ProviderObjectType" IS NOT NULL AND "ProviderMonetaryLeg" IS NOT NULL))""");
+                tableBuilder.HasCheckConstraint(
+                    "ck_payments_provider_environment",
+                    "\"ProviderEnvironment\" IS NULL OR \"ProviderEnvironment\" IN ('test', 'live')");
+                tableBuilder.HasCheckConstraint(
+                    "ck_payments_stripe_value_mapping_required",
+                    """(lower("Provider") <> 'stripe' OR "Status" NOT IN (1, 2, 5, 6, 7) OR ("ProviderEnvironment" IS NOT NULL AND "ProviderAccountId" IS NOT NULL AND "ProviderObjectId" IS NOT NULL AND "ProviderObjectType" IS NOT NULL AND "ProviderMonetaryLeg" IS NOT NULL))""");
+            });
+
             builder.Property(payment => payment.ProviderEnvironment)
                 .HasMaxLength(32);
             builder.Property(payment => payment.ProviderAccountId)
@@ -32,6 +45,7 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
                     payment.ProviderMonetaryLeg
                 })
                 .HasFilter("\"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"ProviderObjectId\" IS NOT NULL AND \"ProviderMonetaryLeg\" IS NOT NULL")
+                .IsUnique()
                 .IsCreatedConcurrently()
                 .HasDatabaseName("ix_payments_provider_object_leg");
         });

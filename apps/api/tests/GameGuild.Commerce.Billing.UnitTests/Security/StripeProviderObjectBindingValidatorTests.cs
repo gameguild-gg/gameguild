@@ -18,8 +18,8 @@ public sealed class StripeProviderObjectBindingValidatorTests
                 verifiedEvent.ProviderEnvironment,
                 verifiedEvent.ProviderAccountId,
                 verifiedEvent.ProviderObjectId,
-                verifiedEvent.ProviderObjectType,
-                verifiedEvent.ProviderMonetaryLeg,
+                "payment_intent",
+                "capture",
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((Payment?)null);
 

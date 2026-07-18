@@ -19,7 +19,9 @@ public sealed class PaymentProviderReadinessHealthCheckTests
             IsEnabled = true,
             UseSimulation = true,
             ApiKey = "sk_test_sensitive-api-key",
-            PublishableKey = "pk_test_sensitive-publishable-key"
+            PublishableKey = "pk_test_sensitive-publishable-key",
+            AccountId = "acct_platform",
+            LiveMode = false
         };
         var healthCheck = CreateHealthCheck(options, Environments.Development);
 
@@ -34,7 +36,8 @@ public sealed class PaymentProviderReadinessHealthCheckTests
             ["outboundConfigured"] = true,
             ["webhookConfigured"] = true,
             ["signatureVerificationEnabled"] = true,
-            ["providerEnvironment"] = "test"
+            ["providerEnvironment"] = "test",
+            ["providerIdentityReady"] = true
         });
         AssertSanitized(
             result,
@@ -53,7 +56,9 @@ public sealed class PaymentProviderReadinessHealthCheckTests
             IsEnabled = true,
             UseSimulation = false,
             ApiKey = "sk_live_sensitive-api-key",
-            PublishableKey = "pk_live_sensitive-publishable-key"
+            PublishableKey = "pk_live_sensitive-publishable-key",
+            AccountId = "acct_platform",
+            LiveMode = true
         };
         var healthCheck = CreateHealthCheck(options, Environments.Production);
 
@@ -68,7 +73,8 @@ public sealed class PaymentProviderReadinessHealthCheckTests
             ["outboundConfigured"] = true,
             ["webhookConfigured"] = true,
             ["signatureVerificationEnabled"] = true,
-            ["providerEnvironment"] = "live"
+            ["providerEnvironment"] = "live",
+            ["providerIdentityReady"] = true
         });
         AssertSanitized(
             result,
@@ -96,7 +102,9 @@ public sealed class PaymentProviderReadinessHealthCheckTests
             IsEnabled = isEnabled,
             UseSimulation = useSimulation,
             ApiKey = apiKey,
-            PublishableKey = publishableKey
+            PublishableKey = publishableKey,
+            AccountId = "acct_platform",
+            LiveMode = true
         };
         var healthCheck = CreateHealthCheck(options, Environments.Production);
 
@@ -111,7 +119,8 @@ public sealed class PaymentProviderReadinessHealthCheckTests
             "outboundConfigured",
             "webhookConfigured",
             "signatureVerificationEnabled",
-            "providerEnvironment");
+            "providerEnvironment",
+            "providerIdentityReady");
         AssertSanitized(result, apiKey, publishableKey);
     }
 
@@ -133,7 +142,9 @@ public sealed class PaymentProviderReadinessHealthCheckTests
             IsEnabled = true,
             UseSimulation = false,
             ApiKey = "sk_live_sensitive-api-key",
-            PublishableKey = "pk_live_sensitive-publishable-key"
+            PublishableKey = "pk_live_sensitive-publishable-key",
+            AccountId = "acct_platform",
+            LiveMode = true
         };
         var billingConfiguration = CreateBillingConfiguration(liveMode);
         billingConfiguration.Stripe.WebhookSecret = webhookSecret;
@@ -186,7 +197,9 @@ public sealed class PaymentProviderReadinessHealthCheckTests
                 IsEnabled = true,
                 UseSimulation = false,
                 ApiKey = "sk_live_sensitive-api-key",
-                PublishableKey = "pk_live_sensitive-publishable-key"
+                PublishableKey = "pk_live_sensitive-publishable-key",
+                AccountId = "acct_platform",
+                LiveMode = true
             }),
             new ThrowingOptions<BillingConfiguration>(sensitiveFailure),
             new TestHostEnvironment(Environments.Production));
@@ -217,6 +230,7 @@ public sealed class PaymentProviderReadinessHealthCheckTests
         {
             WebhookSecret = "whsec_sensitive-webhook",
             WebhookEndpointId = "we_sensitive-endpoint",
+            AccountId = "acct_platform",
             ApiVersion = "2026-06-01",
             LiveMode = liveMode
         },

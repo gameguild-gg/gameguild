@@ -242,7 +242,14 @@ public sealed class PaymentProviderSecurityExpansionTests
         }
 
         entity.GetIndexes().Single(index => index.GetDatabaseName() == "ix_payments_provider_object_leg")
-            .IsUnique.Should().BeFalse();
+            .IsUnique.Should().BeTrue();
+
+        entity.GetCheckConstraints().Select(constraint => constraint.Name).Should().Contain(
+            "ck_payments_provider_mapping_complete");
+        entity.GetCheckConstraints().Select(constraint => constraint.Name).Should().Contain(
+            "ck_payments_provider_environment");
+        entity.GetCheckConstraints().Select(constraint => constraint.Name).Should().Contain(
+            "ck_payments_stripe_value_mapping_required");
     }
 
     [Fact]
