@@ -8,9 +8,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Xunit;
@@ -24,6 +26,7 @@ namespace GameGuild.Commerce.Subscriptions.IntegrationTests.Security;
 /// </summary>
 public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
 {
+    private const string StripeWebhookSecret = "whsec_subscriptions_security";
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
     private readonly HttpClient _client;
     private static readonly string DatabaseName = $"CommerceSecurityTestDb_{Guid.NewGuid()}";
@@ -35,6 +38,17 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration((_, configuration) =>
+            {
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Billing:Stripe:WebhookSecret"] = StripeWebhookSecret,
+                    ["Billing:Stripe:WebhookEndpointId"] = "we_subscriptions_security",
+                    ["Billing:Stripe:ApiVersion"] = "2023-10-16",
+                    ["Billing:Stripe:LiveMode"] = "false",
+                    ["Billing:Stripe:WebhookToleranceSeconds"] = "300"
+                });
+            });
             builder.ConfigureTestServices(services =>
             {
                 // Remove existing DbContext registrations
@@ -223,28 +237,21 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
         var webhookPayload = JsonSerializer.Serialize(new
         {
             id = externalEventId,
-            type = "invoice.payment_succeeded",
-            data = new
-            {
-                @object = new
-                {
-                    id = "in_123",
-                    subscription = "sub_123",
-                    amount_paid = 2999
-                }
-            }
+            @object = "event",
+            api_version = "2023-10-16",
+            created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            data = new { @object = new { id = "cus_subscriptions", @object = "customer" } },
+            livemode = false,
+            pending_webhooks = 1,
+            request = new { id = (string?)null, idempotency_key = (string?)null },
+            type = "customer.created"
         });
-        var content = new StringContent(webhookPayload, Encoding.UTF8, "application/json");
-
-        // Add webhook signature header (would need proper signing in production)
-        _client.DefaultRequestHeaders.Add("Stripe-Signature", "test_signature");
 
         // Act - First webhook call
-        var response1 = await _client.PostAsync("/api/v1/billing/webhooks/stripe", content);
+        var response1 = await PostStripeWebhookAsync(webhookPayload);
 
         // Act - Duplicate webhook call (should be idempotent)
-        var response2 = await _client.PostAsync("/api/v1/billing/webhooks/stripe",
-            new StringContent(webhookPayload, Encoding.UTF8, "application/json"));
+        var response2 = await PostStripeWebhookAsync(webhookPayload);
 
         // Assert - Both should succeed (or second returns 200/204 indicating already processed)
         response1.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.NoContent, HttpStatusCode.Accepted);
@@ -520,6 +527,21 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
     public void Dispose()
     {
         _client.Dispose();
+    }
+
+    private Task<HttpResponseMessage> PostStripeWebhookAsync(string payload)
+    {
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(StripeWebhookSecret));
+        var signature = Convert.ToHexString(
+                hmac.ComputeHash(Encoding.UTF8.GetBytes($"{timestamp}.{payload}")))
+            .ToLowerInvariant();
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/billing/webhooks/stripe")
+        {
+            Content = new StringContent(payload, Encoding.UTF8, "application/json")
+        };
+        request.Headers.Add("Stripe-Signature", $"t={timestamp},v1={signature}");
+        return _client.SendAsync(request);
     }
 
     #endregion
