@@ -195,6 +195,73 @@ public class Payment : EntityBase
         };
     }
 
+    /// <summary>Binds this payment to one immutable provider object and monetary leg.</summary>
+    public void BindProviderMapping(
+        string provider,
+        string providerEnvironment,
+        string providerAccountId,
+        string providerObjectId,
+        string providerObjectType,
+        string providerMonetaryLeg)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(provider);
+        ArgumentException.ThrowIfNullOrWhiteSpace(providerEnvironment);
+        ArgumentException.ThrowIfNullOrWhiteSpace(providerAccountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(providerObjectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(providerObjectType);
+        ArgumentException.ThrowIfNullOrWhiteSpace(providerMonetaryLeg);
+
+        var isUnbound = ProviderEnvironment is null
+                        && ProviderAccountId is null
+                        && ProviderObjectId is null
+                        && ProviderObjectType is null
+                        && ProviderMonetaryLeg is null;
+
+        if (isUnbound && string.Equals(Provider, provider, StringComparison.Ordinal))
+        {
+            ProviderEnvironment = providerEnvironment;
+            ProviderAccountId = providerAccountId;
+            ProviderObjectId = providerObjectId;
+            ProviderObjectType = providerObjectType;
+            ProviderMonetaryLeg = providerMonetaryLeg;
+            Touch();
+            return;
+        }
+
+        var isIdentical = string.Equals(Provider, provider, StringComparison.Ordinal)
+                          && string.Equals(ProviderEnvironment, providerEnvironment, StringComparison.Ordinal)
+                          && string.Equals(ProviderAccountId, providerAccountId, StringComparison.Ordinal)
+                          && string.Equals(ProviderObjectId, providerObjectId, StringComparison.Ordinal)
+                          && string.Equals(ProviderObjectType, providerObjectType, StringComparison.Ordinal)
+                          && string.Equals(ProviderMonetaryLeg, providerMonetaryLeg, StringComparison.Ordinal);
+
+        if (!isIdentical)
+            throw new InvalidOperationException("Payment provider mapping is already bound to a different identity");
+    }
+
+    /// <summary>Validates cumulative provider amounts without changing payment state.</summary>
+    public void ValidateProviderMonetaryBounds(
+        decimal cumulativeConfirmedAmount,
+        decimal cumulativeRefundedAmount,
+        decimal cumulativeDisputedAmount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(cumulativeConfirmedAmount);
+        ArgumentOutOfRangeException.ThrowIfNegative(cumulativeRefundedAmount);
+        ArgumentOutOfRangeException.ThrowIfNegative(cumulativeDisputedAmount);
+
+        if (cumulativeConfirmedAmount > Amount)
+            throw new InvalidOperationException("Cumulative provider confirmed amount cannot exceed payment amount");
+
+        if (cumulativeRefundedAmount > cumulativeConfirmedAmount)
+            throw new InvalidOperationException("Cumulative provider refunded amount cannot exceed confirmed amount");
+
+        if (cumulativeDisputedAmount > cumulativeConfirmedAmount)
+            throw new InvalidOperationException("Cumulative provider disputed amount cannot exceed confirmed amount");
+
+        if (cumulativeRefundedAmount + cumulativeDisputedAmount > cumulativeConfirmedAmount)
+            throw new InvalidOperationException("Combined provider refunded and disputed amounts cannot exceed confirmed amount");
+    }
+
     /// <summary>Checks if transition to the specified status is valid</summary>
     public bool CanTransitionTo(PaymentStatus newStatus)
     {
