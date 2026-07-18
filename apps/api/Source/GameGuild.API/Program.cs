@@ -3,11 +3,13 @@ using GameGuild.API.Email;
 using GameGuild.API.Database;
 using GameGuild.API.Integration;
 using GameGuild.API.Setup;
+using GameGuild.Commerce.Billing;
+using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Subscriptions;
 using GameGuild.Email;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
+using Microsoft.Extensions.Options;
 
 // ===========================================================================================
 // GameGuild API - Entry Point
@@ -68,12 +70,8 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
 
-// Configure application settings from appsettings.json and environment-specific files
-builder.AddAppSettings();
-
-// Load environment variables for sensitive configuration (e.g., connection strings, secrets)
-builder.AddEnvironmentVariables();
-
+// WebApplication.CreateBuilder already loads JSON settings, environment variables,
+// and host-provided overrides in the correct precedence order.
 // Configure structured logging with Serilog for comprehensive application logging
 builder.AddStructuredLogging();
 
@@ -102,6 +100,7 @@ builder.Services.AddSingleton<IMonthlyStatementLinkBuilder, MonthlyStatementLink
 
 // Build the configured web application
 var app = builder.Build();
+DatabaseStartupConfiguration.ThrowIfInvalid(app.Configuration, app.Environment.EnvironmentName);
 
 if (importSnapshotCourses)
 {
@@ -109,9 +108,13 @@ if (importSnapshotCourses)
     return;
 }
 
+// Trigger fail-closed value-movement option validation before migrations or HTTP listeners.
+_ = app.Services.GetRequiredService<IOptions<StripeGatewayOptions>>().Value;
+_ = app.Services.GetRequiredService<IOptions<BillingConfiguration>>().Value;
+
 if (app.Configuration.GetValue<bool?>("Database:RunStartupInitialization") ?? true)
 {
-    StartDatabaseInitialization(app);
+    await RunDatabaseInitializationAsync(app).ConfigureAwait(false);
 }
 
 // Configure the HTTP request pipeline (middleware, routing, endpoints)
@@ -126,24 +129,6 @@ static bool ShouldImportSnapshotCourses(IConfiguration configuration)
         ?? Environment.GetEnvironmentVariable("SEED_SNAPSHOT_COURSES");
 
     return bool.TryParse(configuredValue, out var enabled) && enabled;
-}
-
-static void StartDatabaseInitialization(WebApplication app)
-{
-    app.Lifetime.ApplicationStarted.Register(() =>
-    {
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await RunDatabaseInitializationAsync(app).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                app.Logger.LogCritical(ex, "Database startup initialization failed after the HTTP listener started.");
-            }
-        });
-    });
 }
 
 static async Task RunDatabaseInitializationAsync(WebApplication app)
@@ -171,7 +156,15 @@ static async Task RunDatabaseInitializationAsync(WebApplication app)
     }
     catch (Exception ex)
     {
-        app.Logger.LogWarning(ex, "Database seeding failed — default roles and admin user may not exist.");
+        var failStartupOnSeedFailure = app.Configuration.GetValue<bool?>("Database:FailStartupOnSeedFailure")
+            ?? !DatabaseStartupConfiguration.AllowsRuntimeFallback(app.Environment.EnvironmentName);
+        if (failStartupOnSeedFailure)
+        {
+            app.Logger.LogCritical(ex, "Database seeding failed. Refusing to open the HTTP listener.");
+            throw;
+        }
+
+        app.Logger.LogWarning(ex, "Database seeding failed - default roles and admin user may not exist.");
     }
 
     if (ShouldImportSnapshotCourses(app.Configuration))
@@ -205,7 +198,7 @@ static async Task ImportSnapshotCoursesAsync(WebApplication app, string message)
 
 static async Task<bool> TryApplyDatabaseMigrationsAsync(WebApplication app)
 {
-    const int maxAttempts = 5;
+    var maxAttempts = Math.Clamp(app.Configuration.GetValue<int?>("Database:MigrationMaxAttempts") ?? 5, 1, 20);
     var failStartupOnMigrationFailure = app.Configuration.GetValue<bool?>("Database:FailStartupOnMigrationFailure")
         ?? !app.Environment.IsDevelopment();
 
@@ -214,7 +207,7 @@ static async Task<bool> TryApplyDatabaseMigrationsAsync(WebApplication app)
         try
         {
             using var scope = app.Services.CreateScope();
-            var migrationConnectionString = GetMigrationConnectionString(app.Configuration);
+            var migrationConnectionString = DatabaseStartupConfiguration.ResolveMigrationConnectionString(app.Configuration);
             var ownsMigrationContext = !string.IsNullOrWhiteSpace(migrationConnectionString);
             await using var db = ownsMigrationContext
                 ? CreateMigrationDbContext(migrationConnectionString!)
@@ -247,11 +240,6 @@ static async Task<bool> TryApplyDatabaseMigrationsAsync(WebApplication app)
                 .ConfigureAwait(false);
 
             app.Logger.LogInformation("Database migrations applied successfully.");
-
-            if (ownsMigrationContext)
-            {
-                await GrantRuntimeRolePrivilegesAsync(app, db).ConfigureAwait(false);
-            }
 
             return true;
         }
@@ -289,15 +277,6 @@ static async Task<bool> TryApplyDatabaseMigrationsAsync(WebApplication app)
     return false;
 }
 
-static string? GetMigrationConnectionString(IConfiguration configuration)
-{
-    var connectionString = configuration.GetConnectionString("MigrationConnection")
-        ?? configuration["ConnectionStrings:MigrationConnection"]
-        ?? configuration["Database:MigrationConnectionString"];
-
-    return PostgresConnectionString.Normalize(connectionString);
-}
-
 static GameGuild.API.Database.ApplicationDbContext CreateMigrationDbContext(string connectionString)
 {
     var optionsBuilder = new DbContextOptionsBuilder<GameGuild.API.Database.ApplicationDbContext>();
@@ -311,70 +290,6 @@ static GameGuild.API.Database.ApplicationDbContext CreateMigrationDbContext(stri
         w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
     return new GameGuild.API.Database.ApplicationDbContext(optionsBuilder.Options);
-}
-
-static async Task GrantRuntimeRolePrivilegesAsync(WebApplication app, DbContext migrationDb)
-{
-    var grantRuntimeRole = app.Configuration.GetValue<bool?>("Database:GrantRuntimeRoleAfterMigrations") ?? true;
-    if (!grantRuntimeRole)
-    {
-        return;
-    }
-
-    var runtimeConnectionString = PostgresConnectionString.Resolve(app.Configuration);
-
-    if (string.IsNullOrWhiteSpace(runtimeConnectionString))
-    {
-        return;
-    }
-
-    string? runtimeUser;
-    try
-    {
-        runtimeUser = new NpgsqlConnectionStringBuilder(runtimeConnectionString).Username;
-    }
-    catch (ArgumentException)
-    {
-        return;
-    }
-
-    if (string.IsNullOrWhiteSpace(runtimeUser))
-    {
-        return;
-    }
-
-    var quotedRuntimeUser = QuotePostgresIdentifier(runtimeUser);
-    var sql = $"""
-        GRANT USAGE ON SCHEMA public TO {quotedRuntimeUser};
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {quotedRuntimeUser};
-        GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO {quotedRuntimeUser};
-        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {quotedRuntimeUser};
-        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO {quotedRuntimeUser};
-        """;
-
-    try
-    {
-        await migrationDb.Database.ExecuteSqlRawAsync(sql, app.Lifetime.ApplicationStopping).ConfigureAwait(false);
-        app.Logger.LogInformation("Granted runtime database privileges to configured application role after migrations.");
-    }
-    catch (Exception ex)
-    {
-        var failStartupOnGrantFailure = app.Configuration.GetValue<bool?>("Database:FailStartupOnGrantFailure")
-            ?? !app.Environment.IsDevelopment();
-
-        if (failStartupOnGrantFailure)
-        {
-            app.Logger.LogCritical(ex, "Failed to grant runtime database privileges after migrations.");
-            throw;
-        }
-
-        app.Logger.LogWarning(ex, "Failed to grant runtime database privileges after migrations.");
-    }
-}
-
-static string QuotePostgresIdentifier(string identifier)
-{
-    return $"\"{identifier.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
 }
 
 // REMARK: Required for functional and integration tests to work.

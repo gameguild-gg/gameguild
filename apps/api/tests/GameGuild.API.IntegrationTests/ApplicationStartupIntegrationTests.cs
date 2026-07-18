@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Text.Json.Nodes;
 
@@ -165,5 +166,98 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
 
         publicSecurity.Should().BeNull("the OpenAPI serializer omits empty security arrays, so code generation relies on the explicit anonymous extension instead");
         slugSecurity.Should().BeNull("the OpenAPI serializer omits empty security arrays, so code generation relies on the explicit anonymous extension instead");
+    }
+
+    [Fact]
+    public void Application_ShouldRefuseToListen_WhenRequiredStartupMigrationFails()
+    {
+        using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration((_, configuration) =>
+            {
+                const string unavailableDatabase =
+                    "Host=127.0.0.1;Port=1;Database=unavailable;Username=runtime;Password=test;Timeout=1;Command Timeout=1;Pooling=false";
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["ConnectionStrings:DefaultConnection"] = unavailableDatabase,
+                    ["ConnectionStrings:MigrationConnection"] = unavailableDatabase.Replace("Username=runtime", "Username=migrator", StringComparison.Ordinal),
+                    ["Database:RunStartupInitialization"] = "true",
+                    ["Database:FailStartupOnMigrationFailure"] = "true",
+                    ["Database:MigrationMaxAttempts"] = "1",
+                    ["SeedData:ImportSnapshotCourses"] = "false"
+                });
+            });
+        });
+
+        Action start = () => factory.CreateClient();
+
+        start.Should().Throw<Exception>();
+    }
+
+    [Theory]
+    [InlineData("Staging")]
+    [InlineData("Production")]
+    public void Application_ShouldRefuseToListen_WhenPaymentSimulationIsEnabled(string environmentName)
+    {
+        using var factory = CreateCommerceConfiguredFactory(environmentName, configuration =>
+        {
+            configuration["PaymentGateways:Stripe:UseSimulation"] = "true";
+        });
+
+        Action start = () => factory.CreateClient();
+
+        start.Should().Throw<Exception>();
+    }
+
+    [Theory]
+    [InlineData("Staging")]
+    [InlineData("Production")]
+    public void Application_ShouldRefuseToListen_WhenWebhookVerificationIsNotConfigured(string environmentName)
+    {
+        using var factory = CreateCommerceConfiguredFactory(environmentName, configuration =>
+        {
+            configuration["Billing:Stripe:WebhookSecret"] = null;
+        });
+
+        Action start = () => factory.CreateClient();
+
+        start.Should().Throw<Exception>();
+    }
+
+    [Fact]
+    public void Application_ShouldStart_WithCompleteProductionCommerceConfiguration()
+    {
+        using var factory = CreateCommerceConfiguredFactory("Production");
+
+        Action start = () => factory.CreateClient();
+
+        start.Should().NotThrow();
+    }
+
+    private static WebApplicationFactory<Program> CreateCommerceConfiguredFactory(
+        string environmentName,
+        Action<Dictionary<string, string?>>? customize = null)
+    {
+        var values = new Dictionary<string, string?>
+        {
+            ["Database:RunStartupInitialization"] = "false",
+            ["PaymentGateways:Stripe:IsEnabled"] = "true",
+            ["PaymentGateways:Stripe:UseSimulation"] = "false",
+            ["PaymentGateways:Stripe:ApiKey"] = environmentName == "Production" ? "sk_live_startup_test" : "sk_test_startup_test",
+            ["PaymentGateways:Stripe:PublishableKey"] = environmentName == "Production" ? "pk_live_startup_test" : "pk_test_startup_test",
+            ["Billing:Stripe:WebhookSecret"] = "whsec_startup_test",
+            ["Billing:Stripe:WebhookEndpointId"] = "we_startup_test",
+            ["Billing:Stripe:ApiVersion"] = "2023-10-16",
+            ["Billing:Stripe:LiveMode"] = environmentName == "Production" ? "true" : "false",
+            ["SeedData:ImportSnapshotCourses"] = "false"
+        };
+        customize?.Invoke(values);
+
+        return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment(environmentName);
+            builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(values));
+        });
     }
 }
