@@ -320,16 +320,18 @@ Verification: `GameGuild.Economy` is a domain-only assembly with no EF Core refe
 
 **Produces:** Posting aggregate, immutable source stamps and credit lots, journal entries, exact fragment allocations/lineage, chain head, idempotency, outbox, and transactional posting service.
 
-- [ ] Write posting, idempotency, partial source-allocation, deterministic root-range split/merge lineage, mixed-root reversal, exact restoration/retirement, and concurrency unit tests first.
-- [ ] Implement append-only entities without `EntityBase`; observed funding creates source evidence only, while every confirmed mint/derived credit requires a hashed source stamp and stores authoritative `confirmed_at` plus original `matures_at`.
-- [ ] Implement global confirmed-fragment FIFO by `confirmed_at` then stable journal sequence; provenance never reorders eligible spending.
-- [ ] Map every output lot to exact parent fragments and prove per-currency lineage conservation across recipient, fee, escrow, conversion, and retirement outputs.
-- [ ] Carry immutable ordered root trace-unit intervals; preserve unrelated ranges in mixed-root lots; select partial cumulative reversals as deterministic nonoverlapping intervals.
-- [ ] Add a per-root reversal epoch/fence checked by every allocator so descendant discovery cannot race spend, transfer, conversion, escrow, or payout.
-- [ ] Implement global chain-head lock and deterministic entry hashing.
-- [ ] Commit posting, allocation, lineage, projection update, idempotency result, and outbox atomically.
-- [ ] Expose typed core commands only; no generic public posting endpoint.
-- [ ] Sign periodic chain heads with independent credentials and persist anchors through an immutable-storage outbox contract; support on-demand anchors that also bind a canonical dispatch-snapshot hash.
+- [x] Write posting, idempotency, partial source-allocation, deterministic root-range split/merge lineage, mixed-root reversal, exact restoration/retirement, and concurrency unit tests first.
+- [x] Implement append-only entities without `EntityBase`; observed funding creates source evidence only, while every confirmed mint/derived credit requires a hashed source stamp and stores authoritative `confirmed_at` plus original `matures_at`.
+- [x] Implement global confirmed-fragment FIFO by `confirmed_at` then stable journal sequence; provenance never reorders eligible spending.
+- [x] Map every output lot to exact parent fragments and prove per-currency lineage conservation across recipient, fee, escrow, conversion, and retirement outputs.
+- [x] Carry immutable ordered root trace-unit intervals; preserve unrelated ranges in mixed-root lots; select partial cumulative reversals as deterministic nonoverlapping intervals.
+- [x] Add a per-root reversal epoch/fence checked by every allocator so descendant discovery cannot race spend, transfer, conversion, escrow, or payout.
+- [x] Implement global chain-head lock and deterministic entry hashing.
+- [x] Commit posting, allocation, lineage, projection update, idempotency result, and outbox atomically.
+- [x] Expose typed core commands only; no generic public posting endpoint.
+- [x] Sign periodic chain heads with independent credentials and persist anchors through an immutable-storage outbox contract; support on-demand anchors that also bind a canonical dispatch-snapshot hash.
+
+Verification: the immutable ledger kernel and its atomic in-memory transaction boundary are integrated on `develop` SHA `4e6cae8f3`. `GameGuild.Economy.UnitTests` passes `124/124` tests with zero skips and `100%` line, branch, and method coverage. Strict API build and Release publish complete with zero warnings and zero errors. Persistence mappings and the constrained database writer remain explicitly scoped to Task 2.3.
 
 ### Task 2.3: Persistence Model And Constrained Writer Contract
 
