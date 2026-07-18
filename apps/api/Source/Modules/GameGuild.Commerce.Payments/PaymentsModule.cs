@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -36,11 +37,10 @@ public static class PaymentsModule
         services.Replace(ServiceDescriptor.Scoped<IOrderPaymentAuthority, OrderPaymentService>());
 
         // Register payment gateway and sub-services
-        services.Configure<StripeGatewayOptions>(options =>
-        {
-            configuration.GetSection("Stripe").Bind(options);
-            configuration.GetSection(StripeGatewayOptions.SectionName).Bind(options);
-        });
+        services.AddSingleton<IValidateOptions<StripeGatewayOptions>, StripeGatewayOptionsValidator>();
+        services.AddOptions<StripeGatewayOptions>()
+            .Bind(configuration.GetSection(StripeGatewayOptions.SectionName))
+            .ValidateOnStart();
         services.AddScoped<IStripePaymentService, StripePaymentService>();
         services.AddScoped<IStripeCustomerService, StripeCustomerService>();
         services.AddScoped<IPaymentGateway, StripePaymentGateway>();

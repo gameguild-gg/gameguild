@@ -1,6 +1,7 @@
 using GameGuild.CQRS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Commerce.Billing;
 
@@ -18,6 +19,7 @@ public static class ServiceCollectionExtensions
         services.AddCqrs(typeof(ServiceCollectionExtensions).Assembly);
 
         // Register configuration
+        services.AddSingleton<IValidateOptions<BillingConfiguration>, BillingConfigurationProductionValidator>();
         services.AddOptions<BillingConfiguration>()
             .Bind(configuration.GetSection(BillingConfiguration.SectionName))
             .ValidateDataAnnotations()
