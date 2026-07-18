@@ -15,7 +15,8 @@ public enum OrderChargeState
     Succeeded,
     Failed,
     Processing,
-    RequiresAction
+    RequiresAction,
+    RequiresReconciliation
 }
 
 /// <summary>
@@ -40,6 +41,9 @@ public sealed record OrderChargeResult(
 
     public static OrderChargeResult RequiresAction(Guid paymentId, string message, string? clientActionToken) =>
         new(false, paymentId, null, message, OrderChargeState.RequiresAction, clientActionToken);
+
+    public static OrderChargeResult RequiresReconciliation(Guid paymentId, string message) =>
+        new(false, paymentId, null, message, OrderChargeState.RequiresReconciliation);
 }
 
 /// <summary>

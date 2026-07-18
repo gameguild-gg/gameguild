@@ -39,6 +39,13 @@ public interface IPaymentGateway
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Cancels a provider payment attempt before a replacement attempt may be created.
+    /// </summary>
+    Task<GatewayPaymentCancellationResult> CancelPaymentAsync(
+        string externalTransactionId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Processes a refund through this gateway
     /// </summary>
     /// <param name="request">Refund request details</param>
@@ -114,6 +121,13 @@ public sealed record GatewayPaymentResult(
     PaymentStatus Status,
     DateTime ProcessedAt,
     string? ClientActionToken = null);
+
+/// <summary>Result of closing a provider payment attempt.</summary>
+public sealed record GatewayPaymentCancellationResult(
+    bool Success,
+    bool OutcomeUnknown,
+    string? ErrorCode,
+    string? ErrorMessage);
 
 /// <summary>
 ///     Request for processing a refund

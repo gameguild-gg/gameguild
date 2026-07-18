@@ -254,7 +254,7 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
     [HttpPost("{orderId:guid}:capture")]
     [MinimumOrderRoute]
     [RequirePermission(OrdersPermission.Keys.Create)]
-    public async Task<ActionResult<OrderDto>> CaptureOrder(
+    public async Task<ActionResult<OrderCaptureDto>> CaptureOrder(
         Guid orderId,
         [FromBody] CaptureOrderRequest? request = null,
         CancellationToken cancellationToken = default)
@@ -262,7 +262,34 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
         var command = new CaptureOrderCommand(orderId, request?.PaymentMethodId ?? string.Empty);
         var result = await sender.Send<Result<OrderOperationResult>>(command, cancellationToken).ConfigureAwait(false);
 
-        return ToOrderActionResult(result);
+        if (result.IsFailure)
+            return BadRequest(CreateProblemDetails(result.Error.Description));
+
+        var value = result.Value;
+        var order = MapToDto(value.Order);
+        return Ok(new OrderCaptureDto(
+            order.Id,
+            order.UserId,
+            order.IdempotencyKey,
+            order.Status,
+            order.Subtotal,
+            order.DiscountTotal,
+            order.TaxAmount,
+            order.Total,
+            order.Currency,
+            order.PaymentProviderReference,
+            order.PaymentMethod,
+            order.PaidAt,
+            order.RefundedAt,
+            order.RefundAmount,
+            order.RefundReason,
+            order.CreatedAt,
+            order.UpdatedAt,
+            order.LineItems,
+            value.PaymentState ?? (value.Order.Status == OrderStatus.Paid ? OrderChargeState.Succeeded : null),
+            value.PaymentId ?? value.Order.PaymentId,
+            value.ClientActionToken,
+            value.PaymentMessage));
     }
 
     /// <summary>
@@ -425,6 +452,31 @@ public sealed record PatchOrderRequest(
 
 /// <summary>Request to capture payment for an order</summary>
 public sealed record CaptureOrderRequest(string PaymentMethodId);
+
+/// <summary>Order capture result including any client-side payment action.</summary>
+public sealed record OrderCaptureDto(
+    Guid Id,
+    Guid UserId,
+    string IdempotencyKey,
+    OrderStatus Status,
+    decimal Subtotal,
+    decimal DiscountTotal,
+    decimal TaxAmount,
+    decimal Total,
+    string Currency,
+    string? PaymentProviderReference,
+    string? PaymentMethod,
+    DateTime? PaidAt,
+    DateTime? RefundedAt,
+    decimal? RefundAmount,
+    string? RefundReason,
+    DateTime CreatedAt,
+    DateTime UpdatedAt,
+    IReadOnlyList<OrderLineItemDto> LineItems,
+    OrderChargeState? PaymentState,
+    Guid? PaymentId,
+    string? ClientActionToken,
+    string? PaymentMessage);
 
 /// <summary>Request to hold an order</summary>
 public sealed record HoldOrderRequest(string? Reason = null);

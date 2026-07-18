@@ -228,6 +228,19 @@ public class PaymentTransitionTests
     }
 
     [Fact]
+    public void PrepareForRetry_ShouldReleaseTheDefinitivelyFailedProviderAttempt()
+    {
+        var payment = CreatePendingPayment();
+        payment.MarkAsProcessing("pi_declined");
+        payment.MarkAsFailed("Card declined", "card_declined");
+
+        payment.PrepareForRetry("pm_replacement");
+
+        payment.ExternalTransactionId.Should().BeNull();
+        payment.PaymentMethodId.Should().Be("pm_replacement");
+    }
+
+    [Fact]
     public void PrepareForRetry_WhenNotFailed_ShouldThrow()
     {
         var p = CreatePendingPayment();
