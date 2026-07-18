@@ -146,6 +146,43 @@ public sealed class TransactionalPostingServiceTests
         store.IdempotencyRecords.Should().ContainSingle();
     }
 
+    [Fact]
+    public async Task Transfer_SerializesConcurrentAllocatorsAgainstTheSameSourceFragments()
+    {
+        var (store, service, observed) = Setup();
+        var sourceWallet = WalletId.New();
+        service.ConfirmTopUp(TopUp(observed.Id, 10, sourceWallet));
+        var commands = new[]
+        {
+            new TransferFragmentsCommand(
+                PostingId.New(), new IdempotencyKey("allocator-race-a"), sourceWallet, WalletId.New(),
+                new CoinAmount(CurrencyCode.HardCoin, 7), ProvenanceKind.PurchasedHard,
+                new ReserveVersion(1), new PolicyVersion(1), Time.AddMinutes(2)),
+            new TransferFragmentsCommand(
+                PostingId.New(), new IdempotencyKey("allocator-race-b"), sourceWallet, WalletId.New(),
+                new CoinAmount(CurrencyCode.HardCoin, 7), ProvenanceKind.PurchasedHard,
+                new ReserveVersion(1), new PolicyVersion(1), Time.AddMinutes(2))
+        };
+
+        var outcomes = await Task.WhenAll(commands.Select(command => Task.Run(() =>
+        {
+            try
+            {
+                service.Transfer(command);
+                return true;
+            }
+            catch (InsufficientFragmentsException)
+            {
+                return false;
+            }
+        })));
+
+        outcomes.Should().ContainSingle(success => success);
+        store.FragmentConsumptions.Should().ContainSingle().Which.Amount.Units.Should().Be(7);
+        store.GetAvailableLots(sourceWallet, CurrencyCode.HardCoin)
+            .Should().ContainSingle().Which.Amount.Units.Should().Be(3);
+    }
+
     private static (InMemoryLedgerKernelStore Store, TransactionalPostingService Service, SourceEvidence Observed) Setup()
     {
         var store = new InMemoryLedgerKernelStore();
