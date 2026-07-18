@@ -22,28 +22,8 @@ public class SubscriptionBillingService(
         return subscription ?? throw new SubscriptionNotFoundException(subscriptionId);
     }
 
-    private async Task<SubscriptionPlan> GetRequiredPlanAsync(Guid planId, CancellationToken ct)
-    {
-        var plan = await _planService.GetByIdAsync(planId, ct).ConfigureAwait(false);
-        return plan ?? throw new InvalidOperationException($"Subscription plan {planId} not found");
-    }
-
     private static string GenerateIdempotencyKey(Guid subscriptionId, int billingCycle, DateTime periodStart)
         => $"{subscriptionId}:{billingCycle}:{periodStart:yyyyMMdd}";
-
-    private static Money GetPriceForCycle(SubscriptionPlan plan, BillingCycle cycle)
-    {
-        var monthlyPrice = plan.GetMonthlyPrice();
-        return cycle switch
-        {
-            BillingCycle.Monthly => monthlyPrice,
-            BillingCycle.Annually => plan.GetAnnualPrice() ?? monthlyPrice * 12,
-            BillingCycle.Quarterly => monthlyPrice * 3,
-            BillingCycle.SemiAnnually => monthlyPrice * 6,
-            BillingCycle.Biannually => monthlyPrice * 24,
-            _ => monthlyPrice
-        };
-    }
 
     public async Task<SubscriptionRenewalResult> ProcessRenewalAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
     {
@@ -51,21 +31,11 @@ public class SubscriptionBillingService(
 
         var idempotencyKey = GenerateIdempotencyKey(
             subscriptionId,
-            subscription.BillingCycleCount + 1,
-            subscription.CurrentPeriodEnd
+            subscription.LastProcessedBillingCycle + 1,
+            subscription.NextBillingDate
         );
 
-        var plan = await GetRequiredPlanAsync(subscription.PlanId, cancellationToken).ConfigureAwait(false);
-        var renewalAmount = GetPriceForCycle(plan, subscription.BillingCycle);
-
-        var result = subscription.ProcessRenewal(renewalAmount, idempotencyKey);
-
-        if (result.Success)
-        {
-            await _repository.UpdateAsync(subscription, cancellationToken).ConfigureAwait(false);
-        }
-
-        return result;
+        return subscription.PrepareRenewal(idempotencyKey);
     }
 
     public async Task<Subscription> RecordPaymentAsync(Guid subscriptionId, decimal amount, string currency, DateTime paymentDate, CancellationToken cancellationToken = default)
