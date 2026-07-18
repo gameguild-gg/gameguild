@@ -73,13 +73,24 @@ public sealed class UpdatePaymentStatusCommandHandler(
 
         if (request.Status == PaymentStatus.Succeeded && payment.ProcessedAt.HasValue)
         {
-            await paymentSubscriptionSyncService.SyncSuccessfulPaymentAsync(
-                payment.Id,
-                payment.SubscriptionId,
-                payment.Amount,
-                payment.Currency,
-                payment.ProcessedAt.Value,
-                cancellationToken).ConfigureAwait(false);
+            var billingCycleNumber = SubscriptionPaymentIdentity.TryGetBillingCycleNumber(payment.IdempotencyKey);
+            if (billingCycleNumber.HasValue)
+            {
+                await paymentSubscriptionSyncService.SyncSuccessfulPaymentAsync(
+                    payment.Id,
+                    payment.SubscriptionId,
+                    payment.Amount,
+                    payment.Currency,
+                    billingCycleNumber,
+                    payment.ProcessedAt.Value,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                logger.LogWarning(
+                    "Payment {PaymentId} reached succeeded without an authoritative billing-cycle identity; subscription synchronization was blocked",
+                    payment.Id);
+            }
         }
 
         logger.LogInformation("Payment {PaymentId} status updated to {Status}",

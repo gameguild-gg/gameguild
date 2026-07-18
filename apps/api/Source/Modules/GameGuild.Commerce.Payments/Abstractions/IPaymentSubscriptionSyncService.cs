@@ -10,6 +10,7 @@ public interface IPaymentSubscriptionSyncService
         Guid? subscriptionId,
         decimal amount,
         string currency,
+        int? billingCycleNumber,
         DateTime processedAt,
         CancellationToken cancellationToken = default);
 }
