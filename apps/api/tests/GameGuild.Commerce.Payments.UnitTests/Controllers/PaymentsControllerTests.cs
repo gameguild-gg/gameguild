@@ -12,6 +12,135 @@ namespace GameGuild.Commerce.Payments.UnitTests.Controllers;
 public class PaymentsControllerTests
 {
     [Fact]
+    public async Task GetAll_ShouldScopeMissingTenantFilterToAuthenticatedTenant()
+    {
+        var tenantId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(service => service.Send(
+                It.Is<GetAllPaymentsQuery>(query => query.TenantId == tenantId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        var controller = CreateController(
+            sender.Object,
+            CreateAuthenticatedActorContext(tenantId),
+            Mock.Of<IStripeCustomerService>(),
+            Mock.Of<ISubscriptionPaymentContextService>());
+
+        var result = await controller.GetAll(null, null, null, null, ct: CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
+        sender.Verify(
+            service => service.Send(
+                It.Is<GetAllPaymentsQuery>(query => query.TenantId == tenantId),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetAll_ShouldRejectTenantFilterFromAnotherTenant()
+    {
+        var sender = new Mock<ISender>();
+        var controller = CreateController(
+            sender.Object,
+            CreateAuthenticatedActorContext(Guid.NewGuid()),
+            Mock.Of<IStripeCustomerService>(),
+            Mock.Of<ISubscriptionPaymentContextService>());
+
+        var result = await controller.GetAll(Guid.NewGuid(), null, null, null, ct: CancellationToken.None);
+
+        result.Should().BeOfType<ObjectResult>()
+            .Which.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        sender.Verify(
+            service => service.Send(It.IsAny<GetAllPaymentsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task GetById_ShouldRejectPaymentFromAnotherTenant()
+    {
+        var actorTenantId = Guid.NewGuid();
+        var paymentId = Guid.NewGuid();
+        var sender = CreateSenderWithPayment(paymentId, Guid.NewGuid());
+        var controller = CreateController(
+            sender.Object,
+            CreateAuthenticatedActorContext(actorTenantId),
+            Mock.Of<IStripeCustomerService>(),
+            Mock.Of<ISubscriptionPaymentContextService>());
+
+        var result = await controller.GetById(paymentId, CancellationToken.None);
+
+        result.Should().BeOfType<ObjectResult>()
+            .Which.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+    }
+
+    [Fact]
+    public async Task Cancel_ShouldRejectPaymentFromAnotherTenant_BeforeDispatchingMutation()
+    {
+        var paymentId = Guid.NewGuid();
+        var sender = CreateSenderWithPayment(paymentId, Guid.NewGuid());
+        var controller = CreateController(
+            sender.Object,
+            CreateAuthenticatedActorContext(Guid.NewGuid()),
+            Mock.Of<IStripeCustomerService>(),
+            Mock.Of<ISubscriptionPaymentContextService>());
+
+        var result = await controller.Cancel(
+            paymentId,
+            new PaymentsController.CancelPaymentRequest("duplicate"),
+            CancellationToken.None);
+
+        result.Should().BeOfType<ObjectResult>()
+            .Which.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        sender.Verify(
+            service => service.Send(It.IsAny<CancelPaymentCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Refund_ShouldRejectPaymentFromAnotherTenant_BeforeDispatchingMutation()
+    {
+        var paymentId = Guid.NewGuid();
+        var sender = CreateSenderWithPayment(paymentId, Guid.NewGuid());
+        var controller = CreateController(
+            sender.Object,
+            CreateAuthenticatedActorContext(Guid.NewGuid()),
+            Mock.Of<IStripeCustomerService>(),
+            Mock.Of<ISubscriptionPaymentContextService>());
+
+        var result = await controller.Refund(
+            paymentId,
+            new PaymentsController.RefundRequest(10m, "duplicate"),
+            CancellationToken.None);
+
+        result.Should().BeOfType<ObjectResult>()
+            .Which.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        sender.Verify(
+            service => service.Send(It.IsAny<ProcessRefundCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Retry_ShouldRejectPaymentFromAnotherTenant_BeforeDispatchingMutation()
+    {
+        var paymentId = Guid.NewGuid();
+        var sender = CreateSenderWithPayment(paymentId, Guid.NewGuid());
+        var controller = CreateController(
+            sender.Object,
+            CreateAuthenticatedActorContext(Guid.NewGuid()),
+            Mock.Of<IStripeCustomerService>(),
+            Mock.Of<ISubscriptionPaymentContextService>());
+
+        var result = await controller.Retry(paymentId, CancellationToken.None);
+
+        result.Should().BeOfType<ObjectResult>()
+            .Which.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        sender.Verify(
+            service => service.Send(It.IsAny<RetryPaymentCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task CreateSetupIntent_ShouldCreateCustomerPersistExternalIdAndReturnClientSecret()
     {
         var tenantId = Guid.NewGuid();
@@ -137,6 +266,25 @@ public class PaymentsControllerTests
                 HttpContext = new DefaultHttpContext()
             }
         };
+    }
+
+    private static Mock<ISender> CreateSenderWithPayment(Guid paymentId, Guid tenantId)
+    {
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(service => service.Send(
+                It.Is<GetPaymentByIdQuery>(query => query.PaymentId == paymentId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaymentResult
+            {
+                PaymentId = paymentId.ToString(),
+                TenantId = tenantId,
+                Amount = new Money(25m, "USD"),
+                Status = PaymentStatus.Succeeded,
+                Success = true
+            });
+
+        return sender;
     }
 
     private static ActorContext CreateAuthenticatedActorContext(Guid? tenantId)
