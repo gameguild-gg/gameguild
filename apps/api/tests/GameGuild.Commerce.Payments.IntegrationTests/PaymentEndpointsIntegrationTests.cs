@@ -56,6 +56,7 @@ public class PaymentEndpointsIntegrationTests : IClassFixture<WebApplicationFact
         });
 
         _client = _factory.CreateClient();
+        _client.DefaultRequestHeaders.Add("X-Tenant-Id", TestAuthHandler.DefaultTenantId.ToString());
     }
 
     [Fact]
@@ -105,16 +106,21 @@ public class PaymentEndpointsIntegrationTests : IClassFixture<WebApplicationFact
     }
 
     [Fact]
-    public async Task GetAllPayments_ShouldSupportFiltering_ByTenantId()
+    public async Task GetAllPayments_ShouldSupportFiltering_ByAuthenticatedTenantId()
     {
-        // Arrange
-        var tenantId = Guid.NewGuid();
-
         // Act
-        var response = await _client.GetAsync($"/api/v1/payments?tenantId={tenantId}");
+        var response = await _client.GetAsync($"/api/v1/payments?tenantId={TestAuthHandler.DefaultTenantId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetAllPayments_ShouldRejectFiltering_ByAnotherTenantId()
+    {
+        var response = await _client.GetAsync($"/api/v1/payments?tenantId={Guid.NewGuid()}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
