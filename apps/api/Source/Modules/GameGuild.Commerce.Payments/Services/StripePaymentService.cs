@@ -80,6 +80,68 @@ public class StripePaymentService(
     }
 
     /// <inheritdoc />
+    public async Task<GatewayPaymentCancellationResult> CancelPaymentAsync(
+        string externalTransactionId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(externalTransactionId);
+
+        if (_options.UseSimulation)
+            return new GatewayPaymentCancellationResult(true, false, null, null);
+
+        try
+        {
+            var current = await _paymentIntentService
+                .GetAsync(externalTransactionId, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+            if (string.Equals(current.Status, "canceled", StringComparison.Ordinal))
+                return new GatewayPaymentCancellationResult(true, false, null, null);
+            if (string.Equals(current.Status, "succeeded", StringComparison.Ordinal))
+            {
+                return new GatewayPaymentCancellationResult(
+                    false,
+                    false,
+                    "payment_already_succeeded",
+                    "The provider payment already succeeded and cannot be replaced.");
+            }
+
+            var paymentIntent = await _paymentIntentService
+                .CancelAsync(externalTransactionId, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+            return new GatewayPaymentCancellationResult(
+                string.Equals(paymentIntent.Status, "canceled", StringComparison.Ordinal),
+                false,
+                null,
+                string.Equals(paymentIntent.Status, "canceled", StringComparison.Ordinal)
+                    ? null
+                    : $"Stripe returned payment intent status {paymentIntent.Status} after cancellation.");
+        }
+        catch (StripeException ex)
+        {
+            var outcomeUnknown = IsOutcomeUnknown(ex);
+            logger.LogError(
+                ex,
+                "Stripe payment intent cancellation failed for {PaymentIntentId}; outcome unknown: {OutcomeUnknown}",
+                externalTransactionId,
+                outcomeUnknown);
+            return new GatewayPaymentCancellationResult(
+                false,
+                outcomeUnknown,
+                ex.StripeError?.Code ?? "stripe_cancellation_failed",
+                ex.StripeError?.Message ?? ex.Message);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Stripe payment intent cancellation outcome is unknown for {PaymentIntentId}", externalTransactionId);
+            return new GatewayPaymentCancellationResult(
+                false,
+                true,
+                "stripe_outcome_unknown",
+                ex.Message);
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<GatewayRefundResult> ProcessRefundAsync(
         GatewayRefundRequest request,
         CancellationToken cancellationToken = default)

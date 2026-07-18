@@ -255,7 +255,7 @@ API activation begins only after integrated schema and security gates pass. Task
 - [x] Ensure refund/cancel/retry operations enforce ownership and state.
 - [x] Run Orders, Products, Payments, Billing, and Subscriptions tests.
 
-**Verification:** Orders unit `187/187`, Orders integration `8/8`, Products unit `554/554`, Products integration `10/10`, Payments unit `862/862`, Payments integration `41/41`, Billing unit `259/259`, Billing integration `7/7`, Subscriptions unit `739/739`, Subscriptions integration `62/62`, and strict API build `0` warnings/errors. Total focused tests: `2,729/2,729`.
+**Verification:** Orders unit `189/189`, Orders integration `8/8`, Products unit `554/554`, Products integration `10/10`, Payments unit `872/872`, Payments integration `41/41`, Billing unit `259/259`, Billing integration `7/7`, Subscriptions unit `739/739`, Subscriptions integration `62/62`, and strict API build `0` warnings/errors. Total focused tests: `2,741/2,741`.
 
 ### Task 1.4: Production Fail-Closed Configuration
 
