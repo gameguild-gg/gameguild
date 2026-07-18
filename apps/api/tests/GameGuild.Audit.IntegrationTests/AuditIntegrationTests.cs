@@ -28,6 +28,8 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
             builder.UseEnvironment("Testing");
             builder.ConfigureTestServices(services =>
             {
+                var databaseName = $"TestDb_{Guid.NewGuid()}";
+
                 // Remove all EF Core and Npgsql service registrations
                 var descriptorsToRemove = services
                     .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
@@ -43,7 +45,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
 
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
-                    options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}");
+                    options.UseInMemoryDatabase(databaseName);
                 });
             });
         });
@@ -84,6 +86,35 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
         auditLog.Success.Should().Be(request.Success);
         auditLog.RiskLevel.Should().Be(request.RiskLevel);
         auditLog.Category.Should().Be(request.Category);
+    }
+
+    [Fact]
+    public async Task AuditService_ShouldUseIndependentContext_WithoutSavingCallerChanges() {
+        var pendingCallerLog = new AuditLog {
+            ActionType = "Caller.Pending",
+            ResourceType = "TestResource",
+            Success = true,
+            Category = AuditCategory.General
+        };
+        _context.Set<AuditLog>().Add(pendingCallerLog);
+
+        await _auditService.LogAsync(new CreateAuditLogRequest {
+            ActionType = "Audit.Independent",
+            ResourceType = "TestResource",
+            Success = true,
+            Category = AuditCategory.General
+        });
+
+        _context.Entry(pendingCallerLog).State.Should().Be(EntityState.Added);
+
+        using var verificationScope = _factory.Services.CreateScope();
+        var verificationContext = verificationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var persistedActions = await verificationContext.Set<AuditLog>()
+            .Select(log => log.ActionType)
+            .ToListAsync();
+
+        persistedActions.Should().ContainSingle(action => action == "Audit.Independent");
+        persistedActions.Should().NotContain("Caller.Pending");
     }
 
     [Fact]

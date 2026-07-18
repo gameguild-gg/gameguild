@@ -1,16 +1,19 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Compliance.Audit;
 
-public class AuditService(IApplicationDbContext context, IHttpContextAccessor httpContextAccessor, ILogger<AuditService> logger) : IAuditService
+public sealed class AuditService(IServiceScopeFactory scopeFactory, IHttpContextAccessor httpContextAccessor, ILogger<AuditService> logger) : IAuditService
 {
     public async Task LogAsync(CreateAuditLogRequest request)
     {
         try
         {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
             var httpContext = httpContextAccessor.HttpContext;
 
             var auditLog = new AuditLog
@@ -234,6 +237,8 @@ public class AuditService(IApplicationDbContext context, IHttpContextAccessor ht
 
     public async Task<List<AuditLog>> GetAuditLogsAsync(AuditLogQuery query)
     {
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
         var queryable = context.Set<AuditLog>().AsQueryable();
 
         // Apply filters
@@ -273,6 +278,8 @@ public class AuditService(IApplicationDbContext context, IHttpContextAccessor ht
 
     public async Task<int> GetAuditLogCountAsync(AuditLogQuery query)
     {
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
         var queryable = context.Set<AuditLog>().AsQueryable();
 
         // Apply same filters as GetAuditLogsAsync but without ordering/pagination
