@@ -428,7 +428,10 @@ public class OrderTests
             tenantId: Guid.NewGuid(),
             currency: "USD"
         );
-        order.Total = 99.99m;
+        order.AddLineItem(
+            Guid.NewGuid(),
+            "Test product",
+            new OrderLineItemPricingSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1, 99.99m, null, 99.99m, "USD"));
         return order;
     }
 
