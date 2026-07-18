@@ -26,8 +26,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Applicatio
             .AddEnvironmentVariables()
             .Build();
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres";
+        var connectionString = ResolveConnectionString(configuration);
 
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         optionsBuilder.UseNpgsql(connectionString);
@@ -36,6 +35,12 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Applicatio
 
         return new ApplicationDbContext(optionsBuilder.Options);
     }
+
+    /// <summary>Resolves the DDL-capable connection used by EF tooling.</summary>
+    public static string ResolveConnectionString(IConfiguration configuration) =>
+        DatabaseStartupConfiguration.ResolveMigrationConnectionString(configuration)
+        ?? PostgresConnectionString.Resolve(configuration)
+        ?? "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres";
 
     /// <summary>
     ///     Scans the output directory for all GameGuild.*.dll files and loads them
