@@ -56,6 +56,44 @@ public class SubscriptionQueryAndExternalIdServiceTests
     }
 
     [Fact]
+    public async Task GetPaymentContextAsync_ShouldProjectTheInitialAuthoritativeBillingCycle()
+    {
+        var subscription = CreateActiveSubscription();
+        _repository.Setup(r => r.GetByIdAsync(subscription.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(subscription);
+
+        var result = await _service.GetPaymentContextAsync(subscription.Id);
+
+        result.Should().NotBeNull();
+        result!.BillingCycleNumber.Should().Be(1);
+        result.BillingPeriodStart.Should().Be(subscription.CurrentPeriodStart);
+        result.BillingPeriodEnd.Should().Be(subscription.CurrentPeriodEnd);
+    }
+
+    [Fact]
+    public async Task GetPaymentContextAsync_ShouldProjectTheNextAuthoritativeRenewalCycle()
+    {
+        var subscription = CreateActiveSubscription();
+        var firstPayment = subscription.RecordPayment(
+            subscription.Amount.Amount,
+            subscription.Amount.Currency,
+            subscription.CurrentPeriodStart,
+            "payment-cycle-1",
+            forBillingCycle: 1);
+        firstPayment.IsSuccess.Should().BeTrue();
+
+        _repository.Setup(r => r.GetByIdAsync(subscription.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(subscription);
+
+        var result = await _service.GetPaymentContextAsync(subscription.Id);
+
+        result.Should().NotBeNull();
+        result!.BillingCycleNumber.Should().Be(2);
+        result.BillingPeriodStart.Should().Be(subscription.NextBillingDate);
+        result.BillingPeriodEnd.Should().Be(subscription.NextBillingDate.AddMonths(1).AddDays(-1));
+    }
+
+    [Fact]
     public async Task ValidateSubscriptionLimitsAsync_ShouldRequireAnActiveSubscription()
     {
         _repository.Setup(r => r.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
