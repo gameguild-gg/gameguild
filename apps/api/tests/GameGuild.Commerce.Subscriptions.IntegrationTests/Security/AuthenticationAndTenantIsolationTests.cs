@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
@@ -23,6 +24,7 @@ namespace GameGuild.Commerce.Subscriptions.IntegrationTests.Security;
 /// </summary>
 public class AuthenticationAndTenantIsolationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
 {
+    private const string StripeWebhookSecret = "whsec_subscriptions_authentication";
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
     private readonly HttpClient _unauthenticatedClient;
     private static readonly string DatabaseName = $"AuthTenantTestDb_{Guid.NewGuid()}";
@@ -34,6 +36,17 @@ public class AuthenticationAndTenantIsolationTests : IClassFixture<WebApplicatio
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration((_, configuration) =>
+            {
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Billing:Stripe:WebhookSecret"] = StripeWebhookSecret,
+                    ["Billing:Stripe:WebhookEndpointId"] = "we_subscriptions_authentication",
+                    ["Billing:Stripe:ApiVersion"] = "2023-10-16",
+                    ["Billing:Stripe:LiveMode"] = "false",
+                    ["Billing:Stripe:WebhookToleranceSeconds"] = "300"
+                });
+            });
             builder.ConfigureTestServices(services =>
             {
                 // Remove existing DbContext registrations
