@@ -58,6 +58,7 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
     /// Create a new order with idempotency protection
     /// </summary>
     [HttpPost]
+    [MinimumOrderRoute]
     [RequirePermission(OrdersPermission.Keys.Create)]
     public async Task<ActionResult<OrderDto>> CreateOrder(
         [FromBody] CreateOrderRequest request,
@@ -84,6 +85,7 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
     /// Add a product to an existing order
     /// </summary>
     [HttpPost("{orderId:guid}/items")]
+    [MinimumOrderRoute]
     [RequirePermission(OrdersPermission.Keys.Create)]
     public async Task<ActionResult<OrderDto>> AddProductToOrder(
         Guid orderId,
@@ -109,6 +111,7 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
     /// Complete an order (process payment, grant entitlements)
     /// </summary>
     [HttpPost("{orderId:guid}:complete")]
+    [MinimumOrderRoute]
     [RequirePermission(OrdersPermission.Keys.Create)]
     public async Task<ActionResult<OrderDto>> CompleteOrder(
         Guid orderId,
@@ -157,6 +160,7 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
     /// Get an order by ID
     /// </summary>
     [HttpGet("{orderId:guid}")]
+    [MinimumOrderRoute]
     [RequirePermission(OrdersPermission.Keys.Read)]
     public async Task<ActionResult<OrderDto>> GetOrder(
         Guid orderId,
@@ -248,13 +252,14 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
     /// Capture payment for an authorized order
     /// </summary>
     [HttpPost("{orderId:guid}:capture")]
+    [MinimumOrderRoute]
     [RequirePermission(OrdersPermission.Keys.Create)]
     public async Task<ActionResult<OrderDto>> CaptureOrder(
         Guid orderId,
         [FromBody] CaptureOrderRequest? request = null,
         CancellationToken cancellationToken = default)
     {
-        var command = new CaptureOrderCommand(orderId, request?.Amount);
+        var command = new CaptureOrderCommand(orderId, request?.PaymentMethodId ?? string.Empty);
         var result = await sender.Send<Result<OrderOperationResult>>(command, cancellationToken).ConfigureAwait(false);
 
         return ToOrderActionResult(result);
@@ -419,7 +424,7 @@ public sealed record PatchOrderRequest(
     Dictionary<string, string>? Metadata = null);
 
 /// <summary>Request to capture payment for an order</summary>
-public sealed record CaptureOrderRequest(decimal? Amount = null);
+public sealed record CaptureOrderRequest(string PaymentMethodId);
 
 /// <summary>Request to hold an order</summary>
 public sealed record HoldOrderRequest(string? Reason = null);

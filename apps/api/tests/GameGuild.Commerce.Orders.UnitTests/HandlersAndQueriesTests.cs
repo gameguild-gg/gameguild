@@ -512,7 +512,7 @@ public sealed class OrderCommandHandlerTests
     }
 
     [Fact]
-    public async Task CaptureOrderCommandHandler_RequiresPaymentAuthority()
+    public async Task CaptureOrderCommandHandler_RejectsMissingPayableSnapshot()
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var repository = new Mock<IOrderRepository>();
@@ -523,12 +523,15 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var handler = new CaptureOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
+        var handler = new CaptureOrderCommandHandler(
+            repository.Object,
+            Mock.Of<IOrderPaymentProcessor>(),
+            OrderTestFactory.CreateActor(order));
 
-        var result = await handler.Handle(new CaptureOrderCommand(order.Id), CancellationToken.None);
+        var result = await handler.Handle(new CaptureOrderCommand(order.Id, "pm_test"), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("Orders.PaymentAuthorityRequired");
+        result.Error.Code.Should().Be("Orders.InvalidPayableOrder");
         order.Status.Should().Be(OrderStatus.Pending);
         order.PaidAt.Should().BeNull();
     }
@@ -540,16 +543,19 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetWithLineItemsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new CaptureOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor());
+        var handler = new CaptureOrderCommandHandler(
+            repository.Object,
+            Mock.Of<IOrderPaymentProcessor>(),
+            OrderTestFactory.CreateActor());
 
-        var result = await handler.Handle(new CaptureOrderCommand(Guid.NewGuid()), CancellationToken.None);
+        var result = await handler.Handle(new CaptureOrderCommand(Guid.NewGuid(), "pm_test"), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Orders.NotFound");
     }
 
     [Fact]
-    public async Task CaptureOrderCommandHandler_RemainsDisabledWhenOrderIsNotPending()
+    public async Task CaptureOrderCommandHandler_RejectsOrderThatIsNotPending()
     {
         var order = OrderTestFactory.CreatePendingOrder();
         order.Cancel("customer request");
@@ -557,12 +563,15 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
 
-        var handler = new CaptureOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
+        var handler = new CaptureOrderCommandHandler(
+            repository.Object,
+            Mock.Of<IOrderPaymentProcessor>(),
+            OrderTestFactory.CreateActor(order));
 
-        var result = await handler.Handle(new CaptureOrderCommand(order.Id), CancellationToken.None);
+        var result = await handler.Handle(new CaptureOrderCommand(order.Id, "pm_test"), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("Orders.PaymentAuthorityRequired");
+        result.Error.Code.Should().Be("Orders.InvalidStatus");
     }
 
     [Fact]

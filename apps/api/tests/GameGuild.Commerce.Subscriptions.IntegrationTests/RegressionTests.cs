@@ -351,7 +351,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
             tenantId: Guid.NewGuid(),
             currency: "USD"
         );
-        order.Total = 99.99m;
+        AddAuthoritativeLineItem(order);
 
         dbContext.Set<Order>().Add(order);
         await dbContext.SaveChangesAsync();
@@ -380,9 +380,24 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
             idempotencyKey: Guid.NewGuid().ToString(),
             tenantId: Guid.NewGuid()
         );
-        order.Total = 99.99m;
+        AddAuthoritativeLineItem(order);
         order.MarkAsPaidPendingFulfillment(Guid.NewGuid(), "pi_test");
         return order;
+    }
+
+    private static void AddAuthoritativeLineItem(Order order)
+    {
+        order.AddLineItem(
+            Guid.NewGuid(),
+            "Regression product",
+            new OrderLineItemPricingSnapshot(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                1,
+                99.99m,
+                null,
+                99.99m,
+                "USD"));
     }
 
     public void Dispose()

@@ -17,6 +17,7 @@ public static class OrdersModule
         // Register repositories
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.TryAddScoped<IOrderPaymentAuthority, DenyOrderPaymentAuthority>();
+        services.TryAddScoped<IOrderPaymentProcessor, DenyOrderPaymentProcessor>();
 
         // IOrderService removed — all operations now use CQRS commands/queries dispatched via ISender.
         // CQRS handlers are automatically registered by assembly scanning in ApplicationLayerExtensions

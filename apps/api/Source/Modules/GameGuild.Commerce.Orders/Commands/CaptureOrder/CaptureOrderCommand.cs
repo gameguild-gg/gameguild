@@ -7,4 +7,4 @@ namespace GameGuild.Commerce.Orders;
 /// </summary>
 public sealed record CaptureOrderCommand(
     Guid OrderId,
-    decimal? Amount = null) : ICommand<Result<OrderOperationResult>>;
+    string PaymentMethodId) : ICommand<Result<OrderOperationResult>>;
