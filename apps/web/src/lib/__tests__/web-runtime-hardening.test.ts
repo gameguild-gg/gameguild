@@ -28,9 +28,12 @@ function readSourceFiles(relativePath: string): Array<{ file: string; source: st
 describe('web runtime hardening', () => {
   it('keeps React Compiler enabled while giving the Docker build enough heap', () => {
     const nextConfig = readRepoFile('apps/web/next.config.ts');
+    const economyGate = readRepoFile('scripts/ci/verify-economy.sh');
 
     expect(nextConfig).toContain('reactCompiler: true');
     expect(nextConfig).toContain('outputFileTracingRoot: path.resolve(__dirname, "../..")');
+    expect(nextConfig).toContain('process.env.GAMEGUILD_DISABLE_WEBPACK_CACHE === "1"');
+    expect(economyGate).toContain('GAMEGUILD_DISABLE_WEBPACK_CACHE=1');
     expect(readRepoFile('apps/web/Dockerfile')).toContain('NODE_OPTIONS=--max-old-space-size=4096');
   });
 
