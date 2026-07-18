@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.Commerce.Products;
 using GameGuild.Identity.Context.Actors;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
 
@@ -251,6 +252,9 @@ public sealed class AuthoritativeOrderCommandTests
         var paymentId = Guid.NewGuid();
         var paymentProcessor = new Mock<IOrderPaymentProcessor>();
         paymentProcessor
+            .Setup(processor => processor.GetPaymentMethodValidationError("pm_test"))
+            .Returns((string?)null);
+        paymentProcessor
             .Setup(processor => processor.ProcessAsync(
                 It.Is<AuthoritativeOrderCharge>(charge =>
                     charge.OrderId == order.Id &&
@@ -271,16 +275,19 @@ public sealed class AuthoritativeOrderCommandTests
         order.Status.Should().Be(OrderStatus.Paid);
         order.PaymentId.Should().Be(paymentId);
         order.ExternalPaymentId.Should().Be("pi_order");
-        repository.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        repository.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [Fact]
-    public async Task CaptureOrder_ShouldRemainPendingWhenPaymentFails()
+    public async Task CaptureOrder_ShouldRemainReservedWhenPaymentFails()
     {
         var order = OrderTestFactory.CreatePendingOrder();
         OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Authoritative product", 45m);
         var repository = RepositoryWith(order, withLineItems: true);
         var paymentProcessor = new Mock<IOrderPaymentProcessor>();
+        paymentProcessor
+            .Setup(processor => processor.GetPaymentMethodValidationError("pm_test"))
+            .Returns((string?)null);
         paymentProcessor
             .Setup(processor => processor.ProcessAsync(
                 It.IsAny<AuthoritativeOrderCharge>(),
@@ -296,9 +303,119 @@ public sealed class AuthoritativeOrderCommandTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Orders.PaymentFailed");
         result.Error.Description.Should().Be("Card declined");
-        order.Status.Should().Be(OrderStatus.Pending);
+        order.Status.Should().Be(OrderStatus.Processing);
         order.PaymentId.Should().BeNull();
+        repository.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CaptureOrder_RejectsMalformedPaymentMethodBeforeReservingOrder()
+    {
+        var order = OrderTestFactory.CreatePendingOrder();
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Authoritative product", 45m);
+        var repository = RepositoryWith(order, withLineItems: true);
+        var paymentProcessor = new Mock<IOrderPaymentProcessor>();
+        paymentProcessor
+            .Setup(processor => processor.GetPaymentMethodValidationError("attacker-controlled"))
+            .Returns("Payment method identifier is invalid.");
+        var handler = new CaptureOrderCommandHandler(
+            repository.Object,
+            paymentProcessor.Object,
+            CreateActor(order.UserId, order.TenantId!.Value));
+
+        var result = await handler.Handle(
+            new CaptureOrderCommand(order.Id, "attacker-controlled"),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.InvalidPaymentMethod");
+        order.Status.Should().Be(OrderStatus.Pending);
         repository.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        paymentProcessor.Verify(
+            processor => processor.ProcessAsync(It.IsAny<AuthoritativeOrderCharge>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task CaptureOrder_RejectsConcurrentOrderMutationBeforeCharging()
+    {
+        var order = OrderTestFactory.CreatePendingOrder();
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Authoritative product", 45m);
+        var repository = RepositoryWith(order, withLineItems: true);
+        repository
+            .Setup(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new DbUpdateConcurrencyException("Concurrent order mutation"));
+        var paymentProcessor = new Mock<IOrderPaymentProcessor>();
+        paymentProcessor
+            .Setup(processor => processor.GetPaymentMethodValidationError("pm_test"))
+            .Returns((string?)null);
+        var handler = new CaptureOrderCommandHandler(
+            repository.Object,
+            paymentProcessor.Object,
+            CreateActor(order.UserId, order.TenantId!.Value));
+
+        var result = await handler.Handle(new CaptureOrderCommand(order.Id, "pm_test"), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.ConcurrentModification");
+        paymentProcessor.Verify(
+            processor => processor.ProcessAsync(It.IsAny<AuthoritativeOrderCharge>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task CaptureOrder_ReplaysAlreadyPaidOrderWithoutChargingOrSaving()
+    {
+        var order = OrderTestFactory.CreatePendingOrder();
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Authoritative product", 45m);
+        var paymentId = Guid.NewGuid();
+        order.MarkAsPaidPendingFulfillment(paymentId, "pi_existing");
+        var repository = RepositoryWith(order, withLineItems: true);
+        var paymentProcessor = new Mock<IOrderPaymentProcessor>();
+        var handler = new CaptureOrderCommandHandler(
+            repository.Object,
+            paymentProcessor.Object,
+            CreateActor(order.UserId, order.TenantId!.Value));
+
+        var result = await handler.Handle(new CaptureOrderCommand(order.Id, "pm_test"), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.WasDuplicate.Should().BeTrue();
+        order.PaymentId.Should().Be(paymentId);
+        paymentProcessor.VerifyNoOtherCalls();
+        repository.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CaptureOrder_ResumesReservedOrderWithoutSavingReservationAgain()
+    {
+        var order = OrderTestFactory.CreatePendingOrder();
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Authoritative product", 45m);
+        order.StartPaymentProcessing();
+        var repository = RepositoryWith(order, withLineItems: true);
+        var paymentProcessor = new Mock<IOrderPaymentProcessor>();
+        paymentProcessor
+            .Setup(processor => processor.GetPaymentMethodValidationError("pm_test"))
+            .Returns((string?)null);
+        paymentProcessor
+            .Setup(processor => processor.ProcessAsync(
+                It.IsAny<AuthoritativeOrderCharge>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(OrderChargeResult.Failed(null, "Payment is processing."));
+        var handler = new CaptureOrderCommandHandler(
+            repository.Object,
+            paymentProcessor.Object,
+            CreateActor(order.UserId, order.TenantId!.Value));
+
+        var result = await handler.Handle(new CaptureOrderCommand(order.Id, "pm_test"), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.PaymentFailed");
+        order.Status.Should().Be(OrderStatus.Processing);
+        repository.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        paymentProcessor.Verify(
+            processor => processor.ProcessAsync(It.IsAny<AuthoritativeOrderCharge>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

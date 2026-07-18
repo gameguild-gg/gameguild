@@ -314,6 +314,19 @@ public class Order : StatefulEntity<OrderStatus>
     }
 
     /// <summary>
+    /// Reserves a pending order for an authoritative payment attempt.
+    /// Concurrent item, cancellation, and capture updates are rejected by the order version token.
+    /// </summary>
+    public void StartPaymentProcessing()
+    {
+        if (Status == OrderStatus.Processing)
+            return;
+
+        TransitionToWithReason(OrderStatus.Processing, reason: "Authoritative payment capture started");
+        Touch();
+    }
+
+    /// <summary>
     ///     Mark order as fulfilled after entitlements are granted.
     ///     Must be in Paid or Completed status.
     ///     Economic invariant: FulfilledAt is set exactly once.
