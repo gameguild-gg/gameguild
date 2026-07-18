@@ -24,9 +24,18 @@ const config = {
   adminPassword: process.env.GAMEGUILD_SMOKE_ADMIN_PASSWORD ?? 'Admin123!',
 };
 
+const expectedOrderOperations = [
+  'get /v1/orders/{orderId}',
+  'post /v1/orders',
+  'post /v1/orders/{orderId}/items',
+  'post /v1/orders/{orderId}:capture',
+  'post /v1/orders/{orderId}:complete',
+];
+const openApiMethods = new Set(['delete', 'get', 'head', 'options', 'patch', 'post', 'put', 'trace']);
+
 const checks = [
   ['api live', config.api, '/live'],
-  ['api health', config.api, '/health'],
+  ['api ready', config.api, '/ready'],
   ['api documentation', config.api, '/documentation/index.html'],
   ['web health', config.web, '/api/health'],
   ['web auth csrf', config.web, '/api/auth/csrf'],
@@ -108,6 +117,63 @@ async function readJson(response) {
     return await response.json();
   } catch {
     return null;
+  }
+}
+
+function getOrderOperations(document) {
+  if (!document?.paths || typeof document.paths !== 'object' || Array.isArray(document.paths)) {
+    return [];
+  }
+
+  return Object.entries(document.paths)
+    .filter(([path]) => path.startsWith('/v1/orders'))
+    .flatMap(([path, pathItem]) =>
+      Object.keys(pathItem ?? {})
+        .map((method) => method.toLowerCase())
+        .filter((method) => openApiMethods.has(method))
+        .map((method) => `${method} ${path}`),
+    )
+    .sort((left, right) => left.localeCompare(right));
+}
+
+async function runOrdersOpenApiCheck() {
+  const started = Date.now();
+  const url = joinUrl(config.api, '/swagger/v1/swagger.json');
+
+  try {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: {
+        'User-Agent': 'gameguild-smoke/1.0',
+      },
+    });
+    const document = await readJson(response);
+    const actualOperations = getOrderOperations(document);
+    const missing = expectedOrderOperations.filter((operation) => !actualOperations.includes(operation));
+    const unexpected = actualOperations.filter((operation) => !expectedOrderOperations.includes(operation));
+    const matches = response.ok && missing.length === 0 && unexpected.length === 0;
+
+    return {
+      name: 'Orders OpenAPI',
+      url,
+      status: response.status,
+      elapsed: Date.now() - started,
+      ok: matches,
+      attempts: 1,
+      error: matches
+        ? undefined
+        : `Orders OpenAPI operations mismatch; missing=[${missing.join(', ')}]; unexpected=[${unexpected.join(', ')}]`,
+    };
+  } catch (error) {
+    return {
+      name: 'Orders OpenAPI',
+      url,
+      status: 'ERR',
+      elapsed: Date.now() - started,
+      ok: false,
+      attempts: 1,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -229,6 +295,7 @@ async function runWebAuthBridgeCheck() {
 
 const results = [
   ...(await Promise.all(checks.map(runCheck))),
+  await runOrdersOpenApiCheck(),
   await runApiAuthCheck(),
   await runWebAuthBridgeCheck(),
 ];
@@ -239,7 +306,12 @@ for (const result of results) {
   const status = String(result.status).padEnd(3, ' ');
   const attempts = result.attempts > 1 ? ` attempts=${result.attempts}` : '';
   const message = result.error ? ` ${result.error}` : '';
-  console.log(`${marker} ${result.name.padEnd(nameWidth, ' ')} ${status} ${result.elapsed}ms ${result.url}${attempts}${message}`);
+  const line = `${marker} ${result.name.padEnd(nameWidth, ' ')} ${status} ${result.elapsed}ms ${result.url}${attempts}${message}`;
+  if (result.ok) {
+    console.log(line);
+  } else {
+    console.error(line);
+  }
 }
 
 const failed = results.filter((result) => !result.ok);
