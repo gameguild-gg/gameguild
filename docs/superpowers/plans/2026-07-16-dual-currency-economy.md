@@ -263,13 +263,15 @@ API activation begins only after integrated schema and security gates pass. Task
 
 **Produces:** Staging/production cannot start value-moving capabilities with simulation or missing secrets, and shared API composition activates only the minimum verified Orders path.
 
-- [ ] Write startup validation tests.
-- [ ] Fail startup when payment simulation is enabled outside Development/Test.
-- [ ] Fail startup when required webhook/provider secrets are absent.
-- [ ] Separate migration-role and runtime-role configuration.
-- [ ] After Task 1.3 merges, activate its minimum Orders path in shared API composition and prove unrelated Orders routes remain disabled.
-- [ ] Add health/readiness details for provider and inbox state without exposing secrets.
-- [ ] Update deployment smoke documentation and tests.
+- [x] Write startup validation tests.
+- [x] Fail startup when payment simulation is enabled outside Development/Test.
+- [x] Fail startup when required webhook/provider secrets are absent.
+- [x] Separate migration-role and runtime-role configuration.
+- [x] After Task 1.3 merges, activate its minimum Orders path in shared API composition and prove unrelated Orders routes remain disabled.
+- [x] Add health/readiness details for provider and inbox state without exposing secrets.
+- [x] Update deployment smoke documentation and tests.
+
+Verification: targeted API/Commerce suites, strict touched-project builds, API publish, client tests/build, compose validation, and the integrated Economy gate passed with 262 evidence files on 2026-07-18.
 
 ### Task 1.5: Security Schema Rollup
 
