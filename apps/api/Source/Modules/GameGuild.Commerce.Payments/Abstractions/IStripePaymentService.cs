@@ -12,6 +12,10 @@ public interface IStripePaymentService
         GatewayPaymentRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<GatewayPaymentResult> GetPaymentAsync(
+        string externalTransactionId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     ///     Processes a refund through Stripe.
     /// </summary>
