@@ -1,0 +1,293 @@
+using GameGuild.Economy.Contracts;
+
+namespace GameGuild.Economy.Posting;
+
+public enum PostingErrorCode
+{
+    UnsupportedTemplate = 1,
+    UnsupportedTemplateVersion = 2,
+    UnauthorizedAuthority = 3,
+    InvalidLineCount = 4,
+    InvalidSequence = 5,
+    InvalidAccountShape = 6,
+    InvalidCurrency = 7,
+    UnbalancedCurrency = 8,
+    MissingWallet = 9,
+    InvalidProvenance = 10,
+    InvalidSourceState = 11,
+    InvalidParity = 12,
+    InvalidAmount = 13
+}
+
+public sealed record PostingValidationError(PostingErrorCode Code, string Message);
+
+public sealed record PostingValidationResult
+{
+    internal PostingValidationResult(IReadOnlyList<PostingValidationError> errors) => Errors = errors;
+
+    public bool IsValid => Errors.Count == 0;
+    public IReadOnlyList<PostingValidationError> Errors { get; }
+}
+
+public sealed class PostingValidationException : InvalidOperationException
+{
+    public PostingValidationException(IReadOnlyList<PostingValidationError> errors)
+        : base(string.Join("; ", errors.Select(error => $"{error.Code}: {error.Message}"))) => Errors = errors;
+
+    public IReadOnlyList<PostingValidationError> Errors { get; }
+}
+
+public static class PostingMatrix
+{
+    public static PostingValidationResult Validate(PostingRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var errors = new List<PostingValidationError>();
+
+        if (!Enum.IsDefined(request.Template.Kind))
+            Add(errors, PostingErrorCode.UnsupportedTemplate, "Posting template is not registered.");
+
+        if (request.Template.Version != PostingTemplate.CurrentVersion)
+            Add(errors, PostingErrorCode.UnsupportedTemplateVersion, "Only the current immutable template version is accepted.");
+
+        var expectedAuthority = ExpectedAuthority(request.Template.Kind);
+        if (expectedAuthority.HasValue && request.Authority != expectedAuthority.Value)
+            Add(errors, PostingErrorCode.UnauthorizedAuthority, "Posting authority does not match the selected template.");
+
+        ValidateSequences(request.Lines, errors);
+        ValidateAmountsAndCurrencyBalance(request.Lines, errors);
+        ValidateSource(request, errors);
+        ValidateShape(request, errors);
+
+        return new PostingValidationResult(errors);
+    }
+
+    public static void EnsureValid(PostingRequest request)
+    {
+        var result = Validate(request);
+        if (!result.IsValid) throw new PostingValidationException(result.Errors);
+    }
+
+    private static PostingAuthority? ExpectedAuthority(PostingTemplateKind kind) => kind switch
+    {
+        PostingTemplateKind.ConfirmedTopUpMint or PostingTemplateKind.ProviderReversalFull or PostingTemplateKind.ProviderReversalPartial => PostingAuthority.ProviderConfirmation,
+        PostingTemplateKind.Spend or PostingTemplateKind.HardToSoftConversion or PostingTemplateKind.Burn or PostingTemplateKind.Escrow => PostingAuthority.WalletOwner,
+        PostingTemplateKind.SystemBackedGrant => PostingAuthority.PlatformSystem,
+        PostingTemplateKind.Reclaim or PostingTemplateKind.Refund => PostingAuthority.EscrowCoordinator,
+        PostingTemplateKind.PayoutReservation or PostingTemplateKind.PayoutSuccess or PostingTemplateKind.PayoutFailure => PostingAuthority.PayoutCoordinator,
+        PostingTemplateKind.AdminWithdrawalReservation or PostingTemplateKind.AdminWithdrawalSuccess or PostingTemplateKind.AdminWithdrawalFailure => PostingAuthority.Administrator,
+        _ => null
+    };
+
+    private static void ValidateSequences(IReadOnlyList<PostingLine> lines, ICollection<PostingValidationError> errors)
+    {
+        var ordered = lines.Select(line => line.Sequence).Order().ToArray();
+        if (ordered.Length == 0 || ordered.Distinct().Count() != ordered.Length || ordered.Where((sequence, index) => sequence != index + 1).Any())
+            Add(errors, PostingErrorCode.InvalidSequence, "Line sequences must be unique and contiguous from one.");
+    }
+
+    private static void ValidateAmountsAndCurrencyBalance(IReadOnlyList<PostingLine> lines, ICollection<PostingValidationError> errors)
+    {
+        if (lines.Any(line => line.Amount.Units <= 0))
+            Add(errors, PostingErrorCode.InvalidAmount, "Posting lines must carry positive integer units.");
+
+        foreach (var currencyGroup in lines.GroupBy(line => line.Amount.Currency))
+        {
+            try
+            {
+                var debits = currencyGroup.Where(line => line.Side == EntrySide.Debit).Aggregate(0L, (total, line) => checked(total + line.Amount.Units));
+                var credits = currencyGroup.Where(line => line.Side == EntrySide.Credit).Aggregate(0L, (total, line) => checked(total + line.Amount.Units));
+                if (debits != credits)
+                    Add(errors, PostingErrorCode.UnbalancedCurrency, $"{currencyGroup.Key} debits and credits must balance independently.");
+            }
+            catch (OverflowException)
+            {
+                Add(errors, PostingErrorCode.InvalidAmount, "Posting totals exceed the supported integer range.");
+            }
+        }
+    }
+
+    private static void ValidateSource(PostingRequest request, ICollection<PostingValidationError> errors)
+    {
+        var requiredState = request.Template.Kind switch
+        {
+            PostingTemplateKind.ConfirmedTopUpMint => SourceConfirmationState.Confirmed,
+            PostingTemplateKind.ProviderReversalFull or PostingTemplateKind.ProviderReversalPartial => SourceConfirmationState.Reversed,
+            _ => (SourceConfirmationState?)null
+        };
+
+        if (requiredState.HasValue && request.Source?.State != requiredState)
+            Add(errors, PostingErrorCode.InvalidSourceState, $"Template requires {requiredState} source evidence.");
+    }
+
+    private static void ValidateShape(PostingRequest request, ICollection<PostingValidationError> errors)
+    {
+        var expectedCount = request.Template.Kind is PostingTemplateKind.HardToSoftConversion or PostingTemplateKind.SystemBackedGrant ? 4 : 2;
+        if (request.Lines.Count != expectedCount)
+        {
+            Add(errors, PostingErrorCode.InvalidLineCount, $"Template requires exactly {expectedCount} lines.");
+            return;
+        }
+
+        var lines = request.Lines.OrderBy(line => line.Sequence).ToArray();
+        switch (request.Template.Kind)
+        {
+            case PostingTemplateKind.ConfirmedTopUpMint:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.PurchasedHardLiability, CurrencyCode.HardCoin, true, ProvenanceKind.PurchasedHard, errors);
+                break;
+            case PostingTemplateKind.ProviderReversalFull:
+            case PostingTemplateKind.ProviderReversalPartial:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.PurchasedHardLiability, CurrencyCode.HardCoin, true, ProvenanceKind.PurchasedHard, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, false, null, errors);
+                break;
+            case PostingTemplateKind.Spend:
+                ValidateSameLiabilityTransfer(lines, null, errors);
+                break;
+            case PostingTemplateKind.HardToSoftConversion:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.PurchasedHardLiability, CurrencyCode.HardCoin, true, ProvenanceKind.PurchasedHard, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.HardCoinReserve, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[2], EntrySide.Debit, EconomyAccountCode.SoftCoinReserve, CurrencyCode.SoftCoin, false, null, errors);
+                Match(lines[3], EntrySide.Credit, EconomyAccountCode.SoftCoinLiability, CurrencyCode.SoftCoin, true, ProvenanceKind.ConvertedSoft, errors);
+                ValidateParity(lines[0].Amount.Units, lines[3].Amount.Units, errors);
+                break;
+            case PostingTemplateKind.SystemBackedGrant:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.PlatformHardTreasury, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.HardCoinReserve, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[2], EntrySide.Debit, EconomyAccountCode.SoftCoinReserve, CurrencyCode.SoftCoin, false, null, errors);
+                Match(lines[3], EntrySide.Credit, EconomyAccountCode.SoftCoinLiability, CurrencyCode.SoftCoin, true, ProvenanceKind.SystemGrantSoft, errors);
+                ValidateParity(lines[0].Amount.Units, lines[3].Amount.Units, errors);
+                break;
+            case PostingTemplateKind.Burn:
+                ValidateLiabilityAndSystemAccount(lines, EntrySide.Debit, ReserveFor(lines[0].Amount.Currency), errors);
+                break;
+            case PostingTemplateKind.Escrow:
+                ValidateLiabilityAndSystemAccount(lines, EntrySide.Debit, EscrowFor(lines[0].Amount.Currency), errors);
+                break;
+            case PostingTemplateKind.Reclaim:
+                var escrowAccount = EscrowFor(lines[1].Amount.Currency);
+                if (escrowAccount.HasValue)
+                    Match(lines[0], EntrySide.Debit, escrowAccount.Value, lines[1].Amount.Currency, false, null, errors);
+                else
+                    Add(errors, PostingErrorCode.InvalidCurrency, "Reclaim requires a supported coin currency.");
+                ValidateLiability(lines[1], EntrySide.Credit, ProvenanceKind.EscrowReturn, errors);
+                break;
+            case PostingTemplateKind.Refund:
+                ValidateSameLiabilityTransfer(lines, ProvenanceKind.RefundRestoration, errors);
+                break;
+            case PostingTemplateKind.PayoutReservation:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.EarnedHardLiability, CurrencyCode.HardCoin, true, ProvenanceKind.EarnedHard, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.PayoutPayableHard, CurrencyCode.HardCoin, false, null, errors);
+                break;
+            case PostingTemplateKind.PayoutSuccess:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.PayoutPayableHard, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, false, null, errors);
+                break;
+            case PostingTemplateKind.PayoutFailure:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.PayoutPayableHard, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.EarnedHardLiability, CurrencyCode.HardCoin, true, ProvenanceKind.EarnedHard, errors);
+                break;
+            case PostingTemplateKind.AdminWithdrawalReservation:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.PlatformHardTreasury, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.AdminWithdrawalPayableHard, CurrencyCode.HardCoin, false, null, errors);
+                break;
+            case PostingTemplateKind.AdminWithdrawalSuccess:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.AdminWithdrawalPayableHard, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, false, null, errors);
+                break;
+            case PostingTemplateKind.AdminWithdrawalFailure:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.AdminWithdrawalPayableHard, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.PlatformHardTreasury, CurrencyCode.HardCoin, false, null, errors);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private static void ValidateSameLiabilityTransfer(PostingLine[] lines, ProvenanceKind? creditProvenance, ICollection<PostingValidationError> errors)
+    {
+        ValidateLiability(lines[0], EntrySide.Debit, null, errors);
+        ValidateLiability(lines[1], EntrySide.Credit, creditProvenance, errors);
+        if (lines[0].Account != lines[1].Account || lines[0].Amount.Currency != lines[1].Amount.Currency)
+            Add(errors, PostingErrorCode.InvalidAccountShape, "Transfer legs must use the same currency liability account.");
+    }
+
+    private static void ValidateLiabilityAndSystemAccount(PostingLine[] lines, EntrySide liabilitySide, EconomyAccountCode? systemAccount, ICollection<PostingValidationError> errors)
+    {
+        ValidateLiability(lines[0], liabilitySide, null, errors);
+        if (systemAccount.HasValue)
+            Match(lines[1], EntrySide.Credit, systemAccount.Value, lines[0].Amount.Currency, false, null, errors);
+        else
+            Add(errors, PostingErrorCode.InvalidCurrency, "Template requires a supported coin currency.");
+    }
+
+    private static void ValidateLiability(
+        PostingLine line,
+        EntrySide side,
+        ProvenanceKind? requiredProvenance,
+        ICollection<PostingValidationError> errors)
+    {
+        var validAccount = line.Amount.Currency switch
+        {
+            CurrencyCode.HardCoin => line.Account is EconomyAccountCode.PurchasedHardLiability or EconomyAccountCode.EarnedHardLiability,
+            CurrencyCode.SoftCoin => line.Account == EconomyAccountCode.SoftCoinLiability,
+            _ => false
+        };
+        if (!validAccount) Add(errors, PostingErrorCode.InvalidAccountShape, "Line must use the liability account for its currency.");
+        if (line.Side != side) Add(errors, PostingErrorCode.InvalidAccountShape, "Liability line has the wrong entry side.");
+        if (line.WalletId is null) Add(errors, PostingErrorCode.MissingWallet, "Liability line requires a wallet.");
+        if (requiredProvenance.HasValue && line.Provenance != requiredProvenance)
+            Add(errors, PostingErrorCode.InvalidProvenance, "Liability line has the wrong provenance.");
+    }
+
+    private static EconomyAccountCode? ReserveFor(CurrencyCode currency) => currency switch
+    {
+        CurrencyCode.HardCoin => EconomyAccountCode.HardCoinReserve,
+        CurrencyCode.SoftCoin => EconomyAccountCode.SoftCoinReserve,
+        _ => null
+    };
+
+    private static EconomyAccountCode? EscrowFor(CurrencyCode currency) => currency switch
+    {
+        CurrencyCode.HardCoin => EconomyAccountCode.HardCoinEscrow,
+        CurrencyCode.SoftCoin => EconomyAccountCode.SoftCoinEscrow,
+        _ => null
+    };
+
+    private static void Match(
+        PostingLine line,
+        EntrySide side,
+        EconomyAccountCode account,
+        CurrencyCode currency,
+        bool walletRequired,
+        ProvenanceKind? provenance,
+        ICollection<PostingValidationError> errors)
+    {
+        if (line.Side != side || line.Account != account)
+            Add(errors, PostingErrorCode.InvalidAccountShape, $"Line {line.Sequence} does not match its registered account shape.");
+        if (line.Amount.Currency != currency)
+            Add(errors, PostingErrorCode.InvalidCurrency, $"Line {line.Sequence} uses the wrong currency.");
+        if (walletRequired && line.WalletId is null)
+            Add(errors, PostingErrorCode.MissingWallet, $"Line {line.Sequence} requires a wallet.");
+        if (!walletRequired && line.WalletId is not null)
+            Add(errors, PostingErrorCode.InvalidAccountShape, $"Line {line.Sequence} cannot target a wallet.");
+        if (line.Provenance != provenance)
+            Add(errors, PostingErrorCode.InvalidProvenance, $"Line {line.Sequence} uses the wrong provenance.");
+    }
+
+    private static void ValidateParity(long hardUnits, long softUnits, ICollection<PostingValidationError> errors)
+    {
+        try
+        {
+            if (checked(hardUnits * Money.FixedParity.SoftCoinsPerHardCoin) != softUnits)
+                Add(errors, PostingErrorCode.InvalidParity, "Principal conversion must use exactly 1 HC = 1,000 SC.");
+        }
+        catch (OverflowException)
+        {
+            Add(errors, PostingErrorCode.InvalidParity, "Principal conversion exceeds the supported integer range.");
+        }
+    }
+
+    private static void Add(ICollection<PostingValidationError> errors, PostingErrorCode code, string message) =>
+        errors.Add(new PostingValidationError(code, message));
+}
