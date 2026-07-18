@@ -216,12 +216,12 @@ API activation begins only after integrated schema and security gates pass. Task
 
 **Produces:** No authenticated user can read or mutate another wallet; generic value-minting endpoints are not public.
 
-- [ ] Write authorization matrix tests for self, other user, tenant admin, platform admin, and missing tenant/context.
-- [ ] Derive self-service wallet identity from actor context.
-- [ ] Require explicit platform permission for list/freeze/unfreeze/admin operations.
-- [ ] Remove or disable public arbitrary credit/debit operations.
-- [ ] Add audit events for privileged wallet actions.
-- [ ] Run Payments unit/integration tests and strict API build.
+- [x] Write authorization matrix tests for self, other user, tenant admin, platform admin, and missing tenant/context.
+- [x] Derive self-service wallet identity from actor context.
+- [x] Require explicit platform permission for list/freeze/unfreeze/admin operations.
+- [x] Remove or disable public arbitrary credit/debit operations.
+- [x] Add audit events for privileged wallet actions.
+- [x] Run Payments unit/integration tests and strict API build.
 
 ### Task 1.2: Stripe Webhook Authenticity And Inbox
 
