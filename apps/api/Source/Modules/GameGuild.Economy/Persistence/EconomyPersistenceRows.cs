@@ -1,5 +1,7 @@
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Policy;
+using GameGuild.Economy.Risk;
 
 namespace GameGuild.Economy.Persistence;
 
@@ -221,4 +223,145 @@ internal sealed class EconomyExternalAnchorRow
     public string Provider { get; set; } = string.Empty;
     public string ProviderReference { get; set; } = string.Empty;
     public DateTimeOffset AnchoredAt { get; set; }
+}
+
+internal sealed class EconomyRiskDecisionRow
+{
+    public Guid Id { get; set; }
+    public RiskOutcome Outcome { get; set; }
+    public string OperationFingerprint { get; set; } = string.Empty;
+    public string ActorHash { get; set; } = string.Empty;
+    public PostingTemplateKind TemplateKind { get; set; }
+    public Guid SourceWalletId { get; set; }
+    public Guid DestinationWalletId { get; set; }
+    public CurrencyCode Currency { get; set; }
+    public long AmountUnits { get; set; }
+    public string CurrencyLegs { get; set; } = string.Empty;
+    public string SourceRoots { get; set; } = string.Empty;
+    public string ProviderReferenceHash { get; set; } = string.Empty;
+    public long PolicyVersion { get; set; }
+    public long ReserveVersion { get; set; }
+    public long FeatureVersion { get; set; }
+    public long KillSwitchEpoch { get; set; }
+    public long CounterVersion { get; set; }
+    public long EntityGraphVersion { get; set; }
+    public string EntityGraphEvidenceHash { get; set; } = string.Empty;
+    public string ReasonCodes { get; set; } = string.Empty;
+    public DateTimeOffset IssuedAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
+}
+
+internal sealed class EconomyRegisteredCapabilityRow
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string AllowedTemplateKinds { get; set; } = string.Empty;
+    public bool IsEnabled { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? RevokedAt { get; set; }
+}
+
+internal sealed class EconomyRiskDecisionConsumptionRow
+{
+    public Guid Id { get; set; }
+    public Guid RiskDecisionId { get; set; }
+    public Guid PostingGroupId { get; set; }
+    public string OperationFingerprint { get; set; } = string.Empty;
+    public DateTimeOffset ConsumedAt { get; set; }
+}
+
+internal sealed class EconomyRiskCounterRow
+{
+    public Guid Id { get; set; }
+    public RiskLimitDimension Dimension { get; set; }
+    public string SubjectHash { get; set; } = string.Empty;
+    public PostingTemplateKind Operation { get; set; }
+    public CurrencyCode Currency { get; set; }
+    public DateTimeOffset WindowStartedAt { get; set; }
+    public DateTimeOffset WindowEndsAt { get; set; }
+    public long CounterVersion { get; set; }
+    public long MaxUnits { get; set; }
+    public long UsedUnits { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
+internal sealed class EconomyRiskCounterReservationRow
+{
+    public Guid Id { get; set; }
+    public Guid RiskDecisionId { get; set; }
+    public Guid RiskCounterId { get; set; }
+    public long AmountUnits { get; set; }
+    public DateTimeOffset ReservedAt { get; set; }
+}
+
+internal sealed class EconomyProtectedChangeCooldownRow
+{
+    public Guid Id { get; set; }
+    public Guid SubjectId { get; set; }
+    public ProtectedChangeKind Kind { get; set; }
+    public string ValueHash { get; set; } = string.Empty;
+    public long Version { get; set; }
+    public DateTimeOffset ChangedAt { get; set; }
+    public DateTimeOffset AvailableAt { get; set; }
+}
+
+internal sealed class EconomyHoldRow
+{
+    public Guid Id { get; set; }
+    public Guid WalletId { get; set; }
+    public CurrencyCode Currency { get; set; }
+    public long AmountUnits { get; set; }
+    public HoldReason Reason { get; set; }
+    public HoldStatus Status { get; set; }
+    public DateTimeOffset EffectiveAt { get; set; }
+    public DateTimeOffset? ReleasedAt { get; set; }
+}
+
+internal sealed class EconomyHoldEventRow
+{
+    public Guid Id { get; set; }
+    public Guid HoldId { get; set; }
+    public long Sequence { get; set; }
+    public HoldEventKind Kind { get; set; }
+    public Guid ActorId { get; set; }
+    public string EvidenceHash { get; set; } = string.Empty;
+    public DateTimeOffset OccurredAt { get; set; }
+}
+
+internal sealed class EconomyRiskReviewCaseRow
+{
+    public Guid Id { get; set; }
+    public Guid RiskDecisionId { get; set; }
+    public Guid SubmittedBy { get; set; }
+    public RiskReviewStatus Status { get; set; }
+    public DateTimeOffset SubmittedAt { get; set; }
+    public DateTimeOffset? ResolvedAt { get; set; }
+    public Guid? ResolvedBy { get; set; }
+    public string? Resolution { get; set; }
+    public int RequiredApprovals { get; set; }
+    public Guid? AppealOf { get; set; }
+}
+
+internal sealed class EconomyRiskReviewEventRow
+{
+    public Guid Id { get; set; }
+    public Guid RiskReviewCaseId { get; set; }
+    public long Sequence { get; set; }
+    public RiskReviewEventKind Kind { get; set; }
+    public Guid ActorId { get; set; }
+    public string EvidenceHashes { get; set; } = string.Empty;
+    public string? Resolution { get; set; }
+    public RiskManualDecisionCode? DecisionCode { get; set; }
+    public DateTimeOffset OccurredAt { get; set; }
+}
+
+internal sealed class EconomyRiskAuditEvidenceRow
+{
+    public Guid Id { get; set; }
+    public Guid RiskDecisionId { get; set; }
+    public string EventKind { get; set; } = string.Empty;
+    public string OperationFingerprint { get; set; } = string.Empty;
+    public string EvidenceHash { get; set; } = string.Empty;
+    public string Payload { get; set; } = string.Empty;
+    public DateTimeOffset RecordedAt { get; set; }
 }
