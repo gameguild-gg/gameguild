@@ -1,6 +1,7 @@
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Policy;
+using GameGuild.Economy.Reserves;
 using GameGuild.Economy.Risk;
 
 namespace GameGuild.Economy.Persistence;
@@ -68,6 +69,7 @@ internal sealed class EconomyPostingGroupRow
     public Guid? RiskDecisionId { get; set; }
     public long PolicyVersion { get; set; }
     public long ReserveVersion { get; set; }
+    public long ReserveAuthorizationEpoch { get; set; }
     public Guid? SourceStampId { get; set; }
     public DateTimeOffset RecordedAt { get; set; }
 }
@@ -180,6 +182,7 @@ internal sealed class EconomyDispatchSnapshotRow
     public long ChainSequence { get; set; }
     public string ChainHash { get; set; } = string.Empty;
     public long ReserveVersion { get; set; }
+    public long ReserveAuthorizationEpoch { get; set; }
     public long KillSwitchEpoch { get; set; }
     public long FencingToken { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
@@ -225,6 +228,35 @@ internal sealed class EconomyExternalAnchorRow
     public DateTimeOffset AnchoredAt { get; set; }
 }
 
+internal sealed class EconomyReserveHeadRow
+{
+    public long Version { get; set; }
+    public bool IsActive { get; set; }
+    public long PolicyVersion { get; set; }
+    public long AuthorizationEpoch { get; set; }
+    public DateTimeOffset ObservedAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
+    public long HardFaceValueUsdMinor { get; set; }
+    public long RequiredHardReserveUsdMinor { get; set; }
+    public long SoftFaceValueUsdNanos { get; set; }
+    public long StressedExpectedRedemptionCostUsdNanos { get; set; }
+    public long RequiredSoftReserveUsdNanos { get; set; }
+    public long HardBackingUsdNanos { get; set; }
+    public long SoftBackingUsdNanos { get; set; }
+    public ReserveCoverageState Coverage { get; set; }
+    public string EvidenceHash { get; set; } = string.Empty;
+    public DateTimeOffset ActivatedAt { get; set; }
+}
+
+internal sealed class EconomyReserveAssetAllocationRow
+{
+    public Guid Id { get; set; }
+    public long ReserveVersion { get; set; }
+    public string AssetKey { get; set; } = string.Empty;
+    public ReserveBackingPurpose Purpose { get; set; }
+    public long EligibleUsdNanos { get; set; }
+}
+
 internal sealed class EconomyRiskDecisionRow
 {
     public Guid Id { get; set; }
@@ -241,6 +273,7 @@ internal sealed class EconomyRiskDecisionRow
     public string ProviderReferenceHash { get; set; } = string.Empty;
     public long PolicyVersion { get; set; }
     public long ReserveVersion { get; set; }
+    public long ReserveAuthorizationEpoch { get; set; }
     public long FeatureVersion { get; set; }
     public long KillSwitchEpoch { get; set; }
     public long CounterVersion { get; set; }
