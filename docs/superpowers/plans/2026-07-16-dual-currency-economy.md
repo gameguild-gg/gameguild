@@ -389,16 +389,18 @@ Verification: immutable effective-dated policy, fixed `100 HC/USD` and `100,000 
 
 **Produces:** `GameGuild.Economy.Risk`, transaction risk decisions, entity graph contracts, aggregate limits, protected-change cooldowns, Trust/Safety and FinancialCrime input contracts, review queue, and Core decision-validation hooks.
 
-- [ ] Write tests for missing, expired, reused, wrong-outcome, actor-mismatched, destination-mismatched, source-root-mismatched, amount-mismatched, stale-policy, stale-reserve, stale-kill-switch, stale-counter, and stale-graph decisions.
-- [ ] Add explicit `Allow`, `Challenge`, `Hold`, `Review`, and `Deny` outcomes; prove only `Allow` can authorize value movement and `Hold` can only create or preserve nonspendable holds.
-- [ ] Define risk-decision snapshots that bind actor, operation template, amount, currency legs, source roots, destination, provider reference, policy version, reserve version, feature flag, kill-switch epoch, entity-cluster evidence, and reason codes.
-- [ ] Implement privacy-preserving entity graph contracts for account, tenant, KYC identity, payment instrument, bank account, payout destination, device-risk token, IP/prefix, ASN, referral, project, product, marketplace counterparty, and provider object using opaque or KMS-HMAC references.
-- [ ] Implement aggregate exposure and velocity limit contracts across wallet, identity cluster, source root, destination, counterparty pair, product, tenant, provider account, device/IP/ASN cluster, and global loss budget.
-- [ ] Implement protected-change cooldown policies for password reset, MFA reset, email change, ownership transfer, identity update, bank/payout-destination change, new-device login, and high-risk session elevation.
-- [ ] Add transaction-bound reauthentication evidence requirements for payout, destination change, ownership transfer, hold release, high-risk settlement, and administrative adjustment.
-- [ ] Add review-case, appeal, manual decision, dual-approval, and immutable audit contracts without exposing risk bypass details in user-facing responses.
-- [ ] Add `Compliance.FinancialCrime` and `TrustSafety` input contracts so Core can fail closed when required status is blocked, stale, unknown, or unauditable.
-- [ ] Wire Core protected posting commands to require and validate `RiskDecisionId`; keep all value-moving capabilities disabled until schema rollup verifies persistence and counters.
+- [x] Write tests for missing, expired, reused, wrong-outcome, actor-mismatched, destination-mismatched, source-root-mismatched, amount-mismatched, stale-policy, stale-reserve, stale-kill-switch, stale-counter, and stale-graph decisions.
+- [x] Add explicit `Allow`, `Challenge`, `Hold`, `Review`, and `Deny` outcomes; prove only `Allow` can authorize value movement and `Hold` can only create or preserve nonspendable holds.
+- [x] Define risk-decision snapshots that bind actor, operation template, amount, currency legs, source roots, destination, provider reference, policy version, reserve version, feature flag, kill-switch epoch, entity-cluster evidence, and reason codes.
+- [x] Implement privacy-preserving entity graph contracts for account, tenant, KYC identity, payment instrument, bank account, payout destination, device-risk token, IP/prefix, ASN, referral, project, product, marketplace counterparty, and provider object using opaque or KMS-HMAC references.
+- [x] Implement aggregate exposure and velocity limit contracts across wallet, identity cluster, source root, destination, counterparty pair, product, tenant, provider account, device/IP/ASN cluster, and global loss budget.
+- [x] Implement protected-change cooldown policies for password reset, MFA reset, email change, ownership transfer, identity update, bank/payout-destination change, new-device login, and high-risk session elevation.
+- [x] Add transaction-bound reauthentication evidence requirements for payout, destination change, ownership transfer, hold release, high-risk settlement, and administrative adjustment.
+- [x] Add review-case, appeal, manual decision, dual-approval, and immutable audit contracts without exposing risk bypass details in user-facing responses.
+- [x] Add `Compliance.FinancialCrime` and `TrustSafety` input contracts so Core can fail closed when required status is blocked, stale, unknown, or unauditable.
+- [x] Wire Core protected posting commands to require and validate `RiskDecisionId`; keep all value-moving capabilities disabled until schema rollup verifies persistence and counters.
+
+Verification: the protected-operation risk engine is integrated on `develop` SHA `09e87379a`. It includes immutable context-bound decisions, one-time exact replay, opaque/HMAC entity graph contracts, serialized multi-dimensional exposure counters, cooldown and reauthentication evidence, FinancialCrime and TrustSafety fail-closed inputs, independent review/appeal/dual-approval workflows, redacted audit output, and the Core posting gate. The gate remains intentionally closed until Task 2.7 verifies both schema persistence and counter constraints. `GameGuild.Economy.UnitTests` passes `223/223` tests with zero skips and `100%` line, branch, and method coverage; strict Release Economy/API builds and API publish complete with zero warnings and zero errors.
 
 ### Task 2.7: Foundation Schema, Roles, And Immutability Rollup
 
