@@ -9,7 +9,7 @@ public sealed class CoreReserveAuthorityTests
     private static readonly DateTimeOffset Now = new(2026, 7, 18, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public void CoreAtomicallyActivatesOneProposalAndRejectsAStaleVersionRace()
+    public void CoreAtomicallyActivatesOneProposalAndRejectsAStaleExpectedVersion()
     {
         var authority = new CoreReserveAuthority();
         var first = Proposal(new ReserveVersion(1), expected: null, epoch: 1);
@@ -24,6 +24,38 @@ public sealed class CoreReserveAuthorityTests
                 Proposal(new ReserveVersion(2), expected: null, epoch: 2), Now))
             .Should().Throw<ReserveVersionConflictException>();
         authority.ActiveHead.Should().Be(activated);
+    }
+
+    [Fact]
+    public async Task CoreSerializesConcurrentProposalActivation()
+    {
+        var authority = new CoreReserveAuthority();
+        var active = authority.ValidateAndActivate(Proposal(new ReserveVersion(1), null, 1), Now);
+        using var start = new Barrier(2);
+
+        async Task<(ReserveHead? Head, Exception? Error)> AttemptAsync()
+        {
+            await Task.Yield();
+            start.SignalAndWait();
+            try
+            {
+                return (authority.ValidateAndActivate(
+                    Proposal(new ReserveVersion(2), active.Version, 2), Now), null);
+            }
+            catch (Exception exception)
+            {
+                return (null, exception);
+            }
+        }
+
+        var results = await Task.WhenAll(
+            Task.Run(AttemptAsync),
+            Task.Run(AttemptAsync));
+
+        var activated = results.Single(result => result.Head is not null).Head!;
+        results.Should().ContainSingle(result => result.Error is ReserveVersionConflictException);
+        authority.ActiveHead.Should().BeSameAs(activated);
+        activated.Version.Should().Be(new ReserveVersion(2));
     }
 
     [Fact]
@@ -109,6 +141,9 @@ public sealed class CoreReserveAuthorityTests
             .Should().Throw<ReserveAuthorizationException>();
         FluentActions.Invoking(() => authority.Authorize(new ReserveVersion(1), 6, Now))
             .Should().Throw<ReserveAuthorizationEpochException>();
+        FluentActions.Invoking(() => authority.Authorize(
+                new ReserveVersion(1), 7, Now.AddMinutes(-2)))
+            .Should().Throw<ReserveInputUnknownException>();
         FluentActions.Invoking(() => authority.Authorize(new ReserveVersion(1), 7, Now.AddMinutes(6)))
             .Should().Throw<ReserveInputUnknownException>();
     }
@@ -131,6 +166,15 @@ public sealed class CoreReserveAuthorityTests
         authority.ValidateAndActivate(underfunded, Now).Coverage.Should().Be(ReserveCoverageState.Shortfall);
         FluentActions.Invoking(() => authority.Authorize(new ReserveVersion(1), 1, Now))
             .Should().Throw<ReserveShortfallException>();
+    }
+
+    [Fact]
+    public void AuthorizationTokenCannotBeConstructedFromDefaultOrInvalidAuthorityState()
+    {
+        FluentActions.Invoking(() => new ReservePostingAuthorization(default, 1, Now))
+            .Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => new ReservePostingAuthorization(new ReserveVersion(1), 0, Now))
+            .Should().Throw<ArgumentOutOfRangeException>();
     }
 
     private static ReserveProposal Proposal(

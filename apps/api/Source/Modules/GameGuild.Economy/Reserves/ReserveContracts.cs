@@ -78,21 +78,23 @@ public sealed record ReserveHead(
     IReadOnlyList<ExternalReserveAsset> AssetAllocations,
     string EvidenceHash);
 
-public readonly record struct ReservePostingAuthorization
+public sealed record ReservePostingAuthorization
 {
     internal ReservePostingAuthorization(
         ReserveVersion version,
         long authorizationEpoch,
         DateTimeOffset lockedAt)
     {
+        if (version.Value <= 0) throw new ArgumentOutOfRangeException(nameof(version));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(authorizationEpoch);
         Version = version;
         AuthorizationEpoch = authorizationEpoch;
         LockedAt = lockedAt;
     }
 
-    public ReserveVersion Version { get; init; }
-    public long AuthorizationEpoch { get; init; }
-    public DateTimeOffset LockedAt { get; init; }
+    public ReserveVersion Version { get; }
+    public long AuthorizationEpoch { get; }
+    public DateTimeOffset LockedAt { get; }
 }
 
 public sealed class ReserveInputUnknownException(string message) : InvalidOperationException(message);

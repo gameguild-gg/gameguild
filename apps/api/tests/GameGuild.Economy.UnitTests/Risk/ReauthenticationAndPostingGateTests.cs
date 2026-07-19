@@ -55,6 +55,9 @@ public sealed class ReauthenticationAndPostingGateTests
                 command, decision, RiskPersistenceReadiness.NotReady, reserveAuthorization, Time))
             .Should().Throw<RiskPersistenceNotReadyException>();
         FluentActions.Invoking(() => gate.Authorize(
+                command, decision, new(true, true), null!, Time))
+            .Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => gate.Authorize(
                 command with { RiskDecisionId = null }, decision, new(true, true), reserveAuthorization, Time))
             .Should().Throw<MissingRiskDecisionException>();
         FluentActions.Invoking(() => gate.Authorize(
@@ -66,10 +69,12 @@ public sealed class ReauthenticationAndPostingGateTests
                 reserveAuthorization, Time))
             .Should().Throw<RiskDecisionBindingException>();
         FluentActions.Invoking(() => gate.Authorize(
-                command, decision, new(true, true), reserveAuthorization with { Version = new ReserveVersion(2) }, Time))
+                command, decision, new(true, true),
+                new ReservePostingAuthorization(new ReserveVersion(2), context.ReserveAuthorizationEpoch, Time), Time))
             .Should().Throw<ReserveAuthorizationException>();
         FluentActions.Invoking(() => gate.Authorize(
-                command, decision, new(true, true), reserveAuthorization with { AuthorizationEpoch = 2 }, Time))
+                command, decision, new(true, true),
+                new ReservePostingAuthorization(context.ReserveVersion, 2, Time), Time))
             .Should().Throw<ReserveAuthorizationEpochException>();
 
         gate.Authorize(command, decision, new(true, true), reserveAuthorization, Time)
