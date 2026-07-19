@@ -18,6 +18,7 @@ public sealed class EconomyPersistenceModelTests
         "economy_entry_allocations",
         "economy_external_anchors",
         "economy_fragment_root_ranges",
+        "economy_funding_claims",
         "economy_hold_events",
         "economy_holds",
         "economy_idempotency_records",
@@ -55,6 +56,9 @@ public sealed class EconomyPersistenceModelTests
         "ux_economy_dispatch_snapshots_hash",
         "ux_economy_entry_allocations_line_parent",
         "ux_economy_fragment_root_ranges_owner_interval",
+        "ux_economy_funding_claims_provider_leg",
+        "ux_economy_funding_claims_posting_group",
+        "ux_economy_funding_claims_root_lot",
         "ux_economy_idempotency_records_key",
         "ux_economy_journal_entries_posting_group_id",
         "ux_economy_journal_entries_sequence",
@@ -123,6 +127,10 @@ public sealed class EconomyPersistenceModelTests
             "ck_economy_entry_allocations_amount_positive",
             "ck_economy_fragment_root_ranges_half_open",
             "ck_economy_fragment_root_ranges_single_owner",
+            "ck_economy_funding_claims_amount_positive",
+            "ck_economy_funding_claims_lifecycle",
+            "ck_economy_funding_claims_provider_reversal_bounds",
+            "ck_economy_funding_claims_version_positive",
             "ck_economy_hold_events_sequence_positive",
             "ck_economy_holds_amount_positive",
             "ck_economy_holds_state_timestamp",
@@ -168,6 +176,11 @@ public sealed class EconomyPersistenceModelTests
             "SourceKind", "InternalSourceId", "SourceLegId");
         AssertUniqueIndex(
             model,
+            "economy_funding_claims",
+            "ux_economy_funding_claims_provider_leg",
+            "Provider", "Environment", "ConnectedAccount", "ProviderObject", "ProviderMonetaryLeg");
+        AssertUniqueIndex(
+            model,
             "economy_provider_fact_allocations",
             "ux_economy_provider_fact_allocations_provider_leg",
             "Provider", "Environment", "ConnectedAccount", "ProviderObject", "ProviderMonetaryLeg");
@@ -211,6 +224,34 @@ public sealed class EconomyPersistenceModelTests
         AssertProperties(model, "economy_posting_groups", "ReserveVersion", "ReserveAuthorizationEpoch", "RiskDecisionId");
         AssertProperties(model, "economy_risk_decisions", "ReserveVersion", "ReserveAuthorizationEpoch");
         AssertProperties(model, "economy_dispatch_snapshots", "ReserveVersion", "ReserveAuthorizationEpoch");
+    }
+
+    [Fact]
+    public void FundingClaimPersistsPendingAndTerminalProviderLifecycle()
+    {
+        using var context = CreateContext();
+        var model = context.Model;
+
+        AssertProperties(
+            model,
+            "economy_funding_claims",
+            "SourceStampId",
+            "WalletId",
+            "AuthoritativeUsdMinorUnits",
+            "State",
+            "ObservedAt",
+            "ConfirmedAt",
+            "StateChangedAt",
+            "PostingGroupId",
+            "RootCreditLotId",
+            "CumulativeProviderReversalUnits",
+            "Version");
+
+        var fundingClaim = model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "economy_funding_claims");
+        fundingClaim.FindPrimaryKey()!.Properties.Select(property => property.Name)
+            .Should().Equal("SourceStampId");
+        fundingClaim.FindProperty("Version")!.IsConcurrencyToken.Should().BeTrue();
     }
 
     [Fact]
