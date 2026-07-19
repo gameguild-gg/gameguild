@@ -13,6 +13,7 @@ public sealed class PostingTemplateCatalogTests
         PostingTemplateCatalog.All.Select(item => item.Kind)
             .Should().BeEquivalentTo(Enum.GetValues<PostingTemplateKind>());
         PostingTemplateCatalog.All.Should().OnlyContain(item => item.Version == PostingTemplate.CurrentVersion);
+        PostingTemplateCatalog.All.Should().OnlyContain(item => item.RequiresReserveAuthorization);
         PostingTemplateCatalog.All.GroupBy(item => (item.Kind, item.Version))
             .Should().OnlyContain(group => group.Count() == 1);
     }

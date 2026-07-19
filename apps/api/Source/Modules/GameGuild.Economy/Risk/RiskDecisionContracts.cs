@@ -54,7 +54,8 @@ public sealed record ProtectedOperationContext(
     long KillSwitchEpoch,
     long EntityGraphVersion,
     string EntityGraphEvidenceHash,
-    long CounterVersion = 1)
+    long CounterVersion = 1,
+    long ReserveAuthorizationEpoch = 1)
 {
     public string Fingerprint()
     {
@@ -78,7 +79,8 @@ public sealed record ProtectedOperationContext(
             KillSwitchEpoch.ToString(CultureInfo.InvariantCulture),
             EntityGraphVersion.ToString(CultureInfo.InvariantCulture),
             EntityGraphEvidenceHash,
-            CounterVersion.ToString(CultureInfo.InvariantCulture));
+            CounterVersion.ToString(CultureInfo.InvariantCulture),
+            ReserveAuthorizationEpoch.ToString(CultureInfo.InvariantCulture));
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }
 }
