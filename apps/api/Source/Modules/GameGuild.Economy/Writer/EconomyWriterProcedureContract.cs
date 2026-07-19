@@ -36,6 +36,8 @@ public static class EconomyWriterProcedureContract
             Input("p_policy_version", "bigint"),
             Input("p_reserve_version", "bigint"),
             Input("p_risk_decision_id", "uuid"),
+            Input("p_risk_operation_fingerprint", "text"),
+            Input("p_expected_counter_version", "bigint"),
             Input("p_source_stamp_id", "uuid"),
             Input("p_source_evidence_hash", "text"),
             Input("p_requested_at", "timestamptz"),
