@@ -58,6 +58,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                          && t.GetConstructor(Type.EmptyTypes) is not null)
             .Select(Activator.CreateInstance)
             .OfType<IModelConfiguration>()
+            .OrderBy(configuration => configuration.GetType().FullName, StringComparer.Ordinal)
             .ToList();
 
         foreach (var configuration in configurations)
