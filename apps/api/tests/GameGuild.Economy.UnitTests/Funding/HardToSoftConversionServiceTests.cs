@@ -14,7 +14,7 @@ public sealed class HardToSoftConversionServiceTests
     {
         var (store, service, wallet) = Setup(10);
 
-        var conversion = service.ConvertHardToSoft(Convert(wallet, 4));
+        var conversion = service.ConvertHardToSoft(Convert(store, wallet, 4));
 
         conversion.PrincipalPosting.Status.Should().Be(PostingStatus.Accepted);
         conversion.FeePosting.Should().BeNull();
@@ -35,7 +35,7 @@ public sealed class HardToSoftConversionServiceTests
     {
         var (store, service, wallet) = Setup(10);
 
-        var conversion = service.ConvertHardToSoft(Convert(wallet, 4, 1));
+        var conversion = service.ConvertHardToSoft(Convert(store, wallet, 4, 1));
 
         conversion.FeePosting.Should().NotBeNull();
         store.JournalEntries.Should().HaveCount(3);
@@ -52,7 +52,7 @@ public sealed class HardToSoftConversionServiceTests
     public void ConvertHardToSoft_IsIdempotentAcrossPrincipalAndFee()
     {
         var (store, service, wallet) = Setup(10);
-        var command = Convert(wallet, 4, 1);
+        var command = Convert(store, wallet, 4, 1);
 
         var first = service.ConvertHardToSoft(command);
         var duplicate = service.ConvertHardToSoft(command);
@@ -69,7 +69,7 @@ public sealed class HardToSoftConversionServiceTests
         var (store, service, wallet) = Setup(4);
         var before = store.SnapshotCounts();
 
-        FluentActions.Invoking(() => service.ConvertHardToSoft(Convert(wallet, 4, 1)))
+        FluentActions.Invoking(() => service.ConvertHardToSoft(Convert(store, wallet, 4, 1)))
             .Should().Throw<InsufficientFragmentsException>();
 
         store.SnapshotCounts().Should().Be(before);
@@ -83,9 +83,9 @@ public sealed class HardToSoftConversionServiceTests
     [InlineData(-1)]
     public void ConvertHardToSoft_RejectsNonPositivePrincipal(long units)
     {
-        var (_, service, wallet) = Setup(4);
+        var (store, service, wallet) = Setup(4);
 
-        FluentActions.Invoking(() => service.ConvertHardToSoft(Convert(wallet, units)))
+        FluentActions.Invoking(() => service.ConvertHardToSoft(Convert(store, wallet, units)))
             .Should().Throw<ArgumentOutOfRangeException>();
     }
 
@@ -109,27 +109,62 @@ public sealed class HardToSoftConversionServiceTests
             "provider-observation",
             units,
             Time));
+        var idempotencyKey = new IdempotencyKey($"fund-{Guid.NewGuid():N}");
+        var confirmedAt = Time.AddMinutes(1);
         service.ConfirmObservedTopUp(new ConfirmObservedTopUpCommand(
             PostingId.New(),
-            new IdempotencyKey($"fund-{Guid.NewGuid():N}"),
+            idempotencyKey,
             observed.SourceId,
             CreditLotId.New(),
             new ReserveVersion(1),
             new PolicyVersion(1),
             "provider-confirmation",
-            Time.AddMinutes(1)));
+            confirmedAt,
+            FundingAuthorizationFixture.Create(
+                PostingTemplateKind.ConfirmedTopUpMint,
+                idempotencyKey,
+                wallet,
+                observed.Amount,
+                [observed.SourceId],
+                confirmedAt)));
         return (store, service, wallet);
     }
 
-    private static ConvertHardToSoftCommand Convert(WalletId wallet, long principal, long fee = 0) => new(
-        PostingId.New(),
-        PostingId.New(),
-        new IdempotencyKey($"convert-{Guid.NewGuid():N}"),
-        wallet,
-        CreditLotId.New(),
-        principal,
-        fee,
-        new ReserveVersion(1),
-        new PolicyVersion(1),
-        Time.AddMinutes(2));
+    private static ConvertHardToSoftCommand Convert(
+        InMemoryLedgerKernelStore store,
+        WalletId wallet,
+        long principal,
+        long fee = 0)
+    {
+        var idempotencyKey = new IdempotencyKey($"convert-{Guid.NewGuid():N}");
+        var total = checked(principal + fee);
+        var amount = new CoinAmount(CurrencyCode.HardCoin, Math.Max(total, 0));
+        var requestedAt = Time.AddMinutes(2);
+        var roots = store.GetAvailableLots(wallet, CurrencyCode.HardCoin)
+            .SelectMany(lot => lot.Ranges)
+            .Select(range => range.Root)
+            .Distinct()
+            .ToArray();
+        return new ConvertHardToSoftCommand(
+            PostingId.New(),
+            PostingId.New(),
+            idempotencyKey,
+            wallet,
+            CreditLotId.New(),
+            principal,
+            fee,
+            new ReserveVersion(1),
+            new PolicyVersion(1),
+            requestedAt,
+            FundingAuthorizationFixture.Create(
+                PostingTemplateKind.HardToSoftConversion,
+                idempotencyKey,
+                wallet,
+                amount,
+                roots,
+                requestedAt,
+                principal > 0
+                    ? new CoinAmount(CurrencyCode.SoftCoin, checked(principal * 1_000))
+                    : new CoinAmount(CurrencyCode.SoftCoin, 1)));
+    }
 }

@@ -65,7 +65,7 @@ public sealed class HardCoinFundingServiceTests
     {
         var (store, service, claim) = Setup();
 
-        var result = service.ConfirmObservedTopUp(Confirm(claim.SourceId));
+        var result = service.ConfirmObservedTopUp(Confirm(claim));
 
         result.Status.Should().Be(PostingStatus.Accepted);
         store.PendingFundingClaims.Should().BeEmpty();
@@ -85,7 +85,7 @@ public sealed class HardCoinFundingServiceTests
     public void ConfirmObservedTopUp_DuplicateWebhookIsIdempotent()
     {
         var (store, service, claim) = Setup();
-        var command = Confirm(claim.SourceId);
+        var command = Confirm(claim);
 
         var first = service.ConfirmObservedTopUp(command);
         var duplicate = service.ConfirmObservedTopUp(command);
@@ -125,10 +125,9 @@ public sealed class HardCoinFundingServiceTests
         var (store, service, claim) = Setup();
 
         store.PendingFundingClaims.Should().ContainSingle();
-        var result = service.ConfirmObservedTopUp(Confirm(claim.SourceId) with
+        var result = service.ConfirmObservedTopUp(Confirm(claim, Time.AddHours(2)) with
         {
-            Evidence = "provider-confirmed-after-timeout",
-            ConfirmedAt = Time.AddHours(2)
+            Evidence = "provider-confirmed-after-timeout"
         });
 
         result.Status.Should().Be(PostingStatus.Accepted);
@@ -141,7 +140,7 @@ public sealed class HardCoinFundingServiceTests
         var (store, service, claim) = Setup();
         var actions = new Func<bool>[]
         {
-            () => Complete(() => service.ConfirmObservedTopUp(Confirm(claim.SourceId))),
+            () => Complete(() => service.ConfirmObservedTopUp(Confirm(claim))),
             () => Complete(() => service.FinalizeObservedTopUp(new FinalizeObservedTopUpCommand(
                 claim.SourceId, SourceConfirmationState.Failed, "failure", Time.AddMinutes(2)))),
             () => Complete(() => service.FinalizeObservedTopUp(new FinalizeObservedTopUpCommand(
@@ -187,13 +186,27 @@ public sealed class HardCoinFundingServiceTests
         2_500,
         Time);
 
-    private static ConfirmObservedTopUpCommand Confirm(SourceStampId sourceId) => new(
-        PostingId.New(),
-        new IdempotencyKey("provider-confirmation"),
-        sourceId,
-        CreditLotId.New(),
-        new ReserveVersion(1),
-        new PolicyVersion(1),
-        "provider-confirmation-evidence",
-        Time.AddMinutes(1));
+    private static ConfirmObservedTopUpCommand Confirm(
+        HardCoinFundingClaim claim,
+        DateTimeOffset? recoveredAt = null)
+    {
+        var idempotencyKey = new IdempotencyKey("provider-confirmation");
+        var confirmedAt = recoveredAt ?? Time.AddMinutes(1);
+        return new ConfirmObservedTopUpCommand(
+            PostingId.New(),
+            idempotencyKey,
+            claim.SourceId,
+            CreditLotId.New(),
+            new ReserveVersion(1),
+            new PolicyVersion(1),
+            "provider-confirmation-evidence",
+            confirmedAt,
+            FundingAuthorizationFixture.Create(
+                PostingTemplateKind.ConfirmedTopUpMint,
+                idempotencyKey,
+                claim.WalletId,
+                claim.Amount,
+                [claim.SourceId],
+                confirmedAt));
+    }
 }

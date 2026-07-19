@@ -22,7 +22,8 @@ public sealed record ConfirmObservedTopUpCommand(
     ReserveVersion ReserveVersion,
     PolicyVersion PolicyVersion,
     string Evidence,
-    DateTimeOffset ConfirmedAt);
+    DateTimeOffset ConfirmedAt,
+    ProtectedIssuanceAuthorization Authorization);
 
 public sealed record FinalizeObservedTopUpCommand(
     SourceStampId SourceId,
@@ -40,12 +41,28 @@ public sealed record ConvertHardToSoftCommand(
     long FeeHardCoinUnits,
     ReserveVersion ReserveVersion,
     PolicyVersion PolicyVersion,
-    DateTimeOffset RequestedAt);
+    DateTimeOffset RequestedAt,
+    ProtectedIssuanceAuthorization Authorization);
 
 public sealed record HardToSoftConversionResult(
     PostingResult PrincipalPosting,
     PostingResult? FeePosting,
     CreditLot OutputLot);
+
+public sealed record IssueSystemBackedGrantCommand(
+    PostingId PostingId,
+    IdempotencyKey IdempotencyKey,
+    SourceStampId SourceId,
+    WalletId WalletId,
+    CreditLotId OutputLotId,
+    long HardBackingUnits,
+    ReserveVersion ReserveVersion,
+    PolicyVersion PolicyVersion,
+    string TreasuryEvidence,
+    DateTimeOffset IssuedAt,
+    ProtectedIssuanceAuthorization Authorization);
+
+public sealed record SystemBackedGrantResult(PostingResult Posting, CreditLot OutputLot);
 
 public sealed record ProviderMonetaryLeg
 {
@@ -199,6 +216,7 @@ public sealed class HardCoinFundingClaim
             (SourceConfirmationState.Observed, SourceConfirmationState.Expired) => true,
             (SourceConfirmationState.Confirmed, SourceConfirmationState.Disputed) => true,
             (SourceConfirmationState.Confirmed, SourceConfirmationState.Reversed) => true,
+            (SourceConfirmationState.Disputed, SourceConfirmationState.Disputed) => true,
             (SourceConfirmationState.Disputed, SourceConfirmationState.Reversed) => true,
             _ => false
         };

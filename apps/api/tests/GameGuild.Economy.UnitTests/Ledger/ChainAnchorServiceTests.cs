@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using FluentAssertions;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.UnitTests.Funding;
 
 namespace GameGuild.Economy.UnitTests.Ledger;
 
@@ -79,12 +80,8 @@ public sealed class ChainAnchorServiceTests
     {
         var store = new InMemoryLedgerKernelStore();
         var posting = new TransactionalPostingService(store);
-        var observed = posting.ObserveFunding(new ObserveFundingCommand(
-            SourceStampId.New(), "stripe", "pi_anchor", "payload", Time));
-        posting.ConfirmTopUp(new ConfirmTopUpCommand(
-            PostingId.New(), new IdempotencyKey("anchor-topup"), observed.Id,
-            WalletId.New(), CreditLotId.New(), new CoinAmount(CurrencyCode.HardCoin, 10),
-            new ReserveVersion(1), new PolicyVersion(1), Time.AddMinutes(1), Time.AddDays(120)));
+        var observed = FundingTestDriver.Observe(posting, Time, providerObject: "pi_anchor");
+        FundingTestDriver.Confirm(posting, observed, Time.AddMinutes(1), "anchor-topup");
         return (store, new HmacChainHeadSigner("anchor-key-1", RandomNumberGenerator.GetBytes(32)));
     }
 
