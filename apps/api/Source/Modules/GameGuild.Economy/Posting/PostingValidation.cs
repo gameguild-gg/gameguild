@@ -151,6 +151,10 @@ public static class PostingMatrix
                 Match(lines[3], EntrySide.Credit, EconomyAccountCode.SoftCoinLiability, CurrencyCode.SoftCoin, true, ProvenanceKind.ConvertedSoft, errors);
                 ValidateParity(lines[0].Amount.Units, lines[3].Amount.Units, errors);
                 break;
+            case PostingTemplateKind.HardToSoftConversionFee:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.PurchasedHardLiability, CurrencyCode.HardCoin, true, ProvenanceKind.PurchasedHard, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.FeeRevenueHard, CurrencyCode.HardCoin, false, null, errors);
+                break;
             case PostingTemplateKind.SystemBackedGrant:
                 Match(lines[0], EntrySide.Debit, EconomyAccountCode.PlatformHardTreasury, CurrencyCode.HardCoin, false, null, errors);
                 Match(lines[1], EntrySide.Credit, EconomyAccountCode.HardCoinReserve, CurrencyCode.HardCoin, false, null, errors);

@@ -73,16 +73,46 @@ public sealed class SourceEvidence
             SourceConfirmationState.Confirmed, ObservedAt, confirmedAt, null);
     }
 
-    public SourceEvidence Reverse(DateTimeOffset reversedAt)
+    public SourceEvidence Fail(DateTimeOffset failedAt) =>
+        CompleteObserved(SourceConfirmationState.Failed, failedAt);
+
+    public SourceEvidence Expire(DateTimeOffset expiredAt) =>
+        CompleteObserved(SourceConfirmationState.Expired, expiredAt);
+
+    public SourceEvidence Dispute(DateTimeOffset disputedAt)
     {
         if (State != SourceConfirmationState.Confirmed)
-            throw new InvalidOperationException("Only confirmed source evidence can be reversed.");
+            throw new InvalidOperationException("Only confirmed source evidence can be disputed.");
+        if (disputedAt < ConfirmedAt!.Value)
+            throw new ArgumentException("Dispute cannot precede confirmation.", nameof(disputedAt));
+
+        return new SourceEvidence(
+            Id, Provider, ProviderReference, EvidenceHash,
+            SourceConfirmationState.Disputed, ObservedAt, ConfirmedAt, disputedAt);
+    }
+
+    public SourceEvidence Reverse(DateTimeOffset reversedAt)
+    {
+        if (State is not (SourceConfirmationState.Confirmed or SourceConfirmationState.Disputed))
+            throw new InvalidOperationException("Only confirmed or disputed source evidence can be reversed.");
         if (reversedAt < ConfirmedAt!.Value)
             throw new ArgumentException("Reversal cannot precede confirmation.", nameof(reversedAt));
 
         return new SourceEvidence(
             Id, Provider, ProviderReference, EvidenceHash,
             SourceConfirmationState.Reversed, ObservedAt, ConfirmedAt, reversedAt);
+    }
+
+    private SourceEvidence CompleteObserved(SourceConfirmationState target, DateTimeOffset occurredAt)
+    {
+        if (State != SourceConfirmationState.Observed)
+            throw new InvalidOperationException("Only observed source evidence can fail or expire.");
+        if (occurredAt < ObservedAt)
+            throw new ArgumentException("Terminal evidence cannot precede observation.", nameof(occurredAt));
+
+        return new SourceEvidence(
+            Id, Provider, ProviderReference, EvidenceHash,
+            target, ObservedAt, null, occurredAt);
     }
 
     private static string ComputeEvidenceHash(string provider, string reference, string evidence)

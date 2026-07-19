@@ -94,7 +94,8 @@ public enum PostingTemplateKind
     PayoutFailure = 13,
     AdminWithdrawalReservation = 14,
     AdminWithdrawalSuccess = 15,
-    AdminWithdrawalFailure = 16
+    AdminWithdrawalFailure = 16,
+    HardToSoftConversionFee = 17
 }
 
 public enum PostingStatus
