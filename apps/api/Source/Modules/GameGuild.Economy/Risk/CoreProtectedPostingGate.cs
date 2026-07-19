@@ -1,0 +1,60 @@
+using GameGuild.Economy.Contracts;
+
+namespace GameGuild.Economy.Risk;
+
+public readonly record struct RiskDecisionId
+{
+    public RiskDecisionId(Guid value)
+    {
+        if (value == Guid.Empty) throw new ArgumentException("Risk decision ID cannot be empty.", nameof(value));
+        Value = value;
+    }
+
+    public Guid Value { get; }
+}
+
+public sealed record RiskPersistenceReadiness(bool SchemaRollupVerified, bool CounterConstraintsVerified)
+{
+    public bool IsReady => SchemaRollupVerified && CounterConstraintsVerified;
+    public static RiskPersistenceReadiness NotReady { get; } = new(false, false);
+}
+
+public sealed record ProtectedPostingCommand(
+    PostingTemplateKind Operation,
+    RiskDecisionId? RiskDecisionId,
+    ProtectedOperationContext Context);
+
+public sealed class CoreProtectedPostingGate
+{
+    private readonly RiskDecisionAuthorizer _authorizer;
+
+    public CoreProtectedPostingGate(RiskDecisionAuthorizer authorizer)
+    {
+        ArgumentNullException.ThrowIfNull(authorizer);
+        _authorizer = authorizer;
+    }
+
+    public RiskAuthorization Authorize(
+        ProtectedPostingCommand command,
+        RiskDecisionSnapshot decision,
+        RiskPersistenceReadiness readiness,
+        DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        ArgumentNullException.ThrowIfNull(decision);
+        ArgumentNullException.ThrowIfNull(readiness);
+        if (!readiness.IsReady)
+            throw new RiskPersistenceNotReadyException(
+                "Protected postings remain disabled until schema and counter constraints are verified.");
+        if (command.RiskDecisionId is null)
+            throw new MissingRiskDecisionException("Protected postings require a RiskDecisionId.");
+        if (command.RiskDecisionId.Value.Value != decision.Id)
+            throw new RiskDecisionBindingException("RiskDecisionId does not match the supplied decision snapshot.");
+        if (command.Operation != command.Context.Operation)
+            throw new RiskDecisionBindingException("Protected posting operation does not match the bound context.");
+        return _authorizer.AuthorizeValueMovement(decision, command.Context, now);
+    }
+}
+
+public sealed class RiskPersistenceNotReadyException(string message) : InvalidOperationException(message);
+public sealed class MissingRiskDecisionException(string message) : InvalidOperationException(message);
