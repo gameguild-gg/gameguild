@@ -72,7 +72,7 @@ public static class PostingMatrix
     {
         PostingTemplateKind.ConfirmedTopUpMint or PostingTemplateKind.ProviderReversalFull or PostingTemplateKind.ProviderReversalPartial => PostingAuthority.ProviderConfirmation,
         PostingTemplateKind.Spend or PostingTemplateKind.HardToSoftConversion or PostingTemplateKind.Burn or PostingTemplateKind.Escrow => PostingAuthority.WalletOwner,
-        PostingTemplateKind.SystemBackedGrant => PostingAuthority.PlatformSystem,
+        PostingTemplateKind.SystemBackedGrant or PostingTemplateKind.AdRewardIssuance => PostingAuthority.PlatformSystem,
         PostingTemplateKind.Reclaim or PostingTemplateKind.Refund => PostingAuthority.EscrowCoordinator,
         PostingTemplateKind.PayoutReservation or PostingTemplateKind.PayoutSuccess or PostingTemplateKind.PayoutFailure => PostingAuthority.PayoutCoordinator,
         PostingTemplateKind.AdminWithdrawalReservation or PostingTemplateKind.AdminWithdrawalSuccess or PostingTemplateKind.AdminWithdrawalFailure => PostingAuthority.Administrator,
@@ -184,6 +184,10 @@ public static class PostingMatrix
                 Match(lines[2], EntrySide.Debit, EconomyAccountCode.SoftCoinReserve, CurrencyCode.SoftCoin, false, null, errors);
                 Match(lines[3], EntrySide.Credit, EconomyAccountCode.SoftCoinLiability, CurrencyCode.SoftCoin, true, ProvenanceKind.SystemGrantSoft, errors);
                 ValidateParity(lines[0].Amount.Units, lines[3].Amount.Units, errors);
+                break;
+            case PostingTemplateKind.AdRewardIssuance:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.SoftCoinReserve, CurrencyCode.SoftCoin, false, null, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.SoftCoinLiability, CurrencyCode.SoftCoin, true, ProvenanceKind.AdRewardSoft, errors);
                 break;
             case PostingTemplateKind.Burn:
                 ValidateLiabilityAndSystemAccount(lines, EntrySide.Debit, ReserveFor(lines[0].Amount.Currency), errors);

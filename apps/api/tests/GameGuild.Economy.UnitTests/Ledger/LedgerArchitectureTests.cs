@@ -43,6 +43,7 @@ public sealed class LedgerArchitectureTests
             nameof(TransactionalPostingService.FinalizeObservedTopUp),
             nameof(TransactionalPostingService.ConvertHardToSoft),
             nameof(TransactionalPostingService.IssueSystemBackedGrant),
+            nameof(TransactionalPostingService.IssueAdReward),
             nameof(TransactionalPostingService.ReverseTopUp),
             nameof(TransactionalPostingService.Transfer));
         methods.SelectMany(method => method.GetParameters()).Select(parameter => parameter.ParameterType)

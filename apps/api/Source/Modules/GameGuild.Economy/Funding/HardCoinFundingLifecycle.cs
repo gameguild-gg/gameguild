@@ -64,6 +64,21 @@ public sealed record IssueSystemBackedGrantCommand(
 
 public sealed record SystemBackedGrantResult(PostingResult Posting, CreditLot OutputLot);
 
+public sealed record IssueAdRewardCommand(
+    PostingId PostingId,
+    IdempotencyKey IdempotencyKey,
+    SourceStampId SourceId,
+    WalletId WalletId,
+    CreditLotId OutputLotId,
+    long SoftUnits,
+    ReserveVersion ReserveVersion,
+    PolicyVersion PolicyVersion,
+    string ProviderEvidence,
+    DateTimeOffset IssuedAt,
+    ProtectedIssuanceAuthorization Authorization);
+
+public sealed record AdRewardIssuanceResult(PostingResult Posting, CreditLot OutputLot);
+
 public sealed record ProviderMonetaryLeg
 {
     private const char Separator = '\u001f';
