@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Economy.Contracts;
+using GameGuild.Economy.Reserves;
 using GameGuild.Economy.Risk;
 
 namespace GameGuild.Economy.UnitTests.Risk;
@@ -47,22 +48,32 @@ public sealed class ReauthenticationAndPostingGateTests
         var gate = new CoreProtectedPostingGate(new RiskDecisionAuthorizer());
         var command = new ProtectedPostingCommand(
             context.Operation, new RiskDecisionId(decision.Id), context);
+        var reserveAuthorization = new ReservePostingAuthorization(
+            context.ReserveVersion, context.ReserveAuthorizationEpoch, Time);
 
         FluentActions.Invoking(() => gate.Authorize(
-                command, decision, RiskPersistenceReadiness.NotReady, Time))
+                command, decision, RiskPersistenceReadiness.NotReady, reserveAuthorization, Time))
             .Should().Throw<RiskPersistenceNotReadyException>();
         FluentActions.Invoking(() => gate.Authorize(
-                command with { RiskDecisionId = null }, decision, new(true, true), Time))
+                command with { RiskDecisionId = null }, decision, new(true, true), reserveAuthorization, Time))
             .Should().Throw<MissingRiskDecisionException>();
         FluentActions.Invoking(() => gate.Authorize(
                 command with { RiskDecisionId = new RiskDecisionId(Guid.NewGuid()) }, decision,
-                new(true, true), Time))
+                new(true, true), reserveAuthorization, Time))
             .Should().Throw<RiskDecisionBindingException>();
         FluentActions.Invoking(() => gate.Authorize(
-                command with { Operation = PostingTemplateKind.Burn }, decision, new(true, true), Time))
+                command with { Operation = PostingTemplateKind.Burn }, decision, new(true, true),
+                reserveAuthorization, Time))
             .Should().Throw<RiskDecisionBindingException>();
+        FluentActions.Invoking(() => gate.Authorize(
+                command, decision, new(true, true), reserveAuthorization with { Version = new ReserveVersion(2) }, Time))
+            .Should().Throw<ReserveAuthorizationException>();
+        FluentActions.Invoking(() => gate.Authorize(
+                command, decision, new(true, true), reserveAuthorization with { AuthorizationEpoch = 2 }, Time))
+            .Should().Throw<ReserveAuthorizationEpochException>();
 
-        gate.Authorize(command, decision, new(true, true), Time).DecisionId.Should().Be(decision.Id);
+        gate.Authorize(command, decision, new(true, true), reserveAuthorization, Time)
+            .DecisionId.Should().Be(decision.Id);
     }
 
     [Fact]
@@ -87,5 +98,5 @@ public sealed class ReauthenticationAndPostingGateTests
             new IdempotencyKey("protected-posting"), Guid.NewGuid(), PostingTemplateKind.PayoutReservation,
             WalletId.New(), WalletId.New(), new CoinAmount(CurrencyCode.HardCoin, 10),
             [new RiskCurrencyLeg(CurrencyCode.HardCoin, 10)], [SourceStampId.New()], "provider",
-            new PolicyVersion(1), new ReserveVersion(1), 1, 1, 1, "graph", 1);
+            new PolicyVersion(1), new ReserveVersion(1), 1, 1, 1, "graph", 1, 1);
 }
