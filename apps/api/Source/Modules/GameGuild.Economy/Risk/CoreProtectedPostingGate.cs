@@ -45,6 +45,7 @@ public sealed class CoreProtectedPostingGate
         ArgumentNullException.ThrowIfNull(command);
         ArgumentNullException.ThrowIfNull(decision);
         ArgumentNullException.ThrowIfNull(readiness);
+        ArgumentNullException.ThrowIfNull(reserveAuthorization);
         if (!readiness.IsReady)
             throw new RiskPersistenceNotReadyException(
                 "Protected postings remain disabled until schema and counter constraints are verified.");

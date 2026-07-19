@@ -50,6 +50,9 @@ public sealed class RiskReviewWorkflowTests
         FluentActions.Invoking(() => ledger.Appeal(
                 Guid.NewGuid(), appeal.Id, Decision(), Guid.NewGuid(), ["invalid"], Time.AddMinutes(3)))
             .Should().Throw<InvalidOperationException>();
+        FluentActions.Invoking(() => ledger.Appeal(
+                Guid.NewGuid(), Guid.NewGuid(), Decision(), Guid.NewGuid(), ["unknown"], Time.AddMinutes(3)))
+            .Should().Throw<InvalidOperationException>();
     }
 
     [Fact]
