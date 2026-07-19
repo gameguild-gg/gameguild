@@ -24,6 +24,7 @@ public static class PostingTemplateCatalog
         Register(PostingTemplateKind.HardToSoftConversion, PostingAuthority.WalletOwner, 4),
         Register(PostingTemplateKind.HardToSoftConversionFee, PostingAuthority.WalletOwner, 2),
         Register(PostingTemplateKind.SystemBackedGrant, PostingAuthority.PlatformSystem, 4),
+        Register(PostingTemplateKind.AdRewardIssuance, PostingAuthority.PlatformSystem, 2),
         Register(PostingTemplateKind.Burn, PostingAuthority.WalletOwner, 2),
         Register(PostingTemplateKind.Escrow, PostingAuthority.WalletOwner, 2),
         Register(PostingTemplateKind.Reclaim, PostingAuthority.EscrowCoordinator, 2),

@@ -18,6 +18,7 @@ public sealed class PostingMatrixTests
         PostingTemplateKind.HardToSoftConversion,
         PostingTemplateKind.HardToSoftConversionFee,
         PostingTemplateKind.SystemBackedGrant,
+        PostingTemplateKind.AdRewardIssuance,
         PostingTemplateKind.Burn,
         PostingTemplateKind.Escrow,
         PostingTemplateKind.Reclaim,
@@ -35,7 +36,7 @@ public sealed class PostingMatrixTests
     {
         var registered = Enum.GetValues<PostingTemplateKind>();
 
-        registered.Should().HaveCount(20);
+        registered.Should().HaveCount(21);
         registered.Select(kind => kind.ToString()).Should().NotContain(name =>
             name.Contains("Observed", StringComparison.OrdinalIgnoreCase) ||
             name.Contains("FailedMint", StringComparison.OrdinalIgnoreCase));
@@ -412,6 +413,12 @@ internal static class PostingFixture
                     Line(2, EntrySide.Credit, EconomyAccountCode.HardCoinReserve, CurrencyCode.HardCoin, 10),
                     Line(3, EntrySide.Debit, EconomyAccountCode.SoftCoinReserve, CurrencyCode.SoftCoin, 10_000),
                     Line(4, EntrySide.Credit, EconomyAccountCode.SoftCoinLiability, CurrencyCode.SoftCoin, 10_000, WalletId.New(), ProvenanceKind.SystemGrantSoft)
+                }, null),
+            PostingTemplateKind.AdRewardIssuance => (PostingAuthority.PlatformSystem,
+                new[]
+                {
+                    Line(1, EntrySide.Debit, EconomyAccountCode.SoftCoinReserve, CurrencyCode.SoftCoin, 10),
+                    Line(2, EntrySide.Credit, EconomyAccountCode.SoftCoinLiability, CurrencyCode.SoftCoin, 10, WalletId.New(), ProvenanceKind.AdRewardSoft)
                 }, null),
             PostingTemplateKind.Burn => (PostingAuthority.WalletOwner,
                 new[]
