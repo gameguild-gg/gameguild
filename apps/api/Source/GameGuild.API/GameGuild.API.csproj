@@ -33,11 +33,16 @@
         <ProjectReference Include="..\Modules\GameGuild.AI\GameGuild.AI.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Compliance.Audit\GameGuild.Compliance.Audit.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Compliance.FERPA\GameGuild.Compliance.FERPA.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Compliance.FinancialCrime\GameGuild.Compliance.FinancialCrime.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Authentication\GameGuild.Identity.Authentication.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Billing\GameGuild.Commerce.Billing.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Orders\GameGuild.Commerce.Orders.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Economy\GameGuild.Economy.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Economy.AdRewards\GameGuild.Economy.AdRewards.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Economy.Bounties\GameGuild.Economy.Bounties.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Economy.Payouts\GameGuild.Economy.Payouts.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Economy.Treasury\GameGuild.Economy.Treasury.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Features\GameGuild.Features.csproj" />
         <!-- Orphaned: SLA module is not in EnabledModules and has no DI registration -->
         <!-- <ProjectReference Include="..\Modules\GameGuild.Monitoring.SLA\GameGuild.Monitoring.SLA.csproj" /> -->
@@ -66,6 +71,7 @@
         <ProjectReference Include="..\Modules\GameGuild.TestingLab\GameGuild.TestingLab.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.LaunchPad\GameGuild.LaunchPad.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Tags\GameGuild.Tags.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.TrustSafety\GameGuild.TrustSafety.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Content.Pages\GameGuild.Content.Pages.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Resources\GameGuild.Resources.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
