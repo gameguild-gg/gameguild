@@ -42,6 +42,16 @@ public sealed class CooldownAndExternalEvidenceTests
     }
 
     [Fact]
+    public void SubjectLookup_IsEmptyForUnknownSubject_AndRejectsEmptyIdentity()
+    {
+        var registry = new ProtectedChangeCooldownRegistry();
+
+        registry.ForSubject(Guid.NewGuid()).Should().BeEmpty();
+        FluentActions.Invoking(() => registry.ForSubject(Guid.Empty))
+            .Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void ExternalEvidenceRequiresFreshAllowFromFinancialCrimeAndTrustSafety()
     {
         var valid = new[]

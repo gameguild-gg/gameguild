@@ -16,7 +16,10 @@ public static class PostingTemplateCatalog
     [
         Register(PostingTemplateKind.ConfirmedTopUpMint, PostingAuthority.ProviderConfirmation, 2, SourceConfirmationState.Confirmed),
         Register(PostingTemplateKind.ProviderReversalFull, PostingAuthority.ProviderConfirmation, 2, SourceConfirmationState.Reversed),
-        Register(PostingTemplateKind.ProviderReversalPartial, PostingAuthority.ProviderConfirmation, 2, SourceConfirmationState.Reversed),
+        Register(PostingTemplateKind.ProviderReversalPartial, PostingAuthority.ProviderConfirmation, 2),
+        Register(PostingTemplateKind.ProviderConvertedSoftReversal, PostingAuthority.ProviderConfirmation, 4),
+        Register(PostingTemplateKind.ProviderReversalDebt, PostingAuthority.ProviderConfirmation, 2),
+        Register(PostingTemplateKind.ProviderReversalLoss, PostingAuthority.ProviderConfirmation, 2),
         Register(PostingTemplateKind.Spend, PostingAuthority.WalletOwner, 2),
         Register(PostingTemplateKind.HardToSoftConversion, PostingAuthority.WalletOwner, 4),
         Register(PostingTemplateKind.HardToSoftConversionFee, PostingAuthority.WalletOwner, 2),
