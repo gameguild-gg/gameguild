@@ -427,7 +427,7 @@ Verification: the protected-operation risk engine is integrated on `develop` SHA
 - [x] Define deterministic hard face-value and soft face-value/stressed-portfolio formula contracts, including open authorizations, worst-case unreserved service mix, checked ceiling arithmetic, and `0 <= margin_ppm < 1,000,000`.
 - [x] Require every issuance, conversion, settlement, reversal, payout, and withdrawal template to name and lock an active reserve version and matching risk decision even while production capabilities remain disabled.
 - [x] Provide test fixtures only, not a production reserve override. Real external observations and reconciliation arrive in Task 4.3.
-- [ ] Merge and delete this branch before Task 3.0.
+- [x] Merge and delete this branch before Task 3.0.
 
 Verification: Core now owns an unforgeable reserve authorization lock, deterministic conservative formulas, compare-and-swap activation, monotonic reserve and authorization epochs, exclusive external-asset allocation, and fail-closed protected-posting bindings. PostgreSQL persists one active reserve head through a security-definer procedure with pinned `search_path`, restricted table ACLs, advisory transaction serialization, and migration up/down coverage. `GameGuild.Economy.UnitTests` passes `244/244` tests with zero skips and `100%` line, branch, and method coverage; `GameGuild.API.UnitTests` passes `187/187`, the focused PostgreSQL migration suite passes `2/2`, the EF model reports no pending changes, and strict Release API build completes with zero warnings and zero errors.
 
