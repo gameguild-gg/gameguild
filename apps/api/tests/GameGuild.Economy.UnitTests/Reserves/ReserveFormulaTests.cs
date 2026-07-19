@@ -49,6 +49,8 @@ public sealed class ReserveFormulaTests
     [Fact]
     public void MissingStaleDisabledOrZeroPricedServiceInputsFailClosed()
     {
+        ReserveFormula.StressedExpectedRedemptionCostUsdNanos(0, 0, 0, [], Now)
+            .Should().Be(0);
         FluentActions.Invoking(() => ReserveFormula.StressedExpectedRedemptionCostUsdNanos(
                 1, 1, 0, [], Now))
             .Should().Throw<ReserveInputUnknownException>();
