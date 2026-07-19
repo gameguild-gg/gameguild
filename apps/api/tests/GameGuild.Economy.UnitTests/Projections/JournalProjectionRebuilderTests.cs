@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Projections;
+using GameGuild.Economy.UnitTests.Funding;
 
 namespace GameGuild.Economy.UnitTests.Projections;
 
@@ -16,12 +17,13 @@ public sealed class JournalProjectionRebuilderTests
         var service = new TransactionalPostingService(store);
         var sourceWallet = WalletId.New();
         var destinationWallet = WalletId.New();
-        var source = SourceStampId.New();
-        service.ObserveFunding(new ObserveFundingCommand(source, "stripe", "pi_projection", "evidence", Time));
-        service.ConfirmTopUp(new ConfirmTopUpCommand(
-            PostingId.New(), new IdempotencyKey("projection-top-up"), source, sourceWallet,
-            CreditLotId.New(), new CoinAmount(CurrencyCode.HardCoin, 10),
-            new ReserveVersion(1), new PolicyVersion(1), Time.AddMinutes(1), Time.AddMinutes(1)));
+        var claim = FundingTestDriver.Observe(
+            service,
+            Time,
+            10,
+            sourceWallet,
+            providerObject: "pi_projection");
+        FundingTestDriver.Confirm(service, claim, Time.AddMinutes(1), "projection-top-up");
         service.Transfer(new TransferFragmentsCommand(
             PostingId.New(), new IdempotencyKey("projection-transfer"), sourceWallet, destinationWallet,
             new CoinAmount(CurrencyCode.HardCoin, 4), ProvenanceKind.PurchasedHard,
