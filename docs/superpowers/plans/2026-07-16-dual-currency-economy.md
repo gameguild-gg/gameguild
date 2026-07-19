@@ -411,10 +411,10 @@ Verification: the protected-operation risk engine is integrated on `develop` SHA
 - [ ] Generate the centralized migration and model snapshot from the current integrated `develop`.
 - [ ] Install grants so the general runtime role cannot directly mutate any immutable or integrity-bearing mutable economy table; the writer role can only execute registered procedures.
 - [ ] Harden security-definer ownership, explicit execute ACLs, pinned trusted `search_path`, schema-qualified references, caller capability validation, and absence of caller-selected SQL.
-- [ ] Add update/delete denial triggers plus source/provider uniqueness, cumulative provider amount, one-root-lot, maturity, allocation, lineage/root-range conservation, reversal-epoch, template-shape, limit, and reserve constraints.
-- [ ] Add risk-decision uniqueness, single-use consumption, decision-operation binding, aggregate-counter, cooldown, hold, review-case, and audit-evidence constraints.
-- [ ] Run migration up/down/current tests on disposable PostgreSQL.
-- [ ] Verify concurrent posting, rollback, role denial, procedure enforcement, chain anchoring, projection rebuild, stale-decision rejection, and aggregate-counter oversubscription behavior.
+- [x] Add update/delete denial triggers plus source/provider uniqueness, cumulative provider amount, one-root-lot, maturity, allocation, lineage/root-range conservation, reversal-epoch, template-shape, limit, and reserve constraints.
+- [x] Add risk-decision uniqueness, single-use consumption, decision-operation binding, aggregate-counter, cooldown, hold, review-case, and audit-evidence constraints.
+- [x] Run migration up/down/current tests on disposable PostgreSQL.
+- [x] Verify concurrent posting, rollback, role denial, procedure enforcement, chain anchoring, projection rebuild, stale-decision rejection, and aggregate-counter oversubscription behavior.
 
 ### Task 2.8: Core Reserve Authority
 
