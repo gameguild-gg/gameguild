@@ -29,6 +29,8 @@ public sealed class EconomyPersistenceModelTests
         "economy_protected_change_cooldowns",
         "economy_provider_fact_allocations",
         "economy_registered_capabilities",
+        "economy_reserve_asset_allocations",
+        "economy_reserve_heads",
         "economy_risk_audit_evidence",
         "economy_risk_counter_reservations",
         "economy_risk_counters",
@@ -62,6 +64,9 @@ public sealed class EconomyPersistenceModelTests
         "ux_economy_posting_groups_source_stamp",
         "ux_economy_provider_fact_allocations_provider_leg",
         "ux_economy_registered_capabilities_name",
+        "ux_economy_reserve_asset_allocations_version_asset",
+        "ux_economy_reserve_heads_active",
+        "ux_economy_reserve_heads_authorization_epoch",
         "ux_economy_protected_change_cooldowns_subject_kind",
         "ux_economy_risk_audit_evidence_decision_hash",
         "ux_economy_risk_counter_reservations_decision_counter",
@@ -123,8 +128,16 @@ public sealed class EconomyPersistenceModelTests
             "ck_economy_holds_state_timestamp",
             "ck_economy_journal_lines_amount_positive",
             "ck_economy_lot_lineage_edges_amount_positive",
+            "ck_economy_posting_groups_reserve_authorization",
             "ck_economy_provider_fact_allocations_cumulative_bounds",
             "ck_economy_registered_capabilities_state",
+            "ck_economy_reserve_asset_allocations_value_positive",
+            "ck_economy_reserve_asset_allocations_values_valid",
+            "ck_economy_reserve_heads_amounts_nonnegative",
+            "ck_economy_reserve_heads_values_valid",
+            "ck_economy_reserve_heads_versions_positive",
+            "ck_economy_reserve_heads_window",
+            "ck_economy_dispatch_snapshots_reserve_authorization",
             "ck_economy_protected_change_cooldowns_version",
             "ck_economy_protected_change_cooldowns_window",
             "ck_economy_risk_counter_reservations_amount_positive",
@@ -163,6 +176,11 @@ public sealed class EconomyPersistenceModelTests
             "economy_credit_lots",
             "ux_economy_credit_lots_root_source",
             "RootSourceStampId");
+        AssertUniqueIndex(
+            model,
+            "economy_reserve_asset_allocations",
+            "ux_economy_reserve_asset_allocations_version_asset",
+            "ReserveVersion", "AssetKey");
 
         var source = model.GetEntityTypes().Single(entity => entity.GetTableName() == "economy_source_stamps");
         source.GetIndexes().Single(index => index.GetDatabaseName() == "ux_economy_source_stamps_provider_reference")
@@ -182,6 +200,17 @@ public sealed class EconomyPersistenceModelTests
         entityTypes.Select(entity => entity.ClrType)
             .Should()
             .NotContain(type => InheritsEntityBase(type));
+    }
+
+    [Fact]
+    public void ProtectedPersistenceCarriesReserveVersionEpochAndRiskDecision()
+    {
+        using var context = CreateContext();
+        var model = context.Model;
+
+        AssertProperties(model, "economy_posting_groups", "ReserveVersion", "ReserveAuthorizationEpoch", "RiskDecisionId");
+        AssertProperties(model, "economy_risk_decisions", "ReserveVersion", "ReserveAuthorizationEpoch");
+        AssertProperties(model, "economy_dispatch_snapshots", "ReserveVersion", "ReserveAuthorizationEpoch");
     }
 
     [Fact]
@@ -217,6 +246,12 @@ public sealed class EconomyPersistenceModelTests
 
         index.IsUnique.Should().BeTrue();
         index.Properties.Select(property => property.Name).Should().Equal(properties);
+    }
+
+    private static void AssertProperties(IModel model, string table, params string[] properties)
+    {
+        var entity = model.GetEntityTypes().Single(candidate => candidate.GetTableName() == table);
+        entity.GetProperties().Select(property => property.Name).Should().Contain(properties);
     }
 
     private static EconomySchemaDbContext CreateContext()

@@ -15,6 +15,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         ConfigureLineage(modelBuilder);
         ConfigureOperations(modelBuilder);
         ConfigureChain(modelBuilder);
+        ConfigureReserves(modelBuilder);
         ConfigureRisk(modelBuilder);
     }
 
@@ -92,7 +93,10 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
     {
         modelBuilder.Entity<EconomyPostingGroupRow>(builder =>
         {
-            builder.ToTable("economy_posting_groups");
+            builder.ToTable("economy_posting_groups", table =>
+                table.HasCheckConstraint(
+                    "ck_economy_posting_groups_reserve_authorization",
+                    "\"ReserveVersion\" > 0 AND \"ReserveAuthorizationEpoch\" > 0 AND \"RiskDecisionId\" IS NOT NULL"));
             builder.HasKey(row => row.Id);
             builder.Property(row => row.IdempotencyKey).HasMaxLength(128);
             builder.HasIndex(row => row.IdempotencyKey)
@@ -304,7 +308,12 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         modelBuilder.Entity<EconomyDispatchSnapshotRow>(builder =>
         {
             builder.ToTable("economy_dispatch_snapshots", table =>
-                table.HasCheckConstraint("ck_economy_dispatch_snapshots_amount_positive", "\"AmountUnits\" > 0"));
+            {
+                table.HasCheckConstraint("ck_economy_dispatch_snapshots_amount_positive", "\"AmountUnits\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_dispatch_snapshots_reserve_authorization",
+                    "\"ReserveVersion\" > 0 AND \"ReserveAuthorizationEpoch\" > 0");
+            });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.SnapshotHash).HasMaxLength(128);
             builder.Property(row => row.Destination).HasMaxLength(512);
@@ -375,6 +384,62 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         });
     }
 
+    private static void ConfigureReserves(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EconomyReserveHeadRow>(builder =>
+        {
+            builder.ToTable("economy_reserve_heads", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_reserve_heads_versions_positive",
+                    "\"Version\" > 0 AND \"PolicyVersion\" > 0 AND \"AuthorizationEpoch\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_reserve_heads_window",
+                    "\"ExpiresAt\" > \"ObservedAt\" AND \"ActivatedAt\" >= \"ObservedAt\"");
+                table.HasCheckConstraint(
+                    "ck_economy_reserve_heads_amounts_nonnegative",
+                    "\"HardFaceValueUsdMinor\" >= 0 AND \"RequiredHardReserveUsdMinor\" >= 0 AND " +
+                    "\"SoftFaceValueUsdNanos\" >= 0 AND \"StressedExpectedRedemptionCostUsdNanos\" >= 0 AND " +
+                    "\"RequiredSoftReserveUsdNanos\" >= 0 AND \"HardBackingUsdNanos\" >= 0 AND \"SoftBackingUsdNanos\" >= 0");
+                table.HasCheckConstraint(
+                    "ck_economy_reserve_heads_values_valid",
+                    "\"Coverage\" IN (1, 2) AND length(btrim(\"EvidenceHash\")) > 0");
+            });
+            builder.HasKey(row => row.Version);
+            builder.Property(row => row.Version).ValueGeneratedNever();
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.HasIndex(row => row.IsActive)
+                .IsUnique()
+                .HasFilter("\"IsActive\" = TRUE")
+                .HasDatabaseName("ux_economy_reserve_heads_active");
+            builder.HasIndex(row => row.AuthorizationEpoch)
+                .IsUnique()
+                .HasDatabaseName("ux_economy_reserve_heads_authorization_epoch");
+        });
+
+        modelBuilder.Entity<EconomyReserveAssetAllocationRow>(builder =>
+        {
+            builder.ToTable("economy_reserve_asset_allocations", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_reserve_asset_allocations_value_positive",
+                    "\"EligibleUsdNanos\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_reserve_asset_allocations_values_valid",
+                    "\"Purpose\" IN (1, 2) AND length(btrim(\"AssetKey\")) > 0");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.AssetKey).HasMaxLength(256);
+            builder.HasIndex(row => new { row.ReserveVersion, row.AssetKey })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_reserve_asset_allocations_version_asset");
+            builder.HasOne<EconomyReserveHeadRow>()
+                .WithMany()
+                .HasForeignKey(row => row.ReserveVersion)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
     private static void ConfigureRisk(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<EconomyRegisteredCapabilityRow>(builder =>
@@ -399,7 +464,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 table.HasCheckConstraint("ck_economy_risk_decisions_lifetime", "\"ExpiresAt\" > \"IssuedAt\"");
                 table.HasCheckConstraint(
                     "ck_economy_risk_decisions_versions_positive",
-                    "\"PolicyVersion\" > 0 AND \"ReserveVersion\" > 0 AND \"FeatureVersion\" > 0 AND \"CounterVersion\" > 0 AND \"EntityGraphVersion\" >= 0");
+                    "\"PolicyVersion\" > 0 AND \"ReserveVersion\" > 0 AND \"ReserveAuthorizationEpoch\" > 0 AND " +
+                    "\"FeatureVersion\" > 0 AND \"CounterVersion\" > 0 AND \"EntityGraphVersion\" >= 0");
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.OperationFingerprint).HasMaxLength(128);
