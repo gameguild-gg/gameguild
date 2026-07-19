@@ -81,8 +81,8 @@ public sealed class SourceEvidence
 
     public SourceEvidence Dispute(DateTimeOffset disputedAt)
     {
-        if (State != SourceConfirmationState.Confirmed)
-            throw new InvalidOperationException("Only confirmed source evidence can be disputed.");
+        if (State is not (SourceConfirmationState.Confirmed or SourceConfirmationState.Disputed))
+            throw new InvalidOperationException("Only confirmed or disputed source evidence can be disputed.");
         if (disputedAt < ConfirmedAt!.Value)
             throw new ArgumentException("Dispute cannot precede confirmation.", nameof(disputedAt));
 

@@ -63,4 +63,15 @@ public sealed class ProtectedChangeCooldownRegistry
             return new ProtectedChangeEvaluation(change, now >= change.AvailableAt);
         }
     }
+
+    public IReadOnlyList<ProtectedChangeCooldown> ForSubject(Guid subjectId)
+    {
+        if (subjectId == Guid.Empty) throw new ArgumentException("Subject ID cannot be empty.", nameof(subjectId));
+        lock (_gate)
+        {
+            return [.. _changes.Values
+                .Where(change => change.SubjectId == subjectId)
+                .OrderBy(change => change.Kind)];
+        }
+    }
 }

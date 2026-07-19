@@ -6,6 +6,7 @@ namespace GameGuild.Economy.Reserves;
 public sealed class CoreReserveAuthority
 {
     private const long UsdNanosPerCent = 10_000_000;
+    private const long UsdNanosPerSoftCoin = 10_000;
     private readonly object _gate = new();
     private ReserveHead? _activeHead;
 
@@ -56,18 +57,52 @@ public sealed class CoreReserveAuthority
     {
         lock (_gate)
         {
-            var head = _activeHead ??
-                       throw new ReserveAuthorizationException("No authoritative reserve head is active.");
-            if (head.ObservedAt > now || head.ExpiresAt <= now)
-                throw new ReserveInputUnknownException("The active reserve head is stale.");
-            if (head.Version != version)
-                throw new ReserveAuthorizationException("The requested reserve version is not active.");
-            if (head.AuthorizationEpoch != authorizationEpoch)
-                throw new ReserveAuthorizationEpochException("The requested reserve authorization epoch is not active.");
-            if (head.Coverage != ReserveCoverageState.Covered)
-                throw new ReserveShortfallException("The active reserve head does not cover required liabilities and buffers.");
+            _ = AuthorizedHead(version, authorizationEpoch, now);
             return new ReservePostingAuthorization(version, authorizationEpoch, now);
         }
+    }
+
+    public ReservePostingAuthorization AuthorizeIssuance(
+        ReserveVersion version,
+        long authorizationEpoch,
+        CoinAmount liabilityIncrease,
+        DateTimeOffset now)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(liabilityIncrease.Units);
+        lock (_gate)
+        {
+            var head = AuthorizedHead(version, authorizationEpoch, now);
+            EnsureIssuanceHeadroom(head, liabilityIncrease);
+            return new ReservePostingAuthorization(version, authorizationEpoch, now);
+        }
+    }
+
+    private ReserveHead AuthorizedHead(ReserveVersion version, long authorizationEpoch, DateTimeOffset now)
+    {
+        var head = _activeHead ??
+                   throw new ReserveAuthorizationException("No authoritative reserve head is active.");
+        if (head.ObservedAt > now || head.ExpiresAt <= now)
+            throw new ReserveInputUnknownException("The active reserve head is stale.");
+        if (head.Version != version)
+            throw new ReserveAuthorizationException("The requested reserve version is not active.");
+        if (head.AuthorizationEpoch != authorizationEpoch)
+            throw new ReserveAuthorizationEpochException("The requested reserve authorization epoch is not active.");
+        if (head.Coverage != ReserveCoverageState.Covered)
+            throw new ReserveShortfallException("The active reserve head does not cover required liabilities and buffers.");
+        return head;
+    }
+
+    private static void EnsureIssuanceHeadroom(ReserveHead head, CoinAmount liabilityIncrease)
+    {
+        var required = liabilityIncrease.Currency == CurrencyCode.HardCoin
+            ? ((BigInteger)head.Requirements.RequiredHardReserveUsdMinor + liabilityIncrease.Units) * UsdNanosPerCent
+            : (BigInteger)head.Requirements.RequiredSoftReserveUsdNanos +
+              (BigInteger)liabilityIncrease.Units * UsdNanosPerSoftCoin;
+        var backing = liabilityIncrease.Currency == CurrencyCode.HardCoin
+            ? head.HardBackingUsdNanos
+            : head.SoftBackingUsdNanos;
+        if (required > backing)
+            throw new ReserveShortfallException("The active reserve head lacks incremental issuance headroom.");
     }
 
     private void ValidateVersion(ReserveProposal proposal)

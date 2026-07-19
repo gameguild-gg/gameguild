@@ -36,7 +36,9 @@ public sealed class CanonicalPostingSerializerTests
         {
             Source = new SourceStampContract(
                 SourceStampId.New(), "reverse-hash", SourceConfirmationState.Reversed,
-                DateTimeOffset.Parse("2026-07-18T12:00:00Z"), null, null),
+                DateTimeOffset.Parse("2026-07-18T12:00:00Z"),
+                DateTimeOffset.Parse("2026-07-18T12:01:00Z"),
+                null),
             Lines =
             [
                 PostingFixture.Valid(PostingTemplateKind.ProviderReversalFull).Lines[0] with { LotId = CreditLotId.New() },
@@ -46,6 +48,20 @@ public sealed class CanonicalPostingSerializerTests
 
         Encoding.UTF8.GetString(CanonicalPostingSerializer.Serialize(confirmed)).Should().Contain("sha256-source").And.Contain("pi_test");
         Encoding.UTF8.GetString(CanonicalPostingSerializer.Serialize(reversed)).Should().Contain("reverse-hash");
+    }
+
+    [Fact]
+    public void ObservedSource_SerializesWithoutAConfirmationTimestamp()
+    {
+        var request = PostingFixture.Valid(PostingTemplateKind.Spend) with
+        {
+            Source = new SourceStampContract(
+                SourceStampId.New(), "observed-hash", SourceConfirmationState.Observed,
+                DateTimeOffset.Parse("2026-07-18T12:00:00Z"), null, null)
+        };
+
+        Encoding.UTF8.GetString(CanonicalPostingSerializer.Serialize(request))
+            .Should().Contain("observed-hash");
     }
 
     [Fact]

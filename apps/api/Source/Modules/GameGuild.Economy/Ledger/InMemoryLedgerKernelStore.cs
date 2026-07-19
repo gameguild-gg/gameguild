@@ -14,6 +14,8 @@ public sealed class InMemoryLedgerKernelStore
     public IReadOnlyList<HardCoinFundingClaim> PendingFundingClaims => Read(state => state.FundingClaims.Values
         .Where(claim => claim.IsPending)
         .ToArray());
+    public IReadOnlyList<ProviderReversalState> ProviderReversalStates => Read(state =>
+        state.ProviderReversalStates.Values.ToArray());
     public IReadOnlyList<JournalEntry> JournalEntries => Read(state => state.JournalEntries.ToArray());
     public IReadOnlyList<CreditLot> CreditLots => Read(state => state.CreditLots.ToArray());
     public IReadOnlyList<FragmentConsumption> FragmentConsumptions => Read(state => state.Consumptions.ToArray());
@@ -71,6 +73,8 @@ internal sealed class LedgerKernelState
     internal List<SourceEvidence> Sources { get; } = [];
     internal Dictionary<SourceStampId, HardCoinFundingClaim> FundingClaims { get; } = [];
     internal Dictionary<string, SourceStampId> ProviderMonetaryLegs { get; } = new(StringComparer.Ordinal);
+    internal Dictionary<SourceStampId, ProviderReversalState> ProviderReversalStates { get; } = [];
+    internal Dictionary<string, ProviderReversalResult> ProviderReversalResults { get; } = new(StringComparer.Ordinal);
     internal List<JournalEntry> JournalEntries { get; set; } = [];
     internal List<CreditLot> CreditLots { get; } = [];
     internal List<FragmentConsumption> Consumptions { get; } = [];
@@ -88,6 +92,8 @@ internal sealed class LedgerKernelState
         clone.Sources.AddRange(Sources);
         foreach (var pair in FundingClaims) clone.FundingClaims.Add(pair.Key, pair.Value);
         foreach (var pair in ProviderMonetaryLegs) clone.ProviderMonetaryLegs.Add(pair.Key, pair.Value);
+        foreach (var pair in ProviderReversalStates) clone.ProviderReversalStates.Add(pair.Key, pair.Value);
+        foreach (var pair in ProviderReversalResults) clone.ProviderReversalResults.Add(pair.Key, pair.Value);
         clone.CreditLots.AddRange(CreditLots);
         clone.Consumptions.AddRange(Consumptions);
         clone.Lineages.AddRange(Lineages);
@@ -137,6 +143,24 @@ public sealed class LedgerKernelTransaction
         if (!_state.FundingClaims.ContainsKey(claim.SourceId))
             throw new KeyNotFoundException($"Funding source {claim.SourceId.Value:N} was not found.");
         _state.FundingClaims[claim.SourceId] = claim;
+    }
+
+    public ProviderReversalState? CurrentProviderReversalState(SourceStampId sourceId) =>
+        _state.ProviderReversalStates.GetValueOrDefault(sourceId);
+
+    public void SetProviderReversalState(ProviderReversalState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        _state.ProviderReversalStates[state.SourceId] = state;
+    }
+
+    public ProviderReversalResult? FindProviderReversalResult(IdempotencyKey key) =>
+        _state.ProviderReversalResults.GetValueOrDefault(key.Value);
+
+    public void AddProviderReversalResult(IdempotencyKey key, ProviderReversalResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        _state.ProviderReversalResults.Add(key.Value, result);
     }
 
     public JournalAppendResult AppendJournal(PostingRequest request, DateTimeOffset recordedAt)

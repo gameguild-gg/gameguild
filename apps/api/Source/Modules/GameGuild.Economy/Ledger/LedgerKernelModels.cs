@@ -5,25 +5,6 @@ using GameGuild.Economy.Contracts;
 
 namespace GameGuild.Economy.Ledger;
 
-public sealed record ObserveFundingCommand(
-    SourceStampId SourceId,
-    string Provider,
-    string ProviderReference,
-    string Evidence,
-    DateTimeOffset ObservedAt);
-
-public sealed record ConfirmTopUpCommand(
-    PostingId PostingId,
-    IdempotencyKey IdempotencyKey,
-    SourceStampId SourceId,
-    WalletId WalletId,
-    CreditLotId CreditLotId,
-    CoinAmount Amount,
-    ReserveVersion ReserveVersion,
-    PolicyVersion PolicyVersion,
-    DateTimeOffset ConfirmedAt,
-    DateTimeOffset OriginalMaturesAt);
-
 public sealed record TransferFragmentsCommand(
     PostingId PostingId,
     IdempotencyKey IdempotencyKey,

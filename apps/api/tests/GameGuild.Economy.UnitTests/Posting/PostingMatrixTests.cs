@@ -11,6 +11,9 @@ public sealed class PostingMatrixTests
         PostingTemplateKind.ConfirmedTopUpMint,
         PostingTemplateKind.ProviderReversalFull,
         PostingTemplateKind.ProviderReversalPartial,
+        PostingTemplateKind.ProviderConvertedSoftReversal,
+        PostingTemplateKind.ProviderReversalDebt,
+        PostingTemplateKind.ProviderReversalLoss,
         PostingTemplateKind.Spend,
         PostingTemplateKind.HardToSoftConversion,
         PostingTemplateKind.HardToSoftConversionFee,
@@ -32,7 +35,7 @@ public sealed class PostingMatrixTests
     {
         var registered = Enum.GetValues<PostingTemplateKind>();
 
-        registered.Should().HaveCount(17);
+        registered.Should().HaveCount(20);
         registered.Select(kind => kind.ToString()).Should().NotContain(name =>
             name.Contains("Observed", StringComparison.OrdinalIgnoreCase) ||
             name.Contains("FailedMint", StringComparison.OrdinalIgnoreCase));
@@ -139,6 +142,26 @@ public sealed class PostingMatrixTests
         };
 
         PostingMatrix.Validate(request).Errors.Should().Contain(error => error.Code == PostingErrorCode.InvalidSourceState);
+    }
+
+    [Theory]
+    [InlineData(PostingTemplateKind.ProviderReversalPartial)]
+    [InlineData(PostingTemplateKind.ProviderConvertedSoftReversal)]
+    [InlineData(PostingTemplateKind.ProviderReversalDebt)]
+    [InlineData(PostingTemplateKind.ProviderReversalLoss)]
+    public void PartialProviderReversalTemplates_AcceptDisputedAndRejectConfirmedEvidence(
+        PostingTemplateKind kind)
+    {
+        var request = PostingFixture.Valid(kind);
+
+        PostingMatrix.Validate(request with { Source = PostingFixture.Source(SourceConfirmationState.Disputed) })
+            .Errors.Should().NotContain(error => error.Code == PostingErrorCode.InvalidSourceState);
+        PostingMatrix.Validate(request with { Source = PostingFixture.Source(SourceConfirmationState.Reversed) })
+            .Errors.Should().NotContain(error => error.Code == PostingErrorCode.InvalidSourceState);
+        PostingMatrix.Validate(request with { Source = PostingFixture.Source(SourceConfirmationState.Confirmed) })
+            .Errors.Should().Contain(error => error.Code == PostingErrorCode.InvalidSourceState);
+        PostingMatrix.Validate(request with { Source = null })
+            .Errors.Should().Contain(error => error.Code == PostingErrorCode.InvalidSourceState);
     }
 
     [Fact]
@@ -342,6 +365,26 @@ internal static class PostingFixture
                     Line(1, EntrySide.Debit, EconomyAccountCode.PurchasedHardLiability, CurrencyCode.HardCoin, 10, WalletId.New(), ProvenanceKind.PurchasedHard),
                     Line(2, EntrySide.Credit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, 10)
                 }, Source(SourceConfirmationState.Reversed)),
+            PostingTemplateKind.ProviderConvertedSoftReversal => (PostingAuthority.ProviderConfirmation,
+                new[]
+                {
+                    Line(1, EntrySide.Debit, EconomyAccountCode.SoftCoinLiability, CurrencyCode.SoftCoin, 10_000, WalletId.New(), ProvenanceKind.ConvertedSoft),
+                    Line(2, EntrySide.Credit, EconomyAccountCode.SoftCoinReserve, CurrencyCode.SoftCoin, 10_000),
+                    Line(3, EntrySide.Debit, EconomyAccountCode.HardCoinReserve, CurrencyCode.HardCoin, 10),
+                    Line(4, EntrySide.Credit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, 10)
+                }, Source(SourceConfirmationState.Disputed)),
+            PostingTemplateKind.ProviderReversalDebt => (PostingAuthority.ProviderConfirmation,
+                new[]
+                {
+                    Line(1, EntrySide.Debit, EconomyAccountCode.RecoveryReceivableHard, CurrencyCode.HardCoin, 10),
+                    Line(2, EntrySide.Credit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, 10)
+                }, Source(SourceConfirmationState.Disputed)),
+            PostingTemplateKind.ProviderReversalLoss => (PostingAuthority.ProviderConfirmation,
+                new[]
+                {
+                    Line(1, EntrySide.Debit, EconomyAccountCode.ProviderLossHard, CurrencyCode.HardCoin, 10),
+                    Line(2, EntrySide.Credit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, 10)
+                }, Source(SourceConfirmationState.Disputed)),
             PostingTemplateKind.Spend => (PostingAuthority.WalletOwner,
                 new[]
                 {
@@ -457,7 +500,10 @@ internal static class PostingFixture
 
     internal static SourceStampContract Source(SourceConfirmationState state)
     {
-        DateTimeOffset? confirmedAt = state == SourceConfirmationState.Confirmed ? Time.AddMinutes(1) : null;
+        DateTimeOffset? confirmedAt = state is SourceConfirmationState.Confirmed or
+            SourceConfirmationState.Disputed or SourceConfirmationState.Reversed
+            ? Time.AddMinutes(1)
+            : null;
         return new SourceStampContract(SourceStampId.New(), "sha256-source", state, Time, confirmedAt, "pi_test");
     }
 }
