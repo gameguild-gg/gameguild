@@ -64,7 +64,8 @@ public enum EconomyAccountCode
     PayoutPayableHard = 11,
     AdminWithdrawalPayableHard = 12,
     RecoveryReceivableHard = 13,
-    FeeRevenueHard = 14
+    FeeRevenueHard = 14,
+    ProviderLossHard = 15
 }
 
 public enum PostingAuthority
@@ -94,7 +95,11 @@ public enum PostingTemplateKind
     PayoutFailure = 13,
     AdminWithdrawalReservation = 14,
     AdminWithdrawalSuccess = 15,
-    AdminWithdrawalFailure = 16
+    AdminWithdrawalFailure = 16,
+    HardToSoftConversionFee = 17,
+    ProviderConvertedSoftReversal = 18,
+    ProviderReversalDebt = 19,
+    ProviderReversalLoss = 20
 }
 
 public enum PostingStatus

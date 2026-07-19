@@ -1,13 +1,57 @@
 using System.Security.Cryptography;
 using FluentAssertions;
 using GameGuild.Economy.Contracts;
+using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.UnitTests.Funding;
 
 namespace GameGuild.Economy.UnitTests.Ledger;
 
 public sealed class LedgerEdgeCaseTests
 {
     private static readonly DateTimeOffset Time = DateTimeOffset.Parse("2026-05-01T00:00:00Z");
+
+    [Fact]
+    public void KernelTransaction_RejectsDuplicateOrMissingFundingAndPostingRecords()
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var claim = HardCoinFundingClaim.Observe(
+            SourceStampId.New(),
+            WalletId.New(),
+            new ProviderMonetaryLeg("stripe", "test", "acct", "pi_edge", "capture"),
+            "edge-evidence",
+            1,
+            Time);
+        store.Execute(transaction =>
+        {
+            transaction.AddFundingClaim(claim);
+            return 0;
+        });
+
+        FluentActions.Invoking(() => store.Execute(transaction =>
+            {
+                transaction.AddFundingClaim(claim);
+                return 0;
+            }))
+            .Should().Throw<InvalidOperationException>();
+        var unknown = HardCoinFundingClaim.Observe(
+            SourceStampId.New(),
+            WalletId.New(),
+            new ProviderMonetaryLeg("stripe", "test", "acct", "pi_unknown", "capture"),
+            "unknown-evidence",
+            1,
+            Time);
+        FluentActions.Invoking(() => store.Execute(transaction =>
+            {
+                transaction.UpdateFundingClaim(unknown);
+                return 0;
+            }))
+            .Should().Throw<KeyNotFoundException>();
+        FluentActions.Invoking(() => store.Execute(transaction => transaction.GetCreditLot(CreditLotId.New())))
+            .Should().Throw<KeyNotFoundException>();
+        FluentActions.Invoking(() => store.Execute(transaction => transaction.GetPostingResult(PostingId.New())))
+            .Should().Throw<KeyNotFoundException>();
+    }
 
     [Fact]
     public void ImmutableModels_RejectMalformedConstruction()
@@ -228,18 +272,28 @@ public sealed class LedgerEdgeCaseTests
     }
 
     [Fact]
-    public void PostingService_RejectsDuplicateSourceMissingSourceSoftTopUpAndSameWallet()
+    public void PostingService_RejectsDuplicateSourceMissingSourceAndSameWallet()
     {
         var store = new InMemoryLedgerKernelStore();
         var service = new TransactionalPostingService(store);
-        var observe = new ObserveFundingCommand(SourceStampId.New(), "stripe", "pi_dup", "payload", Time);
-        service.ObserveFunding(observe);
+        var source = SourceStampId.New();
+        var observe = new ObserveHardCoinTopUpCommand(
+            source,
+            WalletId.New(),
+            new ProviderMonetaryLeg("stripe", "test", "platform", "pi_dup", "principal"),
+            "payload",
+            1,
+            Time);
+        service.ObserveTopUp(observe);
 
-        FluentActions.Invoking(() => service.ObserveFunding(observe)).Should().Throw<InvalidOperationException>();
-        FluentActions.Invoking(() => service.ConfirmTopUp(TopUp(SourceStampId.New(), CurrencyCode.HardCoin)))
-            .Should().Throw<InvalidOperationException>();
-        FluentActions.Invoking(() => service.ConfirmTopUp(TopUp(observe.SourceId, CurrencyCode.SoftCoin)))
-            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => service.ObserveTopUp(observe)).Should().Throw<InvalidOperationException>();
+        var absent = FundingTestDriver.Observe(
+            new TransactionalPostingService(new InMemoryLedgerKernelStore()),
+            Time,
+            1);
+        FluentActions.Invoking(() => service.ConfirmObservedTopUp(
+                FundingTestDriver.Confirmation(absent, Time.AddMinutes(1), "missing-source")))
+            .Should().Throw<KeyNotFoundException>();
 
         var wallet = WalletId.New();
         FluentActions.Invoking(() => service.Transfer(new TransferFragmentsCommand(
@@ -298,12 +352,6 @@ public sealed class LedgerEdgeCaseTests
         new(
             CreditLotId.New(), WalletId.New(), new CoinAmount(CurrencyCode.HardCoin, 1),
             provenance, Time, maturity, 1, state, ranges);
-
-    private static ConfirmTopUpCommand TopUp(SourceStampId source, CurrencyCode currency) =>
-        new(
-            PostingId.New(), new IdempotencyKey($"topup-{currency}"), source,
-            WalletId.New(), CreditLotId.New(), new CoinAmount(currency, 1),
-            new ReserveVersion(1), new PolicyVersion(1), Time.AddMinutes(1), Time.AddDays(120));
 
     private static WalletId SeedLot(
         InMemoryLedgerKernelStore store,

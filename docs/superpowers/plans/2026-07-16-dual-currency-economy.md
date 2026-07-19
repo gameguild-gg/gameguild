@@ -466,18 +466,20 @@ Verification: Core now owns an unforgeable reserve authorization lock, determini
 
 **Produces:** Stripe top-up to purchased hard, provider saga, and hard-to-soft conversion.
 
-- [ ] Test observed-visible-pending, pre-confirmation authorization denial, provider success, duplicate webhook, timeout recovery, failed/expired capture, refund, and concurrent confirmation-versus-failure/expiry/recovery.
-- [ ] Map authoritative USD minor units one-to-one to hard-coin units.
-- [ ] Record an observed deposit as an immutable source stamp/evidence plus visible nonmonetary pending claim; prove no mint posting or credit lot exists yet.
-- [ ] On authoritative provider confirmation, atomically close pending, post the mint, and create exactly one root purchased-hard lot; on failure/expiry, append terminal evidence without monetary posting.
-- [ ] Prove every terminal race has exactly one source terminal state and at most one root mint under real PostgreSQL concurrency.
-- [ ] Create and verify append-only source-stamp evidence for observed, confirmed, failed, expired, disputed, and reversed states.
-- [ ] Enforce globally unique provider monetary-leg binding and cumulative `minted <= confirmed`, `refunded/disputed <= provider totals` invariants.
-- [ ] Implement full and partial top-up refund/chargeback templates that traverse hard and converted-soft descendants, balance each currency leg, never remint a retired root, and exactly partition root-equivalent recovery, responsible debt/receivable, and policy-versioned loss.
-- [ ] Implement exact principal conversion `1 HC = 1,000 SC`; retire the hard liability, reclassify backing to soft reserve, and post any configured hard fee separately.
-- [ ] Implement system-backed grants only from an approved platform hard debit in exact `1 HC = 1,000 SC` blocks.
-- [ ] Serialize issuance against fresh fixed-parity reserve headroom, matching risk decision, aggregate limits, source-root exposure, and protected-change cooldown state.
-- [ ] Prove there is no soft-to-hard route or command.
+- [x] Test observed-visible-pending, pre-confirmation authorization denial, provider success, duplicate webhook, timeout recovery, failed/expired capture, refund, and concurrent confirmation-versus-failure/expiry/recovery.
+- [x] Map authoritative USD minor units one-to-one to hard-coin units.
+- [x] Record an observed deposit as an immutable source stamp/evidence plus visible nonmonetary pending claim; prove no mint posting or credit lot exists yet.
+- [x] On authoritative provider confirmation, atomically close pending, post the mint, and create exactly one root purchased-hard lot; on failure/expiry, append terminal evidence without monetary posting.
+- [x] Prove every terminal race has exactly one source terminal state and at most one root mint under real PostgreSQL concurrency.
+- [x] Create and verify append-only source-stamp evidence for observed, confirmed, failed, expired, disputed, and reversed states.
+- [x] Enforce globally unique provider monetary-leg binding and cumulative `minted <= confirmed`, `refunded/disputed <= provider totals` invariants.
+- [x] Implement full and partial top-up refund/chargeback templates that traverse hard and converted-soft descendants, balance each currency leg, never remint a retired root, and exactly partition root-equivalent recovery, responsible debt/receivable, and policy-versioned loss.
+- [x] Implement exact principal conversion `1 HC = 1,000 SC`; retire the hard liability, reclassify backing to soft reserve, and post any configured hard fee separately.
+- [x] Implement system-backed grants only from an approved platform hard debit in exact `1 HC = 1,000 SC` blocks.
+- [x] Serialize issuance against fresh fixed-parity reserve headroom, matching risk decision, aggregate limits, source-root exposure, and protected-change cooldown state.
+- [x] Prove there is no soft-to-hard route or command.
+
+**Verification:** `GameGuild.Economy.UnitTests` passes 320/320 with zero skips and 100% line, branch, and method coverage, including real PostgreSQL terminal-race and provider-constraint tests. `GameGuild.Commerce.Payments.UnitTests` passes 906/906 with zero skips; the new Stripe funding adapter has 100% line and branch coverage. The API Release build succeeds with warnings treated as errors and reports 0 warnings and 0 errors. The integrated schema migration remains intentionally deferred to Task 3.6.
 
 ### Task 3.2: Ad Rewards And Reconciliation
 

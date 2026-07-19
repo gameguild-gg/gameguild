@@ -177,6 +177,23 @@ public sealed class CoreReserveAuthorityTests
             .Should().Throw<ArgumentOutOfRangeException>();
     }
 
+    [Fact]
+    public void IssuanceAuthorization_CoversSoftCoinHeadroomAndIncrementalShortfall()
+    {
+        var authority = new CoreReserveAuthority();
+        authority.ValidateAndActivate(Proposal(new ReserveVersion(1), null, 1), Now);
+
+        authority.AuthorizeIssuance(
+                new ReserveVersion(1), 1, new CoinAmount(CurrencyCode.SoftCoin, 1), Now)
+            .Version.Should().Be(new ReserveVersion(1));
+        FluentActions.Invoking(() => authority.AuthorizeIssuance(
+                new ReserveVersion(1), 1, new CoinAmount(CurrencyCode.SoftCoin, long.MaxValue), Now))
+            .Should().Throw<ReserveShortfallException>();
+        FluentActions.Invoking(() => authority.AuthorizeIssuance(
+                new ReserveVersion(1), 1, default, Now))
+            .Should().Throw<ArgumentOutOfRangeException>();
+    }
+
     private static ReserveProposal Proposal(
         ReserveVersion version,
         ReserveVersion? expected,
