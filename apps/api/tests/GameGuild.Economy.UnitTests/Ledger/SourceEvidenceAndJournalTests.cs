@@ -82,6 +82,26 @@ public sealed class SourceEvidenceAndJournalTests
     }
 
     [Fact]
+    public void Evidence_AllowsDisputeReplayAndRejectsBackdatedOrPostTerminalTransitions()
+    {
+        var observed = SourceEvidence.Observe(SourceStampId.New(), "stripe", "pi_states", "payload", Time);
+        var confirmed = observed.Confirm(Time.AddMinutes(1));
+        var disputed = confirmed.Dispute(Time.AddMinutes(2));
+
+        disputed.Dispute(Time.AddMinutes(3)).State.Should().Be(SourceConfirmationState.Disputed);
+        FluentActions.Invoking(() => observed.Dispute(Time.AddMinutes(1)))
+            .Should().Throw<InvalidOperationException>();
+        FluentActions.Invoking(() => confirmed.Dispute(Time))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => confirmed.Fail(Time.AddMinutes(2)))
+            .Should().Throw<InvalidOperationException>();
+        FluentActions.Invoking(() => observed.Fail(Time.AddTicks(-1)))
+            .Should().Throw<ArgumentException>();
+        observed.Fail(Time.AddMinutes(1)).State.Should().Be(SourceConfirmationState.Failed);
+        observed.Expire(Time.AddMinutes(1)).State.Should().Be(SourceConfirmationState.Expired);
+    }
+
+    [Fact]
     public void JournalAppend_IsDeterministicAndBuildsVerifiableHashChain()
     {
         var request = PostingFixture.Valid(PostingTemplateKind.ConfirmedTopUpMint);

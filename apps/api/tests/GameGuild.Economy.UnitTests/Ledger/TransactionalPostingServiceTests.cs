@@ -1,6 +1,8 @@
 using FluentAssertions;
 using GameGuild.Economy.Contracts;
+using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.UnitTests.Funding;
 
 namespace GameGuild.Economy.UnitTests.Ledger;
 
@@ -9,15 +11,15 @@ public sealed class TransactionalPostingServiceTests
     private static readonly DateTimeOffset Time = DateTimeOffset.Parse("2026-03-01T12:00:00Z");
 
     [Fact]
-    public void ObserveFunding_PersistsSourceEvidenceWithoutCreatingMonetaryState()
+    public void ObserveTopUp_PersistsPendingEvidenceWithoutCreatingMonetaryState()
     {
         var store = new InMemoryLedgerKernelStore();
         var service = new TransactionalPostingService(store);
 
-        var evidence = service.ObserveFunding(new ObserveFundingCommand(
-            SourceStampId.New(), "stripe", "pi_123", "payload", Time));
+        var claim = FundingTestDriver.Observe(service, Time, providerObject: "pi_123");
 
-        evidence.State.Should().Be(SourceConfirmationState.Observed);
+        claim.State.Should().Be(SourceConfirmationState.Observed);
+        store.PendingFundingClaims.Should().ContainSingle().Which.Should().BeSameAs(claim);
         store.SourceEvidenceHistory.Should().ContainSingle();
         store.JournalEntries.Should().BeEmpty();
         store.CreditLots.Should().BeEmpty();
@@ -29,12 +31,12 @@ public sealed class TransactionalPostingServiceTests
     }
 
     [Fact]
-    public void ConfirmTopUp_CommitsSourceJournalLotProjectionIdempotencyAndOutboxTogether()
+    public void ConfirmObservedTopUp_CommitsSourceJournalLotProjectionIdempotencyAndOutboxTogether()
     {
         var (store, service, observed) = Setup();
-        var command = TopUp(observed.Id, 10);
+        var command = TopUp(observed);
 
-        var result = service.ConfirmTopUp(command);
+        var result = service.ConfirmObservedTopUp(command);
 
         result.Status.Should().Be(PostingStatus.Accepted);
         store.SourceEvidenceHistory.Should().HaveCount(2);
@@ -44,25 +46,25 @@ public sealed class TransactionalPostingServiceTests
         store.ProjectionUpdates.Should().ContainSingle().Which.DeltaUnits.Should().Be(10);
         store.IdempotencyRecords.Should().ContainSingle();
         store.OutboxMessages.Should().ContainSingle().Which.Type.Should().Be("economy.posting.accepted.v1");
-        store.GetAvailableLots(command.WalletId, CurrencyCode.HardCoin)
+        store.GetAvailableLots(observed.WalletId, CurrencyCode.HardCoin)
             .Should().ContainSingle().Which.Amount.Units.Should().Be(10);
     }
 
     [Fact]
-    public void ConfirmTopUp_IsIdempotentAndRejectsKeyReuseWithDifferentCommand()
+    public void ConfirmObservedTopUp_IsIdempotentAndRejectsKeyReuseWithDifferentCommand()
     {
         var (store, service, observed) = Setup();
-        var command = TopUp(observed.Id, 10);
+        var command = TopUp(observed);
 
-        var first = service.ConfirmTopUp(command);
-        var duplicate = service.ConfirmTopUp(command);
+        var first = service.ConfirmObservedTopUp(command);
+        var duplicate = service.ConfirmObservedTopUp(command);
 
         duplicate.Should().Be(first);
         store.JournalEntries.Should().ContainSingle();
         store.CreditLots.Should().ContainSingle();
 
-        var conflict = command with { Amount = new CoinAmount(CurrencyCode.HardCoin, 11) };
-        FluentActions.Invoking(() => service.ConfirmTopUp(conflict))
+        var conflict = command with { Evidence = "different-provider-confirmation" };
+        FluentActions.Invoking(() => service.ConfirmObservedTopUp(conflict))
             .Should().Throw<IdempotencyConflictException>();
         store.JournalEntries.Should().ContainSingle();
     }
@@ -70,9 +72,9 @@ public sealed class TransactionalPostingServiceTests
     [Fact]
     public void Transfer_AtomicallyConsumesFifoFragmentsAndCreatesExactDestinationLineage()
     {
-        var (store, service, observed) = Setup();
         var sourceWallet = WalletId.New();
-        service.ConfirmTopUp(TopUp(observed.Id, 10, sourceWallet));
+        var (store, service, observed) = Setup(sourceWallet);
+        service.ConfirmObservedTopUp(TopUp(observed));
         var destination = WalletId.New();
         var transfer = new TransferFragmentsCommand(
             PostingId.New(), new IdempotencyKey("transfer-1"),
@@ -98,9 +100,9 @@ public sealed class TransactionalPostingServiceTests
     [Fact]
     public void Transfer_RollsBackEveryArtifactWhenFragmentsAreInsufficient()
     {
-        var (store, service, observed) = Setup();
         var sourceWallet = WalletId.New();
-        service.ConfirmTopUp(TopUp(observed.Id, 3, sourceWallet));
+        var (store, service, observed) = Setup(sourceWallet, 3);
+        service.ConfirmObservedTopUp(TopUp(observed));
         var before = store.SnapshotCounts();
 
         FluentActions.Invoking(() => service.Transfer(new TransferFragmentsCommand(
@@ -114,14 +116,13 @@ public sealed class TransactionalPostingServiceTests
     }
 
     [Fact]
-    public void ConfirmTopUp_RollsBackLateFailureIncludingSourceConfirmation()
+    public void ConfirmObservedTopUp_RollsBackLateFailureIncludingSourceConfirmation()
     {
         var store = new InMemoryLedgerKernelStore();
         var service = new TransactionalPostingService(store, new ThrowingOutboxFactory());
-        var observed = service.ObserveFunding(new ObserveFundingCommand(
-            SourceStampId.New(), "stripe", "pi_rollback", "payload", Time));
+        var observed = FundingTestDriver.Observe(service, Time, providerObject: "pi_rollback");
 
-        FluentActions.Invoking(() => service.ConfirmTopUp(TopUp(observed.Id, 10)))
+        FluentActions.Invoking(() => service.ConfirmObservedTopUp(TopUp(observed)))
             .Should().Throw<InvalidOperationException>().WithMessage("outbox failure");
 
         store.SourceEvidenceHistory.Should().ContainSingle().Which.State.Should().Be(SourceConfirmationState.Observed);
@@ -133,13 +134,13 @@ public sealed class TransactionalPostingServiceTests
     }
 
     [Fact]
-    public async Task ConfirmTopUp_SerializesConcurrentDuplicateCommands()
+    public async Task ConfirmObservedTopUp_SerializesConcurrentDuplicateCommands()
     {
         var (store, service, observed) = Setup();
-        var command = TopUp(observed.Id, 10);
+        var command = TopUp(observed);
 
         var results = await Task.WhenAll(Enumerable.Range(0, 16)
-            .Select(_ => Task.Run(() => service.ConfirmTopUp(command))));
+            .Select(_ => Task.Run(() => service.ConfirmObservedTopUp(command))));
 
         results.Select(result => result.Hash).Should().OnlyContain(hash => hash == results[0].Hash);
         store.JournalEntries.Should().ContainSingle();
@@ -149,9 +150,9 @@ public sealed class TransactionalPostingServiceTests
     [Fact]
     public async Task Transfer_SerializesConcurrentAllocatorsAgainstTheSameSourceFragments()
     {
-        var (store, service, observed) = Setup();
         var sourceWallet = WalletId.New();
-        service.ConfirmTopUp(TopUp(observed.Id, 10, sourceWallet));
+        var (store, service, observed) = Setup(sourceWallet);
+        service.ConfirmObservedTopUp(TopUp(observed));
         var commands = new[]
         {
             new TransferFragmentsCommand(
@@ -183,22 +184,18 @@ public sealed class TransactionalPostingServiceTests
             .Should().ContainSingle().Which.Amount.Units.Should().Be(3);
     }
 
-    private static (InMemoryLedgerKernelStore Store, TransactionalPostingService Service, SourceEvidence Observed) Setup()
+    private static (InMemoryLedgerKernelStore Store, TransactionalPostingService Service, HardCoinFundingClaim Observed) Setup(
+        WalletId? walletId = null,
+        long units = 10)
     {
         var store = new InMemoryLedgerKernelStore();
         var service = new TransactionalPostingService(store);
-        var observed = service.ObserveFunding(new ObserveFundingCommand(
-            SourceStampId.New(), "stripe", $"pi_{Guid.NewGuid():N}", "payload", Time));
+        var observed = FundingTestDriver.Observe(service, Time, units, walletId);
         return (store, service, observed);
     }
 
-    private static ConfirmTopUpCommand TopUp(SourceStampId sourceId, long units, WalletId? wallet = null) =>
-        new(
-            PostingId.New(), new IdempotencyKey("topup-1"), sourceId,
-            wallet ?? WalletId.New(), CreditLotId.New(),
-            new CoinAmount(CurrencyCode.HardCoin, units),
-            new ReserveVersion(1), new PolicyVersion(1),
-            Time.AddMinutes(1), Time.AddDays(120));
+    private static ConfirmObservedTopUpCommand TopUp(HardCoinFundingClaim claim) =>
+        FundingTestDriver.Confirmation(claim, Time.AddMinutes(1));
 
     private sealed class ThrowingOutboxFactory : IEconomyOutboxFactory
     {

@@ -1,4 +1,5 @@
 using GameGuild.Economy.Contracts;
+using GameGuild.Economy.Funding;
 using GameGuild.Economy.Policy;
 
 namespace GameGuild.Economy.Ledger;
@@ -9,6 +10,12 @@ public sealed class InMemoryLedgerKernelStore
     private LedgerKernelState _state = new();
 
     public IReadOnlyList<SourceEvidence> SourceEvidenceHistory => Read(state => state.Sources.ToArray());
+    public IReadOnlyList<HardCoinFundingClaim> FundingClaims => Read(state => state.FundingClaims.Values.ToArray());
+    public IReadOnlyList<HardCoinFundingClaim> PendingFundingClaims => Read(state => state.FundingClaims.Values
+        .Where(claim => claim.IsPending)
+        .ToArray());
+    public IReadOnlyList<ProviderReversalState> ProviderReversalStates => Read(state =>
+        state.ProviderReversalStates.Values.ToArray());
     public IReadOnlyList<JournalEntry> JournalEntries => Read(state => state.JournalEntries.ToArray());
     public IReadOnlyList<CreditLot> CreditLots => Read(state => state.CreditLots.ToArray());
     public IReadOnlyList<FragmentConsumption> FragmentConsumptions => Read(state => state.Consumptions.ToArray());
@@ -64,6 +71,10 @@ public sealed class InMemoryLedgerKernelStore
 internal sealed class LedgerKernelState
 {
     internal List<SourceEvidence> Sources { get; } = [];
+    internal Dictionary<SourceStampId, HardCoinFundingClaim> FundingClaims { get; } = [];
+    internal Dictionary<string, SourceStampId> ProviderMonetaryLegs { get; } = new(StringComparer.Ordinal);
+    internal Dictionary<SourceStampId, ProviderReversalState> ProviderReversalStates { get; } = [];
+    internal Dictionary<string, ProviderReversalResult> ProviderReversalResults { get; } = new(StringComparer.Ordinal);
     internal List<JournalEntry> JournalEntries { get; set; } = [];
     internal List<CreditLot> CreditLots { get; } = [];
     internal List<FragmentConsumption> Consumptions { get; } = [];
@@ -79,6 +90,10 @@ internal sealed class LedgerKernelState
     {
         var clone = new LedgerKernelState { JournalEntries = [.. JournalEntries] };
         clone.Sources.AddRange(Sources);
+        foreach (var pair in FundingClaims) clone.FundingClaims.Add(pair.Key, pair.Value);
+        foreach (var pair in ProviderMonetaryLegs) clone.ProviderMonetaryLegs.Add(pair.Key, pair.Value);
+        foreach (var pair in ProviderReversalStates) clone.ProviderReversalStates.Add(pair.Key, pair.Value);
+        foreach (var pair in ProviderReversalResults) clone.ProviderReversalResults.Add(pair.Key, pair.Value);
         clone.CreditLots.AddRange(CreditLots);
         clone.Consumptions.AddRange(Consumptions);
         clone.Lineages.AddRange(Lineages);
@@ -107,6 +122,47 @@ public sealed class LedgerKernelTransaction
         _state.Sources.Add(source);
     }
 
+    public void AddFundingClaim(HardCoinFundingClaim claim)
+    {
+        ArgumentNullException.ThrowIfNull(claim);
+        if (_state.FundingClaims.ContainsKey(claim.SourceId))
+            throw new InvalidOperationException("Funding source already exists.");
+        if (!_state.ProviderMonetaryLegs.TryAdd(claim.ProviderLeg.Key, claim.SourceId))
+            throw new DuplicateProviderMonetaryLegException(claim.ProviderLeg);
+        _state.FundingClaims.Add(claim.SourceId, claim);
+    }
+
+    public HardCoinFundingClaim CurrentFundingClaim(SourceStampId sourceId) =>
+        _state.FundingClaims.TryGetValue(sourceId, out var claim)
+            ? claim
+            : throw new KeyNotFoundException($"Funding source {sourceId.Value:N} was not found.");
+
+    public void UpdateFundingClaim(HardCoinFundingClaim claim)
+    {
+        ArgumentNullException.ThrowIfNull(claim);
+        if (!_state.FundingClaims.ContainsKey(claim.SourceId))
+            throw new KeyNotFoundException($"Funding source {claim.SourceId.Value:N} was not found.");
+        _state.FundingClaims[claim.SourceId] = claim;
+    }
+
+    public ProviderReversalState? CurrentProviderReversalState(SourceStampId sourceId) =>
+        _state.ProviderReversalStates.GetValueOrDefault(sourceId);
+
+    public void SetProviderReversalState(ProviderReversalState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        _state.ProviderReversalStates[state.SourceId] = state;
+    }
+
+    public ProviderReversalResult? FindProviderReversalResult(IdempotencyKey key) =>
+        _state.ProviderReversalResults.GetValueOrDefault(key.Value);
+
+    public void AddProviderReversalResult(IdempotencyKey key, ProviderReversalResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        _state.ProviderReversalResults.Add(key.Value, result);
+    }
+
     public JournalAppendResult AppendJournal(PostingRequest request, DateTimeOffset recordedAt)
     {
         var chain = new JournalChain(_state.JournalEntries);
@@ -119,6 +175,21 @@ public sealed class LedgerKernelTransaction
         GetAvailableLots(_state, walletId, currency);
 
     public void AddCreditLot(CreditLot lot) => _state.CreditLots.Add(lot);
+    public CreditLot GetCreditLot(CreditLotId lotId) =>
+        _state.CreditLots.SingleOrDefault(lot => lot.Id == lotId)
+        ?? throw new KeyNotFoundException($"Credit lot {lotId.Value:N} was not found.");
+
+    public PostingResult GetPostingResult(PostingId postingId)
+    {
+        var entry = _state.JournalEntries.SingleOrDefault(item => item.PostingId == postingId)
+            ?? throw new KeyNotFoundException($"Posting {postingId.Value:N} was not found.");
+        return new PostingResult(
+            entry.PostingId,
+            PostingStatus.Accepted,
+            entry.Hash,
+            entry.RecordedAt,
+            entry.Lines.Select(line => new PostedLineResult(line.Sequence, line.Id)).ToArray());
+    }
     public void AddConsumption(FragmentConsumption consumption) => _state.Consumptions.Add(consumption);
     public void AddLineage(DerivedCreditLot lineage) => _state.Lineages.Add(lineage);
     public void AddProjectionUpdate(WalletProjectionUpdate update) => _state.ProjectionUpdates.Add(update);

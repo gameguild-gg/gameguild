@@ -38,8 +38,12 @@ public sealed class LedgerArchitectureTests
             .ToArray();
 
         methods.Select(method => method.Name).Should().BeEquivalentTo(
-            nameof(TransactionalPostingService.ObserveFunding),
-            nameof(TransactionalPostingService.ConfirmTopUp),
+            nameof(TransactionalPostingService.ObserveTopUp),
+            nameof(TransactionalPostingService.ConfirmObservedTopUp),
+            nameof(TransactionalPostingService.FinalizeObservedTopUp),
+            nameof(TransactionalPostingService.ConvertHardToSoft),
+            nameof(TransactionalPostingService.IssueSystemBackedGrant),
+            nameof(TransactionalPostingService.ReverseTopUp),
             nameof(TransactionalPostingService.Transfer));
         methods.SelectMany(method => method.GetParameters()).Select(parameter => parameter.ParameterType)
             .Should().OnlyContain(type => type.Name.EndsWith("Command", StringComparison.Ordinal));

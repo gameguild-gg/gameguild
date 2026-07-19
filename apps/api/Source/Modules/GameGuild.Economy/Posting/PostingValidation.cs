@@ -112,17 +112,25 @@ public static class PostingMatrix
         var requiredState = request.Template.Kind switch
         {
             PostingTemplateKind.ConfirmedTopUpMint => SourceConfirmationState.Confirmed,
-            PostingTemplateKind.ProviderReversalFull or PostingTemplateKind.ProviderReversalPartial => SourceConfirmationState.Reversed,
+            PostingTemplateKind.ProviderReversalFull => SourceConfirmationState.Reversed,
             _ => (SourceConfirmationState?)null
         };
 
         if (requiredState.HasValue && request.Source?.State != requiredState)
             Add(errors, PostingErrorCode.InvalidSourceState, $"Template requires {requiredState} source evidence.");
+        if (request.Template.Kind is PostingTemplateKind.ProviderReversalPartial or
+            PostingTemplateKind.ProviderConvertedSoftReversal or
+            PostingTemplateKind.ProviderReversalDebt or
+            PostingTemplateKind.ProviderReversalLoss &&
+            request.Source?.State is not (SourceConfirmationState.Disputed or SourceConfirmationState.Reversed))
+            Add(errors, PostingErrorCode.InvalidSourceState, "Template requires disputed or reversed source evidence.");
     }
 
     private static void ValidateShape(PostingRequest request, ICollection<PostingValidationError> errors)
     {
-        var expectedCount = request.Template.Kind is PostingTemplateKind.HardToSoftConversion or PostingTemplateKind.SystemBackedGrant ? 4 : 2;
+        var expectedCount = request.Template.Kind is PostingTemplateKind.HardToSoftConversion or
+            PostingTemplateKind.SystemBackedGrant or
+            PostingTemplateKind.ProviderConvertedSoftReversal ? 4 : 2;
         if (request.Lines.Count != expectedCount)
         {
             Add(errors, PostingErrorCode.InvalidLineCount, $"Template requires exactly {expectedCount} lines.");
@@ -141,6 +149,21 @@ public static class PostingMatrix
                 Match(lines[0], EntrySide.Debit, EconomyAccountCode.PurchasedHardLiability, CurrencyCode.HardCoin, true, ProvenanceKind.PurchasedHard, errors);
                 Match(lines[1], EntrySide.Credit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, false, null, errors);
                 break;
+            case PostingTemplateKind.ProviderConvertedSoftReversal:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.SoftCoinLiability, CurrencyCode.SoftCoin, true, ProvenanceKind.ConvertedSoft, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.SoftCoinReserve, CurrencyCode.SoftCoin, false, null, errors);
+                Match(lines[2], EntrySide.Debit, EconomyAccountCode.HardCoinReserve, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[3], EntrySide.Credit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, false, null, errors);
+                ValidateParity(lines[2].Amount.Units, lines[0].Amount.Units, errors);
+                break;
+            case PostingTemplateKind.ProviderReversalDebt:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.RecoveryReceivableHard, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, false, null, errors);
+                break;
+            case PostingTemplateKind.ProviderReversalLoss:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.ProviderLossHard, CurrencyCode.HardCoin, false, null, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.ExternalClearingHard, CurrencyCode.HardCoin, false, null, errors);
+                break;
             case PostingTemplateKind.Spend:
                 ValidateSameLiabilityTransfer(lines, null, errors);
                 break;
@@ -150,6 +173,10 @@ public static class PostingMatrix
                 Match(lines[2], EntrySide.Debit, EconomyAccountCode.SoftCoinReserve, CurrencyCode.SoftCoin, false, null, errors);
                 Match(lines[3], EntrySide.Credit, EconomyAccountCode.SoftCoinLiability, CurrencyCode.SoftCoin, true, ProvenanceKind.ConvertedSoft, errors);
                 ValidateParity(lines[0].Amount.Units, lines[3].Amount.Units, errors);
+                break;
+            case PostingTemplateKind.HardToSoftConversionFee:
+                Match(lines[0], EntrySide.Debit, EconomyAccountCode.PurchasedHardLiability, CurrencyCode.HardCoin, true, ProvenanceKind.PurchasedHard, errors);
+                Match(lines[1], EntrySide.Credit, EconomyAccountCode.FeeRevenueHard, CurrencyCode.HardCoin, false, null, errors);
                 break;
             case PostingTemplateKind.SystemBackedGrant:
                 Match(lines[0], EntrySide.Debit, EconomyAccountCode.PlatformHardTreasury, CurrencyCode.HardCoin, false, null, errors);

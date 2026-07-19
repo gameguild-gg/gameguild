@@ -55,6 +55,26 @@ internal sealed class EconomySourceStampEventRow
     public DateTimeOffset OccurredAt { get; set; }
 }
 
+internal sealed class EconomyFundingClaimRow
+{
+    public Guid SourceStampId { get; set; }
+    public Guid WalletId { get; set; }
+    public string Provider { get; set; } = string.Empty;
+    public string Environment { get; set; } = string.Empty;
+    public string ConnectedAccount { get; set; } = string.Empty;
+    public string ProviderObject { get; set; } = string.Empty;
+    public string ProviderMonetaryLeg { get; set; } = string.Empty;
+    public long AuthoritativeUsdMinorUnits { get; set; }
+    public SourceConfirmationState State { get; set; }
+    public DateTimeOffset ObservedAt { get; set; }
+    public DateTimeOffset? ConfirmedAt { get; set; }
+    public DateTimeOffset StateChangedAt { get; set; }
+    public Guid? PostingGroupId { get; set; }
+    public Guid? RootCreditLotId { get; set; }
+    public long CumulativeProviderReversalUnits { get; set; }
+    public long Version { get; set; }
+}
+
 internal sealed class EconomyPostingGroupRow
 {
     public Guid Id { get; set; }
