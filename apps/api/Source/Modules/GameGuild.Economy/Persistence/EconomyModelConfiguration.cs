@@ -10,6 +10,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
 
         ConfigureWallets(modelBuilder);
         ConfigureSources(modelBuilder);
+        ConfigureFunding(modelBuilder);
         ConfigurePostings(modelBuilder);
         ConfigureLedger(modelBuilder);
         ConfigureLineage(modelBuilder);
@@ -54,8 +55,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                     "\"AuthoritativeUnits\" >= 0");
                 table.HasCheckConstraint(
                     "ck_economy_source_stamps_confirmation",
-                    "(\"State\" = 2 AND \"ConfirmedAt\" IS NOT NULL AND \"ConfirmedAt\" >= \"ObservedAt\") OR " +
-                    "(\"State\" <> 2 AND \"ConfirmedAt\" IS NULL)");
+                    "(\"State\" IN (2, 5, 6) AND \"ConfirmedAt\" IS NOT NULL AND \"ConfirmedAt\" >= \"ObservedAt\") OR " +
+                    "(\"State\" IN (1, 3, 4) AND \"ConfirmedAt\" IS NULL)");
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.SourceKind).HasMaxLength(100);
@@ -85,6 +86,72 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.HasOne<EconomySourceStampRow>()
                 .WithMany()
                 .HasForeignKey(row => row.SourceStampId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureFunding(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EconomyFundingClaimRow>(builder =>
+        {
+            builder.ToTable("economy_funding_claims", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_funding_claims_amount_positive",
+                    "\"AuthoritativeUsdMinorUnits\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_funding_claims_version_positive",
+                    "\"Version\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_funding_claims_provider_reversal_bounds",
+                    "\"CumulativeProviderReversalUnits\" >= 0 AND \"CumulativeProviderReversalUnits\" <= \"AuthoritativeUsdMinorUnits\"");
+                table.HasCheckConstraint(
+                    "ck_economy_funding_claims_lifecycle",
+                    "(\"State\" = 1 AND \"ConfirmedAt\" IS NULL AND \"StateChangedAt\" = \"ObservedAt\" AND \"PostingGroupId\" IS NULL AND \"RootCreditLotId\" IS NULL AND \"CumulativeProviderReversalUnits\" = 0) OR " +
+                    "(\"State\" = 2 AND \"ConfirmedAt\" >= \"ObservedAt\" AND \"StateChangedAt\" >= \"ConfirmedAt\" AND \"PostingGroupId\" IS NOT NULL AND \"RootCreditLotId\" IS NOT NULL) OR " +
+                    "(\"State\" IN (3, 4) AND \"ConfirmedAt\" IS NULL AND \"StateChangedAt\" >= \"ObservedAt\" AND \"PostingGroupId\" IS NULL AND \"RootCreditLotId\" IS NULL AND \"CumulativeProviderReversalUnits\" = 0) OR " +
+                    "(\"State\" IN (5, 6) AND \"ConfirmedAt\" >= \"ObservedAt\" AND \"StateChangedAt\" >= \"ConfirmedAt\" AND \"PostingGroupId\" IS NOT NULL AND \"RootCreditLotId\" IS NOT NULL AND \"CumulativeProviderReversalUnits\" > 0)");
+            });
+            builder.HasKey(row => row.SourceStampId);
+            builder.Property(row => row.Provider).HasMaxLength(100);
+            builder.Property(row => row.Environment).HasMaxLength(50);
+            builder.Property(row => row.ConnectedAccount).HasMaxLength(256);
+            builder.Property(row => row.ProviderObject).HasMaxLength(256);
+            builder.Property(row => row.ProviderMonetaryLeg).HasMaxLength(256);
+            builder.Property(row => row.Version).IsConcurrencyToken();
+            builder.HasIndex(row => new
+            {
+                row.Provider,
+                row.Environment,
+                row.ConnectedAccount,
+                row.ProviderObject,
+                row.ProviderMonetaryLeg
+            })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_funding_claims_provider_leg");
+            builder.HasIndex(row => row.PostingGroupId)
+                .IsUnique()
+                .HasFilter("\"PostingGroupId\" IS NOT NULL")
+                .HasDatabaseName("ux_economy_funding_claims_posting_group");
+            builder.HasIndex(row => row.RootCreditLotId)
+                .IsUnique()
+                .HasFilter("\"RootCreditLotId\" IS NOT NULL")
+                .HasDatabaseName("ux_economy_funding_claims_root_lot");
+            builder.HasOne<EconomySourceStampRow>()
+                .WithOne()
+                .HasForeignKey<EconomyFundingClaimRow>(row => row.SourceStampId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyWalletRow>()
+                .WithMany()
+                .HasForeignKey(row => row.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyPostingGroupRow>()
+                .WithOne()
+                .HasForeignKey<EconomyFundingClaimRow>(row => row.PostingGroupId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyCreditLotRow>()
+                .WithOne()
+                .HasForeignKey<EconomyFundingClaimRow>(row => row.RootCreditLotId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
