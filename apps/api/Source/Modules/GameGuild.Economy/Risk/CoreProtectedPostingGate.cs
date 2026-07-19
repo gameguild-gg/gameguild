@@ -1,4 +1,5 @@
 using GameGuild.Economy.Contracts;
+using GameGuild.Economy.Reserves;
 
 namespace GameGuild.Economy.Risk;
 
@@ -38,6 +39,7 @@ public sealed class CoreProtectedPostingGate
         ProtectedPostingCommand command,
         RiskDecisionSnapshot decision,
         RiskPersistenceReadiness readiness,
+        ReservePostingAuthorization reserveAuthorization,
         DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -52,6 +54,12 @@ public sealed class CoreProtectedPostingGate
             throw new RiskDecisionBindingException("RiskDecisionId does not match the supplied decision snapshot.");
         if (command.Operation != command.Context.Operation)
             throw new RiskDecisionBindingException("Protected posting operation does not match the bound context.");
+        if (command.Context.ReserveVersion != reserveAuthorization.Version)
+            throw new ReserveAuthorizationException(
+                "Protected posting reserve version does not match the active reserve lock.");
+        if (command.Context.ReserveAuthorizationEpoch != reserveAuthorization.AuthorizationEpoch)
+            throw new ReserveAuthorizationEpochException(
+                "Protected posting authorization epoch does not match the active reserve lock.");
         return _authorizer.AuthorizeValueMovement(decision, command.Context, now);
     }
 }

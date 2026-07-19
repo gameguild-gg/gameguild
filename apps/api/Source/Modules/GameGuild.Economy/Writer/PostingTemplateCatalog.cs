@@ -7,7 +7,8 @@ public sealed record PostingTemplateRegistration(
     int Version,
     PostingAuthority Authority,
     int LineCount,
-    SourceConfirmationState? RequiredSourceState);
+    SourceConfirmationState? RequiredSourceState,
+    bool RequiresReserveAuthorization);
 
 public static class PostingTemplateCatalog
 {
@@ -41,5 +42,5 @@ public static class PostingTemplateCatalog
         PostingAuthority authority,
         int lineCount,
         SourceConfirmationState? sourceState = null) =>
-        new(kind, PostingTemplate.CurrentVersion, authority, lineCount, sourceState);
+        new(kind, PostingTemplate.CurrentVersion, authority, lineCount, sourceState, true);
 }
