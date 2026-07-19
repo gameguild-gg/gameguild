@@ -366,6 +366,83 @@ public sealed class TransactionalPostingService
         });
     }
 
+    public AdRewardIssuanceResult IssueAdReward(IssueAdRewardCommand command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        ArgumentNullException.ThrowIfNull(command.Authorization);
+        ArgumentException.ThrowIfNullOrWhiteSpace(command.ProviderEvidence);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(command.SoftUnits);
+        var soft = new CoinAmount(CurrencyCode.SoftCoin, command.SoftUnits);
+        command.Authorization.EnsureMatches(
+            PostingTemplateKind.AdRewardIssuance,
+            command.IdempotencyKey,
+            soft,
+            command.ReserveVersion,
+            command.IssuedAt);
+        command.Authorization.EnsureSourceRoots([command.SourceId]);
+        var commandHash = ComputeAdRewardHash(command);
+
+        return _store.Execute(transaction =>
+        {
+            var duplicate = transaction.FindIdempotent(command.IdempotencyKey, commandHash);
+            if (duplicate is not null)
+                return new AdRewardIssuanceResult(duplicate, transaction.GetCreditLot(command.OutputLotId));
+            if (transaction.LatestSource(command.SourceId) is not null)
+                throw new InvalidOperationException("Ad reward source evidence already exists.");
+
+            var observed = SourceEvidence.Observe(
+                command.SourceId,
+                "ad-network",
+                command.PostingId.Value.ToString("N"),
+                command.ProviderEvidence,
+                command.IssuedAt);
+            var confirmed = observed.Confirm(command.IssuedAt);
+            transaction.AddSource(observed);
+            transaction.AddSource(confirmed);
+            var source = new SourceStampContract(
+                confirmed.Id,
+                confirmed.EvidenceHash,
+                SourceConfirmationState.Confirmed,
+                confirmed.ObservedAt,
+                confirmed.ConfirmedAt,
+                confirmed.ProviderReference);
+            var request = new PostingRequest(
+                command.PostingId,
+                new PostingTemplate(PostingTemplateKind.AdRewardIssuance, PostingTemplate.CurrentVersion),
+                command.IdempotencyKey,
+                PostingAuthority.PlatformSystem,
+                command.ReserveVersion,
+                command.PolicyVersion,
+                source,
+                command.IssuedAt,
+                [
+                    new PostingLine(1, EntrySide.Debit, EconomyAccountCode.SoftCoinReserve,
+                        soft, null, null, null),
+                    new PostingLine(2, EntrySide.Credit, EconomyAccountCode.SoftCoinLiability,
+                        soft, command.WalletId, command.OutputLotId, ProvenanceKind.AdRewardSoft)
+                ]);
+            var append = transaction.AppendJournal(request, command.IssuedAt);
+            var lot = ConfirmedCreditFactory.CreateRootLot(
+                command.OutputLotId,
+                command.WalletId,
+                soft,
+                ProvenanceKind.AdRewardSoft,
+                confirmed,
+                command.IssuedAt,
+                append.Entry.Sequence);
+            transaction.AddCreditLot(lot);
+            transaction.AddProjectionUpdate(new WalletProjectionUpdate(
+                command.PostingId,
+                command.WalletId,
+                CurrencyCode.SoftCoin,
+                soft.Units,
+                append.Entry.Sequence));
+            transaction.AddIdempotency(new IdempotencyRecord(command.IdempotencyKey, commandHash, append.Result));
+            transaction.AddOutbox(_outboxFactory.PostingAccepted(append.Result));
+            return new AdRewardIssuanceResult(append.Result, lot);
+        });
+    }
+
     public ProviderReversalResult ReverseTopUp(ReverseTopUpCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -722,6 +799,17 @@ public sealed class TransactionalPostingService
         command.ReserveVersion.Value.ToString(CultureInfo.InvariantCulture),
         command.PolicyVersion.Value.ToString(CultureInfo.InvariantCulture),
         command.TreasuryEvidence.Trim(),
+        command.IssuedAt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
+
+    private static string ComputeAdRewardHash(IssueAdRewardCommand command) => Hash(
+        command.PostingId.Value.ToString("N"),
+        command.SourceId.Value.ToString("N"),
+        command.WalletId.Value.ToString("N"),
+        command.OutputLotId.Value.ToString("N"),
+        command.SoftUnits.ToString(CultureInfo.InvariantCulture),
+        command.ReserveVersion.Value.ToString(CultureInfo.InvariantCulture),
+        command.PolicyVersion.Value.ToString(CultureInfo.InvariantCulture),
+        command.ProviderEvidence.Trim(),
         command.IssuedAt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
 
     private static string ComputeProviderReversalHash(ReverseTopUpCommand command) => Hash(

@@ -99,7 +99,8 @@ public enum PostingTemplateKind
     HardToSoftConversionFee = 17,
     ProviderConvertedSoftReversal = 18,
     ProviderReversalDebt = 19,
-    ProviderReversalLoss = 20
+    ProviderReversalLoss = 20,
+    AdRewardIssuance = 21
 }
 
 public enum PostingStatus
