@@ -487,16 +487,18 @@ Verification: Core now owns an unforgeable reserve authorization lock, determini
 
 **Produces:** `GameGuild.Economy.AdRewards`, verified sessions, estimated reward quotes, fraud decisions, provider batches, and forward-only reconciliation.
 
-- [ ] Write token, provider-proof, timing, visibility, replay, velocity, quota, loss-budget, rounding, split-versus-batch, duplicate, and reconciliation tests.
-- [ ] Implement network policy and cold-start state.
-- [ ] Implement signed short-lived single-use sessions.
-- [ ] Convert conservative USD nanos at exactly `100,000 SC/USD` through one rational numerator/final division, retaining the canonical-denominator remainder in an idempotent wallet-level accumulator that survives network/policy retirement.
-- [ ] Atomically consume completion token, user/device/network/global counters, fraud-loss budget, and reserve headroom before posting reward.
-- [ ] Require a matching `RiskDecisionId` and entity-graph exposure check before reward issuance; related-account/device/IP/ASN/referral clusters consume aggregate limits together.
-- [ ] Require independent provider-side completion proof for immediate mint; disable unsupported networks or defer minting until an independently verified report. Fail closed when proof, fraud service, counters, reports, loss budget, or reserve snapshot are unavailable/stale.
-- [ ] Implement report import and unique reconciliation versioning.
-- [ ] Update future eCPM/buffer/ranking without changing prior rewards.
-- [ ] Add network and global kill switches.
+- [x] Write token, provider-proof, timing, visibility, replay, velocity, quota, loss-budget, rounding, split-versus-batch, duplicate, and reconciliation tests.
+- [x] Implement network policy and cold-start state.
+- [x] Implement signed short-lived single-use sessions.
+- [x] Convert conservative USD nanos at exactly `100,000 SC/USD` through one rational numerator/final division, retaining the canonical-denominator remainder in an idempotent wallet-level accumulator that survives network/policy retirement.
+- [x] Atomically consume completion token, user/device/network/global counters, fraud-loss budget, and reserve headroom before posting reward.
+- [x] Require a matching `RiskDecisionId` and entity-graph exposure check before reward issuance; related-account/device/IP/ASN/referral clusters consume aggregate limits together.
+- [x] Require independent provider-side completion proof for immediate mint; disable unsupported networks or defer minting until an independently verified report. Fail closed when proof, fraud service, counters, reports, loss budget, or reserve snapshot are unavailable/stale.
+- [x] Implement report import and unique reconciliation versioning.
+- [x] Update future eCPM/buffer/ranking without changing prior rewards.
+- [x] Add network and global kill switches.
+
+**Verification:** `GameGuild.Economy.AdRewards.UnitTests` passes 57/57 with zero skips and 100% line, branch, and method coverage. `GameGuild.Economy.UnitTests` passes 323/323 with zero skips and 100% line, branch, and method coverage. The API Release build succeeds with warnings treated as errors and reports 0 warnings and 0 errors. Integrated persistence and public route composition remain intentionally deferred to Task 3.6.
 
 ### Task 3.3: Bounty Escrow
 
