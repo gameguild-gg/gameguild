@@ -19,6 +19,7 @@ public static class PostingTemplateCatalog
         Register(PostingTemplateKind.ProviderReversalPartial, PostingAuthority.ProviderConfirmation, 2, SourceConfirmationState.Reversed),
         Register(PostingTemplateKind.Spend, PostingAuthority.WalletOwner, 2),
         Register(PostingTemplateKind.HardToSoftConversion, PostingAuthority.WalletOwner, 4),
+        Register(PostingTemplateKind.HardToSoftConversionFee, PostingAuthority.WalletOwner, 2),
         Register(PostingTemplateKind.SystemBackedGrant, PostingAuthority.PlatformSystem, 4),
         Register(PostingTemplateKind.Burn, PostingAuthority.WalletOwner, 2),
         Register(PostingTemplateKind.Escrow, PostingAuthority.WalletOwner, 2),
