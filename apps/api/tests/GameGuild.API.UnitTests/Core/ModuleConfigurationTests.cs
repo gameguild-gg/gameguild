@@ -26,6 +26,20 @@ public class ModuleConfigurationTests
     }
 
     [Fact]
+    public void FinancialCapabilityModules_ShouldBeKnownButDisabledByDefault()
+    {
+        ModuleConfiguration.DefaultDisabledModules.Should().BeEquivalentTo(
+            "Economy.AdRewards",
+            "Economy.Bounties",
+            "Economy.Payouts",
+            "Economy.Treasury",
+            "Compliance.FinancialCrime",
+            "TrustSafety");
+        ModuleConfiguration.DefaultEnabledModules.Should()
+            .NotIntersectWith(ModuleConfiguration.DefaultDisabledModules);
+    }
+
+    [Fact]
     public void HandlerTypeNames_ShouldContainExpectedTypes()
     {
         ModuleConfiguration.HandlerTypeNames.Should().Contain("ICommandHandler");
