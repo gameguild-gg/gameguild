@@ -2,6 +2,8 @@ using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.API.Database.Migrations;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace GameGuild.API.UnitTests.Database;
@@ -165,7 +167,7 @@ public sealed class CanonicalSnapshotEntitySetTests
         string? PrincipalNavigation);
 
     [Fact]
-    public void Snapshot_PreservesMigrationBackedEntitiesAndExcludesAuditedDrift()
+    public void Snapshot_PreservesMigrationBackedEntitiesAndExcludesUnmigratedDrift()
     {
         var root = FindRepositoryRoot();
         var snapshot = File.ReadAllText(Path.Combine(
@@ -191,17 +193,35 @@ public sealed class CanonicalSnapshotEntitySetTests
             "GameGuild.Notifications.Notification",
             "GameGuild.Notifications.NotificationPreference",
             "GameGuild.Notifications.NotificationTemplate",
-            "GameGuild.Projects.ProjectStoreProduct"
+            "GameGuild.Projects.ProjectStoreProduct",
+            "GameGuild.Compliance.Audit.AuditLog",
+            "GameGuild.Commerce.Orders.Order",
+            "GameGuild.Identity.Authorization.PermissionTemplate"
         });
         entities.Should().NotContain(new[]
         {
             "GameGuild.Analytics.AnalyticsEvent",
             "GameGuild.Assets.AssetContent",
-            "GameGuild.Localization.Language",
-            "GameGuild.Compliance.Audit.AuditLog",
-            "GameGuild.Commerce.Orders.Order",
-            "GameGuild.Identity.Authorization.PermissionTemplate"
+            "GameGuild.Localization.Language"
         });
+    }
+
+    [Fact]
+    public void ComplianceAuditMigration_IsScopedToTheAuditLogTable()
+    {
+        var up = new MigrationBuilder("Npgsql.EntityFrameworkCore.PostgreSQL");
+        var down = new MigrationBuilder("Npgsql.EntityFrameworkCore.PostgreSQL");
+        var migration = new TestableAddComplianceAuditLog();
+
+        migration.BuildUp(up);
+        migration.BuildDown(down);
+
+        up.Operations.OfType<CreateTableOperation>()
+            .Should().ContainSingle(operation => operation.Name == "AuditLogs");
+        up.Operations.OfType<CreateIndexOperation>()
+            .Should().HaveCount(7).And.OnlyContain(operation => operation.Table == "AuditLogs");
+        down.Operations.OfType<DropTableOperation>()
+            .Should().ContainSingle(operation => operation.Name == "AuditLogs");
     }
 
     private static string FindRepositoryRoot()
@@ -215,5 +235,11 @@ public sealed class CanonicalSnapshotEntitySetTests
         }
 
         throw new DirectoryNotFoundException("Repository root was not found.");
+    }
+
+    private sealed class TestableAddComplianceAuditLog : AddComplianceAuditLog
+    {
+        public void BuildUp(MigrationBuilder migrationBuilder) => Up(migrationBuilder);
+        public void BuildDown(MigrationBuilder migrationBuilder) => Down(migrationBuilder);
     }
 }

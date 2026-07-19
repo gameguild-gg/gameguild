@@ -24,13 +24,14 @@ public sealed class EconomyWriterContractTests
         contract.Inputs.Select(input => input.Name).Should().Equal(
             "p_capability_id", "p_actor_id", "p_tenant_id", "p_posting_id", "p_idempotency_key",
             "p_template_kind", "p_template_version", "p_authority", "p_policy_version", "p_reserve_version",
-            "p_risk_decision_id", "p_source_stamp_id", "p_source_evidence_hash", "p_requested_at",
+            "p_risk_decision_id", "p_risk_operation_fingerprint", "p_expected_counter_version",
+            "p_source_stamp_id", "p_source_evidence_hash", "p_requested_at",
             "p_lines", "p_allocations", "p_root_ranges", "p_expected_reversal_epochs", "p_dispatch_snapshot_hash");
         contract.Inputs.Should().NotContain(input => input.Name.Contains("sql", StringComparison.OrdinalIgnoreCase));
         contract.Outputs.Select(output => output.Name).Should().Equal(
             "posting_id", "journal_sequence", "journal_hash", "duplicate");
         contract.CanonicalSignature.Should().Be(
-            "economy_private.post_registered_posting_v1(uuid,uuid,uuid,uuid,text,integer,integer,integer,bigint,bigint,uuid,uuid,text,timestamptz,jsonb,jsonb,jsonb,jsonb,text)");
+            "economy_private.post_registered_posting_v1(uuid,uuid,uuid,uuid,text,integer,integer,integer,bigint,bigint,uuid,text,bigint,uuid,text,timestamptz,jsonb,jsonb,jsonb,jsonb,text)");
     }
 
     [Fact]
