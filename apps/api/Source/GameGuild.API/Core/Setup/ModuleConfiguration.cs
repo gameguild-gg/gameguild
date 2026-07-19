@@ -48,6 +48,19 @@ public sealed class ModuleConfiguration
     ];
 
     /// <summary>
+    ///     Known capability modules that are present in the host but must be explicitly enabled.
+    /// </summary>
+    public static readonly string[] DefaultDisabledModules =
+    [
+        "Economy.AdRewards",
+        "Economy.Bounties",
+        "Economy.Payouts",
+        "Economy.Treasury",
+        "Compliance.FinancialCrime",
+        "TrustSafety"
+    ];
+
+    /// <summary>
     ///     Gets or sets the list of enabled module names.
     /// </summary>
     public string[] EnabledModules { get; set; } = DefaultEnabledModules;

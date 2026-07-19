@@ -220,6 +220,12 @@ public static class InfrastructureLayerExtensions
         services.AddFerpaModule();
         logger.LogInformation("FERPA Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
+        // 10a.3a. Economy protected-operation contracts remain fail-closed until capability rollout.
+        stepStopwatch.Restart();
+        services.AddEconomyCapabilityComposition(configuration);
+        logger.LogInformation("Economy Risk/FinancialCrime/TrustSafety composition registered in {ElapsedMs}ms",
+            stepStopwatch.ElapsedMilliseconds);
+
         // 10a.4. Social Profiles Module (public profiles, skills, portfolio, privacy)
         stepStopwatch.Restart();
         services.AddSocialProfilesModule();
