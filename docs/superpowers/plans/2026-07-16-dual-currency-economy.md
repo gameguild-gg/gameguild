@@ -450,11 +450,13 @@ Verification: Core now owns an unforgeable reserve authorization lock, determini
 
 **Produces:** Disabled AdRewards, Bounties, Payouts, Treasury, FinancialCrime, and TrustSafety projects plus test projects, API references, module registry entries, and shared composition hooks required by later parallel branches.
 
-- [ ] Create projects and references without enabling any value-moving route.
-- [ ] Register `GameGuild.Economy.Risk`, `GameGuild.Compliance.FinancialCrime`, and `GameGuild.TrustSafety` contracts in composition with value-moving decisions disabled by default.
-- [ ] Add disabled module entries and empty composition hooks following current modular-monolith conventions.
-- [ ] Add smoke tests proving the API composes with every capability disabled.
+- [x] Create projects and references without enabling any value-moving route.
+- [x] Register `GameGuild.Economy.Risk`, `GameGuild.Compliance.FinancialCrime`, and `GameGuild.TrustSafety` contracts in composition with value-moving decisions disabled by default.
+- [x] Add disabled module entries and empty composition hooks following current modular-monolith conventions.
+- [x] Add smoke tests proving the API composes with every capability disabled.
 - [ ] Merge and delete this branch before Task 3.1 is created; Tasks 3.2-3.5 wait for Task 3.1 to merge.
+
+**Verification:** `GameGuild.Economy.UnitTests` passes 247/247 with 100% line, branch, and method coverage. Each of the six new capability test projects passes with 100% line, branch, and method coverage. `GameGuild.API.UnitTests` passes 189/189 with zero skips. The API Release build succeeds with warnings treated as errors and reports 0 warnings and 0 errors.
 
 ### Task 3.1: Hard-Coin Funding And Conversion
 
