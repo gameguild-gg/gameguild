@@ -39,6 +39,20 @@ public sealed class DatabaseStartupConfigurationTests
         failures.Should().BeEmpty();
     }
 
+    [Fact]
+    public void Validate_AcceptsPostgresMigrationConnectionEnvironmentAliasInProduction()
+    {
+        var configuration = CreateConfiguration(RuntimeConnection, values: new Dictionary<string, string?>
+        {
+            ["POSTGRES_MIGRATION_CONNECTION"] =
+                "Host=database;Database=game_guild;Username=game_guild_migrator;Password=migration-secret"
+        });
+
+        var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
+
+        failures.Should().BeEmpty();
+    }
+
     [Theory]
     [InlineData("Development")]
     [InlineData("Test")]
