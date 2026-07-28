@@ -6,6 +6,11 @@
 apps/academy/node_modules/
 apps/academy/.next/
 
+# Allow api app and its contents
+!apps/api/**
+apps/api/**/bin/
+apps/api/**/obj/
+
 # Allow blog app and its contents
 !apps/blog/**
 apps/blog/node_modules/
