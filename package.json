@@ -82,7 +82,7 @@
     "@game-guild/eslint-config": "workspace:*",
     "@game-guild/prettier-config": "workspace:*",
     "@game-guild/typescript-config": "workspace:*",
-    "eslint": "^9.18.0",
+    "eslint": "^10.8.0",
     "prettier": "^3.5.0",
     "rimraf": "^6.0.0",
     "syncpack": "^13.0.4",
