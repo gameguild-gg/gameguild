@@ -5,11 +5,10 @@ WORKDIR /src
 # Copy source code for the API solution
 COPY . .
 
-# Restore dependencies for the actual API project
-RUN dotnet restore "Source/GameGuild.API/GameGuild.API.csproj"
-
-# Publish the application from restored assets without a redundant intermediate build
-RUN dotnet publish "Source/GameGuild.API/GameGuild.API.csproj" -c Release -o /app/publish /p:UseAppHost=false --no-restore
+# Restore and publish application (handles both monorepo root and apps/api build context)
+RUN PROJ=$(test -f "apps/api/Source/GameGuild.API/GameGuild.API.csproj" && echo "apps/api/Source/GameGuild.API/GameGuild.API.csproj" || echo "Source/GameGuild.API/GameGuild.API.csproj") \
+    && dotnet restore "$PROJ" \
+    && dotnet publish "$PROJ" -c Release -o /app/publish /p:UseAppHost=false --no-restore
 
 # Stage 2: Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
