@@ -55,7 +55,8 @@ public static class DatabaseStartupConfiguration
     {
         var connectionString = configuration.GetConnectionString("MigrationConnection")
             ?? configuration["ConnectionStrings:MigrationConnection"]
-            ?? configuration["Database:MigrationConnectionString"];
+            ?? configuration["Database:MigrationConnectionString"]
+            ?? configuration["POSTGRES_MIGRATION_CONNECTION"];
 
         return PostgresConnectionString.Normalize(connectionString);
     }
