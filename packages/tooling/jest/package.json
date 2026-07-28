@@ -9,8 +9,8 @@
   "main": "src/index.js",
   "devDependencies": {
     "@types/jest": "^29.5.14",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "peerDependencies": {
     "@babel/preset-env": "^7.0.0",
