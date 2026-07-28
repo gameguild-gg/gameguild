@@ -146,7 +146,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
-    "jsdom": "25.0.1",
+    "jsdom": "30.0.0",
     "playwright": "1.59.1",
     "tailwindcss": "^4",
     "typescript": "^5",
