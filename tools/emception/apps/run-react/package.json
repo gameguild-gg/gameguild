@@ -21,8 +21,8 @@
     "@gameguild/emception-react": "*",
     "@gameguild/emception-webcomponent": "*",
     "emception": "*",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@types/react": "^19",
