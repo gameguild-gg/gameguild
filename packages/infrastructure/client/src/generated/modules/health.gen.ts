@@ -16,6 +16,29 @@ export class HealthModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Application information endpoint
+   *
+   * Provides application version, build details, and runtime information for debugging and deployment monitoring.
+   */
+  async getInfo(): Promise<Result<Types.APIControllersApplicationInfoOutput, ApiError>> {
+    const url = '/info';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.APIControllersApplicationInfoOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Comprehensive application health check
    *
    * Performs a comprehensive health check of all registered services and dependencies. Returns detailed status information for monitoring systems, load balancers, and orchestration platforms.
@@ -39,12 +62,12 @@ export class HealthModule {
   }
 
   /**
-   * Detailed dependency health check
+   * Readiness probe for traffic routing decisions
    *
-   * Provides comprehensive health status of all external dependencies including databases, APIs, caches, and message queues.
+   * Kubernetes-style readiness probe that determines whether the application is ready to serve traffic. Checks all dependencies and services required for proper request handling.
    */
-  async getHealthDependencies(): Promise<Result<Types.APIControllersDependencyHealthOutput, ApiError>> {
-    const url = '/health/dependencies';
+  async getReady(): Promise<Result<Types.APIControllersReadinessOutput, ApiError>> {
+    const url = '/ready';
 
     const result = await this.client.request({
       method: 'GET',
@@ -54,30 +77,7 @@ export class HealthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.APIControllersDependencyHealthOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Application information endpoint
-   *
-   * Provides application version, build details, and runtime information for debugging and deployment monitoring.
-   */
-  async getInfo(): Promise<Result<Types.APIControllersApplicationInfoOutput, ApiError>> {
-    const url = '/info';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIControllersApplicationInfoOutputSchema, result.data, 'response');
+      const validatedData = safeParse(Types.APIControllersReadinessOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -108,6 +108,29 @@ export class HealthModule {
   }
 
   /**
+   * Detailed dependency health check
+   *
+   * Provides comprehensive health status of all external dependencies including databases, APIs, caches, and message queues.
+   */
+  async getHealthDependencies(): Promise<Result<Types.APIControllersDependencyHealthOutput, ApiError>> {
+    const url = '/health/dependencies';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.APIControllersDependencyHealthOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Prometheus metrics endpoint
    *
    * Exposes application metrics in Prometheus text format for monitoring, alerting, and observability dashboards.
@@ -122,29 +145,6 @@ export class HealthModule {
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Readiness probe for traffic routing decisions
-   *
-   * Kubernetes-style readiness probe that determines whether the application is ready to serve traffic. Checks all dependencies and services required for proper request handling.
-   */
-  async getReady(): Promise<Result<Types.APIControllersReadinessOutput, ApiError>> {
-    const url = '/ready';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIControllersReadinessOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
   }
 }
 
