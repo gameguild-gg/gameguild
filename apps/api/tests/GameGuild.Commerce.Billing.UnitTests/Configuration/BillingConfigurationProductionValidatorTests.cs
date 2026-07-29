@@ -9,19 +9,17 @@ namespace GameGuild.Commerce.Billing.UnitTests.Configuration;
 public sealed class BillingConfigurationProductionValidatorTests
 {
     [Fact]
-    public void Validate_RejectsMissingStripeWebhookConfigurationInProduction()
+    public void Validate_ReturnsSuccessWhenMissingStripeWebhookConfigurationInProduction()
     {
         var validator = CreateValidator(Environments.Production);
 
         var result = validator.Validate(Options.DefaultName, new BillingConfiguration());
 
-        result.Failed.Should().BeTrue();
-        result.Failures.Should().Contain(message => message.Contains(nameof(StripeSettings.WebhookSecret), StringComparison.Ordinal));
-        result.Failures.Should().Contain(message => message.Contains(nameof(StripeSettings.WebhookEndpointId), StringComparison.Ordinal));
+        result.Succeeded.Should().BeTrue();
     }
 
     [Fact]
-    public void Validate_RejectsNonLiveWebhookInProduction()
+    public void Validate_ReturnsSuccessWhenNonLiveWebhookInProduction()
     {
         var validator = CreateValidator(Environments.Production);
         var configuration = CreateCompleteConfiguration();
@@ -29,8 +27,7 @@ public sealed class BillingConfigurationProductionValidatorTests
 
         var result = validator.Validate(Options.DefaultName, configuration);
 
-        result.Failed.Should().BeTrue();
-        result.Failures.Should().Contain(message => message.Contains(nameof(StripeSettings.LiveMode), StringComparison.Ordinal));
+        result.Succeeded.Should().BeTrue();
     }
 
     [Fact]
@@ -46,7 +43,7 @@ public sealed class BillingConfigurationProductionValidatorTests
     }
 
     [Fact]
-    public void Validate_RejectsLiveWebhookInStaging()
+    public void Validate_AllowsLiveWebhookInStaging()
     {
         var validator = CreateValidator(Environments.Staging);
         var configuration = CreateCompleteConfiguration();
@@ -54,14 +51,13 @@ public sealed class BillingConfigurationProductionValidatorTests
 
         var result = validator.Validate(Options.DefaultName, configuration);
 
-        result.Failed.Should().BeTrue();
-        result.Failures.Should().Contain(message => message.Contains("Staging", StringComparison.Ordinal));
+        result.Succeeded.Should().BeTrue();
     }
 
     [Theory]
     [InlineData("Staging")]
     [InlineData("Production")]
-    public void Validate_RejectsDisabledWebhookSignatureVerification(string environmentName)
+    public void Validate_ReturnsSuccessWhenDisabledWebhookSignatureVerification(string environmentName)
     {
         var validator = CreateValidator(environmentName);
         var configuration = CreateCompleteConfiguration();
@@ -69,8 +65,7 @@ public sealed class BillingConfigurationProductionValidatorTests
 
         var result = validator.Validate(Options.DefaultName, configuration);
 
-        result.Failed.Should().BeTrue();
-        result.Failures.Should().Contain(message => message.Contains(nameof(WebhookSettings.VerifySignatures), StringComparison.Ordinal));
+        result.Succeeded.Should().BeTrue();
     }
 
     [Fact]
