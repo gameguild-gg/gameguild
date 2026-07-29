@@ -10489,6 +10489,20 @@ export const deleteTestingEventsRegistrationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetTestingEventsRegistrationsMeInput {
+  query?: {
+    eventId?: string;
+  };
+}
+export type GetTestingEventsRegistrationsMeOutput = Array<Types.TestingLabTestingSlotRegistrationProjection>;
+export const getTestingEventsRegistrationsMeEndpoint = {
+  operationId: 'getTestingEventsRegistrationsMe' as const,
+  method: 'GET' as const,
+  path: '/v1/testing/events/registrations/me' as const,
+  tags: ['TestingLab/testingEventParticipation'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostTestingEventsRegistrationsCheckInInput {
   registrationId: string;
 }
@@ -10601,6 +10615,33 @@ export const postTestingEventsEndpoint = {
   operationId: 'postTestingEvents' as const,
   method: 'POST' as const,
   path: '/v1/testing/events' as const,
+  tags: ['TestingLab/testingEvents'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetTestingEventsPublicInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetTestingEventsPublicOutput = Array<Types.TestingLabPublicTestingEventProjection>;
+export const getTestingEventsPublicEndpoint = {
+  operationId: 'getTestingEventsPublic' as const,
+  method: 'GET' as const,
+  path: '/v1/testing/events/public' as const,
+  tags: ['TestingLab/testingEvents'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetTestingEventsPublic1Input {
+  eventId: string;
+}
+export type GetTestingEventsPublic1Output = Types.TestingLabPublicTestingEventProjection;
+export const getTestingEventsPublic1Endpoint = {
+  operationId: 'getTestingEventsPublic1' as const,
+  method: 'GET' as const,
+  path: '/v1/testing/events/public/{eventId}' as const,
   tags: ['TestingLab/testingEvents'] as const,
   requiresAuth: true,
 } as const;
@@ -10844,6 +10885,20 @@ export const postTestingEventsApplicationsEndpoint = {
   operationId: 'postTestingEventsApplications' as const,
   method: 'POST' as const,
   path: '/v1/testing/events/{eventId}/applications' as const,
+  tags: ['TestingLab/testingEvents'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetTestingEventsApplicationsMeInput {
+  query?: {
+    eventId?: string;
+  };
+}
+export type GetTestingEventsApplicationsMeOutput = Array<Types.TestingLabTestingProjectApplicationProjection>;
+export const getTestingEventsApplicationsMeEndpoint = {
+  operationId: 'getTestingEventsApplicationsMe' as const,
+  method: 'GET' as const,
+  path: '/v1/testing/events/applications/me' as const,
   tags: ['TestingLab/testingEvents'] as const,
   requiresAuth: true,
 } as const;
@@ -14507,6 +14562,7 @@ export const endpoints = {
   getTestingEventsSlotsRegistrations: getTestingEventsSlotsRegistrationsEndpoint,
   postTestingEventsSlotsRegistrations: postTestingEventsSlotsRegistrationsEndpoint,
   deleteTestingEventsRegistrations: deleteTestingEventsRegistrationsEndpoint,
+  getTestingEventsRegistrationsMe: getTestingEventsRegistrationsMeEndpoint,
   postTestingEventsRegistrationsCheckIn: postTestingEventsRegistrationsCheckInEndpoint,
   postTestingEventsRegistrationsCheckOut: postTestingEventsRegistrationsCheckOutEndpoint,
   postTestingEventsRegistrationsNoShow: postTestingEventsRegistrationsNoShowEndpoint,
@@ -14516,6 +14572,8 @@ export const endpoints = {
   postTestingEventsFeedbackObligationsFeedback: postTestingEventsFeedbackObligationsFeedbackEndpoint,
   getTestingEvents: getTestingEventsEndpoint,
   postTestingEvents: postTestingEventsEndpoint,
+  getTestingEventsPublic: getTestingEventsPublicEndpoint,
+  getTestingEventsPublic1: getTestingEventsPublic1Endpoint,
   getTestingEvents1: getTestingEvents1Endpoint,
   putTestingEvents: putTestingEventsEndpoint,
   deleteTestingEvents: deleteTestingEventsEndpoint,
@@ -14535,6 +14593,7 @@ export const endpoints = {
   deleteTestingEventsCommittee: deleteTestingEventsCommitteeEndpoint,
   getTestingEventsApplications: getTestingEventsApplicationsEndpoint,
   postTestingEventsApplications: postTestingEventsApplicationsEndpoint,
+  getTestingEventsApplicationsMe: getTestingEventsApplicationsMeEndpoint,
   getTestingEventsApplications1: getTestingEventsApplications1Endpoint,
   postTestingEventsApplicationsWithdraw: postTestingEventsApplicationsWithdrawEndpoint,
   postTestingEventsApplicationsReview: postTestingEventsApplicationsReviewEndpoint,

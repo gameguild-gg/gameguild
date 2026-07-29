@@ -11,6 +11,10 @@ const mocks = vi.hoisted(() => ({
     postTestingEventsOpenApplications: vi.fn(),
     postTestingEventsCommittee: vi.fn(),
   },
+  participation: {
+    deleteTestingEventsRegistrations: vi.fn(),
+    postTestingEventsFeedbackObligationsFeedback: vi.fn(),
+  },
 }));
 
 vi.mock('@/auth', () => ({
@@ -26,15 +30,17 @@ vi.mock('@game-guild/client', () => ({
   createServerClient: vi.fn(() => ({})),
   GeneratedApi: {
     TestinglabTestingeventsModule: vi.fn(() => mocks.events),
-    TestinglabTestingeventparticipationModule: vi.fn(() => ({})),
+    TestinglabTestingeventparticipationModule: vi.fn(() => mocks.participation),
   },
 }));
 
 import {
   addTestingEventCommitteeMember,
+  cancelTestingEventRegistration,
   createTestingEvent,
   createTestingEventSlot,
   rejectTestingEventApplication,
+  submitTestingEventFeedback,
   transitionTestingEvent,
 } from './events-actions';
 
@@ -132,5 +138,61 @@ describe('Testing Lab event actions', () => {
       userId: 'user-1',
       isChair: true,
     });
+  });
+
+  it('cancels the current tester registration through the participation client', async () => {
+    mocks.participation.deleteTestingEventsRegistrations.mockResolvedValue({
+      ok: true,
+      data: true,
+    });
+
+    const result = await cancelTestingEventRegistration(
+      form({ eventId: 'event-1', registrationId: 'registration-1' }),
+    );
+
+    expect(result.success).toBe(true);
+    expect(mocks.participation.deleteTestingEventsRegistrations).toHaveBeenCalledWith('registration-1');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/testing-lab/events/event-1');
+  });
+
+  it('submits required structured feedback for an assigned project', async () => {
+    mocks.participation.postTestingEventsFeedbackObligationsFeedback.mockResolvedValue({
+      ok: true,
+      data: { id: 'feedback-1' },
+    });
+
+    const result = await submitTestingEventFeedback(
+      form({
+        eventId: 'event-1',
+        obligationId: 'obligation-1',
+        feedbackData: 'The onboarding and controls are clear.',
+        overallRating: '8',
+        wouldRecommend: 'on',
+        additionalNotes: 'Retest after the tutorial polish.',
+      }),
+    );
+
+    expect(result.success).toBe(true);
+    expect(mocks.participation.postTestingEventsFeedbackObligationsFeedback).toHaveBeenCalledWith(
+      'obligation-1',
+      {
+        feedbackData: 'The onboarding and controls are clear.',
+        overallRating: 8,
+        wouldRecommend: true,
+        additionalNotes: 'Retest after the tutorial polish.',
+      },
+    );
+  });
+
+  it('validates feedback before calling the participation client', async () => {
+    const result = await submitTestingEventFeedback(
+      form({ obligationId: 'obligation-1', feedbackData: ' ', overallRating: '11' }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Structured feedback and a rating from 1 to 10 are required.',
+    });
+    expect(mocks.participation.postTestingEventsFeedbackObligationsFeedback).not.toHaveBeenCalled();
   });
 });

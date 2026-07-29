@@ -73,6 +73,8 @@ public sealed record GetTestingEventSlotRegistrationsQuery(
 public sealed record GetMyTestingFeedbackObligationsQuery(Guid? EventId = null)
     : IQuery<Result<IReadOnlyList<TestingFeedbackObligationProjection>>>;
 
+public sealed record GetMyTestingSlotRegistrationsQuery(Guid? EventId = null)
+    : IQuery<Result<IReadOnlyList<TestingSlotRegistrationProjection>>>;
 public sealed record RegisterTestingEventSlotRequest(string? Notes);
 
 public sealed record AssignTestingProjectToTesterRequest(Guid ApplicationId);

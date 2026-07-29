@@ -10,9 +10,13 @@ const mocks = vi.hoisted(() => ({
     getTestingEventsSlots: vi.fn(),
     getTestingEventsApplications: vi.fn(),
     getTestingEventsCommittee: vi.fn(),
+    getTestingEventsPublic: vi.fn(),
+    getTestingEventsPublic1: vi.fn(),
+    getTestingEventsApplicationsMe: vi.fn(),
   },
   participation: {
     getTestingEventsSlotsRegistrations: vi.fn(),
+    getTestingEventsRegistrationsMe: vi.fn(),
     getTestingEventsFeedbackObligationsMe: vi.fn(),
   },
 }));
@@ -30,13 +34,18 @@ vi.mock('@game-guild/client', () => ({
   },
 }));
 
-import { getTestingEventManagerData, getTestingEventsDirectory } from './events-queries';
+import {
+  getPublicTestingEventExperience,
+  getPublicTestingEventsDirectory,
+  getTestingEventManagerData,
+  getTestingEventsDirectory,
+} from './events-queries';
 
 describe('Testing Lab event queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getToken.mockResolvedValue('access-token');
-    mocks.auth.mockResolvedValue({ tenantId: 'tenant-1' });
+    mocks.auth.mockResolvedValue({ tenantId: 'tenant-1', user: { id: 'user-1' } });
     mocks.createServerClient.mockReturnValue({ kind: 'server-client' });
     mocks.events.getTestingEvents.mockResolvedValue({
       ok: true,
@@ -70,6 +79,40 @@ describe('Testing Lab event queries', () => {
     mocks.participation.getTestingEventsSlotsRegistrations.mockResolvedValue({
       ok: true,
       data: [{ id: 'registration-1', slotId: 'slot-1', status: 'Registered' }],
+    });
+    mocks.events.getTestingEventsPublic.mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: 'event-1',
+          name: 'Friday campus lab',
+          status: 'ApplicationsOpen',
+          mode: 'InPerson',
+          applicationCount: 4,
+          slots: [{ id: 'slot-1', availableTesterCount: 7, availableProjectCount: 2 }],
+        },
+      ],
+    });
+    mocks.events.getTestingEventsPublic1.mockResolvedValue({
+      ok: true,
+      data: {
+        id: 'event-1',
+        name: 'Friday campus lab',
+        status: 'ApplicationsOpen',
+        slots: [{ id: 'slot-1', availableTesterCount: 7, availableProjectCount: 2 }],
+      },
+    });
+    mocks.events.getTestingEventsApplicationsMe.mockResolvedValue({
+      ok: true,
+      data: [{ id: 'application-1', eventId: 'event-1', status: 'Pending' }],
+    });
+    mocks.participation.getTestingEventsRegistrationsMe.mockResolvedValue({
+      ok: true,
+      data: [{ id: 'registration-1', eventId: 'event-1', slotId: 'slot-1', status: 'Registered' }],
+    });
+    mocks.participation.getTestingEventsFeedbackObligationsMe.mockResolvedValue({
+      ok: true,
+      data: [{ id: 'obligation-1', eventId: 'event-1', applicationId: 'application-1', status: 'Pending' }],
     });
   });
 
@@ -118,5 +161,44 @@ describe('Testing Lab event queries', () => {
     expect(result.event?.id).toBe('event-1');
     expect(result.applications).toEqual([]);
     expect(result.accessIssues).toContain('Applications returned 403: Forbidden');
+  });
+
+  it('loads the anonymous public event directory without requiring actor state', async () => {
+    mocks.auth.mockResolvedValue(null);
+
+    const result = await getPublicTestingEventsDirectory({ skip: -4, take: 400 });
+
+    expect(result.events).toHaveLength(1);
+    expect(result.accessIssues).toEqual([]);
+    expect(mocks.events.getTestingEventsPublic).toHaveBeenCalledWith({ skip: 0, take: 100 });
+    expect(mocks.events.getTestingEventsApplicationsMe).not.toHaveBeenCalled();
+  });
+
+  it('loads a public event together with the signed-in actor application, registration, and obligations', async () => {
+    const result = await getPublicTestingEventExperience('event-1');
+
+    expect(result.event?.id).toBe('event-1');
+    expect(result.applications).toHaveLength(1);
+    expect(result.registrations).toHaveLength(1);
+    expect(result.feedbackObligations).toHaveLength(1);
+    expect(result.isAuthenticated).toBe(true);
+    expect(result.accessIssues).toEqual([]);
+    expect(mocks.events.getTestingEventsApplicationsMe).toHaveBeenCalledWith({ eventId: 'event-1' });
+    expect(mocks.participation.getTestingEventsRegistrationsMe).toHaveBeenCalledWith({ eventId: 'event-1' });
+    expect(mocks.participation.getTestingEventsFeedbackObligationsMe).toHaveBeenCalledWith({ eventId: 'event-1' });
+  });
+
+  it('keeps an anonymous public event readable and skips private self-service calls', async () => {
+    mocks.auth.mockResolvedValue(null);
+
+    const result = await getPublicTestingEventExperience('event-1');
+
+    expect(result.event?.id).toBe('event-1');
+    expect(result.applications).toEqual([]);
+    expect(result.registrations).toEqual([]);
+    expect(result.feedbackObligations).toEqual([]);
+    expect(result.isAuthenticated).toBe(false);
+    expect(mocks.events.getTestingEventsApplicationsMe).not.toHaveBeenCalled();
+    expect(mocks.participation.getTestingEventsRegistrationsMe).not.toHaveBeenCalled();
   });
 });

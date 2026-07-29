@@ -136,3 +136,8 @@ export async function getTestingEventManagerData(
     accessIssues,
   };
 }
+
+export {
+  getPublicTestingEventExperience,
+  getPublicTestingEventsDirectory,
+} from './events-public-queries';

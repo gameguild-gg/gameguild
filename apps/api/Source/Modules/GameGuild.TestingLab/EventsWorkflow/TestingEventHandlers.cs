@@ -25,6 +25,8 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
     ICommandHandler<RemoveTestingEventCommitteeMemberCommand, Result<bool>>,
     IQueryHandler<GetTestingEventQuery, Result<TestingEventProjection>>,
     IQueryHandler<GetTestingEventsQuery, Result<IReadOnlyList<TestingEventProjection>>>,
+    IQueryHandler<GetPublicTestingEventsQuery, Result<IReadOnlyList<PublicTestingEventProjection>>>,
+    IQueryHandler<GetPublicTestingEventQuery, Result<PublicTestingEventProjection>>,
     IQueryHandler<GetTestingEventSlotsQuery, Result<IReadOnlyList<TestingEventSlotProjection>>>,
     IQueryHandler<GetTestingEventCommitteeQuery, Result<IReadOnlyList<TestingEventCommitteeMemberProjection>>>
 {
@@ -302,6 +304,118 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         return Result.Success<IReadOnlyList<TestingEventProjection>>(events);
+    }
+
+    public async Task<Result<IReadOnlyList<PublicTestingEventProjection>>> Handle(
+        GetPublicTestingEventsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var events = await LoadPublicEventsAsync(
+            null,
+            Math.Max(0, request.Skip),
+            Math.Clamp(request.Take, 1, 100),
+            cancellationToken).ConfigureAwait(false);
+        return Result.Success<IReadOnlyList<PublicTestingEventProjection>>(events);
+    }
+
+    public async Task<Result<PublicTestingEventProjection>> Handle(
+        GetPublicTestingEventQuery request,
+        CancellationToken cancellationToken)
+    {
+        var events = await LoadPublicEventsAsync(request.EventId, 0, 1, cancellationToken).ConfigureAwait(false);
+        return events.Count == 0
+            ? Result.Failure<PublicTestingEventProjection>(
+                Error.NotFound("TestingLab.PublicEventNotFound", "Public testing event not found."))
+            : Result.Success(events[0]);
+    }
+
+    private async Task<IReadOnlyList<PublicTestingEventProjection>> LoadPublicEventsAsync(
+        Guid? eventId,
+        int skip,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        var query = context.Set<TestingEvent>()
+            .AsNoTracking()
+            .Include(testingEvent => testingEvent.Slots.Where(slot => slot.DeletedAt == null))
+            .Where(testingEvent =>
+                testingEvent.DeletedAt == null &&
+                (testingEvent.Status == TestingEventStatus.ApplicationsOpen ||
+                 testingEvent.Status == TestingEventStatus.ApplicationsClosed ||
+                 testingEvent.Status == TestingEventStatus.Scheduled ||
+                 testingEvent.Status == TestingEventStatus.Active));
+        if (eventId.HasValue)
+            query = query.Where(testingEvent => testingEvent.Id == eventId.Value);
+
+        var events = await query
+            .OrderBy(testingEvent => testingEvent.StartsAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (events.Count == 0) return [];
+
+        var eventIds = events.Select(testingEvent => testingEvent.Id).ToArray();
+        var slotIds = events.SelectMany(testingEvent => testingEvent.Slots).Select(slot => slot.Id).ToArray();
+        var applicationCounts = await context.Set<TestingProjectApplication>()
+            .AsNoTracking()
+            .Where(application => eventIds.Contains(application.EventId) && application.DeletedAt == null)
+            .GroupBy(application => application.EventId)
+            .Select(group => new { EventId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.EventId, row => row.Count, cancellationToken)
+            .ConfigureAwait(false);
+        var approvedProjectCounts = await context.Set<TestingProjectApplication>()
+            .AsNoTracking()
+            .Where(application =>
+                application.AssignedSlotId.HasValue &&
+                slotIds.Contains(application.AssignedSlotId.Value) &&
+                application.Status == TestingApplicationStatus.Approved &&
+                application.DeletedAt == null)
+            .GroupBy(application => application.AssignedSlotId!.Value)
+            .Select(group => new { SlotId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.SlotId, row => row.Count, cancellationToken)
+            .ConfigureAwait(false);
+        var registeredTesterCounts = await context.Set<TestingSlotRegistration>()
+            .AsNoTracking()
+            .Where(registration =>
+                slotIds.Contains(registration.SlotId) &&
+                registration.DeletedAt == null &&
+                registration.Status != TestingSlotRegistrationStatus.Waitlisted &&
+                registration.Status != TestingSlotRegistrationStatus.Cancelled)
+            .GroupBy(registration => registration.SlotId)
+            .Select(group => new { SlotId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.SlotId, row => row.Count, cancellationToken)
+            .ConfigureAwait(false);
+
+        return events.Select(testingEvent => new PublicTestingEventProjection(
+            testingEvent.Id,
+            testingEvent.Name,
+            testingEvent.Description,
+            testingEvent.Mode,
+            testingEvent.ApprovalMode,
+            testingEvent.Status,
+            testingEvent.ApplicationsOpenAt,
+            testingEvent.ApplicationsCloseAt,
+            testingEvent.StartsAt,
+            testingEvent.EndsAt,
+            testingEvent.RequiresFeedback,
+            applicationCounts.GetValueOrDefault(testingEvent.Id),
+            testingEvent.Slots
+                .OrderBy(slot => slot.StartsAt)
+                .Select(slot => new PublicTestingEventSlotProjection(
+                    slot.Id,
+                    slot.EventId,
+                    slot.Mode,
+                    slot.StartsAt,
+                    slot.EndsAt,
+                    slot.MaxTesters,
+                    slot.MaxProjects,
+                    slot.CampusName,
+                    slot.RoomName,
+                    approvedProjectCounts.GetValueOrDefault(slot.Id),
+                    registeredTesterCounts.GetValueOrDefault(slot.Id)))
+                .ToList()))
+            .ToList();
     }
 
     public async Task<Result<IReadOnlyList<TestingEventSlotProjection>>> Handle(GetTestingEventSlotsQuery request, CancellationToken cancellationToken)

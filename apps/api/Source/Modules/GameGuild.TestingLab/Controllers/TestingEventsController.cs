@@ -18,6 +18,25 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
         CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new GetTestingEventsQuery(status, skip, take), cancellationToken).ConfigureAwait(false));
 
+    [HttpGet("public")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<PublicTestingEventProjection>>> GetPublicEvents(
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new GetPublicTestingEventsQuery(skip, take),
+            cancellationToken).ConfigureAwait(false));
+
+    [HttpGet("public/{eventId:guid}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<PublicTestingEventProjection>> GetPublicEvent(
+        Guid eventId,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new GetPublicTestingEventQuery(eventId),
+            cancellationToken).ConfigureAwait(false));
+
     [HttpGet("{eventId:guid}")]
     public async Task<ActionResult<TestingEventProjection>> GetEvent(Guid eventId, CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new GetTestingEventQuery(eventId), cancellationToken).ConfigureAwait(false));
@@ -216,6 +235,13 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
         CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new GetTestingEventApplicationsQuery(eventId, status, skip, take), cancellationToken).ConfigureAwait(false));
 
+    [HttpGet("applications/me")]
+    public async Task<ActionResult<IReadOnlyList<TestingProjectApplicationProjection>>> GetMyApplications(
+        [FromQuery] Guid? eventId = null,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new GetMyTestingProjectApplicationsQuery(eventId),
+            cancellationToken).ConfigureAwait(false));
     [HttpGet("applications/{applicationId:guid}")]
     public async Task<ActionResult<TestingProjectApplicationProjection>> GetApplication(
         Guid applicationId,

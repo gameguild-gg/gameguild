@@ -82,6 +82,21 @@ export class TestinglabTestingeventparticipationModule {
 
   /**
    */
+  async getTestingEventsRegistrationsMe(query?: { eventId?: string }): Promise<Result<Array<Types.TestingLabTestingSlotRegistrationProjection>, ApiError>> {
+    const url = '/v1/testing/events/registrations/me';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.TestingLabTestingSlotRegistrationProjection>, ApiError>;
+  }
+
+  /**
+   */
   async postTestingEventsRegistrationsCheckIn(registrationId: string): Promise<Result<Types.TestingLabTestingSlotRegistrationProjection, ApiError>> {
     const url = `/v1/testing/events/registrations/${registrationId}:check-in`;
 
