@@ -63,6 +63,8 @@ public sealed record GetTestingEventApplicationsQuery(
     int Skip = 0,
     int Take = 50) : IQuery<Result<IReadOnlyList<TestingProjectApplicationProjection>>>;
 
+public sealed record GetMyTestingProjectApplicationsQuery(Guid? EventId = null)
+    : IQuery<Result<IReadOnlyList<TestingProjectApplicationProjection>>>;
 public sealed record SubmitTestingProjectApplicationRequest(
     Guid ProjectId,
     Guid? ProjectVersionId,

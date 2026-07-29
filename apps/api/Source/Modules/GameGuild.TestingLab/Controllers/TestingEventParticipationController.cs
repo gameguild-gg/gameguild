@@ -27,6 +27,13 @@ public sealed class TestingEventParticipationController(IMediator mediator) : Ba
             new CancelTestingEventSlotRegistrationCommand(registrationId),
             cancellationToken).ConfigureAwait(false));
 
+    [HttpGet("registrations/me")]
+    public async Task<ActionResult<IReadOnlyList<TestingSlotRegistrationProjection>>> GetMyRegistrations(
+        [FromQuery] Guid? eventId = null,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new GetMyTestingSlotRegistrationsQuery(eventId),
+            cancellationToken).ConfigureAwait(false));
     [HttpGet("slots/{slotId:guid}/registrations")]
     public async Task<ActionResult<IReadOnlyList<TestingSlotRegistrationProjection>>> GetRegistrations(
         Guid slotId,

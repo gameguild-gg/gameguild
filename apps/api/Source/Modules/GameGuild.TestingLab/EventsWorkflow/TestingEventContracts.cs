@@ -38,6 +38,43 @@ public sealed record TestingEventSlotProjection(
     int ApprovedProjectCount,
     int RegisteredTesterCount);
 
+public sealed record PublicTestingEventSlotProjection(
+    Guid Id,
+    Guid EventId,
+    TestingEventMode Mode,
+    DateTime StartsAt,
+    DateTime EndsAt,
+    int? MaxTesters,
+    int? MaxProjects,
+    string? CampusName,
+    string? RoomName,
+    int ApprovedProjectCount,
+    int RegisteredTesterCount)
+{
+    public int? AvailableTesterCount => MaxTesters.HasValue
+        ? Math.Max(0, MaxTesters.Value - RegisteredTesterCount)
+        : null;
+
+    public int? AvailableProjectCount => MaxProjects.HasValue
+        ? Math.Max(0, MaxProjects.Value - ApprovedProjectCount)
+        : null;
+}
+
+public sealed record PublicTestingEventProjection(
+    Guid Id,
+    string Name,
+    string? Description,
+    TestingEventMode Mode,
+    TestingEventApprovalMode ApprovalMode,
+    TestingEventStatus Status,
+    DateTime ApplicationsOpenAt,
+    DateTime ApplicationsCloseAt,
+    DateTime StartsAt,
+    DateTime EndsAt,
+    bool RequiresFeedback,
+    int ApplicationCount,
+    IReadOnlyList<PublicTestingEventSlotProjection> Slots);
+
 public sealed record CreateTestingEventCommand(
     string Name,
     string? Description,
@@ -121,6 +158,12 @@ public sealed record GetTestingEventsQuery(
     TestingEventStatus? Status = null,
     int Skip = 0,
     int Take = 50) : IQuery<Result<IReadOnlyList<TestingEventProjection>>>;
+
+public sealed record GetPublicTestingEventsQuery(
+    int Skip = 0,
+    int Take = 50) : IQuery<Result<IReadOnlyList<PublicTestingEventProjection>>>;
+
+public sealed record GetPublicTestingEventQuery(Guid EventId) : IQuery<Result<PublicTestingEventProjection>>;
 
 public sealed record GetTestingEventSlotsQuery(Guid EventId) : IQuery<Result<IReadOnlyList<TestingEventSlotProjection>>>;
 

@@ -6876,6 +6876,38 @@ export type TestingLabLocationStatus = 'Active' | 'Maintenance' | 'Inactive';
 
 export type TestingLabParticipationStatus = 'Registered' | 'Active' | 'Completed' | 'Withdrawn' | 'Suspended';
 
+export interface TestingLabPublicTestingEventProjection {
+  id?: string;
+  name?: string | null;
+  description?: string | null;
+  mode?: TestingLabTestingEventMode;
+  approvalMode?: TestingLabTestingEventApprovalMode;
+  status?: TestingLabTestingEventStatus;
+  applicationsOpenAt?: string;
+  applicationsCloseAt?: string;
+  startsAt?: string;
+  endsAt?: string;
+  requiresFeedback?: boolean;
+  applicationCount?: number;
+  slots?: Array<TestingLabPublicTestingEventSlotProjection> | null;
+}
+
+export interface TestingLabPublicTestingEventSlotProjection {
+  id?: string;
+  eventId?: string;
+  mode?: TestingLabTestingEventMode;
+  startsAt?: string;
+  endsAt?: string;
+  maxTesters?: number | null;
+  maxProjects?: number | null;
+  campusName?: string | null;
+  roomName?: string | null;
+  approvedProjectCount?: number;
+  registeredTesterCount?: number;
+  availableTesterCount?: number | null;
+  availableProjectCount?: number | null;
+}
+
 export interface TestingLabRateFeedbackQuality {
   quality?: TestingLabFeedbackQuality;
 }
@@ -8329,6 +8361,8 @@ export let TestingLabInstructionTypeSchema: z.ZodType<TestingLabInstructionType>
 export let TestingLabLinkSessionProjectInputSchema: z.ZodType<TestingLabLinkSessionProjectInput>;
 export let TestingLabLocationStatusSchema: z.ZodType<TestingLabLocationStatus>;
 export let TestingLabParticipationStatusSchema: z.ZodType<TestingLabParticipationStatus>;
+export let TestingLabPublicTestingEventProjectionSchema: z.ZodType<TestingLabPublicTestingEventProjection>;
+export let TestingLabPublicTestingEventSlotProjectionSchema: z.ZodType<TestingLabPublicTestingEventSlotProjection>;
 export let TestingLabRateFeedbackQualitySchema: z.ZodType<TestingLabRateFeedbackQuality>;
 export let TestingLabRegisterTestingEventSlotInputSchema: z.ZodType<TestingLabRegisterTestingEventSlotInput>;
 export let TestingLabRegistrationStatusSchema: z.ZodType<TestingLabRegistrationStatus>;
@@ -16511,6 +16545,43 @@ TestingLabLocationStatusSchema = z.enum(['Active', 'Maintenance', 'Inactive']);
 
 /** Zod schema for TestingLabParticipationStatus */
 TestingLabParticipationStatusSchema = z.enum(['Registered', 'Active', 'Completed', 'Withdrawn', 'Suspended']);
+
+/** Zod schema for TestingLabPublicTestingEventProjection */
+TestingLabPublicTestingEventProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
+  status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
+  applicationsOpenAt: z.string().datetime().optional(),
+  applicationsCloseAt: z.string().datetime().optional(),
+  startsAt: z.string().datetime().optional(),
+  endsAt: z.string().datetime().optional(),
+  requiresFeedback: z.boolean().optional(),
+  applicationCount: z.number().int().optional(),
+  slots: z
+    .array(z.lazy(() => TestingLabPublicTestingEventSlotProjectionSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for TestingLabPublicTestingEventSlotProjection */
+TestingLabPublicTestingEventSlotProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  eventId: z.string().uuid().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  startsAt: z.string().datetime().optional(),
+  endsAt: z.string().datetime().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  maxProjects: z.number().int().nullable().optional(),
+  campusName: z.string().nullable().optional(),
+  roomName: z.string().nullable().optional(),
+  approvedProjectCount: z.number().int().optional(),
+  registeredTesterCount: z.number().int().optional(),
+  availableTesterCount: z.number().int().nullable().optional(),
+  availableProjectCount: z.number().int().nullable().optional(),
+});
 
 /** Zod schema for TestingLabRateFeedbackQuality */
 TestingLabRateFeedbackQualitySchema = z.object({

@@ -22,7 +22,7 @@ public sealed class TestingApplicationHandlers(
     ICommandHandler<WaitlistTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
     ICommandHandler<AssignTestingProjectApplicationSlotCommand, Result<TestingProjectApplicationProjection>>,
     IQueryHandler<GetTestingProjectApplicationQuery, Result<TestingProjectApplicationProjection>>,
-    IQueryHandler<GetTestingEventApplicationsQuery, Result<IReadOnlyList<TestingProjectApplicationProjection>>>
+    IQueryHandler<GetMyTestingProjectApplicationsQuery, Result<IReadOnlyList<TestingProjectApplicationProjection>>>,    IQueryHandler<GetTestingEventApplicationsQuery, Result<IReadOnlyList<TestingProjectApplicationProjection>>>
 {
     private readonly IProjectLifecycleLock _capacityLock = capacityLock ?? new ProjectLifecycleLock(context);
 
@@ -332,6 +332,29 @@ public sealed class TestingApplicationHandlers(
         return Result.Success<IReadOnlyList<TestingProjectApplicationProjection>>(applications.Select(ToProjection).ToList());
     }
 
+    public async Task<Result<IReadOnlyList<TestingProjectApplicationProjection>>> Handle(
+        GetMyTestingProjectApplicationsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
+        if (actor.Error != null)
+            return Result.Failure<IReadOnlyList<TestingProjectApplicationProjection>>(actor.Error);
+        var query = context.Set<TestingProjectApplication>()
+            .AsNoTracking()
+            .Include(application => application.Votes)
+            .Where(application =>
+                application.SubmittedByUserId == actor.UserId &&
+                application.TenantId == actor.TenantId &&
+                application.DeletedAt == null);
+        if (request.EventId.HasValue)
+            query = query.Where(application => application.EventId == request.EventId.Value);
+        var applications = await query
+            .OrderByDescending(application => application.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return Result.Success<IReadOnlyList<TestingProjectApplicationProjection>>(
+            applications.Select(ToProjection).ToList());
+    }
     private async Task<LoadedApplication> LoadApplicationAsync(Guid applicationId, CancellationToken cancellationToken)
     {
         var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);

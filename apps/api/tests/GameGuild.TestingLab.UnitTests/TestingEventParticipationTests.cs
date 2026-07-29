@@ -180,6 +180,24 @@ public sealed class TestingEventParticipationTests : IDisposable
         (await _context.TestingFeedback.SingleAsync()).EventId.Should().Be(testingEvent.Id);
     }
 
+
+    [Fact]
+    public async Task GetMyRegistrations_ReturnsOnlyCurrentTesterRegistrationsForEvent()
+    {
+        var (testingEvent, slot) = AddScheduledEventAndSlot(TestingEventMode.InPerson, maxTesters: 2);
+        _context.AddRange(
+            TestingSlotRegistration.Register(testingEvent.Id, slot.Id, _testerOneId, null, _tenantId),
+            TestingSlotRegistration.Register(testingEvent.Id, slot.Id, _testerTwoId, null, _tenantId));
+        await _context.SaveChangesAsync();
+        SetActor(_testerOneId);
+
+        var result = await CreateHandler().Handle(
+            new GetMyTestingSlotRegistrationsQuery(testingEvent.Id),
+            default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle().Which.UserId.Should().Be(_testerOneId);
+    }
     private TestingParticipationHandlers CreateHandler() => new(
         _context,
         _actorAccessor,

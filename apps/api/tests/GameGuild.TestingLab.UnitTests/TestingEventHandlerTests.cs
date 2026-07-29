@@ -377,6 +377,28 @@ public sealed class TestingEventHandlerTests : IDisposable
         result.Error.Type.Should().Be(ErrorType.Conflict);
     }
 
+
+    [Fact]
+    public async Task GetMyApplications_ReturnsOnlyCurrentActorApplicationsForEvent()
+    {
+        var applicantId = Guid.NewGuid();
+        AddActor(applicantId, TenantRole.Member);
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        var managerProject = AddProject(_managerId);
+        var otherProject = AddProject(applicantId);
+        _context.AddRange(
+            TestingProjectApplication.Submit(testingEvent.Id, managerProject.Id, null, _managerId, null, _tenantId),
+            TestingProjectApplication.Submit(testingEvent.Id, otherProject.Id, null, applicantId, null, _tenantId));
+        await _context.SaveChangesAsync();
+        SetActor(_managerId);
+
+        var result = await CreateApplicationHandler().Handle(
+            new GetMyTestingProjectApplicationsQuery(testingEvent.Id),
+            default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle().Which.SubmittedByUserId.Should().Be(_managerId);
+    }
     private TestingEventHandlers CreateEventHandler() => new(_context, _actorAccessor);
 
     private TestingApplicationHandlers CreateApplicationHandler() => new(

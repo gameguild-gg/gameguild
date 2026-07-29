@@ -21,7 +21,7 @@ public sealed class TestingParticipationHandlers(
     ICommandHandler<AssignTestingProjectToTesterCommand, Result<TestingFeedbackObligationProjection>>,
     ICommandHandler<SubmitTestingEventFeedbackCommand, Result<TestingEventFeedbackProjection>>,
     ICommandHandler<CompleteTestingEventParticipationCommand, Result<TestingSlotRegistrationProjection>>,
-    IQueryHandler<GetTestingEventSlotRegistrationsQuery, Result<IReadOnlyList<TestingSlotRegistrationProjection>>>,
+    IQueryHandler<GetMyTestingSlotRegistrationsQuery, Result<IReadOnlyList<TestingSlotRegistrationProjection>>>,    IQueryHandler<GetTestingEventSlotRegistrationsQuery, Result<IReadOnlyList<TestingSlotRegistrationProjection>>>,
     IQueryHandler<GetMyTestingFeedbackObligationsQuery, Result<IReadOnlyList<TestingFeedbackObligationProjection>>>
 {
     private static readonly TestingSlotRegistrationStatus[] CapacityStatuses =
@@ -371,6 +371,30 @@ public sealed class TestingParticipationHandlers(
             obligations.Select(ToProjection).ToList());
     }
 
+    public async Task<Result<IReadOnlyList<TestingSlotRegistrationProjection>>> Handle(
+        GetMyTestingSlotRegistrationsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
+        if (actor.Error != null)
+            return Result.Failure<IReadOnlyList<TestingSlotRegistrationProjection>>(actor.Error);
+        var query = context.Set<TestingSlotRegistration>()
+            .AsNoTracking()
+            .Where(registration =>
+                registration.UserId == actor.UserId &&
+                registration.TenantId == actor.TenantId &&
+                registration.DeletedAt == null);
+        if (request.EventId.HasValue)
+            query = query.Where(registration => registration.EventId == request.EventId.Value);
+        var registrations = await query
+            .OrderByDescending(registration => registration.RegisteredAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var projections = new List<TestingSlotRegistrationProjection>(registrations.Count);
+        foreach (var registration in registrations)
+            projections.Add(await ToProjectionAsync(registration, cancellationToken).ConfigureAwait(false));
+        return Result.Success<IReadOnlyList<TestingSlotRegistrationProjection>>(projections);
+    }
     private async Task<Result<TestingSlotRegistrationProjection>> ChangeAttendanceAsync(
         Guid registrationId,
         Action<TestingSlotRegistration> transition,
