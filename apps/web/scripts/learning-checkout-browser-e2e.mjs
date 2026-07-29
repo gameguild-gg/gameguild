@@ -245,7 +245,14 @@ async function runBrowserJourney(course) {
     await page.waitForURL((url) => url.origin === webBaseUrl && url.pathname.endsWith(`/courses/${course.slug}`));
     await assertNoErrorSurface(page, 'Signed-in paid course page');
 
-    await page.getByRole('button', { name: 'Enroll for $49' }).first().click();
+    const checkoutButton = page.getByRole('button', { name: /Enroll for \$49(?:\.00)?/ }).first();
+    try {
+      await checkoutButton.waitFor();
+    } catch {
+      const body = await page.locator('body').innerText({ timeout: 10_000 }).catch(() => '');
+      throw new Error(`Paid checkout action was not available at ${page.url()}:\n${body.slice(0, 2_000)}`);
+    }
+    await checkoutButton.click();
     await page.getByRole('heading', { name: 'Complete enrollment' }).waitFor();
     await page.getByText('Total due today').waitFor();
     await page.getByText('$49').first().waitFor();
