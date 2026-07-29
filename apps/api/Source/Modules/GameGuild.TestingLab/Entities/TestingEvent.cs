@@ -136,6 +136,16 @@ public sealed class TestingEvent : EntityBase
     {
         if (courseId == Guid.Empty || learningActivityId == Guid.Empty)
             throw new ArgumentException("Course and learning activity are required.");
+        if (Status is TestingEventStatus.Active or TestingEventStatus.Completed or TestingEventStatus.Cancelled)
+            throw new InvalidOperationException("Active or terminal events cannot change their Learning configuration.");
+        const TestingLearningCompletionRequirement supported =
+            TestingLearningCompletionRequirement.Attendance |
+            TestingLearningCompletionRequirement.FeedbackSubmitted |
+            TestingLearningCompletionRequirement.ProjectPresented;
+        if (requirement == TestingLearningCompletionRequirement.None ||
+            (requirement & ~supported) != TestingLearningCompletionRequirement.None)
+            throw new ArgumentOutOfRangeException(
+                nameof(requirement), requirement, "At least one supported Learning requirement is required.");
         CourseId = courseId;
         CohortId = cohortId;
         LearningActivityId = learningActivityId;
