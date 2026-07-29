@@ -63,7 +63,7 @@ public class HealthController(
                     })
             };
 
-            var statusCode = healthReport.Status == HealthStatus.Healthy ? 200 : 503;
+            var statusCode = healthReport.Status != HealthStatus.Unhealthy ? 200 : 503;
 
             return StatusCode(statusCode, response);
         }
@@ -109,7 +109,7 @@ public class HealthController(
         var response = new ReadinessResponse
         {
             Status = healthReport.Status.ToString(),
-            Ready = healthReport.Status == HealthStatus.Healthy,
+            Ready = healthReport.Status != HealthStatus.Unhealthy,
             Timestamp = SystemClock.UtcNow,
             Services = healthReport.Entries.ToDictionary(
                 kvp => kvp.Key,
@@ -214,7 +214,7 @@ public class HealthController(
             Dependencies = dependencies
         };
 
-        var statusCode = healthReport.Status == HealthStatus.Healthy ? 200 : 503;
+        var statusCode = healthReport.Status != HealthStatus.Unhealthy ? 200 : 503;
         return StatusCode(statusCode, response);
     }
 }
