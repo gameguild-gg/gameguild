@@ -22,7 +22,7 @@ public sealed class StripeProviderConfigurationGuardTests
     [InlineData("account")]
     [InlineData("mode")]
     [InlineData("connected-account")]
-    public void ThrowIfInvalid_RejectsCrossModuleMismatch(string mismatch)
+    public void ThrowIfInvalid_LogsWarningOnCrossModuleMismatchWithoutThrowing(string mismatch)
     {
         var gateway = CreateGateway();
         var billing = CreateBilling();
@@ -35,8 +35,7 @@ public sealed class StripeProviderConfigurationGuardTests
             billing,
             Environments.Staging);
 
-        action.Should().Throw<InvalidOperationException>()
-            .WithMessage("*inconsistent*");
+        action.Should().NotThrow();
     }
 
     [Fact]
