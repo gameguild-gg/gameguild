@@ -70,13 +70,13 @@ services:
       - PaymentGateways__Stripe__PublishableKey=${PaymentGateways__Stripe__PublishableKey:?set PaymentGateways__Stripe__PublishableKey}
       - PaymentGateways__Stripe__AccountId=${PaymentGateways__Stripe__AccountId:?set PaymentGateways__Stripe__AccountId}
       - PaymentGateways__Stripe__ConnectedAccountId=${Billing__Stripe__ConnectedAccountId:-}
-      - PaymentGateways__Stripe__LiveMode=${Billing__Stripe__LiveMode:?set Billing__Stripe__LiveMode to false for Staging or true for Production}
+      - PaymentGateways__Stripe__LiveMode=${Billing__Stripe__LiveMode:-false}
       - Billing__Stripe__WebhookSecret=${Billing__Stripe__WebhookSecret:?set Billing__Stripe__WebhookSecret}
       - Billing__Stripe__WebhookEndpointId=${Billing__Stripe__WebhookEndpointId:?set Billing__Stripe__WebhookEndpointId}
       - Billing__Stripe__AccountId=${PaymentGateways__Stripe__AccountId:?set PaymentGateways__Stripe__AccountId}
       - Billing__Stripe__ApiVersion=${Billing__Stripe__ApiVersion:?set Billing__Stripe__ApiVersion}
       - Billing__Stripe__ConnectedAccountId=${Billing__Stripe__ConnectedAccountId:-}
-      - Billing__Stripe__LiveMode=${Billing__Stripe__LiveMode:?set Billing__Stripe__LiveMode to false for Staging or true for Production}
+      - Billing__Stripe__LiveMode=${Billing__Stripe__LiveMode:-false}
       - Billing__Stripe__WebhookToleranceSeconds=${Billing__Stripe__WebhookToleranceSeconds:-300}
     volumes:
       - dataprotection-keys-v2:/app/.aspnet/DataProtection-Keys
