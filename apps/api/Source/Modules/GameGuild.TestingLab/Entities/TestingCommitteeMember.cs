@@ -33,4 +33,11 @@ public sealed class TestingCommitteeMember : EntityBase
             TenantId = tenantId,
         };
     }
+
+    public void Deactivate()
+    {
+        if (!IsActive) return;
+        IsActive = false;
+        Touch();
+    }
 }

@@ -67,6 +67,14 @@ public sealed record OpenTestingEventApplicationsCommand(Guid EventId) : IComman
 
 public sealed record CloseTestingEventApplicationsCommand(Guid EventId) : ICommand<Result<TestingEventProjection>>;
 
+public sealed record ScheduleTestingEventCommand(Guid EventId) : ICommand<Result<TestingEventProjection>>;
+
+public sealed record ActivateTestingEventCommand(Guid EventId) : ICommand<Result<TestingEventProjection>>;
+
+public sealed record CompleteTestingEventCommand(Guid EventId) : ICommand<Result<TestingEventProjection>>;
+
+public sealed record CancelTestingEventCommand(Guid EventId, string Reason) : ICommand<Result<TestingEventProjection>>;
+
 public sealed record ConfigureTestingEventLearningCommand(
     Guid EventId,
     Guid CourseId,
@@ -116,6 +124,27 @@ public sealed record GetTestingEventsQuery(
 
 public sealed record GetTestingEventSlotsQuery(Guid EventId) : IQuery<Result<IReadOnlyList<TestingEventSlotProjection>>>;
 
+public sealed record TestingEventCommitteeMemberProjection(
+    Guid Id,
+    Guid EventId,
+    Guid UserId,
+    string UserName,
+    string UserEmail,
+    bool IsChair,
+    bool IsActive);
+
+public sealed record AddTestingEventCommitteeMemberCommand(
+    Guid EventId,
+    Guid UserId,
+    bool IsChair) : ICommand<Result<TestingEventCommitteeMemberProjection>>;
+
+public sealed record RemoveTestingEventCommitteeMemberCommand(
+    Guid EventId,
+    Guid UserId) : ICommand<Result<bool>>;
+
+public sealed record GetTestingEventCommitteeQuery(
+    Guid EventId) : IQuery<Result<IReadOnlyList<TestingEventCommitteeMemberProjection>>>;
+
 public sealed record CreateTestingEventRequest(
     string Name,
     string? Description,
@@ -148,3 +177,6 @@ public sealed record UpsertTestingEventSlotRequest(
     string? RoomName,
     string? MeetingUrl,
     Guid? LocationId = null);
+public sealed record CancelTestingEventRequest(string Reason);
+
+public sealed record AddTestingEventCommitteeMemberRequest(Guid UserId, bool IsChair);

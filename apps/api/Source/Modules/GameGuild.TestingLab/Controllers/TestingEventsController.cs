@@ -74,6 +74,27 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
     public async Task<ActionResult<TestingEventProjection>> CloseApplications(Guid eventId, CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new CloseTestingEventApplicationsCommand(eventId), cancellationToken).ConfigureAwait(false));
 
+    [HttpPost("{eventId:guid}:schedule")]
+    public async Task<ActionResult<TestingEventProjection>> Schedule(Guid eventId, CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(new ScheduleTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false));
+
+    [HttpPost("{eventId:guid}:activate")]
+    public async Task<ActionResult<TestingEventProjection>> Activate(Guid eventId, CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(new ActivateTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false));
+
+    [HttpPost("{eventId:guid}:complete")]
+    public async Task<ActionResult<TestingEventProjection>> Complete(Guid eventId, CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(new CompleteTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false));
+
+    [HttpPost("{eventId:guid}:cancel")]
+    public async Task<ActionResult<TestingEventProjection>> Cancel(
+        Guid eventId,
+        CancelTestingEventRequest request,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new CancelTestingEventCommand(eventId, request.Reason),
+            cancellationToken).ConfigureAwait(false));
+
     [HttpPut("{eventId:guid}/learning")]
     public async Task<ActionResult<TestingEventProjection>> ConfigureLearning(
         Guid eventId,
@@ -138,6 +159,35 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
     public async Task<ActionResult<bool>> DeleteSlot(Guid eventId, Guid slotId, CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(new DeleteTestingEventSlotCommand(eventId, slotId), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? NoContent() : ToActionResult(result);
+    }
+
+    [HttpGet("{eventId:guid}/committee")]
+    public async Task<ActionResult<IReadOnlyList<TestingEventCommitteeMemberProjection>>> GetCommittee(
+        Guid eventId,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new GetTestingEventCommitteeQuery(eventId),
+            cancellationToken).ConfigureAwait(false));
+
+    [HttpPost("{eventId:guid}/committee")]
+    public async Task<ActionResult<TestingEventCommitteeMemberProjection>> AddCommitteeMember(
+        Guid eventId,
+        AddTestingEventCommitteeMemberRequest request,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new AddTestingEventCommitteeMemberCommand(eventId, request.UserId, request.IsChair),
+            cancellationToken).ConfigureAwait(false));
+
+    [HttpDelete("{eventId:guid}/committee/{userId:guid}")]
+    public async Task<ActionResult<bool>> RemoveCommitteeMember(
+        Guid eventId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(
+            new RemoveTestingEventCommitteeMemberCommand(eventId, userId),
+            cancellationToken).ConfigureAwait(false);
         return result.IsSuccess ? NoContent() : ToActionResult(result);
     }
 

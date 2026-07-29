@@ -13,13 +13,20 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
     ICommandHandler<DeleteTestingEventCommand, Result<bool>>,
     ICommandHandler<OpenTestingEventApplicationsCommand, Result<TestingEventProjection>>,
     ICommandHandler<CloseTestingEventApplicationsCommand, Result<TestingEventProjection>>,
+    ICommandHandler<ScheduleTestingEventCommand, Result<TestingEventProjection>>,
+    ICommandHandler<ActivateTestingEventCommand, Result<TestingEventProjection>>,
+    ICommandHandler<CompleteTestingEventCommand, Result<TestingEventProjection>>,
+    ICommandHandler<CancelTestingEventCommand, Result<TestingEventProjection>>,
     ICommandHandler<ConfigureTestingEventLearningCommand, Result<TestingEventProjection>>,
     ICommandHandler<CreateTestingEventSlotCommand, Result<TestingEventSlotProjection>>,
     ICommandHandler<UpdateTestingEventSlotCommand, Result<TestingEventSlotProjection>>,
     ICommandHandler<DeleteTestingEventSlotCommand, Result<bool>>,
+    ICommandHandler<AddTestingEventCommitteeMemberCommand, Result<TestingEventCommitteeMemberProjection>>,
+    ICommandHandler<RemoveTestingEventCommitteeMemberCommand, Result<bool>>,
     IQueryHandler<GetTestingEventQuery, Result<TestingEventProjection>>,
     IQueryHandler<GetTestingEventsQuery, Result<IReadOnlyList<TestingEventProjection>>>,
-    IQueryHandler<GetTestingEventSlotsQuery, Result<IReadOnlyList<TestingEventSlotProjection>>>
+    IQueryHandler<GetTestingEventSlotsQuery, Result<IReadOnlyList<TestingEventSlotProjection>>>,
+    IQueryHandler<GetTestingEventCommitteeQuery, Result<IReadOnlyList<TestingEventCommitteeMemberProjection>>>
 {
     public async Task<Result<TestingEventProjection>> Handle(CreateTestingEventCommand request, CancellationToken cancellationToken)
     {
@@ -126,6 +133,18 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
             return Result.Failure<TestingEventProjection>(Validation(exception.Message));
         }
     }
+
+    public Task<Result<TestingEventProjection>> Handle(ScheduleTestingEventCommand request, CancellationToken cancellationToken)
+        => TransitionEventAsync(request.EventId, testingEvent => testingEvent.Schedule(), cancellationToken);
+
+    public Task<Result<TestingEventProjection>> Handle(ActivateTestingEventCommand request, CancellationToken cancellationToken)
+        => TransitionEventAsync(request.EventId, testingEvent => testingEvent.Activate(), cancellationToken);
+
+    public Task<Result<TestingEventProjection>> Handle(CompleteTestingEventCommand request, CancellationToken cancellationToken)
+        => TransitionEventAsync(request.EventId, testingEvent => testingEvent.Complete(), cancellationToken);
+
+    public Task<Result<TestingEventProjection>> Handle(CancelTestingEventCommand request, CancellationToken cancellationToken)
+        => TransitionEventAsync(request.EventId, testingEvent => testingEvent.Cancel(request.Reason), cancellationToken);
 
     public async Task<Result<TestingEventProjection>> Handle(
         ConfigureTestingEventLearningCommand request,
@@ -326,6 +345,146 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
         return Result.Success<IReadOnlyList<TestingEventSlotProjection>>(slots);
     }
 
+    public async Task<Result<TestingEventCommitteeMemberProjection>> Handle(
+        AddTestingEventCommitteeMemberCommand request,
+        CancellationToken cancellationToken)
+    {
+        var authorization = await GetManagedEventAsync(request.EventId, cancellationToken).ConfigureAwait(false);
+        if (authorization.Error != null)
+            return Result.Failure<TestingEventCommitteeMemberProjection>(authorization.Error);
+        if (authorization.Event!.ApprovalMode != TestingEventApprovalMode.Committee)
+            return Result.Failure<TestingEventCommitteeMemberProjection>(
+                Validation("Committee members can only be assigned to committee-reviewed events."));
+        if (authorization.Event.Status is TestingEventStatus.Active or TestingEventStatus.Completed or TestingEventStatus.Cancelled)
+            return Result.Failure<TestingEventCommitteeMemberProjection>(
+                Validation("Committee membership cannot change for active or terminal events."));
+
+        var user = await context.Set<User>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(candidate =>
+                candidate.Id == request.UserId &&
+                candidate.IsActive &&
+                !candidate.IsSuspended &&
+                candidate.DeletedAt == null,
+                cancellationToken)
+            .ConfigureAwait(false);
+        var isMember = user != null && await context.Set<TenantMember>()
+            .AsNoTracking()
+            .AnyAsync(member =>
+                member.UserId == request.UserId &&
+                member.TenantId == authorization.Event.TenantId &&
+                member.IsActive &&
+                member.DeletedAt == null,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (!isMember)
+            return Result.Failure<TestingEventCommitteeMemberProjection>(
+                Error.NotFound("TestingLab.CommitteeUserNotFound", "An active tenant member is required."));
+
+        var exists = await context.Set<TestingCommitteeMember>()
+            .AnyAsync(member =>
+                member.EventId == request.EventId &&
+                member.UserId == request.UserId &&
+                member.DeletedAt == null,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (exists)
+            return Result.Failure<TestingEventCommitteeMemberProjection>(
+                Error.Conflict("TestingLab.CommitteeMemberExists", "This user already has a committee membership for the event."));
+
+        var member = TestingCommitteeMember.Create(
+            request.EventId,
+            request.UserId,
+            request.IsChair,
+            authorization.Event.TenantId);
+        context.Set<TestingCommitteeMember>().Add(member);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(ToProjection(member, user!));
+    }
+
+    public async Task<Result<bool>> Handle(
+        RemoveTestingEventCommitteeMemberCommand request,
+        CancellationToken cancellationToken)
+    {
+        var authorization = await GetManagedEventAsync(request.EventId, cancellationToken).ConfigureAwait(false);
+        if (authorization.Error != null) return Result.Failure<bool>(authorization.Error);
+        if (authorization.Event!.Status is TestingEventStatus.Active or TestingEventStatus.Completed or TestingEventStatus.Cancelled)
+            return Result.Failure<bool>(Validation("Committee membership cannot change for active or terminal events."));
+
+        var member = await context.Set<TestingCommitteeMember>()
+            .FirstOrDefaultAsync(candidate =>
+                candidate.EventId == request.EventId &&
+                candidate.UserId == request.UserId &&
+                candidate.IsActive &&
+                candidate.DeletedAt == null,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (member == null)
+            return Result.Failure<bool>(
+                Error.NotFound("TestingLab.CommitteeMemberNotFound", "Active committee member not found."));
+        var hasVotes = await context.Set<TestingApplicationVote>()
+            .AnyAsync(vote => vote.ReviewerId == request.UserId &&
+                              vote.Application.EventId == request.EventId &&
+                              vote.DeletedAt == null, cancellationToken)
+            .ConfigureAwait(false);
+        if (hasVotes)
+            return Result.Failure<bool>(
+                Error.Conflict("TestingLab.CommitteeMemberHasVotes", "Committee members with recorded votes cannot be removed."));
+
+        member.Deactivate();
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(true);
+    }
+
+    public async Task<Result<IReadOnlyList<TestingEventCommitteeMemberProjection>>> Handle(
+        GetTestingEventCommitteeQuery request,
+        CancellationToken cancellationToken)
+    {
+        var authorization = await GetManagedEventAsync(request.EventId, cancellationToken).ConfigureAwait(false);
+        if (authorization.Error != null)
+            return Result.Failure<IReadOnlyList<TestingEventCommitteeMemberProjection>>(authorization.Error);
+
+        var members = await context.Set<TestingCommitteeMember>()
+            .AsNoTracking()
+            .Where(member =>
+                member.EventId == request.EventId &&
+                member.TenantId == authorization.Event!.TenantId &&
+                member.IsActive &&
+                member.DeletedAt == null)
+            .OrderByDescending(member => member.IsChair)
+            .ThenBy(member => member.User.Name)
+            .Select(member => new TestingEventCommitteeMemberProjection(
+                member.Id,
+                member.EventId,
+                member.UserId,
+                member.User.Name,
+                member.User.Email,
+                member.IsChair,
+                member.IsActive))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return Result.Success<IReadOnlyList<TestingEventCommitteeMemberProjection>>(members);
+    }
+
+    private async Task<Result<TestingEventProjection>> TransitionEventAsync(
+        Guid eventId,
+        Action<TestingEvent> transition,
+        CancellationToken cancellationToken)
+    {
+        var authorization = await GetManagedEventAsync(eventId, cancellationToken).ConfigureAwait(false);
+        if (authorization.Error != null) return Result.Failure<TestingEventProjection>(authorization.Error);
+        try
+        {
+            transition(authorization.Event!);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return Result.Success(ToProjection(authorization.Event!));
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+        {
+            return Result.Failure<TestingEventProjection>(Validation(exception.Message));
+        }
+    }
+
     private async Task<ManagedEvent> GetManagedEventAsync(Guid eventId, CancellationToken cancellationToken)
     {
         var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
@@ -425,6 +584,15 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
         0,
         0);
 
+
+    private static TestingEventCommitteeMemberProjection ToProjection(TestingCommitteeMember member, User user) => new(
+        member.Id,
+        member.EventId,
+        member.UserId,
+        user.Name,
+        user.Email,
+        member.IsChair,
+        member.IsActive);
     private sealed record ActorScope(Guid UserId, Guid TenantId, Error? Error);
     private sealed record ManagedEvent(TestingEvent? Event, Error? Error);
 }
