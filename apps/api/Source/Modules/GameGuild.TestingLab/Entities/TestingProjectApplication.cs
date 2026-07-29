@@ -118,6 +118,14 @@ public sealed class TestingProjectApplication : EntityBase
         Touch();
     }
 
+    public void ReassignSlot(Guid slotId)
+    {
+        if (Status != TestingApplicationStatus.Approved)
+            throw new InvalidOperationException("Only approved applications can be reassigned.");
+        if (slotId == Guid.Empty) throw new ArgumentException("Slot is required.", nameof(slotId));
+        AssignedSlotId = slotId;
+        Touch();
+    }
     public void Withdraw(Guid actorUserId)
     {
         if (actorUserId != SubmittedByUserId) throw new UnauthorizedAccessException("Only the applicant can withdraw this application.");

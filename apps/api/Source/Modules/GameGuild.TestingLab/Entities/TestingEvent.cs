@@ -85,6 +85,35 @@ public sealed class TestingEvent : EntityBase
         };
     }
 
+    public void Update(
+        string name,
+        string? description,
+        TestingEventMode mode,
+        TestingEventApprovalMode approvalMode,
+        DateTime applicationsOpenAt,
+        DateTime applicationsCloseAt,
+        DateTime startsAt,
+        DateTime endsAt,
+        bool requiresFeedback)
+    {
+        if (Status is TestingEventStatus.Active or TestingEventStatus.Completed or TestingEventStatus.Cancelled)
+            throw new InvalidOperationException("Active or terminal events cannot be edited.");
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Event name is required.", nameof(name));
+        if (applicationsCloseAt <= applicationsOpenAt) throw new ArgumentException("Application window must end after it opens.");
+        if (startsAt < applicationsCloseAt) throw new ArgumentException("Event must start after applications close.");
+        if (endsAt <= startsAt) throw new ArgumentException("Event must end after it starts.");
+
+        Name = name.Trim();
+        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        Mode = mode;
+        ApprovalMode = approvalMode;
+        ApplicationsOpenAt = applicationsOpenAt;
+        ApplicationsCloseAt = applicationsCloseAt;
+        StartsAt = startsAt;
+        EndsAt = endsAt;
+        RequiresFeedback = requiresFeedback;
+        Touch();
+    }
     public void OpenApplications()
     {
         if (Status != TestingEventStatus.Draft) throw new InvalidOperationException("Only draft events can open applications.");
