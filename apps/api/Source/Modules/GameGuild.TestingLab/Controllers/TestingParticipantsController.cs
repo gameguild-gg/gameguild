@@ -61,7 +61,6 @@ public class TestingParticipantsController(
 
     // POST: testing/sessions/{sessionId}/register
     [HttpPost("sessions/{sessionId}/register")]
-    [RequireResourcePermission<PermissionType, SessionRegistration>(PermissionType.Create, "sessionId")]
     public async Task<ActionResult<SessionRegistration>> RegisterForSession(Guid sessionId, [FromBody] SessionRegistrationRequest request)
     {
         var userId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
@@ -74,7 +73,6 @@ public class TestingParticipantsController(
 
     // DELETE: testing/sessions/{sessionId}/register
     [HttpDelete("sessions/{sessionId}/register")]
-    [RequireResourcePermission<PermissionType, SessionRegistration>(PermissionType.Delete, "sessionId")]
     public async Task<ActionResult> UnregisterFromSession(Guid sessionId)
     {
         var userId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
@@ -101,7 +99,6 @@ public class TestingParticipantsController(
 
     // POST: testing/sessions/{sessionId}/waitlist
     [HttpPost("sessions/{sessionId}/waitlist")]
-    [RequireResourcePermission<PermissionType, SessionWaitlist>(PermissionType.Create, "sessionId")]
     public async Task<ActionResult<SessionWaitlist>> AddToWaitlist(Guid sessionId, [FromBody] SessionRegistrationRequest request)
     {
         var userId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
@@ -114,7 +111,6 @@ public class TestingParticipantsController(
 
     // DELETE: testing/sessions/{sessionId}/waitlist
     [HttpDelete("sessions/{sessionId}/waitlist")]
-    [RequireResourcePermission<PermissionType, SessionWaitlist>(PermissionType.Delete, "sessionId")]
     public async Task<ActionResult> RemoveFromWaitlist(Guid sessionId)
     {
         var userId = actorContextAccessor.ActorContext.SubjectIdAsGuid;

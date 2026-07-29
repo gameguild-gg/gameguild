@@ -1,136 +1,160 @@
 import { Link } from '@/i18n/navigation';
-import { publicPlaytests, publicProjects } from '@/lib/community/public-community';
-import { ArrowRight, BarChart3, ClipboardList, FlaskConical, Target } from 'lucide-react';
-import Image from 'next/image';
-import React from 'react';
+import { getPublicTestingEventsDirectory } from '@/lib/testing-lab/events-queries';
+import { Badge } from '@game-guild/ui/components/badge';
+import { ArrowRight, CalendarDays, ClipboardCheck, FlaskConical, MapPin, UsersRound } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 const testingSteps = [
-  {
-    title: 'Submit a build',
-    description: 'Share a playable build, video walkthrough, or project page with the context reviewers need.',
-    icon: FlaskConical,
-  },
-  {
-    title: 'Define test goals',
-    description: 'Pick the questions that matter: onboarding, controls, clarity, difficulty, pacing, or market signal.',
-    icon: Target,
-  },
-  {
-    title: 'Collect a feedback report',
-    description: 'Turn player notes into a concise feedback report with issues, patterns, and next actions.',
-    icon: BarChart3,
-  },
+  ['Connect a project', 'Apply with a project already created on GameGuild.'],
+  ['Manager review', 'A manager or review committee decides which projects join each slot.'],
+  ['Reserve a tester seat', 'Register for an available schedule or enter its waitlist.'],
+  ['Deliver feedback', 'Complete structured feedback for the projects assigned to you.'],
 ] as const;
 
-export default async function TestingLabPage(): Promise<React.JSX.Element> {
+function formatDateTime(value?: string | null) {
+  if (!value) return 'Schedule pending';
+  const date = new Date(value);
+  if (Number.isNaN(date.valueOf())) return 'Schedule pending';
+  return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+}
+
+function Metric({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return <span className="inline-flex items-center gap-2 text-sm text-slate-300">{icon}{children}</span>;
+}
+
+export default async function TestingLabPage() {
+  const directory = await getPublicTestingEventsDirectory({ take: 100 });
+
   return (
-    <main className="bg-slate-950 text-white">
-      <section className="border-b border-white/10 bg-[radial-gradient(circle_at_18%_0%,rgba(56,189,248,0.18),transparent_34%),radial-gradient(circle_at_82%_14%,rgba(34,197,94,0.12),transparent_30%),linear-gradient(180deg,#0f172a,#020617)]">
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+    <main className="min-h-screen bg-slate-950 text-white">
+      <section className="border-b border-white/10">
+        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.8fr)] lg:px-8 lg:py-20">
           <div className="max-w-3xl space-y-6">
-            <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">Testing Lab</h1>
+            <Badge variant="outline" className="border-sky-300/30 text-sky-200">Community playtesting</Badge>
+            <h1 className="text-4xl font-semibold sm:text-5xl">Testing Lab</h1>
             <p className="text-lg leading-8 text-slate-300">
-              A public entry point for students and members to validate game projects with structured playtests,
-              reviewer notes, and launch-readiness evidence.
+              Put member projects in front of real testers through managed online and campus events, structured review,
+              attendance, and actionable feedback.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/projects"
-                className="inline-flex items-center rounded-full bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
+                href="#events"
+                className="inline-flex items-center rounded-md bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
               >
-                Browse testable projects
-                <ArrowRight className="ml-2 size-4" aria-hidden="true" />
+                Find an event
+                <ArrowRight className="ml-2 size-4" />
               </Link>
               <Link
-                href="/community"
-                className="inline-flex items-center rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                href="/dashboard/projects"
+                className="inline-flex items-center rounded-md border border-white/15 px-5 py-3 text-sm font-semibold transition hover:bg-white/10"
               >
-                Find reviewers
+                Manage projects
               </Link>
             </div>
           </div>
+          <ol className="grid gap-px overflow-hidden rounded-md border border-white/10 bg-white/10 sm:grid-cols-2">
+            {testingSteps.map(([title, description], index) => (
+              <li key={title} className="bg-slate-950 p-5">
+                <span className="text-xs font-semibold text-sky-300">0{index + 1}</span>
+                <h2 className="mt-3 font-semibold">{title}</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{description}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            {testingSteps.map((step) => {
-              const Icon = step.icon;
+      <section id="events" className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-3xl font-semibold">Open and upcoming events</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+              Applications never consume project capacity until a manager approves them. Tester capacity is managed
+              independently for each schedule.
+            </p>
+          </div>
+          <Badge variant="outline" className="w-fit border-white/15 text-slate-200">
+            {directory.events.length} available
+          </Badge>
+        </div>
 
+        {directory.accessIssues.length > 0 ? (
+          <div className="mb-6 rounded-md border border-amber-400/30 bg-amber-400/5 p-4 text-sm text-amber-100">
+            Live Testing Lab events are temporarily unavailable. Retry shortly.
+          </div>
+        ) : null}
+
+        {directory.events.length === 0 ? (
+          <div className="rounded-md border border-dashed border-white/15 p-10 text-center">
+            <CalendarDays className="mx-auto size-8 text-slate-500" />
+            <h3 className="mt-4 font-semibold">No public testing events</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              Events appear here when their application window opens or their approved schedule is published.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {directory.events.map((event) => {
+              const slots = event.slots ?? [];
+              const testerAvailability = slots.reduce((total, slot) => total + (slot.availableTesterCount ?? 0), 0);
+              const locations = [...new Set(slots.map((slot) => slot.campusName).filter(Boolean))];
               return (
-                <article key={step.title} className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-                  <div className="mb-5 flex size-11 items-center justify-center rounded-2xl bg-sky-300/10 text-sky-200">
-                    <Icon className="size-5" aria-hidden="true" />
+                <article key={event.id} className="flex flex-col rounded-md border border-white/10 bg-slate-900/70 p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className="bg-sky-300/10 text-sky-200">{event.status}</Badge>
+                      <Badge variant="outline" className="border-white/15 text-slate-300">
+                        {event.mode === 'InPerson' ? 'In person' : event.mode}
+                      </Badge>
+                    </div>
+                    <span className="text-xs text-slate-400">{event.applicationCount ?? 0} applications</span>
                   </div>
-                  <h2 className="text-lg font-semibold text-white">{step.title}</h2>
-                  <p className="mt-3 text-sm leading-6 text-slate-400">{step.description}</p>
+                  <h3 className="mt-5 text-xl font-semibold">{event.name}</h3>
+                  <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-400">
+                    {event.description ?? 'A managed GameGuild project testing event.'}
+                  </p>
+                  <div className="my-5 grid gap-3 border-y border-white/10 py-4 sm:grid-cols-2">
+                    <Metric icon={<CalendarDays className="size-4 text-slate-500" />}>
+                      {formatDateTime(event.startsAt)}
+                    </Metric>
+                    <Metric icon={<UsersRound className="size-4 text-slate-500" />}>
+                      {testerAvailability} tester seats open
+                    </Metric>
+                    <Metric icon={<ClipboardCheck className="size-4 text-slate-500" />}>
+                      {slots.length} {slots.length === 1 ? 'schedule' : 'schedules'}
+                    </Metric>
+                    <Metric icon={<MapPin className="size-4 text-slate-500" />}>
+                      {locations.length > 0 ? locations.join(', ') : event.mode === 'Online' ? 'Online' : 'Location pending'}
+                    </Metric>
+                  </div>
+                  <Link
+                    href={`/testing-lab/events/${event.id}`}
+                    className="mt-auto inline-flex items-center text-sm font-semibold text-sky-200 hover:text-sky-100"
+                  >
+                    View event and participate
+                    <ArrowRight className="ml-2 size-4" />
+                  </Link>
                 </article>
               );
             })}
           </div>
-        </div>
+        )}
       </section>
 
-      <section className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
-        <div className="max-w-xl">
-          <h2 className="text-3xl font-semibold tracking-tight">Active testing queue</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-400">
-            Each queue item links to a real project page so visitors can understand the build, creator, test goal, and
-            expected output before joining.
-          </p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {publicProjects.map((project) => (
-            <Link
-              key={project.slug}
-              href={`/projects/${project.slug}`}
-              className="group overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 transition hover:-translate-y-1 hover:border-white/20"
-            >
-              <div className="relative h-40 overflow-hidden">
-                <Image
-                  src={project.previewImage}
-                  alt={`${project.title} testing preview`}
-                  fill
-                  className="object-cover opacity-90 transition duration-500 group-hover:scale-105"
-                  sizes="(min-width: 1024px) 33vw, 100vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
-              </div>
-              <div className="p-5">
-                <ClipboardList className="mb-5 size-6 text-sky-200" aria-hidden="true" />
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">{project.status}</p>
-                <h3 className="mt-3 text-xl font-semibold text-white">{project.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-400">{project.feedbackGoal}</p>
-                <span className="mt-5 inline-flex items-center text-sm font-semibold text-sky-200">
-                  Open project
-                  <ArrowRight className="ml-2 size-4 transition group-hover:translate-x-1" aria-hidden="true" />
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="border-y border-white/10 bg-white/[0.03]">
-        <div className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-          <div className="mb-8 max-w-2xl">
-            <h2 className="text-3xl font-semibold tracking-tight">Upcoming playtest sessions</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              Public sessions create clear expectations before a tester signs up and help teams gather comparable
-              feedback instead of scattered comments.
-            </p>
+      <section className="border-t border-white/10 bg-white/[0.03]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-12 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+          <div>
+            <FlaskConical className="size-6 text-sky-200" />
+            <h2 className="mt-3 text-xl font-semibold">Testing Lab managers</h2>
+            <p className="mt-1 text-sm text-slate-400">Create events, review candidates, manage capacity, and monitor feedback.</p>
           </div>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {publicPlaytests.map((playtest) => (
-              <Link
-                key={playtest.title}
-                href={playtest.href}
-                className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 transition hover:border-white/20"
-              >
-                <p className="text-sm font-semibold text-sky-200">{playtest.format}</p>
-                <h3 className="mt-3 text-xl font-semibold text-white">{playtest.title}</h3>
-                <p className="mt-3 text-sm text-slate-400">{playtest.date}</p>
-                <p className="mt-1 text-sm text-slate-400">{playtest.seats}</p>
-              </Link>
-            ))}
-          </div>
+          <Link
+            href="/dashboard/testing-lab/events"
+            className="inline-flex w-fit items-center rounded-md border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-white/10"
+          >
+            Open event management
+            <ArrowRight className="ml-2 size-4" />
+          </Link>
         </div>
       </section>
     </main>

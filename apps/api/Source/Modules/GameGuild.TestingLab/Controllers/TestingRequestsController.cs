@@ -143,7 +143,6 @@ public class TestingRequestsController(
 
     // POST: testing/submit-simple
     [HttpPost("submit-simple")]
-    [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Create)]
     public async Task<ActionResult<TestingRequest>> SubmitSimpleTestingRequest(CreateSimpleTestingRequestDto requestDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
