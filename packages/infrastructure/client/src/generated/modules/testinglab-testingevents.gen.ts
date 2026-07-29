@@ -60,6 +60,41 @@ export class TestinglabTestingeventsModule {
 
   /**
    */
+  async getTestingEventsPublic(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.TestingLabPublicTestingEventProjection>, ApiError>> {
+    const url = '/v1/testing/events/public';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Types.TestingLabPublicTestingEventProjection>, ApiError>;
+  }
+
+  /**
+   */
+  async getTestingEventsPublic1(eventId: string): Promise<Result<Types.TestingLabPublicTestingEventProjection, ApiError>> {
+    const url = `/v1/testing/events/public/${eventId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.TestingLabPublicTestingEventProjectionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getTestingEvents1(eventId: string): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}`;
 
@@ -451,6 +486,21 @@ export class TestinglabTestingeventsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getTestingEventsApplicationsMe(query?: { eventId?: string }): Promise<Result<Array<Types.TestingLabTestingProjectApplicationProjection>, ApiError>> {
+    const url = '/v1/testing/events/applications/me';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.TestingLabTestingProjectApplicationProjection>, ApiError>;
   }
 
   /**

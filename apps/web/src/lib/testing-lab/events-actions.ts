@@ -408,3 +408,41 @@ export async function assignTestedProjectToRegistration(
     optionalText(formData, 'eventId') ?? undefined,
   );
 }
+
+export async function cancelTestingEventRegistration(
+  formData: FormData,
+): Promise<TestingEventActionResult<unknown>> {
+  const registrationId = text(formData, 'registrationId');
+  if (!registrationId) return { success: false, error: 'Registration is required.' };
+  return complete(
+    createModules().participation.deleteTestingEventsRegistrations(registrationId),
+    'Testing registration cancelled.',
+    optionalText(formData, 'eventId') ?? undefined,
+  );
+}
+
+export async function submitTestingEventFeedback(
+  formData: FormData,
+): Promise<TestingEventActionResult<{ id?: string }>> {
+  const obligationId = text(formData, 'obligationId');
+  const feedbackData = text(formData, 'feedbackData');
+  const overallRating = optionalNumber(formData, 'overallRating');
+  if (!obligationId) return { success: false, error: 'Feedback obligation is required.' };
+  if (!feedbackData || overallRating === null || overallRating < 1 || overallRating > 10) {
+    return {
+      success: false,
+      error: 'Structured feedback and a rating from 1 to 10 are required.',
+    };
+  }
+
+  return complete(
+    createModules().participation.postTestingEventsFeedbackObligationsFeedback(obligationId, {
+      feedbackData,
+      overallRating,
+      wouldRecommend: checked(formData, 'wouldRecommend'),
+      additionalNotes: optionalText(formData, 'additionalNotes'),
+    }),
+    'Required project feedback submitted.',
+    optionalText(formData, 'eventId') ?? undefined,
+  );
+}
