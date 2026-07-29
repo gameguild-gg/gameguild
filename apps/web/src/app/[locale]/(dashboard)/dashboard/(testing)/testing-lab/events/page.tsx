@@ -1,4 +1,5 @@
-import { CreateTestingEventDialog, formatTestingEventStatus } from '@/components/testing-lab/testing-event-management';
+import { CreateTestingEventDialog } from '@/components/testing-lab/testing-event-management';
+import { formatTestingEventStatus } from '@/lib/testing-lab/format';
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
 import { TestingLabAccessIssues, TestingLabEmptyState } from '@/components/testing-lab/testing-lab-state';
 import { Link } from '@/i18n/navigation';
