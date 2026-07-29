@@ -3,6 +3,7 @@ using GameGuild.API.Database;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using GameGuild.Projects;
 using GameGuild.TestingLab;
@@ -101,6 +102,67 @@ public sealed class TestingEventPostgreSqlConcurrencyTests : IAsyncLifetime
             application.DeletedAt == null)).Should().Be(1);
     }
 
+    [Fact]
+    public async Task ConcurrentRegistrations_ForLastTesterSlot_RegisterOneAndWaitlistOne()
+    {
+        var tenantId = Guid.NewGuid();
+        var managerId = Guid.NewGuid();
+        var firstTesterId = Guid.NewGuid();
+        var secondTesterId = Guid.NewGuid();
+        var testingEvent = TestingEvent.Create(
+            "Tester capacity race",
+            TestingEventMode.InPerson,
+            managerId,
+            SystemClock.UtcNow.AddDays(-4),
+            SystemClock.UtcNow.AddDays(-2),
+            SystemClock.UtcNow.AddDays(2),
+            SystemClock.UtcNow.AddDays(3),
+            true,
+            TestingEventApprovalMode.ManagerOnly,
+            tenantId);
+        testingEvent.OpenApplications();
+        testingEvent.CloseApplications();
+        var slot = TestingEventSlot.Create(
+            testingEvent.Id,
+            TestingEventMode.InPerson,
+            testingEvent.StartsAt,
+            testingEvent.StartsAt.AddHours(2),
+            1,
+            4,
+            "Main campus",
+            "Lab 201",
+            null,
+            tenantId);
+        await SeedAsync(
+            NewTenant(tenantId),
+            NewUser(managerId),
+            NewUser(firstTesterId),
+            NewUser(secondTesterId),
+            NewMembership(tenantId, managerId, TenantRole.Owner),
+            NewMembership(tenantId, firstTesterId, TenantRole.Member),
+            NewMembership(tenantId, secondTesterId, TenantRole.Member),
+            testingEvent,
+            slot);
+
+        await using var gateContext = new ApplicationDbContext(_options);
+        await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(slot.Id);
+        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await observer.OpenAsync();
+
+        var firstTask = RegisterAsync(slot.Id, ActorAccessor(firstTesterId, tenantId));
+        var secondTask = RegisterAsync(slot.Id, ActorAccessor(secondTesterId, tenantId));
+        await WaitForWaitingAdvisoryLocksAsync(observer, 2);
+        await gate.CommitAsync();
+        var results = await Task.WhenAll(firstTask, secondTask);
+
+        results.Should().OnlyContain(result => result.IsSuccess);
+        results.Count(result => result.Value.Status == TestingSlotRegistrationStatus.Registered).Should().Be(1);
+        results.Count(result => result.Value.Status == TestingSlotRegistrationStatus.Waitlisted).Should().Be(1);
+        await using var verify = new ApplicationDbContext(_options);
+        (await verify.Set<TestingSlotRegistration>().CountAsync(registration =>
+            registration.SlotId == slot.Id &&
+            registration.Status == TestingSlotRegistrationStatus.Registered)).Should().Be(1);
+    }
     public async Task DisposeAsync() => await _container.DisposeAsync();
 
     private async Task<Result<TestingProjectApplicationProjection>> ApproveAsync(
@@ -118,6 +180,18 @@ public sealed class TestingEventPostgreSqlConcurrencyTests : IAsyncLifetime
             .Handle(new ApproveTestingProjectApplicationCommand(applicationId, slotId, "Capacity test"), default);
     }
 
+    private async Task<Result<TestingSlotRegistrationProjection>> RegisterAsync(
+        Guid slotId,
+        IActorContextAccessor actorAccessor)
+    {
+        await using var context = new ApplicationDbContext(_options);
+        return await new TestingParticipationHandlers(
+                context,
+                actorAccessor,
+                NullLogger<TestingParticipationHandlers>.Instance,
+                new ProjectLifecycleLock(context))
+            .Handle(new RegisterTestingEventSlotCommand(slotId, null), default);
+    }
     private async Task SeedAsync(params object[] entities)
     {
         await using var context = new ApplicationDbContext(_options);
@@ -135,6 +209,29 @@ public sealed class TestingEventPostgreSqlConcurrencyTests : IAsyncLifetime
         Visibility = ContentVisibility.Private
     };
 
+    private static Tenant NewTenant(Guid id) => new()
+    {
+        Id = id,
+        Name = $"Testing tenant {id:N}",
+        Slug = $"testing-tenant-{id:N}",
+        AdminEmail = $"admin-{id:N}@example.com",
+        IsActive = true
+    };
+    private static User NewUser(Guid id) => new()
+    {
+        Id = id,
+        Email = $"{id:N}@example.com",
+        Name = "Testing Lab actor",
+        IsActive = true
+    };
+
+    private static TenantMember NewMembership(Guid tenantId, Guid userId, string role) => new()
+    {
+        TenantId = tenantId,
+        UserId = userId,
+        Role = role,
+        IsActive = true
+    };
     private static IActorContextAccessor ActorAccessor(Guid actorId, Guid tenantId)
     {
         var accessor = new ActorContextAccessor();

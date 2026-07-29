@@ -9,6 +9,7 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
     {
         ConfigureTestingEvent(modelBuilder);
         ConfigureTestingEventSlot(modelBuilder);
+        ConfigureTestingSlotRegistration(modelBuilder);
         ConfigureTestingProjectApplication(modelBuilder);
         ConfigureTestingCommitteeMember(modelBuilder);
         ConfigureTestingApplicationVote(modelBuilder);
@@ -26,6 +27,38 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
         ConfigureTestingLabSettings(modelBuilder);
     }
 
+    private static void ConfigureTestingSlotRegistration(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TestingSlotRegistration>(builder =>
+        {
+            builder.ToTable("testing_slot_registrations");
+            builder.HasKey(registration => registration.Id);
+            builder.Property(registration => registration.Status).HasConversion<string>().HasMaxLength(40);
+            builder.Property(registration => registration.Notes).HasMaxLength(1000);
+            builder.HasOne(registration => registration.Event)
+                .WithMany()
+                .HasForeignKey(registration => registration.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(registration => registration.Slot)
+                .WithMany()
+                .HasForeignKey(registration => registration.SlotId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(registration => registration.User)
+                .WithMany()
+                .HasForeignKey(registration => registration.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(registration => registration.TenantId);
+            builder.HasIndex(registration => new { registration.SlotId, registration.Status });
+            builder.HasIndex(registration => new { registration.SlotId, registration.UserId })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL AND \"Status\" <> 'Cancelled'")
+                .HasDatabaseName("IX_testing_slot_registrations_active_slot_user");
+            builder.HasIndex(registration => new { registration.SlotId, registration.WaitlistPosition })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL AND \"Status\" = 'Waitlisted'")
+                .HasDatabaseName("IX_testing_slot_registrations_waitlist_position");
+        });
+    }
     private static void ConfigureTestingRequest(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TestingRequest>(builder =>
@@ -137,6 +170,15 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
                 .WithMany(form => form.Feedback)
                 .HasForeignKey(feedback => feedback.FeedbackFormId)
                 .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(feedback => feedback.Event)
+                .WithMany()
+                .HasForeignKey(feedback => feedback.EventId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(feedback => feedback.Application)
+                .WithMany()
+                .HasForeignKey(feedback => feedback.ApplicationId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(feedback => new { feedback.EventId, feedback.ApplicationId, feedback.UserId });
             builder.HasOne(feedback => feedback.User)
                 .WithMany()
                 .HasForeignKey(feedback => feedback.UserId)
