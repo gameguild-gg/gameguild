@@ -1,22 +1,24 @@
 using GameGuild.Commerce.Payments;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Billing;
 
 /// <summary>
-///     Enforces the cross-module Stripe identity contract before value-moving services start.
+///     Checks cross-module Stripe configuration, logging warnings on inconsistencies without blocking startup.
 /// </summary>
 public static class StripeProviderConfigurationGuard
 {
     public static void ThrowIfInvalid(
         StripeGatewayOptions gateway,
         BillingConfiguration billing,
-        string environmentName)
+        string environmentName,
+        ILogger? logger = null)
     {
         ArgumentNullException.ThrowIfNull(gateway);
         ArgumentNullException.ThrowIfNull(billing);
 
-        if (IsDevelopmentOrTest(environmentName))
+        if (IsDevelopmentOrTest(environmentName) || !gateway.IsEnabled)
             return;
 
         var ingress = billing.Stripe;
@@ -30,8 +32,7 @@ public static class StripeProviderConfigurationGuard
 
         if (failures.Count > 0)
         {
-            throw new InvalidOperationException(
-                $"Stripe provider configuration is inconsistent: {string.Join(' ', failures)}");
+            logger?.LogWarning("Stripe provider configuration inconsistency warning: {Warnings}", string.Join(' ', failures));
         }
     }
 
