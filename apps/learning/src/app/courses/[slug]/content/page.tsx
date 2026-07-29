@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
+import { CourseAccessGate } from '@/components/course-access-gate';
 import { CourseAttendanceShell } from '@/components/course-attendance-shell';
-import { getCourseAttendanceData } from '@/lib/courses';
+import { getCourseAccessData } from '@/lib/courses';
 import { notFound, redirect } from 'next/navigation';
 
 export default async function CourseContentPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -11,11 +12,15 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
         redirect(`/sign-in?redirectTo=${encodeURIComponent(`/courses/${slug}/content`)}`);
     }
 
-    const course = await getCourseAttendanceData(slug, { includeProgress: true });
+    const access = await getCourseAccessData(slug);
 
-    if (!course) {
+    if (access.kind === 'not-found') {
         notFound();
     }
 
-    return <CourseAttendanceShell course={course} />;
+    if (access.kind !== 'ready') {
+        return <CourseAccessGate access={access} />;
+    }
+
+    return <CourseAttendanceShell course={access.course} />;
 }
