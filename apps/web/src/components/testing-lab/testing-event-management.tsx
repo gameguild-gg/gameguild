@@ -19,6 +19,7 @@ import {
   waitlistTestingEventApplication,
   type TestingEventActionResult,
 } from '@/lib/testing-lab/events-actions';
+import { formatTestingEventStatus } from '@/lib/testing-lab/format';
 import type {
   TestingLabTestingEventCommitteeMemberProjection,
   TestingLabTestingEventProjection,
@@ -79,9 +80,6 @@ function datetimeLocal(value?: string | null) {
   return local.toISOString().slice(0, 16);
 }
 
-export function formatTestingEventStatus(status?: string | null) {
-  return (status ?? 'Draft').replace(/([a-z])([A-Z])/g, '$1 $2');
-}
 
 function ActionMessage({ result }: { result: TestingEventActionResult<unknown> | null }) {
   if (!result) return null;
