@@ -300,6 +300,83 @@ public sealed class TestingEventHandlerTests : IDisposable
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Validation);
     }
+    [Fact]
+    public async Task EventLifecycle_AdvancesThroughScheduledActiveAndCompleted()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        await _context.SaveChangesAsync();
+        var handler = CreateEventHandler();
+
+        (await handler.Handle(new CloseTestingEventApplicationsCommand(testingEvent.Id), default))
+            .Value.Status.Should().Be(TestingEventStatus.ApplicationsClosed);
+        (await handler.Handle(new ScheduleTestingEventCommand(testingEvent.Id), default))
+            .Value.Status.Should().Be(TestingEventStatus.Scheduled);
+        (await handler.Handle(new ActivateTestingEventCommand(testingEvent.Id), default))
+            .Value.Status.Should().Be(TestingEventStatus.Active);
+        (await handler.Handle(new CompleteTestingEventCommand(testingEvent.Id), default))
+            .Value.Status.Should().Be(TestingEventStatus.Completed);
+    }
+
+    [Fact]
+    public async Task CancelEvent_RejectsCompletedEvents()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        await _context.SaveChangesAsync();
+        var handler = CreateEventHandler();
+        await handler.Handle(new CloseTestingEventApplicationsCommand(testingEvent.Id), default);
+        await handler.Handle(new ScheduleTestingEventCommand(testingEvent.Id), default);
+        await handler.Handle(new ActivateTestingEventCommand(testingEvent.Id), default);
+        await handler.Handle(new CompleteTestingEventCommand(testingEvent.Id), default);
+
+        var result = await handler.Handle(new CancelTestingEventCommand(testingEvent.Id, "Too late"), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Validation);
+    }
+
+    [Fact]
+    public async Task CommitteeManagement_AddsListsAndRemovesActiveTenantMember()
+    {
+        var reviewerId = Guid.NewGuid();
+        AddActor(reviewerId, TenantRole.Member);
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.Committee);
+        await _context.SaveChangesAsync();
+        var handler = CreateEventHandler();
+
+        var added = await handler.Handle(
+            new AddTestingEventCommitteeMemberCommand(testingEvent.Id, reviewerId, true),
+            default);
+        var listed = await handler.Handle(new GetTestingEventCommitteeQuery(testingEvent.Id), default);
+        var removed = await handler.Handle(
+            new RemoveTestingEventCommitteeMemberCommand(testingEvent.Id, reviewerId),
+            default);
+
+        added.IsSuccess.Should().BeTrue();
+        added.Value.UserId.Should().Be(reviewerId);
+        added.Value.IsChair.Should().BeTrue();
+        listed.IsSuccess.Should().BeTrue();
+        listed.Value.Should().ContainSingle(member => member.UserId == reviewerId);
+        removed.IsSuccess.Should().BeTrue();
+        (await _context.Set<TestingCommitteeMember>().SingleAsync()).IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CommitteeManagement_RejectsDuplicateActiveMember()
+    {
+        var reviewerId = Guid.NewGuid();
+        AddActor(reviewerId, TenantRole.Member);
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.Committee);
+        _context.Add(TestingCommitteeMember.Create(testingEvent.Id, reviewerId, false, _tenantId));
+        await _context.SaveChangesAsync();
+
+        var result = await CreateEventHandler().Handle(
+            new AddTestingEventCommitteeMemberCommand(testingEvent.Id, reviewerId, false),
+            default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Conflict);
+    }
+
     private TestingEventHandlers CreateEventHandler() => new(_context, _actorAccessor);
 
     private TestingApplicationHandlers CreateApplicationHandler() => new(

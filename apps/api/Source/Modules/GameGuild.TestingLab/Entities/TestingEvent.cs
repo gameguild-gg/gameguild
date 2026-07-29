@@ -39,6 +39,11 @@ public sealed class TestingEvent : EntityBase
 
     public Guid? LearningActivityId { get; private set; }
 
+    [MaxLength(1000)]
+    public string? CancellationReason { get; private set; }
+
+    public DateTime? CancelledAt { get; private set; }
+
     public ICollection<TestingEventSlot> Slots { get; private set; } = new List<TestingEventSlot>();
 
     public ICollection<TestingProjectApplication> Applications { get; private set; } = new List<TestingProjectApplication>();
@@ -125,6 +130,42 @@ public sealed class TestingEvent : EntityBase
     {
         if (Status != TestingEventStatus.ApplicationsOpen) throw new InvalidOperationException("Applications are not open.");
         Status = TestingEventStatus.ApplicationsClosed;
+        Touch();
+    }
+
+    public void Schedule()
+    {
+        if (Status != TestingEventStatus.ApplicationsClosed)
+            throw new InvalidOperationException("Only events with closed applications can be scheduled.");
+        Status = TestingEventStatus.Scheduled;
+        Touch();
+    }
+
+    public void Activate()
+    {
+        if (Status != TestingEventStatus.Scheduled)
+            throw new InvalidOperationException("Only scheduled events can become active.");
+        Status = TestingEventStatus.Active;
+        Touch();
+    }
+
+    public void Complete()
+    {
+        if (Status != TestingEventStatus.Active)
+            throw new InvalidOperationException("Only active events can be completed.");
+        Status = TestingEventStatus.Completed;
+        Touch();
+    }
+
+    public void Cancel(string reason)
+    {
+        if (Status is TestingEventStatus.Completed or TestingEventStatus.Cancelled)
+            throw new InvalidOperationException("Completed or cancelled events cannot be cancelled.");
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("A cancellation reason is required.", nameof(reason));
+        Status = TestingEventStatus.Cancelled;
+        CancellationReason = reason.Trim();
+        CancelledAt = SystemClock.UtcNow;
         Touch();
     }
 
