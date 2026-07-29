@@ -268,6 +268,34 @@ function mapContentDto(dto: LearningCoursesProgramContent): ContentItem {
   };
 }
 
+function serializeContentBody(body: unknown): string | null {
+  if (body == null) return null;
+  return typeof body === 'string' ? body : JSON.stringify(body);
+}
+
+function mapContentDetailDto(dto: LearningCoursesProgramContent): ContentItemDetail {
+  return {
+    ...mapContentDto(dto),
+    content: serializeContentBody(dto.body),
+    settings: {
+      isRequired: dto.isRequired,
+      gradingMethod: dto.gradingMethod ?? null,
+      maxPoints: dto.maxPoints ?? null,
+    },
+  };
+}
+
+function findContentDto(dtos: LearningCoursesProgramContent[], contentId: string): LearningCoursesProgramContent | null {
+  for (const dto of dtos) {
+    if (dto.id === contentId) return dto;
+
+    const child = findContentDto(dto.children ?? [], contentId);
+    if (child) return child;
+  }
+
+  return null;
+}
+
 /**
  * Fetch course content items from the API (flat list for tree rendering).
  */
@@ -306,21 +334,19 @@ export const getCourseContent = cache(async (courseId: string): Promise<CourseCo
 export const getContentItem = cache(async (courseId: string, contentId: string): Promise<ContentItemDetail | null> => {
   try {
     const resolvedCourseId = await resolveCourseId(courseId);
-    const { content } = createCourseModules();
-    const result = await content.getCoursesContent1(resolvedCourseId, contentId);
+    const dto = await learningApiGet<LearningCoursesProgramContent>(
+      `/v1/courses/${resolvedCourseId}/content/${contentId}`,
+      0,
+    );
 
-    if (!result.ok) return null;
+    if (dto) return mapContentDetailDto(dto);
 
-    const dto = result.data;
-    return {
-      ...mapContentDto(dto),
-      content: dto.body != null ? (typeof dto.body === 'string' ? dto.body : JSON.stringify(dto.body)) : null,
-      settings: {
-        isRequired: dto.isRequired,
-        gradingMethod: dto.gradingMethod ?? null,
-        maxPoints: dto.maxPoints ?? null,
-      },
-    };
+    const courseContent = await learningApiGet<LearningCoursesProgramContent[]>(
+      `/v1/courses/${resolvedCourseId}/content`,
+      0,
+    );
+    const fallbackDto = courseContent ? findContentDto(courseContent, contentId) : null;
+    return fallbackDto ? mapContentDetailDto(fallbackDto) : null;
   } catch {
     return null;
   }
