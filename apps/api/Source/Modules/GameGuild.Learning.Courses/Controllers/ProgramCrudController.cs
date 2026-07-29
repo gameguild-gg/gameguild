@@ -87,6 +87,16 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
     return Ok(programs.ToDtos());
   }
 
+  /// <summary> Get every course in which the current user has an active enrollment. </summary>
+  [HttpGet("me")]
+  public async Task<ActionResult<IEnumerable<ProgramDto>>> GetMyPrograms()
+  {
+    var currentUserId = GetCurrentUserId();
+    if (!currentUserId.HasValue) return Unauthorized();
+
+    var programs = await programService.GetUserProgramsAsync(currentUserId.Value).ConfigureAwait(false);
+    return Ok(programs.ToDtos());
+  }
   /// <summary> Create a new program (content-type level draft permission) </summary>
   [HttpPost]
   [RequireContentTypePermission<Program>(PermissionType.Draft)]

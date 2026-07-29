@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace GameGuild.Learning.Courses;
 
 /// <summary> DTO for ContentInteraction responses - avoids circular references for Swagger/OpenAPI </summary>
@@ -31,8 +33,10 @@ public class ContentInteractionDto {
   public DateTime UpdatedAt { get; set; }
 
   // Simplified nested objects to avoid circular references
+  [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
   public ContentSummaryDto? Content { get; set; }
 
+  [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
   public ProgramUserSummaryDto? ProgramUser { get; set; }
 
   // Computed properties for convenience
