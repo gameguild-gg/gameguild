@@ -5,6 +5,8 @@ import {
     type LearningCoursesProgramContent,
     type LearningCoursesProgressStatus,
 } from '@game-guild/client';
+import { flattenUniqueContent } from '@/lib/content-tree';
+import { unstable_rethrow } from 'next/navigation';
 
 export interface LearningCourseSummary {
     id: string;
@@ -30,6 +32,11 @@ export interface CourseAttendanceItem {
     order: number;
     isRequired: boolean;
     content?: unknown;
+    contentType?: LearningCoursesProgramContent['type'];
+    lessonFormat?: LearningCoursesProgramContent['lessonFormat'];
+    activitySettings?: LearningCoursesProgramContent['activitySettings'];
+    maxPoints?: number;
+    gradingMethod?: LearningCoursesProgramContent['gradingMethod'];
 }
 
 export interface CourseAttendanceModule {
@@ -40,6 +47,14 @@ export interface CourseAttendanceModule {
     items: CourseAttendanceItem[];
     progress: number;
 }
+
+export type CourseAccessState =
+    | { kind: 'ready'; course: CourseAttendanceData }
+    | { kind: 'enrollment-required'; course: LearningCourseSummary }
+    | { kind: 'payment-required'; course: LearningCourseSummary; price: number | null; currency: string }
+    | { kind: 'enrollment-closed'; course: LearningCourseSummary }
+    | { kind: 'unavailable'; course?: LearningCourseSummary; message: string }
+    | { kind: 'not-found' };
 
 export interface CourseAttendanceData {
     id: string;
@@ -53,6 +68,7 @@ export interface CourseAttendanceData {
     completedItems: number;
     currentItem?: CourseAttendanceItem;
     remainingMinutes: number;
+    enrollmentId?: string;
 }
 
 interface CourseAttendanceModuleSource {
@@ -90,24 +106,6 @@ function createCourseModules(getAccessToken?: () => Promise<string | null>) {
         programs: new GeneratedApi.LearningCoursesProgramModule(client),
         content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
     };
-}
-
-function flattenContent(items: LearningCoursesProgramContent[]): LearningCoursesProgramContent[] {
-    const flattened: LearningCoursesProgramContent[] = [];
-
-    const visit = (item: LearningCoursesProgramContent) => {
-        flattened.push(item);
-
-        for (const child of item.children ?? []) {
-            visit(child);
-        }
-    };
-
-    for (const item of items) {
-        visit(item);
-    }
-
-    return flattened.sort((left, right) => (left.sortOrder ?? 0) - (right.sortOrder ?? 0));
 }
 
 function mapCourse(program: GeneratedApi.LearningCoursesProgram): LearningCourseSummary {
@@ -260,7 +258,7 @@ export async function getCourseAttendanceData(
             };
         }
 
-        const flatContent = flattenContent(contentResult.data).filter(
+        const flatContent = flattenUniqueContent(contentResult.data).filter(
             (item): item is LearningCoursesProgramContent & { id: string } => Boolean(item.id),
         );
         const progress = progressResult && progressResult.ok ? progressResult.data : undefined;
@@ -312,6 +310,11 @@ export async function getCourseAttendanceData(
                     order: item.sortOrder ?? 0,
                     isRequired: item.isRequired ?? false,
                     content: item.body ?? undefined,
+                    contentType: item.type,
+                    lessonFormat: item.lessonFormat,
+                    activitySettings: item.activitySettings,
+                    maxPoints: item.maxPoints ?? undefined,
+                    gradingMethod: item.gradingMethod,
                 } satisfies CourseAttendanceItem;
             });
 
@@ -342,9 +345,104 @@ export async function getCourseAttendanceData(
             completedItems,
             currentItem,
             remainingMinutes,
+            enrollmentId: progress?.enrollmentId,
         };
     } catch (error) {
         console.error('[learning] Failed to build course attendance data', error);
         return null;
+    }
+}
+
+function getApiErrorStatus(error: unknown): number | undefined {
+    return (error as { status?: number } | undefined)?.status;
+}
+
+export async function getCourseAccessData(courseSlug: string): Promise<CourseAccessState> {
+    try {
+        const publicModules = createCourseModules();
+        const courseResult = await publicModules.programs.getCoursesSlug(encodeURIComponent(courseSlug));
+
+        if (!courseResult.ok || !courseResult.data.id) {
+            return getApiErrorStatus(courseResult.ok ? undefined : courseResult.error) === 404
+                ? { kind: 'not-found' }
+                : { kind: 'unavailable', message: 'Course access could not be verified. Try again.' };
+        }
+
+        const course = mapCourse(courseResult.data);
+        const token = await getOptionalToken();
+        if (!token) {
+            return { kind: 'unavailable', course, message: 'Your session expired. Sign in again to continue.' };
+        }
+
+        const authenticatedModules = createCourseModules(async () => token);
+        const progressResult = await authenticatedModules.programs.getCoursesMeProgress(course.id);
+
+        if (progressResult.ok) {
+            const attendance = await getCourseAttendanceData(courseSlug, { includeProgress: true });
+            return attendance
+                ? { kind: 'ready', course: attendance }
+                : { kind: 'unavailable', course, message: 'The classroom is temporarily unavailable.' };
+        }
+
+        if (getApiErrorStatus(progressResult.error) !== 404) {
+            return { kind: 'unavailable', course, message: 'Your enrollment could not be verified. Try again.' };
+        }
+
+        if (!course.isEnrollmentOpen) {
+            return { kind: 'enrollment-closed', course };
+        }
+
+        const productsResult = await publicModules.programs.getCoursesProducts(course.id);
+        const productIds = productsResult.ok
+            ? productsResult.data.filter((productId): productId is string => Boolean(productId))
+            : [];
+
+        if (productIds.length === 0) {
+            return { kind: 'enrollment-required', course };
+        }
+
+        const pricingResult = await authenticatedModules.programs.getCoursesPricing(course.id);
+        const pricing = pricingResult.ok ? pricingResult.data : undefined;
+
+        return {
+            kind: 'payment-required',
+            course,
+            price: pricing?.price ?? null,
+            currency: pricing?.currency ?? 'USD',
+        };
+    } catch (error) {
+        console.error('[learning] Failed to resolve course access', error);
+        return { kind: 'unavailable', message: 'Course access could not be verified. Try again.' };
+    }
+}
+export async function getMyLearningCourses(): Promise<CourseAttendanceData[]> {
+    try {
+        const token = await getOptionalToken();
+        if (!token) return [];
+
+        const client = getApiClient(async () => token);
+        const result = await client.request<Array<GeneratedApi.LearningCoursesProgram>>({
+            method: 'GET',
+            path: '/v1/courses/me',
+            requiresAuth: true,
+        });
+
+        if (!result.ok) {
+            console.error('[learning] Failed to fetch learner courses', result.error);
+            return [];
+        }
+
+        const attendance = await Promise.all(
+            result.data
+                .map(mapCourse)
+                .filter((course) => Boolean(course.slug))
+                .map((course) => getCourseAttendanceData(course.slug, { includeProgress: true })),
+        );
+
+        return attendance.filter((course): course is CourseAttendanceData => course !== null);
+    } catch (error) {
+        unstable_rethrow(error);
+        console.error('[learning] Failed to build learner dashboard', error);
+        return [];
     }
 }

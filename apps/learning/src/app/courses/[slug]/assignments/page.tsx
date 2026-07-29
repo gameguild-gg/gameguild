@@ -1,17 +1,16 @@
 import { auth } from '@/auth';
 import { CourseAccessGate } from '@/components/course-access-gate';
-import { CourseLearnerOverview } from '@/components/course-learner-overview';
+import { LearnerActivities } from '@/components/learner-activities';
 import { getCourseAccessData } from '@/lib/courses';
 import { getCourseLearnerContext } from '@/lib/learner-data';
 import { notFound, redirect } from 'next/navigation';
 
-export default async function CourseOverviewPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CourseAssignmentsPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
-    const session = await auth();
-    if (!session) redirect(`/sign-in?redirectTo=${encodeURIComponent(`/courses/${slug}`)}`);
+    if (!await auth()) redirect(`/sign-in?redirectTo=${encodeURIComponent(`/courses/${slug}/assignments`)}`);
     const access = await getCourseAccessData(slug);
     if (access.kind === 'not-found') notFound();
     if (access.kind !== 'ready') return <CourseAccessGate access={access} />;
     const context = await getCourseLearnerContext(access.course.id);
-    return <CourseLearnerOverview course={access.course} context={context} />;
+    return <LearnerActivities course={access.course} context={context} />;
 }
