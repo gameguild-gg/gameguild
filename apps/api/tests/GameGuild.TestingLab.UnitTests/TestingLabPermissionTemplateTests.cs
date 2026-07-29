@@ -96,6 +96,16 @@ public sealed class TestingLabPermissionTemplateTests
         templates.Should().ContainSingle(template => template.Name == "TestingLab Facilitator");
     }
 
+    [Fact]
+    public void Permission_Controller_Should_Require_Admin_Policy()
+    {
+        var authorize = typeof(TestingLabPermissionController)
+            .GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), inherit: true)
+            .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()
+            .Single();
+
+        authorize.Policy.Should().Be("Users.Admin");
+    }
     [Theory]
     [InlineData("")]
     [InlineData("Reviewer")]
