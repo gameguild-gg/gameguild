@@ -97,4 +97,15 @@ public class ModuleConfigurationTests
 
         config.IsEnabledAssembly(assemblyName).Should().Be(expected);
     }
+
+    [Theory]
+    [InlineData("GameGuild.TestingLab", false)]
+    [InlineData("GameGuild.TestingLab.UnitTests", true)]
+    [InlineData("GameGuild.API.Tests", true)]
+    [InlineData("GameGuild.Contest", false)]
+    [InlineData(null, false)]
+    public void IsTestAssembly_ShouldOnlyMatchTestProjectNames(string? assemblyName, bool expected)
+    {
+        ModuleConfiguration.IsTestAssembly(assemblyName).Should().Be(expected);
+    }
 }
