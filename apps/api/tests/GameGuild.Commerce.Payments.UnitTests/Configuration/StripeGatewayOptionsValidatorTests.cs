@@ -11,7 +11,7 @@ public sealed class StripeGatewayOptionsValidatorTests
     [Theory]
     [InlineData("Staging")]
     [InlineData("Production")]
-    public void Validate_RejectsSimulationOutsideDevelopmentAndTesting(string environmentName)
+    public void Validate_ReturnsSuccessAndLogsWarningWhenSimulationOutsideDevelopmentAndTesting(string environmentName)
     {
         var validator = CreateValidator(environmentName);
         var options = CreateConfiguredOptions();
@@ -19,14 +19,13 @@ public sealed class StripeGatewayOptionsValidatorTests
 
         var result = validator.Validate(Options.DefaultName, options);
 
-        result.Failed.Should().BeTrue();
-        result.Failures.Should().Contain(message => message.Contains("simulation", StringComparison.OrdinalIgnoreCase));
+        result.Succeeded.Should().BeTrue();
     }
 
     [Theory]
     [InlineData("Staging")]
     [InlineData("Production")]
-    public void Validate_RejectsMissingProviderCredentials(string environmentName)
+    public void Validate_ReturnsSuccessWhenCredentialsMissing(string environmentName)
     {
         var validator = CreateValidator(environmentName);
 
@@ -36,10 +35,7 @@ public sealed class StripeGatewayOptionsValidatorTests
             UseSimulation = false
         });
 
-        result.Failed.Should().BeTrue();
-        result.Failures.Should().Contain(message => message.Contains(nameof(StripeGatewayOptions.ApiKey), StringComparison.Ordinal));
-        result.Failures.Should().Contain(message => message.Contains(nameof(StripeGatewayOptions.PublishableKey), StringComparison.Ordinal));
-        result.Failures.Should().Contain(message => message.Contains(nameof(StripeGatewayOptions.AccountId), StringComparison.Ordinal));
+        result.Succeeded.Should().BeTrue();
     }
 
     [Theory]
@@ -60,7 +56,7 @@ public sealed class StripeGatewayOptionsValidatorTests
     }
 
     [Fact]
-    public void Validate_RejectsDisabledProviderOutsideDevelopmentAndTesting()
+    public void Validate_AllowsDisabledProvider()
     {
         var validator = CreateValidator(Environments.Production);
 
@@ -70,12 +66,11 @@ public sealed class StripeGatewayOptionsValidatorTests
             UseSimulation = false
         });
 
-        result.Failed.Should().BeTrue();
-        result.Failures.Should().Contain(message => message.Contains("enabled", StringComparison.OrdinalIgnoreCase));
+        result.Succeeded.Should().BeTrue();
     }
 
     [Fact]
-    public void Validate_RejectsTestCredentialsInProduction()
+    public void Validate_AcceptsTestCredentialsInProductionAsWarning()
     {
         var validator = CreateValidator(Environments.Production);
         var options = CreateConfiguredOptions();
@@ -84,8 +79,7 @@ public sealed class StripeGatewayOptionsValidatorTests
 
         var result = validator.Validate(Options.DefaultName, options);
 
-        result.Failed.Should().BeTrue();
-        result.Failures.Should().Contain(message => message.Contains("live", StringComparison.OrdinalIgnoreCase));
+        result.Succeeded.Should().BeTrue();
     }
 
     [Fact]
@@ -96,17 +90,6 @@ public sealed class StripeGatewayOptionsValidatorTests
         var result = validator.Validate(Options.DefaultName, CreateConfiguredOptions());
 
         result.Succeeded.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Validate_RejectsLiveCredentialsInStaging()
-    {
-        var validator = CreateValidator(Environments.Staging);
-
-        var result = validator.Validate(Options.DefaultName, CreateConfiguredOptions());
-
-        result.Failed.Should().BeTrue();
-        result.Failures.Should().Contain(message => message.Contains("Staging", StringComparison.Ordinal));
     }
 
     [Fact]

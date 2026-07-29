@@ -1,5 +1,37 @@
 # Git Workflow
 
+## Overview
+
+The full lifecycle: feature flows into `develop`, `develop` flows into `release`, `release` flows into both `main` (tagged) and `develop`, and `hotfix` branches from `main` flow back into both `main` (tagged) and `develop`.
+
+```mermaid
+gitGraph
+   commit id: "init"
+   branch develop
+   checkout develop
+   branch feat/new-feat
+   checkout feat/new-feat
+   commit id: "wip"
+   commit id: "done"
+   checkout develop
+   merge feat/new-feat
+   branch release/x.y.z
+   checkout release/x.y.z
+   commit id: "bugfix"
+   commit id: "polish"
+   checkout develop
+   merge release/x.y.z
+   checkout main
+   merge release/x.y.z tag: "x.y.z"
+   branch hotfix/x.y.z
+   checkout hotfix/x.y.z
+   commit id: "urgent fix"
+   checkout main
+   merge hotfix/x.y.z tag: "x.y.z"
+   checkout develop
+   merge hotfix/x.y.z
+```
+
 ## Branches
 
 - **main** - the main branch, where the production code is stored. 
