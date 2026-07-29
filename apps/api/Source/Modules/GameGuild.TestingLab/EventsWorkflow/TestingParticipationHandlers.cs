@@ -11,7 +11,8 @@ public sealed class TestingParticipationHandlers(
     IApplicationDbContext context,
     IActorContextAccessor actorContextAccessor,
     ILogger<TestingParticipationHandlers> logger,
-    IProjectLifecycleLock? capacityLock = null) :
+    IProjectLifecycleLock? capacityLock = null,
+    IPublisher? publisher = null) :
     ICommandHandler<RegisterTestingEventSlotCommand, Result<TestingSlotRegistrationProjection>>,
     ICommandHandler<CancelTestingEventSlotRegistrationCommand, Result<TestingSlotRegistrationProjection>>,
     ICommandHandler<CheckInTestingEventRegistrationCommand, Result<TestingSlotRegistrationProjection>>,
@@ -286,7 +287,17 @@ public sealed class TestingParticipationHandlers(
                 Validation("All required feedback must be submitted before participation can be completed."));
         try
         {
-            loaded.Registration.Complete();
+            if (loaded.Registration.Status != TestingSlotRegistrationStatus.Completed)
+            {
+                loaded.Registration.Complete();
+            }
+
+            var evidence = await CreateLearningEvidenceAsync(loaded.Registration, cancellationToken)
+                .ConfigureAwait(false);
+            if (evidence != null && publisher != null)
+            {
+                await publisher.Publish(evidence, cancellationToken).ConfigureAwait(false);
+            }
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return Result.Success(await ToProjectionAsync(loaded.Registration, cancellationToken).ConfigureAwait(false));
         }
@@ -504,6 +515,58 @@ public sealed class TestingParticipationHandlers(
             registration.CheckedOutAt,
             registration.CompletedAt,
             pendingFeedback);
+    }
+
+
+    private async Task<TestingLearningEvidenceCompletedEvent?> CreateLearningEvidenceAsync(
+        TestingSlotRegistration registration,
+        CancellationToken cancellationToken)
+    {
+        var testingEvent = registration.Event;
+        if (!testingEvent.CourseId.HasValue ||
+            !testingEvent.LearningActivityId.HasValue ||
+            testingEvent.LearningCompletionRequirement == TestingLearningCompletionRequirement.None)
+        {
+            return null;
+        }
+
+        var hasSubmittedFeedback = await context.Set<TestingFeedbackObligation>().AnyAsync(candidate =>
+            candidate.SlotId == registration.SlotId &&
+            candidate.TesterUserId == registration.UserId &&
+            candidate.Status == TestingFeedbackObligationStatus.Fulfilled &&
+            candidate.DeletedAt == null,
+            cancellationToken).ConfigureAwait(false);
+        var hasPresentedProject = await context.Set<TestingProjectApplication>().AnyAsync(application =>
+            application.EventId == registration.EventId &&
+            application.AssignedSlotId == registration.SlotId &&
+            application.SubmittedByUserId == registration.UserId &&
+            application.Status == TestingApplicationStatus.Approved &&
+            application.DeletedAt == null &&
+            context.Set<TestingFeedbackObligation>().Any(obligation =>
+                obligation.ApplicationId == application.Id &&
+                obligation.SlotId == registration.SlotId &&
+                obligation.DeletedAt == null),
+            cancellationToken).ConfigureAwait(false);
+        var state = new TestingLearningEvidenceState(
+            registration.Status,
+            hasSubmittedFeedback,
+            hasPresentedProject);
+        if (!TestingLearningPolicy.IsSatisfied(testingEvent.LearningCompletionRequirement, state))
+        {
+            return null;
+        }
+
+        return new TestingLearningEvidenceCompletedEvent(
+            registration.Id,
+            registration.EventId,
+            registration.SlotId,
+            registration.UserId,
+            testingEvent.CourseId.Value,
+            testingEvent.CohortId,
+            testingEvent.LearningActivityId.Value,
+            testingEvent.LearningCompletionRequirement,
+            registration.CompletedAt ?? SystemClock.UtcNow,
+            registration.TenantId);
     }
 
     private static TestingFeedbackObligationProjection ToProjection(TestingFeedbackObligation obligation) => new(

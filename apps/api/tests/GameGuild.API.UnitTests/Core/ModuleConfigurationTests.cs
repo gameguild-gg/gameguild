@@ -88,6 +88,7 @@ public class ModuleConfigurationTests
     [InlineData("GameGuild.Content.Pages", true)]
     [InlineData("GameGuild.TestingLab", true)]
     [InlineData("GameGuild.Learning.Experience.LearningPaths", true)]
+    [InlineData("GameGuild.Learning.TestingLab", true)]
     [InlineData("GameGuild.Unknown", false)]
     [InlineData(null, false)]
     public void IsEnabledAssembly_ShouldMatchDottedAndCompactModuleNames(string? assemblyName, bool expected)

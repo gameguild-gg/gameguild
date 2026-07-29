@@ -67,6 +67,19 @@ public sealed record OpenTestingEventApplicationsCommand(Guid EventId) : IComman
 
 public sealed record CloseTestingEventApplicationsCommand(Guid EventId) : ICommand<Result<TestingEventProjection>>;
 
+public sealed record ConfigureTestingEventLearningCommand(
+    Guid EventId,
+    Guid CourseId,
+    Guid? CohortId,
+    Guid LearningActivityId,
+    TestingLearningCompletionRequirement Requirement) : ICommand<Result<TestingEventProjection>>;
+
+public sealed record ConfigureTestingEventLearningRequest(
+    Guid CourseId,
+    Guid? CohortId,
+    Guid LearningActivityId,
+    TestingLearningCompletionRequirement Requirement);
+
 public sealed record CreateTestingEventSlotCommand(
     Guid EventId,
     TestingEventMode Mode,

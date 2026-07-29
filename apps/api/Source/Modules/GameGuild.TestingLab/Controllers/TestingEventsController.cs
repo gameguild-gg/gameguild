@@ -74,6 +74,19 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
     public async Task<ActionResult<TestingEventProjection>> CloseApplications(Guid eventId, CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new CloseTestingEventApplicationsCommand(eventId), cancellationToken).ConfigureAwait(false));
 
+    [HttpPut("{eventId:guid}/learning")]
+    public async Task<ActionResult<TestingEventProjection>> ConfigureLearning(
+        Guid eventId,
+        ConfigureTestingEventLearningRequest request,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(new ConfigureTestingEventLearningCommand(
+            eventId,
+            request.CourseId,
+            request.CohortId,
+            request.LearningActivityId,
+            request.Requirement),
+            cancellationToken).ConfigureAwait(false));
+
     [HttpGet("{eventId:guid}/slots")]
     public async Task<ActionResult<IReadOnlyList<TestingEventSlotProjection>>> GetSlots(
         Guid eventId,
