@@ -10,7 +10,7 @@ import { CheckCircle2, Clock3, Lock, PlayCircle, Send, Star } from 'lucide-react
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { MarkdownRenderer } from '@game-guild/content-rendering';
+import { LearnerLessonRenderer } from './learner-lesson-renderer';
 
 interface PeerReviewCriterion {
     name: string;
@@ -43,28 +43,6 @@ function getStatusClasses(status: CourseAttendanceItem['status']) {
         default:
             return 'border-slate-700 bg-slate-900 text-slate-400';
     }
-}
-
-function contentToMarkdown(content: unknown): string | null {
-    if (typeof content === 'string' && content.trim()) {
-        return content;
-    }
-
-    if (content && typeof content === 'object') {
-        const record = content as Record<string, unknown>;
-
-        if (typeof record.markdown === 'string' && record.markdown.trim()) {
-            return record.markdown;
-        }
-
-        if (typeof record.content === 'string' && record.content.trim()) {
-            return record.content;
-        }
-
-        return `\`\`\`json\n${JSON.stringify(record, null, 2)}\n\`\`\``;
-    }
-
-    return null;
 }
 
 function parseObjectContent(content: unknown): Record<string, unknown> | null {
@@ -165,7 +143,6 @@ export function CourseAttendanceShell({ course }: { course: CourseAttendanceData
     const [peerFeedback, setPeerFeedback] = useState('');
 
     const selectedItem = course.modules.flatMap((module) => module.items).find((item) => item.id === selectedItemId) ?? null;
-    const contentMarkdown = selectedItem ? contentToMarkdown(selectedItem.content) : null;
     const peerReviewContent = selectedItem?.type === 'peer-review' ? getPeerReviewContent(selectedItem) : null;
     const allPeerCriteriaRated = peerReviewContent ? peerReviewContent.criteria.every((criterion) => (peerRatings[criterion.name] ?? 0) > 0) : false;
     const canSubmitPeerReview = Boolean(selectedItem && peerReviewContent && allPeerCriteriaRated && peerFeedback.trim().length > 0 && !isMutating);
@@ -337,7 +314,7 @@ export function CourseAttendanceShell({ course }: { course: CourseAttendanceData
                                         </Button>
                                     ) : null}
                                     {selectedItem.status !== 'locked' && selectedItem.status !== 'completed' ? (
-                                        selectedItem.type === 'peer-review' ? null : (
+                                        selectedItem.type !== 'lesson' ? null : (
                                             <Button
                                                 type="button"
                                                 variant="outline"
@@ -436,11 +413,12 @@ export function CourseAttendanceShell({ course }: { course: CourseAttendanceData
                                         {isMutating ? 'Submitting peer review...' : 'Submit peer review'}
                                     </Button>
                                 </div>
-                            ) : contentMarkdown ? (
-                                <MarkdownRenderer content={contentMarkdown} />
+                            ) : selectedItem.type === 'lesson' ? (
+                                <LearnerLessonRenderer courseId={course.id} enrollmentId={course.enrollmentId} itemId={selectedItem.id} format={selectedItem.lessonFormat} content={selectedItem.content} />
                             ) : (
-                                <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/60 p-6 text-sm text-slate-300">
-                                    This content item has no authored body yet. Use the course outline, assessment status, and progress actions while the instructor finishes the lesson material.
+                                <div className="border-l-2 border-violet-500 bg-white/[0.025] p-6">
+                                    <p className="text-sm text-slate-300">This graded or participatory activity is completed through the course activity workspace, where attempts, deadlines, submissions, and feedback are preserved.</p>
+                                    <Button asChild className="mt-4"><Link href={`/courses/${course.slug}/assignments`}>Open activities</Link></Button>
                                 </div>
                             )
                         ) : (
