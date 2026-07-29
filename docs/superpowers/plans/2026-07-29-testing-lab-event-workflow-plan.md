@@ -176,11 +176,11 @@
 Completed on 2026-07-29 in `feat/testing-lab-dashboard-completion` before integration into `develop`.
 
 - API host build: succeeded with 0 warnings and 0 errors.
-- Testing Lab unit suite: 157 passed, 0 failed, 0 skipped.
+- Testing Lab unit suite: 158 passed, 0 failed, 0 skipped.
 - Learning evidence integration: 6 passed, 0 failed, 0 skipped.
 - PostgreSQL concurrency: last-slot approval and 15 project lifecycle race tests passed.
 - Frontend Testing Lab suite: 55 passed across 17 files.
 - API E2E: 6 passed across the legacy request/session flow and the event workflow.
 - Browser E2E: passed with real API data for anonymous, project owner, committee reviewer, manager, and tester journeys, including desktop and mobile viewport checks.
 - Generated API client build, web TypeScript, and focused ESLint: passed.
-- Real Coverlet result for `GameGuild.TestingLab`: 65.94% line, 41.26% branch, and 45.93% method coverage. This is the measured module baseline, not a 100% claim; remaining uncovered code is concentrated in legacy Testing Lab entities, repositories, GraphQL types, and operations services.
+- Real Coverlet result for `GameGuild.TestingLab`: 65.94% line, 41.44% branch, and 45.93% method coverage. This is the measured module baseline, not a 100% claim; remaining uncovered code is concentrated in legacy Testing Lab entities, repositories, GraphQL types, and operations services.

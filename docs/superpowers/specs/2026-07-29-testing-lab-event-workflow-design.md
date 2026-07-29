@@ -72,9 +72,9 @@ Backend unit and PostgreSQL integration tests cover invariants, concurrent appro
 
 The completed verification baseline is:
 
-- 157 Testing Lab unit tests passed with no skips.
+- 158 Testing Lab unit tests passed with no skips.
 - 6 Learning evidence tests passed with no skips.
 - 55 focused frontend tests passed across 17 files.
 - 6 API E2E tests passed across request/session and event workflows.
 - The complete Testing Lab browser E2E passed without route failures, browser exceptions, or viewport overflow.
-- Real Testing Lab Coverlet coverage is 65.94% line, 41.26% branch, and 45.93% method. This remains an explicit legacy unit-coverage debt and is not represented as 100%.
+- Real Testing Lab Coverlet coverage is 65.94% line, 41.44% branch, and 45.93% method. This remains an explicit legacy unit-coverage debt and is not represented as 100%.
