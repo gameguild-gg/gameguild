@@ -1,12 +1,12 @@
 # Production API image context: keep only solution metadata and source projects.
 **
 
-!GameGuild.sln
-!Directory.Build.props
-!Directory.Packages.props
-!global.json
-!Source/
-!Source/**
+!**/GameGuild.sln
+!**/Directory.Build.props
+!**/Directory.Packages.props
+!**/global.json
+!**/Source/
+!**/Source/**
 
 # Never send local build, test, IDE, logs, or coverage artifacts.
 **/bin/
