@@ -117,6 +117,47 @@ public sealed class TestingEventDomainTests
         uniqueIndex.IsUnique.Should().BeTrue();
     }
 
+    [Fact]
+    public void UpdateEvent_RejectsApplicationWindowAfterStart()
+    {
+        var testingEvent = TestingEvent.Create(
+            "Showcase",
+            TestingEventMode.Online,
+            Guid.NewGuid(),
+            SystemClock.UtcNow,
+            SystemClock.UtcNow.AddDays(1),
+            SystemClock.UtcNow.AddDays(2),
+            SystemClock.UtcNow.AddDays(3),
+            true,
+            TestingEventApprovalMode.ManagerOnly,
+            Guid.NewGuid());
+
+        var act = () => testingEvent.Update(
+            "Showcase",
+            null,
+            TestingEventMode.Online,
+            TestingEventApprovalMode.ManagerOnly,
+            SystemClock.UtcNow,
+            SystemClock.UtcNow.AddDays(3),
+            SystemClock.UtcNow.AddDays(2),
+            SystemClock.UtcNow.AddDays(4),
+            true);
+
+        act.Should().Throw<ArgumentException>().WithMessage("*start after applications close*");
+    }
+
+    [Fact]
+    public void ReassignSlot_ReplacesRatherThanDuplicatesAssignment()
+    {
+        var application = NewApplication();
+        var firstSlotId = Guid.NewGuid();
+        var secondSlotId = Guid.NewGuid();
+        application.Approve(Guid.NewGuid(), firstSlotId, null);
+
+        application.ReassignSlot(secondSlotId);
+
+        application.AssignedSlotId.Should().Be(secondSlotId);
+    }
     private static TestingProjectApplication NewApplication() => TestingProjectApplication.Submit(
         Guid.NewGuid(),
         Guid.NewGuid(),

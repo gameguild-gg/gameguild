@@ -77,4 +77,35 @@ public sealed class TestingEventSlot : EntityBase
             TenantId = tenantId,
         };
     }
-}
+
+    public void Update(
+        TestingEventMode mode,
+        DateTime startsAt,
+        DateTime endsAt,
+        int? maxTesters,
+        int? maxProjects,
+        string? campusName,
+        string? roomName,
+        string? meetingUrl,
+        Guid? locationId)
+    {
+        if (endsAt <= startsAt) throw new ArgumentException("Slot must end after it starts.");
+        if (maxTesters is <= 0) throw new ArgumentOutOfRangeException(nameof(maxTesters));
+        if (maxProjects is <= 0) throw new ArgumentOutOfRangeException(nameof(maxProjects));
+        if (mode == TestingEventMode.InPerson &&
+            (string.IsNullOrWhiteSpace(campusName) || string.IsNullOrWhiteSpace(roomName)))
+            throw new ArgumentException("In-person slots require campus and room.");
+        if (mode == TestingEventMode.Online && string.IsNullOrWhiteSpace(meetingUrl))
+            throw new ArgumentException("Online slots require a meeting URL.", nameof(meetingUrl));
+
+        Mode = mode;
+        StartsAt = startsAt;
+        EndsAt = endsAt;
+        MaxTesters = maxTesters;
+        MaxProjects = maxProjects;
+        CampusName = string.IsNullOrWhiteSpace(campusName) ? null : campusName.Trim();
+        RoomName = string.IsNullOrWhiteSpace(roomName) ? null : roomName.Trim();
+        MeetingUrl = string.IsNullOrWhiteSpace(meetingUrl) ? null : meetingUrl.Trim();
+        LocationId = locationId;
+        Touch();
+    }}
