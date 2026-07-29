@@ -22,6 +22,7 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="coverlet.msbuild" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Moq" />
@@ -29,6 +30,7 @@
         <PackageReference Include="xunit.runner.visualstudio" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.TestingLab\GameGuild.Learning.TestingLab.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning\GameGuild.Learning.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Features\GameGuild.Features.csproj" />

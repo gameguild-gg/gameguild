@@ -19,8 +19,10 @@ import {
   SidebarRail,
 } from '@game-guild/ui/components/sidebar';
 import {
+  BarChart3,
   BookOpen,
   ChevronRight,
+  ClipboardList,
   FileText,
   FlaskConical,
   FolderOpen,
@@ -28,7 +30,10 @@ import {
   HeadphonesIcon,
   LayoutDashboard,
   MailCheck,
+  MapPin,
+  MessageSquareText,
   Rocket,
+  Settings,
   ShieldCheck,
   UserCog,
   Users,
@@ -163,8 +168,18 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
       },
       {
         title: 'Testing Lab',
-        url: '/dashboard/testing-lab',
         icon: FlaskConical,
+        subGroups: [
+          { title: 'Overview', url: '/dashboard/testing-lab', icon: LayoutDashboard, items: [] },
+          { title: 'Requests', url: '/dashboard/testing-lab/requests', icon: ClipboardList, items: [] },
+          { title: 'Sessions', url: '/dashboard/testing-lab/sessions', icon: FlaskConical, items: [] },
+          { title: 'People', url: '/dashboard/testing-lab/people', icon: Users, items: [] },
+          { title: 'Feedback', url: '/dashboard/testing-lab/feedback', icon: MessageSquareText, items: [] },
+          { title: 'Reports', url: '/dashboard/testing-lab/reports', icon: BarChart3, items: [] },
+          { title: 'Locations', url: '/dashboard/testing-lab/locations', icon: MapPin, items: [] },
+          { title: 'Settings', url: '/dashboard/testing-lab/settings', icon: Settings, items: [] },
+          { title: 'Access', url: '/dashboard/testing-lab/access', icon: ShieldCheck, items: [] },
+        ],
       },
       {
         title: 'Launch Pad',
@@ -250,12 +265,7 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                 // Collapsible item with sub-items
                 if (hasItems) {
                   return (
-                    <Collapsible
-                      key={item.title}
-                      open={isOpen}
-                      onOpenChange={() => toggleItem(item.title)}
-                      className="group/collapsible"
-                    >
+                    <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton>
@@ -275,9 +285,7 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                                       <subItem.icon className="size-4" />
                                       <span>{subItem.title}</span>
                                       {subItem.badge && (
-                                        <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
-                                          {subItem.badge}
-                                        </span>
+                                        <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">{subItem.badge}</span>
                                       )}
                                     </Link>
                                   </SidebarMenuSubButton>
@@ -294,12 +302,7 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                 // Collapsible item with sub-groups (nested)
                 if (hasSubGroups) {
                   return (
-                    <Collapsible
-                      key={item.title}
-                      open={isOpen}
-                      onOpenChange={() => toggleItem(item.title)}
-                      className="group/collapsible"
-                    >
+                    <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton>

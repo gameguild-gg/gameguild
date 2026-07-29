@@ -50,8 +50,8 @@ export class LearningExperienceSocialFeedModule {
 
   /**
    */
-  async postApiSocialFeedDismiss(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>> {
-    const url = `/api/social/feed/${id}/dismiss`;
+  async postApiSocialFeedViewed(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>> {
+    const url = `/api/social/feed/${id}/viewed`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -70,8 +70,8 @@ export class LearningExperienceSocialFeedModule {
 
   /**
    */
-  async postApiSocialFeedViewed(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>> {
-    const url = `/api/social/feed/${id}/viewed`;
+  async postApiSocialFeedDismiss(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>> {
+    const url = `/api/social/feed/${id}/dismiss`;
 
     const result = await this.client.request({
       method: 'POST',
