@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 
 namespace GameGuild.Learning.Courses;
@@ -21,8 +22,10 @@ public class ProgramContentDto {
 
   public JsonDocument? Body { get; set; }
 
+  [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
   public LessonContentFormat? LessonFormat { get; set; }
 
+  [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
   public ActivitySettings? ActivitySettings { get; set; }
 
   public int SortOrder { get; set; }

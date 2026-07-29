@@ -617,37 +617,17 @@ public class AssessmentService : IAssessmentService
     {
         try
         {
-            await using var attemptTransaction = await AssessmentSubmissionDatabaseLock
-                .AcquireAsync(_context, assessmentId, enrollmentId)
-                .ConfigureAwait(false);
-            var assessment = await GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
-            if (assessment == null)
+            if (_context is DbContext dbContext &&
+                dbContext.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL" &&
+                dbContext.Database.CurrentTransaction is null)
             {
-                return Result.Failure<AssessmentSubmission>(Error.NotFound("Assessment", "Assessment not found"));
+                var executionStrategy = dbContext.Database.CreateExecutionStrategy();
+                return await executionStrategy.ExecuteAsync(
+                        () => StartSubmissionCoreAsync(assessmentId, enrollmentId, userId))
+                    .ConfigureAwait(false);
             }
 
-            if (!assessment.IsAvailable())
-            {
-                return Result.Failure<AssessmentSubmission>(Error.Validation("Assessment", "Assessment is not currently available"));
-            }
-
-            // Check attempt limit
-            var attemptCount = await GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
-            if (assessment.MaxAttempts.HasValue && attemptCount >= assessment.MaxAttempts.Value)
-            {
-                return Result.Failure<AssessmentSubmission>(Error.Validation("Assessment.MaxAttemptsReached", "Maximum attempts reached"));
-            }
-
-            var highestAttemptNumber = await GetHighestAttemptNumberAsync(assessmentId, enrollmentId).ConfigureAwait(false);
-            var submission = AssessmentSubmission.Start(assessmentId, enrollmentId, userId, highestAttemptNumber + 1);
-
-            _context.Set<AssessmentSubmission>().Add(submission);
-            await _context.SaveChangesAsync().ConfigureAwait(false);
-            await AssessmentSubmissionDatabaseLock.CommitAsync(attemptTransaction).ConfigureAwait(false);
-
-            _logger.LogInformation("Submission started: {SubmissionId} for assessment {AssessmentId}", submission.Id, assessmentId);
-
-            return Result.Success(submission);
+            return await StartSubmissionCoreAsync(assessmentId, enrollmentId, userId).ConfigureAwait(false);
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -666,6 +646,41 @@ public class AssessmentService : IAssessmentService
         }
     }
 
+    private async Task<Result<AssessmentSubmission>> StartSubmissionCoreAsync(
+        Guid assessmentId,
+        Guid enrollmentId,
+        Guid userId)
+    {
+        await using var attemptTransaction = await AssessmentSubmissionDatabaseLock
+            .AcquireAsync(_context, assessmentId, enrollmentId)
+            .ConfigureAwait(false);
+        var assessment = await GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+        if (assessment == null)
+        {
+            return Result.Failure<AssessmentSubmission>(Error.NotFound("Assessment", "Assessment not found"));
+        }
+
+        if (!assessment.IsAvailable())
+        {
+            return Result.Failure<AssessmentSubmission>(Error.Validation("Assessment", "Assessment is not currently available"));
+        }
+
+        var attemptCount = await GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
+        if (assessment.MaxAttempts.HasValue && attemptCount >= assessment.MaxAttempts.Value)
+        {
+            return Result.Failure<AssessmentSubmission>(Error.Validation("Assessment.MaxAttemptsReached", "Maximum attempts reached"));
+        }
+
+        var highestAttemptNumber = await GetHighestAttemptNumberAsync(assessmentId, enrollmentId).ConfigureAwait(false);
+        var submission = AssessmentSubmission.Start(assessmentId, enrollmentId, userId, highestAttemptNumber + 1);
+
+        _context.Set<AssessmentSubmission>().Add(submission);
+        await _context.SaveChangesAsync().ConfigureAwait(false);
+        await AssessmentSubmissionDatabaseLock.CommitAsync(attemptTransaction).ConfigureAwait(false);
+
+        _logger.LogInformation("Submission started: {SubmissionId} for assessment {AssessmentId}", submission.Id, assessmentId);
+        return Result.Success(submission);
+    }
     public async Task<Result<AssessmentSubmission>> SubmitAsync(Guid submissionId, SubmitAssessmentRequest? request = null)
     {
         try
