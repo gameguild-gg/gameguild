@@ -13,6 +13,7 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
     ICommandHandler<DeleteTestingEventCommand, Result<bool>>,
     ICommandHandler<OpenTestingEventApplicationsCommand, Result<TestingEventProjection>>,
     ICommandHandler<CloseTestingEventApplicationsCommand, Result<TestingEventProjection>>,
+    ICommandHandler<ConfigureTestingEventLearningCommand, Result<TestingEventProjection>>,
     ICommandHandler<CreateTestingEventSlotCommand, Result<TestingEventSlotProjection>>,
     ICommandHandler<UpdateTestingEventSlotCommand, Result<TestingEventSlotProjection>>,
     ICommandHandler<DeleteTestingEventSlotCommand, Result<bool>>,
@@ -121,6 +122,29 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
             return Result.Success(ToProjection(authorization.Event));
         }
         catch (InvalidOperationException exception)
+        {
+            return Result.Failure<TestingEventProjection>(Validation(exception.Message));
+        }
+    }
+
+    public async Task<Result<TestingEventProjection>> Handle(
+        ConfigureTestingEventLearningCommand request,
+        CancellationToken cancellationToken)
+    {
+        var authorization = await GetManagedEventAsync(request.EventId, cancellationToken).ConfigureAwait(false);
+        if (authorization.Error != null) return Result.Failure<TestingEventProjection>(authorization.Error);
+
+        try
+        {
+            authorization.Event!.ConfigureLearning(
+                request.CourseId,
+                request.CohortId,
+                request.LearningActivityId,
+                request.Requirement);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return Result.Success(ToProjection(authorization.Event));
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
         {
             return Result.Failure<TestingEventProjection>(Validation(exception.Message));
         }
