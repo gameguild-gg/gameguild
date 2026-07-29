@@ -10,7 +10,9 @@ public static class DatabaseStartupConfiguration
         ArgumentNullException.ThrowIfNull(configuration);
 
         if (!(configuration.GetValue<bool?>("Database:RunStartupInitialization") ?? true) ||
-            AllowsRuntimeFallback(environmentName))
+            AllowsRuntimeFallback(environmentName) ||
+            configuration.GetValue<bool?>("Database:AllowSameMigrationUser") == true ||
+            configuration.GetValue<bool?>("ALLOW_SAME_MIGRATION_USER") == true)
         {
             return [];
         }
