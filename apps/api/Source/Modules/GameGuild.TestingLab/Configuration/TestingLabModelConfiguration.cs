@@ -7,6 +7,12 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
 {
     public void Configure(ModelBuilder modelBuilder)
     {
+        ConfigureTestingEvent(modelBuilder);
+        ConfigureTestingEventSlot(modelBuilder);
+        ConfigureTestingProjectApplication(modelBuilder);
+        ConfigureTestingCommitteeMember(modelBuilder);
+        ConfigureTestingApplicationVote(modelBuilder);
+        ConfigureTestingFeedbackObligation(modelBuilder);
         ConfigureTestingRequest(modelBuilder);
         ConfigureTestingSession(modelBuilder);
         ConfigureTestingLocation(modelBuilder);
@@ -52,6 +58,10 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
             builder.HasKey(session => session.Id);
             builder.Property(session => session.SessionName).IsRequired().HasMaxLength(255);
             builder.Property(session => session.Status).HasConversion<string>().HasMaxLength(40);
+            builder.HasOne(session => session.EventSlot)
+                .WithMany()
+                .HasForeignKey(session => session.EventSlotId)
+                .OnDelete(DeleteBehavior.SetNull);
             builder.HasOne(session => session.TestingRequest)
                 .WithMany(request => request.Sessions)
                 .HasForeignKey(session => session.TestingRequestId)
@@ -264,4 +274,171 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
-}
+
+    private static void ConfigureTestingEvent(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TestingEvent>(builder =>
+        {
+            builder.ToTable("testing_events");
+            builder.HasKey(testingEvent => testingEvent.Id);
+            builder.Property(testingEvent => testingEvent.Name).IsRequired().HasMaxLength(255);
+            builder.Property(testingEvent => testingEvent.Description).HasMaxLength(2000);
+            builder.Property(testingEvent => testingEvent.Mode).HasConversion<string>().HasMaxLength(40);
+            builder.Property(testingEvent => testingEvent.ApprovalMode).HasConversion<string>().HasMaxLength(40);
+            builder.Property(testingEvent => testingEvent.Status).HasConversion<string>().HasMaxLength(40);
+            builder.Property(testingEvent => testingEvent.LearningCompletionRequirement).HasConversion<string>().HasMaxLength(100);
+            builder.HasOne(testingEvent => testingEvent.Manager)
+                .WithMany()
+                .HasForeignKey(testingEvent => testingEvent.ManagerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasMany(testingEvent => testingEvent.Slots)
+                .WithOne(slot => slot.Event)
+                .HasForeignKey(slot => slot.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(testingEvent => testingEvent.Applications)
+                .WithOne(application => application.Event)
+                .HasForeignKey(application => application.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(testingEvent => testingEvent.CommitteeMembers)
+                .WithOne(member => member.Event)
+                .HasForeignKey(member => member.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasIndex(testingEvent => testingEvent.TenantId);
+            builder.HasIndex(testingEvent => new { testingEvent.TenantId, testingEvent.Status, testingEvent.StartsAt });
+        });
+    }
+
+    private static void ConfigureTestingEventSlot(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TestingEventSlot>(builder =>
+        {
+            builder.ToTable("testing_event_slots");
+            builder.HasKey(slot => slot.Id);
+            builder.Property(slot => slot.Mode).HasConversion<string>().HasMaxLength(40);
+            builder.Property(slot => slot.CampusName).HasMaxLength(200);
+            builder.Property(slot => slot.RoomName).HasMaxLength(200);
+            builder.Property(slot => slot.MeetingUrl).HasMaxLength(1000);
+            builder.HasOne(slot => slot.Location)
+                .WithMany()
+                .HasForeignKey(slot => slot.LocationId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(slot => slot.TenantId);
+            builder.HasIndex(slot => new { slot.EventId, slot.StartsAt });
+        });
+    }
+
+    private static void ConfigureTestingProjectApplication(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TestingProjectApplication>(builder =>
+        {
+            builder.ToTable("testing_project_applications");
+            builder.HasKey(application => application.Id);
+            builder.Property(application => application.PreferredAvailability).HasMaxLength(1000);
+            builder.Property(application => application.Status).HasConversion<string>().HasMaxLength(40);
+            builder.Property(application => application.DecisionRationale).HasMaxLength(2000);
+            builder.HasOne(application => application.Project)
+                .WithMany()
+                .HasForeignKey(application => application.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(application => application.ProjectVersion)
+                .WithMany()
+                .HasForeignKey(application => application.ProjectVersionId)
+                .OnDelete(DeleteBehavior.SetNull);
+            builder.HasOne(application => application.SubmittedBy)
+                .WithMany()
+                .HasForeignKey(application => application.SubmittedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(application => application.AssignedSlot)
+                .WithMany()
+                .HasForeignKey(application => application.AssignedSlotId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(application => application.DecidedBy)
+                .WithMany()
+                .HasForeignKey(application => application.DecidedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasMany(application => application.Votes)
+                .WithOne(vote => vote.Application)
+                .HasForeignKey(vote => vote.ApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasIndex(application => application.TenantId);
+            builder.HasIndex(application => new { application.EventId, application.Status });
+            builder.HasIndex(application => new { application.EventId, application.ProjectId })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL AND \"Status\" NOT IN ('Rejected', 'Withdrawn')")
+                .HasDatabaseName("IX_testing_project_applications_active_event_project");
+        });
+    }
+
+    private static void ConfigureTestingCommitteeMember(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TestingCommitteeMember>(builder =>
+        {
+            builder.ToTable("testing_committee_members");
+            builder.HasKey(member => member.Id);
+            builder.HasOne(member => member.User)
+                .WithMany()
+                .HasForeignKey(member => member.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(member => member.TenantId);
+            builder.HasIndex(member => new { member.EventId, member.UserId })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL AND \"IsActive\" = TRUE")
+                .HasDatabaseName("IX_testing_committee_members_active_event_user");
+        });
+    }
+
+    private static void ConfigureTestingApplicationVote(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TestingApplicationVote>(builder =>
+        {
+            builder.ToTable("testing_application_votes");
+            builder.HasKey(vote => vote.Id);
+            builder.Property(vote => vote.Decision).HasConversion<string>().HasMaxLength(40);
+            builder.Property(vote => vote.Comments).HasMaxLength(2000);
+            builder.HasOne(vote => vote.Reviewer)
+                .WithMany()
+                .HasForeignKey(vote => vote.ReviewerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(vote => vote.TenantId);
+            builder.HasIndex(vote => new { vote.ApplicationId, vote.ReviewerId })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL")
+                .HasDatabaseName("IX_testing_application_votes_active_application_reviewer");
+        });
+    }
+
+    private static void ConfigureTestingFeedbackObligation(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TestingFeedbackObligation>(builder =>
+        {
+            builder.ToTable("testing_feedback_obligations");
+            builder.HasKey(obligation => obligation.Id);
+            builder.Property(obligation => obligation.Status).HasConversion<string>().HasMaxLength(40);
+            builder.HasOne<TestingEvent>()
+                .WithMany()
+                .HasForeignKey(obligation => obligation.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne<TestingEventSlot>()
+                .WithMany()
+                .HasForeignKey(obligation => obligation.SlotId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne<TestingProjectApplication>()
+                .WithMany()
+                .HasForeignKey(obligation => obligation.ApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne<GameGuild.Identity.Users.User>()
+                .WithMany()
+                .HasForeignKey(obligation => obligation.TesterUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<TestingFeedback>()
+                .WithMany()
+                .HasForeignKey(obligation => obligation.FeedbackId)
+                .OnDelete(DeleteBehavior.SetNull);
+            builder.HasIndex(obligation => obligation.TenantId);
+            builder.HasIndex(obligation => obligation.Status);
+            builder.HasIndex(obligation => new { obligation.SlotId, obligation.ApplicationId, obligation.TesterUserId })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL")
+                .HasDatabaseName("IX_testing_feedback_obligations_active_assignment");
+        });
+    }}
