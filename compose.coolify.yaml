@@ -50,6 +50,7 @@ services:
       - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Gss Encryption Mode=Disable;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
       - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Gss Encryption Mode=Disable;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
       - ConnectionStrings__MigrationConnection=${POSTGRES_MIGRATION_CONNECTION:?set POSTGRES_MIGRATION_CONNECTION with a role distinct from POSTGRES_USER}
+      - POSTGRES_MIGRATION_CONNECTION=${POSTGRES_MIGRATION_CONNECTION:?set POSTGRES_MIGRATION_CONNECTION with a role distinct from POSTGRES_USER}
       - Database__RunStartupInitialization=true
       - Database__FailStartupOnMigrationFailure=true
       # JWT configuration consumed by the API and auth services
