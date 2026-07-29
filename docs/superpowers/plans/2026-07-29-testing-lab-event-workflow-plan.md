@@ -1,6 +1,6 @@
 # Testing Lab Event Workflow Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Implement manager-created Testing Lab events with scheduled slots, project applications, controlled approval, tester registration, mandatory feedback, and Learning completion evidence.
 
@@ -38,13 +38,13 @@
 **Interfaces:**
 - Produces: `TestingEvent`, `TestingEventSlot`, `TestingProjectApplication`, `TestingCommitteeMember`, `TestingApplicationVote`, and `TestingFeedbackObligation`.
 
-- [ ] Write failing tests for in-person location requirements, application state transitions, rejection rationale, one active assignment, duplicate votes, and feedback completion.
-- [ ] Run `dotnet test apps/api/tests/GameGuild.TestingLab.UnitTests/GameGuild.TestingLab.UnitTests.csproj --filter FullyQualifiedName~TestingEventDomainTests`.
-- [ ] Implement entities with explicit enums and domain methods.
-- [ ] Register relationships, indexes, tenant filters, and uniqueness constraints.
-- [ ] Generate and inspect the EF migration.
-- [ ] Re-run the focused tests and API build.
-- [ ] Commit domain and persistence changes.
+- [x] Write failing tests for in-person location requirements, application state transitions, rejection rationale, one active assignment, duplicate votes, and feedback completion.
+- [x] Run `dotnet test apps/api/tests/GameGuild.TestingLab.UnitTests/GameGuild.TestingLab.UnitTests.csproj --filter FullyQualifiedName~TestingEventDomainTests`.
+- [x] Implement entities with explicit enums and domain methods.
+- [x] Register relationships, indexes, tenant filters, and uniqueness constraints.
+- [x] Generate and inspect the EF migration.
+- [x] Re-run the focused tests and API build.
+- [x] Commit domain and persistence changes.
 
 ### Task 2: CQRS Event, Slot, And Application Operations
 
@@ -60,12 +60,12 @@
 **Interfaces:**
 - Produces: event and slot CRUD queries/commands; submit, withdraw, review, approve, reject, waitlist, and assign-slot application commands.
 
-- [ ] Write failing handler tests for actor ownership, project membership, manager-only decisions, committee majority, tie resolution, and required rationale.
-- [ ] Write PostgreSQL tests that concurrently approve applications into the last project slot.
-- [ ] Implement handlers through `IApplicationDbContext`, `IActorContextAccessor`, project authorization, and advisory locking.
-- [ ] Add thin CQRS controllers with resource permissions and structured errors.
-- [ ] Run focused unit, PostgreSQL, and controller tests.
-- [ ] Commit CQRS and API operations.
+- [x] Write failing handler tests for actor ownership, project membership, manager-only decisions, committee majority, tie resolution, and required rationale.
+- [x] Write PostgreSQL tests that concurrently approve applications into the last project slot.
+- [x] Implement handlers through `IApplicationDbContext`, `IActorContextAccessor`, project authorization, and advisory locking.
+- [x] Add thin CQRS controllers with resource permissions and structured errors.
+- [x] Run focused unit, PostgreSQL, and controller tests.
+- [x] Commit CQRS and API operations.
 
 ### Task 3: Tester Capacity, Attendance, And Feedback Obligations
 
@@ -80,12 +80,12 @@
 **Interfaces:**
 - Produces: slot registration, waitlist promotion, check-in, project-tested assignment, feedback obligation, and participation-completion operations.
 
-- [ ] Write failing tests for in-person capacity, unlimited online capacity, deterministic waitlist promotion, no-show, and incomplete required feedback.
-- [ ] Implement atomic registration and waitlist movement.
-- [ ] Create feedback obligations from attendance and assigned projects.
-- [ ] Complete participation only when configured obligations are fulfilled.
-- [ ] Run focused tests.
-- [ ] Commit participation and feedback changes.
+- [x] Write failing tests for in-person capacity, unlimited online capacity, deterministic waitlist promotion, no-show, and incomplete required feedback.
+- [x] Implement atomic registration and waitlist movement.
+- [x] Create feedback obligations from attendance and assigned projects.
+- [x] Complete participation only when configured obligations are fulfilled.
+- [x] Run focused tests.
+- [x] Commit participation and feedback changes.
 
 ### Task 4: Learning Evidence Integration
 
@@ -99,12 +99,12 @@
 **Interfaces:**
 - Produces: event linkage to course/cohort/activity and `TestingLearningEvidenceCompletedEvent`.
 
-- [ ] Write failing policy tests for attendance, feedback, project presentation, and combined completion.
-- [ ] Implement policy evaluation without calculating grades in Testing Lab.
-- [ ] Publish idempotent completion evidence.
-- [ ] Consume evidence in Learning and update the linked activity record exactly once.
-- [ ] Run both module test projects.
-- [ ] Commit Learning integration.
+- [x] Write failing policy tests for attendance, feedback, project presentation, and combined completion.
+- [x] Implement policy evaluation without calculating grades in Testing Lab.
+- [x] Publish idempotent completion evidence.
+- [x] Consume evidence in Learning and update the linked activity record exactly once.
+- [x] Run both module test projects.
+- [x] Commit Learning integration.
 
 ### Task 5: Generated Client And Dashboard
 
@@ -123,13 +123,13 @@
 - Consumes: generated Testing Lab event/application modules.
 - Produces: manager event directory, event detail, slots, application review, committee, registrations, attendance, and feedback-obligation screens.
 
-- [ ] Regenerate the API client and verify no handwritten fetch is introduced.
-- [ ] Write failing query/action mapping tests.
-- [ ] Implement manager event CRUD and slot scheduling dialogs.
-- [ ] Implement application review with approval, rejection rationale, committee votes, and slot assignment.
-- [ ] Implement filters, search, pagination, selection, bulk review, confirmations, retry, and success states.
-- [ ] Run frontend unit tests, types, and lint.
-- [ ] Commit client and manager dashboard.
+- [x] Regenerate the API client and verify no handwritten fetch is introduced.
+- [x] Write failing query/action mapping tests.
+- [x] Implement manager event CRUD and slot scheduling dialogs.
+- [x] Implement application review with approval, rejection rationale, committee votes, and slot assignment.
+- [x] Implement filters, search, pagination, selection, bulk review, confirmations, retry, and success states.
+- [x] Run frontend unit tests, types, and lint.
+- [x] Commit client and manager dashboard.
 
 ### Task 6: Public Applicant And Tester Experience
 
@@ -146,12 +146,12 @@
 **Interfaces:**
 - Produces: real public event directory, authenticated project application, application tracking, tester slot registration/waitlist, and required feedback submission.
 
-- [ ] Write failing component tests for anonymous, applicant, approved, rejected, registered, waitlisted, attended, and feedback-pending states.
-- [ ] Implement public event and slot views using generated API data.
-- [ ] Implement project application without reserving capacity.
-- [ ] Implement tester registration and feedback obligation completion.
-- [ ] Verify responsive, keyboard, loading, empty, error, and retry states.
-- [ ] Commit public participant experience.
+- [x] Write failing component tests for anonymous, applicant, approved, rejected, registered, waitlisted, attended, and feedback-pending states.
+- [x] Implement public event and slot views using generated API data.
+- [x] Implement project application without reserving capacity.
+- [x] Implement tester registration and feedback obligation completion.
+- [x] Verify responsive, keyboard, loading, empty, error, and retry states.
+- [x] Commit public participant experience.
 
 ### Task 7: Complete Verification And Delivery
 
@@ -164,10 +164,23 @@
 **Interfaces:**
 - Produces: repeatable API integration and Playwright evidence for manager, applicant, committee reviewer, and tester journeys.
 
-- [ ] Add API E2E for event creation, slots, project application, review, assignment, capacity, registration, attendance, feedback, reports, settings, roles, and permissions.
-- [ ] Add Playwright for all dashboard routes and all four user journeys.
-- [ ] Run Testing Lab unit tests with Coverlet and report the real line, branch, and method metrics.
-- [ ] Run API build, generated-client build, web typecheck, lint, unit tests, API E2E, and Playwright.
-- [ ] Inspect desktop and mobile screenshots for clipping, overlap, empty states, and dialogs.
-- [ ] Commit verification and documentation.
-- [ ] Merge the feature branch into `develop`, push `develop`, and remove the merged branch and worktree.
+- [x] Add API E2E for event creation, slots, project application, review, assignment, capacity, registration, attendance, feedback, reports, settings, roles, and permissions.
+- [x] Add Playwright for all dashboard routes and all four user journeys.
+- [x] Run Testing Lab unit tests with Coverlet and report the real line, branch, and method metrics.
+- [x] Run API build, generated-client build, web typecheck, lint, unit tests, API E2E, and Playwright.
+- [x] Inspect desktop and mobile screenshots for clipping, overlap, empty states, and dialogs.
+- [x] Commit verification and documentation.
+- [x] Merge the feature branch into `develop`, push `develop`, and remove the merged branch and worktree.
+## Completion Evidence
+
+Completed on 2026-07-29 in `feat/testing-lab-dashboard-completion` before integration into `develop`.
+
+- API host build: succeeded with 0 warnings and 0 errors.
+- Testing Lab unit suite: 157 passed, 0 failed, 0 skipped.
+- Learning evidence integration: 6 passed, 0 failed, 0 skipped.
+- PostgreSQL concurrency: last-slot approval and 15 project lifecycle race tests passed.
+- Frontend Testing Lab suite: 55 passed across 17 files.
+- API E2E: 6 passed across the legacy request/session flow and the event workflow.
+- Browser E2E: passed with real API data for anonymous, project owner, committee reviewer, manager, and tester journeys, including desktop and mobile viewport checks.
+- Generated API client build, web TypeScript, and focused ESLint: passed.
+- Real Coverlet result for `GameGuild.TestingLab`: 65.94% line, 41.26% branch, and 45.93% method coverage. This is the measured module baseline, not a 100% claim; remaining uncovered code is concentrated in legacy Testing Lab entities, repositories, GraphQL types, and operations services.
