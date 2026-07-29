@@ -16,6 +16,15 @@ namespace GameGuild.TestingLab;
 public class TestingSession : EntityBase
 {
     /// <summary>
+    /// Optional event slot that scheduled this operational session.
+    /// </summary>
+    public Guid? EventSlotId { get; set; }
+
+    /// <summary>
+    /// Event slot that scheduled this operational session.
+    /// </summary>
+    public virtual TestingEventSlot? EventSlot { get; set; }
+    /// <summary>
     /// Foreign key to the testing request
     /// </summary>
     [Required]

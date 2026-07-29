@@ -21,24 +21,30 @@ public class TestingFeedback : EntityBase
     /// <summary>
     /// Foreign key to the testing request
     /// </summary>
-    [Required]
-    public Guid TestingRequestId { get; set; }
+    public Guid? TestingRequestId { get; set; }
 
     /// <summary>
     /// Navigation property to the testing request
     /// </summary>
-    public virtual TestingRequest TestingRequest { get; set; } = null!;
+    public virtual TestingRequest? TestingRequest { get; set; }
 
     /// <summary>
     /// Foreign key to the feedback form
     /// </summary>
-    [Required]
-    public Guid FeedbackFormId { get; set; }
+    public Guid? FeedbackFormId { get; set; }
 
     /// <summary>
     /// Navigation property to the feedback form
     /// </summary>
-    public virtual TestingFeedbackForm FeedbackForm { get; set; } = null!;
+    public virtual TestingFeedbackForm? FeedbackForm { get; set; }
+
+    public Guid? EventId { get; set; }
+
+    public virtual TestingEvent? Event { get; set; }
+
+    public Guid? ApplicationId { get; set; }
+
+    public virtual TestingProjectApplication? Application { get; set; }
 
     /// <summary>
     /// Foreign key to the user who provided feedback
@@ -136,6 +142,39 @@ public class TestingFeedback : EntityBase
     /// Whether this feedback is global (tenant-independent)
     /// </summary>
     public override bool IsGlobal => TenantId == null;
+
+    public static TestingFeedback CreateForEvent(
+        Guid eventId,
+        Guid applicationId,
+        Guid testerUserId,
+        TestingContext testingContext,
+        string feedbackData,
+        int? overallRating,
+        bool? wouldRecommend,
+        string? additionalNotes,
+        Guid? tenantId)
+    {
+        if (eventId == Guid.Empty || applicationId == Guid.Empty || testerUserId == Guid.Empty)
+            throw new ArgumentException("Event, application, and tester are required.");
+        if (string.IsNullOrWhiteSpace(feedbackData))
+            throw new ArgumentException("Feedback data is required.", nameof(feedbackData));
+        if (overallRating is < 1 or > 10)
+            throw new ArgumentOutOfRangeException(nameof(overallRating), "Rating must be between 1 and 10.");
+
+        return new TestingFeedback
+        {
+            Id = Guid.NewGuid(),
+            EventId = eventId,
+            ApplicationId = applicationId,
+            UserId = testerUserId,
+            TestingContext = testingContext,
+            FeedbackData = feedbackData.Trim(),
+            OverallRating = overallRating,
+            WouldRecommend = wouldRecommend,
+            AdditionalNotes = string.IsNullOrWhiteSpace(additionalNotes) ? null : additionalNotes.Trim(),
+            TenantId = tenantId,
+        };
+    }
 
     /// <summary>
     /// Whether this is positive feedback
