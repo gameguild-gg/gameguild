@@ -106,9 +106,9 @@ public sealed class TestingLabPermissionTemplateTests
 
         authorize.Policy.Should().Be("Users.Admin");
     }
+
     [Theory]
     [InlineData("")]
-    [InlineData("Reviewer")]
     public async Task Service_Should_Reject_Invalid_TestingLab_Template_Names(string name)
     {
         await using var context = CreateContext();
@@ -120,6 +120,35 @@ public sealed class TestingLabPermissionTemplateTests
             [new GameGuild.TestingLab.PermissionTemplate { ResourceType = TestingLabResourceTypes.Request, Action = TestingLabActions.Read }]);
 
         await action.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task Service_Should_Accept_Human_Readable_Role_Template_Name()
+    {
+        await using var context = CreateContext();
+        var service = new TestingLabPermissionService(context);
+
+        var created = await service.CreateRoleTemplateAsync(
+            "Event Reviewer",
+            "Reviews project applications.",
+            [new GameGuild.TestingLab.PermissionTemplate { ResourceType = TestingLabResourceTypes.Request, Action = TestingLabActions.Read }]);
+
+        created.Name.Should().Be("Event Reviewer");
+    }
+
+    [Fact]
+    public async Task Service_Should_Reject_Overlong_Role_Template_Name()
+    {
+        await using var context = CreateContext();
+        var service = new TestingLabPermissionService(context);
+
+        var action = () => service.CreateRoleTemplateAsync(
+            new string('R', 101),
+            "Too long.",
+            []);
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Role template name cannot exceed 100 characters.");
     }
 
     [Fact]
