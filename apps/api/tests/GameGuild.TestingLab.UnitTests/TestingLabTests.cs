@@ -165,6 +165,15 @@ public class TestingLocationTests
 public sealed class TestingRequestsControllerAuthorizationTests
 {
     [Fact]
+    public void SubmitSimpleTestingRequest_Should_Rely_On_Project_Edit_Authorization()
+    {
+        var method = typeof(TestingRequestsController).GetMethod(nameof(TestingRequestsController.SubmitSimpleTestingRequest));
+
+        method.Should().NotBeNull();
+        method!.GetCustomAttributes(inherit: true)
+            .Should().NotContain(attribute => attribute.GetType().Name.StartsWith("RequireResourcePermission", StringComparison.Ordinal));
+    }
+    [Fact]
     public async Task SubmitSimpleTestingRequest_Should_Return_Forbidden_When_Project_Authorization_Is_Denied()
     {
         var userId = Guid.NewGuid();
