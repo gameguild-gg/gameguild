@@ -113,7 +113,7 @@ public static class ApplicationLayerExtensions
 
         var allAssemblies = DependencyInjection.GetAssembliesByPattern(config.AssemblyPrefix)
             .Where(a => !config.ExcludeTestAssemblies ||
-                        !(a.FullName?.Contains("Test", StringComparison.OrdinalIgnoreCase) ?? false))
+                        !ModuleConfiguration.IsTestAssembly(a.GetName().Name))
             .ToArray();
 
         var moduleAssemblies = allAssemblies
