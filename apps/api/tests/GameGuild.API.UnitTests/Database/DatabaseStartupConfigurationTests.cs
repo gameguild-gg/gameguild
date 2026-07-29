@@ -2,29 +2,33 @@ using FluentAssertions;
 using GameGuild.API.Database;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Xunit;
 
 namespace GameGuild.API.UnitTests.Database;
 
 public sealed class DatabaseStartupConfigurationTests
 {
     [Fact]
-    public void Validate_RejectsMissingMigrationConnectionInProduction()
+    public void Validate_RejectsSharedRuntimeAndMigrationRoleWhenRequired()
     {
-        var configuration = CreateConfiguration(RuntimeConnection);
+        var configuration = CreateConfiguration(RuntimeConnection, RuntimeConnection, values: new Dictionary<string, string?>
+        {
+            ["Database:RequireDistinctMigrationUser"] = "true"
+        });
 
         var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
 
-        failures.Should().Contain(message => message.Contains("migration connection", StringComparison.OrdinalIgnoreCase));
+        failures.Should().Contain(message => message.Contains("distinct", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
-    public void Validate_RejectsSharedRuntimeAndMigrationRoleInProduction()
+    public void Validate_AllowsSharedRuntimeAndMigrationRoleByDefault()
     {
         var configuration = CreateConfiguration(RuntimeConnection, RuntimeConnection);
 
         var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
 
-        failures.Should().Contain(message => message.Contains("distinct", StringComparison.OrdinalIgnoreCase));
+        failures.Should().BeEmpty();
     }
 
     [Fact]
