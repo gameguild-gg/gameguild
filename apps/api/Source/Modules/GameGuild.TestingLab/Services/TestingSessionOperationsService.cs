@@ -1,15 +1,20 @@
+using GameGuild.Identity.Context.Actors;
+
 namespace GameGuild.TestingLab;
 
 /// <summary>
 /// Service implementation for testing session operations.
 /// Extracted from the monolithic TestService for focused responsibility.
 /// </summary>
-public class TestingSessionOperationsService(IApplicationDbContext context) : ITestingSessionOperations
+public class TestingSessionOperationsService(
+    IApplicationDbContext context,
+    IActorContextAccessor actorContextAccessor) : ITestingSessionOperations
 {
     public async Task<IEnumerable<TestingSession>> GetAllTestingSessionsAsync()
     {
+        var tenantId = RequireTenantId();
         return await context.Set<TestingSession>()
-            .Where(ts => ts.DeletedAt == null)
+            .Where(ts => ts.TenantId == tenantId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
             .OrderByDescending(ts => ts.SessionDate)
@@ -18,8 +23,9 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> GetTestingSessionsAsync(int skip = 0, int take = 50)
     {
+        var tenantId = RequireTenantId();
         return await context.Set<TestingSession>()
-            .Where(ts => ts.DeletedAt == null)
+            .Where(ts => ts.TenantId == tenantId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
             .OrderByDescending(ts => ts.SessionDate)
@@ -30,8 +36,9 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingSession?> GetTestingSessionByIdAsync(Guid id)
     {
+        var tenantId = RequireTenantId();
         return await context.Set<TestingSession>()
-            .Where(ts => ts.Id == id && ts.DeletedAt == null)
+            .Where(ts => ts.Id == id && ts.TenantId == tenantId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
             .FirstOrDefaultAsync();
@@ -39,8 +46,9 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingSession?> GetTestingSessionByIdWithDetailsAsync(Guid id)
     {
+        var tenantId = RequireTenantId();
         return await context.Set<TestingSession>()
-            .Where(ts => ts.Id == id && ts.DeletedAt == null)
+            .Where(ts => ts.Id == id && ts.TenantId == tenantId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
             .FirstOrDefaultAsync();
@@ -48,6 +56,19 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingSession> CreateTestingSessionAsync(TestingSession testingSession)
     {
+        var tenantId = RequireTenantId();
+        var requestBelongsToTenant = await context.Set<TestingRequest>()
+            .AnyAsync(request => request.Id == testingSession.TestingRequestId &&
+                                 request.TenantId == tenantId &&
+                                 request.DeletedAt == null);
+        var locationBelongsToTenant = await context.Set<TestingLocation>()
+            .AnyAsync(location => location.Id == testingSession.LocationId &&
+                                  location.TenantId == tenantId &&
+                                  location.DeletedAt == null);
+        if (!requestBelongsToTenant || !locationBelongsToTenant)
+            throw new UnauthorizedAccessException("Testing Lab sessions can only reference requests and locations from the current tenant.");
+
+        testingSession.TenantId = tenantId;
         testingSession.Id = Guid.NewGuid();
         testingSession.Touch();
 
@@ -59,7 +80,12 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<TestingSession> UpdateTestingSessionAsync(TestingSession testingSession)
     {
-        var existingSession = await context.Set<TestingSession>().FindAsync(testingSession.Id).ConfigureAwait(false);
+        var tenantId = RequireTenantId();
+        var existingSession = await context.Set<TestingSession>()
+            .FirstOrDefaultAsync(session => session.Id == testingSession.Id &&
+                                            session.TenantId == tenantId &&
+                                            session.DeletedAt == null)
+            .ConfigureAwait(false);
 
         if (existingSession == null)
             throw new InvalidOperationException($"Testing session with ID {testingSession.Id} not found.");
@@ -80,7 +106,10 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<bool> DeleteTestingSessionAsync(Guid id)
     {
-        var testingSession = await context.Set<TestingSession>().FindAsync(id).ConfigureAwait(false);
+        var tenantId = RequireTenantId();
+        var testingSession = await context.Set<TestingSession>()
+            .FirstOrDefaultAsync(session => session.Id == id && session.TenantId == tenantId && session.DeletedAt == null)
+            .ConfigureAwait(false);
 
         if (testingSession == null) return false;
 
@@ -92,7 +121,10 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<bool> RestoreTestingSessionAsync(Guid id)
     {
-        var testingSession = await context.Set<TestingSession>().IgnoreQueryFilters().FirstOrDefaultAsync(ts => ts.Id == id);
+        var tenantId = RequireTenantId();
+        var testingSession = await context.Set<TestingSession>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(ts => ts.Id == id && ts.TenantId == tenantId);
 
         if (testingSession == null) return false;
 
@@ -105,8 +137,9 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> GetTestingSessionsByRequestAsync(Guid testingRequestId)
     {
+        var tenantId = RequireTenantId();
         return await context.Set<TestingSession>()
-            .Where(ts => ts.TestingRequestId == testingRequestId && ts.DeletedAt == null)
+            .Where(ts => ts.TestingRequestId == testingRequestId && ts.TenantId == tenantId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
             .OrderByDescending(ts => ts.SessionDate)
@@ -115,8 +148,9 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> GetTestingSessionsByLocationAsync(Guid locationId)
     {
+        var tenantId = RequireTenantId();
         return await context.Set<TestingSession>()
-            .Where(ts => ts.LocationId == locationId && ts.DeletedAt == null)
+            .Where(ts => ts.LocationId == locationId && ts.TenantId == tenantId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
             .OrderByDescending(ts => ts.SessionDate)
@@ -125,8 +159,9 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> GetTestingSessionsByStatusAsync(SessionStatus status)
     {
+        var tenantId = RequireTenantId();
         return await context.Set<TestingSession>()
-            .Where(ts => ts.Status == status && ts.DeletedAt == null)
+            .Where(ts => ts.Status == status && ts.TenantId == tenantId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
             .OrderByDescending(ts => ts.SessionDate)
@@ -135,8 +170,9 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> GetTestingSessionsByManagerAsync(Guid managerId)
     {
+        var tenantId = RequireTenantId();
         return await context.Set<TestingSession>()
-            .Where(ts => ts.ManagerUserId == managerId && ts.DeletedAt == null)
+            .Where(ts => ts.ManagerUserId == managerId && ts.TenantId == tenantId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
             .OrderByDescending(ts => ts.SessionDate)
@@ -145,10 +181,11 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<IEnumerable<TestingSession>> SearchTestingSessionsAsync(string searchTerm)
     {
+        var tenantId = RequireTenantId();
         var lowerSearchTerm = searchTerm.ToLower();
 
         return await context.Set<TestingSession>()
-            .Where(ts => ts.DeletedAt == null && ts.SessionName.ToLower().Contains(lowerSearchTerm))
+            .Where(ts => ts.TenantId == tenantId && ts.DeletedAt == null && ts.SessionName.ToLower().Contains(lowerSearchTerm))
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
             .OrderByDescending(ts => ts.SessionDate)
@@ -172,7 +209,10 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<object> GetTestingSessionStatisticsAsync(Guid testingSessionId)
     {
-        var session = await context.Set<TestingSession>().FindAsync(testingSessionId).ConfigureAwait(false);
+        var tenantId = RequireTenantId();
+        var session = await context.Set<TestingSession>()
+            .FirstOrDefaultAsync(candidate => candidate.Id == testingSessionId && candidate.TenantId == tenantId && candidate.DeletedAt == null)
+            .ConfigureAwait(false);
 
         if (session == null) return new { };
 
@@ -192,8 +232,9 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task<object> GetSessionAttendanceReportAsync()
     {
+        var tenantId = RequireTenantId();
         var sessions = await context.Set<TestingSession>()
-            .Where(ts => ts.DeletedAt == null)
+            .Where(ts => ts.TenantId == tenantId && ts.DeletedAt == null)
             .Include(ts => ts.Location)
             .Select(ts => new
             {
@@ -214,6 +255,12 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
 
     public async Task UpdateSessionAttendanceAsync(Guid sessionId, Guid userId, AttendanceStatus status, Guid updatedByUserId)
     {
+        var tenantId = RequireTenantId();
+        var sessionBelongsToTenant = await context.Set<TestingSession>()
+            .AnyAsync(session => session.Id == sessionId && session.TenantId == tenantId && session.DeletedAt == null);
+        if (!sessionBelongsToTenant)
+            throw new UnauthorizedAccessException("Testing session is outside the current tenant.");
+
         var registration = await context.Set<SessionRegistration>().FirstOrDefaultAsync(sr => sr.SessionId == sessionId && sr.UserId == userId);
 
         if (registration == null) { throw new ArgumentException("Registration not found"); }
@@ -223,5 +270,14 @@ public class TestingSessionOperationsService(IApplicationDbContext context) : IT
         if (status == AttendanceStatus.Completed) { registration.AttendedAt = SystemClock.UtcNow; }
 
         await context.SaveChangesAsync().ConfigureAwait(false);
+    }
+
+    private Guid RequireTenantId()
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid == null || actor.TenantId == null)
+            throw new UnauthorizedAccessException("An authenticated tenant actor is required for Testing Lab sessions.");
+
+        return actor.TenantId.Value;
     }
 }

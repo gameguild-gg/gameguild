@@ -1,23 +1,29 @@
+using GameGuild.Identity.Context.Actors;
+
 namespace GameGuild.TestingLab;
 
 /// <summary>
 /// Service implementation for testing location operations.
 /// Extracted from the monolithic TestService for focused responsibility.
 /// </summary>
-public class TestingLocationOperationsService(IApplicationDbContext context) : ITestingLocationOperations
+public class TestingLocationOperationsService(
+    IApplicationDbContext context,
+    IActorContextAccessor actorContextAccessor) : ITestingLocationOperations
 {
     public async Task<IEnumerable<TestingLocation>> GetAllTestingLocationsAsync()
     {
+        var tenantId = RequireTenantId();
         return await context.Set<TestingLocation>()
-            .Where(tl => tl.DeletedAt == null)
+            .Where(tl => tl.TenantId == tenantId && tl.DeletedAt == null)
             .OrderBy(tl => tl.Name)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<TestingLocation>> GetTestingLocationsAsync(int skip = 0, int take = 50)
     {
+        var tenantId = RequireTenantId();
         return await context.Set<TestingLocation>()
-            .Where(tl => tl.DeletedAt == null)
+            .Where(tl => tl.TenantId == tenantId && tl.DeletedAt == null)
             .OrderBy(tl => tl.Name)
             .Skip(skip)
             .Take(take)
@@ -26,13 +32,15 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
 
     public async Task<TestingLocation?> GetTestingLocationByIdAsync(Guid id)
     {
+        var tenantId = RequireTenantId();
         return await context.Set<TestingLocation>()
-            .Where(tl => tl.Id == id && tl.DeletedAt == null)
+            .Where(tl => tl.Id == id && tl.TenantId == tenantId && tl.DeletedAt == null)
             .FirstOrDefaultAsync();
     }
 
     public async Task<TestingLocation> CreateTestingLocationAsync(TestingLocation location)
     {
+        location.TenantId = RequireTenantId();
         location.Id = Guid.NewGuid();
         location.Touch();
 
@@ -44,8 +52,9 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
 
     public async Task<TestingLocation> UpdateTestingLocationAsync(TestingLocation location)
     {
+        var tenantId = RequireTenantId();
         var existingLocation = await context.Set<TestingLocation>()
-            .FirstOrDefaultAsync(tl => tl.Id == location.Id && tl.DeletedAt == null);
+            .FirstOrDefaultAsync(tl => tl.Id == location.Id && tl.TenantId == tenantId && tl.DeletedAt == null);
 
         if (existingLocation == null)
             throw new InvalidOperationException($"Testing location with ID {location.Id} not found");
@@ -66,8 +75,9 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
 
     public async Task<bool> DeleteTestingLocationAsync(Guid id)
     {
+        var tenantId = RequireTenantId();
         var location = await context.Set<TestingLocation>()
-            .FirstOrDefaultAsync(tl => tl.Id == id && tl.DeletedAt == null);
+            .FirstOrDefaultAsync(tl => tl.Id == id && tl.TenantId == tenantId && tl.DeletedAt == null);
 
         if (location == null) return false;
 
@@ -79,8 +89,10 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
 
     public async Task<bool> RestoreTestingLocationAsync(Guid id)
     {
+        var tenantId = RequireTenantId();
         var location = await context.Set<TestingLocation>()
-            .FirstOrDefaultAsync(tl => tl.Id == id && tl.DeletedAt != null);
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(tl => tl.Id == id && tl.TenantId == tenantId && tl.DeletedAt != null);
 
         if (location == null) return false;
 
@@ -89,5 +101,14 @@ public class TestingLocationOperationsService(IApplicationDbContext context) : I
         await context.SaveChangesAsync().ConfigureAwait(false);
 
         return true;
+    }
+
+    private Guid RequireTenantId()
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid == null || actor.TenantId == null)
+            throw new UnauthorizedAccessException("An authenticated tenant actor is required for Testing Lab locations.");
+
+        return actor.TenantId.Value;
     }
 }
