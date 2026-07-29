@@ -306,9 +306,10 @@ public class TestingParticipantOperationsService(IApplicationDbContext context) 
             .GroupBy(registration => GetCalendarBlock(registration.Session.SessionDate))
             .ToDictionary(group => group.Key, group => group.Count());
 
-        var gamesTested = attendedRegistrations.Select(registration => registration.Session.TestingRequestId)
-            .Concat(participants.Where(IsCompletedParticipation).Select(participant => participant.TestingRequestId))
-            .Concat(feedback.Select(entry => entry.TestingRequestId))
+        var gamesTested = attendedRegistrations.Select(registration => (Guid?)registration.Session.TestingRequestId)
+            .Concat(participants.Where(IsCompletedParticipation).Select(participant => (Guid?)participant.TestingRequestId))
+            .Concat(feedback.Select(entry => entry.TestingRequestId ?? entry.ApplicationId))
+            .Where(identifier => identifier.HasValue)
             .Distinct()
             .Count();
 
