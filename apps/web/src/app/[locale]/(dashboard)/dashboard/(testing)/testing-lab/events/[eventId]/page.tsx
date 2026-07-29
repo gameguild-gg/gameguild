@@ -1,7 +1,6 @@
 import {
   CreateTestingEventSlotDialog,
   EditTestingEventDialog,
-  formatTestingEventStatus,
   ManageTestingEventSlotDialog,
   TestingEventApplications,
   TestingEventCommittee,
@@ -15,6 +14,7 @@ import { getMembers } from '@/lib/community/queries/members';
 import { getCourses } from '@/lib/courses/services/course.service';
 import { getCourseContent } from '@/lib/learning/queries/course';
 import { getTestingEventManagerData } from '@/lib/testing-lab/events-queries';
+import { formatTestingEventStatus } from '@/lib/testing-lab/format';
 import type { TestingLabTestingApplicationStatus } from '@game-guild/client';
 import { Badge } from '@game-guild/ui/components/badge';
 import { CalendarDays, FlaskConical, MapPin } from 'lucide-react';
