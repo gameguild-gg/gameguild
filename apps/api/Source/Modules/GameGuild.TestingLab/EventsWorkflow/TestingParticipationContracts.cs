@@ -38,6 +38,16 @@ public sealed record TestingEventFeedbackProjection(
     string? AdditionalNotes,
     DateTime SubmittedAt);
 
+public sealed record TestingEventFeedbackReviewProjection(
+    Guid ObligationId,
+    Guid EventId,
+    Guid SlotId,
+    Guid ApplicationId,
+    Guid TesterUserId,
+    TestingFeedbackObligationStatus Status,
+    DateTime? FulfilledAt,
+    TestingEventFeedbackProjection? Feedback);
+
 public sealed record RegisterTestingEventSlotCommand(Guid SlotId, string? Notes)
     : ICommand<Result<TestingSlotRegistrationProjection>>;
 
@@ -73,8 +83,12 @@ public sealed record GetTestingEventSlotRegistrationsQuery(
 public sealed record GetMyTestingFeedbackObligationsQuery(Guid? EventId = null)
     : IQuery<Result<IReadOnlyList<TestingFeedbackObligationProjection>>>;
 
+public sealed record GetTestingEventFeedbackQuery(Guid EventId)
+    : IQuery<Result<IReadOnlyList<TestingEventFeedbackReviewProjection>>>;
+
 public sealed record GetMyTestingSlotRegistrationsQuery(Guid? EventId = null)
     : IQuery<Result<IReadOnlyList<TestingSlotRegistrationProjection>>>;
+
 public sealed record RegisterTestingEventSlotRequest(string? Notes);
 
 public sealed record AssignTestingProjectToTesterRequest(Guid ApplicationId);

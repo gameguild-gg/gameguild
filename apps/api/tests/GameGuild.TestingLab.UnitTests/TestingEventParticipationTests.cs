@@ -182,6 +182,55 @@ public sealed class TestingEventParticipationTests : IDisposable
 
 
     [Fact]
+    public async Task GetEventFeedback_AsManager_ReturnsObligationsAndSubmittedFeedback()
+    {
+        var (testingEvent, slot) = AddScheduledEventAndSlot(
+            TestingEventMode.InPerson,
+            maxTesters: 2,
+            requiresFeedback: true);
+        var application = AddApprovedApplication(testingEvent, slot);
+        await _context.SaveChangesAsync();
+        var handler = CreateHandler();
+        SetActor(_testerOneId);
+        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        SetActor(_managerId);
+        await handler.Handle(new CheckInTestingEventRegistrationCommand(registered.Value.Id), default);
+        var assigned = await handler.Handle(
+            new AssignTestingProjectToTesterCommand(registered.Value.Id, application.Id),
+            default);
+        SetActor(_testerOneId);
+        await handler.Handle(new SubmitTestingEventFeedbackCommand(
+            assigned.Value.Id,
+            """{"playability":"clear"}""",
+            9,
+            true,
+            "Ready for another round"), default);
+        SetActor(_managerId);
+
+        var result = await handler.Handle(new GetTestingEventFeedbackQuery(testingEvent.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle();
+        result.Value[0].ApplicationId.Should().Be(application.Id);
+        result.Value[0].TesterUserId.Should().Be(_testerOneId);
+        result.Value[0].Feedback.Should().NotBeNull();
+        result.Value[0].Feedback!.OverallRating.Should().Be(9);
+    }
+
+    [Fact]
+    public async Task GetEventFeedback_AsNonManager_ShouldBeForbidden()
+    {
+        var (testingEvent, _) = AddScheduledEventAndSlot(TestingEventMode.Online, maxTesters: null);
+        await _context.SaveChangesAsync();
+        SetActor(_testerOneId);
+
+        var result = await CreateHandler().Handle(new GetTestingEventFeedbackQuery(testingEvent.Id), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Forbidden);
+    }
+
+    [Fact]
     public async Task GetMyRegistrations_ReturnsOnlyCurrentTesterRegistrationsForEvent()
     {
         var (testingEvent, slot) = AddScheduledEventAndSlot(TestingEventMode.InPerson, maxTesters: 2);
