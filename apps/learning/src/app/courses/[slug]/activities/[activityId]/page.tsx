@@ -57,7 +57,7 @@ export default async function LearnerActivityPage({ params }: { params: Promise<
 
     return (
         <div className="mx-auto max-w-4xl space-y-6">
-            <Button asChild variant="ghost" className="-ml-3 text-slate-400"><Link href={`/courses/${slug}/assignments`}><ArrowLeft className="size-4" />All activities</Link></Button>
+            <Button asChild variant="ghost" className="-ml-3 text-slate-400"><Link href={`/courses/${slug}/activities`}><ArrowLeft className="size-4" />All activities</Link></Button>
             <header className="border-b border-white/10 pb-6"><div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{type}</Badge>{points != null ? <Badge className="bg-white/10 text-slate-300">{points} points</Badge> : null}</div><h1 className="mt-4 text-3xl font-semibold text-white">{title}</h1>{dueAt ? <p className="mt-3 inline-flex items-center gap-2 text-sm text-slate-400"><CalendarClock className="size-4" />Due {new Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(dueAt))}</p> : null}</header>
             {description ? <Card className="border-white/10 bg-white/[0.03]"><CardHeader><CardTitle className="flex items-center gap-2 text-lg"><ClipboardCheck className="size-5 text-violet-300" />Instructions</CardTitle></CardHeader><CardContent className="prose prose-invert max-w-none"><MarkdownRenderer content={description} /></CardContent></Card> : null}
             <Card className="border-white/10 bg-white/[0.03]"><CardHeader><CardTitle className="text-lg">Your response</CardTitle></CardHeader><CardContent><LearnerActivityForm courseId={access.course.id} courseSlug={slug} enrollmentId={access.course.enrollmentId} activity={activity} /></CardContent></Card>

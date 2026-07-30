@@ -418,7 +418,7 @@ export function CourseAttendanceShell({ course }: { course: CourseAttendanceData
                             ) : (
                                 <div className="border-l-2 border-violet-500 bg-white/[0.025] p-6">
                                     <p className="text-sm text-slate-300">This graded or participatory activity is completed through the course activity workspace, where attempts, deadlines, submissions, and feedback are preserved.</p>
-                                    <Button asChild className="mt-4"><Link href={`/courses/${course.slug}/assignments`}>Open activities</Link></Button>
+                                    <Button asChild className="mt-4"><Link href={`/courses/${course.slug}/activities`}>Open activities</Link></Button>
                                 </div>
                             )
                         ) : (
