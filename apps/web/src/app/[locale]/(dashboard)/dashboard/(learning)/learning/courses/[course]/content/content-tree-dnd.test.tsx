@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContentTree } from './content-tree';
 import type { ContentItem } from '@/lib/learning/types';
 import { TooltipProvider } from '@game-guild/ui/components/tooltip';
-import { addContent, deleteContent, reorderContent, updateAssessment, updateContent } from '@/lib/learning/actions';
+import { addContent, deleteContent, reorderContent, updateContent } from '@/lib/learning/actions';
 
 const dndHarness = vi.hoisted(() => ({
   handlers: [] as Array<(event: { active: { id: string }; over: { id: string } | null }) => void>,
@@ -65,7 +65,6 @@ vi.mock('@/lib/learning/actions', () => ({
   addContent: vi.fn(),
   deleteContent: vi.fn(),
   reorderContent: vi.fn(),
-  updateAssessment: vi.fn(),
   updateContent: vi.fn(),
 }));
 
@@ -113,7 +112,6 @@ function renderTree() {
         courseId="course-1"
         modules={[moduleOne, moduleTwo]}
         allItems={[moduleOne, moduleTwo, lessonOne, lessonTwo]}
-        assessments={[]}
       />
     </TooltipProvider>,
   );
@@ -125,7 +123,6 @@ describe('ContentTree deterministic drag handlers', () => {
     vi.mocked(addContent).mockResolvedValue({ success: true, data: { id: 'created-content' } });
     vi.mocked(deleteContent).mockResolvedValue({ success: true, data: null });
     vi.mocked(reorderContent).mockResolvedValue({ success: true, data: null });
-    vi.mocked(updateAssessment).mockResolvedValue({ success: true, data: null });
     vi.mocked(updateContent).mockResolvedValue({ success: true, data: null });
   });
 

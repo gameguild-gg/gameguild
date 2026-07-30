@@ -2,7 +2,7 @@
 
 import { getToken } from '@/auth';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
-import type { AssessmentType } from '@/lib/learning/queries/assessments';
+import type { AssessmentPresentationMode, AssessmentType } from '@/lib/learning/queries/assessments';
 import type { CourseIntegrationSettings, CourseNotificationSettings } from '@/lib/learning/queries/settings';
 import type { LearningCoursesProgramContentType } from '@/lib/learning/types';
 import {
@@ -73,6 +73,17 @@ function extractError(err: unknown): string {
   return e?.detail || e?.message || 'An unexpected error occurred.';
 }
 
+function formatUnexpectedError(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+
 async function learningApiRequest<T>(path: string, init: RequestInit): Promise<ActionResult<T>> {
   const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
   const token = await getToken();
@@ -136,17 +147,19 @@ export async function addContent(input: AddContentInput): Promise<ActionResult<{
       ...(parentId ? { parentId } : {}),
     };
 
-    const { content } = createCourseModules();
-    const result = await content.postCoursesContent(resolvedCourseId, contentBody);
+    const result = await learningApiRequest<{ id?: string }>(`/v1/courses/${resolvedCourseId}/content`, {
+      method: 'POST',
+      body: JSON.stringify(contentBody),
+    });
 
-    if (result.ok) {
+    if (result.success && result.data.id) {
       revalidateCourseContentPaths(courseId, resolvedCourseId);
-      return { success: true, data: { id: result.data.id! } };
+      return { success: true, data: { id: result.data.id } };
     }
 
-    return { success: false, error: extractError(result.error) };
+    return { success: false, error: result.success ? 'Content was created, but the API did not return its ID.' : result.error };
   } catch (e) {
-    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+    return { success: false, error: `Unexpected error: ${formatUnexpectedError(e)}` };
   }
 }
 
@@ -185,18 +198,20 @@ export async function updateContent(input: UpdateContentInput): Promise<ActionRe
 
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const { content } = createCourseModules();
     const body = { id: contentId, ...fields } as LearningCoursesUpdateProgramContent;
-    const result = await content.putCoursesContent(resolvedCourseId, contentId, body);
+    const result = await learningApiRequest<unknown>(`/v1/courses/${resolvedCourseId}/content/${contentId}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
 
-    if (result.ok) {
+    if (result.success) {
       revalidateCourseContentPaths(courseId, resolvedCourseId);
       return { success: true, data: null };
     }
 
-    return { success: false, error: extractError(result.error) };
+    return { success: false, error: result.error };
   } catch (e) {
-    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+    return { success: false, error: `Unexpected error: ${formatUnexpectedError(e)}` };
   }
 }
 
@@ -902,6 +917,7 @@ export interface CreateAssessmentInput {
   isRequired?: boolean;
   availableFrom?: string;
   availableUntil?: string;
+  presentationMode?: AssessmentPresentationMode;
 }
 
 export async function createAssessment(input: CreateAssessmentInput): Promise<ActionResult<{ id: string }>> {
@@ -926,6 +942,7 @@ export async function createAssessment(input: CreateAssessmentInput): Promise<Ac
       isRequired: rest.isRequired ?? true,
       availableFrom: rest.availableFrom ?? null,
       availableUntil: rest.availableUntil ?? null,
+      presentationMode: rest.presentationMode ?? (rest.type === 'Quiz' ? 'Continuous' : 'SingleStep'),
     };
 
     const { assessments } = createCourseModules();
@@ -1076,6 +1093,7 @@ export interface UpdateAssessmentInput {
   clearContentId?: boolean;
   assessmentGroupId?: string | null;
   clearAssessmentGroupId?: boolean;
+  presentationMode?: AssessmentPresentationMode;
 }
 
 export async function updateAssessment(input: UpdateAssessmentInput): Promise<ActionResult<null>> {
@@ -1100,6 +1118,7 @@ export async function updateAssessment(input: UpdateAssessmentInput): Promise<Ac
       clearContentId: fields.clearContentId ?? false,
       assessmentGroupId: fields.assessmentGroupId ?? null,
       clearAssessmentGroupId: fields.clearAssessmentGroupId ?? false,
+      presentationMode: fields.presentationMode,
     };
 
     const { assessments } = createCourseModules();
@@ -1111,6 +1130,47 @@ export async function updateAssessment(input: UpdateAssessmentInput): Promise<Ac
     }
 
     return { success: false, error: extractError(result.error) };
+  } catch (e) {
+    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export interface UpdateAssessmentDefinitionInput {
+  courseId: string;
+  assessmentId: string;
+  definition: unknown;
+  definitionSchemaVersion?: number;
+}
+
+function normalizeAssessmentDefinitionPayload(definition: unknown): unknown {
+  if (typeof definition !== 'string') {
+    return definition ?? { order: [], blocks: {} };
+  }
+
+  const trimmed = definition.trim();
+  return trimmed ? JSON.parse(trimmed) : { order: [], blocks: {} };
+}
+
+export async function updateAssessmentDefinition(input: UpdateAssessmentDefinitionInput): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
+    const definition = normalizeAssessmentDefinitionPayload(input.definition);
+    const result = await learningApiRequest<unknown>(`/v1/assessments/${input.assessmentId}/definition`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        definitionSchemaVersion: input.definitionSchemaVersion ?? 1,
+        definition,
+      }),
+    });
+
+    if (!result.success) return result as ActionResult<null>;
+
+    revalidateCourseAssessmentPaths(input.courseId, resolvedCourseId);
+    revalidatePath(`/dashboard/learning/courses/${input.courseId}/assessments/${input.assessmentId}`);
+    if (resolvedCourseId !== input.courseId) {
+      revalidatePath(`/dashboard/learning/courses/${resolvedCourseId}/assessments/${input.assessmentId}`);
+    }
+    return { success: true, data: null };
   } catch (e) {
     return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
   }

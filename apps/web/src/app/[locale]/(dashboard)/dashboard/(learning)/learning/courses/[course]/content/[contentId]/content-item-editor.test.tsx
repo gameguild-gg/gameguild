@@ -51,7 +51,7 @@ const item = {
 describe('ContentItemEditor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(updateContent).mockResolvedValue({ success: true, data: { id: 'content-1' } });
+    vi.mocked(updateContent).mockResolvedValue({ success: true, data: null });
   });
 
   it('renders quiz-publication copy and normalizes questionnaire to quiz', () => {
@@ -93,7 +93,7 @@ describe('ContentItemEditor', () => {
         contentId: 'content-1',
         title: 'Updated quiz',
         description: 'Updated description.',
-        body: undefined,
+        body: '<p>Answer all questions.</p>',
         visibility: 'Public',
         isRequired: true,
         estimatedMinutes: 35,
