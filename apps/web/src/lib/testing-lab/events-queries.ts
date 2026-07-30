@@ -6,6 +6,7 @@ import {
   type Result,
   type TestingLabTestingApplicationStatus,
   type TestingLabTestingEventCommitteeMemberProjection,
+  type TestingLabTestingEventFeedbackReviewProjection,
   type TestingLabTestingEventProjection,
   type TestingLabTestingEventSlotProjection,
   type TestingLabTestingEventStatus,
@@ -25,6 +26,11 @@ export interface TestingEventManagerData {
   applications: TestingLabTestingProjectApplicationProjection[];
   committee: TestingLabTestingEventCommitteeMemberProjection[];
   registrationsBySlot: Record<string, TestingLabTestingSlotRegistrationProjection[]>;
+  accessIssues: string[];
+}
+
+export interface TestingEventFeedbackReviewData {
+  feedback: TestingLabTestingEventFeedbackReviewProjection[];
   accessIssues: string[];
 }
 
@@ -138,6 +144,14 @@ export async function getTestingEventManagerData(
   };
 }
 
+export const getTestingEventFeedbackReview = cache(async (eventId: string): Promise<TestingEventFeedbackReviewData> => {
+  const result = await read(createModules().participation.getTestingEventsFeedback(eventId), 'Event feedback');
+
+  return {
+    feedback: result.data ?? [],
+    accessIssues: result.issue ? [result.issue] : [],
+  };
+});
 export const getTestingEventWorkspaceData = cache((eventId: string) => getTestingEventManagerData(eventId));
 
 export {
