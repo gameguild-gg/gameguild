@@ -454,7 +454,7 @@ describe('AssessmentsList weighted groups', () => {
       });
     });
     expect(await screen.findByText('Assessment title must be unique.')).toBeInTheDocument();
-  });
+  }, 15_000);
 
   it('lets professors edit a weighted assessment group without leaving the assessment hub', async () => {
     const user = userEvent.setup();

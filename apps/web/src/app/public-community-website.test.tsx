@@ -111,10 +111,9 @@ describe('public community website UX', () => {
     expect(screen.getByRole('heading', { name: /recent activity/i })).toBeInTheDocument();
 
     render(await TestingLabPage());
-    expect(screen.getByRole('heading', { name: /testing lab/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/submit a build/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/define test goals/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/feedback report/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { name: /game testing lab/i, level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /test\. play\. improve\./i })).toBeInTheDocument();
+    expect(screen.getByText(/participate as a tester or apply with a GameGuild project/i)).toBeInTheDocument();
   });
 
   it('renders the public launch pad entry for release-ready projects', async () => {
