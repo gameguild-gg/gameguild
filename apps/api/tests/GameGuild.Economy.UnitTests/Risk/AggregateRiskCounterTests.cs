@@ -44,6 +44,8 @@ public sealed class AggregateRiskCounterTests
             id, PostingTemplateKind.PayoutReservation,
             new CoinAmount(CurrencyCode.HardCoin, 5), Limits(10, 2), Time);
 
+        first.Id.Should().Be(id);
+        first.Allocations.Should().OnlyContain(allocation => allocation.CounterVersion == 2);
         store.Reserve(
             id, PostingTemplateKind.PayoutReservation,
             new CoinAmount(CurrencyCode.HardCoin, 5), Limits(10, 2), Time).Should().Be(first);
@@ -98,6 +100,24 @@ public sealed class AggregateRiskCounterTests
         FluentActions.Invoking(() => store.Reserve(
                 Guid.NewGuid(), PostingTemplateKind.Spend, amount, [duplicate, duplicate], Time))
             .Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void DifferentOperationCurrencyAndExpiredWindowDoNotShareAllocatedCapacity()
+    {
+        var store = new AggregateRiskCounterStore();
+        var limits = Limits(10);
+
+        store.Reserve(Guid.NewGuid(), PostingTemplateKind.Spend,
+            new CoinAmount(CurrencyCode.HardCoin, 10), limits, Time);
+        store.Reserve(Guid.NewGuid(), PostingTemplateKind.PayoutReservation,
+            new CoinAmount(CurrencyCode.HardCoin, 10), limits, Time);
+        store.Reserve(Guid.NewGuid(), PostingTemplateKind.Spend,
+            new CoinAmount(CurrencyCode.SoftCoin, 10), limits, Time);
+        store.Reserve(Guid.NewGuid(), PostingTemplateKind.Spend,
+            new CoinAmount(CurrencyCode.HardCoin, 10), limits, Time.AddHours(1).AddTicks(1));
+
+        store.Reservations.Should().HaveCount(4);
     }
 
     private static AggregateRiskLimit[] Limits(long maxUnits, long version = 1) =>

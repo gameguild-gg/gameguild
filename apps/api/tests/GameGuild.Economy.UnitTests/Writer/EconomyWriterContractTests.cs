@@ -264,6 +264,7 @@ public sealed class EconomyWriterContractTests
             null,
             null);
 
+        request.InputRanges.Should().BeEmpty();
         EconomyWriterContractValidator.Validate(request).IsValid.Should().BeTrue();
     }
 

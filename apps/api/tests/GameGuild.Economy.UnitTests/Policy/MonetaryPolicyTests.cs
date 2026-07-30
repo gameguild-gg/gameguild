@@ -18,6 +18,9 @@ public sealed class MonetaryPolicyTests
 
         var policy = Policy(conversionFeePpm: 3_333, adReservePpm: 250_000);
 
+        policy.Limits.MaximumHardTransferUnits.Should().Be(10_000);
+        policy.Limits.MaximumSoftSpendUnits.Should().Be(1_000_000);
+        policy.MinimumServiceMarginPpm.Should().Be(200_000);
         policy.ConvertHardToSoft(1).Should().Be(996);
         policy.QuoteAdRewardSoft(1_000_000).Should().Be(75_000);
         policy.QuoteAdRewardSoft(10_000_000).Should().Be(250_000);
@@ -93,6 +96,20 @@ public sealed class MonetaryPolicyTests
         catalog.Policies.Should().Equal(historical, openEnded);
         FluentActions.Invoking(() => catalog.Add(Policy(version: 3, effectiveAt: EffectiveAt.AddDays(3))))
             .Should().Throw<InvalidOperationException>().WithMessage("*overlap*");
+    }
+
+    [Fact]
+    public void FinitePolicyWindowRejectsExactEndAndLaterInstants()
+    {
+        var catalog = new MonetaryPolicyCatalog();
+        catalog.Add(Policy(effectiveAt: EffectiveAt, endsAt: EffectiveAt.AddHours(1)));
+
+        catalog.Resolve(EffectiveAt).EffectiveAt.Should().Be(EffectiveAt);
+        catalog.Resolve(EffectiveAt.AddHours(1).AddTicks(-1)).EffectiveAt.Should().Be(EffectiveAt);
+        FluentActions.Invoking(() => catalog.Resolve(EffectiveAt.AddHours(1)))
+            .Should().Throw<InvalidOperationException>();
+        FluentActions.Invoking(() => catalog.Resolve(EffectiveAt.AddHours(2)))
+            .Should().Throw<InvalidOperationException>();
     }
 
     private static MonetaryPolicySnapshot Policy(
