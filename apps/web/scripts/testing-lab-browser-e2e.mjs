@@ -231,7 +231,10 @@ async function run() {
 
   try {
     console.log('[testing-lab-browser-e2e] anonymous directory and event detail');
-    await visit(page, '/testing-lab', 'public Testing Lab directory');
+    await visit(page, '/testing-lab', 'public Testing Lab landing');
+    await waitForText(page, 'Game Testing Lab');
+    await page.getByRole('link', { name: 'Browse Events', exact: true }).click();
+    await page.waitForURL(/\/testing-lab\/events/);
     await waitForText(page, fixture.event.name);
     await assertNoViewportOverflow(page, 'public Testing Lab directory');
     await page.screenshot({ path: path.join(artifactsDirectory, 'public-directory-desktop.png'), fullPage: true });
@@ -322,7 +325,7 @@ async function run() {
 
     console.log('[testing-lab-browser-e2e] mobile public and manager surfaces');
     await page.setViewportSize({ width: 390, height: 844 });
-    await visit(page, '/testing-lab', 'mobile public Testing Lab directory');
+    await visit(page, '/testing-lab/events', 'mobile public Testing Lab directory');
     await waitForText(page, fixture.event.name);
     await assertNoViewportOverflow(page, 'mobile public Testing Lab directory');
     await page.screenshot({ path: path.join(artifactsDirectory, 'public-directory-mobile.png'), fullPage: true });
