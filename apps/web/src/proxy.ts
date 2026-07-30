@@ -81,7 +81,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     response = NextResponse.redirect(hostDecision.url, hostDecision.status);
     proxyAction = 'redirect';
   } else if (hostDecision.action === 'rewrite') {
-    response = NextResponse.rewrite(hostDecision.url);
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-gameguild-visible-url', request.nextUrl.toString());
+    response = NextResponse.rewrite(hostDecision.url, {
+      request: { headers: requestHeaders },
+    });
     proxyAction = 'rewrite';
   } else if (trackRedirectPath) {
     const redirectUrl = request.nextUrl.clone();
