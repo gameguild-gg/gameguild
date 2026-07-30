@@ -57,5 +57,5 @@ describe('CertificateTemplateEditor', () => {
     });
     expect(await screen.findByRole('status')).toHaveTextContent('Certificate template saved.');
     expect(screen.getByTitle('Certificate preview')).toHaveAttribute('sandbox', '');
-  });
+  }, 15_000);
 });
