@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssessmentEditor } from './assessment-editor';
-import { deleteAssessment, updateAssessment } from '@/lib/learning/actions';
+import { deleteAssessment, updateAssessment, updateAssessmentDefinition } from '@/lib/learning/actions';
 import type { Assessment, AssessmentGroup } from '@/lib/learning/queries/assessments';
 
 const routerMocks = vi.hoisted(() => ({
@@ -30,7 +30,16 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/lib/learning/actions', () => ({
   updateAssessment: vi.fn(),
+  updateAssessmentDefinition: vi.fn(),
   deleteAssessment: vi.fn(),
+}));
+
+vi.mock('./quiz-assessment-editor', () => ({
+  QuizAssessmentEditor: ({ onChange }: { onChange: (definition: unknown) => void }) => (
+    <button type="button" onClick={() => onChange({ order: [['1', 'quiz']], blocks: { '1': { type: 'SINGLE_CHOICE' } } })}>
+      Mock quiz editor
+    </button>
+  ),
 }));
 
 const assessment = {
@@ -52,6 +61,10 @@ const assessment = {
   order: 1,
   availableFrom: '2026-07-01T10:00:00.000Z',
   availableUntil: '2026-07-05T10:00:00.000Z',
+  presentationMode: 'Continuous',
+  dueAt: null,
+  allowLateSubmissions: false,
+  lateSubmissionDeadline: null,
   isAvailable: true,
 } satisfies Assessment;
 
@@ -69,7 +82,8 @@ const groups = [
 describe('AssessmentEditor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(updateAssessment).mockResolvedValue({ success: true, data: { id: 'assessment-1' } });
+    vi.mocked(updateAssessment).mockResolvedValue({ success: true, data: null });
+    vi.mocked(updateAssessmentDefinition).mockResolvedValue({ success: true, data: null });
     vi.mocked(deleteAssessment).mockResolvedValue({ success: true, data: null });
     vi.stubGlobal('confirm', vi.fn(() => true));
   });
@@ -98,6 +112,7 @@ describe('AssessmentEditor', () => {
     fireEvent.change(screen.getByLabelText(/available until/i), { target: { value: '2026-08-05T10:00' } });
     fireEvent.change(screen.getByLabelText(/time limit/i), { target: { value: '45' } });
     fireEvent.change(screen.getByLabelText(/max attempts/i), { target: { value: '3' } });
+    await user.click(screen.getByRole('button', { name: /mock quiz editor/i }));
 
     await user.click(screen.getByRole('button', { name: /save changes/i }));
 
@@ -116,6 +131,13 @@ describe('AssessmentEditor', () => {
         availableUntil: '2026-08-05T10:00',
         assessmentGroupId: 'group-quizzes',
         clearAssessmentGroupId: false,
+        presentationMode: 'Continuous',
+      });
+      expect(updateAssessmentDefinition).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        assessmentId: 'assessment-1',
+        definition: { order: [['1', 'quiz']], blocks: { '1': { type: 'SINGLE_CHOICE' } } },
+        definitionSchemaVersion: 1,
       });
     });
     expect(routerMocks.refresh).toHaveBeenCalled();
