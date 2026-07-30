@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -12,8 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@game-guild/ui/components/switch';
 import { Separator } from '@game-guild/ui/components/separator';
 import { ArrowLeft, Clock, Loader2, Save, Trash2 } from 'lucide-react';
-import type { Assessment, AssessmentGroup, AssessmentType } from '@/lib/learning/queries/assessments';
-import { updateAssessment, deleteAssessment } from '@/lib/learning/actions';
+import type { Assessment, AssessmentDefinition, AssessmentGroup, AssessmentPresentationMode, AssessmentType } from '@/lib/learning/queries/assessments';
+import { updateAssessment, deleteAssessment, updateAssessmentDefinition } from '@/lib/learning/actions';
+import { EMPTY_ASSESSMENT_BLOCK_STORAGE } from '@/components/block-content-editor/lib/assessment/assessment-contracts';
+import { QuizAssessmentEditor } from './quiz-assessment-editor';
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: 'Quiz', label: 'Quiz' },
@@ -26,6 +28,7 @@ const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
 interface AssessmentEditorProps {
   courseId: string;
   assessment: Assessment;
+  assessmentDefinition?: AssessmentDefinition | null;
   assessmentGroups?: AssessmentGroup[];
 }
 
@@ -33,10 +36,12 @@ function formatWeight(weightPercent: number) {
   return `${Number.isInteger(weightPercent) ? weightPercent : weightPercent.toFixed(1)}% of Total`;
 }
 
-export function AssessmentEditor({ courseId, assessment, assessmentGroups = [] }: AssessmentEditorProps) {
+export function AssessmentEditor({ courseId, assessment, assessmentDefinition = null, assessmentGroups = [] }: AssessmentEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
+  const isQuiz = assessment.type === 'Quiz';
+  const definitionRef = useRef<unknown>(assessmentDefinition?.definition ?? EMPTY_ASSESSMENT_BLOCK_STORAGE);
 
   const [title, setTitle] = useState(assessment.title);
   const [description, setDescription] = useState(assessment.description ?? '');
@@ -50,6 +55,7 @@ export function AssessmentEditor({ courseId, assessment, assessmentGroups = [] }
   );
   const [isRequired, setIsRequired] = useState(assessment.isRequired);
   const [assessmentGroupId, setAssessmentGroupId] = useState(assessment.assessmentGroupId ?? 'none');
+  const [presentationMode, setPresentationMode] = useState<AssessmentPresentationMode>(assessment.presentationMode);
   const [availableFrom, setAvailableFrom] = useState(
     assessment.availableFrom ? assessment.availableFrom.slice(0, 16) : '',
   );
@@ -83,14 +89,30 @@ export function AssessmentEditor({ courseId, assessment, assessmentGroups = [] }
         availableUntil: availableUntil || null,
         assessmentGroupId: assessmentGroupId === 'none' ? null : assessmentGroupId,
         clearAssessmentGroupId: assessmentGroupId === 'none',
+        presentationMode,
       });
 
-      if (result.success) {
-        setSaved(true);
-        router.refresh();
-      } else {
+      if (!result.success) {
         setError(result.error);
+        return;
       }
+
+      if (isQuiz) {
+        const definitionResult = await updateAssessmentDefinition({
+          courseId,
+          assessmentId: assessment.id,
+          definition: definitionRef.current,
+          definitionSchemaVersion: assessmentDefinition?.definitionSchemaVersion ?? 1,
+        });
+
+        if (!definitionResult.success) {
+          setError(definitionResult.error);
+          return;
+        }
+      }
+
+      setSaved(true);
+      router.refresh();
     });
   }
 
@@ -158,6 +180,22 @@ export function AssessmentEditor({ courseId, assessment, assessmentGroups = [] }
               </div>
             </CardContent>
           </Card>
+
+          {isQuiz && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Quiz</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <QuizAssessmentEditor
+                  initialDefinition={assessmentDefinition?.definition ?? EMPTY_ASSESSMENT_BLOCK_STORAGE}
+                  onChange={(definition) => {
+                    definitionRef.current = definition;
+                  }}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
@@ -277,6 +315,28 @@ export function AssessmentEditor({ courseId, assessment, assessmentGroups = [] }
               </div>
 
               <Separator />
+
+              {isQuiz && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="presentation-mode">Presentation</Label>
+                    <Select
+                      value={presentationMode}
+                      onValueChange={(value) => setPresentationMode(value as AssessmentPresentationMode)}
+                    >
+                      <SelectTrigger id="presentation-mode">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Continuous">Continuous list</SelectItem>
+                        <SelectItem value="SingleStep">One at a time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+                </>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="time-limit">

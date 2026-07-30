@@ -53,7 +53,7 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
   // ── Lexical editor state (Lesson only) ──
   const initialLexicalState = useMemo(() => parseLexicalState(item.content), [item.content]);
   const editorStateRef = useRef<SerializedEditorState | null>(initialLexicalState);
-  const quizContentRef = useRef<string | undefined>(undefined);
+  const quizContentRef = useRef<string | undefined>(item.type === 'Questionnaire' ? item.content ?? undefined : undefined);
 
   const handleEditorChange = useCallback(
     (state: SerializedEditorState) => {
