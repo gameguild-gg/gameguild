@@ -1,7 +1,6 @@
 'use client';
 
-import { addContent, deleteContent, reorderContent, updateAssessment, updateContent } from '@/lib/learning/actions';
-import type { Assessment } from '@/lib/learning/queries/assessments';
+import { addContent, deleteContent, reorderContent, updateContent } from '@/lib/learning/actions';
 import type { ContentItem, LearningCoursesProgramContentType } from '@/lib/learning/types';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -16,7 +15,7 @@ import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@game-guild/ui/components/tooltip';
-import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronRight, ClipboardList, Clock, Code2, Copy, Edit, FileText, Flag, GripVertical, HelpCircle, LinkIcon, Loader2, MessageSquare, Plus, Trash2, Unlink } from 'lucide-react';
+import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronRight, Clock, Code2, Copy, Edit, FileText, Flag, GripVertical, HelpCircle, Loader2, MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState, useTransition } from 'react';
 
@@ -24,7 +23,6 @@ interface ContentTreeProps {
   courseId: string;
   modules: ContentItem[];
   allItems: ContentItem[];
-  assessments: Assessment[];
   virtualModuleIds?: string[];
 }
 
@@ -49,8 +47,8 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
 // Lesson types available when adding a new lesson (backend ProgramContentType values)
 const lessonTypes: Array<{ value: LearningCoursesProgramContentType; label: string }> = [
   { value: 'Lesson', label: 'Lesson' },
-  { value: 'Questionnaire', label: 'Quiz' },
   { value: 'Assignment', label: 'Assignment' },
+  { value: 'Questionnaire', label: 'Quiz' },
   { value: 'Project', label: 'Project' },
   { value: 'Discussion', label: 'Discussion' },
   { value: 'Code', label: 'Code' },
@@ -113,7 +111,7 @@ function ContentActionButton({
   );
 }
 
-export function ContentTree({ courseId, modules, allItems, assessments, virtualModuleIds = [] }: ContentTreeProps) {
+export function ContentTree({ courseId, modules, allItems, virtualModuleIds = [] }: ContentTreeProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
@@ -175,18 +173,6 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
 
   // Submodule dialog state
   const [submoduleParentId, setSubmoduleParentId] = useState<string | null>(null);
-
-  // Assessment picker dialog state
-  const [assessmentPickerTarget, setAssessmentPickerTarget] = useState<string | null>(null); // content item id
-
-  // Build a map of contentId -> Assessment for quick lookup
-  const assessmentsByContentId = React.useMemo(() => {
-    const map = new Map<string, Assessment>();
-    for (const a of assessments) {
-      if (a.contentId) map.set(a.contentId, a);
-    }
-    return map;
-  }, [assessments]);
 
   // DnD sensors
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -253,40 +239,6 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
         setSubmoduleParentId(null);
         setModuleTitle('');
         setModuleDescription('');
-        router.refresh();
-      } else {
-        setError(result.error);
-      }
-    });
-  }
-
-  function handleAttachAssessment(assessmentId: string) {
-    if (!assessmentPickerTarget) return;
-    setError('');
-    startTransition(async () => {
-      const result = await updateAssessment({
-        courseId,
-        assessmentId,
-        contentId: assessmentPickerTarget,
-      });
-      if (result.success) {
-        setAssessmentPickerTarget(null);
-        router.refresh();
-      } else {
-        setError(result.error);
-      }
-    });
-  }
-
-  function handleDetachAssessment(assessmentId: string) {
-    setError('');
-    startTransition(async () => {
-      const result = await updateAssessment({
-        courseId,
-        assessmentId,
-        clearContentId: true,
-      });
-      if (result.success) {
         router.refresh();
       } else {
         setError(result.error);
@@ -511,7 +463,6 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
                                         const isSubmodule = subchildren.length > 0;
                                         const config = typeConfig[item.type] ?? { icon: FileText, label: item.type };
                                         const Icon = config.icon;
-                                        const linkedAssessment = assessmentsByContentId.get(item.id);
                                         return (
                                           <SortableItem key={item.id} id={item.id}>
                                             {({ ref: itemRef, style: itemStyle, listeners: itemListeners, isDragging: itemDragging }) => (
@@ -527,15 +478,6 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
                                                     <p className="text-sm font-medium">{item.title}</p>
                                                     {isSubmodule && (
                                                       <p className="text-xs text-muted-foreground">{subchildren.length} sub-items</p>
-                                                    )}
-                                                    {linkedAssessment && (
-                                                      <div className="mt-0.5 flex items-center gap-1">
-                                                        <ClipboardList className="size-3 text-blue-500" />
-                                                        <span className="text-xs text-blue-600">{linkedAssessment.title}</span>
-                                                        <button type="button" className="ml-1 rounded p-0.5 text-muted-foreground hover:text-destructive" title="Detach assessment" onClick={(e) => { e.stopPropagation(); handleDetachAssessment(linkedAssessment.id); }} disabled={isPending}>
-                                                          <Unlink className="size-3" />
-                                                        </button>
-                                                      </div>
                                                     )}
                                                   </div>
                                                   <Badge variant="outline" className="text-xs capitalize">
@@ -553,11 +495,6 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
                                                   <div className="flex items-center gap-1">
                                                     <ContentActionButton label={`Edit ${config.label}`} icon={Edit} onClick={() => navigateToContentItem(item.id)} className="size-7" />
                                                     <ContentActionButton label="Duplicate" icon={Copy} onClick={() => handleDuplicate(item)} disabled={isPending} className="size-7" />
-                                                    {linkedAssessment ? (
-                                                      <ContentActionButton label="Detach assessment" icon={Unlink} onClick={() => handleDetachAssessment(linkedAssessment.id)} disabled={isPending} className="size-7" />
-                                                    ) : (
-                                                      <ContentActionButton label="Attach assessment" icon={LinkIcon} onClick={() => setAssessmentPickerTarget(item.id)} disabled={assessments.length === 0} className="size-7" />
-                                                    )}
                                                     <ContentActionButton label="Move up" icon={ArrowUp} onClick={() => handleMoveLesson(module.id, item.id, 'up')} disabled={isPending || itemIndex === 0} className="size-7" />
                                                     <ContentActionButton label="Move down" icon={ArrowDown} onClick={() => handleMoveLesson(module.id, item.id, 'down')} disabled={isPending || itemIndex === children.length - 1} className="size-7" />
                                                     <ContentActionButton label="Delete" icon={Trash2} onClick={() => setDeleteTarget({ id: item.id, title: item.title, isModule: false })} destructive className="size-7" />
@@ -766,49 +703,6 @@ export function ContentTree({ courseId, modules, allItems, assessments, virtualM
         </DialogContent>
       </Dialog>
 
-      {/* ── Attach Assessment Picker Dialog ── */}
-      <Dialog open={assessmentPickerTarget !== null} onOpenChange={(open) => { if (!open) setAssessmentPickerTarget(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Attach Assessment</DialogTitle>
-            <DialogDescription>Select an assessment to link to this content item.</DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-2 py-2">
-            {assessments.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">No assessments available. Create one in the Assessments tab first.</p>
-            ) : (
-              assessments.map((a) => {
-                const alreadyLinked = a.contentId !== null && a.contentId !== assessmentPickerTarget;
-                return (
-                  <button
-                    key={a.id}
-                    type="button"
-                    disabled={isPending || alreadyLinked}
-                    onClick={() => handleAttachAssessment(a.id)}
-                    className="flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <ClipboardList className="size-4 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{a.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {a.type} &bull; {a.passingScore}/{a.maxScore} pts
-                        {alreadyLinked && ' (already linked to another item)'}
-                      </p>
-                    </div>
-                    {a.contentId === assessmentPickerTarget && (
-                      <Badge variant="secondary" className="text-xs">Current</Badge>
-                    )}
-                  </button>
-                );
-              })
-            )}
-            {error && <p className="text-sm text-destructive">{error}</p>}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAssessmentPickerTarget(null)}>Cancel</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

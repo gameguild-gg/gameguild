@@ -29,6 +29,7 @@ function createAssessmentsModule() {
 // =============================================================================
 
 export type AssessmentType = 'Quiz' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
+export type AssessmentPresentationMode = 'SingleStep' | 'Continuous';
 
 export interface Assessment {
   id: string;
@@ -49,7 +50,17 @@ export interface Assessment {
   order: number;
   availableFrom: string | null;
   availableUntil: string | null;
+  presentationMode: AssessmentPresentationMode;
+  dueAt: string | null;
+  allowLateSubmissions: boolean;
+  lateSubmissionDeadline: string | null;
   isAvailable: boolean;
+}
+
+export interface AssessmentDefinition {
+  assessmentId: string;
+  definitionSchemaVersion: number;
+  definition: unknown;
 }
 
 export interface CourseAssessments {
@@ -129,6 +140,10 @@ function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
     order: dto.order ?? 0,
     availableFrom: dto.availableFrom ?? null,
     availableUntil: dto.availableUntil ?? null,
+    presentationMode: normalizePresentationMode(dto.presentationMode),
+    dueAt: dto.dueAt ?? null,
+    allowLateSubmissions: dto.allowLateSubmissions ?? false,
+    lateSubmissionDeadline: dto.lateSubmissionDeadline ?? null,
     isAvailable: dto.isAvailable ?? true,
   };
 }
@@ -146,6 +161,10 @@ function normalizeAssessmentType(type: string | null | undefined): AssessmentTyp
   }
 
   return 'Quiz';
+}
+
+function normalizePresentationMode(mode: string | null | undefined): AssessmentPresentationMode {
+  return mode === 'Continuous' ? 'Continuous' : 'SingleStep';
 }
 
 function mapAssessmentGroup(dto: Partial<AssessmentGroup>): AssessmentGroup {
@@ -216,6 +235,20 @@ export const getAssessment = cache(async (assessmentId: string): Promise<Assessm
     }
     return mapAssessment(result.data);
   } catch {
+    return null;
+  }
+});
+
+export const getAssessmentDefinition = cache(async (assessmentId: string): Promise<AssessmentDefinition | null> => {
+  try {
+    const dto = await learningApiGet<Partial<AssessmentDefinition>>(`/v1/assessments/${assessmentId}/definition`, 60) ?? {};
+    return {
+      assessmentId: dto.assessmentId ?? assessmentId,
+      definitionSchemaVersion: dto.definitionSchemaVersion ?? 1,
+      definition: dto.definition ?? { order: [], blocks: {} },
+    };
+  } catch (err) {
+    console.error('Error fetching assessment definition:', err);
     return null;
   }
 });

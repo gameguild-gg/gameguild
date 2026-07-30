@@ -9386,6 +9386,13 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("DefinitionPayload")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("DefinitionSchemaVersion")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<DateTime?>("DueAt")
                         .HasColumnType("timestamp with time zone");
 

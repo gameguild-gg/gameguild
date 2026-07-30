@@ -44,7 +44,7 @@ public class ProgramContentService(
     return await context.Set<ProgramContent>().Include(pc => pc.Children.Where(c => c.DeletedAt == null)).Where(pc => pc.ProgramId == programId && pc.ParentId == null && pc.DeletedAt == null).OrderBy(pc => pc.SortOrder).ToListAsync();
   }
 
-  public async Task<ProgramContent> UpdateContentAsync(ProgramContent content) {
+  public async Task<ProgramContent> UpdateContentAsync(ProgramContent content) => await ExecuteInContentLifecycleStrategyAsync(async () => {
     await using var lifecycleTransaction = await ProgramContentLifecycleDatabaseLock
       .AcquireAsync(context, [content.Id])
       .ConfigureAwait(false);
@@ -79,9 +79,9 @@ public class ProgramContentService(
     await ProgramContentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
 
     return existingContent;
-  }
+  }).ConfigureAwait(false);
 
-  public async Task<bool> DeleteContentAsync(Guid id) {
+  public async Task<bool> DeleteContentAsync(Guid id) => await ExecuteInContentLifecycleStrategyAsync(async () => {
     var content = await context.Set<ProgramContent>().FirstOrDefaultAsync(pc => pc.Id == id && pc.DeletedAt == null);
 
     if (content == null) return false;
@@ -111,6 +111,18 @@ public class ProgramContentService(
     await ProgramContentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
 
     return true;
+  }).ConfigureAwait(false);
+
+  private async Task<T> ExecuteInContentLifecycleStrategyAsync<T>(Func<Task<T>> operation)
+  {
+    if (context is not DbContext dbContext ||
+        dbContext.Database.ProviderName != "Npgsql.EntityFrameworkCore.PostgreSQL")
+    {
+      return await operation().ConfigureAwait(false);
+    }
+
+    var strategy = dbContext.Database.CreateExecutionStrategy();
+    return await strategy.ExecuteAsync(operation).ConfigureAwait(false);
   }
 
   private static void SoftDeleteContentTree(Guid rootId, IEnumerable<ProgramContent> contents) {
