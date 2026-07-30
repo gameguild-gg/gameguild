@@ -83,6 +83,9 @@ public sealed class TransactionalPostingServiceTests
             new ReserveVersion(1), new PolicyVersion(1), Time.AddMinutes(2));
 
         var result = service.Transfer(transfer);
+        var duplicate = service.Transfer(transfer);
+
+        duplicate.Should().Be(result);
 
         result.Status.Should().Be(PostingStatus.Accepted);
         store.JournalEntries.Should().HaveCount(2);
