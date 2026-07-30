@@ -126,6 +126,12 @@ test_manifest_accepts_declared_projects() {
   assert_economy_manifest "$root" "$root/manifest.json" >/dev/null
 }
 
+test_manifest_record_fields_normalize_windows_line_endings() {
+  local assembly
+  assembly="$(normalize_shell_record_field $'GameGuild.Economy\r')"
+  assert_equal "$assembly" 'GameGuild.Economy' 'Windows Python output must not alter assembly names'
+}
+
 test_warning_scope_finds_commerce_projects() {
   local root="$fixture_root/warning-scope"
   local production='apps/api/Source/Modules/GameGuild.Commerce.Payments/GameGuild.Commerce.Payments.csproj'
@@ -242,6 +248,7 @@ run_test 'Coolify forwards Stripe gateway identity and mode' test_coolify_compos
 run_test 'published API uses its published content root' test_published_api_uses_published_content_root
 run_test 'manifest rejects undeclared Economy projects' test_manifest_rejects_undeclared_project
 run_test 'manifest accepts declared Economy projects and tests' test_manifest_accepts_declared_projects
+run_test 'manifest records normalize Windows line endings' test_manifest_record_fields_normalize_windows_line_endings
 run_test 'warning scope resolves touched Commerce projects' test_warning_scope_finds_commerce_projects
 run_test 'readiness requires consecutive successful probes' test_readiness_requires_consecutive_successes
 run_test 'process cleanup terminates Bash background processes' test_process_cleanup_stops_background_process

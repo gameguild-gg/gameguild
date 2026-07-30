@@ -182,6 +182,9 @@ declare -a economy_tests=()
 declare -a economy_coverage_records=()
 declare -a provider_contracts=()
 while IFS=$'\t' read -r record_type first second; do
+  record_type="$(normalize_shell_record_field "$record_type")"
+  first="$(normalize_shell_record_field "$first")"
+  second="$(normalize_shell_record_field "$second")"
   case "$record_type" in
     production) economy_production+=("$first") ;;
     test) economy_tests+=("$first") ;;
