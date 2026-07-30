@@ -142,6 +142,30 @@ public sealed class ProviderReversalServiceTests
     }
 
     [Fact]
+    public void PlannerStopsScanningRemainingLotRangesAfterTargetIsSatisfied()
+    {
+        var root = SourceStampId.New();
+        var first = new RootTraceRange(root, 0, 1_000, 0);
+        var later = new RootTraceRange(root, 2_000, 1_000, 0);
+        var lot = new CreditLot(
+            CreditLotId.New(),
+            WalletId.New(),
+            new CoinAmount(CurrencyCode.HardCoin, 2),
+            ProvenanceKind.PurchasedHard,
+            Time,
+            Time.AddDays(120),
+            1,
+            CreditLotState.Active,
+            [first, later],
+            CurrencyTraceScale.HardCoinTraceUnitsPerCoin);
+
+        var plan = ProviderReversalPlanner.Plan(root, 1_000, [], [lot]);
+
+        plan.Fragments.Should().ContainSingle();
+        plan.Fragments[0].Ranges.Should().Equal(first);
+    }
+
+    [Fact]
     public void ReverseTopUp_RejectsPendingClaimWithoutMutatingFundingState()
     {
         var store = new InMemoryLedgerKernelStore();
