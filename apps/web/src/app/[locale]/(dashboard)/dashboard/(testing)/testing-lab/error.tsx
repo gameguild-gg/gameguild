@@ -10,7 +10,7 @@ export default function TestingLabError({ error, reset }: { error: Error & { dig
   }, [error]);
 
   return (
-    <main className="flex min-h-[55vh] items-center justify-center p-6">
+    <div className="flex min-h-[55vh] items-center justify-center p-6">
       <div className="max-w-lg rounded-md border p-6 text-center">
         <AlertTriangle className="mx-auto size-8 text-destructive" />
         <h1 className="mt-4 text-xl font-semibold">Testing Lab could not be loaded</h1>
@@ -22,6 +22,6 @@ export default function TestingLabError({ error, reset }: { error: Error & { dig
           Retry
         </Button>
       </div>
-    </main>
+    </div>
   );
 }
