@@ -10578,6 +10578,18 @@ export const getTestingEventsFeedbackObligationsMeEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetTestingEventsFeedbackInput {
+  eventId: string;
+}
+export type GetTestingEventsFeedbackOutput = Array<Types.TestingLabTestingEventFeedbackReviewProjection>;
+export const getTestingEventsFeedbackEndpoint = {
+  operationId: 'getTestingEventsFeedback' as const,
+  method: 'GET' as const,
+  path: '/v1/testing/events/{eventId}/feedback' as const,
+  tags: ['TestingLab/testingEventParticipation'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostTestingEventsFeedbackObligationsFeedbackInput {
   obligationId: string;
   body?: Types.TestingLabSubmitTestingEventFeedbackInput;
@@ -14569,6 +14581,7 @@ export const endpoints = {
   postTestingEventsRegistrationsTestedProjects: postTestingEventsRegistrationsTestedProjectsEndpoint,
   postTestingEventsRegistrationsComplete: postTestingEventsRegistrationsCompleteEndpoint,
   getTestingEventsFeedbackObligationsMe: getTestingEventsFeedbackObligationsMeEndpoint,
+  getTestingEventsFeedback: getTestingEventsFeedbackEndpoint,
   postTestingEventsFeedbackObligationsFeedback: postTestingEventsFeedbackObligationsFeedbackEndpoint,
   getTestingEvents: getTestingEventsEndpoint,
   postTestingEvents: postTestingEventsEndpoint,
