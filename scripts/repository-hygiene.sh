@@ -27,7 +27,7 @@ while IFS= read -r path; do
     contributors/gource.txt|contributors/gource.mp4|contributors/gource.gif)
       report "generated Gource output is tracked: ${path}"
       ;;
-    apps/web/public/wasm/*|tools/emception/public/cdn/*|tools/emception/public/c2w-net-proxy.wasm)
+    apps/web/public/wasm/*|tools/emception/public/cdn/*|tools/emception/public/c2w-net-proxy.wasm|tools/emception/logs)
       report "generated browser runtime output is tracked: ${path}"
       ;;
     *.wasm|*.wasm.gz|*.tar|*.tar.gz|*.zip|*.mp4)
