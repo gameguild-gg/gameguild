@@ -78,7 +78,7 @@ export async function submitAssessment(formData: FormData): Promise<LearnerMutat
         if (!result.ok) return { success: false, error: `The assessment response could not be submitted: ${errorMessage(result.error, 'request failed')}` };
 
         if (courseSlug) {
-            revalidatePath(`/courses/${courseSlug}/assignments`);
+            revalidatePath(`/courses/${courseSlug}/activities`);
             revalidatePath(`/courses/${courseSlug}/activities/assessment-${assessmentId}`);
         }
         revalidatePath('/grades');
@@ -117,7 +117,7 @@ export async function submitContentActivity(formData: FormData): Promise<Learner
         if (!result.ok) return { success: false, error: errorMessage(result.error, 'The activity response could not be submitted.') };
 
         if (courseSlug) {
-            revalidatePath(`/courses/${courseSlug}/assignments`);
+            revalidatePath(`/courses/${courseSlug}/activities`);
             revalidatePath(`/courses/${courseSlug}/activities/content-${contentId}`);
             revalidatePath(`/courses/${courseSlug}/content`);
         }
