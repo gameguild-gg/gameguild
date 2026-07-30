@@ -46,11 +46,11 @@ vi.mock('@game-guild/client', () => ({
       putCourses = mocks.putCourses;
       postCoursesUsers = mocks.postCoursesUsers;
       deleteCoursesUsers = mocks.deleteCoursesUsers;
-      postCoursesContentReorder = mocks.postCoursesContentReorder;
     },
     LearningCoursesProgramcontentModule: class {
       postCoursesContent = mocks.postCoursesContent;
       deleteCoursesContent = mocks.deleteCoursesContent;
+      postCoursesContentReorder = mocks.postCoursesContentReorder;
     },
     LearningCoursesProgramlifecycleModule: class {
       postCoursesPublish = mocks.postCoursesPublish;
