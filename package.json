@@ -47,6 +47,7 @@
     "ci:provider-contracts": "dotnet test apps/api/tests/GameGuild.Commerce.Billing.UnitTests/GameGuild.Commerce.Billing.UnitTests.csproj -c Release --no-restore --filter \"FullyQualifiedName~Stripe|FullyQualifiedName~Webhook\" && dotnet test apps/api/tests/GameGuild.Commerce.Payments.UnitTests/GameGuild.Commerce.Payments.UnitTests.csproj -c Release --no-restore --filter \"FullyQualifiedName~Stripe\"",
     "ci:web:build": "pnpm --filter @game-guild/web build",
     "ci:playwright:smoke": "pnpm --filter @game-guild/web test:browser:public",
+    "ci:playwright:learning-student": "pnpm --filter @game-guild/web test:browser:learning-student",
     "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo pnpm-lock.yaml",
     "changeset": "changeset",
     "version": "changeset version",

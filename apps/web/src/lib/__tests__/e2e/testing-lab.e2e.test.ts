@@ -5,6 +5,7 @@ interface SignInOutput {
   accessToken: string;
   refreshToken: string;
   userId: string;
+  tenantId?: string;
   user?: { id: string };
 }
 
@@ -47,7 +48,7 @@ const TENANT_ID = process.env.API_TENANT_ID ?? process.env.TENANT_ID ?? undefine
 
 const unwrap = <T>(result: Result<T, ApiError>, label: string): T => {
   if (result.ok) return result.data;
-  throw new Error(`${label} failed: ${result.error?.message ?? 'Unknown'} (${result.error?.status})`);
+  throw new Error(`${label} failed: ${result.error?.message ?? 'Unknown'} (${result.error?.status}) ${JSON.stringify(result.error)}`);
 };
 
 const unique = () => `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -126,6 +127,7 @@ describe('Testing Lab E2E — build submission and session scheduling', () => {
 
       const signIn = unwrap(signInResult, 'Testing Lab tenant-owner sign-in');
       accessToken = signIn.accessToken;
+      tenantId = signIn.tenantId ?? tenantId;
       userId = signIn.userId || signIn.user?.id || userId;
     }
 
@@ -134,6 +136,7 @@ describe('Testing Lab E2E — build submission and session scheduling', () => {
       timeout: 15_000,
       devtools: { enabled: false },
       auth: { getAccessToken: async () => accessToken },
+      tenant: { getTenantId: async () => tenantId ?? null },
     });
   }, 60_000);
 

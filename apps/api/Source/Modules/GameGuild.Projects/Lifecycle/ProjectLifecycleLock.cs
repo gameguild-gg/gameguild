@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
+using System.Data;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace GameGuild.Projects;
 
@@ -28,28 +28,31 @@ public sealed class ProjectLifecycleLock(IApplicationDbContext context) : IProje
         if (context is DbContext dbContext &&
             dbContext.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL")
         {
-            var transaction = dbContext.Database.CurrentTransaction == null
-                ? await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
-                : null;
+            var lockKey = CreateLockKey(projectId);
+            var openedConnection = dbContext.Database.GetDbConnection().State != ConnectionState.Open;
             try
             {
+                if (openedConnection)
+                    await dbContext.Database.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+
                 await dbContext.Database.ExecuteSqlRawAsync(
-                        "SELECT pg_advisory_xact_lock({0})",
-                        [CreateLockKey(projectId)],
+                        "SELECT pg_advisory_lock({0})",
+                        [lockKey],
                         cancellationToken)
                     .ConfigureAwait(false);
-                return new Handle(transaction, null);
+                return new Handle(dbContext, lockKey, openedConnection, null);
             }
             catch
             {
-                if (transaction != null) await transaction.DisposeAsync().ConfigureAwait(false);
+                if (openedConnection)
+                    await dbContext.Database.CloseConnectionAsync().ConfigureAwait(false);
                 throw;
             }
         }
 
         var fallback = FallbackLocks.GetOrAdd(projectId, static _ => new SemaphoreSlim(1, 1));
         await fallback.WaitAsync(cancellationToken).ConfigureAwait(false);
-        return new Handle(null, fallback);
+        return new Handle(null, null, false, fallback);
     }
 
     private static long CreateLockKey(Guid projectId)
@@ -63,20 +66,39 @@ public sealed class ProjectLifecycleLock(IApplicationDbContext context) : IProje
     }
 
     private sealed class Handle(
-        IDbContextTransaction? transaction,
+        DbContext? dbContext,
+        long? lockKey,
+        bool closeConnection,
         SemaphoreSlim? fallback) : IProjectLifecycleLockHandle
     {
-        private bool _disposed;
+        private bool _released;
 
-        public Task CommitAsync(CancellationToken cancellationToken = default)
-            => transaction == null ? Task.CompletedTask : transaction.CommitAsync(cancellationToken);
+        public Task CommitAsync(CancellationToken cancellationToken = default) => ReleaseAsync();
 
-        public async ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync() => await ReleaseAsync().ConfigureAwait(false);
+
+        private async Task ReleaseAsync()
         {
-            if (_disposed) return;
-            _disposed = true;
-            if (transaction != null) await transaction.DisposeAsync().ConfigureAwait(false);
-            fallback?.Release();
+            if (_released) return;
+            _released = true;
+
+            try
+            {
+                if (dbContext != null && lockKey.HasValue)
+                {
+                    await dbContext.Database.ExecuteSqlRawAsync(
+                            "SELECT pg_advisory_unlock({0})",
+                            [lockKey.Value],
+                            CancellationToken.None)
+                        .ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                if (dbContext != null && closeConnection)
+                    await dbContext.Database.CloseConnectionAsync().ConfigureAwait(false);
+                fallback?.Release();
+            }
         }
     }
 }

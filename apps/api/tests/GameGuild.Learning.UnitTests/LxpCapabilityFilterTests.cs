@@ -53,14 +53,39 @@ public sealed class LxpCapabilityFilterTests
             .Which.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
     }
 
+    [Fact]
+    public async Task OnActionExecutionAsync_ResolvedRequestTenant_UsesValidatedTenantContext()
+    {
+        var tenantId = Guid.NewGuid();
+        var capabilityService = new Mock<ICapabilityService>();
+        capabilityService
+            .Setup(service => service.IsCapabilityEnabledAsync(tenantId, LxpCapabilities.Social, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var requestContext = new Mock<IRequestContextAccessor>();
+        requestContext.SetupGet(accessor => accessor.CurrentTenantId).Returns(tenantId);
+        var context = CreateContext(CreateUser("User"), capabilityService.Object, requestContext.Object);
+        var nextCalled = false;
+
+        await CreateFilter().OnActionExecutionAsync(context, CreateNext(context, () => nextCalled = true));
+
+        nextCalled.Should().BeTrue();
+        context.Result.Should().BeNull();
+    }
     private static LxpCapabilityFilter CreateFilter()
         => new(NullLogger<LxpCapabilityFilter>.Instance);
 
-    private static ActionExecutingContext CreateContext(ClaimsPrincipal user, ICapabilityService capabilityService)
+    private static ActionExecutingContext CreateContext(
+        ClaimsPrincipal user,
+        ICapabilityService capabilityService,
+        IRequestContextAccessor? requestContextAccessor = null)
     {
-        var services = new ServiceCollection()
-            .AddSingleton(capabilityService)
-            .BuildServiceProvider();
+        var serviceCollection = new ServiceCollection()
+            .AddSingleton(capabilityService);
+        if (requestContextAccessor is not null)
+        {
+            serviceCollection.AddSingleton(requestContextAccessor);
+        }
+        var services = serviceCollection.BuildServiceProvider();
         var httpContext = new DefaultHttpContext
         {
             User = user,
