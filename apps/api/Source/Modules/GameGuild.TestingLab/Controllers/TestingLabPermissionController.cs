@@ -8,7 +8,7 @@ namespace GameGuild.TestingLab;
 
 /// <summary> TestingLab-specific permission management controller Allows admins to create role templates for TestingLab resources: sessions, locations, feedbacks, etc. </summary>
 [Route("api/testing-lab/permissions")]
-[Authorize] // Admin access enforced via ActorContext.IsSystemAdmin / IsTenantAdmin checks in action methods
+[Authorize(Policy = "Users.Admin")]
 public class TestingLabPermissionController : BaseApiController {
   private readonly ILogger<TestingLabPermissionController> _logger;
 
