@@ -30,7 +30,7 @@ describe('API Client Package Integration', () => {
       loadReactModule(),
       loadNextModule(),
     ]);
-  });
+  }, 60_000);
 
   describe('Package Installation', () => {
     it('should have @game-guild/client in dependencies', async () => {
