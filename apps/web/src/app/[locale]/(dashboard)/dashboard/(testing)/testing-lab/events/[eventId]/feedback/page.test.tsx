@@ -54,7 +54,6 @@ describe('Testing Event feedback review', () => {
           obligationId: 'obligation-2',
           slotId: 'slot-1',
           applicationId: 'application-2',
-          testerUserId: 'tester-2',
           status: 'Pending',
         },
       ],
@@ -63,13 +62,8 @@ describe('Testing Event feedback review', () => {
     mocks.getMembers.mockResolvedValue({
       members: [
         { id: 'tester-1', displayName: 'Ana Tester', email: 'ana@example.com' },
-        {
-          id: 'tester-2',
-          displayName: 'Bruno Tester',
-          email: 'bruno@example.com',
-        },
       ],
-      total: 2,
+      total: 1,
     });
     mocks.getTestingProjectOptions.mockResolvedValue([
       { id: 'project-1', title: 'Asterion' },
@@ -89,7 +83,7 @@ describe('Testing Event feedback review', () => {
     expect(screen.getByText('9/10')).toBeInTheDocument();
     expect(screen.getByText('Clear controls')).toBeInTheDocument();
     expect(screen.getByText('Neon Harbor')).toBeInTheDocument();
-    expect(screen.getByText('Bruno Tester')).toBeInTheDocument();
+    expect(screen.getByText('Unknown tester')).toBeInTheDocument();
     expect(screen.queryByText('tester-1')).not.toBeInTheDocument();
   });
 });
