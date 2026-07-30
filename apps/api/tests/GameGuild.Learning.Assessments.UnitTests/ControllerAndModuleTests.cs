@@ -79,6 +79,7 @@ public class ControllerAndModuleTests
         typeof(IAssessmentService).GetMethod("GetCourseAssessmentGroupsAsync").Should().NotBeNull();
         typeof(IAssessmentService).GetMethod("CreateAssessmentGroupAsync").Should().NotBeNull();
         typeof(IAssessmentService).GetMethod("AssignAssessmentToGroupAsync").Should().NotBeNull();
+        typeof(IAssessmentService).GetMethod("UpdateAssessmentDefinitionAsync").Should().NotBeNull();
     }
 
     [Fact]
@@ -775,14 +776,15 @@ public class ControllerAndModuleTests
         var courseId = Guid.NewGuid();
         var enrollmentId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        _svc.Setup(s => s.GetAssessmentByIdAsync(aId))
-            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+        var assessment = Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60);
+        _svc.Setup(s => s.GetAssessmentByIdAsync(aId)).ReturnsAsync(assessment);
         _enrollments.Setup(s => s.GetAsync(enrollmentId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EnrollmentDto(enrollmentId, courseId, userId, null, GameGuild.Learning.Enrollments.EnrollmentStatus.Active, DateTime.UtcNow, null, null, 0, null));
         _svc.Setup(s => s.StartSubmissionAsync(aId, enrollmentId, userId))
             .ReturnsAsync(Result.Success(AssessmentSubmission.Start(aId, enrollmentId, userId, 1)));
         var r = await CreateController(userId).StartSubmission(aId, new StartSubmissionRequest(enrollmentId));
-        r.Result.Should().BeOfType<CreatedAtActionResult>();
+        r.Result.Should().BeOfType<CreatedAtActionResult>()
+            .Which.Value.Should().BeOfType<LearnerAssessmentAttemptDto>();
     }
 
     [Fact]

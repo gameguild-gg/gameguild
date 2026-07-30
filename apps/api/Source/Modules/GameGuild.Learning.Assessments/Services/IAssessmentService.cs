@@ -1,4 +1,6 @@
 
+using System.Text.Json;
+
 namespace GameGuild.Learning.Assessments;
 
 /// <summary>
@@ -32,6 +34,11 @@ public interface IAssessmentService
     /// Updates an existing assessment
     /// </summary>
     Task<Result<Assessment>> UpdateAssessmentAsync(Guid id, UpdateAssessmentRequest request);
+
+    /// <summary>
+    /// Updates the authored graded definition for an assessment.
+    /// </summary>
+    Task<Result<Assessment>> UpdateAssessmentDefinitionAsync(Guid id, UpdateAssessmentDefinitionRequest request);
 
     /// <summary>
     /// Deletes an assessment
@@ -180,6 +187,14 @@ public sealed record UpdateAssessmentRequest(
     bool? AllowLateSubmissions = null,
     DateTime? LateSubmissionDeadline = null,
     bool ClearLateSubmissionDeadline = false
+);
+
+/// <summary>
+/// Request to store an authored assessment definition.
+/// </summary>
+public sealed record UpdateAssessmentDefinitionRequest(
+    JsonElement Definition,
+    int DefinitionSchemaVersion = AssessmentDefinitionContract.CurrentSchemaVersion
 );
 
 /// <summary>

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -201,6 +202,42 @@ public class AssessmentsController : BaseApiController
     }
 
     /// <summary>
+    /// Get the authored assessment definition. This payload can include answer keys.
+    /// </summary>
+    [HttpGet("{id:guid}/definition")]
+    public async Task<ActionResult<AssessmentDefinitionDto>> GetAssessmentDefinition(Guid id)
+    {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
+        return Ok(AssessmentDefinitionDto.FromEntity(assessment));
+    }
+
+    /// <summary>
+    /// Update the authored assessment definition. This payload can include answer keys.
+    /// </summary>
+    [HttpPut("{id:guid}/definition")]
+    public async Task<ActionResult<AssessmentDefinitionDto>> UpdateAssessmentDefinition(
+        Guid id,
+        [FromBody] UpdateAssessmentDefinitionRequest request)
+    {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
+        var result = await _assessmentService.UpdateAssessmentDefinitionAsync(id, request).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
+                : BadRequest(result.Error);
+        }
+
+        return Ok(AssessmentDefinitionDto.FromEntity(result.Value));
+    }
+
+    /// <summary>
     /// Assign an assessment to a weighted group or clear the assignment.
     /// </summary>
     [HttpPut("{id:guid}/group")]
@@ -327,7 +364,7 @@ public class AssessmentsController : BaseApiController
     /// Start a new assessment attempt
     /// </summary>
     [HttpPost("{assessmentId:guid}/submissions/start")]
-    public async Task<ActionResult<LearnerAssessmentSubmissionDto>> StartSubmission(
+    public async Task<ActionResult<LearnerAssessmentAttemptDto>> StartSubmission(
         Guid assessmentId, 
         [FromBody] StartSubmissionRequest request)
     {
@@ -357,7 +394,7 @@ public class AssessmentsController : BaseApiController
         return CreatedAtAction(
             nameof(GetSubmission), 
             new { submissionId = result.Value.Id }, 
-            LearnerAssessmentSubmissionDto.FromEntity(result.Value));
+            LearnerAssessmentAttemptDto.FromEntities(result.Value, assessment));
     }
 
     /// <summary>
@@ -625,6 +662,17 @@ public sealed record InteractiveVideoAssessmentCueDto(
         entity.CuePositionSeconds);
 }
 
+public sealed record AssessmentDefinitionDto(
+    Guid AssessmentId,
+    int DefinitionSchemaVersion,
+    JsonElement Definition)
+{
+    public static AssessmentDefinitionDto FromEntity(Assessment entity) => new(
+        entity.Id,
+        entity.DefinitionSchemaVersion,
+        AssessmentDefinitionContract.AuthorDefinition(entity.DefinitionPayload));
+}
+
 public sealed record LearnerInteractiveVideoAssessmentCueDto(
     string CueId,
     decimal? CuePositionSeconds)
@@ -728,6 +776,17 @@ public sealed record LearnerAssessmentSubmissionDto(
         entity.Feedback, entity.Status, entity.IsLate, entity.SubmittedModalities,
         entity.TextPayload, entity.FilePayload, entity.UrlPayload, entity.CodePayload,
         entity.MediaPayload, entity.ProjectPayload, entity.StructuredAnswerPayload);
+}
+
+public sealed record LearnerAssessmentAttemptDto(
+    LearnerAssessmentSubmissionDto Submission,
+    int DefinitionSchemaVersion,
+    JsonElement Definition)
+{
+    public static LearnerAssessmentAttemptDto FromEntities(AssessmentSubmission submission, Assessment assessment) => new(
+        LearnerAssessmentSubmissionDto.FromEntity(submission),
+        assessment.DefinitionSchemaVersion,
+        AssessmentDefinitionContract.LearnerDefinition(assessment.DefinitionPayload, submission.Id));
 }
 
 public sealed record StartSubmissionRequest(Guid EnrollmentId);
