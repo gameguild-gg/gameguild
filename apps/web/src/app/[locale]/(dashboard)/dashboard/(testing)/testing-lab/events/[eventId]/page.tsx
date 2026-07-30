@@ -66,12 +66,12 @@ export default async function TestingEventDetailPage({
   );
   if (!detail.event && detail.accessIssues.length === 0) notFound();
   if (!detail.event) {
-    return <main className="p-6"><TestingLabAccessIssues issues={detail.accessIssues} /></main>;
+    return <div className="p-6"><TestingLabAccessIssues issues={detail.accessIssues} /></div>;
   }
   const event = detail.event;
 
   return (
-    <main className="space-y-6 p-4 lg:p-6">
+    <div className="space-y-6 p-4 lg:p-6">
       <TestingLabPageHeader
         icon={FlaskConical}
         title={event.name ?? 'Testing event'}
@@ -181,6 +181,6 @@ export default async function TestingEventDetailPage({
           />
         </div>
       </section>
-    </main>
+    </div>
   );
 }

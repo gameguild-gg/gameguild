@@ -33,7 +33,7 @@ export default async function TestingLabSessionsPage({ searchParams }: { searchP
   }
 
   return (
-    <main className="space-y-6 p-4 lg:p-6">
+    <div className="space-y-6 p-4 lg:p-6">
       <TestingLabPageHeader
         icon={CalendarDays}
         title="Testing sessions"
@@ -107,7 +107,7 @@ export default async function TestingLabSessionsPage({ searchParams }: { searchP
             </span>
             <div className="flex gap-2">
               <Button asChild size="sm" variant="outline" disabled={page <= 1}>
-                <Link href={href(page - 1)}>Previous</Link>
+                <Link href={href(Math.max(1, page - 1))}>Previous</Link>
               </Button>
               <Button asChild size="sm" variant="outline" disabled={page >= pageCount}>
                 <Link href={href(page + 1)}>Next</Link>
@@ -116,6 +116,6 @@ export default async function TestingLabSessionsPage({ searchParams }: { searchP
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }
