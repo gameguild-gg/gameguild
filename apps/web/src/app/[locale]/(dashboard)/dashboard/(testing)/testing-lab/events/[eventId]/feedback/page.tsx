@@ -75,7 +75,9 @@ export default async function TestingEventFeedbackPage({ params }: { params: Pro
           {review.feedback.map((item) => {
             const application = applications.get(item.applicationId);
             const projectTitle = application?.projectId ? (projectTitles.get(application.projectId) ?? 'Approved project') : 'Approved project';
-            const testerName = members.get(item.testerUserId) ?? 'Unknown tester';
+            const testerName = item.testerUserId
+              ? members.get(item.testerUserId) ?? 'Unknown tester'
+              : 'Unknown tester';
             const slot = slots.get(item.slotId);
             const details = feedbackDetails(item.feedback?.feedbackData);
 
