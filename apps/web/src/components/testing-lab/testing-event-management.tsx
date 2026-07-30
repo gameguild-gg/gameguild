@@ -481,10 +481,12 @@ export function TestingEventCommittee({
   event,
   members,
   committee,
+  readOnly = false,
 }: {
   event: TestingLabTestingEventProjection;
   members: TestingLabMemberOption[];
   committee: TestingLabTestingEventCommitteeMemberProjection[];
+  readOnly?: boolean;
 }) {
   return (
     <section>
@@ -495,7 +497,7 @@ export function TestingEventCommittee({
             {event.approvalMode === 'Committee' ? 'Committee votes inform approval; the manager resolves ties.' : 'Manager-only approval is active.'}
           </p>
         </div>
-        {event.id ? (
+        {event.id && !readOnly ? (
           <EventActionDialog
             trigger={<Button size="sm" variant="outline"><UserRoundCheck className="mr-2 size-4" />Add reviewer</Button>}
             title="Add committee reviewer"
@@ -531,7 +533,7 @@ export function TestingEventCommittee({
               </div>
               <div className="flex items-center gap-2">
                 {reviewer.isChair ? <Badge variant="secondary">Chair</Badge> : null}
-                {event.id && reviewer.userId ? (
+                {event.id && reviewer.userId && !readOnly ? (
                   <EventActionDialog
                     trigger={<Button size="icon" variant="ghost" aria-label={`Remove ${reviewer.userName ?? 'reviewer'}`}><Trash2 className="size-4" /></Button>}
                     title="Remove this reviewer?"
@@ -557,10 +559,12 @@ export function TestingEventApplications({
   eventId,
   applications,
   slots,
+  readOnly = false,
 }: {
   eventId: string;
   applications: TestingLabTestingProjectApplicationProjection[];
   slots: TestingLabTestingEventSlotProjection[];
+  readOnly?: boolean;
 }) {
   if (applications.length === 0) {
     return <p className="rounded-md border border-dashed p-5 text-center text-sm text-muted-foreground">No project applications yet.</p>;
@@ -579,7 +583,7 @@ export function TestingEventApplications({
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{formatTestingEventStatus(status)}</Badge>
-              {status === 'Pending' && application.id ? (
+              {!readOnly && status === 'Pending' && application.id ? (
                 <Button
                   size="sm"
                   variant="outline"
@@ -593,7 +597,7 @@ export function TestingEventApplications({
                   Review
                 </Button>
               ) : null}
-              {['Pending', 'UnderReview', 'Waitlisted'].includes(status) && application.id ? (
+              {!readOnly && ['Pending', 'UnderReview', 'Waitlisted'].includes(status) && application.id ? (
                 <>
                   <EventActionDialog
                     trigger={<Button size="sm"><CheckCircle2 className="mr-2 size-4" />Approve</Button>}
@@ -688,9 +692,11 @@ export function TestingEventApplications({
 export function TestingSlotRegistrations({
   eventId,
   registrations,
+  readOnly = false,
 }: {
   eventId: string;
   registrations: TestingLabTestingSlotRegistrationProjection[];
+  readOnly?: boolean;
 }) {
   if (registrations.length === 0) return <p className="text-sm text-muted-foreground">No tester registrations.</p>;
   return (
@@ -703,7 +709,7 @@ export function TestingSlotRegistrations({
               {registration.pendingFeedbackCount ?? 0} pending feedback · {formatTestingEventStatus(registration.status)}
             </p>
           </div>
-          {registration.id ? (
+          {registration.id && !readOnly ? (
             <form
               className="flex items-center gap-2"
               action={async (formData) => {
@@ -733,15 +739,17 @@ export function TestingSlotRegistrations({
 export function TestingEventLearningDialog({
   event,
   activities,
+  readOnly = false,
 }: {
   event: TestingLabTestingEventProjection;
   activities: TestingLabLearningActivityOption[];
+  readOnly?: boolean;
 }) {
   const initialActivity = activities.find((activity) => activity.id === event.learningActivityId);
   const [selectedActivityId, setSelectedActivityId] = useState(initialActivity?.id ?? '');
   const selectedActivity = activities.find((activity) => activity.id === selectedActivityId);
 
-  if (!event.id) return null;
+  if (!event.id || readOnly) return null;
   return (
     <EventActionDialog
       trigger={<Button size="sm" variant="outline"><Pencil className="mr-2 size-4" />Configure learning</Button>}
