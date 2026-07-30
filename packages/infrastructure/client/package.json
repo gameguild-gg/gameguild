@@ -89,7 +89,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "handlebars": "^4.7.8",
     "happy-dom": "^20.6.1",
-    "next": "16.2.9",
+    "next": "16.2.11",
     "openapi-types": "^12.1.3",
     "prettier": "^3.5.0",
     "react": "19.2.3",
