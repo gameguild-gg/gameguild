@@ -770,6 +770,27 @@ public class ControllerAndModuleTests
     }
 
     [Fact]
+    public async Task StartSubmission_WithProgramUserMembership_Returns201()
+    {
+        var assessmentId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var programUserId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        _svc.Setup(service => service.GetAssessmentByIdAsync(assessmentId))
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+        _enrollments.Setup(service => service.GetAsync(programUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((EnrollmentDto?)null);
+        _programs.Setup(service => service.GetUserProgressDtoAsync(courseId, userId))
+            .ReturnsAsync(new UserProgressDto(programUserId, courseId, userId, 0, null, null, null, []));
+        _svc.Setup(service => service.StartSubmissionAsync(assessmentId, programUserId, userId))
+            .ReturnsAsync(Result.Success(AssessmentSubmission.Start(assessmentId, programUserId, userId, 1)));
+
+        var result = await CreateController(userId).StartSubmission(assessmentId, new StartSubmissionRequest(programUserId));
+
+        result.Result.Should().BeOfType<CreatedAtActionResult>();
+    }
+
+    [Fact]
     public async Task StartSubmission_Success_Returns201()
     {
         var aId = Guid.NewGuid();

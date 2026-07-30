@@ -4,6 +4,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
         <RootNamespace>GameGuild.Learning.UnitTests</RootNamespace>
     </PropertyGroup>
     <!-- Coverage Thresholds -->
@@ -22,6 +23,7 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="coverlet.msbuild" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Moq" />
@@ -29,7 +31,11 @@
         <PackageReference Include="xunit.runner.visualstudio" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Enrollments\GameGuild.Learning.Enrollments.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.TestingLab\GameGuild.Learning.TestingLab.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning\GameGuild.Learning.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.TestingLab\GameGuild.TestingLab.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Features\GameGuild.Features.csproj" />
     </ItemGroup>

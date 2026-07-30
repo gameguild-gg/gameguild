@@ -141,6 +141,12 @@ public sealed class LxpCapabilityFilter : IAsyncActionFilter
 
     private static Guid? GetTenantId(HttpContext httpContext)
     {
+        var requestContextAccessor = httpContext.RequestServices.GetService<IRequestContextAccessor>();
+        if (requestContextAccessor?.CurrentTenantId is Guid resolvedTenantId)
+        {
+            return resolvedTenantId;
+        }
+
         // Try route value first
         if (httpContext.Request.RouteValues.TryGetValue("tenantId", out var routeValue) &&
             Guid.TryParse(routeValue?.ToString(), out var routeTenantId))
