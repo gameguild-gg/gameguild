@@ -5,7 +5,7 @@ import { getTestingLabAnalytics, getTestingLabDashboard, normalizeTestingRequest
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { ArrowRight, BarChart3, CalendarDays, ClipboardList, FlaskConical, MapPin, MessageSquareText, Users } from 'lucide-react';
+import { ArrowRight, BarChart3, CalendarDays, FlaskConical, FolderKanban, Settings, Users } from 'lucide-react';
 
 const workstreams = [
   {
@@ -15,31 +15,29 @@ const workstreams = [
     icon: CalendarDays,
   },
   {
-    title: 'Requests',
-    description: 'Build intake, testing briefs, windows, and participant capacity.',
-    href: '/dashboard/testing-lab/requests',
-    icon: ClipboardList,
+    title: 'Projects',
+    description: 'Project builds, testing briefs, event applications, and lifecycle.',
+    href: '/dashboard/testing-lab/projects',
+    icon: FolderKanban,
   },
   {
-    title: 'Sessions',
-    description: 'Moderated schedules, registrations, projects, waitlists, and attendance.',
-    href: '/dashboard/testing-lab/sessions',
-    icon: FlaskConical,
-  },
-  { title: 'People', description: 'Participants, registrations, waitlists, and attendance follow-up.', href: '/dashboard/testing-lab/people', icon: Users },
-  {
-    title: 'Feedback',
-    description: 'Responses, quality ratings, moderation reports, and project findings.',
-    href: '/dashboard/testing-lab/feedback',
-    icon: MessageSquareText,
+    title: 'Participants',
+    description: 'Testers, registrations, waitlists, and attendance follow-up.',
+    href: '/dashboard/testing-lab/participants',
+    icon: Users,
   },
   {
-    title: 'Reports',
+    title: 'Analytics',
     description: 'Live demand, capacity, completion, ratings, and recommendation analytics.',
-    href: '/dashboard/testing-lab/reports',
+    href: '/dashboard/testing-lab/analytics',
     icon: BarChart3,
   },
-  { title: 'Locations', description: 'Physical and remote lab capacity used by testing sessions.', href: '/dashboard/testing-lab/locations', icon: MapPin },
+  {
+    title: 'Settings',
+    description: 'General defaults, locations, access roles, and permissions.',
+    href: '/dashboard/testing-lab/settings',
+    icon: Settings,
+  },
 ];
 
 export default async function TestingLabPage() {
@@ -47,7 +45,7 @@ export default async function TestingLabPage() {
   const issues = [...directory.accessIssues, ...analytics.accessIssues];
 
   return (
-    <main className="space-y-6 p-4 lg:p-6">
+    <div className="space-y-6 p-4 lg:p-6">
       <TestingLabPageHeader
         icon={FlaskConical}
         title="Testing Lab"
@@ -126,7 +124,7 @@ export default async function TestingLabPage() {
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Recent requests</h2>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/dashboard/testing-lab/requests">View all</Link>
+              <Link href="/dashboard/testing-lab/projects">View all</Link>
             </Button>
           </div>
           {directory.requests.length === 0 ? (
@@ -136,7 +134,7 @@ export default async function TestingLabPage() {
               {directory.requests.slice(0, 5).map((request) => (
                 <Link
                   key={request.id}
-                  href={`/dashboard/testing-lab/requests/${request.id}`}
+                  href={`/dashboard/testing-lab/projects/${request.id}`}
                   className="flex items-center justify-between gap-4 p-3 hover:bg-muted/30"
                 >
                   <div className="min-w-0">
@@ -177,6 +175,6 @@ export default async function TestingLabPage() {
           )}
         </div>
       </section>
-    </main>
+    </div>
   );
 }
