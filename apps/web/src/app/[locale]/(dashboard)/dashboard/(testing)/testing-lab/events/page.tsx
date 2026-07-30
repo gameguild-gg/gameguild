@@ -50,7 +50,7 @@ export default async function TestingEventsPage({
   const querySuffix = `${selectedStatus ? `&status=${selectedStatus}` : ''}${query.q ? `&q=${encodeURIComponent(query.q)}` : ''}`;
 
   return (
-    <main className="space-y-6 p-4 lg:p-6">
+    <div className="space-y-6 p-4 lg:p-6">
       <TestingLabPageHeader
         icon={CalendarDays}
         title="Testing events"
@@ -126,6 +126,6 @@ export default async function TestingEventsPage({
           </Button>
         </nav>
       ) : null}
-    </main>
+    </div>
   );
 }

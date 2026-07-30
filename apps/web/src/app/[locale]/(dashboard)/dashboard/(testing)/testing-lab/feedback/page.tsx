@@ -4,7 +4,6 @@ import { TestingLabAccessIssues, TestingLabEmptyState } from '@/components/testi
 import { rateTestingFeedback, reportTestingFeedback } from '@/lib/testing-lab/actions';
 import { getTestingLabDashboard, getTestingRequestDetail } from '@/lib/testing-lab';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { MessageSquareText, Search, Star } from 'lucide-react';
 
@@ -27,7 +26,7 @@ export default async function TestingLabFeedbackPage({ searchParams }: { searchP
     });
 
   return (
-    <main className="space-y-6 p-4 lg:p-6">
+    <div className="space-y-6 p-4 lg:p-6">
       <TestingLabPageHeader
         icon={MessageSquareText}
         title="Testing feedback"
@@ -90,6 +89,6 @@ export default async function TestingLabFeedbackPage({ searchParams }: { searchP
           ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }

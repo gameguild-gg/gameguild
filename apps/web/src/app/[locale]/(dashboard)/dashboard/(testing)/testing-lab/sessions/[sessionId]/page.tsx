@@ -12,7 +12,6 @@ import {
 } from '@/lib/testing-lab/actions';
 import { getTestingLabDashboard, getTestingProjectOptions, getTestingSessionDetail, normalizeTestingSessionStatus } from '@/lib/testing-lab';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
@@ -26,13 +25,13 @@ export default async function TestingSessionDetailPage({ params }: { params: Pro
   const session = detail.session;
   if (!session)
     return (
-      <main className="p-6">
+      <div className="p-6">
         <TestingLabAccessIssues issues={detail.accessIssues} />
-      </main>
+      </div>
     );
 
   return (
-    <main className="space-y-6 p-4 lg:p-6">
+    <div className="space-y-6 p-4 lg:p-6">
       <TestingLabPageHeader
         icon={CalendarDays}
         title={session.sessionName}
@@ -192,6 +191,6 @@ export default async function TestingSessionDetailPage({ params }: { params: Pro
           </TestingLabActionForm>
         </aside>
       </section>
-    </main>
+    </div>
   );
 }
