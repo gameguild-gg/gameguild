@@ -28,6 +28,8 @@ public class Assessment : EntityBase
     public DateTime? LateSubmissionDeadline { get; private set; }
     public SubmissionModality SubmissionModalities { get; private set; } = SubmissionModality.Text;
     public AssessmentPresentationMode PresentationMode { get; private set; } = AssessmentPresentationMode.SingleStep;
+    public string? DefinitionPayload { get; private set; }
+    public int DefinitionSchemaVersion { get; private set; } = AssessmentDefinitionContract.CurrentSchemaVersion;
     public ICollection<InteractiveVideoAssessmentCue> InteractiveVideoCues { get; private set; } = new List<InteractiveVideoAssessmentCue>();
 
     private Assessment() { } // EF Core
@@ -95,6 +97,18 @@ public class Assessment : EntityBase
 
         SubmissionModalities = submissionModalities;
         PresentationMode = presentationMode;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public void SetDefinition(string? definitionPayload, int definitionSchemaVersion)
+    {
+        if (definitionSchemaVersion <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(definitionSchemaVersion), "Definition schema version must be greater than zero.");
+        }
+
+        DefinitionPayload = AssessmentDefinitionContract.NormalizeDefinition(definitionPayload);
+        DefinitionSchemaVersion = definitionSchemaVersion;
         UpdatedAt = SystemClock.UtcNow;
     }
 
