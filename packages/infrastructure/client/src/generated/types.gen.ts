@@ -7122,6 +7122,17 @@ export interface TestingLabTestingEventFeedbackProjection {
   submittedAt?: string;
 }
 
+export interface TestingLabTestingEventFeedbackReviewProjection {
+  obligationId?: string;
+  eventId?: string;
+  slotId?: string;
+  applicationId?: string;
+  testerUserId?: string;
+  status?: TestingLabTestingFeedbackObligationStatus;
+  fulfilledAt?: string | null;
+  feedback?: TestingLabTestingEventFeedbackProjection;
+}
+
 export type TestingLabTestingEventMode = 'Online' | 'InPerson' | 'Hybrid';
 
 export interface TestingLabTestingEventProjection {
@@ -8386,6 +8397,7 @@ export let TestingLabTestingEventSchema: z.ZodType<TestingLabTestingEvent>;
 export let TestingLabTestingEventApprovalModeSchema: z.ZodType<TestingLabTestingEventApprovalMode>;
 export let TestingLabTestingEventCommitteeMemberProjectionSchema: z.ZodType<TestingLabTestingEventCommitteeMemberProjection>;
 export let TestingLabTestingEventFeedbackProjectionSchema: z.ZodType<TestingLabTestingEventFeedbackProjection>;
+export let TestingLabTestingEventFeedbackReviewProjectionSchema: z.ZodType<TestingLabTestingEventFeedbackReviewProjection>;
 export let TestingLabTestingEventModeSchema: z.ZodType<TestingLabTestingEventMode>;
 export let TestingLabTestingEventProjectionSchema: z.ZodType<TestingLabTestingEventProjection>;
 export let TestingLabTestingEventSlotSchema: z.ZodType<TestingLabTestingEventSlot>;
@@ -16842,6 +16854,18 @@ TestingLabTestingEventFeedbackProjectionSchema = z.object({
   wouldRecommend: z.boolean().nullable().optional(),
   additionalNotes: z.string().nullable().optional(),
   submittedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for TestingLabTestingEventFeedbackReviewProjection */
+TestingLabTestingEventFeedbackReviewProjectionSchema = z.object({
+  obligationId: z.string().uuid().optional(),
+  eventId: z.string().uuid().optional(),
+  slotId: z.string().uuid().optional(),
+  applicationId: z.string().uuid().optional(),
+  testerUserId: z.string().uuid().optional(),
+  status: z.lazy(() => TestingLabTestingFeedbackObligationStatusSchema).optional(),
+  fulfilledAt: z.string().datetime().nullable().optional(),
+  feedback: z.lazy(() => TestingLabTestingEventFeedbackProjectionSchema).optional(),
 });
 
 /** Zod schema for TestingLabTestingEventMode */

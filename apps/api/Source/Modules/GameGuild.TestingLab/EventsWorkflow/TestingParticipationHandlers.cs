@@ -21,8 +21,10 @@ public sealed class TestingParticipationHandlers(
     ICommandHandler<AssignTestingProjectToTesterCommand, Result<TestingFeedbackObligationProjection>>,
     ICommandHandler<SubmitTestingEventFeedbackCommand, Result<TestingEventFeedbackProjection>>,
     ICommandHandler<CompleteTestingEventParticipationCommand, Result<TestingSlotRegistrationProjection>>,
-    IQueryHandler<GetMyTestingSlotRegistrationsQuery, Result<IReadOnlyList<TestingSlotRegistrationProjection>>>,    IQueryHandler<GetTestingEventSlotRegistrationsQuery, Result<IReadOnlyList<TestingSlotRegistrationProjection>>>,
-    IQueryHandler<GetMyTestingFeedbackObligationsQuery, Result<IReadOnlyList<TestingFeedbackObligationProjection>>>
+    IQueryHandler<GetMyTestingSlotRegistrationsQuery, Result<IReadOnlyList<TestingSlotRegistrationProjection>>>,
+    IQueryHandler<GetTestingEventSlotRegistrationsQuery, Result<IReadOnlyList<TestingSlotRegistrationProjection>>>,
+    IQueryHandler<GetMyTestingFeedbackObligationsQuery, Result<IReadOnlyList<TestingFeedbackObligationProjection>>>,
+    IQueryHandler<GetTestingEventFeedbackQuery, Result<IReadOnlyList<TestingEventFeedbackReviewProjection>>>
 {
     private static readonly TestingSlotRegistrationStatus[] CapacityStatuses =
     [
@@ -395,6 +397,72 @@ public sealed class TestingParticipationHandlers(
             projections.Add(await ToProjectionAsync(registration, cancellationToken).ConfigureAwait(false));
         return Result.Success<IReadOnlyList<TestingSlotRegistrationProjection>>(projections);
     }
+
+    public async Task<Result<IReadOnlyList<TestingEventFeedbackReviewProjection>>> Handle(
+        GetTestingEventFeedbackQuery request,
+        CancellationToken cancellationToken)
+    {
+        var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
+        if (actor.Error != null)
+            return Result.Failure<IReadOnlyList<TestingEventFeedbackReviewProjection>>(actor.Error);
+
+        var testingEvent = await context.Set<TestingEvent>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(candidate =>
+                candidate.Id == request.EventId &&
+                candidate.TenantId == actor.TenantId &&
+                candidate.DeletedAt == null,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (testingEvent == null)
+            return Result.Failure<IReadOnlyList<TestingEventFeedbackReviewProjection>>(
+                Error.NotFound("TestingLab.EventNotFound", "Testing event not found."));
+        if (testingEvent.ManagerUserId != actor.UserId)
+            return Result.Failure<IReadOnlyList<TestingEventFeedbackReviewProjection>>(
+                Error.Forbidden(
+                    "TestingLab.EventManagerRequired",
+                    "Only the event manager can review event feedback."));
+
+        var obligations = await context.Set<TestingFeedbackObligation>()
+            .AsNoTracking()
+            .Where(candidate =>
+                candidate.EventId == request.EventId &&
+                candidate.TenantId == actor.TenantId &&
+                candidate.DeletedAt == null)
+            .OrderBy(candidate => candidate.Status)
+            .ThenBy(candidate => candidate.CreatedAt)
+            .ThenBy(candidate => candidate.Id)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var feedbackIds = obligations
+            .Where(candidate => candidate.FeedbackId.HasValue)
+            .Select(candidate => candidate.FeedbackId!.Value)
+            .ToArray();
+        var feedbackById = await context.Set<TestingFeedback>()
+            .AsNoTracking()
+            .Where(candidate =>
+                feedbackIds.Contains(candidate.Id) &&
+                candidate.EventId == request.EventId &&
+                candidate.TenantId == actor.TenantId &&
+                candidate.DeletedAt == null)
+            .ToDictionaryAsync(candidate => candidate.Id, cancellationToken)
+            .ConfigureAwait(false);
+
+        var result = obligations.Select(obligation => new TestingEventFeedbackReviewProjection(
+            obligation.Id,
+            obligation.EventId,
+            obligation.SlotId,
+            obligation.ApplicationId,
+            obligation.TesterUserId,
+            obligation.Status,
+            obligation.FulfilledAt,
+            obligation.FeedbackId.HasValue &&
+            feedbackById.TryGetValue(obligation.FeedbackId.Value, out var feedback)
+                ? ToProjection(feedback)
+                : null)).ToList();
+        return Result.Success<IReadOnlyList<TestingEventFeedbackReviewProjection>>(result);
+    }
+
     private async Task<Result<TestingSlotRegistrationProjection>> ChangeAttendanceAsync(
         Guid registrationId,
         Action<TestingSlotRegistration> transition,
