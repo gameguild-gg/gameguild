@@ -26,7 +26,7 @@ describe('CourseLearnerOverview', () => {
         expect(screen.getByText('AI behavior quiz')).toBeInTheDocument();
         expect(screen.getByText('42%')).toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'Continue learning' })).toHaveAttribute('href', '/courses/advanced-game-ai/content');
-        expect(screen.getByRole('link', { name: 'View assignments' })).toHaveAttribute('href', '/courses/advanced-game-ai/assignments');
+        expect(screen.getByRole('link', { name: 'View activities' })).toHaveAttribute('href', '/courses/advanced-game-ai/activities');
         expect(screen.getByRole('link', { name: 'Open community' })).toHaveAttribute('href', '/courses/advanced-game-ai/community');
     });
 });
