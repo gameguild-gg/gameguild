@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { GameGuildAuth, CredentialsProvider, processSession, encodeSession, SessionStore, resolveCookieOptions } from '@game-guild/client';
 import { cookies } from 'next/headers';
+import { createSharedAuthCookieConfig } from '@/lib/auth/cross-domain-auth';
 
 const result = GameGuildAuth({
   providers: [CredentialsProvider()],
@@ -13,6 +14,10 @@ const result = GameGuildAuth({
         ? 'game-guild-web-local-development-secret'
         : undefined),
   debug: process.env.NODE_ENV === 'development',
+  cookies: createSharedAuthCookieConfig({
+    authCookieDomain: process.env.AUTH_COOKIE_DOMAIN,
+    nodeEnv: process.env.NODE_ENV,
+  }),
 });
 
 export const { handlers, auth, signIn, signOut, signUp, update } = result;
