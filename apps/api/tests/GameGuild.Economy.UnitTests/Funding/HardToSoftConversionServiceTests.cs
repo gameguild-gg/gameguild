@@ -64,6 +64,22 @@ public sealed class HardToSoftConversionServiceTests
     }
 
     [Fact]
+    public void ConvertHardToSoft_ZeroFeeRetryReturnsTheCommittedPrincipalOnly()
+    {
+        var (store, service, wallet) = Setup(10);
+        var command = Convert(store, wallet, 4);
+
+        var first = service.ConvertHardToSoft(command);
+        var duplicate = service.ConvertHardToSoft(command);
+
+        duplicate.Should().BeEquivalentTo(first);
+        duplicate.FeePosting.Should().BeNull();
+        store.JournalEntries.Should().HaveCount(2);
+        store.FragmentConsumptions.Should().ContainSingle();
+        store.Lineages.Should().ContainSingle();
+    }
+
+    [Fact]
     public void ConvertHardToSoft_RollsBackWhenPrincipalAndFeeExceedAvailableHardCoin()
     {
         var (store, service, wallet) = Setup(4);
