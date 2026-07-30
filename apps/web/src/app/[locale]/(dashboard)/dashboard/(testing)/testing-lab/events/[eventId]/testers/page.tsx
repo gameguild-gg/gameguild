@@ -1,36 +1,42 @@
-import { TestingSlotRegistrations } from '@/components/testing-lab/testing-event-management';
+import { getMembers } from '@/lib/community/queries/members';
+import { TestingSlotRegistrations, type TestingLabApprovedApplicationOption } from '@/components/testing-lab/testing-event-management';
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
-import {
-  formatEventDateTime,
-  isTestingEventReadOnly,
-} from '@/lib/testing-lab/event-workspace';
+import { formatEventDateTime, isTestingEventReadOnly } from '@/lib/testing-lab/event-workspace';
 import { getTestingEventWorkspaceData } from '@/lib/testing-lab/events-queries';
+import { getTestingProjectOptions } from '@/lib/testing-lab/queries';
 import { Badge } from '@game-guild/ui/components/badge';
 import { UsersRound } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
-export default async function TestingEventTestersPage({
-  params,
-}: {
-  params: Promise<{ eventId: string }>;
-}) {
+export default async function TestingEventTestersPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
-  const detail = await getTestingEventWorkspaceData(eventId);
+  const [detail, memberDirectory, projects] = await Promise.all([getTestingEventWorkspaceData(eventId), getMembers({ page: 1, limit: 100 }), getTestingProjectOptions()]);
   if (!detail.event) notFound();
+
   const readOnly = isTestingEventReadOnly(detail.event);
   const total = Object.values(detail.registrationsBySlot).flat().length;
+  const memberLabels = Object.fromEntries(memberDirectory.members.map((member) => [member.id, member.displayName || member.email || 'Unknown tester']));
+  const projectLabels = new Map(projects.map((project) => [project.id, project.title]));
+  const approvedApplications: TestingLabApprovedApplicationOption[] = detail.applications
+    .filter(
+      (
+        application,
+      ): application is typeof application & {
+        id: string;
+        projectId: string;
+      } => application.status === 'Approved' && Boolean(application.id) && Boolean(application.projectId),
+    )
+    .map((application) => ({
+      id: application.id,
+      slotId: application.assignedSlotId,
+      label: projectLabels.get(application.projectId) ?? 'Approved project',
+    }));
 
   return (
     <div className="space-y-5">
-      <TestingLabPageHeader
-        icon={UsersRound}
-        title="Testers and attendance"
-        description="Manage tester participation per slot and preserve check-in, check-out, no-show, and completion evidence."
-      />
+      <TestingLabPageHeader icon={UsersRound} title="Testers and attendance" description="Manage tester participation per slot and preserve check-in, check-out, no-show, and completion evidence." />
 
-      <p className="text-sm text-muted-foreground">
-        {total === 1 ? '1 tester registered across this event.' : `${total} testers registered across this event.`}
-      </p>
+      <p className="text-sm text-muted-foreground">{total === 1 ? '1 tester registered across this event.' : `${total} testers registered across this event.`}</p>
 
       {detail.slots.length === 0 ? (
         <div className="rounded-md border border-dashed p-8 text-center">
@@ -40,23 +46,17 @@ export default async function TestingEventTestersPage({
       ) : (
         <div className="space-y-3">
           {detail.slots.map((slot) => {
-            const registrations = slot.id ? detail.registrationsBySlot[slot.id] ?? [] : [];
+            const registrations = slot.id ? (detail.registrationsBySlot[slot.id] ?? []) : [];
             return (
               <section key={slot.id} className="rounded-md border p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <h2 className="font-semibold">{formatEventDateTime(slot.startsAt)}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {slot.campusName ?? slot.meetingUrl ?? slot.mode}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{slot.campusName ?? slot.meetingUrl ?? slot.mode}</p>
                   </div>
                   <Badge variant="outline">{registrations.length} registered</Badge>
                 </div>
-                <TestingSlotRegistrations
-                  eventId={eventId}
-                  registrations={registrations}
-                  readOnly={readOnly}
-                />
+                <TestingSlotRegistrations eventId={eventId} registrations={registrations} memberLabels={memberLabels} approvedApplications={approvedApplications} readOnly={readOnly} />
               </section>
             );
           })}

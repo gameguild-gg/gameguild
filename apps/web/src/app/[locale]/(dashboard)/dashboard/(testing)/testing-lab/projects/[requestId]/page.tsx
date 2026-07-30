@@ -1,17 +1,15 @@
-import { TestingLabActionForm } from '@/components/testing-lab/testing-lab-action-form';
 import { TestingLabConfirmAction } from '@/components/testing-lab/testing-lab-confirm-action';
-import { EditTestingRequestDialog } from '@/components/testing-lab/testing-lab-dialogs';
+import { AddTestingParticipantDialog, EditTestingRequestDialog } from '@/components/testing-lab/testing-lab-dialogs';
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
 import { TestingLabAccessIssues, TestingLabEmptyState } from '@/components/testing-lab/testing-lab-state';
 import { Link } from '@/i18n/navigation';
-import { addTestingParticipant, deleteTestingRequest, removeTestingParticipant, restoreTestingRequest } from '@/lib/testing-lab/actions';
+import { deleteTestingRequest, removeTestingParticipant, restoreTestingRequest } from '@/lib/testing-lab/actions';
 import { getMembers } from '@/lib/community/queries/members';
 import { getTestingRequestDetail, normalizeTestingRequestStatus } from '@/lib/testing-lab';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Label } from '@game-guild/ui/components/label';
-import { ClipboardList, Download, UserPlus } from 'lucide-react';
+import { ClipboardList, Download } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
 export default async function TestingProjectDetailPage({ params }: { params: Promise<{ requestId: string }> }) {
@@ -27,6 +25,9 @@ export default async function TestingProjectDetailPage({ params }: { params: Pro
     );
   }
   const status = normalizeTestingRequestStatus(request.status);
+  const memberLabels = new Map(
+    memberDirectory.members.map((member) => [member.id, member.displayName || member.email || 'Unknown member']),
+  );
 
   return (
     <div className="space-y-6 p-4 lg:p-6">
@@ -36,6 +37,7 @@ export default async function TestingProjectDetailPage({ params }: { params: Pro
         description={request.description ?? 'Project testing brief and operational follow-up.'}
         actions={
           <>
+            <AddTestingParticipantDialog requestId={request.id} members={memberDirectory.members} />
             <EditTestingRequestDialog request={request} />
             {request.downloadUrl ? (
               <Button asChild variant="outline">
@@ -92,8 +94,7 @@ export default async function TestingProjectDetailPage({ params }: { params: Pro
         </Card>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-6">
+      <section className="space-y-6">
           <div>
             <h2 className="mb-3 text-lg font-semibold">Testing sessions</h2>
             {detail.sessions.length === 0 ? (
@@ -122,7 +123,7 @@ export default async function TestingProjectDetailPage({ params }: { params: Pro
                 {detail.participants.map((participant) => (
                   <div key={participant.id ?? participant.userId} className="flex items-center justify-between gap-3 p-3">
                     <div>
-                      <p className="text-sm font-medium">{participant.user?.name ?? participant.user?.email ?? participant.userId}</p>
+                      <p className="text-sm font-medium">{participant.user?.name ?? participant.user?.email ?? memberLabels.get(participant.userId) ?? 'Unknown member'}</p>
                       <p className="text-xs text-muted-foreground">{participant.timeSpentMinutes ?? 0} tracked minutes</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -151,7 +152,7 @@ export default async function TestingProjectDetailPage({ params }: { params: Pro
                 {detail.feedback.map((feedback) => (
                   <div key={feedback.id} className="rounded-md border p-4">
                     <div className="flex justify-between gap-4">
-                      <p className="font-medium">{feedback.user?.name ?? feedback.userId}</p>
+                      <p className="font-medium">{feedback.user?.name ?? memberLabels.get(feedback.userId) ?? 'Unknown member'}</p>
                       <span className="text-sm">{feedback.overallRating ?? '-'} / 5</span>
                     </div>
                     <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{feedback.additionalNotes ?? feedback.feedbackData}</p>
@@ -160,27 +161,6 @@ export default async function TestingProjectDetailPage({ params }: { params: Pro
               </div>
             )}
           </div>
-        </div>
-        <aside className="h-fit rounded-md border p-4">
-          <div className="mb-4 flex items-center gap-2">
-            <UserPlus className="size-4" />
-            <h2 className="font-semibold">Add participant</h2>
-          </div>
-          <TestingLabActionForm action={addTestingParticipant} submitLabel="Add participant" pendingLabel="Adding..." resetOnSuccess className="space-y-3" submitClassName="w-full">
-            <input type="hidden" name="requestId" value={request.id} />
-            <div className="space-y-2">
-              <Label htmlFor="participant-user">Member</Label>
-              <select id="participant-user" name="userId" required className="h-9 w-full rounded-md border bg-background px-3 text-sm">
-                <option value="">Choose a member</option>
-                {memberDirectory.members.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.displayName} · {member.email}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </TestingLabActionForm>
-        </aside>
       </section>
     </div>
   );
