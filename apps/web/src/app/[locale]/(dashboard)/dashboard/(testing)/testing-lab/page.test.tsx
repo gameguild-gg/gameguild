@@ -71,8 +71,8 @@ describe('testing lab dashboard page', () => {
     expect(screen.getByRole('heading', { name: 'Testing Lab' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /public lab/i })).toHaveAttribute('href', '/testing-lab');
     expect(screen.getByRole('heading', { name: 'Operations' })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: /requests/i }).some((link) => link.getAttribute('href') === '/dashboard/testing-lab/requests')).toBe(true);
-    expect(screen.getAllByRole('link').some((link) => link.getAttribute('href') === '/dashboard/testing-lab/reports')).toBe(true);
+    expect(screen.getAllByRole('link', { name: /projects/i }).some((link) => link.getAttribute('href') === '/dashboard/testing-lab/projects')).toBe(true);
+    expect(screen.getAllByRole('link').some((link) => link.getAttribute('href') === '/dashboard/testing-lab/analytics')).toBe(true);
     expect(screen.getByText('20%')).toBeInTheDocument();
     expect(screen.getByText('Combat prototype playtest')).toBeInTheDocument();
     expect(screen.getByText('Friday feedback lab')).toBeInTheDocument();

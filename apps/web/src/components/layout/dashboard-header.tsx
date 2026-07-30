@@ -111,7 +111,7 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
         {breadcrumbs.length > 0 && (
           <>
             <Separator orientation="vertical" className="mr-2 hidden data-[orientation=vertical]:h-4 sm:block" />
-            <Breadcrumb className="hidden min-w-0 flex-1 overflow-hidden sm:block">
+            <Breadcrumb aria-label="Dashboard breadcrumb" className="hidden min-w-0 flex-1 overflow-hidden sm:block">
               <BreadcrumbList className="flex-nowrap overflow-hidden">
                 <BreadcrumbItem>
                   {breadcrumbs[0]?.href ? (
@@ -123,8 +123,8 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
                   )}
                 </BreadcrumbItem>
                 {breadcrumbs.length > 1 && <BreadcrumbSeparator />}
-                {breadcrumbs.slice(1).map((item, index) => (
-                  <React.Fragment key={index}>
+                {breadcrumbs.slice(1).map((item) => (
+                  <React.Fragment key={`${item.href ?? 'current'}:${item.label}`}>
                     <BreadcrumbItem>
                       {item.href ? (
                         <BreadcrumbLink asChild className="max-w-24 truncate md:max-w-40 xl:max-w-64">
