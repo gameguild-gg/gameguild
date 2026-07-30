@@ -265,6 +265,61 @@ public sealed class EconomyPersistenceModelTests
             .Should().Throw<ArgumentNullException>();
     }
 
+    [Fact]
+    public void PersistenceRowsRoundTripEveryMappedProperty()
+    {
+        using var context = CreateContext();
+        var rowTypes = context.Model.GetEntityTypes()
+            .Select(entity => entity.ClrType)
+            .Where(type => type.Namespace == "GameGuild.Economy.Persistence"
+                && type.Name.StartsWith("Economy", StringComparison.Ordinal)
+                && type.Name.EndsWith("Row", StringComparison.Ordinal))
+            .OrderBy(type => type.FullName, StringComparer.Ordinal)
+            .ToArray();
+
+        rowTypes.Should().NotBeEmpty();
+
+        foreach (var rowType in rowTypes)
+        {
+            var row = Activator.CreateInstance(rowType, nonPublic: true);
+            row.Should().NotBeNull($"{rowType.Name} must remain materializable by EF Core");
+
+            foreach (var property in rowType.GetProperties())
+            {
+                property.CanRead.Should().BeTrue($"{rowType.Name}.{property.Name} must be readable");
+                property.CanWrite.Should().BeTrue($"{rowType.Name}.{property.Name} must be writable");
+
+                var value = CreateRoundTripValue(property.PropertyType, property.Name);
+                property.SetValue(row, value);
+                property.GetValue(row).Should().Be(value, $"{rowType.Name}.{property.Name} must preserve persisted values");
+            }
+        }
+    }
+
+    private static object CreateRoundTripValue(Type propertyType, string propertyName)
+    {
+        var valueType = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
+
+        if (valueType == typeof(string))
+            return $"value-{propertyName}";
+        if (valueType == typeof(Guid))
+            return Guid.Parse("b66a0a03-8e43-4c28-b1d0-13b0c9c0d2ab");
+        if (valueType == typeof(DateTimeOffset))
+            return new DateTimeOffset(2026, 7, 30, 12, 0, 0, TimeSpan.Zero);
+        if (valueType == typeof(bool))
+            return true;
+        if (valueType == typeof(short))
+            return (short)7;
+        if (valueType == typeof(int))
+            return 11;
+        if (valueType == typeof(long))
+            return 13L;
+        if (valueType.IsEnum)
+            return Enum.GetValues(valueType).GetValue(Math.Min(1, Enum.GetValues(valueType).Length - 1))!;
+
+        throw new NotSupportedException($"No persistence round-trip value is defined for {propertyType}.");
+    }
+
     private static bool InheritsEntityBase(Type type)
     {
         for (var current = type.BaseType; current is not null; current = current.BaseType)
