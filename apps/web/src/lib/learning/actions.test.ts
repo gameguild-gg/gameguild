@@ -76,6 +76,7 @@ const {
   createCertificateTemplate,
   addContent,
   createAssessment,
+  updateAssessmentDefinition,
   updateCertificateTemplate,
   deleteCertificateTemplate,
   deleteContent,
@@ -106,6 +107,12 @@ describe('learning server actions', () => {
     mocks.getToken.mockResolvedValue('access-token');
     mocks.resolveCourseId.mockImplementation(async (courseId: string) => courseId);
     mocks.postCoursesContent.mockResolvedValue({ ok: true, data: { id: 'content-1' } });
+    mocks.fetch.mockResolvedValue(
+      new Response(JSON.stringify({ id: 'content-1' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
     mocks.postCoursesContentReorder.mockResolvedValue({ ok: true, data: undefined });
     mocks.deleteCoursesContent.mockResolvedValue({ ok: true, data: undefined });
     mocks.postAssessments.mockResolvedValue({ ok: true, data: { id: 'assessment-1' } });
@@ -456,15 +463,20 @@ describe('learning server actions', () => {
     });
 
     expect(result).toEqual({ success: true, data: { id: 'content-1' } });
-    expect(mocks.postCoursesContent).toHaveBeenCalledWith(
-      '1caa16bb-6810-4e53-bb0d-91f0d5702333',
-      expect.objectContaining({
-        programId: '1caa16bb-6810-4e53-bb0d-91f0d5702333',
-        parentId: '9ec3b854-89ca-4757-83fb-cfc823da1a5e',
-        title: 'Gesture foundations',
-        type: 'Lesson',
-      }),
-    );
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content', {
+      method: 'POST',
+      body: expect.any(String),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(JSON.parse(mocks.fetch.mock.calls[0]![1]!.body as string)).toEqual(expect.objectContaining({
+      programId: '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+      parentId: '9ec3b854-89ca-4757-83fb-cfc823da1a5e',
+      title: 'Gesture foundations',
+      type: 'Lesson',
+    }));
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin/content');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content');
   });
@@ -506,6 +518,37 @@ describe('learning server actions', () => {
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin/assessments');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/assessments');
+  });
+
+  it('saves authored assessment definitions through the assessments API', async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce('1caa16bb-6810-4e53-bb0d-91f0d5702333');
+    mocks.fetch.mockResolvedValue(
+      new Response(JSON.stringify({ assessmentId: 'assessment-1', definitionSchemaVersion: 1, definition: { order: [], blocks: {} } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const result = await updateAssessmentDefinition({
+      courseId: 'creature-design-by-admin',
+      assessmentId: 'assessment-1',
+      definition: { order: [], blocks: {} },
+    });
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/assessments/assessment-1/definition', {
+      method: 'PUT',
+      body: JSON.stringify({
+        definitionSchemaVersion: 1,
+        definition: { order: [], blocks: {} },
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer access-token',
+      },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin/assessments');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/assessments/assessment-1');
   });
 
   it('creates certificate templates through the Learning.Certificates API', async () => {
