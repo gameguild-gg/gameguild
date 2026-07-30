@@ -176,7 +176,7 @@ public sealed class MonetaryPolicyCatalog
         lock (_gate)
         {
             return _policies.SingleOrDefault(policy =>
-                       policy.EffectiveAt <= at && (policy.EndsAt is null || at < policy.EndsAt)) ??
+                       policy.EffectiveAt <= at && (policy.EndsAt is null || at < policy.EndsAt.Value)) ??
                    throw new InvalidOperationException("No monetary policy is effective at the requested time.");
         }
     }

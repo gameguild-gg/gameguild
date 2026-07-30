@@ -75,6 +75,9 @@ public sealed class EntityGraphAndLimitTests
             id, cluster, PostingTemplateKind.PayoutReservation,
             new CoinAmount(CurrencyCode.HardCoin, 5), 10, Time, Time.AddHours(1));
 
+        first.Id.Should().Be(id);
+        first.ClusterVersion.Should().Be(3);
+        first.ReservedAt.Should().Be(Time);
         store.Reserve(
             id, cluster, PostingTemplateKind.PayoutReservation,
             new CoinAmount(CurrencyCode.HardCoin, 5), 10, Time, Time.AddHours(1)).Should().Be(first);
@@ -87,4 +90,25 @@ public sealed class EntityGraphAndLimitTests
                 new CoinAmount(CurrencyCode.HardCoin, 1), 10, Time, Time.AddHours(1)))
             .Should().Throw<StaleEntityGraphException>();
     }
+    [Fact]
+    public void DifferentClusterOperationCurrencyAndExpiredReservationDoNotShareCapacity()
+    {
+        var store = new AggregateRiskLimitStore();
+        var cluster = new EntityRiskCluster("cluster-a", 1, "evidence-a", []);
+
+        store.Reserve(Guid.NewGuid(), cluster, PostingTemplateKind.Spend,
+            new CoinAmount(CurrencyCode.HardCoin, 10), 10, Time, Time.AddHours(1));
+        store.Reserve(Guid.NewGuid(), cluster, PostingTemplateKind.PayoutReservation,
+            new CoinAmount(CurrencyCode.HardCoin, 10), 10, Time, Time.AddHours(1));
+        store.Reserve(Guid.NewGuid(), cluster, PostingTemplateKind.Spend,
+            new CoinAmount(CurrencyCode.SoftCoin, 10), 10, Time, Time.AddHours(1));
+        store.Reserve(Guid.NewGuid(), new EntityRiskCluster("cluster-b", 1, "evidence-b", []),
+            PostingTemplateKind.Spend, new CoinAmount(CurrencyCode.HardCoin, 10),
+            10, Time, Time.AddHours(1));
+        store.Reserve(Guid.NewGuid(), cluster, PostingTemplateKind.Spend,
+            new CoinAmount(CurrencyCode.HardCoin, 10), 10, Time.AddHours(1), Time.AddHours(2));
+
+        store.Reservations.Should().HaveCount(5);
+    }
+
 }

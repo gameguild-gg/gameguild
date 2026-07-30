@@ -71,7 +71,10 @@ public sealed class PostingMatrixTests
         };
 
         PostingMatrix.Validate(request).Errors.Should().Contain(error => error.Code == PostingErrorCode.UnsupportedTemplateVersion);
-        FluentActions.Invoking(() => PostingMatrix.EnsureValid(request)).Should().Throw<PostingValidationException>();
+        FluentActions.Invoking(() => PostingMatrix.EnsureValid(request))
+            .Should().Throw<PostingValidationException>()
+            .Which.Errors.Should().Contain(error =>
+                error.Code == PostingErrorCode.UnsupportedTemplateVersion);
     }
 
     [Fact]

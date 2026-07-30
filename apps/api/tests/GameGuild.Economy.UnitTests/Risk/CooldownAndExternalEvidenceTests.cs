@@ -20,6 +20,8 @@ public sealed class CooldownAndExternalEvidenceTests
         registry.Evaluate(subject, ProtectedChangeKind.PayoutDestination, Time.AddHours(24))
             .IsElapsed.Should().BeTrue();
         change.Version.Should().Be(1);
+        change.ValueHash.Should().Be("destination-hash");
+        change.ChangedAt.Should().Be(Time);
         typeof(ProtectedChangeCooldownRegistry).GetMethods().Select(method => method.Name)
             .Should().NotContain(name => name.Contains("Accelerate", StringComparison.OrdinalIgnoreCase));
     }
