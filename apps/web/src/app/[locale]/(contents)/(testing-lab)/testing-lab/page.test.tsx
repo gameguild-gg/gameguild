@@ -47,7 +47,10 @@ describe('Public Testing Lab page', () => {
 
     render(await TestingLabPage());
 
-    expect(screen.getByRole('heading', { name: 'Testing Lab' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Game Testing Lab' })).toBeInTheDocument();
+    expect(screen.getByText('Community playtesting is live')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'How to Get Involved' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Browse Events' })).toHaveAttribute('href', '#events');
     expect(screen.getByText('August campus playtest')).toBeInTheDocument();
     expect(screen.getByText('7 tester seats open')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view event and participate/i })).toHaveAttribute(
