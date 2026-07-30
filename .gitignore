@@ -91,9 +91,22 @@ next-env.d.ts
 # Turbo
 .turbo
 
+# Generated repository visualizations
+contributors/gource.txt
+contributors/gource.mp4
+contributors/gource.gif
+
 # Public assets generated at build time
 public/pyodide/*
 public/wasm/*
+tools/emception/public/cdn/
+tools/emception/public/c2w-net-proxy.wasm
+*.wasm
+*.wasm.gz
+*.tar
+*.tar.gz
+*.zip
+*.mp4
 
 # Embedded upstream repos (avoid nested .git metadata/tooling conflicts)
 tools/emception/userland/**/.git/
