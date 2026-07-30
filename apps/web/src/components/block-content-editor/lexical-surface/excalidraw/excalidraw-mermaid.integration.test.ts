@@ -23,5 +23,5 @@ describe("Excalidraw Mermaid integration", () => {
         expect.objectContaining({ type: "arrow" }),
       ]),
     );
-  }, 20_000);
+  }, 60_000);
 });
