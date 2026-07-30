@@ -12,6 +12,7 @@ import {
   type TestingLabTestingProjectApplicationProjection,
   type TestingLabTestingSlotRegistrationProjection,
 } from '@game-guild/client';
+import { cache } from 'react';
 
 export interface TestingEventsDirectory {
   events: TestingLabTestingEventProjection[];
@@ -109,18 +110,18 @@ export async function getTestingEventManagerData(
     slots
       .filter((slot): slot is TestingLabTestingEventSlotProjection & { id: string } => Boolean(slot.id))
       .map(async (slot) => {
-        const result = await read(api.participation.getTestingEventsSlotsRegistrations(slot.id), `Registrations for slot ${slot.id}`);
+        const result = await read(
+          api.participation.getTestingEventsSlotsRegistrations(slot.id),
+          `Registrations for slot ${slot.id}`,
+        );
         return [slot.id, result] as const;
       }),
   );
 
   const registrationsBySlot: Record<string, TestingLabTestingSlotRegistrationProjection[]> = {};
-  const accessIssues = [
-    eventResult.issue,
-    slotsResult.issue,
-    applicationsResult.issue,
-    committeeResult.issue,
-  ].filter((issue): issue is string => Boolean(issue));
+  const accessIssues = [eventResult.issue, slotsResult.issue, applicationsResult.issue, committeeResult.issue].filter(
+    (issue): issue is string => Boolean(issue),
+  );
 
   registrationEntries.forEach(([slotId, result]) => {
     registrationsBySlot[slotId] = result.data ?? [];
@@ -136,6 +137,8 @@ export async function getTestingEventManagerData(
     accessIssues,
   };
 }
+
+export const getTestingEventWorkspaceData = cache((eventId: string) => getTestingEventManagerData(eventId));
 
 export {
   getPublicTestingEventExperience,
