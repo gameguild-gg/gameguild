@@ -101,6 +101,7 @@ public/pyodide/*
 public/wasm/*
 tools/emception/public/cdn/
 tools/emception/public/c2w-net-proxy.wasm
+tools/emception/logs
 *.wasm
 *.wasm.gz
 *.tar
