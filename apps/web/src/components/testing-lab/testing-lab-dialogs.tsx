@@ -1,9 +1,11 @@
 'use client';
 
 import {
+  addTestingParticipant,
   createTestingLabLocation,
   createTestingLabRole,
   createTestingSession,
+  linkTestingSessionProject,
   submitTestingBuild,
   updateTestingLabLocation,
   updateTestingLabRole,
@@ -20,7 +22,7 @@ import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Textarea } from '@game-guild/ui/components/textarea';
-import { AlertCircle, CheckCircle2, FlaskConical, MapPin, Pencil, Plus, ShieldCheck } from 'lucide-react';
+import { AlertCircle, CheckCircle2, FlaskConical, Link2, MapPin, Pencil, Plus, ShieldCheck, UserPlus } from 'lucide-react';
 import { useState, useTransition, type FormEvent, type ReactNode } from 'react';
 
 type Action = (formData: FormData) => Promise<TestingLabActionResult<unknown>>;
@@ -176,6 +178,87 @@ export function SubmitTestingBuildDialog({ projects }: { projects: TestingProjec
   );
 }
 
+export function AddTestingParticipantDialog({
+  requestId,
+  members,
+}: {
+  requestId: string;
+  members: Array<{
+    id: string;
+    displayName?: string | null;
+    email?: string | null;
+  }>;
+}) {
+  return (
+    <ActionDialog
+      trigger={
+        <Button>
+          <UserPlus className="mr-2 size-4" />
+          Add participant
+        </Button>
+      }
+      title="Add a participant"
+      description="Grant a community member access to this testing request. Existing evidence remains tied to their account."
+      submitLabel="Add participant"
+      action={addTestingParticipant}
+    >
+      <input type="hidden" name="requestId" value={requestId} />
+      <div className="space-y-2">
+        <Label htmlFor={`participant-${requestId}`}>Member</Label>
+        <Select name="userId" required>
+          <SelectTrigger id={`participant-${requestId}`}>
+            <SelectValue placeholder="Choose a member" />
+          </SelectTrigger>
+          <SelectContent>
+            {members.map((member) => (
+              <SelectItem key={member.id} value={member.id}>
+                {member.displayName || member.email || 'Unknown member'}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </ActionDialog>
+  );
+}
+
+export function LinkTestingSessionProjectDialog({ sessionId, projects }: { sessionId: string; projects: TestingProjectOption[] }) {
+  return (
+    <ActionDialog
+      trigger={
+        <Button disabled={projects.length === 0}>
+          <Link2 className="mr-2 size-4" />
+          Link project
+        </Button>
+      }
+      title="Link a project"
+      description="Choose an approved testing project for this session and record the build or testing focus."
+      submitLabel="Link project"
+      action={linkTestingSessionProject}
+    >
+      <input type="hidden" name="sessionId" value={sessionId} />
+      <div className="space-y-2">
+        <Label htmlFor={`session-project-${sessionId}`}>Project</Label>
+        <Select name="projectId" required>
+          <SelectTrigger id={`session-project-${sessionId}`}>
+            <SelectValue placeholder="Choose a project" />
+          </SelectTrigger>
+          <SelectContent>
+            {projects.map((project) => (
+              <SelectItem key={project.id} value={project.id}>
+                {project.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`project-notes-${sessionId}`}>Notes</Label>
+        <Input id={`project-notes-${sessionId}`} name="notes" placeholder="Build version or test focus" />
+      </div>
+    </ActionDialog>
+  );
+}
 export function CreateTestingSessionDialog({ requests, locations }: { requests: TestingRequestSummary[]; locations: TestingLocationSummary[] }) {
   return (
     <ActionDialog

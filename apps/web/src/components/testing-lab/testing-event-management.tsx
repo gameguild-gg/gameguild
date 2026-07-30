@@ -2,6 +2,7 @@
 
 import {
   addTestingEventCommitteeMember,
+  assignTestedProjectToRegistration,
   approveTestingEventApplication,
   beginTestingEventApplicationReview,
   configureTestingEventLearning,
@@ -48,6 +49,7 @@ import {
   AlertCircle,
   CheckCircle2,
   CircleStop,
+  ClipboardCheck,
   Clock3,
   Pencil,
   Play,
@@ -64,6 +66,12 @@ type Action = (formData: FormData) => Promise<TestingEventActionResult<unknown>>
 export interface TestingLabMemberOption {
   id: string;
   label: string;
+}
+
+export interface TestingLabApprovedApplicationOption {
+  id: string;
+  label: string;
+  slotId?: string | null;
 }
 
 export interface TestingLabLearningActivityOption {
@@ -692,50 +700,97 @@ export function TestingEventApplications({
 export function TestingSlotRegistrations({
   eventId,
   registrations,
+  memberLabels,
+  approvedApplications,
   readOnly = false,
 }: {
   eventId: string;
   registrations: TestingLabTestingSlotRegistrationProjection[];
+  memberLabels: Record<string, string>;
+  approvedApplications: TestingLabApprovedApplicationOption[];
   readOnly?: boolean;
 }) {
   if (registrations.length === 0) return <p className="text-sm text-muted-foreground">No tester registrations.</p>;
   return (
     <div className="mt-3 divide-y border-t">
-      {registrations.map((registration) => (
-        <div key={registration.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-medium">{registration.userId}</p>
-            <p className="text-xs text-muted-foreground">
-              {registration.pendingFeedbackCount ?? 0} pending feedback · {formatTestingEventStatus(registration.status)}
-            </p>
+      {registrations.map((registration) => {
+        const testerLabel = registration.userId ? memberLabels[registration.userId] : undefined;
+        const assignableProjects = approvedApplications.filter((application) => !application.slotId || application.slotId === registration.slotId);
+        const canAssignProject = ['CheckedIn', 'Attended'].includes(registration.status ?? '');
+
+        return (
+          <div key={registration.id} className="flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{testerLabel ?? 'Unknown tester'}</p>
+              <p className="text-xs text-muted-foreground">
+                {registration.pendingFeedbackCount ?? 0} pending feedback / {formatTestingEventStatus(registration.status)}
+              </p>
+            </div>
+            {registration.id && !readOnly ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {canAssignProject && assignableProjects.length > 0 ? (
+                  <EventActionDialog
+                    trigger={
+                      <Button size="sm" variant="outline">
+                        <ClipboardCheck className="mr-2 size-4" />
+                        Assign tested project
+                      </Button>
+                    }
+                    title="Assign a tested project"
+                    description="Create the feedback obligation for this tester after check-in."
+                    submitLabel="Assign project"
+                    action={assignTestedProjectToRegistration}
+                  >
+                    <input type="hidden" name="eventId" value={eventId} />
+                    <input type="hidden" name="registrationId" value={registration.id} />
+                    <div className="space-y-2">
+                      <Label>Approved project</Label>
+                      <Select name="applicationId" required>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a project" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {assignableProjects.map((application) => (
+                            <SelectItem key={application.id} value={application.id}>
+                              {application.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </EventActionDialog>
+                ) : null}
+                <form
+                  className="flex items-center gap-2"
+                  action={async (formData) => {
+                    await updateTestingEventAttendance(formData);
+                  }}
+                >
+                  <input type="hidden" name="eventId" value={eventId} />
+                  <input type="hidden" name="registrationId" value={registration.id} />
+                  <Select name="attendance" required>
+                    <SelectTrigger className="w-36">
+                      <SelectValue placeholder="Attendance" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="check-in">Check in</SelectItem>
+                      <SelectItem value="check-out">Check out</SelectItem>
+                      <SelectItem value="no-show">No show</SelectItem>
+                      <SelectItem value="complete">Complete</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" type="submit">
+                    Update
+                  </Button>
+                </form>
+              </div>
+            ) : null}
           </div>
-          {registration.id && !readOnly ? (
-            <form
-              className="flex items-center gap-2"
-              action={async (formData) => {
-                await updateTestingEventAttendance(formData);
-              }}
-            >
-              <input type="hidden" name="eventId" value={eventId} />
-              <input type="hidden" name="registrationId" value={registration.id} />
-              <Select name="attendance" required>
-                <SelectTrigger className="w-36"><SelectValue placeholder="Attendance" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="check-in">Check in</SelectItem>
-                  <SelectItem value="check-out">Check out</SelectItem>
-                  <SelectItem value="no-show">No show</SelectItem>
-                  <SelectItem value="complete">Complete</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button size="sm" type="submit">Update</Button>
-            </form>
-          ) : null}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
-
 export function TestingEventLearningDialog({
   event,
   activities,

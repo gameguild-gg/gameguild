@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
     getTestingEventsSlotsRegistrations: vi.fn(),
     getTestingEventsRegistrationsMe: vi.fn(),
     getTestingEventsFeedbackObligationsMe: vi.fn(),
+    getTestingEventsFeedback: vi.fn(),
   },
 }));
 
@@ -37,6 +38,7 @@ vi.mock('@game-guild/client', () => ({
 import {
   getPublicTestingEventExperience,
   getPublicTestingEventsDirectory,
+  getTestingEventFeedbackReview,
   getTestingEventManagerData,
   getTestingEventsDirectory,
 } from './events-queries';
@@ -114,6 +116,20 @@ describe('Testing Lab event queries', () => {
       ok: true,
       data: [{ id: 'obligation-1', eventId: 'event-1', applicationId: 'application-1', status: 'Pending' }],
     });
+    mocks.participation.getTestingEventsFeedback.mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          obligationId: 'obligation-1',
+          eventId: 'event-1',
+          slotId: 'slot-1',
+          applicationId: 'application-1',
+          testerUserId: 'tester-1',
+          status: 'Fulfilled',
+          feedback: { id: 'feedback-1', overallRating: 9 },
+        },
+      ],
+    });
   });
 
   it('loads the manager event directory through the generated event client', async () => {
@@ -150,6 +166,14 @@ describe('Testing Lab event queries', () => {
     expect(mocks.participation.getTestingEventsSlotsRegistrations).toHaveBeenCalledWith('slot-1');
   });
 
+  it('loads manager feedback review through the generated participation client', async () => {
+    const result = await getTestingEventFeedbackReview('event-1');
+
+    expect(result.feedback).toHaveLength(1);
+    expect(result.feedback[0]?.feedback?.overallRating).toBe(9);
+    expect(result.accessIssues).toEqual([]);
+    expect(mocks.participation.getTestingEventsFeedback).toHaveBeenCalledWith('event-1');
+  });
   it('keeps partial manager data and reports generated-client failures', async () => {
     mocks.events.getTestingEventsApplications.mockResolvedValue({
       ok: false,
