@@ -92,6 +92,14 @@ public sealed class TestingEventParticipationController(IMediator mediator) : Ba
             new GetMyTestingFeedbackObligationsQuery(eventId),
             cancellationToken).ConfigureAwait(false));
 
+    [HttpGet("{eventId:guid}/feedback")]
+    public async Task<ActionResult<IReadOnlyList<TestingEventFeedbackReviewProjection>>> GetEventFeedback(
+        Guid eventId,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new GetTestingEventFeedbackQuery(eventId),
+            cancellationToken).ConfigureAwait(false));
+
     [HttpPost("feedback-obligations/{obligationId:guid}/feedback")]
     public async Task<ActionResult<TestingEventFeedbackProjection>> SubmitFeedback(
         Guid obligationId,
