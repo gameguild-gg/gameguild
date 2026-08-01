@@ -3961,6 +3961,12 @@ export interface LaunchPadLaunchPlan {
 
 export type LaunchPadLaunchPlanStatus = 'Draft' | 'Preparing' | 'Ready' | 'Launched' | 'Paused';
 
+export interface LearningAssessmentsAssessmentDefinition {
+  assessmentId?: string;
+  definitionSchemaVersion?: number;
+  definition?: Record<string, unknown>;
+}
+
 export interface LearningAssessmentsAssessment {
   id?: string;
   courseId?: string;
@@ -4108,6 +4114,12 @@ export interface LearningAssessmentsInteractiveVideoAssessmentCue {
   cuePositionSeconds?: number | null;
 }
 
+export interface LearningAssessmentsLearnerAssessmentAttempt {
+  submission?: LearningAssessmentsLearnerAssessmentSubmission;
+  definitionSchemaVersion?: number;
+  definition?: Record<string, unknown>;
+}
+
 export interface LearningAssessmentsLearnerAssessmentSubmission {
   id?: string;
   assessmentId?: string;
@@ -4158,6 +4170,11 @@ export interface LearningAssessmentsSubmitAssessmentInput {
   mediaPayload?: string | null;
   projectPayload?: string | null;
   structuredAnswerPayload?: string | null;
+}
+
+export interface LearningAssessmentsUpdateAssessmentDefinitionInput {
+  definition?: Record<string, unknown>;
+  definitionSchemaVersion?: number;
 }
 
 export interface LearningAssessmentsUpdateAssessmentGroupInput {
@@ -5498,6 +5515,237 @@ export interface LearningExperienceSocialServicesPersonalizedFeedItem {
 export interface LearningExperienceSocialServicesWishlistPreferencesInput {
   notifyOnSale?: boolean;
   notifyOnUpdate?: boolean;
+}
+
+export interface LearningWorkspacesLearnerAnnouncement {
+  discussionId?: string;
+  courseId?: string;
+  courseTitle?: string | null;
+  courseSlug?: string | null;
+  title?: string | null;
+  content?: string | null;
+  createdAt?: string;
+  lastActivityAt?: string | null;
+}
+
+export interface LearningWorkspacesLearnerAssessmentDeadline {
+  assessmentId?: string;
+  courseId?: string;
+  courseTitle?: string | null;
+  courseSlug?: string | null;
+  contentId?: string | null;
+  groupId?: string | null;
+  title?: string | null;
+  type?: string | null;
+  maxScore?: number;
+  passingScore?: number;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  dueAt?: string | null;
+  submissionStatus?: string | null;
+}
+
+export interface LearningWorkspacesLearnerAssessment {
+  assessmentId?: string;
+  contentId?: string | null;
+  groupId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  type?: string | null;
+  maxScore?: number;
+  passingScore?: number;
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number | null;
+  isRequired?: boolean;
+  order?: number;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  dueAt?: string | null;
+  allowLateSubmissions?: boolean;
+  lateSubmissionDeadline?: string | null;
+  submissionModalities?: string | null;
+  presentationMode?: string | null;
+}
+
+export interface LearningWorkspacesLearnerAssessmentGroup {
+  groupId?: string;
+  name?: string | null;
+  description?: string | null;
+  weightPercent?: number;
+  order?: number;
+}
+
+export interface LearningWorkspacesLearnerAssessmentSubmission {
+  submissionId?: string;
+  assessmentId?: string;
+  enrollmentId?: string;
+  attemptNumber?: number;
+  score?: number | null;
+  passed?: boolean | null;
+  startedAt?: string;
+  submittedAt?: string | null;
+  gradedAt?: string | null;
+  feedback?: string | null;
+  status?: string | null;
+  isLate?: boolean;
+}
+
+export interface LearningWorkspacesLearnerCertificate {
+  certificateId?: string;
+  enrollmentId?: string;
+  courseId?: string;
+  courseName?: string | null;
+  certificateNumber?: string | null;
+  recipientName?: string | null;
+  issuedAt?: string;
+  expiresAt?: string | null;
+  verificationUrl?: string | null;
+  status?: string | null;
+}
+
+export interface LearningWorkspacesLearnerCohort {
+  cohortId?: string;
+  name?: string | null;
+  description?: string | null;
+  startDate?: string;
+  endDate?: string;
+  maxCapacity?: number;
+  currentEnrollmentCount?: number;
+  status?: string | null;
+  instructorId?: string | null;
+  meetingSchedule?: string | null;
+}
+
+export interface LearningWorkspacesLearnerContent {
+  contentId?: string;
+  parentId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  type?: string | null;
+  body?: string | null;
+  lessonFormat?: string | null;
+  activitySettings?: string | null;
+  sortOrder?: number;
+  isRequired?: boolean;
+  gradingMethod?: string | null;
+  maxPoints?: number | null;
+  estimatedMinutes?: number | null;
+  visibility?: string | null;
+}
+
+export interface LearningWorkspacesLearnerContentProgress {
+  contentId?: string;
+  status?: string | null;
+  progressPercentage?: number;
+  firstAccessedAt?: string | null;
+  lastAccessedAt?: string | null;
+  completedAt?: string | null;
+  timeSpentSeconds?: number;
+  score?: number | null;
+  maxScore?: number | null;
+  attempts?: number;
+}
+
+export interface LearningWorkspacesLearnerCourseSummary {
+  courseId?: string;
+  enrollmentId?: string;
+  title?: string | null;
+  slug?: string | null;
+  description?: string | null;
+  thumbnail?: string | null;
+  category?: string | null;
+  difficulty?: string | null;
+  estimatedHours?: number | null;
+  enrollmentStatus?: string | null;
+  completionStatus?: string | null;
+  progressPercentage?: number;
+  finalGrade?: number | null;
+  enrolledAt?: string;
+  totalItems?: number;
+  completedItems?: number;
+  remainingMinutes?: number;
+  currentContentId?: string | null;
+  currentContentTitle?: string | null;
+  currentContentType?: string | null;
+}
+
+export interface LearningWorkspacesLearnerCourseWorkspace {
+  course?: LearningWorkspacesLearnerCourseSummary;
+  content?: Array<LearningWorkspacesLearnerContent> | null;
+  progress?: Array<LearningWorkspacesLearnerContentProgress> | null;
+  cohort?: LearningWorkspacesLearnerCohort;
+  calendar?: Array<LearningWorkspacesLearnerScheduleEntry> | null;
+  assessmentGroups?: Array<LearningWorkspacesLearnerAssessmentGroup> | null;
+  assessments?: Array<LearningWorkspacesLearnerAssessment> | null;
+  submissions?: Array<LearningWorkspacesLearnerAssessmentSubmission> | null;
+  discussions?: Array<LearningWorkspacesLearnerDiscussion> | null;
+  certificates?: Array<LearningWorkspacesLearnerCertificate> | null;
+}
+
+export interface LearningWorkspacesLearnerDashboard {
+  courses?: Array<LearningWorkspacesLearnerCourseSummary> | null;
+  upcoming?: Array<LearningWorkspacesLearnerScheduleEntry> | null;
+  deadlines?: Array<LearningWorkspacesLearnerAssessmentDeadline> | null;
+  grades?: Array<LearningWorkspacesLearnerGradeSummary> | null;
+  certificates?: Array<LearningWorkspacesLearnerCertificate> | null;
+  announcements?: Array<LearningWorkspacesLearnerAnnouncement> | null;
+}
+
+export interface LearningWorkspacesLearnerDiscussion {
+  discussionId?: string;
+  contentId?: string | null;
+  authorId?: string;
+  title?: string | null;
+  content?: string | null;
+  isPinned?: boolean;
+  isResolved?: boolean;
+  replyCount?: number;
+  viewCount?: number;
+  lastActivityAt?: string | null;
+  createdAt?: string;
+}
+
+export interface LearningWorkspacesLearnerGradeSummary {
+  courseId?: string;
+  courseTitle?: string | null;
+  courseSlug?: string | null;
+  finalGrade?: number | null;
+  gradedAssessments?: number;
+  totalAssessments?: number;
+  earnedPoints?: number | null;
+  possiblePoints?: number | null;
+  percentage?: number | null;
+}
+
+export interface LearningWorkspacesLearnerScheduleEntry {
+  courseId?: string;
+  courseTitle?: string | null;
+  courseSlug?: string | null;
+  cohortId?: string;
+  cohortName?: string | null;
+  scheduleItemId?: string;
+  contentId?: string | null;
+  assessmentId?: string | null;
+  type?: string | null;
+  title?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  dueAt?: string | null;
+  location?: string | null;
+  meetingUrl?: string | null;
+  status?: string | null;
+}
+
+export interface LearningWorkspacesLearnerSearchResult {
+  id?: string;
+  courseId?: string;
+  courseSlug?: string | null;
+  kind?: string | null;
+  title?: string | null;
+  description?: string | null;
+  route?: string | null;
 }
 
 export interface Money {
@@ -8034,6 +8282,7 @@ export let LaunchPadLaunchChecklistItemSchema: z.ZodType<LaunchPadLaunchChecklis
 export let LaunchPadLaunchChecklistItemInputSchema: z.ZodType<LaunchPadLaunchChecklistItemInput>;
 export let LaunchPadLaunchPlanSchema: z.ZodType<LaunchPadLaunchPlan>;
 export let LaunchPadLaunchPlanStatusSchema: z.ZodType<LaunchPadLaunchPlanStatus>;
+export let LearningAssessmentsAssessmentDefinitionSchema: z.ZodType<LearningAssessmentsAssessmentDefinition>;
 export let LearningAssessmentsAssessmentSchema: z.ZodType<LearningAssessmentsAssessment>;
 export let LearningAssessmentsAssessmentGroupAnalyticsSchema: z.ZodType<LearningAssessmentsAssessmentGroupAnalytics>;
 export let LearningAssessmentsAssessmentGroupSchema: z.ZodType<LearningAssessmentsAssessmentGroup>;
@@ -8048,6 +8297,7 @@ export let LearningAssessmentsCreateAssessmentGroupInputSchema: z.ZodType<Learni
 export let LearningAssessmentsCreateAssessmentInputSchema: z.ZodType<LearningAssessmentsCreateAssessmentInput>;
 export let LearningAssessmentsGradeSubmissionInputSchema: z.ZodType<LearningAssessmentsGradeSubmissionInput>;
 export let LearningAssessmentsInteractiveVideoAssessmentCueSchema: z.ZodType<LearningAssessmentsInteractiveVideoAssessmentCue>;
+export let LearningAssessmentsLearnerAssessmentAttemptSchema: z.ZodType<LearningAssessmentsLearnerAssessmentAttempt>;
 export let LearningAssessmentsLearnerAssessmentSubmissionSchema: z.ZodType<LearningAssessmentsLearnerAssessmentSubmission>;
 export let LearningAssessmentsLearnerInteractiveVideoAssessmentCueSchema: z.ZodType<LearningAssessmentsLearnerInteractiveVideoAssessmentCue>;
 export let LearningAssessmentsLinkInteractiveVideoCueInputSchema: z.ZodType<LearningAssessmentsLinkInteractiveVideoCueInput>;
@@ -8055,6 +8305,7 @@ export let LearningAssessmentsStartSubmissionInputSchema: z.ZodType<LearningAsse
 export let LearningAssessmentsSubmissionModalitySchema: z.ZodType<LearningAssessmentsSubmissionModality>;
 export let LearningAssessmentsSubmissionStatusSchema: z.ZodType<LearningAssessmentsSubmissionStatus>;
 export let LearningAssessmentsSubmitAssessmentInputSchema: z.ZodType<LearningAssessmentsSubmitAssessmentInput>;
+export let LearningAssessmentsUpdateAssessmentDefinitionInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentDefinitionInput>;
 export let LearningAssessmentsUpdateAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentGroupInput>;
 export let LearningAssessmentsUpdateAssessmentInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentInput>;
 export let LearningCertificatesCertificateSchema: z.ZodType<LearningCertificatesCertificate>;
@@ -8211,6 +8462,22 @@ export let LearningExperienceSocialServicesCreateReviewInputSchema: z.ZodType<Le
 export let LearningExperienceSocialServicesDiscussionReplySchema: z.ZodType<LearningExperienceSocialServicesDiscussionReply>;
 export let LearningExperienceSocialServicesPersonalizedFeedItemSchema: z.ZodType<LearningExperienceSocialServicesPersonalizedFeedItem>;
 export let LearningExperienceSocialServicesWishlistPreferencesInputSchema: z.ZodType<LearningExperienceSocialServicesWishlistPreferencesInput>;
+export let LearningWorkspacesLearnerAnnouncementSchema: z.ZodType<LearningWorkspacesLearnerAnnouncement>;
+export let LearningWorkspacesLearnerAssessmentDeadlineSchema: z.ZodType<LearningWorkspacesLearnerAssessmentDeadline>;
+export let LearningWorkspacesLearnerAssessmentSchema: z.ZodType<LearningWorkspacesLearnerAssessment>;
+export let LearningWorkspacesLearnerAssessmentGroupSchema: z.ZodType<LearningWorkspacesLearnerAssessmentGroup>;
+export let LearningWorkspacesLearnerAssessmentSubmissionSchema: z.ZodType<LearningWorkspacesLearnerAssessmentSubmission>;
+export let LearningWorkspacesLearnerCertificateSchema: z.ZodType<LearningWorkspacesLearnerCertificate>;
+export let LearningWorkspacesLearnerCohortSchema: z.ZodType<LearningWorkspacesLearnerCohort>;
+export let LearningWorkspacesLearnerContentSchema: z.ZodType<LearningWorkspacesLearnerContent>;
+export let LearningWorkspacesLearnerContentProgressSchema: z.ZodType<LearningWorkspacesLearnerContentProgress>;
+export let LearningWorkspacesLearnerCourseSummarySchema: z.ZodType<LearningWorkspacesLearnerCourseSummary>;
+export let LearningWorkspacesLearnerCourseWorkspaceSchema: z.ZodType<LearningWorkspacesLearnerCourseWorkspace>;
+export let LearningWorkspacesLearnerDashboardSchema: z.ZodType<LearningWorkspacesLearnerDashboard>;
+export let LearningWorkspacesLearnerDiscussionSchema: z.ZodType<LearningWorkspacesLearnerDiscussion>;
+export let LearningWorkspacesLearnerGradeSummarySchema: z.ZodType<LearningWorkspacesLearnerGradeSummary>;
+export let LearningWorkspacesLearnerScheduleEntrySchema: z.ZodType<LearningWorkspacesLearnerScheduleEntry>;
+export let LearningWorkspacesLearnerSearchResultSchema: z.ZodType<LearningWorkspacesLearnerSearchResult>;
 export let MoneySchema: z.ZodType<Money>;
 export let MvcProblemDetailsSchema: z.ZodType<MvcProblemDetails>;
 export let NotificationsNotificationChannelSchema: z.ZodType<NotificationsNotificationChannel>;
@@ -13052,6 +13319,13 @@ LaunchPadLaunchPlanSchema = z.object({
 /** Zod schema for LaunchPadLaunchPlanStatus */
 LaunchPadLaunchPlanStatusSchema = z.enum(['Draft', 'Preparing', 'Ready', 'Launched', 'Paused']);
 
+/** Zod schema for LearningAssessmentsAssessmentDefinition */
+LearningAssessmentsAssessmentDefinitionSchema = z.object({
+  assessmentId: z.string().uuid().optional(),
+  definitionSchemaVersion: z.number().int().optional(),
+  definition: z.record(z.string(), z.unknown()).optional(),
+});
+
 /** Zod schema for LearningAssessmentsAssessment */
 LearningAssessmentsAssessmentSchema = z.object({
   id: z.string().uuid().optional(),
@@ -13222,6 +13496,13 @@ LearningAssessmentsInteractiveVideoAssessmentCueSchema = z.object({
   cuePositionSeconds: z.number().nullable().optional(),
 });
 
+/** Zod schema for LearningAssessmentsLearnerAssessmentAttempt */
+LearningAssessmentsLearnerAssessmentAttemptSchema = z.object({
+  submission: z.lazy(() => LearningAssessmentsLearnerAssessmentSubmissionSchema).optional(),
+  definitionSchemaVersion: z.number().int().optional(),
+  definition: z.record(z.string(), z.unknown()).optional(),
+});
+
 /** Zod schema for LearningAssessmentsLearnerAssessmentSubmission */
 LearningAssessmentsLearnerAssessmentSubmissionSchema = z.object({
   id: z.string().uuid().optional(),
@@ -13279,6 +13560,12 @@ LearningAssessmentsSubmitAssessmentInputSchema = z.object({
   mediaPayload: z.string().nullable().optional(),
   projectPayload: z.string().nullable().optional(),
   structuredAnswerPayload: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsUpdateAssessmentDefinitionInput */
+LearningAssessmentsUpdateAssessmentDefinitionInputSchema = z.object({
+  definition: z.record(z.string(), z.unknown()).optional(),
+  definitionSchemaVersion: z.number().int().optional(),
 });
 
 /** Zod schema for LearningAssessmentsUpdateAssessmentGroupInput */
@@ -14867,6 +15154,295 @@ LearningExperienceSocialServicesPersonalizedFeedItemSchema = z.object({
 LearningExperienceSocialServicesWishlistPreferencesInputSchema = z.object({
   notifyOnSale: z.boolean().optional(),
   notifyOnUpdate: z.boolean().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerAnnouncement */
+LearningWorkspacesLearnerAnnouncementSchema = z.object({
+  discussionId: z.string().uuid().optional(),
+  courseId: z.string().uuid().optional(),
+  courseTitle: z.string().nullable().optional(),
+  courseSlug: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  content: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  lastActivityAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerAssessmentDeadline */
+LearningWorkspacesLearnerAssessmentDeadlineSchema = z.object({
+  assessmentId: z.string().uuid().optional(),
+  courseId: z.string().uuid().optional(),
+  courseTitle: z.string().nullable().optional(),
+  courseSlug: z.string().nullable().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  groupId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+  maxScore: z.number().int().optional(),
+  passingScore: z.number().int().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  submissionStatus: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerAssessment */
+LearningWorkspacesLearnerAssessmentSchema = z.object({
+  assessmentId: z.string().uuid().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  groupId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+  maxScore: z.number().int().optional(),
+  passingScore: z.number().int().optional(),
+  timeLimitMinutes: z.number().int().nullable().optional(),
+  maxAttempts: z.number().int().nullable().optional(),
+  isRequired: z.boolean().optional(),
+  order: z.number().int().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  allowLateSubmissions: z.boolean().optional(),
+  lateSubmissionDeadline: z.string().datetime().nullable().optional(),
+  submissionModalities: z.string().nullable().optional(),
+  presentationMode: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerAssessmentGroup */
+LearningWorkspacesLearnerAssessmentGroupSchema = z.object({
+  groupId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  weightPercent: z.number().optional(),
+  order: z.number().int().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerAssessmentSubmission */
+LearningWorkspacesLearnerAssessmentSubmissionSchema = z.object({
+  submissionId: z.string().uuid().optional(),
+  assessmentId: z.string().uuid().optional(),
+  enrollmentId: z.string().uuid().optional(),
+  attemptNumber: z.number().int().optional(),
+  score: z.number().int().nullable().optional(),
+  passed: z.boolean().nullable().optional(),
+  startedAt: z.string().datetime().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
+  gradedAt: z.string().datetime().nullable().optional(),
+  feedback: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  isLate: z.boolean().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerCertificate */
+LearningWorkspacesLearnerCertificateSchema = z.object({
+  certificateId: z.string().uuid().optional(),
+  enrollmentId: z.string().uuid().optional(),
+  courseId: z.string().uuid().optional(),
+  courseName: z.string().nullable().optional(),
+  certificateNumber: z.string().nullable().optional(),
+  recipientName: z.string().nullable().optional(),
+  issuedAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  verificationUrl: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerCohort */
+LearningWorkspacesLearnerCohortSchema = z.object({
+  cohortId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  maxCapacity: z.number().int().optional(),
+  currentEnrollmentCount: z.number().int().optional(),
+  status: z.string().nullable().optional(),
+  instructorId: z.string().uuid().nullable().optional(),
+  meetingSchedule: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerContent */
+LearningWorkspacesLearnerContentSchema = z.object({
+  contentId: z.string().uuid().optional(),
+  parentId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  lessonFormat: z.string().nullable().optional(),
+  activitySettings: z.string().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  isRequired: z.boolean().optional(),
+  gradingMethod: z.string().nullable().optional(),
+  maxPoints: z.number().int().nullable().optional(),
+  estimatedMinutes: z.number().int().nullable().optional(),
+  visibility: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerContentProgress */
+LearningWorkspacesLearnerContentProgressSchema = z.object({
+  contentId: z.string().uuid().optional(),
+  status: z.string().nullable().optional(),
+  progressPercentage: z.number().optional(),
+  firstAccessedAt: z.string().datetime().nullable().optional(),
+  lastAccessedAt: z.string().datetime().nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  timeSpentSeconds: z.number().int().optional(),
+  score: z.number().nullable().optional(),
+  maxScore: z.number().nullable().optional(),
+  attempts: z.number().int().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerCourseSummary */
+LearningWorkspacesLearnerCourseSummarySchema = z.object({
+  courseId: z.string().uuid().optional(),
+  enrollmentId: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  thumbnail: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  difficulty: z.string().nullable().optional(),
+  estimatedHours: z.number().int().nullable().optional(),
+  enrollmentStatus: z.string().nullable().optional(),
+  completionStatus: z.string().nullable().optional(),
+  progressPercentage: z.number().optional(),
+  finalGrade: z.number().nullable().optional(),
+  enrolledAt: z.string().datetime().optional(),
+  totalItems: z.number().int().optional(),
+  completedItems: z.number().int().optional(),
+  remainingMinutes: z.number().int().optional(),
+  currentContentId: z.string().uuid().nullable().optional(),
+  currentContentTitle: z.string().nullable().optional(),
+  currentContentType: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerCourseWorkspace */
+LearningWorkspacesLearnerCourseWorkspaceSchema = z.object({
+  course: z.lazy(() => LearningWorkspacesLearnerCourseSummarySchema).optional(),
+  content: z
+    .array(z.lazy(() => LearningWorkspacesLearnerContentSchema))
+    .nullable()
+    .optional(),
+  progress: z
+    .array(z.lazy(() => LearningWorkspacesLearnerContentProgressSchema))
+    .nullable()
+    .optional(),
+  cohort: z.lazy(() => LearningWorkspacesLearnerCohortSchema).optional(),
+  calendar: z
+    .array(z.lazy(() => LearningWorkspacesLearnerScheduleEntrySchema))
+    .nullable()
+    .optional(),
+  assessmentGroups: z
+    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentGroupSchema))
+    .nullable()
+    .optional(),
+  assessments: z
+    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentSchema))
+    .nullable()
+    .optional(),
+  submissions: z
+    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentSubmissionSchema))
+    .nullable()
+    .optional(),
+  discussions: z
+    .array(z.lazy(() => LearningWorkspacesLearnerDiscussionSchema))
+    .nullable()
+    .optional(),
+  certificates: z
+    .array(z.lazy(() => LearningWorkspacesLearnerCertificateSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerDashboard */
+LearningWorkspacesLearnerDashboardSchema = z.object({
+  courses: z
+    .array(z.lazy(() => LearningWorkspacesLearnerCourseSummarySchema))
+    .nullable()
+    .optional(),
+  upcoming: z
+    .array(z.lazy(() => LearningWorkspacesLearnerScheduleEntrySchema))
+    .nullable()
+    .optional(),
+  deadlines: z
+    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentDeadlineSchema))
+    .nullable()
+    .optional(),
+  grades: z
+    .array(z.lazy(() => LearningWorkspacesLearnerGradeSummarySchema))
+    .nullable()
+    .optional(),
+  certificates: z
+    .array(z.lazy(() => LearningWorkspacesLearnerCertificateSchema))
+    .nullable()
+    .optional(),
+  announcements: z
+    .array(z.lazy(() => LearningWorkspacesLearnerAnnouncementSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerDiscussion */
+LearningWorkspacesLearnerDiscussionSchema = z.object({
+  discussionId: z.string().uuid().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  authorId: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  content: z.string().nullable().optional(),
+  isPinned: z.boolean().optional(),
+  isResolved: z.boolean().optional(),
+  replyCount: z.number().int().optional(),
+  viewCount: z.number().int().optional(),
+  lastActivityAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerGradeSummary */
+LearningWorkspacesLearnerGradeSummarySchema = z.object({
+  courseId: z.string().uuid().optional(),
+  courseTitle: z.string().nullable().optional(),
+  courseSlug: z.string().nullable().optional(),
+  finalGrade: z.number().nullable().optional(),
+  gradedAssessments: z.number().int().optional(),
+  totalAssessments: z.number().int().optional(),
+  earnedPoints: z.number().nullable().optional(),
+  possiblePoints: z.number().nullable().optional(),
+  percentage: z.number().nullable().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerScheduleEntry */
+LearningWorkspacesLearnerScheduleEntrySchema = z.object({
+  courseId: z.string().uuid().optional(),
+  courseTitle: z.string().nullable().optional(),
+  courseSlug: z.string().nullable().optional(),
+  cohortId: z.string().uuid().optional(),
+  cohortName: z.string().nullable().optional(),
+  scheduleItemId: z.string().uuid().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  assessmentId: z.string().uuid().nullable().optional(),
+  type: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  location: z.string().nullable().optional(),
+  meetingUrl: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerSearchResult */
+LearningWorkspacesLearnerSearchResultSchema = z.object({
+  id: z.string().uuid().optional(),
+  courseId: z.string().uuid().optional(),
+  courseSlug: z.string().nullable().optional(),
+  kind: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  route: z.string().nullable().optional(),
 });
 
 /** Zod schema for Money */

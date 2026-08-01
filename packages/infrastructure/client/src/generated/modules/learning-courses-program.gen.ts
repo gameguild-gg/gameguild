@@ -80,6 +80,20 @@ export class LearningCoursesProgramModule {
 
   /**
    */
+  async getCoursesMe(): Promise<Result<Array<Types.LearningCoursesProgram>, ApiError>> {
+    const url = '/v1/courses/me';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesProgram>, ApiError>;
+  }
+
+  /**
+   */
   async getCourses1(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
     const url = `/v1/courses/${id}`;
 

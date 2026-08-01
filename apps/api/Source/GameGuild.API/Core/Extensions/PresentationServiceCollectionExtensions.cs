@@ -175,6 +175,11 @@ public static class PresentationServiceCollectionExtensions
 
         controllerStopwatch.Restart();
         services.AddControllers()
+            .AddApplicationPart(typeof(GameGuild.Learning.Workspaces.LearnerWorkspaceController).Assembly); // Learning Workspaces module
+        LogControllersFromAssembly(typeof(GameGuild.Learning.Workspaces.LearnerWorkspaceController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
             .AddApplicationPart(typeof(GameGuild.Learning.Experience.Discovery.DiscoveryController).Assembly); // Learning Discovery module
         LogControllersFromAssembly(typeof(GameGuild.Learning.Experience.Discovery.DiscoveryController).Assembly, logger, controllerStopwatch);
 
