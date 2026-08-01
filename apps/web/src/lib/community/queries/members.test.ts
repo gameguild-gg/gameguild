@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   getToken: vi.fn(),
   createServerClient: vi.fn(),
   getProfileByHandle: vi.fn(),
+  getProfileByUserId: vi.fn(),
   getUserFeed: vi.fn(),
   getSocialGroups: vi.fn(),
   getPublicCourseCatalog: vi.fn(),
@@ -23,6 +24,7 @@ vi.mock('@game-guild/client', () => ({
   GeneratedApi: {
     SocialProfilesModule: class {
       getApiSocialProfiles = mocks.getProfileByHandle;
+      getApiSocialProfilesUsers = mocks.getProfileByUserId;
     },
     SocialFeedModule: class {
       getApiSocialFeedUsers = mocks.getUserFeed;
@@ -43,7 +45,7 @@ vi.mock('@/lib/courses/services/course.service', () => ({
   getPublicCourseCatalog: mocks.getPublicCourseCatalog,
 }));
 
-const { getCommunityFeed, getCommunityStats, getGroups, getMemberAccessDirectory, getMemberProject, getMembers, getPublicMemberProfile, getSupportTickets } = await import('./members');
+const { getCommunityFeed, getCommunityStats, getGroups, getMember, getMemberAccessDirectory, getMemberProject, getMembers, getPublicMemberProfile, getSupportTickets } = await import('./members');
 
 describe('community member queries', () => {
   beforeEach(() => {
@@ -376,6 +378,61 @@ describe('community member queries', () => {
 
     expect(result.total).toBe(1);
     expect(result.members[0]?.id).toBe('00000000-0000-0000-0000-000000000111');
+  });
+
+  it('returns an identity member when optional profile enrichment throws', async () => {
+    mocks.clientRequest.mockImplementation(async ({ path }: { path: string }) => {
+      if (path === '/v1/users/00000000-0000-0000-0000-000000000123') {
+        return {
+          ok: true,
+          data: {
+            id: '00000000-0000-0000-0000-000000000123',
+            email: 'ada@example.com',
+            name: 'Ada Developer',
+            isActive: true,
+            createdAt: '2026-06-01T00:00:00.000Z',
+          },
+        };
+      }
+
+      if (path === '/v1/users/00000000-0000-0000-0000-000000000123/profile') {
+        throw new Error('Identity profile is not provisioned');
+      }
+
+      throw new Error(`Unexpected path ${path}`);
+    });
+    mocks.getProfileByUserId.mockRejectedValue(new Error('Social profile is not provisioned'));
+
+    const member = await getMember('00000000-0000-0000-0000-000000000123');
+
+    expect(member).toMatchObject({
+      id: '00000000-0000-0000-0000-000000000123',
+      displayName: 'Ada Developer',
+      email: 'ada@example.com',
+      skills: [],
+      portfolioItems: [],
+    });
+  });
+
+  it('returns the signed-in member when the identity detail endpoint rejects self access', async () => {
+    mocks.clientRequest.mockResolvedValue({
+      ok: false,
+      error: { message: 'Forbidden', status: 403 },
+    });
+    mocks.getProfileByUserId.mockResolvedValue({
+      ok: false,
+      error: { message: 'Profile not found', status: 404 },
+    });
+
+    const member = await getMember('00000000-0000-0000-0000-000000000111');
+
+    expect(member).toMatchObject({
+      id: '00000000-0000-0000-0000-000000000111',
+      displayName: 'Signed In Member',
+      email: 'member@example.com',
+      skills: [],
+      portfolioItems: [],
+    });
   });
 
   it('builds role-management rows with memberships and super-admin state', async () => {
