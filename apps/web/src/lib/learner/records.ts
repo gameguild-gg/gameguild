@@ -8,6 +8,7 @@ import {
     type LearningCertificatesCertificate,
     type LearningCohortsCohort,
     type LearningCohortsCohortCalendarEntry,
+    type LearningExperienceSocialServicesDiscussionReply,
     type LearningExperienceSocialServicesCourseDiscussion,
     type LearningWorkspacesLearnerAssessment,
     type LearningWorkspacesLearnerAssessmentSubmission,
@@ -27,11 +28,20 @@ export interface LearnerCourseRecord {
     course: CourseAttendanceData;
     context: LearnerCourseContext;
 }
+interface LearnerAssessmentGroupRecord {
+    id: string;
+    name: string;
+    description?: string | null;
+    weightPercent: number;
+    order: number;
+}
+
 
 export interface LearnerCourseContext {
     enrollmentId: string | null;
     cohort: LearningCohortsCohort | null;
     calendar: LearningCohortsCohortCalendarEntry[];
+    assessmentGroups: LearnerAssessmentGroupRecord[];
     assessments: LearningAssessmentsAssessment[];
     submissions: LearningAssessmentsLearnerAssessmentSubmission[];
     discussions: LearningExperienceSocialServicesCourseDiscussion[];
@@ -57,6 +67,7 @@ function emptyContext(): LearnerCourseContext {
         enrollmentId: null,
         cohort: null,
         calendar: [],
+        assessmentGroups: [],
         assessments: [],
         submissions: [],
         discussions: [],
@@ -187,6 +198,17 @@ function mapWorkspaceContext(workspace: LearningWorkspacesLearnerCourseWorkspace
         enrollmentId: workspace.course?.enrollmentId ?? null,
         cohort,
         calendar: (workspace.calendar ?? []).map(mapSchedule),
+        assessmentGroups: (workspace.assessmentGroups ?? []).flatMap((group) =>
+            group.groupId
+                ? [{
+                      id: group.groupId,
+                      name: group.name ?? 'Assessment group',
+                      description: group.description,
+                      weightPercent: group.weightPercent ?? 0,
+                      order: group.order ?? 0,
+                  }]
+                : [],
+        ),
         assessments: (workspace.assessments ?? []).map((assessment) => mapAssessment(assessment, courseId, groupNames)),
         submissions: (workspace.submissions ?? []).map(mapSubmission),
         discussions: (workspace.discussions ?? []).map((discussion) => mapDiscussion(discussion, courseId)),
@@ -229,6 +251,7 @@ export async function getMyLearnerRecords(): Promise<LearnerCourseRecord[]> {
                 enrollmentId: course.enrollmentId ?? null,
                 cohort: null,
                 calendar: (dashboard.upcoming ?? []).filter((entry) => entry.courseId === course.id).map(mapSchedule),
+                assessmentGroups: [],
                 assessments: deadlines.map((deadline) => ({
                     id: deadline.assessmentId,
                     courseId: course.id,
@@ -274,4 +297,30 @@ export async function getMyLearnerRecords(): Promise<LearnerCourseRecord[]> {
             return { course, context };
         })
         .filter((record) => Boolean(record.course.id && record.course.slug));
+}
+
+export interface LearnerDiscussionThread {
+    discussion: LearningExperienceSocialServicesCourseDiscussion;
+    replies: LearningExperienceSocialServicesDiscussionReply[];
+}
+
+export async function getCourseDiscussionThread(discussionId: string): Promise<LearnerDiscussionThread | null> {
+    const client = await getClient();
+    if (!client || !discussionId) return null;
+
+    const discussions = new GeneratedApi.LearningExperienceSocialDiscussionsModule(client);
+    const replies = new GeneratedApi.LearningExperienceSocialRepliesModule(client);
+    const [discussionResult, repliesResult] = await Promise.all([
+        discussions.getApiSocialDiscussions(discussionId),
+        replies.getApiSocialDiscussionsReplies(discussionId, { take: 200 }),
+    ]);
+
+    if (!discussionResult.ok || !repliesResult.ok) {
+        return null;
+    }
+
+    return {
+        discussion: discussionResult.data,
+        replies: repliesResult.data,
+    };
 }
