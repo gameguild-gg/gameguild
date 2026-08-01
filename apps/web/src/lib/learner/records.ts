@@ -1,5 +1,5 @@
 import { getToken } from '@/auth';
-import { getMyLearningCourses, type CourseAttendanceData } from '@/lib/learner/courses';
+import { getLearnerDashboard, mapLearnerCourseSummary, type CourseAttendanceData } from '@/lib/learner/courses';
 import {
     createServerClient,
     GeneratedApi,
@@ -9,9 +9,19 @@ import {
     type LearningCohortsCohort,
     type LearningCohortsCohortCalendarEntry,
     type LearningExperienceSocialServicesCourseDiscussion,
-    type LearningEnrollmentsEnrollment,
+    type LearningWorkspacesLearnerAssessment,
+    type LearningWorkspacesLearnerAssessmentSubmission,
+    type LearningWorkspacesLearnerCertificate,
+    type LearningWorkspacesLearnerCourseWorkspace,
+    type LearningWorkspacesLearnerDiscussion,
+    type LearningWorkspacesLearnerGradeSummary,
+    type LearningWorkspacesLearnerScheduleEntry,
     type ProjectsProject,
 } from '@game-guild/client';
+
+type LearnerCertificateRecord = LearningCertificatesCertificate & {
+    verificationUrl?: string | null;
+};
 
 export interface LearnerCourseRecord {
     course: CourseAttendanceData;
@@ -25,7 +35,8 @@ export interface LearnerCourseContext {
     assessments: LearningAssessmentsAssessment[];
     submissions: LearningAssessmentsLearnerAssessmentSubmission[];
     discussions: LearningExperienceSocialServicesCourseDiscussion[];
-    certificates: LearningCertificatesCertificate[];
+    certificates: LearnerCertificateRecord[];
+    gradeSummary?: LearningWorkspacesLearnerGradeSummary;
 }
 
 function getApiUrl() {
@@ -35,66 +46,160 @@ function getApiUrl() {
 async function getClient() {
     const token = await getToken();
     if (!token) return null;
-    return createServerClient({ baseUrl: getApiUrl(), auth: { getAccessToken: async () => token } });
+    return createServerClient({
+        baseUrl: getApiUrl(),
+        auth: { getAccessToken: async () => token },
+    });
+}
+
+function emptyContext(): LearnerCourseContext {
+    return {
+        enrollmentId: null,
+        cohort: null,
+        calendar: [],
+        assessments: [],
+        submissions: [],
+        discussions: [],
+        certificates: [],
+    };
+}
+
+function mapSchedule(entry: LearningWorkspacesLearnerScheduleEntry): LearningCohortsCohortCalendarEntry {
+    return {
+        cohortId: entry.cohortId,
+        cohortName: entry.cohortName,
+        itemId: entry.scheduleItemId,
+        type: entry.type as LearningCohortsCohortCalendarEntry['type'],
+        title: entry.title,
+        startsAt: entry.startsAt,
+        endsAt: entry.endsAt,
+        availableFrom: entry.availableFrom,
+        dueAt: entry.dueAt,
+        status: entry.status as LearningCohortsCohortCalendarEntry['status'],
+    };
+}
+
+function mapAssessment(
+    assessment: LearningWorkspacesLearnerAssessment,
+    courseId: string,
+    groupNames: ReadonlyMap<string, string>,
+): LearningAssessmentsAssessment {
+    const groupId = assessment.groupId ?? null;
+
+    return {
+        id: assessment.assessmentId,
+        courseId,
+        contentId: assessment.contentId,
+        title: assessment.title,
+        description: assessment.description,
+        type: (assessment.type === 'Exam' ? 'Quiz' : assessment.type) as LearningAssessmentsAssessment['type'],
+        maxScore: assessment.maxScore,
+        passingScore: assessment.passingScore,
+        timeLimitMinutes: assessment.timeLimitMinutes,
+        maxAttempts: assessment.maxAttempts,
+        isRequired: assessment.isRequired,
+        order: assessment.order,
+        availableFrom: assessment.availableFrom,
+        availableUntil: assessment.availableUntil,
+        assessmentGroupId: groupId,
+        assessmentGroupName: groupId ? (groupNames.get(groupId) ?? null) : null,
+        isAvailable: true,
+        submissionModalities: assessment.submissionModalities as LearningAssessmentsAssessment['submissionModalities'],
+        presentationMode: assessment.presentationMode as LearningAssessmentsAssessment['presentationMode'],
+        dueAt: assessment.dueAt,
+        allowLateSubmissions: assessment.allowLateSubmissions,
+        lateSubmissionDeadline: assessment.lateSubmissionDeadline,
+    };
+}
+
+function mapSubmission(submission: LearningWorkspacesLearnerAssessmentSubmission): LearningAssessmentsLearnerAssessmentSubmission {
+    return {
+        id: submission.submissionId,
+        assessmentId: submission.assessmentId,
+        enrollmentId: submission.enrollmentId,
+        attemptNumber: submission.attemptNumber,
+        score: submission.score,
+        passed: submission.passed,
+        startedAt: submission.startedAt,
+        submittedAt: submission.submittedAt,
+        gradedAt: submission.gradedAt,
+        feedback: submission.feedback,
+        status: submission.status as LearningAssessmentsLearnerAssessmentSubmission['status'],
+        isLate: submission.isLate,
+    };
+}
+
+function mapDiscussion(discussion: LearningWorkspacesLearnerDiscussion, courseId: string): LearningExperienceSocialServicesCourseDiscussion {
+    return {
+        id: discussion.discussionId,
+        courseId,
+        contentId: discussion.contentId,
+        authorId: discussion.authorId,
+        title: discussion.title,
+        content: discussion.content,
+        isPinned: discussion.isPinned,
+        isResolved: discussion.isResolved,
+        replyCount: discussion.replyCount,
+        viewCount: discussion.viewCount,
+        lastActivityAt: discussion.lastActivityAt,
+        createdAt: discussion.createdAt,
+    };
+}
+
+function mapCertificate(certificate: LearningWorkspacesLearnerCertificate): LearnerCertificateRecord {
+    return {
+        id: certificate.certificateId,
+        enrollmentId: certificate.enrollmentId,
+        courseId: certificate.courseId,
+        certificateNumber: certificate.certificateNumber,
+        recipientName: certificate.recipientName,
+        courseName: certificate.courseName,
+        issuedAt: certificate.issuedAt,
+        expiresAt: certificate.expiresAt,
+        status: certificate.status as LearningCertificatesCertificate['status'],
+        verificationUrl: certificate.verificationUrl,
+    };
+}
+
+function mapWorkspaceContext(workspace: LearningWorkspacesLearnerCourseWorkspace, courseId: string): LearnerCourseContext {
+    const groupNames = new Map(
+        (workspace.assessmentGroups ?? [])
+            .filter((group): group is typeof group & { groupId: string } => Boolean(group.groupId))
+            .map((group) => [group.groupId, group.name ?? 'Assessment group']),
+    );
+    const cohort = workspace.cohort
+        ? {
+              id: workspace.cohort.cohortId,
+              courseId,
+              name: workspace.cohort.name,
+              description: workspace.cohort.description,
+              startDate: workspace.cohort.startDate,
+              endDate: workspace.cohort.endDate,
+              maxCapacity: workspace.cohort.maxCapacity,
+              currentEnrollmentCount: workspace.cohort.currentEnrollmentCount,
+              status: workspace.cohort.status as LearningCohortsCohort['status'],
+              instructorId: workspace.cohort.instructorId,
+              meetingSchedule: workspace.cohort.meetingSchedule,
+          }
+        : null;
+
+    return {
+        enrollmentId: workspace.course?.enrollmentId ?? null,
+        cohort,
+        calendar: (workspace.calendar ?? []).map(mapSchedule),
+        assessments: (workspace.assessments ?? []).map((assessment) => mapAssessment(assessment, courseId, groupNames)),
+        submissions: (workspace.submissions ?? []).map(mapSubmission),
+        discussions: (workspace.discussions ?? []).map((discussion) => mapDiscussion(discussion, courseId)),
+        certificates: (workspace.certificates ?? []).map(mapCertificate),
+    };
 }
 
 export async function getCourseLearnerContext(courseId: string): Promise<LearnerCourseContext> {
-    const empty: LearnerCourseContext = { enrollmentId: null, cohort: null, calendar: [], assessments: [], submissions: [], discussions: [], certificates: [] };
     const client = await getClient();
-    if (!client) return empty;
+    if (!client) return emptyContext();
 
-    const programs = new GeneratedApi.LearningCoursesProgramModule(client);
-    const assessmentsApi = new GeneratedApi.LearningAssessmentsModule(client);
-    const cohortsApi = new GeneratedApi.LearningCohortsModule(client);
-    const schedulesApi = new GeneratedApi.LearningCohortsSchedulesModule(client);
-    const certificatesApi = new GeneratedApi.LearningCertificatesModule(client);
-    const discussionsApi = new GeneratedApi.LearningExperienceSocialDiscussionsModule(client);
-
-    const progressResult = await programs.getCoursesMeProgress(courseId);
-    if (!progressResult.ok) return empty;
-    const enrollmentId = progressResult.data.enrollmentId ?? null;
-
-    const [activeCohortsResult, assessmentsResult, discussionsResult, certificatesResult] = await Promise.all([
-        cohortsApi.getApiCohortsCourseActive(courseId),
-        assessmentsApi.getAssessmentsCourse(courseId),
-        discussionsApi.getApiSocialCoursesDiscussions(courseId, { take: 50, pinnedFirst: true }),
-        certificatesApi.getApiCertificatesMy(),
-    ]);
-
-    let enrollment: LearningEnrollmentsEnrollment | null = null;
-    if (enrollmentId) {
-        const enrollmentResult = await client.request<LearningEnrollmentsEnrollment>({ method: 'GET', path: `/api/learning/enrollments/${enrollmentId}`, requiresAuth: true });
-        enrollment = enrollmentResult.ok ? enrollmentResult.data : null;
-    }
-
-    const activeCohorts = activeCohortsResult.ok ? activeCohortsResult.data : [];
-    let cohort = enrollment?.cohortId
-        ? activeCohorts.find((candidate) => candidate.id === enrollment?.cohortId) ?? null
-        : activeCohorts.length === 1 ? activeCohorts[0] : null;
-
-    if (!cohort && enrollment?.cohortId) {
-        const cohortResult = await cohortsApi.getApiCohorts(enrollment.cohortId);
-        cohort = cohortResult.ok ? cohortResult.data : null;
-    }
-
-    const [calendarResult, submissionsResult] = await Promise.all([
-        cohort?.id
-            ? schedulesApi.getCoursesCohortsCalendar(courseId, { cohortId: cohort.id })
-            : Promise.resolve(null),
-        enrollmentId
-            ? assessmentsApi.getAssessmentsMySubmissions(enrollmentId)
-            : Promise.resolve(null),
-    ]);
-
-    return {
-        enrollmentId,
-        cohort,
-        calendar: calendarResult?.ok ? calendarResult.data.entries ?? [] : [],
-        assessments: assessmentsResult.ok ? assessmentsResult.data : [],
-        submissions: submissionsResult?.ok ? submissionsResult.data : [],
-        discussions: discussionsResult.ok ? discussionsResult.data : [],
-        certificates: certificatesResult.ok ? certificatesResult.data.filter((certificate) => certificate.courseId === courseId) : [],
-    };
+    const result = await new GeneratedApi.LearningWorkspacesLearnerworkspaceModule(client).getLearningCoursesWorkspace(courseId);
+    return result.ok ? mapWorkspaceContext(result.data, courseId) : emptyContext();
 }
 
 export async function getMyCertificates(): Promise<LearningCertificatesCertificate[]> {
@@ -103,14 +208,70 @@ export async function getMyCertificates(): Promise<LearningCertificatesCertifica
     const result = await new GeneratedApi.LearningCertificatesModule(client).getApiCertificatesMy();
     return result.ok ? result.data : [];
 }
+
 export async function getMyProjects(userId: string): Promise<ProjectsProject[]> {
     const client = await getClient();
     if (!client || !userId) return [];
     const result = await new GeneratedApi.ProjectsModule(client).getProjectsCreator(userId, { take: 100 });
     return result.ok ? result.data : [];
 }
+
 export async function getMyLearnerRecords(): Promise<LearnerCourseRecord[]> {
-    const courses = await getMyLearningCourses();
-    const contexts = await Promise.all(courses.map((course) => getCourseLearnerContext(course.id)));
-    return courses.map((course, index) => ({ course, context: contexts[index]! }));
+    const dashboard = await getLearnerDashboard();
+    if (!dashboard) return [];
+
+    return (dashboard.courses ?? [])
+        .map((summary) => {
+            const course = mapLearnerCourseSummary(summary);
+            const deadlines = (dashboard.deadlines ?? []).filter((item) => item.courseId === course.id);
+            const gradeSummary = (dashboard.grades ?? []).find((item) => item.courseId === course.id);
+            const context: LearnerCourseContext = {
+                enrollmentId: course.enrollmentId ?? null,
+                cohort: null,
+                calendar: (dashboard.upcoming ?? []).filter((entry) => entry.courseId === course.id).map(mapSchedule),
+                assessments: deadlines.map((deadline) => ({
+                    id: deadline.assessmentId,
+                    courseId: course.id,
+                    contentId: deadline.contentId,
+                    title: deadline.title,
+                    type: (deadline.type === 'Exam' ? 'Quiz' : deadline.type) as LearningAssessmentsAssessment['type'],
+                    maxScore: deadline.maxScore,
+                    passingScore: deadline.passingScore,
+                    availableFrom: deadline.availableFrom,
+                    availableUntil: deadline.availableUntil,
+                    assessmentGroupId: deadline.groupId,
+                    dueAt: deadline.dueAt,
+                })),
+                submissions: deadlines.flatMap((deadline) => {
+                    if (!deadline.assessmentId || !deadline.submissionStatus || deadline.submissionStatus === 'NotStarted') {
+                        return [];
+                    }
+
+                    return [
+                        {
+                            id: `dashboard-${deadline.assessmentId}`,
+                            assessmentId: deadline.assessmentId,
+                            enrollmentId: course.enrollmentId,
+                            status: deadline.submissionStatus as LearningAssessmentsLearnerAssessmentSubmission['status'],
+                        },
+                    ];
+                }),
+                discussions: (dashboard.announcements ?? [])
+                    .filter((announcement) => announcement.courseId === course.id)
+                    .map((announcement) => ({
+                        id: announcement.discussionId,
+                        courseId: course.id,
+                        title: announcement.title,
+                        content: announcement.content,
+                        isPinned: true,
+                        lastActivityAt: announcement.lastActivityAt,
+                        createdAt: announcement.createdAt,
+                    })),
+                certificates: (dashboard.certificates ?? []).filter((certificate) => certificate.courseId === course.id).map(mapCertificate),
+                gradeSummary,
+            };
+
+            return { course, context };
+        })
+        .filter((record) => Boolean(record.course.id && record.course.slug));
 }
