@@ -146,3 +146,28 @@ export async function createCourseDiscussion(formData: FormData): Promise<Learne
         return { success: false, error: errorMessage(error, 'The discussion could not be created.') };
     }
 }
+export async function createCourseDiscussionReply(formData: FormData): Promise<LearnerMutationResult> {
+    try {
+        const discussionId = String(formData.get('discussionId') || '');
+        const courseSlug = String(formData.get('courseSlug') || '');
+        const content = String(formData.get('content') || '').trim();
+        const parentReplyId = String(formData.get('parentReplyId') || '').trim();
+        if (!discussionId || !content) return { success: false, error: 'A reply message is required.' };
+
+        const authenticated = await authenticatedClient();
+        if (!authenticated) return { success: false, error: 'Your session expired. Sign in again.' };
+        const replies = new GeneratedApi.LearningExperienceSocialRepliesModule(authenticated.client);
+        const result = await replies.postApiSocialDiscussionsReplies(discussionId, {
+            discussionId,
+            content,
+            parentReplyId: parentReplyId || null,
+        });
+        if (!result.ok) return { success: false, error: errorMessage(result.error, 'The reply could not be published.') };
+
+        revalidatePath(`/courses/${courseSlug}/community`);
+        revalidatePath(`/courses/${courseSlug}/community/${discussionId}`);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: errorMessage(error, 'The reply could not be published.') };
+    }
+}

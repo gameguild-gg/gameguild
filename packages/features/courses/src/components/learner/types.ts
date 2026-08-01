@@ -64,6 +64,14 @@ export interface LearnerCalendarEntry {
   status?: string | null;
 }
 
+export interface LearnerAssessmentGroup {
+  id: string;
+  name: string;
+  description?: string | null;
+  weightPercent: number;
+  order: number;
+}
+
 export interface LearnerAssessment {
   id?: string | null;
   courseId?: string | null;
@@ -75,6 +83,7 @@ export interface LearnerAssessment {
   passingScore?: number | null;
   isAvailable?: boolean | null;
   submissionModalities?: string | null;
+  assessmentGroupId?: string | null;
   assessmentGroupName?: string | null;
 }
 
@@ -116,6 +125,7 @@ export interface LearnerCourseContext {
   enrollmentId: string | null;
   cohort: LearnerCohort | null;
   calendar: LearnerCalendarEntry[];
+  assessmentGroups?: LearnerAssessmentGroup[];
   assessments: LearnerAssessment[];
   submissions: LearnerSubmission[];
   discussions: LearnerDiscussion[];
