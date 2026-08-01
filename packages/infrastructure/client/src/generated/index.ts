@@ -3,7 +3,7 @@
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
- * Generated from: http://localhost:5297/swagger/v1/swagger.json
+ * Generated from: captured-openapi
  *
  * To regenerate, run: pnpm generate
  */
@@ -65,6 +65,7 @@ export * from './modules/social-feed.gen.js';
 export * from './modules/gamejams.gen.js';
 export * from './modules/health.gen.js';
 export * from './modules/launchpad.gen.js';
+export * from './modules/learning-workspaces-learnerworkspace.gen.js';
 export * from './modules/learning-experience-learningpaths-learningpath.gen.js';
 export * from './modules/learning-courses-lessoninteractionevents.gen.js';
 export * from './modules/learning-experience-social-likes.gen.js';
@@ -100,6 +101,7 @@ export * from './modules/tenants-resources-metadata.gen.js';
 export * from './modules/tenants-resources-settings.gen.js';
 export * from './modules/tenants-settings.gen.js';
 export * from './modules/testinglab-testingeventparticipation.gen.js';
+export * from './modules/testinglab-analytics.gen.js';
 export * from './modules/testinglab-testingevents.gen.js';
 export * from './modules/testinglab-testingfeedback.gen.js';
 export * from './modules/testinglab-permission.gen.js';

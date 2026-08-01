@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
     getTestingEventsApplicationsMe: vi.fn(),
   },
   participation: {
+    getTestingEventsParticipants: vi.fn(),
     getTestingEventsSlotsRegistrations: vi.fn(),
     getTestingEventsRegistrationsMe: vi.fn(),
     getTestingEventsFeedbackObligationsMe: vi.fn(),
@@ -41,6 +42,7 @@ import {
   getTestingEventFeedbackReview,
   getTestingEventManagerData,
   getTestingEventsDirectory,
+  getTestingParticipantDirectory,
 } from './events-queries';
 
 describe('Testing Lab event queries', () => {
@@ -77,6 +79,29 @@ describe('Testing Lab event queries', () => {
     mocks.events.getTestingEventsCommittee.mockResolvedValue({
       ok: true,
       data: [{ id: 'member-1', eventId: 'event-1', userId: 'user-1', userName: 'Reviewer' }],
+    });
+    mocks.participation.getTestingEventsParticipants.mockResolvedValue({
+      ok: true,
+      data: {
+        items: [
+          {
+            registrationId: 'registration-1',
+            eventId: 'event-1',
+            eventName: 'Friday campus lab',
+            userId: 'user-1',
+            userName: 'Ada Player',
+            userEmail: 'ada@example.com',
+            status: 'Registered',
+          },
+        ],
+        totalCount: 1,
+        registeredCount: 1,
+        waitlistedCount: 0,
+        checkedInCount: 0,
+        attendedCount: 0,
+        completedCount: 0,
+        noShowCount: 0,
+      },
     });
     mocks.participation.getTestingEventsSlotsRegistrations.mockResolvedValue({
       ok: true,
@@ -145,6 +170,26 @@ describe('Testing Lab event queries', () => {
     expect(mocks.events.getTestingEvents).toHaveBeenCalledWith({
       status: 'ApplicationsOpen',
       skip: 10,
+      take: 25,
+    });
+  });
+
+  it('loads the tenant participant directory through one generated-client call', async () => {
+    const result = await getTestingParticipantDirectory({
+      search: 'Ada',
+      status: 'Registered',
+      skip: 25,
+      take: 25,
+    });
+
+    expect(result.directory?.items).toHaveLength(1);
+    expect(result.directory?.items?.[0]?.userName).toBe('Ada Player');
+    expect(result.accessIssues).toEqual([]);
+    expect(mocks.participation.getTestingEventsParticipants).toHaveBeenCalledTimes(1);
+    expect(mocks.participation.getTestingEventsParticipants).toHaveBeenCalledWith({
+      search: 'Ada',
+      status: 'Registered',
+      skip: 25,
       take: 25,
     });
   });

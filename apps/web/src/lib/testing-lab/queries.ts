@@ -5,6 +5,7 @@ import {
   type ApiError,
   type ProjectsProject,
   type Result,
+  type TestingLabAnalyticsReportProjection,
   type TestingLabSessionProjectProjection,
   type TestingLabSessionRegistration,
   type TestingLabSessionWaitlist,
@@ -129,6 +130,7 @@ function createTestingLabModules() {
     locations: new GeneratedApi.TestinglabTestinglocationsModule(client),
     participants: new GeneratedApi.TestinglabTestingparticipantsModule(client),
     feedback: new GeneratedApi.TestinglabTestingfeedbackModule(client),
+    analytics: new GeneratedApi.TestinglabAnalyticsModule(client),
     settings: new GeneratedApi.TestinglabSettingsModule(client),
     permissions: new GeneratedApi.TestinglabPermissionModule(client),
     projects: new GeneratedApi.ProjectsModule(client),
@@ -361,76 +363,148 @@ export const getTestingLabAdministration = cache(async (): Promise<TestingLabAdm
   };
 });
 
+export interface TestingLabAnalyticsSummary {
+  events: number;
+  completedEvents: number;
+  applications: number;
+  approvedProjects: number;
+  registeredTesters: number;
+  attendedTesters: number;
+  feedback: number;
+  averageRating: number | null;
+  recommendationRate: number | null;
+  capacity: number;
+  fillRate: number;
+}
+
+export interface TestingLabAnalyticsTrend {
+  date: string;
+  events: number;
+  applications: number;
+  registrations: number;
+  attendance: number;
+  feedback: number;
+}
+
+export interface TestingLabEventAnalytics {
+  eventId: string;
+  name: string;
+  status: string;
+  mode: string;
+  startsAt: string;
+  applications: number;
+  approvedProjects: number;
+  registeredTesters: number;
+  attendedTesters: number;
+  feedback: number;
+  averageRating: number | null;
+  capacity: number;
+  fillRate: number;
+}
+
 export interface TestingLabAnalyticsData {
-  requests: { total: number; open: number; active: number; completed: number };
-  sessions: { total: number; scheduled: number; active: number; completed: number };
-  capacity: { registered: number; available: number; total: number; fillRate: number };
-  feedback: { total: number; averageRating: number | null; recommendationRate: number | null };
+  fromDate: string;
+  toDate: string;
+  generatedAt: string | null;
+  current: TestingLabAnalyticsSummary;
+  previous: TestingLabAnalyticsSummary | null;
   locations: { total: number; active: number };
+  trend: TestingLabAnalyticsTrend[];
+  events: TestingLabEventAnalytics[];
   accessIssues: string[];
 }
 
-function roundedPercent(numerator: number, denominator: number): number {
-  return denominator > 0 ? Math.round((numerator / denominator) * 10000) / 100 : 0;
+export interface TestingLabAnalyticsOptions {
+  fromDate?: string;
+  toDate?: string;
+  includeComparison?: boolean;
 }
 
-export const getTestingLabAnalytics = cache(async (): Promise<TestingLabAnalyticsData> => {
-  const api = createTestingLabModules();
-  const [requests, sessions, locations] = await Promise.all([
-    readResult(api.requests.getTestingRequests({ skip: 0, take: 500 }), 'Testing requests'),
-    readResult(api.sessions.getTestingSessions({ skip: 0, take: 500 }), 'Testing sessions'),
-    readResult(api.locations.getTestingLocations({ skip: 0, take: 500 }), 'Testing locations'),
-  ]);
+export interface TestingLabAnalyticsCsvResult {
+  data: string | null;
+  issue?: string;
+}
 
-  const requestRecords = requests.data ?? [];
-  const sessionRecords = sessions.data ?? [];
-  const locationRecords = locations.data ?? [];
-  const feedbackResults = await Promise.all(
-    requestRecords
-      .filter((request) => request.id)
-      .map((request) => readResult(api.feedback.getTestingRequestsFeedback(request.id!), `Feedback for ${request.title}`)),
-  );
-  const feedbackRecords = feedbackResults.flatMap((result) => result.data ?? []);
-  const ratings = feedbackRecords.map((feedback) => feedback.overallRating).filter((rating): rating is number => typeof rating === 'number');
-  const recommendations = feedbackRecords
-    .map((feedback) => feedback.wouldRecommend)
-    .filter((recommendation): recommendation is boolean => typeof recommendation === 'boolean');
-  const registered = sessionRecords.reduce((total, session) => total + (session.registeredTesterCount ?? 0), 0);
-  const totalCapacity = sessionRecords.reduce((total, session) => total + Math.max(0, session.maxTesters ?? 0), 0);
-  const requestStatuses = requestRecords.map((request) => normalizeTestingRequestStatus(request.status));
-  const sessionStatuses = sessionRecords.map((session) => normalizeTestingSessionStatus(session.status));
+const emptyAnalyticsSummary: TestingLabAnalyticsSummary = {
+  events: 0,
+  completedEvents: 0,
+  applications: 0,
+  approvedProjects: 0,
+  registeredTesters: 0,
+  attendedTesters: 0,
+  feedback: 0,
+  averageRating: null,
+  recommendationRate: null,
+  capacity: 0,
+  fillRate: 0,
+};
+
+function mapAnalyticsSummary(summary: TestingLabAnalyticsReportProjection['current'] | null | undefined): TestingLabAnalyticsSummary {
+  return {
+    events: summary?.events ?? 0,
+    completedEvents: summary?.completedEvents ?? 0,
+    applications: summary?.applications ?? 0,
+    approvedProjects: summary?.approvedProjects ?? 0,
+    registeredTesters: summary?.registeredTesters ?? 0,
+    attendedTesters: summary?.attendedTesters ?? 0,
+    feedback: summary?.feedback ?? 0,
+    averageRating: summary?.averageRating ?? null,
+    recommendationRate: summary?.recommendationRate ?? null,
+    capacity: summary?.capacity ?? 0,
+    fillRate: summary?.fillRate ?? 0,
+  };
+}
+
+export const getTestingLabAnalytics = cache(async (options: TestingLabAnalyticsOptions = {}): Promise<TestingLabAnalyticsData> => {
+  const api = createTestingLabModules();
+  const report = await readResult(api.analytics.getTestingAnalytics(options), 'Testing Lab analytics');
+  const data = report.data;
 
   return {
-    requests: {
-      total: requestRecords.length,
-      open: requestStatuses.filter((status) => status === 'Open').length,
-      active: requestStatuses.filter((status) => status === 'Active' || status === 'In Progress').length,
-      completed: requestStatuses.filter((status) => status === 'Completed').length,
-    },
-    sessions: {
-      total: sessionRecords.length,
-      scheduled: sessionStatuses.filter((status) => status === 'Scheduled').length,
-      active: sessionStatuses.filter((status) => status === 'Active').length,
-      completed: sessionStatuses.filter((status) => status === 'Completed').length,
-    },
-    capacity: {
-      registered,
-      available: Math.max(0, totalCapacity - registered),
-      total: totalCapacity,
-      fillRate: roundedPercent(registered, totalCapacity),
-    },
-    feedback: {
-      total: feedbackRecords.length,
-      averageRating: ratings.length > 0 ? Math.round((ratings.reduce((total, rating) => total + rating, 0) / ratings.length) * 100) / 100 : null,
-      recommendationRate: recommendations.length > 0 ? roundedPercent(recommendations.filter(Boolean).length, recommendations.length) : null,
-    },
+    fromDate: data?.fromDate ?? options.fromDate ?? '',
+    toDate: data?.toDate ?? options.toDate ?? '',
+    generatedAt: data?.generatedAt ?? null,
+    current: data?.current ? mapAnalyticsSummary(data.current) : { ...emptyAnalyticsSummary },
+    previous: data?.previous ? mapAnalyticsSummary(data.previous) : null,
     locations: {
-      total: locationRecords.length,
-      active: locationRecords.filter((location) => normalizeTestingLocationStatus(location.status ?? 'Inactive') === 'Active').length,
+      total: data?.locations?.total ?? 0,
+      active: data?.locations?.active ?? 0,
     },
-    accessIssues: [requests.issue, sessions.issue, locations.issue, ...feedbackResults.map((result) => result.issue)].filter(Boolean) as string[],
+    trend: (data?.trend ?? []).map((item) => ({
+      date: item.date ?? '',
+      events: item.events ?? 0,
+      applications: item.applications ?? 0,
+      registrations: item.registrations ?? 0,
+      attendance: item.attendance ?? 0,
+      feedback: item.feedback ?? 0,
+    })),
+    events: (data?.events ?? [])
+      .filter((item) => item.eventId)
+      .map((item) => ({
+        eventId: item.eventId!,
+        name: item.name ?? 'Untitled event',
+        status: String(item.status ?? 'Draft'),
+        mode: String(item.mode ?? 'Online'),
+        startsAt: item.startsAt ?? '',
+        applications: item.applications ?? 0,
+        approvedProjects: item.approvedProjects ?? 0,
+        registeredTesters: item.registeredTesters ?? 0,
+        attendedTesters: item.attendedTesters ?? 0,
+        feedback: item.feedback ?? 0,
+        averageRating: item.averageRating ?? null,
+        capacity: item.capacity ?? 0,
+        fillRate: item.fillRate ?? 0,
+      })),
+    accessIssues: report.issue ? [report.issue] : [],
   };
 });
+
+export async function getTestingLabAnalyticsCsv(
+  options: Omit<TestingLabAnalyticsOptions, 'includeComparison'>,
+): Promise<TestingLabAnalyticsCsvResult> {
+  const api = createTestingLabModules();
+  return readResult(api.analytics.getTestingAnalyticsExport(options), 'Testing Lab analytics export');
+}
 export function normalizeTestingRequestStatus(status: TestingRequestStatus): string {
   if (typeof status === 'string') return status === 'InProgress' ? 'In Progress' : status;
   return ['Draft', 'Open', 'Active', 'In Progress', 'Paused', 'Completed', 'Cancelled'][status] ?? 'Unknown';

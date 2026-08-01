@@ -300,6 +300,14 @@ function mapSessionToMember(
   });
 }
 
+function mapSummaryToMemberDetail(summary: MemberSummary): MemberDetail {
+  return {
+    ...summary,
+    skills: [],
+    portfolioItems: [],
+  };
+}
+
 function isSuperAdminRole(role?: string | null) {
   return role === 'SystemAdmin' || role === 'Admin';
 }
@@ -889,13 +897,21 @@ export async function getMemberAccessDirectory(options?: {
 export async function getMember(userId: string): Promise<MemberDetail | null> {
   try {
     const client = getApiClient();
+    const userResult = await client.request<IdentityUsersUser>({
+      method: 'GET',
+      path: `/v1/users/${userId}`,
+      requiresAuth: true,
+    });
+
+    if (!userResult.ok) {
+      const session = await auth().catch(() => null);
+      const sessionMember = mapSessionToMember(session?.user);
+
+      return sessionMember?.id === userId ? mapSummaryToMemberDetail(sessionMember) : null;
+    }
+
     const socialProfiles = new GeneratedApi.SocialProfilesModule(client);
-    const [userResult, profileResult, socialProfileResult] = await Promise.all([
-      client.request<IdentityUsersUser>({
-        method: 'GET',
-        path: `/v1/users/${userId}`,
-        requiresAuth: true,
-      }),
+    const [profileResult, socialProfileResult] = await Promise.allSettled([
       client.request<IdentityUsersUserProfileDto>({
         method: 'GET',
         path: `/v1/users/${userId}/profile`,
@@ -904,11 +920,9 @@ export async function getMember(userId: string): Promise<MemberDetail | null> {
       socialProfiles.getApiSocialProfilesUsers(userId),
     ]);
 
-    if (!userResult.ok) return null;
-
     const user = userResult.data;
-    const profile = profileResult.ok ? profileResult.data : null;
-    const socialProfile = socialProfileResult.ok ? socialProfileResult.data : null;
+    const profile = profileResult.status === 'fulfilled' && profileResult.value.ok ? profileResult.value.data : null;
+    const socialProfile = socialProfileResult.status === 'fulfilled' && socialProfileResult.value.ok ? socialProfileResult.value.data : null;
     const summary = mapUserToMember(user);
 
     return {

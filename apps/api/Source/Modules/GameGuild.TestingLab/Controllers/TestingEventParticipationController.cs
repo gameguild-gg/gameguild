@@ -43,6 +43,16 @@ public sealed class TestingEventParticipationController(IMediator mediator) : Ba
             new GetTestingEventSlotRegistrationsQuery(slotId, status),
             cancellationToken).ConfigureAwait(false));
 
+    [HttpGet("participants")]
+    public async Task<ActionResult<TestingParticipantDirectoryProjection>> GetParticipantDirectory(
+        [FromQuery] string? search = null,
+        [FromQuery] TestingSlotRegistrationStatus? status = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new GetTestingParticipantDirectoryQuery(search, status, skip, take),
+            cancellationToken).ConfigureAwait(false));
     [HttpPost("registrations/{registrationId:guid}:check-in")]
     public async Task<ActionResult<TestingSlotRegistrationProjection>> CheckIn(
         Guid registrationId,
