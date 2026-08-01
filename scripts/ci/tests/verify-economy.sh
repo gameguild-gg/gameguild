@@ -85,6 +85,10 @@ test_browser_server_uses_published_api() {
   [[ "$api_url_line" -lt "$web_launch_line" ]]
 }
 
+test_web_vitest_isolated_from_published_api() {
+  grep -q 'run env -u API_URL pnpm --filter @game-guild/web exec vitest run' "$ci_dir/verify-economy.sh"
+}
+
 test_local_api_readiness_enables_simulation_explicitly() {
   local gate="$ci_dir/verify-economy.sh"
   local enabled_line simulation_line launch_line
@@ -279,6 +283,7 @@ run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
 run_test 'browser server uses the published API instance' test_browser_server_uses_published_api
+run_test 'web Vitest is isolated from the published API instance' test_web_vitest_isolated_from_published_api
 run_test 'local API readiness enables payment simulation explicitly' test_local_api_readiness_enables_simulation_explicitly
 run_test 'Coolify forwards Stripe gateway identity and mode' test_coolify_compose_forwards_stripe_gateway_identity
 run_test 'published API uses its published content root' test_published_api_uses_published_content_root
