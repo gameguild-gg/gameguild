@@ -24,6 +24,46 @@ whole_solution_scaffold_project() {
   esac
 }
 
+test_assembly_from_trx_metadata() {
+  "$PYTHON_BIN" - "$1" <<'PY'
+import re
+import sys
+import xml.etree.ElementTree as ET
+
+root = ET.parse(sys.argv[1]).getroot()
+candidates = set()
+
+for element in root.iter():
+    tag = element.tag.rsplit("}", 1)[-1]
+    if tag not in {"StdOut", "Text"}:
+        continue
+
+    text = "".join(element.itertext())
+    for match in re.finditer(
+        r"(?:Discovering|Discovered):\s+([A-Za-z0-9_.-]+)",
+        text,
+    ):
+        assembly = match.group(1)
+        candidates.add(
+            assembly if assembly.endswith(".dll") else f"{assembly}.dll"
+        )
+
+    for match in re.finditer(
+        r"No test is available in\s+([^\r\n]+?\.dll)",
+        text,
+    ):
+        candidates.add(re.split(r"[\\/]", match.group(1))[-1])
+
+if len(candidates) != 1:
+    raise SystemExit(
+        "TRX metadata must identify exactly one test assembly; "
+        f"found {sorted(candidates)}"
+    )
+
+print(next(iter(candidates)))
+PY
+}
+
 test_assembly_for_trx() {
   local output_log="$1" trx_path="$2"
   local target_name="${trx_path//\\//}"
@@ -49,7 +89,12 @@ test_assembly_for_trx() {
     esac
   done < "$output_log"
 
-  [[ -n "$matched_assembly" ]] || economy_gate_error "Could not identify the test assembly for TRX evidence: $trx_path"
+  if [[ -z "$matched_assembly" ]]; then
+    if ! matched_assembly="$(test_assembly_from_trx_metadata "$trx_path")"; then
+      economy_gate_error "Could not identify the test assembly for TRX evidence: $trx_path"
+      return 1
+    fi
+  fi
   printf '%s\n' "$matched_assembly"
 }
 

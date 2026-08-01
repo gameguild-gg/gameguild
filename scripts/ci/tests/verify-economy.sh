@@ -211,6 +211,31 @@ test_whole_solution_allows_only_source_empty_scaffolds() {
     --validate-whole-solution-evidence "$root" "$log" "$trx"
 }
 
+test_whole_solution_recovers_scaffold_identity_from_trx() {
+  local root="$fixture_root/whole-solution-trx-fallback"
+  local project='apps/api/tests/GameGuild.Localization.IntegrationTests/GameGuild.Localization.IntegrationTests.csproj'
+  local project_directory="$root/$(dirname "$project")"
+  local trx="$root/localization-empty.trx"
+  local log="$root/dotnet-test.log"
+  mkdir -p "$project_directory"
+  printf '<Project Sdk="Microsoft.NET.Sdk" />\n' > "$root/$project"
+  cat > "$trx" <<'XML'
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <ResultSummary outcome="Completed">
+    <Counters total="0" executed="0" passed="0" failed="0" />
+    <Output>
+      <StdOut>[xUnit.net] Discovering: GameGuild.Localization.IntegrationTests
+[xUnit.net] Discovered: GameGuild.Localization.IntegrationTests</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
+XML
+  printf 'Test run for %s/bin/Release/net10.0/GameGuild.Localization.IntegrationTests.dll (.NETCoreApp,Version=v10.0)\nResults File: %s/unrelated.trx\n' \
+    "$project_directory" "$root" > "$log"
+
+  bash "$ci_dir/verify-economy.sh" --validate-whole-solution-evidence "$root" "$log" "$trx" >/dev/null
+}
+
 test_cobertura_requires_full_method_coverage() {
   local coverage="$fixture_root/coverage.cobertura.xml"
   cat > "$coverage" <<'XML'
@@ -254,6 +279,7 @@ run_test 'readiness requires consecutive successful probes' test_readiness_requi
 run_test 'process cleanup terminates Bash background processes' test_process_cleanup_stops_background_process
 run_test 'TRX evidence rejects skipped and zero-test suites' test_trx_rejects_skips_and_empty_suites
 run_test 'whole-solution evidence allows only named source-empty scaffolds' test_whole_solution_allows_only_source_empty_scaffolds
+run_test 'whole-solution evidence recovers scaffold identity from TRX metadata' test_whole_solution_recovers_scaffold_identity_from_trx
 run_test 'Cobertura enforces line, branch, and method coverage' test_cobertura_requires_full_method_coverage
 run_test 'Vitest and Playwright reject pending or skipped tests' test_json_evidence_rejects_pending_and_skipped
 run_test 'canonical JSON is deterministic and preserves arrays' test_canonical_json_preserves_arrays
