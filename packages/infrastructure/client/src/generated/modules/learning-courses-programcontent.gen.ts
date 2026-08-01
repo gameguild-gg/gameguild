@@ -56,113 +56,6 @@ export class LearningCoursesProgramcontentModule {
 
   /**
    */
-  async getCoursesContentByType(
-    programId: string,
-    type: Types.LearningCoursesProgramContentType,
-  ): Promise<Result<Array<Types.LearningCoursesProgramContent>, ApiError>> {
-    const url = `/v1/courses/${programId}/content/by-type/${type}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesProgramContent>, ApiError>;
-  }
-
-  /**
-   */
-  async getCoursesContentByVisibility(
-    programId: string,
-    visibility: Types.LearningCoursesVisibility,
-  ): Promise<Result<Array<Types.LearningCoursesProgramContent>, ApiError>> {
-    const url = `/v1/courses/${programId}/content/by-visibility/${visibility}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesProgramContent>, ApiError>;
-  }
-
-  /**
-   */
-  async postCoursesContentReorder1(programId: string, body: Types.LearningCoursesReorderContent): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${programId}/content/reorder`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesReorderContentSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getCoursesContentRequired(programId: string): Promise<Result<Array<Types.LearningCoursesProgramContent>, ApiError>> {
-    const url = `/v1/courses/${programId}/content/required`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesProgramContent>, ApiError>;
-  }
-
-  /**
-   */
-  async postCoursesContentSearch(
-    programId: string,
-    body: Types.LearningCoursesSearchContent,
-  ): Promise<Result<Array<Types.LearningCoursesProgramContent>, ApiError>> {
-    const url = `/v1/courses/${programId}/content/search`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesSearchContentSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesProgramContent>, ApiError>;
-  }
-
-  /**
-   */
-  async getCoursesContentStats(programId: string): Promise<Result<Types.LearningCoursesContentStats, ApiError>> {
-    const url = `/v1/courses/${programId}/content/stats`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesContentStatsSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async getCoursesContent1(programId: string, id: string): Promise<Result<Types.LearningCoursesProgramContent, ApiError>> {
     const url = `/v1/courses/${programId}/content/${id}`;
 
@@ -225,24 +118,6 @@ export class LearningCoursesProgramcontentModule {
 
   /**
    */
-  async postCoursesContentMove(programId: string, id: string, body: Types.LearningCoursesMoveContent): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${programId}/content/${id}/move`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesMoveContentSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async postCoursesContentSubmit(
     programId: string,
     id: string,
@@ -281,6 +156,131 @@ export class LearningCoursesProgramcontentModule {
     });
 
     return result as Result<Array<Types.LearningCoursesProgramContent>, ApiError>;
+  }
+
+  /**
+   */
+  async postCoursesContentReorder(programId: string, body: Types.LearningCoursesReorderContent): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${programId}/content/reorder`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCoursesReorderContentSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postCoursesContentMove(programId: string, id: string, body: Types.LearningCoursesMoveContent): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${programId}/content/${id}/move`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCoursesMoveContentSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getCoursesContentRequired(programId: string): Promise<Result<Array<Types.LearningCoursesProgramContent>, ApiError>> {
+    const url = `/v1/courses/${programId}/content/required`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesProgramContent>, ApiError>;
+  }
+
+  /**
+   */
+  async getCoursesContentByType(
+    programId: string,
+    type: Types.LearningCoursesProgramContentType,
+  ): Promise<Result<Array<Types.LearningCoursesProgramContent>, ApiError>> {
+    const url = `/v1/courses/${programId}/content/by-type/${type}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesProgramContent>, ApiError>;
+  }
+
+  /**
+   */
+  async getCoursesContentByVisibility(
+    programId: string,
+    visibility: Types.LearningCoursesVisibility,
+  ): Promise<Result<Array<Types.LearningCoursesProgramContent>, ApiError>> {
+    const url = `/v1/courses/${programId}/content/by-visibility/${visibility}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesProgramContent>, ApiError>;
+  }
+
+  /**
+   */
+  async postCoursesContentSearch(
+    programId: string,
+    body: Types.LearningCoursesSearchContent,
+  ): Promise<Result<Array<Types.LearningCoursesProgramContent>, ApiError>> {
+    const url = `/v1/courses/${programId}/content/search`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCoursesSearchContentSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesProgramContent>, ApiError>;
+  }
+
+  /**
+   */
+  async getCoursesContentStats(programId: string): Promise<Result<Types.LearningCoursesContentStats, ApiError>> {
+    const url = `/v1/courses/${programId}/content/stats`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesContentStatsSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 }
 

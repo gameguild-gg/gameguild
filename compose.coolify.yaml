@@ -50,6 +50,7 @@ services:
       - ConnectionStrings__DefaultConnection=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Gss Encryption Mode=Disable;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
       - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_HOST:?set POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:?set POSTGRES_DB};Username=${POSTGRES_USER:?set POSTGRES_USER};Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD};Include Error Detail=false;Gss Encryption Mode=Disable;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
       - ConnectionStrings__MigrationConnection=${POSTGRES_MIGRATION_CONNECTION:?set POSTGRES_MIGRATION_CONNECTION with a role distinct from POSTGRES_USER}
+      - POSTGRES_MIGRATION_CONNECTION=${POSTGRES_MIGRATION_CONNECTION:?set POSTGRES_MIGRATION_CONNECTION with a role distinct from POSTGRES_USER}
       - Database__RunStartupInitialization=true
       - Database__FailStartupOnMigrationFailure=true
       # JWT configuration consumed by the API and auth services
@@ -69,13 +70,13 @@ services:
       - PaymentGateways__Stripe__PublishableKey=${PaymentGateways__Stripe__PublishableKey:?set PaymentGateways__Stripe__PublishableKey}
       - PaymentGateways__Stripe__AccountId=${PaymentGateways__Stripe__AccountId:?set PaymentGateways__Stripe__AccountId}
       - PaymentGateways__Stripe__ConnectedAccountId=${Billing__Stripe__ConnectedAccountId:-}
-      - PaymentGateways__Stripe__LiveMode=${Billing__Stripe__LiveMode:?set Billing__Stripe__LiveMode to false for Staging or true for Production}
+      - PaymentGateways__Stripe__LiveMode=${Billing__Stripe__LiveMode:-false}
       - Billing__Stripe__WebhookSecret=${Billing__Stripe__WebhookSecret:?set Billing__Stripe__WebhookSecret}
       - Billing__Stripe__WebhookEndpointId=${Billing__Stripe__WebhookEndpointId:?set Billing__Stripe__WebhookEndpointId}
       - Billing__Stripe__AccountId=${PaymentGateways__Stripe__AccountId:?set PaymentGateways__Stripe__AccountId}
       - Billing__Stripe__ApiVersion=${Billing__Stripe__ApiVersion:?set Billing__Stripe__ApiVersion}
       - Billing__Stripe__ConnectedAccountId=${Billing__Stripe__ConnectedAccountId:-}
-      - Billing__Stripe__LiveMode=${Billing__Stripe__LiveMode:?set Billing__Stripe__LiveMode to false for Staging or true for Production}
+      - Billing__Stripe__LiveMode=${Billing__Stripe__LiveMode:-false}
       - Billing__Stripe__WebhookToleranceSeconds=${Billing__Stripe__WebhookToleranceSeconds:-300}
     volumes:
       - dataprotection-keys-v2:/app/.aspnet/DataProtection-Keys
@@ -125,6 +126,8 @@ services:
         API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
+        AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
+        UNIFIED_LEARNING_ENABLED: ${UNIFIED_LEARNING_ENABLED:-false}
     image: game-guild-web
     ports:
       - '3000'
@@ -136,6 +139,10 @@ services:
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
       - NEXT_PUBLIC_APP_URL=${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
       - NEXT_PUBLIC_LEARNING_APP_URL=${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
+      - WEB_PUBLIC_URL=${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
+      - LEARNING_PUBLIC_URL=${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
+      - AUTH_COOKIE_DOMAIN=${AUTH_COOKIE_DOMAIN:-}
+      - UNIFIED_LEARNING_ENABLED=${UNIFIED_LEARNING_ENABLED:-false}
       - NEXTAUTH_URL=${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
       - AUTH_SECRET=${AUTH_SECRET:?set AUTH_SECRET}
       - AUTH_TRUST_HOST=true
@@ -189,6 +196,7 @@ services:
         API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
+        AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
     image: game-guild-learning
     ports:
       - '3000'
@@ -202,6 +210,7 @@ services:
       - AUTH_SECRET=${AUTH_SECRET:?set AUTH_SECRET}
       - AUTH_TRUST_HOST=true
       - NEXT_PUBLIC_WEB_URL=${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
+      - AUTH_COOKIE_DOMAIN=${AUTH_COOKIE_DOMAIN:-}
     security_opt:
       - no-new-privileges:true
     healthcheck:

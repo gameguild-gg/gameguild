@@ -13,6 +13,14 @@ const result = GameGuildAuth({
                 ? 'game-guild-learning-local-development-secret'
                 : undefined),
     debug: process.env.NODE_ENV === 'development',
+    cookies: {
+        name: 'gameguild',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        domain: process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined,
+        httpOnly: true,
+    },
 });
 
 export const { handlers, auth, signIn, signOut, signUp, update } = result;

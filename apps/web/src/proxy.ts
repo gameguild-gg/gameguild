@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { routing } from '@/i18n';
 import { getTrackProgramHref } from '@/lib/tracks/catalog';
 import { elapsedMs, getRequestId, logWebRequest } from '@/lib/server/request-logging';
+import {
+  getRequestHostname,
+  resolveLearningHostRoute,
+} from '@/lib/routing/learning-host-routing';
 
 function isPublicAssetPath(pathname: string): boolean {
   return (
@@ -52,9 +56,38 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const requestId = getRequestId(request.headers);
   let response: NextResponse;
   let proxyAction = 'next';
+  const hostDecision =
+    process.env.UNIFIED_LEARNING_ENABLED === 'true'
+      ? resolveLearningHostRoute({
+          config: {
+            defaultLocale: routing.defaultLocale,
+            locales: routing.locales,
+            learningOrigin:
+              process.env.LEARNING_PUBLIC_URL ||
+              process.env.NEXT_PUBLIC_LEARNING_APP_URL ||
+              'https://learning.gameguild.gg',
+            webOrigin:
+              process.env.WEB_PUBLIC_URL ||
+              process.env.NEXT_PUBLIC_APP_URL ||
+              'https://gameguild.gg',
+          },
+          hostname: getRequestHostname(request.headers),
+          url: request.nextUrl,
+        })
+      : { action: 'next' as const };
   const trackRedirectPath = getTrackRedirectPath(request.nextUrl.pathname);
 
-  if (trackRedirectPath) {
+  if (hostDecision.action === 'redirect') {
+    response = NextResponse.redirect(hostDecision.url, hostDecision.status);
+    proxyAction = 'redirect';
+  } else if (hostDecision.action === 'rewrite') {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-gameguild-visible-url', request.nextUrl.toString());
+    response = NextResponse.rewrite(hostDecision.url, {
+      request: { headers: requestHeaders },
+    });
+    proxyAction = 'rewrite';
+  } else if (trackRedirectPath) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = trackRedirectPath;
     redirectUrl.search = '';

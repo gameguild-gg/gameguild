@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContentTree } from './content-tree';
 import type { ContentItem } from '@/lib/learning/types';
 import { TooltipProvider } from '@game-guild/ui/components/tooltip';
-import { addContent, deleteContent, reorderContent, updateAssessment, updateContent } from '@/lib/learning/actions';
+import { addContent, deleteContent, reorderContent, updateContent } from '@/lib/learning/actions';
 
 const navigationMocks = vi.hoisted(() => ({
   refresh: vi.fn(),
@@ -37,7 +37,6 @@ vi.mock('@/lib/learning/actions', () => ({
   addContent: vi.fn(),
   deleteContent: vi.fn(),
   reorderContent: vi.fn(),
-  updateAssessment: vi.fn(),
   updateContent: vi.fn(),
 }));
 
@@ -96,29 +95,13 @@ const secondLessonItem = {
   order: 1,
 } satisfies ContentItem;
 
-const availableAssessments = [
-  {
-    id: 'assessment-1',
-    courseId: 'course-1',
-    contentId: null,
-    title: 'Week 01 Quiz',
-    description: null,
-    type: 'Quiz',
-    maxScore: 10,
-    passingScore: 7,
-    isRequired: true,
-  },
-];
-
 function renderContentTree({
   modules = [moduleItem],
   allItems = [moduleItem],
-  assessments = [],
   virtualModuleIds = [],
 }: {
   modules?: ContentItem[];
   allItems?: ContentItem[];
-  assessments?: any[];
   virtualModuleIds?: string[];
 } = {}) {
   return render(
@@ -127,7 +110,6 @@ function renderContentTree({
         courseId="course-1"
         modules={modules}
         allItems={allItems}
-        assessments={assessments}
         virtualModuleIds={virtualModuleIds}
       />
     </TooltipProvider>,
@@ -140,11 +122,10 @@ describe('ContentTree course management', () => {
     vi.mocked(addContent).mockResolvedValue({ success: true, data: { id: 'created-content' } });
     vi.mocked(deleteContent).mockResolvedValue({ success: true, data: null });
     vi.mocked(reorderContent).mockResolvedValue({ success: true, data: null });
-    vi.mocked(updateAssessment).mockResolvedValue({ success: true, data: null });
     vi.mocked(updateContent).mockResolvedValue({ success: true, data: null });
   });
 
-  it('offers lesson and activity types without legacy Page or Challenge options', async () => {
+  it('offers the current content item types without legacy aliases', async () => {
     const user = userEvent.setup();
 
     renderContentTree();
@@ -153,9 +134,13 @@ describe('ContentTree course management', () => {
     await user.click(screen.getByRole('combobox', { name: /type/i }));
 
     expect(screen.getByRole('option', { name: 'Lesson' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Quiz' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Assignment' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Quiz' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Project' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Discussion' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Code' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Reflection' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Survey' })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Page' })).not.toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Challenge' })).not.toBeInTheDocument();
   });
@@ -195,7 +180,6 @@ describe('ContentTree course management', () => {
           courseId="course-1"
           modules={[createdModule]}
           allItems={[createdModule]}
-          assessments={[]}
           virtualModuleIds={[]}
         />
       </TooltipProvider>,
@@ -220,7 +204,6 @@ describe('ContentTree course management', () => {
           courseId="course-1"
           modules={[createdModule]}
           allItems={[createdModule]}
-          assessments={[]}
           virtualModuleIds={[]}
         />
       </TooltipProvider>,
@@ -624,98 +607,17 @@ describe('ContentTree course management', () => {
     expect(navigationMocks.refresh).not.toHaveBeenCalled();
   });
 
-  it('attaches and detaches assessments from content items', async () => {
-    const user = userEvent.setup();
-    renderContentTree({
-      allItems: [moduleItem, lessonItem],
-      assessments: availableAssessments,
-    });
+  it('does not expose assessment linking controls in the content tree', () => {
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
 
-    await user.click(screen.getByRole('button', { name: /attach assessment/i }));
-    const attachDialog = screen.getByRole('dialog', { name: /attach assessment/i });
-    await user.click(within(attachDialog).getByRole('button', { name: /week 01 quiz/i }));
-
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: 'course-1',
-        assessmentId: 'assessment-1',
-        contentId: 'lesson-1',
-      });
-    });
-
-    vi.clearAllMocks();
-    renderContentTree({
-      allItems: [moduleItem, lessonItem],
-      assessments: [{ ...availableAssessments[0], contentId: 'lesson-1' }],
-    });
-
-    await user.click(screen.getAllByRole('button', { name: /detach assessment/i })[0]!);
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: 'course-1',
-        assessmentId: 'assessment-1',
-        clearContentId: true,
-      });
-    });
-  });
-
-  it('marks unavailable assessment choices and surfaces attach errors', async () => {
-    const user = userEvent.setup();
-    vi.mocked(updateAssessment).mockResolvedValueOnce({ success: false, error: 'Assessment is already linked.' });
-    renderContentTree({
-      allItems: [moduleItem, lessonItem],
-      assessments: [
-        ...availableAssessments,
-        {
-          ...availableAssessments[0],
-          id: 'assessment-2',
-          title: 'Linked elsewhere',
-          contentId: 'other-lesson',
-        },
-      ],
-    });
-
-    await user.click(screen.getByRole('button', { name: /attach assessment/i }));
-    const attachDialog = screen.getByRole('dialog', { name: /attach assessment/i });
-    expect(within(attachDialog).getByText(/already linked to another item/i)).toBeInTheDocument();
-
-    await user.click(within(attachDialog).getByRole('button', { name: /week 01 quiz/i }));
-    expect(await screen.findByText('Assessment is already linked.')).toBeInTheDocument();
-  });
-
-  it('handles detach assessment errors and lets professors cancel the picker', async () => {
-    vi.mocked(updateAssessment).mockResolvedValueOnce({ success: false, error: 'Cannot detach assessment.' });
-    renderContentTree({
-      allItems: [moduleItem, lessonItem],
-      assessments: [{ ...availableAssessments[0], contentId: 'lesson-1' }],
-    });
-
-    fireEvent.click(screen.getAllByRole('button', { name: /detach assessment/i })[1]!);
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: 'course-1',
-        assessmentId: 'assessment-1',
-        clearContentId: true,
-      });
-    });
-    expect(navigationMocks.refresh).not.toHaveBeenCalled();
-
-    vi.clearAllMocks();
-    renderContentTree({
-      allItems: [moduleItem, secondLessonItem],
-      assessments: availableAssessments,
-    });
-    fireEvent.click(screen.getByRole('button', { name: /attach assessment/i }));
-    const picker = screen.getByRole('dialog', { name: /attach assessment/i });
-    fireEvent.click(within(picker).getByRole('button', { name: /cancel/i }));
-    expect(screen.queryByRole('dialog', { name: /attach assessment/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /attach assessment/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /detach assessment/i })).not.toBeInTheDocument();
   });
 
   it('closes management dialogs through the dialog close affordance', () => {
     renderContentTree({
       modules: [moduleItem, secondModuleItem],
       allItems: [moduleItem, secondModuleItem, lessonItem],
-      assessments: availableAssessments,
     });
 
     fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
@@ -730,9 +632,6 @@ describe('ContentTree course management', () => {
     fireEvent.click(screen.getByRole('button', { name: /^close$/i }));
     expect(screen.queryByRole('dialog', { name: /add submodule/i })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /attach assessment/i }));
-    fireEvent.click(screen.getByRole('button', { name: /^close$/i }));
-    expect(screen.queryByRole('dialog', { name: /attach assessment/i })).not.toBeInTheDocument();
   });
 
   it('uses subitem edit and delete actions from nested content rows', async () => {

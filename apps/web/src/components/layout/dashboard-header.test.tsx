@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DashboardHeader } from './dashboard-header';
 
 const mocks = vi.hoisted(() => ({
+  pathname: '/dashboard/learning/courses',
   push: vi.fn(),
   signOut: vi.fn(),
 }));
@@ -19,7 +20,7 @@ vi.mock('@/i18n/navigation', () => ({
       {children}
     </a>
   ),
-  usePathname: () => '/dashboard/learning/courses',
+  usePathname: () => mocks.pathname,
   useRouter: () => ({ push: mocks.push }),
 }));
 
@@ -36,11 +37,35 @@ vi.mock('@game-guild/ui/components/sidebar', () => ({
 
 describe('DashboardHeader', () => {
   beforeEach(() => {
+    mocks.pathname = '/dashboard/learning/courses';
     mocks.push.mockReset();
     mocks.signOut.mockReset();
     mocks.signOut.mockResolvedValue(undefined);
   });
 
+  it('updates the accessible breadcrumb when Testing Lab routes change', () => {
+    mocks.pathname = '/dashboard/testing-lab/reports';
+    const { rerender } = render(
+      <DashboardHeader
+        user={{ id: 'user-123', name: 'Ada Lovelace', email: 'ada@gameguild.gg', image: null }}
+        notifications={{ items: [], unreadCount: 0 }}
+      />,
+    );
+
+    expect(screen.getByRole('navigation', { name: 'Dashboard breadcrumb' })).toHaveTextContent('Reports');
+
+    mocks.pathname = '/dashboard/testing-lab/settings/access';
+    rerender(
+      <DashboardHeader
+        user={{ id: 'user-123', name: 'Ada Lovelace', email: 'ada@gameguild.gg', image: null }}
+        notifications={{ items: [], unreadCount: 0 }}
+      />,
+    );
+
+    const breadcrumb = screen.getByRole('navigation', { name: 'Dashboard breadcrumb' });
+    expect(breadcrumb).toHaveTextContent('Access');
+    expect(breadcrumb).not.toHaveTextContent('Reports');
+  });
   it('renders the signed-in user menu and routes sign-out through auth', async () => {
     const user = userEvent.setup();
 

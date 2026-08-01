@@ -404,7 +404,7 @@ public static class InfrastructureLayerExtensions
 
         // Discover module assemblies - load from disk to ensure all modules are available
         var allAssemblies = DependencyInjection.GetAssembliesByPattern("GameGuild.", loadFromDisk: true)
-            .Where(a => !a.FullName?.Contains("Test", StringComparison.OrdinalIgnoreCase) ?? true)
+            .Where(a => !ModuleConfiguration.IsTestAssembly(a.GetName().Name))
             .Where(a => !a.FullName?.Contains("API", StringComparison.OrdinalIgnoreCase) ?? true)
             .ToArray();
 

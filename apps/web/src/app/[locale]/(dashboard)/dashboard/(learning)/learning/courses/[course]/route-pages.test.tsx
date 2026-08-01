@@ -92,16 +92,14 @@ vi.mock('./course-nav', () => ({
 vi.mock('./content/content-tree', () => ({
   ContentTree: ({
     modules,
-    assessments,
     allItems,
     virtualModuleIds,
   }: {
     modules: unknown[];
-    assessments: unknown[];
     allItems: unknown[];
     virtualModuleIds: unknown[];
   }) => (
-    <div data-testid="content-tree">{`${modules.length} modules / ${assessments.length} assessments / ${allItems.length} items / ${virtualModuleIds.length} virtual`}</div>
+    <div data-testid="content-tree">{`${modules.length} modules / ${allItems.length} items / ${virtualModuleIds.length} virtual`}</div>
   ),
 }));
 
@@ -333,7 +331,7 @@ describe('course-management dashboard route pages', () => {
   it('renders content, assessment, class, student, certificate, and listing management pages', async () => {
     render(await ContentPage({ params: params() } as never));
     expect(screen.getByText('1 modules')).toBeInTheDocument();
-    expect(screen.getByTestId('content-tree')).toHaveTextContent('1 modules / 1 assessments / 2 items / 0 virtual');
+    expect(screen.getByTestId('content-tree')).toHaveTextContent('1 modules / 2 items / 0 virtual');
 
     cleanup();
     render(await AssessmentsPage({ params: params() } as never));
@@ -397,7 +395,7 @@ describe('course-management dashboard route pages', () => {
     expect(screen.getByText('2 content items')).toBeInTheDocument();
     expect(screen.getByText('1 published')).toBeInTheDocument();
     expect(screen.getByText('1h 20m')).toBeInTheDocument();
-    expect(screen.getByTestId('content-tree')).toHaveTextContent('1 modules / 1 assessments / 2 items / 1 virtual');
+    expect(screen.getByTestId('content-tree')).toHaveTextContent('1 modules / 2 items / 1 virtual');
   });
 
   it('uses the Next not-found boundary when protected course-management routes cannot load the course', async () => {

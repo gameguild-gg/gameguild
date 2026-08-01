@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
   getCourseTestimonials: vi.fn(),
   getContentItem: vi.fn(),
   getAssessment: vi.fn(),
+  getAssessmentDefinition: vi.fn(),
   getCourseAssessments: vi.fn(),
   getCourseAssessmentGroups: vi.fn(),
   getCourseCertificates: vi.fn(),
@@ -68,6 +69,7 @@ vi.mock('@/lib/learning', () => ({
   getCourseTestimonials: mocks.getCourseTestimonials,
   getContentItem: mocks.getContentItem,
   getAssessment: mocks.getAssessment,
+  getAssessmentDefinition: mocks.getAssessmentDefinition,
   getCourseAssessments: mocks.getCourseAssessments,
   getCourseAssessmentGroups: mocks.getCourseAssessmentGroups,
   getCourseCertificates: mocks.getCourseCertificates,
@@ -81,8 +83,16 @@ vi.mock('./content/[contentId]/content-item-editor', () => ({
 }));
 
 vi.mock('./assessments/[assessmentId]/assessment-editor', () => ({
-  AssessmentEditor: ({ assessment, assessmentGroups }: { assessment: { title: string }; assessmentGroups: unknown[] }) => (
-    <div data-testid="assessment-editor">{`${assessment.title}:${assessmentGroups.length}`}</div>
+  AssessmentEditor: ({
+    assessment,
+    assessmentDefinition,
+    assessmentGroups,
+  }: {
+    assessment: { title: string };
+    assessmentDefinition: unknown;
+    assessmentGroups: unknown[];
+  }) => (
+    <div data-testid="assessment-editor">{`${assessment.title}:${assessmentDefinition ? 1 : 0}:${assessmentGroups.length}`}</div>
   ),
 }));
 
@@ -319,6 +329,7 @@ describe('course-management secondary route pages', () => {
     });
     mocks.getContentItem.mockResolvedValue({ id: 'content-1', title: 'Lesson 1' });
     mocks.getAssessment.mockResolvedValue({ id: 'assessment-1', title: 'Quiz 1' });
+    mocks.getAssessmentDefinition.mockResolvedValue({ assessmentId: 'assessment-1', definitionSchemaVersion: 1, definition: { order: [], blocks: {} } });
     mocks.getCourseAssessments.mockResolvedValue({ assessments: [{ id: 'assessment-1', title: 'Quiz 1' }], total: 1 });
     mocks.getCourseAssessmentGroups.mockResolvedValue([{ id: 'group-1', name: 'Quizzes' }]);
     mocks.getCourseCertificates.mockResolvedValue({ templates: [{ id: 'template-1', name: 'Completion certificate' }], total: 1 });
@@ -486,7 +497,7 @@ describe('course-management secondary route pages', () => {
     expect(screen.getByTestId('content-item-editor')).toHaveTextContent('Advanced AI:Lesson 1');
 
     render(await AssessmentDetailPage({ params: params({ assessmentId: 'assessment-1' }) } as never));
-    expect(screen.getByTestId('assessment-editor')).toHaveTextContent('Quiz 1:1');
+    expect(screen.getByTestId('assessment-editor')).toHaveTextContent('Quiz 1:1:1');
 
     render(await CertificateTemplateDetailPage({ params: params({ templateId: 'template-1' }) } as never));
     expect(screen.getByDisplayValue('Completion certificate')).toBeInTheDocument();

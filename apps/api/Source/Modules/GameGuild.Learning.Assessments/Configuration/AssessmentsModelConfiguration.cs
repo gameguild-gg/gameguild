@@ -16,6 +16,8 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.DefinitionPayload).HasColumnType("jsonb");
+            entity.Property(e => e.DefinitionSchemaVersion).HasDefaultValue(1);
             entity.Property(e => e.SubmissionModalities).HasConversion<int>();
             entity.Property(e => e.PresentationMode).HasConversion<int>();
             entity.ToTable(table =>

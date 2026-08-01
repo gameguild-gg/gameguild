@@ -4,9 +4,7 @@ import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { Label } from '@game-guild/ui/components/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { serializeProject, storageToBlocks } from '@/components/block-content-editor/lib/storage/editor/block-storage';
-import type { BlockArray, BlockCellType, BlockStorage } from '@/components/block-content-editor/lib/storage/editor/block-structure';
-
-const QUIZ_ALLOWED_BLOCK_TYPES = [] satisfies BlockCellType[];
+import type { BlockArray, BlockStorage } from '@/components/block-content-editor/lib/storage/editor/block-structure';
 
 const BlockArrayEditor = lazy(async () => {
   const mod = await import('@/components/block-content-editor/engines/blocks/block-array-editor');
@@ -62,9 +60,7 @@ export function QuizContentEditor({ initialContent, onChange }: QuizContentEdito
               <BlockArrayEditor
                 blocks={blocks}
                 onChange={handleBlocksChange}
-                allowedBlockTypes={QUIZ_ALLOWED_BLOCK_TYPES}
-                defaultPickerTab="templates"
-                hideBlockTypesTab
+                projectType="quiz"
               />
             </Suspense>
           </div>

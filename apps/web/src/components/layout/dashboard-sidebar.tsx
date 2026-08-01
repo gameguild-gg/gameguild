@@ -19,6 +19,7 @@ import {
   SidebarRail,
 } from '@game-guild/ui/components/sidebar';
 import {
+  BarChart3,
   BookOpen,
   ChevronRight,
   FileText,
@@ -28,7 +29,9 @@ import {
   HeadphonesIcon,
   LayoutDashboard,
   MailCheck,
+  FolderKanban,
   Rocket,
+  Settings,
   ShieldCheck,
   UserCog,
   Users,
@@ -163,8 +166,15 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
       },
       {
         title: 'Testing Lab',
-        url: '/dashboard/testing-lab',
         icon: FlaskConical,
+        subGroups: [
+          { title: 'Overview', url: '/dashboard/testing-lab', icon: LayoutDashboard, items: [] },
+          { title: 'Events', url: '/dashboard/testing-lab/events', icon: FlaskConical, items: [] },
+          { title: 'Projects', url: '/dashboard/testing-lab/projects', icon: FolderKanban, items: [] },
+          { title: 'Participants', url: '/dashboard/testing-lab/participants', icon: Users, items: [] },
+          { title: 'Analytics', url: '/dashboard/testing-lab/analytics', icon: BarChart3, items: [] },
+          { title: 'Settings', url: '/dashboard/testing-lab/settings', icon: Settings, items: [] },
+        ],
       },
       {
         title: 'Launch Pad',
@@ -250,12 +260,7 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                 // Collapsible item with sub-items
                 if (hasItems) {
                   return (
-                    <Collapsible
-                      key={item.title}
-                      open={isOpen}
-                      onOpenChange={() => toggleItem(item.title)}
-                      className="group/collapsible"
-                    >
+                    <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton>
@@ -275,9 +280,7 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                                       <subItem.icon className="size-4" />
                                       <span>{subItem.title}</span>
                                       {subItem.badge && (
-                                        <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
-                                          {subItem.badge}
-                                        </span>
+                                        <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">{subItem.badge}</span>
                                       )}
                                     </Link>
                                   </SidebarMenuSubButton>
@@ -294,12 +297,7 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                 // Collapsible item with sub-groups (nested)
                 if (hasSubGroups) {
                   return (
-                    <Collapsible
-                      key={item.title}
-                      open={isOpen}
-                      onOpenChange={() => toggleItem(item.title)}
-                      className="group/collapsible"
-                    >
+                    <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton>
