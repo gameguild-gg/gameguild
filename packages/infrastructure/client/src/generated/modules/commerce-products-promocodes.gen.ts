@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -25,11 +25,13 @@ export class CommerceProductsPromocodesModule {
     searchTerm?: string;
     skip?: number;
     take?: number;
-  }): Promise<Result<Types.PagedResultOfGameGuildCommerceProductsPromoCodeDto, ApiError>> {
-    const url = '/v1/promo-codes';
+  }): Promise<
+    Result<Types.PagedResultOfGameGuildCommerceProductsPromoCodeDto, ApiError>
+  > {
+    const url = "/v1/promo-codes";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -37,7 +39,11 @@ export class CommerceProductsPromocodesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultOfGameGuildCommerceProductsPromoCodeDtoSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.PagedResultOfGameGuildCommerceProductsPromoCodeDtoSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -46,14 +52,20 @@ export class CommerceProductsPromocodesModule {
 
   /**
    */
-  async postPromoCodes(body: Types.CommerceProductsCreatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
-    const url = '/v1/promo-codes';
+  async postPromoCodes(
+    body: Types.CommerceProductsCreatePromoCodeInput,
+  ): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
+    const url = "/v1/promo-codes";
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsCreatePromoCodeInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceProductsCreatePromoCodeInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -61,7 +73,11 @@ export class CommerceProductsPromocodesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsPromoCodeSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -70,34 +86,22 @@ export class CommerceProductsPromocodesModule {
 
   /**
    */
-  async getPromoCodes1(promoCodeId: string): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
-    const url = `/v1/promo-codes/${promoCodeId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsPromoCodeSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async putPromoCodes(promoCodeId: string, body: Types.CommerceProductsUpdatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
-    const url = `/v1/promo-codes/${promoCodeId}`;
+  async postPromoCodesApply(
+    body: Types.CommerceProductsApplyPromoCodesInput,
+  ): Promise<
+    Result<Types.CommerceProductsPromoCodeApplicationResult, ApiError>
+  > {
+    const url = "/v1/promo-codes/:apply";
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsUpdatePromoCodeInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceProductsApplyPromoCodesInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -105,7 +109,134 @@ export class CommerceProductsPromocodesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsPromoCodeSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeApplicationResultSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postPromoCodesValidate(
+    body: Types.CommerceProductsValidatePromoCodeInput,
+  ): Promise<
+    Result<Types.CommerceProductsPromoCodeValidationResult, ApiError>
+  > {
+    const url = "/v1/promo-codes/:validate";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.CommerceProductsValidatePromoCodeInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeValidationResultSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getPromoCodesByCode(
+    code: string,
+  ): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
+    const url = `/v1/promo-codes/by-code/${code}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getPromoCodes1(
+    promoCodeId: string,
+  ): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
+    const url = `/v1/promo-codes/${promoCodeId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putPromoCodes(
+    promoCodeId: string,
+    body: Types.CommerceProductsUpdatePromoCodeInput,
+  ): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
+    const url = `/v1/promo-codes/${promoCodeId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.CommerceProductsUpdatePromoCodeInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -118,7 +249,7 @@ export class CommerceProductsPromocodesModule {
     const url = `/v1/promo-codes/${promoCodeId}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
@@ -128,14 +259,21 @@ export class CommerceProductsPromocodesModule {
 
   /**
    */
-  async patchPromoCodes(promoCodeId: string, body: Types.CommerceProductsPatchPromoCodeInput): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
+  async patchPromoCodes(
+    promoCodeId: string,
+    body: Types.CommerceProductsPatchPromoCodeInput,
+  ): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsPatchPromoCodeInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceProductsPatchPromoCodeInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PATCH',
+      method: "PATCH",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -143,7 +281,11 @@ export class CommerceProductsPromocodesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsPromoCodeSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -156,7 +298,7 @@ export class CommerceProductsPromocodesModule {
     const url = `/v1/promo-codes/${promoCodeId}`;
 
     const result = await this.client.request({
-      method: 'HEAD',
+      method: "HEAD",
       path: url,
       requiresAuth: true,
     });
@@ -166,38 +308,24 @@ export class CommerceProductsPromocodesModule {
 
   /**
    */
-  async getPromoCodesByCode(code: string): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
-    const url = `/v1/promo-codes/by-code/${code}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsPromoCodeSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getPromoCodesUsage(promoCodeId: string): Promise<Result<Types.CommerceProductsPromoCodeUsage, ApiError>> {
+  async getPromoCodesUsage(
+    promoCodeId: string,
+  ): Promise<Result<Types.CommerceProductsPromoCodeUsage, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}/usage`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsPromoCodeUsageSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeUsageSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -206,18 +334,24 @@ export class CommerceProductsPromocodesModule {
 
   /**
    */
-  async postPromoCodesActivate(promoCodeId: string): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
+  async postPromoCodesActivate(
+    promoCodeId: string,
+  ): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}:activate`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsPromoCodeSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -226,66 +360,24 @@ export class CommerceProductsPromocodesModule {
 
   /**
    */
-  async postPromoCodesDeactivate(promoCodeId: string): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
+  async postPromoCodesDeactivate(
+    promoCodeId: string,
+  ): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}:deactivate`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsPromoCodeSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postPromoCodesValidate(body: Types.CommerceProductsValidatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeValidationResult, ApiError>> {
-    const url = '/v1/promo-codes/:validate';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsValidatePromoCodeInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsPromoCodeValidationResultSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postPromoCodesApply(body: Types.CommerceProductsApplyPromoCodesInput): Promise<Result<Types.CommerceProductsPromoCodeApplicationResult, ApiError>> {
-    const url = '/v1/promo-codes/:apply';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsApplyPromoCodesInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsPromoCodeApplicationResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -293,6 +385,8 @@ export class CommerceProductsPromocodesModule {
   }
 }
 
-export function createCommerceProductsPromocodesModule(client: ApiClient): CommerceProductsPromocodesModule {
+export function createCommerceProductsPromocodesModule(
+  client: ApiClient,
+): CommerceProductsPromocodesModule {
   return new CommerceProductsPromocodesModule(client);
 }

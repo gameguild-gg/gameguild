@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,14 +17,20 @@ export class CommerceOrdersModule {
 
   /**
    */
-  async postOrders(body: Types.CommerceOrdersCreateOrderInput): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
-    const url = '/v1/orders';
+  async postOrders(
+    body: Types.CommerceOrdersCreateOrderInput,
+  ): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
+    const url = "/v1/orders";
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceOrdersCreateOrderInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceOrdersCreateOrderInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -32,7 +38,11 @@ export class CommerceOrdersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceOrdersOrderSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceOrdersOrderSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -41,66 +51,24 @@ export class CommerceOrdersModule {
 
   /**
    */
-  async postOrdersItems(orderId: string, body: Types.CommerceOrdersAddOrderItemInput): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
-    const url = `/v1/orders/${orderId}/items`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceOrdersAddOrderItemInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.CommerceOrdersOrderSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postOrdersComplete(orderId: string, body: Types.CommerceOrdersCompleteOrderInput): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
-    const url = `/v1/orders/${orderId}:complete`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceOrdersCompleteOrderInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.CommerceOrdersOrderSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getOrders(orderId: string): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
+  async getOrders(
+    orderId: string,
+  ): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
     const url = `/v1/orders/${orderId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceOrdersOrderSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceOrdersOrderSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -109,14 +77,21 @@ export class CommerceOrdersModule {
 
   /**
    */
-  async postOrdersCapture(orderId: string, body: Types.CommerceOrdersCaptureOrderInput): Promise<Result<Types.CommerceOrdersOrderCapture, ApiError>> {
-    const url = `/v1/orders/${orderId}:capture`;
+  async postOrdersItems(
+    orderId: string,
+    body: Types.CommerceOrdersAddOrderItemInput,
+  ): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
+    const url = `/v1/orders/${orderId}/items`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceOrdersCaptureOrderInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceOrdersAddOrderItemInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -124,7 +99,81 @@ export class CommerceOrdersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceOrdersOrderCaptureSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceOrdersOrderSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postOrdersCapture(
+    orderId: string,
+    body: Types.CommerceOrdersCaptureOrderInput,
+  ): Promise<Result<Types.CommerceOrdersOrderCapture, ApiError>> {
+    const url = `/v1/orders/${orderId}:capture`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.CommerceOrdersCaptureOrderInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.CommerceOrdersOrderCaptureSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postOrdersComplete(
+    orderId: string,
+    body: Types.CommerceOrdersCompleteOrderInput,
+  ): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
+    const url = `/v1/orders/${orderId}:complete`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.CommerceOrdersCompleteOrderInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.CommerceOrdersOrderSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -132,6 +181,8 @@ export class CommerceOrdersModule {
   }
 }
 
-export function createCommerceOrdersModule(client: ApiClient): CommerceOrdersModule {
+export function createCommerceOrdersModule(
+  client: ApiClient,
+): CommerceOrdersModule {
   return new CommerceOrdersModule(client);
 }

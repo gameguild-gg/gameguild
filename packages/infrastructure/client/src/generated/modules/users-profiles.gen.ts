@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -24,11 +24,13 @@ export class UsersProfilesModule {
     search?: string;
     sortBy?: string;
     sortDirection?: string;
-  }): Promise<Result<Types.PagedResultOfGameGuildIdentityUsersUserProfileDto, ApiError>> {
-    const url = '/v1/users/profiles';
+  }): Promise<
+    Result<Types.PagedResultOfGameGuildIdentityUsersUserProfileDto, ApiError>
+  > {
+    const url = "/v1/users/profiles";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -36,7 +38,11 @@ export class UsersProfilesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultOfGameGuildIdentityUsersUserProfileDtoSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.PagedResultOfGameGuildIdentityUsersUserProfileDtoSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -46,18 +52,24 @@ export class UsersProfilesModule {
   /**
    * Get user profile by user ID
    */
-  async getUsersProfile(userId: string): Promise<Result<Types.IdentityUsersUserProfileDto, ApiError>> {
+  async getUsersProfile(
+    userId: string,
+  ): Promise<Result<Types.IdentityUsersUserProfileDto, ApiError>> {
     const url = `/v1/users/${userId}/profile`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserProfileDtoSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.IdentityUsersUserProfileDtoSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -67,14 +79,21 @@ export class UsersProfilesModule {
   /**
    * Replace user profile (full update)
    */
-  async putUsersProfile(userId: string, body: Types.IdentityUsersReplaceUserProfileInput): Promise<Result<void, ApiError>> {
+  async putUsersProfile(
+    userId: string,
+    body: Types.IdentityUsersReplaceUserProfileInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/profile`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersReplaceUserProfileInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityUsersReplaceUserProfileInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: "PUT",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -86,14 +105,21 @@ export class UsersProfilesModule {
   /**
    * Update user profile (partial update)
    */
-  async patchUsersProfile(userId: string, body: Types.IdentityUsersUpdateUserProfileInput): Promise<Result<void, ApiError>> {
+  async patchUsersProfile(
+    userId: string,
+    body: Types.IdentityUsersUpdateUserProfileInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/profile`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersUpdateUserProfileInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityUsersUpdateUserProfileInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PATCH',
+      method: "PATCH",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -103,6 +129,8 @@ export class UsersProfilesModule {
   }
 }
 
-export function createUsersProfilesModule(client: ApiClient): UsersProfilesModule {
+export function createUsersProfilesModule(
+  client: ApiClient,
+): UsersProfilesModule {
   return new UsersProfilesModule(client);
 }

@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,16 +17,23 @@ export class ProjectsStoreproductsModule {
 
   /**
    */
-  async getProjectsStoreProducts(projectId: string): Promise<Result<Array<Types.ProjectsProjectStoreProductProjection>, ApiError>> {
+  async getProjectsStoreProducts(
+    projectId: string,
+  ): Promise<
+    Result<Array<Types.ProjectsProjectStoreProductProjection>, ApiError>
+  > {
     const url = `/v1/projects/${projectId}/store-products`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ProjectsProjectStoreProductProjection>, ApiError>;
+    return result as Result<
+      Array<Types.ProjectsProjectStoreProductProjection>,
+      ApiError
+    >;
   }
 
   /**
@@ -38,10 +45,14 @@ export class ProjectsStoreproductsModule {
     const url = `/v1/projects/${projectId}/store-products`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsLinkProjectStoreProductInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.ProjectsLinkProjectStoreProductInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -49,7 +60,11 @@ export class ProjectsStoreproductsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.ProjectsProjectStoreProductProjectionSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.ProjectsProjectStoreProductProjectionSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -58,11 +73,14 @@ export class ProjectsStoreproductsModule {
 
   /**
    */
-  async deleteProjectsStoreProducts(projectId: string, productId: string): Promise<Result<void, ApiError>> {
+  async deleteProjectsStoreProducts(
+    projectId: string,
+    productId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/projects/${projectId}/store-products/${productId}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
@@ -72,19 +90,28 @@ export class ProjectsStoreproductsModule {
 
   /**
    */
-  async getStoreProductsProjects(productId: string): Promise<Result<Array<Types.ProjectsProjectStoreProductProjection>, ApiError>> {
+  async getStoreProductsProjects(
+    productId: string,
+  ): Promise<
+    Result<Array<Types.ProjectsProjectStoreProductProjection>, ApiError>
+  > {
     const url = `/v1/store/products/${productId}/projects`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: false,
     });
 
-    return result as Result<Array<Types.ProjectsProjectStoreProductProjection>, ApiError>;
+    return result as Result<
+      Array<Types.ProjectsProjectStoreProductProjection>,
+      ApiError
+    >;
   }
 }
 
-export function createProjectsStoreproductsModule(client: ApiClient): ProjectsStoreproductsModule {
+export function createProjectsStoreproductsModule(
+  client: ApiClient,
+): ProjectsStoreproductsModule {
   return new ProjectsStoreproductsModule(client);
 }

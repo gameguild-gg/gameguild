@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -25,10 +25,10 @@ export class ContentMarketingleadsModule {
     skip?: number;
     take?: number;
   }): Promise<Result<Array<Types.ContentPagesMarketingLead>, ApiError>> {
-    const url = '/v1/marketing/leads';
+    const url = "/v1/marketing/leads";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -39,14 +39,20 @@ export class ContentMarketingleadsModule {
 
   /**
    */
-  async postMarketingLeads(body: Types.ContentPagesCreateMarketingLead): Promise<Result<Types.ContentPagesMarketingLead, ApiError>> {
-    const url = '/v1/marketing/leads';
+  async postMarketingLeads(
+    body: Types.ContentPagesCreateMarketingLead,
+  ): Promise<Result<Types.ContentPagesMarketingLead, ApiError>> {
+    const url = "/v1/marketing/leads";
 
     // Validate request body
-    const validatedBody = safeParse(Types.ContentPagesCreateMarketingLeadSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.ContentPagesCreateMarketingLeadSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: false,
@@ -54,7 +60,11 @@ export class ContentMarketingleadsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.ContentPagesMarketingLeadSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.ContentPagesMarketingLeadSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -63,18 +73,24 @@ export class ContentMarketingleadsModule {
 
   /**
    */
-  async getMarketingLeadById(id: string): Promise<Result<Types.ContentPagesMarketingLead, ApiError>> {
+  async getMarketingLeadById(
+    id: string,
+  ): Promise<Result<Types.ContentPagesMarketingLead, ApiError>> {
     const url = `/v1/marketing/leads/${id}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.ContentPagesMarketingLeadSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.ContentPagesMarketingLeadSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -82,6 +98,8 @@ export class ContentMarketingleadsModule {
   }
 }
 
-export function createContentMarketingleadsModule(client: ApiClient): ContentMarketingleadsModule {
+export function createContentMarketingleadsModule(
+  client: ApiClient,
+): ContentMarketingleadsModule {
   return new ContentMarketingleadsModule(client);
 }

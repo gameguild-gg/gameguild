@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -27,11 +27,16 @@ export class NotificationsSubscriptionsModule {
     isSent?: boolean;
     page?: number;
     pageSize?: number;
-  }): Promise<Result<Types.PagedResultOfGameGuildCommerceSubscriptionsSubscriptionNotificationDto, ApiError>> {
-    const url = '/api/v1/notifications/subscriptions';
+  }): Promise<
+    Result<
+      Types.PagedResultOfGameGuildCommerceSubscriptionsSubscriptionNotificationDto,
+      ApiError
+    >
+  > {
+    const url = "/api/v1/notifications/subscriptions";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -39,7 +44,11 @@ export class NotificationsSubscriptionsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultOfGameGuildCommerceSubscriptionsSubscriptionNotificationDtoSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.PagedResultOfGameGuildCommerceSubscriptionsSubscriptionNotificationDtoSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -54,14 +63,20 @@ export class NotificationsSubscriptionsModule {
   async postNotificationsSubscriptionsResend(
     notificationId: string,
     body: Types.CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput,
-  ): Promise<Result<Types.CommerceSubscriptionsSubscriptionNotification, ApiError>> {
+  ): Promise<
+    Result<Types.CommerceSubscriptionsSubscriptionNotification, ApiError>
+  > {
     const url = `/api/v1/notifications/subscriptions/${notificationId}:resend`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -69,7 +84,11 @@ export class NotificationsSubscriptionsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceSubscriptionsSubscriptionNotificationSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceSubscriptionsSubscriptionNotificationSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -77,6 +96,8 @@ export class NotificationsSubscriptionsModule {
   }
 }
 
-export function createNotificationsSubscriptionsModule(client: ApiClient): NotificationsSubscriptionsModule {
+export function createNotificationsSubscriptionsModule(
+  client: ApiClient,
+): NotificationsSubscriptionsModule {
   return new NotificationsSubscriptionsModule(client);
 }
