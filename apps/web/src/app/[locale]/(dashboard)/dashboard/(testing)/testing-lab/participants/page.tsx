@@ -1,160 +1,417 @@
-import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
-import { TestingLabAccessIssues, TestingLabEmptyState } from '@/components/testing-lab/testing-lab-state';
-import { Link } from '@/i18n/navigation';
-import { getTestingLabDashboard, getTestingRequestDetail, getTestingSessionDetail } from '@/lib/testing-lab';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Input } from '@game-guild/ui/components/input';
-import { Search, Users } from 'lucide-react';
+import { TestingLabPageHeader } from "@/components/testing-lab/testing-lab-page-header";
+import { TestingParticipantFilters } from "@/components/testing-lab/testing-participant-filters";
+import {
+  TestingLabAccessIssues,
+  TestingLabEmptyState,
+} from "@/components/testing-lab/testing-lab-state";
+import { Link } from "@/i18n/navigation";
+import { getTestingParticipantDirectory } from "@/lib/testing-lab/events-queries";
+import type {
+  TestingLabTestingParticipantDirectoryItemProjection,
+  TestingLabTestingSlotRegistrationStatus,
+} from "@game-guild/client";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@game-guild/ui/components/avatar";
+import { Badge } from "@game-guild/ui/components/badge";
+import { Button } from "@game-guild/ui/components/button";
+import {
+  CalendarClock,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  CircleDot,
+  MessageSquareText,
+  Users,
+} from "lucide-react";
 
-export default async function TestingLabParticipantsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+const PAGE_SIZE = 25;
+const registrationStatuses = new Set<TestingLabTestingSlotRegistrationStatus>([
+  "Registered",
+  "Waitlisted",
+  "CheckedIn",
+  "Attended",
+  "Completed",
+  "Cancelled",
+  "NoShow",
+]);
+
+function parseStatus(value?: string) {
+  return value &&
+    registrationStatuses.has(value as TestingLabTestingSlotRegistrationStatus)
+    ? (value as TestingLabTestingSlotRegistrationStatus)
+    : undefined;
+}
+
+function formatStatus(status?: TestingLabTestingSlotRegistrationStatus) {
+  if (!status) return "Unknown";
+  if (status === "CheckedIn") return "Checked in";
+  if (status === "NoShow") return "No-show";
+  return status;
+}
+
+function statusClassName(status?: TestingLabTestingSlotRegistrationStatus) {
+  if (
+    status === "CheckedIn" ||
+    status === "Attended" ||
+    status === "Completed"
+  ) {
+    return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+  }
+  if (status === "Waitlisted")
+    return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+  if (status === "NoShow" || status === "Cancelled")
+    return "border-destructive/30 bg-destructive/10 text-destructive";
+  return "border-border bg-muted/35 text-foreground";
+}
+
+function formatSchedule(value?: string) {
+  if (!value) return "Schedule pending";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+    timeZoneName: "short",
+  }).format(new Date(value));
+}
+
+function initials(item: TestingLabTestingParticipantDirectoryItemProjection) {
+  const source = item.userName?.trim() || item.userEmail?.trim() || "Member";
+  return source
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+}
+
+function participantName(
+  item: TestingLabTestingParticipantDirectoryItemProjection,
+) {
+  return (
+    item.userName?.trim() ||
+    item.userEmail?.trim() ||
+    "Member profile unavailable"
+  );
+}
+
+function sessionLocation(
+  item: TestingLabTestingParticipantDirectoryItemProjection,
+) {
+  if (item.mode === "Online") return "Online session";
+  return (
+    [item.campusName, item.roomName].filter(Boolean).join(" · ") ||
+    item.mode ||
+    "Location pending"
+  );
+}
+
+function ParticipantIdentity({
+  item,
+}: {
+  item: TestingLabTestingParticipantDirectoryItemProjection;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <Avatar className="size-9 shrink-0">
+        {item.avatarUrl ? <AvatarImage src={item.avatarUrl} alt="" /> : null}
+        <AvatarFallback>{initials(item)}</AvatarFallback>
+      </Avatar>
+      <div className="min-w-0">
+        <p className="truncate font-medium">{participantName(item)}</p>
+        {item.userEmail && item.userName ? (
+          <p className="truncate text-xs text-muted-foreground">
+            {item.userEmail}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function ParticipantStatus({
+  item,
+}: {
+  item: TestingLabTestingParticipantDirectoryItemProjection;
+}) {
+  return (
+    <Badge className={statusClassName(item.status)}>
+      {formatStatus(item.status)}
+    </Badge>
+  );
+}
+
+function buildPageHref(
+  page: number,
+  search?: string,
+  status?: TestingLabTestingSlotRegistrationStatus,
+) {
+  const params = new URLSearchParams();
+  if (search) params.set("q", search);
+  if (status) params.set("status", status);
+  params.set("page", String(page));
+  return `/dashboard/testing-lab/participants?${params.toString()}`;
+}
+
+export default async function TestingLabParticipantsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; q?: string; status?: string }>;
+}) {
   const params = await searchParams;
-  const q = params.q?.trim().toLowerCase() ?? '';
-  const directory = await getTestingLabDashboard();
-  const [requestDetails, sessionDetails] = await Promise.all([
-    Promise.all(directory.requests.slice(0, 50).map((request) => getTestingRequestDetail(request.id))),
-    Promise.all(directory.sessions.slice(0, 50).map((session) => getTestingSessionDetail(session.id))),
-  ]);
-  const issues = [
-    ...directory.accessIssues,
-    ...requestDetails.flatMap((detail) => detail.accessIssues),
-    ...sessionDetails.flatMap((detail) => detail.accessIssues),
-  ];
-  const participants = requestDetails.flatMap((detail) =>
-    detail.participants.map((participant) => ({
-      participant,
-      request: detail.request,
-    })),
-  );
-  const registrations = sessionDetails.flatMap((detail) =>
-    detail.registrations.map((registration) => ({
-      registration,
-      session: detail.session,
-    })),
-  );
-  const waitlist = sessionDetails.flatMap((detail) =>
-    detail.waitlist.map((entry) => ({
-      entry,
-      session: detail.session,
-    })),
-  );
-  const matches = (value: string) => !q || value.toLowerCase().includes(q);
+  const search = params.q?.trim() || undefined;
+  const status = parseStatus(params.status);
+  const parsedPage = Number.parseInt(params.page ?? "1", 10);
+  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const result = await getTestingParticipantDirectory({
+    search,
+    status,
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+  });
+  const directory = result.directory;
+  const items = directory?.items ?? [];
+  const total = directory?.totalCount ?? 0;
+  const hasNextPage = page * PAGE_SIZE < total;
+  const resolvedOutcomes =
+    (directory?.attendedCount ?? 0) + (directory?.completedCount ?? 0);
 
   return (
-    <div className="space-y-6 p-4 lg:p-6">
+    <div className="min-w-0 space-y-5 p-4 lg:p-6">
       <TestingLabPageHeader
         icon={Users}
         title="Testing Lab participants"
-        description="Review project participants, event registrations, attendance, and waitlists across the lab."
+        description="Track registrations, waitlists, attendance, and feedback obligations across testing events."
       />
-      <TestingLabAccessIssues issues={[...new Set(issues)]} />
-      <form method="get" className="relative max-w-xl">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input name="q" defaultValue={params.q} className="pl-9" placeholder="Search member, request, or session" />
-      </form>
-      <section>
-        <h2 className="mb-3 text-lg font-semibold">Request participants</h2>
-        {participants.length === 0 ? (
-          <TestingLabEmptyState title="No request participants" description="Participants appear after a member joins or an operator adds them to a request." />
+
+      <TestingLabAccessIssues issues={result.accessIssues} />
+
+      <section
+        aria-label="Participant status summary"
+        className="grid grid-cols-2 divide-x divide-y overflow-hidden rounded-md border bg-card lg:grid-cols-4 lg:divide-y-0"
+      >
+        <div className="min-w-0 p-4">
+          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <Users className="size-4" />
+            All registrations
+          </div>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">{total}</p>
+          <p className="text-xs text-muted-foreground">
+            {directory?.registeredCount ?? 0} awaiting arrival
+          </p>
+        </div>
+        <div className="min-w-0 p-4">
+          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <CircleDot className="size-4" />
+            Waitlist
+          </div>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">
+            {directory?.waitlistedCount ?? 0}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Waiting for an approved seat
+          </p>
+        </div>
+        <div className="min-w-0 p-4">
+          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <CalendarClock className="size-4" />
+            Checked in
+          </div>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">
+            {directory?.checkedInCount ?? 0}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Currently active at a session
+          </p>
+        </div>
+        <div className="min-w-0 p-4">
+          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <CheckCircle2 className="size-4" />
+            Outcomes
+          </div>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">
+            {resolvedOutcomes}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {directory?.noShowCount ?? 0} no-show
+          </p>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="participant-directory-heading"
+        className="overflow-hidden rounded-md border bg-card"
+      >
+        <div className="flex items-center justify-between gap-4 px-4 py-3">
+          <div>
+            <h2 id="participant-directory-heading" className="font-semibold">
+              Participant directory
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              One tenant-scoped view of every event registration.
+            </p>
+          </div>
+          <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+            {total} total
+          </span>
+        </div>
+
+        <TestingParticipantFilters search={search} status={status} />
+
+        {items.length === 0 ? (
+          <div className="p-4">
+            <TestingLabEmptyState
+              title="No participants match this view"
+              description="Clear the filters or wait for members to reserve an approved testing seat."
+            />
+          </div>
         ) : (
-          <div className="overflow-x-auto rounded-md border">
-            <table className="w-full min-w-[760px] text-sm">
-              <thead className="bg-muted/35 text-left">
-                <tr>
-                  <th className="px-4 py-3">Member</th>
-                  <th className="px-4 py-3">Request</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Tracked time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {participants
-                  .filter(({ participant, request }) =>
-                    matches(`${participant.user?.name ?? ''} ${participant.user?.email ?? participant.userId} ${request?.title ?? ''}`),
-                  )
-                  .map(({ participant, request }) => (
-                    <tr key={`${request?.id}-${participant.id ?? participant.userId}`}>
-                      <td className="px-4 py-3 font-medium">{participant.user?.name ?? participant.user?.email ?? participant.userId}</td>
+          <>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full min-w-[900px] text-sm">
+                <thead className="border-b bg-muted/25 text-left text-xs text-muted-foreground">
+                  <tr>
+                    <th scope="col" className="px-4 py-3 font-medium">
+                      Member
+                    </th>
+                    <th scope="col" className="px-4 py-3 font-medium">
+                      Event and location
+                    </th>
+                    <th scope="col" className="px-4 py-3 font-medium">
+                      Schedule
+                    </th>
+                    <th scope="col" className="px-4 py-3 font-medium">
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-right font-medium"
+                    >
+                      Feedback
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {items.map((item) => (
+                    <tr
+                      key={item.registrationId}
+                      className="transition-colors hover:bg-muted/20"
+                    >
                       <td className="px-4 py-3">
-                        {request ? (
-                          <Link href={`/dashboard/testing-lab/projects/${request.id}`} className="hover:underline">
-                            {request.title}
+                        <ParticipantIdentity item={item} />
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.eventId ? (
+                          <Link
+                            href={`/dashboard/testing-lab/events/${item.eventId}/testers`}
+                            className="font-medium hover:underline"
+                          >
+                            {item.eventName || "Testing event"}
                           </Link>
                         ) : (
-                          '-'
+                          <span className="font-medium">
+                            {item.eventName || "Testing event"}
+                          </span>
                         )}
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {sessionLocation(item)}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {formatSchedule(item.startsAt)}
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant="outline">{participant.status ?? 'Registered'}</Badge>
+                        <ParticipantStatus item={item} />
                       </td>
-                      <td className="px-4 py-3">{participant.timeSpentMinutes ?? 0} min</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                          <MessageSquareText className="size-4" />
+                          {item.pendingFeedbackCount ?? 0} pending
+                        </span>
+                      </td>
                     </tr>
                   ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-      <section>
-        <h2 className="mb-3 text-lg font-semibold">Session registrations</h2>
-        {registrations.length === 0 ? (
-          <TestingLabEmptyState title="No session registrations" description="Registrations appear after members reserve a seat." />
-        ) : (
-          <div className="overflow-x-auto rounded-md border">
-            <table className="w-full min-w-[760px] text-sm">
-              <thead className="bg-muted/35 text-left">
-                <tr>
-                  <th className="px-4 py-3">Member</th>
-                  <th className="px-4 py-3">Session</th>
-                  <th className="px-4 py-3">Registration</th>
-                  <th className="px-4 py-3">Attendance</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {registrations
-                  .filter(({ registration, session }) =>
-                    matches(`${registration.user?.name ?? ''} ${registration.user?.email ?? registration.userId} ${session?.sessionName ?? ''}`),
-                  )
-                  .map(({ registration, session }) => (
-                    <tr key={`${session?.id}-${registration.id ?? registration.userId}`}>
-                      <td className="px-4 py-3 font-medium">{registration.user?.name ?? registration.user?.email ?? registration.userId}</td>
-                      <td className="px-4 py-3">
-                        {session ? (
-                          <Link href={`/dashboard/testing-lab/sessions/${session.id}`} className="hover:underline">
-                            {session.sessionName}
-                          </Link>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline">{registration.status ?? 'Registered'}</Badge>
-                      </td>
-                      <td className="px-4 py-3">{registration.attendanceStatus ?? 'Registered'}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-      <section>
-        <h2 className="mb-3 text-lg font-semibold">Waitlist</h2>
-        {waitlist.length === 0 ? (
-          <p className="rounded-md border border-dashed p-5 text-sm text-muted-foreground">No members are currently waiting for a testing seat.</p>
-        ) : (
-          <div className="divide-y rounded-md border">
-            {waitlist
-              .filter(({ entry, session }) => matches(`${entry.user?.name ?? ''} ${entry.user?.email ?? entry.userId} ${session?.sessionName ?? ''}`))
-              .map(({ entry, session }) => (
-                <div key={`${session?.id}-${entry.id ?? entry.userId}`} className="flex items-center justify-between p-3 text-sm">
-                  <span>{entry.user?.name ?? entry.user?.email ?? entry.userId}</span>
-                  <span className="text-muted-foreground">
-                    {session?.sessionName} · position {entry.position}
-                  </span>
-                </div>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="divide-y md:hidden">
+              {items.map((item) => (
+                <article key={item.registrationId} className="space-y-3 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <ParticipantIdentity item={item} />
+                    <ParticipantStatus item={item} />
+                  </div>
+                  <div>
+                    {item.eventId ? (
+                      <Link
+                        href={`/dashboard/testing-lab/events/${item.eventId}/testers`}
+                        className="font-medium hover:underline"
+                      >
+                        {item.eventName || "Testing event"}
+                      </Link>
+                    ) : (
+                      <p className="font-medium">
+                        {item.eventName || "Testing event"}
+                      </p>
+                    )}
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {sessionLocation(item)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatSchedule(item.startsAt)}
+                    </p>
+                  </div>
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <MessageSquareText className="size-4" />
+                    {item.pendingFeedbackCount ?? 0} feedback obligation(s)
+                    pending
+                  </p>
+                </article>
               ))}
-          </div>
+            </div>
+          </>
         )}
+
+        {total > 0 ? (
+          <div className="flex items-center justify-between gap-4 border-t px-4 py-3">
+            <p className="text-xs text-muted-foreground">
+              Page {page} · showing {items.length} of {total}
+            </p>
+            <div className="flex items-center gap-2">
+              {page > 1 ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link href={buildPageHref(page - 1, search, status)}>
+                    <ChevronLeft className="size-4" />
+                    Previous
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" disabled>
+                  <ChevronLeft className="size-4" />
+                  Previous
+                </Button>
+              )}
+              {hasNextPage ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link href={buildPageHref(page + 1, search, status)}>
+                    Next
+                    <ChevronRight className="size-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" disabled>
+                  Next
+                  <ChevronRight className="size-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        ) : null}
       </section>
     </div>
   );

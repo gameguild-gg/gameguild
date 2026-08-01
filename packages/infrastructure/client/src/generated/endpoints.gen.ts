@@ -10503,6 +10503,23 @@ export const getTestingEventsRegistrationsMeEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetTestingEventsParticipantsInput {
+  query?: {
+    search?: string;
+    status?: Types.TestingLabTestingSlotRegistrationStatus;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetTestingEventsParticipantsOutput = Types.TestingLabTestingParticipantDirectoryProjection;
+export const getTestingEventsParticipantsEndpoint = {
+  operationId: 'getTestingEventsParticipants' as const,
+  method: 'GET' as const,
+  path: '/v1/testing/events/participants' as const,
+  tags: ['TestingLab/testingEventParticipation'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostTestingEventsRegistrationsCheckInInput {
   registrationId: string;
 }

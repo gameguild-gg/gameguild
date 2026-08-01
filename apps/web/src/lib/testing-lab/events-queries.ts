@@ -10,8 +10,10 @@ import {
   type TestingLabTestingEventProjection,
   type TestingLabTestingEventSlotProjection,
   type TestingLabTestingEventStatus,
+  type TestingLabTestingParticipantDirectoryProjection,
   type TestingLabTestingProjectApplicationProjection,
   type TestingLabTestingSlotRegistrationProjection,
+  type TestingLabTestingSlotRegistrationStatus,
 } from '@game-guild/client';
 import { cache } from 'react';
 
@@ -32,6 +34,18 @@ export interface TestingEventManagerData {
 export interface TestingEventFeedbackReviewData {
   feedback: TestingLabTestingEventFeedbackReviewProjection[];
   accessIssues: string[];
+}
+
+export interface TestingParticipantDirectoryData {
+  directory: TestingLabTestingParticipantDirectoryProjection | null;
+  accessIssues: string[];
+}
+
+export interface TestingParticipantDirectoryOptions {
+  search?: string;
+  status?: TestingLabTestingSlotRegistrationStatus;
+  skip?: number;
+  take?: number;
 }
 
 export interface TestingEventsDirectoryOptions {
@@ -88,6 +102,25 @@ export async function getTestingEventsDirectory(
 
   return {
     events: result.data ?? [],
+    accessIssues: result.issue ? [result.issue] : [],
+  };
+}
+
+export async function getTestingParticipantDirectory(
+  options: TestingParticipantDirectoryOptions = {},
+): Promise<TestingParticipantDirectoryData> {
+  const result = await read(
+    createModules().participation.getTestingEventsParticipants({
+      search: options.search?.trim() || undefined,
+      status: options.status,
+      skip: Math.max(0, options.skip ?? 0),
+      take: Math.min(100, Math.max(1, options.take ?? 25)),
+    }),
+    'Participants',
+  );
+
+  return {
+    directory: result.data ?? null,
     accessIssues: result.issue ? [result.issue] : [],
   };
 }
