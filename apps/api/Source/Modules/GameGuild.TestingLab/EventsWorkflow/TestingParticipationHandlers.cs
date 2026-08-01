@@ -23,6 +23,7 @@ public sealed class TestingParticipationHandlers(
     ICommandHandler<CompleteTestingEventParticipationCommand, Result<TestingSlotRegistrationProjection>>,
     IQueryHandler<GetMyTestingSlotRegistrationsQuery, Result<IReadOnlyList<TestingSlotRegistrationProjection>>>,
     IQueryHandler<GetTestingEventSlotRegistrationsQuery, Result<IReadOnlyList<TestingSlotRegistrationProjection>>>,
+    IQueryHandler<GetTestingParticipantDirectoryQuery, Result<TestingParticipantDirectoryProjection>>,
     IQueryHandler<GetMyTestingFeedbackObligationsQuery, Result<IReadOnlyList<TestingFeedbackObligationProjection>>>,
     IQueryHandler<GetTestingEventFeedbackQuery, Result<IReadOnlyList<TestingEventFeedbackReviewProjection>>>
 {
@@ -352,6 +353,88 @@ public sealed class TestingParticipationHandlers(
         return Result.Success<IReadOnlyList<TestingSlotRegistrationProjection>>(result);
     }
 
+    public async Task<Result<TestingParticipantDirectoryProjection>> Handle(
+        GetTestingParticipantDirectoryQuery request,
+        CancellationToken cancellationToken)
+    {
+        var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
+        if (actor.Error != null)
+            return Result.Failure<TestingParticipantDirectoryProjection>(actor.Error);
+
+        var query = context.Set<TestingSlotRegistration>()
+            .AsNoTracking()
+            .Where(registration =>
+                registration.TenantId == actor.TenantId &&
+                registration.DeletedAt == null &&
+                registration.Event.DeletedAt == null &&
+                registration.Slot.DeletedAt == null &&
+                registration.User.DeletedAt == null);
+
+        var search = request.Search?.Trim().ToLowerInvariant();
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(registration =>
+                registration.User.Name.ToLower().Contains(search) ||
+                registration.User.Email.ToLower().Contains(search) ||
+                registration.Event.Name.ToLower().Contains(search) ||
+                (registration.Slot.CampusName != null && registration.Slot.CampusName.ToLower().Contains(search)) ||
+                (registration.Slot.RoomName != null && registration.Slot.RoomName.ToLower().Contains(search)));
+        if (request.Status.HasValue)
+            query = query.Where(registration => registration.Status == request.Status.Value);
+
+        var statusCounts = await query
+            .GroupBy(registration => registration.Status)
+            .Select(group => new { Status = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.Status, row => row.Count, cancellationToken)
+            .ConfigureAwait(false);
+        var totalCount = statusCounts.Values.Sum();
+        var items = await query
+            .OrderBy(registration => registration.Status == TestingSlotRegistrationStatus.Waitlisted
+                ? registration.WaitlistPosition
+                : 0)
+            .ThenByDescending(registration => registration.RegisteredAt)
+            .ThenBy(registration => registration.Id)
+            .Skip(Math.Max(0, request.Skip))
+            .Take(Math.Clamp(request.Take, 1, 100))
+            .Select(registration => new TestingParticipantDirectoryItemProjection(
+                registration.Id,
+                registration.EventId,
+                registration.Event.Name,
+                registration.SlotId,
+                registration.Slot.Mode,
+                registration.Slot.StartsAt,
+                registration.Slot.EndsAt,
+                registration.Slot.CampusName,
+                registration.Slot.RoomName,
+                registration.UserId,
+                registration.User.Name,
+                registration.User.Email,
+                registration.User.Profile == null ? null : registration.User.Profile.AvatarUrl,
+                registration.Status,
+                registration.WaitlistPosition,
+                registration.Notes,
+                registration.RegisteredAt,
+                registration.CheckedInAt,
+                registration.CheckedOutAt,
+                registration.CompletedAt,
+                context.Set<TestingFeedbackObligation>().Count(obligation =>
+                    obligation.EventId == registration.EventId &&
+                    obligation.SlotId == registration.SlotId &&
+                    obligation.TesterUserId == registration.UserId &&
+                    obligation.Status == TestingFeedbackObligationStatus.Pending &&
+                    obligation.DeletedAt == null)))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return Result.Success(new TestingParticipantDirectoryProjection(
+            items,
+            totalCount,
+            statusCounts.GetValueOrDefault(TestingSlotRegistrationStatus.Registered),
+            statusCounts.GetValueOrDefault(TestingSlotRegistrationStatus.Waitlisted),
+            statusCounts.GetValueOrDefault(TestingSlotRegistrationStatus.CheckedIn),
+            statusCounts.GetValueOrDefault(TestingSlotRegistrationStatus.Attended),
+            statusCounts.GetValueOrDefault(TestingSlotRegistrationStatus.Completed),
+            statusCounts.GetValueOrDefault(TestingSlotRegistrationStatus.NoShow)));
+    }
     public async Task<Result<IReadOnlyList<TestingFeedbackObligationProjection>>> Handle(
         GetMyTestingFeedbackObligationsQuery request,
         CancellationToken cancellationToken)
