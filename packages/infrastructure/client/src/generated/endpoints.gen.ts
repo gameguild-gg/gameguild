@@ -11320,6 +11320,7 @@ export interface GetTestingLocationsInput {
   query?: {
     skip?: number;
     take?: number;
+    includeArchived?: boolean;
   };
 }
 export type GetTestingLocationsOutput = Array<Types.TestingLabTestingLocation>;
