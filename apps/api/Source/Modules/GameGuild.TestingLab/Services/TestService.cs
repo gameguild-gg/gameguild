@@ -77,7 +77,7 @@ public class TestService(
 
     // Location Operations
     public Task<IEnumerable<TestingLocation>> GetAllTestingLocationsAsync() => locationOps.GetAllTestingLocationsAsync();
-    public Task<IEnumerable<TestingLocation>> GetTestingLocationsAsync(int skip = 0, int take = 50) => locationOps.GetTestingLocationsAsync(skip, take);
+    public Task<IEnumerable<TestingLocation>> GetTestingLocationsAsync(int skip = 0, int take = 50, bool includeArchived = false) => locationOps.GetTestingLocationsAsync(skip, take, includeArchived);
     public Task<TestingLocation?> GetTestingLocationByIdAsync(Guid id) => locationOps.GetTestingLocationByIdAsync(id);
     public Task<TestingLocation> CreateTestingLocationAsync(TestingLocation location) => locationOps.CreateTestingLocationAsync(location);
     public Task<TestingLocation> UpdateTestingLocationAsync(TestingLocation location) => locationOps.UpdateTestingLocationAsync(location);

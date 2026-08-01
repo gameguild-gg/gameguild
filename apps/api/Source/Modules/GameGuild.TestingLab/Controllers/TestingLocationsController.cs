@@ -17,9 +17,9 @@ public class TestingLocationsController(
     // GET: testing/locations
     [HttpGet("locations")]
     [RequireResourcePermission<PermissionType, TestingLocation>(PermissionType.Read)]
-    public async Task<ActionResult<IEnumerable<TestingLocation>>> GetTestingLocations([FromQuery] int skip = 0, [FromQuery] int take = 50)
+    public async Task<ActionResult<IEnumerable<TestingLocation>>> GetTestingLocations([FromQuery] int skip = 0, [FromQuery] int take = 50, [FromQuery] bool includeArchived = false)
     {
-        var locations = await locationService.GetTestingLocationsAsync(skip, take).ConfigureAwait(false);
+        var locations = await locationService.GetTestingLocationsAsync(skip, take, includeArchived).ConfigureAwait(false);
         return Ok(locations);
     }
 
@@ -65,9 +65,16 @@ public class TestingLocationsController(
     [RequireResourcePermission<PermissionType, TestingLocation>(PermissionType.Delete)]
     public async Task<ActionResult> DeleteTestingLocation(Guid id)
     {
-        var result = await locationService.DeleteTestingLocationAsync(id).ConfigureAwait(false);
-        if (!result) return NotFound();
-        return NoContent();
+        try
+        {
+            var result = await locationService.DeleteTestingLocationAsync(id).ConfigureAwait(false);
+            if (!result) return NotFound();
+            return NoContent();
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new { message = exception.Message });
+        }
     }
 
     // POST: testing/locations/{id}/restore

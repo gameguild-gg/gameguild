@@ -174,6 +174,96 @@ public sealed class TestingLabPermissionTemplateTests
     }
 
     [Fact]
+    public async Task AssignedRole_ShouldExpandItsEffectivePermissions()
+    {
+        await using var context = CreateContext();
+        var service = new TestingLabPermissionService(context);
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        await service.CreateRoleTemplateAsync(
+            "Session facilitator",
+            "Runs testing sessions.",
+            [
+                new GameGuild.TestingLab.PermissionTemplate { ResourceType = TestingLabResourceTypes.Session, Action = TestingLabActions.Create },
+                new GameGuild.TestingLab.PermissionTemplate { ResourceType = TestingLabResourceTypes.Session, Action = TestingLabActions.Read }
+            ]);
+
+        await service.AssignRoleToUserAsync(userId, tenantId, "Session facilitator");
+
+        var roles = await service.GetUserRolesAsync(userId, tenantId);
+        var permissions = await service.GetUserPermissionsAsync(userId, tenantId);
+
+        roles.Should().ContainSingle(role => role.RoleName == "Session facilitator");
+        permissions.Should().Contain(permission =>
+            permission.ResourceType == TestingLabResourceTypes.Session &&
+            permission.Action == TestingLabActions.Create &&
+            permission.ResourceId == null);
+    }
+
+    [Fact]
+    public async Task AssignedRoleTemplate_ShouldNotBeDeleted()
+    {
+        await using var context = CreateContext();
+        var service = new TestingLabPermissionService(context);
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        await service.CreateRoleTemplateAsync("Event reviewer", "Reviews applications.", []);
+        await service.AssignRoleToUserAsync(userId, tenantId, "Event reviewer");
+
+        var action = () => service.DeleteRoleTemplateAsync("Event reviewer");
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*assigned to one or more members*");
+    }
+
+    [Fact]
+    public async Task ResourcePermission_ShouldTrackExpiryAndPreserveOtherActionsWhenOneIsRevoked()
+    {
+        await using var context = CreateContext();
+        var service = new TestingLabPermissionService(context);
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var resourceId = Guid.NewGuid();
+        var expiry = SystemClock.UtcNow.AddDays(2);
+
+        await service.GrantPermissionAsync(userId, tenantId, TestingLabActions.Read, TestingLabResourceTypes.Request, resourceId, expiresAt: expiry);
+        await service.GrantPermissionAsync(userId, tenantId, TestingLabActions.Edit, TestingLabResourceTypes.Request, resourceId, expiresAt: expiry);
+        await service.RevokePermissionAsync(userId, tenantId, TestingLabActions.Edit, TestingLabResourceTypes.Request, resourceId);
+
+        var permissions = await service.GetUserPermissionsAsync(userId, tenantId);
+
+        permissions.Should().ContainSingle(permission =>
+            permission.ResourceType == TestingLabResourceTypes.Request &&
+            permission.ResourceId == resourceId &&
+            permission.Action == TestingLabActions.Read &&
+            permission.ExpiresAt == expiry);
+        permissions.Should().NotContain(permission => permission.Action == TestingLabActions.Edit);
+    }
+
+    [Fact]
+    public async Task ExpiredResourcePermission_ShouldNotBeEffective()
+    {
+        await using var context = CreateContext();
+        var service = new TestingLabPermissionService(context);
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var resourceId = Guid.NewGuid();
+
+        await service.GrantPermissionAsync(
+            userId,
+            tenantId,
+            TestingLabActions.Read,
+            TestingLabResourceTypes.Location,
+            resourceId,
+            expiresAt: SystemClock.UtcNow.AddMinutes(-1));
+
+        var permissions = await service.GetUserPermissionsAsync(userId, tenantId);
+
+        permissions.Should().BeEmpty();
+        (await service.HasPermissionAsync(userId, tenantId, TestingLabActions.Read, TestingLabResourceTypes.Location, resourceId)).Should().BeFalse();
+    }
+
+    [Fact]
     public void TestingLab_Model_Configuration_Should_Register_Runtime_Entities()
     {
         var modelBuilder = new ModelBuilder();
@@ -213,6 +303,7 @@ public sealed class TestingLabPermissionTemplateTests
         {
             modelBuilder.ApplyConfiguration(new TenantPermissionConfiguration());
             modelBuilder.ApplyConfiguration(new PermissionTemplateConfiguration());
+            modelBuilder.ApplyConfiguration(new ResourceUserPermissionConfiguration());
         }
     }
 }

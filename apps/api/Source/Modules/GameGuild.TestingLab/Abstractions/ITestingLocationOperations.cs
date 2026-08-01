@@ -7,7 +7,7 @@ namespace GameGuild.TestingLab;
 public interface ITestingLocationOperations
 {
     Task<IEnumerable<TestingLocation>> GetAllTestingLocationsAsync();
-    Task<IEnumerable<TestingLocation>> GetTestingLocationsAsync(int skip = 0, int take = 50);
+    Task<IEnumerable<TestingLocation>> GetTestingLocationsAsync(int skip = 0, int take = 50, bool includeArchived = false);
     Task<TestingLocation?> GetTestingLocationByIdAsync(Guid id);
     Task<TestingLocation> CreateTestingLocationAsync(TestingLocation location);
     Task<TestingLocation> UpdateTestingLocationAsync(TestingLocation location);
