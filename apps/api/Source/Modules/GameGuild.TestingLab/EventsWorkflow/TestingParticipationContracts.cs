@@ -48,6 +48,38 @@ public sealed record TestingEventFeedbackReviewProjection(
     DateTime? FulfilledAt,
     TestingEventFeedbackProjection? Feedback);
 
+public sealed record TestingParticipantDirectoryItemProjection(
+    Guid RegistrationId,
+    Guid EventId,
+    string EventName,
+    Guid SlotId,
+    TestingEventMode Mode,
+    DateTime StartsAt,
+    DateTime EndsAt,
+    string? CampusName,
+    string? RoomName,
+    Guid UserId,
+    string UserName,
+    string UserEmail,
+    string? AvatarUrl,
+    TestingSlotRegistrationStatus Status,
+    int? WaitlistPosition,
+    string? Notes,
+    DateTime RegisteredAt,
+    DateTime? CheckedInAt,
+    DateTime? CheckedOutAt,
+    DateTime? CompletedAt,
+    int PendingFeedbackCount);
+
+public sealed record TestingParticipantDirectoryProjection(
+    IReadOnlyList<TestingParticipantDirectoryItemProjection> Items,
+    int TotalCount,
+    int RegisteredCount,
+    int WaitlistedCount,
+    int CheckedInCount,
+    int AttendedCount,
+    int CompletedCount,
+    int NoShowCount);
 public sealed record RegisterTestingEventSlotCommand(Guid SlotId, string? Notes)
     : ICommand<Result<TestingSlotRegistrationProjection>>;
 
@@ -86,6 +118,11 @@ public sealed record GetMyTestingFeedbackObligationsQuery(Guid? EventId = null)
 public sealed record GetTestingEventFeedbackQuery(Guid EventId)
     : IQuery<Result<IReadOnlyList<TestingEventFeedbackReviewProjection>>>;
 
+public sealed record GetTestingParticipantDirectoryQuery(
+    string? Search = null,
+    TestingSlotRegistrationStatus? Status = null,
+    int Skip = 0,
+    int Take = 50) : IQuery<Result<TestingParticipantDirectoryProjection>>;
 public sealed record GetMyTestingSlotRegistrationsQuery(Guid? EventId = null)
     : IQuery<Result<IReadOnlyList<TestingSlotRegistrationProjection>>>;
 

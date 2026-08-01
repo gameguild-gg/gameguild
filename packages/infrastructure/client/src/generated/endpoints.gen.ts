@@ -484,6 +484,31 @@ export const deleteAssessmentsGroupsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAssessmentsDefinitionInput {
+  id: string;
+}
+export type GetAssessmentsDefinitionOutput = Types.LearningAssessmentsAssessmentDefinition;
+export const getAssessmentsDefinitionEndpoint = {
+  operationId: 'getAssessmentsDefinition' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/{id}/definition' as const,
+  tags: ['Learning/assessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutAssessmentsDefinitionInput {
+  id: string;
+  body?: Types.LearningAssessmentsUpdateAssessmentDefinitionInput;
+}
+export type PutAssessmentsDefinitionOutput = Types.LearningAssessmentsAssessmentDefinition;
+export const putAssessmentsDefinitionEndpoint = {
+  operationId: 'putAssessmentsDefinition' as const,
+  method: 'PUT' as const,
+  path: '/v1/assessments/{id}/definition' as const,
+  tags: ['Learning/assessments'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PutAssessmentsGroupInput {
   id: string;
   body?: Types.LearningAssessmentsAssignAssessmentGroupInput;
@@ -553,7 +578,7 @@ export interface PostAssessmentsSubmissionsStartInput {
   assessmentId: string;
   body?: Types.LearningAssessmentsStartSubmissionInput;
 }
-export type PostAssessmentsSubmissionsStartOutput = Types.LearningAssessmentsLearnerAssessmentSubmission;
+export type PostAssessmentsSubmissionsStartOutput = Types.LearningAssessmentsLearnerAssessmentAttempt;
 export const postAssessmentsSubmissionsStartEndpoint = {
   operationId: 'postAssessmentsSubmissionsStart' as const,
   method: 'POST' as const,
@@ -5616,6 +5641,43 @@ export const postLaunchPadPublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+export type GetLearningMeDashboardInput = void;
+export type GetLearningMeDashboardOutput = Types.LearningWorkspacesLearnerDashboard;
+export const getLearningMeDashboardEndpoint = {
+  operationId: 'getLearningMeDashboard' as const,
+  method: 'GET' as const,
+  path: '/v1/learning/me/dashboard' as const,
+  tags: ['Learning/workspaces/learnerWorkspace'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetLearningCoursesWorkspaceInput {
+  courseId: string;
+}
+export type GetLearningCoursesWorkspaceOutput = Types.LearningWorkspacesLearnerCourseWorkspace;
+export const getLearningCoursesWorkspaceEndpoint = {
+  operationId: 'getLearningCoursesWorkspace' as const,
+  method: 'GET' as const,
+  path: '/v1/learning/courses/{courseId}/workspace' as const,
+  tags: ['Learning/workspaces/learnerWorkspace'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetLearningMeSearchInput {
+  query?: {
+    q?: string;
+    take?: number;
+  };
+}
+export type GetLearningMeSearchOutput = Array<Types.LearningWorkspacesLearnerSearchResult>;
+export const getLearningMeSearchEndpoint = {
+  operationId: 'getLearningMeSearch' as const,
+  method: 'GET' as const,
+  path: '/v1/learning/me/search' as const,
+  tags: ['Learning/workspaces/learnerWorkspace'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetLearningPathsInput {
   query?: {
     tenantId?: string;
@@ -6806,6 +6868,16 @@ export const getCoursesPublicEndpoint = {
   operationId: 'getCoursesPublic' as const,
   method: 'GET' as const,
   path: '/v1/courses/public' as const,
+  tags: ['Learning/courses/program'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetCoursesMeInput = void;
+export type GetCoursesMeOutput = Array<Types.LearningCoursesProgram>;
+export const getCoursesMeEndpoint = {
+  operationId: 'getCoursesMe' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/me' as const,
   tags: ['Learning/courses/program'] as const,
   requiresAuth: true,
 } as const;
@@ -10503,6 +10575,23 @@ export const getTestingEventsRegistrationsMeEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetTestingEventsParticipantsInput {
+  query?: {
+    search?: string;
+    status?: Types.TestingLabTestingSlotRegistrationStatus;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetTestingEventsParticipantsOutput = Types.TestingLabTestingParticipantDirectoryProjection;
+export const getTestingEventsParticipantsEndpoint = {
+  operationId: 'getTestingEventsParticipants' as const,
+  method: 'GET' as const,
+  path: '/v1/testing/events/participants' as const,
+  tags: ['TestingLab/testingEventParticipation'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostTestingEventsRegistrationsCheckInInput {
   registrationId: string;
 }
@@ -13897,6 +13986,8 @@ export const endpoints = {
   postAssessmentsGroups: postAssessmentsGroupsEndpoint,
   putAssessmentsGroups: putAssessmentsGroupsEndpoint,
   deleteAssessmentsGroups: deleteAssessmentsGroupsEndpoint,
+  getAssessmentsDefinition: getAssessmentsDefinitionEndpoint,
+  putAssessmentsDefinition: putAssessmentsDefinitionEndpoint,
   putAssessmentsGroup: putAssessmentsGroupEndpoint,
   getAssessmentsInteractiveVideoCues: getAssessmentsInteractiveVideoCuesEndpoint,
   postAssessmentsInteractiveVideoCues: postAssessmentsInteractiveVideoCuesEndpoint,
@@ -14248,6 +14339,9 @@ export const endpoints = {
   getLaunchPadProjects: getLaunchPadProjectsEndpoint,
   postLaunchPadChecklistComplete: postLaunchPadChecklistCompleteEndpoint,
   postLaunchPadPublish: postLaunchPadPublishEndpoint,
+  getLearningMeDashboard: getLearningMeDashboardEndpoint,
+  getLearningCoursesWorkspace: getLearningCoursesWorkspaceEndpoint,
+  getLearningMeSearch: getLearningMeSearchEndpoint,
   getLearningPaths: getLearningPathsEndpoint,
   postLearningPaths: postLearningPathsEndpoint,
   getLearningPathsSearch: getLearningPathsSearchEndpoint,
@@ -14331,6 +14425,7 @@ export const endpoints = {
   getCourses: getCoursesEndpoint,
   postCourses: postCoursesEndpoint,
   getCoursesPublic: getCoursesPublicEndpoint,
+  getCoursesMe: getCoursesMeEndpoint,
   getCourses1: getCourses1Endpoint,
   putCourses: putCoursesEndpoint,
   deleteCourses: deleteCoursesEndpoint,

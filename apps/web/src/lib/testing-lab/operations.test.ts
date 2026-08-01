@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
     getTestingSessionsWaitlist: vi.fn(),
   },
   feedback: { getTestingRequestsFeedback: vi.fn() },
+  analytics: { getTestingAnalytics: vi.fn(), getTestingAnalyticsExport: vi.fn() },
   settings: { getApiTestingLabSettings: vi.fn() },
   permissions: { getApiTestingLabPermissionsRoleTemplates: vi.fn() },
 }));
@@ -31,13 +32,20 @@ vi.mock('@game-guild/client', () => ({
     TestinglabTestinglocationsModule: vi.fn(() => mocks.locations),
     TestinglabTestingparticipantsModule: vi.fn(() => mocks.participants),
     TestinglabTestingfeedbackModule: vi.fn(() => mocks.feedback),
+    TestinglabAnalyticsModule: vi.fn(() => mocks.analytics),
     TestinglabSettingsModule: vi.fn(() => mocks.settings),
     TestinglabPermissionModule: vi.fn(() => mocks.permissions),
     ProjectsModule: vi.fn(() => ({})),
   },
 }));
 
-import { getTestingLabAdministration, getTestingLabAnalytics, getTestingRequestDetail, getTestingSessionDetail } from './queries';
+import {
+  getTestingLabAdministration,
+  getTestingLabAnalytics,
+  getTestingLabAnalyticsCsv,
+  getTestingRequestDetail,
+  getTestingSessionDetail,
+} from './queries';
 
 describe('Testing Lab operational queries', () => {
   beforeEach(() => {
@@ -111,6 +119,31 @@ describe('Testing Lab operational queries', () => {
       ok: true,
       data: [{ id: 'location-1', name: 'Remote', status: 'Active' }],
     });
+    mocks.analytics.getTestingAnalytics.mockResolvedValue({
+      ok: true,
+      data: {
+        fromDate: '2026-07-01T00:00:00.000Z',
+        toDate: '2026-07-08T00:00:00.000Z',
+        current: {
+          events: 2,
+          completedEvents: 1,
+          applications: 4,
+          approvedProjects: 2,
+          registeredTesters: 5,
+          attendedTesters: 4,
+          feedback: 3,
+          averageRating: 8.5,
+          recommendationRate: 75,
+          capacity: 12,
+          fillRate: 41.67,
+        },
+        previous: null,
+        locations: { total: 1, active: 1 },
+        trend: [],
+        events: [],
+      },
+    });
+    mocks.analytics.getTestingAnalyticsExport.mockResolvedValue({ ok: true, data: 'event,applications\nJuly lab,4' });
   });
 
   it('loads request details with sessions, participants, and feedback', async () => {
@@ -139,14 +172,35 @@ describe('Testing Lab operational queries', () => {
     expect(administration.roles).toEqual([expect.objectContaining({ id: 'role-1', name: 'Facilitator' })]);
   });
 
-  it('computes dashboard analytics from live request, session, location, and feedback records', async () => {
-    const analytics = await getTestingLabAnalytics();
+  it('loads tenant analytics through one generated CQRS endpoint', async () => {
+    const analytics = await getTestingLabAnalytics({
+      fromDate: '2026-07-01T00:00:00.000Z',
+      toDate: '2026-07-08T00:00:00.000Z',
+      includeComparison: true,
+    });
 
-    expect(analytics.requests.total).toBe(2);
-    expect(analytics.requests.open).toBe(1);
-    expect(analytics.sessions.completed).toBe(1);
-    expect(analytics.capacity.fillRate).toBe(41.67);
-    expect(analytics.feedback.averageRating).toBe(4);
-    expect(analytics.feedback.recommendationRate).toBe(100);
+    expect(analytics.current.events).toBe(2);
+    expect(analytics.current.fillRate).toBe(41.67);
+    expect(analytics.current.averageRating).toBe(8.5);
+    expect(analytics.accessIssues).toEqual([]);
+    expect(mocks.analytics.getTestingAnalytics).toHaveBeenCalledWith({
+      fromDate: '2026-07-01T00:00:00.000Z',
+      toDate: '2026-07-08T00:00:00.000Z',
+      includeComparison: true,
+    });
+    expect(mocks.feedback.getTestingRequestsFeedback).not.toHaveBeenCalled();
+  });
+
+  it('loads the tenant CSV through the authenticated generated client', async () => {
+    const result = await getTestingLabAnalyticsCsv({
+      fromDate: '2026-07-01T00:00:00.000Z',
+      toDate: '2026-07-08T00:00:00.000Z',
+    });
+
+    expect(result).toEqual({ data: 'event,applications\nJuly lab,4' });
+    expect(mocks.analytics.getTestingAnalyticsExport).toHaveBeenCalledWith({
+      fromDate: '2026-07-01T00:00:00.000Z',
+      toDate: '2026-07-08T00:00:00.000Z',
+    });
   });
 });
