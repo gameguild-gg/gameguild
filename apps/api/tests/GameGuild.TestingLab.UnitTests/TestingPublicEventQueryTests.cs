@@ -120,7 +120,53 @@ public sealed class TestingPublicEventQueryTests : IDisposable
         result.Error.Type.Should().Be(ErrorType.NotFound);
     }
 
+    [Fact]
+    public async Task PublicDirectory_WhenAuthenticated_OnlyReturnsEventsFromTheActiveTenant()
+    {
+        AddActiveActor(_managerId, _tenantId);
+        var visible = AddEvent("Visible event");
+        visible.OpenApplications();
+        var otherTenant = TestingEvent.Create(
+            "Other tenant event",
+            TestingEventMode.Online,
+            Guid.NewGuid(),
+            SystemClock.UtcNow.AddDays(-2),
+            SystemClock.UtcNow.AddDays(1),
+            SystemClock.UtcNow.AddDays(2),
+            SystemClock.UtcNow.AddDays(3),
+            true,
+            TestingEventApprovalMode.ManagerOnly,
+            Guid.NewGuid());
+        otherTenant.OpenApplications();
+        _context.Add(otherTenant);
+        await _context.SaveChangesAsync();
+        _actorAccessor.SetActorContext(
+            ActorContextBuilder.ForUser(_managerId).WithTenantId(_tenantId).Build());
+
+        var result = await CreateHandler().Handle(new GetPublicTestingEventsQuery(), default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle(testingEvent => testingEvent.Id == visible.Id);
+        result.Value.Should().NotContain(testingEvent => testingEvent.Id == otherTenant.Id);
+    }
     private TestingEventHandlers CreateHandler() => new(_context, _actorAccessor);
+    private void AddActiveActor(Guid userId, Guid tenantId)
+    {
+        _context.Add(new User
+        {
+            Id = userId,
+            Email = $"{userId:N}@example.com",
+            Name = "Testing Lab manager",
+            IsActive = true
+        });
+        _context.Add(new TenantMember
+        {
+            UserId = userId,
+            TenantId = tenantId,
+            Role = "Admin",
+            IsActive = true
+        });
+    }
 
     private TestingEvent AddEvent(string name)
     {
