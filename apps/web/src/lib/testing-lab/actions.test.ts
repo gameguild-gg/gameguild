@@ -158,6 +158,10 @@ describe('Testing Lab server actions', () => {
     const location = await createTestingLabLocation(
       form({
         name: 'Remote Lab',
+        isVirtual: 'true',
+        virtualUrl: 'https://meet.gameguild.gg/lab',
+        contactEmail: 'facilitator@gameguild.gg',
+        contactPhone: '+55 11 5555-0100',
         status: 'Active',
         maxTestersCapacity: '30',
         maxProjectsCapacity: '8',
@@ -167,7 +171,15 @@ describe('Testing Lab server actions', () => {
     expect(session.success).toBe(true);
     expect(mocks.postTestingSessions).toHaveBeenCalledWith(expect.objectContaining({ managerUserId: 'manager-1' }));
     expect(location.success).toBe(true);
-    expect(mocks.postTestingLocations).toHaveBeenCalledWith(expect.objectContaining({ name: 'Remote Lab' }));
+    expect(mocks.postTestingLocations).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Remote Lab',
+        isVirtual: true,
+        virtualUrl: 'https://meet.gameguild.gg/lab',
+        contactEmail: 'facilitator@gameguild.gg',
+        contactPhone: '+55 11 5555-0100',
+      }),
+    );
   });
 
   it('registers members or joins the waitlist through the generated participant module', async () => {
@@ -240,7 +252,15 @@ describe('Testing Lab server actions', () => {
       message: 'Effective Testing Lab access loaded.',
     });
     await expect(
-      grantTestingLabResourcePermission(form({ userId: 'user-1', resourceType: 'TestingSession', resourceId: 'session-1', action: 'edit' })),
+      grantTestingLabResourcePermission(
+        form({
+          userId: 'user-1',
+          resourceType: 'TestingSession',
+          resourceId: 'session-1',
+          action: 'edit',
+          expiresAt: '2026-08-15T18:00',
+        }),
+      ),
     ).resolves.toEqual({ success: true, data: null, message: 'Resource permission granted.' });
     await expect(
       revokeTestingLabResourcePermission(form({ userId: 'user-1', resourceType: 'TestingSession', resourceId: 'session-1', action: 'edit' })),
@@ -251,7 +271,7 @@ describe('Testing Lab server actions', () => {
       'user-1',
       'TestingSession',
       'session-1',
-      expect.objectContaining({ action: 'edit' }),
+      expect.objectContaining({ action: 'edit', expiresAt: expect.stringMatching(/^2026-08-15T/) }),
     );
     expect(mocks.deleteApiTestingLabPermissionsUsersResources).toHaveBeenCalledWith('user-1', 'TestingSession', 'session-1', {
       action: 'edit',

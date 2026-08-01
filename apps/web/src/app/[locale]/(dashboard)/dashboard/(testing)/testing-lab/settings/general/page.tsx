@@ -1,67 +1,189 @@
-import { TestingLabActionForm } from '@/components/testing-lab/testing-lab-action-form';
-import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
-import { TestingLabAccessIssues } from '@/components/testing-lab/testing-lab-state';
-import { resetTestingLabSettings, updateTestingLabSettings } from '@/lib/testing-lab/actions';
-import { getTestingLabAdministration } from '@/lib/testing-lab';
-import { Input } from '@game-guild/ui/components/input';
-import { Label } from '@game-guild/ui/components/label';
-import { Textarea } from '@game-guild/ui/components/textarea';
-import { Settings } from 'lucide-react';
+import { TestingLabActionForm } from "@/components/testing-lab/testing-lab-action-form";
+import { TestingLabPageHeader } from "@/components/testing-lab/testing-lab-page-header";
+import { TestingLabAccessIssues } from "@/components/testing-lab/testing-lab-state";
+import {
+  resetTestingLabSettings,
+  updateTestingLabSettings,
+} from "@/lib/testing-lab/actions";
+import { getTestingLabAdministration } from "@/lib/testing-lab";
+import { Input } from "@game-guild/ui/components/input";
+import { Label } from "@game-guild/ui/components/label";
+import { Switch } from "@game-guild/ui/components/switch";
+import { Textarea } from "@game-guild/ui/components/textarea";
+import { Bell, CalendarClock, Settings, UserCheck } from "lucide-react";
+
+const operatingControls = [
+  {
+    name: "allowPublicSignups",
+    label: "Public tester registration",
+    description:
+      "Allow authenticated community members to register for sessions that have open capacity.",
+    icon: UserCheck,
+  },
+  {
+    name: "requireApproval",
+    label: "Project approval required",
+    description:
+      "Keep project applications pending until a manager or review committee approves them.",
+    icon: CalendarClock,
+  },
+  {
+    name: "enableNotifications",
+    label: "Operational notifications",
+    description:
+      "Send status, schedule, waitlist, and feedback reminders to participants and managers.",
+    icon: Bell,
+  },
+] as const;
 
 export default async function TestingLabSettingsPage() {
   const administration = await getTestingLabAdministration();
   const settings = administration.settings;
+  const enabledByName = {
+    allowPublicSignups: settings?.allowPublicSignups,
+    requireApproval: settings?.requireApproval,
+    enableNotifications: settings?.enableNotifications,
+  };
+
   return (
     <div className="space-y-6 p-4 lg:p-6">
       <TestingLabPageHeader
         icon={Settings}
-        title="Testing Lab settings"
-        description="Configure tenant-wide operating defaults for public registration, approvals, notifications, duration, and concurrent sessions."
+        title="General settings"
+        description="Set the identity, scheduling defaults, and participation policy used across this Testing Lab."
       />
       <TestingLabAccessIssues issues={administration.accessIssues} />
+
       <TestingLabActionForm
         action={updateTestingLabSettings}
         secondaryAction={resetTestingLabSettings}
         submitLabel="Save settings"
         secondaryLabel="Reset defaults"
-        className="max-w-4xl space-y-6 rounded-md border p-5"
-        actionsClassName="flex flex-wrap justify-between gap-3 border-t pt-4"
+        className="max-w-5xl space-y-8"
+        actionsClassName="sticky bottom-0 z-10 flex flex-wrap justify-between gap-3 border-t bg-background/95 py-4 backdrop-blur"
       >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="lab-name">Lab name</Label>
-            <Input id="lab-name" name="labName" defaultValue={settings?.labName ?? 'GameGuild Testing Lab'} required />
+        <section className="grid gap-5 border-b pb-8 lg:grid-cols-[14rem_minmax(0,1fr)]">
+          <div>
+            <h2 className="font-semibold">Identity</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              The name and context managers see across Testing Lab operations.
+            </p>
           </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="lab-description">Description</Label>
-            <Textarea id="lab-description" name="description" rows={3} defaultValue={settings?.description ?? ''} />
+          <div className="grid gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="lab-name">Lab name</Label>
+              <Input
+                id="lab-name"
+                name="labName"
+                defaultValue={settings?.labName ?? "GameGuild Testing Lab"}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lab-description">Description</Label>
+              <Textarea
+                id="lab-description"
+                name="description"
+                rows={3}
+                defaultValue={settings?.description ?? ""}
+              />
+            </div>
+            <div className="max-w-sm space-y-2">
+              <Label htmlFor="lab-timezone">Timezone</Label>
+              <Input
+                id="lab-timezone"
+                name="timezone"
+                defaultValue={settings?.timezone ?? "UTC"}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                IANA timezone used for schedules, reminders, and reports.
+              </p>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="lab-timezone">Timezone</Label>
-            <Input id="lab-timezone" name="timezone" defaultValue={settings?.timezone ?? 'UTC'} required />
+        </section>
+
+        <section className="grid gap-5 border-b pb-8 lg:grid-cols-[14rem_minmax(0,1fr)]">
+          <div>
+            <h2 className="font-semibold">Scheduling defaults</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Starting values for new sessions. Managers can adjust each session
+              later.
+            </p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="lab-duration">Default session duration (minutes)</Label>
-            <Input id="lab-duration" name="defaultSessionDuration" type="number" min="15" defaultValue={settings?.defaultSessionDuration ?? 120} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="lab-duration">Session duration</Label>
+              <div className="relative">
+                <Input
+                  id="lab-duration"
+                  name="defaultSessionDuration"
+                  type="number"
+                  min="15"
+                  step="15"
+                  defaultValue={settings?.defaultSessionDuration ?? 120}
+                  className="pr-20"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  minutes
+                </span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lab-concurrency">Simultaneous sessions</Label>
+              <Input
+                id="lab-concurrency"
+                name="maxSimultaneousSessions"
+                type="number"
+                min="1"
+                defaultValue={settings?.maxSimultaneousSessions ?? 4}
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="lab-concurrency">Maximum simultaneous sessions</Label>
-            <Input id="lab-concurrency" name="maxSimultaneousSessions" type="number" min="1" defaultValue={settings?.maxSimultaneousSessions ?? 4} />
+        </section>
+
+        <section className="grid gap-5 lg:grid-cols-[14rem_minmax(0,1fr)]">
+          <div>
+            <h2 className="font-semibold">Participation policy</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Tenant-wide controls for applications, attendance, and
+              communication.
+            </p>
           </div>
-        </div>
-        <fieldset className="grid gap-3 sm:grid-cols-3">
-          <legend className="mb-3 text-sm font-medium">Operating controls</legend>
-          {[
-            ['allowPublicSignups', 'Allow public signups', settings?.allowPublicSignups],
-            ['requireApproval', 'Require request approval', settings?.requireApproval],
-            ['enableNotifications', 'Enable notifications', settings?.enableNotifications],
-          ].map(([name, label, enabled]) => (
-            <label key={String(name)} className="flex items-center gap-3 rounded-md border p-3 text-sm">
-              <input type="checkbox" name={String(name)} defaultChecked={Boolean(enabled)} className="size-4" />
-              {String(label)}
-            </label>
-          ))}
-        </fieldset>
+          <div className="divide-y rounded-md border">
+            {operatingControls.map((control) => {
+              const Icon = control.icon;
+              return (
+                <div
+                  key={control.name}
+                  className="flex items-start justify-between gap-4 p-4"
+                >
+                  <div className="flex gap-3">
+                    <Icon
+                      aria-hidden="true"
+                      className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                    />
+                    <div>
+                      <Label htmlFor={"setting-" + control.name}>
+                        {control.label}
+                      </Label>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {control.description}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    id={"setting-" + control.name}
+                    name={control.name}
+                    value="true"
+                    defaultChecked={Boolean(enabledByName[control.name])}
+                    aria-label={control.label}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </section>
       </TestingLabActionForm>
     </div>
   );

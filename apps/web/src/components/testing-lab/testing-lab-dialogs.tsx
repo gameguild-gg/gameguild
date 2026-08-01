@@ -14,9 +14,11 @@ import {
   type TestingLabActionResult,
 } from '@/lib/testing-lab/actions';
 import type { TestingLocationSummary, TestingProjectOption, TestingRequestSummary, TestingSessionSummary } from '@/lib/testing-lab/queries';
+import { TestingLocationFields } from './testing-location-fields';
 import type { TestingLabTestingLabRoleTemplate } from '@game-guild/client';
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Button } from '@game-guild/ui/components/button';
+import { Checkbox } from '@game-guild/ui/components/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
@@ -357,49 +359,11 @@ export function CreateTestingLocationDialog() {
         </Button>
       }
       title="Create testing location"
-      description="Configure physical or remote capacity used when scheduling moderated sessions."
+      description="Configure a physical room or remote lab with the capacity and contact details used by scheduling."
       submitLabel="Create location"
       action={createTestingLabLocation}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="location-name">Name</Label>
-          <Input id="location-name" name="name" required placeholder="Remote community lab" />
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="location-address">Address or meeting URL</Label>
-          <Input id="location-address" name="address" placeholder="Room address or remote meeting URL" />
-        </div>
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Select name="status" defaultValue="Active">
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Maintenance">Maintenance</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="location-equipment">Equipment</Label>
-          <Input id="location-equipment" name="equipmentAvailable" placeholder="PCs, headsets, controllers" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="location-testers">Tester capacity</Label>
-          <Input id="location-testers" name="maxTestersCapacity" type="number" min="0" defaultValue="20" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="location-projects">Project capacity</Label>
-          <Input id="location-projects" name="maxProjectsCapacity" type="number" min="0" defaultValue="6" />
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="location-description">Notes</Label>
-          <Textarea id="location-description" name="description" rows={3} />
-        </div>
-      </div>
+      <TestingLocationFields idPrefix="create-location" />
     </ActionDialog>
   );
 }
@@ -453,10 +417,10 @@ export function CreateTestingLabRoleDialog() {
           <legend className="mb-3 text-sm font-medium">Permissions</legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {permissionOptions.map(([name, label]) => (
-              <label key={name} className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm">
-                <input type="checkbox" name={name} className="size-4" />
-                {label}
-              </label>
+              <div key={name} className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm">
+                <Checkbox id={'create-role-' + name} name={name} value="true" />
+                <Label htmlFor={'create-role-' + name}>{label}</Label>
+              </div>
             ))}
           </div>
         </fieldset>
@@ -631,53 +595,13 @@ export function EditTestingLocationDialog({ location }: { location: TestingLocat
           Edit
         </Button>
       }
-      title="Edit testing location"
-      description="Update room or remote-lab details and operational capacity."
+      title={'Edit ' + location.name}
+      description="Update delivery mode, address, capacity, contacts, and operating status."
       submitLabel="Save location"
       action={updateTestingLabLocation}
     >
       <input type="hidden" name="locationId" value={location.id} />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2 sm:col-span-2">
-          <Label>Name</Label>
-          <Input name="name" required defaultValue={location.name} />
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label>Address or meeting URL</Label>
-          <Input name="address" defaultValue={location.address ?? location.virtualUrl ?? ''} />
-        </div>
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Select name="status" defaultValue={String(location.status)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {['Active', 'Maintenance', 'Inactive'].map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Equipment</Label>
-          <Input name="equipmentAvailable" defaultValue={location.equipmentAvailable ?? ''} />
-        </div>
-        <div className="space-y-2">
-          <Label>Tester capacity</Label>
-          <Input name="maxTestersCapacity" type="number" min="0" defaultValue={location.maxTestersCapacity ?? 0} />
-        </div>
-        <div className="space-y-2">
-          <Label>Project capacity</Label>
-          <Input name="maxProjectsCapacity" type="number" min="0" defaultValue={location.maxProjectsCapacity ?? 0} />
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label>Notes</Label>
-          <Textarea name="description" rows={3} defaultValue={location.description ?? ''} />
-        </div>
-      </div>
+      <TestingLocationFields idPrefix={'edit-location-' + location.id} location={location} />
     </ActionDialog>
   );
 }
@@ -710,10 +634,10 @@ export function EditTestingLabRoleDialog({ role }: { role: TestingLabTestingLabR
           <legend className="mb-3 text-sm font-medium">Permissions</legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {permissionOptions.map(([name, label]) => (
-              <label key={name} className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm">
-                <input type="checkbox" name={name} defaultChecked={Boolean(role.permissions?.[name])} className="size-4" />
-                {label}
-              </label>
+              <div key={name} className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm">
+                <Checkbox id={'edit-role-' + name} name={name} value="true" defaultChecked={Boolean(role.permissions?.[name])} />
+                <Label htmlFor={'edit-role-' + name}>{label}</Label>
+              </div>
             ))}
           </div>
         </fieldset>
