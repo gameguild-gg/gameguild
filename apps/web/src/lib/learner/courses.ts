@@ -4,6 +4,8 @@ import {
     type LearningCoursesContentProgress,
     type LearningCoursesProgramContent,
     type LearningCoursesProgressStatus,
+    type LearningWorkspacesLearnerCourseSummary,
+    type LearningWorkspacesLearnerDashboard,
 } from '@game-guild/client';
 import { flattenUniqueContent } from '@/lib/learner/content-tree';
 import { unstable_rethrow } from 'next/navigation';
@@ -105,6 +107,7 @@ function createCourseModules(getAccessToken?: () => Promise<string | null>) {
     return {
         programs: new GeneratedApi.LearningCoursesProgramModule(client),
         content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
+        workspaces: new GeneratedApi.LearningWorkspacesLearnerworkspaceModule(client),
     };
 }
 
@@ -121,6 +124,54 @@ function mapCourse(program: GeneratedApi.LearningCoursesProgram): LearningCourse
         currentEnrollments: program.currentEnrollments ?? 0,
         averageRating: program.averageRating ?? 0,
         isEnrollmentOpen: program.isEnrollmentOpen ?? false,
+    };
+}
+
+function mapWorkspaceItemType(type?: string | null): CourseAttendanceItem['type'] {
+    switch (type) {
+        case 'Assignment':
+            return 'assignment';
+        case 'Questionnaire':
+        case 'Quiz':
+            return 'quiz';
+        case 'Discussion':
+            return 'peer-review';
+        case 'Code':
+        case 'Project':
+        case 'Reflection':
+        case 'Survey':
+            return 'activity';
+        default:
+            return 'lesson';
+    }
+}
+
+export function mapLearnerCourseSummary(course: LearningWorkspacesLearnerCourseSummary): CourseAttendanceData {
+    const progress = Math.max(0, Math.min(100, Math.round(course.progressPercentage ?? 0)));
+    const currentItem = course.currentContentId
+        ? {
+              id: course.currentContentId,
+              title: course.currentContentTitle || 'Continue course',
+              type: mapWorkspaceItemType(course.currentContentType),
+              status: progress > 0 ? ('in-progress' as const) : ('available' as const),
+              order: 0,
+              isRequired: true,
+          }
+        : undefined;
+
+    return {
+        id: course.courseId ?? '',
+        title: course.title ?? 'Untitled course',
+        slug: course.slug ?? '',
+        description: course.description ?? '',
+        thumbnail: course.thumbnail ?? null,
+        modules: [],
+        overallProgress: progress,
+        totalItems: course.totalItems ?? 0,
+        completedItems: course.completedItems ?? 0,
+        currentItem,
+        remainingMinutes: course.remainingMinutes ?? 0,
+        enrollmentId: course.enrollmentId,
     };
 }
 
@@ -415,31 +466,25 @@ export async function getCourseAccessData(courseSlug: string): Promise<CourseAcc
         return { kind: 'unavailable', message: 'Course access could not be verified. Try again.' };
     }
 }
+
+export async function getLearnerDashboard(): Promise<LearningWorkspacesLearnerDashboard | null> {
+    const token = await getOptionalToken();
+    if (!token) return null;
+
+    const { workspaces } = createCourseModules(async () => token);
+    const result = await workspaces.getLearningMeDashboard();
+    if (!result.ok) {
+        console.error('[learning] Failed to fetch learner dashboard', result.error);
+        return null;
+    }
+
+    return result.data;
+}
+
 export async function getMyLearningCourses(): Promise<CourseAttendanceData[]> {
     try {
-        const token = await getOptionalToken();
-        if (!token) return [];
-
-        const client = getApiClient(async () => token);
-        const result = await client.request<Array<GeneratedApi.LearningCoursesProgram>>({
-            method: 'GET',
-            path: '/v1/courses/me',
-            requiresAuth: true,
-        });
-
-        if (!result.ok) {
-            console.error('[learning] Failed to fetch learner courses', result.error);
-            return [];
-        }
-
-        const attendance = await Promise.all(
-            result.data
-                .map(mapCourse)
-                .filter((course) => Boolean(course.slug))
-                .map((course) => getCourseAttendanceData(course.slug, { includeProgress: true })),
-        );
-
-        return attendance.filter((course): course is CourseAttendanceData => course !== null);
+        const dashboard = await getLearnerDashboard();
+        return (dashboard?.courses ?? []).map(mapLearnerCourseSummary).filter((course) => Boolean(course.id && course.slug));
     } catch (error) {
         unstable_rethrow(error);
         console.error('[learning] Failed to build learner dashboard', error);

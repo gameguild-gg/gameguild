@@ -23,6 +23,7 @@ using GameGuild.Learning.Enrollments;
 using GameGuild.Learning.Experience.Discovery;
 using GameGuild.Learning.Experience.LearningPaths;
 using GameGuild.Learning.Experience.Recommendations;
+using GameGuild.Learning.Workspaces;
 using GameGuild.Content.Pages;
 using GameGuild.Notifications;
 using GameGuild.Resources;
@@ -294,7 +295,12 @@ public static class InfrastructureLayerExtensions
         services.AddCertificatesModule();
         logger.LogInformation("Learning Certificates Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10f.5. Learning Experience Modules
+        // 10f.5. Learning Workspaces Module
+        stepStopwatch.Restart();
+        services.AddLearningWorkspacesModule();
+        logger.LogInformation("Learning Workspaces Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10f.6. Learning Experience Modules
         stepStopwatch.Restart();
         services.AddDiscoveryModule();
         services.AddLearningPathsModule();
@@ -302,12 +308,12 @@ public static class InfrastructureLayerExtensions
         LearningSocialModule.AddSocialModule(services);
         logger.LogInformation("Learning Discovery/Paths/Recommendations/Social Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10f.6. Game Jams Module
+        // 10f.7. Game Jams Module
         stepStopwatch.Restart();
         services.AddGameJamsModule();
         logger.LogInformation("Game Jams Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10f.7. Projects, Testing Lab, and Launch Pad Modules
+        // 10f.8. Projects, Testing Lab, and Launch Pad Modules
         stepStopwatch.Restart();
         services.AddProjectsModule();
         services.AddTestingLabModule(configuration);
