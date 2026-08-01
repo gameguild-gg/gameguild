@@ -97,6 +97,32 @@ export class TestinglabTestingeventparticipationModule {
 
   /**
    */
+  async getTestingEventsParticipants(query?: {
+    search?: string;
+    status?: Types.TestingLabTestingSlotRegistrationStatus;
+    skip?: number;
+    take?: number;
+  }): Promise<Result<Types.TestingLabTestingParticipantDirectoryProjection, ApiError>> {
+    const url = '/v1/testing/events/participants';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.TestingLabTestingParticipantDirectoryProjectionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postTestingEventsRegistrationsCheckIn(registrationId: string): Promise<Result<Types.TestingLabTestingSlotRegistrationProjection, ApiError>> {
     const url = `/v1/testing/events/registrations/${registrationId}:check-in`;
 
