@@ -1,4 +1,5 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
+import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -8,21 +9,23 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(resolve(repoRoot, relativePath), 'utf8');
 }
 
-function readSourceFiles(relativePath: string): Array<{ file: string; source: string }> {
+async function readSourceFiles(relativePath: string): Promise<Array<{ file: string; source: string }>> {
   const absolutePath = resolve(repoRoot, relativePath);
-  return readdirSync(absolutePath).flatMap((entry) => {
-    const filePath = resolve(absolutePath, entry);
-    const repoRelativePath = `${relativePath}/${entry}`;
-    const stats = statSync(filePath);
+  const entries = await readdir(absolutePath, { withFileTypes: true });
+  const sources = await Promise.all(entries.map(async (entry) => {
+    const filePath = resolve(absolutePath, entry.name);
+    const repoRelativePath = `${relativePath}/${entry.name}`;
 
-    if (stats.isDirectory()) {
-      if (entry === 'docs') return [];
+    if (entry.isDirectory()) {
+      if (entry.name === 'docs') return [];
       return readSourceFiles(repoRelativePath);
     }
 
-    if (!/\.[cm]?[jt]sx?$/.test(entry)) return [];
-    return [{ file: repoRelativePath, source: readFileSync(filePath, 'utf8') }];
-  });
+    if (!/\.[cm]?[jt]sx?$/.test(entry.name)) return [];
+    return [{ file: repoRelativePath, source: await readFile(filePath, 'utf8') }];
+  }));
+
+  return sources.flat();
 }
 
 describe('web runtime hardening', () => {
@@ -51,12 +54,12 @@ describe('web runtime hardening', () => {
     expect(readRepoFile('apps/web/src/app/api/static-viewer/file/[...path]/route.ts')).toContain('logWebRequest');
   });
 
-  it('does not depend on the internal Next loadable alias', () => {
+  it('does not depend on the internal Next loadable alias', async () => {
     expect(readRepoFile('apps/web/next.config.ts')).not.toContain(
       'next/dist/server/route-modules/app-page/vendored/contexts/loadable',
     );
 
-    const dynamicImports = readSourceFiles('apps/web/src/components/block-content-editor').filter(({ source }) =>
+    const dynamicImports = (await readSourceFiles('apps/web/src/components/block-content-editor')).filter(({ source }) =>
       source.includes('next/dynamic'),
     );
 
