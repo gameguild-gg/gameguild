@@ -7135,6 +7135,61 @@ export interface TestingLabTestingEventFeedbackReviewProjection {
 
 export type TestingLabTestingEventMode = 'Online' | 'InPerson' | 'Hybrid';
 
+export interface TestingLabAnalyticsSummaryProjection {
+  events?: number;
+  completedEvents?: number;
+  applications?: number;
+  approvedProjects?: number;
+  registeredTesters?: number;
+  attendedTesters?: number;
+  feedback?: number;
+  averageRating?: number | null;
+  recommendationRate?: number | null;
+  capacity?: number;
+  fillRate?: number;
+}
+
+export interface TestingLabAnalyticsTrendProjection {
+  date?: string;
+  events?: number;
+  applications?: number;
+  registrations?: number;
+  attendance?: number;
+  feedback?: number;
+}
+
+export interface TestingLabEventAnalyticsProjection {
+  eventId?: string;
+  name?: string | null;
+  status?: TestingLabTestingEventStatus;
+  mode?: TestingLabTestingEventMode;
+  startsAt?: string;
+  applications?: number;
+  approvedProjects?: number;
+  registeredTesters?: number;
+  attendedTesters?: number;
+  feedback?: number;
+  averageRating?: number | null;
+  capacity?: number;
+  fillRate?: number;
+}
+
+export interface TestingLabLocationAnalyticsProjection {
+  total?: number;
+  active?: number;
+}
+
+export interface TestingLabAnalyticsReportProjection {
+  fromDate?: string;
+  toDate?: string;
+  generatedAt?: string;
+  current?: TestingLabAnalyticsSummaryProjection;
+  previous?: TestingLabAnalyticsSummaryProjection | null;
+  locations?: TestingLabLocationAnalyticsProjection;
+  trend?: Array<TestingLabAnalyticsTrendProjection> | null;
+  events?: Array<TestingLabEventAnalyticsProjection> | null;
+}
+
 export interface TestingLabTestingEventProjection {
   id?: string;
   name?: string | null;

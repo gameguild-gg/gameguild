@@ -4,7 +4,6 @@ import { Link } from '@/i18n/navigation';
 import { getTestingLabAnalytics, getTestingLabDashboard, normalizeTestingRequestStatus, normalizeTestingSessionStatus } from '@/lib/testing-lab';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { ArrowRight, BarChart3, CalendarDays, FlaskConical, FolderKanban, Settings, Users } from 'lucide-react';
 
 const workstreams = [
@@ -70,26 +69,25 @@ export default async function TestingLabPage() {
 
       <TestingLabAccessIssues issues={[...new Set(issues)]} />
 
-      <section aria-label="Testing Lab metrics" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Testing Lab metrics" className="grid overflow-hidden rounded-md border sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ['Open requests', analytics.requests.open + analytics.requests.active, `${analytics.requests.total} total requests`],
-          ['Upcoming sessions', analytics.sessions.scheduled + analytics.sessions.active, `${analytics.sessions.completed} completed`],
-          ['Capacity fill', `${analytics.capacity.fillRate}%`, `${analytics.capacity.registered}/${analytics.capacity.total} seats`],
+          ['Applications', analytics.current.applications, `${analytics.current.approvedProjects} approved projects`],
+          ['Events', analytics.current.events, `${analytics.current.completedEvents} completed`],
+          ['Capacity fill', `${analytics.current.fillRate}%`, `${analytics.current.registeredTesters}/${analytics.current.capacity} seats`],
           [
             'Feedback',
-            analytics.feedback.total,
-            analytics.feedback.averageRating === null ? 'No ratings yet' : `${analytics.feedback.averageRating}/5 average`,
+            analytics.current.feedback,
+            analytics.current.averageRating === null ? 'No ratings yet' : `${analytics.current.averageRating}/10 average`,
           ],
         ].map(([label, value, detail]) => (
-          <Card key={label}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">{label}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold">{value}</p>
-              <CardDescription>{detail}</CardDescription>
-            </CardContent>
-          </Card>
+          <div
+            key={label}
+            className="border-b p-4 last:border-b-0 sm:odd:border-r sm:[&:nth-last-child(-n+2)]:border-b-0 xl:border-b-0 xl:border-r xl:last:border-r-0"
+          >
+            <p className="text-sm font-medium text-muted-foreground">{label}</p>
+            <p className="mt-1 text-2xl font-semibold">{value}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
+          </div>
         ))}
       </section>
 
