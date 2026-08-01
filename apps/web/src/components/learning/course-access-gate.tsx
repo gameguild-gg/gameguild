@@ -46,13 +46,13 @@ export function CourseAccessGate({ access }: { access: GateAccess }) {
             : 'Classroom unavailable';
 
     return (
-        <main className="mx-auto flex min-h-[70vh] max-w-3xl items-center px-4 py-12">
+        <section aria-labelledby="course-access-title" className="mx-auto flex min-h-[70vh] max-w-3xl items-center px-4 py-12">
             <Card className="w-full">
                 <CardHeader className="gap-3">
                     <div className="flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
                         {access.kind === 'enrollment-required' ? <CheckCircle2 className="size-5" /> : <LockKeyhole className="size-5" />}
                     </div>
-                    <h1 className="text-2xl font-semibold">{title}</h1>
+                    <h1 id="course-access-title" className="text-2xl font-semibold">{title}</h1>
                     <p className="text-sm text-muted-foreground">
                         {course?.title ?? (access.kind === 'unavailable' ? access.message : 'This course')}
                     </p>
@@ -77,6 +77,6 @@ export function CourseAccessGate({ access }: { access: GateAccess }) {
                     <Button asChild variant="outline"><Link href={`${process.env.NEXT_PUBLIC_WEB_URL || 'https://gameguild.gg'}/courses`}>Browse catalog</Link></Button>
                 </CardContent>
             </Card>
-        </main>
+        </section>
     );
 }
