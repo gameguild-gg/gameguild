@@ -88,6 +88,7 @@ public class ModuleConfigurationTests
     [InlineData("GameGuild.Content.Pages", true)]
     [InlineData("GameGuild.TestingLab", true)]
     [InlineData("GameGuild.Learning.Experience.LearningPaths", true)]
+    [InlineData("GameGuild.Learning.TestingLab", true)]
     [InlineData("GameGuild.Unknown", false)]
     [InlineData(null, false)]
     public void IsEnabledAssembly_ShouldMatchDottedAndCompactModuleNames(string? assemblyName, bool expected)
@@ -95,5 +96,16 @@ public class ModuleConfigurationTests
         var config = new ModuleConfiguration();
 
         config.IsEnabledAssembly(assemblyName).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("GameGuild.TestingLab", false)]
+    [InlineData("GameGuild.TestingLab.UnitTests", true)]
+    [InlineData("GameGuild.API.Tests", true)]
+    [InlineData("GameGuild.Contest", false)]
+    [InlineData(null, false)]
+    public void IsTestAssembly_ShouldOnlyMatchTestProjectNames(string? assemblyName, bool expected)
+    {
+        ModuleConfiguration.IsTestAssembly(assemblyName).Should().Be(expected);
     }
 }

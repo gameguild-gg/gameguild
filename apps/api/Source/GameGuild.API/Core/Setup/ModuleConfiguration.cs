@@ -98,6 +98,18 @@ public sealed class ModuleConfiguration
             NormalizeModuleName(assemblyName).EndsWith(NormalizeModuleName(module), StringComparison.OrdinalIgnoreCase));
     }
 
+    public static bool IsTestAssembly(string? assemblyName)
+    {
+        if (string.IsNullOrWhiteSpace(assemblyName))
+        {
+            return false;
+        }
+
+        return assemblyName
+            .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Any(segment => segment.Equals("Tests", StringComparison.OrdinalIgnoreCase) ||
+                            segment.EndsWith("Tests", StringComparison.OrdinalIgnoreCase));
+    }
     private static string NormalizeModuleName(string value)
         => value
             .Replace(".", string.Empty, StringComparison.Ordinal)

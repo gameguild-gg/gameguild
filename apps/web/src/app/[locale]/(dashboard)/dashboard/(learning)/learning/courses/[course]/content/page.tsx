@@ -1,5 +1,4 @@
 import { getCourse, getCourseContent } from '@/lib/learning';
-import { getCourseAssessments } from '@/lib/learning/queries/assessments';
 import { CheckCircle2, Clock } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import React from 'react';
@@ -9,10 +8,9 @@ import { buildContentTreeModel } from './content-tree-model';
 export default async function ContentPage({ params }: PageProps<'/[locale]/dashboard/learning/courses/[course]/content'>): Promise<React.JSX.Element> {
   const { course: courseId } = await params;
 
-  const [course, content, assessmentsData] = await Promise.all([
+  const [course, content] = await Promise.all([
     getCourse(courseId),
     getCourseContent(courseId),
-    getCourseAssessments(courseId),
   ]);
 
   if (!course) {
@@ -53,7 +51,6 @@ export default async function ContentPage({ params }: PageProps<'/[locale]/dashb
         courseId={courseId}
         modules={treeModel.modules}
         allItems={treeModel.treeItems}
-        assessments={assessmentsData.assessments}
         virtualModuleIds={treeModel.virtualModuleIds}
       />
     </div>

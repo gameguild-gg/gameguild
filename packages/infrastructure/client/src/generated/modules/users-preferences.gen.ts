@@ -75,173 +75,10 @@ export class UsersPreferencesModule {
   }
 
   /**
-   * Get accessibility settings for user
+   * Reset user preferences to defaults
    */
-  async getUsersPreferencesAccessibility(userId: string): Promise<Result<Types.IdentityUsersUserAccessibilityPreferences, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/accessibility`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserAccessibilityPreferencesSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Replace accessibility preferences for user (full update)
-   */
-  async putUsersPreferencesAccessibility(userId: string, body: Types.IdentityUsersReplaceUserAccessibilityPreferencesInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/accessibility`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersReplaceUserAccessibilityPreferencesInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Partially update accessibility preferences for user
-   */
-  async patchUsersPreferencesAccessibility(userId: string, body: Types.IdentityUsersUpdateUserAccessibilityPreferencesInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/accessibility`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersUpdateUserAccessibilityPreferencesInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PATCH',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Check if accessibility preferences exist
-   */
-  async headUsersPreferencesAccessibility(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/accessibility`;
-
-    const result = await this.client.request({
-      method: 'HEAD',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Reset accessibility preferences to defaults
-   */
-  async postUsersPreferencesAccessibilityReset(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/accessibility:reset`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Get localization settings for user
-   */
-  async getUsersPreferencesLocalization(userId: string): Promise<Result<Types.IdentityUsersUserLocalizationPreferences, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/localization`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserLocalizationPreferencesSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Replace localization preferences for user (full update)
-   */
-  async putUsersPreferencesLocalization(userId: string, body: Types.IdentityUsersReplaceUserLocalizationPreferencesInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/localization`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersReplaceUserLocalizationPreferencesInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Partially update localization preferences for user
-   */
-  async patchUsersPreferencesLocalization(userId: string, body: Types.IdentityUsersUpdateUserLocalizationPreferencesInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/localization`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersUpdateUserLocalizationPreferencesInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PATCH',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Check if localization preferences exist
-   */
-  async headUsersPreferencesLocalization(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/localization`;
-
-    const result = await this.client.request({
-      method: 'HEAD',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Reset localization preferences to defaults
-   */
-  async postUsersPreferencesLocalizationReset(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences/localization:reset`;
+  async postUsersPreferencesReset(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences:reset`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -342,6 +179,95 @@ export class UsersPreferencesModule {
   }
 
   /**
+   * Get accessibility settings for user
+   */
+  async getUsersPreferencesAccessibility(userId: string): Promise<Result<Types.IdentityUsersUserAccessibilityPreferences, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/accessibility`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityUsersUserAccessibilityPreferencesSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Replace accessibility preferences for user (full update)
+   */
+  async putUsersPreferencesAccessibility(userId: string, body: Types.IdentityUsersReplaceUserAccessibilityPreferencesInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/accessibility`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersReplaceUserAccessibilityPreferencesInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Partially update accessibility preferences for user
+   */
+  async patchUsersPreferencesAccessibility(userId: string, body: Types.IdentityUsersUpdateUserAccessibilityPreferencesInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/accessibility`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserAccessibilityPreferencesInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PATCH',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Check if accessibility preferences exist
+   */
+  async headUsersPreferencesAccessibility(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/accessibility`;
+
+    const result = await this.client.request({
+      method: 'HEAD',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Reset accessibility preferences to defaults
+   */
+  async postUsersPreferencesAccessibilityReset(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/accessibility:reset`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Get privacy settings for user
    */
   async getUsersPreferencesPrivacy(userId: string): Promise<Result<Types.IdentityUsersUserPrivacyPreferences, ApiError>> {
@@ -431,10 +357,84 @@ export class UsersPreferencesModule {
   }
 
   /**
-   * Reset user preferences to defaults
+   * Get localization settings for user
    */
-  async postUsersPreferencesReset(userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/preferences:reset`;
+  async getUsersPreferencesLocalization(userId: string): Promise<Result<Types.IdentityUsersUserLocalizationPreferences, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/localization`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityUsersUserLocalizationPreferencesSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Replace localization preferences for user (full update)
+   */
+  async putUsersPreferencesLocalization(userId: string, body: Types.IdentityUsersReplaceUserLocalizationPreferencesInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/localization`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersReplaceUserLocalizationPreferencesInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Partially update localization preferences for user
+   */
+  async patchUsersPreferencesLocalization(userId: string, body: Types.IdentityUsersUpdateUserLocalizationPreferencesInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/localization`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserLocalizationPreferencesInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PATCH',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Check if localization preferences exist
+   */
+  async headUsersPreferencesLocalization(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/localization`;
+
+    const result = await this.client.request({
+      method: 'HEAD',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Reset localization preferences to defaults
+   */
+  async postUsersPreferencesLocalizationReset(userId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/preferences/localization:reset`;
 
     const result = await this.client.request({
       method: 'POST',

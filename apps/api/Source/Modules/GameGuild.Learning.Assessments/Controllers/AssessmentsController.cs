@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -201,6 +202,42 @@ public class AssessmentsController : BaseApiController
     }
 
     /// <summary>
+    /// Get the authored assessment definition. This payload can include answer keys.
+    /// </summary>
+    [HttpGet("{id:guid}/definition")]
+    public async Task<ActionResult<AssessmentDefinitionDto>> GetAssessmentDefinition(Guid id)
+    {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
+        return Ok(AssessmentDefinitionDto.FromEntity(assessment));
+    }
+
+    /// <summary>
+    /// Update the authored assessment definition. This payload can include answer keys.
+    /// </summary>
+    [HttpPut("{id:guid}/definition")]
+    public async Task<ActionResult<AssessmentDefinitionDto>> UpdateAssessmentDefinition(
+        Guid id,
+        [FromBody] UpdateAssessmentDefinitionRequest request)
+    {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
+        var result = await _assessmentService.UpdateAssessmentDefinitionAsync(id, request).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
+                : BadRequest(result.Error);
+        }
+
+        return Ok(AssessmentDefinitionDto.FromEntity(result.Value));
+    }
+
+    /// <summary>
     /// Assign an assessment to a weighted group or clear the assignment.
     /// </summary>
     [HttpPut("{id:guid}/group")]
@@ -327,7 +364,7 @@ public class AssessmentsController : BaseApiController
     /// Start a new assessment attempt
     /// </summary>
     [HttpPost("{assessmentId:guid}/submissions/start")]
-    public async Task<ActionResult<LearnerAssessmentSubmissionDto>> StartSubmission(
+    public async Task<ActionResult<LearnerAssessmentAttemptDto>> StartSubmission(
         Guid assessmentId, 
         [FromBody] StartSubmissionRequest request)
     {
@@ -339,25 +376,51 @@ public class AssessmentsController : BaseApiController
 
         var assessment = await _assessmentService.GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
         if (assessment == null) return NotFound();
-        var enrollment = await _enrollmentService.GetAsync(request.EnrollmentId).ConfigureAwait(false);
-        if (enrollment == null || enrollment.CourseId != assessment.CourseId) return BadRequest();
         var canManage = await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false);
-        if (!canManage && enrollment.UserId != actor.SubjectIdAsGuid.Value) return Forbid();
-
-        var result = await _assessmentService.StartSubmissionAsync(
-            assessmentId, 
+        var enrollmentUserId = await ResolveEnrollmentUserIdAsync(
+            assessment.CourseId,
             request.EnrollmentId,
-            enrollment.UserId).ConfigureAwait(false);
+            actor.SubjectIdAsGuid.Value,
+            canManage).ConfigureAwait(false);
+        if (!enrollmentUserId.HasValue)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid course membership",
+                Detail = "The assessment attempt could not be matched to an active course enrollment."
+            });
+        }
+        if (!canManage && enrollmentUserId.Value != actor.SubjectIdAsGuid.Value) return Forbid();
+
+        _logger.LogInformation(
+            "Starting assessment {AssessmentId} for enrollment {EnrollmentId} and user {UserId}",
+            assessmentId,
+            request.EnrollmentId,
+            enrollmentUserId.Value);
+        var result = await _assessmentService.StartSubmissionAsync(
+            assessmentId,
+            request.EnrollmentId,
+            enrollmentUserId.Value).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
-            return BadRequest(result.Error);
+            _logger.LogWarning(
+                "Assessment {AssessmentId} start was rejected for enrollment {EnrollmentId}: {ErrorCode} {ErrorDescription}",
+                assessmentId,
+                request.EnrollmentId,
+                result.Error.Code,
+                result.Error.Description);
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Assessment attempt rejected",
+                Detail = result.Error.Description
+            });
         }
 
         return CreatedAtAction(
             nameof(GetSubmission), 
             new { submissionId = result.Value.Id }, 
-            LearnerAssessmentSubmissionDto.FromEntity(result.Value));
+            LearnerAssessmentAttemptDto.FromEntities(result.Value, assessment));
     }
 
     /// <summary>
@@ -488,9 +551,21 @@ public class AssessmentsController : BaseApiController
         if (assessment == null) return NotFound();
         var actorUserId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorUserId.HasValue) return Unauthorized();
-        var enrollment = await _enrollmentService.GetAsync(enrollmentId).ConfigureAwait(false);
-        if (enrollment == null || enrollment.CourseId != assessment.CourseId) return BadRequest();
-        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false) && enrollment.UserId != actorUserId.Value) return Forbid();
+        var canManage = await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false);
+        var enrollmentUserId = await ResolveEnrollmentUserIdAsync(
+            assessment.CourseId,
+            enrollmentId,
+            actorUserId.Value,
+            canManage).ConfigureAwait(false);
+        if (!enrollmentUserId.HasValue)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid course membership",
+                Detail = "The assessment attempt could not be matched to an active course enrollment."
+            });
+        }
+        if (!canManage && enrollmentUserId.Value != actorUserId.Value) return Forbid();
 
         var result = await _assessmentService.CanAttemptAsync(assessmentId, enrollmentId).ConfigureAwait(false);
         if (!result.IsSuccess)
@@ -500,6 +575,46 @@ public class AssessmentsController : BaseApiController
 
         var attemptCount = await _assessmentService.GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
         return Ok(new CanAttemptResponse(result.Value, attemptCount));
+    }
+
+    private async Task<Guid?> ResolveEnrollmentUserIdAsync(
+        Guid courseId,
+        Guid enrollmentId,
+        Guid actorUserId,
+        bool canManage)
+    {
+        var enrollment = await _enrollmentService.GetAsync(enrollmentId).ConfigureAwait(false);
+        if (enrollment is { CourseId: var enrollmentCourseId } && enrollmentCourseId == courseId)
+        {
+            _logger.LogDebug("Resolved assessment enrollment {EnrollmentId} through Learning.Enrollments", enrollmentId);
+            return enrollment.UserId;
+        }
+
+        var actorProgress = await _programService.GetUserProgressDtoAsync(courseId, actorUserId).ConfigureAwait(false);
+        if (actorProgress?.EnrollmentId == enrollmentId)
+        {
+            _logger.LogDebug("Resolved assessment enrollment {EnrollmentId} through ProgramUser", enrollmentId);
+            return actorProgress.UserId;
+        }
+
+        if (!canManage)
+        {
+            _logger.LogWarning(
+                "Assessment membership {EnrollmentId} could not be resolved for actor {ActorUserId} in course {CourseId}; actor ProgramUser is {ActorProgramUserId}",
+                enrollmentId,
+                actorUserId,
+                courseId,
+                actorProgress?.EnrollmentId);
+            return null;
+        }
+
+        var courseUsers = await _programService.GetProgramUsersAsync(courseId, 0, 1000).ConfigureAwait(false);
+        var managedProgress = courseUsers.FirstOrDefault(progress => progress.EnrollmentId == enrollmentId);
+        if (managedProgress == null)
+        {
+            _logger.LogWarning("Managed assessment membership {EnrollmentId} was not found in course {CourseId}", enrollmentId, courseId);
+        }
+        return managedProgress?.UserId;
     }
 
     private async Task<bool> CanManageCourseAsync(Guid courseId)
@@ -625,6 +740,17 @@ public sealed record InteractiveVideoAssessmentCueDto(
         entity.CuePositionSeconds);
 }
 
+public sealed record AssessmentDefinitionDto(
+    Guid AssessmentId,
+    int DefinitionSchemaVersion,
+    JsonElement Definition)
+{
+    public static AssessmentDefinitionDto FromEntity(Assessment entity) => new(
+        entity.Id,
+        entity.DefinitionSchemaVersion,
+        AssessmentDefinitionContract.AuthorDefinition(entity.DefinitionPayload));
+}
+
 public sealed record LearnerInteractiveVideoAssessmentCueDto(
     string CueId,
     decimal? CuePositionSeconds)
@@ -728,6 +854,17 @@ public sealed record LearnerAssessmentSubmissionDto(
         entity.Feedback, entity.Status, entity.IsLate, entity.SubmittedModalities,
         entity.TextPayload, entity.FilePayload, entity.UrlPayload, entity.CodePayload,
         entity.MediaPayload, entity.ProjectPayload, entity.StructuredAnswerPayload);
+}
+
+public sealed record LearnerAssessmentAttemptDto(
+    LearnerAssessmentSubmissionDto Submission,
+    int DefinitionSchemaVersion,
+    JsonElement Definition)
+{
+    public static LearnerAssessmentAttemptDto FromEntities(AssessmentSubmission submission, Assessment assessment) => new(
+        LearnerAssessmentSubmissionDto.FromEntity(submission),
+        assessment.DefinitionSchemaVersion,
+        AssessmentDefinitionContract.LearnerDefinition(assessment.DefinitionPayload, submission.Id));
 }
 
 public sealed record StartSubmissionRequest(Guid EnrollmentId);

@@ -13,10 +13,16 @@ describe('block content editor migration surface', () => {
     'src/app/api/static-viewer/folder/[folderName]/route.ts',
     'src/app/api/static-viewer/file/[...path]/route.ts',
     'src/data/test-blocks/projeto-17792247804366bs8q7l9t/index.json',
+  ])('keeps %s available', (relativePath) => {
+    expect(existsSync(join(webRoot, relativePath))).toBe(true);
+  });
+
+  it.each([
     'public/assets/clang.wasm',
     'public/assets/lld.wasm',
     'public/assets/memfs.wasm',
-  ])('keeps %s available', (relativePath) => {
-    expect(existsSync(join(webRoot, relativePath))).toBe(true);
+    'public/assets/sysroot.tar',
+  ])('does not version generated compiler binary %s', (relativePath) => {
+    expect(existsSync(join(webRoot, relativePath))).toBe(false);
   });
 });

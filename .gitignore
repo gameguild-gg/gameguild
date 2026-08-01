@@ -58,6 +58,15 @@ test-results/
 playwright-report/
 playwright-report-react/
 artifacts/
+cov.json
+cov[0-9]*.json
+coverage.*.xml
+coverage.*.json
+apps/api/*temp-test-output.txt
+apps/api/*test-failures-detail.txt
+apps/api/build_output.txt
+packages/infrastructure/client/temp_spec.json
+touched_files_game_guild.txt
 *.tsbuildinfo
 apps/web/test-results/
 
@@ -91,9 +100,35 @@ next-env.d.ts
 # Turbo
 .turbo
 
+# Generated repository visualizations
+contributors/gource.txt
+contributors/gource.mp4
+contributors/gource.gif
+**/gource.txt
+**/gource.mp4
+
 # Public assets generated at build time
 public/pyodide/*
 public/wasm/*
+tools/emception/public/cdn/
+tools/emception/public/c2w-net-proxy.wasm
+tools/emception/bin/
+tools/emception/logs/
+*.wasm
+*.wasm.gz
+*.tar
+*.tar.gz
+*.zip
+*.mp4
+*.trx
+*.bak
+*.backup
+*.old
+*.ps1
+*.psm1
+
+# AI conversation dumps must not be versioned
+docs/devlog/2025-08-10-permissions-refactor-conversation-summary.md
 
 # Embedded upstream repos (avoid nested .git metadata/tooling conflicts)
 tools/emception/userland/**/.git/

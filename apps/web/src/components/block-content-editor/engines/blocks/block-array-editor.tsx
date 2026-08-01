@@ -29,6 +29,7 @@ import { BLOCK_REGISTRY, type BlockCellType } from "./block-component-registry"
 import { DeleteConfirmDialog } from "@/components/block-content-editor/extras/dialogs/delete-confirm-dialog"
 import type { Block, BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { nextBlockId } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+import { getProjectTypeStructure, type ProjectType } from "@/components/block-content-editor/lib/storage/editor/project-types"
 import { BlockContentRenderer } from "./block-array-viewer"
 import { InlineRichTextEditor } from "../../extras/rich-text/inline-rich-text-editor"
 import type { RichTextData } from "../../nodes/rich-text-node"
@@ -218,6 +219,8 @@ interface BlockArrayEditorProps {
   onChange: (blocks: BlockArray) => void
   readOnly?: boolean
   allowedBlockTypes?: import("@/components/block-content-editor/lib/storage/editor/block-structure").BlockCellType[]
+  /** High-level editor structure, used by direct BlockArrayEditor consumers. */
+  projectType?: ProjectType
   /** Which tab to show by default in the picker */
   defaultPickerTab?: "blocks" | "templates"
   /** Hide the Block Types tab in the picker */
@@ -232,9 +235,16 @@ interface BlockArrayEditorProps {
   onDragStateChange?: (dragging: boolean) => void
 }
 
-export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBlockTypes, defaultPickerTab, hideBlockTypesTab, singleBlockMode, onDragStateChange }: BlockArrayEditorProps) {
+export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBlockTypes, projectType, defaultPickerTab, hideBlockTypesTab, singleBlockMode, onDragStateChange }: BlockArrayEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [insertIndex, setInsertIndex] = useState<number | null>(null)
+  const projectTypeStructure = projectType ? getProjectTypeStructure(projectType) : {}
+  const effectiveAllowedBlockTypes = allowedBlockTypes ?? projectTypeStructure.allowedBlockTypes
+  const effectiveSingleBlockMode = singleBlockMode ?? projectTypeStructure.singleBlockMode
+  const isQuizMode = projectType === "quiz"
+  const hasRestrictedBlockTypes = !!effectiveAllowedBlockTypes && effectiveAllowedBlockTypes.length <= 1
+  const effectiveHideBlockTypesTab = hideBlockTypesTab ?? (hasRestrictedBlockTypes || (isQuizMode && !effectiveAllowedBlockTypes?.length))
+  const effectiveDefaultPickerTab = defaultPickerTab ?? (effectiveHideBlockTypesTab || isQuizMode ? "templates" : "blocks")
 
   // Editor modal state
   const [editorOpen, setEditorOpen] = useState(false)
@@ -351,7 +361,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
   return (
     <div className="space-y-0">
       {/* Empty state (oculto em modo single-block; EditorField auto-cria o bloco) */}
-      {blocks.length === 0 && !readOnly && !singleBlockMode && (
+      {blocks.length === 0 && !readOnly && !effectiveSingleBlockMode && (
         <div className="flex flex-col items-center justify-center py-20">
           <button
             type="button"
@@ -373,7 +383,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
           onDragLeave={drag.isDragging ? drag.handleContainerDragLeave : undefined}
         >
           {/* Insert line before first block (normal mode) */}
-          {!readOnly && !drag.isDragging && !singleBlockMode && <InsertLine onInsert={() => openPickerAt(0)} />}
+          {!readOnly && !drag.isDragging && !effectiveSingleBlockMode && <InsertLine onInsert={() => openPickerAt(0)} />}
 
           {/* Drag preview before first block */}
           {drag.isDragging && drag.dropTargetIndex === 0 && drag.dragIndex !== null && (
@@ -392,7 +402,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
                 onEdit={() => handleEditBlock(index)}
                 onUpdate={(data) => handleInlineBlockUpdate(index, data)}
                 readOnly={readOnly}
-                hideRemove={singleBlockMode}
+                hideRemove={effectiveSingleBlockMode}
                 onDragStart={() => drag.handleDragStart(index)}
                 onDragEnd={drag.handleDragEnd}
                 isDragSource={drag.dragIndex === index}
@@ -406,7 +416,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
               )}
 
               {/* Insert line after each block (normal mode; oculto em single-block) */}
-              {!readOnly && !drag.isDragging && !singleBlockMode && <InsertLine onInsert={() => openPickerAt(index + 1)} />}
+              {!readOnly && !drag.isDragging && !effectiveSingleBlockMode && <InsertLine onInsert={() => openPickerAt(index + 1)} />}
             </div>
           ))}
         </div>
@@ -416,9 +426,9 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         onSelect={handleAddBlock}
-        allowedBlockTypes={allowedBlockTypes}
-        defaultTab={defaultPickerTab}
-        hideBlockTypesTab={hideBlockTypesTab}
+        allowedBlockTypes={effectiveAllowedBlockTypes}
+        defaultTab={effectiveDefaultPickerTab}
+        hideBlockTypesTab={effectiveHideBlockTypesTab}
       />
 
       <BlockEditorModal

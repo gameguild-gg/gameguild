@@ -15,6 +15,17 @@ public class ContentInteractionService(
   IPermissionQueryService? permissionQueryService = null) : IContentInteractionService {
   /// <summary> Start a new content interaction (or resume existing one if not submitted) </summary>
   public async Task<ContentInteraction> StartContentAsync(Guid programUserId, Guid contentId) {
+    if (context is DbContext dbContext &&
+        dbContext.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL" &&
+        dbContext.Database.CurrentTransaction is null) {
+      var executionStrategy = dbContext.Database.CreateExecutionStrategy();
+      return await executionStrategy.ExecuteAsync(() => StartContentCoreAsync(programUserId, contentId)).ConfigureAwait(false);
+    }
+
+    return await StartContentCoreAsync(programUserId, contentId).ConfigureAwait(false);
+  }
+
+  private async Task<ContentInteraction> StartContentCoreAsync(Guid programUserId, Guid contentId) {
     var currentUserId = requestContextAccessor.CurrentUserId;
     if (!currentUserId.HasValue)
       throw new RequestValidationException("Active course enrollment was not found.");
@@ -119,6 +130,17 @@ public class ContentInteractionService(
 
   /// <summary> Submit content interaction (makes it immutable) </summary>
   public async Task<ContentInteraction> SubmitContentAsync(Guid interactionId, string submissionData) {
+    if (context is DbContext dbContext &&
+        dbContext.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL" &&
+        dbContext.Database.CurrentTransaction is null) {
+      var executionStrategy = dbContext.Database.CreateExecutionStrategy();
+      return await executionStrategy.ExecuteAsync(() => SubmitContentCoreAsync(interactionId, submissionData)).ConfigureAwait(false);
+    }
+
+    return await SubmitContentCoreAsync(interactionId, submissionData).ConfigureAwait(false);
+  }
+
+  private async Task<ContentInteraction> SubmitContentCoreAsync(Guid interactionId, string submissionData) {
     var submissionTarget = await GetSubmissionTargetAsync(interactionId).ConfigureAwait(false);
     var currentContentType = await context.Set<ProgramContent>()
       .AsNoTracking()

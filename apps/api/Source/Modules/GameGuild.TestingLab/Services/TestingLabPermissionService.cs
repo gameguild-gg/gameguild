@@ -217,7 +217,7 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
 
   private static void ValidateTemplateName(string name) {
     if (string.IsNullOrWhiteSpace(name)) throw new InvalidOperationException("Role template name is required.");
-    if (!name.StartsWith("TestingLab", StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("TestingLab role template names must start with 'TestingLab'.");
+    if (name.Trim().Length > 100) throw new InvalidOperationException("Role template name cannot exceed 100 characters.");
   }
 
   private static TestingLabUserPermission? ParsePermission(string permission) {

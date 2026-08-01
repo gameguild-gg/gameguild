@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.API.Context;
@@ -32,6 +33,7 @@ public sealed class RequestContextAccessor(
 
     public Guid? CurrentTenantId =>
         actorContextAccessor.ActorContext.TenantId ??
+        TryGetValidatedTenantId() ??
         TryGetClaimGuid(TenantIdClaimTypes) ??
         TryGetHeaderGuid("X-Tenant-Id");
 
@@ -85,6 +87,18 @@ public sealed class RequestContextAccessor(
         return Task.FromResult<TenantInfo?>(new TenantInfo(tenantId.Value, tenantName, tenantSlug, true));
     }
 
+    private Guid? TryGetValidatedTenantId()
+    {
+        var items = httpContextAccessor.HttpContext?.Items;
+        if (items is not null &&
+            items.TryGetValue(HttpContextKeys.AuthorizationTenantId, out var value) &&
+            value is Guid tenantId)
+        {
+            return tenantId;
+        }
+
+        return null;
+    }
     private Guid? TryGetClaimGuid(params string[] claimTypes)
     {
         var value = TryGetClaimValue(claimTypes);

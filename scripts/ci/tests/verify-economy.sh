@@ -93,7 +93,8 @@ test_coolify_compose_forwards_stripe_gateway_identity() {
   grep -Fq -- '- PaymentGateways__Stripe__AccountId=${PaymentGateways__Stripe__AccountId:?set PaymentGateways__Stripe__AccountId}' "$compose" || return 1
   grep -Fq -- '- Billing__Stripe__AccountId=${PaymentGateways__Stripe__AccountId:?set PaymentGateways__Stripe__AccountId}' "$compose" || return 1
   grep -Fq -- '- PaymentGateways__Stripe__ConnectedAccountId=${Billing__Stripe__ConnectedAccountId:-}' "$compose" || return 1
-  grep -Fq -- '- PaymentGateways__Stripe__LiveMode=${Billing__Stripe__LiveMode:?set Billing__Stripe__LiveMode to false for Staging or true for Production}' "$compose" || return 1
+  grep -Fq -- '- PaymentGateways__Stripe__LiveMode=${Billing__Stripe__LiveMode:-false}' "$compose" || return 1
+  grep -Fq -- '- Billing__Stripe__LiveMode=${Billing__Stripe__LiveMode:-false}' "$compose" || return 1
   grep -Fq 'PaymentGateways__Stripe__AccountId=acct_' "$deployment_docs" || return 1
   grep -Fq 'Billing__Stripe__LiveMode=false' "$deployment_docs"
 }
