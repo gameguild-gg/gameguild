@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>GameGuild.Learning.Workspaces</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning\GameGuild.Learning.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning.Enrollments\GameGuild.Learning.Enrollments.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning.Cohorts\GameGuild.Learning.Cohorts.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning.Certificates\GameGuild.Learning.Certificates.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning.Experience.Social\GameGuild.Learning.Experience.Social.csproj" />
+    </ItemGroup>
+
+</Project>

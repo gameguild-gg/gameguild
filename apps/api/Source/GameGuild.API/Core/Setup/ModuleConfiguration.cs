@@ -28,6 +28,7 @@ public sealed class ModuleConfiguration
         "Learning.Experience.LearningPaths",
         "Learning.Experience.Recommendations",
         "Learning.Experience.Social",
+        "Learning.Workspaces",
         "Notifications",
         "Orders",
         "Payments",

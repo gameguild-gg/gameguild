@@ -66,15 +66,16 @@ export async function submitAssessment(formData: FormData): Promise<LearnerMutat
             ? current
             : await assessments.postAssessmentsSubmissionsStart(assessmentId, { enrollmentId }).then((result) => {
                 if (!result.ok) throw new Error(`The assessment attempt could not be started: ${errorMessage(result.error, 'request failed')}`);
-                return result.data;
+                return result.data.submission;
             });
-        if (!started.id) throw new Error('The assessment attempt did not return an identifier.');
+        const submissionId = started?.id;
+        if (!submissionId) throw new Error('The assessment attempt did not return an identifier.');
 
         const responseValue = modality === 'File'
             ? await uploadAssessmentFile(authenticated.token, assessmentId, formData.get('file') as File)
             : String(formData.get('response') || '');
         const payload = buildAssessmentPayload(modality, responseValue);
-        const result = await assessments.postAssessmentsSubmissionsSubmit(started.id, payload);
+        const result = await assessments.postAssessmentsSubmissionsSubmit(submissionId, payload);
         if (!result.ok) return { success: false, error: `The assessment response could not be submitted: ${errorMessage(result.error, 'request failed')}` };
 
         if (courseSlug) {

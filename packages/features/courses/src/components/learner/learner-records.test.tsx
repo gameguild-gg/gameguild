@@ -99,4 +99,34 @@ describe("learner record views", () => {
     expect(screen.getByText("GG-2026-001")).toBeInTheDocument();
     expect(screen.getByText("Game Production")).toBeInTheDocument();
   });
+
+  it("renders aggregate grade summaries without detailed assessment rows", () => {
+    render(
+      <LearnerGradebook
+        records={[
+          {
+            ...records[0],
+            context: {
+              ...records[0]!.context,
+              assessments: [],
+              submissions: [],
+              gradeSummary: {
+                finalGrade: 88,
+                gradedAssessments: 4,
+                totalAssessments: 5,
+                earnedPoints: 352,
+                possiblePoints: 400,
+                percentage: 88,
+              },
+            },
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("4 of 5 assessments graded")).toBeInTheDocument();
+    expect(screen.getAllByText("88%")).toHaveLength(2);
+    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+  });
 });
