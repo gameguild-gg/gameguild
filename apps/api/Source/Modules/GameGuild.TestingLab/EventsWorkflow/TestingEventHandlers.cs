@@ -310,8 +310,12 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
         GetPublicTestingEventsQuery request,
         CancellationToken cancellationToken)
     {
+        var tenantId = actorContextAccessor.ActorContext.IsAuthenticated
+            ? actorContextAccessor.ActorContext.TenantId
+            : null;
         var events = await LoadPublicEventsAsync(
             null,
+            tenantId,
             Math.Max(0, request.Skip),
             Math.Clamp(request.Take, 1, 100),
             cancellationToken).ConfigureAwait(false);
@@ -322,7 +326,10 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
         GetPublicTestingEventQuery request,
         CancellationToken cancellationToken)
     {
-        var events = await LoadPublicEventsAsync(request.EventId, 0, 1, cancellationToken).ConfigureAwait(false);
+        var tenantId = actorContextAccessor.ActorContext.IsAuthenticated
+            ? actorContextAccessor.ActorContext.TenantId
+            : null;
+        var events = await LoadPublicEventsAsync(request.EventId, tenantId, 0, 1, cancellationToken).ConfigureAwait(false);
         return events.Count == 0
             ? Result.Failure<PublicTestingEventProjection>(
                 Error.NotFound("TestingLab.PublicEventNotFound", "Public testing event not found."))
@@ -331,6 +338,7 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
 
     private async Task<IReadOnlyList<PublicTestingEventProjection>> LoadPublicEventsAsync(
         Guid? eventId,
+        Guid? tenantId,
         int skip,
         int take,
         CancellationToken cancellationToken)
@@ -346,6 +354,8 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
                  testingEvent.Status == TestingEventStatus.Active));
         if (eventId.HasValue)
             query = query.Where(testingEvent => testingEvent.Id == eventId.Value);
+        if (tenantId.HasValue)
+            query = query.Where(testingEvent => testingEvent.TenantId == tenantId.Value);
 
         var events = await query
             .OrderBy(testingEvent => testingEvent.StartsAt)
