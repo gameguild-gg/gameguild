@@ -19,11 +19,14 @@ public class TestingLocationOperationsService(
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<TestingLocation>> GetTestingLocationsAsync(int skip = 0, int take = 50)
+    public async Task<IEnumerable<TestingLocation>> GetTestingLocationsAsync(int skip = 0, int take = 50, bool includeArchived = false)
     {
         var tenantId = RequireTenantId();
-        return await context.Set<TestingLocation>()
-            .Where(tl => tl.TenantId == tenantId && tl.DeletedAt == null)
+        var query = context.Set<TestingLocation>().AsQueryable();
+        if (includeArchived) query = query.IgnoreQueryFilters();
+
+        return await query
+            .Where(tl => tl.TenantId == tenantId && (includeArchived || tl.DeletedAt == null))
             .OrderBy(tl => tl.Name)
             .Skip(skip)
             .Take(take)
@@ -62,9 +65,17 @@ public class TestingLocationOperationsService(
         existingLocation.Name = location.Name;
         existingLocation.Description = location.Description;
         existingLocation.Address = location.Address;
+        existingLocation.City = location.City;
+        existingLocation.State = location.State;
+        existingLocation.PostalCode = location.PostalCode;
+        existingLocation.Country = location.Country;
         existingLocation.MaxTestersCapacity = location.MaxTestersCapacity;
         existingLocation.MaxProjectsCapacity = location.MaxProjectsCapacity;
         existingLocation.EquipmentAvailable = location.EquipmentAvailable;
+        existingLocation.IsVirtual = location.IsVirtual;
+        existingLocation.VirtualUrl = location.VirtualUrl;
+        existingLocation.ContactEmail = location.ContactEmail;
+        existingLocation.ContactPhone = location.ContactPhone;
         existingLocation.Status = location.Status;
         existingLocation.Touch();
 
@@ -80,6 +91,17 @@ public class TestingLocationOperationsService(
             .FirstOrDefaultAsync(tl => tl.Id == id && tl.TenantId == tenantId && tl.DeletedAt == null);
 
         if (location == null) return false;
+
+        var hasUpcomingSessions = await context.Set<TestingSession>()
+            .AnyAsync(session =>
+                session.TenantId == tenantId &&
+                session.LocationId == id &&
+                session.DeletedAt == null &&
+                session.Status != SessionStatus.Cancelled &&
+                session.Status != SessionStatus.Completed &&
+                session.EndTime >= SystemClock.UtcNow);
+        if (hasUpcomingSessions)
+            throw new InvalidOperationException("Move or cancel upcoming sessions before archiving this location.");
 
         location.SoftDelete();
         await context.SaveChangesAsync().ConfigureAwait(false);
