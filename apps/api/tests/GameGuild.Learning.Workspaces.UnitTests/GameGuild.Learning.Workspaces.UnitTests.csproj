@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>GameGuild.Learning.Workspaces.UnitTests</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <CollectCoverage>false</CollectCoverage>
+        <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+        <CoverletOutput>./TestResults/coverage.cobertura.xml</CoverletOutput>
+        <Threshold>80</Threshold>
+        <ThresholdType>line,branch,method</ThresholdType>
+        <ThresholdStat>total</ThresholdStat>
+        <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
+        <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
+        <Include>[GameGuild.Learning.Workspaces]*</Include>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.msbuild" />
+        <PackageReference Include="FluentAssertions" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="Moq" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Workspaces\GameGuild.Learning.Workspaces.csproj" />
+    </ItemGroup>
+
+</Project>

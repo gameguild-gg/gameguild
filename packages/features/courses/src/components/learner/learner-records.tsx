@@ -122,6 +122,9 @@ export function LearnerGradebook({
 }: {
   records: LearnerCourseRecord[];
 }) {
+  const summaries = records.flatMap(({ course, context }) =>
+    context.gradeSummary ? [{ course, summary: context.gradeSummary }] : [],
+  );
   const assessments = records.flatMap(({ course, context }) =>
     context.assessments.map((assessment) => ({
       course,
@@ -140,6 +143,44 @@ export function LearnerGradebook({
     (total, row) => total + (row.assessment.maxScore ?? 0),
     0,
   );
+  const summarizedEarned = summaries.reduce(
+    (total, row) => total + (row.summary.earnedPoints ?? 0),
+    0,
+  );
+  const summarizedPossible = summaries.reduce(
+    (total, row) => total + (row.summary.possiblePoints ?? 0),
+    0,
+  );
+  const gradedCount =
+    summaries.length > 0
+      ? summaries.reduce(
+          (total, row) => total + (row.summary.gradedAssessments ?? 0),
+          0,
+        )
+      : graded.length;
+  const awaitingCount =
+    summaries.length > 0
+      ? summaries.reduce(
+          (total, row) =>
+            total +
+            Math.max(
+              0,
+              (row.summary.totalAssessments ?? 0) -
+                (row.summary.gradedAssessments ?? 0),
+            ),
+          0,
+        )
+      : assessments.filter(
+          (row) => row.submission && row.submission.score == null,
+        ).length;
+  const currentScore =
+    summaries.length > 0
+      ? summarizedPossible > 0
+        ? Math.round((summarizedEarned / summarizedPossible) * 100)
+        : 0
+      : possible > 0
+        ? Math.round((earned / possible) * 100)
+        : 0;
 
   return (
     <div className="space-y-6">
@@ -159,7 +200,7 @@ export function LearnerGradebook({
             </CardTitle>
           </CardHeader>
           <CardContent className="text-3xl font-semibold">
-            {graded.length}
+            {gradedCount}
           </CardContent>
         </Card>
         <Card className="rounded-lg bg-card">
@@ -169,7 +210,7 @@ export function LearnerGradebook({
             </CardTitle>
           </CardHeader>
           <CardContent className="text-3xl font-semibold">
-            {possible > 0 ? Math.round((earned / possible) * 100) : 0}%
+            {currentScore}%
           </CardContent>
         </Card>
         <Card className="rounded-lg bg-card">
@@ -179,20 +220,35 @@ export function LearnerGradebook({
             </CardTitle>
           </CardHeader>
           <CardContent className="text-3xl font-semibold">
-            {
-              assessments.filter(
-                (row) => row.submission && row.submission.score == null,
-              ).length
-            }
+            {awaitingCount}
           </CardContent>
         </Card>
       </div>
-      {assessments.length === 0 ? (
+      {assessments.length === 0 && summaries.length === 0 ? (
         <Card className="rounded-lg bg-card">
           <CardContent className="flex min-h-48 items-center justify-center text-sm text-muted-foreground">
             No assessments are assigned yet.
           </CardContent>
         </Card>
+      ) : summaries.length > 0 ? (
+        <div className="space-y-3">
+          {summaries.map(({ course, summary }) => (
+            <Card key={course.id} className="rounded-lg bg-card">
+              <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="font-semibold">{course.title}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {summary.gradedAssessments ?? 0} of{" "}
+                    {summary.totalAssessments ?? 0} assessments graded
+                  </p>
+                </div>
+                <strong className="text-2xl">
+                  {Math.round(summary.percentage ?? summary.finalGrade ?? 0)}%
+                </strong>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : (
         <div className="space-y-3">
           {assessments.map(({ course, assessment, submission }) => (

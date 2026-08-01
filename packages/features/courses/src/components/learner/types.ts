@@ -103,6 +103,15 @@ export interface LearnerCertificate {
   verificationUrl?: string | null;
 }
 
+export interface LearnerGradeSummary {
+  finalGrade?: number | null;
+  gradedAssessments?: number | null;
+  totalAssessments?: number | null;
+  earnedPoints?: number | null;
+  possiblePoints?: number | null;
+  percentage?: number | null;
+}
+
 export interface LearnerCourseContext {
   enrollmentId: string | null;
   cohort: LearnerCohort | null;
@@ -111,6 +120,7 @@ export interface LearnerCourseContext {
   submissions: LearnerSubmission[];
   discussions: LearnerDiscussion[];
   certificates: LearnerCertificate[];
+  gradeSummary?: LearnerGradeSummary;
 }
 
 export interface LearnerCourseRecord {
