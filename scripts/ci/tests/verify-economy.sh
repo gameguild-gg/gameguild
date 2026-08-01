@@ -75,6 +75,16 @@ test_web_server_uses_direct_node_process_for_cleanup() {
   ! grep -q 'pnpm --filter @game-guild/web exec next start' "$ci_dir/verify-economy.sh"
 }
 
+test_browser_server_uses_published_api() {
+  local gate="$ci_dir/verify-economy.sh"
+  local api_url_line web_launch_line
+  api_url_line="$(grep -n 'export API_URL="http://127.0.0.1:$api_port"' "$gate" | cut -d: -f1)"
+  web_launch_line="$(grep -n 'node "$repository_root/apps/web/node_modules/next/dist/bin/next" start' "$gate" | cut -d: -f1)"
+
+  [[ -n "$api_url_line" && -n "$web_launch_line" ]] || return 1
+  [[ "$api_url_line" -lt "$web_launch_line" ]]
+}
+
 test_local_api_readiness_enables_simulation_explicitly() {
   local gate="$ci_dir/verify-economy.sh"
   local enabled_line simulation_line launch_line
@@ -268,6 +278,7 @@ test_canonical_json_preserves_arrays() {
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
+run_test 'browser server uses the published API instance' test_browser_server_uses_published_api
 run_test 'local API readiness enables payment simulation explicitly' test_local_api_readiness_enables_simulation_explicitly
 run_test 'Coolify forwards Stripe gateway identity and mode' test_coolify_compose_forwards_stripe_gateway_identity
 run_test 'published API uses its published content root' test_published_api_uses_published_content_root
