@@ -382,6 +382,7 @@ if [[ "$skip_openapi" == false ]]; then
   api_port="$(get_ephemeral_port)"
   export ASPNETCORE_ENVIRONMENT=Development
   export ASPNETCORE_URLS="http://127.0.0.1:$api_port"
+  export API_URL="http://127.0.0.1:$api_port"
   export PaymentGateways__Stripe__IsEnabled=true
   export PaymentGateways__Stripe__UseSimulation=true
   dotnet "$publish_directory/GameGuild.API.dll" --contentRoot "$publish_directory" \
