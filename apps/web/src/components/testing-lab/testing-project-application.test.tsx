@@ -37,6 +37,19 @@ describe('TestingProjectApplication', () => {
     expect(screen.getByText(/capacity is reserved only after approval/i)).toBeInTheDocument();
   });
 
+  it('links users without projects to the real project directory', () => {
+    render(
+      <TestingProjectApplication
+        eventId="event-1"
+        isAuthenticated
+        acceptsApplications
+        projects={[]}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: /browse projects/i })).toHaveAttribute('href', '/projects');
+  });
+
   it('shows rejection rationale and does not render a second application form', () => {
     render(
       <TestingProjectApplication

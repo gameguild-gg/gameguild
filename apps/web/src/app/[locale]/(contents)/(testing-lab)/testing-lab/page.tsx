@@ -45,10 +45,10 @@ export default async function TestingLabPage() {
                 <ArrowRight className="ml-2 size-4" />
               </Link>
               <Link
-                href="/dashboard/projects"
+                href="/projects"
                 className="inline-flex items-center rounded-md border border-white/15 px-5 py-3 text-sm font-semibold transition hover:bg-white/10"
               >
-                Manage projects
+                Browse projects
               </Link>
             </div>
           </div>
