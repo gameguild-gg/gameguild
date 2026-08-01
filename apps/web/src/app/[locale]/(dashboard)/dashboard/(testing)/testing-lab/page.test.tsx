@@ -53,17 +53,23 @@ describe('testing lab dashboard page', () => {
     });
     mocks.getTestingLabAnalytics.mockResolvedValue({
       accessIssues: [],
-      requests: { total: 1, open: 1, active: 0, completed: 0 },
-      sessions: { total: 1, scheduled: 1, active: 0, completed: 0 },
-      capacity: { total: 10, registered: 2, available: 8, waitlisted: 0, fillRate: 20 },
-      feedback: { total: 0, averageRating: null, recommended: 0, recommendationRate: null },
-      attendance: { registered: 2, attended: 0, attendanceRate: 0 },
-      locations: {
-        total: 1,
-        active: 1,
-        virtual: 1,
-        rows: [{ id: 'location-1', name: 'Remote lab', sessions: 1, registered: 2, capacity: 10 }],
+      current: {
+        events: 1,
+        completedEvents: 0,
+        applications: 1,
+        approvedProjects: 1,
+        registeredTesters: 2,
+        attendedTesters: 0,
+        feedback: 0,
+        averageRating: null,
+        recommendationRate: null,
+        capacity: 10,
+        fillRate: 20,
       },
+      previous: null,
+      locations: { total: 1, active: 1 },
+      trend: [],
+      events: [],
     });
 
     render(await TestingLabPage());
