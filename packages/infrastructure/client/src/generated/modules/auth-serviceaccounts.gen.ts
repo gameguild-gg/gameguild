@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,31 +17,44 @@ export class AuthServiceaccountsModule {
 
   /**
    */
-  async getAuthServiceAccounts(query?: { tenantId?: string }): Promise<Result<Array<Types.IdentityAuthenticationServiceAccountOutput>, ApiError>> {
-    const url = '/v1/auth/service-accounts';
+  async getAuthServiceAccounts(query?: {
+    tenantId?: string;
+  }): Promise<
+    Result<Array<Types.IdentityAuthenticationServiceAccountOutput>, ApiError>
+  > {
+    const url = "/v1/auth/service-accounts";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.IdentityAuthenticationServiceAccountOutput>, ApiError>;
+    return result as Result<
+      Array<Types.IdentityAuthenticationServiceAccountOutput>,
+      ApiError
+    >;
   }
 
   /**
    */
   async postAuthServiceAccounts(
     body: Types.IdentityAuthenticationCreateServiceAccountInput,
-  ): Promise<Result<Types.IdentityAuthenticationServiceAccountCreatedOutput, ApiError>> {
-    const url = '/v1/auth/service-accounts';
+  ): Promise<
+    Result<Types.IdentityAuthenticationServiceAccountCreatedOutput, ApiError>
+  > {
+    const url = "/v1/auth/service-accounts";
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCreateServiceAccountInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationCreateServiceAccountInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -49,7 +62,11 @@ export class AuthServiceaccountsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationServiceAccountCreatedOutputSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationServiceAccountCreatedOutputSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -58,18 +75,26 @@ export class AuthServiceaccountsModule {
 
   /**
    */
-  async getAuthServiceAccounts1(serviceAccountId: string): Promise<Result<Types.IdentityAuthenticationServiceAccountOutput, ApiError>> {
+  async getAuthServiceAccounts1(
+    serviceAccountId: string,
+  ): Promise<
+    Result<Types.IdentityAuthenticationServiceAccountOutput, ApiError>
+  > {
     const url = `/v1/auth/service-accounts/${serviceAccountId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationServiceAccountOutputSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationServiceAccountOutputSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -78,11 +103,13 @@ export class AuthServiceaccountsModule {
 
   /**
    */
-  async deleteAuthServiceAccounts(serviceAccountId: string): Promise<Result<void, ApiError>> {
+  async deleteAuthServiceAccounts(
+    serviceAccountId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
@@ -95,14 +122,21 @@ export class AuthServiceaccountsModule {
    *
    * Updates specific fields of a service account. Only provided fields are updated.
    */
-  async patchAuthServiceAccounts(serviceAccountId: string, body: Types.IdentityAuthenticationPatchServiceAccountInput): Promise<Result<void, ApiError>> {
+  async patchAuthServiceAccounts(
+    serviceAccountId: string,
+    body: Types.IdentityAuthenticationPatchServiceAccountInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationPatchServiceAccountInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationPatchServiceAccountInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PATCH',
+      method: "PATCH",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -116,67 +150,14 @@ export class AuthServiceaccountsModule {
    *
    * Checks if a service account exists without returning the body.
    */
-  async headAuthServiceAccounts(serviceAccountId: string): Promise<Result<void, ApiError>> {
+  async headAuthServiceAccounts(
+    serviceAccountId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}`;
 
     const result = await this.client.request({
-      method: 'HEAD',
+      method: "HEAD",
       path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postAuthServiceAccountsRotateSecret(serviceAccountId: string): Promise<Result<Types.IdentityAuthenticationSecretRotationOutput, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}:rotate-secret`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSecretRotationOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postAuthServiceAccountsUnlock(serviceAccountId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}:unlock`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Lock service account
-   *
-   * Locks a service account to prevent it from authenticating.
-   */
-  async postAuthServiceAccountsLock(serviceAccountId: string, body: Types.IdentityAuthenticationLockServiceAccountInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}:lock`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationLockServiceAccountInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 
@@ -191,11 +172,13 @@ export class AuthServiceaccountsModule {
   async getAuthServiceAccountsAuditLog(
     serviceAccountId: string,
     query?: { page?: number; pageSize?: number },
-  ): Promise<Result<Types.IdentityAuthenticationServiceAccountAuditLogOutput, ApiError>> {
+  ): Promise<
+    Result<Types.IdentityAuthenticationServiceAccountAuditLogOutput, ApiError>
+  > {
     const url = `/v1/auth/service-accounts/${serviceAccountId}/audit-log`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -203,7 +186,11 @@ export class AuthServiceaccountsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationServiceAccountAuditLogOutputSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationServiceAccountAuditLogOutputSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -212,42 +199,21 @@ export class AuthServiceaccountsModule {
 
   /**
    */
-  async postAuthServiceAccountsDeactivate(serviceAccountId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}:deactivate`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postAuthServiceAccountsReactivate(serviceAccountId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}:reactivate`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async patchAuthServiceAccountsScopes(serviceAccountId: string, body: Types.IdentityAuthenticationUpdateScopesInput): Promise<Result<void, ApiError>> {
+  async patchAuthServiceAccountsScopes(
+    serviceAccountId: string,
+    body: Types.IdentityAuthenticationUpdateScopesInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}/scopes`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationUpdateScopesInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationUpdateScopesInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PATCH',
+      method: "PATCH",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -255,8 +221,114 @@ export class AuthServiceaccountsModule {
 
     return result as Result<void, ApiError>;
   }
+
+  /**
+   */
+  async postAuthServiceAccountsDeactivate(
+    serviceAccountId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}:deactivate`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Lock service account
+   *
+   * Locks a service account to prevent it from authenticating.
+   */
+  async postAuthServiceAccountsLock(
+    serviceAccountId: string,
+    body: Types.IdentityAuthenticationLockServiceAccountInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}:lock`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationLockServiceAccountInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postAuthServiceAccountsReactivate(
+    serviceAccountId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}:reactivate`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postAuthServiceAccountsRotateSecret(
+    serviceAccountId: string,
+  ): Promise<
+    Result<Types.IdentityAuthenticationSecretRotationOutput, ApiError>
+  > {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}:rotate-secret`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationSecretRotationOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAuthServiceAccountsUnlock(
+    serviceAccountId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}:unlock`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
 }
 
-export function createAuthServiceaccountsModule(client: ApiClient): AuthServiceaccountsModule {
+export function createAuthServiceaccountsModule(
+  client: ApiClient,
+): AuthServiceaccountsModule {
   return new AuthServiceaccountsModule(client);
 }

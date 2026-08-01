@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,31 +17,11 @@ export class TestinglabTestingparticipantsModule {
 
   /**
    */
-  async postTestingRequestsParticipants(requestId: string, userId: string): Promise<Result<Types.TestingLabTestingParticipant, ApiError>> {
-    const url = `/v1/testing/requests/${requestId}/participants/${userId}`;
+  async getTestingAttendanceStudents(): Promise<Result<void, ApiError>> {
+    const url = "/v1/testing/attendance/students";
 
     const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.TestingLabTestingParticipantSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async deleteTestingRequestsParticipants(requestId: string, userId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/testing/requests/${requestId}/participants/${userId}`;
-
-    const result = await this.client.request({
-      method: 'DELETE',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -51,25 +31,77 @@ export class TestinglabTestingparticipantsModule {
 
   /**
    */
-  async getTestingRequestsParticipants(requestId: string): Promise<Result<Array<Types.TestingLabTestingParticipant>, ApiError>> {
+  async getTestingRequestsParticipants(
+    requestId: string,
+  ): Promise<Result<Array<Types.TestingLabTestingParticipant>, ApiError>> {
     const url = `/v1/testing/requests/${requestId}/participants`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.TestingLabTestingParticipant>, ApiError>;
+    return result as Result<
+      Array<Types.TestingLabTestingParticipant>,
+      ApiError
+    >;
   }
 
   /**
    */
-  async getTestingRequestsParticipantsCheck(requestId: string, userId: string): Promise<Result<boolean, ApiError>> {
+  async postTestingRequestsParticipants(
+    requestId: string,
+    userId: string,
+  ): Promise<Result<Types.TestingLabTestingParticipant, ApiError>> {
+    const url = `/v1/testing/requests/${requestId}/participants/${userId}`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.TestingLabTestingParticipantSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteTestingRequestsParticipants(
+    requestId: string,
+    userId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/testing/requests/${requestId}/participants/${userId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getTestingRequestsParticipantsCheck(
+    requestId: string,
+    userId: string,
+  ): Promise<Result<boolean, ApiError>> {
     const url = `/v1/testing/requests/${requestId}/participants/${userId}/check`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -86,10 +118,14 @@ export class TestinglabTestingparticipantsModule {
     const url = `/v1/testing/sessions/${sessionId}/register`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabSessionRegistrationInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.TestingLabSessionRegistrationInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -97,7 +133,11 @@ export class TestinglabTestingparticipantsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.TestingLabSessionRegistrationSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.TestingLabSessionRegistrationSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -106,11 +146,13 @@ export class TestinglabTestingparticipantsModule {
 
   /**
    */
-  async deleteTestingSessionsRegister(sessionId: string): Promise<Result<void, ApiError>> {
+  async deleteTestingSessionsRegister(
+    sessionId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/testing/sessions/${sessionId}/register`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
@@ -120,25 +162,32 @@ export class TestinglabTestingparticipantsModule {
 
   /**
    */
-  async getTestingSessionsRegistrations(sessionId: string): Promise<Result<Array<Types.TestingLabSessionRegistration>, ApiError>> {
+  async getTestingSessionsRegistrations(
+    sessionId: string,
+  ): Promise<Result<Array<Types.TestingLabSessionRegistration>, ApiError>> {
     const url = `/v1/testing/sessions/${sessionId}/registrations`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.TestingLabSessionRegistration>, ApiError>;
+    return result as Result<
+      Array<Types.TestingLabSessionRegistration>,
+      ApiError
+    >;
   }
 
   /**
    */
-  async getTestingSessionsWaitlist(sessionId: string): Promise<Result<Array<Types.TestingLabSessionWaitlist>, ApiError>> {
+  async getTestingSessionsWaitlist(
+    sessionId: string,
+  ): Promise<Result<Array<Types.TestingLabSessionWaitlist>, ApiError>> {
     const url = `/v1/testing/sessions/${sessionId}/waitlist`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -155,10 +204,14 @@ export class TestinglabTestingparticipantsModule {
     const url = `/v1/testing/sessions/${sessionId}/waitlist`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabSessionRegistrationInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.TestingLabSessionRegistrationInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -166,7 +219,11 @@ export class TestinglabTestingparticipantsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.TestingLabSessionWaitlistSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.TestingLabSessionWaitlistSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -175,11 +232,13 @@ export class TestinglabTestingparticipantsModule {
 
   /**
    */
-  async deleteTestingSessionsWaitlist(sessionId: string): Promise<Result<void, ApiError>> {
+  async deleteTestingSessionsWaitlist(
+    sessionId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/testing/sessions/${sessionId}/waitlist`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
@@ -189,25 +248,13 @@ export class TestinglabTestingparticipantsModule {
 
   /**
    */
-  async getTestingUsersActivity(userId: string): Promise<Result<void, ApiError>> {
+  async getTestingUsersActivity(
+    userId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/testing/users/${userId}/activity`;
 
     const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getTestingAttendanceStudents(): Promise<Result<void, ApiError>> {
-    const url = '/v1/testing/attendance/students';
-
-    const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -216,6 +263,8 @@ export class TestinglabTestingparticipantsModule {
   }
 }
 
-export function createTestinglabTestingparticipantsModule(client: ApiClient): TestinglabTestingparticipantsModule {
+export function createTestinglabTestingparticipantsModule(
+  client: ApiClient,
+): TestinglabTestingparticipantsModule {
   return new TestinglabTestingparticipantsModule(client);
 }

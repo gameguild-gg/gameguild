@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -27,10 +27,10 @@ export class SocialGroupsSocialgroupsModule {
     skip?: number;
     take?: number;
   }): Promise<Result<Array<Types.SocialGroupsSocialGroup>, ApiError>> {
-    const url = '/api/social/groups';
+    const url = "/api/social/groups";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -41,14 +41,20 @@ export class SocialGroupsSocialgroupsModule {
 
   /**
    */
-  async postApiSocialGroups(body: Types.SocialGroupsCreateSocialGroupInput): Promise<Result<Types.SocialGroupsSocialGroup, ApiError>> {
-    const url = '/api/social/groups';
+  async postApiSocialGroups(
+    body: Types.SocialGroupsCreateSocialGroupInput,
+  ): Promise<Result<Types.SocialGroupsSocialGroup, ApiError>> {
+    const url = "/api/social/groups";
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialGroupsCreateSocialGroupInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.SocialGroupsCreateSocialGroupInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -56,7 +62,11 @@ export class SocialGroupsSocialgroupsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.SocialGroupsSocialGroupSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.SocialGroupsSocialGroupSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -65,18 +75,24 @@ export class SocialGroupsSocialgroupsModule {
 
   /**
    */
-  async getApiSocialGroups1(id: string): Promise<Result<Types.SocialGroupsSocialGroup, ApiError>> {
+  async getApiSocialGroups1(
+    id: string,
+  ): Promise<Result<Types.SocialGroupsSocialGroup, ApiError>> {
     const url = `/api/social/groups/${id}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.SocialGroupsSocialGroupSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.SocialGroupsSocialGroupSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -85,14 +101,21 @@ export class SocialGroupsSocialgroupsModule {
 
   /**
    */
-  async putApiSocialGroups(id: string, body: Types.SocialGroupsUpdateSocialGroupInput): Promise<Result<Types.SocialGroupsSocialGroup, ApiError>> {
+  async putApiSocialGroups(
+    id: string,
+    body: Types.SocialGroupsUpdateSocialGroupInput,
+  ): Promise<Result<Types.SocialGroupsSocialGroup, ApiError>> {
     const url = `/api/social/groups/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialGroupsUpdateSocialGroupInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.SocialGroupsUpdateSocialGroupInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: "PUT",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -100,7 +123,11 @@ export class SocialGroupsSocialgroupsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.SocialGroupsSocialGroupSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.SocialGroupsSocialGroupSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -109,11 +136,13 @@ export class SocialGroupsSocialgroupsModule {
 
   /**
    */
-  async postApiSocialGroupsActivate(id: string): Promise<Result<void, ApiError>> {
+  async postApiSocialGroupsActivate(
+    id: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/social/groups/${id}/activate`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -123,25 +152,13 @@ export class SocialGroupsSocialgroupsModule {
 
   /**
    */
-  async postApiSocialGroupsArchive(id: string): Promise<Result<void, ApiError>> {
+  async postApiSocialGroupsArchive(
+    id: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/social/groups/${id}/archive`;
 
     const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postApiSocialGroupsSuspend(id: string): Promise<Result<void, ApiError>> {
-    const url = `/api/social/groups/${id}/suspend`;
-
-    const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -153,30 +170,44 @@ export class SocialGroupsSocialgroupsModule {
    */
   async getApiSocialGroupsMembers(
     id: string,
-    query?: { status?: Types.SocialGroupsSocialGroupMembershipStatus; skip?: number; take?: number },
+    query?: {
+      status?: Types.SocialGroupsSocialGroupMembershipStatus;
+      skip?: number;
+      take?: number;
+    },
   ): Promise<Result<Array<Types.SocialGroupsSocialGroupMember>, ApiError>> {
     const url = `/api/social/groups/${id}/members`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.SocialGroupsSocialGroupMember>, ApiError>;
+    return result as Result<
+      Array<Types.SocialGroupsSocialGroupMember>,
+      ApiError
+    >;
   }
 
   /**
    */
-  async postApiSocialGroupsMembers(id: string, body: Types.SocialGroupsJoinSocialGroupInput): Promise<Result<Types.SocialGroupsSocialGroupMember, ApiError>> {
+  async postApiSocialGroupsMembers(
+    id: string,
+    body: Types.SocialGroupsJoinSocialGroupInput,
+  ): Promise<Result<Types.SocialGroupsSocialGroupMember, ApiError>> {
     const url = `/api/social/groups/${id}/members`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialGroupsJoinSocialGroupInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.SocialGroupsJoinSocialGroupInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -184,7 +215,11 @@ export class SocialGroupsSocialgroupsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.SocialGroupsSocialGroupMemberSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.SocialGroupsSocialGroupMemberSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -193,61 +228,99 @@ export class SocialGroupsSocialgroupsModule {
 
   /**
    */
-  async postApiSocialGroupsMembersApprove(id: string, userId: string, body: Types.SocialGroupsApproveSocialGroupMemberInput): Promise<Result<void, ApiError>> {
-    const url = `/api/social/groups/${id}/members/${userId}/approve`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.SocialGroupsApproveSocialGroupMemberInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postApiSocialGroupsMembersReject(id: string, userId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/social/groups/${id}/members/${userId}/reject`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async putApiSocialGroupsMembersRole(id: string, userId: string, body: Types.SocialGroupsChangeSocialGroupMemberRoleInput): Promise<Result<void, ApiError>> {
-    const url = `/api/social/groups/${id}/members/${userId}/role`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.SocialGroupsChangeSocialGroupMemberRoleInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async deleteApiSocialGroupsMembers(id: string, userId: string): Promise<Result<void, ApiError>> {
+  async deleteApiSocialGroupsMembers(
+    id: string,
+    userId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/social/groups/${id}/members/${userId}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postApiSocialGroupsMembersApprove(
+    id: string,
+    userId: string,
+    body: Types.SocialGroupsApproveSocialGroupMemberInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/social/groups/${id}/members/${userId}/approve`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.SocialGroupsApproveSocialGroupMemberInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postApiSocialGroupsMembersReject(
+    id: string,
+    userId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/social/groups/${id}/members/${userId}/reject`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async putApiSocialGroupsMembersRole(
+    id: string,
+    userId: string,
+    body: Types.SocialGroupsChangeSocialGroupMemberRoleInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/social/groups/${id}/members/${userId}/role`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.SocialGroupsChangeSocialGroupMemberRoleInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postApiSocialGroupsSuspend(
+    id: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/social/groups/${id}/suspend`;
+
+    const result = await this.client.request({
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -256,6 +329,8 @@ export class SocialGroupsSocialgroupsModule {
   }
 }
 
-export function createSocialGroupsSocialgroupsModule(client: ApiClient): SocialGroupsSocialgroupsModule {
+export function createSocialGroupsSocialgroupsModule(
+  client: ApiClient,
+): SocialGroupsSocialgroupsModule {
   return new SocialGroupsSocialgroupsModule(client);
 }

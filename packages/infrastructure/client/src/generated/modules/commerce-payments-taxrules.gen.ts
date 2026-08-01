@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -22,10 +22,10 @@ export class CommercePaymentsTaxrulesModule {
     customerType?: string;
     effectiveDate?: string;
   }): Promise<Result<Array<Types.CommercePaymentsTaxRate>, ApiError>> {
-    const url = '/api/v1/tax-rules';
+    const url = "/api/v1/tax-rules";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -39,14 +39,20 @@ export class CommercePaymentsTaxrulesModule {
    *
    * Creates a new tax rule with the provided information.
    */
-  async postTaxRules(body: Types.CommercePaymentsCreateTaxRuleInput): Promise<Result<void, ApiError>> {
-    const url = '/api/v1/tax-rules';
+  async postTaxRules(
+    body: Types.CommercePaymentsCreateTaxRuleInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/tax-rules";
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsCreateTaxRuleInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommercePaymentsCreateTaxRuleInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -60,18 +66,24 @@ export class CommercePaymentsTaxrulesModule {
    *
    * Retrieves detailed information for a specific tax rule.
    */
-  async getTaxRules1(ruleId: string): Promise<Result<Types.CommercePaymentsTaxRuleDto, ApiError>> {
+  async getTaxRules1(
+    ruleId: string,
+  ): Promise<Result<Types.CommercePaymentsTaxRuleDto, ApiError>> {
     const url = `/api/v1/tax-rules/${ruleId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsTaxRuleDtoSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommercePaymentsTaxRuleDtoSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -87,7 +99,7 @@ export class CommercePaymentsTaxrulesModule {
     const url = `/api/v1/tax-rules/${ruleId}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
@@ -100,14 +112,21 @@ export class CommercePaymentsTaxrulesModule {
    *
    * Updates specific fields of a tax rule.
    */
-  async patchTaxRules(ruleId: string, body: Types.CommercePaymentsPatchTaxRuleInput): Promise<Result<void, ApiError>> {
+  async patchTaxRules(
+    ruleId: string,
+    body: Types.CommercePaymentsPatchTaxRuleInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/tax-rules/${ruleId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPatchTaxRuleInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommercePaymentsPatchTaxRuleInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PATCH',
+      method: "PATCH",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -117,6 +136,8 @@ export class CommercePaymentsTaxrulesModule {
   }
 }
 
-export function createCommercePaymentsTaxrulesModule(client: ApiClient): CommercePaymentsTaxrulesModule {
+export function createCommercePaymentsTaxrulesModule(
+  client: ApiClient,
+): CommercePaymentsTaxrulesModule {
   return new CommercePaymentsTaxrulesModule(client);
 }

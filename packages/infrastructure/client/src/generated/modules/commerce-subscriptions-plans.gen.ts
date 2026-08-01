@@ -4,120 +4,16 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class CommerceSubscriptionsPlansModule {
   constructor(private readonly client: ApiClient) {}
-
-  /**
-   * Get subscription plan usage statistics
-   *
-   * Retrieves usage statistics for a specific subscription plan.
-   */
-  async getSubscriptionPlansUsage(planId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}/usage`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Get suggested plan upgrades
-   *
-   * Suggests upgrade plans based on current usage requirements.
-   */
-  async getSubscriptionPlansSuggestUpgrades(
-    planId: string,
-    query?: { users?: number; storageMb?: number; apiCalls?: number },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}/suggest-upgrades`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Calculate pricing for a subscription plan
-   *
-   * Calculates the total cost for a subscription plan including all applicable taxes, fees, and discounts.
-   */
-  async getSubscriptionPlansPricing(planId: string, query?: { tenantId?: string; discountCode?: string }): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}/pricing`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Update subscription plan pricing
-   *
-   * Updates the pricing for a subscription plan.
-   */
-  async patchSubscriptionPlansPricing(
-    planId: string,
-    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}/pricing`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PATCH',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Validate subscription plan limits
-   *
-   * Validates whether the specified usage fits within the plan limits. Custom action per Google API guidelines.
-   */
-  async postSubscriptionPlansValidateLimits(
-    planId: string,
-    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}:validate-limits`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
 
   /**
    * Partially update subscription plan details
@@ -131,34 +27,14 @@ export class CommerceSubscriptionsPlansModule {
     const url = `/api/v1/subscription-plans/${planId}/details`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PATCH',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Update subscription plan limits
-   *
-   * Updates the limits for a subscription plan.
-   */
-  async patchSubscriptionPlansLimits(
-    planId: string,
-    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}/limits`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PATCH',
+      method: "PATCH",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -179,12 +55,133 @@ export class CommerceSubscriptionsPlansModule {
     const url = `/api/v1/subscription-plans/${planId}/features`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PATCH',
+      method: "PATCH",
       path: url,
       body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Update subscription plan limits
+   *
+   * Updates the limits for a subscription plan.
+   */
+  async patchSubscriptionPlansLimits(
+    planId: string,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/subscription-plans/${planId}/limits`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PATCH",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Calculate pricing for a subscription plan
+   *
+   * Calculates the total cost for a subscription plan including all applicable taxes, fees, and discounts.
+   */
+  async getSubscriptionPlansPricing(
+    planId: string,
+    query?: { tenantId?: string; discountCode?: string },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/subscription-plans/${planId}/pricing`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Update subscription plan pricing
+   *
+   * Updates the pricing for a subscription plan.
+   */
+  async patchSubscriptionPlansPricing(
+    planId: string,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/subscription-plans/${planId}/pricing`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PATCH",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get suggested plan upgrades
+   *
+   * Suggests upgrade plans based on current usage requirements.
+   */
+  async getSubscriptionPlansSuggestUpgrades(
+    planId: string,
+    query?: { users?: number; storageMb?: number; apiCalls?: number },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/subscription-plans/${planId}/suggest-upgrades`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get subscription plan usage statistics
+   *
+   * Retrieves usage statistics for a specific subscription plan.
+   */
+  async getSubscriptionPlansUsage(
+    planId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/subscription-plans/${planId}/usage`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
       requiresAuth: true,
     });
 
@@ -196,28 +193,13 @@ export class CommerceSubscriptionsPlansModule {
    *
    * Activates a subscription plan by ID.
    */
-  async postSubscriptionPlansActivate(planId: string): Promise<Result<void, ApiError>> {
+  async postSubscriptionPlansActivate(
+    planId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscription-plans/${planId}:activate`;
 
     const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Deactivate subscription plan
-   *
-   * Deactivates a subscription plan by ID.
-   */
-  async postSubscriptionPlansDeactivate(planId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}:deactivate`;
-
-    const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -230,11 +212,13 @@ export class CommerceSubscriptionsPlansModule {
    *
    * Archives a subscription plan, making it unavailable for new subscriptions while preserving existing subscriptions.
    */
-  async postSubscriptionPlansArchive(planId: string): Promise<Result<void, ApiError>> {
+  async postSubscriptionPlansArchive(
+    planId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscription-plans/${planId}:archive`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -254,10 +238,61 @@ export class CommerceSubscriptionsPlansModule {
     const url = `/api/v1/subscription-plans/${planId}:clone`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Deactivate subscription plan
+   *
+   * Deactivates a subscription plan by ID.
+   */
+  async postSubscriptionPlansDeactivate(
+    planId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/subscription-plans/${planId}:deactivate`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Set subscription plan external ID
+   *
+   * Sets the external system ID for subscription plan integration.
+   */
+  async postSubscriptionPlansExternalId(
+    planId: string,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/subscription-plans/${planId}:external-id`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -278,10 +313,14 @@ export class CommerceSubscriptionsPlansModule {
     const url = `/api/v1/subscription-plans/${planId}:featured`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -291,21 +330,25 @@ export class CommerceSubscriptionsPlansModule {
   }
 
   /**
-   * Set subscription plan external ID
+   * Validate subscription plan limits
    *
-   * Sets the external system ID for subscription plan integration.
+   * Validates whether the specified usage fits within the plan limits. Custom action per Google API guidelines.
    */
-  async postSubscriptionPlansExternalId(
+  async postSubscriptionPlansValidateLimits(
     planId: string,
-    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput,
   ): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/subscription-plans/${planId}:external-id`;
+    const url = `/api/v1/subscription-plans/${planId}:validate-limits`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -330,10 +373,10 @@ export class CommerceSubscriptionsPlansModule {
     minPrice?: number;
     maxPrice?: number;
   }): Promise<Result<void, ApiError>> {
-    const url = '/v1/subscription-plans';
+    const url = "/v1/subscription-plans";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: false,
@@ -347,35 +390,20 @@ export class CommerceSubscriptionsPlansModule {
    *
    * Creates a new subscription plan with the provided information.
    */
-  async postSubscriptionPlans(body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput): Promise<Result<void, ApiError>> {
-    const url = '/v1/subscription-plans';
+  async postSubscriptionPlans(
+    body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/v1/subscription-plans";
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Compare subscription plans
-   *
-   * Compares multiple subscription plans side by side. Custom action per Google API guidelines.
-   */
-  async postSubscriptionPlansCompare(body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput): Promise<Result<void, ApiError>> {
-    const url = '/v1/subscription-plans:compare';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -393,7 +421,7 @@ export class CommerceSubscriptionsPlansModule {
     const url = `/v1/subscription-plans/${planId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -413,10 +441,14 @@ export class CommerceSubscriptionsPlansModule {
     const url = `/v1/subscription-plans/${planId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: "PUT",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -430,11 +462,13 @@ export class CommerceSubscriptionsPlansModule {
    *
    * Deletes a subscription plan by ID.
    */
-  async deleteSubscriptionPlans(planId: string): Promise<Result<void, ApiError>> {
+  async deleteSubscriptionPlans(
+    planId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/subscription-plans/${planId}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
@@ -451,8 +485,35 @@ export class CommerceSubscriptionsPlansModule {
     const url = `/v1/subscription-plans/${planId}`;
 
     const result = await this.client.request({
-      method: 'HEAD',
+      method: "HEAD",
       path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Compare subscription plans
+   *
+   * Compares multiple subscription plans side by side. Custom action per Google API guidelines.
+   */
+  async postSubscriptionPlansCompare(
+    body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/v1/subscription-plans:compare";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 
@@ -460,6 +521,8 @@ export class CommerceSubscriptionsPlansModule {
   }
 }
 
-export function createCommerceSubscriptionsPlansModule(client: ApiClient): CommerceSubscriptionsPlansModule {
+export function createCommerceSubscriptionsPlansModule(
+  client: ApiClient,
+): CommerceSubscriptionsPlansModule {
   return new CommerceSubscriptionsPlansModule(client);
 }

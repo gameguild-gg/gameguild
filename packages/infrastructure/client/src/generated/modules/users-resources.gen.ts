@@ -4,16 +4,105 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class UsersResourcesModule {
   constructor(private readonly client: ApiClient) {}
+
+  /**
+   * Check resource limits for a user
+   *
+   * Checks current resource usage against configured limits for a specific user.
+   */
+  async getUsersResourcesLimits(
+    userId: string,
+    query?: { usageType?: Types.ResourcesResourceUsageType },
+  ): Promise<
+    Result<
+      {
+        AbacPolicies?: boolean;
+        AccessReviewCampaigns?: boolean;
+        AiRequests?: boolean;
+        AiTokens?: boolean;
+        ApiCalls?: boolean;
+        AssetDownloads?: boolean;
+        AssetStorage?: boolean;
+        AssetTransformations?: boolean;
+        Assets?: boolean;
+        AuditEntries?: boolean;
+        ConditionalPolicies?: boolean;
+        Courses?: boolean;
+        Disputes?: boolean;
+        FeatureFlags?: boolean;
+        Orders?: boolean;
+        Products?: boolean;
+        Programs?: boolean;
+        Projects?: boolean;
+        PromoCodes?: boolean;
+        Roles?: boolean;
+        SLOs?: boolean;
+        SoDRules?: boolean;
+        Storage?: boolean;
+        SubscriptionPlans?: boolean;
+        Subscriptions?: boolean;
+        Tenants?: boolean;
+        TestingSessions?: boolean;
+        Users?: boolean;
+        Wallets?: boolean;
+      },
+      ApiError
+    >
+  > {
+    const url = `/v1/users/${userId}/resources/limits`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      {
+        AbacPolicies?: boolean;
+        AccessReviewCampaigns?: boolean;
+        AiRequests?: boolean;
+        AiTokens?: boolean;
+        ApiCalls?: boolean;
+        AssetDownloads?: boolean;
+        AssetStorage?: boolean;
+        AssetTransformations?: boolean;
+        Assets?: boolean;
+        AuditEntries?: boolean;
+        ConditionalPolicies?: boolean;
+        Courses?: boolean;
+        Disputes?: boolean;
+        FeatureFlags?: boolean;
+        Orders?: boolean;
+        Products?: boolean;
+        Programs?: boolean;
+        Projects?: boolean;
+        PromoCodes?: boolean;
+        Roles?: boolean;
+        SLOs?: boolean;
+        SoDRules?: boolean;
+        Storage?: boolean;
+        SubscriptionPlans?: boolean;
+        Subscriptions?: boolean;
+        Tenants?: boolean;
+        TestingSessions?: boolean;
+        Users?: boolean;
+        Wallets?: boolean;
+      },
+      ApiError
+    >;
+  }
 
   /**
    * Get usage records for a user
@@ -22,12 +111,16 @@ export class UsersResourcesModule {
    */
   async getUsersResourcesUsageRecords(
     userId: string,
-    query?: { usageType?: Types.ResourcesResourceUsageType; startDate?: string; endDate?: string },
+    query?: {
+      usageType?: Types.ResourcesResourceUsageType;
+      startDate?: string;
+      endDate?: string;
+    },
   ): Promise<Result<Array<Types.ResourcesUsageRecord>, ApiError>> {
     const url = `/v1/users/${userId}/resources/usage-records`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -46,35 +139,35 @@ export class UsersResourcesModule {
   ): Promise<
     Result<
       {
-        Users?: number;
-        Projects?: number;
-        Storage?: number;
-        ApiCalls?: number;
-        Programs?: number;
-        Courses?: number;
-        FeatureFlags?: number;
-        SubscriptionPlans?: number;
-        Products?: number;
-        TestingSessions?: number;
-        Roles?: number;
-        Tenants?: number;
-        Subscriptions?: number;
-        SLOs?: number;
-        AccessReviewCampaigns?: number;
-        SoDRules?: number;
         AbacPolicies?: number;
-        ConditionalPolicies?: number;
-        Wallets?: number;
-        Disputes?: number;
-        PromoCodes?: number;
-        Orders?: number;
-        AuditEntries?: number;
-        Assets?: number;
-        AssetStorage?: number;
-        AssetDownloads?: number;
-        AssetTransformations?: number;
+        AccessReviewCampaigns?: number;
         AiRequests?: number;
         AiTokens?: number;
+        ApiCalls?: number;
+        AssetDownloads?: number;
+        AssetStorage?: number;
+        AssetTransformations?: number;
+        Assets?: number;
+        AuditEntries?: number;
+        ConditionalPolicies?: number;
+        Courses?: number;
+        Disputes?: number;
+        FeatureFlags?: number;
+        Orders?: number;
+        Products?: number;
+        Programs?: number;
+        Projects?: number;
+        PromoCodes?: number;
+        Roles?: number;
+        SLOs?: number;
+        SoDRules?: number;
+        Storage?: number;
+        SubscriptionPlans?: number;
+        Subscriptions?: number;
+        Tenants?: number;
+        TestingSessions?: number;
+        Users?: number;
+        Wallets?: number;
       },
       ApiError
     >
@@ -82,131 +175,42 @@ export class UsersResourcesModule {
     const url = `/v1/users/${userId}/resources/usage-summary`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     return result as Result<
       {
-        Users?: number;
-        Projects?: number;
-        Storage?: number;
-        ApiCalls?: number;
-        Programs?: number;
-        Courses?: number;
-        FeatureFlags?: number;
-        SubscriptionPlans?: number;
-        Products?: number;
-        TestingSessions?: number;
-        Roles?: number;
-        Tenants?: number;
-        Subscriptions?: number;
-        SLOs?: number;
-        AccessReviewCampaigns?: number;
-        SoDRules?: number;
         AbacPolicies?: number;
-        ConditionalPolicies?: number;
-        Wallets?: number;
-        Disputes?: number;
-        PromoCodes?: number;
-        Orders?: number;
-        AuditEntries?: number;
-        Assets?: number;
-        AssetStorage?: number;
-        AssetDownloads?: number;
-        AssetTransformations?: number;
+        AccessReviewCampaigns?: number;
         AiRequests?: number;
         AiTokens?: number;
-      },
-      ApiError
-    >;
-  }
-
-  /**
-   * Check resource limits for a user
-   *
-   * Checks current resource usage against configured limits for a specific user.
-   */
-  async getUsersResourcesLimits(
-    userId: string,
-    query?: { usageType?: Types.ResourcesResourceUsageType },
-  ): Promise<
-    Result<
-      {
-        Users?: boolean;
-        Projects?: boolean;
-        Storage?: boolean;
-        ApiCalls?: boolean;
-        Programs?: boolean;
-        Courses?: boolean;
-        FeatureFlags?: boolean;
-        SubscriptionPlans?: boolean;
-        Products?: boolean;
-        TestingSessions?: boolean;
-        Roles?: boolean;
-        Tenants?: boolean;
-        Subscriptions?: boolean;
-        SLOs?: boolean;
-        AccessReviewCampaigns?: boolean;
-        SoDRules?: boolean;
-        AbacPolicies?: boolean;
-        ConditionalPolicies?: boolean;
-        Wallets?: boolean;
-        Disputes?: boolean;
-        PromoCodes?: boolean;
-        Orders?: boolean;
-        AuditEntries?: boolean;
-        Assets?: boolean;
-        AssetStorage?: boolean;
-        AssetDownloads?: boolean;
-        AssetTransformations?: boolean;
-        AiRequests?: boolean;
-        AiTokens?: boolean;
-      },
-      ApiError
-    >
-  > {
-    const url = `/v1/users/${userId}/resources/limits`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      {
-        Users?: boolean;
-        Projects?: boolean;
-        Storage?: boolean;
-        ApiCalls?: boolean;
-        Programs?: boolean;
-        Courses?: boolean;
-        FeatureFlags?: boolean;
-        SubscriptionPlans?: boolean;
-        Products?: boolean;
-        TestingSessions?: boolean;
-        Roles?: boolean;
-        Tenants?: boolean;
-        Subscriptions?: boolean;
-        SLOs?: boolean;
-        AccessReviewCampaigns?: boolean;
-        SoDRules?: boolean;
-        AbacPolicies?: boolean;
-        ConditionalPolicies?: boolean;
-        Wallets?: boolean;
-        Disputes?: boolean;
-        PromoCodes?: boolean;
-        Orders?: boolean;
-        AuditEntries?: boolean;
-        Assets?: boolean;
-        AssetStorage?: boolean;
-        AssetDownloads?: boolean;
-        AssetTransformations?: boolean;
-        AiRequests?: boolean;
-        AiTokens?: boolean;
+        ApiCalls?: number;
+        AssetDownloads?: number;
+        AssetStorage?: number;
+        AssetTransformations?: number;
+        Assets?: number;
+        AuditEntries?: number;
+        ConditionalPolicies?: number;
+        Courses?: number;
+        Disputes?: number;
+        FeatureFlags?: number;
+        Orders?: number;
+        Products?: number;
+        Programs?: number;
+        Projects?: number;
+        PromoCodes?: number;
+        Roles?: number;
+        SLOs?: number;
+        SoDRules?: number;
+        Storage?: number;
+        SubscriptionPlans?: number;
+        Subscriptions?: number;
+        Tenants?: number;
+        TestingSessions?: number;
+        Users?: number;
+        Wallets?: number;
       },
       ApiError
     >;
@@ -217,14 +221,21 @@ export class UsersResourcesModule {
    *
    * Records a new resource usage entry for the specified user.
    */
-  async postUsersResourcesRecord(userId: string, body: Types.ResourcesRecordUserResourceUsageInput): Promise<Result<void, ApiError>> {
+  async postUsersResourcesRecord(
+    userId: string,
+    body: Types.ResourcesRecordUserResourceUsageInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/resources:record`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesRecordUserResourceUsageInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.ResourcesRecordUserResourceUsageInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -238,14 +249,21 @@ export class UsersResourcesModule {
    *
    * Records a new resource usage entry after verifying it doesn't exceed configured quotas. Returns 429 if quota would be exceeded.
    */
-  async postUsersResourcesRecordWithQuotaCheck(userId: string, body: Types.ResourcesRecordUserResourceUsageInput): Promise<Result<void, ApiError>> {
+  async postUsersResourcesRecordWithQuotaCheck(
+    userId: string,
+    body: Types.ResourcesRecordUserResourceUsageInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/resources:record-with-quota-check`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesRecordUserResourceUsageInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.ResourcesRecordUserResourceUsageInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -259,11 +277,14 @@ export class UsersResourcesModule {
    *
    * Resets the resource usage counters for a specific user and resource type to zero.
    */
-  async postUsersResourcesReset(userId: string, query?: { usageType?: Types.ResourcesResourceUsageType }): Promise<Result<void, ApiError>> {
+  async postUsersResourcesReset(
+    userId: string,
+    query?: { usageType?: Types.ResourcesResourceUsageType },
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/resources:reset`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       params: query,
       requiresAuth: true,
@@ -273,6 +294,8 @@ export class UsersResourcesModule {
   }
 }
 
-export function createUsersResourcesModule(client: ApiClient): UsersResourcesModule {
+export function createUsersResourcesModule(
+  client: ApiClient,
+): UsersResourcesModule {
   return new UsersResourcesModule(client);
 }
