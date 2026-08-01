@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
     getTestingEvents: vi.fn(),
     getTestingEvents1: vi.fn(),
     getTestingEventsSlots: vi.fn(),
-    getTestingEventsApplications: vi.fn(),
+    getTestingEventsApplications1: vi.fn(),
     getTestingEventsCommittee: vi.fn(),
     getTestingEventsPublic: vi.fn(),
     getTestingEventsPublic1: vi.fn(),
@@ -68,7 +68,7 @@ describe('Testing Lab event queries', () => {
       ok: true,
       data: [{ id: 'slot-1', eventId: 'event-1', registeredTesterCount: 3 }],
     });
-    mocks.events.getTestingEventsApplications.mockResolvedValue({
+    mocks.events.getTestingEventsApplications1.mockResolvedValue({
       ok: true,
       data: [{ id: 'application-1', eventId: 'event-1', status: 'Pending' }],
     });
@@ -142,7 +142,7 @@ describe('Testing Lab event queries', () => {
     expect(result.committee).toHaveLength(1);
     expect(result.registrationsBySlot['slot-1']).toHaveLength(1);
     expect(result.accessIssues).toEqual([]);
-    expect(mocks.events.getTestingEventsApplications).toHaveBeenCalledWith('event-1', {
+    expect(mocks.events.getTestingEventsApplications1).toHaveBeenCalledWith('event-1', {
       status: 'Pending',
       skip: 0,
       take: 100,
@@ -151,7 +151,7 @@ describe('Testing Lab event queries', () => {
   });
 
   it('keeps partial manager data and reports generated-client failures', async () => {
-    mocks.events.getTestingEventsApplications.mockResolvedValue({
+    mocks.events.getTestingEventsApplications1.mockResolvedValue({
       ok: false,
       error: { message: 'Forbidden', status: 403 },
     });

@@ -54,6 +54,7 @@ describe('Public Testing Lab page', () => {
       'href',
       '/testing-lab/events/event-1',
     );
+    expect(screen.getByRole('link', { name: /browse projects/i })).toHaveAttribute('href', '/projects');
     expect(mocks.getPublicTestingEventsDirectory).toHaveBeenCalledWith({ take: 100 });
   });
 
