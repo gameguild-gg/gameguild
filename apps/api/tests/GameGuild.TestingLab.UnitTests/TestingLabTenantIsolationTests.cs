@@ -143,6 +143,52 @@ public sealed class TestingLabTenantIsolationTests
         persisted.DeletedAt.Should().BeNull();
     }
 
+    [Fact]
+    public async Task LocationsQuery_ShouldIncludeArchivedRowsOnlyWhenRequested()
+    {
+        await using var context = CreateContext();
+        var actorTenantId = Guid.NewGuid();
+        var otherTenantId = Guid.NewGuid();
+        var active = NewLocation(actorTenantId, "Active location");
+        var archived = NewLocation(actorTenantId, "Archived location");
+        archived.Version = 1;
+        archived.SoftDelete();
+        var otherArchived = NewLocation(otherTenantId, "Other archived location");
+        otherArchived.Version = 1;
+        otherArchived.SoftDelete();
+        context.Set<TestingLocation>().AddRange(active, archived, otherArchived);
+        await context.SaveChangesAsync();
+        var service = CreateService<TestingLocationOperationsService>(context, CreateActor(actorTenantId));
+
+        var activeOnly = await service.GetTestingLocationsAsync();
+        var includingArchived = await service.GetTestingLocationsAsync(includeArchived: true);
+
+        activeOnly.Should().ContainSingle(location => location.Id == active.Id);
+        includingArchived.Should().HaveCount(2);
+        includingArchived.Should().Contain(location => location.Id == archived.Id);
+        includingArchived.Should().NotContain(location => location.TenantId == otherTenantId);
+    }
+
+    [Fact]
+    public async Task DeleteLocation_ShouldRejectLocationWithUpcomingSession()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var request = NewRequest(tenantId);
+        var location = NewLocation(tenantId, "Scheduled room");
+        context.Set<TestingRequest>().Add(request);
+        context.Set<TestingLocation>().Add(location);
+        context.Set<TestingSession>().Add(NewSession(tenantId, "Upcoming session", request.Id, location.Id));
+        await context.SaveChangesAsync();
+        var service = CreateService<TestingLocationOperationsService>(context, CreateActor(tenantId));
+
+        var action = () => service.DeleteTestingLocationAsync(location.Id);
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*upcoming sessions*");
+        location.DeletedAt.Should().BeNull();
+    }
+
     private static TService CreateService<TService>(IApplicationDbContext context, IActorContextAccessor actor)
         where TService : notnull
     {

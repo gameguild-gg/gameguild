@@ -63,7 +63,11 @@ export interface TestingLocationSummary {
   address?: string | null;
   equipmentAvailable?: string | null;
   city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
   country?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
   isVirtual?: boolean;
   virtualUrl?: string | null;
   maxTestersCapacity?: number | null;
@@ -209,7 +213,11 @@ function mapLocation(location: TestingLabTestingLocation): TestingLocationSummar
     address: location.address,
     equipmentAvailable: location.equipmentAvailable,
     city: location.city,
+    state: location.state,
+    postalCode: location.postalCode,
     country: location.country,
+    contactEmail: location.contactEmail,
+    contactPhone: location.contactPhone,
     isVirtual: location.isVirtual,
     virtualUrl: location.virtualUrl,
     maxTestersCapacity: location.maxTestersCapacity,
@@ -265,6 +273,23 @@ export const getTestingLabDashboard = cache(async (): Promise<TestingLabDashboar
   };
 });
 
+export interface TestingLabLocationDirectory {
+  locations: TestingLocationSummary[];
+  accessIssues: string[];
+}
+
+export const getTestingLabLocations = cache(async (): Promise<TestingLabLocationDirectory> => {
+  const api = createTestingLabModules();
+  const locations = await readResult(
+    api.locations.getTestingLocations({ skip: 0, take: 200, includeArchived: true }),
+    'Testing locations',
+  );
+
+  return {
+    locations: compact((locations.data ?? []).map(mapLocation)),
+    accessIssues: locations.issue ? [locations.issue] : [],
+  };
+});
 export interface PublicTestingLabDirectory {
   sessions: TestingSessionSummary[];
   projects: TestingProjectOption[];
@@ -504,6 +529,43 @@ export async function getTestingLabAnalyticsCsv(
 ): Promise<TestingLabAnalyticsCsvResult> {
   const api = createTestingLabModules();
   return readResult(api.analytics.getTestingAnalyticsExport(options), 'Testing Lab analytics export');
+}
+export interface TestingLabLocationFilterOptions {
+  q?: string;
+  status?: 'all' | 'active' | 'maintenance' | 'inactive' | 'archived';
+  mode?: 'all' | 'physical' | 'remote';
+}
+
+export function filterTestingLabLocations(
+  locations: TestingLocationSummary[],
+  options: TestingLabLocationFilterOptions,
+): TestingLocationSummary[] {
+  const query = options.q?.trim().toLowerCase() ?? '';
+  const status = options.status ?? 'all';
+  const mode = options.mode ?? 'all';
+
+  return locations.filter((location) => {
+    const searchable = [
+      location.name,
+      location.description,
+      location.address,
+      location.city,
+      location.state,
+      location.postalCode,
+      location.country,
+      location.contactEmail,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    const normalizedStatus = normalizeTestingLocationStatus(location.status).toLowerCase();
+    const matchesStatus =
+      status === 'all' ||
+      (status === 'archived' ? Boolean(location.isDeleted) : !location.isDeleted && normalizedStatus === status);
+    const matchesMode = mode === 'all' || (mode === 'remote' ? Boolean(location.isVirtual) : !location.isVirtual);
+
+    return (!query || searchable.includes(query)) && matchesStatus && matchesMode;
+  });
 }
 export function normalizeTestingRequestStatus(status: TestingRequestStatus): string {
   if (typeof status === 'string') return status === 'InProgress' ? 'In Progress' : status;
