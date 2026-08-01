@@ -6785,9 +6785,17 @@ export interface TestingLabCreateTestingLocation {
   name?: string | null;
   description?: string | null;
   address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
   maxTestersCapacity?: number;
   maxProjectsCapacity?: number;
   equipmentAvailable?: string | null;
+  isVirtual?: boolean;
+  virtualUrl?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
   status?: TestingLabLocationStatus;
 }
 
@@ -7675,9 +7683,17 @@ export interface TestingLabUpdateTestingLocation {
   name?: string | null;
   description?: string | null;
   address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
   maxTestersCapacity?: number | null;
   maxProjectsCapacity?: number | null;
   equipmentAvailable?: string | null;
+  isVirtual?: boolean | null;
+  virtualUrl?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
   status?: TestingLabLocationStatus;
 }
 
@@ -7693,11 +7709,19 @@ export interface TestingLabUpsertTestingEventSlotInput {
   locationId?: string | null;
 }
 
+export interface TestingLabTestingLabResourcePermission {
+  action?: string | null;
+  resourceType?: string | null;
+  resourceId?: string;
+  expiresAt?: string | null;
+}
+
 export interface TestingLabUserTestingLabPermissions {
   userId?: string;
   tenantId?: string | null;
   assignedRoles?: Array<string> | null;
   permissions?: TestingLabTestingLabPermissions;
+  resourcePermissions?: Array<TestingLabTestingLabResourcePermission> | null;
 }
 
 // Zod Schema Declarations (to handle circular references)
@@ -8520,6 +8544,7 @@ export let TestingLabUpdateTestingLabRoleInputSchema: z.ZodType<TestingLabUpdate
 export let TestingLabUpdateTestingLabSettingsSchema: z.ZodType<TestingLabUpdateTestingLabSettings>;
 export let TestingLabUpdateTestingLocationSchema: z.ZodType<TestingLabUpdateTestingLocation>;
 export let TestingLabUpsertTestingEventSlotInputSchema: z.ZodType<TestingLabUpsertTestingEventSlotInput>;
+export let TestingLabTestingLabResourcePermissionSchema: z.ZodType<TestingLabTestingLabResourcePermission>;
 export let TestingLabUserTestingLabPermissionsSchema: z.ZodType<TestingLabUserTestingLabPermissions>;
 
 // Zod Schema Definitions
@@ -16525,6 +16550,7 @@ TestingLabCreateTestingLabRoleInputSchema = z.object({
   name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
+  resourcePermissions: z.array(z.lazy(() => TestingLabTestingLabResourcePermissionSchema)).nullable().optional(),
 });
 
 /** Zod schema for TestingLabCreateTestingLabSettings */
@@ -16544,9 +16570,17 @@ TestingLabCreateTestingLocationSchema = z.object({
   name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
   maxTestersCapacity: z.number().int().optional(),
   maxProjectsCapacity: z.number().int().optional(),
   equipmentAvailable: z.string().nullable().optional(),
+  isVirtual: z.boolean().optional(),
+  virtualUrl: z.string().nullable().optional(),
+  contactEmail: z.string().nullable().optional(),
+  contactPhone: z.string().nullable().optional(),
   status: z.lazy(() => TestingLabLocationStatusSchema).optional(),
 });
 
@@ -17165,6 +17199,7 @@ TestingLabTestingLabRoleTemplateSchema = z.object({
   description: z.string().nullable().optional(),
   isSystemRole: z.boolean().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
+  resourcePermissions: z.array(z.lazy(() => TestingLabTestingLabResourcePermissionSchema)).nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingLabSettings */
@@ -17526,6 +17561,7 @@ TestingLabUpdateTestingLabRoleInputSchema = z.object({
   name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
+  resourcePermissions: z.array(z.lazy(() => TestingLabTestingLabResourcePermissionSchema)).nullable().optional(),
 });
 
 /** Zod schema for TestingLabUpdateTestingLabSettings */
@@ -17545,9 +17581,17 @@ TestingLabUpdateTestingLocationSchema = z.object({
   name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
   maxTestersCapacity: z.number().int().nullable().optional(),
   maxProjectsCapacity: z.number().int().nullable().optional(),
   equipmentAvailable: z.string().nullable().optional(),
+  isVirtual: z.boolean().nullable().optional(),
+  virtualUrl: z.string().nullable().optional(),
+  contactEmail: z.string().nullable().optional(),
+  contactPhone: z.string().nullable().optional(),
   status: z.lazy(() => TestingLabLocationStatusSchema).optional(),
 });
 
@@ -17564,10 +17608,19 @@ TestingLabUpsertTestingEventSlotInputSchema = z.object({
   locationId: z.string().uuid().nullable().optional(),
 });
 
+/** Zod schema for TestingLabTestingLabResourcePermission */
+TestingLabTestingLabResourcePermissionSchema = z.object({
+  action: z.string().nullable().optional(),
+  resourceType: z.string().nullable().optional(),
+  resourceId: z.string().uuid().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+});
+
 /** Zod schema for TestingLabUserTestingLabPermissions */
 TestingLabUserTestingLabPermissionsSchema = z.object({
   userId: z.string().uuid().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   assignedRoles: z.array(z.string()).nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
+  resourcePermissions: z.array(z.lazy(() => TestingLabTestingLabResourcePermissionSchema)).nullable().optional(),
 });
