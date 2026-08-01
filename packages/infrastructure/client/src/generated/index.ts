@@ -100,6 +100,7 @@ export * from './modules/tenants-resources-metadata.gen.js';
 export * from './modules/tenants-resources-settings.gen.js';
 export * from './modules/tenants-settings.gen.js';
 export * from './modules/testinglab-testingeventparticipation.gen.js';
+export * from './modules/testinglab-analytics.gen.js';
 export * from './modules/testinglab-testingevents.gen.js';
 export * from './modules/testinglab-testingfeedback.gen.js';
 export * from './modules/testinglab-permission.gen.js';
