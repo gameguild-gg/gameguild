@@ -1,6 +1,10 @@
 'use client';
 
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import {
+  searchLearnerWorkspace,
+  type LearnerSearchItem,
+} from '@/lib/learner/search-actions';
 import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications';
 import { createLearnerRoutes } from '@/lib/learner/routes';
 import { useAuth } from '@game-guild/client/react';
@@ -23,6 +27,13 @@ import {
   DropdownMenuTrigger,
 } from '@game-guild/ui/components/dropdown-menu';
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@game-guild/ui/components/sheet';
+import {
   Award,
   Bell,
   BookOpen,
@@ -33,7 +44,6 @@ import {
   LogOut,
   Menu,
   Search,
-  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -91,6 +101,9 @@ export function LearningShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<LearnerSearchItem[]>([]);
+  const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'error' | 'ready'>('idle');
   const catalogUrl = new URL('/courses', webOrigin).toString().replace(/\/$/, '');
   const signInUrl = new URL('/sign-in', webOrigin).toString().replace(/\/$/, '');
   const notificationItems = notifications?.items ?? [];
@@ -106,6 +119,35 @@ export function LearningShell({
     document.addEventListener('keydown', handleKeyboard);
     return () => document.removeEventListener('keydown', handleKeyboard);
   }, []);
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (query.length < 2) {
+      setSearchResults([]);
+      setSearchStatus('idle');
+      return;
+    }
+
+    let cancelled = false;
+    setSearchStatus('loading');
+    const timer = window.setTimeout(async () => {
+      const result = await searchLearnerWorkspace(query);
+      if (cancelled) return;
+
+      if (result.success) {
+        setSearchResults(result.items);
+        setSearchStatus('ready');
+      } else {
+        setSearchResults([]);
+        setSearchStatus('error');
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [searchQuery]);
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -141,6 +183,8 @@ export function LearningShell({
           className="mr-2 lg:hidden"
           onClick={() => setMobileOpen((open) => !open)}
           aria-label="Toggle navigation"
+          aria-controls="learning-mobile-navigation"
+          aria-expanded={mobileOpen}
         >
           <Menu className="size-5" />
         </Button>
@@ -167,9 +211,14 @@ export function LearningShell({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Open notifications">
-                <Bell className="size-4" />
+                <Bell aria-hidden="true" className="size-4" />
                 {(notifications?.unreadCount ?? 0) > 0 ? (
-                  <span className="absolute mt-[-1.25rem] ml-5 size-2 rounded-full bg-destructive" />
+                  <>
+                    <span aria-hidden="true" className="absolute mt-[-1.25rem] ml-5 size-2 rounded-full bg-destructive" />
+                    <span className="sr-only">
+                      {notifications?.unreadCount} unread notifications
+                    </span>
+                  </>
                 ) : null}
               </Button>
             </DropdownMenuTrigger>
@@ -229,7 +278,7 @@ export function LearningShell({
       </header>
 
       <aside
-        className={`${mobileOpen ? 'flex' : 'hidden'} fixed inset-y-0 left-0 z-50 w-64 flex-col border-r bg-background p-4 lg:flex`}
+        className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r bg-background p-4 lg:flex"
       >
         <div className="mb-8 flex h-10 items-center gap-2">
           <Link
@@ -242,15 +291,6 @@ export function LearningShell({
             </span>
             <span className="truncate">GameGuild Learning</span>
           </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="shrink-0 lg:hidden"
-            onClick={() => setMobileOpen(false)}
-            aria-label="Close navigation"
-          >
-            <X className="size-5" />
-          </Button>
         </div>
 
         <nav aria-label="Learner navigation" className="space-y-1">
@@ -285,15 +325,55 @@ export function LearningShell({
         </div>
       </aside>
 
-      {mobileOpen ? (
-        <button
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-          onClick={() => setMobileOpen(false)}
-          aria-label="Dismiss navigation"
-        />
-      ) : null}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent
+          id="learning-mobile-navigation"
+          side="left"
+          className="w-72 p-4 lg:hidden"
+          aria-label="Learner navigation"
+        >
+          <SheetHeader className="mb-6 p-0 pr-8 text-left">
+            <SheetTitle className="flex items-center gap-3">
+              <span className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                <GraduationCap aria-hidden="true" className="size-5" />
+              </span>
+              GameGuild Learning
+            </SheetTitle>
+            <SheetDescription>Navigate your courses and learning records.</SheetDescription>
+          </SheetHeader>
+          <nav aria-label="Learner navigation" className="space-y-1">
+            {navigation.map(({ href, icon: Icon, label }) => {
+              const active = isRouteActive(pathname, href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={active ? 'page' : undefined}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors ${
+                    active
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                  }`}
+                >
+                  <Icon aria-hidden="true" className="size-4" />
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="mt-auto border-t pt-4">
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href={catalogUrl} onClick={() => setMobileOpen(false)}>
+                <Library aria-hidden="true" className="size-4" />
+                Browse courses
+              </Link>
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
-      <main id="learning-content" className="min-w-0 lg:pl-64">
+      <main id="learning-content" tabIndex={-1} className="min-w-0 overflow-x-clip lg:pl-64">
         <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">{children}</div>
       </main>
 
@@ -301,11 +381,42 @@ export function LearningShell({
         open={searchOpen}
         onOpenChange={setSearchOpen}
         title="Search learning"
-        description="Navigate your learning workspace."
+        description="Search the courses and content available to your account."
       >
-        <CommandInput placeholder="Search learning..." />
-        <CommandList>
-          <CommandEmpty>No matching learning destination.</CommandEmpty>
+        <CommandInput
+          placeholder="Search your courses and lessons..."
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+        />
+        <CommandList aria-busy={searchStatus === 'loading'}>
+          <CommandEmpty>
+            {searchStatus === 'loading'
+              ? 'Searching your learning workspace...'
+              : searchStatus === 'error'
+                ? 'Search is temporarily unavailable. Try again.'
+                : searchQuery.trim().length < 2
+                  ? 'Type at least 2 characters to search.'
+                  : 'No matching courses or lessons.'}
+          </CommandEmpty>
+          {searchResults.length > 0 ? (
+            <CommandGroup heading="Results">
+              {searchResults.map((result) => (
+                <CommandItem
+                  key={`${result.kind}-${result.id}`}
+                  onSelect={() => navigate(result.route)}
+                  value={`${result.title} ${result.kind} ${result.description}`}
+                >
+                  <BookOpen aria-hidden="true" className="size-4" />
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{result.title}</span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {result.kind}{result.description ? ` - ${result.description}` : ''}
+                    </span>
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ) : null}
           <CommandGroup heading="Learning">
             {navigation.map(({ href, icon: Icon, label }) => (
               <CommandItem key={href} onSelect={() => navigate(href)} value={label}>
