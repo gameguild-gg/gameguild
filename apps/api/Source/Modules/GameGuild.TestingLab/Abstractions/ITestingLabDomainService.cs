@@ -15,6 +15,4 @@ public interface ITestingLabDomainService {
   /// <summary> Validates if a user can participate in a specific testing request </summary>
   Task<(bool CanParticipate, string? Reason)> ValidateUserParticipationAsync(Guid userId, Guid testingRequestId, CancellationToken cancellationToken = default);
 
-  /// <summary> Generates comprehensive testing statistics and analytics </summary>
-  Task<TestingAnalytics> GenerateTestingAnalyticsAsync(Guid? projectVersionId = null, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default);
 }
