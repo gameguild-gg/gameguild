@@ -7397,6 +7397,41 @@ export interface TestingLabTestingParticipant {
   canProvideFeedback?: boolean;
 }
 
+export interface TestingLabTestingParticipantDirectoryItemProjection {
+  registrationId?: string;
+  eventId?: string;
+  eventName?: string | null;
+  slotId?: string;
+  mode?: TestingLabTestingEventMode;
+  startsAt?: string;
+  endsAt?: string;
+  campusName?: string | null;
+  roomName?: string | null;
+  userId?: string;
+  userName?: string | null;
+  userEmail?: string | null;
+  avatarUrl?: string | null;
+  status?: TestingLabTestingSlotRegistrationStatus;
+  waitlistPosition?: number | null;
+  notes?: string | null;
+  registeredAt?: string;
+  checkedInAt?: string | null;
+  checkedOutAt?: string | null;
+  completedAt?: string | null;
+  pendingFeedbackCount?: number;
+}
+
+export interface TestingLabTestingParticipantDirectoryProjection {
+  items?: Array<TestingLabTestingParticipantDirectoryItemProjection> | null;
+  totalCount?: number;
+  registeredCount?: number;
+  waitlistedCount?: number;
+  checkedInCount?: number;
+  attendedCount?: number;
+  completedCount?: number;
+  noShowCount?: number;
+}
+
 export type TestingLabTestingPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface TestingLabTestingProjectApplication {
@@ -8414,6 +8449,8 @@ export let TestingLabTestingLearningCompletionRequirementSchema: z.ZodType<Testi
 export let TestingLabTestingLocationSchema: z.ZodType<TestingLabTestingLocation>;
 export let TestingLabTestingModeSchema: z.ZodType<TestingLabTestingMode>;
 export let TestingLabTestingParticipantSchema: z.ZodType<TestingLabTestingParticipant>;
+export let TestingLabTestingParticipantDirectoryItemProjectionSchema: z.ZodType<TestingLabTestingParticipantDirectoryItemProjection>;
+export let TestingLabTestingParticipantDirectoryProjectionSchema: z.ZodType<TestingLabTestingParticipantDirectoryProjection>;
 export let TestingLabTestingPrioritySchema: z.ZodType<TestingLabTestingPriority>;
 export let TestingLabTestingProjectApplicationSchema: z.ZodType<TestingLabTestingProjectApplication>;
 export let TestingLabTestingProjectApplicationProjectionSchema: z.ZodType<TestingLabTestingProjectApplicationProjection>;
@@ -17173,6 +17210,50 @@ TestingLabTestingParticipantSchema = z.object({
   isCompleted: z.boolean().optional(),
   participationDuration: z.string().nullable().optional(),
   canProvideFeedback: z.boolean().optional(),
+});
+
+/** Zod schema for TestingLabTestingParticipantDirectoryItemProjection */
+TestingLabTestingParticipantDirectoryItemProjectionSchema = z.object({
+  registrationId: z.string().uuid().optional(),
+  eventId: z.string().uuid().optional(),
+  eventName: z.string().nullable().optional(),
+  slotId: z.string().uuid().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  startsAt: z.string().datetime().optional(),
+  endsAt: z.string().datetime().optional(),
+  campusName: z.string().nullable().optional(),
+  roomName: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+  userName: z.string().nullable().optional(),
+  userEmail: z.string().nullable().optional(),
+  avatarUrl: z.string().nullable().optional(),
+  status: z
+    .lazy(() => TestingLabTestingSlotRegistrationStatusSchema)
+    .optional(),
+  waitlistPosition: z.number().int().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  registeredAt: z.string().datetime().optional(),
+  checkedInAt: z.string().datetime().nullable().optional(),
+  checkedOutAt: z.string().datetime().nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  pendingFeedbackCount: z.number().int().optional(),
+});
+
+/** Zod schema for TestingLabTestingParticipantDirectoryProjection */
+TestingLabTestingParticipantDirectoryProjectionSchema = z.object({
+  items: z
+    .array(
+      z.lazy(() => TestingLabTestingParticipantDirectoryItemProjectionSchema),
+    )
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+  registeredCount: z.number().int().optional(),
+  waitlistedCount: z.number().int().optional(),
+  checkedInCount: z.number().int().optional(),
+  attendedCount: z.number().int().optional(),
+  completedCount: z.number().int().optional(),
+  noShowCount: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingPriority */
