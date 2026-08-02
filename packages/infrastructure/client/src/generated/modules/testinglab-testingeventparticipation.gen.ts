@@ -247,9 +247,7 @@ export class TestinglabTestingeventparticipationModule {
 
   /**
    */
-  async getTestingEventsFeedback(
-    eventId: string,
-  ): Promise<Result<Array<Types.TestingLabTestingEventFeedbackReviewProjection>, ApiError>> {
+  async getTestingEventsFeedback(eventId: string): Promise<Result<Array<Types.TestingLabTestingEventFeedbackReviewProjection>, ApiError>> {
     const url = `/v1/testing/events/${eventId}/feedback`;
 
     const result = await this.client.request({

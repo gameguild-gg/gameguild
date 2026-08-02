@@ -24,6 +24,46 @@ whole_solution_scaffold_project() {
   esac
 }
 
+test_assembly_from_trx_metadata() {
+  "$PYTHON_BIN" - "$1" <<'PY'
+import re
+import sys
+import xml.etree.ElementTree as ET
+
+root = ET.parse(sys.argv[1]).getroot()
+candidates = set()
+
+for element in root.iter():
+    tag = element.tag.rsplit("}", 1)[-1]
+    if tag not in {"StdOut", "Text"}:
+        continue
+
+    text = "".join(element.itertext())
+    for match in re.finditer(
+        r"(?:Discovering|Discovered):\s+([A-Za-z0-9_.-]+)",
+        text,
+    ):
+        assembly = match.group(1)
+        candidates.add(
+            assembly if assembly.endswith(".dll") else f"{assembly}.dll"
+        )
+
+    for match in re.finditer(
+        r"No test is available in\s+([^\r\n]+?\.dll)",
+        text,
+    ):
+        candidates.add(re.split(r"[\\/]", match.group(1))[-1])
+
+if len(candidates) != 1:
+    raise SystemExit(
+        "TRX metadata must identify exactly one test assembly; "
+        f"found {sorted(candidates)}"
+    )
+
+print(next(iter(candidates)))
+PY
+}
+
 test_assembly_for_trx() {
   local output_log="$1" trx_path="$2"
   local target_name="${trx_path//\\//}"
@@ -49,7 +89,12 @@ test_assembly_for_trx() {
     esac
   done < "$output_log"
 
-  [[ -n "$matched_assembly" ]] || economy_gate_error "Could not identify the test assembly for TRX evidence: $trx_path"
+  if [[ -z "$matched_assembly" ]]; then
+    if ! matched_assembly="$(test_assembly_from_trx_metadata "$trx_path")"; then
+      economy_gate_error "Could not identify the test assembly for TRX evidence: $trx_path"
+      return 1
+    fi
+  fi
   printf '%s\n' "$matched_assembly"
 }
 
@@ -182,6 +227,9 @@ declare -a economy_tests=()
 declare -a economy_coverage_records=()
 declare -a provider_contracts=()
 while IFS=$'\t' read -r record_type first second; do
+  record_type="$(normalize_shell_record_field "$record_type")"
+  first="$(normalize_shell_record_field "$first")"
+  second="$(normalize_shell_record_field "$second")"
   case "$record_type" in
     production) economy_production+=("$first") ;;
     test) economy_tests+=("$first") ;;
@@ -334,6 +382,7 @@ if [[ "$skip_openapi" == false ]]; then
   api_port="$(get_ephemeral_port)"
   export ASPNETCORE_ENVIRONMENT=Development
   export ASPNETCORE_URLS="http://127.0.0.1:$api_port"
+  export API_URL="http://127.0.0.1:$api_port"
   export PaymentGateways__Stripe__IsEnabled=true
   export PaymentGateways__Stripe__UseSimulation=true
   dotnet "$publish_directory/GameGuild.API.dll" --contentRoot "$publish_directory" \
@@ -357,7 +406,7 @@ if [[ "$skip_frontend" == false ]]; then
   run pnpm --filter @game-guild/client build
 
   web_evidence="$artifact_root/vitest/web.json"
-  run pnpm --filter @game-guild/web exec vitest run --reporter=json "--outputFile=$web_evidence"
+  run env -u API_URL pnpm --filter @game-guild/web exec vitest run --reporter=json "--outputFile=$web_evidence"
   assert_vitest_evidence "$web_evidence" >/dev/null
   GAMEGUILD_DISABLE_WEBPACK_CACHE=1 run pnpm --filter @game-guild/web build
 fi

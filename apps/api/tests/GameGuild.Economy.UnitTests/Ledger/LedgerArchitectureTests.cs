@@ -73,10 +73,42 @@ public sealed class LedgerArchitectureTests
 
         lot.Ranges.Should().ContainSingle();
         consumption.Ranges.Should().ContainSingle();
+        consumption.PostingId.Value.Should().NotBeEmpty();
         parent.Ranges.Should().ContainSingle();
         derived.Parents.Should().ContainSingle();
         retirement.Parents.Should().ContainSingle();
+        retirement.PostingId.Value.Should().NotBeEmpty();
         lot.Ranges.Should().NotBeAssignableTo<RootTraceRange[]>();
         derived.Parents.Should().NotBeAssignableTo<ParentFragmentLineage[]>();
     }
+    [Fact]
+    public void KernelContractsExposePostingTraceProjectionAndOutboxIdentity()
+    {
+        var postingId = global::GameGuild.Economy.Contracts.PostingId.New();
+        var walletId = global::GameGuild.Economy.Contracts.WalletId.New();
+        var lotId = global::GameGuild.Economy.Contracts.CreditLotId.New();
+        var occurredAt = DateTimeOffset.Parse("2026-07-30T12:00:00Z");
+        var projection = new WalletProjectionUpdate(
+            postingId, walletId, global::GameGuild.Economy.Contracts.CurrencyCode.HardCoin, 17, 23);
+        var outboxId = Guid.NewGuid();
+        var outbox = new ImmutableOutboxMessage(outboxId, " economy.test ", "{\"ok\":true}", occurredAt);
+        var journalLine = new JournalEntryLine(
+            1, Guid.NewGuid(), global::GameGuild.Economy.Contracts.EntrySide.Debit,
+            global::GameGuild.Economy.Contracts.EconomyAccountCode.PurchasedHardLiability,
+            new global::GameGuild.Economy.Contracts.CoinAmount(
+                global::GameGuild.Economy.Contracts.CurrencyCode.HardCoin, 17),
+            walletId, lotId, global::GameGuild.Economy.Contracts.ProvenanceKind.PurchasedHard);
+        var counts = new LedgerKernelCounts(1, 2, 3, 4, 5, 6, 7, 8);
+
+        (projection.PostingId, projection.WalletId, projection.Currency, projection.DeltaUnits, projection.JournalSequence)
+            .Should().Be((postingId, walletId, global::GameGuild.Economy.Contracts.CurrencyCode.HardCoin, 17, 23));
+        (outbox.Id, outbox.Type, outbox.Payload, outbox.OccurredAt)
+            .Should().Be((outboxId, "economy.test", "{\"ok\":true}", occurredAt));
+        outbox.PayloadHash.Should().HaveLength(64);
+        journalLine.LotId.Should().Be(lotId);
+        (counts.Sources, counts.JournalEntries, counts.CreditLots, counts.FragmentConsumptions,
+            counts.Lineages, counts.ProjectionUpdates, counts.IdempotencyRecords, counts.OutboxMessages)
+            .Should().Be((1, 2, 3, 4, 5, 6, 7, 8));
+    }
+
 }

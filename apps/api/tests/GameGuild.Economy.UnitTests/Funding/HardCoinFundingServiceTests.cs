@@ -120,6 +120,84 @@ public sealed class HardCoinFundingServiceTests
     }
 
     [Fact]
+    public void ConfirmObservedTopUp_MissingObservedEvidenceFailsClosedAndRollsBack()
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var service = new TransactionalPostingService(store);
+        var command = Observe();
+        var claim = HardCoinFundingClaim.Observe(
+            command.SourceId,
+            command.WalletId,
+            command.ProviderLeg,
+            command.Evidence,
+            command.AuthoritativeUsdMinorUnits,
+            command.ObservedAt);
+        store.Execute(transaction =>
+        {
+            transaction.AddFundingClaim(claim);
+            return true;
+        });
+        var before = store.SnapshotCounts();
+
+        FluentActions.Invoking(() => service.ConfirmObservedTopUp(Confirm(claim)))
+            .Should().Throw<InvalidOperationException>().WithMessage("*Observed source evidence*");
+
+        store.SnapshotCounts().Should().Be(before);
+        store.FundingClaims.Should().ContainSingle().Which.State.Should().Be(SourceConfirmationState.Observed);
+        store.SourceEvidenceHistory.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void FinalizeObservedTopUp_MissingObservedEvidenceFailsClosedAndRollsBack()
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var service = new TransactionalPostingService(store);
+        var command = Observe();
+        var claim = HardCoinFundingClaim.Observe(
+            command.SourceId,
+            command.WalletId,
+            command.ProviderLeg,
+            command.Evidence,
+            command.AuthoritativeUsdMinorUnits,
+            command.ObservedAt);
+        store.Execute(transaction =>
+        {
+            transaction.AddFundingClaim(claim);
+            return true;
+        });
+        var before = store.SnapshotCounts();
+
+        FluentActions.Invoking(() => service.FinalizeObservedTopUp(new FinalizeObservedTopUpCommand(
+                claim.SourceId,
+                SourceConfirmationState.Failed,
+                "provider-failure",
+                Time.AddMinutes(2))))
+            .Should().Throw<InvalidOperationException>().WithMessage("*Observed source evidence*");
+
+        store.SnapshotCounts().Should().Be(before);
+        store.FundingClaims.Should().ContainSingle().Which.State.Should().Be(SourceConfirmationState.Observed);
+        store.SourceEvidenceHistory.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void FinalizeObservedTopUp_RejectsConfirmedAsATerminalFailureAndRollsBack()
+    {
+        var (store, service, claim) = Setup();
+        var before = store.SnapshotCounts();
+
+        FluentActions.Invoking(() => service.FinalizeObservedTopUp(new FinalizeObservedTopUpCommand(
+                claim.SourceId,
+                SourceConfirmationState.Confirmed,
+                "invalid-terminal-confirmation",
+                Time.AddMinutes(2))))
+            .Should().Throw<InvalidFundingStateTransitionException>();
+
+        store.SnapshotCounts().Should().Be(before);
+        store.FundingClaims.Should().ContainSingle().Which.State.Should().Be(SourceConfirmationState.Observed);
+        store.SourceEvidenceHistory.Should().ContainSingle().Which.State.Should().Be(SourceConfirmationState.Observed);
+    }
+
+    [Fact]
     public void ConfirmObservedTopUp_RecoversAfterRetryableProviderTimeout()
     {
         var (store, service, claim) = Setup();

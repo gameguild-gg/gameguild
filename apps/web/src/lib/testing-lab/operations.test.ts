@@ -1,3 +1,4 @@
+import { Blob as NodeBlob } from 'node:buffer';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -32,7 +33,7 @@ vi.mock('@game-guild/client', () => ({
     TestinglabTestinglocationsModule: vi.fn(() => mocks.locations),
     TestinglabTestingparticipantsModule: vi.fn(() => mocks.participants),
     TestinglabTestingfeedbackModule: vi.fn(() => mocks.feedback),
-    TestinglabAnalyticsModule: vi.fn(() => mocks.analytics),
+    TestinglabTestinganalyticsModule: vi.fn(() => mocks.analytics),
     TestinglabSettingsModule: vi.fn(() => mocks.settings),
     TestinglabPermissionModule: vi.fn(() => mocks.permissions),
     ProjectsModule: vi.fn(() => ({})),
@@ -143,7 +144,10 @@ describe('Testing Lab operational queries', () => {
         events: [],
       },
     });
-    mocks.analytics.getTestingAnalyticsExport.mockResolvedValue({ ok: true, data: 'event,applications\nJuly lab,4' });
+    mocks.analytics.getTestingAnalyticsExport.mockResolvedValue({
+      ok: true,
+      data: new NodeBlob(['event,applications\nJuly lab,4'], { type: 'text/csv' }),
+    });
   });
 
   it('loads request details with sessions, participants, and feedback', async () => {
