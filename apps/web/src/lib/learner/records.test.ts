@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
     createServerClient: vi.fn(),
     getLearningCoursesWorkspace: vi.fn(),
+    getApiSocialDiscussion: vi.fn(),
+    getApiSocialDiscussionReplies: vi.fn(),
     getApiCertificatesMy: vi.fn(),
     getProjectsCreator: vi.fn(),
     getToken: vi.fn(),
@@ -25,6 +27,12 @@ vi.mock('@game-guild/client', () => ({
         LearningWorkspacesLearnerworkspaceModule: class {
             getLearningCoursesWorkspace = mocks.getLearningCoursesWorkspace;
         },
+        LearningExperienceSocialDiscussionsModule: class {
+            getApiSocialDiscussions = mocks.getApiSocialDiscussion;
+        },
+        LearningExperienceSocialRepliesModule: class {
+            getApiSocialDiscussionsReplies = mocks.getApiSocialDiscussionReplies;
+        },
         LearningCertificatesModule: class {
             getApiCertificatesMy = mocks.getApiCertificatesMy;
         },
@@ -34,7 +42,7 @@ vi.mock('@game-guild/client', () => ({
     },
 }));
 
-import { getCourseLearnerContext, getMyCertificates, getMyLearnerRecords, getMyProjects } from './records';
+import { getCourseDiscussionThread, getCourseLearnerContext, getMyCertificates, getMyLearnerRecords, getMyProjects } from './records';
 
 describe('learner workspace record adapter', () => {
     beforeEach(() => {
@@ -75,7 +83,7 @@ describe('learner workspace record adapter', () => {
                         status: 'Scheduled',
                     },
                 ],
-                assessmentGroups: [{ groupId: 'group-1', name: 'Final project' }],
+                assessmentGroups: [{ groupId: 'group-1', name: 'Final project', description: 'Capstone', weightPercent: 40, order: 2 }],
                 assessments: [
                     {
                         assessmentId: 'assessment-1',
@@ -109,6 +117,7 @@ describe('learner workspace record adapter', () => {
         });
 
         await expect(getCourseLearnerContext('course-1')).resolves.toMatchObject({
+            assessmentGroups: [{ id: 'group-1', name: 'Final project', description: 'Capstone', weightPercent: 40, order: 2 }],
             enrollmentId: 'enrollment-1',
             cohort: { id: 'cohort-1', name: 'Evening cohort' },
             calendar: [{ itemId: 'schedule-1', title: 'Live critique' }],
@@ -194,6 +203,23 @@ describe('learner workspace record adapter', () => {
             }),
         ]);
         expect(mocks.getLearningCoursesWorkspace).not.toHaveBeenCalled();
+    });
+
+    it('loads a discussion and its replies as one learner thread', async () => {
+        mocks.getApiSocialDiscussion.mockResolvedValue({
+            ok: true,
+            data: { id: 'discussion-1', title: 'Testing approach' },
+        });
+        mocks.getApiSocialDiscussionReplies.mockResolvedValue({
+            ok: true,
+            data: [{ id: 'reply-1', content: 'Start with onboarding.' }],
+        });
+
+        await expect(getCourseDiscussionThread('discussion-1')).resolves.toEqual({
+            discussion: { id: 'discussion-1', title: 'Testing approach' },
+            replies: [{ id: 'reply-1', content: 'Start with onboarding.' }],
+        });
+        expect(mocks.getApiSocialDiscussionReplies).toHaveBeenCalledWith('discussion-1', { take: 200 });
     });
 
     it('keeps certificate and project helpers authenticated', async () => {
