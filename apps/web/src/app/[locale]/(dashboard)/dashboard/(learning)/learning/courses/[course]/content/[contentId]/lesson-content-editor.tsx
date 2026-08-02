@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { lazy, Suspense, useCallback } from 'react';
-import { Label } from '@game-guild/ui/components/label';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { SerializedEditorState } from 'lexical';
-import type { LexicalSurfaceFeatures } from '@/components/block-content-editor/lexical-surface';
+import { lazy, Suspense, useCallback } from "react";
+import { Label } from "@game-guild/ui/components/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { SerializedEditorState } from "lexical";
+import type { LexicalSurfaceFeatures } from "@/components/block-content-editor/lexical-surface";
 
 const LexicalSurface = lazy(async () => {
-  const mod = await import('@/components/block-content-editor/lexical-surface');
+  const mod = await import("@/components/block-content-editor/lexical-surface");
   return { default: mod.LexicalSurface };
 });
 
@@ -51,11 +51,13 @@ interface LessonContentEditorProps {
 }
 
 /** Parse stored body string into a Lexical SerializedEditorState, or null. */
-export function parseLexicalState(raw: string | null | undefined): SerializedEditorState | null {
+export function parseLexicalState(
+  raw: string | null | undefined,
+): SerializedEditorState | null {
   if (!raw || raw.trim().length === 0) return null;
   try {
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object' && 'root' in parsed) {
+    if (parsed && typeof parsed === "object" && "root" in parsed) {
       return parsed as SerializedEditorState;
     }
   } catch {
@@ -73,7 +75,11 @@ function EditorLoadingState() {
   );
 }
 
-export function LessonContentEditor({ itemId, initialState, onChange }: LessonContentEditorProps) {
+export function LessonContentEditor({
+  itemId,
+  initialState,
+  onChange,
+}: LessonContentEditorProps) {
   const handleEditorChange = useCallback(
     (state: SerializedEditorState) => {
       onChange(state);
@@ -94,8 +100,9 @@ export function LessonContentEditor({ itemId, initialState, onChange }: LessonCo
             mountKey={itemId}
             initialState={initialState}
             onChange={handleEditorChange}
+            accessibleLabel="Body"
             placeholder="Start writing your lesson content..."
-            contentStyle={{ minHeight: '400px' }}
+            contentStyle={{ minHeight: "400px" }}
             contentClassName="max-w-none"
             features={LESSON_EDITOR_FEATURES}
           />

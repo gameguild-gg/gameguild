@@ -1,62 +1,139 @@
-'use client';
+"use client";
 
-import { addContent, deleteContent, reorderContent, updateContent } from '@/lib/learning/actions';
-import type { ContentItem, LearningCoursesProgramContentType } from '@/lib/learning/types';
-import type { DragEndEvent } from '@dnd-kit/core';
-import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@game-guild/ui/components/collapsible';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
-import { Input } from '@game-guild/ui/components/input';
-import { Label } from '@game-guild/ui/components/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@game-guild/ui/components/tooltip';
-import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronRight, Clock, Code2, Copy, Edit, FileText, Flag, GripVertical, HelpCircle, Loader2, MessageSquare, Plus, Trash2 } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
-import React, { useEffect, useRef, useState, useTransition } from 'react';
+import {
+  addContent,
+  deleteContent,
+  reorderContent,
+  updateAssessment,
+  updateContent,
+} from "@/lib/learning/actions";
+import type { Assessment } from "@/lib/learning/queries/assessments";
+import type {
+  ContentItem,
+  LearningCoursesProgramContentType,
+} from "@/lib/learning/types";
+import type { DragEndEvent } from "@dnd-kit/core";
+import {
+  closestCenter,
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Badge } from "@game-guild/ui/components/badge";
+import { Button } from "@game-guild/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@game-guild/ui/components/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@game-guild/ui/components/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@game-guild/ui/components/dialog";
+import { Input } from "@game-guild/ui/components/input";
+import { Label } from "@game-guild/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@game-guild/ui/components/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@game-guild/ui/components/tooltip";
+import {
+  ArrowDown,
+  ArrowUp,
+  BookOpen,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Code2,
+  Copy,
+  Edit,
+  FileText,
+  Flag,
+  GripVertical,
+  HelpCircle,
+  Link2,
+  Loader2,
+  MessageSquare,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState, useTransition } from "react";
 
 interface ContentTreeProps {
   courseId: string;
   modules: ContentItem[];
   allItems: ContentItem[];
+  assessments?: Assessment[];
   virtualModuleIds?: string[];
 }
 
-const typeConfig: Record<LearningCoursesProgramContentType, { icon: React.ElementType; label: string }> = {
-  Module: { icon: BookOpen, label: 'Module' },
-  Lesson: { icon: FileText, label: 'Lesson' },
-  Assignment: { icon: FileText, label: 'Assignment' },
-  Questionnaire: { icon: HelpCircle, label: 'Quiz' },
-  Discussion: { icon: MessageSquare, label: 'Discussion' },
-  Code: { icon: Code2, label: 'Code' },
-  Reflection: { icon: BookOpen, label: 'Reflection' },
-  Survey: { icon: HelpCircle, label: 'Survey' },
-  Project: { icon: Flag, label: 'Project' },
+const typeConfig: Record<
+  LearningCoursesProgramContentType,
+  { icon: React.ElementType; label: string }
+> = {
+  Module: { icon: BookOpen, label: "Module" },
+  Lesson: { icon: FileText, label: "Lesson" },
+  Assignment: { icon: FileText, label: "Assignment" },
+  Questionnaire: { icon: HelpCircle, label: "Quiz" },
+  Discussion: { icon: MessageSquare, label: "Discussion" },
+  Code: { icon: Code2, label: "Code" },
+  Reflection: { icon: BookOpen, label: "Reflection" },
+  Survey: { icon: HelpCircle, label: "Survey" },
+  Project: { icon: Flag, label: "Project" },
 };
 
-const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
-  published: 'default',
-  draft: 'secondary',
-  archived: 'outline',
+const statusVariant: Record<string, "default" | "secondary" | "outline"> = {
+  published: "default",
+  draft: "secondary",
+  archived: "outline",
 };
 
 // Lesson types available when adding a new lesson (backend ProgramContentType values)
-const lessonTypes: Array<{ value: LearningCoursesProgramContentType; label: string }> = [
-  { value: 'Lesson', label: 'Lesson' },
-  { value: 'Assignment', label: 'Assignment' },
-  { value: 'Questionnaire', label: 'Quiz' },
-  { value: 'Project', label: 'Project' },
-  { value: 'Discussion', label: 'Discussion' },
-  { value: 'Code', label: 'Code' },
-  { value: 'Reflection', label: 'Reflection' },
-  { value: 'Survey', label: 'Survey' },
+const lessonTypes: Array<{
+  value: LearningCoursesProgramContentType;
+  label: string;
+}> = [
+  { value: "Lesson", label: "Lesson" },
+  { value: "Assignment", label: "Assignment" },
+  { value: "Questionnaire", label: "Quiz" },
+  { value: "Project", label: "Project" },
+  { value: "Discussion", label: "Discussion" },
+  { value: "Code", label: "Code" },
+  { value: "Reflection", label: "Reflection" },
+  { value: "Survey", label: "Survey" },
 ];
 
-function SortableItem({ id, children }: {
+function SortableItem({
+  id,
+  children,
+}: {
   id: string;
   children: (props: {
     ref: (el: HTMLElement | null) => void;
@@ -65,7 +142,14 @@ function SortableItem({ id, children }: {
     isDragging: boolean;
   }) => React.ReactNode;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -79,7 +163,7 @@ function ContentActionButton({
   onClick,
   disabled,
   destructive = false,
-  className = 'size-8',
+  className = "size-8",
 }: {
   label: string;
   icon: React.ElementType;
@@ -95,7 +179,7 @@ function ContentActionButton({
           type="button"
           variant="ghost"
           size="icon"
-          className={`${className} ${destructive ? 'text-destructive hover:text-destructive' : ''}`}
+          className={`${className} ${destructive ? "text-destructive hover:text-destructive" : ""}`}
           onClick={(event) => {
             event.stopPropagation();
             onClick();
@@ -111,13 +195,24 @@ function ContentActionButton({
   );
 }
 
-export function ContentTree({ courseId, modules, allItems, virtualModuleIds = [] }: ContentTreeProps) {
+export function ContentTree({
+  courseId,
+  modules,
+  allItems,
+  assessments = [],
+  virtualModuleIds = [],
+}: ContentTreeProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
-  const [openModules, setOpenModules] = useState<Set<string>>(() => new Set(modules.map((m) => m.id)));
+  const [openModules, setOpenModules] = useState<Set<string>>(
+    () => new Set(modules.map((m) => m.id)),
+  );
   const previousModuleIds = useRef(new Set(modules.map((module) => module.id)));
-  const virtualModuleIdSet = React.useMemo(() => new Set(virtualModuleIds), [virtualModuleIds]);
+  const virtualModuleIdSet = React.useMemo(
+    () => new Set(virtualModuleIds),
+    [virtualModuleIds],
+  );
 
   useEffect(() => {
     const nextModuleIds = new Set(modules.map((module) => module.id));
@@ -135,14 +230,21 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
   }, [modules]);
 
   // Derive the base path for navigation (e.g. /en-US/learning/courses/{id}/content)
-  const contentBasePath = pathname.endsWith('/content') ? pathname : pathname.replace(/\/content\/.*$/, '/content');
+  const contentBasePath = pathname.endsWith("/content")
+    ? pathname
+    : pathname.replace(/\/content\/.*$/, "/content");
 
   const navigateToContentItem = (contentId: string) => {
-    router.push(`${contentBasePath}/${contentId}` as Parameters<typeof router.push>[0]);
+    router.push(
+      `${contentBasePath}/${contentId}` as Parameters<typeof router.push>[0],
+    );
   };
 
-  const isVirtualModule = (moduleId: string) => virtualModuleIdSet.has(moduleId);
-  const normalizeParentId = (parentId: string | null | undefined): string | undefined => {
+  const isVirtualModule = (moduleId: string) =>
+    virtualModuleIdSet.has(moduleId);
+  const normalizeParentId = (
+    parentId: string | null | undefined,
+  ): string | undefined => {
     if (!parentId || virtualModuleIdSet.has(parentId)) {
       return undefined;
     }
@@ -152,30 +254,44 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
 
   // Add Module dialog state
   const [showAddModule, setShowAddModule] = useState(false);
-  const [moduleTitle, setModuleTitle] = useState('');
-  const [moduleDescription, setModuleDescription] = useState('');
+  const [moduleTitle, setModuleTitle] = useState("");
+  const [moduleDescription, setModuleDescription] = useState("");
 
   // Add Lesson dialog state
   const [showAddLesson, setShowAddLesson] = useState(false);
-  const [lessonParentId, setLessonParentId] = useState('');
-  const [lessonTitle, setLessonTitle] = useState('');
-  const [lessonType, setLessonType] = useState<LearningCoursesProgramContentType>('Lesson');
+  const [lessonParentId, setLessonParentId] = useState("");
+  const [lessonTitle, setLessonTitle] = useState("");
+  const [lessonType, setLessonType] =
+    useState<LearningCoursesProgramContentType>("Lesson");
 
   // Delete confirmation state
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string; isModule: boolean } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    title: string;
+    isModule: boolean;
+  } | null>(null);
 
   // Edit module dialog state
   const [editTarget, setEditTarget] = useState<ContentItem | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editDescription, setEditDescription] = useState('');
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
 
-  const [error, setError] = useState('');
+  const [assessmentTarget, setAssessmentTarget] = useState<ContentItem | null>(
+    null,
+  );
+  const [assessmentError, setAssessmentError] = useState("");
+
+  const [error, setError] = useState("");
 
   // Submodule dialog state
-  const [submoduleParentId, setSubmoduleParentId] = useState<string | null>(null);
+  const [submoduleParentId, setSubmoduleParentId] = useState<string | null>(
+    null,
+  );
 
   // DnD sensors
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
 
   function handleModuleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -183,8 +299,12 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
     const oldIndex = modules.findIndex((m) => m.id === active.id);
     const newIndex = modules.findIndex((m) => m.id === over.id);
     if (oldIndex < 0 || newIndex < 0) return;
-    const newIds = arrayMove(modules.map((m) => m.id), oldIndex, newIndex);
-    setError('');
+    const newIds = arrayMove(
+      modules.map((m) => m.id),
+      oldIndex,
+      newIndex,
+    );
+    setError("");
     startTransition(async () => {
       const result = await reorderContent(courseId, newIds);
       if (result.success) {
@@ -202,8 +322,12 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
       const oldIndex = children.findIndex((c) => c.id === active.id);
       const newIndex = children.findIndex((c) => c.id === over.id);
       if (oldIndex < 0 || newIndex < 0) return;
-      const newIds = arrayMove(children.map((c) => c.id), oldIndex, newIndex);
-      setError('');
+      const newIds = arrayMove(
+        children.map((c) => c.id),
+        oldIndex,
+        newIndex,
+      );
+      setError("");
       startTransition(async () => {
         const result = await reorderContent(courseId, newIds);
         if (result.success) {
@@ -217,28 +341,30 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
 
   function openAddSubmoduleDialog(parentId: string) {
     setSubmoduleParentId(parentId);
-    setModuleTitle('');
-    setModuleDescription('');
-    setError('');
+    setModuleTitle("");
+    setModuleDescription("");
+    setError("");
   }
 
   function handleAddSubmodule() {
     if (!moduleTitle.trim() || !submoduleParentId) return;
-    setError('');
-    const parentChildren = allItems.filter((i) => i.parentId === submoduleParentId);
+    setError("");
+    const parentChildren = allItems.filter(
+      (i) => i.parentId === submoduleParentId,
+    );
     startTransition(async () => {
       const result = await addContent({
         courseId,
         parentId: submoduleParentId,
         title: moduleTitle.trim(),
         description: moduleDescription.trim(),
-        type: 'Module',
+        type: "Module",
         sortOrder: parentChildren.length,
       });
       if (result.success) {
         setSubmoduleParentId(null);
-        setModuleTitle('');
-        setModuleDescription('');
+        setModuleTitle("");
+        setModuleDescription("");
         router.refresh();
       } else {
         setError(result.error);
@@ -257,19 +383,19 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
 
   function handleAddModule() {
     if (!moduleTitle.trim()) return;
-    setError('');
+    setError("");
     startTransition(async () => {
       const result = await addContent({
         courseId,
         title: moduleTitle.trim(),
         description: moduleDescription.trim(),
-        type: 'Module',
+        type: "Module",
         sortOrder: modules.length,
       });
       if (result.success) {
         setShowAddModule(false);
-        setModuleTitle('');
-        setModuleDescription('');
+        setModuleTitle("");
+        setModuleDescription("");
         router.refresh();
       } else {
         setError(result.error);
@@ -279,8 +405,10 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
 
   function handleAddLesson() {
     if (!lessonTitle.trim()) return;
-    setError('');
-    const parentChildren = allItems.filter((i) => i.parentId === lessonParentId);
+    setError("");
+    const parentChildren = allItems.filter(
+      (i) => i.parentId === lessonParentId,
+    );
     startTransition(async () => {
       const result = await addContent({
         courseId,
@@ -291,8 +419,8 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
       });
       if (result.success) {
         setShowAddLesson(false);
-        setLessonTitle('');
-        setLessonType('Lesson');
+        setLessonTitle("");
+        setLessonType("Lesson");
         router.refresh();
       } else {
         setError(result.error);
@@ -302,7 +430,7 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
 
   function handleDelete() {
     if (!deleteTarget) return;
-    setError('');
+    setError("");
     startTransition(async () => {
       const result = await deleteContent(courseId, deleteTarget.id);
       if (result.success) {
@@ -316,22 +444,22 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
 
   function openAddLessonDialog(parentId: string) {
     setLessonParentId(parentId);
-    setLessonTitle('');
-    setLessonType('Lesson' as LearningCoursesProgramContentType);
-    setError('');
+    setLessonTitle("");
+    setLessonType("Lesson" as LearningCoursesProgramContentType);
+    setError("");
     setShowAddLesson(true);
   }
 
   function openEditModuleDialog(item: ContentItem) {
     setEditTarget(item);
     setEditTitle(item.title);
-    setEditDescription(item.description ?? '');
-    setError('');
+    setEditDescription(item.description ?? "");
+    setError("");
   }
 
   function handleEditModule() {
     if (!editTarget || !editTitle.trim()) return;
-    setError('');
+    setError("");
     startTransition(async () => {
       const result = await updateContent({
         courseId,
@@ -348,8 +476,33 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
     });
   }
 
+  function openAssessmentDialog(item: ContentItem) {
+    setAssessmentTarget(item);
+    setAssessmentError("");
+  }
+
+  function handleAssessmentLink(assessment: Assessment) {
+    if (!assessmentTarget) return;
+    const isLinkedToTarget = assessment.contentId === assessmentTarget.id;
+    setAssessmentError("");
+    startTransition(async () => {
+      const result = await updateAssessment({
+        courseId,
+        assessmentId: assessment.id,
+        contentId: isLinkedToTarget ? null : assessmentTarget.id,
+        ...(isLinkedToTarget ? { clearContentId: true } : {}),
+      });
+      if (result.success) {
+        setAssessmentTarget(null);
+        router.refresh();
+      } else {
+        setAssessmentError(result.error);
+      }
+    });
+  }
+
   function handleDuplicate(item: ContentItem) {
-    setError('');
+    setError("");
     startTransition(async () => {
       const result = await addContent({
         courseId,
@@ -366,14 +519,14 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
     });
   }
 
-  function handleMoveModule(moduleId: string, direction: 'up' | 'down') {
+  function handleMoveModule(moduleId: string, direction: "up" | "down") {
     const ids = modules.map((m) => m.id);
     const idx = ids.indexOf(moduleId);
     if (idx < 0) return;
-    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
     if (swapIdx < 0 || swapIdx >= ids.length) return;
     [ids[idx], ids[swapIdx]] = [ids[swapIdx], ids[idx]];
-    setError('');
+    setError("");
     startTransition(async () => {
       const result = await reorderContent(courseId, ids);
       if (result.success) {
@@ -384,17 +537,21 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
     });
   }
 
-  function handleMoveLesson(parentId: string, itemId: string, direction: 'up' | 'down') {
+  function handleMoveLesson(
+    parentId: string,
+    itemId: string,
+    direction: "up" | "down",
+  ) {
     const siblings = allItems
       .filter((i) => i.parentId === parentId)
       .sort((a, b) => a.order - b.order);
     const ids = siblings.map((s) => s.id);
     const idx = ids.indexOf(itemId);
     if (idx < 0) return;
-    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
     if (swapIdx < 0 || swapIdx >= ids.length) return;
     [ids[idx], ids[swapIdx]] = [ids[swapIdx], ids[idx]];
-    setError('');
+    setError("");
     startTransition(async () => {
       const result = await reorderContent(courseId, ids);
       if (result.success) {
@@ -407,11 +564,20 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
 
   return (
     <>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleModuleDragEnd}>
-        <SortableContext items={modules.map((m) => m.id)} strategy={verticalListSortingStrategy}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleModuleDragEnd}
+      >
+        <SortableContext
+          items={modules.map((m) => m.id)}
+          strategy={verticalListSortingStrategy}
+        >
           <div className="space-y-4">
             {modules.map((module, index) => {
-              const children = allItems.filter((i) => i.parentId === module.id).sort((a, b) => a.order - b.order);
+              const children = allItems
+                .filter((i) => i.parentId === module.id)
+                .sort((a, b) => a.order - b.order);
               const isOpen = openModules.has(module.id);
               const moduleIsVirtual = isVirtualModule(module.id);
 
@@ -419,33 +585,106 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
                 <SortableItem key={module.id} id={module.id}>
                   {({ ref, style, listeners, isDragging }) => (
                     <div ref={ref} style={style}>
-                      <Collapsible open={isOpen} onOpenChange={() => toggleModule(module.id)}>
-                        <Card className={isDragging ? 'opacity-50' : ''}>
+                      <Collapsible
+                        open={isOpen}
+                        onOpenChange={() => toggleModule(module.id)}
+                      >
+                        <Card className={isDragging ? "opacity-50" : ""}>
                           <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                            <button type="button" className="cursor-grab touch-none" {...listeners}>
+                            <button
+                              type="button"
+                              className="cursor-grab touch-none"
+                              {...listeners}
+                            >
                               <GripVertical className="size-5 text-muted-foreground" />
                             </button>
                             <CollapsibleTrigger asChild>
-                              <Button variant="ghost" size="icon" className="size-8">
-                                {isOpen ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                              >
+                                {isOpen ? (
+                                  <ChevronDown className="size-4" />
+                                ) : (
+                                  <ChevronRight className="size-4" />
+                                )}
                               </Button>
                             </CollapsibleTrigger>
-                            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">{index + 1}</div>
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
+                              {index + 1}
+                            </div>
                             <div className="flex-1">
-                              <CardTitle className="text-base">{module.title}</CardTitle>
-                              {module.description && <CardDescription className="mt-0.5 text-xs">{module.description}</CardDescription>}
+                              <CardTitle className="text-base">
+                                {module.title}
+                              </CardTitle>
+                              {module.description && (
+                                <CardDescription className="mt-0.5 text-xs">
+                                  {module.description}
+                                </CardDescription>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge variant={statusVariant[module.status] ?? 'outline'}>{module.status}</Badge>
-                              <span className="text-xs text-muted-foreground">{children.length} items</span>
+                              <Badge
+                                variant={
+                                  statusVariant[module.status] ?? "outline"
+                                }
+                              >
+                                {module.status}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {children.length} items
+                              </span>
                               {!moduleIsVirtual && (
                                 <div className="flex items-center gap-1">
-                                  <ContentActionButton label="Edit module" icon={Edit} onClick={() => openEditModuleDialog(module)} />
-                                  <ContentActionButton label="Duplicate module" icon={Copy} onClick={() => handleDuplicate(module)} disabled={isPending} />
-                                  <ContentActionButton label="Add submodule" icon={Plus} onClick={() => openAddSubmoduleDialog(module.id)} />
-                                  <ContentActionButton label="Move module up" icon={ArrowUp} onClick={() => handleMoveModule(module.id, 'up')} disabled={isPending || index === 0} />
-                                  <ContentActionButton label="Move module down" icon={ArrowDown} onClick={() => handleMoveModule(module.id, 'down')} disabled={isPending || index === modules.length - 1} />
-                                  <ContentActionButton label="Delete module" icon={Trash2} onClick={() => setDeleteTarget({ id: module.id, title: module.title, isModule: true })} destructive />
+                                  <ContentActionButton
+                                    label="Edit module"
+                                    icon={Edit}
+                                    onClick={() => openEditModuleDialog(module)}
+                                  />
+                                  <ContentActionButton
+                                    label="Duplicate module"
+                                    icon={Copy}
+                                    onClick={() => handleDuplicate(module)}
+                                    disabled={isPending}
+                                  />
+                                  <ContentActionButton
+                                    label="Add submodule"
+                                    icon={Plus}
+                                    onClick={() =>
+                                      openAddSubmoduleDialog(module.id)
+                                    }
+                                  />
+                                  <ContentActionButton
+                                    label="Move module up"
+                                    icon={ArrowUp}
+                                    onClick={() =>
+                                      handleMoveModule(module.id, "up")
+                                    }
+                                    disabled={isPending || index === 0}
+                                  />
+                                  <ContentActionButton
+                                    label="Move module down"
+                                    icon={ArrowDown}
+                                    onClick={() =>
+                                      handleMoveModule(module.id, "down")
+                                    }
+                                    disabled={
+                                      isPending || index === modules.length - 1
+                                    }
+                                  />
+                                  <ContentActionButton
+                                    label="Delete module"
+                                    icon={Trash2}
+                                    onClick={() =>
+                                      setDeleteTarget({
+                                        id: module.id,
+                                        title: module.title,
+                                        isModule: true,
+                                      })
+                                    }
+                                    destructive
+                                  />
                                 </div>
                               )}
                             </div>
@@ -453,76 +692,283 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
                           <CollapsibleContent>
                             <CardContent className="pt-0">
                               {children.length === 0 ? (
-                                <p className="py-4 text-center text-sm text-muted-foreground">No content items yet</p>
+                                <p className="py-4 text-center text-sm text-muted-foreground">
+                                  No content items yet
+                                </p>
                               ) : (
-                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={makeLessonDragEnd(module.id, children)}>
-                                  <SortableContext items={children.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                                <DndContext
+                                  sensors={sensors}
+                                  collisionDetection={closestCenter}
+                                  onDragEnd={makeLessonDragEnd(
+                                    module.id,
+                                    children,
+                                  )}
+                                >
+                                  <SortableContext
+                                    items={children.map((c) => c.id)}
+                                    strategy={verticalListSortingStrategy}
+                                  >
                                     <div className="divide-y rounded-lg border">
                                       {children.map((item, itemIndex) => {
-                                        const subchildren = allItems.filter((i) => i.parentId === item.id).sort((a, b) => a.order - b.order);
-                                        const isSubmodule = subchildren.length > 0;
-                                        const config = typeConfig[item.type] ?? { icon: FileText, label: item.type };
+                                        const subchildren = allItems
+                                          .filter((i) => i.parentId === item.id)
+                                          .sort((a, b) => a.order - b.order);
+                                        const linkedAssessments =
+                                          assessments.filter(
+                                            (assessment) =>
+                                              assessment.contentId === item.id,
+                                          );
+                                        const isSubmodule =
+                                          subchildren.length > 0;
+                                        const config = typeConfig[
+                                          item.type
+                                        ] ?? {
+                                          icon: FileText,
+                                          label: item.type,
+                                        };
                                         const Icon = config.icon;
                                         return (
-                                          <SortableItem key={item.id} id={item.id}>
-                                            {({ ref: itemRef, style: itemStyle, listeners: itemListeners, isDragging: itemDragging }) => (
-                                              <div ref={itemRef} style={itemStyle}>
-                                                <div className={`group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50 ${itemDragging ? 'opacity-50' : ''}`}>
-                                                  <button type="button" className="cursor-grab touch-none" {...itemListeners}>
+                                          <SortableItem
+                                            key={item.id}
+                                            id={item.id}
+                                          >
+                                            {({
+                                              ref: itemRef,
+                                              style: itemStyle,
+                                              listeners: itemListeners,
+                                              isDragging: itemDragging,
+                                            }) => (
+                                              <div
+                                                ref={itemRef}
+                                                style={itemStyle}
+                                              >
+                                                <div
+                                                  className={`group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50 ${itemDragging ? "opacity-50" : ""}`}
+                                                >
+                                                  <button
+                                                    type="button"
+                                                    className="cursor-grab touch-none"
+                                                    {...itemListeners}
+                                                  >
                                                     <GripVertical className="size-4 text-muted-foreground/50" />
                                                   </button>
                                                   <div className="flex size-8 items-center justify-center rounded bg-muted">
                                                     <Icon className="size-4 text-muted-foreground" />
                                                   </div>
                                                   <div className="flex-1">
-                                                    <p className="text-sm font-medium">{item.title}</p>
+                                                    <p className="text-sm font-medium">
+                                                      {item.title}
+                                                    </p>
+                                                    {linkedAssessments.length >
+                                                      0 && (
+                                                      <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                                                        <Link2
+                                                          className="size-3"
+                                                          aria-hidden="true"
+                                                        />
+                                                        {linkedAssessments
+                                                          .map(
+                                                            (assessment) =>
+                                                              assessment.title,
+                                                          )
+                                                          .join(", ")}
+                                                      </p>
+                                                    )}
                                                     {isSubmodule && (
-                                                      <p className="text-xs text-muted-foreground">{subchildren.length} sub-items</p>
+                                                      <p className="text-xs text-muted-foreground">
+                                                        {subchildren.length}{" "}
+                                                        sub-items
+                                                      </p>
                                                     )}
                                                   </div>
-                                                  <Badge variant="outline" className="text-xs capitalize">
+                                                  <Badge
+                                                    variant="outline"
+                                                    className="text-xs capitalize"
+                                                  >
                                                     {config.label}
                                                   </Badge>
-                                                  <Badge variant={statusVariant[item.status] ?? 'outline'} className="text-xs">
+                                                  <Badge
+                                                    variant={
+                                                      statusVariant[
+                                                        item.status
+                                                      ] ?? "outline"
+                                                    }
+                                                    className="text-xs"
+                                                  >
                                                     {item.status}
                                                   </Badge>
-                                                  {item.duration != null && item.duration > 0 && (
-                                                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                      <Clock className="size-3" />
-                                                      {item.duration}m
-                                                    </span>
-                                                  )}
+                                                  {item.duration != null &&
+                                                    item.duration > 0 && (
+                                                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                        <Clock className="size-3" />
+                                                        {item.duration}m
+                                                      </span>
+                                                    )}
                                                   <div className="flex items-center gap-1">
-                                                    <ContentActionButton label={`Edit ${config.label}`} icon={Edit} onClick={() => navigateToContentItem(item.id)} className="size-7" />
-                                                    <ContentActionButton label="Duplicate" icon={Copy} onClick={() => handleDuplicate(item)} disabled={isPending} className="size-7" />
-                                                    <ContentActionButton label="Move up" icon={ArrowUp} onClick={() => handleMoveLesson(module.id, item.id, 'up')} disabled={isPending || itemIndex === 0} className="size-7" />
-                                                    <ContentActionButton label="Move down" icon={ArrowDown} onClick={() => handleMoveLesson(module.id, item.id, 'down')} disabled={isPending || itemIndex === children.length - 1} className="size-7" />
-                                                    <ContentActionButton label="Delete" icon={Trash2} onClick={() => setDeleteTarget({ id: item.id, title: item.title, isModule: false })} destructive className="size-7" />
+                                                    <ContentActionButton
+                                                      label={`Edit ${config.label}`}
+                                                      icon={Edit}
+                                                      onClick={() =>
+                                                        navigateToContentItem(
+                                                          item.id,
+                                                        )
+                                                      }
+                                                      className="size-7"
+                                                    />
+                                                    <ContentActionButton
+                                                      label={
+                                                        linkedAssessments.length >
+                                                        0
+                                                          ? "Manage assessments"
+                                                          : "Attach assessment"
+                                                      }
+                                                      icon={Link2}
+                                                      onClick={() =>
+                                                        openAssessmentDialog(
+                                                          item,
+                                                        )
+                                                      }
+                                                      className="size-7"
+                                                    />
+                                                    <ContentActionButton
+                                                      label="Duplicate"
+                                                      icon={Copy}
+                                                      onClick={() =>
+                                                        handleDuplicate(item)
+                                                      }
+                                                      disabled={isPending}
+                                                      className="size-7"
+                                                    />
+                                                    <ContentActionButton
+                                                      label="Move up"
+                                                      icon={ArrowUp}
+                                                      onClick={() =>
+                                                        handleMoveLesson(
+                                                          module.id,
+                                                          item.id,
+                                                          "up",
+                                                        )
+                                                      }
+                                                      disabled={
+                                                        isPending ||
+                                                        itemIndex === 0
+                                                      }
+                                                      className="size-7"
+                                                    />
+                                                    <ContentActionButton
+                                                      label="Move down"
+                                                      icon={ArrowDown}
+                                                      onClick={() =>
+                                                        handleMoveLesson(
+                                                          module.id,
+                                                          item.id,
+                                                          "down",
+                                                        )
+                                                      }
+                                                      disabled={
+                                                        isPending ||
+                                                        itemIndex ===
+                                                          children.length - 1
+                                                      }
+                                                      className="size-7"
+                                                    />
+                                                    <ContentActionButton
+                                                      label="Delete"
+                                                      icon={Trash2}
+                                                      onClick={() =>
+                                                        setDeleteTarget({
+                                                          id: item.id,
+                                                          title: item.title,
+                                                          isModule: false,
+                                                        })
+                                                      }
+                                                      destructive
+                                                      className="size-7"
+                                                    />
                                                   </div>
                                                 </div>
                                                 {isSubmodule && (
                                                   <div className="ml-8 border-l pl-4 pb-2">
                                                     {subchildren.map((sub) => {
-                                                      const subConfig = typeConfig[sub.type] ?? { icon: FileText, label: sub.type };
-                                                      const SubIcon = subConfig.icon;
+                                                      const subConfig =
+                                                        typeConfig[
+                                                          sub.type
+                                                        ] ?? {
+                                                          icon: FileText,
+                                                          label: sub.type,
+                                                        };
+                                                      const SubIcon =
+                                                        subConfig.icon;
                                                       return (
-                                                        <div key={sub.id} className="group flex items-center gap-3 px-4 py-2 transition-colors hover:bg-muted/30">
+                                                        <div
+                                                          key={sub.id}
+                                                          className="group flex items-center gap-3 px-4 py-2 transition-colors hover:bg-muted/30"
+                                                        >
                                                           <div className="flex size-6 items-center justify-center rounded bg-muted">
                                                             <SubIcon className="size-3 text-muted-foreground" />
                                                           </div>
                                                           <div className="flex-1">
-                                                            <p className="text-sm">{sub.title}</p>
+                                                            <p className="text-sm">
+                                                              {sub.title}
+                                                            </p>
                                                           </div>
-                                                          <Badge variant="outline" className="text-xs">{subConfig.label}</Badge>
-                                                          <Badge variant={statusVariant[sub.status] ?? 'outline'} className="text-xs">{sub.status}</Badge>
+                                                          <Badge
+                                                            variant="outline"
+                                                            className="text-xs"
+                                                          >
+                                                            {subConfig.label}
+                                                          </Badge>
+                                                          <Badge
+                                                            variant={
+                                                              statusVariant[
+                                                                sub.status
+                                                              ] ?? "outline"
+                                                            }
+                                                            className="text-xs"
+                                                          >
+                                                            {sub.status}
+                                                          </Badge>
                                                           <div className="flex items-center gap-1">
-                                                            <ContentActionButton label="Edit" icon={Edit} onClick={() => navigateToContentItem(sub.id)} className="size-6" />
-                                                            <ContentActionButton label="Delete" icon={Trash2} onClick={() => setDeleteTarget({ id: sub.id, title: sub.title, isModule: false })} destructive className="size-6" />
+                                                            <ContentActionButton
+                                                              label="Edit"
+                                                              icon={Edit}
+                                                              onClick={() =>
+                                                                navigateToContentItem(
+                                                                  sub.id,
+                                                                )
+                                                              }
+                                                              className="size-6"
+                                                            />
+                                                            <ContentActionButton
+                                                              label="Delete"
+                                                              icon={Trash2}
+                                                              onClick={() =>
+                                                                setDeleteTarget(
+                                                                  {
+                                                                    id: sub.id,
+                                                                    title:
+                                                                      sub.title,
+                                                                    isModule: false,
+                                                                  },
+                                                                )
+                                                              }
+                                                              destructive
+                                                              className="size-6"
+                                                            />
                                                           </div>
                                                         </div>
                                                       );
                                                     })}
-                                                    <Button variant="ghost" size="sm" className="mt-1 w-full text-xs text-muted-foreground" onClick={() => openAddLessonDialog(item.id)}>
+                                                    <Button
+                                                      variant="ghost"
+                                                      size="sm"
+                                                      className="mt-1 w-full text-xs text-muted-foreground"
+                                                      onClick={() =>
+                                                        openAddLessonDialog(
+                                                          item.id,
+                                                        )
+                                                      }
+                                                    >
                                                       <Plus className="mr-1 size-3" />
                                                       Add to {item.title}
                                                     </Button>
@@ -537,9 +983,16 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
                                   </SortableContext>
                                 </DndContext>
                               )}
-                              <Button variant="ghost" size="sm" className="mt-2 w-full text-muted-foreground" onClick={() => openAddLessonDialog(module.id)}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="mt-2 w-full text-muted-foreground"
+                                onClick={() => openAddLessonDialog(module.id)}
+                              >
                                 <Plus className="mr-2 size-4" />
-                                {moduleIsVirtual ? 'Add Content Item' : 'Add Lesson'}
+                                {moduleIsVirtual
+                                  ? "Add Content Item"
+                                  : "Add Lesson"}
                               </Button>
                             </CardContent>
                           </CollapsibleContent>
@@ -552,7 +1005,16 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
             })}
 
             {/* Add Module button at the bottom */}
-            <Button variant="outline" className="w-full border-dashed" onClick={() => { setModuleTitle(''); setModuleDescription(''); setError(''); setShowAddModule(true); }}>
+            <Button
+              variant="outline"
+              className="w-full border-dashed"
+              onClick={() => {
+                setModuleTitle("");
+                setModuleDescription("");
+                setError("");
+                setShowAddModule(true);
+              }}
+            >
               <Plus className="mr-2 size-4" />
               Add Module
             </Button>
@@ -561,26 +1023,112 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
       </DndContext>
 
       {/* ── Add Module Dialog ── */}
+      <Dialog
+        open={assessmentTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setAssessmentTarget(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Attach assessment</DialogTitle>
+            <DialogDescription>
+              Link graded work to {assessmentTarget?.title}. Select a linked
+              assessment again to detach it.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            {assessments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Create an assessment before linking graded work to this lesson.
+              </p>
+            ) : (
+              assessments.map((assessment) => {
+                const isLinkedToTarget =
+                  assessment.contentId === assessmentTarget?.id;
+                const isLinkedElsewhere =
+                  Boolean(assessment.contentId) && !isLinkedToTarget;
+                return (
+                  <Button
+                    key={assessment.id}
+                    type="button"
+                    variant={isLinkedToTarget ? "secondary" : "outline"}
+                    className="h-auto w-full justify-between gap-3 py-3 text-left"
+                    disabled={isPending || isLinkedElsewhere}
+                    onClick={() => handleAssessmentLink(assessment)}
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">
+                        {assessment.title}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {isLinkedToTarget
+                          ? "Linked to this lesson"
+                          : isLinkedElsewhere
+                            ? "Linked to another lesson"
+                            : assessment.type +
+                              " / " +
+                              assessment.maxScore +
+                              " points"}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-xs">
+                      {isLinkedToTarget ? "Detach" : "Attach"}
+                    </span>
+                  </Button>
+                );
+              })
+            )}
+            {assessmentError && (
+              <p className="text-sm text-destructive">{assessmentError}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssessmentTarget(null)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showAddModule} onOpenChange={setShowAddModule}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Module</DialogTitle>
-            <DialogDescription>Create a new module to organize your course content.</DialogDescription>
+            <DialogDescription>
+              Create a new module to organize your course content.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="module-title">Title</Label>
-              <Input id="module-title" placeholder="e.g. Introduction to Game Design" value={moduleTitle} onChange={(e) => setModuleTitle(e.target.value)} autoFocus />
+              <Input
+                id="module-title"
+                placeholder="e.g. Introduction to Game Design"
+                value={moduleTitle}
+                onChange={(e) => setModuleTitle(e.target.value)}
+                autoFocus
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="module-desc">Description (optional)</Label>
-              <Input id="module-desc" placeholder="Brief description of this module" value={moduleDescription} onChange={(e) => setModuleDescription(e.target.value)} />
+              <Input
+                id="module-desc"
+                placeholder="Brief description of this module"
+                value={moduleDescription}
+                onChange={(e) => setModuleDescription(e.target.value)}
+              />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddModule(false)}>Cancel</Button>
-            <Button onClick={handleAddModule} disabled={!moduleTitle.trim() || isPending}>
+            <Button variant="outline" onClick={() => setShowAddModule(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddModule}
+              disabled={!moduleTitle.trim() || isPending}
+            >
               {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
               Add Module
             </Button>
@@ -593,22 +1141,37 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Lesson</DialogTitle>
-            <DialogDescription>Add a lesson or course activity to this module.</DialogDescription>
+            <DialogDescription>
+              Add a lesson or course activity to this module.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="lesson-title">Title</Label>
-              <Input id="lesson-title" placeholder="e.g. Setting Up Your Environment" value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} autoFocus />
+              <Input
+                id="lesson-title"
+                placeholder="e.g. Setting Up Your Environment"
+                value={lessonTitle}
+                onChange={(e) => setLessonTitle(e.target.value)}
+                autoFocus
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="lesson-type">Type</Label>
-              <Select value={lessonType} onValueChange={(v) => setLessonType(v as LearningCoursesProgramContentType)}>
+              <Select
+                value={lessonType}
+                onValueChange={(v) =>
+                  setLessonType(v as LearningCoursesProgramContentType)
+                }
+              >
                 <SelectTrigger id="lesson-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {lessonTypes.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -616,8 +1179,13 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddLesson(false)}>Cancel</Button>
-            <Button onClick={handleAddLesson} disabled={!lessonTitle.trim() || isPending}>
+            <Button variant="outline" onClick={() => setShowAddLesson(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddLesson}
+              disabled={!lessonTitle.trim() || isPending}
+            >
               {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
               Add Lesson
             </Button>
@@ -626,20 +1194,35 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
       </Dialog>
 
       {/* ── Delete Confirmation Dialog ── */}
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete {deleteTarget?.isModule ? 'Module' : 'Item'}</DialogTitle>
+            <DialogTitle>
+              Delete {deleteTarget?.isModule ? "Module" : "Item"}
+            </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{deleteTarget?.title}&rdquo;?
-              {deleteTarget?.isModule && ' All lessons within this module will also be deleted.'}
-              {' '}This action cannot be undone.
+              Are you sure you want to delete &ldquo;{deleteTarget?.title}
+              &rdquo;?
+              {deleteTarget?.isModule &&
+                " All lessons within this module will also be deleted."}{" "}
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isPending}
+            >
               {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
               Delete
             </Button>
@@ -648,26 +1231,47 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
       </Dialog>
 
       {/* ── Edit Module Dialog ── */}
-      <Dialog open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }}>
+      <Dialog
+        open={!!editTarget}
+        onOpenChange={(open) => {
+          if (!open) setEditTarget(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Module</DialogTitle>
-            <DialogDescription>Update the module title and description.</DialogDescription>
+            <DialogDescription>
+              Update the module title and description.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="edit-module-title">Title</Label>
-              <Input id="edit-module-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} autoFocus />
+              <Input
+                id="edit-module-title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                autoFocus
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="edit-module-desc">Description (optional)</Label>
-              <Input id="edit-module-desc" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+              <Input
+                id="edit-module-desc"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+              />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditTarget(null)}>Cancel</Button>
-            <Button onClick={handleEditModule} disabled={!editTitle.trim() || isPending}>
+            <Button variant="outline" onClick={() => setEditTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditModule}
+              disabled={!editTitle.trim() || isPending}
+            >
               {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
               Save Changes
             </Button>
@@ -676,33 +1280,58 @@ export function ContentTree({ courseId, modules, allItems, virtualModuleIds = []
       </Dialog>
 
       {/* ── Add Submodule Dialog ── */}
-      <Dialog open={submoduleParentId !== null} onOpenChange={(open) => { if (!open) setSubmoduleParentId(null); }}>
+      <Dialog
+        open={submoduleParentId !== null}
+        onOpenChange={(open) => {
+          if (!open) setSubmoduleParentId(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Submodule</DialogTitle>
-            <DialogDescription>Create a submodule to further organize content within this module.</DialogDescription>
+            <DialogDescription>
+              Create a submodule to further organize content within this module.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="submodule-title">Title</Label>
-              <Input id="submodule-title" placeholder="e.g. Part A: Fundamentals" value={moduleTitle} onChange={(e) => setModuleTitle(e.target.value)} autoFocus />
+              <Input
+                id="submodule-title"
+                placeholder="e.g. Part A: Fundamentals"
+                value={moduleTitle}
+                onChange={(e) => setModuleTitle(e.target.value)}
+                autoFocus
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="submodule-desc">Description (optional)</Label>
-              <Input id="submodule-desc" placeholder="Brief description of this submodule" value={moduleDescription} onChange={(e) => setModuleDescription(e.target.value)} />
+              <Input
+                id="submodule-desc"
+                placeholder="Brief description of this submodule"
+                value={moduleDescription}
+                onChange={(e) => setModuleDescription(e.target.value)}
+              />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSubmoduleParentId(null)}>Cancel</Button>
-            <Button onClick={handleAddSubmodule} disabled={!moduleTitle.trim() || isPending}>
+            <Button
+              variant="outline"
+              onClick={() => setSubmoduleParentId(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddSubmodule}
+              disabled={!moduleTitle.trim() || isPending}
+            >
               {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
               Add Submodule
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </>
   );
 }

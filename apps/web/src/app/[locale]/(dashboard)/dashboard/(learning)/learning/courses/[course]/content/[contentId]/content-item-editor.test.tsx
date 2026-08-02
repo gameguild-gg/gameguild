@@ -1,13 +1,14 @@
-import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ContentItemEditor } from './content-item-editor';
-import { updateContent } from '@/lib/learning/actions';
-import type { ContentItemDetail } from '@/lib/learning/types';
+import "@testing-library/jest-dom/vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ContentItemEditor } from "./content-item-editor";
+import { updateContent } from "@/lib/learning/actions";
+import type { ContentItemDetail } from "@/lib/learning/types";
 
 const routerMocks = vi.hoisted(() => ({
   back: vi.fn(),
+  push: vi.fn(),
   refresh: vi.fn(),
 }));
 
@@ -24,95 +25,135 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   useRouter: () => routerMocks,
 }));
 
-vi.mock('@/lib/learning/actions', () => ({
+vi.mock("@/lib/learning/actions", () => ({
   updateContent: vi.fn(),
 }));
 
 const item = {
-  id: 'content-1',
-  parentId: 'module-1',
+  id: "content-1",
+  parentId: "module-1",
   order: 1,
-  type: 'Questionnaire',
-  title: 'Intro quiz',
-  description: 'First knowledge check.',
-  status: 'published',
+  type: "Questionnaire",
+  title: "Intro quiz",
+  description: "First knowledge check.",
+  status: "published",
   duration: 20,
   metadata: {},
-  content: '<p>Answer all questions.</p>',
+  content: "<p>Answer all questions.</p>",
   settings: { isRequired: true },
-  createdAt: '2026-01-01T00:00:00.000Z',
-  updatedAt: '2026-01-02T00:00:00.000Z',
+  createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-02T00:00:00.000Z",
 } satisfies ContentItemDetail;
 
-describe('ContentItemEditor', () => {
+describe("ContentItemEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(updateContent).mockResolvedValue({ success: true, data: null });
   });
 
-  it('renders quiz-publication copy and normalizes questionnaire to quiz', () => {
-    render(<ContentItemEditor courseId="course-1" item={item} courseTitle="Advanced Game AI" />);
+  it("renders quiz-publication copy and normalizes questionnaire to quiz", () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
 
-    expect(screen.getByRole('heading', { name: 'Intro quiz' })).toBeInTheDocument();
-    expect(screen.getByText('Advanced Game AI')).toBeInTheDocument();
-    expect(screen.getByText('Quiz')).toBeInTheDocument();
-    expect(screen.getByText('Quiz content')).toBeInTheDocument();
-    expect(screen.getByText('Quiz publication')).toBeInTheDocument();
-    expect(screen.getByText(/Public course landing-page visibility is managed in Listing/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Intro quiz" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Advanced Game AI")).toBeInTheDocument();
+    expect(screen.getByText("Quiz")).toBeInTheDocument();
+    expect(screen.getByText("Quiz content")).toBeInTheDocument();
+    expect(screen.getByText("Quiz publication")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Public course landing-page visibility is managed in Listing/i,
+      ),
+    ).toBeInTheDocument();
   });
 
-  it('validates title before updating lesson content', async () => {
+  it("validates title before updating lesson content", async () => {
     const user = userEvent.setup();
-    render(<ContentItemEditor courseId="course-1" item={item} courseTitle="Advanced Game AI" />);
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
 
     await user.clear(screen.getByLabelText(/^title$/i));
-    await user.click(screen.getByRole('button', { name: /save changes/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
 
-    expect(await screen.findByText('Title is required.')).toBeInTheDocument();
+    expect(await screen.findByText("Title is required.")).toBeInTheDocument();
     expect(updateContent).not.toHaveBeenCalled();
   });
 
-  it('saves edited quiz metadata and refreshes the dashboard route', async () => {
+  it("saves edited quiz metadata and refreshes the dashboard route", async () => {
     const user = userEvent.setup();
-    render(<ContentItemEditor courseId="course-1" item={item} courseTitle="Advanced Game AI" />);
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
 
     await user.clear(screen.getByLabelText(/^title$/i));
-    await user.type(screen.getByLabelText(/^title$/i), 'Updated quiz');
-    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Updated description.' } });
-    fireEvent.change(screen.getByLabelText(/estimated minutes/i), { target: { value: '35' } });
+    await user.type(screen.getByLabelText(/^title$/i), "Updated quiz");
+    fireEvent.change(screen.getByLabelText(/description/i), {
+      target: { value: "Updated description." },
+    });
+    fireEvent.change(screen.getByLabelText(/estimated minutes/i), {
+      target: { value: "35" },
+    });
 
-    await user.click(screen.getByRole('button', { name: /save changes/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
       expect(updateContent).toHaveBeenCalledWith({
-        courseId: 'course-1',
-        contentId: 'content-1',
-        title: 'Updated quiz',
-        description: 'Updated description.',
-        body: '<p>Answer all questions.</p>',
-        visibility: 'Public',
+        courseId: "course-1",
+        contentId: "content-1",
+        title: "Updated quiz",
+        description: "Updated description.",
+        body: "<p>Answer all questions.</p>",
+        visibility: "Public",
         isRequired: true,
         estimatedMinutes: 35,
       });
     });
     expect(routerMocks.refresh).toHaveBeenCalled();
-    expect(screen.getByText('Saved successfully.')).toBeInTheDocument();
+    expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
   });
 
-  it('shows update errors and routes cancel/back through the dashboard router', async () => {
+  it("shows update errors and routes cancel back to the course content deterministically", async () => {
     const user = userEvent.setup();
-    vi.mocked(updateContent).mockResolvedValueOnce({ success: false, error: 'Bad Request' });
+    vi.mocked(updateContent).mockResolvedValueOnce({
+      success: false,
+      error: "Bad Request",
+    });
 
-    render(<ContentItemEditor courseId="course-1" item={item} courseTitle="Advanced Game AI" />);
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
 
-    await user.click(screen.getByRole('button', { name: /save changes/i }));
-    expect(await screen.findByText('Bad Request')).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+    expect(await screen.findByText("Bad Request")).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /^cancel$/i }));
-    expect(routerMocks.back).toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: /^cancel$/i }));
+    expect(routerMocks.push).toHaveBeenCalledWith(
+      "/dashboard/learning/courses/course-1/content",
+    );
+    expect(routerMocks.back).not.toHaveBeenCalled();
   });
 });
