@@ -1,3 +1,4 @@
+using GameGuild.CQRS.Models;
 using GameGuild.Identity.Authorization;
 
 namespace GameGuild.TestingLab;
@@ -147,12 +148,17 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
     }
 
     if (tenantId.HasValue) {
+      var resourceTenantId = new TenantId(tenantId.Value);
       var resourcePermissions = await context.Set<ResourceUserPermission>()
         .Where(permission =>
-          permission.TenantId.Value == tenantId.Value &&
+          permission.TenantId == resourceTenantId &&
           permission.UserId == userId &&
           permission.RevokedAt == null &&
-          TestingLabResourceTypes.All.Contains(permission.ResourceType))
+          (permission.ResourceType == TestingLabResourceTypes.Session ||
+           permission.ResourceType == TestingLabResourceTypes.Location ||
+           permission.ResourceType == TestingLabResourceTypes.Feedback ||
+           permission.ResourceType == TestingLabResourceTypes.Request ||
+           permission.ResourceType == TestingLabResourceTypes.Participant))
         .ToListAsync()
         .ConfigureAwait(false);
 
@@ -205,10 +211,11 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
     Guid? grantedByUserId = null) {
     if (!tenantId.HasValue) throw new InvalidOperationException("A tenant is required for a Testing Lab resource permission.");
     ValidateResourcePermission(action, resourceType);
+    var resourceTenantId = new TenantId(tenantId.Value);
 
     var permission = await context.Set<ResourceUserPermission>()
       .FirstOrDefaultAsync(candidate =>
-        candidate.TenantId.Value == tenantId.Value &&
+        candidate.TenantId == resourceTenantId &&
         candidate.UserId == userId &&
         candidate.ResourceType == resourceType &&
         candidate.ResourceId == resourceId.ToString() &&
@@ -247,10 +254,11 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
     Guid? revokedByUserId = null) {
     if (!tenantId.HasValue) return;
     ValidateResourcePermission(action, resourceType);
+    var resourceTenantId = new TenantId(tenantId.Value);
 
     var permission = await context.Set<ResourceUserPermission>()
       .FirstOrDefaultAsync(candidate =>
-        candidate.TenantId.Value == tenantId.Value &&
+        candidate.TenantId == resourceTenantId &&
         candidate.UserId == userId &&
         candidate.ResourceType == resourceType &&
         candidate.ResourceId == resourceId.ToString() &&
