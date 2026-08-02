@@ -14,11 +14,13 @@
     "test:browser:learning-checkout": "node scripts/learning-checkout-browser-e2e.mjs",
     "test:browser:learning-student": "node scripts/learning-student-browser-e2e.mjs",
     "test:browser:learning-professor": "node scripts/learning-professor-browser-e2e.mjs",
+    "test:browser:learning-support": "node --test scripts/learning-browser-e2e-support.test.mjs",
     "test:browser:community-admin": "node scripts/community-admin-browser-e2e.mjs",
     "test:browser:testing-lab": "bash scripts/testing-lab-browser-e2e.sh",
     "test:browser:testing-lab:existing": "node scripts/testing-lab-browser-e2e.mjs",
     "test:watch": "vitest",
-    "test:e2e": "vitest run -c vitest.e2e.config.mts"
+    "test:e2e": "vitest run -c vitest.e2e.config.mts",
+    "test:browser:learning": "pnpm run test:browser:learning-support && pnpm run test:browser:learning-checkout && pnpm run test:browser:learning-student && pnpm run test:browser:learning-professor"
   },
   "dependencies": {
     "@codingame/monaco-vscode-files-service-override": "^23.1.0",
