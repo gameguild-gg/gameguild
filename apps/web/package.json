@@ -15,7 +15,8 @@
     "test:browser:learning-student": "node scripts/learning-student-browser-e2e.mjs",
     "test:browser:learning-professor": "node scripts/learning-professor-browser-e2e.mjs",
     "test:browser:community-admin": "node scripts/community-admin-browser-e2e.mjs",
-    "test:browser:testing-lab": "node scripts/testing-lab-browser-e2e.mjs",
+    "test:browser:testing-lab": "bash scripts/testing-lab-browser-e2e.sh",
+    "test:browser:testing-lab:existing": "node scripts/testing-lab-browser-e2e.mjs",
     "test:watch": "vitest",
     "test:e2e": "vitest run -c vitest.e2e.config.mts"
   },
