@@ -25,10 +25,20 @@ export default async function PublicTestingEventDetailPage({
   if (!experience.event && experience.accessIssues.length === 0) notFound();
 
   if (!experience.event) {
+    console.error(
+      `[testing-lab] public event ${eventId} could not be loaded`,
+      experience.accessIssues,
+    );
     return (
       <main className="min-h-screen bg-slate-950 px-4 py-16 text-white">
-        <div className="mx-auto max-w-4xl rounded-md border border-amber-400/30 bg-amber-400/5 p-6 text-amber-100">
-          This Testing Lab event could not be loaded. Retry shortly.
+        <div className="mx-auto max-w-4xl rounded-md border border-amber-400/30 bg-amber-400/5 p-6">
+          <h1 className="text-2xl font-semibold text-amber-100">Event temporarily unavailable</h1>
+          <p className="mt-2 text-sm leading-6 text-amber-100/80">
+            The event details could not be loaded. Return to the directory and try again shortly.
+          </p>
+          <Link href="/testing-lab/events" className="mt-5 inline-flex text-sm font-medium text-sky-200 hover:text-sky-100">
+            Back to Testing Lab events
+          </Link>
         </div>
       </main>
     );

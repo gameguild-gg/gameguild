@@ -59,6 +59,7 @@ import {
   Trash2,
   UserRoundCheck,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent, type ReactNode } from 'react';
 
 type Action = (formData: FormData) => Promise<TestingEventActionResult<unknown>>;
@@ -116,6 +117,7 @@ function EventActionDialog({
   children: ReactNode;
   destructive?: boolean;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<TestingEventActionResult<unknown> | null>(null);
@@ -129,6 +131,7 @@ function EventActionDialog({
       setResult(next);
       if (next.success) {
         form.reset();
+        router.refresh();
         window.setTimeout(() => setOpen(false), 450);
       }
     });
@@ -567,13 +570,25 @@ export function TestingEventApplications({
   eventId,
   applications,
   slots,
+  projectLabels = {},
+  memberLabels = {},
   readOnly = false,
 }: {
   eventId: string;
   applications: TestingLabTestingProjectApplicationProjection[];
   slots: TestingLabTestingEventSlotProjection[];
   readOnly?: boolean;
+  projectLabels?: Record<string, string>;
+  memberLabels?: Record<string, string>;
 }) {
+  const router = useRouter();
+  const [reviewingApplicationId, setReviewingApplicationId] = useState<string | null>(null);
+  const [reviewPending, startReviewTransition] = useTransition();
+  const [reviewResult, setReviewResult] = useState<{
+    applicationId: string;
+    result: TestingEventActionResult<unknown>;
+  } | null>(null);
+
   if (applications.length === 0) {
     return <p className="rounded-md border border-dashed p-5 text-center text-sm text-muted-foreground">No project applications yet.</p>;
   }
@@ -582,12 +597,23 @@ export function TestingEventApplications({
     <div className="divide-y rounded-md border">
       {applications.map((application) => {
         const status = application.status ?? 'Pending';
+        const projectLabel = application.projectId
+          ? projectLabels[application.projectId] ?? 'Project details unavailable'
+          : 'Project details unavailable';
+        const memberLabel = application.submittedByUserId
+          ? memberLabels[application.submittedByUserId] ?? 'Member details unavailable'
+          : 'Member details unavailable';
         return (
           <div key={application.id} className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
-              <p className="truncate font-medium">{application.projectId}</p>
-              <p className="text-xs text-muted-foreground">Submitted by {application.submittedByUserId}</p>
+              <p className="truncate font-medium">{projectLabel}</p>
+              <p className="text-xs text-muted-foreground">Submitted by {memberLabel}</p>
               {application.decisionRationale ? <p className="mt-1 text-sm text-muted-foreground">{application.decisionRationale}</p> : null}
+              {reviewResult?.applicationId === application.id ? (
+                <div className="mt-3">
+                  <ActionMessage result={reviewResult?.result ?? null} />
+                </div>
+              ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{formatTestingEventStatus(status)}</Badge>
@@ -595,14 +621,21 @@ export function TestingEventApplications({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={async () => {
-                    const form = new FormData();
-                    form.set('eventId', eventId);
-                    form.set('applicationId', application.id!);
-                    await beginTestingEventApplicationReview(form);
+                  disabled={reviewPending && reviewingApplicationId === application.id}
+                  onClick={() => {
+                    setReviewingApplicationId(application.id!);
+                    startReviewTransition(async () => {
+                      const form = new FormData();
+                      form.set('eventId', eventId);
+                      form.set('applicationId', application.id!);
+                      const result = await beginTestingEventApplicationReview(form);
+                      setReviewResult({ applicationId: application.id!, result });
+                      if (result.success) router.refresh();
+                      setReviewingApplicationId(null);
+                    });
                   }}
                 >
-                  Review
+                  {reviewPending && reviewingApplicationId === application.id ? 'Starting...' : 'Review'}
                 </Button>
               ) : null}
               {!readOnly && ['Pending', 'UnderReview', 'Waitlisted'].includes(status) && application.id ? (
@@ -617,9 +650,14 @@ export function TestingEventApplications({
                     <input type="hidden" name="eventId" value={eventId} />
                     <input type="hidden" name="applicationId" value={application.id} />
                     <div className="space-y-2">
-                      <Label>Testing slot</Label>
+                      <Label htmlFor={`approve-slot-${application.id}`}>Testing slot</Label>
                       <Select name="slotId" required>
-                        <SelectTrigger><SelectValue placeholder="Choose a slot" /></SelectTrigger>
+                        <SelectTrigger
+                          id={`approve-slot-${application.id}`}
+                          aria-label="Testing slot"
+                        >
+                          <SelectValue placeholder="Choose a slot" />
+                        </SelectTrigger>
                         <SelectContent>
                           {slots.filter((slot) => slot.id).map((slot) => (
                             <SelectItem key={slot.id} value={slot.id!}>
