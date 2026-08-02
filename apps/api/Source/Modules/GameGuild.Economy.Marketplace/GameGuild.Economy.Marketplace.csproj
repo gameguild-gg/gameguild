@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GameGuild.Economy\GameGuild.Economy.csproj" />
+    <ProjectReference Include="..\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj" />
+    <ProjectReference Include="..\GameGuild.Commerce.Orders\GameGuild.Commerce.Orders.csproj" />
+    <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+  </ItemGroup>
+</Project>
