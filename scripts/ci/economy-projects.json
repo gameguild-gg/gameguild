@@ -17,6 +17,11 @@
       "coverageAssemblies": ["GameGuild.Economy.Bounties"]
     },
     {
+      "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Marketplace/GameGuild.Economy.Marketplace.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.Economy.Marketplace.UnitTests/GameGuild.Economy.Marketplace.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.Economy.Marketplace"]
+    },
+    {
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Payouts/GameGuild.Economy.Payouts.csproj",
       "testProjects": ["apps/api/tests/GameGuild.Economy.Payouts.UnitTests/GameGuild.Economy.Payouts.UnitTests.csproj"],
       "coverageAssemblies": ["GameGuild.Economy.Payouts"]
