@@ -1,26 +1,46 @@
-'use client';
+"use client";
 
-import React, { useCallback, useMemo, useRef, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components/input';
-import { Label } from '@game-guild/ui/components/label';
-import { Textarea } from '@game-guild/ui/components/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { Switch } from '@game-guild/ui/components/switch';
-import { Separator } from '@game-guild/ui/components/separator';
-import { ArrowLeft, Clock, Loader2, Save } from 'lucide-react';
-import type { SerializedEditorState } from 'lexical';
-import type { ContentItemDetail } from '@/lib/learning/types';
-import { updateContent } from '@/lib/learning/actions';
-import { CONTENT_VISIBILITIES, formatEnumLabel } from '@/lib/learning/enums';
-import { LessonContentEditor, parseLexicalState } from './lesson-content-editor';
-import { QuizContentEditor } from './quiz-content-editor';
+import React, {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@game-guild/ui/components/card";
+import { Badge } from "@game-guild/ui/components/badge";
+import { Button } from "@game-guild/ui/components/button";
+import { Input } from "@game-guild/ui/components/input";
+import { Label } from "@game-guild/ui/components/label";
+import { Textarea } from "@game-guild/ui/components/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@game-guild/ui/components/select";
+import { Switch } from "@game-guild/ui/components/switch";
+import { Separator } from "@game-guild/ui/components/separator";
+import { ArrowLeft, Clock, Loader2, Save } from "lucide-react";
+import type { SerializedEditorState } from "lexical";
+import type { ContentItemDetail } from "@/lib/learning/types";
+import { updateContent } from "@/lib/learning/actions";
+import { CONTENT_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
+import {
+  LessonContentEditor,
+  parseLexicalState,
+} from "./lesson-content-editor";
+import { QuizContentEditor } from "./quiz-content-editor";
 
-function formatContentTypeLabel(type: ContentItemDetail['type']) {
-  if (type === 'Questionnaire') return 'Quiz';
+function formatContentTypeLabel(type: ContentItemDetail["type"]) {
+  if (type === "Questionnaire") return "Quiz";
   return type;
 }
 
@@ -32,47 +52,55 @@ interface ContentItemEditorProps {
   courseTitle: string;
 }
 
-export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEditorProps) {
+export function ContentItemEditor({
+  courseId,
+  item,
+  courseTitle,
+}: ContentItemEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const [title, setTitle] = useState(item.title);
-  const [description, setDescription] = useState(item.description ?? '');
+  const [description, setDescription] = useState(item.description ?? "");
   const [visibility, setVisibility] = useState<string>(
-    item.status === 'published' ? 'Public' : 'Private',
+    item.status === "published" ? "Public" : "Private",
   );
   const [isRequired, setIsRequired] = useState<boolean>(
     (item.settings?.isRequired as boolean) ?? true,
   );
   const [estimatedMinutes, setEstimatedMinutes] = useState<string>(
-    item.duration != null ? String(item.duration) : '',
+    item.duration != null ? String(item.duration) : "",
   );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   // ── Lexical editor state (Lesson only) ──
-  const initialLexicalState = useMemo(() => parseLexicalState(item.content), [item.content]);
-  const editorStateRef = useRef<SerializedEditorState | null>(initialLexicalState);
-  const quizContentRef = useRef<string | undefined>(item.type === 'Questionnaire' ? item.content ?? undefined : undefined);
-
-  const handleEditorChange = useCallback(
-    (state: SerializedEditorState) => {
-      editorStateRef.current = state;
-    },
-    [],
+  const initialLexicalState = useMemo(
+    () => parseLexicalState(item.content),
+    [item.content],
   );
+  const editorStateRef = useRef<SerializedEditorState | null>(
+    initialLexicalState,
+  );
+  const quizContentRef = useRef<string | undefined>(
+    item.type === "Questionnaire" ? (item.content ?? undefined) : undefined,
+  );
+
+  const handleEditorChange = useCallback((state: SerializedEditorState) => {
+    editorStateRef.current = state;
+  }, []);
 
   const handleQuizContentChange = useCallback((content: string) => {
     quizContentRef.current = content;
   }, []);
 
-  const isLesson = item.type === 'Lesson';
-  const isQuiz = item.type === 'Questionnaire';
+  const isLesson = item.type === "Lesson";
+  const isQuiz = item.type === "Questionnaire";
   const contentTypeLabel = formatContentTypeLabel(item.type);
 
   function handleSave() {
     if (!title.trim()) {
-      setError('Title is required.');
+      setError("Title is required.");
       return;
     }
     setError(null);
@@ -95,7 +123,9 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
         body: bodyToSave,
         visibility,
         isRequired,
-        estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : undefined,
+        estimatedMinutes: estimatedMinutes
+          ? Number(estimatedMinutes)
+          : undefined,
       });
 
       if (result.success) {
@@ -108,7 +138,11 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
   }
 
   function handleBack() {
-    router.back();
+    router.push(
+      "/dashboard/learning/courses/" +
+        encodeURIComponent(courseId) +
+        "/content",
+    );
   }
 
   return (
@@ -178,7 +212,8 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
                 <div className="space-y-2">
                   <Label>Body</Label>
                   <p className="text-muted-foreground text-sm py-8 text-center">
-                    Editor for <strong>{contentTypeLabel}</strong> content is not yet available.
+                    Editor for <strong>{contentTypeLabel}</strong> content is
+                    not yet available.
                   </p>
                 </div>
               )}
@@ -194,7 +229,9 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="visibility">{contentTypeLabel} visibility</Label>
+                <Label htmlFor="visibility">
+                  {contentTypeLabel} visibility
+                </Label>
                 <Select value={visibility} onValueChange={setVisibility}>
                   <SelectTrigger id="visibility">
                     <SelectValue />
@@ -208,7 +245,8 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
                   </SelectContent>
                 </Select>
                 <p className="text-muted-foreground text-xs">
-                  Controls enrolled-student access only. Public course landing-page visibility is managed in Listing.
+                  Controls enrolled-student access only. Public course
+                  landing-page visibility is managed in Listing.
                 </p>
               </div>
 
@@ -243,9 +281,7 @@ export function ContentItemEditor({ courseId, item, courseTitle }: ContentItemEd
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {error && (
-                <p className="text-destructive text-sm">{error}</p>
-              )}
+              {error && <p className="text-destructive text-sm">{error}</p>}
               {saved && (
                 <p className="text-sm text-green-600">Saved successfully.</p>
               )}

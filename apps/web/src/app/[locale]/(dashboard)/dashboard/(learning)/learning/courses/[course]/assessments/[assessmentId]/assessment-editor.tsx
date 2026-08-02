@@ -1,28 +1,50 @@
-'use client';
+"use client";
 
-import React, { useRef, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components/input';
-import { Label } from '@game-guild/ui/components/label';
-import { Textarea } from '@game-guild/ui/components/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { Switch } from '@game-guild/ui/components/switch';
-import { Separator } from '@game-guild/ui/components/separator';
-import { ArrowLeft, Clock, Loader2, Save, Trash2 } from 'lucide-react';
-import type { Assessment, AssessmentDefinition, AssessmentGroup, AssessmentPresentationMode, AssessmentType } from '@/lib/learning/queries/assessments';
-import { updateAssessment, deleteAssessment, updateAssessmentDefinition } from '@/lib/learning/actions';
-import { EMPTY_ASSESSMENT_BLOCK_STORAGE } from '@/components/block-content-editor/lib/assessment/assessment-contracts';
-import { QuizAssessmentEditor } from './quiz-assessment-editor';
+import React, { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@game-guild/ui/components/card";
+import { Badge } from "@game-guild/ui/components/badge";
+import { Button } from "@game-guild/ui/components/button";
+import { Input } from "@game-guild/ui/components/input";
+import { Label } from "@game-guild/ui/components/label";
+import { Textarea } from "@game-guild/ui/components/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@game-guild/ui/components/select";
+import { Switch } from "@game-guild/ui/components/switch";
+import { Separator } from "@game-guild/ui/components/separator";
+import { ArrowLeft, Clock, Loader2, Save, Trash2 } from "lucide-react";
+import type {
+  Assessment,
+  AssessmentDefinition,
+  AssessmentGroup,
+  AssessmentPresentationMode,
+  AssessmentType,
+} from "@/lib/learning/queries/assessments";
+import {
+  updateAssessment,
+  deleteAssessment,
+  updateAssessmentDefinition,
+} from "@/lib/learning/actions";
+import { EMPTY_ASSESSMENT_BLOCK_STORAGE } from "@/components/block-content-editor/lib/assessment/assessment-contracts";
+import { QuizAssessmentEditor } from "./quiz-assessment-editor";
+import type { ContentItem } from "@/lib/learning/types";
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
-  { value: 'Quiz', label: 'Quiz' },
-  { value: 'Assignment', label: 'Assignment' },
-  { value: 'Project', label: 'Project' },
-  { value: 'PeerReview', label: 'Peer Review' },
-  { value: 'SelfAssessment', label: 'Self Assessment' },
+  { value: "Quiz", label: "Quiz" },
+  { value: "Assignment", label: "Assignment" },
+  { value: "Project", label: "Project" },
+  { value: "PeerReview", label: "Peer Review" },
+  { value: "SelfAssessment", label: "Self Assessment" },
 ];
 
 interface AssessmentEditorProps {
@@ -30,37 +52,56 @@ interface AssessmentEditorProps {
   assessment: Assessment;
   assessmentDefinition?: AssessmentDefinition | null;
   assessmentGroups?: AssessmentGroup[];
+  contentItems?: ContentItem[];
 }
 
 function formatWeight(weightPercent: number) {
   return `${Number.isInteger(weightPercent) ? weightPercent : weightPercent.toFixed(1)}% of Total`;
 }
 
-export function AssessmentEditor({ courseId, assessment, assessmentDefinition = null, assessmentGroups = [] }: AssessmentEditorProps) {
+export function AssessmentEditor({
+  courseId,
+  assessment,
+  assessmentDefinition = null,
+  assessmentGroups = [],
+  contentItems = [],
+}: AssessmentEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
-  const isQuiz = assessment.type === 'Quiz';
-  const definitionRef = useRef<unknown>(assessmentDefinition?.definition ?? EMPTY_ASSESSMENT_BLOCK_STORAGE);
+  const isQuiz = assessment.type === "Quiz";
+  const definitionRef = useRef<unknown>(
+    assessmentDefinition?.definition ?? EMPTY_ASSESSMENT_BLOCK_STORAGE,
+  );
 
   const [title, setTitle] = useState(assessment.title);
-  const [description, setDescription] = useState(assessment.description ?? '');
+  const [description, setDescription] = useState(assessment.description ?? "");
   const [maxScore, setMaxScore] = useState(String(assessment.maxScore));
-  const [passingScore, setPassingScore] = useState(String(assessment.passingScore));
+  const [passingScore, setPassingScore] = useState(
+    String(assessment.passingScore),
+  );
   const [timeLimitMinutes, setTimeLimitMinutes] = useState(
-    assessment.timeLimitMinutes != null ? String(assessment.timeLimitMinutes) : '',
+    assessment.timeLimitMinutes != null
+      ? String(assessment.timeLimitMinutes)
+      : "",
   );
   const [maxAttempts, setMaxAttempts] = useState(
-    assessment.maxAttempts != null ? String(assessment.maxAttempts) : '',
+    assessment.maxAttempts != null ? String(assessment.maxAttempts) : "",
   );
   const [isRequired, setIsRequired] = useState(assessment.isRequired);
-  const [assessmentGroupId, setAssessmentGroupId] = useState(assessment.assessmentGroupId ?? 'none');
-  const [presentationMode, setPresentationMode] = useState<AssessmentPresentationMode>(assessment.presentationMode);
+  const [assessmentGroupId, setAssessmentGroupId] = useState(
+    assessment.assessmentGroupId ?? "none",
+  );
+  const [linkedContentId, setLinkedContentId] = useState(
+    assessment.contentId ?? "none",
+  );
+  const [presentationMode, setPresentationMode] =
+    useState<AssessmentPresentationMode>(assessment.presentationMode);
   const [availableFrom, setAvailableFrom] = useState(
-    assessment.availableFrom ? assessment.availableFrom.slice(0, 16) : '',
+    assessment.availableFrom ? assessment.availableFrom.slice(0, 16) : "",
   );
   const [availableUntil, setAvailableUntil] = useState(
-    assessment.availableUntil ? assessment.availableUntil.slice(0, 16) : '',
+    assessment.availableUntil ? assessment.availableUntil.slice(0, 16) : "",
   );
 
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +109,7 @@ export function AssessmentEditor({ courseId, assessment, assessmentDefinition = 
 
   function handleSave() {
     if (!title.trim()) {
-      setError('Title is required.');
+      setError("Title is required.");
       return;
     }
     setError(null);
@@ -87,8 +128,11 @@ export function AssessmentEditor({ courseId, assessment, assessmentDefinition = 
         isRequired,
         availableFrom: availableFrom || null,
         availableUntil: availableUntil || null,
-        assessmentGroupId: assessmentGroupId === 'none' ? null : assessmentGroupId,
-        clearAssessmentGroupId: assessmentGroupId === 'none',
+        assessmentGroupId:
+          assessmentGroupId === "none" ? null : assessmentGroupId,
+        clearAssessmentGroupId: assessmentGroupId === "none",
+        contentId: linkedContentId === "none" ? null : linkedContentId,
+        clearContentId: linkedContentId === "none",
         presentationMode,
       });
 
@@ -102,7 +146,8 @@ export function AssessmentEditor({ courseId, assessment, assessmentDefinition = 
           courseId,
           assessmentId: assessment.id,
           definition: definitionRef.current,
-          definitionSchemaVersion: assessmentDefinition?.definitionSchemaVersion ?? 1,
+          definitionSchemaVersion:
+            assessmentDefinition?.definitionSchemaVersion ?? 1,
         });
 
         if (!definitionResult.success) {
@@ -117,12 +162,14 @@ export function AssessmentEditor({ courseId, assessment, assessmentDefinition = 
   }
 
   function handleDelete() {
-    if (!confirm('Are you sure you want to delete this assessment?')) return;
+    if (!confirm("Are you sure you want to delete this assessment?")) return;
 
     startDeleteTransition(async () => {
       const result = await deleteAssessment(courseId, assessment.id);
       if (result.success) {
-        router.back();
+        router.push(
+          `/dashboard/learning/courses/${encodeURIComponent(courseId)}/assessments`,
+        );
       } else {
         setError(result.error);
       }
@@ -130,10 +177,14 @@ export function AssessmentEditor({ courseId, assessment, assessmentDefinition = 
   }
 
   function handleBack() {
-    router.back();
+    router.push(
+      `/dashboard/learning/courses/${encodeURIComponent(courseId)}/assessments`,
+    );
   }
 
-  const typeLabel = ASSESSMENT_TYPE_OPTIONS.find((o) => o.value === assessment.type)?.label ?? assessment.type;
+  const typeLabel =
+    ASSESSMENT_TYPE_OPTIONS.find((o) => o.value === assessment.type)?.label ??
+    assessment.type;
 
   return (
     <div className="space-y-6">
@@ -188,7 +239,10 @@ export function AssessmentEditor({ courseId, assessment, assessmentDefinition = 
               </CardHeader>
               <CardContent>
                 <QuizAssessmentEditor
-                  initialDefinition={assessmentDefinition?.definition ?? EMPTY_ASSESSMENT_BLOCK_STORAGE}
+                  initialDefinition={
+                    assessmentDefinition?.definition ??
+                    EMPTY_ASSESSMENT_BLOCK_STORAGE
+                  }
                   onChange={(definition) => {
                     definitionRef.current = definition;
                   }}
@@ -225,9 +279,12 @@ export function AssessmentEditor({ courseId, assessment, assessmentDefinition = 
                 </div>
               </div>
               <p className="text-muted-foreground text-xs">
-                Students need at least {passingScore || 0} out of {maxScore || 0} points to pass (
+                Students need at least {passingScore || 0} out of{" "}
+                {maxScore || 0} points to pass (
                 {maxScore && Number(maxScore) > 0
-                  ? Math.round((Number(passingScore || 0) / Number(maxScore)) * 100)
+                  ? Math.round(
+                      (Number(passingScore || 0) / Number(maxScore)) * 100,
+                    )
                   : 0}
                 %).
               </p>
@@ -295,8 +352,38 @@ export function AssessmentEditor({ courseId, assessment, assessmentDefinition = 
               <Separator />
 
               <div className="space-y-2">
+                <Label htmlFor="linked-lesson">Linked lesson</Label>
+                <Select
+                  value={linkedContentId}
+                  onValueChange={setLinkedContentId}
+                >
+                  <SelectTrigger id="linked-lesson">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No lesson</SelectItem>
+                    {contentItems
+                      .filter((item) => item.type !== "Module")
+                      .map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.title}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-muted-foreground text-xs">
+                  Place this activity in the learner&apos;s course sequence.
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
                 <Label htmlFor="grade-group">Grade group</Label>
-                <Select value={assessmentGroupId} onValueChange={setAssessmentGroupId}>
+                <Select
+                  value={assessmentGroupId}
+                  onValueChange={setAssessmentGroupId}
+                >
                   <SelectTrigger id="grade-group">
                     <SelectValue />
                   </SelectTrigger>
@@ -322,14 +409,20 @@ export function AssessmentEditor({ courseId, assessment, assessmentDefinition = 
                     <Label htmlFor="presentation-mode">Presentation</Label>
                     <Select
                       value={presentationMode}
-                      onValueChange={(value) => setPresentationMode(value as AssessmentPresentationMode)}
+                      onValueChange={(value) =>
+                        setPresentationMode(value as AssessmentPresentationMode)
+                      }
                     >
                       <SelectTrigger id="presentation-mode">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Continuous">Continuous list</SelectItem>
-                        <SelectItem value="SingleStep">One at a time</SelectItem>
+                        <SelectItem value="Continuous">
+                          Continuous list
+                        </SelectItem>
+                        <SelectItem value="SingleStep">
+                          One at a time
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -382,9 +475,15 @@ export function AssessmentEditor({ courseId, assessment, assessmentDefinition = 
             </CardHeader>
             <CardContent className="space-y-3">
               {error && <p className="text-destructive text-sm">{error}</p>}
-              {saved && <p className="text-sm text-green-600">Saved successfully.</p>}
+              {saved && (
+                <p className="text-sm text-green-600">Saved successfully.</p>
+              )}
 
-              <Button className="w-full" onClick={handleSave} disabled={isPending}>
+              <Button
+                className="w-full"
+                onClick={handleSave}
+                disabled={isPending}
+              >
                 {isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -422,9 +521,12 @@ export function AssessmentEditor({ courseId, assessment, assessmentDefinition = 
               <p>Type: {typeLabel}</p>
               <p>Order: {assessment.order}</p>
               <p>
-                Available:{' '}
-                <Badge variant={assessment.isAvailable ? 'default' : 'secondary'} className="text-xs">
-                  {assessment.isAvailable ? 'Yes' : 'No'}
+                Available:{" "}
+                <Badge
+                  variant={assessment.isAvailable ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  {assessment.isAvailable ? "Yes" : "No"}
                 </Badge>
               </p>
             </CardContent>
