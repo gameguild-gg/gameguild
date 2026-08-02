@@ -28,6 +28,8 @@ export interface RequestConfig {
   headers?: Record<string, string>;
   /** Request timeout in milliseconds */
   timeout?: number;
+  /** Fetch cache policy for this request */
+  cache?: RequestCache;
   /** Whether this request requires authentication */
   requiresAuth?: boolean;
   /** AbortSignal for request cancellation */
@@ -87,6 +89,8 @@ export interface TransportConfig {
   baseUrl: string;
   /** Default timeout in milliseconds */
   timeout?: number;
+  /** Default fetch cache policy */
+  cache?: RequestCache;
   /** Default headers for all requests */
   headers?: Record<string, string>;
   /** Request/response interceptors */
