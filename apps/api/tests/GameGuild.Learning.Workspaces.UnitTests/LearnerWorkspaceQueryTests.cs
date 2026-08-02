@@ -62,7 +62,7 @@ public sealed class LearnerWorkspaceQueryTests
             null);
         var submission = AssessmentSubmission.Start(assessment.Id, enrollment.Id, userId, 1);
         submission.Submit();
-        submission.Grade(8, 7, 10);
+        submission.Grade(8, 7, 10, feedback: "Strong pathfinding result.");
         var discussion = CourseDiscussion.Create(course.Id, userId, "Welcome", "Start here");
         discussion.Pin();
         var certificate = Certificate.Issue(
@@ -102,6 +102,15 @@ public sealed class LearnerWorkspaceQueryTests
         result.Upcoming.Should().ContainSingle(entry => entry.ScheduleItemId == meeting.Id);
         result.Deadlines.Should().ContainSingle(item => item.AssessmentId == assessment.Id);
         result.Grades.Should().ContainSingle(item => item.Percentage == 80m);
+        var grade = result.Grades.Single();
+        grade.Groups.Should().ContainSingle(item =>
+            item.GroupId == group.Id && item.Name == "Quizzes" && item.WeightPercent == 20m);
+        grade.Items.Should().ContainSingle(item =>
+            item.AssessmentId == assessment.Id &&
+            item.Title == "Pathfinding quiz" &&
+            item.Score == 8 &&
+            item.SubmissionStatus == nameof(SubmissionStatus.Graded) &&
+            item.Feedback == "Strong pathfinding result.");
         result.Certificates.Should().ContainSingle(item => item.CertificateId == certificate.Id);
         result.Announcements.Should().ContainSingle(item => item.DiscussionId == discussion.Id);
     }
