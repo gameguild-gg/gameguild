@@ -1,15 +1,22 @@
-'use client';
+"use client";
 
-import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   searchLearnerWorkspace,
   type LearnerSearchItem,
-} from '@/lib/learner/search-actions';
-import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications';
-import { createLearnerRoutes } from '@/lib/learner/routes';
-import { useAuth } from '@game-guild/client/react';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
-import { Button } from '@game-guild/ui/components/button';
+} from "@/lib/learner/search-actions";
+import type { DashboardNotificationSummary } from "@/lib/dashboard-notifications";
+import {
+  createLearnerRoutes,
+  normalizeLearnerPathname,
+} from "@/lib/learner/routes";
+import { useAuth } from "@game-guild/client/react";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@game-guild/ui/components/avatar";
+import { Button } from "@game-guild/ui/components/button";
 import {
   CommandDialog,
   CommandEmpty,
@@ -17,7 +24,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from "@/components/ui/command";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,14 +32,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@game-guild/ui/components/dropdown-menu';
+} from "@game-guild/ui/components/dropdown-menu";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@game-guild/ui/components/sheet';
+} from "@game-guild/ui/components/sheet";
 import {
   Award,
   Bell,
@@ -44,10 +51,10 @@ import {
   LogOut,
   Menu,
   Search,
-} from 'lucide-react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { type ReactNode, useEffect, useState } from 'react';
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { type ReactNode, useEffect, useState } from "react";
 
 export interface LearningShellUser {
   id: string;
@@ -65,11 +72,11 @@ interface LearningShellProps {
 
 const routes = createLearnerRoutes();
 const navigation = [
-  { href: routes.home, label: 'Home', icon: Home },
-  { href: routes.courses, label: 'My courses', icon: Library },
-  { href: routes.calendar, label: 'Calendar', icon: CalendarDays },
-  { href: routes.grades, label: 'Grades', icon: BookOpen },
-  { href: routes.certificates, label: 'Certificates', icon: Award },
+  { href: routes.home, label: "Home", icon: Home },
+  { href: routes.courses, label: "My courses", icon: Library },
+  { href: routes.calendar, label: "Calendar", icon: CalendarDays },
+  { href: routes.grades, label: "Grades", icon: BookOpen },
+  { href: routes.certificates, label: "Certificates", icon: Award },
 ];
 
 function initials(name: string): string {
@@ -79,13 +86,13 @@ function initials(name: string): string {
       .filter(Boolean)
       .slice(0, 2)
       .map((part) => part[0])
-      .join('')
-      .toUpperCase() || 'GG'
+      .join("")
+      .toUpperCase() || "GG"
   );
 }
 
 function isRouteActive(pathname: string, href: string): boolean {
-  if (href === '/') return pathname === '/';
+  if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -93,53 +100,64 @@ export function LearningShell({
   children,
   notifications,
   user,
-  webOrigin = 'https://gameguild.gg',
+  webOrigin = "https://gameguild.gg",
 }: LearningShellProps) {
-  const pathname = usePathname();
+  const pathname = normalizeLearnerPathname(usePathname());
   const router = useRouter();
   const { isLoading, signOut } = useAuth();
+  const [ready, setReady] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<LearnerSearchItem[]>([]);
-  const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'error' | 'ready'>('idle');
-  const catalogUrl = new URL('/courses', webOrigin).toString().replace(/\/$/, '');
-  const signInUrl = new URL('/sign-in', webOrigin).toString().replace(/\/$/, '');
+  const [searchStatus, setSearchStatus] = useState<
+    "idle" | "loading" | "error" | "ready"
+  >("idle");
+  const catalogUrl = new URL("/courses", webOrigin)
+    .toString()
+    .replace(/\/$/, "");
+  const signInUrl = new URL("/sign-in", webOrigin)
+    .toString()
+    .replace(/\/$/, "");
   const notificationItems = notifications?.items ?? [];
 
   useEffect(() => {
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
     const handleKeyboard = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === 'k' && (event.ctrlKey || event.metaKey)) {
+      if (event.key.toLowerCase() === "k" && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
         setSearchOpen((current) => !current);
       }
     };
 
-    document.addEventListener('keydown', handleKeyboard);
-    return () => document.removeEventListener('keydown', handleKeyboard);
+    document.addEventListener("keydown", handleKeyboard);
+    return () => document.removeEventListener("keydown", handleKeyboard);
   }, []);
 
   useEffect(() => {
     const query = searchQuery.trim();
     if (query.length < 2) {
       setSearchResults([]);
-      setSearchStatus('idle');
+      setSearchStatus("idle");
       return;
     }
 
     let cancelled = false;
-    setSearchStatus('loading');
+    setSearchStatus("loading");
     const timer = window.setTimeout(async () => {
       const result = await searchLearnerWorkspace(query);
       if (cancelled) return;
 
       if (result.success) {
         setSearchResults(result.items);
-        setSearchStatus('ready');
+        setSearchStatus("ready");
       } else {
         setSearchResults([]);
-        setSearchStatus('error');
+        setSearchStatus("error");
       }
     }, 250);
 
@@ -160,7 +178,7 @@ export function LearningShell({
 
   function navigate(href: string) {
     setSearchOpen(false);
-    if (href.startsWith('http')) {
+    if (href.startsWith("http")) {
       window.location.assign(href);
       return;
     }
@@ -168,7 +186,10 @@ export function LearningShell({
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div
+      data-learning-ready={ready ? "true" : "false"}
+      className="min-h-screen bg-background text-foreground"
+    >
       <a
         href="#learning-content"
         className="sr-only z-[100] rounded-md bg-background px-4 py-2 focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
@@ -189,7 +210,10 @@ export function LearningShell({
           <Menu className="size-5" />
         </Button>
 
-        <Link href="/" className="mr-auto flex items-center gap-2 font-semibold lg:hidden">
+        <Link
+          href="/"
+          className="mr-auto flex items-center gap-2 font-semibold lg:hidden"
+        >
           <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <GraduationCap className="size-4" />
           </span>
@@ -198,23 +222,42 @@ export function LearningShell({
 
         <Button
           variant="outline"
-          className="mx-auto hidden w-full max-w-md justify-start text-muted-foreground md:flex"
+          className="mx-auto hidden w-full max-w-md justify-start text-muted-foreground lg:flex"
           onClick={() => setSearchOpen(true)}
         >
           <Search className="size-4" />
           Search learning
-          <kbd className="ml-auto rounded border px-1.5 py-0.5 text-xs">Ctrl K</kbd>
+          <kbd className="ml-auto rounded border px-1.5 py-0.5 text-xs">
+            Ctrl K
+          </kbd>
         </Button>
 
         <div className="ml-auto flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            aria-label="Search learning"
+            onClick={() => setSearchOpen(true)}
+          >
+            <Search aria-hidden="true" className="size-4" />
+          </Button>
           <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Open notifications">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Open notifications"
+              >
                 <Bell aria-hidden="true" className="size-4" />
                 {(notifications?.unreadCount ?? 0) > 0 ? (
                   <>
-                    <span aria-hidden="true" className="absolute mt-[-1.25rem] ml-5 size-2 rounded-full bg-destructive" />
+                    <span
+                      aria-hidden="true"
+                      className="absolute mt-[-1.25rem] ml-5 size-2 rounded-full bg-destructive"
+                    />
                     <span className="sr-only">
                       {notifications?.unreadCount} unread notifications
                     </span>
@@ -228,7 +271,10 @@ export function LearningShell({
               {notificationItems.length > 0 ? (
                 notificationItems.slice(0, 6).map((item) => (
                   <DropdownMenuItem key={item.id} asChild>
-                    <Link href={item.actionUrl || '/'} className="flex-col items-start gap-1">
+                    <Link
+                      href={item.actionUrl || "/"}
+                      className="flex-col items-start gap-1"
+                    >
                       <span className="font-medium">{item.title}</span>
                       {item.message ? (
                         <span className="line-clamp-2 text-xs text-muted-foreground">
@@ -239,19 +285,27 @@ export function LearningShell({
                   </DropdownMenuItem>
                 ))
               ) : (
-                <DropdownMenuItem disabled>No new notifications</DropdownMenuItem>
+                <DropdownMenuItem disabled>
+                  No new notifications
+                </DropdownMenuItem>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2 px-2" aria-label="Open account menu">
+              <Button
+                variant="ghost"
+                className="gap-2 px-2"
+                aria-label="Open account menu"
+              >
                 <Avatar size="sm">
-                  {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+                  {user.image ? (
+                    <AvatarImage src={user.image} alt={user.name} />
+                  ) : null}
                   <AvatarFallback>{initials(user.name)}</AvatarFallback>
                 </Avatar>
-                <span className="hidden max-w-36 truncate text-sm font-medium sm:inline">
+                <span className="hidden max-w-36 truncate text-sm font-medium xl:inline">
                   {user.name}
                 </span>
               </Button>
@@ -259,7 +313,9 @@ export function LearningShell({
             <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuLabel className="font-normal">
                 <p className="truncate text-sm font-medium">{user.name}</p>
-                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -270,16 +326,14 @@ export function LearningShell({
                 }}
               >
                 <LogOut className="size-4" />
-                {signingOut ? 'Signing out...' : 'Sign out'}
+                {signingOut ? "Signing out..." : "Sign out"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </header>
 
-      <aside
-        className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r bg-background p-4 lg:flex"
-      >
+      <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r bg-background p-4 lg:flex">
         <div className="mb-8 flex h-10 items-center gap-2">
           <Link
             href="/"
@@ -300,12 +354,12 @@ export function LearningShell({
               <Link
                 key={href}
                 href={href}
-                aria-current={active ? 'page' : undefined}
+                aria-current={active ? "page" : undefined}
                 onClick={() => setMobileOpen(false)}
                 className={`flex h-10 items-center gap-3 rounded-md px-3 text-sm transition-colors ${
                   active
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                 }`}
               >
                 <Icon className="size-4" />
@@ -339,7 +393,9 @@ export function LearningShell({
               </span>
               GameGuild Learning
             </SheetTitle>
-            <SheetDescription>Navigate your courses and learning records.</SheetDescription>
+            <SheetDescription>
+              Navigate your courses and learning records.
+            </SheetDescription>
           </SheetHeader>
           <nav aria-label="Learner navigation" className="space-y-1">
             {navigation.map(({ href, icon: Icon, label }) => {
@@ -348,12 +404,12 @@ export function LearningShell({
                 <Link
                   key={href}
                   href={href}
-                  aria-current={active ? 'page' : undefined}
+                  aria-current={active ? "page" : undefined}
                   onClick={() => setMobileOpen(false)}
                   className={`flex h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors ${
                     active
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                   }`}
                 >
                   <Icon aria-hidden="true" className="size-4" />
@@ -373,8 +429,14 @@ export function LearningShell({
         </SheetContent>
       </Sheet>
 
-      <main id="learning-content" tabIndex={-1} className="min-w-0 overflow-x-clip lg:pl-64">
-        <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">{children}</div>
+      <main
+        id="learning-content"
+        tabIndex={-1}
+        className="min-w-0 overflow-x-clip lg:pl-64"
+      >
+        <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">
+          {children}
+        </div>
       </main>
 
       <CommandDialog
@@ -388,15 +450,15 @@ export function LearningShell({
           value={searchQuery}
           onValueChange={setSearchQuery}
         />
-        <CommandList aria-busy={searchStatus === 'loading'}>
+        <CommandList aria-busy={searchStatus === "loading"}>
           <CommandEmpty>
-            {searchStatus === 'loading'
-              ? 'Searching your learning workspace...'
-              : searchStatus === 'error'
-                ? 'Search is temporarily unavailable. Try again.'
+            {searchStatus === "loading"
+              ? "Searching your learning workspace..."
+              : searchStatus === "error"
+                ? "Search is temporarily unavailable. Try again."
                 : searchQuery.trim().length < 2
-                  ? 'Type at least 2 characters to search.'
-                  : 'No matching courses or lessons.'}
+                  ? "Type at least 2 characters to search."
+                  : "No matching courses or lessons."}
           </CommandEmpty>
           {searchResults.length > 0 ? (
             <CommandGroup heading="Results">
@@ -408,9 +470,12 @@ export function LearningShell({
                 >
                   <BookOpen aria-hidden="true" className="size-4" />
                   <span className="min-w-0">
-                    <span className="block truncate font-medium">{result.title}</span>
+                    <span className="block truncate font-medium">
+                      {result.title}
+                    </span>
                     <span className="block truncate text-xs text-muted-foreground">
-                      {result.kind}{result.description ? ` - ${result.description}` : ''}
+                      {result.kind}
+                      {result.description ? ` - ${result.description}` : ""}
                     </span>
                   </span>
                 </CommandItem>
@@ -419,12 +484,19 @@ export function LearningShell({
           ) : null}
           <CommandGroup heading="Learning">
             {navigation.map(({ href, icon: Icon, label }) => (
-              <CommandItem key={href} onSelect={() => navigate(href)} value={label}>
+              <CommandItem
+                key={href}
+                onSelect={() => navigate(href)}
+                value={label}
+              >
                 <Icon className="size-4" />
                 {label}
               </CommandItem>
             ))}
-            <CommandItem onSelect={() => navigate(catalogUrl)} value="Browse courses">
+            <CommandItem
+              onSelect={() => navigate(catalogUrl)}
+              value="Browse courses"
+            >
               <Library className="size-4" />
               Browse courses
             </CommandItem>
