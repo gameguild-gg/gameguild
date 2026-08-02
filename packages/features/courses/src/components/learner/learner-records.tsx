@@ -571,13 +571,34 @@ export function LearnerGradebook({
         </section>
       ) : null}
 
+      {summaries.length > 0 && assessments.length > 0 ? (
+        <div className="space-y-3">
+          {summaries.map(({ course, summary }) => (
+            <Card key={course.id} className="rounded-lg bg-card">
+              <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="font-semibold">{course.title}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {summary.gradedAssessments ?? 0} of{" "}
+                    {summary.totalAssessments ?? 0} assessments graded
+                  </p>
+                </div>
+                <strong className="text-2xl">
+                  {Math.round(summary.percentage ?? summary.finalGrade ?? 0)}%
+                </strong>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : null}
+
       {assessments.length === 0 && summaries.length === 0 ? (
         <Card className="rounded-lg bg-card">
           <CardContent className="flex min-h-48 items-center justify-center text-sm text-muted-foreground">
             No assessments are assigned yet.
           </CardContent>
         </Card>
-      ) : summaries.length > 0 ? (
+      ) : summaries.length > 0 && assessments.length === 0 ? (
         <div className="space-y-3">
           {summaries.map(({ course, summary }) => (
             <Card key={course.id} className="rounded-lg bg-card">

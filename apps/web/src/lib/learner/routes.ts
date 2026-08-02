@@ -1,4 +1,20 @@
-import type { LearnerRoutes } from '@game-guild/courses/components/learner';
+import { routing } from "@/i18n/routing";
+import type { LearnerRoutes } from "@game-guild/courses/components/learner";
+
+export function normalizeLearnerPathname(pathname: string): string {
+  const segments = pathname.split("/").filter(Boolean);
+
+  if (
+    routing.locales.includes(segments[0] as (typeof routing.locales)[number])
+  ) {
+    segments.shift();
+  }
+  if (segments[0] === "learn") {
+    segments.shift();
+  }
+
+  return segments.length > 0 ? `/${segments.join("/")}` : "/";
+}
 
 export interface LearningNavigationRoutes extends LearnerRoutes {
   home: string;
@@ -9,14 +25,16 @@ export interface LearningNavigationRoutes extends LearnerRoutes {
   lesson: (slug: string, lessonId: string) => string;
 }
 
-export function createLearnerRoutes(webOrigin = process.env.NEXT_PUBLIC_WEB_URL || 'https://gameguild.gg'): LearningNavigationRoutes {
+export function createLearnerRoutes(
+  webOrigin = process.env.NEXT_PUBLIC_WEB_URL || "https://gameguild.gg",
+): LearningNavigationRoutes {
   return {
-    home: '/',
-    courses: '/courses',
-    calendar: '/calendar',
-    grades: '/grades',
-    certificates: '/certificates',
-    catalog: new URL('/courses', webOrigin).toString().replace(/\/$/, ''),
+    home: "/",
+    courses: "/courses",
+    calendar: "/calendar",
+    grades: "/grades",
+    certificates: "/certificates",
+    catalog: new URL("/courses", webOrigin).toString().replace(/\/$/, ""),
     course: (slug) => `/courses/${slug}`,
     content: (slug) => `/courses/${slug}/content`,
     lesson: (slug, lessonId) => `/courses/${slug}/lessons/${lessonId}`,
@@ -39,8 +57,8 @@ export function getCentralSignInUrl({
 }: CentralSignInInput): string {
   const allowedLearningOrigin = new URL(learningOrigin);
   const returnUrl = new URL(pathname, allowedLearningOrigin);
-  const signInUrl = new URL('/sign-in', webOrigin);
-  signInUrl.searchParams.set('redirectTo', returnUrl.toString());
+  const signInUrl = new URL("/sign-in", webOrigin);
+  signInUrl.searchParams.set("redirectTo", returnUrl.toString());
 
   return signInUrl.toString();
 }
