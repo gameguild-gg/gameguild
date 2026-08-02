@@ -48,11 +48,11 @@ export default async function TestingLabProjectsPage({ searchParams }: { searchP
       <form className="grid gap-3 rounded-md border p-3 md:grid-cols-[minmax(240px,1fr)_220px_auto]" method="get">
         <label className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="q" defaultValue={params.q} className="pl-9" placeholder="Search title or objective" />
+          <Input aria-label="Search community projects" name="q" defaultValue={params.q} className="pl-9" placeholder="Search title or objective" />
         </label>
         <label className="relative">
           <Filter className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <select name="status" defaultValue={status} className="h-9 w-full rounded-md border bg-background pl-9 pr-3 text-sm">
+          <select aria-label="Filter projects by status" name="status" defaultValue={status} className="h-9 w-full rounded-md border bg-background pl-9 pr-3 text-sm">
             <option value="">All statuses</option>
             {['Draft', 'Open', 'Active', 'In Progress', 'Paused', 'Completed', 'Cancelled'].map((value) => (
               <option key={value}>{value}</option>

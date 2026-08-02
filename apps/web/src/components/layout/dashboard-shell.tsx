@@ -7,6 +7,7 @@ import { cn } from '@game-guild/ui/lib/utils';
 import { SidebarInset, SidebarProvider } from '@game-guild/ui/components/sidebar';
 import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications';
 import type { DashboardUser } from './dashboard-user-menu';
+import { Toaster } from '@/components/ui/sonner';
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -27,12 +28,13 @@ export function DashboardShell({ children, notifications, user }: DashboardShell
             <DashboardHeader notifications={notifications} user={user} />
 
             {/* Page Content */}
-            <main className={cn('min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-muted/30 p-4 transition-all duration-300 sm:p-6')}>
+            <div className={cn('min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-muted/30 p-4 transition-all duration-300 sm:p-6')}>
               {children}
-            </main>
+            </div>
           </div>
         </SidebarInset>
       </SidebarProvider>
+      <Toaster closeButton richColors position="top-right" />
     </div>
   );
 }

@@ -51,9 +51,9 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
               <Sparkles className="size-4" />
               Game development community
             </div>
-            <h1 className="text-5xl font-semibold leading-tight tracking-tight">
+            <h2 className="text-5xl font-semibold leading-tight tracking-tight">
               Join builders turning lessons into playable projects.
-            </h1>
+            </h2>
             <p className="text-lg leading-8 text-slate-300">
               GameGuild combines learning paths, community critique, Testing Lab feedback, and launch support for people
               who want to make and ship better games.

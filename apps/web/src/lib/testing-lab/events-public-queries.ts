@@ -29,7 +29,18 @@ export interface PublicTestingEventsDirectoryOptions {
   take?: number;
 }
 
-function createModules() {
+function createPublicModules() {
+  const client = createServerClient({
+    baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295',
+    cache: 'no-store',
+  });
+
+  return {
+    events: new GeneratedApi.TestinglabTestingeventsModule(client),
+  };
+}
+
+function createAuthenticatedModules() {
   const client = createServerClient({
     baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295',
     auth: { getAccessToken: () => getToken() },
@@ -61,7 +72,7 @@ async function read<T>(operation: Promise<Result<T, ApiError>>, label: string) {
 export async function getPublicTestingEventsDirectory(
   options: PublicTestingEventsDirectoryOptions = {},
 ): Promise<PublicTestingEventsDirectory> {
-  const api = createModules();
+  const api = createPublicModules();
   const result = await read(
     api.events.getTestingEventsPublic({
       skip: Math.max(0, options.skip ?? 0),
@@ -69,7 +80,6 @@ export async function getPublicTestingEventsDirectory(
     }),
     'Public events',
   );
-
   return {
     events: result.data ?? [],
     accessIssues: result.issue ? [result.issue] : [],
@@ -79,9 +89,10 @@ export async function getPublicTestingEventsDirectory(
 export async function getPublicTestingEventExperience(
   eventId: string,
 ): Promise<PublicTestingEventExperience> {
-  const api = createModules();
+  const publicApi = createPublicModules();
+  const eventPromise = read(publicApi.events.getTestingEventsPublic1(eventId), 'Public event');
   const session = await auth().catch(() => null);
-  const eventResult = await read(api.events.getTestingEventsPublic1(eventId), 'Public event');
+  const eventResult = await eventPromise;
   const isAuthenticated = Boolean(session?.user);
 
   if (!isAuthenticated) {
@@ -95,6 +106,7 @@ export async function getPublicTestingEventExperience(
     };
   }
 
+  const api = createAuthenticatedModules();
   const [applicationsResult, registrationsResult, obligationsResult] = await Promise.all([
     read(api.events.getTestingEventsApplicationsMe({ eventId }), 'Your project applications'),
     read(api.participation.getTestingEventsRegistrationsMe({ eventId }), 'Your tester registrations'),

@@ -6,12 +6,16 @@ export function TestingLabPageHeader({
   title,
   description,
   actions,
+  headingLevel = 1,
 }: {
   icon: LucideIcon;
   title: string;
   description: string;
   actions?: ReactNode;
+  headingLevel?: 1 | 2;
 }) {
+  const Heading = headingLevel === 2 ? 'h2' : 'h1';
+
   return (
     <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex min-w-0 items-start gap-3">
@@ -19,7 +23,7 @@ export function TestingLabPageHeader({
           <Icon className="size-5" />
         </div>
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold">{title}</h1>
+          <Heading className="text-2xl font-semibold">{title}</Heading>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
