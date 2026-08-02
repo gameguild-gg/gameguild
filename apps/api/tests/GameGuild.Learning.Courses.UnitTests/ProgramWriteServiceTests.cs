@@ -293,6 +293,77 @@ public sealed class ProgramWriteServiceTests
     ];
 
     [Fact]
+    public async Task AddUserToProgramAsync_ShouldCreateCanonicalAndInteractionEnrollments()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.TenantId = tenantId;
+        context.Add(program);
+        await context.SaveChangesAsync();
+
+        var result = await new ProgramWriteService(context).AddUserToProgramAsync(program.Id, userId);
+
+        result.Should().NotBeNull();
+        var interactionEnrollment = await context.Set<ProgramUser>().SingleAsync();
+        interactionEnrollment.UserId.Should().Be(userId);
+        interactionEnrollment.ProgramId.Should().Be(program.Id);
+        interactionEnrollment.IsActive.Should().BeTrue();
+        interactionEnrollment.TenantId.Should().Be(tenantId);
+        var canonicalEnrollment = await context.Set<ProgramEnrollment>().SingleAsync();
+        canonicalEnrollment.UserId.Should().Be(userId);
+        canonicalEnrollment.ProgramId.Should().Be(program.Id);
+        canonicalEnrollment.EnrollmentStatus.Should().Be(EnrollmentStatus.Active);
+        canonicalEnrollment.TenantId.Should().Be(tenantId);
+    }
+
+    [Fact]
+    public async Task AddUserToProgramAsync_ShouldRepairMissingCanonicalEnrollment()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var program = CreateProgram();
+        var legacyEnrollment = new ProgramUser
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            UserId = userId,
+            IsActive = true,
+            JoinedAt = DateTime.UtcNow.AddDays(-2),
+        };
+        context.AddRange(program, legacyEnrollment);
+        await context.SaveChangesAsync();
+
+        var result = await new ProgramWriteService(context).AddUserToProgramAsync(program.Id, userId);
+
+        result.Should().NotBeNull();
+        (await context.Set<ProgramUser>().CountAsync()).Should().Be(1);
+        var canonicalEnrollment = await context.Set<ProgramEnrollment>().SingleAsync();
+        canonicalEnrollment.EnrolledAt.Should().Be(legacyEnrollment.JoinedAt);
+        canonicalEnrollment.EnrollmentStatus.Should().Be(EnrollmentStatus.Active);
+    }
+
+    [Fact]
+    public async Task RemoveUserFromProgramAsync_ShouldDeactivateBothEnrollmentModels()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var program = CreateProgram();
+        context.Add(program);
+        await context.SaveChangesAsync();
+        var service = new ProgramWriteService(context);
+        await service.AddUserToProgramAsync(program.Id, userId);
+
+        var removed = await service.RemoveUserFromProgramAsync(program.Id, userId);
+
+        removed.Should().BeTrue();
+        (await context.Set<ProgramUser>().SingleAsync()).DeletedAt.Should().NotBeNull();
+        var canonicalEnrollment = await context.Set<ProgramEnrollment>().SingleAsync();
+        canonicalEnrollment.EnrollmentStatus.Should().Be(EnrollmentStatus.Cancelled);
+    }
+
+    [Fact]
     public async Task UpdateProgramAsync_ShouldClearNullableEnrollmentControls()
     {
         await using var context = CreateContext();
@@ -967,6 +1038,11 @@ public sealed class ProgramWriteServiceTests
                 entity.Ignore(enrollment => enrollment.ReceivedGrades);
                 entity.Ignore(enrollment => enrollment.GivenGrades);
                 entity.Ignore(enrollment => enrollment.ProgramRatings);
+            });
+            modelBuilder.Entity<ProgramEnrollment>(entity =>
+            {
+                entity.Ignore(enrollment => enrollment.Program);
+                entity.Ignore(enrollment => enrollment.User);
             });
             modelBuilder.Entity<ContentInteraction>(entity =>
             {

@@ -94,6 +94,23 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
     }
 
     [Fact]
+    public async Task Swagger_ShouldDescribeFlagsEnumsAsComposableStrings()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var document = JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsObject();
+        var schema = document["components"]!["schemas"]!["Learning_Assessments_SubmissionModality"]!.AsObject();
+
+        schema["type"]!.GetValue<string>().Should().Be("string");
+        schema["enum"].Should().BeNull();
+        schema["description"]!.GetValue<string>().Should().Contain("comma-separated");
+    }
+
+    [Fact]
     public async Task Runtime_ShouldNotRouteUnverifiedOrderOperations()
     {
         using var client = _factory.CreateClient();

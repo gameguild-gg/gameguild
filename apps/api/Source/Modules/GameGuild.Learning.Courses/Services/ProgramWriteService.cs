@@ -388,24 +388,59 @@ public class ProgramWriteService(
 
     if (program == null) return null;
 
-    var existingUser = await context.Set<ProgramUser>().FirstOrDefaultAsync(pu => pu.ProgramId == programId && pu.UserId == userId && pu.DeletedAt == null);
-
-    if (existingUser != null)
-      return await GetUserProgressDtoInternalAsync(programId, userId).ConfigureAwait(false);
-
-    var programUser = new ProgramUser
+    var now = SystemClock.UtcNow;
+    var programUser = await context.Set<ProgramUser>()
+      .FirstOrDefaultAsync(pu => pu.ProgramId == programId && pu.UserId == userId);
+    if (programUser == null)
     {
-      Id = Guid.NewGuid(),
-      ProgramId = programId,
-      UserId = userId,
-      JoinedAt = SystemClock.UtcNow,
-      LastAccessedAt = SystemClock.UtcNow,
-      CompletionPercentage = 0,
-    };
+      programUser = new ProgramUser
+      {
+        Id = Guid.NewGuid(),
+        ProgramId = programId,
+        UserId = userId,
+        JoinedAt = now,
+        LastAccessedAt = now,
+        CompletionPercentage = 0,
+        IsActive = true,
+        TenantId = program.TenantId,
+      };
+      context.Set<ProgramUser>().Add(programUser);
+    }
+    else
+    {
+      if (programUser.DeletedAt.HasValue) programUser.Restore();
+      programUser.IsActive = true;
+      programUser.TenantId ??= program.TenantId;
+    }
 
-    context.Set<ProgramUser>().Add(programUser);
+    var canonicalEnrollment = await context.Set<ProgramEnrollment>()
+      .FirstOrDefaultAsync(enrollment => enrollment.ProgramId == programId && enrollment.UserId == userId);
+    if (canonicalEnrollment == null)
+    {
+      canonicalEnrollment = new ProgramEnrollment
+      {
+        Id = Guid.NewGuid(),
+        ProgramId = programId,
+        UserId = userId,
+        EnrollmentSource = EnrollmentSource.Manual,
+        EnrollmentStatus = EnrollmentStatus.Active,
+        EnrolledAt = programUser.JoinedAt == default ? now : programUser.JoinedAt,
+        StartDate = programUser.JoinedAt == default ? now : programUser.JoinedAt,
+        ProgressPercentage = programUser.CompletionPercentage,
+        FinalGrade = programUser.FinalGrade,
+        TenantId = program.TenantId,
+      };
+      context.Set<ProgramEnrollment>().Add(canonicalEnrollment);
+    }
+    else
+    {
+      if (canonicalEnrollment.DeletedAt.HasValue) canonicalEnrollment.Restore();
+      canonicalEnrollment.EnrollmentStatus = EnrollmentStatus.Active;
+      canonicalEnrollment.TenantId ??= program.TenantId;
+      canonicalEnrollment.Touch();
+    }
+
     await context.SaveChangesAsync().ConfigureAwait(false);
-
     return await GetUserProgressDtoInternalAsync(programId, userId).ConfigureAwait(false);
   }
 
@@ -415,7 +450,15 @@ public class ProgramWriteService(
 
     if (programUser == null) return false;
 
+    programUser.IsActive = false;
     programUser.SoftDelete();
+    var canonicalEnrollment = await context.Set<ProgramEnrollment>()
+      .FirstOrDefaultAsync(enrollment => enrollment.ProgramId == programId && enrollment.UserId == userId);
+    if (canonicalEnrollment != null)
+    {
+      canonicalEnrollment.EnrollmentStatus = EnrollmentStatus.Cancelled;
+      canonicalEnrollment.Touch();
+    }
     await context.SaveChangesAsync().ConfigureAwait(false);
 
     return true;

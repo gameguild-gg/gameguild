@@ -8,6 +8,7 @@ using GameGuild.Learning.Workspaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Xunit;
+using System.Text.Json;
 using LearningEnrollment = GameGuild.Learning.Enrollments.Enrollment;
 using Program = GameGuild.Learning.Courses.Program;
 
@@ -155,6 +156,7 @@ public sealed class LearnerWorkspaceEdgeCaseTests
         result.Should().NotBeNull();
         result!.Assessments.Should().BeEmpty();
         result.Submissions.Should().BeEmpty();
+        JsonSerializer.Serialize(result).Should().NotContain("\"Cohort\"");
     }
 
     [Fact]

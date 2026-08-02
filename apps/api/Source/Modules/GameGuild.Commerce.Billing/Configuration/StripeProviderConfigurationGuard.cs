@@ -21,6 +21,8 @@ public static class StripeProviderConfigurationGuard
 
         var ingress = billing.Stripe;
         var failures = new List<string>();
+        if (gateway.UseSimulation)
+            failures.Add("Stripe payment simulation is not allowed outside Development and Test environments.");
         if (!string.Equals(gateway.AccountId, ingress.AccountId, StringComparison.Ordinal))
             failures.Add("Payments and Billing must use the same canonical Stripe AccountId.");
         if (gateway.LiveMode != ingress.LiveMode)
