@@ -27,8 +27,6 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     private const string GoogleUserUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
 
-    private const string GoogleTokenInfoUrl = "https://oauth2.googleapis.com/tokeninfo";
-
     private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower, PropertyNameCaseInsensitive = true };
 
     public Task<string> GetAuthorizationUrlAsync(string provider, string redirectUri, string state, string[ ]? scopes = null)
@@ -59,15 +57,6 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
         var accessToken = await ExchangeCodeForTokenAsync(provider, code, redirectUri).ConfigureAwait(false);
 
         return await GetUserProfileAsync(provider, accessToken).ConfigureAwait(false);
-    }
-
-    public async Task<OAuthUserProfile> ValidateIdTokenAsync(string provider, string idToken)
-    {
-        return provider.ToLower(CultureInfo.InvariantCulture) switch
-        {
-            "google" => await ValidateGoogleIdTokenInternalAsync(idToken).ConfigureAwait(false),
-            _ => throw new NotSupportedException($"ID token validation not supported for provider: {provider}")
-        };
     }
 
     public async Task<OAuthUserProfile> GetUserProfileAsync(string provider, string accessToken)
@@ -266,39 +255,6 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
             Locale = null, // GoogleUserDto doesn't include locale
             AccessToken = accessToken
         };
-    }
-
-    private async Task<OAuthUserProfile> ValidateGoogleIdTokenInternalAsync(string idToken)
-    {
-        try
-        {
-            var tokenInfoUri = new Uri($"{GoogleTokenInfoUrl}?id_token={Uri.EscapeDataString(idToken)}");
-            using var response = await httpClient.GetAsync(tokenInfoUri).ConfigureAwait(false);
-
-            if (!response.IsSuccessStatusCode) { throw new UnauthorizedAccessException($"Google tokeninfo API returned {response.StatusCode}"); }
-
-            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var tokenInfo = JsonSerializer.Deserialize<JsonElement>(content);
-
-            // Validate that the token is valid
-            if (!tokenInfo.TryGetProperty("aud", out _)) { throw new UnauthorizedAccessException("Invalid Google ID token: missing audience"); }
-
-            return new OAuthUserProfile
-            {
-                ProviderId = tokenInfo.GetProperty("sub").GetString() ?? throw new InvalidOperationException("Missing sub claim"),
-                Provider = "Google",
-                Email = tokenInfo.GetProperty("email").GetString(),
-                EmailVerified = tokenInfo.TryGetProperty("email_verified", out var verifiedElement) && (verifiedElement.GetString() == "true" || verifiedElement.ValueKind == JsonValueKind.True),
-                Name = tokenInfo.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : null,
-                AvatarUrl = tokenInfo.TryGetProperty("picture", out var pictureElement) ? pictureElement.GetString() : null
-            };
-        }
-        catch (Exception ex) when (ex is not UnauthorizedAccessException)
-        {
-            logger.LogError(ex, "Failed to validate Google ID token");
-
-            throw new UnauthorizedAccessException($"Failed to validate Google ID token: {ex.Message}", ex);
-        }
     }
 
     #endregion
