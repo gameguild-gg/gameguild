@@ -20,6 +20,7 @@ public sealed class ProviderReversalServiceTests
             cumulativeHardUnits: 5,
             ProviderReversalDisposition.ResponsibleDebt));
 
+        reversal.State.AuthoritativeHardUnits.Should().Be(10);
         reversal.State.CumulativeProviderHardUnits.Should().Be(5);
         reversal.State.RecoveredConvertedSoftUnits.Should().Be(4_000);
         reversal.State.RecoveredHardUnits.Should().Be(1);
@@ -141,6 +142,198 @@ public sealed class ProviderReversalServiceTests
     }
 
     [Fact]
+    public void PlannerStopsScanningRemainingLotRangesAfterTargetIsSatisfied()
+    {
+        var root = SourceStampId.New();
+        var first = new RootTraceRange(root, 0, 1_000, 0);
+        var later = new RootTraceRange(root, 2_000, 1_000, 0);
+        var lot = new CreditLot(
+            CreditLotId.New(),
+            WalletId.New(),
+            new CoinAmount(CurrencyCode.HardCoin, 2),
+            ProvenanceKind.PurchasedHard,
+            Time,
+            Time.AddDays(120),
+            1,
+            CreditLotState.Active,
+            [first, later],
+            CurrencyTraceScale.HardCoinTraceUnitsPerCoin);
+
+        var plan = ProviderReversalPlanner.Plan(root, 1_000, [], [lot]);
+
+        plan.Fragments.Should().ContainSingle();
+        plan.Fragments[0].Ranges.Should().Equal(first);
+    }
+
+    [Fact]
+    public void ReverseTopUp_RejectsPendingClaimWithoutMutatingFundingState()
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var service = new TransactionalPostingService(store);
+        var pending = service.ObserveTopUp(Observe(WalletId.New(), 2));
+        var before = store.SnapshotCounts();
+
+        FluentActions.Invoking(() => service.ReverseTopUp(
+                Reverse(pending.SourceId, 1, ProviderReversalDisposition.ResponsibleDebt)))
+            .Should().Throw<InvalidFundingStateTransitionException>();
+
+        store.SnapshotCounts().Should().Be(before);
+        store.FundingClaims.Should().ContainSingle().Which.State.Should().Be(SourceConfirmationState.Observed);
+    }
+
+    [Fact]
+    public void ReverseTopUp_RejectsNonIncreasingCumulativeProviderTotal()
+    {
+        var fixture = Setup(10);
+        fixture.Service.ReverseTopUp(
+            Reverse(fixture.SourceId, 5, ProviderReversalDisposition.ResponsibleDebt));
+        var before = fixture.Store.SnapshotCounts();
+
+        FluentActions.Invoking(() => fixture.Service.ReverseTopUp(
+                Reverse(fixture.SourceId, 5, ProviderReversalDisposition.ResponsibleDebt)))
+            .Should().Throw<ProviderMonetaryTotalExceededException>().WithMessage("*monotonically*");
+
+        fixture.Store.SnapshotCounts().Should().Be(before);
+        fixture.Store.ProviderReversalStates.Should().ContainSingle()
+            .Which.CumulativeProviderHardUnits.Should().Be(5);
+    }
+
+    [Fact]
+    public void ReverseTopUp_IdempotencyRecordWithoutAtomicResultFailsClosed()
+    {
+        var fixture = Setup(2);
+        var command = Reverse(fixture.SourceId, 1, ProviderReversalDisposition.ResponsibleDebt);
+        var hashMethod = typeof(TransactionalPostingService).GetMethod(
+            "ComputeProviderReversalHash",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var hash = (string)hashMethod!.Invoke(null, new object?[] { command })!;
+        var committedPosting = fixture.Store.IdempotencyRecords.Single().Result;
+        fixture.Store.Execute(transaction =>
+        {
+            transaction.AddIdempotency(new IdempotencyRecord(command.IdempotencyKey, hash, committedPosting));
+            return true;
+        });
+        var before = fixture.Store.SnapshotCounts();
+
+        FluentActions.Invoking(() => fixture.Service.ReverseTopUp(command))
+            .Should().Throw<InvalidOperationException>().WithMessage("*not committed atomically*");
+
+        fixture.Store.SnapshotCounts().Should().Be(before);
+        fixture.Store.ProviderReversalStates.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ReverseTopUp_ConfirmedClaimWithoutSourceEvidenceFailsClosed()
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var service = new TransactionalPostingService(store);
+        var wallet = WalletId.New();
+        var (claim, evidence) = ConfirmedClaim(wallet, 2);
+        var rootLot = ConfirmedCreditFactory.CreateRootLot(
+            CreditLotId.New(), wallet, claim.Amount, ProvenanceKind.PurchasedHard, evidence, 1);
+        store.Execute(transaction =>
+        {
+            transaction.AddFundingClaim(claim);
+            transaction.AddCreditLot(rootLot);
+            return true;
+        });
+        var before = store.SnapshotCounts();
+
+        FluentActions.Invoking(() => service.ReverseTopUp(
+                Reverse(claim.SourceId, 1, ProviderReversalDisposition.ResponsibleDebt)))
+            .Should().Throw<InvalidOperationException>().WithMessage("*Confirmed source evidence*");
+
+        store.SnapshotCounts().Should().Be(before);
+        store.FundingClaims.Should().ContainSingle().Which.State.Should().Be(SourceConfirmationState.Confirmed);
+        store.SourceEvidenceHistory.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ReverseTopUp_RejectsConvertedSoftParityFractionsAndRollsBack()
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var service = new TransactionalPostingService(store);
+        var wallet = WalletId.New();
+        var (claim, evidence) = ConfirmedClaim(wallet, 1);
+        var confirmedAt = evidence.ConfirmedAt!.Value;
+        store.Execute(transaction =>
+        {
+            transaction.AddFundingClaim(claim);
+            transaction.AddSource(evidence);
+            transaction.AddCreditLot(new CreditLot(
+                CreditLotId.New(),
+                wallet,
+                new CoinAmount(CurrencyCode.SoftCoin, 999),
+                ProvenanceKind.ConvertedSoft,
+                confirmedAt,
+                confirmedAt,
+                1,
+                CreditLotState.Active,
+                [new RootTraceRange(claim.SourceId, 0, 999, 0)],
+                CurrencyTraceScale.SoftCoinTraceUnitsPerCoin));
+            transaction.AddCreditLot(new CreditLot(
+                CreditLotId.New(),
+                wallet,
+                new CoinAmount(CurrencyCode.SoftCoin, 1),
+                ProvenanceKind.ConvertedSoft,
+                confirmedAt,
+                confirmedAt,
+                2,
+                CreditLotState.Active,
+                [new RootTraceRange(claim.SourceId, 999, 1, 0)],
+                CurrencyTraceScale.SoftCoinTraceUnitsPerCoin));
+            return true;
+        });
+        var before = store.SnapshotCounts();
+
+        FluentActions.Invoking(() => service.ReverseTopUp(
+                Reverse(claim.SourceId, 1, ProviderReversalDisposition.ResponsibleDebt)))
+            .Should().Throw<UnrecoverableParityFractionException>();
+
+        store.SnapshotCounts().Should().Be(before);
+        store.FundingClaims.Should().ContainSingle().Which.State.Should().Be(SourceConfirmationState.Confirmed);
+        store.SourceEvidenceHistory.Should().ContainSingle().Which.State.Should().Be(SourceConfirmationState.Confirmed);
+    }
+
+    [Fact]
+    public void ReverseTopUp_RejectsAStoredPartitionThatCannotConserveTheProviderTotal()
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var service = new TransactionalPostingService(store);
+        var wallet = WalletId.New();
+        var (claim, evidence) = ConfirmedClaim(wallet, 2);
+        var rootLot = ConfirmedCreditFactory.CreateRootLot(
+            CreditLotId.New(), wallet, claim.Amount, ProvenanceKind.PurchasedHard, evidence, 1);
+        var inconsistentState = new ProviderReversalState(
+            claim.SourceId,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            [new RootTraceRange(claim.SourceId, 0, 1_000, 0)]);
+        store.Execute(transaction =>
+        {
+            transaction.AddFundingClaim(claim);
+            transaction.AddSource(evidence);
+            transaction.AddCreditLot(rootLot);
+            transaction.SetProviderReversalState(inconsistentState);
+            return true;
+        });
+        var before = store.SnapshotCounts();
+
+        FluentActions.Invoking(() => service.ReverseTopUp(
+                Reverse(claim.SourceId, 2, ProviderReversalDisposition.ResponsibleDebt)))
+            .Should().Throw<LineageConservationException>();
+
+        store.SnapshotCounts().Should().Be(before);
+        store.ProviderReversalStates.Should().ContainSingle()
+            .Which.CumulativeProviderHardUnits.Should().Be(1);
+        store.JournalEntries.Should().BeEmpty();
+    }
+
+    [Fact]
     public void ReverseTopUp_RejectsUnknownDisposition()
     {
         var fixture = Setup(10);
@@ -148,6 +341,30 @@ public sealed class ProviderReversalServiceTests
         FluentActions.Invoking(() => fixture.Service.ReverseTopUp(
                 Reverse(fixture.SourceId, 1, (ProviderReversalDisposition)99)))
             .Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    private static (HardCoinFundingClaim Claim, SourceEvidence Evidence) ConfirmedClaim(
+        WalletId wallet,
+        long hardUnits)
+    {
+        var command = Observe(wallet, hardUnits);
+        var confirmedAt = Time.AddMinutes(1);
+        var claim = HardCoinFundingClaim.Observe(
+                command.SourceId,
+                command.WalletId,
+                command.ProviderLeg,
+                command.Evidence,
+                command.AuthoritativeUsdMinorUnits,
+                command.ObservedAt)
+            .Transition(SourceConfirmationState.Confirmed, "provider-confirmation", confirmedAt);
+        var evidence = SourceEvidence.Observe(
+                command.SourceId,
+                command.ProviderLeg.Provider,
+                command.ProviderLeg.Key,
+                command.Evidence,
+                command.ObservedAt)
+            .Confirm(confirmedAt);
+        return (claim, evidence);
     }
 
     private static Fixture Setup(long hardUnits)

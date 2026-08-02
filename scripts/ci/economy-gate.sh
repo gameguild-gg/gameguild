@@ -18,6 +18,10 @@ resolve_python() {
 
 PYTHON_BIN="${PYTHON_BIN:-$(resolve_python)}"
 
+normalize_shell_record_field() {
+  printf '%s' "${1%$'\r'}"
+}
+
 assert_economy_manifest() {
   local repository_root="$1" manifest_path="$2"
   "$PYTHON_BIN" - "$repository_root" "$manifest_path" <<'PY'

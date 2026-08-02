@@ -17,6 +17,11 @@ public sealed class CoreReserveAuthorityTests
         var activated = authority.ValidateAndActivate(first, Now);
 
         activated.Version.Should().Be(new ReserveVersion(1));
+        activated.PolicyVersion.Should().Be(first.PolicyVersion);
+        activated.AssetAllocations.Should().BeEquivalentTo(first.AssetAllocations);
+        activated.Requirements.HardFaceValueUsdMinor.Should().BeGreaterThan(0);
+        activated.Requirements.SoftFaceValueUsdNanos.Should().BeGreaterThan(0);
+        activated.Requirements.StressedExpectedRedemptionCostUsdNanos.Should().BeGreaterThan(0);
         activated.Coverage.Should().Be(ReserveCoverageState.Covered);
         authority.ActiveHead.Should().Be(activated);
 
@@ -135,8 +140,9 @@ public sealed class CoreReserveAuthorityTests
         var authority = new CoreReserveAuthority();
         authority.ValidateAndActivate(Proposal(new ReserveVersion(1), null, 7), Now);
 
-        authority.Authorize(new ReserveVersion(1), 7, Now)
-            .Should().Be(new ReservePostingAuthorization(new ReserveVersion(1), 7, Now));
+        var authorization = authority.Authorize(new ReserveVersion(1), 7, Now);
+        authorization.Should().Be(new ReservePostingAuthorization(new ReserveVersion(1), 7, Now));
+        authorization.LockedAt.Should().Be(Now);
         FluentActions.Invoking(() => authority.Authorize(new ReserveVersion(2), 7, Now))
             .Should().Throw<ReserveAuthorizationException>();
         FluentActions.Invoking(() => authority.Authorize(new ReserveVersion(1), 6, Now))

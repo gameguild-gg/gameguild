@@ -130,7 +130,8 @@ async function main() {
     }
   });
   page.on('response', (response) => {
-    if (response.status() >= 500) {
+    const status = response.status();
+    if (status === 404 || status >= 500) {
       requestErrors.push(`${response.request().method()} ${response.url()}: HTTP ${response.status()}`);
     }
   });
@@ -156,7 +157,7 @@ async function main() {
     await page.getByRole('button', { name: 'Open public navigation' }).click();
     await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Testing Lab' }).click();
     await page.waitForURL('**/testing-lab');
-    await page.getByRole('heading', { name: 'Testing Lab' }).waitFor();
+    await page.getByRole('heading', { name: 'Testing Lab', exact: true, level: 1 }).waitFor();
 
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(routeUrl('/sign-in'), { waitUntil: 'domcontentloaded' });
@@ -175,16 +176,16 @@ async function main() {
       await runRealAuthFlow(page);
     }
 
+    if (requestErrors.length > 0) {
+      throw new Error(`Failed browser requests detected:\n${requestErrors.join('\n')}`);
+    }
+
     if (consoleErrors.length > 0) {
       const relevantErrors = consoleErrors.filter((message) => !/favicon/i.test(message));
 
       if (relevantErrors.length > 0) {
         throw new Error(`Console/page errors detected:\n${relevantErrors.join('\n')}`);
       }
-    }
-
-    if (requestErrors.length > 0) {
-      throw new Error(`Failed browser requests detected:\n${requestErrors.join('\n')}`);
     }
 
     await writeBrowserEvidence(evidencePath, { passed: true, errors: [] });

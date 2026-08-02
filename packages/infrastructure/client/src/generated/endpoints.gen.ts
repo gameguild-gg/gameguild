@@ -10521,6 +10521,37 @@ export const patchTenantsSettingsIntegrationSettingsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetTestingAnalyticsInput {
+  query?: {
+    fromDate?: string;
+    toDate?: string;
+    includeComparison?: boolean;
+  };
+}
+export type GetTestingAnalyticsOutput = Types.TestingLabTestingLabAnalyticsReportProjection;
+export const getTestingAnalyticsEndpoint = {
+  operationId: 'getTestingAnalytics' as const,
+  method: 'GET' as const,
+  path: '/v1/testing/analytics' as const,
+  tags: ['TestingLab/testingAnalytics'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetTestingAnalyticsExportInput {
+  query?: {
+    fromDate?: string;
+    toDate?: string;
+  };
+}
+export type GetTestingAnalyticsExportOutput = Blob;
+export const getTestingAnalyticsExportEndpoint = {
+  operationId: 'getTestingAnalyticsExport' as const,
+  method: 'GET' as const,
+  path: '/v1/testing/analytics/export' as const,
+  tags: ['TestingLab/testingAnalytics'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetTestingEventsSlotsRegistrationsInput {
   slotId: string;
   query?: {
@@ -14667,10 +14698,13 @@ export const endpoints = {
   patchTenantsSettingsSystemLimits: patchTenantsSettingsSystemLimitsEndpoint,
   getTenantsSettingsIntegrationSettings: getTenantsSettingsIntegrationSettingsEndpoint,
   patchTenantsSettingsIntegrationSettings: patchTenantsSettingsIntegrationSettingsEndpoint,
+  getTestingAnalytics: getTestingAnalyticsEndpoint,
+  getTestingAnalyticsExport: getTestingAnalyticsExportEndpoint,
   getTestingEventsSlotsRegistrations: getTestingEventsSlotsRegistrationsEndpoint,
   postTestingEventsSlotsRegistrations: postTestingEventsSlotsRegistrationsEndpoint,
   deleteTestingEventsRegistrations: deleteTestingEventsRegistrationsEndpoint,
   getTestingEventsRegistrationsMe: getTestingEventsRegistrationsMeEndpoint,
+  getTestingEventsParticipants: getTestingEventsParticipantsEndpoint,
   postTestingEventsRegistrationsCheckIn: postTestingEventsRegistrationsCheckInEndpoint,
   postTestingEventsRegistrationsCheckOut: postTestingEventsRegistrationsCheckOutEndpoint,
   postTestingEventsRegistrationsNoShow: postTestingEventsRegistrationsNoShowEndpoint,

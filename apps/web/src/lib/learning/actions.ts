@@ -218,8 +218,8 @@ export async function updateContent(input: UpdateContentInput): Promise<ActionRe
 export async function reorderContent(courseId: string, contentIds: string[]): Promise<ActionResult<null>> {
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const { content } = createCourseModules();
-    const result = await content.postCoursesContentReorder(resolvedCourseId, { contentIds });
+    const { programs } = createCourseModules();
+    const result = await programs.postCoursesContentReorder1(resolvedCourseId, { contentIds });
 
     if (result.ok) {
       revalidateCourseContentPaths(courseId, resolvedCourseId);

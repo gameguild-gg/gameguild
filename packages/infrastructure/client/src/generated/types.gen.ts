@@ -7391,61 +7391,6 @@ export interface TestingLabTestingEventFeedbackReviewProjection {
 
 export type TestingLabTestingEventMode = 'Online' | 'InPerson' | 'Hybrid';
 
-export interface TestingLabAnalyticsSummaryProjection {
-  events?: number;
-  completedEvents?: number;
-  applications?: number;
-  approvedProjects?: number;
-  registeredTesters?: number;
-  attendedTesters?: number;
-  feedback?: number;
-  averageRating?: number | null;
-  recommendationRate?: number | null;
-  capacity?: number;
-  fillRate?: number;
-}
-
-export interface TestingLabAnalyticsTrendProjection {
-  date?: string;
-  events?: number;
-  applications?: number;
-  registrations?: number;
-  attendance?: number;
-  feedback?: number;
-}
-
-export interface TestingLabEventAnalyticsProjection {
-  eventId?: string;
-  name?: string | null;
-  status?: TestingLabTestingEventStatus;
-  mode?: TestingLabTestingEventMode;
-  startsAt?: string;
-  applications?: number;
-  approvedProjects?: number;
-  registeredTesters?: number;
-  attendedTesters?: number;
-  feedback?: number;
-  averageRating?: number | null;
-  capacity?: number;
-  fillRate?: number;
-}
-
-export interface TestingLabLocationAnalyticsProjection {
-  total?: number;
-  active?: number;
-}
-
-export interface TestingLabAnalyticsReportProjection {
-  fromDate?: string;
-  toDate?: string;
-  generatedAt?: string;
-  current?: TestingLabAnalyticsSummaryProjection;
-  previous?: TestingLabAnalyticsSummaryProjection | null;
-  locations?: TestingLabLocationAnalyticsProjection;
-  trend?: Array<TestingLabAnalyticsTrendProjection> | null;
-  events?: Array<TestingLabEventAnalyticsProjection> | null;
-}
-
 export interface TestingLabTestingEventProjection {
   id?: string;
   name?: string | null;
@@ -7594,6 +7539,61 @@ export interface TestingLabTestingFeedbackObligationProjection {
 
 export type TestingLabTestingFeedbackObligationStatus = 'Pending' | 'Fulfilled' | 'Waived';
 
+export interface TestingLabTestingLabAnalyticsReportProjection {
+  fromDate?: string;
+  toDate?: string;
+  generatedAt?: string;
+  current?: TestingLabTestingLabAnalyticsSummaryProjection;
+  previous?: TestingLabTestingLabAnalyticsSummaryProjection;
+  locations?: TestingLabTestingLabLocationAnalyticsProjection;
+  trend?: Array<TestingLabTestingLabAnalyticsTrendProjection> | null;
+  events?: Array<TestingLabTestingLabEventAnalyticsProjection> | null;
+}
+
+export interface TestingLabTestingLabAnalyticsSummaryProjection {
+  events?: number;
+  completedEvents?: number;
+  applications?: number;
+  approvedProjects?: number;
+  registeredTesters?: number;
+  attendedTesters?: number;
+  feedback?: number;
+  averageRating?: number | null;
+  recommendationRate?: number | null;
+  capacity?: number;
+  fillRate?: number;
+}
+
+export interface TestingLabTestingLabAnalyticsTrendProjection {
+  date?: string;
+  events?: number;
+  applications?: number;
+  registrations?: number;
+  attendance?: number;
+  feedback?: number;
+}
+
+export interface TestingLabTestingLabEventAnalyticsProjection {
+  eventId?: string;
+  name?: string | null;
+  status?: TestingLabTestingEventStatus;
+  mode?: TestingLabTestingEventMode;
+  startsAt?: string;
+  applications?: number;
+  approvedProjects?: number;
+  registeredTesters?: number;
+  attendedTesters?: number;
+  feedback?: number;
+  averageRating?: number | null;
+  capacity?: number;
+  fillRate?: number;
+}
+
+export interface TestingLabTestingLabLocationAnalyticsProjection {
+  total?: number;
+  active?: number;
+}
+
 export interface TestingLabTestingLabPermissions {
   canCreateSessions?: boolean;
   canEditSessions?: boolean;
@@ -7615,6 +7615,13 @@ export interface TestingLabTestingLabPermissions {
   canApproveRequests?: boolean;
   canManageParticipants?: boolean;
   canViewParticipants?: boolean;
+}
+
+export interface TestingLabTestingLabResourcePermission {
+  action?: string | null;
+  resourceType?: string | null;
+  resourceId?: string;
+  expiresAt?: string | null;
 }
 
 export interface TestingLabTestingLabRoleTemplate {
@@ -7955,13 +7962,6 @@ export interface TestingLabUpsertTestingEventSlotInput {
   roomName?: string | null;
   meetingUrl?: string | null;
   locationId?: string | null;
-}
-
-export interface TestingLabTestingLabResourcePermission {
-  action?: string | null;
-  resourceType?: string | null;
-  resourceId?: string;
-  expiresAt?: string | null;
 }
 
 export interface TestingLabUserTestingLabPermissions {
@@ -8788,7 +8788,13 @@ export let TestingLabTestingFeedbackSchema: z.ZodType<TestingLabTestingFeedback>
 export let TestingLabTestingFeedbackFormSchema: z.ZodType<TestingLabTestingFeedbackForm>;
 export let TestingLabTestingFeedbackObligationProjectionSchema: z.ZodType<TestingLabTestingFeedbackObligationProjection>;
 export let TestingLabTestingFeedbackObligationStatusSchema: z.ZodType<TestingLabTestingFeedbackObligationStatus>;
+export let TestingLabTestingLabAnalyticsReportProjectionSchema: z.ZodType<TestingLabTestingLabAnalyticsReportProjection>;
+export let TestingLabTestingLabAnalyticsSummaryProjectionSchema: z.ZodType<TestingLabTestingLabAnalyticsSummaryProjection>;
+export let TestingLabTestingLabAnalyticsTrendProjectionSchema: z.ZodType<TestingLabTestingLabAnalyticsTrendProjection>;
+export let TestingLabTestingLabEventAnalyticsProjectionSchema: z.ZodType<TestingLabTestingLabEventAnalyticsProjection>;
+export let TestingLabTestingLabLocationAnalyticsProjectionSchema: z.ZodType<TestingLabTestingLabLocationAnalyticsProjection>;
 export let TestingLabTestingLabPermissionsSchema: z.ZodType<TestingLabTestingLabPermissions>;
+export let TestingLabTestingLabResourcePermissionSchema: z.ZodType<TestingLabTestingLabResourcePermission>;
 export let TestingLabTestingLabRoleTemplateSchema: z.ZodType<TestingLabTestingLabRoleTemplate>;
 export let TestingLabTestingLabSettingsSchema: z.ZodType<TestingLabTestingLabSettings>;
 export let TestingLabTestingLearningCompletionRequirementSchema: z.ZodType<TestingLabTestingLearningCompletionRequirement>;
@@ -8811,7 +8817,6 @@ export let TestingLabUpdateTestingLabRoleInputSchema: z.ZodType<TestingLabUpdate
 export let TestingLabUpdateTestingLabSettingsSchema: z.ZodType<TestingLabUpdateTestingLabSettings>;
 export let TestingLabUpdateTestingLocationSchema: z.ZodType<TestingLabUpdateTestingLocation>;
 export let TestingLabUpsertTestingEventSlotInputSchema: z.ZodType<TestingLabUpsertTestingEventSlotInput>;
-export let TestingLabTestingLabResourcePermissionSchema: z.ZodType<TestingLabTestingLabResourcePermission>;
 export let TestingLabUserTestingLabPermissionsSchema: z.ZodType<TestingLabUserTestingLabPermissions>;
 
 // Zod Schema Definitions
@@ -17126,7 +17131,6 @@ TestingLabCreateTestingLabRoleInputSchema = z.object({
   name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
-  resourcePermissions: z.array(z.lazy(() => TestingLabTestingLabResourcePermissionSchema)).nullable().optional(),
 });
 
 /** Zod schema for TestingLabCreateTestingLabSettings */
@@ -17744,6 +17748,72 @@ TestingLabTestingFeedbackObligationProjectionSchema = z.object({
 /** Zod schema for TestingLabTestingFeedbackObligationStatus */
 TestingLabTestingFeedbackObligationStatusSchema = z.enum(['Pending', 'Fulfilled', 'Waived']);
 
+/** Zod schema for TestingLabTestingLabAnalyticsReportProjection */
+TestingLabTestingLabAnalyticsReportProjectionSchema = z.object({
+  fromDate: z.string().datetime().optional(),
+  toDate: z.string().datetime().optional(),
+  generatedAt: z.string().datetime().optional(),
+  current: z.lazy(() => TestingLabTestingLabAnalyticsSummaryProjectionSchema).optional(),
+  previous: z.lazy(() => TestingLabTestingLabAnalyticsSummaryProjectionSchema).optional(),
+  locations: z.lazy(() => TestingLabTestingLabLocationAnalyticsProjectionSchema).optional(),
+  trend: z
+    .array(z.lazy(() => TestingLabTestingLabAnalyticsTrendProjectionSchema))
+    .nullable()
+    .optional(),
+  events: z
+    .array(z.lazy(() => TestingLabTestingLabEventAnalyticsProjectionSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for TestingLabTestingLabAnalyticsSummaryProjection */
+TestingLabTestingLabAnalyticsSummaryProjectionSchema = z.object({
+  events: z.number().int().optional(),
+  completedEvents: z.number().int().optional(),
+  applications: z.number().int().optional(),
+  approvedProjects: z.number().int().optional(),
+  registeredTesters: z.number().int().optional(),
+  attendedTesters: z.number().int().optional(),
+  feedback: z.number().int().optional(),
+  averageRating: z.number().nullable().optional(),
+  recommendationRate: z.number().nullable().optional(),
+  capacity: z.number().int().optional(),
+  fillRate: z.number().optional(),
+});
+
+/** Zod schema for TestingLabTestingLabAnalyticsTrendProjection */
+TestingLabTestingLabAnalyticsTrendProjectionSchema = z.object({
+  date: z.string().datetime().optional(),
+  events: z.number().int().optional(),
+  applications: z.number().int().optional(),
+  registrations: z.number().int().optional(),
+  attendance: z.number().int().optional(),
+  feedback: z.number().int().optional(),
+});
+
+/** Zod schema for TestingLabTestingLabEventAnalyticsProjection */
+TestingLabTestingLabEventAnalyticsProjectionSchema = z.object({
+  eventId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  startsAt: z.string().datetime().optional(),
+  applications: z.number().int().optional(),
+  approvedProjects: z.number().int().optional(),
+  registeredTesters: z.number().int().optional(),
+  attendedTesters: z.number().int().optional(),
+  feedback: z.number().int().optional(),
+  averageRating: z.number().nullable().optional(),
+  capacity: z.number().int().optional(),
+  fillRate: z.number().optional(),
+});
+
+/** Zod schema for TestingLabTestingLabLocationAnalyticsProjection */
+TestingLabTestingLabLocationAnalyticsProjectionSchema = z.object({
+  total: z.number().int().optional(),
+  active: z.number().int().optional(),
+});
+
 /** Zod schema for TestingLabTestingLabPermissions */
 TestingLabTestingLabPermissionsSchema = z.object({
   canCreateSessions: z.boolean().optional(),
@@ -17768,6 +17838,14 @@ TestingLabTestingLabPermissionsSchema = z.object({
   canViewParticipants: z.boolean().optional(),
 });
 
+/** Zod schema for TestingLabTestingLabResourcePermission */
+TestingLabTestingLabResourcePermissionSchema = z.object({
+  action: z.string().nullable().optional(),
+  resourceType: z.string().nullable().optional(),
+  resourceId: z.string().uuid().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+});
+
 /** Zod schema for TestingLabTestingLabRoleTemplate */
 TestingLabTestingLabRoleTemplateSchema = z.object({
   id: z.string().uuid().optional(),
@@ -17775,7 +17853,6 @@ TestingLabTestingLabRoleTemplateSchema = z.object({
   description: z.string().nullable().optional(),
   isSystemRole: z.boolean().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
-  resourcePermissions: z.array(z.lazy(() => TestingLabTestingLabResourcePermissionSchema)).nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingLabSettings */
@@ -17893,9 +17970,7 @@ TestingLabTestingParticipantDirectoryItemProjectionSchema = z.object({
   userName: z.string().nullable().optional(),
   userEmail: z.string().nullable().optional(),
   avatarUrl: z.string().nullable().optional(),
-  status: z
-    .lazy(() => TestingLabTestingSlotRegistrationStatusSchema)
-    .optional(),
+  status: z.lazy(() => TestingLabTestingSlotRegistrationStatusSchema).optional(),
   waitlistPosition: z.number().int().nullable().optional(),
   notes: z.string().nullable().optional(),
   registeredAt: z.string().datetime().optional(),
@@ -17908,9 +17983,7 @@ TestingLabTestingParticipantDirectoryItemProjectionSchema = z.object({
 /** Zod schema for TestingLabTestingParticipantDirectoryProjection */
 TestingLabTestingParticipantDirectoryProjectionSchema = z.object({
   items: z
-    .array(
-      z.lazy(() => TestingLabTestingParticipantDirectoryItemProjectionSchema),
-    )
+    .array(z.lazy(() => TestingLabTestingParticipantDirectoryItemProjectionSchema))
     .nullable()
     .optional(),
   totalCount: z.number().int().optional(),
@@ -18137,7 +18210,6 @@ TestingLabUpdateTestingLabRoleInputSchema = z.object({
   name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
-  resourcePermissions: z.array(z.lazy(() => TestingLabTestingLabResourcePermissionSchema)).nullable().optional(),
 });
 
 /** Zod schema for TestingLabUpdateTestingLabSettings */
@@ -18184,19 +18256,14 @@ TestingLabUpsertTestingEventSlotInputSchema = z.object({
   locationId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingLabResourcePermission */
-TestingLabTestingLabResourcePermissionSchema = z.object({
-  action: z.string().nullable().optional(),
-  resourceType: z.string().nullable().optional(),
-  resourceId: z.string().uuid().optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
-});
-
 /** Zod schema for TestingLabUserTestingLabPermissions */
 TestingLabUserTestingLabPermissionsSchema = z.object({
   userId: z.string().uuid().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   assignedRoles: z.array(z.string()).nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
-  resourcePermissions: z.array(z.lazy(() => TestingLabTestingLabResourcePermissionSchema)).nullable().optional(),
+  resourcePermissions: z
+    .array(z.lazy(() => TestingLabTestingLabResourcePermissionSchema))
+    .nullable()
+    .optional(),
 });

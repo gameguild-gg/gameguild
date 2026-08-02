@@ -5,7 +5,7 @@ import {
   type ApiError,
   type ProjectsProject,
   type Result,
-  type TestingLabAnalyticsReportProjection,
+  type TestingLabTestingLabAnalyticsReportProjection,
   type TestingLabSessionProjectProjection,
   type TestingLabSessionRegistration,
   type TestingLabSessionWaitlist,
@@ -134,7 +134,7 @@ function createTestingLabModules() {
     locations: new GeneratedApi.TestinglabTestinglocationsModule(client),
     participants: new GeneratedApi.TestinglabTestingparticipantsModule(client),
     feedback: new GeneratedApi.TestinglabTestingfeedbackModule(client),
-    analytics: new GeneratedApi.TestinglabAnalyticsModule(client),
+    analytics: new GeneratedApi.TestinglabTestinganalyticsModule(client),
     settings: new GeneratedApi.TestinglabSettingsModule(client),
     permissions: new GeneratedApi.TestinglabPermissionModule(client),
     projects: new GeneratedApi.ProjectsModule(client),
@@ -464,7 +464,7 @@ const emptyAnalyticsSummary: TestingLabAnalyticsSummary = {
   fillRate: 0,
 };
 
-function mapAnalyticsSummary(summary: TestingLabAnalyticsReportProjection['current'] | null | undefined): TestingLabAnalyticsSummary {
+function mapAnalyticsSummary(summary: TestingLabTestingLabAnalyticsReportProjection['current'] | null | undefined): TestingLabAnalyticsSummary {
   return {
     events: summary?.events ?? 0,
     completedEvents: summary?.completedEvents ?? 0,
@@ -528,7 +528,17 @@ export async function getTestingLabAnalyticsCsv(
   options: Omit<TestingLabAnalyticsOptions, 'includeComparison'>,
 ): Promise<TestingLabAnalyticsCsvResult> {
   const api = createTestingLabModules();
-  return readResult(api.analytics.getTestingAnalyticsExport(options), 'Testing Lab analytics export');
+  const result = await readResult(api.analytics.getTestingAnalyticsExport(options), 'Testing Lab analytics export');
+  if (!result.data) return { data: null, issue: result.issue };
+
+  try {
+    return { data: await result.data.text() };
+  } catch (error) {
+    return {
+      data: null,
+      issue: `Testing Lab analytics export could not be read: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+  }
 }
 export interface TestingLabLocationFilterOptions {
   q?: string;

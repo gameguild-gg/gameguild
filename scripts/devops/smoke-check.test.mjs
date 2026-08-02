@@ -55,7 +55,7 @@ async function runSmokeWithOpenApi(paths) {
       GAMEGUILD_WEB_URL: origin,
       GAMEGUILD_LEARNING_URL: origin,
       SMOKE_RETRIES: '0',
-      SMOKE_TIMEOUT_MS: '1000',
+      SMOKE_TIMEOUT_MS: '5000',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });

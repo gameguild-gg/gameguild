@@ -31,7 +31,7 @@ vi.mock('@game-guild/client', () => ({
     }),
     TestinglabTestingparticipantsModule: vi.fn(() => ({})),
     TestinglabTestingfeedbackModule: vi.fn(() => ({})),
-    TestinglabAnalyticsModule: vi.fn(() => mocks.analytics),
+    TestinglabTestinganalyticsModule: vi.fn(() => mocks.analytics),
     TestinglabSettingsModule: vi.fn(() => ({})),
     TestinglabPermissionModule: vi.fn(() => ({})),
     ProjectsModule: vi.fn(function ProjectsModule() {

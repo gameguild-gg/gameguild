@@ -64,10 +64,14 @@ public sealed class ContractTests
         var ownerId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var createdAt = DateTimeOffset.Parse("2026-07-18T12:00:00Z");
-        var wallet = new WalletContract(WalletId.New(), ownerId, tenantId, WalletLifecycleState.Active, createdAt);
+        var walletId = WalletId.New();
+        var wallet = new WalletContract(walletId, ownerId, tenantId, WalletLifecycleState.Active, createdAt);
 
+        wallet.Id.Should().Be(walletId);
         wallet.OwnerId.Should().Be(ownerId);
         wallet.TenantId.Should().Be(tenantId);
+        wallet.State.Should().Be(WalletLifecycleState.Active);
+        wallet.CreatedAt.Should().Be(createdAt);
         typeof(WalletContract).GetProperty("Balance").Should().BeNull();
         FluentActions.Invoking(() => new WalletContract(WalletId.New(), Guid.Empty, tenantId, WalletLifecycleState.Active, createdAt))
             .Should().Throw<ArgumentException>();
@@ -85,6 +89,11 @@ public sealed class ContractTests
             new ReserveVersion(3), observed, observed.AddMinutes(5), new HardCoinAmount(100), new SoftCoinAmount(10_000), " reserve-hash ");
 
         snapshot.EvidenceHash.Should().Be("reserve-hash");
+        snapshot.Version.Should().Be(new ReserveVersion(3));
+        snapshot.ObservedAt.Should().Be(observed);
+        snapshot.ExpiresAt.Should().Be(observed.AddMinutes(5));
+        snapshot.HardHeadroom.Should().Be(new HardCoinAmount(100));
+        snapshot.SoftHeadroom.Should().Be(new SoftCoinAmount(10_000));
         FluentActions.Invoking(() => new ReserveSnapshotContract(
             new ReserveVersion(3), observed, observed, HardCoinAmount.Zero, SoftCoinAmount.Zero, "hash"))
             .Should().Throw<ArgumentException>();
@@ -100,6 +109,10 @@ public sealed class ContractTests
         var policy = new MonetaryPolicyContract(new PolicyVersion(2), effective, effective.AddDays(1), 10_000, 250_000);
 
         policy.ConversionFeePpm.Should().Be(10_000);
+        policy.Version.Should().Be(new PolicyVersion(2));
+        policy.EffectiveAt.Should().Be(effective);
+        policy.EndsAt.Should().Be(effective.AddDays(1));
+        policy.MinimumMarginPpm.Should().Be(250_000);
         FluentActions.Invoking(() => new MonetaryPolicyContract(new PolicyVersion(2), effective, effective, 0, 0))
             .Should().Throw<ArgumentException>();
         FluentActions.Invoking(() => new MonetaryPolicyContract(new PolicyVersion(2), effective, null, -1, 0))
@@ -150,7 +163,10 @@ public sealed class ContractTests
         FluentActions.Invoking(() => new FragmentAllocationContract(lot, -1, 1, wallet)).Should().Throw<ArgumentOutOfRangeException>();
         FluentActions.Invoking(() => new FragmentAllocationContract(lot, 0, 0, wallet)).Should().Throw<ArgumentOutOfRangeException>();
         FluentActions.Invoking(() => new FragmentAllocationContract(lot, long.MaxValue, 2, wallet)).Should().Throw<OverflowException>();
-        new FragmentAllocationContract(lot, 4, 2, wallet).EndExclusive.Should().Be(6);
+        var allocation = new FragmentAllocationContract(lot, 4, 2, wallet);
+        allocation.ParentLotId.Should().Be(lot);
+        allocation.DestinationWalletId.Should().Be(wallet);
+        allocation.EndExclusive.Should().Be(6);
     }
 
     [Fact]
@@ -193,6 +209,8 @@ public sealed class ContractTests
 
         var confirmedAt = now.AddMinutes(1);
         var confirmed = new SourceStampContract(SourceStampId.New(), "sha256", SourceConfirmationState.Confirmed, now, confirmedAt, "pi_1");
+        var lotId = CreditLotId.New();
+        var walletId = WalletId.New();
         FluentActions.Invoking(() => new RootMintContract(confirmed, CreditLotId.New(), WalletId.New(), new CoinAmount(CurrencyCode.HardCoin, 0), ProvenanceKind.PurchasedHard, confirmedAt, null))
             .Should().Throw<ArgumentOutOfRangeException>();
         FluentActions.Invoking(() => new RootMintContract(confirmed, CreditLotId.New(), WalletId.New(), CoinAmount.From(new HardCoinAmount(10)), (ProvenanceKind)99, confirmedAt, null))
@@ -202,9 +220,14 @@ public sealed class ContractTests
         FluentActions.Invoking(() => new RootMintContract(confirmed, CreditLotId.New(), WalletId.New(), CoinAmount.From(new HardCoinAmount(10)), ProvenanceKind.PurchasedHard, confirmedAt, confirmedAt.AddMinutes(-1)))
             .Should().Throw<ArgumentException>();
 
-        var mint = new RootMintContract(confirmed, CreditLotId.New(), WalletId.New(), CoinAmount.From(new HardCoinAmount(10)), ProvenanceKind.PurchasedHard, confirmedAt, null);
+        var mint = new RootMintContract(confirmed, lotId, walletId, CoinAmount.From(new HardCoinAmount(10)), ProvenanceKind.PurchasedHard, confirmedAt, null);
+        mint.LotId.Should().Be(lotId);
+        mint.WalletId.Should().Be(walletId);
         mint.Amount.Units.Should().Be(10);
         mint.Source.Should().BeSameAs(confirmed);
+        mint.Provenance.Should().Be(ProvenanceKind.PurchasedHard);
+        mint.ConfirmedAt.Should().Be(confirmedAt);
+        mint.MaturesAt.Should().BeNull();
     }
 
     [Fact]
@@ -212,9 +235,11 @@ public sealed class ContractTests
     {
         var allocation = new FragmentAllocationContract(CreditLotId.New(), 0, 5, WalletId.New());
         var parents = new List<FragmentAllocationContract> { allocation };
-        var lineage = new FragmentLineageContract(CreditLotId.New(), parents);
+        var outputLotId = CreditLotId.New();
+        var lineage = new FragmentLineageContract(outputLotId, parents);
         parents.Clear();
 
+        lineage.OutputLotId.Should().Be(outputLotId);
         lineage.Parents.Should().ContainSingle().Which.Should().Be(allocation);
         FluentActions.Invoking(() => new FragmentLineageContract(CreditLotId.New(), null!)).Should().Throw<ArgumentNullException>();
         FluentActions.Invoking(() => new FragmentLineageContract(CreditLotId.New(), [])).Should().Throw<ArgumentException>();
