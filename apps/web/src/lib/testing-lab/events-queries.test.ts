@@ -239,6 +239,10 @@ describe('Testing Lab event queries', () => {
 
     expect(result.events).toHaveLength(1);
     expect(result.accessIssues).toEqual([]);
+    expect(mocks.createServerClient).toHaveBeenCalledWith({
+      baseUrl: 'http://localhost:5295',
+      cache: 'no-store',
+    });
     expect(mocks.events.getTestingEventsPublic).toHaveBeenCalledWith({ skip: 0, take: 100 });
     expect(mocks.events.getTestingEventsApplicationsMe).not.toHaveBeenCalled();
   });
@@ -252,6 +256,18 @@ describe('Testing Lab event queries', () => {
     expect(result.feedbackObligations).toHaveLength(1);
     expect(result.isAuthenticated).toBe(true);
     expect(result.accessIssues).toEqual([]);
+    expect(mocks.events.getTestingEventsPublic1.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.auth.mock.invocationCallOrder[0]!,
+    );
+    expect(mocks.createServerClient).toHaveBeenNthCalledWith(1, {
+      baseUrl: 'http://localhost:5295',
+      cache: 'no-store',
+    });
+    expect(mocks.createServerClient).toHaveBeenNthCalledWith(2, {
+      baseUrl: 'http://localhost:5295',
+      auth: { getAccessToken: expect.any(Function) },
+      tenant: { getTenantId: expect.any(Function) },
+    });
     expect(mocks.events.getTestingEventsApplicationsMe).toHaveBeenCalledWith({ eventId: 'event-1' });
     expect(mocks.participation.getTestingEventsRegistrationsMe).toHaveBeenCalledWith({ eventId: 'event-1' });
     expect(mocks.participation.getTestingEventsFeedbackObligationsMe).toHaveBeenCalledWith({ eventId: 'event-1' });

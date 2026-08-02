@@ -98,6 +98,17 @@ function Metric({ metric }: { metric: MetricDefinition }) {
   );
 }
 
+function formatTrendDate(value: string) {
+  const candidate = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? `${value}T00:00:00.000Z`
+    : value;
+  const date = new Date(candidate);
+
+  return Number.isNaN(date.getTime())
+    ? value
+    : shortDateFormatter.format(date);
+}
+
 function ActivityTrend({
   trend,
 }: {
@@ -143,9 +154,7 @@ function ActivityTrend({
               className="text-[11px] text-muted-foreground"
               dateTime={point.date}
             >
-              {shortDateFormatter.format(
-                new Date(`${point.date}T00:00:00.000Z`),
-              )}
+              {formatTrendDate(point.date)}
             </time>
           </div>
         ))}

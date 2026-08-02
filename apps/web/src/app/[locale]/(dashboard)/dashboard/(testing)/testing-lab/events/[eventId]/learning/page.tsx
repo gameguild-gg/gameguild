@@ -43,6 +43,7 @@ export default async function TestingEventLearningPage({
   return (
     <div className="space-y-5">
       <TestingLabPageHeader
+        headingLevel={2}
         icon={BookOpenCheck}
         title="Learning evidence"
         description="Connect attendance and feedback evidence to one course activity without moving grading ownership into Testing Lab."

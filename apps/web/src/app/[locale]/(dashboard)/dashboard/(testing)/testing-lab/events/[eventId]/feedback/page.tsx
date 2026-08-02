@@ -40,7 +40,7 @@ export default async function TestingEventFeedbackPage({ params }: { params: Pro
 
   return (
     <div className="space-y-5">
-      <TestingLabPageHeader icon={BarChart3} title="Feedback review" description="Review every required tester submission, identify pending obligations, and preserve project feedback evidence." />
+      <TestingLabPageHeader headingLevel={2} icon={BarChart3} title="Feedback review" description="Review every required tester submission, identify pending obligations, and preserve project feedback evidence." />
 
       <TestingLabAccessIssues issues={review.accessIssues} />
 

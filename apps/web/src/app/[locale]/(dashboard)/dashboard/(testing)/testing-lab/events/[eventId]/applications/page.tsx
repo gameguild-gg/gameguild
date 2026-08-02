@@ -1,8 +1,10 @@
 import { TestingEventApplications } from '@/components/testing-lab/testing-event-management';
+import { getMembers } from '@/lib/community/queries/members';
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
 import { Link } from '@/i18n/navigation';
 import { isTestingEventReadOnly } from '@/lib/testing-lab/event-workspace';
 import { getTestingEventWorkspaceData } from '@/lib/testing-lab/events-queries';
+import { getTestingProjectOptions } from '@/lib/testing-lab/queries';
 import { cn } from '@game-guild/ui/lib/utils';
 import type { TestingLabTestingApplicationStatus } from '@game-guild/client';
 import { ClipboardList } from 'lucide-react';
@@ -25,8 +27,22 @@ export default async function TestingEventApplicationsPage({
   searchParams: Promise<{ applicationStatus?: string }>;
 }) {
   const [{ eventId }, query] = await Promise.all([params, searchParams]);
-  const detail = await getTestingEventWorkspaceData(eventId);
+  const [detail, memberDirectory, projects] = await Promise.all([
+    getTestingEventWorkspaceData(eventId),
+    getMembers({ page: 1, limit: 100 }),
+    getTestingProjectOptions(),
+  ]);
   if (!detail.event) notFound();
+  const projectLabels = Object.fromEntries(projects.map((project) => [project.id, project.title]));
+  const memberLabels = Object.fromEntries(
+    memberDirectory.members.map((member) => [
+      member.id,
+      member.displayName && member.email
+        ? `${member.displayName} / ${member.email}`
+        : member.displayName || member.email || 'Member details unavailable',
+    ]),
+  );
+
 
   const selected = statuses.find((status) => status.value === query.applicationStatus)?.value;
   const applications = selected
@@ -36,6 +52,7 @@ export default async function TestingEventApplicationsPage({
   return (
     <div className="space-y-5">
       <TestingLabPageHeader
+        headingLevel={2}
         icon={ClipboardList}
         title="Project applications"
         description="Review project candidates, record committee decisions, and reserve capacity only when a project is approved."
@@ -68,6 +85,8 @@ export default async function TestingEventApplicationsPage({
         applications={applications}
         slots={detail.slots}
         readOnly={isTestingEventReadOnly(detail.event)}
+        projectLabels={projectLabels}
+        memberLabels={memberLabels}
       />
     </div>
   );

@@ -98,4 +98,23 @@ describe('Public Testing Event detail page', () => {
     expect(screen.getByText('Application state: new')).toBeInTheDocument();
     expect(mocks.getTestingProjectOptions).not.toHaveBeenCalled();
   });
+
+  it('renders an accessible retry state and records the public contract failure', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mocks.getPublicTestingEventExperience.mockResolvedValue({
+      event: null,
+      applications: [],
+      registrations: [],
+      feedbackObligations: [],
+      isAuthenticated: false,
+      accessIssues: ['Public event failed: response validation failed'],
+    });
+
+    render(await PublicTestingEventDetailPage({ params: Promise.resolve({ eventId: 'event-1' }) }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Event temporarily unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Back to Testing Lab events' })).toHaveAttribute('href', '/testing-lab/events');
+    expect(consoleError).toHaveBeenCalledWith('[testing-lab] public event event-1 could not be loaded', ['Public event failed: response validation failed']);
+    consoleError.mockRestore();
+  });
 });

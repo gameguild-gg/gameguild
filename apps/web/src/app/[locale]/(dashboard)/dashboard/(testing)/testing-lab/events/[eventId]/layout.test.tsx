@@ -6,6 +6,10 @@ const mocks = vi.hoisted(() => ({
   getTestingEventWorkspaceData: vi.fn(),
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 vi.mock('@/lib/testing-lab/events-queries', () => ({
   getTestingEventWorkspaceData: mocks.getTestingEventWorkspaceData,
 }));
@@ -47,7 +51,7 @@ describe('Testing Event workspace layout', () => {
       }),
     );
 
-    expect(screen.getByRole('heading', { name: 'August campus playtest' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'August campus playtest', level: 1 })).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Testing event workspace' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Overview' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Applications' })).toHaveAttribute(

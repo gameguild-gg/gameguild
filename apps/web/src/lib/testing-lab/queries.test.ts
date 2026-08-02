@@ -30,7 +30,6 @@ vi.mock('@game-guild/client', () => ({
       return mocks.locations;
     }),
     TestinglabTestingparticipantsModule: vi.fn(() => ({})),
-    TestinglabAnalyticsModule: vi.fn(() => ({})),
     TestinglabTestingfeedbackModule: vi.fn(() => ({})),
     TestinglabAnalyticsModule: vi.fn(() => mocks.analytics),
     TestinglabSettingsModule: vi.fn(() => ({})),
