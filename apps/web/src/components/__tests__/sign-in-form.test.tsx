@@ -39,6 +39,8 @@ vi.mock('next-intl', () => ({
 
 // Must import AFTER mocks
 const { SignInForm } = await import('@/components/sign-in-form');
+const { GoogleSignInButton } = await import('@/components/google-sign-in-button');
+const { __resetGisForTest } = await import('@/components/use-google-identity-service');
 
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
@@ -240,5 +242,71 @@ describe('SignInForm', () => {
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in$/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /login with google/i })).not.toBeInTheDocument();
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  Providers slot composition (real GoogleSignInButton)               */
+/* ------------------------------------------------------------------ */
+
+describe('SignInForm providers slot composition', () => {
+  let initializeMock: ReturnType<typeof vi.fn>;
+  let renderButtonMock: ReturnType<typeof vi.fn>;
+  let promptMock: ReturnType<typeof vi.fn>;
+  let disableAutoSelectMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mockAuth = createMockUseAuth();
+    initializeMock = vi.fn();
+    renderButtonMock = vi.fn();
+    promptMock = vi.fn();
+    disableAutoSelectMock = vi.fn();
+
+    // Reset the module-level singleton guards so the GIS hook gets a clean
+    // initialize call, then pre-seed window.google so the hook's
+    // "script already loaded" branch short-circuits (no real <script>).
+    __resetGisForTest();
+    (globalThis as unknown as { google: unknown }).google = {
+      accounts: {
+        id: {
+          initialize: initializeMock,
+          renderButton: renderButtonMock,
+          prompt: promptMock,
+          disableAutoSelect: disableAutoSelectMock,
+        },
+      },
+    };
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID = 'test-google-client-id';
+  });
+
+  afterEach(() => {
+    delete (globalThis as unknown as { google?: unknown }).google;
+  });
+
+  it('renders the Google button above Email inside the same Card, with one divider', async () => {
+    renderWithUser(<SignInForm providers={<GoogleSignInButton />} />);
+
+    // GIS surface must hydrate the branded button before layout assertions.
+    await waitFor(() => {
+      expect(renderButtonMock).toHaveBeenCalledTimes(1);
+    });
+
+    // (a) Ordering: Google button container precedes the Email label.
+    const googleBtn = screen.getByTestId('google-sign-in-button');
+    const emailInput = screen.getByLabelText('Email');
+    expect(
+      googleBtn.compareDocumentPosition(emailInput) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+
+    // (b) Unification: both share the same nearest Card root.
+    const cardRoot = googleBtn.closest('[data-slot="card"]');
+    const emailCard = emailInput.closest('[data-slot="card"]');
+    expect(cardRoot).not.toBeNull();
+    expect(cardRoot).toBe(emailCard);
+
+    // (c) "or with email" divider present exactly once.
+    expect(screen.getByText('or with email')).toBeInTheDocument();
+    expect(screen.getAllByText('or with email')).toHaveLength(1);
   });
 });
