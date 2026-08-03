@@ -62,7 +62,7 @@ describe("Testing Lab analytics page", () => {
       locations: { total: 3, active: 2 },
       trend: [
         {
-          date: "2026-07-10",
+          date: "2026-07-10T00:00:00.000Z",
           events: 1,
           applications: 4,
           registrations: 8,

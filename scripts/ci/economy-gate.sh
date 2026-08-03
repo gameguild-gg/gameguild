@@ -18,6 +18,10 @@ resolve_python() {
 
 PYTHON_BIN="${PYTHON_BIN:-$(resolve_python)}"
 
+normalize_shell_record_field() {
+  printf '%s' "${1%$'\r'}"
+}
+
 assert_economy_manifest() {
   local repository_root="$1" manifest_path="$2"
   "$PYTHON_BIN" - "$repository_root" "$manifest_path" <<'PY'
@@ -152,23 +156,68 @@ PY
 }
 
 assert_cobertura_coverage() {
-  local path="$1" assembly="$2"
-  "$PYTHON_BIN" - "$path" "$assembly" <<'PY'
+  local path="$1" assembly="$2" path_prefixes="${3:-}"
+  "$PYTHON_BIN" - "$path" "$assembly" "$path_prefixes" <<'PY'
 import json
+import re
 import sys
 import xml.etree.ElementTree as ET
 
-path, assembly = sys.argv[1:3]
+path, assembly, path_prefixes_csv = sys.argv[1:4]
+prefixes = [value.replace("\\", "/").strip("/") + "/" for value in path_prefixes_csv.split(",") if value]
 root = ET.parse(path).getroot()
 package = next((node for node in root.iter() if node.tag.rsplit("}", 1)[-1] == "package" and node.attrib.get("name") == assembly), None)
 if package is None:
     raise SystemExit(f"Coverage report does not contain required assembly '{assembly}': {path}")
 
-line_rate = float(package.attrib.get("line-rate", "0"))
-branch_rate = float(package.attrib.get("branch-rate", "0"))
-methods = [node for node in package.iter() if node.tag.rsplit("}", 1)[-1] == "method"]
+classes = [node for node in package.iter() if node.tag.rsplit("}", 1)[-1] == "class"]
+if prefixes:
+    classes = [
+        node for node in classes
+        if any(node.attrib.get("filename", "").replace("\\", "/").startswith(prefix) for prefix in prefixes)
+    ]
+    if not classes:
+        raise SystemExit(
+            f"Coverage assembly '{assembly}' contains no classes under path prefixes {path_prefixes_csv}"
+        )
+
+methods = [
+    node for class_node in classes
+    for node in class_node.iter()
+    if node.tag.rsplit("}", 1)[-1] == "method"
+]
 if not methods:
     raise SystemExit(f"Coverage assembly '{assembly}' contains zero methods")
+
+if prefixes:
+    lines = []
+    for class_node in classes:
+        class_lines = next(
+            (child for child in class_node if child.tag.rsplit("}", 1)[-1] == "lines"),
+            None,
+        )
+        if class_lines is not None:
+            lines.extend(
+                line for line in class_lines
+                if line.tag.rsplit("}", 1)[-1] == "line"
+            )
+    if not lines:
+        raise SystemExit(f"Coverage assembly '{assembly}' contains zero executable lines under {path_prefixes_csv}")
+    line_rate = sum(int(line.attrib.get("hits", "0")) > 0 for line in lines) / len(lines)
+    covered_branches = total_branches = 0
+    for line in lines:
+        if line.attrib.get("branch", "false").lower() != "true":
+            continue
+        match = re.search(r"\((\d+)/(\d+)\)", line.attrib.get("condition-coverage", ""))
+        if match is None:
+            raise SystemExit(f"Coverage branch evidence is malformed for assembly '{assembly}'")
+        covered_branches += int(match.group(1))
+        total_branches += int(match.group(2))
+    branch_rate = covered_branches / total_branches if total_branches else 1.0
+else:
+    line_rate = float(package.attrib.get("line-rate", "0"))
+    branch_rate = float(package.attrib.get("branch-rate", "0"))
+
 covered_methods = sum(
     1 for method in methods
     if any(
@@ -185,7 +234,13 @@ if branch_rate < 1:
 if method_rate < 1:
     raise SystemExit(f"Assembly '{assembly}' method coverage is {method_rate * 100:g}% (required: 100%)")
 
-print(json.dumps({"assembly": assembly, "lineRate": line_rate, "branchRate": branch_rate, "methodRate": method_rate}, separators=(",", ":")))
+print(json.dumps({
+    "assembly": assembly,
+    "pathPrefixes": prefixes,
+    "lineRate": line_rate,
+    "branchRate": branch_rate,
+    "methodRate": method_rate,
+}, separators=(",", ":")))
 PY
 }
 

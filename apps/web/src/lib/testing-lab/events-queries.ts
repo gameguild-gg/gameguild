@@ -134,7 +134,7 @@ export async function getTestingEventManagerData(
     read(api.events.getTestingEvents1(eventId), 'Event'),
     read(api.events.getTestingEventsSlots(eventId), 'Slots'),
     read(
-      api.events.getTestingEventsApplications(eventId, {
+      api.events.getTestingEventsApplications1(eventId, {
         status: options.applicationStatus,
         skip: 0,
         take: 100,

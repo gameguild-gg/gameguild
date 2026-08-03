@@ -65,7 +65,10 @@ public sealed class HardCoinFundingLifecycleTests
         claim.Amount.Should().Be(new CoinAmount(CurrencyCode.HardCoin, 1_250));
         claim.IsPending.Should().BeTrue();
         claim.TerminalAt.Should().BeNull();
-        claim.Events.Should().ContainSingle().Which.State.Should().Be(SourceConfirmationState.Observed);
+        var observed = claim.Events.Should().ContainSingle().Subject;
+        observed.State.Should().Be(SourceConfirmationState.Observed);
+        observed.Sequence.Should().Be(1);
+        observed.EvidenceHash.Should().HaveLength(64);
     }
 
     [Theory]

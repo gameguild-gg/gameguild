@@ -17,14 +17,24 @@ public sealed class RiskReviewLedgerTests
         var decision = RiskDecisionSnapshot.Create(
             Guid.NewGuid(), RiskOutcome.Review, context, Time, Time.AddMinutes(5), [RiskReasonCode.ManualReviewRequired]);
         var review = ledger.Submit(Guid.NewGuid(), decision, submitter, ["evidence-a", "evidence-b"], Time);
+        review.DecisionId.Should().Be(decision.Id);
 
         FluentActions.Invoking(() => ledger.Approve(review.Id, submitter, "same actor", Time.AddMinutes(1)))
             .Should().Throw<InvalidOperationException>();
-        ledger.Approve(review.Id, Guid.NewGuid(), "verified", Time.AddMinutes(1));
+        var reviewer = Guid.NewGuid();
+        ledger.Approve(review.Id, reviewer, "verified", Time.AddMinutes(1));
 
         ledger.Current(review.Id).Status.Should().Be(RiskReviewStatus.Approved);
         ledger.Events.Should().HaveCount(2);
-        ledger.Events[0].EvidenceHashes.Should().Equal("evidence-a", "evidence-b");
+        var submitted = ledger.Events[0];
+        submitted.Sequence.Should().Be(1);
+        submitted.ReviewId.Should().Be(review.Id);
+        submitted.ActorId.Should().Be(submitter);
+        submitted.EvidenceHashes.Should().Equal("evidence-a", "evidence-b");
+        submitted.Resolution.Should().BeNull();
+        submitted.DecisionCode.Should().BeNull();
+        ledger.Events[1].Resolution.Should().Be("verified");
+        ledger.Events[1].DecisionCode.Should().Be(RiskManualDecisionCode.EvidenceVerified);
         FluentActions.Invoking(() => ledger.Reject(review.Id, Guid.NewGuid(), "late", Time.AddMinutes(2)))
             .Should().Throw<InvalidOperationException>();
     }

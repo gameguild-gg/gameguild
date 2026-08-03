@@ -12,12 +12,12 @@ namespace GameGuild;
 /// </remarks>
 public static class SystemClock
 {
-    private static TimeProvider _provider = TimeProvider.System;
+    private static readonly AsyncLocal<TimeProvider?> Provider = new();
 
     /// <summary>
     ///     Gets the current UTC date and time.
     /// </summary>
-    public static DateTime UtcNow => _provider.GetUtcNow().UtcDateTime;
+    public static DateTime UtcNow => (Provider.Value ?? TimeProvider.System).GetUtcNow().UtcDateTime;
 
     /// <summary>
     ///     Sets the time provider (for testing purposes only).
@@ -26,7 +26,7 @@ public static class SystemClock
     public static void SetProvider(TimeProvider provider)
     {
         ArgumentNullException.ThrowIfNull(provider);
-        _provider = provider;
+        Provider.Value = provider;
     }
 
     /// <summary>
@@ -34,6 +34,6 @@ public static class SystemClock
     /// </summary>
     public static void Reset()
     {
-        _provider = TimeProvider.System;
+        Provider.Value = null;
     }
 }

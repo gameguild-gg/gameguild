@@ -17,9 +17,10 @@ public sealed class StripeGatewayOptionsValidator(
         if (!RequiresRealProvider(environment.EnvironmentName) || !options.IsEnabled)
             return ValidateOptionsResult.Success;
 
+        if (options.UseSimulation)
+            return ValidateOptionsResult.Fail($"Stripe simulation is not permitted in {environment.EnvironmentName}.");
+
         var warnings = new List<string>();
-        if (options.UseSimulation && string.Equals(environment.EnvironmentName, Environments.Production, StringComparison.OrdinalIgnoreCase))
-            warnings.Add("Stripe simulation is active in Production.");
         if (string.IsNullOrWhiteSpace(options.ApiKey))
             warnings.Add($"{nameof(StripeGatewayOptions.ApiKey)} is not set.");
         if (string.IsNullOrWhiteSpace(options.PublishableKey))

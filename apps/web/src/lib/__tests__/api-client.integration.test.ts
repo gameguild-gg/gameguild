@@ -6,7 +6,9 @@
 
 import { createClient } from '@game-guild/client';
 
-const nextIntegrationModulePath = '../../../../../packages/infrastructure/client/dist/next.js';
+async function loadNextIntegrationModule() {
+  return import('../../../../../packages/infrastructure/client/dist/next.js');
+}
 
 describe('API Client Integration', () => {
   describe('Basic Client Creation', () => {
@@ -37,17 +39,17 @@ describe('API Client Integration', () => {
 
   describe('Next.js Integration', () => {
     it('should export createNextClient', async () => {
-      const { createNextClient } = await import(nextIntegrationModulePath);
+      const { createNextClient } = await loadNextIntegrationModule();
       expect(typeof createNextClient).toBe('function');
     });
 
     it('should export createServerClient', async () => {
-      const { createRouteClient } = await import(nextIntegrationModulePath);
+      const { createRouteClient } = await loadNextIntegrationModule();
       expect(typeof createRouteClient).toBe('function');
     });
 
     it('should create Next.js client', async () => {
-      const { createNextClient } = await import(nextIntegrationModulePath);
+      const { createNextClient } = await loadNextIntegrationModule();
       const client = createNextClient({
         baseUrl: 'http://localhost:5295',
       });
@@ -100,7 +102,7 @@ describe('API Client Integration', () => {
     });
 
     it('should export Next.js utilities', async () => {
-      const module = await import(nextIntegrationModulePath);
+      const module = await loadNextIntegrationModule();
       expect(module.createNextClient).toBeDefined();
       expect(module.createRouteClient).toBeDefined();
     });

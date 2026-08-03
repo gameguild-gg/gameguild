@@ -123,4 +123,18 @@ describe('Fetch Transport - Request ID', () => {
       expect(result.error.message).toContain('Failed to parse');
     }
   });
+
+  it('propagates the transport cache policy to fetch', async () => {
+    const transport = createFetchTransport({
+      baseUrl: 'http://localhost:5000',
+      cache: 'no-store',
+    });
+
+    await transport.request({ method: 'GET', path: '/dynamic' });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://localhost:5000/dynamic',
+      expect.objectContaining({ cache: 'no-store' }),
+    );
+  });
 });

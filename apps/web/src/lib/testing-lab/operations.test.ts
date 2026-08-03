@@ -1,3 +1,4 @@
+import { Blob as NodeBlob } from 'node:buffer';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -27,15 +28,33 @@ vi.mock('@/auth', () => ({ getToken: vi.fn(async () => 'token') }));
 vi.mock('@game-guild/client', () => ({
   createServerClient: vi.fn(() => ({})),
   GeneratedApi: {
-    TestinglabTestingrequestsModule: vi.fn(() => mocks.requests),
-    TestinglabTestingsessionsModule: vi.fn(() => mocks.sessions),
-    TestinglabTestinglocationsModule: vi.fn(() => mocks.locations),
-    TestinglabTestingparticipantsModule: vi.fn(() => mocks.participants),
-    TestinglabTestingfeedbackModule: vi.fn(() => mocks.feedback),
-    TestinglabAnalyticsModule: vi.fn(() => mocks.analytics),
-    TestinglabSettingsModule: vi.fn(() => mocks.settings),
-    TestinglabPermissionModule: vi.fn(() => mocks.permissions),
-    ProjectsModule: vi.fn(() => ({})),
+    TestinglabTestingrequestsModule: vi.fn(function TestinglabTestingrequestsModule() {
+      return mocks.requests;
+    }),
+    TestinglabTestingsessionsModule: vi.fn(function TestinglabTestingsessionsModule() {
+      return mocks.sessions;
+    }),
+    TestinglabTestinglocationsModule: vi.fn(function TestinglabTestinglocationsModule() {
+      return mocks.locations;
+    }),
+    TestinglabTestingparticipantsModule: vi.fn(function TestinglabTestingparticipantsModule() {
+      return mocks.participants;
+    }),
+    TestinglabTestingfeedbackModule: vi.fn(function TestinglabTestingfeedbackModule() {
+      return mocks.feedback;
+    }),
+    TestinglabTestinganalyticsModule: vi.fn(function TestinglabTestinganalyticsModule() {
+      return mocks.analytics;
+    }),
+    TestinglabSettingsModule: vi.fn(function TestinglabSettingsModule() {
+      return mocks.settings;
+    }),
+    TestinglabPermissionModule: vi.fn(function TestinglabPermissionModule() {
+      return mocks.permissions;
+    }),
+    ProjectsModule: vi.fn(function ProjectsModule() {
+      return {};
+    }),
   },
 }));
 
@@ -143,7 +162,10 @@ describe('Testing Lab operational queries', () => {
         events: [],
       },
     });
-    mocks.analytics.getTestingAnalyticsExport.mockResolvedValue({ ok: true, data: 'event,applications\nJuly lab,4' });
+    mocks.analytics.getTestingAnalyticsExport.mockResolvedValue({
+      ok: true,
+      data: new NodeBlob(['event,applications\nJuly lab,4'], { type: 'text/csv' }),
+    });
   });
 
   it('loads request details with sessions, participants, and feedback', async () => {

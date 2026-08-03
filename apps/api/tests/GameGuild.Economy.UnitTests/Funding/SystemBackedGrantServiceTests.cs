@@ -72,6 +72,25 @@ public sealed class SystemBackedGrantServiceTests
             .Should().Throw<ArgumentOutOfRangeException>();
     }
 
+    [Fact]
+    public void IssueSystemBackedGrantRejectsAnExistingSourceWithoutPartialPosting()
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var service = new TransactionalPostingService(store);
+        var command = Command(1);
+        store.Execute(transaction =>
+        {
+            transaction.AddSource(SourceEvidence.Observe(
+                command.SourceId, "platform-treasury", "existing", "evidence", Time));
+            return true;
+        });
+
+        FluentActions.Invoking(() => service.IssueSystemBackedGrant(command))
+            .Should().Throw<InvalidOperationException>();
+        store.JournalEntries.Should().BeEmpty();
+        store.CreditLots.Should().BeEmpty();
+    }
+
     private static IssueSystemBackedGrantCommand Command(long hardUnits)
     {
         var sourceId = SourceStampId.New();

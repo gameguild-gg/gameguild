@@ -26,6 +26,7 @@ export default async function TestingEventSchedulePage({
   return (
     <div className="space-y-5">
       <TestingLabPageHeader
+        headingLevel={2}
         icon={CalendarDays}
         title="Schedule and capacity"
         description="Each slot owns its time, location, tester limit, and approved-project capacity."

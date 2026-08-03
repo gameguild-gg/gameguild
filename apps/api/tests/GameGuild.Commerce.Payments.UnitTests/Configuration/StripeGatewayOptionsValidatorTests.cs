@@ -11,7 +11,7 @@ public sealed class StripeGatewayOptionsValidatorTests
     [Theory]
     [InlineData("Staging")]
     [InlineData("Production")]
-    public void Validate_ReturnsSuccessAndLogsWarningWhenSimulationOutsideDevelopmentAndTesting(string environmentName)
+    public void Validate_RejectsSimulationOutsideDevelopmentAndTesting(string environmentName)
     {
         var validator = CreateValidator(environmentName);
         var options = CreateConfiguredOptions();
@@ -19,7 +19,9 @@ public sealed class StripeGatewayOptionsValidatorTests
 
         var result = validator.Validate(Options.DefaultName, options);
 
-        result.Succeeded.Should().BeTrue();
+        result.Failed.Should().BeTrue();
+        result.FailureMessage.Should()
+            .Be($"Stripe simulation is not permitted in {environmentName}.");
     }
 
     [Theory]

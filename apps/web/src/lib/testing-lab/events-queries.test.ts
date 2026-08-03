@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
     getTestingEvents: vi.fn(),
     getTestingEvents1: vi.fn(),
     getTestingEventsSlots: vi.fn(),
-    getTestingEventsApplications: vi.fn(),
+    getTestingEventsApplications1: vi.fn(),
     getTestingEventsCommittee: vi.fn(),
     getTestingEventsPublic: vi.fn(),
     getTestingEventsPublic1: vi.fn(),
@@ -31,8 +31,12 @@ vi.mock('@/auth', () => ({
 vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
-    TestinglabTestingeventsModule: vi.fn(() => mocks.events),
-    TestinglabTestingeventparticipationModule: vi.fn(() => mocks.participation),
+    TestinglabTestingeventsModule: vi.fn(function TestinglabTestingeventsModule() {
+      return mocks.events;
+    }),
+    TestinglabTestingeventparticipationModule: vi.fn(function TestinglabTestingeventparticipationModule() {
+      return mocks.participation;
+    }),
   },
 }));
 
@@ -72,7 +76,7 @@ describe('Testing Lab event queries', () => {
       ok: true,
       data: [{ id: 'slot-1', eventId: 'event-1', registeredTesterCount: 3 }],
     });
-    mocks.events.getTestingEventsApplications.mockResolvedValue({
+    mocks.events.getTestingEventsApplications1.mockResolvedValue({
       ok: true,
       data: [{ id: 'application-1', eventId: 'event-1', status: 'Pending' }],
     });
@@ -203,7 +207,7 @@ describe('Testing Lab event queries', () => {
     expect(result.committee).toHaveLength(1);
     expect(result.registrationsBySlot['slot-1']).toHaveLength(1);
     expect(result.accessIssues).toEqual([]);
-    expect(mocks.events.getTestingEventsApplications).toHaveBeenCalledWith('event-1', {
+    expect(mocks.events.getTestingEventsApplications1).toHaveBeenCalledWith('event-1', {
       status: 'Pending',
       skip: 0,
       take: 100,
@@ -220,7 +224,7 @@ describe('Testing Lab event queries', () => {
     expect(mocks.participation.getTestingEventsFeedback).toHaveBeenCalledWith('event-1');
   });
   it('keeps partial manager data and reports generated-client failures', async () => {
-    mocks.events.getTestingEventsApplications.mockResolvedValue({
+    mocks.events.getTestingEventsApplications1.mockResolvedValue({
       ok: false,
       error: { message: 'Forbidden', status: 403 },
     });
@@ -239,6 +243,10 @@ describe('Testing Lab event queries', () => {
 
     expect(result.events).toHaveLength(1);
     expect(result.accessIssues).toEqual([]);
+    expect(mocks.createServerClient).toHaveBeenCalledWith({
+      baseUrl: 'http://localhost:5295',
+      cache: 'no-store',
+    });
     expect(mocks.events.getTestingEventsPublic).toHaveBeenCalledWith({ skip: 0, take: 100 });
     expect(mocks.events.getTestingEventsApplicationsMe).not.toHaveBeenCalled();
   });
@@ -252,6 +260,18 @@ describe('Testing Lab event queries', () => {
     expect(result.feedbackObligations).toHaveLength(1);
     expect(result.isAuthenticated).toBe(true);
     expect(result.accessIssues).toEqual([]);
+    expect(mocks.events.getTestingEventsPublic1.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.auth.mock.invocationCallOrder[0]!,
+    );
+    expect(mocks.createServerClient).toHaveBeenNthCalledWith(1, {
+      baseUrl: 'http://localhost:5295',
+      cache: 'no-store',
+    });
+    expect(mocks.createServerClient).toHaveBeenNthCalledWith(2, {
+      baseUrl: 'http://localhost:5295',
+      auth: { getAccessToken: expect.any(Function) },
+      tenant: { getTenantId: expect.any(Function) },
+    });
     expect(mocks.events.getTestingEventsApplicationsMe).toHaveBeenCalledWith({ eventId: 'event-1' });
     expect(mocks.participation.getTestingEventsRegistrationsMe).toHaveBeenCalledWith({ eventId: 'event-1' });
     expect(mocks.participation.getTestingEventsFeedbackObligationsMe).toHaveBeenCalledWith({ eventId: 'event-1' });

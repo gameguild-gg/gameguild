@@ -26,6 +26,14 @@ public class TestingLabPermissionController : BaseApiController {
     return _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
   }
 
+  private Guid? GetEffectiveTenantId(Guid? requestedTenantId) {
+    var currentTenantId = _actorContextAccessor.ActorContext.TenantId;
+    if (currentTenantId.HasValue && requestedTenantId.HasValue && currentTenantId != requestedTenantId)
+      throw new UnauthorizedAccessException("Testing Lab access can only be managed inside the current tenant.");
+
+    return currentTenantId ?? requestedTenantId;
+  }
+
   // ===== TESTING LAB ROLE TEMPLATES =====
 
   /// <summary> Get all TestingLab role templates </summary>
@@ -118,45 +126,46 @@ public class TestingLabPermissionController : BaseApiController {
   /// <summary> Get TestingLab permissions for a specific user </summary>
   [HttpGet("users/{userId}")]
   public async Task<ActionResult<UserTestingLabPermissions>> GetUserTestingLabPermissions(Guid userId, [FromQuery] Guid? tenantId = null) {
-    var userRoles = await _permissionService.GetUserRolesAsync(userId, tenantId).ConfigureAwait(false);
-    var userPermissions = await _permissionService.GetUserPermissionsAsync(userId, tenantId).ConfigureAwait(false);
+    var effectiveTenantId = GetEffectiveTenantId(tenantId);
+    var userRoles = await _permissionService.GetUserRolesAsync(userId, effectiveTenantId).ConfigureAwait(false);
+    var userPermissions = await _permissionService.GetUserPermissionsAsync(userId, effectiveTenantId).ConfigureAwait(false);
 
     var testingLabPermissions = userPermissions.Where(p => IsTestingLabResource(p.ResourceType)).ToList();
 
     var result = new UserTestingLabPermissions {
       UserId = userId,
-      TenantId = tenantId,
+      TenantId = effectiveTenantId,
       AssignedRoles = userRoles.Select(r => r.RoleName).ToList(),
+      ResourcePermissions = testingLabPermissions
+        .Where(permission => permission.ResourceId.HasValue)
+        .Select(permission => new TestingLabResourcePermissionDto {
+          Action = permission.Action,
+          ResourceType = permission.ResourceType,
+          ResourceId = permission.ResourceId!.Value,
+          ExpiresAt = permission.ExpiresAt,
+        })
+        .ToList(),
       Permissions = new TestingLabPermissionsDto {
-        // Sessions
-        CanCreateSessions = testingLabPermissions.Any(p => p.Action == TestingLabActions.Create && p.ResourceType == TestingLabResourceTypes.Session),
-        CanEditSessions = testingLabPermissions.Any(p => p.Action == TestingLabActions.Edit && p.ResourceType == TestingLabResourceTypes.Session),
-        CanDeleteSessions = testingLabPermissions.Any(p => p.Action == TestingLabActions.Delete && p.ResourceType == TestingLabResourceTypes.Session),
-        CanViewSessions = testingLabPermissions.Any(p => p.Action == TestingLabActions.Read && p.ResourceType == TestingLabResourceTypes.Session),
-
-        // Locations
-        CanCreateLocations = testingLabPermissions.Any(p => p.Action == TestingLabActions.Create && p.ResourceType == TestingLabResourceTypes.Location),
-        CanEditLocations = testingLabPermissions.Any(p => p.Action == TestingLabActions.Edit && p.ResourceType == TestingLabResourceTypes.Location),
-        CanDeleteLocations = testingLabPermissions.Any(p => p.Action == TestingLabActions.Delete && p.ResourceType == TestingLabResourceTypes.Location),
-        CanViewLocations = testingLabPermissions.Any(p => p.Action == TestingLabActions.Read && p.ResourceType == TestingLabResourceTypes.Location),
-
-        // Feedback
-        CanCreateFeedback = testingLabPermissions.Any(p => p.Action == TestingLabActions.Create && p.ResourceType == TestingLabResourceTypes.Feedback),
-        CanEditFeedback = testingLabPermissions.Any(p => p.Action == TestingLabActions.Edit && p.ResourceType == TestingLabResourceTypes.Feedback),
-        CanDeleteFeedback = testingLabPermissions.Any(p => p.Action == TestingLabActions.Delete && p.ResourceType == TestingLabResourceTypes.Feedback),
-        CanViewFeedback = testingLabPermissions.Any(p => p.Action == TestingLabActions.Read && p.ResourceType == TestingLabResourceTypes.Feedback),
-        CanModerateFeedback = testingLabPermissions.Any(p => p.Action == TestingLabActions.Moderate && p.ResourceType == TestingLabResourceTypes.Feedback),
-
-        // Requests
-        CanCreateRequests = testingLabPermissions.Any(p => p.Action == TestingLabActions.Create && p.ResourceType == TestingLabResourceTypes.Request),
-        CanEditRequests = testingLabPermissions.Any(p => p.Action == TestingLabActions.Edit && p.ResourceType == TestingLabResourceTypes.Request),
-        CanDeleteRequests = testingLabPermissions.Any(p => p.Action == TestingLabActions.Delete && p.ResourceType == TestingLabResourceTypes.Request),
-        CanViewRequests = testingLabPermissions.Any(p => p.Action == TestingLabActions.Read && p.ResourceType == TestingLabResourceTypes.Request),
-        CanApproveRequests = testingLabPermissions.Any(p => p.Action == TestingLabActions.Approve && p.ResourceType == TestingLabResourceTypes.Request),
-
-        // Participants
-        CanManageParticipants = testingLabPermissions.Any(p => p.Action == TestingLabActions.Manage && p.ResourceType == TestingLabResourceTypes.Participant),
-        CanViewParticipants = testingLabPermissions.Any(p => p.Action == TestingLabActions.Read && p.ResourceType == TestingLabResourceTypes.Participant),
+        CanCreateSessions = HasPermission(testingLabPermissions, TestingLabActions.Create, TestingLabResourceTypes.Session),
+        CanEditSessions = HasPermission(testingLabPermissions, TestingLabActions.Edit, TestingLabResourceTypes.Session),
+        CanDeleteSessions = HasPermission(testingLabPermissions, TestingLabActions.Delete, TestingLabResourceTypes.Session),
+        CanViewSessions = HasPermission(testingLabPermissions, TestingLabActions.Read, TestingLabResourceTypes.Session),
+        CanCreateLocations = HasPermission(testingLabPermissions, TestingLabActions.Create, TestingLabResourceTypes.Location),
+        CanEditLocations = HasPermission(testingLabPermissions, TestingLabActions.Edit, TestingLabResourceTypes.Location),
+        CanDeleteLocations = HasPermission(testingLabPermissions, TestingLabActions.Delete, TestingLabResourceTypes.Location),
+        CanViewLocations = HasPermission(testingLabPermissions, TestingLabActions.Read, TestingLabResourceTypes.Location),
+        CanCreateFeedback = HasPermission(testingLabPermissions, TestingLabActions.Create, TestingLabResourceTypes.Feedback),
+        CanEditFeedback = HasPermission(testingLabPermissions, TestingLabActions.Edit, TestingLabResourceTypes.Feedback),
+        CanDeleteFeedback = HasPermission(testingLabPermissions, TestingLabActions.Delete, TestingLabResourceTypes.Feedback),
+        CanViewFeedback = HasPermission(testingLabPermissions, TestingLabActions.Read, TestingLabResourceTypes.Feedback),
+        CanModerateFeedback = HasPermission(testingLabPermissions, TestingLabActions.Moderate, TestingLabResourceTypes.Feedback),
+        CanCreateRequests = HasPermission(testingLabPermissions, TestingLabActions.Create, TestingLabResourceTypes.Request),
+        CanEditRequests = HasPermission(testingLabPermissions, TestingLabActions.Edit, TestingLabResourceTypes.Request),
+        CanDeleteRequests = HasPermission(testingLabPermissions, TestingLabActions.Delete, TestingLabResourceTypes.Request),
+        CanViewRequests = HasPermission(testingLabPermissions, TestingLabActions.Read, TestingLabResourceTypes.Request),
+        CanApproveRequests = HasPermission(testingLabPermissions, TestingLabActions.Approve, TestingLabResourceTypes.Request),
+        CanManageParticipants = HasPermission(testingLabPermissions, TestingLabActions.Manage, TestingLabResourceTypes.Participant),
+        CanViewParticipants = HasPermission(testingLabPermissions, TestingLabActions.Read, TestingLabResourceTypes.Participant),
       },
     };
 
@@ -167,7 +176,7 @@ public class TestingLabPermissionController : BaseApiController {
   [HttpPost("users/{userId}/roles")]
   public async Task<ActionResult> AssignTestingLabRole(Guid userId, [FromBody] AssignTestingLabRoleRequest request) {
     try {
-      await _permissionService.AssignRoleToUserAsync(userId, request.TenantId, request.RoleName, request.ExpiresAt).ConfigureAwait(false);
+      await _permissionService.AssignRoleToUserAsync(userId, GetEffectiveTenantId(request.TenantId), request.RoleName, request.ExpiresAt).ConfigureAwait(false);
 
       _logger.LogInformation("Admin user {AdminUserId} assigned TestingLab role '{RoleName}' to user {UserId}", GetCurrentUserId(), request.RoleName, userId);
 
@@ -183,7 +192,7 @@ public class TestingLabPermissionController : BaseApiController {
   /// <summary> Revoke a TestingLab role from a user </summary>
   [HttpDelete("users/{userId}/roles/{roleName}")]
   public async Task<ActionResult> RevokeTestingLabRole(Guid userId, string roleName, [FromQuery] Guid? tenantId = null) {
-    await _permissionService.RevokeRoleFromUserAsync(userId, tenantId, roleName).ConfigureAwait(false);
+    await _permissionService.RevokeRoleFromUserAsync(userId, GetEffectiveTenantId(tenantId), roleName).ConfigureAwait(false);
 
     _logger.LogInformation("Admin user {AdminUserId} revoked TestingLab role '{RoleName}' from user {UserId}", GetCurrentUserId(), roleName, userId);
 
@@ -197,7 +206,7 @@ public class TestingLabPermissionController : BaseApiController {
   public async Task<ActionResult> GrantResourcePermission(Guid userId, string resourceType, Guid resourceId, [FromBody] GrantResourcePermissionRequest request) {
     if (!IsTestingLabResource(resourceType)) { return BadRequest($"'{resourceType}' is not a valid TestingLab resource type"); }
 
-    await _permissionService.GrantPermissionAsync(userId, request.TenantId, request.Action, resourceType, resourceId, null, request.ExpiresAt).ConfigureAwait(false);
+    await _permissionService.GrantPermissionAsync(userId, GetEffectiveTenantId(request.TenantId), request.Action, resourceType, resourceId, null, request.ExpiresAt, GetCurrentUserId()).ConfigureAwait(false);
 
     _logger.LogInformation("Admin user {AdminUserId} granted permission '{Action}' on {ResourceType} {ResourceId} to user {UserId}", GetCurrentUserId(), request.Action, resourceType, resourceId, userId);
 
@@ -209,7 +218,7 @@ public class TestingLabPermissionController : BaseApiController {
   public async Task<ActionResult> RevokeResourcePermission(Guid userId, string resourceType, Guid resourceId, [FromQuery] string action, [FromQuery] Guid? tenantId = null) {
     if (!IsTestingLabResource(resourceType)) { return BadRequest($"'{resourceType}' is not a valid TestingLab resource type"); }
 
-    await _permissionService.RevokePermissionAsync(userId, tenantId, action, resourceType, resourceId).ConfigureAwait(false);
+    await _permissionService.RevokePermissionAsync(userId, GetEffectiveTenantId(tenantId), action, resourceType, resourceId, GetCurrentUserId()).ConfigureAwait(false);
 
     _logger.LogInformation("Admin user {AdminUserId} revoked permission '{Action}' on {ResourceType} {ResourceId} from user {UserId}", GetCurrentUserId(), action, resourceType, resourceId, userId);
 
@@ -223,12 +232,18 @@ public class TestingLabPermissionController : BaseApiController {
   public async Task<ActionResult<bool>> CheckTestingLabPermission(Guid userId, string resourceType, [FromQuery] string action, [FromQuery] Guid? resourceId = null, [FromQuery] Guid? tenantId = null) {
     if (!IsTestingLabResource(resourceType)) { return BadRequest($"'{resourceType}' is not a valid TestingLab resource type"); }
 
-    var hasPermission = await _permissionService.HasPermissionAsync(userId, tenantId, action, resourceType, resourceId).ConfigureAwait(false);
+    var hasPermission = await _permissionService.HasPermissionAsync(userId, GetEffectiveTenantId(tenantId), action, resourceType, resourceId).ConfigureAwait(false);
 
     return Ok(hasPermission);
   }
 
   // ===== HELPER METHODS =====
+
+  private static bool HasPermission(IEnumerable<TestingLabUserPermission> permissions, string action, string resourceType) {
+    return permissions.Any(permission =>
+      string.Equals(permission.Action, action, StringComparison.OrdinalIgnoreCase) &&
+      string.Equals(permission.ResourceType, resourceType, StringComparison.Ordinal));
+  }
 
   private static bool IsTestingLabResource(string resourceType) {
     return TestingLabResourceTypes.IsValid(resourceType);
@@ -380,6 +395,15 @@ public class UserTestingLabPermissions {
   public List<string> AssignedRoles { get; set; } = new List<string>();
 
   public TestingLabPermissionsDto Permissions { get; set; } = new TestingLabPermissionsDto();
+
+  public List<TestingLabResourcePermissionDto> ResourcePermissions { get; set; } = new();
+}
+
+public class TestingLabResourcePermissionDto {
+  public string Action { get; set; } = string.Empty;
+  public string ResourceType { get; set; } = string.Empty;
+  public Guid ResourceId { get; set; }
+  public DateTime? ExpiresAt { get; set; }
 }
 
 public class CreateTestingLabRoleRequest {

@@ -114,30 +114,6 @@ export class AiPrompttemplatesModule {
 
   /**
    */
-  async postAiPromptTemplatesRender(id: string, body: Types.AIAiPromptTemplateRenderInput): Promise<Result<Types.AIAiPromptTemplateRenderOutput, ApiError>> {
-    const url = `/v1/ai/prompt-templates/${id}/render`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.AIAiPromptTemplateRenderInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.AIAiPromptTemplateRenderOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async postAiPromptTemplatesGenerate(id: string, body: Types.AIAiPromptTemplateGenerateInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = `/v1/ai/prompt-templates/${id}/generate`;
 
@@ -154,6 +130,30 @@ export class AiPrompttemplatesModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.AIAiCompletionOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAiPromptTemplatesRender(id: string, body: Types.AIAiPromptTemplateRenderInput): Promise<Result<Types.AIAiPromptTemplateRenderOutput, ApiError>> {
+    const url = `/v1/ai/prompt-templates/${id}/render`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.AIAiPromptTemplateRenderInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.AIAiPromptTemplateRenderOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

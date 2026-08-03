@@ -16,6 +16,26 @@ public sealed class InMemoryLedgerKernelStore
         .ToArray());
     public IReadOnlyList<ProviderReversalState> ProviderReversalStates => Read(state =>
         state.ProviderReversalStates.Values.ToArray());
+    public IReadOnlyList<ProviderDisputeCase> ProviderDisputes => Read(state =>
+        state.ProviderDisputes.Values.ToArray());
+    public IReadOnlyList<ProviderDisputeEventRecord> ProviderDisputeEvents => Read(state =>
+        state.ProviderDisputeEvents.Values.ToArray());
+    public IReadOnlyList<DisputeFragmentFreeze> DisputeFragmentFreezes => Read(state =>
+        state.DisputeFragmentFreezes.Values.ToArray());
+    public IReadOnlyList<WalletDebtEvent> DebtEvents => Read(state => state.DebtEvents.ToArray());
+    public IReadOnlyList<ValueFragmentReservation> FragmentReservations => Read(state =>
+        state.FragmentReservations.Values.ToArray());
+    public IReadOnlyList<ValueFragmentReservation> GetFragmentReservations(Guid operationId) => Read(state =>
+        state.FragmentReservations.Values.Where(item => item.OperationId == operationId)
+            .OrderBy(item => item.Id).ToArray());
+    public ProviderDisputeEventRecord? FindProviderDisputeEvent(string providerEventId) => Read(state =>
+        state.ProviderDisputeEvents.GetValueOrDefault(providerEventId));
+    public ProviderDisputeCase GetProviderDisputeCase(string providerDisputeReference) => Read(state =>
+        state.ProviderDisputes.TryGetValue(providerDisputeReference, out var dispute)
+            ? dispute
+            : throw new KeyNotFoundException($"Provider dispute '{providerDisputeReference}' was not found."));
+    public WalletDebtPosition GetDebt(WalletId walletId) => Read(state =>
+        state.DebtPositions.GetValueOrDefault(walletId) ?? new WalletDebtPosition(walletId, 0, DateTimeOffset.MinValue));
     public IReadOnlyList<JournalEntry> JournalEntries => Read(state => state.JournalEntries.ToArray());
     public IReadOnlyList<CreditLot> CreditLots => Read(state => state.CreditLots.ToArray());
     public IReadOnlyList<FragmentConsumption> FragmentConsumptions => Read(state => state.Consumptions.ToArray());
@@ -75,6 +95,12 @@ internal sealed class LedgerKernelState
     internal Dictionary<string, SourceStampId> ProviderMonetaryLegs { get; } = new(StringComparer.Ordinal);
     internal Dictionary<SourceStampId, ProviderReversalState> ProviderReversalStates { get; } = [];
     internal Dictionary<string, ProviderReversalResult> ProviderReversalResults { get; } = new(StringComparer.Ordinal);
+    internal Dictionary<string, ProviderDisputeCase> ProviderDisputes { get; } = new(StringComparer.Ordinal);
+    internal Dictionary<string, ProviderDisputeEventRecord> ProviderDisputeEvents { get; } = new(StringComparer.Ordinal);
+    internal Dictionary<Guid, DisputeFragmentFreeze> DisputeFragmentFreezes { get; } = [];
+    internal Dictionary<WalletId, WalletDebtPosition> DebtPositions { get; } = [];
+    internal List<WalletDebtEvent> DebtEvents { get; } = [];
+    internal Dictionary<Guid, ValueFragmentReservation> FragmentReservations { get; } = [];
     internal List<JournalEntry> JournalEntries { get; set; } = [];
     internal List<CreditLot> CreditLots { get; } = [];
     internal List<FragmentConsumption> Consumptions { get; } = [];
@@ -94,6 +120,12 @@ internal sealed class LedgerKernelState
         foreach (var pair in ProviderMonetaryLegs) clone.ProviderMonetaryLegs.Add(pair.Key, pair.Value);
         foreach (var pair in ProviderReversalStates) clone.ProviderReversalStates.Add(pair.Key, pair.Value);
         foreach (var pair in ProviderReversalResults) clone.ProviderReversalResults.Add(pair.Key, pair.Value);
+        foreach (var pair in ProviderDisputes) clone.ProviderDisputes.Add(pair.Key, pair.Value);
+        foreach (var pair in ProviderDisputeEvents) clone.ProviderDisputeEvents.Add(pair.Key, pair.Value);
+        foreach (var pair in DisputeFragmentFreezes) clone.DisputeFragmentFreezes.Add(pair.Key, pair.Value);
+        foreach (var pair in DebtPositions) clone.DebtPositions.Add(pair.Key, pair.Value);
+        clone.DebtEvents.AddRange(DebtEvents);
+        foreach (var pair in FragmentReservations) clone.FragmentReservations.Add(pair.Key, pair.Value);
         clone.CreditLots.AddRange(CreditLots);
         clone.Consumptions.AddRange(Consumptions);
         clone.Lineages.AddRange(Lineages);
@@ -162,6 +194,146 @@ public sealed class LedgerKernelTransaction
         ArgumentNullException.ThrowIfNull(result);
         _state.ProviderReversalResults.Add(key.Value, result);
     }
+
+    public ProviderDisputeEventRecord? FindProviderDisputeEvent(string providerEventId) =>
+        _state.ProviderDisputeEvents.GetValueOrDefault(providerEventId);
+
+    public void AddProviderDisputeEvent(ProviderDisputeEventRecord disputeEvent)
+    {
+        ArgumentNullException.ThrowIfNull(disputeEvent);
+        if (!_state.ProviderDisputeEvents.TryAdd(disputeEvent.ProviderEventId, disputeEvent))
+            throw new ProviderDisputeEventConflictException(disputeEvent.ProviderEventId);
+    }
+
+    public ProviderDisputeCase? FindProviderDisputeCase(string providerDisputeReference) =>
+        _state.ProviderDisputes.GetValueOrDefault(providerDisputeReference);
+
+    public void SetProviderDisputeCase(ProviderDisputeCase dispute)
+    {
+        ArgumentNullException.ThrowIfNull(dispute);
+        _state.ProviderDisputes[dispute.ProviderDisputeReference] = dispute;
+    }
+
+    public void AddDisputeFreeze(DisputeFragmentFreeze freeze)
+    {
+        ArgumentNullException.ThrowIfNull(freeze);
+        if (!_state.DisputeFragmentFreezes.TryAdd(freeze.Id, freeze))
+            throw new InvalidOperationException($"Dispute freeze {freeze.Id:N} already exists.");
+    }
+
+    public IReadOnlyList<DisputeFragmentFreeze> GetDisputeFreezes(IEnumerable<Guid> ids)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+        return ids.Select(id => _state.DisputeFragmentFreezes.TryGetValue(id, out var freeze)
+                ? freeze
+                : throw new KeyNotFoundException($"Dispute freeze {id:N} was not found."))
+            .ToArray();
+    }
+
+    public void TransitionDisputeFreezes(
+        IEnumerable<Guid> ids,
+        HoldStatus status,
+        DateTimeOffset occurredAt)
+    {
+        foreach (var freeze in GetDisputeFreezes(ids).Where(item => item.Status == HoldStatus.Active))
+            _state.DisputeFragmentFreezes[freeze.Id] = freeze.Transition(status, occurredAt);
+    }
+
+    public IReadOnlyList<CreditLot> GetAvailableRootLots(SourceStampId rootSourceId)
+    {
+        var result = new List<CreditLot>();
+        foreach (var lot in _state.CreditLots.Where(item => item.State == CreditLotState.Active))
+        {
+            var rootRanges = lot.Ranges.Where(range => range.Root == rootSourceId).ToArray();
+            if (rootRanges.Length == 0) continue;
+            var remaining = Subtract(rootRanges, ExcludedRanges(_state, lot.Id));
+            var traceUnits = remaining.Aggregate(0L, static (total, range) => checked(total + range.Length));
+            if (traceUnits == 0) continue;
+            if (traceUnits % lot.TraceUnitsPerCoinUnit != 0)
+                throw new LineageConservationException("Available root trace units must resolve to whole coin units.");
+            result.Add(CopyAvailableLot(lot, remaining, traceUnits / lot.TraceUnitsPerCoinUnit));
+        }
+        return result;
+    }
+
+    public void EnsureWalletNotDebtRestricted(WalletId walletId)
+    {
+        if (_state.DebtPositions.TryGetValue(walletId, out var debt) && debt.OutstandingHardUnits > 0)
+            throw new WalletDebtRestrictionException(walletId, debt.OutstandingHardUnits);
+    }
+
+    public void RecordDebt(WalletId walletId, SourceStampId sourceId, long deltaHardUnits, DateTimeOffset occurredAt)
+    {
+        if (deltaHardUnits == 0) return;
+        var current = _state.DebtPositions.GetValueOrDefault(walletId)?.OutstandingHardUnits ?? 0;
+        var outstanding = checked(current + deltaHardUnits);
+        if (outstanding < 0) throw new InvalidOperationException("Wallet debt cannot become negative.");
+        _state.DebtPositions[walletId] = new WalletDebtPosition(walletId, outstanding, occurredAt);
+        _state.DebtEvents.Add(new WalletDebtEvent(
+            checked(_state.DebtEvents.Count + 1L), walletId, sourceId, deltaHardUnits, outstanding, occurredAt));
+    }
+
+    public void AddFragmentReservation(ValueFragmentReservation reservation)
+    {
+        ArgumentNullException.ThrowIfNull(reservation);
+        if (_state.FragmentReservations.ContainsKey(reservation.Id))
+            throw new InvalidOperationException($"Fragment reservation {reservation.Id:N} already exists.");
+        var lot = GetCreditLot(reservation.LotId);
+        if (lot.WalletId != reservation.WalletId || lot.Amount.Currency != reservation.Amount.Currency)
+            throw new InvalidOperationException("Fragment reservation does not match its credit lot.");
+        var excluded = ExcludedRanges(_state, reservation.LotId);
+        if (reservation.Ranges.Any(range => excluded.Any(item => Overlaps(range, item))))
+            throw new InvalidOperationException("Fragment reservation overlaps unavailable lineage ranges.");
+        if (reservation.Ranges.Any(range => !lot.Ranges.Any(parent => Contains(parent, range))))
+            throw new InvalidOperationException("Fragment reservation range is outside its credit lot.");
+        _state.FragmentReservations.Add(reservation.Id, reservation);
+    }
+
+    public IReadOnlyList<ValueFragmentReservation> GetFragmentReservations(Guid operationId) =>
+        _state.FragmentReservations.Values.Where(item => item.OperationId == operationId)
+            .OrderBy(item => item.Id).ToArray();
+
+    public IReadOnlyList<ValueFragmentReservation> TransitionFragmentReservations(
+        Guid operationId,
+        FragmentReservationStatus expected,
+        FragmentReservationStatus next,
+        DateTimeOffset occurredAt)
+    {
+        var current = GetFragmentReservations(operationId);
+        if (current.Count == 0) throw new KeyNotFoundException($"Fragment reservations for {operationId:N} were not found.");
+        if (current.Any(item => item.Status != expected))
+            throw new InvalidOperationException($"All fragment reservations must be {expected}.");
+        var transitioned = current.Select(item => item.Transition(next, occurredAt)).ToArray();
+        foreach (var item in transitioned) _state.FragmentReservations[item.Id] = item;
+        return transitioned;
+    }
+
+    public IReadOnlyList<Guid> ReleaseReservedFragmentsForRoot(
+        SourceStampId root,
+        DateTimeOffset occurredAt)
+    {
+        var operationIds = _state.FragmentReservations.Values
+            .Where(item => item.Status == FragmentReservationStatus.Reserved &&
+                           item.Ranges.Any(range => range.Root == root))
+            .Select(item => item.OperationId)
+            .Distinct()
+            .ToArray();
+        foreach (var operationId in operationIds)
+        {
+            var reservations = GetFragmentReservations(operationId);
+            foreach (var reservation in reservations.Where(item => item.Status == FragmentReservationStatus.Reserved))
+                _state.FragmentReservations[reservation.Id] = reservation.Transition(
+                    FragmentReservationStatus.Released, occurredAt);
+        }
+        return operationIds;
+    }
+
+    private static bool Overlaps(RootTraceRange left, RootTraceRange right) =>
+        left.Root == right.Root && left.Start < right.EndExclusive && right.Start < left.EndExclusive;
+
+    private static bool Contains(RootTraceRange parent, RootTraceRange child) =>
+        parent.Root == child.Root && parent.Epoch == child.Epoch &&
+        parent.Start <= child.Start && parent.EndExclusive >= child.EndExclusive;
 
     public JournalAppendResult AppendJournal(PostingRequest request, DateTimeOffset recordedAt)
     {
@@ -282,32 +454,45 @@ public sealed class LedgerKernelTransaction
         foreach (var lot in state.CreditLots.Where(lot =>
                      lot.WalletId == walletId && lot.Amount.Currency == currency && lot.State == CreditLotState.Active))
         {
-            var consumed = state.Consumptions
-                .Where(consumption => consumption.ParentLotId == lot.Id)
-                .SelectMany(consumption => consumption.Ranges)
-                .ToArray();
-            var remaining = Subtract(lot.Ranges, consumed);
+            var remaining = Subtract(lot.Ranges, ExcludedRanges(state, lot.Id));
             var remainingTraceUnits = remaining.Aggregate(0L, static (total, range) => checked(total + range.Length));
             if (remainingTraceUnits == 0) continue;
             if (remainingTraceUnits % lot.TraceUnitsPerCoinUnit != 0)
                 throw new LineageConservationException("Available trace units must resolve to whole coin units.");
             var remainingUnits = remainingTraceUnits / lot.TraceUnitsPerCoinUnit;
-
-            result.Add(new CreditLot(
-                lot.Id,
-                lot.WalletId,
-                new CoinAmount(lot.Amount.Currency, remainingUnits),
-                lot.Provenance,
-                lot.ConfirmedAt,
-                lot.OriginalMaturesAt,
-                lot.JournalSequence,
-                CreditLotState.Active,
-                remaining,
-                lot.TraceUnitsPerCoinUnit));
+            result.Add(CopyAvailableLot(lot, remaining, remainingUnits));
         }
 
         return result;
     }
+
+    private static RootTraceRange[] ExcludedRanges(LedgerKernelState state, CreditLotId lotId) =>
+        state.Consumptions
+            .Where(consumption => consumption.ParentLotId == lotId)
+            .SelectMany(consumption => consumption.Ranges)
+            .Concat(state.DisputeFragmentFreezes.Values
+                .Where(freeze => freeze.LotId == lotId && freeze.Status == HoldStatus.Active)
+                .SelectMany(freeze => freeze.Ranges))
+            .Concat(state.FragmentReservations.Values
+                .Where(reservation => reservation.LotId == lotId &&
+                                      reservation.Status is FragmentReservationStatus.Reserved or FragmentReservationStatus.Dispatching)
+                .SelectMany(reservation => reservation.Ranges))
+            .ToArray();
+
+    private static CreditLot CopyAvailableLot(
+        CreditLot lot,
+        IReadOnlyList<RootTraceRange> ranges,
+        long units) => new(
+        lot.Id,
+        lot.WalletId,
+        new CoinAmount(lot.Amount.Currency, units),
+        lot.Provenance,
+        lot.ConfirmedAt,
+        lot.OriginalMaturesAt,
+        lot.JournalSequence,
+        CreditLotState.Active,
+        ranges,
+        lot.TraceUnitsPerCoinUnit);
 
     private static IReadOnlyList<RootTraceRange> Subtract(
         IReadOnlyList<RootTraceRange> sources,

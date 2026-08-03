@@ -145,14 +145,14 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
-  async postSupportTicketsResolve(
+  async postSupportTicketsClose(
     ticketId: string,
-    body: Types.CommerceProductsResolveSupportTicketInput,
+    body: Types.CommerceProductsCloseSupportTicketInput,
   ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/support/tickets/${ticketId}:resolve`;
+    const url = `/v1/support/tickets/${ticketId}:close`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsResolveSupportTicketInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsCloseSupportTicketInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -172,14 +172,14 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
-  async postSupportTicketsClose(
+  async postSupportTicketsResolve(
     ticketId: string,
-    body: Types.CommerceProductsCloseSupportTicketInput,
+    body: Types.CommerceProductsResolveSupportTicketInput,
   ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/support/tickets/${ticketId}:close`;
+    const url = `/v1/support/tickets/${ticketId}:resolve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsCloseSupportTicketInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsResolveSupportTicketInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

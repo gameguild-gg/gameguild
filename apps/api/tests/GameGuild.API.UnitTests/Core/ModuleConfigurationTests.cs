@@ -31,6 +31,7 @@ public class ModuleConfigurationTests
         ModuleConfiguration.DefaultDisabledModules.Should().BeEquivalentTo(
             "Economy.AdRewards",
             "Economy.Bounties",
+            "Economy.Marketplace",
             "Economy.Payouts",
             "Economy.Treasury",
             "Compliance.FinancialCrime",

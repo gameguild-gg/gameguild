@@ -1,4 +1,5 @@
 using GameGuild.Economy.Contracts;
+using GameGuild.Economy.Writer;
 
 namespace GameGuild.Economy.Posting;
 
@@ -44,14 +45,16 @@ public static class PostingMatrix
         ArgumentNullException.ThrowIfNull(request);
         var errors = new List<PostingValidationError>();
 
-        if (!Enum.IsDefined(request.Template.Kind))
+        var registeredTemplate = PostingTemplateCatalog.Find(
+            request.Template.Kind,
+            PostingTemplate.CurrentVersion);
+        if (!Enum.IsDefined(request.Template.Kind) || registeredTemplate is null)
             Add(errors, PostingErrorCode.UnsupportedTemplate, "Posting template is not registered.");
 
         if (request.Template.Version != PostingTemplate.CurrentVersion)
             Add(errors, PostingErrorCode.UnsupportedTemplateVersion, "Only the current immutable template version is accepted.");
 
-        var expectedAuthority = ExpectedAuthority(request.Template.Kind);
-        if (expectedAuthority.HasValue && request.Authority != expectedAuthority.Value)
+        if (registeredTemplate is not null && request.Authority != registeredTemplate.Authority)
             Add(errors, PostingErrorCode.UnauthorizedAuthority, "Posting authority does not match the selected template.");
 
         ValidateSequences(request.Lines, errors);
@@ -67,17 +70,6 @@ public static class PostingMatrix
         var result = Validate(request);
         if (!result.IsValid) throw new PostingValidationException(result.Errors);
     }
-
-    private static PostingAuthority? ExpectedAuthority(PostingTemplateKind kind) => kind switch
-    {
-        PostingTemplateKind.ConfirmedTopUpMint or PostingTemplateKind.ProviderReversalFull or PostingTemplateKind.ProviderReversalPartial => PostingAuthority.ProviderConfirmation,
-        PostingTemplateKind.Spend or PostingTemplateKind.HardToSoftConversion or PostingTemplateKind.Burn or PostingTemplateKind.Escrow => PostingAuthority.WalletOwner,
-        PostingTemplateKind.SystemBackedGrant or PostingTemplateKind.AdRewardIssuance => PostingAuthority.PlatformSystem,
-        PostingTemplateKind.Reclaim or PostingTemplateKind.Refund => PostingAuthority.EscrowCoordinator,
-        PostingTemplateKind.PayoutReservation or PostingTemplateKind.PayoutSuccess or PostingTemplateKind.PayoutFailure => PostingAuthority.PayoutCoordinator,
-        PostingTemplateKind.AdminWithdrawalReservation or PostingTemplateKind.AdminWithdrawalSuccess or PostingTemplateKind.AdminWithdrawalFailure => PostingAuthority.Administrator,
-        _ => null
-    };
 
     private static void ValidateSequences(IReadOnlyList<PostingLine> lines, ICollection<PostingValidationError> errors)
     {

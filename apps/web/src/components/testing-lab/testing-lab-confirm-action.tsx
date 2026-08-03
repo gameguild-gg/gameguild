@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Button } from '@game-guild/ui/components/button';
 import { AlertCircle, Archive, CheckCircle2, Loader2, RotateCcw, Trash2 } from 'lucide-react';
 import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
 
 type Action = (formData: FormData) => Promise<TestingLabActionResult<unknown>>;
 
@@ -47,7 +48,12 @@ export function TestingLabConfirmAction({
     startTransition(async () => {
       const next = await action(formData);
       setResult(next);
-      if (next.success) window.setTimeout(() => setOpen(false), 650);
+      if (next.success) {
+        toast.success(next.message);
+        window.setTimeout(() => setOpen(false), 650);
+      } else {
+        toast.error(next.error);
+      }
     });
   }
 

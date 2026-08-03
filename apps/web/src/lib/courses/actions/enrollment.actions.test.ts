@@ -25,7 +25,7 @@ vi.mock('@game-guild/client', () => ({
             postCoursesSelfEnroll = mocks.postCoursesSelfEnroll;
         },
         CommerceProductsModule: class {
-            getProducts = mocks.getProducts;
+            getProducts1 = mocks.getProducts;
         },
     },
 }));

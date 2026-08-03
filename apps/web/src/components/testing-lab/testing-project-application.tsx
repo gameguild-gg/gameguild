@@ -114,7 +114,7 @@ export function TestingProjectApplication({
           Create a project on GameGuild before applying to this Testing Lab event.
         </p>
         <Button asChild variant="outline">
-          <Link href="/dashboard/projects">Manage projects</Link>
+          <Link href="/projects">Browse projects</Link>
         </Button>
       </div>
     );

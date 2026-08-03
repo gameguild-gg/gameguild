@@ -71,7 +71,10 @@ public sealed class PostingMatrixTests
         };
 
         PostingMatrix.Validate(request).Errors.Should().Contain(error => error.Code == PostingErrorCode.UnsupportedTemplateVersion);
-        FluentActions.Invoking(() => PostingMatrix.EnsureValid(request)).Should().Throw<PostingValidationException>();
+        FluentActions.Invoking(() => PostingMatrix.EnsureValid(request))
+            .Should().Throw<PostingValidationException>()
+            .Which.Errors.Should().Contain(error =>
+                error.Code == PostingErrorCode.UnsupportedTemplateVersion);
     }
 
     [Fact]
@@ -83,6 +86,22 @@ public sealed class PostingMatrixTests
         };
 
         PostingMatrix.Validate(request).Errors.Should().Contain(error => error.Code == PostingErrorCode.UnauthorizedAuthority);
+    }
+
+    [Theory]
+    [MemberData(nameof(SupportedTemplates))]
+    public void EveryRegisteredTemplateRejectsAnAuthorityDifferentFromItsCatalogRegistration(
+        PostingTemplateKind kind)
+    {
+        var valid = PostingFixture.Valid(kind);
+        var wrongAuthority = valid.Authority == PostingAuthority.WalletOwner
+            ? PostingAuthority.ProviderConfirmation
+            : PostingAuthority.WalletOwner;
+
+        var result = PostingMatrix.Validate(valid with { Authority = wrongAuthority });
+
+        result.Errors.Should().ContainSingle(error => error.Code == PostingErrorCode.UnauthorizedAuthority,
+            $"{kind} must enforce its registered posting authority");
     }
 
     [Fact]
