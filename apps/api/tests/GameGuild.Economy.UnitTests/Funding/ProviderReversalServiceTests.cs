@@ -166,6 +166,19 @@ public sealed class ProviderReversalServiceTests
     }
 
     [Fact]
+    public void PlannerStopsScanningRemainingLotsAfterTargetIsSatisfied()
+    {
+        var root = SourceStampId.New();
+        var first = Lot(root, new RootTraceRange(root, 0, 1_000, 0));
+        var later = Lot(root, new RootTraceRange(root, 1_000, 1_000, 0));
+
+        var plan = ProviderReversalPlanner.Plan(root, 1_000, [], [first, later]);
+
+        plan.Fragments.Should().ContainSingle()
+            .Which.Lot.Should().BeSameAs(first);
+    }
+
+    [Fact]
     public void ReverseTopUp_RejectsPendingClaimWithoutMutatingFundingState()
     {
         var store = new InMemoryLedgerKernelStore();
