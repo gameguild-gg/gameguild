@@ -23,6 +23,15 @@ function errorMessage(error: unknown, fallback: string) {
     return fallback;
 }
 
+function resolveSubmissionId(value: unknown): string | undefined {
+    if (!value || typeof value !== 'object') return undefined;
+    const response = value as Record<string, unknown>;
+    if (typeof response.id === 'string' && response.id) return response.id;
+    if (!response.submission || typeof response.submission !== 'object') return undefined;
+    const submission = response.submission as Record<string, unknown>;
+    return typeof submission.id === 'string' && submission.id ? submission.id : undefined;
+}
+
 async function authenticatedClient() {
     const { getToken } = await import('@/auth');
     const token = await getToken();
@@ -68,13 +77,14 @@ export async function submitAssessment(formData: FormData): Promise<LearnerMutat
                 if (!result.ok) throw new Error(`The assessment attempt could not be started: ${errorMessage(result.error, 'request failed')}`);
                 return result.data;
             });
-        if (!started.id) throw new Error('The assessment attempt did not return an identifier.');
+        const submissionId = resolveSubmissionId(started);
+        if (!submissionId) throw new Error('The assessment attempt did not return a submission identifier.');
 
         const responseValue = modality === 'File'
             ? await uploadAssessmentFile(authenticated.token, assessmentId, formData.get('file') as File)
             : String(formData.get('response') || '');
         const payload = buildAssessmentPayload(modality, responseValue);
-        const result = await assessments.postAssessmentsSubmissionsSubmit(started.id, payload);
+        const result = await assessments.postAssessmentsSubmissionsSubmit(submissionId, payload);
         if (!result.ok) return { success: false, error: `The assessment response could not be submitted: ${errorMessage(result.error, 'request failed')}` };
 
         if (courseSlug) {
