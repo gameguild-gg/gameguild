@@ -205,4 +205,40 @@ describe('SignInForm', () => {
 
     expect(container.firstChild).toHaveClass('custom-class');
   });
+
+  /* ---------- Providers slot ---------- */
+
+  it('renders providers slot above Email when passed', () => {
+    renderWithUser(
+      <SignInForm providers={<div data-testid="slot-sentinel">PROVIDER</div>} />
+    );
+
+    const sentinel = screen.getByTestId('slot-sentinel');
+    const email = screen.getByLabelText('Email');
+    expect(
+      sentinel.compareDocumentPosition(email) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
+  it('does not render divider when no providers passed', () => {
+    renderWithUser(<SignInForm />);
+
+    expect(screen.queryByText('or with email')).not.toBeInTheDocument();
+  });
+
+  it('renders divider with providers passed', () => {
+    renderWithUser(<SignInForm providers={<span>GOOGLE</span>} />);
+
+    expect(screen.getByText('or with email')).toBeInTheDocument();
+  });
+
+  it('existing rendering assertions still pass with providers slot', () => {
+    renderWithUser(<SignInForm providers={<span>GOOGLE</span>} />);
+
+    expect(screen.getByText('Welcome back to GameGuild')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /login with google/i })).not.toBeInTheDocument();
+  });
 });
