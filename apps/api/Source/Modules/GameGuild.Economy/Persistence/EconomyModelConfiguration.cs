@@ -11,6 +11,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         ConfigureWallets(modelBuilder);
         ConfigureSources(modelBuilder);
         ConfigureFunding(modelBuilder);
+        ConfigureDisputes(modelBuilder);
         ConfigurePostings(modelBuilder);
         ConfigureLedger(modelBuilder);
         ConfigureLineage(modelBuilder);
@@ -193,6 +194,176 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.HasOne<EconomyCreditLotRow>()
                 .WithOne()
                 .HasForeignKey<EconomyFundingClaimRow>(row => row.RootCreditLotId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureDisputes(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EconomyProviderDisputeRow>(builder =>
+        {
+            builder.ToTable("economy_provider_disputes", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_provider_disputes_sequence_positive",
+                    "\"LatestProviderSequence\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_provider_disputes_version_positive",
+                    "\"Version\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_provider_disputes_amount_partition",
+                    "\"CumulativeDisputedHardUnits\" > 0 AND \"BaselineReversedHardUnits\" >= 0 AND " +
+                    "\"BaselineReversedHardUnits\" <= \"CumulativeDisputedHardUnits\" AND " +
+                    "\"FrozenHardEquivalentUnits\" >= 0 AND " +
+                    "\"FrozenHardEquivalentUnits\" <= (\"CumulativeDisputedHardUnits\" - \"BaselineReversedHardUnits\")");
+                table.HasCheckConstraint(
+                    "ck_economy_provider_disputes_lifecycle",
+                    "(\"Status\" = 1 AND \"ReversalIdempotencyKey\" IS NULL) OR " +
+                    "(\"Status\" = 2 AND \"FrozenHardEquivalentUnits\" = 0 AND \"ReversalIdempotencyKey\" IS NULL) OR " +
+                    "(\"Status\" = 3 AND \"FrozenHardEquivalentUnits\" = 0 AND \"ReversalIdempotencyKey\" IS NOT NULL)");
+            });
+            builder.HasKey(row => row.ProviderDisputeReference);
+            builder.Property(row => row.ProviderDisputeReference).HasMaxLength(256);
+            builder.Property(row => row.ReversalIdempotencyKey).HasMaxLength(128);
+            builder.Property(row => row.Version).IsConcurrencyToken();
+            builder.HasIndex(row => row.SourceStampId)
+                .IsUnique()
+                .HasFilter("\"Status\" = 1")
+                .HasDatabaseName("ux_economy_provider_disputes_active_source");
+            builder.HasOne<EconomySourceStampRow>()
+                .WithMany()
+                .HasForeignKey(row => row.SourceStampId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyWalletRow>()
+                .WithMany()
+                .HasForeignKey(row => row.ResponsibleWalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyProviderDisputeEventRow>(builder =>
+        {
+            builder.ToTable("economy_provider_dispute_events", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_provider_dispute_events_sequence_positive",
+                    "\"ProviderSequence\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_provider_dispute_events_amount_positive",
+                    "\"CumulativeDisputedHardUnits\" > 0");
+            });
+            builder.HasKey(row => row.ProviderEventId);
+            builder.Property(row => row.ProviderEventId).HasMaxLength(256);
+            builder.Property(row => row.ProviderDisputeReference).HasMaxLength(256);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.ProviderDisputeReference, row.ProviderSequence })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_provider_dispute_events_dispute_sequence");
+            builder.HasOne<EconomyProviderDisputeRow>()
+                .WithMany()
+                .HasForeignKey(row => row.ProviderDisputeReference)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomySourceStampRow>()
+                .WithMany()
+                .HasForeignKey(row => row.SourceStampId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyDisputeFragmentFreezeRow>(builder =>
+        {
+            builder.ToTable("economy_dispute_fragment_freezes", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_dispute_fragment_freezes_amount_positive",
+                    "\"AmountUnits\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_dispute_fragment_freezes_state_timestamp",
+                    "(\"Status\" = 1 AND \"TerminalAt\" IS NULL) OR " +
+                    "(\"Status\" IN (2, 3) AND \"TerminalAt\" >= \"PlacedAt\")");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.ProviderDisputeReference).HasMaxLength(256);
+            builder.HasIndex(row => new { row.RootSourceStampId, row.Status })
+                .HasDatabaseName("ix_economy_dispute_fragment_freezes_root_status");
+            builder.HasOne<EconomyProviderDisputeRow>()
+                .WithMany()
+                .HasForeignKey(row => row.ProviderDisputeReference)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomySourceStampRow>()
+                .WithMany()
+                .HasForeignKey(row => row.RootSourceStampId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyCreditLotRow>()
+                .WithMany()
+                .HasForeignKey(row => row.CreditLotId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyWalletRow>()
+                .WithMany()
+                .HasForeignKey(row => row.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyDisputeFragmentRangeRow>(builder =>
+        {
+            builder.ToTable("economy_dispute_fragment_ranges", table =>
+                table.HasCheckConstraint(
+                    "ck_economy_dispute_fragment_ranges_half_open",
+                    "\"StartInclusive\" >= 0 AND \"EndExclusive\" > \"StartInclusive\" AND \"ReversalEpoch\" >= 0"));
+            builder.HasKey(row => row.Id);
+            builder.HasIndex(row => new
+                {
+                    row.DisputeFragmentFreezeId,
+                    row.StartInclusive,
+                    row.EndExclusive
+                })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_dispute_fragment_ranges_freeze_interval");
+            builder.HasOne<EconomyDisputeFragmentFreezeRow>()
+                .WithMany()
+                .HasForeignKey(row => row.DisputeFragmentFreezeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyWalletDebtRow>(builder =>
+        {
+            builder.ToTable("economy_wallet_debts", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_wallet_debts_nonnegative",
+                    "\"OutstandingHardUnits\" >= 0");
+                table.HasCheckConstraint(
+                    "ck_economy_wallet_debts_version_positive",
+                    "\"Version\" > 0");
+            });
+            builder.HasKey(row => row.WalletId);
+            builder.Property(row => row.Version).IsConcurrencyToken();
+            builder.HasOne<EconomyWalletRow>()
+                .WithOne()
+                .HasForeignKey<EconomyWalletDebtRow>(row => row.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyWalletDebtEventRow>(builder =>
+        {
+            builder.ToTable("economy_wallet_debt_events", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_wallet_debt_events_sequence_positive",
+                    "\"Sequence\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_wallet_debt_events_delta_nonzero",
+                    "\"DeltaHardUnits\" <> 0 AND \"OutstandingHardUnits\" >= 0");
+            });
+            builder.HasKey(row => row.Id);
+            builder.HasIndex(row => new { row.WalletId, row.Sequence })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_wallet_debt_events_wallet_sequence");
+            builder.HasOne<EconomyWalletDebtRow>()
+                .WithMany()
+                .HasForeignKey(row => row.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomySourceStampRow>()
+                .WithMany()
+                .HasForeignKey(row => row.SourceStampId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
