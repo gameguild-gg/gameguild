@@ -1,21 +1,32 @@
-import { cache } from 'react';
-import { GameGuildAuth, CredentialsProvider, processSession, encodeSession, SessionStore, resolveCookieOptions } from '@game-guild/client';
-import { cookies } from 'next/headers';
-import { createSharedAuthCookieConfig } from '@/lib/auth/cross-domain-auth';
+import { cache } from "react";
+import {
+  GameGuildAuth,
+  CredentialsProvider,
+  processSession,
+  encodeSession,
+  SessionStore,
+  resolveCookieOptions,
+} from "@game-guild/client";
+import { cookies } from "next/headers";
+import { createSharedAuthCookieConfig } from "@/lib/auth/cross-domain-auth";
 
 const result = GameGuildAuth({
   providers: [CredentialsProvider()],
-  apiUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295',
+  apiUrl:
+    process.env.API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://localhost:5295",
   secret:
     process.env.AUTH_SECRET ||
-    (process.env.NEXT_PHASE === 'phase-production-build'
-      ? 'build-time-placeholder-not-used-at-runtime'
-      : process.env.NODE_ENV === 'development'
-        ? 'game-guild-web-local-development-secret'
+    (process.env.NEXT_PHASE === "phase-production-build"
+      ? "build-time-placeholder-not-used-at-runtime"
+      : process.env.NODE_ENV === "development"
+        ? "game-guild-web-local-development-secret"
         : undefined),
-  debug: process.env.NODE_ENV === 'development',
+  debug: process.env.NODE_ENV === "development",
   cookies: createSharedAuthCookieConfig({
     authCookieDomain: process.env.AUTH_COOKIE_DOMAIN,
+    authCookieSecure: process.env.AUTH_COOKIE_SECURE,
     nodeEnv: process.env.NODE_ENV,
   }),
 });
@@ -34,7 +45,10 @@ export const authConfig = result.config;
  */
 export const getToken = cache(async (): Promise<string | null> => {
   const cookieStore = await cookies();
-  const cookieOptions = resolveCookieOptions(authConfig.cookies, authConfig.cookies.secure);
+  const cookieOptions = resolveCookieOptions(
+    authConfig.cookies,
+    authConfig.cookies.secure,
+  );
   const sessionStore = new SessionStore(cookieOptions);
 
   const encrypted = sessionStore.read((name) => cookieStore.get(name)?.value);
@@ -50,9 +64,12 @@ export const getToken = cache(async (): Promise<string | null> => {
     try {
       const newEncrypted = await encodeSession(token, authConfig);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      sessionStore.write(newEncrypted, (name: string, value: string, opts: any) => {
-        cookieStore.set(name, value, opts);
-      });
+      sessionStore.write(
+        newEncrypted,
+        (name: string, value: string, opts: any) => {
+          cookieStore.set(name, value, opts);
+        },
+      );
     } catch {
       // Cookie may be read-only in some contexts (e.g. middleware)
     }

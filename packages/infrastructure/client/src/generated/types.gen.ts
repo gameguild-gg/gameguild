@@ -5712,9 +5712,29 @@ export interface LearningWorkspacesLearnerGradeSummary {
   earnedPoints?: number | null;
   finalGrade?: number | null;
   gradedAssessments?: number;
+  groups?: Array<LearningWorkspacesLearnerAssessmentGroup> | null;
+  items?: Array<LearningWorkspacesLearnerGradeItem> | null;
   percentage?: number | null;
   possiblePoints?: number | null;
   totalAssessments?: number;
+}
+
+export interface LearningWorkspacesLearnerGradeItem {
+  assessmentId?: string;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  contentId?: string | null;
+  dueAt?: string | null;
+  feedback?: string | null;
+  gradedAt?: string | null;
+  groupId?: string | null;
+  maxScore?: number;
+  passed?: boolean | null;
+  passingScore?: number;
+  score?: number | null;
+  submissionStatus?: string | null;
+  title?: string | null;
+  type?: string | null;
 }
 
 export interface LearningWorkspacesLearnerScheduleEntry {
@@ -8600,6 +8620,7 @@ export let LearningWorkspacesLearnerCourseSummarySchema: z.ZodType<LearningWorks
 export let LearningWorkspacesLearnerCourseWorkspaceSchema: z.ZodType<LearningWorkspacesLearnerCourseWorkspace>;
 export let LearningWorkspacesLearnerDashboardSchema: z.ZodType<LearningWorkspacesLearnerDashboard>;
 export let LearningWorkspacesLearnerDiscussionSchema: z.ZodType<LearningWorkspacesLearnerDiscussion>;
+export let LearningWorkspacesLearnerGradeItemSchema: z.ZodType<LearningWorkspacesLearnerGradeItem>;
 export let LearningWorkspacesLearnerGradeSummarySchema: z.ZodType<LearningWorkspacesLearnerGradeSummary>;
 export let LearningWorkspacesLearnerScheduleEntrySchema: z.ZodType<LearningWorkspacesLearnerScheduleEntry>;
 export let LearningWorkspacesLearnerSearchResultSchema: z.ZodType<LearningWorkspacesLearnerSearchResult>;
@@ -15541,9 +15562,36 @@ LearningWorkspacesLearnerGradeSummarySchema = z.object({
   earnedPoints: z.number().nullable().optional(),
   finalGrade: z.number().nullable().optional(),
   gradedAssessments: z.number().int().optional(),
+  groups: z
+    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentGroupSchema))
+    .nullable()
+    .optional(),
+  items: z
+    .array(z.lazy(() => LearningWorkspacesLearnerGradeItemSchema))
+    .nullable()
+    .optional(),
   percentage: z.number().nullable().optional(),
   possiblePoints: z.number().nullable().optional(),
   totalAssessments: z.number().int().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerGradeItem */
+LearningWorkspacesLearnerGradeItemSchema = z.object({
+  assessmentId: z.string().uuid().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  feedback: z.string().nullable().optional(),
+  gradedAt: z.string().datetime().nullable().optional(),
+  groupId: z.string().uuid().nullable().optional(),
+  maxScore: z.number().int().optional(),
+  passed: z.boolean().nullable().optional(),
+  passingScore: z.number().int().optional(),
+  score: z.number().int().nullable().optional(),
+  submissionStatus: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerScheduleEntry */

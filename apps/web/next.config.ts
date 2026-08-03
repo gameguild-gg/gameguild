@@ -2,7 +2,17 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import path from "node:path";
 
+const configuredDevOrigins = process.env.NEXT_ALLOWED_DEV_ORIGINS?.split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const nextConfig: NextConfig = {
+  allowedDevOrigins: configuredDevOrigins ?? [
+    "gameguild.localhost",
+    "learning.gameguild.localhost",
+    "gameguild.127.0.0.1.sslip.io",
+    "learning.gameguild.127.0.0.1.sslip.io",
+  ],
   reactCompiler: true,
   output: "standalone",
   outputFileTracingRoot: path.resolve(__dirname, "../.."),
@@ -84,7 +94,8 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/:locale/block-content-editor/:path((?!doc-editor|quiz-editor).*)",
+        source:
+          "/:locale/block-content-editor/:path((?!doc-editor|quiz-editor).*)",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
           { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
@@ -95,7 +106,10 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "Content-Encoding", value: "gzip" },
           { key: "Content-Type", value: "application/wasm" },
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
           { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
         ],
       },
@@ -104,7 +118,10 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "Content-Encoding", value: "gzip" },
           { key: "Content-Type", value: "application/wasm" },
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
           { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
         ],
       },
@@ -113,7 +130,10 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "Content-Encoding", value: "gzip" },
           { key: "Content-Type", value: "application/javascript" },
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
           { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
         ],
       },
@@ -122,7 +142,10 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "Content-Encoding", value: "gzip" },
           { key: "Content-Type", value: "application/json" },
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
           { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
         ],
       },
@@ -130,7 +153,10 @@ const nextConfig: NextConfig = {
         source: "/langs/:path*.zip",
         headers: [
           { key: "Content-Type", value: "application/zip" },
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
           { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
         ],
       },
@@ -139,21 +165,30 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "Content-Encoding", value: "gzip" },
           { key: "Content-Type", value: "application/javascript" },
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
           { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
         ],
       },
       {
         source: "/managed/:path*",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
           { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
         ],
       },
       {
         source: "/mathlive/:path*",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
           { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
         ],
       },
@@ -169,11 +204,23 @@ const nextConfig: NextConfig = {
         return path.dirname(require.resolve(`${pkg}/package.json`));
       } catch {
         const nested = [
-          path.resolve(__dirname, "node_modules/vscode-languageserver/node_modules", pkg),
-          path.resolve(__dirname, "../../node_modules/vscode-languageserver/node_modules", pkg),
+          path.resolve(
+            __dirname,
+            "node_modules/vscode-languageserver/node_modules",
+            pkg,
+          ),
+          path.resolve(
+            __dirname,
+            "../../node_modules/vscode-languageserver/node_modules",
+            pkg,
+          ),
         ];
 
-        return nested.find((candidate) => require("node:fs").existsSync(candidate)) ?? pkg;
+        return (
+          nested.find((candidate) =>
+            require("node:fs").existsSync(candidate),
+          ) ?? pkg
+        );
       }
     };
 
@@ -181,11 +228,15 @@ const nextConfig: NextConfig = {
       ...config.resolve.alias,
       "@game-guild/dotnet-wasm": path.resolve(
         __dirname,
-        "../../packages/infrastructure/wasm/dotnet/src/index.ts"
+        "../../packages/infrastructure/wasm/dotnet/src/index.ts",
       ),
       "vscode-jsonrpc": resolvePackageDir("vscode-jsonrpc"),
-      "vscode-languageserver-protocol": resolvePackageDir("vscode-languageserver-protocol"),
-      "vscode-languageserver-types": resolvePackageDir("vscode-languageserver-types"),
+      "vscode-languageserver-protocol": resolvePackageDir(
+        "vscode-languageserver-protocol",
+      ),
+      "vscode-languageserver-types": resolvePackageDir(
+        "vscode-languageserver-types",
+      ),
     };
 
     config.resolve.fallback = {
@@ -209,7 +260,7 @@ const nextConfig: NextConfig = {
       config.plugins.push(
         new webpack.DefinePlugin({
           self: "globalThis",
-        })
+        }),
       );
     }
 

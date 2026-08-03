@@ -1,14 +1,15 @@
 interface SharedAuthCookieEnvironment {
   authCookieDomain?: string;
+  authCookieSecure?: boolean | string;
   nodeEnv?: string;
 }
 
 interface SharedAuthCookieConfig {
   domain?: string;
   httpOnly: true;
-  name: 'gameguild';
-  path: '/';
-  sameSite: 'lax';
+  name: "gameguild";
+  path: "/";
+  sameSite: "lax";
   secure: boolean;
 }
 
@@ -20,13 +21,24 @@ interface AllowedAuthRedirectOptions {
 
 export function createSharedAuthCookieConfig({
   authCookieDomain,
+  authCookieSecure,
   nodeEnv,
 }: SharedAuthCookieEnvironment): SharedAuthCookieConfig {
+  const explicitSecure =
+    typeof authCookieSecure === "boolean"
+      ? authCookieSecure
+      : authCookieSecure?.trim().toLowerCase();
+
   return {
-    name: 'gameguild',
-    secure: nodeEnv === 'production',
-    sameSite: 'lax',
-    path: '/',
+    name: "gameguild",
+    secure:
+      explicitSecure === true || explicitSecure === "true"
+        ? true
+        : explicitSecure === false || explicitSecure === "false"
+          ? false
+          : nodeEnv === "production",
+    sameSite: "lax",
+    path: "/",
     domain: authCookieDomain?.trim() || undefined,
     httpOnly: true,
   };
@@ -35,17 +47,17 @@ export function createSharedAuthCookieConfig({
 export function resolveAllowedAuthRedirect(
   value: unknown,
   {
-    fallback = '/dashboard',
+    fallback = "/dashboard",
     learningOrigin,
     webOrigin,
   }: AllowedAuthRedirectOptions,
 ): string {
-  const redirectTo = typeof value === 'string' ? value.trim() : '';
+  const redirectTo = typeof value === "string" ? value.trim() : "";
   if (!redirectTo) {
     return fallback;
   }
 
-  if (redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
+  if (redirectTo.startsWith("/") && !redirectTo.startsWith("//")) {
     return redirectTo;
   }
 

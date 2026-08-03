@@ -1,14 +1,14 @@
-import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
-import type React from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import "@testing-library/jest-dom/vitest";
+import { render, screen } from "@testing-library/react";
+import type React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   redirect: vi.fn((href: string) => {
     throw new Error(`redirect:${href}`);
   }),
   notFound: vi.fn(() => {
-    throw new Error('not-found');
+    throw new Error("not-found");
   }),
   getCourse: vi.fn(),
   getCourseAnalytics: vi.fn(),
@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
   getCoursePricing: vi.fn(),
   getCourseLandingProjects: vi.fn(),
   getCourseTestimonials: vi.fn(),
+  getCourseContent: vi.fn(),
   getContentItem: vi.fn(),
   getAssessment: vi.fn(),
   getAssessmentDefinition: vi.fn(),
@@ -34,24 +35,32 @@ const mocks = vi.hoisted(() => ({
   getCertificateTemplate: vi.fn(),
 }));
 
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   redirect: mocks.redirect,
   notFound: mocks.notFound,
 }));
 
-vi.mock('@/i18n/navigation', () => ({
-  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => (
     <a href={href} {...props}>
       {children}
     </a>
   ),
 }));
 
-vi.mock('@/lib/learning/course-route', () => ({
-  getCourseRouteParam: (course: { slug?: string | null; id: string }) => course.slug || course.id,
+vi.mock("@/lib/learning/course-route", () => ({
+  getCourseRouteParam: (course: { slug?: string | null; id: string }) =>
+    course.slug || course.id,
 }));
 
-vi.mock('@/lib/learning', () => ({
+vi.mock("@/lib/learning", () => ({
   getCourse: mocks.getCourse,
   getCourseAnalytics: mocks.getCourseAnalytics,
   getCourseCompletionAnalytics: mocks.getCourseCompletionAnalytics,
@@ -67,6 +76,7 @@ vi.mock('@/lib/learning', () => ({
   getCoursePricing: mocks.getCoursePricing,
   getCourseLandingProjects: mocks.getCourseLandingProjects,
   getCourseTestimonials: mocks.getCourseTestimonials,
+  getCourseContent: mocks.getCourseContent,
   getContentItem: mocks.getContentItem,
   getAssessment: mocks.getAssessment,
   getAssessmentDefinition: mocks.getAssessmentDefinition,
@@ -76,13 +86,19 @@ vi.mock('@/lib/learning', () => ({
   getCertificateTemplate: mocks.getCertificateTemplate,
 }));
 
-vi.mock('./content/[contentId]/content-item-editor', () => ({
-  ContentItemEditor: ({ courseTitle, item }: { courseTitle: string; item: { title: string } }) => (
+vi.mock("./content/[contentId]/content-item-editor", () => ({
+  ContentItemEditor: ({
+    courseTitle,
+    item,
+  }: {
+    courseTitle: string;
+    item: { title: string };
+  }) => (
     <div data-testid="content-item-editor">{`${courseTitle}:${item.title}`}</div>
   ),
 }));
 
-vi.mock('./assessments/[assessmentId]/assessment-editor', () => ({
+vi.mock("./assessments/[assessmentId]/assessment-editor", () => ({
   AssessmentEditor: ({
     assessment,
     assessmentDefinition,
@@ -96,73 +112,93 @@ vi.mock('./assessments/[assessmentId]/assessment-editor', () => ({
   ),
 }));
 
-vi.mock('./listing/faq/faq-editor-form', () => ({
-  FaqEditorForm: ({ items }: { items: unknown[] }) => <div data-testid="faq-editor">{`${items.length} faq items`}</div>,
+vi.mock("./listing/faq/faq-editor-form", () => ({
+  FaqEditorForm: ({ items }: { items: unknown[] }) => (
+    <div data-testid="faq-editor">{`${items.length} faq items`}</div>
+  ),
 }));
 
-vi.mock('./listing/pricing/pricing-editor-form', () => ({
+vi.mock("./listing/pricing/pricing-editor-form", () => ({
   PricingEditorForm: ({ pricing }: { pricing: { refundPolicy: string } }) => (
     <div data-testid="pricing-editor">{pricing.refundPolicy}</div>
   ),
 }));
 
-vi.mock('./listing/projects/project-carousel-editor-form', () => ({
+vi.mock("./listing/projects/project-carousel-editor-form", () => ({
   ProjectCarouselEditorForm: ({ items }: { items: unknown[] }) => (
     <div data-testid="project-carousel-editor">{`${items.length} project slides`}</div>
   ),
 }));
 
-vi.mock('./support/discussions/course-discussions-manager', () => ({
-  CourseDiscussionsManager: ({ courseTitle, threads }: { courseTitle: string; threads: unknown[] }) => (
+vi.mock("./support/discussions/course-discussions-manager", () => ({
+  CourseDiscussionsManager: ({
+    courseTitle,
+    threads,
+  }: {
+    courseTitle: string;
+    threads: unknown[];
+  }) => (
     <div data-testid="course-discussions-manager">{`${courseTitle}:${threads.length}`}</div>
   ),
 }));
 
-vi.mock('./support/thread-action-panel', () => ({
-  ThreadActionPanel: ({ threadId, replies }: { threadId: string; replies: unknown[] }) => (
+vi.mock("./support/thread-action-panel", () => ({
+  ThreadActionPanel: ({
+    threadId,
+    replies,
+  }: {
+    threadId: string;
+    replies: unknown[];
+  }) => (
     <aside data-testid="thread-action-panel">{`${threadId}:${replies.length}`}</aside>
   ),
 }));
 
-vi.mock('./support/tickets/course-ticket-action-panel', () => ({
-  CourseTicketActionPanel: ({ ticketId, resolved }: { ticketId: string; resolved: boolean }) => (
+vi.mock("./support/tickets/course-ticket-action-panel", () => ({
+  CourseTicketActionPanel: ({
+    ticketId,
+    resolved,
+  }: {
+    ticketId: string;
+    resolved: boolean;
+  }) => (
     <aside data-testid="course-ticket-action-panel">{`${ticketId}:${resolved}`}</aside>
   ),
 }));
 
-import AnalyticsLayout from './analytics/layout';
-import AnalyticsRedirectPage from './analytics/page';
-import CompletionAnalyticsPage from './analytics/completion/page';
-import EngagementAnalyticsPage from './analytics/engagement/page';
-import RevenueAnalyticsPage from './analytics/revenue/page';
-import AssessmentsLayout from './assessments/layout';
-import AssessmentDetailPage from './assessments/[assessmentId]/page';
-import CertificatesLayout from './certificates/layout';
-import CertificateTemplateDetailPage from './certificates/[templateId]/page';
-import ContentItemPage from './content/[contentId]/page';
-import ListingLayout from './listing/layout';
-import ListingFaqPage from './listing/faq/page';
-import ListingPricingPage from './listing/pricing/page';
-import ListingProjectsPage from './listing/projects/page';
-import ListingTestimonialsPage from './listing/testimonials/page';
-import SettingsLayout from './settings/layout';
-import SettingsRedirectPage from './settings/page';
-import GeneralSettingsPage from './settings/general/page';
-import IntegrationSettingsPage from './settings/integrations/page';
-import NotificationSettingsPage from './settings/notifications/page';
-import SupportLayout from './support/layout';
-import SupportRedirectPage from './support/page';
-import DiscussionsPage from './support/discussions/page';
-import DiscussionThreadPage from './support/discussions/[threadId]/page';
-import SupportTicketsPage from './support/tickets/page';
-import SupportTicketDetailPage from './support/tickets/[ticketId]/page';
+import AnalyticsLayout from "./analytics/layout";
+import AnalyticsRedirectPage from "./analytics/page";
+import CompletionAnalyticsPage from "./analytics/completion/page";
+import EngagementAnalyticsPage from "./analytics/engagement/page";
+import RevenueAnalyticsPage from "./analytics/revenue/page";
+import AssessmentsLayout from "./assessments/layout";
+import AssessmentDetailPage from "./assessments/[assessmentId]/page";
+import CertificatesLayout from "./certificates/layout";
+import CertificateTemplateDetailPage from "./certificates/[templateId]/page";
+import ContentItemPage from "./content/[contentId]/page";
+import ListingLayout from "./listing/layout";
+import ListingFaqPage from "./listing/faq/page";
+import ListingPricingPage from "./listing/pricing/page";
+import ListingProjectsPage from "./listing/projects/page";
+import ListingTestimonialsPage from "./listing/testimonials/page";
+import SettingsLayout from "./settings/layout";
+import SettingsRedirectPage from "./settings/page";
+import GeneralSettingsPage from "./settings/general/page";
+import IntegrationSettingsPage from "./settings/integrations/page";
+import NotificationSettingsPage from "./settings/notifications/page";
+import SupportLayout from "./support/layout";
+import SupportRedirectPage from "./support/page";
+import DiscussionsPage from "./support/discussions/page";
+import DiscussionThreadPage from "./support/discussions/[threadId]/page";
+import SupportTicketsPage from "./support/tickets/page";
+import SupportTicketDetailPage from "./support/tickets/[ticketId]/page";
 
 const course = {
-  id: 'course-1',
-  slug: 'advanced-ai-by-gameguild',
-  title: 'Advanced AI',
-  description: 'Advanced course',
-  status: 'Published',
+  id: "course-1",
+  slug: "advanced-ai-by-gameguild",
+  title: "Advanced AI",
+  description: "Advanced course",
+  status: "Published",
   features: {
     hasPricing: true,
     hasDiscussions: true,
@@ -171,13 +207,14 @@ const course = {
   },
 };
 
-const params = (extra: Record<string, string> = {}) => Promise.resolve({
-  locale: 'en-US',
-  course: 'course-1',
-  ...extra,
-});
+const params = (extra: Record<string, string> = {}) =>
+  Promise.resolve({
+    locale: "en-US",
+    course: "course-1",
+    ...extra,
+  });
 
-describe('course-management secondary route pages', () => {
+describe("course-management secondary route pages", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getCourse.mockResolvedValue(course);
@@ -191,27 +228,34 @@ describe('course-management secondary route pages', () => {
       totalCompleted: 8,
       completionRate: 40,
       funnel: [
-        { stage: 'Started', count: 20, percentage: 100 },
-        { stage: 'Completed', count: 8, percentage: 40 },
+        { stage: "Started", count: 20, percentage: 100 },
+        { stage: "Completed", count: 8, percentage: 40 },
       ],
     });
     mocks.getCourseEngagementAnalytics.mockResolvedValue({
       activeStudents: 12,
       totalViews: 1200,
       avgSessionDuration: 5400,
-      dailyActivity: [{ date: '2026-07-01', activeUsers: 7 }],
+      dailyActivity: [{ date: "2026-07-01", activeUsers: 7 }],
       peakHours: [{ hour: 14, activity: 9 }],
       contentViews: [
-        { contentTitle: 'AI Navigation', views: 300, avgWatchTime: 900, completionRate: 80 },
+        {
+          contentTitle: "AI Navigation",
+          views: 300,
+          avgWatchTime: 900,
+          completionRate: 80,
+        },
       ],
     });
     mocks.getCourseRevenueAnalytics.mockResolvedValue({
-      currency: 'USD',
+      currency: "USD",
       totalRevenue: 1500,
       totalTransactions: 10,
       avgTransactionValue: 150,
       refundRate: 2,
-      revenueByTier: [{ tierId: 'tier-1', tierName: 'Premium', revenue: 1500, count: 10 }],
+      revenueByTier: [
+        { tierId: "tier-1", tierName: "Premium", revenue: 1500, count: 10 },
+      ],
     });
     mocks.getCourseSupportTickets.mockResolvedValue({
       openCount: 1,
@@ -219,69 +263,69 @@ describe('course-management secondary route pages', () => {
       resolvedCount: 2,
       tickets: [
         {
-          id: 'ticket-1',
-          subject: 'Cannot submit quiz',
-          studentName: 'Ada',
+          id: "ticket-1",
+          subject: "Cannot submit quiz",
+          studentName: "Ada",
           messageCount: 3,
-          status: 'open',
+          status: "open",
         },
       ],
     });
     mocks.getSupportTicket.mockResolvedValue({
-      id: 'ticket-1',
-      subject: 'Cannot submit quiz',
-      status: 'open',
-      priority: 'high',
-      category: 'assessment',
+      id: "ticket-1",
+      subject: "Cannot submit quiz",
+      status: "open",
+      priority: "high",
+      category: "assessment",
       messages: [
         {
-          id: 'm1',
-          authorId: 'student-1',
-          authorName: 'Ada',
-          authorRole: 'student',
-          content: 'The quiz button is disabled.',
-          createdAt: '2026-07-01T10:00:00.000Z',
+          id: "m1",
+          authorId: "student-1",
+          authorName: "Ada",
+          authorRole: "student",
+          content: "The quiz button is disabled.",
+          createdAt: "2026-07-01T10:00:00.000Z",
         },
         {
-          id: 'm2',
-          authorId: 'support-1',
-          authorName: 'Support',
-          authorRole: 'support',
-          content: 'We are checking it.',
-          createdAt: '2026-07-01T10:05:00.000Z',
+          id: "m2",
+          authorId: "support-1",
+          authorName: "Support",
+          authorRole: "support",
+          content: "We are checking it.",
+          createdAt: "2026-07-01T10:05:00.000Z",
         },
       ],
     });
     mocks.getCourseDiscussions.mockResolvedValue({
-      threads: [{ id: 'thread-1', title: 'Week 1 help' }],
+      threads: [{ id: "thread-1", title: "Week 1 help" }],
     });
     mocks.getDiscussionThread.mockResolvedValue({
-      id: 'thread-1',
-      title: 'Week 1 help',
-      authorName: 'Ada',
-      content: 'How do I start?',
+      id: "thread-1",
+      title: "Week 1 help",
+      authorName: "Ada",
+      content: "How do I start?",
       locked: true,
       pinned: true,
       replyCount: 1,
       viewCount: 12,
-      createdAt: '2026-07-01T09:00:00.000Z',
+      createdAt: "2026-07-01T09:00:00.000Z",
       replies: [
         {
-          id: 'reply-1',
-          threadId: 'thread-1',
-          authorId: 'teacher-1',
-          authorName: 'Teacher',
-          authorRole: 'instructor',
-          content: 'Start with lesson one.',
+          id: "reply-1",
+          threadId: "thread-1",
+          authorId: "teacher-1",
+          authorName: "Teacher",
+          authorRole: "instructor",
+          content: "Start with lesson one.",
           upvotes: 2,
           isAnswer: true,
-          createdAt: '2026-07-01T09:30:00.000Z',
-          updatedAt: '2026-07-01T09:30:00.000Z',
+          createdAt: "2026-07-01T09:30:00.000Z",
+          updatedAt: "2026-07-01T09:30:00.000Z",
         },
       ],
     });
     mocks.getCourseNotificationSettings.mockResolvedValue({
-      courseId: 'course-1',
+      courseId: "course-1",
       studentNotifications: {
         enrollmentConfirmation: true,
         courseUpdates: true,
@@ -302,93 +346,174 @@ describe('course-management secondary route pages', () => {
         lowRatingThreshold: 3,
       },
       templates: [
-        { id: 'template-1', subject: 'Welcome', type: 'Enrollment', enabled: true },
+        {
+          id: "template-1",
+          subject: "Welcome",
+          type: "Enrollment",
+          enabled: true,
+        },
       ],
-      updatedAt: '2026-07-01T00:00:00.000Z',
+      updatedAt: "2026-07-01T00:00:00.000Z",
     });
     mocks.getCourseIntegrationSettings.mockResolvedValue({
-      courseId: 'course-1',
-      integrations: [{ id: 'int-1', name: 'Discord', type: 'discord', enabled: true, config: {}, status: 'connected' }],
+      courseId: "course-1",
+      integrations: [
+        {
+          id: "int-1",
+          name: "Discord",
+          type: "discord",
+          enabled: true,
+          config: {},
+          status: "connected",
+        },
+      ],
       webhooks: [],
-      updatedAt: '2026-07-01T00:00:00.000Z',
+      updatedAt: "2026-07-01T00:00:00.000Z",
     });
-    mocks.getCourseFaq.mockResolvedValue({ items: [{ id: 'faq-1', question: 'When?', answer: 'Now.' }] });
+    mocks.getCourseFaq.mockResolvedValue({
+      items: [{ id: "faq-1", question: "When?", answer: "Now." }],
+    });
     mocks.getCoursePricing.mockResolvedValue({
-      refundPolicy: 'Refunds available for 14 days.',
+      refundPolicy: "Refunds available for 14 days.",
       tiers: [],
       discounts: [],
       hasFreeTrial: false,
     });
-    mocks.getCourseLandingProjects.mockResolvedValue({ items: [{ id: 'project-1', title: 'Boss AI' }] });
+    mocks.getCourseLandingProjects.mockResolvedValue({
+      items: [{ id: "project-1", title: "Boss AI" }],
+    });
     mocks.getCourseTestimonials.mockResolvedValue({
       total: 1,
       averageRating: 4.5,
       testimonials: [
-        { id: 'review-1', title: 'Useful', rating: 5, content: 'Great', studentName: 'Ada' },
+        {
+          id: "review-1",
+          title: "Useful",
+          rating: 5,
+          content: "Great",
+          studentName: "Ada",
+        },
       ],
     });
-    mocks.getContentItem.mockResolvedValue({ id: 'content-1', title: 'Lesson 1' });
-    mocks.getAssessment.mockResolvedValue({ id: 'assessment-1', title: 'Quiz 1' });
-    mocks.getAssessmentDefinition.mockResolvedValue({ assessmentId: 'assessment-1', definitionSchemaVersion: 1, definition: { order: [], blocks: {} } });
-    mocks.getCourseAssessments.mockResolvedValue({ assessments: [{ id: 'assessment-1', title: 'Quiz 1' }], total: 1 });
-    mocks.getCourseAssessmentGroups.mockResolvedValue([{ id: 'group-1', name: 'Quizzes' }]);
-    mocks.getCourseCertificates.mockResolvedValue({ templates: [{ id: 'template-1', name: 'Completion certificate' }], total: 1 });
+    mocks.getCourseContent.mockResolvedValue({ items: [], total: 0 });
+    mocks.getContentItem.mockResolvedValue({
+      id: "content-1",
+      title: "Lesson 1",
+    });
+    mocks.getAssessment.mockResolvedValue({
+      id: "assessment-1",
+      title: "Quiz 1",
+    });
+    mocks.getAssessmentDefinition.mockResolvedValue({
+      assessmentId: "assessment-1",
+      definitionSchemaVersion: 1,
+      definition: { order: [], blocks: {} },
+    });
+    mocks.getCourseAssessments.mockResolvedValue({
+      assessments: [{ id: "assessment-1", title: "Quiz 1" }],
+      total: 1,
+    });
+    mocks.getCourseAssessmentGroups.mockResolvedValue([
+      { id: "group-1", name: "Quizzes" },
+    ]);
+    mocks.getCourseCertificates.mockResolvedValue({
+      templates: [{ id: "template-1", name: "Completion certificate" }],
+      total: 1,
+    });
     mocks.getCertificateTemplate.mockResolvedValue({
-      id: 'template-1',
-      courseId: 'course-1',
-      name: 'Completion certificate',
-      description: 'Issued on completion',
-      status: 'active',
+      id: "template-1",
+      courseId: "course-1",
+      name: "Completion certificate",
+      description: "Issued on completion",
+      status: "active",
       isDefault: true,
       issuedCount: 3,
-      createdAt: '2026-06-01T00:00:00.000Z',
-      templateHtml: '<p>Certificate body</p>',
+      createdAt: "2026-06-01T00:00:00.000Z",
+      templateHtml: "<p>Certificate body</p>",
       templateStyles: null,
-      previewUrl: '/api/certificates/templates/template-1',
-      updatedAt: '2026-07-01T00:00:00.000Z',
+      previewUrl: "/api/certificates/templates/template-1",
+      updatedAt: "2026-07-01T00:00:00.000Z",
     });
   });
 
-  it('redirects index routes to their canonical course-management tabs', async () => {
-    await expect(AnalyticsRedirectPage({ params: params() } as never)).rejects.toThrow(
-      'redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/overview',
+  it("redirects index routes to their canonical course-management tabs", async () => {
+    await expect(
+      AnalyticsRedirectPage({ params: params() } as never),
+    ).rejects.toThrow(
+      "redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/overview",
     );
-    await expect(SupportRedirectPage({ params: params() } as never)).rejects.toThrow(
-      'redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/support/tickets',
+    await expect(
+      SupportRedirectPage({ params: params() } as never),
+    ).rejects.toThrow(
+      "redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/support/tickets",
     );
-    await expect(SettingsRedirectPage({ params: params() } as never)).rejects.toThrow(
-      'redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/settings/danger',
+    await expect(
+      SettingsRedirectPage({ params: params() } as never),
+    ).rejects.toThrow(
+      "redirect:/en-US/dashboard/learning/courses/advanced-ai-by-gameguild/settings/danger",
     );
-    await expect(GeneralSettingsPage({ params: params() } as never)).rejects.toThrow(
-      'redirect:/en-US/dashboard/learning/courses/course-1/listing/info',
+    await expect(
+      GeneralSettingsPage({ params: params() } as never),
+    ).rejects.toThrow(
+      "redirect:/en-US/dashboard/learning/courses/course-1/listing/info",
     );
   });
 
-  it('preloads layout data and renders nested children for analytics, listing, settings, and support groups', async () => {
-    render(await AnalyticsLayout({ params: params(), children: <div>Analytics child</div> } as never));
-    expect(screen.getByText('Analytics child')).toBeInTheDocument();
-    expect(mocks.getCourseRevenueAnalytics).toHaveBeenCalledWith('course-1');
+  it("preloads layout data and renders nested children for analytics, listing, settings, and support groups", async () => {
+    render(
+      await AnalyticsLayout({
+        params: params(),
+        children: <div>Analytics child</div>,
+      } as never),
+    );
+    expect(screen.getByText("Analytics child")).toBeInTheDocument();
+    expect(mocks.getCourseRevenueAnalytics).toHaveBeenCalledWith("course-1");
 
-    render(await ListingLayout({ params: params(), children: <div>Listing child</div> } as never));
-    expect(screen.getByText('Listing child')).toBeInTheDocument();
+    render(
+      await ListingLayout({
+        params: params(),
+        children: <div>Listing child</div>,
+      } as never),
+    );
+    expect(screen.getByText("Listing child")).toBeInTheDocument();
 
-    render(await AssessmentsLayout({ params: params(), children: <div>Assessment child</div> } as never));
-    expect(screen.getByText('Assessment child')).toBeInTheDocument();
-    expect(mocks.getCourseAssessments).toHaveBeenCalledWith('course-1');
+    render(
+      await AssessmentsLayout({
+        params: params(),
+        children: <div>Assessment child</div>,
+      } as never),
+    );
+    expect(screen.getByText("Assessment child")).toBeInTheDocument();
+    expect(mocks.getCourseAssessments).toHaveBeenCalledWith("course-1");
 
-    render(await CertificatesLayout({ params: params(), children: <div>Certificate child</div> } as never));
-    expect(screen.getByText('Certificate child')).toBeInTheDocument();
-    expect(mocks.getCourseCertificates).toHaveBeenCalledWith('course-1');
+    render(
+      await CertificatesLayout({
+        params: params(),
+        children: <div>Certificate child</div>,
+      } as never),
+    );
+    expect(screen.getByText("Certificate child")).toBeInTheDocument();
+    expect(mocks.getCourseCertificates).toHaveBeenCalledWith("course-1");
 
-    render(await SettingsLayout({ params: params(), children: <div>Settings child</div> } as never));
-    expect(screen.getByText('Settings child')).toBeInTheDocument();
+    render(
+      await SettingsLayout({
+        params: params(),
+        children: <div>Settings child</div>,
+      } as never),
+    );
+    expect(screen.getByText("Settings child")).toBeInTheDocument();
 
-    render(await SupportLayout({ params: params(), children: <div>Support child</div> } as never));
-    expect(screen.getByText('Support child')).toBeInTheDocument();
-    expect(mocks.getCourseDiscussions).toHaveBeenCalledWith('course-1');
+    render(
+      await SupportLayout({
+        params: params(),
+        children: <div>Support child</div>,
+      } as never),
+    );
+    expect(screen.getByText("Support child")).toBeInTheDocument();
+    expect(mocks.getCourseDiscussions).toHaveBeenCalledWith("course-1");
   });
 
-  it('skips optional layout preloads when feature flags are disabled', async () => {
+  it("skips optional layout preloads when feature flags are disabled", async () => {
     mocks.getCourse.mockResolvedValue({
       ...course,
       features: {
@@ -398,118 +523,188 @@ describe('course-management secondary route pages', () => {
       },
     });
 
-    render(await AnalyticsLayout({ params: params(), children: <div>Analytics without pricing</div> } as never));
-    expect(screen.getByText('Analytics without pricing')).toBeInTheDocument();
+    render(
+      await AnalyticsLayout({
+        params: params(),
+        children: <div>Analytics without pricing</div>,
+      } as never),
+    );
+    expect(screen.getByText("Analytics without pricing")).toBeInTheDocument();
     expect(mocks.getCourseRevenueAnalytics).not.toHaveBeenCalled();
 
-    render(await SupportLayout({ params: params(), children: <div>Support without discussions</div> } as never));
-    expect(screen.getByText('Support without discussions')).toBeInTheDocument();
-    expect(mocks.getCourseSupportTickets).toHaveBeenCalledWith('course-1');
+    render(
+      await SupportLayout({
+        params: params(),
+        children: <div>Support without discussions</div>,
+      } as never),
+    );
+    expect(screen.getByText("Support without discussions")).toBeInTheDocument();
+    expect(mocks.getCourseSupportTickets).toHaveBeenCalledWith("course-1");
     expect(mocks.getCourseDiscussions).not.toHaveBeenCalled();
   });
 
-  it('uses notFound for missing or disabled course-management route groups', async () => {
+  it("uses notFound for missing or disabled course-management route groups", async () => {
     mocks.getCourse.mockResolvedValueOnce(null);
-    await expect(ListingLayout({ params: params(), children: <div /> } as never)).rejects.toThrow('not-found');
+    await expect(
+      ListingLayout({ params: params(), children: <div /> } as never),
+    ).rejects.toThrow("not-found");
 
     mocks.getCourse.mockResolvedValueOnce(null);
-    await expect(SettingsLayout({ params: params(), children: <div /> } as never)).rejects.toThrow('not-found');
+    await expect(
+      SettingsLayout({ params: params(), children: <div /> } as never),
+    ).rejects.toThrow("not-found");
 
     mocks.getCourse.mockResolvedValueOnce(null);
-    await expect(AnalyticsLayout({ params: params(), children: <div /> } as never)).rejects.toThrow('not-found');
+    await expect(
+      AnalyticsLayout({ params: params(), children: <div /> } as never),
+    ).rejects.toThrow("not-found");
 
     mocks.getCourse.mockResolvedValueOnce(null);
-    await expect(SupportLayout({ params: params(), children: <div /> } as never)).rejects.toThrow('not-found');
+    await expect(
+      SupportLayout({ params: params(), children: <div /> } as never),
+    ).rejects.toThrow("not-found");
 
     mocks.getCourse.mockResolvedValueOnce({
       ...course,
       features: { ...course.features, hasAssessments: false },
     });
-    await expect(AssessmentsLayout({ params: params(), children: <div /> } as never)).rejects.toThrow('not-found');
+    await expect(
+      AssessmentsLayout({ params: params(), children: <div /> } as never),
+    ).rejects.toThrow("not-found");
 
     mocks.getCourse.mockResolvedValueOnce({
       ...course,
       features: { ...course.features, hasCertificate: false },
     });
-    await expect(CertificatesLayout({ params: params(), children: <div /> } as never)).rejects.toThrow('not-found');
+    await expect(
+      CertificatesLayout({ params: params(), children: <div /> } as never),
+    ).rejects.toThrow("not-found");
   });
 
-  it('renders course analytics states from API data', async () => {
+  it("renders course analytics states from API data", async () => {
     render(await EngagementAnalyticsPage({ params: params() } as never));
-    expect(screen.getByText('Engagement Analytics')).toBeInTheDocument();
-    expect(screen.getByText('Daily Active Users')).toBeInTheDocument();
-    expect(screen.getByText('Content Performance')).toBeInTheDocument();
+    expect(screen.getByText("Engagement Analytics")).toBeInTheDocument();
+    expect(screen.getByText("Daily Active Users")).toBeInTheDocument();
+    expect(screen.getByText("Content Performance")).toBeInTheDocument();
 
     render(await CompletionAnalyticsPage({ params: params() } as never));
-    expect(screen.getByText('Completion Funnel')).toBeInTheDocument();
-    expect(screen.getByText('Started')).toBeInTheDocument();
+    expect(screen.getByText("Completion Funnel")).toBeInTheDocument();
+    expect(screen.getByText("Started")).toBeInTheDocument();
 
     render(await RevenueAnalyticsPage({ params: params() } as never));
-    expect(screen.getByText('Revenue Sources')).toBeInTheDocument();
-    expect(screen.getByText('Premium')).toBeInTheDocument();
+    expect(screen.getByText("Revenue Sources")).toBeInTheDocument();
+    expect(screen.getByText("Premium")).toBeInTheDocument();
   });
 
-  it('renders support queues, ticket details, discussions, and discussion details', async () => {
+  it("renders support queues, ticket details, discussions, and discussion details", async () => {
     render(await SupportTicketsPage({ params: params() } as never));
-    expect(screen.getByText('Support Queue')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /cannot submit quiz/i })).toHaveAttribute(
-      'href',
-      '/dashboard/learning/courses/course-1/support/tickets/ticket-1',
+    expect(screen.getByText("Support Queue")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /cannot submit quiz/i }),
+    ).toHaveAttribute(
+      "href",
+      "/dashboard/learning/courses/course-1/support/tickets/ticket-1",
     );
 
-    render(await SupportTicketDetailPage({ params: params({ ticketId: 'ticket-1' }) } as never));
-    expect(screen.getAllByText('Cannot submit quiz').length).toBeGreaterThan(0);
-    expect(screen.getByTestId('course-ticket-action-panel')).toHaveTextContent('ticket-1:false');
+    render(
+      await SupportTicketDetailPage({
+        params: params({ ticketId: "ticket-1" }),
+      } as never),
+    );
+    expect(screen.getAllByText("Cannot submit quiz").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("course-ticket-action-panel")).toHaveTextContent(
+      "ticket-1:false",
+    );
 
     render(await DiscussionsPage({ params: params() } as never));
-    expect(screen.getByTestId('course-discussions-manager')).toHaveTextContent('Advanced AI:1');
+    expect(screen.getByTestId("course-discussions-manager")).toHaveTextContent(
+      "Advanced AI:1",
+    );
 
-    render(await DiscussionThreadPage({ params: params({ threadId: 'thread-1' }) } as never));
-    expect(screen.getAllByText('Week 1 help').length).toBeGreaterThan(0);
-    expect(screen.getByText('Accepted answer')).toBeInTheDocument();
+    render(
+      await DiscussionThreadPage({
+        params: params({ threadId: "thread-1" }),
+      } as never),
+    );
+    expect(screen.getAllByText("Week 1 help").length).toBeGreaterThan(0);
+    expect(screen.getByText("Accepted answer")).toBeInTheDocument();
   });
 
-  it('renders settings and listing management pages from API contracts', async () => {
+  it("renders settings and listing management pages from API contracts", async () => {
     render(await NotificationSettingsPage({ params: params() } as never));
-    expect(screen.getByText('Notification settings')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Welcome')).toBeInTheDocument();
+    expect(screen.getByText("Notification settings")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Welcome")).toBeInTheDocument();
 
     render(await IntegrationSettingsPage({ params: params() } as never));
-    expect(screen.getByText('Course integrations')).toBeInTheDocument();
-    expect(screen.getByText('Discord')).toBeInTheDocument();
+    expect(screen.getByText("Course integrations")).toBeInTheDocument();
+    expect(screen.getByText("Discord")).toBeInTheDocument();
 
     render(await ListingFaqPage({ params: params() } as never));
-    expect(screen.getByTestId('faq-editor')).toHaveTextContent('1 faq items');
+    expect(screen.getByTestId("faq-editor")).toHaveTextContent("1 faq items");
 
     render(await ListingPricingPage({ params: params() } as never));
-    expect(screen.getByTestId('pricing-editor')).toHaveTextContent('Refunds available');
+    expect(screen.getByTestId("pricing-editor")).toHaveTextContent(
+      "Refunds available",
+    );
 
     render(await ListingProjectsPage({ params: params() } as never));
-    expect(screen.getByTestId('project-carousel-editor')).toHaveTextContent('1 project slides');
+    expect(screen.getByTestId("project-carousel-editor")).toHaveTextContent(
+      "1 project slides",
+    );
 
     render(await ListingTestimonialsPage({ params: params() } as never));
-    expect(screen.getByText('Testimonials & reviews')).toBeInTheDocument();
-    expect(screen.getByText('Useful')).toBeInTheDocument();
+    expect(screen.getByText("Testimonials & reviews")).toBeInTheDocument();
+    expect(screen.getByText("Useful")).toBeInTheDocument();
   });
 
-  it('renders item-level editors and certificate details, and uses notFound for missing records', async () => {
-    render(await ContentItemPage({ params: params({ contentId: 'content-1' }) } as never));
-    expect(screen.getByTestId('content-item-editor')).toHaveTextContent('Advanced AI:Lesson 1');
+  it("renders item-level editors and certificate details, and uses notFound for missing records", async () => {
+    render(
+      await ContentItemPage({
+        params: params({ contentId: "content-1" }),
+      } as never),
+    );
+    expect(screen.getByTestId("content-item-editor")).toHaveTextContent(
+      "Advanced AI:Lesson 1",
+    );
 
-    render(await AssessmentDetailPage({ params: params({ assessmentId: 'assessment-1' }) } as never));
-    expect(screen.getByTestId('assessment-editor')).toHaveTextContent('Quiz 1:1:1');
+    render(
+      await AssessmentDetailPage({
+        params: params({ assessmentId: "assessment-1" }),
+      } as never),
+    );
+    expect(screen.getByTestId("assessment-editor")).toHaveTextContent(
+      "Quiz 1:1:1",
+    );
 
-    render(await CertificateTemplateDetailPage({ params: params({ templateId: 'template-1' }) } as never));
-    expect(screen.getByDisplayValue('Completion certificate')).toBeInTheDocument();
-    expect(screen.getByTitle('Certificate preview').getAttribute('srcdoc')).toContain('Certificate body');
+    render(
+      await CertificateTemplateDetailPage({
+        params: params({ templateId: "template-1" }),
+      } as never),
+    );
+    expect(
+      screen.getByDisplayValue("Completion certificate"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTitle("Certificate preview").getAttribute("srcdoc"),
+    ).toContain("Certificate body");
 
     mocks.getContentItem.mockResolvedValueOnce(null);
-    await expect(ContentItemPage({ params: params({ contentId: 'missing' }) } as never)).rejects.toThrow('not-found');
+    await expect(
+      ContentItemPage({ params: params({ contentId: "missing" }) } as never),
+    ).rejects.toThrow("not-found");
 
     mocks.getAssessment.mockResolvedValueOnce(null);
-    await expect(AssessmentDetailPage({ params: params({ assessmentId: 'missing' }) } as never)).rejects.toThrow('not-found');
+    await expect(
+      AssessmentDetailPage({
+        params: params({ assessmentId: "missing" }),
+      } as never),
+    ).rejects.toThrow("not-found");
 
     mocks.getCertificateTemplate.mockResolvedValueOnce(null);
-    await expect(CertificateTemplateDetailPage({ params: params({ templateId: 'missing' }) } as never)).rejects.toThrow('not-found');
+    await expect(
+      CertificateTemplateDetailPage({
+        params: params({ templateId: "missing" }),
+      } as never),
+    ).rejects.toThrow("not-found");
   });
 });

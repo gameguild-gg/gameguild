@@ -165,6 +165,7 @@ public static class OpenApiExtensions
                 // Normalize controller tags into a consistent module/controller path.
                 c.OperationFilter<ModuleControllerTagOperationFilter>();
                 c.OperationFilter<AllowAnonymousOperationFilter>();
+                c.SchemaFilter<FlagsEnumSchemaFilter>();
 
                 // Add security definition for JWT Bearer token
                 c.AddSecurityDefinition(
@@ -275,6 +276,20 @@ public static class OpenApiExtensions
 /// <summary>
 ///     Custom OpenAPI document transformer that ensures proper serialization
 /// </summary>
+internal sealed class FlagsEnumSchemaFilter : ISchemaFilter
+{
+    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    {
+        if (!context.Type.IsEnum || !context.Type.IsDefined(typeof(FlagsAttribute), inherit: false))
+            return;
+
+        schema.Type = "string";
+        schema.Format = null;
+        schema.Enum?.Clear();
+        schema.Description = "A comma-separated combination of the declared flag names.";
+    }
+}
+
 internal sealed class OpenApiDocumentTransformer : Microsoft.AspNetCore.OpenApi.IOpenApiDocumentTransformer
 {
     public Task TransformAsync(Microsoft.OpenApi.Models.OpenApiDocument document, Microsoft.AspNetCore.OpenApi.OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)

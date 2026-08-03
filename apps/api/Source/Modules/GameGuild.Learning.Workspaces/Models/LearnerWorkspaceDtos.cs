@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace GameGuild.Learning.Workspaces;
 
 public sealed record LearnerDashboardDto(
@@ -75,7 +77,26 @@ public sealed record LearnerGradeSummaryDto(
     int TotalAssessments,
     decimal? EarnedPoints,
     decimal? PossiblePoints,
-    decimal? Percentage);
+    decimal? Percentage,
+    IReadOnlyList<LearnerAssessmentGroupDto> Groups,
+    IReadOnlyList<LearnerGradeItemDto> Items);
+
+public sealed record LearnerGradeItemDto(
+    Guid AssessmentId,
+    Guid? ContentId,
+    Guid? GroupId,
+    string Title,
+    string Type,
+    int MaxScore,
+    int PassingScore,
+    DateTime? AvailableFrom,
+    DateTime? AvailableUntil,
+    DateTime? DueAt,
+    string SubmissionStatus,
+    int? Score,
+    bool? Passed,
+    string? Feedback,
+    DateTime? GradedAt);
 
 public sealed record LearnerCertificateDto(
     Guid CertificateId,
@@ -103,7 +124,7 @@ public sealed record LearnerCourseWorkspaceDto(
     LearnerCourseSummaryDto Course,
     IReadOnlyList<LearnerContentDto> Content,
     IReadOnlyList<LearnerContentProgressDto> Progress,
-    LearnerCohortDto? Cohort,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] LearnerCohortDto? Cohort,
     IReadOnlyList<LearnerScheduleEntryDto> Calendar,
     IReadOnlyList<LearnerAssessmentGroupDto> AssessmentGroups,
     IReadOnlyList<LearnerAssessmentDto> Assessments,

@@ -6,9 +6,9 @@ export interface LearningHostRoutingConfig {
 }
 
 export type HostRouteDecision =
-  | { action: 'next' }
-  | { action: 'rewrite'; url: string }
-  | { action: 'redirect'; status: 307 | 308; url: string };
+  | { action: "next" }
+  | { action: "rewrite"; url: string }
+  | { action: "redirect"; status: 307 | 308; url: string };
 
 interface ResolveLearningHostRouteInput {
   config: LearningHostRoutingConfig;
@@ -18,15 +18,15 @@ interface ResolveLearningHostRouteInput {
 }
 
 function normalizeHostname(value: string | null): string {
-  const firstValue = value?.split(',')[0]?.trim();
+  const firstValue = value?.split(",")[0]?.trim();
   if (!firstValue) {
-    return '';
+    return "";
   }
 
   try {
     return new URL(`http://${firstValue}`).hostname.toLowerCase();
   } catch {
-    return firstValue.replace(/:\d+$/, '').toLowerCase();
+    return firstValue.replace(/:\d+$/, "").toLowerCase();
   }
 }
 
@@ -36,16 +36,16 @@ function getOriginHostname(origin: string): string {
 
 function getLocalizedPath(
   pathname: string,
-  config: Pick<LearningHostRoutingConfig, 'defaultLocale' | 'locales'>,
+  config: Pick<LearningHostRoutingConfig, "defaultLocale" | "locales">,
 ): { locale: string; pathname: string; localeWasExplicit: boolean } {
-  const segments = pathname.split('/').filter(Boolean);
-  const localeWasExplicit = config.locales.includes(segments[0] ?? '');
+  const segments = pathname.split("/").filter(Boolean);
+  const localeWasExplicit = config.locales.includes(segments[0] ?? "");
   const locale = localeWasExplicit ? segments.shift()! : config.defaultLocale;
 
   return {
     locale,
     localeWasExplicit,
-    pathname: segments.length > 0 ? `/${segments.join('/')}` : '/',
+    pathname: segments.length > 0 ? `/${segments.join("/")}` : "/",
   };
 }
 
@@ -57,7 +57,25 @@ function joinOrigin(origin: string, pathname: string, search: string): string {
 }
 
 export function getRequestHostname(headers: Headers): string {
-  return normalizeHostname(headers.get('x-forwarded-host') ?? headers.get('host'));
+  return normalizeHostname(
+    headers.get("x-forwarded-host") ?? headers.get("host"),
+  );
+}
+
+export function hasGameGuildSessionCookie(
+  cookieHeader: string | null,
+): boolean {
+  if (!cookieHeader) return false;
+
+  return cookieHeader.split(";").some((entry) => {
+    const rawName = entry.split("=", 1)[0]?.trim() ?? "";
+    const name = rawName.replace(/^__Secure-/, "");
+
+    return (
+      name === "gameguild.session-token" ||
+      name.startsWith("gameguild.session-token.")
+    );
+  });
 }
 
 export function resolveLearningHostRoute({
@@ -72,24 +90,32 @@ export function resolveLearningHostRoute({
   const localized = getLocalizedPath(url.pathname, config);
 
   if (requestHostname === learningHostname) {
-    if (requiresAuthentication) {
-      const signInUrl = new URL('/sign-in', config.webOrigin);
-      signInUrl.searchParams.set('redirectTo', url.toString());
-
-      return { action: 'redirect', status: 307, url: signInUrl.toString() };
+    if (localized.pathname === "/catalog") {
+      return {
+        action: "redirect",
+        status: 308,
+        url: joinOrigin(config.webOrigin, "/courses", url.search),
+      };
     }
 
-    if (localized.pathname === '/catalog') {
-      return {
-        action: 'redirect',
-        status: 308,
-        url: joinOrigin(config.webOrigin, '/courses', url.search),
-      };
+    if (requiresAuthentication) {
+      const visiblePath = localized.localeWasExplicit
+        ? `/${localized.locale}${localized.pathname === "/" ? "" : localized.pathname}`
+        : localized.pathname;
+      const returnUrl = joinOrigin(
+        config.learningOrigin,
+        visiblePath,
+        url.search,
+      );
+      const signInUrl = new URL("/sign-in", config.webOrigin);
+      signInUrl.searchParams.set("redirectTo", returnUrl);
+
+      return { action: "redirect", status: 307, url: signInUrl.toString() };
     }
 
     const legacyAssignmentsPath = localized.pathname.replace(
       /(^|\/)assignments(?=\/|$)/,
-      '$1activities',
+      "$1activities",
     );
     if (legacyAssignmentsPath !== localized.pathname) {
       const visiblePath = localized.localeWasExplicit
@@ -97,41 +123,45 @@ export function resolveLearningHostRoute({
         : legacyAssignmentsPath;
 
       return {
-        action: 'redirect',
+        action: "redirect",
         status: 308,
         url: joinOrigin(config.learningOrigin, visiblePath, url.search),
       };
     }
 
-    if (localized.pathname === '/learn' || localized.pathname.startsWith('/learn/')) {
-      return { action: 'next' };
+    if (
+      localized.pathname === "/learn" ||
+      localized.pathname.startsWith("/learn/")
+    ) {
+      return { action: "next" };
     }
 
     const internalPath = `/${localized.locale}/learn${
-      localized.pathname === '/' ? '' : localized.pathname
+      localized.pathname === "/" ? "" : localized.pathname
     }`;
 
     return {
-      action: 'rewrite',
+      action: "rewrite",
       url: joinOrigin(config.learningOrigin, internalPath, url.search),
     };
   }
 
   if (
     requestHostname === webHostname &&
-    (localized.pathname === '/learn' || localized.pathname.startsWith('/learn/'))
+    (localized.pathname === "/learn" ||
+      localized.pathname.startsWith("/learn/"))
   ) {
-    const visiblePath = localized.pathname.slice('/learn'.length) || '/';
+    const visiblePath = localized.pathname.slice("/learn".length) || "/";
     const localizedVisiblePath = localized.localeWasExplicit
-      ? `/${localized.locale}${visiblePath === '/' ? '' : visiblePath}`
+      ? `/${localized.locale}${visiblePath === "/" ? "" : visiblePath}`
       : visiblePath;
 
     return {
-      action: 'redirect',
+      action: "redirect",
       status: 308,
       url: joinOrigin(config.learningOrigin, localizedVisiblePath, url.search),
     };
   }
 
-  return { action: 'next' };
+  return { action: "next" };
 }

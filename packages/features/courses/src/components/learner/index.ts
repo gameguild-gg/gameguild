@@ -1,5 +1,6 @@
 export { CourseLearnerOverview } from "./course-learner-overview";
 export { LearnerActivities } from "./learner-activities";
+export { LearnerActivityCenter } from "./learner-activity-center";
 export { LearnerDashboard } from "./learner-dashboard";
 export {
   LearnerCalendar,

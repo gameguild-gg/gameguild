@@ -3,6 +3,7 @@ using GameGuild.API.Database;
 using GameGuild.Learning.Assessments;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Npgsql;
@@ -14,6 +15,70 @@ namespace GameGuild.API.UnitTests.Database;
 [Collection(PostgreSqlTestCollection.Name)]
 public sealed class AssessmentLifecyclePostgreSqlRaceTests
 {
+    [Fact]
+    public async Task DeleteAssessment_WithGradeGroup_SoftDeletesOnlyAssessment()
+    {
+        var container = new PostgreSqlBuilder()
+            .WithImage("postgres:16-alpine")
+            .WithDatabase("assessment_group_delete")
+            .WithUsername("test")
+            .WithPassword("test")
+            .WithCleanUp(true)
+            .Build();
+        await container.StartAsync();
+        try
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseNpgsql(container.GetConnectionString(), npgsql => npgsql.EnableRetryOnFailure())
+                .Options;
+            Guid assessmentId;
+            Guid groupId;
+            int originalGroupVersion;
+            await using (var setup = new ApplicationDbContext(options))
+            {
+                await setup.Database.EnsureCreatedAsync();
+                var courseId = Guid.NewGuid();
+                var group = AssessmentGroup.Create(courseId, "Final project", 40, 2);
+                var assessment = Assessment.Create(
+                    courseId,
+                    "Vertical slice review",
+                    AssessmentType.Project,
+                    120,
+                    84,
+                    assessmentGroupId: group.Id);
+                assessment.SetDeliveryContract(
+                    SubmissionModality.Project | SubmissionModality.StructuredAnswer,
+                    AssessmentPresentationMode.Continuous);
+                setup.AddRange(group, assessment);
+                await setup.SaveChangesAsync();
+                assessmentId = assessment.Id;
+                groupId = group.Id;
+                originalGroupVersion = group.Version;
+            }
+
+            var logger = new CapturingLogger<AssessmentService>();
+            Result result;
+            await using (var context = new ApplicationDbContext(options))
+            {
+                var service = new AssessmentService(context, Mock.Of<IProgramContentService>(), logger);
+                (await service.GetAssessmentByIdAsync(assessmentId)).Should().NotBeNull();
+                result = await service.DeleteAssessmentAsync(assessmentId);
+            }
+
+            result.IsSuccess.Should().BeTrue(logger.Exception?.ToString());
+            await using var verify = new ApplicationDbContext(options);
+            var assessmentAfterDelete = await verify.Set<Assessment>().SingleAsync(assessment => assessment.Id == assessmentId);
+            var groupAfterDelete = await verify.Set<AssessmentGroup>().SingleAsync(group => group.Id == groupId);
+            assessmentAfterDelete.DeletedAt.Should().NotBeNull();
+            groupAfterDelete.DeletedAt.Should().BeNull();
+            groupAfterDelete.Version.Should().Be(originalGroupVersion);
+        }
+        finally
+        {
+            await container.DisposeAsync();
+        }
+    }
+
     [Fact]
     public async Task ConcurrentDeleteAndCueLink_CannotLeaveAnActiveCueOnDeletedAssessment()
     {
@@ -112,5 +177,26 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
         }
 
         throw new TimeoutException($"Timed out waiting for {minimumCount} advisory lock waiters.");
+    }
+    private sealed class CapturingLogger<T> : ILogger<T>
+    {
+        public Exception? Exception { get; private set; }
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            if (logLevel >= LogLevel.Error && exception is not null)
+            {
+                Exception = exception;
+            }
+        }
     }
 }
