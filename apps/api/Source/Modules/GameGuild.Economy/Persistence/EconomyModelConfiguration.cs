@@ -29,6 +29,47 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.HasIndex(row => new { row.TenantId, row.OwnerId }).IsUnique();
         });
 
+        modelBuilder.Entity<EconomyWalletBalanceProjectionRow>(builder =>
+        {
+            builder.ToTable("economy_wallet_balance_projections", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_wallet_balance_projections_amounts_nonnegative",
+                    "\"PendingHard\" >= 0 AND \"PendingSoft\" >= 0 AND \"PurchasedHard\" >= 0 AND " +
+                    "\"EarnedHard\" >= 0 AND \"RestrictedHard\" >= 0 AND \"Soft\" >= 0 AND " +
+                    "\"ImmatureEarnedHard\" >= 0 AND \"HeldHard\" >= 0 AND \"HeldSoft\" >= 0 AND " +
+                    "\"AvailableHardToSpend\" >= 0 AND \"AvailableSoftToSpend\" >= 0 AND \"WithdrawableHard\" >= 0");
+                table.HasCheckConstraint(
+                    "ck_economy_wallet_balance_projections_sequence_nonnegative",
+                    "\"SourceJournalSequence\" >= 0");
+            });
+            builder.HasKey(row => row.WalletId);
+            builder.Property(row => row.ProjectionHash).HasMaxLength(128);
+            builder.HasIndex(row => row.ReviewState)
+                .HasDatabaseName("ix_economy_wallet_balance_projections_review_state");
+            builder.HasOne<EconomyWalletRow>()
+                .WithOne()
+                .HasForeignKey<EconomyWalletBalanceProjectionRow>(row => row.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyProjectionReconciliationEventRow>(builder =>
+        {
+            builder.ToTable("economy_projection_reconciliation_events", table =>
+                table.HasCheckConstraint(
+                    "ck_economy_projection_events_sequence_nonnegative",
+                    "\"SourceJournalSequence\" >= 0"));
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.PreviousHash).HasMaxLength(128);
+            builder.Property(row => row.RebuiltHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.WalletId, row.DetectedAt })
+                .HasDatabaseName("ix_economy_projection_reconciliation_events_wallet_detected");
+            builder.HasOne<EconomyWalletRow>()
+                .WithMany()
+                .HasForeignKey(row => row.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<EconomyAccountRow>(builder =>
         {
             builder.ToTable("economy_accounts", table =>
