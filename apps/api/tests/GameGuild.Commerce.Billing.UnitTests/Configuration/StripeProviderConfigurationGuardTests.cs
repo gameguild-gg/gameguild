@@ -49,9 +49,27 @@ public sealed class StripeProviderConfigurationGuardTests
         action.Should().NotThrow();
     }
 
+    [Theory]
+    [InlineData("Staging")]
+    [InlineData("Production")]
+    public void ThrowIfInvalid_RejectsSimulationOutsideDevelopmentAndTest(string environmentName)
+    {
+        var gateway = CreateGateway();
+        gateway.UseSimulation = true;
+
+        var action = () => StripeProviderConfigurationGuard.ThrowIfInvalid(
+            gateway,
+            CreateBilling(),
+            environmentName);
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*simulation*");
+    }
+
     private static StripeGatewayOptions CreateGateway() => new()
     {
         AccountId = "acct_platform",
+        UseSimulation = false,
         LiveMode = false
     };
 

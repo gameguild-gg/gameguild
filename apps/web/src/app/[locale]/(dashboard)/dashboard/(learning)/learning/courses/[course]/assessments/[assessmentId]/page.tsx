@@ -1,7 +1,12 @@
-import React from 'react';
-import { notFound } from 'next/navigation';
-import { getAssessment, getAssessmentDefinition, getCourseAssessmentGroups } from '@/lib/learning';
-import { AssessmentEditor } from './assessment-editor';
+import React from "react";
+import { notFound } from "next/navigation";
+import {
+  getAssessment,
+  getAssessmentDefinition,
+  getCourseAssessmentGroups,
+  getCourseContent,
+} from "@/lib/learning";
+import { AssessmentEditor } from "./assessment-editor";
 
 /**
  * Assessment Detail/Editor Page
@@ -10,14 +15,16 @@ import { AssessmentEditor } from './assessment-editor';
  */
 export default async function AssessmentDetailPage({
   params,
-}: PageProps<'/[locale]/dashboard/learning/courses/[course]/assessments/[assessmentId]'>): Promise<React.JSX.Element> {
+}: PageProps<"/[locale]/dashboard/learning/courses/[course]/assessments/[assessmentId]">): Promise<React.JSX.Element> {
   const { course: courseId, assessmentId } = await params;
 
-  const [assessment, assessmentDefinition, assessmentGroups] = await Promise.all([
-    getAssessment(assessmentId),
-    getAssessmentDefinition(assessmentId),
-    getCourseAssessmentGroups(courseId),
-  ]);
+  const [assessment, assessmentDefinition, assessmentGroups, courseContent] =
+    await Promise.all([
+      getAssessment(assessmentId),
+      getAssessmentDefinition(assessmentId),
+      getCourseAssessmentGroups(courseId),
+      getCourseContent(courseId),
+    ]);
 
   if (!assessment) {
     notFound();
@@ -29,6 +36,7 @@ export default async function AssessmentDetailPage({
       assessment={assessment}
       assessmentDefinition={assessmentDefinition}
       assessmentGroups={assessmentGroups}
+      contentItems={courseContent.items}
     />
   );
 }

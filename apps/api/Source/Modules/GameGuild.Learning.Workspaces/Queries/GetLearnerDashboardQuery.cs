@@ -92,6 +92,11 @@ public sealed class GetLearnerDashboardQueryHandler(IApplicationDbContext contex
             .Where(assessment => courseIds.Contains(assessment.CourseId) && assessment.DeletedAt == null)
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
+        var assessmentGroups = await context.Set<AssessmentGroup>()
+            .AsNoTracking()
+            .Where(group => courseIds.Contains(group.CourseId) && group.DeletedAt == null)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
         var assessmentIds = assessments.Select(assessment => assessment.Id).ToArray();
         var submissions = assessmentIds.Length == 0
             ? []
@@ -186,6 +191,7 @@ public sealed class GetLearnerDashboardQueryHandler(IApplicationDbContext contex
             .Select(course => MapGrade(
                 course,
                 assessments.Where(assessment => assessment.CourseId == course.CourseId).ToArray(),
+                assessmentGroups.Where(group => group.CourseId == course.CourseId).ToArray(),
                 latestSubmissionByAssessment))
             .ToArray();
         var mappedCertificates = certificates.Select(LearnerWorkspaceMapper.MapCertificate).ToArray();
@@ -219,6 +225,7 @@ public sealed class GetLearnerDashboardQueryHandler(IApplicationDbContext contex
     private static LearnerGradeSummaryDto MapGrade(
         LearnerCourseSummaryDto course,
         IReadOnlyList<Assessment> assessments,
+        IReadOnlyList<AssessmentGroup> groups,
         IReadOnlyDictionary<Guid, AssessmentSubmission> submissions)
     {
         var graded = assessments
@@ -246,7 +253,39 @@ public sealed class GetLearnerDashboardQueryHandler(IApplicationDbContext contex
             assessments.Count,
             graded.Length > 0 ? earned : null,
             graded.Length > 0 ? possible : null,
-            percentage);
+            percentage,
+            groups
+                .OrderBy(group => group.Order)
+                .Select(group => new LearnerAssessmentGroupDto(
+                    group.Id,
+                    group.Name,
+                    group.Description,
+                    group.WeightPercent,
+                    group.Order))
+                .ToArray(),
+            assessments
+                .OrderBy(assessment => assessment.Order)
+                .Select(assessment =>
+                {
+                    submissions.TryGetValue(assessment.Id, out var submission);
+                    return new LearnerGradeItemDto(
+                        assessment.Id,
+                        assessment.ContentId,
+                        assessment.AssessmentGroupId,
+                        assessment.Title,
+                        assessment.Type.ToString(),
+                        assessment.MaxScore,
+                        assessment.PassingScore,
+                        assessment.AvailableFrom,
+                        assessment.AvailableUntil,
+                        assessment.DueAt,
+                        submission?.Status.ToString() ?? "NotStarted",
+                        submission?.Score,
+                        submission?.Passed,
+                        submission?.Feedback,
+                        submission?.GradedAt);
+                })
+                .ToArray());
     }
 
     private static LearnerDashboardDto EmptyDashboard()

@@ -13,137 +13,160 @@
  * No legacy string serialization is supported; pre-launch breaking
  * change documented in `docs/DATA-FLOW.md`.
  */
-"use client"
+"use client";
 
-import * as React from "react"
-import { useCallback, useMemo, useRef, useState } from "react"
-import { LexicalComposer } from "@lexical/react/LexicalComposer"
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
-import { ContentEditable } from "@lexical/react/LexicalContentEditable"
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
-import { ListPlugin } from "@lexical/react/LexicalListPlugin"
-import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin"
-import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin"
-import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin"
-import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import type { EditorState, LexicalEditor, SerializedEditorState } from "lexical"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { ListPlugin } from "@lexical/react/LexicalListPlugin";
+import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
+import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
+import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import type {
+  EditorState,
+  LexicalEditor,
+  SerializedEditorState,
+} from "lexical";
+import { cn } from "@/lib/utils";
 
-import { SHARED_LEXICAL_NODES } from "../lib/lexical/shared-lexical-config"
-import { buildInitialEditorState, stripSelection } from "../lib/lexical/initial-editor-state"
-import { BlockEmbedPlugin } from "../plugins/block-embed-plugin"
-import { BlockInsertMenuPlugin } from "../plugins/block-insert-menu-plugin"
-import { LEXICAL_SURFACE_THEME } from "./theme"
-import { ToolbarPlugin, ToolbarContextProvider, useToolbarState } from "./toolbar"
-import { ShortcutsPlugin } from "./shortcuts"
-import { EquationsPlugin } from "./equation"
-import { ExcalidrawPlugin } from "./excalidraw"
-import { EmojiPickerPlugin } from "./emoji"
-import { AutoEmbedPlugin } from "./embeds"
-import { ContextMenuPlugin } from "./context-menu"
-import { CodeActionMenuPlugin, CodeHighlightPlugin } from "./code-action"
-import { TablePlugin, TableActionMenuPlugin, TableCellResizerPlugin, TableInsertHandlesPlugin } from "./table"
-import { LayoutPlugin, LayoutActionMenuPlugin } from "./layout"
-import { CollapsiblePlugin, CollapsibleActionMenuPlugin } from "./collapsible"
-import { StickyPlugin } from "./sticky"
-import { AdmonitionPlugin } from "./admonition"
-import { ButtonPlugin } from "./button"
-import { DividerPlugin } from "./divider"
-import { MermaidPlugin } from "./mermaid"
-import { VegaLitePlugin } from "./vega-lite"
-import { MediaPlugin } from "./media"
+import { SHARED_LEXICAL_NODES } from "../lib/lexical/shared-lexical-config";
+import {
+  buildInitialEditorState,
+  stripSelection,
+} from "../lib/lexical/initial-editor-state";
+import { BlockEmbedPlugin } from "../plugins/block-embed-plugin";
+import { BlockInsertMenuPlugin } from "../plugins/block-insert-menu-plugin";
+import { LEXICAL_SURFACE_THEME } from "./theme";
+import {
+  ToolbarPlugin,
+  ToolbarContextProvider,
+  useToolbarState,
+} from "./toolbar";
+import { ShortcutsPlugin } from "./shortcuts";
+import { EquationsPlugin } from "./equation";
+import { ExcalidrawPlugin } from "./excalidraw";
+import { EmojiPickerPlugin } from "./emoji";
+import { AutoEmbedPlugin } from "./embeds";
+import { ContextMenuPlugin } from "./context-menu";
+import { CodeActionMenuPlugin, CodeHighlightPlugin } from "./code-action";
+import {
+  TablePlugin,
+  TableActionMenuPlugin,
+  TableCellResizerPlugin,
+  TableInsertHandlesPlugin,
+} from "./table";
+import { LayoutPlugin, LayoutActionMenuPlugin } from "./layout";
+import { CollapsiblePlugin, CollapsibleActionMenuPlugin } from "./collapsible";
+import { StickyPlugin } from "./sticky";
+import { AdmonitionPlugin } from "./admonition";
+import { ButtonPlugin } from "./button";
+import { DividerPlugin } from "./divider";
+import { MermaidPlugin } from "./mermaid";
+import { VegaLitePlugin } from "./vega-lite";
+import { MediaPlugin } from "./media";
 import {
   FloatingLinkEditorPlugin,
   FloatingTextFormatToolbarPlugin,
-} from "./floating"
-import { ComponentPickerPlugin } from "./picker"
-import { DraggableBlockPlugin } from "./draggable"
-import { pageSettingsToStyle, isPagedLayout, PagesPlugin, type PageSettings } from "./page"
+} from "./floating";
+import { ComponentPickerPlugin } from "./picker";
+import { DraggableBlockPlugin } from "./draggable";
+import {
+  pageSettingsToStyle,
+  isPagedLayout,
+  PagesPlugin,
+  type PageSettings,
+} from "./page";
 
 export type LexicalSurfaceFeatures = {
   /** Top toolbar (block format, font, color, alignment, …). Default: true */
-  toolbar?: boolean
+  toolbar?: boolean;
   /** Bubble toolbar over selected text. Default: true */
-  floatingTextFormat?: boolean
+  floatingTextFormat?: boolean;
   /** Bubble link editor when cursor is on a `LinkNode`. Default: true */
-  floatingLinkEditor?: boolean
+  floatingLinkEditor?: boolean;
   /** Drag handle on the left margin of every block. Default: true */
-  draggable?: boolean
+  draggable?: boolean;
   /** Native playground `/` slash menu (paragraph, headings, lists, …). Default: true */
-  picker?: boolean
+  picker?: boolean;
   /** Our `BlockEmbedPlugin` (renders embeddable blocks). Default: true */
-  blockEmbed?: boolean
+  blockEmbed?: boolean;
   /** Our `BlockInsertMenuPlugin` ("//" trigger). Default: true */
-  blockInsertMenu?: boolean
+  blockInsertMenu?: boolean;
   /** Apply page-size/margin/orientation from the toolbar to the editable area. Default: true */
-  pageLayout?: boolean
+  pageLayout?: boolean;
   /** Keyboard shortcuts (Ctrl+\\, Ctrl+Shift+1/2/3, Alt+Shift+1..3, etc.). Default: true */
-  shortcuts?: boolean
+  shortcuts?: boolean;
   /** KaTeX equations via `INSERT_EQUATION_COMMAND` + `/Equation` picker item. Default: true */
-  equation?: boolean
+  equation?: boolean;
   /** Excalidraw drawings via `INSERT_EXCALIDRAW_COMMAND` + `/Excalidraw` picker item. Default: true */
-  excalidraw?: boolean
+  excalidraw?: boolean;
   /** Emoji picker via `:` typeahead trigger. Default: true */
-  emoji?: boolean
+  emoji?: boolean;
   /** Auto-embed YouTube/X/Figma URLs. Default: true */
-  autoEmbed?: boolean
+  autoEmbed?: boolean;
   /** Right-click context menu (cut/copy/paste/delete). Default: true */
-  contextMenu?: boolean
+  contextMenu?: boolean;
   /** Floating menu on hovered code blocks (lang + copy). Default: true */
-  codeAction?: boolean
+  codeAction?: boolean;
   /** Tables (`@lexical/table`) + `/Table` picker item. Default: true */
-  table?: boolean
+  table?: boolean;
   /** Columns Layout via `INSERT_LAYOUT_COMMAND` + +Insert dialog. Default: true */
-  layout?: boolean
+  layout?: boolean;
   /** Collapsible container via `INSERT_COLLAPSIBLE_COMMAND` + +Insert item. Default: true */
-  collapsible?: boolean
+  collapsible?: boolean;
   /** Sticky notes. Default: true */
-  sticky?: boolean
+  sticky?: boolean;
   /** Admonition callouts. Default: true */
-  admonition?: boolean
+  admonition?: boolean;
   /** Styled action buttons. Default: true */
-  button?: boolean
+  button?: boolean;
   /** Configurable section divider. Default: true */
-  divider?: boolean
+  divider?: boolean;
   /** Mermaid diagrams. Default: true */
-  mermaid?: boolean
+  mermaid?: boolean;
   /** Vega-Lite charts. Default: true */
-  vegaLite?: boolean
+  vegaLite?: boolean;
   /** Media block (Image, Video, Audio, Gallery). Default: true */
-  media?: boolean
+  media?: boolean;
   /** Lexical built-ins. Defaults: true */
-  history?: boolean
-  list?: boolean
-  link?: boolean
-  checkList?: boolean
-  tabIndentation?: boolean
-}
+  history?: boolean;
+  list?: boolean;
+  link?: boolean;
+  checkList?: boolean;
+  tabIndentation?: boolean;
+};
 
 export interface LexicalSurfaceProps {
-  initialState?: SerializedEditorState | null
-  onChange?: (state: SerializedEditorState, editor: LexicalEditor) => void
-  placeholder?: React.ReactNode
-  readOnly?: boolean
-  namespace?: string
-  features?: LexicalSurfaceFeatures
+  initialState?: SerializedEditorState | null;
+  onChange?: (state: SerializedEditorState, editor: LexicalEditor) => void;
+  placeholder?: React.ReactNode;
+  /** Accessible name applied to the content-editable region. */
+  accessibleLabel?: string;
+  readOnly?: boolean;
+  namespace?: string;
+  features?: LexicalSurfaceFeatures;
   /** Tailwind className applied to the `ContentEditable`. */
-  contentClassName?: string
+  contentClassName?: string;
   /** Tailwind className for the surface wrapper. */
-  className?: string
+  className?: string;
   /** Inline style passthrough for the editable area (e.g. minHeight). */
-  contentStyle?: React.CSSProperties
+  contentStyle?: React.CSSProperties;
   /** Re-mount when this value changes; useful for external state resets. */
-  mountKey?: string | number
+  mountKey?: string | number;
   /** Slot rendered right after `<LexicalComposer>` opens (e.g. custom header). */
-  headerSlot?: React.ReactNode
+  headerSlot?: React.ReactNode;
   /** Optional wrapper function to customize how the toolbar is styled/rendered. */
-  toolbarWrapper?: (toolbar: React.ReactNode) => React.ReactNode
+  toolbarWrapper?: (toolbar: React.ReactNode) => React.ReactNode;
   /** Enable internal content scroll container (useful for container scroll mode). */
-  contentScrollable?: boolean
+  contentScrollable?: boolean;
   /** Optional initial page settings for the internal Lexical toolbar context. */
-  initialPageSettings?: PageSettings
+  initialPageSettings?: PageSettings;
 }
 
 const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
@@ -177,24 +200,24 @@ const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
   link: true,
   checkList: true,
   tabIndentation: true,
-}
+};
 
 function resolveFeatures(
   features: LexicalSurfaceFeatures | undefined,
   readOnly: boolean,
 ): Required<LexicalSurfaceFeatures> {
-  const merged = { ...DEFAULT_FEATURES, ...features }
+  const merged = { ...DEFAULT_FEATURES, ...features };
   if (readOnly) {
     // In read-only mode, hard-disable every interactive plugin.
-    merged.toolbar = false
-    merged.floatingTextFormat = false
-    merged.floatingLinkEditor = false
-    merged.draggable = false
-    merged.picker = false
-    merged.blockInsertMenu = false
-    merged.history = false
+    merged.toolbar = false;
+    merged.floatingTextFormat = false;
+    merged.floatingLinkEditor = false;
+    merged.draggable = false;
+    merged.picker = false;
+    merged.blockInsertMenu = false;
+    merged.history = false;
   }
-  return merged
+  return merged;
 }
 
 // ─── Inner editor body ──────────────────────────────────────────────────────
@@ -206,6 +229,7 @@ function EditorBody({
   features,
   onChange,
   placeholder,
+  accessibleLabel,
   readOnly,
   contentClassName,
   contentStyle,
@@ -214,61 +238,66 @@ function EditorBody({
   toolbarWrapper,
   contentScrollable,
 }: {
-  features: Required<LexicalSurfaceFeatures>
-  onChange?: (state: SerializedEditorState, editor: LexicalEditor) => void
-  placeholder?: React.ReactNode
-  readOnly: boolean
-  contentClassName?: string
-  contentStyle?: React.CSSProperties
-  className?: string
-  headerSlot?: React.ReactNode
-  toolbarWrapper?: (toolbar: React.ReactNode) => React.ReactNode
-  contentScrollable?: boolean
+  features: Required<LexicalSurfaceFeatures>;
+  onChange?: (state: SerializedEditorState, editor: LexicalEditor) => void;
+  placeholder?: React.ReactNode;
+  accessibleLabel?: string;
+  readOnly: boolean;
+  contentClassName?: string;
+  contentStyle?: React.CSSProperties;
+  className?: string;
+  headerSlot?: React.ReactNode;
+  toolbarWrapper?: (toolbar: React.ReactNode) => React.ReactNode;
+  contentScrollable?: boolean;
 }) {
-  const [editor] = useLexicalComposerContext()
-  const [activeEditor, setActiveEditor] = useState<LexicalEditor>(editor)
-  const [isLinkEditMode, setIsLinkEditMode] = useState(false)
-  const [anchorElem, setAnchorElem] = useState<HTMLElement | null>(null)
-  const { pageSettings } = useToolbarState()
-  const paged = features.pageLayout && isPagedLayout(pageSettings)
+  const [editor] = useLexicalComposerContext();
+  const [activeEditor, setActiveEditor] = useState<LexicalEditor>(editor);
+  const [isLinkEditMode, setIsLinkEditMode] = useState(false);
+  const [anchorElem, setAnchorElem] = useState<HTMLElement | null>(null);
+  const { pageSettings } = useToolbarState();
+  const paged = features.pageLayout && isPagedLayout(pageSettings);
   // The flat width card style only applies to pageless surfaces; paged
   // surfaces render real `PageNode` sheets managed by `PagesPlugin`.
   const pageStyle =
-    features.pageLayout && !paged ? pageSettingsToStyle(pageSettings) : undefined
+    features.pageLayout && !paged
+      ? pageSettingsToStyle(pageSettings)
+      : undefined;
 
   const handleChange = useCallback(
     (editorState: EditorState, editorInstance: LexicalEditor) => {
       if (onChange) {
-        onChange(editorState.toJSON(), editorInstance)
+        onChange(editorState.toJSON(), editorInstance);
       }
     },
     [onChange],
-  )
+  );
 
   return (
     <>
-      {features.toolbar && (() => {
-        const toolbarNode = (
-          <ToolbarPlugin
-            editor={editor}
-            activeEditor={activeEditor}
-            setActiveEditor={setActiveEditor}
-            setIsLinkEditMode={setIsLinkEditMode}
-            features={{
-              blockEmbed: features.blockEmbed,
-              blockInsertMenu: features.blockInsertMenu,
-              pageLayout: features.pageLayout,
-            }}
-          />
-        )
-        return toolbarWrapper ? toolbarWrapper(toolbarNode) : toolbarNode
-      })()}
+      {features.toolbar &&
+        (() => {
+          const toolbarNode = (
+            <ToolbarPlugin
+              editor={editor}
+              activeEditor={activeEditor}
+              setActiveEditor={setActiveEditor}
+              setIsLinkEditMode={setIsLinkEditMode}
+              features={{
+                blockEmbed: features.blockEmbed,
+                blockInsertMenu: features.blockInsertMenu,
+                pageLayout: features.pageLayout,
+              }}
+            />
+          );
+          return toolbarWrapper ? toolbarWrapper(toolbarNode) : toolbarNode;
+        })()}
       {headerSlot}
       <div
         className={cn(
           "relative",
           features.pageLayout && "bg-gray-100 dark:bg-gray-950 py-6",
-          contentScrollable && "flex-1 overflow-y-auto overflow-x-hidden min-h-0 scroll-container",
+          contentScrollable &&
+            "flex-1 overflow-y-auto overflow-x-hidden min-h-0 scroll-container",
           className,
         )}
         ref={setAnchorElem}
@@ -276,6 +305,7 @@ function EditorBody({
         {(() => {
           const editable = (
             <ContentEditable
+              aria-label={accessibleLabel}
               readOnly={readOnly}
               tabIndex={readOnly ? -1 : 0}
               data-lexical-readonly={readOnly ? "true" : "false"}
@@ -291,7 +321,7 @@ function EditorBody({
                 contentClassName,
               )}
             />
-          )
+          );
           const richText = (
             <RichTextPlugin
               contentEditable={editable}
@@ -307,7 +337,7 @@ function EditorBody({
               }
               ErrorBoundary={LexicalErrorBoundary}
             />
-          )
+          );
           return paged ? (
             richText
           ) : (
@@ -317,7 +347,7 @@ function EditorBody({
             >
               {richText}
             </div>
-          )
+          );
         })()}
         {features.pageLayout && (
           <PagesPlugin pageSettings={pageSettings} enabled={paged} />
@@ -328,22 +358,36 @@ function EditorBody({
         {features.link && <LinkPlugin />}
         {features.tabIndentation && <TabIndentationPlugin />}
         {features.picker && <ComponentPickerPlugin />}
-        {features.shortcuts && <ShortcutsPlugin setIsLinkEditMode={setIsLinkEditMode} />}
+        {features.shortcuts && (
+          <ShortcutsPlugin setIsLinkEditMode={setIsLinkEditMode} />
+        )}
         {features.equation && <EquationsPlugin />}
         {features.excalidraw && <ExcalidrawPlugin />}
         {features.emoji && <EmojiPickerPlugin />}
         {features.autoEmbed && <AutoEmbedPlugin />}
         {features.contextMenu && <ContextMenuPlugin />}
-        {features.codeAction && anchorElem && <CodeActionMenuPlugin anchorElem={anchorElem} />}
+        {features.codeAction && anchorElem && (
+          <CodeActionMenuPlugin anchorElem={anchorElem} />
+        )}
         <CodeHighlightPlugin />
         {features.table && <TablePlugin />}
-        {anchorElem && features.table && <TableActionMenuPlugin anchorElem={anchorElem} />}
-        {anchorElem && features.table && <TableCellResizerPlugin anchorElem={anchorElem} />}
-        {anchorElem && features.table && <TableInsertHandlesPlugin anchorElem={anchorElem} />}
+        {anchorElem && features.table && (
+          <TableActionMenuPlugin anchorElem={anchorElem} />
+        )}
+        {anchorElem && features.table && (
+          <TableCellResizerPlugin anchorElem={anchorElem} />
+        )}
+        {anchorElem && features.table && (
+          <TableInsertHandlesPlugin anchorElem={anchorElem} />
+        )}
         {features.layout && <LayoutPlugin />}
-        {anchorElem && features.layout && <LayoutActionMenuPlugin anchorElem={anchorElem} />}
+        {anchorElem && features.layout && (
+          <LayoutActionMenuPlugin anchorElem={anchorElem} />
+        )}
         {features.collapsible && <CollapsiblePlugin />}
-        {anchorElem && features.collapsible && <CollapsibleActionMenuPlugin anchorElem={anchorElem} />}
+        {anchorElem && features.collapsible && (
+          <CollapsibleActionMenuPlugin anchorElem={anchorElem} />
+        )}
         {features.sticky && <StickyPlugin />}
         {features.admonition && <AdmonitionPlugin />}
         {features.button && <ButtonPlugin />}
@@ -366,11 +410,15 @@ function EditorBody({
             setIsLinkEditMode={setIsLinkEditMode}
           />
         )}
-        {anchorElem && features.draggable && <DraggableBlockPlugin anchorElem={anchorElem} />}
-        {onChange && <OnChangePlugin onChange={handleChange} ignoreSelectionChange />}
+        {anchorElem && features.draggable && (
+          <DraggableBlockPlugin anchorElem={anchorElem} />
+        )}
+        {onChange && (
+          <OnChangePlugin onChange={handleChange} ignoreSelectionChange />
+        )}
       </div>
     </>
-  )
+  );
 }
 
 // ─── Main component ─────────────────────────────────────────────────────────
@@ -379,6 +427,7 @@ export function LexicalSurface({
   initialState,
   onChange,
   placeholder,
+  accessibleLabel,
   readOnly = false,
   namespace = "LexicalSurface",
   features,
@@ -391,13 +440,18 @@ export function LexicalSurface({
   contentScrollable,
   initialPageSettings,
 }: LexicalSurfaceProps) {
-  const resolvedFeatures = useMemo(() => resolveFeatures(features, readOnly), [features, readOnly])
+  const resolvedFeatures = useMemo(
+    () => resolveFeatures(features, readOnly),
+    [features, readOnly],
+  );
   // Re-mount when caller passes a new `mountKey` (e.g. external state reset).
-  const seedRef = useRef<SerializedEditorState | null | undefined>(initialState)
+  const seedRef = useRef<SerializedEditorState | null | undefined>(
+    initialState,
+  );
 
   // For read-only renders we strip the persisted selection so Lexical
   // doesn't trigger a browser scroll on hydration.
-  const seedState = readOnly ? stripSelection(initialState) : initialState
+  const seedState = readOnly ? stripSelection(initialState) : initialState;
 
   const initialConfig = useMemo(
     () => ({
@@ -408,17 +462,17 @@ export function LexicalSurface({
       editorState: buildInitialEditorState(seedState ?? null),
       onError: (error: Error) => {
         // eslint-disable-next-line no-console
-        console.error(`[${namespace}]`, error)
+        console.error(`[${namespace}]`, error);
       },
     }),
     // Mount-time only. Caller forces a re-mount with `mountKey`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [mountKey, readOnly, namespace],
-  )
+  );
 
   // Track the latest initialState in a ref so consumers can swap it in
   // by bumping `mountKey` without our memoization fighting back.
-  seedRef.current = initialState
+  seedRef.current = initialState;
 
   return (
     <LexicalComposer key={mountKey} initialConfig={initialConfig}>
@@ -427,6 +481,7 @@ export function LexicalSurface({
           features={resolvedFeatures}
           onChange={onChange}
           placeholder={placeholder}
+          accessibleLabel={accessibleLabel}
           readOnly={readOnly}
           contentClassName={contentClassName}
           contentStyle={contentStyle}
@@ -437,5 +492,5 @@ export function LexicalSurface({
         />
       </ToolbarContextProvider>
     </LexicalComposer>
-  )
+  );
 }

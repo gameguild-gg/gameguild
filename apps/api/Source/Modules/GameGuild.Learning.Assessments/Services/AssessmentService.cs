@@ -253,36 +253,50 @@ public class AssessmentService : IAssessmentService
     {
         try
         {
-            await using var lifecycleTransaction = await AssessmentLifecycleDatabaseLock
-                .AcquireAsync(_context, id)
-                .ConfigureAwait(false);
-            var assessment = await GetAssessmentByIdAsync(id).ConfigureAwait(false);
-            if (assessment == null)
+            async Task<Result> DeleteCoreAsync()
             {
-                return Result.Failure(Error.NotFound("Assessment", "Assessment not found"));
+                await using var lifecycleTransaction = await AssessmentLifecycleDatabaseLock
+                    .AcquireAsync(_context, id)
+                    .ConfigureAwait(false);
+                var assessment = await GetAssessmentByIdAsync(id).ConfigureAwait(false);
+                if (assessment == null)
+                {
+                    return Result.Failure(Error.NotFound("Assessment", "Assessment not found"));
+                }
+
+                assessment.SoftDelete();
+                var activeCues = await _context.Set<InteractiveVideoAssessmentCue>()
+                    .Where(cue => cue.AssessmentId == id && cue.DeletedAt == null)
+                    .ToListAsync()
+                    .ConfigureAwait(false);
+                await using var contentLifecycleTransaction = await ProgramContentLifecycleDatabaseLock
+                    .AcquireAsync(_context, activeCues.Select(cue => cue.ContentId))
+                    .ConfigureAwait(false);
+                foreach (var cue in activeCues)
+                {
+                    cue.SoftDelete();
+                }
+
+                _context.Set<Assessment>().Update(assessment);
+                _context.Set<InteractiveVideoAssessmentCue>().UpdateRange(activeCues);
+                await _context.SaveChangesAsync().ConfigureAwait(false);
+                await AssessmentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
+
+                return Result.Success();
             }
 
-            assessment.SoftDelete();
-            var activeCues = await _context.Set<InteractiveVideoAssessmentCue>()
-                .Where(cue => cue.AssessmentId == id && cue.DeletedAt == null)
-                .ToListAsync()
-                .ConfigureAwait(false);
-            await using var contentLifecycleTransaction = await ProgramContentLifecycleDatabaseLock
-                .AcquireAsync(_context, activeCues.Select(cue => cue.ContentId))
-                .ConfigureAwait(false);
-            foreach (var cue in activeCues)
+            var result = _context is DbContext dbContext
+                ? await dbContext.Database.CreateExecutionStrategy()
+                    .ExecuteAsync(DeleteCoreAsync)
+                    .ConfigureAwait(false)
+                : await DeleteCoreAsync().ConfigureAwait(false);
+
+            if (result.IsSuccess)
             {
-                cue.SoftDelete();
+                _logger.LogInformation("Assessment deleted: {AssessmentId}", id);
             }
 
-            _context.Set<Assessment>().Update(assessment);
-            _context.Set<InteractiveVideoAssessmentCue>().UpdateRange(activeCues);
-            await _context.SaveChangesAsync().ConfigureAwait(false);
-            await AssessmentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction).ConfigureAwait(false);
-
-            _logger.LogInformation("Assessment deleted: {AssessmentId}", id);
-
-            return Result.Success();
+            return result;
         }
         catch (Exception ex)
         {

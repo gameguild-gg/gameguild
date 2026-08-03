@@ -102,6 +102,36 @@ describe("learner record views", () => {
     expect(screen.getByText("35.2 points contributed")).toBeInTheDocument();
   });
 
+  it("keeps assessment rows visible when a grade summary is available", () => {
+    render(
+      <LearnerGradebook
+        records={[
+          {
+            ...records[0]!,
+            context: {
+              ...records[0]!.context,
+              gradeSummary: {
+                finalGrade: 88,
+                gradedAssessments: 1,
+                totalAssessments: 1,
+                earnedPoints: 88,
+                possiblePoints: 100,
+                percentage: 88,
+              },
+            },
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("1 of 1 assessments graded")).toBeInTheDocument();
+    expect(screen.getByText("Playable build")).toBeInTheDocument();
+    expect(screen.getByText("88 / 100")).toBeInTheDocument();
+    expect(
+      screen.getByText("Strong iteration and testing evidence."),
+    ).toBeInTheDocument();
+  });
+
   it("renders issued credentials and an honest empty state", () => {
     const { rerender } = render(<LearnerCertificates certificates={[]} />);
 
