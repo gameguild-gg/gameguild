@@ -1,6 +1,7 @@
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Policy;
+using GameGuild.Economy.Projections;
 using GameGuild.Economy.Reserves;
 using GameGuild.Economy.Risk;
 
@@ -13,6 +14,37 @@ internal sealed class EconomyWalletRow
     public Guid TenantId { get; set; }
     public WalletLifecycleState State { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+}
+
+internal sealed class EconomyWalletBalanceProjectionRow
+{
+    public Guid WalletId { get; set; }
+    public long PendingHard { get; set; }
+    public long PendingSoft { get; set; }
+    public long PurchasedHard { get; set; }
+    public long EarnedHard { get; set; }
+    public long RestrictedHard { get; set; }
+    public long Soft { get; set; }
+    public long ImmatureEarnedHard { get; set; }
+    public long HeldHard { get; set; }
+    public long HeldSoft { get; set; }
+    public long AvailableHardToSpend { get; set; }
+    public long AvailableSoftToSpend { get; set; }
+    public long WithdrawableHard { get; set; }
+    public WalletReviewState ReviewState { get; set; }
+    public long SourceJournalSequence { get; set; }
+    public string ProjectionHash { get; set; } = string.Empty;
+    public DateTimeOffset RebuiltAt { get; set; }
+}
+
+internal sealed class EconomyProjectionReconciliationEventRow
+{
+    public Guid Id { get; set; }
+    public Guid WalletId { get; set; }
+    public string PreviousHash { get; set; } = string.Empty;
+    public string RebuiltHash { get; set; } = string.Empty;
+    public long SourceJournalSequence { get; set; }
+    public DateTimeOffset DetectedAt { get; set; }
 }
 
 internal sealed class EconomyAccountRow

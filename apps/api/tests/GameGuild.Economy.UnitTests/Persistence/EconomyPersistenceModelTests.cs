@@ -27,6 +27,7 @@ public sealed class EconomyPersistenceModelTests
         "economy_lot_lineage_edges",
         "economy_outbox_messages",
         "economy_posting_groups",
+        "economy_projection_reconciliation_events",
         "economy_protected_change_cooldowns",
         "economy_provider_fact_allocations",
         "economy_registered_capabilities",
@@ -42,6 +43,7 @@ public sealed class EconomyPersistenceModelTests
         "economy_root_reversal_states",
         "economy_source_stamp_events",
         "economy_source_stamps",
+        "economy_wallet_balance_projections",
         "economy_wallets"
     ];
 
@@ -52,6 +54,8 @@ public sealed class EconomyPersistenceModelTests
         "ix_economy_fragment_root_ranges_root_epoch",
         "ix_economy_holds_wallet_status",
         "ix_economy_lot_lineage_edges_parent_lot",
+        "ix_economy_projection_reconciliation_events_wallet_detected",
+        "ix_economy_wallet_balance_projections_review_state",
         "ux_economy_credit_lots_root_source",
         "ux_economy_dispatch_snapshots_hash",
         "ux_economy_entry_allocations_line_parent",
@@ -140,6 +144,9 @@ public sealed class EconomyPersistenceModelTests
             "ck_economy_posting_groups_reserve_authorization",
             "ck_economy_posting_groups_source_requirement",
             "ck_economy_posting_groups_template_state",
+            "ck_economy_projection_events_sequence_nonnegative",
+            "ck_economy_wallet_balance_projections_amounts_nonnegative",
+            "ck_economy_wallet_balance_projections_sequence_nonnegative",
             "ck_economy_provider_fact_allocations_cumulative_bounds",
             "ck_economy_registered_capabilities_state",
             "ck_economy_reserve_asset_allocations_value_positive",
@@ -255,6 +262,43 @@ public sealed class EconomyPersistenceModelTests
         fundingClaim.FindPrimaryKey()!.Properties.Select(property => property.Name)
             .Should().Equal("SourceStampId");
         fundingClaim.FindProperty("Version")!.IsConcurrencyToken.Should().BeTrue();
+    }
+
+    [Fact]
+    public void WalletProjectionPersistsOnlyDerivedRecoveryState()
+    {
+        using var context = CreateContext();
+        var model = context.Model;
+
+        AssertProperties(
+            model,
+            "economy_wallet_balance_projections",
+            "WalletId",
+            "PendingHard",
+            "PendingSoft",
+            "PurchasedHard",
+            "EarnedHard",
+            "RestrictedHard",
+            "Soft",
+            "ImmatureEarnedHard",
+            "HeldHard",
+            "HeldSoft",
+            "AvailableHardToSpend",
+            "AvailableSoftToSpend",
+            "WithdrawableHard",
+            "ReviewState",
+            "SourceJournalSequence",
+            "ProjectionHash",
+            "RebuiltAt");
+        AssertProperties(
+            model,
+            "economy_projection_reconciliation_events",
+            "Id",
+            "WalletId",
+            "PreviousHash",
+            "RebuiltHash",
+            "SourceJournalSequence",
+            "DetectedAt");
     }
 
     [Fact]
