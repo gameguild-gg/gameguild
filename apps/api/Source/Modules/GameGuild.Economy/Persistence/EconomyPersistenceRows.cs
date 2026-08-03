@@ -1,4 +1,5 @@
 using GameGuild.Economy.Contracts;
+using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Policy;
 using GameGuild.Economy.Projections;
@@ -105,6 +106,75 @@ internal sealed class EconomyFundingClaimRow
     public Guid? RootCreditLotId { get; set; }
     public long CumulativeProviderReversalUnits { get; set; }
     public long Version { get; set; }
+}
+
+internal sealed class EconomyProviderDisputeRow
+{
+    public string ProviderDisputeReference { get; set; } = string.Empty;
+    public Guid SourceStampId { get; set; }
+    public Guid ResponsibleWalletId { get; set; }
+    public ProviderDisputeStatus Status { get; set; }
+    public long LatestProviderSequence { get; set; }
+    public long CumulativeDisputedHardUnits { get; set; }
+    public long BaselineReversedHardUnits { get; set; }
+    public long FrozenHardEquivalentUnits { get; set; }
+    public string? ReversalIdempotencyKey { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public long Version { get; set; }
+}
+
+internal sealed class EconomyProviderDisputeEventRow
+{
+    public string ProviderEventId { get; set; } = string.Empty;
+    public string ProviderDisputeReference { get; set; } = string.Empty;
+    public Guid SourceStampId { get; set; }
+    public long ProviderSequence { get; set; }
+    public ProviderDisputeStatus Status { get; set; }
+    public long CumulativeDisputedHardUnits { get; set; }
+    public string RequestHash { get; set; } = string.Empty;
+    public DateTimeOffset OccurredAt { get; set; }
+}
+
+internal sealed class EconomyDisputeFragmentFreezeRow
+{
+    public Guid Id { get; set; }
+    public string ProviderDisputeReference { get; set; } = string.Empty;
+    public Guid RootSourceStampId { get; set; }
+    public Guid CreditLotId { get; set; }
+    public Guid WalletId { get; set; }
+    public CurrencyCode Currency { get; set; }
+    public long AmountUnits { get; set; }
+    public HoldStatus Status { get; set; }
+    public DateTimeOffset PlacedAt { get; set; }
+    public DateTimeOffset? TerminalAt { get; set; }
+}
+
+internal sealed class EconomyDisputeFragmentRangeRow
+{
+    public Guid Id { get; set; }
+    public Guid DisputeFragmentFreezeId { get; set; }
+    public long StartInclusive { get; set; }
+    public long EndExclusive { get; set; }
+    public long ReversalEpoch { get; set; }
+}
+
+internal sealed class EconomyWalletDebtRow
+{
+    public Guid WalletId { get; set; }
+    public long OutstandingHardUnits { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public long Version { get; set; }
+}
+
+internal sealed class EconomyWalletDebtEventRow
+{
+    public Guid Id { get; set; }
+    public Guid WalletId { get; set; }
+    public Guid SourceStampId { get; set; }
+    public long Sequence { get; set; }
+    public long DeltaHardUnits { get; set; }
+    public long OutstandingHardUnits { get; set; }
+    public DateTimeOffset OccurredAt { get; set; }
 }
 
 internal sealed class EconomyPostingGroupRow
