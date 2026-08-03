@@ -161,9 +161,25 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         modelBuilder.Entity<EconomyPostingGroupRow>(builder =>
         {
             builder.ToTable("economy_posting_groups", table =>
+            {
                 table.HasCheckConstraint(
                     "ck_economy_posting_groups_reserve_authorization",
-                    "\"ReserveVersion\" > 0 AND \"ReserveAuthorizationEpoch\" > 0 AND \"RiskDecisionId\" IS NOT NULL"));
+                    "\"ReserveVersion\" > 0 AND \"ReserveAuthorizationEpoch\" > 0 AND \"RiskDecisionId\" IS NOT NULL");
+                table.HasCheckConstraint(
+                    "ck_economy_posting_groups_template_state",
+                    "\"TemplateKind\" BETWEEN 1 AND 21 AND \"TemplateVersion\" = 1 AND \"Status\" = 1");
+                table.HasCheckConstraint(
+                    "ck_economy_posting_groups_authority_template",
+                    "(\"TemplateKind\" IN (1, 2, 3, 18, 19, 20) AND \"Authority\" = 1) OR " +
+                    "(\"TemplateKind\" IN (4, 5, 7, 8, 17) AND \"Authority\" = 2) OR " +
+                    "(\"TemplateKind\" IN (6, 21) AND \"Authority\" = 3) OR " +
+                    "(\"TemplateKind\" IN (9, 10) AND \"Authority\" = 4) OR " +
+                    "(\"TemplateKind\" IN (11, 12, 13) AND \"Authority\" = 5) OR " +
+                    "(\"TemplateKind\" IN (14, 15, 16) AND \"Authority\" = 6)");
+                table.HasCheckConstraint(
+                    "ck_economy_posting_groups_source_requirement",
+                    "\"TemplateKind\" NOT IN (1, 2, 3, 18, 19, 20) OR \"SourceStampId\" IS NOT NULL");
+            });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.IdempotencyKey).HasMaxLength(128);
             builder.HasIndex(row => row.IdempotencyKey)
