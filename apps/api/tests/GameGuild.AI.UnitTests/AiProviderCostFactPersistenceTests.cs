@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,6 +55,20 @@ public sealed class AiProviderCostFactPersistenceTests
     }
 
     [Fact]
+    public void RelationalModel_EnforcesTokenCostAndChargeConservation()
+    {
+        using var db = CreateRelationalDbContext();
+        var entity = db.GetService<IDesignTimeModel>().Model
+            .FindEntityType(typeof(AiProviderCostFactEntity));
+
+        entity.Should().NotBeNull();
+        entity!.GetCheckConstraints().Select(constraint => constraint.Name).Should().BeEquivalentTo(
+            "ck_ai_provider_cost_facts_token_conservation",
+            "ck_ai_provider_cost_facts_cost_conservation",
+            "ck_ai_provider_cost_facts_charge_positive");
+    }
+
+    [Fact]
     public void AiModule_RegistersTheEfProviderCostFactStore()
     {
         var services = new ServiceCollection();
@@ -89,6 +104,14 @@ public sealed class AiProviderCostFactPersistenceTests
     {
         var options = new DbContextOptionsBuilder<TestAiCostDbContext>()
             .UseInMemoryDatabase($"ai-cost-{Guid.NewGuid()}")
+            .Options;
+        return new TestAiCostDbContext(options);
+    }
+
+    private static TestAiCostDbContext CreateRelationalDbContext()
+    {
+        var options = new DbContextOptionsBuilder<TestAiCostDbContext>()
+            .UseNpgsql("Host=localhost;Database=ai_cost_model;Username=test;Password=test")
             .Options;
         return new TestAiCostDbContext(options);
     }
