@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation';
 import { getPublicTestingEventExperience } from '@/lib/testing-lab/events-queries';
 import { getTestingProjectOptions } from '@/lib/testing-lab/queries';
 import { Badge } from '@game-guild/ui/components/badge';
+import type { TestingLabPublicTestingEventSlotProjection } from '@game-guild/client';
 import { ArrowLeft, CalendarDays, ClipboardCheck, FlaskConical, MessageSquareText } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
@@ -115,7 +116,7 @@ export default async function PublicTestingEventDetailPage({
               </p>
             ) : (
               <div className="space-y-4">
-                {(event.slots ?? []).map((slot) => (
+                {(event.slots ?? []).map((slot: TestingLabPublicTestingEventSlotProjection) => (
                   <TestingSlotRegistration
                     key={slot.id}
                     eventId={eventId}
