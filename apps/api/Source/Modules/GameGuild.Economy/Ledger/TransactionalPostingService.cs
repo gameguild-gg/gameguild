@@ -177,6 +177,7 @@ public sealed class TransactionalPostingService
                     transaction.GetCreditLot(command.OutputLotId));
             }
 
+            transaction.EnsureWalletNotDebtRestricted(command.WalletId);
             var available = transaction.GetAvailableLots(command.WalletId, CurrencyCode.HardCoin)
                 .Where(lot => lot.Provenance == ProvenanceKind.PurchasedHard)
                 .ToArray();
@@ -445,15 +446,50 @@ public sealed class TransactionalPostingService
 
     public ProviderReversalResult ReverseTopUp(ReverseTopUpCommand command)
     {
+        var commandHash = ValidateAndHash(command);
+        var epoch = _fences.BeginReversal(command.SourceId);
+        try
+        {
+            return _store.Execute(transaction => ReverseTopUpInTransaction(transaction, command, commandHash));
+        }
+        finally
+        {
+            _fences.CompleteReversal(command.SourceId, epoch);
+        }
+    }
+
+    internal ProviderReversalResult ReverseTopUpUnderActiveFence(
+        ReverseTopUpCommand command,
+        Action<LedgerKernelTransaction> beforePosting,
+        Action<LedgerKernelTransaction, ProviderReversalResult> afterPosting)
+    {
+        ArgumentNullException.ThrowIfNull(beforePosting);
+        ArgumentNullException.ThrowIfNull(afterPosting);
+        var commandHash = ValidateAndHash(command);
+        return _store.Execute(transaction =>
+        {
+            beforePosting(transaction);
+            var result = ReverseTopUpInTransaction(transaction, command, commandHash);
+            afterPosting(transaction, result);
+            return result;
+        });
+    }
+
+    private static string ValidateAndHash(ReverseTopUpCommand command)
+    {
         ArgumentNullException.ThrowIfNull(command);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.Evidence);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(command.CumulativeProviderHardUnits);
         if (!Enum.IsDefined(command.IrrecoverableDisposition))
             throw new ArgumentOutOfRangeException(nameof(command));
-        var commandHash = ComputeProviderReversalHash(command);
+        return ComputeProviderReversalHash(command);
+    }
 
-        return _store.Execute(transaction =>
-        {
+    private ProviderReversalResult ReverseTopUpInTransaction(
+        LedgerKernelTransaction transaction,
+        ReverseTopUpCommand command,
+        string commandHash)
+    {
             var duplicatePosting = transaction.FindIdempotent(command.IdempotencyKey, commandHash);
             if (duplicatePosting is not null)
                 return transaction.FindProviderReversalResult(command.IdempotencyKey)
@@ -471,9 +507,7 @@ public sealed class TransactionalPostingService
                 throw new ProviderMonetaryTotalExceededException(
                     "Cumulative provider reversal must increase monotonically.");
 
-            var available = transaction.GetAvailableLots(claim.WalletId, CurrencyCode.HardCoin)
-                .Concat(transaction.GetAvailableLots(claim.WalletId, CurrencyCode.SoftCoin))
-                .ToArray();
+            var available = transaction.GetAvailableRootLots(command.SourceId);
             var plan = ProviderReversalPlanner.Plan(
                 command.SourceId,
                 checked(command.CumulativeProviderHardUnits * CurrencyTraceScale.HardCoinTraceUnitsPerCoin),
@@ -565,13 +599,15 @@ public sealed class TransactionalPostingService
             if (state.PartitionedHardEquivalentUnits != command.CumulativeProviderHardUnits)
                 throw new LineageConservationException(
                     "Provider reversal recovery, debt, and loss must exactly partition the cumulative provider total.");
+            var debtDelta = checked(state.ResponsibleDebtHardUnits - current.ResponsibleDebtHardUnits);
+            if (debtDelta > 0)
+                transaction.RecordDebt(claim.WalletId, command.SourceId, debtDelta, command.OccurredAt);
             var result = new ProviderReversalResult(postings, state);
             transaction.SetProviderReversalState(state);
             transaction.AddIdempotency(new IdempotencyRecord(
                 command.IdempotencyKey, commandHash, postings[0]));
             transaction.AddProviderReversalResult(command.IdempotencyKey, result);
             return result;
-        });
     }
 
     public PostingResult Transfer(TransferFragmentsCommand command)
@@ -587,6 +623,7 @@ public sealed class TransactionalPostingService
             var duplicate = transaction.FindIdempotent(command.IdempotencyKey, commandHash);
             if (duplicate is not null) return duplicate;
 
+            transaction.EnsureWalletNotDebtRestricted(command.SourceWalletId);
             var available = transaction.GetAvailableLots(command.SourceWalletId, command.Amount.Currency)
                 .Where(lot => lot.Provenance == command.Provenance)
                 .ToArray();
