@@ -30,6 +30,12 @@
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Treasury/GameGuild.Economy.Treasury.csproj",
       "testProjects": ["apps/api/tests/GameGuild.Economy.Treasury.UnitTests/GameGuild.Economy.Treasury.UnitTests.csproj"],
       "coverageAssemblies": ["GameGuild.Economy.Treasury"]
+    },
+    {
+      "productionProject": "apps/api/Source/Modules/GameGuild.AI/GameGuild.AI.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.AI.UnitTests/GameGuild.AI.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.AI"],
+      "coveragePathPrefixes": ["CostAccounting/"]
     }
   ],
   "providerContractProjects": [

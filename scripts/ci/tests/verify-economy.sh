@@ -260,6 +260,16 @@ XML
   assert_cobertura_coverage "$coverage" 'GameGuild.Economy' >/dev/null
 }
 
+test_cobertura_supports_path_scoped_capabilities() {
+  local coverage="$fixture_root/path-coverage.cobertura.xml"
+  cat > "$coverage" <<'XML'
+<coverage><packages><package name="GameGuild.AI" line-rate="0.5" branch-rate="0.5"><classes><class name="Legacy" filename="Legacy/Old.cs"><methods><method name="Missed"><lines><line number="1" hits="0" /></lines></method></methods><lines><line number="1" hits="0" /></lines></class><class name="Cost" filename="CostAccounting/Cost.cs"><methods><method name="Covered"><lines><line number="2" hits="1" /></lines></method></methods><lines><line number="2" hits="1" branch="true" condition-coverage="100% (2/2)" /></lines></class></classes></package></packages></coverage>
+XML
+  assert_throws 'line coverage' assert_cobertura_coverage "$coverage" 'GameGuild.AI' || return 1
+  assert_cobertura_coverage "$coverage" 'GameGuild.AI' 'CostAccounting/' >/dev/null
+  assert_throws 'contains no classes' assert_cobertura_coverage "$coverage" 'GameGuild.AI' 'Missing/'
+}
+
 test_json_evidence_rejects_pending_and_skipped() {
   local vitest="$fixture_root/vitest.json" playwright="$fixture_root/playwright.json"
   printf '{"numTotalTests":3,"numPassedTests":2,"numFailedTests":0,"numPendingTests":1,"testResults":[]}\n' > "$vitest"
@@ -297,6 +307,7 @@ run_test 'TRX evidence rejects skipped and zero-test suites' test_trx_rejects_sk
 run_test 'whole-solution evidence allows only named source-empty scaffolds' test_whole_solution_allows_only_source_empty_scaffolds
 run_test 'whole-solution evidence recovers scaffold identity from TRX metadata' test_whole_solution_recovers_scaffold_identity_from_trx
 run_test 'Cobertura enforces line, branch, and method coverage' test_cobertura_requires_full_method_coverage
+run_test 'Cobertura supports path-scoped capability coverage' test_cobertura_supports_path_scoped_capabilities
 run_test 'Vitest and Playwright reject pending or skipped tests' test_json_evidence_rejects_pending_and_skipped
 run_test 'canonical JSON is deterministic and preserves arrays' test_canonical_json_preserves_arrays
 
