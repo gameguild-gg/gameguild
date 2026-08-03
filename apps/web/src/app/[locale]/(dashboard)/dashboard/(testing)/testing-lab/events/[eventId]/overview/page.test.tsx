@@ -7,13 +7,19 @@ const mocks = vi.hoisted(() => ({
   getMembers: vi.fn(),
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 vi.mock('@/lib/testing-lab/events-queries', () => ({
   getTestingEventWorkspaceData: mocks.getTestingEventWorkspaceData,
 }));
 
+
 vi.mock('@/lib/community/queries/members', () => ({
   getMembers: mocks.getMembers,
 }));
+
 
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ children, href, ...rest }: { children: ReactNode; href: string }) => (
@@ -57,7 +63,7 @@ describe('Testing Event overview', () => {
       }),
     );
 
-    expect(screen.getByRole('heading', { name: 'Event overview' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Event overview', level: 2 })).toBeInTheDocument();
     expect(screen.getByText('1 project application')).toBeInTheDocument();
     expect(screen.getByText('1 registered tester')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Review committee' })).toBeInTheDocument();

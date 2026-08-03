@@ -60,7 +60,8 @@ describe('createCommunityGroup', () => {
     });
     mocks.getToken.mockResolvedValue('access-token');
     mocks.createServerClient.mockReturnValue({ request: vi.fn() });
-    mocks.SocialGroupsSocialgroupsModule.mockReturnValue({
+    mocks.SocialGroupsSocialgroupsModule.mockImplementation(function SocialGroupsSocialgroupsModule() {
+      return {
       postApiSocialGroups: mocks.postApiSocialGroups,
       putApiSocialGroups: mocks.putApiSocialGroups,
       getApiSocialGroupsMembers: mocks.getApiSocialGroupsMembers,
@@ -70,6 +71,7 @@ describe('createCommunityGroup', () => {
       putApiSocialGroupsMembersRole: mocks.putApiSocialGroupsMembersRole,
       deleteApiSocialGroupsMembers: mocks.deleteApiSocialGroupsMembers,
       postApiSocialGroupsArchive: mocks.postApiSocialGroupsArchive,
+      };
     });
     mocks.postApiSocialGroups.mockResolvedValue({ ok: true, data: { id: 'group-1' } });
     mocks.putApiSocialGroups.mockResolvedValue({ ok: true, data: { id: 'group-1' } });

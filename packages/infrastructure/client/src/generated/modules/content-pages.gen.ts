@@ -63,6 +63,41 @@ export class ContentPagesModule {
 
   /**
    */
+  async getPagesBySlug(slug: string): Promise<Result<Types.ContentPagesPage, ApiError>> {
+    const url = `/v1/pages/by-slug/${slug}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ContentPagesPageSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getPagesSitemap(query?: { locale?: string }): Promise<Result<Array<Types.ContentPagesSitemapEntry>, ApiError>> {
+    const url = '/v1/pages/sitemap';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: false,
+    });
+
+    return result as Result<Array<Types.ContentPagesSitemapEntry>, ApiError>;
+  }
+
+  /**
+   */
   async getPages1(id: string): Promise<Result<Types.ContentPagesPage, ApiError>> {
     const url = `/v1/pages/${id}`;
 
@@ -117,41 +152,6 @@ export class ContentPagesModule {
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getPagesBySlug(slug: string): Promise<Result<Types.ContentPagesPage, ApiError>> {
-    const url = `/v1/pages/by-slug/${slug}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.ContentPagesPageSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getPagesSitemap(query?: { locale?: string }): Promise<Result<Array<Types.ContentPagesSitemapEntry>, ApiError>> {
-    const url = '/v1/pages/sitemap';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: false,
-    });
-
-    return result as Result<Array<Types.ContentPagesSitemapEntry>, ApiError>;
   }
 
   /**
@@ -234,6 +234,21 @@ export class ContentPagesModule {
 
   /**
    */
+  async postPagesSectionsReorder(pageId: string, body: Array<string>): Promise<Result<void, ApiError>> {
+    const url = `/v1/pages/${pageId}/sections/reorder`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: body,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getPagesSections1(pageId: string, sectionId: string): Promise<Result<Types.ContentPagesPageSection, ApiError>> {
     const url = `/v1/pages/${pageId}/sections/${sectionId}`;
 
@@ -288,21 +303,6 @@ export class ContentPagesModule {
     const result = await this.client.request({
       method: 'DELETE',
       path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postPagesSectionsReorder(pageId: string, body: Array<string>): Promise<Result<void, ApiError>> {
-    const url = `/v1/pages/${pageId}/sections/reorder`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: body,
       requiresAuth: true,
     });
 

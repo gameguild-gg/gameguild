@@ -15,6 +15,8 @@ public sealed class EconomyPersistenceModelTests
         "economy_chain_head",
         "economy_credit_lots",
         "economy_dispatch_snapshots",
+        "economy_dispute_fragment_freezes",
+        "economy_dispute_fragment_ranges",
         "economy_entry_allocations",
         "economy_external_anchors",
         "economy_fragment_root_ranges",
@@ -27,7 +29,10 @@ public sealed class EconomyPersistenceModelTests
         "economy_lot_lineage_edges",
         "economy_outbox_messages",
         "economy_posting_groups",
+        "economy_projection_reconciliation_events",
         "economy_protected_change_cooldowns",
+        "economy_provider_dispute_events",
+        "economy_provider_disputes",
         "economy_provider_fact_allocations",
         "economy_registered_capabilities",
         "economy_reserve_asset_allocations",
@@ -42,18 +47,27 @@ public sealed class EconomyPersistenceModelTests
         "economy_root_reversal_states",
         "economy_source_stamp_events",
         "economy_source_stamps",
+        "economy_wallet_balance_projections",
+        "economy_wallet_debt_events",
+        "economy_wallet_debts",
         "economy_wallets"
     ];
 
     private static readonly string[] CriticalIndexes =
     [
+        "ix_economy_dispute_fragment_freezes_root_status",
         "ix_economy_entry_allocations_parent_lot",
         "ix_economy_external_anchors_chain_sequence",
         "ix_economy_fragment_root_ranges_root_epoch",
         "ix_economy_holds_wallet_status",
         "ix_economy_lot_lineage_edges_parent_lot",
+        "ix_economy_projection_reconciliation_events_wallet_detected",
+        "ix_economy_wallet_balance_projections_review_state",
         "ux_economy_credit_lots_root_source",
         "ux_economy_dispatch_snapshots_hash",
+        "ux_economy_dispute_fragment_ranges_freeze_interval",
+        "ux_economy_provider_dispute_events_dispute_sequence",
+        "ux_economy_provider_disputes_active_source",
         "ux_economy_entry_allocations_line_parent",
         "ux_economy_fragment_root_ranges_owner_interval",
         "ux_economy_funding_claims_provider_leg",
@@ -83,7 +97,8 @@ public sealed class EconomyPersistenceModelTests
         "ux_economy_root_reversal_states_root_epoch",
         "ux_economy_source_stamp_events_source_sequence",
         "ux_economy_source_stamps_internal_leg",
-        "ux_economy_source_stamps_provider_reference"
+        "ux_economy_source_stamps_provider_reference",
+        "ux_economy_wallet_debt_events_wallet_sequence"
     ];
 
     [Fact]
@@ -124,6 +139,9 @@ public sealed class EconomyPersistenceModelTests
             "ck_economy_credit_lots_maturity_order",
             "ck_economy_credit_lots_maturity_policy",
             "ck_economy_dispatch_snapshots_amount_positive",
+            "ck_economy_dispute_fragment_freezes_amount_positive",
+            "ck_economy_dispute_fragment_freezes_state_timestamp",
+            "ck_economy_dispute_fragment_ranges_half_open",
             "ck_economy_entry_allocations_amount_positive",
             "ck_economy_fragment_root_ranges_half_open",
             "ck_economy_fragment_root_ranges_single_owner",
@@ -136,7 +154,19 @@ public sealed class EconomyPersistenceModelTests
             "ck_economy_holds_state_timestamp",
             "ck_economy_journal_lines_amount_positive",
             "ck_economy_lot_lineage_edges_amount_positive",
+            "ck_economy_posting_groups_authority_template",
             "ck_economy_posting_groups_reserve_authorization",
+            "ck_economy_posting_groups_source_requirement",
+            "ck_economy_posting_groups_template_state",
+            "ck_economy_projection_events_sequence_nonnegative",
+            "ck_economy_provider_dispute_events_amount_positive",
+            "ck_economy_provider_dispute_events_sequence_positive",
+            "ck_economy_provider_disputes_amount_partition",
+            "ck_economy_provider_disputes_lifecycle",
+            "ck_economy_provider_disputes_sequence_positive",
+            "ck_economy_provider_disputes_version_positive",
+            "ck_economy_wallet_balance_projections_amounts_nonnegative",
+            "ck_economy_wallet_balance_projections_sequence_nonnegative",
             "ck_economy_provider_fact_allocations_cumulative_bounds",
             "ck_economy_registered_capabilities_state",
             "ck_economy_reserve_asset_allocations_value_positive",
@@ -159,7 +189,11 @@ public sealed class EconomyPersistenceModelTests
             "ck_economy_risk_review_events_sequence_positive",
             "ck_economy_root_reversal_states_cumulative_bounds",
             "ck_economy_root_reversal_states_epoch_nonnegative",
-            "ck_economy_source_stamp_events_sequence_positive"
+            "ck_economy_source_stamp_events_sequence_positive",
+            "ck_economy_wallet_debt_events_delta_nonzero",
+            "ck_economy_wallet_debt_events_sequence_positive",
+            "ck_economy_wallet_debts_nonnegative",
+            "ck_economy_wallet_debts_version_positive"
         ]);
     }
 
@@ -255,6 +289,113 @@ public sealed class EconomyPersistenceModelTests
     }
 
     [Fact]
+    public void ProviderDisputesPersistExactFreezesOrderedEventsAndWalletDebt()
+    {
+        using var context = CreateContext();
+        var model = context.Model;
+
+        AssertProperties(
+            model,
+            "economy_provider_disputes",
+            "ProviderDisputeReference",
+            "SourceStampId",
+            "ResponsibleWalletId",
+            "Status",
+            "LatestProviderSequence",
+            "CumulativeDisputedHardUnits",
+            "BaselineReversedHardUnits",
+            "FrozenHardEquivalentUnits",
+            "ReversalIdempotencyKey",
+            "UpdatedAt",
+            "Version");
+        AssertProperties(
+            model,
+            "economy_provider_dispute_events",
+            "ProviderEventId",
+            "ProviderDisputeReference",
+            "SourceStampId",
+            "ProviderSequence",
+            "Status",
+            "CumulativeDisputedHardUnits",
+            "RequestHash",
+            "OccurredAt");
+        AssertProperties(
+            model,
+            "economy_dispute_fragment_freezes",
+            "Id",
+            "ProviderDisputeReference",
+            "RootSourceStampId",
+            "CreditLotId",
+            "WalletId",
+            "Currency",
+            "AmountUnits",
+            "Status",
+            "PlacedAt",
+            "TerminalAt");
+        AssertProperties(
+            model,
+            "economy_dispute_fragment_ranges",
+            "Id",
+            "DisputeFragmentFreezeId",
+            "StartInclusive",
+            "EndExclusive",
+            "ReversalEpoch");
+        AssertProperties(model, "economy_wallet_debts", "WalletId", "OutstandingHardUnits", "UpdatedAt", "Version");
+        AssertProperties(
+            model,
+            "economy_wallet_debt_events",
+            "Id",
+            "WalletId",
+            "SourceStampId",
+            "Sequence",
+            "DeltaHardUnits",
+            "OutstandingHardUnits",
+            "OccurredAt");
+
+        model.GetEntityTypes().Single(entity => entity.GetTableName() == "economy_provider_disputes")
+            .FindProperty("Version")!.IsConcurrencyToken.Should().BeTrue();
+        model.GetEntityTypes().Single(entity => entity.GetTableName() == "economy_wallet_debts")
+            .FindProperty("Version")!.IsConcurrencyToken.Should().BeTrue();
+    }
+
+    [Fact]
+    public void WalletProjectionPersistsOnlyDerivedRecoveryState()
+    {
+        using var context = CreateContext();
+        var model = context.Model;
+
+        AssertProperties(
+            model,
+            "economy_wallet_balance_projections",
+            "WalletId",
+            "PendingHard",
+            "PendingSoft",
+            "PurchasedHard",
+            "EarnedHard",
+            "RestrictedHard",
+            "Soft",
+            "ImmatureEarnedHard",
+            "HeldHard",
+            "HeldSoft",
+            "AvailableHardToSpend",
+            "AvailableSoftToSpend",
+            "WithdrawableHard",
+            "ReviewState",
+            "SourceJournalSequence",
+            "ProjectionHash",
+            "RebuiltAt");
+        AssertProperties(
+            model,
+            "economy_projection_reconciliation_events",
+            "Id",
+            "WalletId",
+            "PreviousHash",
+            "RebuiltHash",
+            "SourceJournalSequence",
+            "DetectedAt");
+    }
+
+    [Fact]
     public void EconomyAssemblyOwnsMappingsButNoCentralizedMigration()
     {
         var assemblyTypes = typeof(EconomyModelConfiguration).Assembly.GetTypes();
@@ -263,6 +404,61 @@ public sealed class EconomyPersistenceModelTests
         assemblyTypes.Should().NotContain(type => typeof(Migration).IsAssignableFrom(type));
         FluentActions.Invoking(() => new EconomyModelConfiguration().Configure(null!))
             .Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void PersistenceRowsRoundTripEveryMappedProperty()
+    {
+        using var context = CreateContext();
+        var rowTypes = context.Model.GetEntityTypes()
+            .Select(entity => entity.ClrType)
+            .Where(type => type.Namespace == "GameGuild.Economy.Persistence"
+                && type.Name.StartsWith("Economy", StringComparison.Ordinal)
+                && type.Name.EndsWith("Row", StringComparison.Ordinal))
+            .OrderBy(type => type.FullName, StringComparer.Ordinal)
+            .ToArray();
+
+        rowTypes.Should().NotBeEmpty();
+
+        foreach (var rowType in rowTypes)
+        {
+            var row = Activator.CreateInstance(rowType, nonPublic: true);
+            row.Should().NotBeNull($"{rowType.Name} must remain materializable by EF Core");
+
+            foreach (var property in rowType.GetProperties())
+            {
+                property.CanRead.Should().BeTrue($"{rowType.Name}.{property.Name} must be readable");
+                property.CanWrite.Should().BeTrue($"{rowType.Name}.{property.Name} must be writable");
+
+                var value = CreateRoundTripValue(property.PropertyType, property.Name);
+                property.SetValue(row, value);
+                property.GetValue(row).Should().Be(value, $"{rowType.Name}.{property.Name} must preserve persisted values");
+            }
+        }
+    }
+
+    private static object CreateRoundTripValue(Type propertyType, string propertyName)
+    {
+        var valueType = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
+
+        if (valueType == typeof(string))
+            return $"value-{propertyName}";
+        if (valueType == typeof(Guid))
+            return Guid.Parse("b66a0a03-8e43-4c28-b1d0-13b0c9c0d2ab");
+        if (valueType == typeof(DateTimeOffset))
+            return new DateTimeOffset(2026, 7, 30, 12, 0, 0, TimeSpan.Zero);
+        if (valueType == typeof(bool))
+            return true;
+        if (valueType == typeof(short))
+            return (short)7;
+        if (valueType == typeof(int))
+            return 11;
+        if (valueType == typeof(long))
+            return 13L;
+        if (valueType.IsEnum)
+            return Enum.GetValues(valueType).GetValue(Math.Min(1, Enum.GetValues(valueType).Length - 1))!;
+
+        throw new NotSupportedException($"No persistence round-trip value is defined for {propertyType}.");
     }
 
     private static bool InheritsEntityBase(Type type)

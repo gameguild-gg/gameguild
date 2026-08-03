@@ -29,6 +29,9 @@ export interface ServerClientConfig {
   /** Default request timeout in milliseconds */
   timeout?: number;
 
+  /** Default fetch cache policy */
+  cache?: RequestCache;
+
   /** Additional interceptors */
   interceptors?: Interceptor[];
 }
@@ -93,6 +96,7 @@ export function createServerClient(config: ServerClientConfig): ApiClient {
   const transport: Transport = createFetchTransport({
     baseUrl: config.baseUrl,
     timeout: config.timeout,
+    cache: config.cache,
     interceptors,
   });
 

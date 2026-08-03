@@ -91,6 +91,24 @@ public sealed class SourceEvidence
             SourceConfirmationState.Disputed, ObservedAt, ConfirmedAt, disputedAt);
     }
 
+    public SourceEvidence ResolveDispute(DateTimeOffset resolvedAt)
+    {
+        if (State != SourceConfirmationState.Disputed)
+            throw new InvalidOperationException("Only disputed source evidence can be resolved.");
+        if (resolvedAt < ReversedAt!.Value)
+            throw new ArgumentException("Resolution cannot precede the dispute.", nameof(resolvedAt));
+
+        return new SourceEvidence(
+            Id,
+            Provider,
+            ProviderReference,
+            EvidenceHash,
+            SourceConfirmationState.Confirmed,
+            ObservedAt,
+            ConfirmedAt,
+            null);
+    }
+
     public SourceEvidence Reverse(DateTimeOffset reversedAt)
     {
         if (State is not (SourceConfirmationState.Confirmed or SourceConfirmationState.Disputed))

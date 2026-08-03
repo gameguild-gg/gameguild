@@ -1,6 +1,43 @@
 {
   "schemaVersion": 1,
-  "projects": [],
+  "projects": [
+    {
+      "productionProject": "apps/api/Source/Modules/GameGuild.Economy/GameGuild.Economy.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.Economy.UnitTests/GameGuild.Economy.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.Economy"]
+    },
+    {
+      "productionProject": "apps/api/Source/Modules/GameGuild.Economy.AdRewards/GameGuild.Economy.AdRewards.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.Economy.AdRewards.UnitTests/GameGuild.Economy.AdRewards.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.Economy.AdRewards"]
+    },
+    {
+      "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Bounties/GameGuild.Economy.Bounties.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.Economy.Bounties.UnitTests/GameGuild.Economy.Bounties.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.Economy.Bounties"]
+    },
+    {
+      "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Marketplace/GameGuild.Economy.Marketplace.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.Economy.Marketplace.UnitTests/GameGuild.Economy.Marketplace.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.Economy.Marketplace"]
+    },
+    {
+      "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Payouts/GameGuild.Economy.Payouts.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.Economy.Payouts.UnitTests/GameGuild.Economy.Payouts.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.Economy.Payouts"]
+    },
+    {
+      "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Treasury/GameGuild.Economy.Treasury.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.Economy.Treasury.UnitTests/GameGuild.Economy.Treasury.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.Economy.Treasury"]
+    },
+    {
+      "productionProject": "apps/api/Source/Modules/GameGuild.AI/GameGuild.AI.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.AI.UnitTests/GameGuild.AI.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.AI"],
+      "coveragePathPrefixes": ["CostAccounting/"]
+    }
+  ],
   "providerContractProjects": [
     {
       "project": "apps/api/tests/GameGuild.Commerce.Billing.UnitTests/GameGuild.Commerce.Billing.UnitTests.csproj",

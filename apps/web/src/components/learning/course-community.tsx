@@ -16,7 +16,8 @@ import {
 } from '@game-guild/ui/components/dialog';
 import { Input } from '@game-guild/ui/components/input';
 import { Textarea } from '@game-guild/ui/components/textarea';
-import { CheckCircle2, MessageCircle, MessagesSquare, Plus } from 'lucide-react';
+import { ArrowRight, CheckCircle2, MessageCircle, MessagesSquare, Plus } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 
@@ -153,10 +154,18 @@ export function CourseCommunity({
               <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
                 {discussion.content}
               </p>
-              <p className="mt-4 inline-flex items-center gap-2 text-xs text-muted-foreground">
-                <MessageCircle className="size-3.5" />
-                {discussion.replyCount ?? 0} replies
-              </p>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                  <MessageCircle className="size-3.5" />
+                  {discussion.replyCount ?? 0} replies
+                </p>
+                <Button asChild size="sm" variant="ghost">
+                  <Link href={`/courses/${courseSlug}/community/${discussion.id}`}>
+                    Open discussion
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+              </div>
             </article>
           ))}
         </div>

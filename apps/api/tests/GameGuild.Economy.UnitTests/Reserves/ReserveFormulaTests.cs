@@ -44,6 +44,14 @@ public sealed class ReserveFormulaTests
                 services,
                 Now)
             .Should().Be(29);
+
+        ReserveFormula.StressedExpectedRedemptionCostUsdNanos(
+                outstandingSoftUnits: 9,
+                unreservedSoftUnits: 3,
+                irreversibleInFlightProviderCostUsdNanos: 7,
+                services.Reverse().ToArray(),
+                Now)
+            .Should().Be(29);
     }
 
     [Fact]

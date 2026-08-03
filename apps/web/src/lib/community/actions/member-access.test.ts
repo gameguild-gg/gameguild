@@ -43,8 +43,12 @@ describe('updateMemberAccessRole', () => {
     mocks.getToken.mockResolvedValue('access-token');
     mocks.createServerClient.mockReturnValue({ request: mocks.request });
     mocks.request.mockResolvedValue({ ok: true, data: { success: true } });
-    mocks.UsersModule.mockReturnValue({ getUsers: mocks.usersGetUsers, postUsers: mocks.usersPostUsers });
-    mocks.UsersMembershipsModule.mockReturnValue({ postUsersMemberships: mocks.usersMembershipsPost });
+    mocks.UsersModule.mockImplementation(function UsersModule() {
+      return { getUsers: mocks.usersGetUsers, postUsers: mocks.usersPostUsers };
+    });
+    mocks.UsersMembershipsModule.mockImplementation(function UsersMembershipsModule() {
+      return { postUsersMemberships: mocks.usersMembershipsPost };
+    });
     mocks.usersPostUsers.mockResolvedValue({ ok: true, data: { id: 'user-1', email: 'learner@game-guild.com' } });
     mocks.usersGetUsers.mockResolvedValue({ ok: true, data: { items: [] } });
     mocks.usersMembershipsPost.mockResolvedValue({ ok: true, data: { success: true, memberId: 'member-1' } });

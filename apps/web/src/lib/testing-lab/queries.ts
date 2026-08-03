@@ -5,7 +5,7 @@ import {
   type ApiError,
   type ProjectsProject,
   type Result,
-  type TestingLabAnalyticsReportProjection,
+  type TestingLabTestingLabAnalyticsReportProjection,
   type TestingLabSessionProjectProjection,
   type TestingLabSessionRegistration,
   type TestingLabSessionWaitlist,
@@ -63,7 +63,11 @@ export interface TestingLocationSummary {
   address?: string | null;
   equipmentAvailable?: string | null;
   city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
   country?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
   isVirtual?: boolean;
   virtualUrl?: string | null;
   maxTestersCapacity?: number | null;
@@ -130,7 +134,7 @@ function createTestingLabModules() {
     locations: new GeneratedApi.TestinglabTestinglocationsModule(client),
     participants: new GeneratedApi.TestinglabTestingparticipantsModule(client),
     feedback: new GeneratedApi.TestinglabTestingfeedbackModule(client),
-    analytics: new GeneratedApi.TestinglabAnalyticsModule(client),
+    analytics: new GeneratedApi.TestinglabTestinganalyticsModule(client),
     settings: new GeneratedApi.TestinglabSettingsModule(client),
     permissions: new GeneratedApi.TestinglabPermissionModule(client),
     projects: new GeneratedApi.ProjectsModule(client),
@@ -209,7 +213,11 @@ function mapLocation(location: TestingLabTestingLocation): TestingLocationSummar
     address: location.address,
     equipmentAvailable: location.equipmentAvailable,
     city: location.city,
+    state: location.state,
+    postalCode: location.postalCode,
     country: location.country,
+    contactEmail: location.contactEmail,
+    contactPhone: location.contactPhone,
     isVirtual: location.isVirtual,
     virtualUrl: location.virtualUrl,
     maxTestersCapacity: location.maxTestersCapacity,
@@ -265,6 +273,23 @@ export const getTestingLabDashboard = cache(async (): Promise<TestingLabDashboar
   };
 });
 
+export interface TestingLabLocationDirectory {
+  locations: TestingLocationSummary[];
+  accessIssues: string[];
+}
+
+export const getTestingLabLocations = cache(async (): Promise<TestingLabLocationDirectory> => {
+  const api = createTestingLabModules();
+  const locations = await readResult(
+    api.locations.getTestingLocations({ skip: 0, take: 200, includeArchived: true }),
+    'Testing locations',
+  );
+
+  return {
+    locations: compact((locations.data ?? []).map(mapLocation)),
+    accessIssues: locations.issue ? [locations.issue] : [],
+  };
+});
 export interface PublicTestingLabDirectory {
   sessions: TestingSessionSummary[];
   projects: TestingProjectOption[];
@@ -439,7 +464,7 @@ const emptyAnalyticsSummary: TestingLabAnalyticsSummary = {
   fillRate: 0,
 };
 
-function mapAnalyticsSummary(summary: TestingLabAnalyticsReportProjection['current'] | null | undefined): TestingLabAnalyticsSummary {
+function mapAnalyticsSummary(summary: TestingLabTestingLabAnalyticsReportProjection['current'] | null | undefined): TestingLabAnalyticsSummary {
   return {
     events: summary?.events ?? 0,
     completedEvents: summary?.completedEvents ?? 0,
@@ -503,7 +528,54 @@ export async function getTestingLabAnalyticsCsv(
   options: Omit<TestingLabAnalyticsOptions, 'includeComparison'>,
 ): Promise<TestingLabAnalyticsCsvResult> {
   const api = createTestingLabModules();
-  return readResult(api.analytics.getTestingAnalyticsExport(options), 'Testing Lab analytics export');
+  const result = await readResult(api.analytics.getTestingAnalyticsExport(options), 'Testing Lab analytics export');
+  if (!result.data) return { data: null, issue: result.issue };
+
+  try {
+    return { data: await result.data.text() };
+  } catch (error) {
+    return {
+      data: null,
+      issue: `Testing Lab analytics export could not be read: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+  }
+}
+export interface TestingLabLocationFilterOptions {
+  q?: string;
+  status?: 'all' | 'active' | 'maintenance' | 'inactive' | 'archived';
+  mode?: 'all' | 'physical' | 'remote';
+}
+
+export function filterTestingLabLocations(
+  locations: TestingLocationSummary[],
+  options: TestingLabLocationFilterOptions,
+): TestingLocationSummary[] {
+  const query = options.q?.trim().toLowerCase() ?? '';
+  const status = options.status ?? 'all';
+  const mode = options.mode ?? 'all';
+
+  return locations.filter((location) => {
+    const searchable = [
+      location.name,
+      location.description,
+      location.address,
+      location.city,
+      location.state,
+      location.postalCode,
+      location.country,
+      location.contactEmail,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    const normalizedStatus = normalizeTestingLocationStatus(location.status).toLowerCase();
+    const matchesStatus =
+      status === 'all' ||
+      (status === 'archived' ? Boolean(location.isDeleted) : !location.isDeleted && normalizedStatus === status);
+    const matchesMode = mode === 'all' || (mode === 'remote' ? Boolean(location.isVirtual) : !location.isVirtual);
+
+    return (!query || searchable.includes(query)) && matchesStatus && matchesMode;
+  });
 }
 export function normalizeTestingRequestStatus(status: TestingRequestStatus): string {
   if (typeof status === 'string') return status === 'InProgress' ? 'In Progress' : status;

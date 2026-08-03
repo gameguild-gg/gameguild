@@ -344,6 +344,52 @@ public sealed class LedgerEdgeCaseTests
             .Should().Throw<LineageConservationException>();
     }
 
+    [Fact]
+    public void AvailableLotsIgnoreForeignAndDisjointConsumptionRanges()
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var wallet = WalletId.New();
+        var root = SourceStampId.New();
+        var lot = new CreditLot(
+            CreditLotId.New(), wallet, new CoinAmount(CurrencyCode.SoftCoin, 10),
+            ProvenanceKind.AdRewardSoft, Time, Time, 1, CreditLotState.Active,
+            [new RootTraceRange(root, 10, 10, 0)]);
+        var ignored = new[]
+        {
+            new RootTraceRange(SourceStampId.New(), 12, 2, 0),
+            new RootTraceRange(root, 0, 2, 0),
+            new RootTraceRange(root, 30, 2, 0)
+        };
+        store.Execute(transaction =>
+        {
+            transaction.AddCreditLot(lot);
+            foreach (var range in ignored.Append(new RootTraceRange(root, 14, 2, 0)))
+                transaction.AddConsumption(new FragmentConsumption(
+                    PostingId.New(), lot.Id, new CoinAmount(CurrencyCode.SoftCoin, 2), [range]));
+            return true;
+        });
+
+        var available = store.GetAvailableLots(wallet, CurrencyCode.SoftCoin).Single();
+        available.Amount.Units.Should().Be(8);
+        available.Ranges.Should().Equal(
+            new RootTraceRange(root, 10, 4, 0),
+            new RootTraceRange(root, 16, 4, 0));
+    }
+
+    [Fact]
+    public void ReversalSelectorRejectsHistoryThatStartsBeforeKnownTrace()
+    {
+        var root = SourceStampId.New();
+        var lot = new CreditLot(
+            CreditLotId.New(), WalletId.New(), new CoinAmount(CurrencyCode.SoftCoin, 5),
+            ProvenanceKind.ConvertedSoft, Time, Time, 1, CreditLotState.Active,
+            [new RootTraceRange(root, 10, 5, 0)]);
+
+        FluentActions.Invoking(() => RootReversalSelector.Select(
+                root, 2, [new RootTraceRange(root, 0, 2, 0)], [lot]))
+            .Should().Throw<LineageConservationException>();
+    }
+
     private static CreditLot Lot(
         ProvenanceKind provenance,
         CreditLotState state,

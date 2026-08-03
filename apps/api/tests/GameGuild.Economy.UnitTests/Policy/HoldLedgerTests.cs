@@ -25,6 +25,11 @@ public sealed class HoldLedgerTests
         ledger.Events.Select(item => item.Kind).Should().Equal(HoldEventKind.Placed, HoldEventKind.Released);
         ledger.Current(hold.Id).Status.Should().Be(HoldStatus.Released);
         ledger.Events.Should().OnlyContain(item => item.Sequence > 0);
+        var placed = ledger.Events[0];
+        placed.HoldId.Should().Be(hold.Id);
+        placed.WalletId.Should().Be(wallet);
+        placed.Amount.Should().Be(new CoinAmount(CurrencyCode.HardCoin, 20));
+        placed.Reason.Should().Be(HoldReason.RiskReview);
         store.Holds.Should().ContainSingle().Which.Status.Should().Be(HoldStatus.Released);
     }
 
@@ -104,6 +109,72 @@ public sealed class HoldLedgerTests
             new ReserveVersion(1), new PolicyVersion(1), Time.AddMinutes(1)));
 
         store.GetAvailableLots(wallet, CurrencyCode.HardCoin).Single().Amount.Units.Should().Be(6);
+    }
+
+    [Fact]
+    public void ActiveHoldQueriesFilterOrderAndRejectUnknownIdentifiers()
+    {
+        var wallet = WalletId.New();
+        var otherWallet = WalletId.New();
+        var store = new InMemoryLedgerKernelStore();
+        store.Execute(transaction =>
+        {
+            transaction.AddCreditLot(new CreditLot(
+                CreditLotId.New(),
+                wallet,
+                new CoinAmount(CurrencyCode.HardCoin, 30),
+                ProvenanceKind.EarnedHard,
+                Time.AddDays(-120),
+                Time,
+                1,
+                CreditLotState.Active,
+                [new RootTraceRange(SourceStampId.New(), 0, 30_000, 0)],
+                CurrencyTraceScale.HardCoinTraceUnitsPerCoin));
+            transaction.AddCreditLot(new CreditLot(
+                CreditLotId.New(),
+                wallet,
+                new CoinAmount(CurrencyCode.SoftCoin, 20),
+                ProvenanceKind.AdRewardSoft,
+                Time.AddDays(-120),
+                Time,
+                1,
+                CreditLotState.Active,
+                [new RootTraceRange(SourceStampId.New(), 0, 20, 0)],
+                CurrencyTraceScale.SoftCoinTraceUnitsPerCoin));
+            transaction.AddCreditLot(new CreditLot(
+                CreditLotId.New(),
+                otherWallet,
+                new CoinAmount(CurrencyCode.HardCoin, 10),
+                ProvenanceKind.EarnedHard,
+                Time.AddDays(-120),
+                Time,
+                1,
+                CreditLotState.Active,
+                [new RootTraceRange(SourceStampId.New(), 0, 10_000, 0)],
+                CurrencyTraceScale.HardCoinTraceUnitsPerCoin));
+            return true;
+        });
+        var ledger = new AppendOnlyHoldLedger(store);
+        var firstId = new HoldId(Guid.Parse("00000000-0000-0000-0000-000000000001"));
+        var secondId = new HoldId(Guid.Parse("00000000-0000-0000-0000-000000000002"));
+        var sameEffectiveAt = Time.AddMinutes(1);
+
+        ledger.Place(secondId, wallet, new CoinAmount(CurrencyCode.HardCoin, 5), HoldReason.RiskReview, sameEffectiveAt);
+        ledger.Place(firstId, wallet, new CoinAmount(CurrencyCode.HardCoin, 5), HoldReason.RiskReview, sameEffectiveAt);
+        var released = ledger.Place(
+            HoldId.New(), wallet, new CoinAmount(CurrencyCode.HardCoin, 2), HoldReason.Compliance, Time);
+        ledger.Release(released.Id, Time.AddSeconds(1));
+        var soft = ledger.Place(
+            HoldId.New(), wallet, new CoinAmount(CurrencyCode.SoftCoin, 4), HoldReason.Dispute, Time.AddMinutes(2));
+        ledger.Place(
+            HoldId.New(), otherWallet, new CoinAmount(CurrencyCode.HardCoin, 3), HoldReason.Compliance, sameEffectiveAt);
+
+        ledger.Current(firstId).Id.Should().Be(firstId);
+        FluentActions.Invoking(() => ledger.Current(HoldId.New())).Should().Throw<KeyNotFoundException>();
+        ledger.ActiveFor(wallet).Select(hold => hold.Id).Should().Equal(firstId, secondId, soft.Id);
+        store.Execute(transaction => transaction.ActiveHoldUnits(wallet, CurrencyCode.HardCoin)).Should().Be(10);
+        store.Execute(transaction => transaction.ActiveHoldUnits(wallet, CurrencyCode.SoftCoin)).Should().Be(4);
+        store.Execute(transaction => transaction.ActiveHoldUnits(otherWallet, CurrencyCode.HardCoin)).Should().Be(3);
     }
 
     private static bool Try(Action operation)

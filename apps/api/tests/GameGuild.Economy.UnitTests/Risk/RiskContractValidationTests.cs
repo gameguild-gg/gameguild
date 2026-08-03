@@ -122,6 +122,10 @@ public sealed class RiskContractValidationTests
         audit.SourceWalletHash.Contains(context.SourceWalletId.Value.ToString(), StringComparison.OrdinalIgnoreCase)
             .Should().BeFalse();
         audit.OperationFingerprint.Should().Be(context.Fingerprint());
+        audit.ReasonCodes.Should().Equal(RiskReasonCode.ManualReviewRequired);
+        audit.DestinationWalletHash.Should().HaveLength(64);
+        audit.ProviderReferenceHash.Should().Be(context.ProviderReferenceHash);
+        audit.EntityGraphEvidenceHash.Should().Be(context.EntityGraphEvidenceHash);
         publicView.Should().Be(new PublicRiskDecision(decision.Id, RiskOutcome.Review, Time));
     }
 

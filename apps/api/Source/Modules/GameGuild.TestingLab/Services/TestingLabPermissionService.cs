@@ -1,3 +1,4 @@
+using GameGuild.CQRS.Models;
 using GameGuild.Identity.Authorization;
 
 namespace GameGuild.TestingLab;
@@ -11,8 +12,8 @@ public interface ITestingLabPermissionService {
   Task<IReadOnlyList<TestingLabUserPermission>> GetUserPermissionsAsync(Guid userId, Guid? tenantId);
   Task AssignRoleToUserAsync(Guid userId, Guid? tenantId, string roleName, DateTime? expiresAt = null);
   Task RevokeRoleFromUserAsync(Guid userId, Guid? tenantId, string roleName);
-  Task GrantPermissionAsync(Guid userId, Guid? tenantId, string action, string resourceType, Guid resourceId, string? reason = null, DateTime? expiresAt = null);
-  Task RevokePermissionAsync(Guid userId, Guid? tenantId, string action, string resourceType, Guid resourceId);
+  Task GrantPermissionAsync(Guid userId, Guid? tenantId, string action, string resourceType, Guid resourceId, string? reason = null, DateTime? expiresAt = null, Guid? grantedByUserId = null);
+  Task RevokePermissionAsync(Guid userId, Guid? tenantId, string action, string resourceType, Guid resourceId, Guid? revokedByUserId = null);
   Task<bool> HasPermissionAsync(Guid userId, Guid? tenantId, string action, string resourceType, Guid? resourceId = null);
 }
 
@@ -24,6 +25,7 @@ public sealed class TestingLabUserPermission {
   public string Action { get; set; } = string.Empty;
   public string ResourceType { get; set; } = string.Empty;
   public Guid? ResourceId { get; set; }
+  public DateTime? ExpiresAt { get; set; }
 }
 
 public sealed class TestingLabPermissionService(IApplicationDbContext context) : ITestingLabPermissionService {
@@ -90,6 +92,14 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
     if (template == null) return false;
     if (template.IsSystemTemplate) throw new InvalidOperationException($"System role template '{template.Name}' cannot be deleted.");
 
+    var assignment = $"role:{template.Name}";
+    var assignedRecords = await context.Set<TenantPermission>()
+      .Where(permission => permission.DeletedAt == null && permission.IsActive)
+      .ToListAsync()
+      .ConfigureAwait(false);
+    if (assignedRecords.Any(permission => permission.Permissions.Contains(assignment, StringComparer.OrdinalIgnoreCase)))
+      throw new InvalidOperationException($"Role template '{template.Name}' is assigned to one or more members and cannot be deleted.");
+
     context.Set<GameGuild.Identity.Authorization.PermissionTemplate>().Remove(template);
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -97,7 +107,8 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
   }
 
   public async Task<IReadOnlyList<TestingLabAssignedRole>> GetUserRolesAsync(Guid userId, Guid? tenantId) {
-    var permissions = await GetTenantPermissions(userId, tenantId).ConfigureAwait(false);
+    var permissions = await FindTenantPermissionsAsync(userId, tenantId).ConfigureAwait(false);
+    if (permissions == null || !permissions.IsActive || permissions.IsExpired()) return [];
 
     return permissions.Permissions
       .Where(permission => permission.StartsWith("role:", StringComparison.OrdinalIgnoreCase))
@@ -106,58 +117,172 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
   }
 
   public async Task<IReadOnlyList<TestingLabUserPermission>> GetUserPermissionsAsync(Guid userId, Guid? tenantId) {
-    var permissions = await GetTenantPermissions(userId, tenantId).ConfigureAwait(false);
+    var result = new List<TestingLabUserPermission>();
+    var permissions = await FindTenantPermissionsAsync(userId, tenantId).ConfigureAwait(false);
 
-    return permissions.Permissions
-      .Select(ParsePermission)
-      .Where(permission => permission != null)
-      .Select(permission => permission!)
+    if (permissions is { IsActive: true } && !permissions.IsExpired()) {
+      result.AddRange(permissions.Permissions
+        .Select(ParsePermission)
+        .Where(permission => permission != null)
+        .Select(permission => permission!));
+
+      var roleNames = permissions.Permissions
+        .Where(permission => permission.StartsWith("role:", StringComparison.OrdinalIgnoreCase))
+        .Select(permission => permission["role:".Length..])
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+      if (roleNames.Length > 0) {
+        var templates = await context.Set<GameGuild.Identity.Authorization.PermissionTemplate>()
+          .Where(template => template.IsActive && (template.Category == TemplateCategory || template.Name.StartsWith("TestingLab")))
+          .ToListAsync()
+          .ConfigureAwait(false);
+
+        result.AddRange(templates
+          .Where(template => roleNames.Contains(template.Name, StringComparer.OrdinalIgnoreCase))
+          .SelectMany(template => template.Permissions)
+          .Select(ParsePermission)
+          .Where(permission => permission != null)
+          .Select(permission => permission!));
+      }
+    }
+
+    if (tenantId.HasValue) {
+      var resourceTenantId = new TenantId(tenantId.Value);
+      var resourcePermissions = await context.Set<ResourceUserPermission>()
+        .Where(permission =>
+          permission.TenantId == resourceTenantId &&
+          permission.UserId == userId &&
+          permission.RevokedAt == null &&
+          (permission.ResourceType == TestingLabResourceTypes.Session ||
+           permission.ResourceType == TestingLabResourceTypes.Location ||
+           permission.ResourceType == TestingLabResourceTypes.Feedback ||
+           permission.ResourceType == TestingLabResourceTypes.Request ||
+           permission.ResourceType == TestingLabResourceTypes.Participant))
+        .ToListAsync()
+        .ConfigureAwait(false);
+
+      result.AddRange(resourcePermissions
+        .Where(permission => permission.IsActive)
+        .SelectMany(permission => permission.Permissions.Select(action => new TestingLabUserPermission {
+          Action = action,
+          ResourceType = permission.ResourceType,
+          ResourceId = Guid.TryParse(permission.ResourceId, out var resourceId) ? resourceId : null,
+          ExpiresAt = permission.ExpiresAt,
+        })));
+    }
+
+    return result
+      .GroupBy(permission => new { permission.Action, permission.ResourceType, permission.ResourceId })
+      .Select(group => group.OrderByDescending(permission => permission.ExpiresAt).First())
       .ToList();
   }
 
   public async Task AssignRoleToUserAsync(Guid userId, Guid? tenantId, string roleName, DateTime? expiresAt = null) {
-    var permissions = await GetTenantPermissions(userId, tenantId).ConfigureAwait(false);
-    permissions.ExpiresAt = expiresAt;
-    permissions.AddPermissions($"role:{roleName}");
+    if (expiresAt.HasValue)
+      throw new InvalidOperationException("Role expiration is not supported. Use a temporary resource exception instead.");
+
+    var template = await FindRoleTemplateAsync(roleName).ConfigureAwait(false);
+    if (template == null) throw new InvalidOperationException($"Role template '{roleName}' was not found.");
+
+    var permissions = await GetOrCreateTenantPermissionsAsync(userId, tenantId).ConfigureAwait(false);
+    permissions.AddPermissions($"role:{template.Name}");
     await context.SaveChangesAsync().ConfigureAwait(false);
   }
 
   public async Task RevokeRoleFromUserAsync(Guid userId, Guid? tenantId, string roleName) {
-    var permissions = await GetTenantPermissions(userId, tenantId).ConfigureAwait(false);
+    var permissions = await FindTenantPermissionsAsync(userId, tenantId).ConfigureAwait(false);
+    if (permissions == null) return;
+
     permissions.Permissions = permissions.Permissions
       .Where(permission => !string.Equals(permission, $"role:{roleName}", StringComparison.OrdinalIgnoreCase))
       .ToArray();
     await context.SaveChangesAsync().ConfigureAwait(false);
   }
 
-  public async Task GrantPermissionAsync(Guid userId, Guid? tenantId, string action, string resourceType, Guid resourceId, string? reason = null, DateTime? expiresAt = null) {
-    var permissions = await GetTenantPermissions(userId, tenantId).ConfigureAwait(false);
-    permissions.ExpiresAt = expiresAt;
-    permissions.Reason = reason;
-    permissions.AddPermissions(FormatPermission(action, resourceType, resourceId));
+  public async Task GrantPermissionAsync(
+    Guid userId,
+    Guid? tenantId,
+    string action,
+    string resourceType,
+    Guid resourceId,
+    string? reason = null,
+    DateTime? expiresAt = null,
+    Guid? grantedByUserId = null) {
+    if (!tenantId.HasValue) throw new InvalidOperationException("A tenant is required for a Testing Lab resource permission.");
+    ValidateResourcePermission(action, resourceType);
+    var resourceTenantId = new TenantId(tenantId.Value);
+
+    var permission = await context.Set<ResourceUserPermission>()
+      .FirstOrDefaultAsync(candidate =>
+        candidate.TenantId == resourceTenantId &&
+        candidate.UserId == userId &&
+        candidate.ResourceType == resourceType &&
+        candidate.ResourceId == resourceId.ToString() &&
+        candidate.RevokedAt == null)
+      .ConfigureAwait(false);
+
+    if (permission == null) {
+      permission = new ResourceUserPermission {
+        TenantId = tenantId.Value,
+        UserId = userId,
+        ResourceType = resourceType,
+        ResourceId = resourceId.ToString(),
+        Permissions = [action],
+        GrantedByUserId = grantedByUserId ?? userId,
+        ExpiresAt = expiresAt,
+      };
+      context.Set<ResourceUserPermission>().Add(permission);
+    }
+    else {
+      permission.Permissions = permission.Permissions
+        .Append(action)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+      permission.ExpiresAt = expiresAt;
+    }
+
     await context.SaveChangesAsync().ConfigureAwait(false);
   }
 
-  public async Task RevokePermissionAsync(Guid userId, Guid? tenantId, string action, string resourceType, Guid resourceId) {
-    var permissions = await GetTenantPermissions(userId, tenantId).ConfigureAwait(false);
-    var target = FormatPermission(action, resourceType, resourceId);
-    permissions.Permissions = permissions.Permissions
-      .Where(permission => !string.Equals(permission, target, StringComparison.OrdinalIgnoreCase))
+  public async Task RevokePermissionAsync(
+    Guid userId,
+    Guid? tenantId,
+    string action,
+    string resourceType,
+    Guid resourceId,
+    Guid? revokedByUserId = null) {
+    if (!tenantId.HasValue) return;
+    ValidateResourcePermission(action, resourceType);
+    var resourceTenantId = new TenantId(tenantId.Value);
+
+    var permission = await context.Set<ResourceUserPermission>()
+      .FirstOrDefaultAsync(candidate =>
+        candidate.TenantId == resourceTenantId &&
+        candidate.UserId == userId &&
+        candidate.ResourceType == resourceType &&
+        candidate.ResourceId == resourceId.ToString() &&
+        candidate.RevokedAt == null)
+      .ConfigureAwait(false);
+    if (permission == null) return;
+
+    permission.Permissions = permission.Permissions
+      .Where(candidate => !string.Equals(candidate, action, StringComparison.OrdinalIgnoreCase))
       .ToArray();
+    if (permission.Permissions.Length == 0) permission.Revoke(revokedByUserId ?? userId, "Testing Lab resource exception revoked.");
+
     await context.SaveChangesAsync().ConfigureAwait(false);
   }
 
   public async Task<bool> HasPermissionAsync(Guid userId, Guid? tenantId, string action, string resourceType, Guid? resourceId = null) {
-    var permissions = await GetTenantPermissions(userId, tenantId).ConfigureAwait(false);
-    var exact = resourceId.HasValue ? FormatPermission(action, resourceType, resourceId.Value) : null;
-    var scoped = $"{resourceType}:{action}";
-
-    return permissions.Permissions.Any(permission =>
-      string.Equals(permission, scoped, StringComparison.OrdinalIgnoreCase) ||
-      (exact != null && string.Equals(permission, exact, StringComparison.OrdinalIgnoreCase)));
+    var permissions = await GetUserPermissionsAsync(userId, tenantId).ConfigureAwait(false);
+    return permissions.Any(permission =>
+      string.Equals(permission.Action, action, StringComparison.OrdinalIgnoreCase) &&
+      string.Equals(permission.ResourceType, resourceType, StringComparison.Ordinal) &&
+      (!permission.ResourceId.HasValue || !resourceId.HasValue || permission.ResourceId == resourceId));
   }
 
-  private async Task<TenantPermission> GetTenantPermissions(Guid userId, Guid? tenantId) {
+  private async Task<TenantPermission> GetOrCreateTenantPermissionsAsync(Guid userId, Guid? tenantId) {
     var permission = await context.Set<TenantPermission>()
       .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null)
       .ConfigureAwait(false);
@@ -174,7 +299,21 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
     return permission;
   }
 
-  private static string FormatPermission(string action, string resourceType, Guid resourceId) => $"{resourceType}:{action}:{resourceId}";
+  private async Task<TenantPermission?> FindTenantPermissionsAsync(Guid userId, Guid? tenantId) {
+    return await context.Set<TenantPermission>()
+      .FirstOrDefaultAsync(permission =>
+        permission.UserId == userId &&
+        permission.TenantId == tenantId &&
+        permission.DeletedAt == null)
+      .ConfigureAwait(false);
+  }
+
+  private static void ValidateResourcePermission(string action, string resourceType) {
+    if (!TestingLabResourceTypes.IsValid(resourceType))
+      throw new InvalidOperationException($"'{resourceType}' is not a valid Testing Lab resource type.");
+    if (!TestingLabActions.All.Contains(action, StringComparer.OrdinalIgnoreCase))
+      throw new InvalidOperationException($"'{action}' is not a valid Testing Lab action.");
+  }
 
   private async Task<GameGuild.Identity.Authorization.PermissionTemplate?> FindRoleTemplateAsync(string idOrName) {
     if (Guid.TryParse(idOrName, out var id)) {

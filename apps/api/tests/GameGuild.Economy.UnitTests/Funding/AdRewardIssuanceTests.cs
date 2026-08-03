@@ -48,6 +48,25 @@ public sealed class AdRewardIssuanceTests
             .Should().Throw<ArgumentOutOfRangeException>();
     }
 
+    [Fact]
+    public void IssueAdRewardRejectsAnExistingSourceWithoutPartialPosting()
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var service = new TransactionalPostingService(store);
+        var command = Command(112);
+        store.Execute(transaction =>
+        {
+            transaction.AddSource(SourceEvidence.Observe(
+                command.SourceId, "ad-network", "existing", "evidence", Time));
+            return true;
+        });
+
+        FluentActions.Invoking(() => service.IssueAdReward(command))
+            .Should().Throw<InvalidOperationException>();
+        store.JournalEntries.Should().BeEmpty();
+        store.CreditLots.Should().BeEmpty();
+    }
+
     private static IssueAdRewardCommand Command(long softUnits)
     {
         var sourceId = SourceStampId.New();

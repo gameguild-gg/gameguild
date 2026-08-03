@@ -75,6 +75,20 @@ test_web_server_uses_direct_node_process_for_cleanup() {
   ! grep -q 'pnpm --filter @game-guild/web exec next start' "$ci_dir/verify-economy.sh"
 }
 
+test_browser_server_uses_published_api() {
+  local gate="$ci_dir/verify-economy.sh"
+  local api_url_line web_launch_line
+  api_url_line="$(grep -n 'export API_URL="http://127.0.0.1:$api_port"' "$gate" | cut -d: -f1)"
+  web_launch_line="$(grep -n 'node "$repository_root/apps/web/node_modules/next/dist/bin/next" start' "$gate" | cut -d: -f1)"
+
+  [[ -n "$api_url_line" && -n "$web_launch_line" ]] || return 1
+  [[ "$api_url_line" -lt "$web_launch_line" ]]
+}
+
+test_web_vitest_isolated_from_published_api() {
+  grep -q 'run env -u API_URL pnpm --filter @game-guild/web exec vitest run' "$ci_dir/verify-economy.sh"
+}
+
 test_local_api_readiness_enables_simulation_explicitly() {
   local gate="$ci_dir/verify-economy.sh"
   local enabled_line simulation_line launch_line
@@ -124,6 +138,12 @@ test_manifest_accepts_declared_projects() {
   printf '{"schemaVersion":1,"projects":[{"productionProject":"%s","testProjects":["%s","%s"],"coverageAssemblies":["GameGuild.Economy"]}]}\n' \
     "$production" "$unit" "$integration" > "$root/manifest.json"
   assert_economy_manifest "$root" "$root/manifest.json" >/dev/null
+}
+
+test_manifest_record_fields_normalize_windows_line_endings() {
+  local assembly
+  assembly="$(normalize_shell_record_field $'GameGuild.Economy\r')"
+  assert_equal "$assembly" 'GameGuild.Economy' 'Windows Python output must not alter assembly names'
 }
 
 test_warning_scope_finds_commerce_projects() {
@@ -205,6 +225,31 @@ test_whole_solution_allows_only_source_empty_scaffolds() {
     --validate-whole-solution-evidence "$root" "$log" "$trx"
 }
 
+test_whole_solution_recovers_scaffold_identity_from_trx() {
+  local root="$fixture_root/whole-solution-trx-fallback"
+  local project='apps/api/tests/GameGuild.Localization.IntegrationTests/GameGuild.Localization.IntegrationTests.csproj'
+  local project_directory="$root/$(dirname "$project")"
+  local trx="$root/localization-empty.trx"
+  local log="$root/dotnet-test.log"
+  mkdir -p "$project_directory"
+  printf '<Project Sdk="Microsoft.NET.Sdk" />\n' > "$root/$project"
+  cat > "$trx" <<'XML'
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <ResultSummary outcome="Completed">
+    <Counters total="0" executed="0" passed="0" failed="0" />
+    <Output>
+      <StdOut>[xUnit.net] Discovering: GameGuild.Localization.IntegrationTests
+[xUnit.net] Discovered: GameGuild.Localization.IntegrationTests</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
+XML
+  printf 'Test run for %s/bin/Release/net10.0/GameGuild.Localization.IntegrationTests.dll (.NETCoreApp,Version=v10.0)\nResults File: %s/unrelated.trx\n' \
+    "$project_directory" "$root" > "$log"
+
+  bash "$ci_dir/verify-economy.sh" --validate-whole-solution-evidence "$root" "$log" "$trx" >/dev/null
+}
+
 test_cobertura_requires_full_method_coverage() {
   local coverage="$fixture_root/coverage.cobertura.xml"
   cat > "$coverage" <<'XML'
@@ -213,6 +258,16 @@ XML
   assert_throws 'method coverage' assert_cobertura_coverage "$coverage" 'GameGuild.Economy' || return 1
   sed -i 's/number="2" hits="0"/number="2" hits="1"/' "$coverage"
   assert_cobertura_coverage "$coverage" 'GameGuild.Economy' >/dev/null
+}
+
+test_cobertura_supports_path_scoped_capabilities() {
+  local coverage="$fixture_root/path-coverage.cobertura.xml"
+  cat > "$coverage" <<'XML'
+<coverage><packages><package name="GameGuild.AI" line-rate="0.5" branch-rate="0.5"><classes><class name="Legacy" filename="Legacy/Old.cs"><methods><method name="Missed"><lines><line number="1" hits="0" /></lines></method></methods><lines><line number="1" hits="0" /></lines></class><class name="Cost" filename="CostAccounting/Cost.cs"><methods><method name="Covered"><lines><line number="2" hits="1" /></lines></method></methods><lines><line number="2" hits="1" branch="true" condition-coverage="100% (2/2)" /></lines></class></classes></package></packages></coverage>
+XML
+  assert_throws 'line coverage' assert_cobertura_coverage "$coverage" 'GameGuild.AI' || return 1
+  assert_cobertura_coverage "$coverage" 'GameGuild.AI' 'CostAccounting/' >/dev/null
+  assert_throws 'contains no classes' assert_cobertura_coverage "$coverage" 'GameGuild.AI' 'Missing/'
 }
 
 test_json_evidence_rejects_pending_and_skipped() {
@@ -237,17 +292,22 @@ test_canonical_json_preserves_arrays() {
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
+run_test 'browser server uses the published API instance' test_browser_server_uses_published_api
+run_test 'web Vitest is isolated from the published API instance' test_web_vitest_isolated_from_published_api
 run_test 'local API readiness enables payment simulation explicitly' test_local_api_readiness_enables_simulation_explicitly
 run_test 'Coolify forwards Stripe gateway identity and mode' test_coolify_compose_forwards_stripe_gateway_identity
 run_test 'published API uses its published content root' test_published_api_uses_published_content_root
 run_test 'manifest rejects undeclared Economy projects' test_manifest_rejects_undeclared_project
 run_test 'manifest accepts declared Economy projects and tests' test_manifest_accepts_declared_projects
+run_test 'manifest records normalize Windows line endings' test_manifest_record_fields_normalize_windows_line_endings
 run_test 'warning scope resolves touched Commerce projects' test_warning_scope_finds_commerce_projects
 run_test 'readiness requires consecutive successful probes' test_readiness_requires_consecutive_successes
 run_test 'process cleanup terminates Bash background processes' test_process_cleanup_stops_background_process
 run_test 'TRX evidence rejects skipped and zero-test suites' test_trx_rejects_skips_and_empty_suites
 run_test 'whole-solution evidence allows only named source-empty scaffolds' test_whole_solution_allows_only_source_empty_scaffolds
+run_test 'whole-solution evidence recovers scaffold identity from TRX metadata' test_whole_solution_recovers_scaffold_identity_from_trx
 run_test 'Cobertura enforces line, branch, and method coverage' test_cobertura_requires_full_method_coverage
+run_test 'Cobertura supports path-scoped capability coverage' test_cobertura_supports_path_scoped_capabilities
 run_test 'Vitest and Playwright reject pending or skipped tests' test_json_evidence_rejects_pending_and_skipped
 run_test 'canonical JSON is deterministic and preserves arrays' test_canonical_json_preserves_arrays
 

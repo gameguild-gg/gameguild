@@ -7,15 +7,22 @@ const mocks = vi.hoisted(() => ({
   getTestingProjectOptions: vi.fn(),
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 vi.mock('@/lib/testing-lab/events-queries', () => ({
   getTestingEventWorkspaceData: mocks.getTestingEventWorkspaceData,
 }));
+
 vi.mock('@/lib/community/queries/members', () => ({
   getMembers: mocks.getMembers,
 }));
+
 vi.mock('@/lib/testing-lab/queries', () => ({
   getTestingProjectOptions: mocks.getTestingProjectOptions,
 }));
+
 vi.mock('@/lib/testing-lab/events-actions', () => ({
   updateTestingEventAttendance: vi.fn(),
   assignTestedProjectToRegistration: vi.fn(),

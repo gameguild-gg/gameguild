@@ -41,80 +41,8 @@ export class LearningCoursesPrerequisitesModule {
 
   /**
    */
-  async getApiPrerequisites(id: string): Promise<Result<Types.LearningCoursesPrerequisite, ApiError>> {
-    const url = `/api/prerequisites/${id}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesPrerequisiteSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async putApiPrerequisites(id: string, body: Types.LearningCoursesUpdatePrerequisiteApiInput): Promise<Result<Types.LearningCoursesPrerequisite, ApiError>> {
-    const url = `/api/prerequisites/${id}`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdatePrerequisiteApiInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesPrerequisiteSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async deleteApiPrerequisites(id: string): Promise<Result<void, ApiError>> {
-    const url = `/api/prerequisites/${id}`;
-
-    const result = await this.client.request({
-      method: 'DELETE',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getApiPrerequisitesCourse(courseId: string): Promise<Result<Array<Types.LearningCoursesPrerequisite>, ApiError>> {
     const url = `/api/prerequisites/course/${courseId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesPrerequisite>, ApiError>;
-  }
-
-  /**
-   */
-  async getApiPrerequisitesDependents(courseId: string): Promise<Result<Array<Types.LearningCoursesPrerequisite>, ApiError>> {
-    const url = `/api/prerequisites/dependents/${courseId}`;
 
     const result = await this.client.request({
       method: 'GET',
@@ -218,6 +146,78 @@ export class LearningCoursesPrerequisitesModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getApiPrerequisitesDependents(courseId: string): Promise<Result<Array<Types.LearningCoursesPrerequisite>, ApiError>> {
+    const url = `/api/prerequisites/dependents/${courseId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesPrerequisite>, ApiError>;
+  }
+
+  /**
+   */
+  async getApiPrerequisites(id: string): Promise<Result<Types.LearningCoursesPrerequisite, ApiError>> {
+    const url = `/api/prerequisites/${id}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesPrerequisiteSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putApiPrerequisites(id: string, body: Types.LearningCoursesUpdatePrerequisiteApiInput): Promise<Result<Types.LearningCoursesPrerequisite, ApiError>> {
+    const url = `/api/prerequisites/${id}`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCoursesUpdatePrerequisiteApiInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesPrerequisiteSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteApiPrerequisites(id: string): Promise<Result<void, ApiError>> {
+    const url = `/api/prerequisites/${id}`;
+
+    const result = await this.client.request({
+      method: 'DELETE',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 }
 

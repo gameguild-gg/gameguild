@@ -33,10 +33,12 @@
     <PackageReference Include="Moq" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Source\Modules\GameGuild.AI\GameGuild.AI.csproj" />
+    <ProjectReference Include="..\..\Source\Modules\GameGuild.Economy\GameGuild.Economy.csproj" />
     <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Tenants\GameGuild.Identity.Tenants.csproj" />
     <ProjectReference Include="..\..\Source\Modules\GameGuild.Resources\GameGuild.Resources.csproj" />
     <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />

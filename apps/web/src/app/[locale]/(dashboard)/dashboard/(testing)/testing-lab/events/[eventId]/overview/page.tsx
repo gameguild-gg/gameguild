@@ -58,6 +58,7 @@ export default async function TestingEventOverviewPage({
   return (
     <div className="space-y-6">
       <TestingLabPageHeader
+        headingLevel={2}
         icon={CalendarClock}
         title="Event overview"
         description="Review operational readiness, application demand, capacity, and governance before the event starts."

@@ -6,6 +6,10 @@ const mocks = vi.hoisted(() => ({
   getTestingEventsDirectory: vi.fn(),
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 vi.mock('@/lib/testing-lab/events-queries', () => ({
   getTestingEventsDirectory: mocks.getTestingEventsDirectory,
 }));

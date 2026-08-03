@@ -123,6 +123,7 @@ async function executeRequest<T>(
   // Build request options
   const options: RequestInit = {
     method: requestConfig.method,
+    cache: requestConfig.cache ?? transportConfig.cache,
     headers,
     signal: requestConfig.signal,
   };

@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ApiClient } from "../../src/runtime/client.js";
-import { TestinglabAnalyticsModule } from "../../src/generated/modules/testinglab-analytics.gen.js";
+import { TestinglabTestinganalyticsModule } from "../../src/generated/modules/testinglab-testinganalytics.gen.js";
 
-describe("TestinglabAnalyticsModule", () => {
+describe("TestinglabTestinganalyticsModule", () => {
   it("requests the tenant analytics report with period and comparison parameters", async () => {
     const request = vi
       .fn()
       .mockResolvedValue({ ok: true, data: { events: [] } });
-    const module = new TestinglabAnalyticsModule({
+    const module = new TestinglabTestinganalyticsModule({
       request,
       getBaseUrl: () => "https://api.example.com",
     } as ApiClient);
@@ -34,7 +34,7 @@ describe("TestinglabAnalyticsModule", () => {
     const request = vi
       .fn()
       .mockResolvedValue({ ok: true, data: "event,applications" });
-    const module = new TestinglabAnalyticsModule({
+    const module = new TestinglabTestinganalyticsModule({
       request,
       getBaseUrl: () => "https://api.example.com",
     } as ApiClient);
