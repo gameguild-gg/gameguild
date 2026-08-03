@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAiPromptTemplateService, AiPromptTemplateService>();
         services.AddScoped<IAiConversationHistoryReader, AiConversationHistoryRepository>();
         services.AddScoped<IAiConversationHistoryRepository, AiConversationHistoryRepository>();
+        services.AddScoped<IAiProviderCostFactStore, EfAiProviderCostFactStore>();
         services.AddScoped<IAiProviderAdapter, OpenAiAdapter>();
         services.AddScoped<IAiProviderAdapter, AnthropicAdapter>();
         services.AddScoped<IAiProviderAdapter, GoogleAiAdapter>();

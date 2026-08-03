@@ -226,14 +226,15 @@ declare -a economy_production=()
 declare -a economy_tests=()
 declare -a economy_coverage_records=()
 declare -a provider_contracts=()
-while IFS=$'\t' read -r record_type first second; do
+while IFS=$'\t' read -r record_type first second third; do
   record_type="$(normalize_shell_record_field "$record_type")"
   first="$(normalize_shell_record_field "$first")"
   second="$(normalize_shell_record_field "$second")"
+  third="$(normalize_shell_record_field "$third")"
   case "$record_type" in
     production) economy_production+=("$first") ;;
     test) economy_tests+=("$first") ;;
-    coverage) economy_coverage_records+=("$first"$'\t'"$second") ;;
+    coverage) economy_coverage_records+=("$first"$'\t'"$second"$'\t'"$third") ;;
     provider) provider_contracts+=("$first"$'\t'"$second") ;;
   esac
 done < <("$PYTHON_BIN" - "$manifest_path" <<'PY'
@@ -246,10 +247,11 @@ for entry in manifest.get("projects", []):
     production = entry["productionProject"].replace("\\", "/")
     print("production", production, sep="\t")
     assemblies = ",".join(entry.get("coverageAssemblies", []))
+    prefixes = ",".join(value.replace("\\", "/") for value in entry.get("coveragePathPrefixes", []))
     for test in entry.get("testProjects", []):
         normalized = test.replace("\\", "/")
         print("test", normalized, sep="\t")
-        print("coverage", normalized, assemblies, sep="\t")
+        print("coverage", normalized, assemblies, prefixes, sep="\t")
 for contract in manifest.get("providerContractProjects", []):
     print("provider", contract["project"].replace("\\", "/"), contract["filter"], sep="\t")
 PY
@@ -318,7 +320,7 @@ if ((${#warning_projects[@]} > 0)); then
 fi
 
 for record in "${economy_coverage_records[@]}"; do
-  IFS=$'\t' read -r test_project assemblies_csv <<< "$record"
+  IFS=$'\t' read -r test_project assemblies_csv path_prefixes_csv <<< "$record"
   test_name="$(basename "${test_project%.csproj}")"
   results="$artifact_root/trx/economy/$test_name"
   mkdir -p "$results"
@@ -340,7 +342,7 @@ for record in "${economy_coverage_records[@]}"; do
   coverage_destination="$artifact_root/coverage/$test_name.cobertura.xml"
   cp "$coverage_report" "$coverage_destination"
   for assembly in "${coverage_assemblies[@]}"; do
-    assert_cobertura_coverage "$coverage_destination" "$assembly" >> "$artifact_root/coverage/summary.jsonl"
+    assert_cobertura_coverage "$coverage_destination" "$assembly" "$path_prefixes_csv" >> "$artifact_root/coverage/summary.jsonl"
   done
 done
 
