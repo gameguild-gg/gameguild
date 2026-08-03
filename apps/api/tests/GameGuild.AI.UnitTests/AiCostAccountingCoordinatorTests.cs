@@ -17,6 +17,9 @@ public sealed class AiCostAccountingCoordinatorTests
         var authorization = harness.Coordinator.Authorize(harness.Command());
 
         authorization.Status.Should().Be(AiServiceChargeStatus.Reserved);
+        authorization.SourceWalletId.Should().NotBe(authorization.ServiceWalletId);
+        authorization.AuthorizedAt.Should().Be(Harness.Now);
+        authorization.Reservation.ReservedAt.Should().Be(Harness.Now);
         authorization.Price.PriceSoftUnits.Should().Be(100_000);
         authorization.FundingFragments.Should().ContainSingle();
         authorization.FundingFragments[0].Amount.Should().Be(new CoinAmount(CurrencyCode.SoftCoin, 100_000));
@@ -188,7 +191,10 @@ public sealed class AiCostAccountingCoordinatorTests
         var harness = new Harness();
         var authorization = harness.Coordinator.Authorize(harness.Command());
         harness.Coordinator.Complete(harness.Completion(authorization.Id));
-        var observation = harness.Publisher.Facts.Single().ToReserveObservation(100_000);
+        var treasuryFact = harness.Publisher.Facts.Single();
+        treasuryFact.ProviderCostFactId.Should().Be(harness.Store.Facts.Single().Id);
+        treasuryFact.ObservedAt.Should().Be(Harness.Now.AddMinutes(1));
+        var observation = treasuryFact.ToReserveObservation(100_000);
         var expensive = observation with
         {
             ServiceCode = "ai.expensive",

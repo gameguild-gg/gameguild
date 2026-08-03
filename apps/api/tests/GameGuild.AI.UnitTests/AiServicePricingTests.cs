@@ -124,6 +124,8 @@ public sealed class AiServicePricingTests
             " v1 ", AiProvider.OpenAi, " model ", 0, 1, Now, Now.AddMinutes(1));
         outputOnly.Version.Should().Be("v1");
         outputOnly.Model.Should().Be("model");
+        outputOnly.ObservedAt.Should().Be(Now);
+        outputOnly.ExpiresAt.Should().Be(Now.AddMinutes(1));
         outputOnly.CalculateCost(0, 1).TotalCostUsdNanos.Should().Be(1);
         FluentActions.Invoking(() => outputOnly.CalculateCost(-1, 0))
             .Should().Throw<ArgumentOutOfRangeException>();
@@ -188,6 +190,58 @@ public sealed class AiServicePricingTests
             .Should().Throw<AiProviderCostUnknownException>();
         FluentActions.Invoking(() => catalog.Resolve("ai.grade", AiProvider.OpenAi, "gpt-test", Now.AddMinutes(-2)))
             .Should().Throw<AiProviderCostUnknownException>();
+    }
+
+    [Fact]
+    public void RateCardCatalog_AllowsIndependentServiceProviderModelAndVersionIdentities()
+    {
+        var catalog = new AiServiceRateCardCatalog();
+        catalog.Publish(Snapshot("v1", Now.AddMinutes(-5), Now.AddMinutes(5), 10));
+        catalog.Publish(AiServicePriceSnapshot.Create(
+            "ai.other",
+            new AiProviderRateCard(
+                "v1", AiProvider.OpenAi, "gpt-test", 10, 10,
+                Now.AddMinutes(-5), Now.AddMinutes(5)),
+            100,
+            100,
+            10,
+            10,
+            100_000,
+            Now.AddMinutes(-5),
+            Now.AddMinutes(5)));
+        catalog.Publish(AiServicePriceSnapshot.Create(
+            "ai.grade",
+            new AiProviderRateCard(
+                "v1", AiProvider.Anthropic, "gpt-test", 10, 10,
+                Now.AddMinutes(-5), Now.AddMinutes(5)),
+            100,
+            100,
+            10,
+            10,
+            100_000,
+            Now.AddMinutes(-5),
+            Now.AddMinutes(5)));
+        catalog.Publish(AiServicePriceSnapshot.Create(
+            "ai.grade",
+            new AiProviderRateCard(
+                "v1", AiProvider.OpenAi, "gpt-other", 10, 10,
+                Now.AddMinutes(-5), Now.AddMinutes(5)),
+            100,
+            100,
+            10,
+            10,
+            100_000,
+            Now.AddMinutes(-5),
+            Now.AddMinutes(5)));
+        catalog.Publish(Snapshot("v2", Now.AddMinutes(-5), Now.AddMinutes(5), 10));
+
+        catalog.Snapshots.Should().HaveCount(5);
+        catalog.Snapshots.Select(snapshot => (
+                snapshot.ServiceCode,
+                snapshot.RateCard.Provider,
+                snapshot.RateCard.Model,
+                snapshot.RateCard.Version))
+            .Should().OnlyHaveUniqueItems();
     }
 
     [Fact]
