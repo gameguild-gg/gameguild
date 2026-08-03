@@ -43,6 +43,10 @@ public sealed class AiCostAccountingValidationTests
         var selection = FifoFragmentSelector.Select(
             [lot], new CoinAmount(CurrencyCode.SoftCoin, 100_000)).Selections.Single();
 
+        var fragment = new AiFundingFragment(lot, selection);
+        fragment.ParentLot.Should().BeSameAs(lot);
+        fragment.Selection.Should().BeSameAs(selection);
+
         FluentActions.Invoking(() => new AiFundingFragment(null!, selection))
             .Should().Throw<ArgumentNullException>();
         FluentActions.Invoking(() => new AiFundingFragment(lot, null!))
@@ -299,6 +303,20 @@ public sealed class AiCostAccountingValidationTests
             .Should().Throw<ArgumentException>();
         FluentActions.Invoking(() => AiCostRiskGate.GlobalLossBudget(Guid.Empty))
             .Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void RiskGate_ReturnsTheAuthorizedDecisionAndCounterReservation()
+    {
+        var harness = new AiCostAccountingCoordinatorTests.Harness();
+        var command = harness.Command();
+        var price = harness.Catalog.Resolve(command.ServiceCode, command.Provider, command.Model, Now);
+
+        var authorization = harness.RiskGate.Authorize(command, price, harness.Funding(command));
+
+        authorization.Decision.DecisionId.Should().Be(command.Risk.Decision.Id);
+        authorization.Decision.IdempotencyKey.Should().Be(command.IdempotencyKey);
+        authorization.CounterReservation.Id.Should().Be(command.Risk.CounterReservationId);
     }
 
     [Fact]
