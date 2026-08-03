@@ -232,6 +232,7 @@ public sealed class HardCoinFundingClaim
             (SourceConfirmationState.Confirmed, SourceConfirmationState.Disputed) => true,
             (SourceConfirmationState.Confirmed, SourceConfirmationState.Reversed) => true,
             (SourceConfirmationState.Disputed, SourceConfirmationState.Disputed) => true,
+            (SourceConfirmationState.Disputed, SourceConfirmationState.Confirmed) => true,
             (SourceConfirmationState.Disputed, SourceConfirmationState.Reversed) => true,
             _ => false
         };
