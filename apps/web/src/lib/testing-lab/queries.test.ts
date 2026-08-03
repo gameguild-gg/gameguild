@@ -29,11 +29,21 @@ vi.mock('@game-guild/client', () => ({
     TestinglabTestinglocationsModule: vi.fn(function TestinglabTestinglocationsModule() {
       return mocks.locations;
     }),
-    TestinglabTestingparticipantsModule: vi.fn(() => ({})),
-    TestinglabTestingfeedbackModule: vi.fn(() => ({})),
-    TestinglabTestinganalyticsModule: vi.fn(() => mocks.analytics),
-    TestinglabSettingsModule: vi.fn(() => ({})),
-    TestinglabPermissionModule: vi.fn(() => ({})),
+    TestinglabTestingparticipantsModule: vi.fn(function TestinglabTestingparticipantsModule() {
+      return {};
+    }),
+    TestinglabTestingfeedbackModule: vi.fn(function TestinglabTestingfeedbackModule() {
+      return {};
+    }),
+    TestinglabTestinganalyticsModule: vi.fn(function TestinglabTestinganalyticsModule() {
+      return mocks.analytics;
+    }),
+    TestinglabSettingsModule: vi.fn(function TestinglabSettingsModule() {
+      return {};
+    }),
+    TestinglabPermissionModule: vi.fn(function TestinglabPermissionModule() {
+      return {};
+    }),
     ProjectsModule: vi.fn(function ProjectsModule() {
       return mocks.projects;
     }),

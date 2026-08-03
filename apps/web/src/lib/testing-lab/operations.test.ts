@@ -28,15 +28,33 @@ vi.mock('@/auth', () => ({ getToken: vi.fn(async () => 'token') }));
 vi.mock('@game-guild/client', () => ({
   createServerClient: vi.fn(() => ({})),
   GeneratedApi: {
-    TestinglabTestingrequestsModule: vi.fn(() => mocks.requests),
-    TestinglabTestingsessionsModule: vi.fn(() => mocks.sessions),
-    TestinglabTestinglocationsModule: vi.fn(() => mocks.locations),
-    TestinglabTestingparticipantsModule: vi.fn(() => mocks.participants),
-    TestinglabTestingfeedbackModule: vi.fn(() => mocks.feedback),
-    TestinglabTestinganalyticsModule: vi.fn(() => mocks.analytics),
-    TestinglabSettingsModule: vi.fn(() => mocks.settings),
-    TestinglabPermissionModule: vi.fn(() => mocks.permissions),
-    ProjectsModule: vi.fn(() => ({})),
+    TestinglabTestingrequestsModule: vi.fn(function TestinglabTestingrequestsModule() {
+      return mocks.requests;
+    }),
+    TestinglabTestingsessionsModule: vi.fn(function TestinglabTestingsessionsModule() {
+      return mocks.sessions;
+    }),
+    TestinglabTestinglocationsModule: vi.fn(function TestinglabTestinglocationsModule() {
+      return mocks.locations;
+    }),
+    TestinglabTestingparticipantsModule: vi.fn(function TestinglabTestingparticipantsModule() {
+      return mocks.participants;
+    }),
+    TestinglabTestingfeedbackModule: vi.fn(function TestinglabTestingfeedbackModule() {
+      return mocks.feedback;
+    }),
+    TestinglabTestinganalyticsModule: vi.fn(function TestinglabTestinganalyticsModule() {
+      return mocks.analytics;
+    }),
+    TestinglabSettingsModule: vi.fn(function TestinglabSettingsModule() {
+      return mocks.settings;
+    }),
+    TestinglabPermissionModule: vi.fn(function TestinglabPermissionModule() {
+      return mocks.permissions;
+    }),
+    ProjectsModule: vi.fn(function ProjectsModule() {
+      return {};
+    }),
   },
 }));
 

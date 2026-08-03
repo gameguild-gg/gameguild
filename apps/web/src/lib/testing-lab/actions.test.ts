@@ -31,32 +31,40 @@ vi.mock('next/cache', () => ({
 vi.mock('@game-guild/client', () => ({
   createServerClient: vi.fn(() => ({})),
   GeneratedApi: {
-    TestinglabTestingrequestsModule: vi.fn(() => ({
-      postTestingSubmitSimple: mocks.postTestingSubmitSimple,
-      deleteTestingRequests: mocks.deleteTestingRequests,
-      postTestingRequestsRestore: mocks.postTestingRequestsRestore,
-    })),
-    TestinglabTestingsessionsModule: vi.fn(() => ({
-      postTestingSessions: mocks.postTestingSessions,
-    })),
-    TestinglabTestinglocationsModule: vi.fn(() => ({
-      postTestingLocations: mocks.postTestingLocations,
-    })),
-    TestinglabTestingparticipantsModule: vi.fn(() => ({
-      postTestingSessionsRegister: mocks.postTestingSessionsRegister,
-      postTestingSessionsWaitlist: mocks.postTestingSessionsWaitlist,
-    })),
-    TestinglabTestingfeedbackModule: vi.fn(() => ({})),
-    TestinglabSettingsModule: vi.fn(() => ({
-      patchApiTestingLabSettings: mocks.patchApiTestingLabSettings,
-    })),
-    TestinglabPermissionModule: vi.fn(() => ({
-      postApiTestingLabPermissionsRoleTemplates: mocks.postApiTestingLabPermissionsRoleTemplates,
-      postApiTestingLabPermissionsUsersRoles: mocks.postApiTestingLabPermissionsUsersRoles,
-      getApiTestingLabPermissionsUsers: mocks.getApiTestingLabPermissionsUsers,
-      postApiTestingLabPermissionsUsersResources: mocks.postApiTestingLabPermissionsUsersResources,
-      deleteApiTestingLabPermissionsUsersResources: mocks.deleteApiTestingLabPermissionsUsersResources,
-    })),
+    TestinglabTestingrequestsModule: vi.fn(function TestinglabTestingrequestsModule() {
+      return {
+        postTestingSubmitSimple: mocks.postTestingSubmitSimple,
+        deleteTestingRequests: mocks.deleteTestingRequests,
+        postTestingRequestsRestore: mocks.postTestingRequestsRestore,
+      };
+    }),
+    TestinglabTestingsessionsModule: vi.fn(function TestinglabTestingsessionsModule() {
+      return { postTestingSessions: mocks.postTestingSessions };
+    }),
+    TestinglabTestinglocationsModule: vi.fn(function TestinglabTestinglocationsModule() {
+      return { postTestingLocations: mocks.postTestingLocations };
+    }),
+    TestinglabTestingparticipantsModule: vi.fn(function TestinglabTestingparticipantsModule() {
+      return {
+        postTestingSessionsRegister: mocks.postTestingSessionsRegister,
+        postTestingSessionsWaitlist: mocks.postTestingSessionsWaitlist,
+      };
+    }),
+    TestinglabTestingfeedbackModule: vi.fn(function TestinglabTestingfeedbackModule() {
+      return {};
+    }),
+    TestinglabSettingsModule: vi.fn(function TestinglabSettingsModule() {
+      return { patchApiTestingLabSettings: mocks.patchApiTestingLabSettings };
+    }),
+    TestinglabPermissionModule: vi.fn(function TestinglabPermissionModule() {
+      return {
+        postApiTestingLabPermissionsRoleTemplates: mocks.postApiTestingLabPermissionsRoleTemplates,
+        postApiTestingLabPermissionsUsersRoles: mocks.postApiTestingLabPermissionsUsersRoles,
+        getApiTestingLabPermissionsUsers: mocks.getApiTestingLabPermissionsUsers,
+        postApiTestingLabPermissionsUsersResources: mocks.postApiTestingLabPermissionsUsersResources,
+        deleteApiTestingLabPermissionsUsersResources: mocks.deleteApiTestingLabPermissionsUsersResources,
+      };
+    }),
   },
 }));
 

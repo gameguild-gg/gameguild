@@ -31,8 +31,12 @@ vi.mock('@/auth', () => ({
 vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
-    TestinglabTestingeventsModule: vi.fn(() => mocks.events),
-    TestinglabTestingeventparticipationModule: vi.fn(() => mocks.participation),
+    TestinglabTestingeventsModule: vi.fn(function TestinglabTestingeventsModule() {
+      return mocks.events;
+    }),
+    TestinglabTestingeventparticipationModule: vi.fn(function TestinglabTestingeventparticipationModule() {
+      return mocks.participation;
+    }),
   },
 }));
 
