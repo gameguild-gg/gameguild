@@ -23,6 +23,11 @@ public sealed class InMemoryLedgerKernelStore
     public IReadOnlyList<DisputeFragmentFreeze> DisputeFragmentFreezes => Read(state =>
         state.DisputeFragmentFreezes.Values.ToArray());
     public IReadOnlyList<WalletDebtEvent> DebtEvents => Read(state => state.DebtEvents.ToArray());
+    public IReadOnlyList<ValueFragmentReservation> FragmentReservations => Read(state =>
+        state.FragmentReservations.Values.ToArray());
+    public IReadOnlyList<ValueFragmentReservation> GetFragmentReservations(Guid operationId) => Read(state =>
+        state.FragmentReservations.Values.Where(item => item.OperationId == operationId)
+            .OrderBy(item => item.Id).ToArray());
     public ProviderDisputeEventRecord? FindProviderDisputeEvent(string providerEventId) => Read(state =>
         state.ProviderDisputeEvents.GetValueOrDefault(providerEventId));
     public ProviderDisputeCase GetProviderDisputeCase(string providerDisputeReference) => Read(state =>
@@ -95,6 +100,7 @@ internal sealed class LedgerKernelState
     internal Dictionary<Guid, DisputeFragmentFreeze> DisputeFragmentFreezes { get; } = [];
     internal Dictionary<WalletId, WalletDebtPosition> DebtPositions { get; } = [];
     internal List<WalletDebtEvent> DebtEvents { get; } = [];
+    internal Dictionary<Guid, ValueFragmentReservation> FragmentReservations { get; } = [];
     internal List<JournalEntry> JournalEntries { get; set; } = [];
     internal List<CreditLot> CreditLots { get; } = [];
     internal List<FragmentConsumption> Consumptions { get; } = [];
@@ -119,6 +125,7 @@ internal sealed class LedgerKernelState
         foreach (var pair in DisputeFragmentFreezes) clone.DisputeFragmentFreezes.Add(pair.Key, pair.Value);
         foreach (var pair in DebtPositions) clone.DebtPositions.Add(pair.Key, pair.Value);
         clone.DebtEvents.AddRange(DebtEvents);
+        foreach (var pair in FragmentReservations) clone.FragmentReservations.Add(pair.Key, pair.Value);
         clone.CreditLots.AddRange(CreditLots);
         clone.Consumptions.AddRange(Consumptions);
         clone.Lineages.AddRange(Lineages);
@@ -266,6 +273,68 @@ public sealed class LedgerKernelTransaction
             checked(_state.DebtEvents.Count + 1L), walletId, sourceId, deltaHardUnits, outstanding, occurredAt));
     }
 
+    public void AddFragmentReservation(ValueFragmentReservation reservation)
+    {
+        ArgumentNullException.ThrowIfNull(reservation);
+        if (_state.FragmentReservations.ContainsKey(reservation.Id))
+            throw new InvalidOperationException($"Fragment reservation {reservation.Id:N} already exists.");
+        var lot = GetCreditLot(reservation.LotId);
+        if (lot.WalletId != reservation.WalletId || lot.Amount.Currency != reservation.Amount.Currency)
+            throw new InvalidOperationException("Fragment reservation does not match its credit lot.");
+        var excluded = ExcludedRanges(_state, reservation.LotId);
+        if (reservation.Ranges.Any(range => excluded.Any(item => Overlaps(range, item))))
+            throw new InvalidOperationException("Fragment reservation overlaps unavailable lineage ranges.");
+        if (reservation.Ranges.Any(range => !lot.Ranges.Any(parent => Contains(parent, range))))
+            throw new InvalidOperationException("Fragment reservation range is outside its credit lot.");
+        _state.FragmentReservations.Add(reservation.Id, reservation);
+    }
+
+    public IReadOnlyList<ValueFragmentReservation> GetFragmentReservations(Guid operationId) =>
+        _state.FragmentReservations.Values.Where(item => item.OperationId == operationId)
+            .OrderBy(item => item.Id).ToArray();
+
+    public IReadOnlyList<ValueFragmentReservation> TransitionFragmentReservations(
+        Guid operationId,
+        FragmentReservationStatus expected,
+        FragmentReservationStatus next,
+        DateTimeOffset occurredAt)
+    {
+        var current = GetFragmentReservations(operationId);
+        if (current.Count == 0) throw new KeyNotFoundException($"Fragment reservations for {operationId:N} were not found.");
+        if (current.Any(item => item.Status != expected))
+            throw new InvalidOperationException($"All fragment reservations must be {expected}.");
+        var transitioned = current.Select(item => item.Transition(next, occurredAt)).ToArray();
+        foreach (var item in transitioned) _state.FragmentReservations[item.Id] = item;
+        return transitioned;
+    }
+
+    public IReadOnlyList<Guid> ReleaseReservedFragmentsForRoot(
+        SourceStampId root,
+        DateTimeOffset occurredAt)
+    {
+        var operationIds = _state.FragmentReservations.Values
+            .Where(item => item.Status == FragmentReservationStatus.Reserved &&
+                           item.Ranges.Any(range => range.Root == root))
+            .Select(item => item.OperationId)
+            .Distinct()
+            .ToArray();
+        foreach (var operationId in operationIds)
+        {
+            var reservations = GetFragmentReservations(operationId);
+            foreach (var reservation in reservations.Where(item => item.Status == FragmentReservationStatus.Reserved))
+                _state.FragmentReservations[reservation.Id] = reservation.Transition(
+                    FragmentReservationStatus.Released, occurredAt);
+        }
+        return operationIds;
+    }
+
+    private static bool Overlaps(RootTraceRange left, RootTraceRange right) =>
+        left.Root == right.Root && left.Start < right.EndExclusive && right.Start < left.EndExclusive;
+
+    private static bool Contains(RootTraceRange parent, RootTraceRange child) =>
+        parent.Root == child.Root && parent.Epoch == child.Epoch &&
+        parent.Start <= child.Start && parent.EndExclusive >= child.EndExclusive;
+
     public JournalAppendResult AppendJournal(PostingRequest request, DateTimeOffset recordedAt)
     {
         var chain = new JournalChain(_state.JournalEntries);
@@ -404,6 +473,10 @@ public sealed class LedgerKernelTransaction
             .Concat(state.DisputeFragmentFreezes.Values
                 .Where(freeze => freeze.LotId == lotId && freeze.Status == HoldStatus.Active)
                 .SelectMany(freeze => freeze.Ranges))
+            .Concat(state.FragmentReservations.Values
+                .Where(reservation => reservation.LotId == lotId &&
+                                      reservation.Status is FragmentReservationStatus.Reserved or FragmentReservationStatus.Dispatching)
+                .SelectMany(reservation => reservation.Ranges))
             .ToArray();
 
     private static CreditLot CopyAvailableLot(
