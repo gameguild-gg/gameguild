@@ -38,10 +38,6 @@ This directory contains the cleaned and consolidated project documentation migra
 
 - `security/DUAL_CURRENCY_ECONOMY_THREAT_MODEL.md` – Financial-integrity, provider, ad-fraud, privacy, and operational controls
 
-## Implementation Plans
-
-- `superpowers/plans/2026-07-16-dual-currency-economy.md` – Agent/worktree delivery plan for the dual-currency economy
-
 ## Permissions System
 
 See `architecture/permissions-dac.md` for DAC details.
