@@ -60,7 +60,18 @@ internal sealed class AiProviderCostFactEntityConfiguration : IEntityTypeConfigu
 {
     public void Configure(EntityTypeBuilder<AiProviderCostFactEntity> builder)
     {
-        builder.ToTable("ai_provider_cost_facts");
+        builder.ToTable("ai_provider_cost_facts", table =>
+        {
+            table.HasCheckConstraint(
+                "ck_ai_provider_cost_facts_token_conservation",
+                "\"InputTokens\" >= 0 AND \"OutputTokens\" >= 0 AND \"TotalTokens\" = \"InputTokens\" + \"OutputTokens\"");
+            table.HasCheckConstraint(
+                "ck_ai_provider_cost_facts_cost_conservation",
+                "\"InputCostUsdNanos\" >= 0 AND \"OutputCostUsdNanos\" >= 0 AND \"ExactProviderCostUsdNanos\" = \"InputCostUsdNanos\" + \"OutputCostUsdNanos\"");
+            table.HasCheckConstraint(
+                "ck_ai_provider_cost_facts_charge_positive",
+                "\"ChargedSoftUnits\" > 0");
+        });
         builder.HasKey(fact => fact.Id);
         builder.Property(fact => fact.Id).ValueGeneratedNever();
         builder.Property(fact => fact.ServiceCode).HasMaxLength(128).IsRequired();

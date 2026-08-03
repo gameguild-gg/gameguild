@@ -41,6 +41,7 @@
         <ProjectReference Include="..\Modules\GameGuild.Economy\GameGuild.Economy.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Economy.AdRewards\GameGuild.Economy.AdRewards.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Economy.Bounties\GameGuild.Economy.Bounties.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Economy.Marketplace\GameGuild.Economy.Marketplace.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Economy.Payouts\GameGuild.Economy.Payouts.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Economy.Treasury\GameGuild.Economy.Treasury.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Features\GameGuild.Features.csproj" />
