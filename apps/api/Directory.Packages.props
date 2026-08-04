@@ -12,6 +12,7 @@
     <PackageVersion Include="DotNetEnv" Version="3.1.1" />
     <PackageVersion Include="Fido2" Version="4.0.1" />
     <PackageVersion Include="Fluid.Core" Version="2.13.0" />
+    <PackageVersion Include="Google.Apis.Auth" Version="1.75.0" />
     <PackageVersion Include="FluentValidation" Version="12.0.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
     <PackageVersion Include="HotChocolate.AspNetCore" Version="15.1.16" />
@@ -56,7 +57,7 @@
     <PackageVersion Include="QRCoder" Version="1.6.0" />
     <PackageVersion Include="Otp.NET" Version="1.4.0" />
     <PackageVersion Include="UAParser" Version="3.1.47" />
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="Nethereum.Signer" Version="6.1.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
     <!-- OpenFeature -->

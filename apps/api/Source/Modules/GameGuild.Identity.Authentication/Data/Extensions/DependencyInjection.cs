@@ -57,6 +57,7 @@ public static class DataDependencyInjection
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<GameGuild.Identity.Authorization.IAuthorizationRolePermissionProvider, RolePermissionProvider>();
         services.AddScoped<IServiceAccountRepository, ServiceAccountRepository>();
+        services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>();
 
         // Core authentication services - focused sub-services
         services.AddScoped<IAuthAttemptService, AuthAttemptService>();
@@ -71,6 +72,9 @@ public static class DataDependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IOAuthService, OAuthService>();
+        // Google ID token verifier — cryptographic signature + iss/aud/exp via Google.Apis.Auth.
+        // Supersedes OAuthService.ValidateGoogleIdTokenInternalAsync (Todo 3 swaps the only caller).
+        services.AddScoped<IGoogleIdTokenVerifier, GoogleIdTokenVerifier>();
         services.AddScoped<IWeb3Service, Web3Service>();
         services.AddScoped<IServiceAccountService, ServiceAccountService>();
 

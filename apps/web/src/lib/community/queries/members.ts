@@ -265,6 +265,7 @@ function getApiClient() {
   return createServerClient({
     baseUrl: apiUrl,
     auth: { getAccessToken },
+    tenant: { getTenantId: async () => (await auth().catch(() => null))?.tenantId ?? null },
   });
 }
 
