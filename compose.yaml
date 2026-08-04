@@ -8,9 +8,71 @@ networks:
 
   database:
     name: game-guild-internal-network
-    external: true
 
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: game-guild-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-gameguild}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_HOST_AUTH_METHOD=scram-sha-256
+      - TZ=${POSTGRES_TIMEZONE:-UTC}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      database:
+        aliases:
+          - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-gameguild}"]
+      start_interval: ${HEALTHCHECK_START_INTERVAL:-5s}
+      start_period: ${HEALTHCHECK_START_PERIOD:-10s}
+      interval: ${HEALTHCHECK_INTERVAL:-10s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
+      retries: ${HEALTHCHECK_RETRIES:-10}
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.game-guild.app=postgres"
+      - "com.game-guild.tier=infrastructure"
+
+  redis:
+    image: redis:7-alpine
+    container_name: game-guild-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      database:
+        aliases:
+          - redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      start_interval: ${HEALTHCHECK_START_INTERVAL:-5s}
+      start_period: ${HEALTHCHECK_START_PERIOD:-10s}
+      interval: ${HEALTHCHECK_INTERVAL:-10s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
+      retries: ${HEALTHCHECK_RETRIES:-10}
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.game-guild.app=redis"
+      - "com.game-guild.tier=infrastructure"
+
   garage:
     image: dxflrs/garage:v2.3.0
     container_name: game-guild-garage
@@ -53,6 +115,7 @@ services:
       dockerfile: Dockerfile
     image: game-guild-api
     container_name: game-guild-api
+    profiles: ["app"]
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
       - ASPNETCORE_HTTP_PORTS=8080
@@ -109,8 +172,12 @@ services:
       - "com.game-guild.app=api"
       - "com.game-guild.tier=backend"
     depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       garage-init:
-        condition: service_completed_successfully
+        condition: service_healthy
 
   web:
     build:
@@ -128,6 +195,7 @@ services:
         UNIFIED_LEARNING_ENABLED: ${UNIFIED_LEARNING_ENABLED:-true}
     image: game-guild-web
     container_name: game-guild-web
+    profiles: ["app"]
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -192,13 +260,23 @@ services:
       - GARAGE_CAPACITY=1000000000
     volumes:
       - ./scripts/garage/init.sh:/init.sh:ro
-    entrypoint: ["/bin/sh", "/init.sh"]
+    # ponytail: idle after provisioning instead of exiting — compose up --wait
+    # (docker/compose#10596) treats any exited container as failure, and
+    # default `ps` hides exited one-shots; api waits on service_healthy below.
+    entrypoint: ["/bin/sh", "-c", "sh /init.sh && exec sleep infinity"]
     networks:
       - database
     depends_on:
       garage:
         condition: service_healthy
-    restart: "no"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"Authorization: Bearer $${GARAGE_ADMIN_TOKEN}\" http://garage:3903/v2/GetClusterHealth >/dev/null || exit 1"]
+      start_interval: ${HEALTHCHECK_START_INTERVAL:-5s}
+      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
+      interval: ${HEALTHCHECK_INTERVAL:-30s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-10s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+    restart: unless-stopped
 
 volumes:
   dataprotection-keys:
@@ -206,4 +284,10 @@ volumes:
     driver: local
   garage-data:
     name: game-guild-garage-data
+    driver: local
+  postgres-data:
+    name: game-guild-postgres-data
+    driver: local
+  redis-data:
+    name: game-guild-redis-data
     driver: local

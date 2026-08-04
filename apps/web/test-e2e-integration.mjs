@@ -6,7 +6,7 @@
  * Web App → @game-guild/client → Backend API
  * 
  * Requires:
- * - API running on http://localhost:5295
+ * - API running on http://localhost:8080
  * - Database running
  */
 
@@ -20,7 +20,7 @@ try {
   const { createClient } = await import('@game-guild/client');
   
   const client = createClient({
-    baseUrl: 'http://localhost:5295',
+    baseUrl: 'http://localhost:8080',
     headers: {
       'X-Tenant-Id': 'default',
     },
@@ -46,7 +46,7 @@ try {
   const { createClient } = await import('@game-guild/client');
   
   const client = createClient({
-    baseUrl: 'http://localhost:5295',
+    baseUrl: 'http://localhost:8080',
     headers: {
       'X-Tenant-Id': 'default',
     },
@@ -71,7 +71,7 @@ try {
   const { createClient } = await import('@game-guild/client');
   
   const client = createClient({
-    baseUrl: 'http://localhost:5295',
+    baseUrl: 'http://localhost:8080',
     headers: {
       'X-Tenant-Id': 'test-tenant-123',
       'X-Custom-Header': 'test-value',
@@ -80,7 +80,7 @@ try {
   
   const baseUrl = client.getBaseUrl();
   
-  if (baseUrl === 'http://localhost:5295') {
+  if (baseUrl === 'http://localhost:8080') {
     tests.push('✅ Configuration: Base URL correctly configured');
   } else {
     failures.push(`❌ Configuration: Base URL mismatch (got: ${baseUrl})`);
@@ -94,7 +94,7 @@ try {
   const { createNextClient } = await import('@game-guild/client/next');
   
   const client = createNextClient({
-    baseUrl: 'http://localhost:5295',
+    baseUrl: 'http://localhost:8080',
   });
   
   const result = await client.request({
@@ -116,7 +116,7 @@ try {
   const { createClient } = await import('@game-guild/client');
   
   const client = createClient({
-    baseUrl: 'http://localhost:5295',
+    baseUrl: 'http://localhost:8080',
     headers: {
       'X-Tenant-Id': 'default',
     },
@@ -142,7 +142,7 @@ try {
   const { createClient } = await import('@game-guild/client');
   
   const client = createClient({
-    baseUrl: 'http://localhost:5295',
+    baseUrl: 'http://localhost:8080',
     headers: {
       'X-Tenant-Id': 'default',
     },

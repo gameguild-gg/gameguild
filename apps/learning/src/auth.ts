@@ -4,7 +4,7 @@ import { cache } from 'react';
 
 const result = GameGuildAuth({
     providers: [CredentialsProvider()],
-    apiUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295',
+    apiUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
     secret:
         process.env.AUTH_SECRET ||
         (process.env.NEXT_PHASE === 'phase-production-build'

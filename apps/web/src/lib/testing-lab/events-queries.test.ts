@@ -167,7 +167,7 @@ describe('Testing Lab event queries', () => {
     expect(result.events).toHaveLength(1);
     expect(result.accessIssues).toEqual([]);
     expect(mocks.createServerClient).toHaveBeenCalledWith({
-      baseUrl: 'http://localhost:5295',
+      baseUrl: 'http://localhost:8080',
       auth: { getAccessToken: expect.any(Function) },
       tenant: { getTenantId: expect.any(Function) },
     });
@@ -244,7 +244,7 @@ describe('Testing Lab event queries', () => {
     expect(result.events).toHaveLength(1);
     expect(result.accessIssues).toEqual([]);
     expect(mocks.createServerClient).toHaveBeenCalledWith({
-      baseUrl: 'http://localhost:5295',
+      baseUrl: 'http://localhost:8080',
       cache: 'no-store',
     });
     expect(mocks.events.getTestingEventsPublic).toHaveBeenCalledWith({ skip: 0, take: 100 });
@@ -264,11 +264,11 @@ describe('Testing Lab event queries', () => {
       mocks.auth.mock.invocationCallOrder[0]!,
     );
     expect(mocks.createServerClient).toHaveBeenNthCalledWith(1, {
-      baseUrl: 'http://localhost:5295',
+      baseUrl: 'http://localhost:8080',
       cache: 'no-store',
     });
     expect(mocks.createServerClient).toHaveBeenNthCalledWith(2, {
-      baseUrl: 'http://localhost:5295',
+      baseUrl: 'http://localhost:8080',
       auth: { getAccessToken: expect.any(Function) },
       tenant: { getTenantId: expect.any(Function) },
     });

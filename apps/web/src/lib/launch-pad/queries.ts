@@ -43,7 +43,7 @@ export interface LaunchProjectOption {
 }
 
 async function launchPadApiGet<T>(path: string, revalidate = 30): Promise<T | null> {
-  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   const token = await getToken();
   const response = await fetch(`${apiUrl}${path}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
