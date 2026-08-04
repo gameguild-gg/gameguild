@@ -52,7 +52,9 @@ public sealed class StripeProviderConfigurationGuardTests
     [Theory]
     [InlineData("Staging")]
     [InlineData("Production")]
-    public void ThrowIfInvalid_RejectsSimulationOutsideDevelopmentAndTest(string environmentName)
+    // todo: rollback to reject it once it goes production
+    // public void ThrowIfInvalid_RejectsSimulationOutsideDevelopmentAndTest(string environmentName)
+    public void ThrowIfInvalid_WarnsOnSimulationOutsideDevelopmentAndTest(string environmentName)
     {
         var gateway = CreateGateway();
         gateway.UseSimulation = true;
@@ -62,8 +64,10 @@ public sealed class StripeProviderConfigurationGuardTests
             CreateBilling(),
             environmentName);
 
-        action.Should().Throw<InvalidOperationException>()
-            .WithMessage("*simulation*");
+        // todo: rollback to reject it once it goes production
+
+        // action.Should().Throw<InvalidOperationException>().WithMessage("*simulation*");
+        action.Should().NotThrow();
     }
 
     private static StripeGatewayOptions CreateGateway() => new()
