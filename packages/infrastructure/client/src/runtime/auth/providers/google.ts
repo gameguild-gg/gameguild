@@ -20,7 +20,7 @@
  */
 
 import type { OAuthProviderConfig, ProviderResult, SessionUser } from '../types.js';
-import { OAuthError } from '../errors.js';
+import { OAuthError, parseErrorBody, extractErrorMessage } from '../errors.js';
 
 /**
  * Options for the Google provider
@@ -93,10 +93,9 @@ export function GoogleProvider(
       );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await parseErrorBody(response);
         throw new OAuthError(
-          (errorData as Record<string, unknown>).message as string ||
-            'Google sign-in failed'
+          extractErrorMessage(errorData, 'Google sign-in failed')
         );
       }
 

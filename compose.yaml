@@ -142,6 +142,8 @@ services:
       - Assets__Storage__Region=${S3_REGION:-garage}
       - Assets__Storage__ForcePathStyle=true
       - SeedData__ImportSnapshotCourses=${SEED_SNAPSHOT_COURSES:-true}
+      - OAuth__Google__ClientId=${GOOGLE_CLIENT_ID:-}
+      - OAuth__Google__ClientSecret=${GOOGLE_CLIENT_SECRET:-}
     volumes:
       - dataprotection-keys:/app/.aspnet/DataProtection-Keys
     security_opt:

@@ -22,6 +22,8 @@ export interface GoogleSignInButtonProps {
   className?: string
   /** Override the default GIS button rendering options. */
   options?: GisRenderButtonOptions
+  /** URL to redirect to after successful sign-in (e.g. "/dashboard"). */
+  redirectTo?: string
 }
 
 /**
@@ -36,13 +38,15 @@ export interface GoogleSignInButtonProps {
 export function GoogleSignInButton({
   className,
   options,
+  redirectTo,
 }: GoogleSignInButtonProps) {
   const { signIn } = useAuth()
   const containerRef = useRef<HTMLDivElement>(null)
   const { status, renderButton } = useGoogleIdentityService({
     onCredential: (credential) => {
       // credential is an untrusted ID token — backend verifies it.
-      void signIn("google", { idToken: credential })
+      // .catch() swallows the re-thrown error (error state is already set by useAuth)
+      signIn("google", { idToken: credential, redirectTo }).catch((e) => {console.warn(e)})
     },
   })
 
