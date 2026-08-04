@@ -114,7 +114,8 @@ var billingConfiguration = app.Services.GetRequiredService<IOptions<BillingConfi
 StripeProviderConfigurationGuard.ThrowIfInvalid(
     stripeGatewayOptions,
     billingConfiguration,
-    app.Environment.EnvironmentName);
+    app.Environment.EnvironmentName,
+    app.Logger);
 
 if (app.Configuration.GetValue<bool?>("Database:RunStartupInitialization") ?? true)
 {

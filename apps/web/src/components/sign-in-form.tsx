@@ -25,8 +25,12 @@ import { Input } from "@game-guild/ui/components/input"
 export function SignInForm({
   className,
   redirectTo = "/dashboard",
+  providers,
   ...props
-}: React.ComponentProps<"div"> & { redirectTo?: string }) {
+}: React.ComponentProps<"div"> & {
+  redirectTo?: string
+  providers?: React.ReactNode
+}) {
   const { signIn, isLoading, error, clearError } = useAuth()
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const locale = useLocale()
@@ -72,6 +76,16 @@ export function SignInForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {providers && (
+            <>
+              <div className="mb-6">{providers}</div>
+              <div className="flex w-full items-center gap-3 text-xs text-slate-400">
+                <div className="h-px flex-1 bg-white/10" />
+                <span>or with email</span>
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
+            </>
+          )}
           <form method="post" onSubmit={handleSubmit} noValidate>
             <FieldGroup>
               <Field>

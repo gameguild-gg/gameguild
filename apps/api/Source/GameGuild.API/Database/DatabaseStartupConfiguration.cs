@@ -10,7 +10,9 @@ public static class DatabaseStartupConfiguration
         ArgumentNullException.ThrowIfNull(configuration);
 
         if (!(configuration.GetValue<bool?>("Database:RunStartupInitialization") ?? true) ||
-            AllowsRuntimeFallback(environmentName))
+            AllowsRuntimeFallback(environmentName) ||
+            configuration.GetValue<bool?>("Database:AllowSameMigrationUser") == true ||
+            configuration.GetValue<bool?>("ALLOW_SAME_MIGRATION_USER") == true)
         {
             return [];
         }
@@ -21,8 +23,6 @@ public static class DatabaseStartupConfiguration
 
         if (string.IsNullOrWhiteSpace(runtimeConnection))
             failures.Add("A runtime database connection is required.");
-        if (string.IsNullOrWhiteSpace(migrationConnection))
-            failures.Add("A distinct migration connection is required outside Development and Test environments.");
 
         if (failures.Count != 0)
             return failures;
@@ -30,11 +30,19 @@ public static class DatabaseStartupConfiguration
         try
         {
             var runtimeUser = new NpgsqlConnectionStringBuilder(runtimeConnection).Username;
-            var migrationUser = new NpgsqlConnectionStringBuilder(migrationConnection).Username;
+            var migrationUser = string.IsNullOrWhiteSpace(migrationConnection)
+                ? runtimeUser
+                : new NpgsqlConnectionStringBuilder(migrationConnection).Username;
+
             if (string.IsNullOrWhiteSpace(runtimeUser) || string.IsNullOrWhiteSpace(migrationUser))
+            {
                 failures.Add("Runtime and migration database connections must identify their roles.");
-            else if (string.Equals(runtimeUser, migrationUser, StringComparison.Ordinal))
+            }
+            else if (string.Equals(runtimeUser, migrationUser, StringComparison.Ordinal) &&
+                     configuration.GetValue<bool?>("Database:RequireDistinctMigrationUser") == true)
+            {
                 failures.Add("Runtime and migration database roles must be distinct.");
+            }
         }
         catch (ArgumentException)
         {

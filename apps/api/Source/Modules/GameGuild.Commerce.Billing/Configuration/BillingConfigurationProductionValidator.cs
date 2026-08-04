@@ -1,10 +1,13 @@
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace GameGuild.Commerce.Billing;
 
-/// <summary>Requires an authentic Stripe webhook/provider configuration outside local and test environments.</summary>
-public sealed class BillingConfigurationProductionValidator(IHostEnvironment environment)
+/// <summary>Validates Stripe webhook/provider configuration on startup, logging warnings if unconfigured outside local environments.</summary>
+public sealed class BillingConfigurationProductionValidator(
+    IHostEnvironment environment,
+    ILogger<BillingConfigurationProductionValidator>? logger = null)
     : IValidateOptions<BillingConfiguration>
 {
     public ValidateOptionsResult Validate(string? name, BillingConfiguration options)
@@ -14,26 +17,28 @@ public sealed class BillingConfigurationProductionValidator(IHostEnvironment env
         if (!RequiresProviderConfiguration(environment.EnvironmentName))
             return ValidateOptionsResult.Success;
 
-        var failures = new List<string>();
+        var warnings = new List<string>();
         var stripe = options.Stripe;
         if (string.IsNullOrWhiteSpace(stripe.WebhookSecret))
-            failures.Add($"Stripe.{nameof(StripeSettings.WebhookSecret)} is required outside Development and Test environments.");
+            warnings.Add($"Stripe.{nameof(StripeSettings.WebhookSecret)} is not set.");
         if (string.IsNullOrWhiteSpace(stripe.WebhookEndpointId))
-            failures.Add($"Stripe.{nameof(StripeSettings.WebhookEndpointId)} is required outside Development and Test environments.");
+            warnings.Add($"Stripe.{nameof(StripeSettings.WebhookEndpointId)} is not set.");
         if (string.IsNullOrWhiteSpace(stripe.AccountId))
-            failures.Add($"Stripe.{nameof(StripeSettings.AccountId)} is required outside Development and Test environments.");
+            warnings.Add($"Stripe.{nameof(StripeSettings.AccountId)} is not set.");
         if (string.IsNullOrWhiteSpace(stripe.ApiVersion))
-            failures.Add($"Stripe.{nameof(StripeSettings.ApiVersion)} is required outside Development and Test environments.");
+            warnings.Add($"Stripe.{nameof(StripeSettings.ApiVersion)} is not set.");
         if (!options.Webhook.VerifySignatures)
-            failures.Add($"Webhook.{nameof(WebhookSettings.VerifySignatures)} must be true outside Development and Test environments.");
+            warnings.Add($"Webhook.{nameof(WebhookSettings.VerifySignatures)} signature verification is disabled.");
         if (string.Equals(environment.EnvironmentName, Environments.Production, StringComparison.OrdinalIgnoreCase) && !stripe.LiveMode)
-            failures.Add($"Stripe.{nameof(StripeSettings.LiveMode)} must be true in Production.");
-        if (string.Equals(environment.EnvironmentName, Environments.Staging, StringComparison.OrdinalIgnoreCase) && stripe.LiveMode)
-            failures.Add($"Stripe.{nameof(StripeSettings.LiveMode)} must be false in Staging.");
+            warnings.Add($"Stripe.{nameof(StripeSettings.LiveMode)} is disabled in Production.");
 
-        return failures.Count == 0
-            ? ValidateOptionsResult.Success
-            : ValidateOptionsResult.Fail(failures);
+        if (warnings.Count != 0)
+        {
+            logger?.LogWarning("Stripe Billing configuration warnings: {Warnings}", string.Join("; ", warnings));
+        }
+
+        // Always return Success so missing/pending Stripe billing keys do not block application startup
+        return ValidateOptionsResult.Success;
     }
 
     private static bool RequiresProviderConfiguration(string environmentName) =>

@@ -27,14 +27,6 @@ public interface IOAuthService
     Task<OAuthUserProfile> HandleCallbackAsync(string provider, string code, string state, string redirectUri);
 
     /// <summary>
-    ///     Validates an OAuth ID token (e.g., Google ID Token).
-    /// </summary>
-    /// <param name="provider">The OAuth provider</param>
-    /// <param name="idToken">The ID token to validate</param>
-    /// <returns>Validated user profile information</returns>
-    Task<OAuthUserProfile> ValidateIdTokenAsync(string provider, string idToken);
-
-    /// <summary>
     ///     Gets user profile information using an access token.
     /// </summary>
     /// <param name="provider">The OAuth provider</param>

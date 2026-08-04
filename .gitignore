@@ -136,3 +136,8 @@ tools/emception/userland/**/.git/
 # Miscellaneous
 *.pem
 .superpowers/
+
+# Security: infra/ contains secrets (CF tokens, origin certs, kubeconfig, ansible vault)
+# Repo is PUBLIC — infra must NEVER be tracked
+infra/
+.omo/

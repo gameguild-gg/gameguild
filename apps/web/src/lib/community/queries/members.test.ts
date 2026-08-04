@@ -487,6 +487,19 @@ describe('community member queries', () => {
     });
   });
 
+  it('wires the tenant provider into the community API client', async () => {
+    mocks.clientRequest.mockResolvedValue({ ok: true, data: { items: [], totalCount: 0 } });
+    mocks.getSocialGroups.mockResolvedValue({ ok: true, data: [] });
+
+    await getMemberAccessDirectory({ limit: 1 });
+
+    expect(mocks.createServerClient).toHaveBeenCalledWith({
+      baseUrl: expect.any(String),
+      auth: { getAccessToken: expect.any(Function) },
+      tenant: { getTenantId: expect.any(Function) },
+    });
+  });
+
   it('maps support contact leads into community support tickets', async () => {
     mocks.getMarketingLeads.mockResolvedValue({
       ok: true,
