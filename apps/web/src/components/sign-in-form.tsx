@@ -78,7 +78,7 @@ export function SignInForm({
         <CardContent>
           {providers && (
             <>
-              {providers}
+              <div className="mb-6">{providers}</div>
               <div className="flex w-full items-center gap-3 text-xs text-slate-400">
                 <div className="h-px flex-1 bg-white/10" />
                 <span>or with email</span>

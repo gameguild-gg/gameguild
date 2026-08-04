@@ -13,7 +13,9 @@ const DEFAULT_BUTTON_OPTIONS: GisRenderButtonOptions = {
   size: "large",
   text: "signin_with",
   shape: "rectangular",
-  width: 320,
+  // ponytail: 400 is GIS max-width. Card content is ~400px (max-w-md 448px
+  // minus padding), so this matches the Sign in button width.
+  width: 400,
 }
 
 export interface GoogleSignInButtonProps {
@@ -64,7 +66,7 @@ export function GoogleSignInButton({
       data-testid="google-sign-in-button"
       className={className}
       // Reserve layout while GIS hydrates the button to prevent CLS.
-      style={{ minHeight: 40 }}
+      style={{ minHeight: 40, width: "100%", display: "flex", justifyContent: "center" }}
     />
   )
 }
