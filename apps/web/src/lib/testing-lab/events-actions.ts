@@ -22,7 +22,7 @@ export type TestingEventActionResult<T = null> =
 
 function createModules() {
   const client = createServerClient({
-    baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295',
+    baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
     auth: { getAccessToken: () => getToken() },
     tenant: { getTenantId: async () => (await auth().catch(() => null))?.tenantId ?? null },
   });

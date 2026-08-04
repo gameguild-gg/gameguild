@@ -8,7 +8,7 @@ type ActionResult =
   | { success: false; error: string };
 
 function getApiClient() {
-  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
   return createServerClient({
     baseUrl: apiUrl,

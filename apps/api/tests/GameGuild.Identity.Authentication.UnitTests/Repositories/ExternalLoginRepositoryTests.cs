@@ -1,0 +1,139 @@
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage;
+using Xunit;
+
+namespace GameGuild.Identity.Authentication.UnitTests.Repositories;
+
+public class ExternalLoginRepositoryTests
+{
+    [Fact]
+    public async Task GetByProviderKeyAsync_ReturnsInsertedRow_AndNullOnMiss()
+    {
+        await using var context = CreateContext();
+        var repository = new ExternalLoginRepository(context);
+        var userId = Guid.NewGuid();
+
+        var inserted = await repository.UpsertAsync(
+            CreateExternalLogin(userId: userId, provider: "google", providerKey: "sub-123"));
+
+        var hit = await repository.GetByProviderKeyAsync("google", "sub-123");
+        var miss = await repository.GetByProviderKeyAsync("google", "missing");
+
+        hit.Should().NotBeNull();
+        hit!.Id.Should().Be(inserted.Id);
+        hit.UserId.Should().Be(userId);
+        hit.Provider.Should().Be("google");
+        hit.ProviderKey.Should().Be("sub-123");
+        miss.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetByUserIdAsync_ReturnsAllRowsForUser_AcrossProviders()
+    {
+        await using var context = CreateContext();
+        var repository = new ExternalLoginRepository(context);
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+
+        await repository.UpsertAsync(CreateExternalLogin(userId, "google", "sub-1"));
+        await repository.UpsertAsync(CreateExternalLogin(userId, "github", "gh-9"));
+        await repository.UpsertAsync(CreateExternalLogin(otherUserId, "google", "sub-2"));
+
+        var rows = await repository.GetByUserIdAsync(userId);
+
+        rows.Should().HaveCount(2);
+        rows.Should().OnlyContain(r => r.UserId == userId);
+    }
+
+    [Fact]
+    public async Task UpsertAsync_InsertsNew_ThenUpdatesSameProviderKeyWithoutDuplicating()
+    {
+        await using var context = CreateContext();
+        var repository = new ExternalLoginRepository(context);
+        var originalUserId = Guid.NewGuid();
+
+        var inserted = await repository.UpsertAsync(
+            CreateExternalLogin(userId: originalUserId, provider: "google", providerKey: "sub-1"));
+        inserted.Id.Should().NotBe(Guid.Empty);
+        inserted.CreatedAt.Should().BeOnOrAfter(DateTime.UtcNow.AddSeconds(-5));
+        inserted.UpdatedAt.Should().BeOnOrAfter(DateTime.UtcNow.AddSeconds(-5));
+
+        // Caller now passes a fresh DTO (untracked) with the SAME (Provider,ProviderKey)
+        // but a different UserId — Upsert must update the existing row, not insert a duplicate.
+        var reLinkedUserId = Guid.NewGuid();
+        var updateDto = CreateExternalLogin(userId: reLinkedUserId, provider: "google", providerKey: "sub-1");
+        var updated = await repository.UpsertAsync(updateDto);
+
+        updated.Id.Should().Be(inserted.Id);
+        updated.UserId.Should().Be(reLinkedUserId);
+
+        var allForOriginal = await repository.GetByUserIdAsync(originalUserId);
+        allForOriginal.Should().BeEmpty();
+
+        var hit = await repository.GetByProviderKeyAsync("google", "sub-1");
+        hit.Should().NotBeNull();
+        hit!.Id.Should().Be(inserted.Id);
+        hit.UserId.Should().Be(reLinkedUserId);
+        hit.UpdatedAt.Should().BeOnOrAfter(inserted.CreatedAt);
+    }
+
+    /// <summary>
+    ///     In-memory provider builds the EF model but does NOT enforce unique constraints at runtime
+    ///     (sibling RefreshToken has a unique index on Token and likewise has no runtime duplicate-throw
+    ///     test). Asserting the index is configured at the model level is the proper TDD guard for the
+    ///     schema; runtime enforcement is the relational DB's job (covered by the migration).
+    /// </summary>
+    [Fact]
+    public void Configuration_HasUniqueIndexOnProviderAndProviderKey_AndNonUniqueIndexOnUserId()
+    {
+        using var context = CreateContext();
+        var entityType = context.Model.FindEntityType(typeof(ExternalLogin));
+        entityType.Should().NotBeNull();
+
+        var indexes = entityType!.GetIndexes().ToList();
+
+        var providerKeyIndex = indexes.SingleOrDefault(i =>
+            i.Properties.Select(p => p.Name)
+                .SequenceEqual(new[] { nameof(ExternalLogin.Provider), nameof(ExternalLogin.ProviderKey) }));
+        providerKeyIndex.Should().NotBeNull("expected unique index on (Provider, ProviderKey)");
+        providerKeyIndex!.IsUnique.Should().BeTrue();
+
+        var userIdIndex = indexes.SingleOrDefault(i =>
+            i.Properties.Select(p => p.Name).SequenceEqual(new[] { nameof(ExternalLogin.UserId) }));
+        userIdIndex.Should().NotBeNull("expected index on UserId");
+        userIdIndex!.IsUnique.Should().BeFalse();
+    }
+
+    private static TestExternalLoginDbContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<TestExternalLoginDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .Options;
+        return new TestExternalLoginDbContext(options);
+    }
+
+    private static ExternalLogin CreateExternalLogin(Guid userId, string provider, string providerKey) => new()
+    {
+        Id = Guid.NewGuid(),
+        UserId = userId,
+        Provider = provider,
+        ProviderKey = providerKey,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+    };
+
+    private sealed class TestExternalLoginDbContext(DbContextOptions<TestExternalLoginDbContext> options)
+        : DbContext(options), IApplicationDbContext
+    {
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.ApplyConfiguration(new ExternalLoginConfiguration());
+            base.OnModelCreating(modelBuilder);
+        }
+    }
+}

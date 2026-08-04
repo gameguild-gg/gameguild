@@ -62,11 +62,11 @@ describe('GitHubProvider', () => {
         clientSecret: 'secret',
       });
 
-      const url = await provider.getAuthorizeUrl('http://localhost:5295');
+      const url = await provider.getAuthorizeUrl('http://localhost:8080');
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining(
-          'http://localhost:5295/v1/auth/github:authorize',
+          'http://localhost:8080/v1/auth/github:authorize',
         ),
         { method: 'GET' },
       );
@@ -86,7 +86,7 @@ describe('GitHubProvider', () => {
         authorizePath: '/custom/github/auth',
       });
 
-      await provider.getAuthorizeUrl('http://localhost:5295');
+      await provider.getAuthorizeUrl('http://localhost:8080');
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/custom/github/auth'),
@@ -107,7 +107,7 @@ describe('GitHubProvider', () => {
       });
 
       await provider.getAuthorizeUrl(
-        'http://localhost:5295',
+        'http://localhost:8080',
         'http://localhost:3000/callback',
       );
 
@@ -146,7 +146,7 @@ describe('GitHubProvider', () => {
       });
 
       await expect(
-        provider.getAuthorizeUrl('http://localhost:5295'),
+        provider.getAuthorizeUrl('http://localhost:8080'),
       ).rejects.toThrow(OAuthError);
     });
   });
@@ -171,13 +171,13 @@ describe('GitHubProvider', () => {
       });
 
       const result = await provider.handleCallback(
-        'http://localhost:5295',
+        'http://localhost:8080',
         'auth-code-123',
         'state-value',
       );
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:5295/v1/auth/github:callback',
+        'http://localhost:8080/v1/auth/github:callback',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ code: 'auth-code-123', state: 'state-value' }),
@@ -202,7 +202,7 @@ describe('GitHubProvider', () => {
       });
 
       await expect(
-        provider.handleCallback('http://localhost:5295', 'bad-code'),
+        provider.handleCallback('http://localhost:8080', 'bad-code'),
       ).rejects.toThrow(OAuthError);
     });
 
@@ -219,7 +219,7 @@ describe('GitHubProvider', () => {
       });
 
       await expect(
-        provider.handleCallback('http://localhost:5295', 'code'),
+        provider.handleCallback('http://localhost:8080', 'code'),
       ).rejects.toThrow(OAuthError);
     });
   });

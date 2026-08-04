@@ -53,7 +53,7 @@ describe('API Client Package Integration', () => {
     it('should create a client instance', async () => {
       const { createClient } = clientModule;
       const client = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
       });
 
       expect(client).toBeDefined();
@@ -73,7 +73,7 @@ describe('API Client Package Integration', () => {
     it('should create Next.js client', async () => {
       const { createNextClient } = nextModule;
       const client = createNextClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
       });
 
       expect(client).toBeDefined();
@@ -90,7 +90,7 @@ describe('API Client Package Integration', () => {
     it('should accept baseUrl configuration', async () => {
       const { createClient } = clientModule;
       const client = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
       });
 
       expect(client).toBeDefined();
@@ -99,7 +99,7 @@ describe('API Client Package Integration', () => {
     it('should accept headers configuration', async () => {
       const { createClient } = clientModule;
       const client = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
         headers: {
           'X-Tenant-Id': 'test-tenant',
           'X-Custom-Header': 'custom-value',
@@ -112,7 +112,7 @@ describe('API Client Package Integration', () => {
     it('should accept auth configuration', async () => {
       const { createClient } = clientModule;
       const client = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
         auth: {
           getToken: async () => 'test-token',
         },
@@ -132,7 +132,7 @@ describe('API Client Package Integration', () => {
       };
 
       const client = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
         interceptors: [requestInterceptor],
       });
 
@@ -144,7 +144,7 @@ describe('API Client Package Integration', () => {
     it('should provide typed client methods', async () => {
       const { createClient } = clientModule;
       const client = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
       });
 
       // Should have health method
@@ -191,7 +191,7 @@ describe('API Client Package Integration', () => {
     it('should export generated modules for newly completed API surfaces', async () => {
       const { createClient, GeneratedApi } = clientModule;
       const client = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
       });
 
       const modules = {
@@ -228,7 +228,7 @@ describe('API Client Package Integration', () => {
 
       // TypeScript compilation would fail if types weren't available
       const client: ReturnType<typeof createClient> = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
       });
 
       expect(client).toBeDefined();

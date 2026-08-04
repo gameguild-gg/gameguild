@@ -32,7 +32,7 @@ export interface CourseLevelConfig {
 type PublicCourseDto = GeneratedApi.LearningCoursesProgram;
 type PublicCourseContentDto = GeneratedApi.LearningCoursesProgramContent;
 
-const DEFAULT_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+const DEFAULT_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 const PUBLIC_COURSE_API_TIMEOUT_MS = Number(process.env.PUBLIC_COURSE_API_TIMEOUT_MS ?? 10_000);
 
 function getApiUrl(): string {

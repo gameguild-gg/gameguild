@@ -128,7 +128,7 @@ describe('testing lab queries', () => {
     expect(dashboard.publicSessions).toHaveLength(1);
     expect(dashboard.accessIssues).toEqual([]);
     expect(mocks.createServerClient).toHaveBeenCalledWith({
-      baseUrl: 'http://localhost:5295',
+      baseUrl: 'http://localhost:8080',
       auth: { getAccessToken: expect.any(Function) },
       tenant: { getTenantId: expect.any(Function) },
     });

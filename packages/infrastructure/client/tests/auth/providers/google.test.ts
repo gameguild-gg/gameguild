@@ -73,11 +73,11 @@ describe('GoogleProvider', () => {
 
       const result = await provider.exchangeToken(
         'google-id-token',
-        'http://localhost:5295',
+        'http://localhost:8080',
       );
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:5295/v1/auth/google',
+        'http://localhost:8080/v1/auth/google',
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -110,7 +110,7 @@ describe('GoogleProvider', () => {
 
       await provider.exchangeToken(
         'id-token',
-        'http://localhost:5295',
+        'http://localhost:8080',
         'tenant-1',
       );
 
@@ -134,7 +134,7 @@ describe('GoogleProvider', () => {
         tokenExchangePath: '/custom/google/exchange',
       });
 
-      await provider.exchangeToken('id-token', 'http://localhost:5295');
+      await provider.exchangeToken('id-token', 'http://localhost:8080');
 
       const calledUrl = mockFetch.mock.calls[0][0] as string;
       expect(calledUrl).toContain('/custom/google/exchange');
@@ -172,7 +172,7 @@ describe('GoogleProvider', () => {
       });
 
       await expect(
-        provider.exchangeToken('bad-token', 'http://localhost:5295'),
+        provider.exchangeToken('bad-token', 'http://localhost:8080'),
       ).rejects.toThrow(OAuthError);
     });
 
@@ -189,7 +189,7 @@ describe('GoogleProvider', () => {
       });
 
       await expect(
-        provider.exchangeToken('id-token', 'http://localhost:5295'),
+        provider.exchangeToken('id-token', 'http://localhost:8080'),
       ).rejects.toThrow('Google sign-in failed');
     });
 
@@ -212,7 +212,7 @@ describe('GoogleProvider', () => {
 
       const result = await provider.exchangeToken(
         'id-token',
-        'http://localhost:5295',
+        'http://localhost:8080',
       );
 
       expect(result.user.id).toBe('user-1');

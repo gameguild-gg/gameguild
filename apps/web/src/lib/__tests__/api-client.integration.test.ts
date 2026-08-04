@@ -14,7 +14,7 @@ describe('API Client Integration', () => {
   describe('Basic Client Creation', () => {
     it('should create a client with base configuration', () => {
       const client = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
         headers: {
           'X-Tenant-Id': 'test-tenant',
         },
@@ -27,7 +27,7 @@ describe('API Client Integration', () => {
 
     it('should create client with authentication', () => {
       const client = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
         auth: {
           getToken: async () => 'test-token',
         },
@@ -51,7 +51,7 @@ describe('API Client Integration', () => {
     it('should create Next.js client', async () => {
       const { createNextClient } = await loadNextIntegrationModule();
       const client = createNextClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
       });
 
       expect(client).toBeDefined();
@@ -61,7 +61,7 @@ describe('API Client Integration', () => {
   describe('Type Safety', () => {
     it('should provide typed API methods', () => {
       const client = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
       });
 
       // These should be type-safe
@@ -75,7 +75,7 @@ describe('API Client Integration', () => {
       };
 
       const client = createClient({
-        baseUrl: 'http://localhost:5295',
+        baseUrl: 'http://localhost:8080',
         interceptors: [requestInterceptor],
       });
 

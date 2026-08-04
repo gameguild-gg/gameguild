@@ -6,7 +6,7 @@ import type {
   IdentityUsersUserProfile,
 } from '@game-guild/client';
 
-const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:5295';
+const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 const TENANT_ID = process.env.API_TENANT_ID ?? process.env.TENANT_ID ?? undefined;
 const SYSTEM_ADMIN_EMAIL = process.env.E2E_SYSTEM_ADMIN_EMAIL ?? 'admin@game-guild.com';
 const SYSTEM_ADMIN_PASSWORD = process.env.E2E_SYSTEM_ADMIN_PASSWORD ?? 'Admin123!';

@@ -20,7 +20,7 @@ describe('learningApiGet', () => {
 
     await learningApiGet('/v1/assessments/course/course-1/groups', 60);
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:5295/v1/assessments/course/course-1/groups', {
+    expect(fetch).toHaveBeenCalledWith('http://localhost:8080/v1/assessments/course/course-1/groups', {
       headers: { Authorization: 'Bearer access-token' },
       cache: 'no-store',
     });
@@ -31,7 +31,7 @@ describe('learningApiGet', () => {
 
     await learningApiGet('/v1/courses', 120);
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:5295/v1/courses', {
+    expect(fetch).toHaveBeenCalledWith('http://localhost:8080/v1/courses', {
       headers: undefined,
       next: { revalidate: 120 },
     });
