@@ -8,7 +8,6 @@ networks:
 
   database:
     name: game-guild-internal-network
-    external: true
 
 services:
   postgres:
