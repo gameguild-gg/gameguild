@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
@@ -11,7 +12,11 @@ public sealed class StripeGatewayOptionsValidatorTests
     [Theory]
     [InlineData("Staging")]
     [InlineData("Production")]
-    public void Validate_RejectsSimulationOutsideDevelopmentAndTesting(string environmentName)
+
+
+    // todo: rollback to rejection when we move to production
+    /*
+        public void Validate_RejectsSimulationOutsideDevelopmentAndTesting(string environmentName)
     {
         var validator = CreateValidator(environmentName);
         var options = CreateConfiguredOptions();
@@ -22,6 +27,26 @@ public sealed class StripeGatewayOptionsValidatorTests
         result.Failed.Should().BeTrue();
         result.FailureMessage.Should()
             .Be($"Stripe simulation is not permitted in {environmentName}.");
+    }
+    */
+    public void Validate_WarnsAndSucceedsWhenSimulationOutsideDevelopmentAndTesting(string environmentName)
+    {
+        var logger = new Mock<ILogger<StripeGatewayOptionsValidator>>();
+        var validator = CreateValidator(environmentName, logger);
+        var options = CreateConfiguredOptions();
+        options.UseSimulation = true;
+
+        var result = validator.Validate(Options.DefaultName, options);
+
+        result.Succeeded.Should().BeTrue();
+        logger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((state, type) => true),
+                It.IsAny<Exception?>(),
+                It.Is<Func<It.IsAnyType, Exception?, string>>((formatter, type) => true)),
+            Times.Once);
     }
 
     [Theory]
@@ -109,10 +134,14 @@ public sealed class StripeGatewayOptionsValidatorTests
     }
 
     private static StripeGatewayOptionsValidator CreateValidator(string environmentName)
+        => CreateValidator(environmentName, logger: null);
+
+    private static StripeGatewayOptionsValidator CreateValidator(
+        string environmentName, Mock<ILogger<StripeGatewayOptionsValidator>>? logger)
     {
         var environment = new Mock<IHostEnvironment>();
         environment.SetupGet(value => value.EnvironmentName).Returns(environmentName);
-        return new StripeGatewayOptionsValidator(environment.Object);
+        return new StripeGatewayOptionsValidator(environment.Object, logger?.Object);
     }
 
     private static StripeGatewayOptions CreateConfiguredOptions() => new()

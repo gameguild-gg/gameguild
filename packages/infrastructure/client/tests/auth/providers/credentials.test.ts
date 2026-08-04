@@ -24,7 +24,7 @@ describe('CredentialsProvider', () => {
   });
 
   it('should create provider with correct config', () => {
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
     expect(provider.id).toBe('credentials');
     expect(provider.name).toBe('Credentials');
@@ -58,7 +58,7 @@ describe('CredentialsProvider', () => {
   });
 
   it('should throw if email is missing', async () => {
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
     await expect(
       provider.authorize({ email: '', password: 'pass' }, undefined as any),
@@ -66,7 +66,7 @@ describe('CredentialsProvider', () => {
   });
 
   it('should throw if password is missing', async () => {
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
     await expect(
       provider.authorize({ email: 'a@b.com', password: '' }, undefined as any),
@@ -87,14 +87,14 @@ describe('CredentialsProvider', () => {
     });
     globalThis.fetch = mockFetch;
 
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
     const result = await provider.authorize(
       { email: 'test@example.com', password: 'password123' },
       undefined as any,
     );
 
     expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:5295/v1/auth/sign-in',
+      'http://localhost:8080/v1/auth/sign-in',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,7 +121,7 @@ describe('CredentialsProvider', () => {
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({
-      apiUrl: 'http://localhost:5295',
+      apiUrl: 'http://localhost:8080',
       signInPath: '/custom/sign-in',
     });
     await provider.authorize(
@@ -130,7 +130,7 @@ describe('CredentialsProvider', () => {
     );
 
     expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:5295/custom/sign-in',
+      'http://localhost:8080/custom/sign-in',
       expect.anything(),
     );
   });
@@ -142,7 +142,7 @@ describe('CredentialsProvider', () => {
     });
     globalThis.fetch = mockFetch;
 
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
     await provider.authorize(
       { email: 'a@b.com', password: 'pass', tenantId: 'tenant-1' },
       undefined as any,
@@ -159,7 +159,7 @@ describe('CredentialsProvider', () => {
       json: async () => ({ message: 'Too many attempts' }),
     });
 
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
     await expect(
       provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
@@ -173,7 +173,7 @@ describe('CredentialsProvider', () => {
       json: async () => ({ message: 'Wrong password' }),
     });
 
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
     await expect(
       provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
@@ -189,7 +189,7 @@ describe('CredentialsProvider', () => {
       }),
     });
 
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
     await expect(
       provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
@@ -203,7 +203,7 @@ describe('CredentialsProvider', () => {
       json: async () => { throw new Error('not JSON'); },
     });
 
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
     await expect(
       provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
@@ -217,7 +217,7 @@ describe('CredentialsProvider', () => {
       json: async () => ({ title: 'An error occurred while processing your request.' }),
     });
 
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
     await expect(
       provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
@@ -227,7 +227,7 @@ describe('CredentialsProvider', () => {
   it('should throw service unavailable when the auth API cannot be reached', async () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('connection refused'));
 
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:5295' });
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
     await expect(
       provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),

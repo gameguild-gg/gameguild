@@ -60,7 +60,7 @@ The client uses a **generic request pattern** (not auto-generated endpoints):
 import { createClient } from '@game-guild/client';
 
 const client = createClient({
-  baseUrl: 'http://localhost:5295',
+  baseUrl: 'http://localhost:8080',
   headers: {
     'X-Tenant-Id': 'default',
   },

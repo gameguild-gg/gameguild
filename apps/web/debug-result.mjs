@@ -4,7 +4,7 @@
 const { createClient } = await import('@game-guild/client');
 
 const client = createClient({
-  baseUrl: 'http://localhost:5295',
+  baseUrl: 'http://localhost:8080',
   headers: {
     'X-Tenant-Id': 'default',
   },

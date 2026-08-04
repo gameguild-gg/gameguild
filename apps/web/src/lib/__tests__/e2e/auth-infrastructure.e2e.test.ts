@@ -5,7 +5,7 @@
  * Covers: CredentialsProvider, JWT encode/decode, session pipeline,
  *         token refresh, CSRF, cookies, error handling.
  *
- * Requires the API to be running on localhost:5295 (or API_BASE_URL env var).
+ * Requires the API to be running on localhost:8080 (or API_BASE_URL env var).
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -39,7 +39,7 @@ import {
 
 // ─── Config ──────────────────────────────────────────────────────
 
-const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:5295';
+const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 const AUTH_SECRET =
   process.env.AUTH_SECRET ?? 'e2e-test-secret-must-be-at-least-32-chars-long!!';
 const TENANT_ID =

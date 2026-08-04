@@ -55,7 +55,7 @@ async function testIntegration() {
   try {
     const { createClient } = await import('@game-guild/client');
     const client = createClient({
-      baseUrl: 'http://localhost:5295',
+      baseUrl: 'http://localhost:8080',
       headers: { 'X-Tenant-Id': 'default' },
     });
     
@@ -71,7 +71,7 @@ async function testIntegration() {
   // Test 6: TypeScript types
   try {
     const { createClient } = await import('@game-guild/client');
-    const client = createClient({ baseUrl: 'http://localhost:5295' });
+    const client = createClient({ baseUrl: 'http://localhost:8080' });
     
     // Type check - if this doesn't error, types are working
     const requestMethod = client.request;

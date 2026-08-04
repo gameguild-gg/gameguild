@@ -90,7 +90,7 @@ info: GameGuild.API.Startup[0]
 info: GameGuild.API.Startup[0]
       Completed registration of 62 repositories and 53 services in 2000ms
 [01:02:02 INF] Microsoft.Hosting.Lifetime
-      Now listening on: http://localhost:5295
+      Now listening on: http://localhost:8080
 [01:02:02 INF] Microsoft.Hosting.Lifetime
       Application started. Press Ctrl+C to shut down.
 ```

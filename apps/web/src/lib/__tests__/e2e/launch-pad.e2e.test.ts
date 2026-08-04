@@ -37,7 +37,7 @@ interface LaunchPlanOutput {
   checklistItems?: LaunchChecklistItemOutput[] | null;
 }
 
-const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:5295';
+const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 const TENANT_ID = process.env.API_TENANT_ID ?? process.env.TENANT_ID ?? undefined;
 
 const unwrap = <T>(result: Result<T, ApiError>, label: string): T => {

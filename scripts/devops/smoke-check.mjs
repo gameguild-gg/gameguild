@@ -11,7 +11,7 @@ const defaults = liveMode
       learning: 'https://game-guild-learning.matheusmartins.com',
     }
   : {
-      api: 'http://localhost:5296',
+      api: 'http://localhost:8080',
       web: 'http://localhost:3005',
       learning: 'http://localhost:3006',
     };

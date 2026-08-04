@@ -25,7 +25,7 @@ The `@game-guild/client` package has been successfully integrated into the Next.
 import { createClient } from '@game-guild/client';
 
 const client = createClient({
-  baseUrl: 'http://localhost:5295',
+  baseUrl: 'http://localhost:8080',
   headers: {
     'X-Tenant-Id': 'default',
   },
@@ -85,7 +85,7 @@ import { /* plugin utilities */ } from '@game-guild/client/plugins';
 import { createClient } from '@game-guild/client';
 
 const client = createClient({
-  baseUrl: 'http://localhost:5295',
+  baseUrl: 'http://localhost:8080',
   headers: {
     'X-Tenant-Id': 'default',
   },
@@ -225,7 +225,7 @@ The package is built with **tsup** and generates:
 ## Troubleshooting
 
 ### API Connection Issues
-- Ensure the API is running on http://localhost:5295
+- Ensure the API is running on http://localhost:8080
 - Check that the database is running (`docker-compose up -d adminer`)
 - Verify `X-Tenant-Id` header is set correctly
 
