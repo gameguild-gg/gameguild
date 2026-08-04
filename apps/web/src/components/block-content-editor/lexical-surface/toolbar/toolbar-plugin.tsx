@@ -924,9 +924,9 @@ export default function ToolbarPlugin({
   const [insertDialog, setInsertDialog] = useState<"equation" | "table" | "layout" | null>(null)
   const { toolbarState, updateToolbarState } = useToolbarState()
 
-  const dispatchToolbarCommand = <T extends LexicalCommand<unknown>>(
+  const dispatchToolbarCommand = <T extends LexicalCommand<any>>(
     command: T,
-    payload: CommandPayloadType<T> | undefined = undefined,
+    payload?: CommandPayloadType<T>,
     skipRefocus: boolean = false,
   ) => {
     activeEditor.update(() => {
