@@ -9,7 +9,7 @@
  *         API keys (CRUD + revoke), MFA config queries,
  *         trusted devices (CRUD), email verification triggers.
  *
- * Requires the API to be running on localhost:5295 (or API_BASE_URL env var).
+ * Requires the API to be running on localhost:8080 (or API_BASE_URL env var).
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -22,7 +22,7 @@ import {
 
 // ─── Config ──────────────────────────────────────────────────────
 
-const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:5295';
+const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 const TENANT_ID =
   process.env.API_TENANT_ID ?? process.env.TENANT_ID ?? undefined;
 

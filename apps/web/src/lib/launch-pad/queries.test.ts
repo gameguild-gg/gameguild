@@ -64,7 +64,7 @@ describe('launch pad queries', () => {
     ]);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:5295/v1/projects?take=50&sortBy=UpdatedAt&sortDirection=DESC',
+      'http://localhost:8080/v1/projects?take=50&sortBy=UpdatedAt&sortDirection=DESC',
       expect.objectContaining({
         headers: { Authorization: 'Bearer launch-token' },
         next: { revalidate: 60 },

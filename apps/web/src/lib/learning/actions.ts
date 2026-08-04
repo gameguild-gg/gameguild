@@ -22,7 +22,7 @@ import { revalidatePath } from 'next/cache';
 type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
 
 function getApiClient() {
-  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   return createServerClient({
     baseUrl: apiUrl,
     auth: { getAccessToken: () => getToken() },
@@ -85,7 +85,7 @@ function formatUnexpectedError(err: unknown): string {
 }
 
 async function learningApiRequest<T>(path: string, init: RequestInit): Promise<ActionResult<T>> {
-  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   const token = await getToken();
   const response = await fetch(`${apiUrl}${path}`, {
     ...init,

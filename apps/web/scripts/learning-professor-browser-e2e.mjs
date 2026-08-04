@@ -12,7 +12,7 @@ import {
 const apiBaseUrl = (
   process.env.API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:5296"
+  "http://localhost:8080"
 ).replace(/\/$/, "");
 const webBaseUrl = (
   process.env.PROFESSOR_E2E_BASE_URL ??

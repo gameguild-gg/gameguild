@@ -75,7 +75,7 @@ Default local URLs:
 
 | App | URL |
 | --- | --- |
-| API | `http://localhost:5296` |
+| API | `http://localhost:8080` |
 | Web | `http://localhost:3005` |
 | Learning | `http://localhost:3006` |
 

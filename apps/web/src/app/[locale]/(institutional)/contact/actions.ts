@@ -13,7 +13,7 @@ type ContactLeadInput = {
 type ActionResult = { success: true; message: string } | { success: false; error: string };
 
 function getApiUrl(): string {
-    return (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295').replace(/\/$/, '');
+    return (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '');
 }
 
 function getFirstProblemDetailError(payload: unknown): string | null {

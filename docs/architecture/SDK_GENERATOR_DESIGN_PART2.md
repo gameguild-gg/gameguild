@@ -68,7 +68,7 @@ interface GeneratorConfig {
 const defaultConfig: GeneratorConfig = {
   input: { 
     type: 'url', 
-    url: process.env.OPENAPI_URL || 'http://localhost:5295/swagger/v1/swagger.json' 
+    url: process.env.OPENAPI_URL || 'http://localhost:8080/swagger/v1/swagger.json' 
   },
   outputDir: 'src/generated',
   metadataFile: 'src/generated/.metadata.json',
