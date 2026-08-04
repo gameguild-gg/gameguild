@@ -7,9 +7,9 @@
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "dev": "turbo run dev",
-    "dev:api": "dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:5296",
-    "dev:compose": "docker compose -f compose.yaml up -d --build",
+    "dev": "docker compose -f compose.yaml up -d --wait && run-p dev:web dev:api",
+    "dev:api": "dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --environment Development --urls http://localhost:5296",
+    "dev:compose": "docker compose -f compose.yaml --profile app up -d --build",
     "dev:compose:down": "docker compose -f compose.yaml down",
     "dev:compose:logs": "docker compose -f compose.yaml logs -f",
     "dev:compose:ps": "docker compose -f compose.yaml ps",
