@@ -298,7 +298,7 @@ describe('learning server actions', () => {
     const result = await updateCourseReviewModeration('course-1', 'review-1', true, false);
 
     expect(result).toEqual({ success: true, data: null });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/social/reviews/review-1/moderation', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/api/social/reviews/review-1/moderation', {
       method: 'PATCH',
       body: JSON.stringify({ isApproved: true, isFeatured: false }),
       headers: {
@@ -354,7 +354,7 @@ describe('learning server actions', () => {
       params: { email: 'student@example.com', limit: 5 },
       requiresAuth: true,
     });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/courses/resolved-course-id', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/v1/courses/resolved-course-id', {
       method: 'PUT',
       body: JSON.stringify({ creatorId: 'user-1' }),
       headers: {
@@ -388,7 +388,7 @@ describe('learning server actions', () => {
     });
 
     expect(result).toEqual({ success: true, data: { sent: 2 } });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/courses/course-1/students/message', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/v1/courses/course-1/students/message', {
       method: 'POST',
       body: JSON.stringify({
         userIds: ['user-1', 'user-2'],
@@ -413,7 +413,7 @@ describe('learning server actions', () => {
       ticketId: 'ticket-1',
       message: ' Please retry now. ',
     })).resolves.toEqual({ success: true, data: null });
-    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:5295/v1/courses/course-1/support/tickets/ticket-1/messages', {
+    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:8080/v1/courses/course-1/support/tickets/ticket-1/messages', {
       method: 'POST',
       body: JSON.stringify({ message: 'Please retry now.' }),
       headers: {
@@ -427,7 +427,7 @@ describe('learning server actions', () => {
       ticketId: 'ticket-1',
       summary: ' Entitlement refreshed. ',
     })).resolves.toEqual({ success: true, data: null });
-    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:5295/v1/courses/course-1/support/tickets/ticket-1:resolve', {
+    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:8080/v1/courses/course-1/support/tickets/ticket-1:resolve', {
       method: 'POST',
       body: JSON.stringify({ summary: 'Entitlement refreshed.' }),
       headers: {
@@ -463,7 +463,7 @@ describe('learning server actions', () => {
     });
 
     expect(result).toEqual({ success: true, data: { id: 'content-1' } });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/v1/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content', {
       method: 'POST',
       body: expect.any(String),
       headers: {
@@ -536,7 +536,7 @@ describe('learning server actions', () => {
     });
 
     expect(result).toEqual({ success: true, data: null });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/assessments/assessment-1/definition', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/v1/assessments/assessment-1/definition', {
       method: 'PUT',
       body: JSON.stringify({
         definitionSchemaVersion: 1,
@@ -566,7 +566,7 @@ describe('learning server actions', () => {
     });
 
     expect(result).toEqual({ success: true, data: { id: 'template-1' } });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/certificates/templates', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/api/certificates/templates', {
       method: 'POST',
       body: JSON.stringify({
         courseId: 'course-1',
@@ -587,7 +587,7 @@ describe('learning server actions', () => {
     const result = await deleteCertificateTemplate('course-1', 'template-1');
 
     expect(result).toEqual({ success: true, data: null });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/certificates/templates/template-1', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/api/certificates/templates/template-1', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -617,7 +617,7 @@ describe('learning server actions', () => {
     });
 
     expect(result).toEqual({ success: true, data: null });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/certificates/templates/template-1', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/api/certificates/templates/template-1', {
       method: 'PUT',
       body: JSON.stringify({
         name: 'Completion',
@@ -651,7 +651,7 @@ describe('learning server actions', () => {
     });
 
     expect(result).toEqual({ success: true, data: { id: 'thread-1' } });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/social/discussions', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/api/social/discussions', {
       method: 'POST',
       body: JSON.stringify({
         courseId: 'course-1',
@@ -683,7 +683,7 @@ describe('learning server actions', () => {
     });
 
     expect(result).toEqual({ success: true, data: { id: 'reply-1' } });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/api/social/discussions/thread-1/replies', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/api/social/discussions/thread-1/replies', {
       method: 'POST',
       body: JSON.stringify({
         discussionId: 'thread-1',
@@ -708,7 +708,7 @@ describe('learning server actions', () => {
     mocks.fetch.mockResolvedValueOnce(okResponse()).mockResolvedValueOnce(okResponse());
 
     expect(await updateDiscussionPin('course-1', 'thread-1', true)).toEqual({ success: true, data: null });
-    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:5295/api/social/discussions/thread-1/pin', {
+    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:8080/api/social/discussions/thread-1/pin', {
       method: 'POST',
       body: JSON.stringify({}),
       headers: {
@@ -718,7 +718,7 @@ describe('learning server actions', () => {
     });
 
     expect(await resolveDiscussion('course-1', 'thread-1')).toEqual({ success: true, data: null });
-    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:5295/api/social/discussions/thread-1/resolve', {
+    expect(mocks.fetch).toHaveBeenLastCalledWith('http://localhost:8080/api/social/discussions/thread-1/resolve', {
       method: 'POST',
       body: JSON.stringify({}),
       headers: {
@@ -746,7 +746,7 @@ describe('learning server actions', () => {
     });
 
     expect(result).toEqual({ success: true, data: { id: 'group-1' } });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/assessments/groups/group-1', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/v1/assessments/groups/group-1', {
       method: 'PUT',
       body: JSON.stringify({
         name: 'Weekly quizzes',
@@ -781,7 +781,7 @@ describe('learning server actions', () => {
     const result = await deleteAssessmentGroup('course-1', 'group-1');
 
     expect(result).toEqual({ success: true, data: null });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:5295/v1/assessments/groups/group-1', {
+    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/v1/assessments/groups/group-1', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

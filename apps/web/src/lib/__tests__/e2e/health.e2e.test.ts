@@ -7,7 +7,7 @@ import type {
   APIControllersDependencyHealthOutput,
 } from '@game-guild/client';
 
-const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:5295';
+const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 
 describe('Health endpoints E2E', () => {
   const client = createClient({

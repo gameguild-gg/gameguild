@@ -31,7 +31,7 @@ export interface PublicTestingEventsDirectoryOptions {
 
 function createPublicModules() {
   const client = createServerClient({
-    baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295',
+    baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
     cache: 'no-store',
   });
 
@@ -42,7 +42,7 @@ function createPublicModules() {
 
 function createAuthenticatedModules() {
   const client = createServerClient({
-    baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295',
+    baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
     auth: { getAccessToken: () => getToken() },
     tenant: { getTenantId: async () => (await auth().catch(() => null))?.tenantId ?? null },
   });

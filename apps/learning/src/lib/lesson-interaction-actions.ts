@@ -18,7 +18,7 @@ export async function recordLessonEvent(input: LessonEventInput): Promise<{ succ
         const { getToken } = await import('@/auth');
         const token = await getToken();
         if (!token) return { success: false, error: 'Your session expired.' };
-        const client = createServerClient({ baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295', auth: { getAccessToken: async () => token } });
+        const client = createServerClient({ baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080', auth: { getAccessToken: async () => token } });
         const interactions = new GeneratedApi.LearningCoursesContentinteractionModule(client);
         let interactionResult = await interactions.getCourseInteractionsUserContent(input.enrollmentId, input.contentId, { programId: input.courseId });
         if (!interactionResult.ok) {

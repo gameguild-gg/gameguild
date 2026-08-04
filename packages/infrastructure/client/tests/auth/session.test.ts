@@ -28,7 +28,7 @@ const mockConfig: ResolvedAuthConfig = {
     authorized: async () => true,
   },
   secret: 'test-secret-at-least-32-characters-long',
-  apiUrl: 'http://localhost:5295',
+  apiUrl: 'http://localhost:8080',
   pages: {},
   cookies: {
     name: '__gg',
@@ -281,7 +281,7 @@ describe('Session Management', () => {
       const result = await refreshAccessToken(token, mockConfig);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:5295/v1/auth/tokens:refresh',
+        'http://localhost:8080/v1/auth/tokens:refresh',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ refreshToken: 'old-refresh' }),

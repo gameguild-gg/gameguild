@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "dev": "docker compose -f compose.yaml up -d --wait && run-p dev:web dev:api",
-    "dev:api": "ASPNETCORE_ENVIRONMENT=Development dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:5296",
+    "dev:api": "ASPNETCORE_ENVIRONMENT=Development dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:8080",
     "dev:compose": "docker compose -f compose.yaml --profile app up -d --build",
     "dev:compose:down": "docker compose -f compose.yaml down",
     "dev:compose:logs": "docker compose -f compose.yaml logs -f",

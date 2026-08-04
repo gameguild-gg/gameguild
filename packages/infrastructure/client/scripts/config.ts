@@ -20,7 +20,7 @@ export function resolveGeneratorConfig(
     artifactPath ??
     environment.OPENAPI_ARTIFACT ??
     environment.OPENAPI_URL ??
-    'http://localhost:5295/swagger/v1/swagger.json';
+    'http://localhost:8080/swagger/v1/swagger.json';
   const isRemote = openApiSource.startsWith('http://') || openApiSource.startsWith('https://');
 
   return {

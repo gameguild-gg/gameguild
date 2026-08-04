@@ -45,7 +45,7 @@ export interface CourseCheckoutResult {
 type PublicCourseDto = GeneratedApi.LearningCoursesProgram;
 type PublicProductDto = GeneratedApi.CommerceProductsProduct;
 
-const DEFAULT_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+const DEFAULT_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 function getApiUrl(): string {
     return DEFAULT_API_URL.replace(/\/$/, '');
