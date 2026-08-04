@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "dev": "docker compose -f compose.yaml up -d --wait && run-p dev:web dev:api",
-    "dev:api": "dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --environment Development --urls http://localhost:5296",
+    "dev:api": "ASPNETCORE_ENVIRONMENT=Development dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:5296",
     "dev:compose": "docker compose -f compose.yaml --profile app up -d --build",
     "dev:compose:down": "docker compose -f compose.yaml down",
     "dev:compose:logs": "docker compose -f compose.yaml logs -f",
@@ -16,7 +16,7 @@
     "dev:compose:restart": "docker compose -f compose.yaml restart",
     "dev:compose:stop": "docker compose -f compose.yaml stop",
     "dev:learning": "pnpm --filter @game-guild/learning run dev",
-    "dev:web": "pnpm --filter @game-guild/web run dev",
+    "dev:web": "pnpm --filter @game-guild/client build && pnpm --filter @game-guild/web run dev",
     "dev:emception": "pnpm --dir tools/emception/apps/ide-react run dev",
     "build": "turbo run build",
     "build:emception": "pnpm --dir tools/emception run build:packages",
