@@ -41,7 +41,7 @@ export async function searchLearnerWorkspace(query: string): Promise<LearnerSear
 
   try {
     const client = createServerClient({
-      baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295',
+      baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
       auth: { getAccessToken: () => getToken() },
     });
     const result = await new GeneratedApi.LearningWorkspacesLearnerworkspaceModule(

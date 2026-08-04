@@ -92,9 +92,12 @@ public class DiExtensionsAndServiceTests
             Mock.Of<IRefreshTokenRepository>(),
             Mock.Of<IJwtTokenService>(),
             Mock.Of<IOAuthService>(),
+            Mock.Of<IGoogleIdTokenVerifier>(),
+            Mock.Of<IExternalLoginRepository>(),
             EmptyConfig(),
             Mock.Of<IAuthAttemptService>(),
             Mock.Of<IHttpContextAccessor>(),
+            Mock.Of<GameGuild.CQRS.ISender>(),
             NullLogger<OAuthAuthService>.Instance);
 
         svc.Should().NotBeNull();

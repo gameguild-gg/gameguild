@@ -18,7 +18,7 @@ export async function enrollInCourse(courseId: string): Promise<EnrollmentAction
         }
 
         const client = createServerClient({
-            baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295',
+            baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
             auth: { getAccessToken: async () => token },
         });
         const result = await new GeneratedApi.LearningCoursesProgramModule(client).postCoursesSelfEnroll(courseId);

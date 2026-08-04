@@ -2,6 +2,7 @@ import { cache } from "react";
 import {
   GameGuildAuth,
   CredentialsProvider,
+  GoogleProvider,
   processSession,
   encodeSession,
   SessionStore,
@@ -11,11 +12,21 @@ import { cookies } from "next/headers";
 import { createSharedAuthCookieConfig } from "@/lib/auth/cross-domain-auth";
 
 const result = GameGuildAuth({
-  providers: [CredentialsProvider()],
+  providers: [
+    CredentialsProvider(),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
+  ],
   apiUrl:
     process.env.API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
-    "http://localhost:5295",
+    "http://localhost:8080",
   secret:
     process.env.AUTH_SECRET ||
     (process.env.NEXT_PHASE === "phase-production-build"

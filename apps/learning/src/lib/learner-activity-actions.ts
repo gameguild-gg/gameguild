@@ -10,7 +10,7 @@ export interface LearnerMutationResult {
 }
 
 function getApiUrl() {
-    return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
+    return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 }
 
 function errorMessage(error: unknown, fallback: string) {
