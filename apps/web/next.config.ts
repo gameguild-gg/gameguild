@@ -87,6 +87,13 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/api/auth/:path*",
+        headers: [
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
+        ],
+      },
+      {
         source: "/block-content-editor/:path((?!doc-editor|quiz-editor).*)",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
