@@ -71,6 +71,9 @@ public class OAuthAuthServiceTests
         _senderMock
             .Setup(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GetUserMembershipsResponse());
+        _senderMock
+            .Setup(x => x.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
 
         _jwtTokenServiceMock
             .Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -260,6 +263,60 @@ public class OAuthAuthServiceTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task GoogleIdTokenSignInAsync_UserWithoutMembership_ProvisionsTheDefaultTenant()
+    {
+        var defaultTenant = new Tenant
+        {
+            Id = Guid.NewGuid(),
+            Name = "GameGuild",
+            Slug = "gameguild",
+            IsDefault = true,
+            IsActive = true
+        };
+
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExternalLogin?)null);
+        _userRepoMock
+            .Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+        _senderMock
+            .Setup(x => x.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(defaultTenant);
+        _senderMock
+            .SetupSequence(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetUserMembershipsResponse())
+            .ReturnsAsync(new GetUserMembershipsResponse
+            {
+                TotalCount = 1,
+                Memberships =
+                [
+                    new UserMembershipDto
+                    {
+                        TenantId = defaultTenant.Id,
+                        TenantName = defaultTenant.Name,
+                        TenantSlug = defaultTenant.Slug,
+                        TenantIsActive = true,
+                        Role = "Member",
+                        IsActive = true
+                    }
+                ]
+            });
+        _senderMock
+            .Setup(x => x.Send(It.IsAny<AddTenantMemberCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AddTenantMemberResponse { Success = true, MemberId = Guid.NewGuid() });
+
+        var result = await CreateSut().GoogleIdTokenSignInAsync(Request());
+
+        result.TenantId.Should().Be(defaultTenant.Id);
+        _senderMock.Verify(
+            x => x.Send(
+                It.Is<AddTenantMemberCommand>(command =>
+                    command.TenantId == defaultTenant.Id && command.UserId == result.UserId && command.Role == "Member"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
     // ── (5) Exactly one refresh row ─────────────────────────────────────────
     //   Folded into baseline (0): GenerateRefreshTokenAsync once, CreateAsync never.
 
@@ -277,6 +334,9 @@ public class OAuthAuthServiceTests
         _senderMock
             .Setup(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GetUserMembershipsResponse());
+        _senderMock
+            .Setup(x => x.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
 
         await CreateSut().GoogleIdTokenSignInAsync(Request());
 
@@ -532,6 +592,7 @@ public class OAuthAuthServiceTests
         var publisher = new Mock<IPublisher>();
         publisher.Setup(x => x.Publish(It.IsAny<UserSignedUpNotification>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sender = new Mock<ISender>();
+        sender.Setup(x => x.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync((Tenant?)null);
         sender.Setup(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(memberships);
 
         var config = new ConfigurationBuilder()
