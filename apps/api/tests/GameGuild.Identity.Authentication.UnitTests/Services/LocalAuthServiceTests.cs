@@ -229,13 +229,68 @@ public class LocalAuthServiceTests
 
         var request = new LocalSignUpRequest { Email = "new@example.com", Password = "Password1!", Username = "newuser" };
 
+        var before = SystemClock.UtcNow;
         var result = await _sut.LocalSignUpAsync(request);
+        var after = SystemClock.UtcNow;
 
         result.Success.Should().BeTrue();
         result.Message.Should().Contain("Sign-up successful");
         result.AccessToken.Should().Be("access-token");
         result.RefreshToken.Should().Be("refresh-token");
         result.Email.Should().Be("new@example.com");
+        // ponytail: sign-up must return access-token lifetime, not refresh-token lifetime
+        result.ExpiresIn.Should().Be(3600, "default AccessTokenExpirationMinutes is 60");
+        result.AccessTokenExpiresAt.Should().BeOnOrAfter(before.AddMinutes(59));
+        result.AccessTokenExpiresAt.Should().BeOnOrBefore(after.AddMinutes(61));
+    }
+
+    [Fact]
+    public async Task LocalSignUpAsync_CustomAccessTokenExpiration_ParsedFromConfig()
+    {
+        var customConfig = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                { "Jwt:RefreshTokenExpiryInDays", "7" },
+                { "Jwt:AccessTokenExpirationMinutes", "30" }
+            })
+            .Build();
+
+        var sut = new LocalAuthService(
+            _userRepoMock.Object,
+            _refreshTokenRepoMock.Object,
+            _jwtTokenServiceMock.Object,
+            _refreshTokenHasherMock.Object,
+            customConfig,
+            _authAttemptServiceMock.Object,
+            _anomalyDetectionMock.Object,
+            _enumerationProtectionMock.Object,
+            _httpContextAccessorMock.Object,
+            NullLogger<LocalAuthService>.Instance,
+            _publisherMock.Object,
+            _senderMock.Object
+        );
+
+        _userRepoMock.Setup(x => x.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _userRepoMock.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _userRepoMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("access-token");
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("refresh-token");
+
+        var request = new LocalSignUpRequest { Email = "custom@example.com", Password = "Password1!", Username = "customuser" };
+
+        var before = SystemClock.UtcNow;
+        var result = await sut.LocalSignUpAsync(request);
+        var after = SystemClock.UtcNow;
+
+        result.ExpiresIn.Should().Be(1800, "30 minutes * 60 seconds");
+        result.AccessTokenExpiresAt.Should().BeOnOrBefore(after.AddMinutes(31));
+        result.AccessTokenExpiresAt.Should().BeOnOrAfter(before.AddMinutes(29));
     }
 
     [Fact]

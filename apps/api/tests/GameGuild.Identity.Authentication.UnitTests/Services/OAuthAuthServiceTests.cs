@@ -34,9 +34,26 @@ public class OAuthAuthServiceTests
         _configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                { "Jwt:RefreshTokenExpiryInDays", "7" }
+                { "Jwt:RefreshTokenExpiryInDays", "7" },
+                { "Jwt:RefreshTokenExpirationDays", "7" },
+                { "Jwt:AccessTokenExpirationMinutes", "60" }
             })
             .Build();
+
+        _oauthServiceMock
+            .Setup(x => x.GetUserProfileAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new OAuthUserProfile
+            {
+                ProviderId = "oauth-sub-default",
+                Email = "oauth@example.com",
+                EmailVerified = true,
+                Name = "OAuth User",
+                AccessToken = "provider-token"
+            });
+
+        _jwtTokenServiceMock
+            .Setup(x => x.GenerateAccessToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>()))
+            .Returns("sync-access-token");
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers.UserAgent = "TestAgent/1.0";
@@ -512,6 +529,109 @@ public class OAuthAuthServiceTests
         await CreateSut().GoogleIdTokenSignInAsync(Request());
 
         return (capturedTenantId, capturedRoles!);
+    }
+
+    // ── (8) ExpiresIn / AccessTokenExpiresAt: all three builders report ACCESS-token lifetime ──
+
+    private OAuthAuthService CreateSutWithConfig(IConfiguration config) => new(
+        _userRepoMock.Object,
+        _refreshTokenRepoMock.Object,
+        _jwtTokenServiceMock.Object,
+        _oauthServiceMock.Object,
+        _googleVerifierMock.Object,
+        _externalLoginRepoMock.Object,
+        config,
+        _authAttemptServiceMock.Object,
+        _httpContextAccessorMock.Object,
+        _senderMock.Object,
+        NullLogger<OAuthAuthService>.Instance);
+
+    private static IConfiguration BuildConfig(string accessTokenMinutes = "60", string refreshDays = "7") =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                { "Jwt:RefreshTokenExpirationDays", refreshDays },
+                { "Jwt:RefreshTokenExpiryInDays", refreshDays },
+                { "Jwt:AccessTokenExpirationMinutes", accessTokenMinutes }
+            })
+            .Build();
+
+    [Fact]
+    public async Task GitHubSignInAsync_ExpiresIn_ReportsAccessTokenLifetime()
+    {
+        var sut = CreateSutWithConfig(BuildConfig());
+        var result = await sut.GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token" });
+
+        result.ExpiresIn.Should().Be(3600);
+        result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(60), TimeSpan.FromSeconds(5));
+        result.ExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddDays(7), TimeSpan.FromSeconds(5));
+        result.RefreshTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddDays(7), TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task GoogleSignInAsync_ExpiresIn_ReportsAccessTokenLifetime()
+    {
+        var sut = CreateSutWithConfig(BuildConfig());
+        var result = await sut.GoogleSignInAsync(new OAuthSignInRequest { AccessToken = "google-token" });
+
+        result.ExpiresIn.Should().Be(3600);
+        result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(60), TimeSpan.FromSeconds(5));
+        result.ExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddDays(7), TimeSpan.FromSeconds(5));
+        result.RefreshTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddDays(7), TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task GoogleIdTokenSignInAsync_ExpiresIn_ReportsAccessTokenLifetime()
+    {
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExternalLogin?)null);
+        _userRepoMock.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        var sut = CreateSutWithConfig(BuildConfig());
+        var result = await sut.GoogleIdTokenSignInAsync(Request());
+
+        result.ExpiresIn.Should().Be(3600);
+        result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(60), TimeSpan.FromSeconds(5));
+        result.ExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddDays(7), TimeSpan.FromSeconds(5));
+        result.RefreshTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddDays(7), TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task GitHubSignInAsync_CustomAccessTokenMinutes_ExpiresInMatches()
+    {
+        var sut = CreateSutWithConfig(BuildConfig(accessTokenMinutes: "15"));
+        var result = await sut.GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token" });
+
+        result.ExpiresIn.Should().Be(900);
+        result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(15), TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task GoogleSignInAsync_CustomAccessTokenMinutes_ExpiresInMatches()
+    {
+        var sut = CreateSutWithConfig(BuildConfig(accessTokenMinutes: "15"));
+        var result = await sut.GoogleSignInAsync(new OAuthSignInRequest { AccessToken = "google-token" });
+
+        result.ExpiresIn.Should().Be(900);
+        result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(15), TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task GoogleIdTokenSignInAsync_CustomAccessTokenMinutes_ExpiresInMatches()
+    {
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExternalLogin?)null);
+        _userRepoMock.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        var sut = CreateSutWithConfig(BuildConfig(accessTokenMinutes: "15"));
+        var result = await sut.GoogleIdTokenSignInAsync(Request());
+
+        result.ExpiresIn.Should().Be(900);
+        result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(15), TimeSpan.FromSeconds(5));
     }
 
     private static async Task<(Guid? TenantId, string[] Roles)> CaptureLocalSignUpTenantResolution(GetUserMembershipsResponse memberships)
