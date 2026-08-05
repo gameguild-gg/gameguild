@@ -133,6 +133,8 @@ public class OAuthAuthService(
         var user = await ResolveGoogleUserAsync(email, providerKey, googleUser, cancellationToken).ConfigureAwait(false);
         var userId = user.Id;
 
+        await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId, cancellationToken).ConfigureAwait(false);
+
         var tenantAccessContext = await ResolveTenantAccessContextAsync(userId, request.TenantId, cancellationToken).ConfigureAwait(false);
 
         var httpContext = httpContextAccessor.HttpContext;

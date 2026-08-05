@@ -212,6 +212,8 @@ public class LocalAuthService(
 
             logger.LogInformation("Created new user with ID: {UserId} and Email: {Email}", userId, newUser.Email);
 
+            await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId, cancellationToken).ConfigureAwait(false);
+
             // Create device info for refresh token
             var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
 

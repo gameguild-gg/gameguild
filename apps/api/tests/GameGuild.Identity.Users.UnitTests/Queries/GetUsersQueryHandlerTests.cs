@@ -178,7 +178,7 @@ public class GetUsersQueryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithSystemAdminTenantContext_ShouldScopeResultsToActiveTenant()
+    public async Task Handle_WithSystemAdminTenantContext_ShouldReturnGlobalResults()
     {
         var activeTenantId = Guid.Parse("f1d53fe7-e6fb-4712-8b55-b37d2d0ed701");
         var otherTenantId = Guid.Parse("9f54d387-4080-49f4-8b0f-60c09b90d6a1");
@@ -198,9 +198,8 @@ public class GetUsersQueryHandlerTests
 
         var result = await _handler.Handle(new GetUsersQuery(Limit: 10, Sort: "email"), CancellationToken.None);
 
-        result.TotalCount.Should().Be(1);
-        result.Items.Should().ContainSingle();
-        result.Items[0].Id.Should().Be(activeTenantUser.Id);
+        result.TotalCount.Should().Be(2);
+        result.Items.Select(item => item.Id).Should().Contain(activeTenantUser.Id).And.Contain(otherTenantUser.Id);
         _tenantMemberRepositoryMock.Verify(
             x => x.GetByUserAndTenantAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
