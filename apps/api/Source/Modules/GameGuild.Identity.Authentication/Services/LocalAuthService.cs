@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using GameGuild.CQRS;
 using GameGuild.Email;
 using GameGuild.Identity.Users;
@@ -245,6 +246,8 @@ public class LocalAuthService(
 
             logger.LogInformation("User {Email} successfully signed up", request.Email);
 
+            var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
+
             return new SignInResponse
             {
                 Success = true,
@@ -252,7 +255,9 @@ public class LocalAuthService(
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 ExpiresAt = refreshTokenExpiresAt,
-                ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
+                ExpiresIn = accessTokenExpirationMinutes * 60,
+                AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
+                RefreshTokenExpiresAt = refreshTokenExpiresAt,
                 UserId = userId,
                 Email = newUser.Email,
                 SessionId = Guid.NewGuid(),
