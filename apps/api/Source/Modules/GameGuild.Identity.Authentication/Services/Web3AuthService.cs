@@ -62,6 +62,8 @@ public class Web3AuthService(
 
         logger.LogInformation("Web3 signature verified for wallet {WalletAddress}", request.WalletAddress);
 
+        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
+
         return new SignInResponse
         {
             Success = true,
@@ -69,7 +71,9 @@ public class Web3AuthService(
             AccessToken = jwtToken,
             RefreshToken = refreshTokenValue,
             ExpiresAt = refreshTokenExpiresAt,
-            ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
+            ExpiresIn = accessTokenExpirationMinutes * 60,
+            AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
+            RefreshTokenExpiresAt = refreshTokenExpiresAt,
             UserId = userId,
             Email = email,
             SessionId = refreshToken.Id

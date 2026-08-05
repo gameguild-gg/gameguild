@@ -58,6 +58,8 @@ public class OAuthAuthService(
 
         logger.LogInformation("GitHub OAuth sign-in successful for {Email}", email);
 
+        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
+
         return new SignInResponse
         {
             Success = true,
@@ -65,7 +67,9 @@ public class OAuthAuthService(
             AccessToken = jwtToken,
             RefreshToken = refreshTokenValue,
             ExpiresAt = refreshTokenExpiresAt,
-            ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
+            ExpiresIn = accessTokenExpirationMinutes * 60,
+            AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
+            RefreshTokenExpiresAt = refreshTokenExpiresAt,
             UserId = userId,
             Email = email,
             SessionId = refreshToken.Id
@@ -105,6 +109,8 @@ public class OAuthAuthService(
 
         logger.LogInformation("Google OAuth sign-in successful for {Email}", email);
 
+        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
+
         return new SignInResponse
         {
             Success = true,
@@ -112,7 +118,9 @@ public class OAuthAuthService(
             AccessToken = jwtToken,
             RefreshToken = refreshTokenValue,
             ExpiresAt = refreshTokenExpiresAt,
-            ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
+            ExpiresIn = accessTokenExpirationMinutes * 60,
+            AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
+            RefreshTokenExpiresAt = refreshTokenExpiresAt,
             UserId = userId,
             Email = email,
             SessionId = refreshToken.Id
@@ -158,6 +166,8 @@ public class OAuthAuthService(
 
         logger.LogInformation("Google ID token sign-in successful for {Email}", email);
 
+        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
+
         return new SignInResponse
         {
             Success = true,
@@ -165,7 +175,9 @@ public class OAuthAuthService(
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             ExpiresAt = refreshTokenExpiresAt,
-            ExpiresIn = (int)(refreshTokenExpiresAt - SystemClock.UtcNow).TotalSeconds,
+            ExpiresIn = accessTokenExpirationMinutes * 60,
+            AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
+            RefreshTokenExpiresAt = refreshTokenExpiresAt,
             UserId = userId,
             Email = user.Email,
             SessionId = Guid.NewGuid(),
