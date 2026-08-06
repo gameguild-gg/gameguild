@@ -308,6 +308,7 @@ describe("ContentTree course management", () => {
         parentId: "module-created",
         title: "Define the playable promise",
         type: "Lesson",
+        lessonFormat: "Markdown",
         sortOrder: 0,
       });
     });
@@ -334,10 +335,68 @@ describe("ContentTree course management", () => {
         parentId: "module-1",
         title: "Playable promise",
         type: "Lesson",
+        lessonFormat: "Markdown",
         sortOrder: 1,
       });
     });
     expect(navigationMocks.refresh).toHaveBeenCalled();
+  }, 15_000);
+
+  it("creates a lesson with the selected lesson format", async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    await user.click(screen.getByRole("button", { name: /add lesson/i }));
+    const dialog = screen.getByRole("dialog", { name: /add lesson/i });
+    await user.click(within(dialog).getByLabelText(/lesson format/i));
+    await user.click(screen.getByRole("option", { name: /video \(link\)/i }));
+    await user.type(
+      within(dialog).getByLabelText(/title/i),
+      "Camera blocking walkthrough",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /^add lesson$/i }),
+    );
+
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith({
+        courseId: "course-1",
+        parentId: "module-1",
+        title: "Camera blocking walkthrough",
+        type: "Lesson",
+        lessonFormat: "Video",
+        sortOrder: 1,
+      });
+    });
+  }, 15_000);
+
+  it("hides the lesson format selector for non-lesson content types", async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    await user.click(screen.getByRole("button", { name: /add lesson/i }));
+    const dialog = screen.getByRole("dialog", { name: /add lesson/i });
+    await user.click(within(dialog).getByLabelText(/type/i));
+    await user.click(screen.getByRole("option", { name: "Quiz" }));
+
+    expect(
+      within(dialog).queryByLabelText(/lesson format/i),
+    ).not.toBeInTheDocument();
+
+    await user.type(within(dialog).getByLabelText(/title/i), "Entry quiz");
+    await user.click(
+      within(dialog).getByRole("button", { name: /^add lesson$/i }),
+    );
+
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith({
+        courseId: "course-1",
+        parentId: "module-1",
+        title: "Entry quiz",
+        type: "Questionnaire",
+        sortOrder: 1,
+      });
+    });
   }, 15_000);
 
   it("duplicates lesson items from the content tree", async () => {
@@ -533,6 +592,7 @@ describe("ContentTree course management", () => {
         parentId: undefined,
         title: "Imported activity",
         type: "Lesson",
+        lessonFormat: "Markdown",
         sortOrder: 1,
       });
     });
@@ -586,6 +646,7 @@ describe("ContentTree course management", () => {
         parentId: "lesson-1",
         title: "Nested reflection",
         type: "Lesson",
+        lessonFormat: "Markdown",
         sortOrder: 1,
       });
     });

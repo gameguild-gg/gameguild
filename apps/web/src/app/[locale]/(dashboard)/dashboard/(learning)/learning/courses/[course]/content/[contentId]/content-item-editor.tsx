@@ -33,6 +33,7 @@ import type { SerializedEditorState } from "lexical";
 import type { ContentItemDetail } from "@/lib/learning/types";
 import { updateContent } from "@/lib/learning/actions";
 import { CONTENT_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
+import { getLessonFormatLabel } from "@/lib/learning/lesson-formats";
 import {
   LessonContentEditor,
   parseLexicalState,
@@ -41,15 +42,6 @@ import { LessonCodeEditor } from "./lesson-code-editor";
 import { LessonVideoEditor } from "./lesson-video-editor";
 import { LessonExternalLinkEditor } from "./lesson-external-link-editor";
 import { QuizContentEditor } from "./quiz-content-editor";
-
-const LESSON_FORMATS = [
-  { value: "Markdown", label: "Markdown" },
-  { value: "Html", label: "HTML" },
-  { value: "Lexical", label: "Rich text (Lexical)" },
-  { value: "RevealJs", label: "Presentation (RevealJS)" },
-  { value: "Video", label: "Video (link)" },
-  { value: "ExternalLink", label: "External link" },
-] as const;
 
 function formatContentTypeLabel(type: ContentItemDetail["type"]) {
   if (type === "Questionnaire") return "Quiz";
@@ -113,9 +105,7 @@ export function ContentItemEditor({
     if (parseLexicalState(item.content)) return "Lexical";
     return "Markdown";
   }, [item.lessonFormat, item.content]);
-  const [selectedFormat, setSelectedFormat] = useState<string>(
-    initialSelectedFormat,
-  );
+  const selectedFormat = initialSelectedFormat;
 
   const handleEditorChange = useCallback((state: SerializedEditorState) => {
     editorStateRef.current = state;
@@ -124,39 +114,6 @@ export function ContentItemEditor({
   const handleQuizContentChange = useCallback((content: string) => {
     quizContentRef.current = content;
   }, []);
-
-  function handleLessonChangeFormat(next: string) {
-    if (next === selectedFormat) return;
-    const currentBody = (() => {
-      switch (selectedFormat) {
-        case "Lexical":
-          return editorStateRef.current
-            ? JSON.stringify(editorStateRef.current)
-            : "";
-        case "Markdown":
-        case "Html":
-        case "RevealJs":
-          return codeBodyRef.current;
-        case "Video":
-          return videoUrlRef.current;
-        case "ExternalLink":
-          return externalLinkRef.current;
-        default:
-          return "";
-      }
-    })();
-    if (currentBody && currentBody.trim().length > 0) {
-      const ok = window.confirm(
-        "Changing the lesson format will discard the current content. Continue?",
-      );
-      if (!ok) return;
-    }
-    codeBodyRef.current = "";
-    videoUrlRef.current = "";
-    externalLinkRef.current = "";
-    editorStateRef.current = null;
-    setSelectedFormat(next);
-  }
 
   const contentTypeLabel = formatContentTypeLabel(item.type);
 
@@ -204,7 +161,6 @@ export function ContentItemEditor({
         estimatedMinutes: estimatedMinutes
           ? Number(estimatedMinutes)
           : undefined,
-        ...(isLesson ? { lessonFormat: selectedFormat } : {}),
       });
 
       if (result.success) {
@@ -270,29 +226,16 @@ export function ContentItemEditor({
 
               <Separator />
 
-              {/* ── Lesson format selector + body editor ── */}
+              {/* ── Lesson format display + body editor ── */}
               {isLesson && (
                 <div className="space-y-2">
                   <Label htmlFor="lesson-format">Lesson format</Label>
-                  <Select
-                    value={selectedFormat}
-                    onValueChange={handleLessonChangeFormat}
-                  >
-                    <SelectTrigger id="lesson-format">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LESSON_FORMATS.map((f) => (
-                        <SelectItem key={f.value} value={f.value}>
-                          {f.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-muted-foreground text-xs">
-                    Switching format discards the current body. Pick the
-                    format before writing.
-                  </p>
+                  <Input
+                    id="lesson-format"
+                    value={getLessonFormatLabel(selectedFormat)}
+                    readOnly
+                    className="bg-muted"
+                  />
                 </div>
               )}
 
