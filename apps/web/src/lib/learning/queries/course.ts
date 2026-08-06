@@ -272,6 +272,7 @@ function mapContentDetailDto(dto: LearningCoursesProgramContent): ContentItemDet
   return {
     ...mapContentDto(dto),
     content: dto.body ?? null,
+    jsonBody: dto.jsonBody ?? null,
     settings: {
       isRequired: dto.isRequired,
       gradingMethod: dto.gradingMethod ?? null,

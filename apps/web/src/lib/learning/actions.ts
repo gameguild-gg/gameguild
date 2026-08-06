@@ -187,6 +187,7 @@ export interface UpdateContentInput {
   description?: string;
   type?: LearningCoursesProgramContentType;
   body?: string;
+  jsonBody?: Record<string, unknown> | null;
   sortOrder?: number;
   isRequired?: boolean;
   estimatedMinutes?: number;
