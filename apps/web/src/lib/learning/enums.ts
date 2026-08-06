@@ -1,38 +1,19 @@
-export type ProgramCategory =
-  | 'General'
-  | 'Programming'
-  | 'DataScience'
-  | 'WebDevelopment'
-  | 'MobileDevelopment'
-  | 'GameDevelopment'
-  | 'AI'
-  | 'Cybersecurity'
-  | 'DevOps'
-  | 'Database'
-  | 'Business'
-  | 'Design'
-  | 'Marketing'
-  | 'ProjectManagement'
-  | 'PersonalDevelopment'
-  | 'CreativeArts'
-  | 'Science'
-  | 'Language'
-  | 'Other';
+// Source-of-truth enums/unions are re-exported from the generated client
+// (`@game-guild/client`); the const arrays below bind UI Select options to
+// those types.
+import type {
+  ContentVisibility,
+  LearningCoursesEnrollmentStatus,
+  LearningCoursesProgramDifficulty,
+  ProgramCategory,
+} from '@game-guild/client';
 
-export type LearningCoursesProgramDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
-
-export type ContentVisibility = 'Private' | 'Internal' | 'Friends' | 'Protected' | 'Public';
-
-export type LearningCoursesEnrollmentStatus =
-  | 'Open'
-  | 'Active'
-  | 'Paused'
-  | 'Cancelled'
-  | 'Expired'
-  | 'Completed'
-  | 'Closed'
-  | 'InviteOnly'
-  | 'Waitlist';
+export type {
+  ContentVisibility,
+  LearningCoursesEnrollmentStatus,
+  LearningCoursesProgramDifficulty,
+  ProgramCategory,
+};
 
 export const PROGRAM_CATEGORIES: readonly ProgramCategory[] = [
   'General',

@@ -45,6 +45,41 @@ const item = {
   metadata: {},
   content: "<p>Answer all questions.</p>",
   settings: { isRequired: true },
+  lessonFormat: null,
+  createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-02T00:00:00.000Z",
+} satisfies ContentItemDetail;
+
+const lessonItemMarkdownEmpty = {
+  id: "lesson-1",
+  parentId: "module-1",
+  order: 2,
+  type: "Lesson",
+  title: "Intro lesson",
+  description: "Markdown-format lesson.",
+  status: "published",
+  duration: 15,
+  metadata: {},
+  content: "",
+  settings: { isRequired: true },
+  lessonFormat: null,
+  createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-02T00:00:00.000Z",
+} satisfies ContentItemDetail;
+
+const lessonItemMarkdownBody = {
+  id: "lesson-2",
+  parentId: "module-1",
+  order: 3,
+  type: "Lesson",
+  title: "Markdown lesson",
+  description: "Has a Markdown body.",
+  status: "published",
+  duration: 15,
+  metadata: {},
+  content: "# existing markdown",
+  settings: { isRequired: true },
+  lessonFormat: "Markdown",
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-02T00:00:00.000Z",
 } satisfies ContentItemDetail;
@@ -155,5 +190,83 @@ describe("ContentItemEditor", () => {
       "/dashboard/learning/courses/course-1/content",
     );
     expect(routerMocks.back).not.toHaveBeenCalled();
+  });
+
+  it("renders the lesson format selector for Lesson items and defaults to Markdown when body is empty", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownEmpty}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const trigger = screen.getByLabelText(/lesson format/i);
+    expect(trigger).toHaveTextContent("Markdown");
+
+    await user.click(trigger);
+    const options = await screen.findAllByRole("option");
+    expect(options).toHaveLength(6);
+    expect(screen.getByRole("option", { name: /^markdown$/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /^html$/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /rich text \(lexical\)/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /presentation \(revealjs\)/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /video \(link\)/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /^external link$/i })).toBeInTheDocument();
+  });
+
+  it("prompts for confirmation and keeps the current format when the user cancels a format change with non-empty body", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownBody}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const trigger = screen.getByLabelText(/lesson format/i);
+    expect(trigger).toHaveTextContent("Markdown");
+
+    await user.click(trigger);
+    await user.click(screen.getByRole("option", { name: /^html$/i }));
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      "Changing the lesson format will discard the current content. Continue?",
+    );
+    expect(trigger).toHaveTextContent("Markdown");
+
+    confirmSpy.mockRestore();
+  });
+
+  it("saves a Markdown lesson with lessonFormat and seeded body passed to updateContent", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownBody}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith({
+        courseId: "course-1",
+        contentId: "lesson-2",
+        title: "Markdown lesson",
+        description: "Has a Markdown body.",
+        body: "# existing markdown",
+        visibility: "Public",
+        isRequired: true,
+        estimatedMinutes: 15,
+        lessonFormat: "Markdown",
+      });
+    });
+    expect(routerMocks.refresh).toHaveBeenCalled();
+    expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
   });
 });
