@@ -11725,6 +11725,9 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<bool>("IsRequired")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("JsonBody")
+                        .HasColumnType("jsonb");
+
                     b.Property<int?>("LessonFormat")
                         .HasColumnType("integer");
 

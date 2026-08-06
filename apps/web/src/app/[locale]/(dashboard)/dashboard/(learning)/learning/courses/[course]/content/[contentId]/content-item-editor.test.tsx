@@ -269,4 +269,50 @@ describe("ContentItemEditor", () => {
     expect(routerMocks.refresh).toHaveBeenCalled();
     expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
   });
+
+  it("shows a Preview toggle on lessons that swaps the body editor for the learner renderer", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownBody}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const previewButton = screen.getByRole("button", { name: /preview/i });
+    expect(previewButton).toBeInTheDocument();
+    expect(screen.queryByTestId("lesson-preview")).not.toBeInTheDocument();
+
+    // Body seeded from item.content; renderer sees it without typing into Monaco.
+    await user.click(previewButton);
+
+    expect(
+      screen.getByRole("button", { name: /^edit$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^preview$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("lesson-preview")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^edit$/i }));
+    expect(
+      screen.getByRole("button", { name: /preview/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("lesson-preview")).not.toBeInTheDocument();
+  });
+
+  it("does not show a Preview toggle on non-lesson items", () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /preview/i }),
+    ).not.toBeInTheDocument();
+  });
 });

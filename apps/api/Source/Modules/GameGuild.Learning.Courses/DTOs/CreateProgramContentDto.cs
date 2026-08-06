@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> DTO for creating new program content </summary>
@@ -14,6 +15,8 @@ public class CreateProgramContentDto {
   [Required] public ProgramContentType Type { get; set; }
 
   public string Body { get; set; } = "{}";
+
+  public JsonDocument? JsonBody { get; set; }
 
   public LessonContentFormat? LessonFormat { get; set; }
 
