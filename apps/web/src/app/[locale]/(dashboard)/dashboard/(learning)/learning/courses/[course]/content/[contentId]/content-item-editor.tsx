@@ -90,9 +90,12 @@ export function ContentItemEditor({
   const [previewMode, setPreviewMode] = useState(false);
 
   // ── Lexical editor state (Lesson only) ──
+  // jsonBody is the structured object now; parseLexicalState(item.content) is legacy fallback.
   const initialLexicalState = useMemo(
-    () => parseLexicalState(item.content),
-    [item.content],
+    () =>
+      (item.jsonBody as SerializedEditorState | null) ??
+      parseLexicalState(item.content),
+    [item.jsonBody, item.content],
   );
   const editorStateRef = useRef<SerializedEditorState | null>(
     initialLexicalState,
@@ -113,9 +116,9 @@ export function ContentItemEditor({
   // Backward-compat: legacy lessons have null lessonFormat but Lexical content.
   const initialSelectedFormat = useMemo(() => {
     if (item.lessonFormat) return item.lessonFormat;
-    if (parseLexicalState(item.content)) return "Lexical";
+    if (item.jsonBody || parseLexicalState(item.content)) return "Lexical";
     return "Markdown";
-  }, [item.lessonFormat, item.content]);
+  }, [item.lessonFormat, item.jsonBody, item.content]);
   const [selectedFormat, setSelectedFormat] = useState<string>(
     initialSelectedFormat,
   );
@@ -171,29 +174,32 @@ export function ContentItemEditor({
     setError(null);
     setSaved(false);
 
-    // Lesson and quiz use different editor engines, but both persist into content.body.
-    const bodyToSave = (() => {
-      if (isLesson) {
-        switch (selectedFormat) {
-          case "Lexical":
-            return editorStateRef.current
-              ? JSON.stringify(editorStateRef.current)
-              : undefined;
-          case "Markdown":
-          case "Html":
-          case "RevealJs":
-            return codeBodyRef.current || undefined;
-          case "Video":
-            return videoUrlRef.current || undefined;
-          case "ExternalLink":
-            return externalLinkRef.current || undefined;
-          default:
-            return undefined;
-        }
+    // Lesson: Lexical → jsonBody (object); text formats → body (string).
+    // Quiz: body string via quizContentRef. jsonBody unused on those paths.
+    let bodyToSave: string | undefined;
+    let jsonBodyToSave: Record<string, unknown> | undefined;
+    if (isLesson) {
+      switch (selectedFormat) {
+        case "Lexical":
+          jsonBodyToSave = (editorStateRef.current ?? undefined) as
+            | Record<string, unknown>
+            | undefined;
+          break;
+        case "Markdown":
+        case "Html":
+        case "RevealJs":
+          bodyToSave = codeBodyRef.current || undefined;
+          break;
+        case "Video":
+          bodyToSave = videoUrlRef.current || undefined;
+          break;
+        case "ExternalLink":
+          bodyToSave = externalLinkRef.current || undefined;
+          break;
       }
-      if (isQuiz) return quizContentRef.current;
-      return undefined;
-    })();
+    } else if (isQuiz) {
+      bodyToSave = quizContentRef.current;
+    }
 
     startTransition(async () => {
       const result = await updateContent({
@@ -202,12 +208,14 @@ export function ContentItemEditor({
         title: title.trim(),
         description: description.trim() || undefined,
         body: bodyToSave,
+        ...(isLesson
+          ? { jsonBody: jsonBodyToSave, lessonFormat: selectedFormat }
+          : {}),
         visibility,
         isRequired,
         estimatedMinutes: estimatedMinutes
           ? Number(estimatedMinutes)
           : undefined,
-        ...(isLesson ? { lessonFormat: selectedFormat } : {}),
       });
 
       if (result.success) {
@@ -229,12 +237,10 @@ export function ContentItemEditor({
 
   // ponytail: IIFE mirrors handleLessonChangeFormat/handleSave body logic.
   // Refs mutate live; preview re-reads on every render — no state needed.
-  const previewContent = (() => {
+  const previewContent: unknown = (() => {
     switch (selectedFormat) {
       case "Lexical":
-        return editorStateRef.current
-          ? JSON.stringify(editorStateRef.current)
-          : "";
+        return editorStateRef.current;
       case "Markdown":
       case "Html":
       case "RevealJs":
