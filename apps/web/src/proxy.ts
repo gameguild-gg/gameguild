@@ -75,11 +75,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     process.env.WEB_PUBLIC_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     "https://gameguild.gg";
-  const pathname = request.nextUrl.pathname;
-  const isLearningPath =
-    pathname === "/learn" || pathname.startsWith("/learn/");
   const hostDecision =
-    process.env.UNIFIED_LEARNING_ENABLED === "true" && isLearningPath
+    process.env.UNIFIED_LEARNING_ENABLED === "true"
       ? resolveLearningHostRoute({
           config: {
             defaultLocale: routing.defaultLocale,
