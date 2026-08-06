@@ -402,7 +402,7 @@ export async function getCourseAttendanceData(
           description: item.description ?? undefined,
           order: item.sortOrder ?? 0,
           isRequired: item.isRequired ?? false,
-          content: item.body ?? undefined,
+          content: item.jsonBody ?? item.body ?? undefined,
           contentType: item.type,
           lessonFormat: item.lessonFormat,
           activitySettings: item.activitySettings,

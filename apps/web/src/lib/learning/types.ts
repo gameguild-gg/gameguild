@@ -134,6 +134,7 @@ export interface CourseContent {
  */
 export interface ContentItemDetail extends ContentItem {
   content: string | null;
+  jsonBody: Record<string, unknown> | null;
   settings: Record<string, unknown>;
   lessonFormat: string | null;
 }
