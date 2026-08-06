@@ -185,7 +185,7 @@ public sealed class LessonContractTests
 
         var constraint = entity.Metadata.GetCheckConstraints()
             .Single(item => item.Name == "CK_program_contents_LessonFormat");
-        constraint.Sql.Should().Contain("\"LessonFormat\" IN (0, 1, 2, 3)");
+        constraint.Sql.Should().Contain("\"LessonFormat\" IN (0, 1, 2, 3, 4, 5)");
     }
 
     private static CreateProgramContentDto CreateLessonDto(string body) =>

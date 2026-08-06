@@ -4738,7 +4738,7 @@ export interface LearningCoursesGraderSummary {
 
 export type LearningCoursesGradingMethod = 'None' | 'Instructor' | 'Peer' | 'Ai' | 'AutomatedTests';
 
-export type LearningCoursesLessonContentFormat = 'Markdown' | 'Lexical' | 'RevealJs' | 'Video';
+export type LearningCoursesLessonContentFormat = 'Markdown' | 'Lexical' | 'RevealJs' | 'Video' | 'Html' | 'ExternalLink';
 
 export interface LearningCoursesMonetization {
   currency?: string | null;
@@ -14392,7 +14392,7 @@ LearningCoursesGraderSummarySchema = z.object({
 LearningCoursesGradingMethodSchema = z.enum(['None', 'Instructor', 'Peer', 'Ai', 'AutomatedTests']);
 
 /** Zod schema for LearningCoursesLessonContentFormat */
-LearningCoursesLessonContentFormatSchema = z.enum(['Markdown', 'Lexical', 'RevealJs', 'Video']);
+LearningCoursesLessonContentFormatSchema = z.enum(['Markdown', 'Lexical', 'RevealJs', 'Video', 'Html', 'ExternalLink']);
 
 /** Zod schema for LearningCoursesMonetization */
 LearningCoursesMonetizationSchema = z.object({

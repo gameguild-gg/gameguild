@@ -37,7 +37,19 @@ import {
   LessonContentEditor,
   parseLexicalState,
 } from "./lesson-content-editor";
+import { LessonCodeEditor } from "./lesson-code-editor";
+import { LessonVideoEditor } from "./lesson-video-editor";
+import { LessonExternalLinkEditor } from "./lesson-external-link-editor";
 import { QuizContentEditor } from "./quiz-content-editor";
+
+const LESSON_FORMATS = [
+  { value: "Markdown", label: "Markdown" },
+  { value: "Html", label: "HTML" },
+  { value: "Lexical", label: "Rich text (Lexical)" },
+  { value: "RevealJs", label: "Presentation (RevealJS)" },
+  { value: "Video", label: "Video (link)" },
+  { value: "ExternalLink", label: "External link" },
+] as const;
 
 function formatContentTypeLabel(type: ContentItemDetail["type"]) {
   if (type === "Questionnaire") return "Quiz";
@@ -82,8 +94,27 @@ export function ContentItemEditor({
   const editorStateRef = useRef<SerializedEditorState | null>(
     initialLexicalState,
   );
+  // ── Per-format body refs (Lesson only) ──
+  // ponytail: simple string refs; one source of truth per format, swapped on format change.
+  const codeBodyRef = useRef<string>(item.content ?? "");
+  const videoUrlRef = useRef<string>(item.content ?? "");
+  const externalLinkRef = useRef<string>(item.content ?? "");
   const quizContentRef = useRef<string | undefined>(
     item.type === "Questionnaire" ? (item.content ?? undefined) : undefined,
+  );
+
+  const isLesson = item.type === "Lesson";
+  const isQuiz = item.type === "Questionnaire";
+
+  // ── Selected lesson format ──
+  // Backward-compat: legacy lessons have null lessonFormat but Lexical content.
+  const initialSelectedFormat = useMemo(() => {
+    if (item.lessonFormat) return item.lessonFormat;
+    if (parseLexicalState(item.content)) return "Lexical";
+    return "Markdown";
+  }, [item.lessonFormat, item.content]);
+  const [selectedFormat, setSelectedFormat] = useState<string>(
+    initialSelectedFormat,
   );
 
   const handleEditorChange = useCallback((state: SerializedEditorState) => {
@@ -94,8 +125,39 @@ export function ContentItemEditor({
     quizContentRef.current = content;
   }, []);
 
-  const isLesson = item.type === "Lesson";
-  const isQuiz = item.type === "Questionnaire";
+  function handleLessonChangeFormat(next: string) {
+    if (next === selectedFormat) return;
+    const currentBody = (() => {
+      switch (selectedFormat) {
+        case "Lexical":
+          return editorStateRef.current
+            ? JSON.stringify(editorStateRef.current)
+            : "";
+        case "Markdown":
+        case "Html":
+        case "RevealJs":
+          return codeBodyRef.current;
+        case "Video":
+          return videoUrlRef.current;
+        case "ExternalLink":
+          return externalLinkRef.current;
+        default:
+          return "";
+      }
+    })();
+    if (currentBody && currentBody.trim().length > 0) {
+      const ok = window.confirm(
+        "Changing the lesson format will discard the current content. Continue?",
+      );
+      if (!ok) return;
+    }
+    codeBodyRef.current = "";
+    videoUrlRef.current = "";
+    externalLinkRef.current = "";
+    editorStateRef.current = null;
+    setSelectedFormat(next);
+  }
+
   const contentTypeLabel = formatContentTypeLabel(item.type);
 
   function handleSave() {
@@ -107,12 +169,28 @@ export function ContentItemEditor({
     setSaved(false);
 
     // Lesson and quiz use different editor engines, but both persist into content.body.
-    const bodyToSave =
-      isLesson && editorStateRef.current
-        ? JSON.stringify(editorStateRef.current)
-        : isQuiz
-          ? quizContentRef.current
-          : undefined;
+    const bodyToSave = (() => {
+      if (isLesson) {
+        switch (selectedFormat) {
+          case "Lexical":
+            return editorStateRef.current
+              ? JSON.stringify(editorStateRef.current)
+              : undefined;
+          case "Markdown":
+          case "Html":
+          case "RevealJs":
+            return codeBodyRef.current || undefined;
+          case "Video":
+            return videoUrlRef.current || undefined;
+          case "ExternalLink":
+            return externalLinkRef.current || undefined;
+          default:
+            return undefined;
+        }
+      }
+      if (isQuiz) return quizContentRef.current;
+      return undefined;
+    })();
 
     startTransition(async () => {
       const result = await updateContent({
@@ -126,6 +204,7 @@ export function ContentItemEditor({
         estimatedMinutes: estimatedMinutes
           ? Number(estimatedMinutes)
           : undefined,
+        ...(isLesson ? { lessonFormat: selectedFormat } : {}),
       });
 
       if (result.success) {
@@ -191,12 +270,83 @@ export function ContentItemEditor({
 
               <Separator />
 
-              {/* ── Body editor: conditional by content type ── */}
+              {/* ── Lesson format selector + body editor ── */}
               {isLesson && (
+                <div className="space-y-2">
+                  <Label htmlFor="lesson-format">Lesson format</Label>
+                  <Select
+                    value={selectedFormat}
+                    onValueChange={handleLessonChangeFormat}
+                  >
+                    <SelectTrigger id="lesson-format">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LESSON_FORMATS.map((f) => (
+                        <SelectItem key={f.value} value={f.value}>
+                          {f.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-muted-foreground text-xs">
+                    Switching format discards the current body. Pick the
+                    format before writing.
+                  </p>
+                </div>
+              )}
+
+              {isLesson && selectedFormat === "Lexical" && (
                 <LessonContentEditor
                   itemId={item.id}
                   initialState={initialLexicalState}
                   onChange={handleEditorChange}
+                />
+              )}
+
+              {isLesson && selectedFormat === "Markdown" && (
+                <LessonCodeEditor
+                  key={item.id}
+                  initialValue={codeBodyRef.current}
+                  language="markdown"
+                  placeholder="Write lesson content in Markdown."
+                  onChange={(v) => (codeBodyRef.current = v)}
+                />
+              )}
+
+              {isLesson && selectedFormat === "Html" && (
+                <LessonCodeEditor
+                  key={item.id}
+                  initialValue={codeBodyRef.current}
+                  language="html"
+                  placeholder="Write lesson content in HTML."
+                  onChange={(v) => (codeBodyRef.current = v)}
+                />
+              )}
+
+              {isLesson && selectedFormat === "RevealJs" && (
+                <LessonCodeEditor
+                  key={item.id}
+                  initialValue={codeBodyRef.current}
+                  language="markdown"
+                  placeholder="Author slides in Markdown — separate slides with --- on its own line."
+                  onChange={(v) => (codeBodyRef.current = v)}
+                />
+              )}
+
+              {isLesson && selectedFormat === "Video" && (
+                <LessonVideoEditor
+                  key={item.id}
+                  initialValue={videoUrlRef.current}
+                  onChange={(v) => (videoUrlRef.current = v)}
+                />
+              )}
+
+              {isLesson && selectedFormat === "ExternalLink" && (
+                <LessonExternalLinkEditor
+                  key={item.id}
+                  initialValue={externalLinkRef.current}
+                  onChange={(v) => (externalLinkRef.current = v)}
                 />
               )}
 
