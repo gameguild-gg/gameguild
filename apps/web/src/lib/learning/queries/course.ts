@@ -282,6 +282,7 @@ function mapContentDetailDto(dto: LearningCoursesProgramContent): ContentItemDet
       gradingMethod: dto.gradingMethod ?? null,
       maxPoints: dto.maxPoints ?? null,
     },
+    lessonFormat: dto.lessonFormat ?? null,
   };
 }
 

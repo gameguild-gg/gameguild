@@ -100,7 +100,9 @@ const typeConfig: Record<
 > = {
   Module: { icon: BookOpen, label: "Module" },
   Lesson: { icon: FileText, label: "Lesson" },
+  Page: { icon: FileText, label: "Page" },
   Assignment: { icon: FileText, label: "Assignment" },
+  Challenge: { icon: FileText, label: "Challenge" },
   Questionnaire: { icon: HelpCircle, label: "Quiz" },
   Discussion: { icon: MessageSquare, label: "Discussion" },
   Code: { icon: Code2, label: "Code" },
