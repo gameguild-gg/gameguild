@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "dev": "docker compose -f compose.yaml up -d --wait && run-p dev:web dev:api",
-    "dev:api": "ASPNETCORE_ENVIRONMENT=Development dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:8080",
+    "dev:api": "dotenv -e .env -- dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:8080",
     "dev:compose": "docker compose -f compose.yaml --profile app up -d --build",
     "dev:compose:down": "docker compose -f compose.yaml down",
     "dev:compose:logs": "docker compose -f compose.yaml logs -f",
@@ -78,17 +78,18 @@
     }
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.5.0",
+    "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.27.0",
     "@game-guild/eslint-config": "workspace:*",
     "@game-guild/prettier-config": "workspace:*",
     "@game-guild/typescript-config": "workspace:*",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.18.0",
+    "npm-run-all": "4.1.5",
     "prettier": "^3.5.0",
     "rimraf": "^6.0.0",
-    "syncpack": "^13.0.4",
+    "syncpack": "^15.3.2",
     "turbo": "^2.8.20",
-    "typescript": "^5.8.3",
-    "npm-run-all": "4.1.5"
+    "typescript": "^5.8.3"
   }
 }

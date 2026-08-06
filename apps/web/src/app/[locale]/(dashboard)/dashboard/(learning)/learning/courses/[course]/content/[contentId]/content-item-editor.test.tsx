@@ -63,6 +63,7 @@ const item = {
   duration: 20,
   metadata: {},
   content: "<p>Answer all questions.</p>",
+  jsonBody: null,
   settings: { isRequired: true },
   lessonFormat: null,
   createdAt: "2026-01-01T00:00:00.000Z",
@@ -80,6 +81,7 @@ const lessonItemMarkdownEmpty = {
   duration: 15,
   metadata: {},
   content: "",
+  jsonBody: null,
   settings: { isRequired: true },
   lessonFormat: null,
   createdAt: "2026-01-01T00:00:00.000Z",
@@ -97,8 +99,38 @@ const lessonItemMarkdownBody = {
   duration: 15,
   metadata: {},
   content: "# existing markdown",
+  jsonBody: null,
   settings: { isRequired: true },
   lessonFormat: "Markdown",
+  createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-02T00:00:00.000Z",
+} satisfies ContentItemDetail;
+
+// Lexical lesson: structured state lives in jsonBody. content stays empty.
+// ponytail: minimal valid SerializedEditorState — root + empty children.
+const lessonItemLexical = {
+  id: "lesson-3",
+  parentId: "module-1",
+  order: 4,
+  type: "Lesson",
+  title: "Lexical lesson",
+  description: "Has a Lexical body.",
+  status: "published",
+  duration: 15,
+  metadata: {},
+  content: "",
+  jsonBody: {
+    root: {
+      type: "root",
+      children: [],
+      direction: null,
+      format: "",
+      indent: 0,
+      version: 1,
+    },
+  },
+  settings: { isRequired: true },
+  lessonFormat: "Lexical",
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-02T00:00:00.000Z",
 } satisfies ContentItemDetail;
@@ -259,12 +291,14 @@ describe("ContentItemEditor", () => {
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
+      // body round-trips as a string; jsonBody explicitly undefined for text formats.
       expect(updateContent).toHaveBeenCalledWith({
         courseId: "course-1",
         contentId: "lesson-2",
         title: "Markdown lesson",
         description: "Has a Markdown body.",
         body: "# existing markdown",
+        jsonBody: undefined,
         visibility: "Public",
         isRequired: true,
         estimatedMinutes: 15,
@@ -272,5 +306,86 @@ describe("ContentItemEditor", () => {
     });
     expect(routerMocks.refresh).toHaveBeenCalled();
     expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
+  });
+
+  it("saves a Lexical lesson with jsonBody (no body) forwarded to updateContent", async () => {
+    // LexicalSurface is lazy + heavy; under jsdom it does not hydrate, so the
+    // editor's onChange never fires and editorStateRef stays at the seeded
+    // initial value derived from item.jsonBody. This test asserts the load→save
+    // wiring: the seeded jsonBody object is forwarded verbatim, body stays
+    // undefined, and lessonFormat is "Lexical".
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemLexical}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith({
+        courseId: "course-1",
+        contentId: "lesson-3",
+        title: "Lexical lesson",
+        description: "Has a Lexical body.",
+        body: undefined,
+        jsonBody: lessonItemLexical.jsonBody,
+        visibility: "Public",
+        isRequired: true,
+        estimatedMinutes: 15,
+        lessonFormat: "Lexical",
+      });
+    });
+    expect(routerMocks.refresh).toHaveBeenCalled();
+    expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
+  });
+
+  it("shows a Preview toggle on lessons that swaps the body editor for the learner renderer", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownBody}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const previewButton = screen.getByRole("button", { name: /preview/i });
+    expect(previewButton).toBeInTheDocument();
+    expect(screen.queryByTestId("lesson-preview")).not.toBeInTheDocument();
+
+    // Body seeded from item.content; renderer sees it without typing into Monaco.
+    await user.click(previewButton);
+
+    expect(
+      screen.getByRole("button", { name: /^edit$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^preview$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("lesson-preview")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^edit$/i }));
+    expect(
+      screen.getByRole("button", { name: /preview/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("lesson-preview")).not.toBeInTheDocument();
+  });
+
+  it("does not show a Preview toggle on non-lesson items", () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /preview/i }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -11,6 +11,8 @@ export interface GoogleOneTapProps {
    * mount points that may render for logged-in users pass true.
    */
   authenticated?: boolean
+  /** URL to redirect to after successful sign-in (e.g. "/dashboard"). */
+  redirectTo?: string
 }
 
 /**
@@ -22,12 +24,16 @@ export interface GoogleOneTapProps {
  * GIS script and google.accounts.id.initialize run once per page even if
  * multiple consumers (e.g. <GoogleSignInButton/>) reuse the hook.
  */
-export function GoogleOneTap({ authenticated = false }: GoogleOneTapProps) {
+export function GoogleOneTap({
+  authenticated = false,
+  redirectTo,
+}: GoogleOneTapProps) {
   const { signIn } = useAuth()
   const { status, prompt } = useGoogleIdentityService({
     onCredential: (credential) => {
       // credential is an untrusted ID token — backend verifies it.
-      void signIn("google", { idToken: credential })
+      // .catch() swallows the re-thrown error (error state is already set by useAuth)
+      signIn("google", { idToken: credential, redirectTo }).catch((e) => {console.warn(e)})
     },
   })
 

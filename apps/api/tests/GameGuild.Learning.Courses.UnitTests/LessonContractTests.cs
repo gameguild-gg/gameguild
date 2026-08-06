@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
@@ -186,6 +187,93 @@ public sealed class LessonContractTests
         var constraint = entity.Metadata.GetCheckConstraints()
             .Single(item => item.Name == "CK_program_contents_LessonFormat");
         constraint.Sql.Should().Contain("\"LessonFormat\" IN (0, 1, 2, 3, 4, 5)");
+    }
+
+    [Fact]
+    public void NormalizeLearningContract_RoutesLexicalLessonToJsonBody()
+    {
+        var lesson = new ProgramContent
+        {
+            Type = ProgramContentType.Lesson,
+            LessonFormat = LessonContentFormat.Lexical,
+            JsonBody = """{"root":{"type":"root","children":[]}}""",
+            Body = "stale text body",
+        };
+
+        lesson.NormalizeLearningContract();
+
+        lesson.Body.Should().BeNull();
+        lesson.JsonBody.Should().Be("""{"root":{"type":"root","children":[]}}""");
+    }
+
+    [Fact]
+    public void NormalizeLearningContract_RoutesMarkdownLessonToBody()
+    {
+        var lesson = new ProgramContent
+        {
+            Type = ProgramContentType.Lesson,
+            LessonFormat = LessonContentFormat.Markdown,
+            Body = "# hi",
+            JsonBody = """{"root":{"stale":true}}""",
+        };
+
+        lesson.NormalizeLearningContract();
+
+        lesson.JsonBody.Should().BeNull();
+        lesson.Body.Should().Be("# hi");
+    }
+
+    [Fact]
+    public void NormalizeLearningContract_QuestionnaireUsesJsonBody()
+    {
+        var content = new ProgramContent
+        {
+            Type = ProgramContentType.Questionnaire,
+            JsonBody = """{"questions":[]}""",
+            Body = null,
+        };
+
+        content.NormalizeLearningContract();
+
+        content.Body.Should().BeNull();
+        content.JsonBody.Should().Be("""{"questions":[]}""");
+    }
+
+    [Fact]
+    public void NormalizeLearningContract_AssignmentClearsJsonBodyForTextRouting()
+    {
+        var content = new ProgramContent
+        {
+            Type = ProgramContentType.Assignment,
+            Body = "instructions",
+            JsonBody = """{"stale":true}""",
+        };
+
+        content.NormalizeLearningContract();
+
+        content.JsonBody.Should().BeNull();
+        content.Body.Should().Be("instructions");
+    }
+
+    [Fact]
+    public void ApplyUpdates_WhenJsonBodySent_ClearsBodyForLexicalLesson()
+    {
+        var content = new ProgramContent
+        {
+            Type = ProgramContentType.Lesson,
+            LessonFormat = LessonContentFormat.Lexical,
+            Body = "old text",
+        };
+        var dto = new UpdateProgramContentDto
+        {
+            Id = content.Id,
+            JsonBody = JsonDocument.Parse("""{"root":{"type":"root","children":[]}}"""),
+        };
+
+        content.ApplyUpdates(dto);
+
+        content.Body.Should().BeNull();
+        content.JsonBody.Should().NotBeNull();
     }
 
     private static CreateProgramContentDto CreateLessonDto(string body) =>
