@@ -191,6 +191,7 @@ export interface UpdateContentInput {
   isRequired?: boolean;
   estimatedMinutes?: number;
   visibility?: string;
+  lessonFormat?: string;
 }
 
 export async function updateContent(input: UpdateContentInput): Promise<ActionResult<null>> {

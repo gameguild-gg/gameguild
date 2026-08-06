@@ -9,4 +9,6 @@ public enum LessonContentFormat
     Lexical = 1,
     RevealJs = 2,
     Video = 3,
+    Html = 4,
+    ExternalLink = 5,
 }

@@ -25,6 +25,11 @@ internal static class LessonContentFormatInference
             // Plain lesson bodies remain Markdown unless the client declares another format.
         }
 
+        if (body.AsSpan().TrimStart().StartsWith("<"))
+        {
+            return LessonContentFormat.Html;
+        }
+
         return LessonContentFormat.Markdown;
     }
 }

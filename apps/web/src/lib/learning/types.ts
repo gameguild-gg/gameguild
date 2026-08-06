@@ -4,17 +4,11 @@
 // Pure type definitions — NO runtime imports. Safe to import from 'use client'
 // components without pulling in server-only modules (auth, next/headers).
 // =============================================================================
+// Source-of-truth enums/unions are re-exported from the generated client
+// (`@game-guild/client`); everything below is an app-specific projection.
+import type { LearningCoursesProgramContentType } from '@game-guild/client';
 
-export type LearningCoursesProgramContentType =
-  | 'Module'
-  | 'Lesson'
-  | 'Assignment'
-  | 'Questionnaire'
-  | 'Discussion'
-  | 'Code'
-  | 'Reflection'
-  | 'Survey'
-  | 'Project';
+export type { LearningCoursesProgramContentType };
 
 /**
  * Course delivery mode - determines available features and routes
@@ -141,6 +135,7 @@ export interface CourseContent {
 export interface ContentItemDetail extends ContentItem {
   content: string | null;
   settings: Record<string, unknown>;
+  lessonFormat: string | null;
 }
 
 /**
