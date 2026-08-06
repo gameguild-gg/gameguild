@@ -48,9 +48,17 @@ public class ProgramContent : EntityBase
     public ProgramContentType Type { get; set; } = ProgramContentType.Lesson;
 
     /// <summary>
-    /// Content body/text
+    /// Content body/text. Holds text-shaped body for lessons whose <see cref="LessonFormat"/> is not
+    /// <see cref="LessonContentFormat.Lexical"/>, and for non-structured non-lesson content.
+    /// Mutually exclusive with <see cref="JsonBody"/>; enforced by <see cref="NormalizeLearningContract"/>.
     /// </summary>
     public string? Body { get; set; }
+
+    /// <summary>
+    /// Structured content body (jsonb): Lexical lesson state, Questionnaire/Code/Project payloads.
+    /// Mutually exclusive with <see cref="Body"/>; enforced by <see cref="NormalizeLearningContract"/>.
+    /// </summary>
+    public string? JsonBody { get; set; }
 
     /// <summary>
     /// Authoring and rendering format for lesson content. Non-lesson content does not use this value.
@@ -218,6 +226,10 @@ public class ProgramContent : EntityBase
             _ => Type,
         };
 
+        // Defense-in-depth: if both slots are set, clear the one that the routing below
+        // would also clear, so the type-specific routing is idempotent regardless of input.
+        RouteBodyByContentType();
+
         if (Type == ProgramContentType.Lesson)
         {
             LessonFormat ??= LessonContentFormatInference.FromBody(Body);
@@ -229,12 +241,14 @@ public class ProgramContent : EntityBase
                     "Lesson format is not supported.");
             }
 
+            RouteBodyByContentType();
             GradingMethod = GradingMethod.None;
             MaxPoints = null;
             return;
         }
 
         LessonFormat = null;
+        RouteBodyByContentType();
 
         if (Type == ProgramContentType.Survey)
         {
@@ -249,6 +263,43 @@ public class ProgramContent : EntityBase
         else
         {
             ActivitySettingsData = null;
+        }
+    }
+
+    /// <summary>
+    /// Routes content between <see cref="Body"/> (text) and <see cref="JsonBody"/> (structured)
+    /// by content type and, for lessons, by <see cref="LessonFormat"/>. Enforces mutual exclusion.
+    /// </summary>
+    private void RouteBodyByContentType()
+    {
+        if (Type == ProgramContentType.Lesson)
+        {
+            // LessonFormat may not yet be inferred on the first call; defer to the post-inference call.
+            if (!LessonFormat.HasValue)
+            {
+                return;
+            }
+
+            if (LessonFormat == LessonContentFormat.Lexical)
+            {
+                Body = null;
+            }
+            else
+            {
+                JsonBody = null;
+            }
+            return;
+        }
+
+        if (Type is ProgramContentType.Questionnaire
+                or ProgramContentType.Code
+                or ProgramContentType.Project)
+        {
+            Body = null;
+        }
+        else
+        {
+            JsonBody = null;
         }
     }
 

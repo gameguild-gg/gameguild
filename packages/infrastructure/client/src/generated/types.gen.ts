@@ -4808,7 +4808,7 @@ export interface LearningCoursesProgramAnalytics {
 
 export interface LearningCoursesProgramContent {
   activitySettings?: LearningCoursesActivitySettings;
-  body?: Record<string, unknown> | null;
+  body?: string | null;
   children?: Array<LearningCoursesProgramContent> | null;
   childrenCount?: number;
   createdAt?: string;
@@ -14474,7 +14474,7 @@ LearningCoursesProgramAnalyticsSchema = z.object({
 /** Zod schema for LearningCoursesProgramContent */
 LearningCoursesProgramContentSchema = z.object({
   activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
-  body: z.record(z.string(), z.unknown()).nullable().optional(),
+  body: z.string().nullable().optional(),
   children: z
     .array(z.lazy(() => LearningCoursesProgramContentSchema))
     .nullable()

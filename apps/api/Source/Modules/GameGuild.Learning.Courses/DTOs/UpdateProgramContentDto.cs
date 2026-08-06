@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+using System.Text.Json;
+
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// DTO for updating existing program content
@@ -14,6 +16,8 @@ public class UpdateProgramContentDto {
   public ProgramContentType? Type { get; set; }
 
   public string? Body { get; set; }
+
+  public JsonDocument? JsonBody { get; set; }
 
   public LessonContentFormat? LessonFormat { get; set; }
 

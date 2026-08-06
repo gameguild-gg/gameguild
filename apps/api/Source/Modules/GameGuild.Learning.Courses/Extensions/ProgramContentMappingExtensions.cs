@@ -2,7 +2,6 @@
 
 using System.Text.Json;
 
-
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Extension methods for mapping between ProgramContent entities and DTOs </summary>
@@ -31,7 +30,8 @@ public static class ProgramContentMappingExtensions
       Title = content.Title,
       Description = content.Description ?? string.Empty,
       Type = normalizedType,
-      Body = ParseBody(content.Body),
+      Body = FormatBody(content.Body),
+      JsonBody = content.JsonBody is null ? null : JsonDocument.Parse(content.JsonBody),
       LessonFormat = isLesson ? content.LessonFormat ?? LessonContentFormatInference.FromBody(content.Body) : null,
       ActivitySettings = content.GetActivitySettings(),
       SortOrder = content.SortOrder,
@@ -52,20 +52,10 @@ public static class ProgramContentMappingExtensions
   /// <summary> Maps collection of ProgramContent entities to DTOs </summary>
   public static IEnumerable<ProgramContentDto> ToDtos(this IEnumerable<ProgramContent> contents) { return contents.Select(c => c.ToDto()); }
 
-  private static JsonDocument? ParseBody(string? body)
+  private static string? FormatBody(string? body)
   {
     if (string.IsNullOrWhiteSpace(body)) return null;
-
-    var normalizedBody = StripImportMarker(body);
-
-    try
-    {
-      return JsonDocument.Parse(normalizedBody);
-    }
-    catch (JsonException)
-    {
-      return JsonDocument.Parse(JsonSerializer.Serialize(new { markdown = normalizedBody }));
-    }
+    return StripImportMarker(body);
   }
 
   private static string StripImportMarker(string body)
@@ -110,6 +100,7 @@ public static class ProgramContentMappingExtensions
       Description = dto.Description,
       Type = NormalizeProfessorFacingType(dto.Type),
       Body = dto.Body,
+      JsonBody = dto.JsonBody is null ? null : JsonSerializer.Serialize(dto.JsonBody),
       LessonFormat = dto.LessonFormat ?? LessonContentFormatInference.FromBody(dto.Body),
       SortOrder = dto.SortOrder,
       IsRequired = dto.IsRequired,
@@ -134,7 +125,16 @@ public static class ProgramContentMappingExtensions
     if (dto.Title != null) content.Title = dto.Title;
     if (dto.Description != null) content.Description = dto.Description;
     if (dto.Type != null) content.Type = NormalizeProfessorFacingType(dto.Type.Value);
-    if (dto.Body != null) content.Body = dto.Body;
+    if (dto.JsonBody is not null)
+    {
+      content.JsonBody = JsonSerializer.Serialize(dto.JsonBody);
+      content.Body = null;
+    }
+    else if (dto.Body is not null)
+    {
+      content.Body = dto.Body;
+      content.JsonBody = null;
+    }
     if (dto.LessonFormat.HasValue)
     {
       content.LessonFormat = dto.LessonFormat.Value;
