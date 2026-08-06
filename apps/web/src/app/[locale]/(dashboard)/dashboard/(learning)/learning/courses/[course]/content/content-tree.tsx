@@ -12,6 +12,11 @@ import type {
   ContentItem,
   LearningCoursesProgramContentType,
 } from "@/lib/learning/types";
+import {
+  DEFAULT_LESSON_FORMAT,
+  LESSON_FORMATS,
+  type LessonContentFormat,
+} from "@/lib/learning/lesson-formats";
 import type { DragEndEvent } from "@dnd-kit/core";
 import {
   closestCenter,
@@ -265,6 +270,9 @@ export function ContentTree({
   const [lessonTitle, setLessonTitle] = useState("");
   const [lessonType, setLessonType] =
     useState<LearningCoursesProgramContentType>("Lesson");
+  const [lessonFormat, setLessonFormat] = useState<LessonContentFormat>(
+    DEFAULT_LESSON_FORMAT,
+  );
 
   // Delete confirmation state
   const [deleteTarget, setDeleteTarget] = useState<{
@@ -417,12 +425,14 @@ export function ContentTree({
         parentId: normalizeParentId(lessonParentId),
         title: lessonTitle.trim(),
         type: lessonType,
+        ...(lessonType === "Lesson" ? { lessonFormat } : {}),
         sortOrder: parentChildren.length,
       });
       if (result.success) {
         setShowAddLesson(false);
         setLessonTitle("");
         setLessonType("Lesson");
+        setLessonFormat(DEFAULT_LESSON_FORMAT);
         router.refresh();
       } else {
         setError(result.error);
@@ -448,6 +458,7 @@ export function ContentTree({
     setLessonParentId(parentId);
     setLessonTitle("");
     setLessonType("Lesson" as LearningCoursesProgramContentType);
+    setLessonFormat(DEFAULT_LESSON_FORMAT);
     setError("");
     setShowAddLesson(true);
   }
@@ -1178,6 +1189,28 @@ export function ContentTree({
                 </SelectContent>
               </Select>
             </div>
+            {lessonType === "Lesson" && (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="lesson-format">Lesson format</Label>
+                <Select
+                  value={lessonFormat}
+                  onValueChange={(value) =>
+                    setLessonFormat(value as LessonContentFormat)
+                  }
+                >
+                  <SelectTrigger id="lesson-format">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LESSON_FORMATS.map((format) => (
+                      <SelectItem key={format.value} value={format.value}>
+                        {format.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter>

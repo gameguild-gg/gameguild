@@ -33,6 +33,25 @@ vi.mock("@/lib/learning/actions", () => ({
   updateContent: vi.fn(),
 }));
 
+vi.mock("./lesson-code-editor", () => ({
+  LessonCodeEditor: ({
+    initialValue,
+    placeholder,
+    onChange,
+  }: {
+    initialValue: string;
+    placeholder?: string;
+    onChange: (value: string) => void;
+  }) => (
+    <textarea
+      aria-label="Body"
+      defaultValue={initialValue}
+      placeholder={placeholder}
+      onChange={(event) => onChange(event.currentTarget.value)}
+    />
+  ),
+}));
+
 const item = {
   id: "content-1",
   parentId: "module-1",
@@ -192,8 +211,7 @@ describe("ContentItemEditor", () => {
     expect(routerMocks.back).not.toHaveBeenCalled();
   });
 
-  it("renders the lesson format selector for Lesson items and defaults to Markdown when body is empty", async () => {
-    const user = userEvent.setup();
+  it("renders the lesson format as read-only for Lesson items and defaults to Markdown when body is empty", () => {
     render(
       <ContentItemEditor
         courseId="course-1"
@@ -202,23 +220,13 @@ describe("ContentItemEditor", () => {
       />,
     );
 
-    const trigger = screen.getByLabelText(/lesson format/i);
-    expect(trigger).toHaveTextContent("Markdown");
-
-    await user.click(trigger);
-    const options = await screen.findAllByRole("option");
-    expect(options).toHaveLength(6);
-    expect(screen.getByRole("option", { name: /^markdown$/i })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /^html$/i })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /rich text \(lexical\)/i })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /presentation \(revealjs\)/i })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /video \(link\)/i })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /^external link$/i })).toBeInTheDocument();
+    const formatInput = screen.getByLabelText(/lesson format/i);
+    expect(formatInput).toHaveValue("Markdown");
+    expect(formatInput).toHaveAttribute("readonly");
   });
 
-  it("prompts for confirmation and keeps the current format when the user cancels a format change with non-empty body", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
-    const user = userEvent.setup();
+  it("does not offer lesson format changes after creation", () => {
+    const confirmSpy = vi.spyOn(window, "confirm");
     render(
       <ContentItemEditor
         courseId="course-1"
@@ -227,16 +235,13 @@ describe("ContentItemEditor", () => {
       />,
     );
 
-    const trigger = screen.getByLabelText(/lesson format/i);
-    expect(trigger).toHaveTextContent("Markdown");
-
-    await user.click(trigger);
-    await user.click(screen.getByRole("option", { name: /^html$/i }));
-
-    expect(confirmSpy).toHaveBeenCalledWith(
-      "Changing the lesson format will discard the current content. Continue?",
-    );
-    expect(trigger).toHaveTextContent("Markdown");
+    const formatInput = screen.getByLabelText(/lesson format/i);
+    expect(formatInput).toHaveValue("Markdown");
+    expect(formatInput).toHaveAttribute("readonly");
+    expect(
+      screen.queryByRole("option", { name: /^html$/i }),
+    ).not.toBeInTheDocument();
+    expect(confirmSpy).not.toHaveBeenCalled();
 
     confirmSpy.mockRestore();
   });
@@ -263,7 +268,6 @@ describe("ContentItemEditor", () => {
         visibility: "Public",
         isRequired: true,
         estimatedMinutes: 15,
-        lessonFormat: "Markdown",
       });
     });
     expect(routerMocks.refresh).toHaveBeenCalled();
