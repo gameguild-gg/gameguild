@@ -34,33 +34,6 @@ export class AuthSigningkeysModule {
   }
 
   /**
-   * Cleanup expired keys
-   *
-   * Removes signing keys that have been expired beyond the retention period.
-   */
-  async postAuthSigningKeysCleanup(body: Types.IdentityAuthenticationCleanupKeysInput): Promise<Result<Types.IdentityAuthenticationCleanupResult, ApiError>> {
-    const url = '/v1/auth/signing-keys:cleanup';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCleanupKeysInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationCleanupResultSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Rotate signing key
    *
    * Manually rotates to a new signing key. Previous keys remain valid for token validation during grace period.
@@ -81,6 +54,33 @@ export class AuthSigningkeysModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.IdentityAuthenticationJwtKeyInfoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Cleanup expired keys
+   *
+   * Removes signing keys that have been expired beyond the retention period.
+   */
+  async postAuthSigningKeysCleanup(body: Types.IdentityAuthenticationCleanupKeysInput): Promise<Result<Types.IdentityAuthenticationCleanupResult, ApiError>> {
+    const url = '/v1/auth/signing-keys:cleanup';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationCleanupKeysInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationCleanupResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
