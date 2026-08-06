@@ -4687,6 +4687,7 @@ export interface LearningCoursesCreateProgramContent {
   estimatedMinutes?: number | null;
   gradingMethod?: LearningCoursesGradingMethod;
   isRequired?: boolean;
+  jsonBody?: Record<string, unknown> | null;
   lessonFormat?: LearningCoursesLessonContentFormat;
   maxPoints?: number | null;
   parentId?: string | null;
@@ -4817,6 +4818,7 @@ export interface LearningCoursesProgramContent {
   gradingMethod?: LearningCoursesGradingMethod;
   id?: string;
   isRequired?: boolean;
+  jsonBody?: Record<string, unknown> | null;
   lessonFormat?: LearningCoursesLessonContentFormat;
   maxPoints?: number | null;
   parentId?: string | null;
@@ -5000,6 +5002,7 @@ export interface LearningCoursesUpdateProgramContent {
   gradingMethod?: LearningCoursesGradingMethod;
   id: string;
   isRequired?: boolean | null;
+  jsonBody?: Record<string, unknown> | null;
   lessonFormat?: LearningCoursesLessonContentFormat;
   maxPoints?: number | null;
   sortOrder?: number | null;
@@ -14334,6 +14337,7 @@ LearningCoursesCreateProgramContentSchema = z.object({
   estimatedMinutes: z.number().int().nullable().optional(),
   gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
   isRequired: z.boolean().optional(),
+  jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
   lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
   maxPoints: z.number().nullable().optional(),
   parentId: z.string().uuid().nullable().optional(),
@@ -14486,6 +14490,7 @@ LearningCoursesProgramContentSchema = z.object({
   gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
   id: z.string().uuid().optional(),
   isRequired: z.boolean().optional(),
+  jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
   lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
   maxPoints: z.number().nullable().optional(),
   parentId: z.string().uuid().nullable().optional(),
@@ -14709,6 +14714,7 @@ LearningCoursesUpdateProgramContentSchema = z.object({
   gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
   id: z.string().uuid(),
   isRequired: z.boolean().nullable().optional(),
+  jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
   lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
   maxPoints: z.number().nullable().optional(),
   sortOrder: z.number().int().nullable().optional(),
