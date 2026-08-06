@@ -28,12 +28,14 @@ import {
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
 import { Separator } from "@game-guild/ui/components/separator";
-import { ArrowLeft, Clock, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Clock, Eye, Loader2, Pencil, Save } from "lucide-react";
 import type { SerializedEditorState } from "lexical";
+import type { LearningCoursesLessonContentFormat } from "@game-guild/client";
 import type { ContentItemDetail } from "@/lib/learning/types";
 import { updateContent } from "@/lib/learning/actions";
 import { CONTENT_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
 import { getLessonFormatLabel } from "@/lib/learning/lesson-formats";
+import { LearnerLessonRenderer } from "@/components/learning/learner-lesson-renderer";
 import {
   LessonContentEditor,
   parseLexicalState,
@@ -77,11 +79,15 @@ export function ContentItemEditor({
   );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
 
   // ── Lexical editor state (Lesson only) ──
+  // jsonBody is the structured object now; parseLexicalState(item.content) is legacy fallback.
   const initialLexicalState = useMemo(
-    () => parseLexicalState(item.content),
-    [item.content],
+    () =>
+      (item.jsonBody as SerializedEditorState | null) ??
+      parseLexicalState(item.content),
+    [item.jsonBody, item.content],
   );
   const editorStateRef = useRef<SerializedEditorState | null>(
     initialLexicalState,
@@ -102,10 +108,12 @@ export function ContentItemEditor({
   // Backward-compat: legacy lessons have null lessonFormat but Lexical content.
   const initialSelectedFormat = useMemo(() => {
     if (item.lessonFormat) return item.lessonFormat;
-    if (parseLexicalState(item.content)) return "Lexical";
+    if (item.jsonBody || parseLexicalState(item.content)) return "Lexical";
     return "Markdown";
   }, [item.lessonFormat, item.content]);
-  const selectedFormat = initialSelectedFormat;
+  const [selectedFormat, setSelectedFormat] = useState<string>(
+    initialSelectedFormat,
+  );
 
   const handleEditorChange = useCallback((state: SerializedEditorState) => {
     editorStateRef.current = state;
@@ -125,29 +133,32 @@ export function ContentItemEditor({
     setError(null);
     setSaved(false);
 
-    // Lesson and quiz use different editor engines, but both persist into content.body.
-    const bodyToSave = (() => {
-      if (isLesson) {
-        switch (selectedFormat) {
-          case "Lexical":
-            return editorStateRef.current
-              ? JSON.stringify(editorStateRef.current)
-              : undefined;
-          case "Markdown":
-          case "Html":
-          case "RevealJs":
-            return codeBodyRef.current || undefined;
-          case "Video":
-            return videoUrlRef.current || undefined;
-          case "ExternalLink":
-            return externalLinkRef.current || undefined;
-          default:
-            return undefined;
-        }
+    // Lesson: Lexical → jsonBody (object); text formats → body (string).
+    // Quiz: body string via quizContentRef. jsonBody unused on those paths.
+    let bodyToSave: string | undefined;
+    let jsonBodyToSave: Record<string, unknown> | undefined;
+    if (isLesson) {
+      switch (selectedFormat) {
+        case "Lexical":
+          jsonBodyToSave = (editorStateRef.current ?? undefined) as
+            | Record<string, unknown>
+            | undefined;
+          break;
+        case "Markdown":
+        case "Html":
+        case "RevealJs":
+          bodyToSave = codeBodyRef.current || undefined;
+          break;
+        case "Video":
+          bodyToSave = videoUrlRef.current || undefined;
+          break;
+        case "ExternalLink":
+          bodyToSave = externalLinkRef.current || undefined;
+          break;
       }
-      if (isQuiz) return quizContentRef.current;
-      return undefined;
-    })();
+    } else if (isQuiz) {
+      bodyToSave = quizContentRef.current;
+    }
 
     startTransition(async () => {
       const result = await updateContent({
@@ -156,6 +167,9 @@ export function ContentItemEditor({
         title: title.trim(),
         description: description.trim() || undefined,
         body: bodyToSave,
+        ...(isLesson
+          ? { jsonBody: jsonBodyToSave, lessonFormat: selectedFormat }
+          : {}),
         visibility,
         isRequired,
         estimatedMinutes: estimatedMinutes
@@ -180,6 +194,25 @@ export function ContentItemEditor({
     );
   }
 
+  // ponytail: IIFE mirrors handleLessonChangeFormat/handleSave body logic.
+  // Refs mutate live; preview re-reads on every render — no state needed.
+  const previewContent: unknown = (() => {
+    switch (selectedFormat) {
+      case "Lexical":
+        return editorStateRef.current;
+      case "Markdown":
+      case "Html":
+      case "RevealJs":
+        return codeBodyRef.current;
+      case "Video":
+        return videoUrlRef.current;
+      case "ExternalLink":
+        return externalLinkRef.current;
+      default:
+        return "";
+    }
+  })();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -200,7 +233,29 @@ export function ContentItemEditor({
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>{contentTypeLabel} content</CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle>{contentTypeLabel} content</CardTitle>
+                {isLesson && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPreviewMode((v) => !v)}
+                  >
+                    {previewMode ? (
+                      <>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Preview
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -239,7 +294,7 @@ export function ContentItemEditor({
                 </div>
               )}
 
-              {isLesson && selectedFormat === "Lexical" && (
+              {isLesson && selectedFormat === "Lexical" && !previewMode && (
                 <LessonContentEditor
                   itemId={item.id}
                   initialState={initialLexicalState}
@@ -247,17 +302,19 @@ export function ContentItemEditor({
                 />
               )}
 
-              {isLesson && selectedFormat === "Markdown" && (
-                <LessonCodeEditor
-                  key={item.id}
-                  initialValue={codeBodyRef.current}
-                  language="markdown"
-                  placeholder="Write lesson content in Markdown."
-                  onChange={(v) => (codeBodyRef.current = v)}
-                />
-              )}
+              {isLesson &&
+                selectedFormat === "Markdown" &&
+                !previewMode && (
+                  <LessonCodeEditor
+                    key={item.id}
+                    initialValue={codeBodyRef.current}
+                    language="markdown"
+                    placeholder="Write lesson content in Markdown."
+                    onChange={(v) => (codeBodyRef.current = v)}
+                  />
+                )}
 
-              {isLesson && selectedFormat === "Html" && (
+              {isLesson && selectedFormat === "Html" && !previewMode && (
                 <LessonCodeEditor
                   key={item.id}
                   initialValue={codeBodyRef.current}
@@ -267,17 +324,19 @@ export function ContentItemEditor({
                 />
               )}
 
-              {isLesson && selectedFormat === "RevealJs" && (
-                <LessonCodeEditor
-                  key={item.id}
-                  initialValue={codeBodyRef.current}
-                  language="markdown"
-                  placeholder="Author slides in Markdown — separate slides with --- on its own line."
-                  onChange={(v) => (codeBodyRef.current = v)}
-                />
-              )}
+              {isLesson &&
+                selectedFormat === "RevealJs" &&
+                !previewMode && (
+                  <LessonCodeEditor
+                    key={item.id}
+                    initialValue={codeBodyRef.current}
+                    language="markdown"
+                    placeholder="Author slides in Markdown — separate slides with --- on its own line."
+                    onChange={(v) => (codeBodyRef.current = v)}
+                  />
+                )}
 
-              {isLesson && selectedFormat === "Video" && (
+              {isLesson && selectedFormat === "Video" && !previewMode && (
                 <LessonVideoEditor
                   key={item.id}
                   initialValue={videoUrlRef.current}
@@ -285,12 +344,30 @@ export function ContentItemEditor({
                 />
               )}
 
-              {isLesson && selectedFormat === "ExternalLink" && (
-                <LessonExternalLinkEditor
-                  key={item.id}
-                  initialValue={externalLinkRef.current}
-                  onChange={(v) => (externalLinkRef.current = v)}
-                />
+              {isLesson &&
+                selectedFormat === "ExternalLink" &&
+                !previewMode && (
+                  <LessonExternalLinkEditor
+                    key={item.id}
+                    initialValue={externalLinkRef.current}
+                    onChange={(v) => (externalLinkRef.current = v)}
+                  />
+                )}
+
+              {isLesson && previewMode && (
+                <div
+                  data-testid="lesson-preview"
+                  className="rounded-lg border border-gray-200 p-4 dark:border-gray-700 min-h-[400px]"
+                >
+                  <LearnerLessonRenderer
+                    courseId={courseId}
+                    itemId={item.id}
+                    format={
+                      selectedFormat as LearningCoursesLessonContentFormat
+                    }
+                    content={previewContent}
+                  />
+                </div>
               )}
 
               {isQuiz && (

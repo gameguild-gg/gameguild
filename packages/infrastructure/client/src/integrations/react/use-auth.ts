@@ -158,7 +158,9 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            (errorData as Record<string, string>).message || 'Sign-in failed'
+            (errorData as Record<string, string>).message ||
+            (errorData as Record<string, string>).detail ||
+            'Sign-in failed'
           );
         }
 
@@ -227,7 +229,9 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            (errorData as Record<string, string>).message || 'Sign-up failed'
+            (errorData as Record<string, string>).message ||
+            (errorData as Record<string, string>).detail ||
+            'Sign-up failed'
           );
         }
 

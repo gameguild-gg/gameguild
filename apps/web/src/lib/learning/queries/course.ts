@@ -268,15 +268,11 @@ function mapContentDto(dto: LearningCoursesProgramContent): ContentItem {
   };
 }
 
-function serializeContentBody(body: unknown): string | null {
-  if (body == null) return null;
-  return typeof body === 'string' ? body : JSON.stringify(body);
-}
-
 function mapContentDetailDto(dto: LearningCoursesProgramContent): ContentItemDetail {
   return {
     ...mapContentDto(dto),
-    content: serializeContentBody(dto.body),
+    content: dto.body ?? null,
+    jsonBody: dto.jsonBody ?? null,
     settings: {
       isRequired: dto.isRequired,
       gradingMethod: dto.gradingMethod ?? null,

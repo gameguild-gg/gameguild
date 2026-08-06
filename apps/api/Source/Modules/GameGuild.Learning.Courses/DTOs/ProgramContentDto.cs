@@ -20,7 +20,9 @@ public class ProgramContentDto {
 
   public ProgramContentType Type { get; set; }
 
-  public JsonDocument? Body { get; set; }
+  public string? Body { get; set; }
+
+  public JsonDocument? JsonBody { get; set; }
 
   [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
   public LessonContentFormat? LessonFormat { get; set; }

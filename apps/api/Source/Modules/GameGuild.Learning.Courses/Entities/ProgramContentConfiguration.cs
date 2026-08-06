@@ -22,6 +22,7 @@ public class ProgramContentConfiguration : IEntityTypeConfiguration<ProgramConte
     });
 
     builder.Property(content => content.ActivitySettingsData).HasColumnType("jsonb");
+    builder.Property(content => content.JsonBody).HasColumnType("jsonb");
 
     // Configure relationship with Program (can't be done with annotations)
     builder.HasOne(pc => pc.Program).WithMany(p => p.ProgramContents).HasForeignKey(pc => pc.ProgramId).OnDelete(DeleteBehavior.Cascade);
