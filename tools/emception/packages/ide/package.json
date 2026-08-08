@@ -72,7 +72,7 @@
   },
   "devDependencies": {
     "@monaco-editor/react": "^4.7.0",
-    "@types/jest": "^29.5.14",
+    "@types/jest": "^30.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@xterm/addon-fit": "^0.11.0",

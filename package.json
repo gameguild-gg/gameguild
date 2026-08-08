@@ -16,7 +16,7 @@
     "dev:compose:restart": "docker compose -f compose.yaml restart",
     "dev:compose:stop": "docker compose -f compose.yaml stop",
     "dev:learning": "pnpm --filter @game-guild/learning run dev",
-    "dev:web": "pnpm --filter @game-guild/client build && pnpm --filter @game-guild/web run dev",
+    "dev:web": "corepack pnpm --filter @game-guild/client build && corepack pnpm --filter @game-guild/web run dev",
     "dev:emception": "pnpm --dir tools/emception/apps/ide-react run dev",
     "build": "turbo run build",
     "build:emception": "pnpm --dir tools/emception run build:packages",

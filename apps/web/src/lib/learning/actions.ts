@@ -4,6 +4,7 @@ import { getToken } from '@/auth';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
 import type { AssessmentPresentationMode, AssessmentType } from '@/lib/learning/queries/assessments';
 import type { CourseIntegrationSettings, CourseNotificationSettings } from '@/lib/learning/queries/settings';
+import type { LessonContentFormat } from '@/lib/learning/lesson-formats';
 import type { LearningCoursesProgramContentType } from '@/lib/learning/types';
 import {
   createServerClient,
@@ -124,11 +125,12 @@ export interface AddContentInput {
   title: string;
   description?: string;
   type: LearningCoursesProgramContentType;
+  lessonFormat?: LessonContentFormat;
   sortOrder?: number;
 }
 
 export async function addContent(input: AddContentInput): Promise<ActionResult<{ id: string }>> {
-  const { courseId, parentId, title, type, description, sortOrder } = input;
+  const { courseId, parentId, title, type, description, lessonFormat, sortOrder } = input;
 
   if (!title || title.trim().length < 1) {
     return { success: false, error: 'Title is required.' };
@@ -145,6 +147,7 @@ export async function addContent(input: AddContentInput): Promise<ActionResult<{
       isRequired: true,
       visibility: 'Public',
       ...(parentId ? { parentId } : {}),
+      ...(type === 'Lesson' && lessonFormat ? { lessonFormat } : {}),
     };
 
     const result = await learningApiRequest<{ id?: string }>(`/v1/courses/${resolvedCourseId}/content`, {
