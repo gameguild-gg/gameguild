@@ -1,6 +1,5 @@
 import {
   getCourse,
-  getCourseAssessments,
   getCourseContent,
 } from "@/lib/learning";
 import { CheckCircle2, Clock } from "lucide-react";
@@ -14,10 +13,9 @@ export default async function ContentPage({
 }: PageProps<"/[locale]/dashboard/learning/courses/[course]/content">): Promise<React.JSX.Element> {
   const { course: courseId } = await params;
 
-  const [course, content, assessmentResult] = await Promise.all([
+  const [course, content] = await Promise.all([
     getCourse(courseId),
     getCourseContent(courseId),
-    getCourseAssessments(courseId),
   ]);
 
   if (!course) {
@@ -71,7 +69,6 @@ export default async function ContentPage({
         courseId={courseId}
         modules={treeModel.modules}
         allItems={treeModel.treeItems}
-        assessments={assessmentResult.assessments}
         virtualModuleIds={treeModel.virtualModuleIds}
       />
     </div>

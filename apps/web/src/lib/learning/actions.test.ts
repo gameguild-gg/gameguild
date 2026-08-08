@@ -8,7 +8,6 @@ const mocks = vi.hoisted(() => ({
   postCoursesContent: vi.fn(),
   postCoursesContentReorder: vi.fn(),
   deleteCoursesContent: vi.fn(),
-  postAssessments: vi.fn(),
   putAssessments: vi.fn(),
   deleteAssessments: vi.fn(),
   getCourses1: vi.fn(),
@@ -37,7 +36,6 @@ vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
     LearningAssessmentsModule: class {
-      postAssessments = mocks.postAssessments;
       putAssessments = mocks.putAssessments;
       deleteAssessments = mocks.deleteAssessments;
     },
@@ -75,8 +73,6 @@ vi.mock('@/lib/learning/course-launch', () => ({
 const {
   createCertificateTemplate,
   addContent,
-  createAssessment,
-  updateAssessmentDefinition,
   updateCertificateTemplate,
   deleteCertificateTemplate,
   deleteContent,
@@ -115,7 +111,6 @@ describe('learning server actions', () => {
     );
     mocks.postCoursesContentReorder.mockResolvedValue({ ok: true, data: undefined });
     mocks.deleteCoursesContent.mockResolvedValue({ ok: true, data: undefined });
-    mocks.postAssessments.mockResolvedValue({ ok: true, data: { id: 'assessment-1' } });
     mocks.putAssessments.mockResolvedValue({ ok: true, data: undefined });
     mocks.deleteAssessments.mockResolvedValue({ ok: true, data: undefined });
     mocks.getCourses1.mockResolvedValue({
@@ -514,62 +509,6 @@ describe('learning server actions', () => {
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin/content');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content');
-  });
-
-  it('revalidates the assessment hub after creating an assessment', async () => {
-    mocks.resolveCourseId.mockResolvedValueOnce('1caa16bb-6810-4e53-bb0d-91f0d5702333');
-
-    const result = await createAssessment({
-      courseId: 'creature-design-by-admin',
-      title: 'Final review',
-      type: 'Quiz',
-      maxScore: 100,
-      passingScore: 70,
-      assessmentGroupId: 'group-1',
-    });
-
-    expect(result).toEqual({ success: true, data: { id: 'assessment-1' } });
-    expect(mocks.postAssessments).toHaveBeenCalledWith(
-      expect.objectContaining({
-        courseId: '1caa16bb-6810-4e53-bb0d-91f0d5702333',
-        title: 'Final review',
-        type: 'Quiz',
-        assessmentGroupId: 'group-1',
-      }),
-    );
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin/assessments');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/assessments');
-  });
-
-  it('saves authored assessment definitions through the assessments API', async () => {
-    mocks.resolveCourseId.mockResolvedValueOnce('1caa16bb-6810-4e53-bb0d-91f0d5702333');
-    mocks.fetch.mockResolvedValue(
-      new Response(JSON.stringify({ assessmentId: 'assessment-1', definitionSchemaVersion: 1, definition: { order: [], blocks: {} } }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
-
-    const result = await updateAssessmentDefinition({
-      courseId: 'creature-design-by-admin',
-      assessmentId: 'assessment-1',
-      definition: { order: [], blocks: {} },
-    });
-
-    expect(result).toEqual({ success: true, data: null });
-    expect(mocks.fetch).toHaveBeenCalledWith('http://localhost:8080/v1/assessments/assessment-1/definition', {
-      method: 'PUT',
-      body: JSON.stringify({
-        definitionSchemaVersion: 1,
-        definition: { order: [], blocks: {} },
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer access-token',
-      },
-    });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/creature-design-by-admin/assessments');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/assessments/assessment-1');
   });
 
   it('creates certificate templates through the Learning.Certificates API', async () => {
