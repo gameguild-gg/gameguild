@@ -65,6 +65,18 @@ public sealed class AuthorizationTenantResolver : IAuthorizationTenantResolver
     }
 
     /// <inheritdoc />
+    public Task<string?> ResolveTenantIdAsync(HttpContext context, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return Task.FromResult(
+            ResolveFromRequest(context)
+            ?? ResolveFromClaims(context.User)
+            ?? GetUserDefaultTenant(context.User));
+    }
+
+    /// <inheritdoc />
     public string? GetUserDefaultTenant(ClaimsPrincipal principal)
     {
         return principal.FindFirstValue(_tokenOptions.UserDefaultTenantClaimType);
