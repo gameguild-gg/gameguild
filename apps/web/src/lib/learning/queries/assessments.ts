@@ -57,12 +57,6 @@ export interface Assessment {
   isAvailable: boolean;
 }
 
-export interface AssessmentDefinition {
-  assessmentId: string;
-  definitionSchemaVersion: number;
-  definition: unknown;
-}
-
 export interface CourseAssessments {
   assessments: Assessment[];
   total: number;
@@ -235,20 +229,6 @@ export const getAssessment = cache(async (assessmentId: string): Promise<Assessm
     }
     return mapAssessment(result.data);
   } catch {
-    return null;
-  }
-});
-
-export const getAssessmentDefinition = cache(async (assessmentId: string): Promise<AssessmentDefinition | null> => {
-  try {
-    const dto = await learningApiGet<Partial<AssessmentDefinition>>(`/v1/assessments/${assessmentId}/definition`, 60) ?? {};
-    return {
-      assessmentId: dto.assessmentId ?? assessmentId,
-      definitionSchemaVersion: dto.definitionSchemaVersion ?? 1,
-      definition: dto.definition ?? { order: [], blocks: {} },
-    };
-  } catch (err) {
-    console.error('Error fetching assessment definition:', err);
     return null;
   }
 });

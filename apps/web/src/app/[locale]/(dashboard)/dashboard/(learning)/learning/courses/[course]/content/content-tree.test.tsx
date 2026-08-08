@@ -15,10 +15,8 @@ import {
   addContent,
   deleteContent,
   reorderContent,
-  updateAssessment,
   updateContent,
 } from "@/lib/learning/actions";
-import type { Assessment } from "@/lib/learning/queries/assessments";
 
 const navigationMocks = vi.hoisted(() => ({
   refresh: vi.fn(),
@@ -51,7 +49,6 @@ vi.mock("@/lib/learning/actions", () => ({
   deleteContent: vi.fn(),
   reorderContent: vi.fn(),
   updateContent: vi.fn(),
-  updateAssessment: vi.fn(),
 }));
 
 const moduleItem = {
@@ -109,41 +106,13 @@ const secondLessonItem = {
   order: 1,
 } satisfies ContentItem;
 
-const assessment = {
-  id: "assessment-1",
-  courseId: "course-1",
-  contentId: null,
-  assessmentGroupId: null,
-  assessmentGroupName: null,
-  assessmentGroupWeightPercent: null,
-  assessmentGroupOrder: null,
-  title: "Final project review",
-  description: null,
-  type: "Project",
-  maxScore: 100,
-  passingScore: 70,
-  timeLimitMinutes: null,
-  maxAttempts: null,
-  isRequired: true,
-  order: 0,
-  availableFrom: null,
-  availableUntil: null,
-  presentationMode: "Continuous",
-  dueAt: null,
-  allowLateSubmissions: false,
-  lateSubmissionDeadline: null,
-  isAvailable: true,
-} satisfies Assessment;
-
 function renderContentTree({
   modules = [moduleItem],
   allItems = [moduleItem],
-  assessments = [],
   virtualModuleIds = [],
 }: {
   modules?: ContentItem[];
   allItems?: ContentItem[];
-  assessments?: Assessment[];
   virtualModuleIds?: string[];
 } = {}) {
   return render(
@@ -152,7 +121,6 @@ function renderContentTree({
         courseId="course-1"
         modules={modules}
         allItems={allItems}
-        assessments={assessments}
         virtualModuleIds={virtualModuleIds}
       />
     </TooltipProvider>,
@@ -168,10 +136,6 @@ describe("ContentTree course management", () => {
     });
     vi.mocked(deleteContent).mockResolvedValue({ success: true, data: null });
     vi.mocked(reorderContent).mockResolvedValue({ success: true, data: null });
-    vi.mocked(updateAssessment).mockResolvedValue({
-      success: true,
-      data: null,
-    });
     vi.mocked(updateContent).mockResolvedValue({ success: true, data: null });
   });
 
@@ -909,54 +873,6 @@ describe("ContentTree course management", () => {
     expect(navigationMocks.refresh).not.toHaveBeenCalled();
   });
 
-  it("attaches an existing course assessment to a lesson", async () => {
-    const user = userEvent.setup();
-    renderContentTree({
-      allItems: [moduleItem, lessonItem],
-      assessments: [assessment],
-    });
-
-    await user.click(
-      screen.getByRole("button", { name: /attach assessment/i }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: /final project review/i }),
-    );
-
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        contentId: "lesson-1",
-      });
-    });
-    expect(navigationMocks.refresh).toHaveBeenCalled();
-  });
-
-  it("detaches an assessment already linked to a lesson", async () => {
-    const user = userEvent.setup();
-    renderContentTree({
-      allItems: [moduleItem, lessonItem],
-      assessments: [{ ...assessment, contentId: "lesson-1" }],
-    });
-
-    await user.click(
-      screen.getByRole("button", { name: /manage assessments/i }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: /final project review/i }),
-    );
-
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        contentId: null,
-        clearContentId: true,
-      });
-    });
-    expect(navigationMocks.refresh).toHaveBeenCalled();
-  });
   it("closes management dialogs through the dialog close affordance", () => {
     renderContentTree({
       modules: [moduleItem, secondModuleItem],

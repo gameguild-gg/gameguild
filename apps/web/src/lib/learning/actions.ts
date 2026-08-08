@@ -2,14 +2,13 @@
 
 import { getToken } from '@/auth';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
-import type { AssessmentPresentationMode, AssessmentType } from '@/lib/learning/queries/assessments';
+import type { AssessmentPresentationMode } from '@/lib/learning/queries/assessments';
 import type { CourseIntegrationSettings, CourseNotificationSettings } from '@/lib/learning/queries/settings';
 import type { LessonContentFormat } from '@/lib/learning/lesson-formats';
 import type { LearningCoursesProgramContentType } from '@/lib/learning/types';
 import {
   createServerClient,
   GeneratedApi,
-  type LearningAssessmentsCreateAssessmentInput,
   type LearningAssessmentsUpdateAssessmentInput,
   type LearningCoursesMonetization,
   type LearningCoursesCloneProgram,
@@ -909,61 +908,6 @@ export async function cloneCourse(courseId: string, newTitle: string): Promise<A
 
 // ── Assessment actions ──
 
-export interface CreateAssessmentInput {
-  courseId: string;
-  title: string;
-  description?: string;
-  type: AssessmentType;
-  assessmentGroupId?: string | null;
-  maxScore?: number;
-  passingScore?: number;
-  timeLimitMinutes?: number;
-  maxAttempts?: number;
-  isRequired?: boolean;
-  availableFrom?: string;
-  availableUntil?: string;
-  presentationMode?: AssessmentPresentationMode;
-}
-
-export async function createAssessment(input: CreateAssessmentInput): Promise<ActionResult<{ id: string }>> {
-  const { courseId, title, ...rest } = input;
-
-  if (!title || title.trim().length < 1) {
-    return { success: false, error: 'Title is required.' };
-  }
-
-  try {
-    const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const body: LearningAssessmentsCreateAssessmentInput & { assessmentGroupId?: string | null } = {
-      courseId: resolvedCourseId,
-      title: title.trim(),
-      description: rest.description?.trim() ?? null,
-      type: rest.type,
-      assessmentGroupId: rest.assessmentGroupId ?? null,
-      maxScore: rest.maxScore ?? 100,
-      passingScore: rest.passingScore ?? 70,
-      timeLimitMinutes: rest.timeLimitMinutes ?? null,
-      maxAttempts: rest.maxAttempts ?? null,
-      isRequired: rest.isRequired ?? true,
-      availableFrom: rest.availableFrom ?? null,
-      availableUntil: rest.availableUntil ?? null,
-      presentationMode: rest.presentationMode ?? (rest.type === 'Quiz' ? 'Continuous' : 'SingleStep'),
-    };
-
-    const { assessments } = createCourseModules();
-    const result = await assessments.postAssessments(body);
-
-    if (result.ok) {
-      revalidateCourseAssessmentPaths(courseId, resolvedCourseId);
-      return { success: true, data: { id: result.data.id! } };
-    }
-
-    return { success: false, error: extractError(result.error) };
-  } catch (e) {
-    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
-  }
-}
-
 export interface CreateAssessmentGroupInput {
   courseId: string;
   name: string;
@@ -1135,47 +1079,6 @@ export async function updateAssessment(input: UpdateAssessmentInput): Promise<Ac
     }
 
     return { success: false, error: extractError(result.error) };
-  } catch (e) {
-    return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
-  }
-}
-
-export interface UpdateAssessmentDefinitionInput {
-  courseId: string;
-  assessmentId: string;
-  definition: unknown;
-  definitionSchemaVersion?: number;
-}
-
-function normalizeAssessmentDefinitionPayload(definition: unknown): unknown {
-  if (typeof definition !== 'string') {
-    return definition ?? { order: [], blocks: {} };
-  }
-
-  const trimmed = definition.trim();
-  return trimmed ? JSON.parse(trimmed) : { order: [], blocks: {} };
-}
-
-export async function updateAssessmentDefinition(input: UpdateAssessmentDefinitionInput): Promise<ActionResult<null>> {
-  try {
-    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
-    const definition = normalizeAssessmentDefinitionPayload(input.definition);
-    const result = await learningApiRequest<unknown>(`/v1/assessments/${input.assessmentId}/definition`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        definitionSchemaVersion: input.definitionSchemaVersion ?? 1,
-        definition,
-      }),
-    });
-
-    if (!result.success) return result as ActionResult<null>;
-
-    revalidateCourseAssessmentPaths(input.courseId, resolvedCourseId);
-    revalidatePath(`/dashboard/learning/courses/${input.courseId}/assessments/${input.assessmentId}`);
-    if (resolvedCourseId !== input.courseId) {
-      revalidatePath(`/dashboard/learning/courses/${resolvedCourseId}/assessments/${input.assessmentId}`);
-    }
-    return { success: true, data: null };
   } catch (e) {
     return { success: false, error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}` };
   }

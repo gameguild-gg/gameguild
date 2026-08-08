@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useTransition } from "react";
+import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -25,19 +25,11 @@ import { Separator } from "@game-guild/ui/components/separator";
 import { ArrowLeft, Clock, Loader2, Save, Trash2 } from "lucide-react";
 import type {
   Assessment,
-  AssessmentDefinition,
   AssessmentGroup,
   AssessmentPresentationMode,
   AssessmentType,
 } from "@/lib/learning/queries/assessments";
-import {
-  updateAssessment,
-  deleteAssessment,
-  updateAssessmentDefinition,
-} from "@/lib/learning/actions";
-import { EMPTY_ASSESSMENT_BLOCK_STORAGE } from "@/components/block-content-editor/lib/assessment/assessment-contracts";
-import { QuizAssessmentEditor } from "./quiz-assessment-editor";
-import type { ContentItem } from "@/lib/learning/types";
+import { updateAssessment, deleteAssessment } from "@/lib/learning/actions";
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: "Quiz", label: "Quiz" },
@@ -50,9 +42,7 @@ const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
 interface AssessmentEditorProps {
   courseId: string;
   assessment: Assessment;
-  assessmentDefinition?: AssessmentDefinition | null;
   assessmentGroups?: AssessmentGroup[];
-  contentItems?: ContentItem[];
 }
 
 function formatWeight(weightPercent: number) {
@@ -62,17 +52,12 @@ function formatWeight(weightPercent: number) {
 export function AssessmentEditor({
   courseId,
   assessment,
-  assessmentDefinition = null,
   assessmentGroups = [],
-  contentItems = [],
 }: AssessmentEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
   const isQuiz = assessment.type === "Quiz";
-  const definitionRef = useRef<unknown>(
-    assessmentDefinition?.definition ?? EMPTY_ASSESSMENT_BLOCK_STORAGE,
-  );
 
   const [title, setTitle] = useState(assessment.title);
   const [description, setDescription] = useState(assessment.description ?? "");
@@ -91,9 +76,6 @@ export function AssessmentEditor({
   const [isRequired, setIsRequired] = useState(assessment.isRequired);
   const [assessmentGroupId, setAssessmentGroupId] = useState(
     assessment.assessmentGroupId ?? "none",
-  );
-  const [linkedContentId, setLinkedContentId] = useState(
-    assessment.contentId ?? "none",
   );
   const [presentationMode, setPresentationMode] =
     useState<AssessmentPresentationMode>(assessment.presentationMode);
@@ -131,29 +113,12 @@ export function AssessmentEditor({
         assessmentGroupId:
           assessmentGroupId === "none" ? null : assessmentGroupId,
         clearAssessmentGroupId: assessmentGroupId === "none",
-        contentId: linkedContentId === "none" ? null : linkedContentId,
-        clearContentId: linkedContentId === "none",
         presentationMode,
       });
 
       if (!result.success) {
         setError(result.error);
         return;
-      }
-
-      if (isQuiz) {
-        const definitionResult = await updateAssessmentDefinition({
-          courseId,
-          assessmentId: assessment.id,
-          definition: definitionRef.current,
-          definitionSchemaVersion:
-            assessmentDefinition?.definitionSchemaVersion ?? 1,
-        });
-
-        if (!definitionResult.success) {
-          setError(definitionResult.error);
-          return;
-        }
       }
 
       setSaved(true);
@@ -231,25 +196,6 @@ export function AssessmentEditor({
               </div>
             </CardContent>
           </Card>
-
-          {isQuiz && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Quiz</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <QuizAssessmentEditor
-                  initialDefinition={
-                    assessmentDefinition?.definition ??
-                    EMPTY_ASSESSMENT_BLOCK_STORAGE
-                  }
-                  onChange={(definition) => {
-                    definitionRef.current = definition;
-                  }}
-                />
-              </CardContent>
-            </Card>
-          )}
 
           <Card>
             <CardHeader>
@@ -346,33 +292,6 @@ export function AssessmentEditor({
                 </Select>
                 <p className="text-muted-foreground text-xs">
                   Type cannot be changed after creation.
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label htmlFor="linked-lesson">Linked lesson</Label>
-                <Select
-                  value={linkedContentId}
-                  onValueChange={setLinkedContentId}
-                >
-                  <SelectTrigger id="linked-lesson">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No lesson</SelectItem>
-                    {contentItems
-                      .filter((item) => item.type !== "Module")
-                      .map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.title}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-muted-foreground text-xs">
-                  Place this activity in the learner&apos;s course sequence.
                 </p>
               </div>
 

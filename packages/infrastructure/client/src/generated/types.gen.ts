@@ -3961,12 +3961,6 @@ export interface LaunchPadLaunchPlan {
 
 export type LaunchPadLaunchPlanStatus = 'Draft' | 'Preparing' | 'Ready' | 'Launched' | 'Paused';
 
-export interface LearningAssessmentsAssessmentDefinition {
-  assessmentId?: string;
-  definitionSchemaVersion?: number;
-  definition?: Record<string, unknown>;
-}
-
 export interface LearningAssessmentsAssessment {
   id?: string;
   courseId?: string;
@@ -4116,8 +4110,6 @@ export interface LearningAssessmentsInteractiveVideoAssessmentCue {
 
 export interface LearningAssessmentsLearnerAssessmentAttempt {
   submission?: LearningAssessmentsLearnerAssessmentSubmission;
-  definitionSchemaVersion?: number;
-  definition?: Record<string, unknown>;
 }
 
 export interface LearningAssessmentsLearnerAssessmentSubmission {
@@ -4171,11 +4163,6 @@ export interface LearningAssessmentsSubmitAssessmentInput {
   mediaPayload?: string | null;
   projectPayload?: string | null;
   structuredAnswerPayload?: string | null;
-}
-
-export interface LearningAssessmentsUpdateAssessmentDefinitionInput {
-  definition?: Record<string, unknown>;
-  definitionSchemaVersion?: number;
 }
 
 export interface LearningAssessmentsUpdateAssessmentGroupInput {
@@ -8432,7 +8419,6 @@ export let LaunchPadLaunchChecklistItemSchema: z.ZodType<LaunchPadLaunchChecklis
 export let LaunchPadLaunchChecklistItemInputSchema: z.ZodType<LaunchPadLaunchChecklistItemInput>;
 export let LaunchPadLaunchPlanSchema: z.ZodType<LaunchPadLaunchPlan>;
 export let LaunchPadLaunchPlanStatusSchema: z.ZodType<LaunchPadLaunchPlanStatus>;
-export let LearningAssessmentsAssessmentDefinitionSchema: z.ZodType<LearningAssessmentsAssessmentDefinition>;
 export let LearningAssessmentsAssessmentSchema: z.ZodType<LearningAssessmentsAssessment>;
 export let LearningAssessmentsAssessmentGroupAnalyticsSchema: z.ZodType<LearningAssessmentsAssessmentGroupAnalytics>;
 export let LearningAssessmentsAssessmentGroupSchema: z.ZodType<LearningAssessmentsAssessmentGroup>;
@@ -8455,7 +8441,6 @@ export let LearningAssessmentsStartSubmissionInputSchema: z.ZodType<LearningAsse
 export let LearningAssessmentsSubmissionModalitySchema: z.ZodType<LearningAssessmentsSubmissionModality>;
 export let LearningAssessmentsSubmissionStatusSchema: z.ZodType<LearningAssessmentsSubmissionStatus>;
 export let LearningAssessmentsSubmitAssessmentInputSchema: z.ZodType<LearningAssessmentsSubmitAssessmentInput>;
-export let LearningAssessmentsUpdateAssessmentDefinitionInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentDefinitionInput>;
 export let LearningAssessmentsUpdateAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentGroupInput>;
 export let LearningAssessmentsUpdateAssessmentInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentInput>;
 export let LearningCertificatesCertificateSchema: z.ZodType<LearningCertificatesCertificate>;
@@ -13479,13 +13464,6 @@ LaunchPadLaunchPlanSchema = z.object({
 /** Zod schema for LaunchPadLaunchPlanStatus */
 LaunchPadLaunchPlanStatusSchema = z.enum(['Draft', 'Preparing', 'Ready', 'Launched', 'Paused']);
 
-/** Zod schema for LearningAssessmentsAssessmentDefinition */
-LearningAssessmentsAssessmentDefinitionSchema = z.object({
-  assessmentId: z.string().uuid().optional(),
-  definitionSchemaVersion: z.number().int().optional(),
-  definition: z.record(z.string(), z.unknown()).optional(),
-});
-
 /** Zod schema for LearningAssessmentsAssessment */
 LearningAssessmentsAssessmentSchema = z.object({
   id: z.string().uuid().optional(),
@@ -13659,8 +13637,6 @@ LearningAssessmentsInteractiveVideoAssessmentCueSchema = z.object({
 /** Zod schema for LearningAssessmentsLearnerAssessmentAttempt */
 LearningAssessmentsLearnerAssessmentAttemptSchema = z.object({
   submission: z.lazy(() => LearningAssessmentsLearnerAssessmentSubmissionSchema).optional(),
-  definitionSchemaVersion: z.number().int().optional(),
-  definition: z.record(z.string(), z.unknown()).optional(),
 });
 
 /** Zod schema for LearningAssessmentsLearnerAssessmentSubmission */
@@ -13720,12 +13696,6 @@ LearningAssessmentsSubmitAssessmentInputSchema = z.object({
   mediaPayload: z.string().nullable().optional(),
   projectPayload: z.string().nullable().optional(),
   structuredAnswerPayload: z.string().nullable().optional(),
-});
-
-/** Zod schema for LearningAssessmentsUpdateAssessmentDefinitionInput */
-LearningAssessmentsUpdateAssessmentDefinitionInputSchema = z.object({
-  definition: z.record(z.string(), z.unknown()).optional(),
-  definitionSchemaVersion: z.number().int().optional(),
 });
 
 /** Zod schema for LearningAssessmentsUpdateAssessmentGroupInput */

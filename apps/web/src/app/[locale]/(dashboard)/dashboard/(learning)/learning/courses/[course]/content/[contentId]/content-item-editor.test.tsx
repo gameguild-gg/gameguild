@@ -33,6 +33,12 @@ vi.mock("@/lib/learning/actions", () => ({
   updateContent: vi.fn(),
 }));
 
+vi.mock("@/components/block-content-editor/lexical-surface", () => ({
+  LexicalSurface: ({ accessibleLabel }: { accessibleLabel?: string }) => (
+    <textarea aria-label={accessibleLabel ?? "Body"} readOnly />
+  ),
+}));
+
 vi.mock("./lesson-code-editor", () => ({
   LessonCodeEditor: ({
     initialValue,
@@ -107,7 +113,7 @@ const lessonItemMarkdownBody = {
 } satisfies ContentItemDetail;
 
 // Lexical lesson: structured state lives in jsonBody. content stays empty.
-// ponytail: minimal valid SerializedEditorState — root + empty children.
+// Minimal valid SerializedEditorState: root + empty children.
 const lessonItemLexical = {
   id: "lesson-3",
   parentId: "module-1",
@@ -302,6 +308,7 @@ describe("ContentItemEditor", () => {
         visibility: "Public",
         isRequired: true,
         estimatedMinutes: 15,
+        lessonFormat: "Markdown",
       });
     });
     expect(routerMocks.refresh).toHaveBeenCalled();

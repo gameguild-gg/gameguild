@@ -484,31 +484,6 @@ export const deleteAssessmentsGroupsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetAssessmentsDefinitionInput {
-  id: string;
-}
-export type GetAssessmentsDefinitionOutput = Types.LearningAssessmentsAssessmentDefinition;
-export const getAssessmentsDefinitionEndpoint = {
-  operationId: 'getAssessmentsDefinition' as const,
-  method: 'GET' as const,
-  path: '/v1/assessments/{id}/definition' as const,
-  tags: ['Learning/assessments'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface PutAssessmentsDefinitionInput {
-  id: string;
-  body?: Types.LearningAssessmentsUpdateAssessmentDefinitionInput;
-}
-export type PutAssessmentsDefinitionOutput = Types.LearningAssessmentsAssessmentDefinition;
-export const putAssessmentsDefinitionEndpoint = {
-  operationId: 'putAssessmentsDefinition' as const,
-  method: 'PUT' as const,
-  path: '/v1/assessments/{id}/definition' as const,
-  tags: ['Learning/assessments'] as const,
-  requiresAuth: true,
-} as const;
-
 export interface PutAssessmentsGroupInput {
   id: string;
   body?: Types.LearningAssessmentsAssignAssessmentGroupInput;
@@ -14018,8 +13993,6 @@ export const endpoints = {
   postAssessmentsGroups: postAssessmentsGroupsEndpoint,
   putAssessmentsGroups: putAssessmentsGroupsEndpoint,
   deleteAssessmentsGroups: deleteAssessmentsGroupsEndpoint,
-  getAssessmentsDefinition: getAssessmentsDefinitionEndpoint,
-  putAssessmentsDefinition: putAssessmentsDefinitionEndpoint,
   putAssessmentsGroup: putAssessmentsGroupEndpoint,
   getAssessmentsInteractiveVideoCues: getAssessmentsInteractiveVideoCuesEndpoint,
   postAssessmentsInteractiveVideoCues: postAssessmentsInteractiveVideoCuesEndpoint,
