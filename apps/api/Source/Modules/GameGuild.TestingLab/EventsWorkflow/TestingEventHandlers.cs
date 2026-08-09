@@ -37,21 +37,40 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
 
         try
         {
-            var testingEvent = TestingEvent.Create(
-                request.Name,
-                request.Mode,
-                actor.UserId,
-                request.ApplicationsOpenAt,
-                request.ApplicationsCloseAt,
-                request.StartsAt,
-                request.EndsAt,
-                request.RequiresFeedback,
-                request.ApprovalMode,
-                actor.TenantId,
-                request.Description);
-            context.Set<TestingEvent>().Add(testingEvent);
+            var occurrenceStarts = TestingEventRecurrenceSchedule.Expand(request.StartsAt, request.Recurrence);
+            Guid? recurrenceSeriesId = request.Recurrence == null ? null : Guid.NewGuid();
+            var recurrenceDaysOfWeek = request.Recurrence?.DaysOfWeek is { Count: > 0 } days
+                ? string.Join(',', days.Distinct().OrderBy(day => day))
+                : null;
+            var testingEvents = occurrenceStarts
+                .Select((occurrenceStart, index) =>
+                {
+                    var offset = occurrenceStart - request.StartsAt;
+                    return TestingEvent.Create(
+                        request.Name,
+                        request.Mode,
+                        actor.UserId,
+                        request.ApplicationsOpenAt + offset,
+                        request.ApplicationsCloseAt + offset,
+                        occurrenceStart,
+                        request.EndsAt + offset,
+                        request.RequiresFeedback,
+                        request.ApprovalMode,
+                        actor.TenantId,
+                        request.Description,
+                        recurrenceSeriesId,
+                        request.Recurrence == null ? null : index + 1,
+                        request.Recurrence?.Frequency,
+                        request.Recurrence?.Interval,
+                        recurrenceDaysOfWeek,
+                        request.Recurrence?.EndsAt,
+                        request.Recurrence?.OccurrenceCount);
+                })
+                .ToArray();
+            foreach (var testingEvent in testingEvents)
+                context.Set<TestingEvent>().Add(testingEvent);
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return Result.Success(ToProjection(testingEvent));
+            return Result.Success(ToProjection(testingEvents[0]));
         }
         catch (ArgumentException exception)
         {
@@ -671,7 +690,14 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
         testingEvent.LearningActivityId,
         testingEvent.TenantId,
         testingEvent.Slots.Count(slot => slot.DeletedAt == null),
-        testingEvent.Applications.Count(application => application.DeletedAt == null));
+        testingEvent.Applications.Count(application => application.DeletedAt == null),
+        testingEvent.RecurrenceSeriesId,
+        testingEvent.RecurrenceOccurrence,
+        testingEvent.RecurrenceFrequency,
+        testingEvent.RecurrenceInterval,
+        ParseRecurrenceDaysOfWeek(testingEvent.RecurrenceDaysOfWeek),
+        testingEvent.RecurrenceEndsAt,
+        testingEvent.RecurrenceOccurrenceCount);
 
     private static readonly Expression<Func<TestingEvent, TestingEventProjection>> EventProjection = testingEvent => new(
         testingEvent.Id,
@@ -692,7 +718,24 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
         testingEvent.LearningActivityId,
         testingEvent.TenantId,
         testingEvent.Slots.Count(slot => slot.DeletedAt == null),
-        testingEvent.Applications.Count(application => application.DeletedAt == null));
+        testingEvent.Applications.Count(application => application.DeletedAt == null),
+        testingEvent.RecurrenceSeriesId,
+        testingEvent.RecurrenceOccurrence,
+        testingEvent.RecurrenceFrequency,
+        testingEvent.RecurrenceInterval,
+        ParseRecurrenceDaysOfWeek(testingEvent.RecurrenceDaysOfWeek),
+        testingEvent.RecurrenceEndsAt,
+        testingEvent.RecurrenceOccurrenceCount);
+    private static IReadOnlyList<DayOfWeek>? ParseRecurrenceDaysOfWeek(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        return value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(item => Enum.TryParse<DayOfWeek>(item, out var day) ? day : (DayOfWeek?)null)
+            .Where(day => day.HasValue)
+            .Select(day => day!.Value)
+            .ToArray();
+    }
+
     private static TestingEventSlotProjection ToProjection(TestingEventSlot slot) => new(
         slot.Id,
         slot.EventId,
