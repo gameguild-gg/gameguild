@@ -5,6 +5,7 @@ import { getDashboardNotificationSummary } from "@/lib/dashboard-notifications";
 import { getCentralSignInUrl } from "@/lib/learner/routes";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import Script from "next/script";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
@@ -37,13 +38,16 @@ export default async function LearningLayout({
       : new URL("/", learningOrigin);
     const returnPath = `${visibleRequest.pathname}${visibleRequest.search}`;
     return (
-      <LearningAuthRedirect
-        href={getCentralSignInUrl({
-          learningOrigin,
-          pathname: returnPath,
-          webOrigin,
-        })}
-      />
+      <>
+        <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
+        <LearningAuthRedirect
+          href={getCentralSignInUrl({
+            learningOrigin,
+            pathname: returnPath,
+            webOrigin,
+          })}
+        />
+      </>
     );
   }
 
@@ -54,17 +58,20 @@ export default async function LearningLayout({
   const notifications = await getDashboardNotificationSummary(session.user.id);
 
   return (
-    <LearningShell
-      notifications={notifications}
-      user={{
-        id: session.user.id,
-        name,
-        email: session.user.email || "",
-        image: session.user.image,
-      }}
-      webOrigin={webOrigin}
-    >
-      {children}
-    </LearningShell>
+    <>
+      <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
+      <LearningShell
+        notifications={notifications}
+        user={{
+          id: session.user.id,
+          name,
+          email: session.user.email || "",
+          image: session.user.image,
+        }}
+        webOrigin={webOrigin}
+      >
+        {children}
+      </LearningShell>
+    </>
   );
 }
