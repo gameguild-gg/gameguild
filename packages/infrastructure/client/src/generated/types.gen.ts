@@ -10,99 +10,99 @@
 import { z } from 'zod';
 
 export interface AIAiChatMessage {
-  role?: string | null;
   content?: string | null;
+  role?: string | null;
 }
 
 export interface AIAiChatInput {
-  provider?: string | null;
-  model?: string | null;
-  systemPrompt?: string | null;
-  messages?: Array<AIAiChatMessage> | null;
-  temperature?: number | null;
   maxTokens?: number | null;
+  messages?: Array<AIAiChatMessage> | null;
+  model?: string | null;
+  provider?: string | null;
+  systemPrompt?: string | null;
+  temperature?: number | null;
 }
 
 export interface AIAiCompletionOutput {
-  provider?: string | null;
-  model?: string | null;
-  text?: string | null;
   finishReason?: string | null;
+  model?: string | null;
+  provider?: string | null;
+  text?: string | null;
   usage?: AIAiUsage;
 }
 
 export interface AIAiConversationHistoryEntry {
+  finishReason?: string | null;
   id?: string;
-  userId?: string | null;
-  requestKind?: string | null;
-  provider?: string | null;
   model?: string | null;
-  requestText?: string | null;
-  systemPrompt?: string | null;
-  responseText?: string | null;
+  occurredAt?: string;
   outcome?: string | null;
   outcomeCode?: string | null;
   outcomeReason?: string | null;
-  finishReason?: string | null;
+  provider?: string | null;
+  requestKind?: string | null;
+  requestText?: string | null;
+  responseText?: string | null;
+  systemPrompt?: string | null;
   usage?: AIAiUsage;
-  occurredAt?: string;
+  userId?: string | null;
 }
 
 export interface AIAiGenerateInput {
-  provider?: string | null;
-  model?: string | null;
-  systemPrompt?: string | null;
-  prompt?: string | null;
-  temperature?: number | null;
   maxTokens?: number | null;
+  model?: string | null;
+  prompt?: string | null;
+  provider?: string | null;
+  systemPrompt?: string | null;
+  temperature?: number | null;
 }
 
 export interface AIAiGeneratedContentDraftInput {
-  subject?: string | null;
-  context?: string | null;
   audience?: string | null;
-  tone?: string | null;
-  provider?: string | null;
-  model?: string | null;
+  context?: string | null;
   maxTokens?: number | null;
+  model?: string | null;
+  provider?: string | null;
+  subject?: string | null;
+  tone?: string | null;
 }
 
 export type AIAiGeneratedContentKind = 'Email' | 'Report' | 'ListingDescription';
 
 export interface AIAiGeneratedContentInput {
-  kind?: AIAiGeneratedContentKind;
-  subject?: string | null;
-  context?: string | null;
   audience?: string | null;
-  tone?: string | null;
-  provider?: string | null;
-  model?: string | null;
+  context?: string | null;
+  kind?: AIAiGeneratedContentKind;
   maxTokens?: number | null;
+  model?: string | null;
+  provider?: string | null;
+  subject?: string | null;
+  tone?: string | null;
 }
 
 export interface AIAiPromptTemplate {
-  id?: string;
-  tenantId?: string | null;
-  key?: string | null;
-  name?: string | null;
-  description?: string | null;
   category?: string | null;
-  systemPrompt?: string | null;
-  prompt?: string | null;
+  createdAt?: string;
+  createdByUserId?: string | null;
+  description?: string | null;
+  id?: string;
   isActive?: boolean;
   isSystemTemplate?: boolean;
-  createdByUserId?: string | null;
-  updatedByUserId?: string | null;
-  createdAt?: string;
+  key?: string | null;
+  name?: string | null;
+  prompt?: string | null;
+  systemPrompt?: string | null;
+  tenantId?: string | null;
   updatedAt?: string;
+  updatedByUserId?: string | null;
 }
 
 export interface AIAiPromptTemplateGenerateInput {
-  variables?: Record<string, string | null> | null;
-  provider?: string | null;
-  model?: string | null;
-  temperature?: number | null;
   maxTokens?: number | null;
+  model?: string | null;
+  provider?: string | null;
+  temperature?: number | null;
+  variables?: Record<string, string | null> | null;
 }
 
 export interface AIAiPromptTemplateRenderInput {
@@ -110,44 +110,44 @@ export interface AIAiPromptTemplateRenderInput {
 }
 
 export interface AIAiPromptTemplateRenderOutput {
-  templateId?: string;
   key?: string | null;
-  systemPrompt?: string | null;
   prompt?: string | null;
+  systemPrompt?: string | null;
+  templateId?: string;
   variables?: Record<string, string | null> | null;
 }
 
 export interface AIAiProviderStatus {
-  provider?: string | null;
-  configured?: boolean;
-  defaultModel?: string | null;
   baseUrl?: string | null;
+  configured?: boolean;
   credentialsConfigured?: boolean;
+  defaultModel?: string | null;
+  provider?: string | null;
 }
 
 export interface AIAiQuotaStatus {
-  resourceType?: string | null;
   currentUsage?: number;
-  softLimit?: number | null;
   hardLimit?: number | null;
-  remaining?: number;
-  usagePercent?: number;
-  period?: string | null;
   isActive?: boolean;
   lastReset?: string | null;
   nextReset?: string | null;
+  period?: string | null;
+  remaining?: number;
+  resourceType?: string | null;
+  softLimit?: number | null;
+  usagePercent?: number;
 }
 
 export interface AIAiQuotaStatusOutput {
-  tenantId?: string;
-  quotas?: Array<AIAiQuotaStatus> | null;
   generatedAtUtc?: string;
+  quotas?: Array<AIAiQuotaStatus> | null;
+  tenantId?: string;
 }
 
 export interface AIAiStatusOutput {
-  enabled?: boolean;
-  defaultProvider?: string | null;
   allowTenantOverrides?: boolean;
+  defaultProvider?: string | null;
+  enabled?: boolean;
   providers?: Array<AIAiProviderStatus> | null;
 }
 
@@ -158,84 +158,84 @@ export interface AIAiUsage {
 }
 
 export interface AICreateAiPromptTemplateInput {
+  category?: string | null;
+  description?: string | null;
+  isActive?: boolean | null;
   key?: string | null;
   name?: string | null;
   prompt?: string | null;
-  description?: string | null;
-  category?: string | null;
   systemPrompt?: string | null;
-  isActive?: boolean | null;
 }
 
 export interface AIUpdateAiPromptTemplateInput {
+  category?: string | null;
+  description?: string | null;
+  isActive?: boolean | null;
   name?: string | null;
   prompt?: string | null;
-  description?: string | null;
-  category?: string | null;
   systemPrompt?: string | null;
-  isActive?: boolean | null;
 }
 
 export interface APIControllersApplicationDetails {
+  description?: string | null;
+  informationalVersion?: string | null;
   name?: string | null;
   version?: string | null;
-  informationalVersion?: string | null;
-  description?: string | null;
 }
 
 export interface APIControllersApplicationInfoOutput {
   application?: APIControllersApplicationDetails;
   build?: APIControllersBuildDetails;
-  runtime?: APIControllersRuntimeDetails;
   process?: APIControllersProcessDetails;
+  runtime?: APIControllersRuntimeDetails;
   timestamp?: string;
 }
 
 export interface APIControllersBuildDetails {
-  timestamp?: string | null;
   configuration?: string | null;
   framework?: string | null;
+  timestamp?: string | null;
 }
 
 export interface APIControllersDependencyHealthItem {
+  data?: Record<string, string> | null;
+  description?: string | null;
+  duration?: string;
+  exception?: string | null;
+  isHealthy?: boolean;
   name?: string | null;
   status?: string | null;
-  duration?: string;
-  description?: string | null;
-  isHealthy?: boolean;
   tags?: Array<string> | null;
-  data?: Record<string, string> | null;
-  exception?: string | null;
 }
 
 export interface APIControllersDependencyHealthOutput {
-  status?: string | null;
-  totalDuration?: string;
-  timestamp?: string;
-  healthyCount?: number;
-  unhealthyCount?: number;
   dependencies?: Array<APIControllersDependencyHealthItem> | null;
   error?: string | null;
+  healthyCount?: number;
+  status?: string | null;
+  timestamp?: string;
+  totalDuration?: string;
+  unhealthyCount?: number;
 }
 
 export interface APIControllersHealthinessOutput {
-  status?: string | null;
-  duration?: string;
-  timestamp?: string;
   checks?: Record<string, APIControllersHealthinessResponseItem> | null;
+  duration?: string;
   error?: string | null;
+  status?: string | null;
+  timestamp?: string;
 }
 
 export interface APIControllersHealthinessResponseItem {
-  status?: string | null;
-  duration?: string;
-  description?: string | null;
   data?: Record<string, Record<string, unknown>> | null;
+  description?: string | null;
+  duration?: string;
+  status?: string | null;
 }
 
 export interface APIControllersLivenessOutput {
-  status?: string | null;
   alive?: boolean;
+  status?: string | null;
   timestamp?: string;
   uptime?: string;
   version?: string | null;
@@ -247,36 +247,36 @@ export interface APIControllersProcessDetails {
 }
 
 export interface APIControllersReadinessOutput {
-  status?: string | null;
-  ready?: boolean;
-  timestamp?: string;
-  services?: Record<string, boolean> | null;
   error?: string | null;
+  ready?: boolean;
+  services?: Record<string, boolean> | null;
+  status?: string | null;
+  timestamp?: string;
 }
 
 export interface APIControllersRuntimeDetails {
   dotNetVersion?: string | null;
-  osDescription?: string | null;
   osArchitecture?: string | null;
+  osDescription?: string | null;
   processArchitecture?: string | null;
 }
 
 export type BillingCycle = 'Weekly' | 'Monthly' | 'Quarterly' | 'SemiAnnually' | 'Annually' | 'Biannually';
 
 export interface BulkOperationError {
+  errorCode?: string | null;
+  errorMessage?: string | null;
   tenantId?: string;
   tenantName?: string | null;
-  errorMessage?: string | null;
-  errorCode?: string | null;
 }
 
 export interface BulkOperationOutput {
-  totalRequested?: number;
-  successfulOperations?: number;
-  failedOperations?: number;
   errors?: Array<BulkOperationError> | null;
+  failedOperations?: number;
   isComplete?: boolean;
   successRate?: number;
+  successfulOperations?: number;
+  totalRequested?: number;
 }
 
 export interface CQRSIDomainEvent {
@@ -286,11 +286,11 @@ export interface CQRSIDomainEvent {
 }
 
 export interface CommerceBillingInvoicePaymentRetryResult {
+  accepted?: boolean;
+  code?: string | null;
   invoiceId?: string;
   invoiceNumber?: string | null;
   invoiceStatus?: CommerceBillingInvoiceStatus;
-  accepted?: boolean;
-  code?: string | null;
   message?: string | null;
   retryScheduledAt?: string | null;
 }
@@ -303,8 +303,8 @@ export interface CommerceOrdersAddOrderItemInput {
   productId?: string;
   productPricingId?: string;
   productPricingVersionId?: string;
-  quantity?: number;
   promoCode?: string | null;
+  quantity?: number;
 }
 
 export interface CommerceOrdersCaptureOrderInput {
@@ -313,8 +313,8 @@ export interface CommerceOrdersCaptureOrderInput {
 
 export interface CommerceOrdersCompleteOrderInput {
   paymentId?: string | null;
-  paymentProviderReference?: string | null;
   paymentMethod?: string | null;
+  paymentProviderReference?: string | null;
 }
 
 export interface CommerceOrdersCreateOrderInput {
@@ -322,82 +322,82 @@ export interface CommerceOrdersCreateOrderInput {
 }
 
 export interface CommerceOrdersOrderCapture {
-  id?: string;
-  userId?: string;
-  idempotencyKey?: string | null;
-  status?: CommerceOrdersOrderStatus;
-  subtotal?: number;
-  discountTotal?: number;
-  taxAmount?: number;
-  total?: number;
+  clientActionToken?: string | null;
+  createdAt?: string;
   currency?: string | null;
-  paymentProviderReference?: string | null;
-  paymentMethod?: string | null;
+  discountTotal?: number;
+  id?: string;
+  idempotencyKey?: string | null;
+  lineItems?: Array<CommerceOrdersOrderLineItem> | null;
   paidAt?: string | null;
-  refundedAt?: string | null;
+  paymentId?: string | null;
+  paymentMessage?: string | null;
+  paymentMethod?: string | null;
+  paymentProviderReference?: string | null;
+  paymentState?: CommerceOrderChargeState;
   refundAmount?: number | null;
   refundReason?: string | null;
-  createdAt?: string;
+  refundedAt?: string | null;
+  status?: CommerceOrdersOrderStatus;
+  subtotal?: number;
+  taxAmount?: number;
+  total?: number;
   updatedAt?: string;
-  lineItems?: Array<CommerceOrdersOrderLineItem> | null;
-  paymentState?: CommerceOrderChargeState;
-  paymentId?: string | null;
-  clientActionToken?: string | null;
-  paymentMessage?: string | null;
+  userId?: string;
 }
 
 export interface CommerceOrdersOrder {
-  id?: string;
-  userId?: string;
-  idempotencyKey?: string | null;
-  status?: CommerceOrdersOrderStatus;
-  subtotal?: number;
-  discountTotal?: number;
-  taxAmount?: number;
-  total?: number;
+  createdAt?: string;
   currency?: string | null;
-  paymentProviderReference?: string | null;
-  paymentMethod?: string | null;
+  discountTotal?: number;
+  id?: string;
+  idempotencyKey?: string | null;
+  lineItems?: Array<CommerceOrdersOrderLineItem> | null;
   paidAt?: string | null;
-  refundedAt?: string | null;
+  paymentMethod?: string | null;
+  paymentProviderReference?: string | null;
   refundAmount?: number | null;
   refundReason?: string | null;
-  createdAt?: string;
+  refundedAt?: string | null;
+  status?: CommerceOrdersOrderStatus;
+  subtotal?: number;
+  taxAmount?: number;
+  total?: number;
   updatedAt?: string;
-  lineItems?: Array<CommerceOrdersOrderLineItem> | null;
+  userId?: string;
 }
 
 export interface CommerceOrdersOrderLineItem {
+  basePrice?: number;
+  currency?: string | null;
+  discountAmount?: number;
   id?: string;
+  isSubscription?: boolean;
+  lineTotal?: number;
+  priceVersion?: number;
   productId?: string;
+  productName?: string | null;
   productPricingId?: string;
   productPricingVersionId?: string;
-  priceVersion?: number;
-  productName?: string | null;
-  unitPrice?: number;
-  basePrice?: number;
-  salePrice?: number | null;
-  currency?: string | null;
-  quantity?: number;
-  discountAmount?: number;
   promoCodesApplied?: string | null;
-  lineTotal?: number;
-  isSubscription?: boolean;
+  quantity?: number;
+  salePrice?: number | null;
+  unitPrice?: number;
 }
 
 export type CommerceOrdersOrderStatus =
   'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Refunded' | 'PartiallyRefunded' | 'Disputed' | 'Paid' | 'Fulfilled' | 'OnHold';
 
 export interface CommercePaymentsBillingChargesControllerCancelBillingChargeInput {
-  cancellationReason?: string | null;
   canceledBy?: string | null;
+  cancellationReason?: string | null;
 }
 
 export interface CommercePaymentsBillingChargesControllerCreateBillingChargeInput {
-  tenantId?: string;
-  subscriptionId?: string;
   amount?: number;
   paymentMethodId?: string | null;
+  subscriptionId?: string;
+  tenantId?: string;
 }
 
 export interface CommercePaymentsBillingChargesControllerRefundBillingChargeInput {
@@ -406,34 +406,34 @@ export interface CommercePaymentsBillingChargesControllerRefundBillingChargeInpu
 }
 
 export interface CommercePaymentsCalculateTaxInput {
-  jurisdictionCode: string | null;
   amount: number;
+  applicableExemptions?: Array<string> | null;
   currency: string | null;
   customerType: string | null;
-  productCategory?: string | null;
   customerVatNumber?: string | null;
   isTaxInclusive?: boolean;
+  jurisdictionCode: string | null;
+  productCategory?: string | null;
   transactionDate?: string | null;
-  applicableExemptions?: Array<string> | null;
 }
 
 export interface CommercePaymentsCreateTaxJurisdictionInput {
   code?: string | null;
-  name?: string | null;
   country?: string | null;
+  defaultRate?: number;
+  name?: string | null;
   state?: string | null;
   taxType?: string | null;
-  defaultRate?: number;
 }
 
 export interface CommercePaymentsCreateTaxRuleInput {
-  jurisdictionCode?: string | null;
-  productCategory?: string | null;
   customerType?: string | null;
-  rate?: number;
+  description?: string | null;
   effectiveFrom?: string;
   effectiveTo?: string | null;
-  description?: string | null;
+  jurisdictionCode?: string | null;
+  productCategory?: string | null;
+  rate?: number;
 }
 
 export interface CommercePaymentsCreateWalletInput {
@@ -457,86 +457,86 @@ export interface CommercePaymentsModelsPatchWalletInput {
 }
 
 export interface CommercePaymentsPatchTaxJurisdictionInput {
-  name?: string | null;
-  taxType?: string | null;
   defaultRate?: number | null;
   isActive?: boolean | null;
+  name?: string | null;
+  taxType?: string | null;
 }
 
 export interface CommercePaymentsPatchTaxRuleInput {
-  rate?: number | null;
+  description?: string | null;
   effectiveFrom?: string | null;
   effectiveTo?: string | null;
-  description?: string | null;
   isActive?: boolean | null;
+  rate?: number | null;
 }
 
 export interface CommercePaymentsPaymentCancellationResult {
-  paymentId: string;
-  cancellationReason: string | null;
   canceledAt: string;
   canceledBy?: string | null;
-  success: boolean;
+  cancellationReason: string | null;
   errorMessage?: string | null;
-  refundProcessed?: boolean;
+  paymentId: string;
   refundAmount?: number | null;
+  refundProcessed?: boolean;
+  success: boolean;
 }
 
 export interface CommercePaymentsPaymentResult {
-  tenantId?: string;
-  success?: boolean;
-  transactionId?: string | null;
-  paymentId?: string | null;
   amount?: Money;
-  processedAt?: string | null;
   failureReason?: string | null;
-  paymentMethodId?: string | null;
-  status?: CommercePaymentsPaymentStatus;
   invoiceId?: string | null;
+  paymentId?: string | null;
+  paymentMethodId?: string | null;
+  processedAt?: string | null;
+  status?: CommercePaymentsPaymentStatus;
+  success?: boolean;
+  tenantId?: string;
+  transactionId?: string | null;
 }
 
 export interface CommercePaymentsPaymentRetryResult {
-  success?: boolean;
-  retryAttempt?: number;
+  failureReason?: string | null;
+  maxRetriesReached?: boolean;
   nextRetryAt?: string | null;
   paymentResult?: CommercePaymentsPaymentResult;
-  maxRetriesReached?: boolean;
-  failureReason?: string | null;
+  retryAttempt?: number;
+  success?: boolean;
 }
 
 export type CommercePaymentsPaymentStatus = 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'Cancelled' | 'RequiresAction' | 'Refunded' | 'Disputed';
 
 export interface CommercePaymentsPaymentsControllerCancelPaymentInput {
-  cancellationReason?: string | null;
   canceledBy?: string | null;
+  cancellationReason?: string | null;
   notes?: string | null;
 }
 
 export interface CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput {
-  tenantId?: string;
-  subscriptionId?: string;
   paymentMethodId?: string | null;
+  subscriptionId?: string;
+  tenantId?: string;
 }
 
 export interface CommercePaymentsPaymentsControllerCreateSetupIntentInput {
-  tenantId?: string;
-  subscriptionId?: string;
   customerEmail?: string | null;
   customerName?: string | null;
+  subscriptionId?: string;
+  tenantId?: string;
 }
 
 export interface CommercePaymentsPaymentsControllerCreateSetupIntentOutput {
-  subscriptionId?: string;
+  clientSecret?: string | null;
   customerId?: string | null;
   setupIntentId?: string | null;
-  clientSecret?: string | null;
+  subscriptionId?: string;
 }
 
 export interface CommercePaymentsPaymentsControllerProcessPaymentInput {
-  tenantId?: string;
-  subscriptionId?: string;
   amount?: number;
   paymentMethodId?: string | null;
+  subscriptionId?: string;
+  tenantId?: string;
 }
 
 export interface CommercePaymentsPaymentsControllerRefundInput {
@@ -545,49 +545,49 @@ export interface CommercePaymentsPaymentsControllerRefundInput {
 }
 
 export interface CommercePaymentsProcessRefundResult {
-  refundId: string;
-  paymentId: string;
-  refundedAmount: number;
   currency: string | null;
-  status: CommercePaymentsTransactionStatus;
-  reason: string | null;
-  processedAt: string;
-  referenceNumber?: string | null;
-  estimatedCompletionDate?: string | null;
-  processingFee?: number;
-  isSuccess?: boolean;
   errorMessage?: string | null;
+  estimatedCompletionDate?: string | null;
+  isSuccess?: boolean;
   isSuccessful?: boolean;
+  paymentId: string;
+  processedAt: string;
+  processingFee?: number;
+  reason: string | null;
+  referenceNumber?: string | null;
+  refundId: string;
+  refundedAmount: number;
+  status: CommercePaymentsTransactionStatus;
 }
 
 export interface CommercePaymentsTaxBreakdown {
-  taxType?: CommercePaymentsTaxType;
   description?: string | null;
-  rate?: number;
-  taxableAmount?: number;
-  taxAmount?: number;
   jurisdictionCode?: string | null;
+  rate?: number;
+  taxAmount?: number;
+  taxType?: CommercePaymentsTaxType;
+  taxableAmount?: number;
 }
 
 export interface CommercePaymentsTaxCalculationResult {
-  subtotalAmount?: number;
-  taxAmount?: number;
-  totalAmount?: number;
   effectiveTaxRate?: number;
+  exemptionReason?: string | null;
+  isReverseCharge?: boolean;
+  isTaxExempt?: boolean;
   jurisdictionCode?: string | null;
   jurisdictionName?: string | null;
-  taxType?: CommercePaymentsTaxType;
-  taxDescription?: string | null;
-  isTaxExempt?: boolean;
-  isReverseCharge?: boolean;
+  subtotalAmount?: number;
+  taxAmount?: number;
   taxBreakdowns?: Array<CommercePaymentsTaxBreakdown> | null;
-  exemptionReason?: string | null;
+  taxDescription?: string | null;
+  taxType?: CommercePaymentsTaxType;
+  totalAmount?: number;
 }
 
 export interface CommercePaymentsTaxExemptionValidationResult {
-  isValid?: boolean;
-  exemptionType?: string | null;
   exemptionRate?: number;
+  exemptionType?: string | null;
+  isValid?: boolean;
   validFrom?: string | null;
   validTo?: string | null;
   validationMessage?: string | null;
@@ -595,106 +595,106 @@ export interface CommercePaymentsTaxExemptionValidationResult {
 }
 
 export interface CommercePaymentsTaxJurisdiction {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  childJurisdictions?: Array<CommercePaymentsTaxJurisdiction> | null;
+  code: string;
+  createdAt: string;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  code: string;
-  name: string;
-  type?: CommercePaymentsTaxJurisdictionType;
-  parentJurisdictionId?: string | null;
-  parentJurisdiction?: CommercePaymentsTaxJurisdiction;
-  childJurisdictions?: Array<CommercePaymentsTaxJurisdiction> | null;
   isActive?: boolean;
-  taxRegistrationNumber?: string | null;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   isReverseChargeApplicable?: boolean;
+  name: string;
+  parentJurisdiction?: CommercePaymentsTaxJurisdiction;
+  parentJurisdictionId?: string | null;
+  taxRegistrationNumber?: string | null;
   taxRules?: Array<CommercePaymentsTaxRule> | null;
+  tenantId?: string | null;
+  type?: CommercePaymentsTaxJurisdictionType;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface CommercePaymentsTaxJurisdictionDto {
-  id?: string;
   code?: string | null;
-  name?: string | null;
   country?: string | null;
+  defaultRate?: number;
+  id?: string;
+  isActive?: boolean;
+  name?: string | null;
   state?: string | null;
   taxType?: string | null;
-  defaultRate?: number;
-  isActive?: boolean;
 }
 
 export type CommercePaymentsTaxJurisdictionType = 'Country' | 'State' | 'Province' | 'Region' | 'City' | 'County' | 'District';
 
 export interface CommercePaymentsTaxRate {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
   createdAt: string;
-  updatedAt: string;
   deletedAt?: string | null;
-  tenantId?: string | null;
-  taxJurisdictionId: string;
-  taxJurisdiction?: CommercePaymentsTaxJurisdiction;
-  taxType?: CommercePaymentsTaxType;
-  rate?: number;
-  productCategory?: string | null;
+  description?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
   effectiveFrom?: string;
   effectiveTo?: string | null;
+  id?: string;
   isActive?: boolean;
-  minimumTaxableAmount?: number | null;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   maximumTaxableAmount?: number | null;
-  description?: string | null;
+  minimumTaxableAmount?: number | null;
+  productCategory?: string | null;
+  rate?: number;
+  taxJurisdiction?: CommercePaymentsTaxJurisdiction;
+  taxJurisdictionId: string;
+  taxType?: CommercePaymentsTaxType;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface CommercePaymentsTaxRule {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
   createdAt: string;
-  updatedAt: string;
+  customerTypeFilter?: CommercePaymentsCustomerType;
+  defaultTaxRate?: CommercePaymentsTaxRate;
+  defaultTaxRateId?: string | null;
   deletedAt?: string | null;
-  tenantId?: string | null;
-  name: string;
   description?: string | null;
-  taxJurisdictionId: string;
-  taxJurisdiction?: CommercePaymentsTaxJurisdiction;
-  ruleType?: CommercePaymentsTaxRuleType;
-  priority?: number;
-  isActive?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
   effectiveFrom?: string | null;
   effectiveTo?: string | null;
-  customerTypeFilter?: CommercePaymentsCustomerType;
-  productCategories?: string | null;
-  minimumAmount?: number | null;
-  maximumAmount?: number | null;
-  isTaxInclusive?: boolean;
-  isReverseCharge?: boolean;
   exemptionConditions?: string | null;
-  defaultTaxRateId?: string | null;
-  defaultTaxRate?: CommercePaymentsTaxRate;
+  id?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isReverseCharge?: boolean;
+  isTaxInclusive?: boolean;
+  maximumAmount?: number | null;
+  minimumAmount?: number | null;
+  name: string;
+  priority?: number;
+  productCategories?: string | null;
+  ruleType?: CommercePaymentsTaxRuleType;
+  taxJurisdiction?: CommercePaymentsTaxJurisdiction;
+  taxJurisdictionId: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface CommercePaymentsTaxRuleDto {
-  id?: string;
-  jurisdictionCode?: string | null;
-  productCategory?: string | null;
   customerType?: string | null;
-  rate?: number;
+  description?: string | null;
   effectiveFrom?: string;
   effectiveTo?: string | null;
-  description?: string | null;
+  id?: string;
   isActive?: boolean;
+  jurisdictionCode?: string | null;
+  productCategory?: string | null;
+  rate?: number;
 }
 
 export type CommercePaymentsTaxRuleType = 'Standard' | 'Reduced' | 'ZeroRated' | 'Exempt' | 'ReverseCharge' | 'WithholdingTax' | 'Compound' | 'Custom';
@@ -704,71 +704,71 @@ export type CommercePaymentsTaxType = 'VAT' | 'GST' | 'SalesTax' | 'ServiceTax' 
 export type CommercePaymentsTransactionStatus = 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Reversed';
 
 export interface CommercePaymentsUserWallet {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  balance?: number;
+  createdAt: string;
+  currency: string;
+  dailyLimit?: number | null;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  userId: string;
-  balance?: number;
-  currency: string;
   isActive?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
   isLocked?: boolean;
-  lockReason?: string | null;
+  isNew?: boolean;
   lastTransactionAt?: string | null;
-  dailyLimit?: number | null;
+  lockReason?: string | null;
   monthlyLimit?: number | null;
+  tenantId?: string | null;
   transactions?: Array<CommercePaymentsWalletTransaction> | null;
+  updatedAt: string;
+  userId: string;
+  version?: number;
 }
 
 export interface CommercePaymentsValidateTaxExemptionInput {
-  jurisdictionCode?: string | null;
-  exemptionType?: string | null;
-  exemptionCertificateNumber?: string | null;
-  customerVatNumber?: string | null;
   customerId?: string | null;
+  customerVatNumber?: string | null;
+  exemptionCertificateNumber?: string | null;
+  exemptionType?: string | null;
+  jurisdictionCode?: string | null;
   transactionDate?: string | null;
 }
 
 export interface CommercePaymentsWalletTransaction {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  walletId: string;
-  wallet?: CommercePaymentsUserWallet;
-  type?: CommercePaymentsWalletTransactionType;
   amount?: number;
   balanceAfter?: number;
+  createdAt: string;
+  deletedAt?: string | null;
   description: string;
-  referenceId?: string | null;
-  status?: CommercePaymentsTransactionStatus;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   metadata?: string | null;
   notes?: string | null;
   processedAt?: string | null;
+  referenceId?: string | null;
+  status?: CommercePaymentsTransactionStatus;
+  tenantId?: string | null;
+  type?: CommercePaymentsWalletTransactionType;
+  updatedAt: string;
+  version?: number;
+  wallet?: CommercePaymentsUserWallet;
+  walletId: string;
 }
 
 export type CommercePaymentsWalletTransactionType = 'Credit' | 'Debit' | 'TransferIn' | 'TransferOut' | 'Refund' | 'Fee' | 'Adjustment';
 
 export interface CommerceProductsAddSupportTicketMessageInput {
-  tenantId?: string;
-  authorUserId?: string;
-  authorName?: string | null;
   authorEmail?: string | null;
+  authorName?: string | null;
   authorType?: CommerceProductsSupportTicketMessageAuthorType;
+  authorUserId?: string;
   body?: string | null;
   isInternal?: boolean;
+  tenantId?: string;
 }
 
 export interface CommerceProductsAppliedPromoCode {
@@ -779,14 +779,14 @@ export interface CommerceProductsAppliedPromoCode {
 
 export interface CommerceProductsApplyPromoCodesInput {
   orderAmount?: number;
-  promoCodes?: Array<string> | null;
   productId?: string | null;
+  promoCodes?: Array<string> | null;
 }
 
 export interface CommerceProductsAssignSupportTicketInput {
-  tenantId?: string;
-  agentUserId?: string;
   agentName?: string | null;
+  agentUserId?: string;
+  tenantId?: string;
 }
 
 export interface CommerceProductsBatchCreateProductsInput {
@@ -795,17 +795,17 @@ export interface CommerceProductsBatchCreateProductsInput {
 }
 
 export interface CommerceProductsBatchProductCreateItem {
-  name?: string | null;
-  description?: string | null;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  type?: CommerceProductsProductType;
-  isBundle?: boolean;
-  creatorId?: string | null;
-  bundleItems?: Array<string> | null;
-  referralCommissionPercentage?: number;
-  maxAffiliateDiscount?: number;
   affiliateCommissionPercentage?: number;
+  bundleItems?: Array<string> | null;
+  creatorId?: string | null;
+  description?: string | null;
+  imageUrl?: string | null;
+  isBundle?: boolean;
+  maxAffiliateDiscount?: number;
+  name?: string | null;
+  referralCommissionPercentage?: number;
+  shortDescription?: string | null;
+  type?: CommerceProductsProductType;
 }
 
 export interface CommerceProductsCheckMultipleAccessInput {
@@ -813,151 +813,151 @@ export interface CommerceProductsCheckMultipleAccessInput {
 }
 
 export interface CommerceProductsCloseSupportTicketInput {
-  tenantId?: string;
-  agentUserId?: string;
   agentName?: string | null;
+  agentUserId?: string;
   closingNotes?: string | null;
+  tenantId?: string;
 }
 
 export interface CommerceProductsCreateProductInput {
-  name?: string | null;
-  description?: string | null;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  type?: CommerceProductsProductType;
-  isBundle?: boolean;
-  creatorId?: string | null;
-  bundleItems?: Array<string> | null;
-  referralCommissionPercentage?: number;
-  maxAffiliateDiscount?: number;
   affiliateCommissionPercentage?: number;
+  bundleItems?: Array<string> | null;
+  creatorId?: string | null;
+  description?: string | null;
+  imageUrl?: string | null;
+  isBundle?: boolean;
+  maxAffiliateDiscount?: number;
+  name?: string | null;
+  referralCommissionPercentage?: number;
+  shortDescription?: string | null;
   tenantId?: string | null;
+  type?: CommerceProductsProductType;
 }
 
 export interface CommerceProductsCreatePromoCodeInput {
   code?: string | null;
-  name?: string | null;
-  description?: string | null;
-  type?: CommerceProductsPromoCodeType;
-  discountPercentage?: number | null;
-  discountAmount?: number | null;
   currency?: string | null;
-  minimumOrderAmount?: number | null;
-  maxUses?: number | null;
-  maxUsesPerUser?: number | null;
-  validFrom?: string | null;
-  validUntil?: string | null;
+  description?: string | null;
+  discountAmount?: number | null;
+  discountPercentage?: number | null;
   isActive?: boolean;
   isExclusive?: boolean;
-  stackingPriority?: number;
+  maxUses?: number | null;
+  maxUsesPerUser?: number | null;
+  minimumOrderAmount?: number | null;
+  name?: string | null;
   productId?: string | null;
+  stackingPriority?: number;
+  type?: CommerceProductsPromoCodeType;
+  validFrom?: string | null;
+  validUntil?: string | null;
 }
 
 export interface CommerceProductsCreateSupportTicketInput {
-  tenantId?: string;
+  body?: string | null;
+  category?: string | null;
   customerId?: string;
   customerName?: string | null;
-  reporterUserId?: string;
-  reporterName?: string | null;
-  reporterEmail?: string | null;
-  subject?: string | null;
-  body?: string | null;
   priority?: CommerceProductsSupportTicketPriority;
-  category?: string | null;
+  reporterEmail?: string | null;
+  reporterName?: string | null;
+  reporterUserId?: string;
+  subject?: string | null;
+  tenantId?: string;
 }
 
 export interface CommerceProductsEntitlementCheckResult {
-  productId?: string;
   hasAccess?: boolean;
+  productId?: string;
 }
 
 export interface CommerceProductsEntitlementInfo {
+  accessEndDate?: string | null;
+  accessStartDate?: string | null;
+  acquisitionType?: string | null;
+  currency?: string | null;
+  isSubscription?: boolean;
+  pricePaid?: number;
   productId?: string;
   productName?: string | null;
   status?: string | null;
-  acquisitionType?: string | null;
-  accessStartDate?: string | null;
-  accessEndDate?: string | null;
-  isSubscription?: boolean;
   subscriptionStatus?: string | null;
-  pricePaid?: number;
-  currency?: string | null;
 }
 
 export interface CommerceProductsGrantEntitlementInput {
-  userId?: string;
-  productId?: string;
   acquisitionType?: CommerceProductsProductAcquisitionType;
-  pricePaid?: number;
   currency?: string | null;
   expiresAt?: string | null;
+  pricePaid?: number;
+  productId?: string;
+  userId?: string;
 }
 
 export interface CommerceProductsPatchProductInput {
-  name?: string | null;
-  description?: string | null;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  type?: CommerceProductsProductType;
-  isBundle?: boolean | null;
-  bundleItems?: Array<string> | null;
-  referralCommissionPercentage?: number | null;
-  maxAffiliateDiscount?: number | null;
   affiliateCommissionPercentage?: number | null;
+  bundleItems?: Array<string> | null;
+  description?: string | null;
   expectedVersion?: number | null;
+  imageUrl?: string | null;
+  isBundle?: boolean | null;
+  maxAffiliateDiscount?: number | null;
+  name?: string | null;
+  referralCommissionPercentage?: number | null;
+  shortDescription?: string | null;
+  type?: CommerceProductsProductType;
 }
 
 export interface CommerceProductsPatchPromoCodeInput {
-  name?: string | null;
-  description?: string | null;
-  type?: CommerceProductsPromoCodeType;
-  discountPercentage?: number | null;
-  discountAmount?: number | null;
   currency?: string | null;
-  minimumOrderAmount?: number | null;
-  maxUses?: number | null;
-  maxUsesPerUser?: number | null;
-  validFrom?: string | null;
-  validUntil?: string | null;
+  description?: string | null;
+  discountAmount?: number | null;
+  discountPercentage?: number | null;
   isActive?: boolean | null;
   isExclusive?: boolean | null;
-  stackingPriority?: number | null;
+  maxUses?: number | null;
+  maxUsesPerUser?: number | null;
+  minimumOrderAmount?: number | null;
+  name?: string | null;
   productId?: string | null;
+  stackingPriority?: number | null;
+  type?: CommerceProductsPromoCodeType;
+  validFrom?: string | null;
+  validUntil?: string | null;
 }
 
 export type CommerceProductsProductAcquisitionType = 'Purchase' | 'Subscription' | 'Grant' | 'PromoCode' | 'Bundle' | 'Trial' | 'Referral' | 'Free' | 'Gift';
 
 export interface CommerceProductsProduct {
-  id?: string;
-  name?: string | null;
+  affiliateCommissionPercentage?: number;
+  bundleItems?: Array<string> | null;
+  createdAt?: string;
+  creatorId?: string | null;
   description?: string | null;
-  shortDescription?: string | null;
+  id?: string;
   imageUrl?: string | null;
-  type?: CommerceProductsProductType;
   isBundle?: boolean;
   isPublished?: boolean;
-  creatorId?: string | null;
-  bundleItems?: Array<string> | null;
-  referralCommissionPercentage?: number;
   maxAffiliateDiscount?: number;
-  affiliateCommissionPercentage?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  name?: string | null;
   pricing?: Array<CommerceProductsProductPricing> | null;
+  referralCommissionPercentage?: number;
+  shortDescription?: string | null;
+  type?: CommerceProductsProductType;
+  updatedAt?: string;
 }
 
 export interface CommerceProductsProductPricing {
-  id?: string;
-  productId?: string;
-  name?: string | null;
   basePrice?: number;
-  salePrice?: number | null;
   currency?: string | null;
-  saleStartDate?: string | null;
-  saleEndDate?: string | null;
-  isDefault?: boolean;
   currentPrice?: number;
+  id?: string;
+  isDefault?: boolean;
   isSaleActive?: boolean;
+  name?: string | null;
+  productId?: string;
+  saleEndDate?: string | null;
+  salePrice?: number | null;
+  saleStartDate?: string | null;
 }
 
 export type CommerceProductsProductType =
@@ -977,57 +977,57 @@ export type CommerceProductsProductType =
   | 'Other';
 
 export interface CommerceProductsPromoCodeApplicationResult {
-  originalAmount?: number;
-  finalAmount?: number;
-  totalDiscount?: number;
   appliedCodes?: Array<CommerceProductsAppliedPromoCode> | null;
+  finalAmount?: number;
+  originalAmount?: number;
   rejectedCodes?: Array<CommerceProductsRejectedPromoCode> | null;
+  totalDiscount?: number;
 }
 
 export interface CommerceProductsPromoCode {
-  id?: string;
   code?: string | null;
-  name?: string | null;
-  description?: string | null;
-  type?: CommerceProductsPromoCodeType;
-  discountPercentage?: number | null;
-  discountAmount?: number | null;
+  createdAt?: string;
   currency?: string | null;
-  minimumOrderAmount?: number | null;
-  maxUses?: number | null;
-  maxUsesPerUser?: number | null;
-  validFrom?: string | null;
-  validUntil?: string | null;
+  description?: string | null;
+  discountAmount?: number | null;
+  discountPercentage?: number | null;
+  id?: string;
   isActive?: boolean;
   isExclusive?: boolean;
-  stackingPriority?: number;
+  maxUses?: number | null;
+  maxUsesPerUser?: number | null;
+  minimumOrderAmount?: number | null;
+  name?: string | null;
   productId?: string | null;
-  usageCount?: number;
-  createdAt?: string;
+  stackingPriority?: number;
+  type?: CommerceProductsPromoCodeType;
   updatedAt?: string;
+  usageCount?: number;
+  validFrom?: string | null;
+  validUntil?: string | null;
 }
 
 export type CommerceProductsPromoCodeType = 'PercentageOff' | 'FixedAmountOff' | 'FreeTrial' | 'BuyOneGetOne' | 'FreeShipping';
 
 export interface CommerceProductsPromoCodeUsage {
-  promoCodeId?: string;
-  code?: string | null;
-  totalUses?: number;
-  uniqueUsers?: number;
-  totalDiscountGiven?: number;
   averageDiscountPerUse?: number;
-  maxUses?: number | null;
-  remainingUses?: number | null;
+  code?: string | null;
   firstUsedAt?: string | null;
   lastUsedAt?: string | null;
+  maxUses?: number | null;
+  promoCodeId?: string;
+  remainingUses?: number | null;
+  totalDiscountGiven?: number;
+  totalUses?: number;
+  uniqueUsers?: number;
 }
 
 export interface CommerceProductsPromoCodeValidationResult {
-  isValid?: boolean;
   code?: string | null;
-  errorMessage?: string | null;
   discountAmount?: number;
   discountPercentage?: number | null;
+  errorMessage?: string | null;
+  isValid?: boolean;
 }
 
 export interface CommerceProductsRejectedPromoCode {
@@ -1036,56 +1036,56 @@ export interface CommerceProductsRejectedPromoCode {
 }
 
 export interface CommerceProductsResolveSupportTicketInput {
-  tenantId?: string;
-  agentUserId?: string;
   agentName?: string | null;
+  agentUserId?: string;
   resolutionSummary?: string | null;
+  tenantId?: string;
 }
 
 export interface CommerceProductsRevokeEntitlementInput {
-  userId?: string;
   productId?: string;
   reason?: string | null;
+  userId?: string;
 }
 
 export interface CommerceProductsSupportTicket {
-  id?: string;
-  tenantId?: string | null;
+  assignedToName?: string | null;
+  assignedToUserId?: string | null;
+  category?: string | null;
+  closedAt?: string | null;
   customerId?: string;
   customerName?: string | null;
-  reporterUserId?: string;
-  reporterName?: string | null;
-  reporterEmail?: string | null;
-  subject?: string | null;
-  category?: string | null;
-  status?: CommerceProductsSupportTicketStatus;
-  priority?: CommerceProductsSupportTicketPriority;
-  assignedToUserId?: string | null;
-  assignedToName?: string | null;
-  openedAt?: string;
   firstResponseAt?: string | null;
-  responseDueBy?: string | null;
-  resolvedAt?: string | null;
-  closedAt?: string | null;
-  resolutionSummary?: string | null;
+  id?: string;
   lastMessageAt?: string | null;
   lastMessagePreview?: string | null;
   messageCount?: number;
   messages?: Array<CommerceProductsSupportTicketMessage> | null;
+  openedAt?: string;
+  priority?: CommerceProductsSupportTicketPriority;
+  reporterEmail?: string | null;
+  reporterName?: string | null;
+  reporterUserId?: string;
+  resolutionSummary?: string | null;
+  resolvedAt?: string | null;
+  responseDueBy?: string | null;
+  status?: CommerceProductsSupportTicketStatus;
+  subject?: string | null;
+  tenantId?: string | null;
 }
 
 export type CommerceProductsSupportTicketMessageAuthorType = 'Customer' | 'Agent' | 'System';
 
 export interface CommerceProductsSupportTicketMessage {
-  id?: string;
-  ticketId?: string;
-  authorUserId?: string;
-  authorName?: string | null;
   authorEmail?: string | null;
+  authorName?: string | null;
   authorType?: CommerceProductsSupportTicketMessageAuthorType;
+  authorUserId?: string;
   body?: string | null;
-  isInternal?: boolean;
   createdAt?: string;
+  id?: string;
+  isInternal?: boolean;
+  ticketId?: string;
 }
 
 export type CommerceProductsSupportTicketPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
@@ -1093,35 +1093,35 @@ export type CommerceProductsSupportTicketPriority = 'Low' | 'Normal' | 'High' | 
 export type CommerceProductsSupportTicketStatus = 'Open' | 'InProgress' | 'Resolved' | 'Closed' | 'Cancelled';
 
 export interface CommerceProductsUpdateProductInput {
-  name?: string | null;
-  description?: string | null;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  type?: CommerceProductsProductType;
-  isBundle?: boolean | null;
-  bundleItems?: Array<string> | null;
-  referralCommissionPercentage?: number | null;
-  maxAffiliateDiscount?: number | null;
   affiliateCommissionPercentage?: number | null;
+  bundleItems?: Array<string> | null;
+  description?: string | null;
   expectedVersion?: number | null;
+  imageUrl?: string | null;
+  isBundle?: boolean | null;
+  maxAffiliateDiscount?: number | null;
+  name?: string | null;
+  referralCommissionPercentage?: number | null;
+  shortDescription?: string | null;
+  type?: CommerceProductsProductType;
 }
 
 export interface CommerceProductsUpdatePromoCodeInput {
-  name?: string | null;
-  description?: string | null;
-  type?: CommerceProductsPromoCodeType;
-  discountPercentage?: number | null;
-  discountAmount?: number | null;
   currency?: string | null;
-  minimumOrderAmount?: number | null;
-  maxUses?: number | null;
-  maxUsesPerUser?: number | null;
-  validFrom?: string | null;
-  validUntil?: string | null;
+  description?: string | null;
+  discountAmount?: number | null;
+  discountPercentage?: number | null;
   isActive?: boolean | null;
   isExclusive?: boolean | null;
-  stackingPriority?: number | null;
+  maxUses?: number | null;
+  maxUsesPerUser?: number | null;
+  minimumOrderAmount?: number | null;
+  name?: string | null;
   productId?: string | null;
+  stackingPriority?: number | null;
+  type?: CommerceProductsPromoCodeType;
+  validFrom?: string | null;
+  validUntil?: string | null;
 }
 
 export interface CommerceProductsValidatePromoCodeInput {
@@ -1131,31 +1131,31 @@ export interface CommerceProductsValidatePromoCodeInput {
 }
 
 export interface CommerceSubscriptionsBillingHistory {
-  id?: string;
-  subscriptionId?: string;
-  billingDate?: string;
   amount?: number;
-  currency?: string | null;
-  status?: string | null;
-  externalPaymentId?: string | null;
-  description?: string | null;
+  billingDate?: string;
   createdAt?: string;
+  currency?: string | null;
+  description?: string | null;
+  externalPaymentId?: string | null;
+  id?: string;
+  status?: string | null;
+  subscriptionId?: string;
 }
 
 export interface CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput {
-  reason?: CommerceSubscriptionsCancellationReason;
-  note?: string | null;
   effectiveDate?: string | null;
+  note?: string | null;
+  reason?: CommerceSubscriptionsCancellationReason;
 }
 
 export interface CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput {
-  tenantId?: string;
-  planId?: string;
-  createdByUserId?: string;
-  billingCycle?: BillingCycle;
   amount?: number;
+  billingCycle?: BillingCycle;
+  createdByUserId?: string;
   fulfilledOrderId?: string | null;
+  planId?: string;
   startDate?: string | null;
+  tenantId?: string;
   trialDays?: number | null;
 }
 
@@ -1164,84 +1164,84 @@ export type CommerceSubscriptionsCancellationReason =
 
 export interface CommerceSubscriptionsClientModulesOutput {
   clientId?: string;
-  subscriptions?: PagedResultOfGameGuildCommerceSubscriptionsSubscription;
   featureFlags?: Record<string, boolean> | null;
+  subscriptions?: PagedResultOfGameGuildCommerceSubscriptionsSubscription;
 }
 
 export interface CommerceSubscriptionsCreateClientInput {
+  adminEmail?: string | null;
+  cnpj?: string | null;
+  description?: string | null;
+  fiscalData?: Record<string, Record<string, unknown> | null> | null;
   name?: string | null;
   slug?: string | null;
-  adminEmail?: string | null;
-  description?: string | null;
-  cnpj?: string | null;
   taxId?: string | null;
-  fiscalData?: Record<string, Record<string, unknown> | null> | null;
 }
 
 export interface CommerceSubscriptionsSubscription {
+  amount?: Money;
+  autoRenew?: boolean;
+  billingCycle?: BillingCycle;
+  billingCycleCount?: number;
+  cancellationNote?: string | null;
+  cancellationReason?: CommerceSubscriptionsCancellationReason;
+  cancelledAt?: string | null;
+  createdAt: string;
+  createdByUserId: string;
+  currentPeriodEnd?: string;
+  currentPeriodStart?: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  endDate?: string | null;
+  externalCustomerId?: string | null;
+  externalId?: string | null;
+  fulfilledOrderId?: string | null;
+  id?: string;
+  isActive?: boolean;
+  isCancelled?: boolean;
+  isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  createdByUserId: string;
-  fulfilledOrderId?: string | null;
-  lastModifyingOrderId?: string | null;
-  lastRenewalIdempotencyKey?: string | null;
-  lastPaymentIdempotencyKey?: string | null;
-  lockedPriceVersionId?: string | null;
-  lastProcessedBillingCycle?: number;
-  trialEndDate?: string | null;
-  cancellationReason?: CommerceSubscriptionsCancellationReason;
-  cancellationNote?: string | null;
-  cancelledAt?: string | null;
-  externalId?: string | null;
-  externalCustomerId?: string | null;
-  autoRenew?: boolean;
-  currentPeriodStart?: string;
-  currentPeriodEnd?: string;
-  billingCycleCount?: number;
-  lastPaymentAt?: string | null;
-  metadata?: string | null;
-  rowVersion?: string | null;
-  plan?: CommerceSubscriptionsSubscriptionPlan;
-  status?: CommerceSubscriptionsSubscriptionStatus;
-  planId: string;
-  billingCycle?: BillingCycle;
-  amount?: Money;
-  startDate?: string;
-  endDate?: string | null;
-  nextBillingDate?: string;
-  isActive?: boolean;
   isTrialing?: boolean;
-  isCancelled?: boolean;
+  lastModifyingOrderId?: string | null;
+  lastPaymentAt?: string | null;
+  lastPaymentIdempotencyKey?: string | null;
+  lastProcessedBillingCycle?: number;
+  lastRenewalIdempotencyKey?: string | null;
+  lockedPriceVersionId?: string | null;
+  metadata?: string | null;
+  nextBillingDate?: string;
+  plan?: CommerceSubscriptionsSubscriptionPlan;
+  planId: string;
+  rowVersion?: string | null;
+  startDate?: string;
+  status?: CommerceSubscriptionsSubscriptionStatus;
+  tenantId?: string | null;
+  trialEndDate?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface CommerceSubscriptionsSubscriptionChurnReport {
-  tenantId?: string | null;
-  startDate?: string;
-  endDate?: string;
-  totalSubscriptions?: number;
   activeSubscriptions?: number;
   cancelledInPeriod?: number;
   churnRate?: number;
-  retentionRate?: number;
-  monthlyRecurringRevenue?: number;
+  endDate?: string;
   generatedAt?: string;
+  monthlyRecurringRevenue?: number;
+  retentionRate?: number;
+  startDate?: string;
   statusBreakdown?: Record<string, number> | null;
+  tenantId?: string | null;
+  totalSubscriptions?: number;
 }
 
 export interface CommerceSubscriptionsSubscriptionDowngradeResult {
+  creditIssued?: Money;
+  effectiveDate?: string | null;
+  failureReason?: string | null;
   success?: boolean;
   updatedSubscription?: CommerceSubscriptionsSubscription;
-  effectiveDate?: string | null;
-  creditIssued?: Money;
-  failureReason?: string | null;
 }
 
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput {
@@ -1249,14 +1249,14 @@ export interface CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewIn
 }
 
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput {
-  reason?: string | null;
-  note?: string | null;
   effectiveDate?: string | null;
+  note?: string | null;
+  reason?: string | null;
 }
 
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput {
-  newPlanId?: string;
   effectiveDate?: string | null;
+  newPlanId?: string;
 }
 
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput {
@@ -1264,8 +1264,8 @@ export interface CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInp
 }
 
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInput {
-  externalSubscriptionId?: string | null;
   externalCustomerId?: string | null;
+  externalSubscriptionId?: string | null;
 }
 
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInput {
@@ -1282,21 +1282,21 @@ export interface CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInpu
 }
 
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput {
-  newPlanId?: string;
   effectiveDate?: string | null;
+  newPlanId?: string;
 }
 
 export interface CommerceSubscriptionsSubscriptionNotification {
-  id?: string;
-  recipientId?: string;
-  tenantId?: string | null;
-  subscriptionId?: string | null;
   channel?: string | null;
-  title?: string | null;
-  message?: string | null;
-  isSent?: boolean;
-  sentAt?: string | null;
   createdAt?: string;
+  id?: string;
+  isSent?: boolean;
+  message?: string | null;
+  recipientId?: string;
+  sentAt?: string | null;
+  subscriptionId?: string | null;
+  tenantId?: string | null;
+  title?: string | null;
 }
 
 export interface CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput {
@@ -1304,36 +1304,36 @@ export interface CommerceSubscriptionsSubscriptionNotificationsControllerResendS
 }
 
 export interface CommerceSubscriptionsSubscriptionPlan {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
+  annualPriceInCents?: number | null;
   createdAt: string;
-  updatedAt: string;
+  currency: string;
   deletedAt?: string | null;
-  tenantId?: string | null;
+  description?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
   externalId?: string | null;
-  isFeatured?: boolean;
-  sortOrder?: number;
-  hasPrioritySupport?: boolean;
+  features?: string | null;
   hasAdvancedAnalytics?: boolean;
   hasCustomBranding?: boolean;
-  features?: string | null;
+  hasPrioritySupport?: boolean;
+  id?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  isFeatured?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  maxApiCallsPerMonth?: number | null;
+  maxStorageMb?: number | null;
+  maxUsers?: number | null;
   metadata?: string | null;
-  trialPeriodDays?: number;
-  subscriptions?: Array<CommerceSubscriptionsSubscription> | null;
+  monthlyPriceInCents?: number;
   name: string;
   slug: string;
-  description?: string | null;
-  monthlyPriceInCents?: number;
-  annualPriceInCents?: number | null;
-  currency: string;
-  isActive?: boolean;
-  maxUsers?: number | null;
-  maxStorageMb?: number | null;
-  maxApiCallsPerMonth?: number | null;
+  sortOrder?: number;
+  subscriptions?: Array<CommerceSubscriptionsSubscription> | null;
+  tenantId?: string | null;
+  trialPeriodDays?: number;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput {
@@ -1350,34 +1350,34 @@ export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFea
 }
 
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput {
-  planId?: string;
-  name?: string | null;
   description?: string | null;
+  name?: string | null;
+  planId?: string;
   sortOrder?: number | null;
 }
 
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput {
-  hasPrioritySupport?: boolean | null;
+  features?: string | null;
   hasAdvancedAnalytics?: boolean | null;
   hasCustomBranding?: boolean | null;
-  features?: string | null;
+  hasPrioritySupport?: boolean | null;
 }
 
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput {
-  maxUsers?: number | null;
-  maxStorageMb?: number | null;
   maxApiCallsPerMonth?: number | null;
+  maxStorageMb?: number | null;
+  maxUsers?: number | null;
 }
 
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput {
-  monthlyPriceInCents?: number;
   annualPriceInCents?: number | null;
+  monthlyPriceInCents?: number;
 }
 
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput {
-  users?: number;
-  storageMb?: number;
   apiCalls?: number;
+  storageMb?: number;
+  users?: number;
 }
 
 export interface CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput {
@@ -1386,96 +1386,96 @@ export interface CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlan
 }
 
 export interface CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput {
-  name?: string | null;
-  slug?: string | null;
-  monthlyPriceInCents?: number;
   currency?: string | null;
   description?: string | null;
+  monthlyPriceInCents?: number;
+  name?: string | null;
+  slug?: string | null;
 }
 
 export interface CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput {
-  name?: string | null;
-  slug?: string | null;
-  description?: string | null;
-  monthlyPriceInCents?: number;
   annualPriceInCents?: number | null;
-  maxUsers?: number | null;
-  maxStorageMb?: number | null;
-  maxApiCallsPerMonth?: number | null;
-  hasPrioritySupport?: boolean | null;
+  description?: string | null;
+  features?: string | null;
   hasAdvancedAnalytics?: boolean | null;
   hasCustomBranding?: boolean | null;
-  features?: string | null;
+  hasPrioritySupport?: boolean | null;
+  maxApiCallsPerMonth?: number | null;
+  maxStorageMb?: number | null;
+  maxUsers?: number | null;
+  monthlyPriceInCents?: number;
+  name?: string | null;
+  slug?: string | null;
   sortOrder?: number | null;
 }
 
 export type CommerceSubscriptionsSubscriptionStatus = 'PendingActivation' | 'Active' | 'Trialing' | 'PastDue' | 'Suspended' | 'Cancelled' | 'Expired';
 
 export interface CommerceSubscriptionsSubscriptionUpgradeResult {
-  success?: boolean;
-  updatedSubscription?: CommerceSubscriptionsSubscription;
-  proratedAmount?: Money;
   creditApplied?: Money;
   failureReason?: string | null;
+  proratedAmount?: Money;
+  success?: boolean;
+  updatedSubscription?: CommerceSubscriptionsSubscription;
 }
 
 export interface CommerceSubscriptionsSubscriptionUsage {
-  subscriptionId?: string;
-  usersCount?: number;
-  maxUsers?: number | null;
-  storageUsedMb?: number;
-  maxStorageMb?: number | null;
   apiCallsThisMonth?: number;
-  maxApiCallsPerMonth?: number | null;
   isOverLimit?: boolean;
   limitWarnings?: Array<string> | null;
+  maxApiCallsPerMonth?: number | null;
+  maxStorageMb?: number | null;
+  maxUsers?: number | null;
+  storageUsedMb?: number;
+  subscriptionId?: string;
+  usersCount?: number;
 }
 
 export interface CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput {
-  tenantId?: string;
-  planId?: string;
-  createdByUserId?: string;
-  billingCycle?: BillingCycle;
   amount?: number;
+  billingCycle?: BillingCycle;
+  createdByUserId?: string;
   currency?: string | null;
   fulfilledOrderId?: string | null;
+  planId?: string;
   startDate?: string | null;
+  tenantId?: string;
   trialDays?: number | null;
 }
 
 export interface CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput {
-  billingCycle?: BillingCycle;
   autoRenew?: boolean | null;
-  externalSubscriptionId?: string | null;
+  billingCycle?: BillingCycle;
   externalCustomerId?: string | null;
+  externalSubscriptionId?: string | null;
   metadata?: string | null;
 }
 
 export interface CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput {
-  planId?: string;
-  billingCycle?: BillingCycle;
   amount?: number;
   autoRenew?: boolean;
-  externalSubscriptionId?: string | null;
+  billingCycle?: BillingCycle;
   externalCustomerId?: string | null;
+  externalSubscriptionId?: string | null;
+  planId?: string;
 }
 
 export interface ComplianceFERPACompleteFerpaInspectionRequestBody {
-  processedByUserId?: string;
   approved?: boolean;
   notes?: string | null;
+  processedByUserId?: string;
 }
 
 export type ComplianceFERPAEducationRecordKind =
   'CourseEnrollment' | 'AssessmentSubmission' | 'Grade' | 'Certificate' | 'Attendance' | 'Communication' | 'SupportCase' | 'Custom';
 
 export interface ComplianceFERPAFerpaDirectoryInformationPolicy {
-  id?: string;
-  tenantId?: string | null;
   allowedFieldsJson?: string | null;
-  optOutEnabled?: boolean;
   annualNoticeSentAt?: string | null;
+  id?: string;
   noticeUrl?: string | null;
+  optOutEnabled?: boolean;
+  tenantId?: string | null;
 }
 
 export type ComplianceFERPAFerpaDisclosureBasis =
@@ -1490,51 +1490,51 @@ export type ComplianceFERPAFerpaDisclosureBasis =
   | 'Other';
 
 export interface ComplianceFERPAFerpaDisclosureConsent {
-  id?: string;
-  studentUserId?: string;
-  guardianUserId?: string | null;
-  recipient?: string | null;
-  purpose?: string | null;
-  scope?: string | null;
   effectiveFrom?: string;
   expiresAt?: string | null;
-  revokedAt?: string | null;
+  guardianUserId?: string | null;
+  id?: string;
   isActive?: boolean;
+  purpose?: string | null;
+  recipient?: string | null;
+  revokedAt?: string | null;
+  scope?: string | null;
+  studentUserId?: string;
 }
 
 export interface ComplianceFERPAFerpaDisclosureLog {
-  id?: string;
-  studentUserId?: string;
-  disclosedByUserId?: string;
-  recipient?: string | null;
   basis?: ComplianceFERPAFerpaDisclosureBasis;
-  purpose?: string | null;
-  recordIdsJson?: string | null;
   disclosedAt?: string;
+  disclosedByUserId?: string;
+  id?: string;
+  purpose?: string | null;
+  recipient?: string | null;
+  recordIdsJson?: string | null;
+  studentUserId?: string;
 }
 
 export interface ComplianceFERPAFerpaEducationRecord {
-  id?: string;
-  studentUserId?: string;
-  recordKind?: ComplianceFERPAEducationRecordKind;
-  externalRecordId?: string | null;
-  title?: string | null;
-  protectionLevel?: ComplianceFERPAFerpaRecordProtectionLevel;
-  isDirectoryInformation?: boolean;
-  retentionUntil?: string | null;
-  metadataJson?: string | null;
   createdAt?: string;
+  externalRecordId?: string | null;
+  id?: string;
+  isDirectoryInformation?: boolean;
+  metadataJson?: string | null;
+  protectionLevel?: ComplianceFERPAFerpaRecordProtectionLevel;
+  recordKind?: ComplianceFERPAEducationRecordKind;
+  retentionUntil?: string | null;
+  studentUserId?: string;
+  title?: string | null;
 }
 
 export interface ComplianceFERPAFerpaInspectionInput {
+  deadline?: string;
   id?: string;
-  studentUserId?: string;
+  processedAt?: string | null;
+  processedByUserId?: string | null;
+  processingNotes?: string | null;
   requestedByUserId?: string;
   status?: ComplianceFERPAFerpaRequestStatus;
-  deadline?: string;
-  processedByUserId?: string | null;
-  processedAt?: string | null;
-  processingNotes?: string | null;
+  studentUserId?: string;
 }
 
 export type ComplianceFERPAFerpaRecordProtectionLevel = 'DirectoryInformation' | 'EducationRecord' | 'SensitiveEducationRecord' | 'Restricted';
@@ -1542,51 +1542,51 @@ export type ComplianceFERPAFerpaRecordProtectionLevel = 'DirectoryInformation' |
 export type ComplianceFERPAFerpaRequestStatus = 'Pending' | 'InReview' | 'Completed' | 'Denied' | 'Expired';
 
 export interface ComplianceFERPAGrantFerpaDisclosureConsentCommand {
-  studentUserId?: string;
-  recipient?: string | null;
-  purpose?: string | null;
-  scope?: string | null;
   effectiveFrom?: string;
-  guardianUserId?: string | null;
   expiresAt?: string | null;
+  guardianUserId?: string | null;
+  purpose?: string | null;
+  recipient?: string | null;
+  scope?: string | null;
+  studentUserId?: string;
 }
 
 export interface ComplianceFERPARecordFerpaDisclosureCommand {
-  studentUserId?: string;
-  disclosedByUserId?: string;
-  recipient?: string | null;
   basis?: ComplianceFERPAFerpaDisclosureBasis;
-  purpose?: string | null;
-  scope?: string | null;
-  recordIdsJson?: string | null;
   disclosedAt?: string;
+  disclosedByUserId?: string;
+  purpose?: string | null;
+  recipient?: string | null;
+  recordIdsJson?: string | null;
+  scope?: string | null;
+  studentUserId?: string;
 }
 
 export interface ComplianceFERPARegisterEducationRecordCommand {
-  studentUserId?: string;
-  recordKind?: ComplianceFERPAEducationRecordKind;
   externalRecordId?: string | null;
-  title?: string | null;
-  protectionLevel?: ComplianceFERPAFerpaRecordProtectionLevel;
   isDirectoryInformation?: boolean;
-  tenantId?: string | null;
-  retentionUntil?: string | null;
   metadataJson?: string | null;
+  protectionLevel?: ComplianceFERPAFerpaRecordProtectionLevel;
+  recordKind?: ComplianceFERPAEducationRecordKind;
+  retentionUntil?: string | null;
+  studentUserId?: string;
+  tenantId?: string | null;
+  title?: string | null;
 }
 
 export interface ComplianceFERPASubmitFerpaInspectionRequestCommand {
-  studentUserId?: string;
-  requestedByUserId?: string;
   deadline?: string;
   description?: string | null;
+  requestedByUserId?: string;
+  studentUserId?: string;
 }
 
 export interface ComplianceFERPAUpsertDirectoryInformationPolicyCommand {
-  tenantId?: string | null;
   allowedFieldsJson?: string | null;
-  optOutEnabled?: boolean;
   annualNoticeSentAt?: string | null;
   noticeUrl?: string | null;
+  optOutEnabled?: boolean;
+  tenantId?: string | null;
 }
 
 export type ContentStatus = 'Draft' | 'Review' | 'Published' | 'Archived' | 'Deleted';
@@ -1594,37 +1594,37 @@ export type ContentStatus = 'Draft' | 'Review' | 'Published' | 'Archived' | 'Del
 export type ContentVisibility = 'Private' | 'Internal' | 'Friends' | 'Protected' | 'Public';
 
 export interface ContentPagesContentResource {
-  id?: string;
-  slug?: string | null;
-  title?: string | null;
-  summary?: string | null;
-  body?: string | null;
-  resourceType?: string | null;
-  status?: string | null;
-  locale?: string | null;
-  categorySlug?: string | null;
-  tags?: string | null;
   authorId?: string | null;
   authorName?: string | null;
+  body?: string | null;
+  categorySlug?: string | null;
   coverImageUrl?: string | null;
-  videoUrl?: string | null;
+  createdAt?: string;
+  customData?: string | null;
   downloadUrl?: string | null;
   externalUrl?: string | null;
+  id?: string;
+  isFeatured?: boolean;
   linkedEntityId?: string | null;
   linkedEntityType?: string | null;
-  metaTitle?: string | null;
+  locale?: string | null;
   metaDescription?: string | null;
+  metaTitle?: string | null;
   ogImageUrl?: string | null;
-  structuredData?: string | null;
-  readingTimeMinutes?: number | null;
-  viewCount?: number;
-  isFeatured?: boolean;
-  sortOrder?: number;
   publishedAt?: string | null;
+  readingTimeMinutes?: number | null;
+  resourceType?: string | null;
   scheduledPublishAt?: string | null;
-  customData?: string | null;
-  createdAt?: string;
+  slug?: string | null;
+  sortOrder?: number;
+  status?: string | null;
+  structuredData?: string | null;
+  summary?: string | null;
+  tags?: string | null;
+  title?: string | null;
   updatedAt?: string | null;
+  videoUrl?: string | null;
+  viewCount?: number;
 }
 
 export type ContentPagesContentResourceStatus = 'Draft' | 'InReview' | 'Published' | 'Archived';
@@ -1632,153 +1632,153 @@ export type ContentPagesContentResourceStatus = 'Draft' | 'InReview' | 'Publishe
 export type ContentPagesContentResourceType = 'Article' | 'Tutorial' | 'Documentation' | 'Video' | 'Download' | 'ExternalLink' | 'Course' | 'Custom';
 
 export interface ContentPagesCreateContentResource {
-  slug?: string | null;
-  title?: string | null;
-  summary?: string | null;
   body?: string | null;
-  resourceType?: ContentPagesContentResourceType;
-  locale?: string | null;
   categorySlug?: string | null;
-  tags?: string | null;
   coverImageUrl?: string | null;
-  videoUrl?: string | null;
+  customData?: string | null;
   downloadUrl?: string | null;
   externalUrl?: string | null;
+  isFeatured?: boolean;
   linkedEntityId?: string | null;
   linkedEntityType?: string | null;
-  metaTitle?: string | null;
+  locale?: string | null;
   metaDescription?: string | null;
+  metaTitle?: string | null;
   ogImageUrl?: string | null;
-  structuredData?: string | null;
   readingTimeMinutes?: number | null;
-  isFeatured?: boolean;
+  resourceType?: ContentPagesContentResourceType;
+  slug?: string | null;
   sortOrder?: number;
-  customData?: string | null;
+  structuredData?: string | null;
+  summary?: string | null;
+  tags?: string | null;
+  title?: string | null;
+  videoUrl?: string | null;
 }
 
 export interface ContentPagesCreateMarketingLead {
-  source: string;
-  name?: string | null;
-  email: string;
   company?: string | null;
-  topic?: string | null;
-  plan?: string | null;
-  message?: string | null;
+  email: string;
   locale?: string | null;
+  message?: string | null;
+  name?: string | null;
   pagePath?: string | null;
+  plan?: string | null;
   referrer?: string | null;
+  source: string;
+  topic?: string | null;
   userAgent?: string | null;
 }
 
 export interface ContentPagesCreatePage {
-  slug?: string | null;
-  title?: string | null;
+  body?: string | null;
+  canonicalUrl?: string | null;
+  customData?: string | null;
   description?: string | null;
-  pageType?: ContentPagesPageType;
   locale?: string | null;
-  metaTitle?: string | null;
   metaDescription?: string | null;
   metaKeywords?: string | null;
-  canonicalUrl?: string | null;
-  robotsDirective?: string | null;
-  ogTitle?: string | null;
+  metaTitle?: string | null;
   ogDescription?: string | null;
   ogImageUrl?: string | null;
+  ogTitle?: string | null;
   ogType?: string | null;
+  pageType?: ContentPagesPageType;
+  parentPageId?: string | null;
+  robotsDirective?: string | null;
+  slug?: string | null;
+  sortOrder?: number;
+  structuredData?: string | null;
+  title?: string | null;
   twitterCard?: string | null;
   twitterSite?: string | null;
-  structuredData?: string | null;
-  body?: string | null;
-  customData?: string | null;
-  parentPageId?: string | null;
-  sortOrder?: number;
 }
 
 export interface ContentPagesCreatePageSection {
-  sectionType?: ContentPagesSectionType;
-  heading?: string | null;
-  subheading?: string | null;
-  data?: string | null;
-  sortOrder?: number;
-  isVisible?: boolean;
   cssClasses?: string | null;
+  data?: string | null;
+  heading?: string | null;
+  isVisible?: boolean;
+  sectionType?: ContentPagesSectionType;
+  sortOrder?: number;
+  subheading?: string | null;
 }
 
 export interface ContentPagesMarketingLead {
+  company?: string | null;
+  createdAt?: string;
+  email?: string | null;
   id?: string;
+  locale?: string | null;
+  message?: string | null;
+  name?: string | null;
+  pagePath?: string | null;
+  plan?: string | null;
+  referrer?: string | null;
   source?: string | null;
   status?: string | null;
-  name?: string | null;
-  email?: string | null;
-  company?: string | null;
   topic?: string | null;
-  plan?: string | null;
-  message?: string | null;
-  locale?: string | null;
-  pagePath?: string | null;
-  referrer?: string | null;
-  userAgent?: string | null;
-  createdAt?: string;
   updatedAt?: string | null;
+  userAgent?: string | null;
 }
 
 export interface ContentPagesOpenGraphMetadata {
-  slug?: string | null;
-  title?: string | null;
+  canonicalUrl?: string | null;
   description?: string | null;
-  ogTitle?: string | null;
   ogDescription?: string | null;
   ogImageUrl?: string | null;
+  ogTitle?: string | null;
   ogType?: string | null;
+  robotsDirective?: string | null;
+  slug?: string | null;
+  structuredData?: string | null;
+  title?: string | null;
   twitterCard?: string | null;
   twitterSite?: string | null;
-  canonicalUrl?: string | null;
-  robotsDirective?: string | null;
-  structuredData?: string | null;
 }
 
 export interface ContentPagesPage {
-  id?: string;
-  slug?: string | null;
-  title?: string | null;
+  body?: string | null;
+  canonicalUrl?: string | null;
+  createdAt?: string;
+  customData?: string | null;
   description?: string | null;
-  pageType?: string | null;
-  status?: string | null;
+  id?: string;
   locale?: string | null;
-  metaTitle?: string | null;
   metaDescription?: string | null;
   metaKeywords?: string | null;
-  canonicalUrl?: string | null;
-  robotsDirective?: string | null;
-  ogTitle?: string | null;
+  metaTitle?: string | null;
   ogDescription?: string | null;
   ogImageUrl?: string | null;
+  ogTitle?: string | null;
   ogType?: string | null;
+  pageType?: string | null;
+  parentPageId?: string | null;
+  publishedAt?: string | null;
+  robotsDirective?: string | null;
+  scheduledPublishAt?: string | null;
+  sections?: Array<ContentPagesPageSection> | null;
+  slug?: string | null;
+  sortOrder?: number;
+  status?: string | null;
+  structuredData?: string | null;
+  title?: string | null;
   twitterCard?: string | null;
   twitterSite?: string | null;
-  structuredData?: string | null;
-  body?: string | null;
-  customData?: string | null;
-  parentPageId?: string | null;
-  sortOrder?: number;
-  sections?: Array<ContentPagesPageSection> | null;
-  publishedAt?: string | null;
-  scheduledPublishAt?: string | null;
-  createdAt?: string;
   updatedAt?: string | null;
 }
 
 export interface ContentPagesPageSection {
+  createdAt?: string;
+  cssClasses?: string | null;
+  data?: string | null;
+  heading?: string | null;
   id?: string;
+  isVisible?: boolean;
   pageId?: string;
   sectionType?: string | null;
-  heading?: string | null;
-  subheading?: string | null;
-  data?: string | null;
   sortOrder?: number;
-  isVisible?: boolean;
-  cssClasses?: string | null;
-  createdAt?: string;
+  subheading?: string | null;
   updatedAt?: string | null;
 }
 
@@ -1804,91 +1804,91 @@ export type ContentPagesSectionType =
   | 'Custom';
 
 export interface ContentPagesSitemapEntry {
+  locale?: string | null;
   slug?: string | null;
   updatedAt?: string | null;
-  locale?: string | null;
 }
 
 export interface ContentPagesUpdateContentResource {
-  slug?: string | null;
-  title?: string | null;
-  summary?: string | null;
   body?: string | null;
-  resourceType?: ContentPagesContentResourceType;
-  status?: ContentPagesContentResourceStatus;
-  locale?: string | null;
   categorySlug?: string | null;
-  tags?: string | null;
   coverImageUrl?: string | null;
-  videoUrl?: string | null;
+  customData?: string | null;
   downloadUrl?: string | null;
   externalUrl?: string | null;
+  isFeatured?: boolean | null;
   linkedEntityId?: string | null;
   linkedEntityType?: string | null;
-  metaTitle?: string | null;
+  locale?: string | null;
   metaDescription?: string | null;
+  metaTitle?: string | null;
   ogImageUrl?: string | null;
-  structuredData?: string | null;
   readingTimeMinutes?: number | null;
-  isFeatured?: boolean | null;
-  sortOrder?: number | null;
+  resourceType?: ContentPagesContentResourceType;
   scheduledPublishAt?: string | null;
-  customData?: string | null;
+  slug?: string | null;
+  sortOrder?: number | null;
+  status?: ContentPagesContentResourceStatus;
+  structuredData?: string | null;
+  summary?: string | null;
+  tags?: string | null;
+  title?: string | null;
+  videoUrl?: string | null;
 }
 
 export interface ContentPagesUpdatePage {
-  slug?: string | null;
-  title?: string | null;
+  body?: string | null;
+  canonicalUrl?: string | null;
+  customData?: string | null;
   description?: string | null;
-  pageType?: ContentPagesPageType;
-  status?: ContentPagesPageStatus;
   locale?: string | null;
-  metaTitle?: string | null;
   metaDescription?: string | null;
   metaKeywords?: string | null;
-  canonicalUrl?: string | null;
-  robotsDirective?: string | null;
-  ogTitle?: string | null;
+  metaTitle?: string | null;
   ogDescription?: string | null;
   ogImageUrl?: string | null;
+  ogTitle?: string | null;
   ogType?: string | null;
+  pageType?: ContentPagesPageType;
+  parentPageId?: string | null;
+  robotsDirective?: string | null;
+  scheduledPublishAt?: string | null;
+  slug?: string | null;
+  sortOrder?: number | null;
+  status?: ContentPagesPageStatus;
+  structuredData?: string | null;
+  title?: string | null;
   twitterCard?: string | null;
   twitterSite?: string | null;
-  structuredData?: string | null;
-  body?: string | null;
-  customData?: string | null;
-  parentPageId?: string | null;
-  sortOrder?: number | null;
-  scheduledPublishAt?: string | null;
 }
 
 export interface ContentPagesUpdatePageSection {
-  sectionType?: ContentPagesSectionType;
-  heading?: string | null;
-  subheading?: string | null;
-  data?: string | null;
-  sortOrder?: number | null;
-  isVisible?: boolean | null;
   cssClasses?: string | null;
+  data?: string | null;
+  heading?: string | null;
+  isVisible?: boolean | null;
+  sectionType?: ContentPagesSectionType;
+  sortOrder?: number | null;
+  subheading?: string | null;
 }
 
 export interface FeaturesBulkEvaluationInput {
-  featureKeys?: Array<string> | null;
   context?: FeaturesFeatureContext;
+  featureKeys?: Array<string> | null;
 }
 
 export interface FeaturesCapabilityAuditLog {
-  id?: string;
-  tenantId?: string;
   capabilityKey?: string | null;
-  oldValue?: boolean | null;
-  newValue?: boolean;
-  oldSource?: string | null;
-  newSource?: string | null;
-  changedByUserId?: string | null;
   changeReason?: string | null;
   changeType?: string | null;
   changedAt?: string;
+  changedByUserId?: string | null;
+  id?: string;
+  newSource?: string | null;
+  newValue?: boolean;
+  oldSource?: string | null;
+  oldValue?: boolean | null;
+  tenantId?: string;
 }
 
 export interface FeaturesCapabilityCheckOutput {
@@ -1897,234 +1897,234 @@ export interface FeaturesCapabilityCheckOutput {
 }
 
 export interface FeaturesCreateFeatureInput {
-  key?: string | null;
-  name?: string | null;
   description?: string | null;
   isEnabled?: boolean;
+  key?: string | null;
+  name?: string | null;
   tenantId?: string | null;
 }
 
 export interface FeaturesFeatureContext {
-  tenantId?: string | null;
-  userId?: string | null;
-  subscriptionPlanId?: string | null;
-  environment?: string | null;
-  permissions?: Array<string> | null;
-  customAttributes?: Record<string, Record<string, unknown>> | null;
-  userAgent?: string | null;
-  ipAddress?: string | null;
   country?: string | null;
+  customAttributes?: Record<string, Record<string, unknown>> | null;
+  environment?: string | null;
+  ipAddress?: string | null;
+  permissions?: Array<string> | null;
   requestTime?: string;
+  subscriptionPlanId?: string | null;
+  tenantId?: string | null;
+  userAgent?: string | null;
+  userId?: string | null;
 }
 
 export interface FeaturesFeatureEvaluationInput {
-  featureKey?: string | null;
-  defaultValue?: Record<string, unknown> | null;
   context?: FeaturesFeatureContext;
+  defaultValue?: Record<string, unknown> | null;
+  featureKey?: string | null;
 }
 
 export interface FeaturesFeatureFlag {
+  createdAt: string;
+  defaultValue?: Record<string, unknown> | null;
+  deletedAt?: string | null;
+  description?: string | null;
+  environment?: string | null;
   id: string;
+  isEnabled: boolean;
   key: string | null;
   name: string | null;
-  description?: string | null;
-  isEnabled: boolean;
-  type: FeaturesFeatureFlagType;
-  environment?: string | null;
-  tenantId?: string | null;
-  defaultValue?: Record<string, unknown> | null;
-  createdAt: string;
-  updatedAt?: string | null;
-  deletedAt?: string | null;
   targets?: Array<FeaturesFeatureFlagTarget> | null;
+  tenantId?: string | null;
+  type: FeaturesFeatureFlagType;
+  updatedAt?: string | null;
 }
 
 export interface FeaturesFeatureFlagTarget {
-  id: string;
-  featureFlagId: string;
-  targetType: string | null;
-  targetIdentifier: string | null;
-  isEnabled: boolean;
-  rolloutPercentage?: number;
+  createdAt: string;
   customValue?: string | null;
+  deletedAt?: string | null;
+  featureFlagId: string;
+  id: string;
+  isEnabled: boolean;
   metadata?: string | null;
   priority?: number;
-  createdAt: string;
+  rolloutPercentage?: number;
+  targetIdentifier: string | null;
+  targetType: string | null;
   updatedAt?: string | null;
-  deletedAt?: string | null;
 }
 
 export type FeaturesFeatureFlagType = 'Toggle' | 'Numeric' | 'String' | 'Percentage' | 'UserSegment';
 
 export interface FeaturesSetCapabilityOverrideInput {
   capability?: string | null;
-  isEnabled?: boolean;
-  source?: string | null;
-  reason?: string | null;
   expiresAt?: string | null;
+  isEnabled?: boolean;
+  reason?: string | null;
+  source?: string | null;
 }
 
 export interface FeaturesToggleFeatureInput {
+  environment?: string | null;
   featureKey?: string | null;
   isEnabled?: boolean;
   reason?: string | null;
   tenantId?: string | null;
-  environment?: string | null;
 }
 
 export interface FeaturesUpdateFeatureInput {
-  name?: string | null;
-  description?: string | null;
-  isEnabled?: boolean | null;
-  rolloutPercentage?: number | null;
-  enabledValue?: string | null;
   defaultValue?: string | null;
+  description?: string | null;
+  enabledValue?: string | null;
+  isEnabled?: boolean | null;
+  name?: string | null;
+  rolloutPercentage?: number | null;
 }
 
 export interface Fido2NetLibAssertionOptions {
-  challenge?: string | null;
-  timeout?: number;
-  rpId?: string | null;
   allowCredentials?: Array<ObjectsPublicKeyCredentialDescriptor> | null;
-  userVerification?: ObjectsUserVerificationRequirement;
-  hints?: Array<ObjectsPublicKeyCredentialHint> | null;
+  challenge?: string | null;
   extensions?: ObjectsAuthenticationExtensionsClientInputs;
+  hints?: Array<ObjectsPublicKeyCredentialHint> | null;
+  rpId?: string | null;
+  timeout?: number;
+  userVerification?: ObjectsUserVerificationRequirement;
 }
 
 export interface Fido2NetLibAuthenticatorSelection {
   authenticatorAttachment?: ObjectsAuthenticatorAttachment;
-  residentKey?: ObjectsResidentKeyRequirement;
   requireResidentKey?: boolean;
+  residentKey?: ObjectsResidentKeyRequirement;
   userVerification?: ObjectsUserVerificationRequirement;
 }
 
 export interface Fido2NetLibCredentialCreateOptions {
-  rp: Fido2NetLibPublicKeyCredentialRpEntity;
-  user: Fido2NetLibFido2User;
-  challenge: string | null;
-  pubKeyCredParams: Array<Fido2NetLibPubKeyCredParam> | null;
-  timeout?: number;
   attestation?: ObjectsAttestationConveyancePreference;
   attestationFormats?: Array<ObjectsAttestationStatementFormatIdentifier> | null;
   authenticatorSelection?: Fido2NetLibAuthenticatorSelection;
-  hints?: Array<ObjectsPublicKeyCredentialHint> | null;
+  challenge: string | null;
   excludeCredentials?: Array<ObjectsPublicKeyCredentialDescriptor> | null;
   extensions?: ObjectsAuthenticationExtensionsClientInputs;
+  hints?: Array<ObjectsPublicKeyCredentialHint> | null;
+  pubKeyCredParams: Array<Fido2NetLibPubKeyCredParam> | null;
+  rp: Fido2NetLibPublicKeyCredentialRpEntity;
+  timeout?: number;
+  user: Fido2NetLibFido2User;
 }
 
 export interface Fido2NetLibFido2User {
-  name?: string | null;
-  id?: string | null;
   displayName?: string | null;
+  id?: string | null;
+  name?: string | null;
 }
 
 export interface Fido2NetLibPubKeyCredParam {
-  type?: ObjectsPublicKeyCredentialType;
   alg?: ObjectsCOSEAlgorithm;
+  type?: ObjectsPublicKeyCredentialType;
 }
 
 export interface Fido2NetLibPublicKeyCredentialRpEntity {
+  icon?: string | null;
   id?: string | null;
   name?: string | null;
-  icon?: string | null;
 }
 
 export interface GameJamsAddJamCriteriaInput {
-  name?: string | null;
   description?: string | null;
-  weight?: number;
   maxScore?: number;
+  name?: string | null;
+  weight?: number;
 }
 
 export interface GameJamsCreateJamInput {
+  createdBy?: string;
+  description?: string | null;
+  endDate?: string;
+  maxParticipants?: number | null;
   name?: string | null;
+  rules?: string | null;
   slug?: string | null;
   startDate?: string;
-  endDate?: string;
-  createdBy?: string;
-  theme?: string | null;
-  description?: string | null;
-  rules?: string | null;
   submissionCriteria?: string | null;
+  theme?: string | null;
   votingEndDate?: string | null;
-  maxParticipants?: number | null;
 }
 
 export interface GameJamsJam {
+  createdAt: string;
+  createdBy: string;
+  deletedAt?: string | null;
+  description?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  endDate: string;
+  id?: string;
+  isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  name: string;
-  slug: string;
-  theme?: string | null;
-  description?: string | null;
-  rules?: string | null;
-  submissionCriteria?: string | null;
-  startDate: string;
-  endDate: string;
-  votingEndDate?: string | null;
   maxParticipants?: number | null;
+  name: string;
   participantCount?: number;
+  rules?: string | null;
+  slug: string;
+  startDate: string;
   status: GameJamsJamStatus;
-  createdBy: string;
+  submissionCriteria?: string | null;
+  tenantId?: string | null;
+  theme?: string | null;
+  updatedAt: string;
+  version?: number;
+  votingEndDate?: string | null;
 }
 
 export interface GameJamsJamCriteria {
+  description?: string | null;
   id?: string;
   jamId?: string;
-  name?: string | null;
-  description?: string | null;
-  weight?: number;
   maxScore?: number;
+  name?: string | null;
+  weight?: number;
 }
 
 export interface GameJamsJamDto {
-  id?: string;
-  name?: string | null;
-  slug?: string | null;
-  theme?: string | null;
-  description?: string | null;
-  startDate?: string;
-  endDate?: string;
-  votingEndDate?: string | null;
-  maxParticipants?: number | null;
-  participantCount?: number;
-  status?: GameJamsJamStatus;
   createdBy?: string;
+  description?: string | null;
+  endDate?: string;
+  id?: string;
+  maxParticipants?: number | null;
+  name?: string | null;
+  participantCount?: number;
+  slug?: string | null;
+  startDate?: string;
+  status?: GameJamsJamStatus;
+  theme?: string | null;
+  votingEndDate?: string | null;
 }
 
 export interface GameJamsJamScore {
+  createdAt: string;
+  criteriaId: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  feedback?: string | null;
+  id?: string;
+  isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  submissionId: string;
-  criteriaId: string;
   judgeUserId: string;
   score: number;
-  feedback?: string | null;
+  submissionId: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface GameJamsJamScoreDto {
-  id?: string;
-  submissionId?: string;
   criteriaId?: string;
+  feedback?: string | null;
+  id?: string;
   judgeUserId?: string;
   score?: number;
-  feedback?: string | null;
+  submissionId?: string;
 }
 
 export type GameJamsJamStatus = 'Upcoming' | 'Active' | 'Voting' | 'Completed' | 'Cancelled';
@@ -2133,39 +2133,39 @@ export interface GameJamsJamSubmission {
   id?: string;
   jamId?: string;
   projectVersionId?: string;
-  userId?: string;
   submissionNotes?: string | null;
+  userId?: string;
 }
 
 export interface GameJamsScoreJamSubmissionInput {
   criteriaId?: string;
+  feedback?: string | null;
   judgeUserId?: string;
   score?: number;
-  feedback?: string | null;
 }
 
 export interface GameJamsSubmitJamEntryInput {
+  notes?: string | null;
   projectVersionId?: string;
   userId?: string;
-  notes?: string | null;
 }
 
 export interface IdentityAuthenticationApiKey {
-  id?: string;
-  name?: string | null;
-  keyPrefix?: string | null;
-  scopes?: Array<string> | null;
-  isActive?: boolean;
-  expiresAt?: string | null;
-  lastUsedAt?: string | null;
-  usageCount?: number;
   createdAt?: string;
+  expiresAt?: string | null;
+  id?: string;
+  isActive?: boolean;
+  keyPrefix?: string | null;
+  lastUsedAt?: string | null;
+  name?: string | null;
+  scopes?: Array<string> | null;
+  usageCount?: number;
 }
 
 export interface IdentityAuthenticationAssignRoleToUserInput {
-  userId?: string;
-  roleId?: string;
   expiresAt?: string | null;
+  roleId?: string;
+  userId?: string;
 }
 
 export interface IdentityAuthenticationBackupCodesOutput {
@@ -2174,10 +2174,10 @@ export interface IdentityAuthenticationBackupCodesOutput {
 }
 
 export interface IdentityAuthenticationBackupCodesStatusOutput {
-  totalCount: number;
-  remainingCount: number;
-  usedCount: number;
   hasBackupCodes: boolean;
+  remainingCount: number;
+  totalCount: number;
+  usedCount: number;
 }
 
 export interface IdentityAuthenticationBeginWebAuthnAuthenticationInput {
@@ -2185,8 +2185,8 @@ export interface IdentityAuthenticationBeginWebAuthnAuthenticationInput {
 }
 
 export interface IdentityAuthenticationBeginWebAuthnRegistrationInput {
-  email?: string | null;
   displayName?: string | null;
+  email?: string | null;
   preferredAuthenticatorType?: IdentityAuthenticationWebAuthnAuthenticatorType;
 }
 
@@ -2200,9 +2200,9 @@ export interface IdentityAuthenticationCleanupResult {
 
 export interface IdentityAuthenticationClientCredentialsTokenOutput {
   accessToken?: string | null;
-  tokenType?: string | null;
   expiresIn?: number;
   scope?: string | null;
+  tokenType?: string | null;
 }
 
 export interface IdentityAuthenticationCompleteMfaSetupInput {
@@ -2211,10 +2211,10 @@ export interface IdentityAuthenticationCompleteMfaSetupInput {
 }
 
 export interface IdentityAuthenticationCompletePasswordResetInput {
-  token: string;
-  newPassword: string;
   confirmPassword: string;
+  newPassword: string;
   tenantId?: string | null;
+  token: string;
 }
 
 export interface IdentityAuthenticationCompleteWebAuthnAuthenticationInput {
@@ -2228,60 +2228,60 @@ export interface IdentityAuthenticationCompleteWebAuthnRegistrationInput {
 }
 
 export interface IdentityAuthenticationConsumeMagicLinkInput {
-  token: string;
-  tenantId?: string | null;
   deviceFingerprint?: string | null;
+  tenantId?: string | null;
+  token: string;
 }
 
 export interface IdentityAuthenticationCreateApiKeyCommand {
-  name: string | null;
-  scopes: Array<string> | null;
   expiresAt?: string | null;
   ipWhitelist?: string | null;
+  name: string | null;
+  scopes: Array<string> | null;
 }
 
 export interface IdentityAuthenticationCreateApiKeyOutput {
-  id?: string;
-  name?: string | null;
   apiKey?: string | null;
-  keyPrefix?: string | null;
-  scopes?: Array<string> | null;
-  expiresAt?: string | null;
   createdAt?: string;
+  expiresAt?: string | null;
+  id?: string;
+  keyPrefix?: string | null;
+  name?: string | null;
+  scopes?: Array<string> | null;
 }
 
 export interface IdentityAuthenticationCreateRoleInput {
-  name?: string | null;
   description?: string | null;
+  name?: string | null;
   permissions?: Array<string> | null;
   tenantId?: string | null;
 }
 
 export interface IdentityAuthenticationCreateServiceAccountInput {
-  name?: string | null;
-  description?: string | null;
-  tenantId?: string | null;
-  scopes?: string | null;
   allowedIpAddresses?: string | null;
+  description?: string | null;
   expiresAt?: string | null;
+  name?: string | null;
+  scopes?: string | null;
+  tenantId?: string | null;
 }
 
 export interface IdentityAuthenticationDeviceInfo {
-  fingerprint?: string | null;
-  deviceId?: string | null;
-  ipAddress?: string | null;
-  deviceName?: string | null;
-  deviceType?: string | null;
-  operatingSystem?: string | null;
-  osVersion?: string | null;
   browser?: string | null;
   browserVersion?: string | null;
+  deviceId?: string | null;
+  deviceName?: string | null;
+  deviceType?: string | null;
+  fingerprint?: string | null;
+  ipAddress?: string | null;
+  isBot?: boolean;
+  isMobile?: boolean;
+  language?: string | null;
+  operatingSystem?: string | null;
+  osVersion?: string | null;
   screenResolution?: string | null;
   timezone?: string | null;
-  language?: string | null;
   userAgent?: string | null;
-  isMobile?: boolean;
-  isBot?: boolean;
 }
 
 export interface IdentityAuthenticationDisableMfaInput {
@@ -2293,9 +2293,9 @@ export interface IdentityAuthenticationEmailVerificationOutput {
 }
 
 export interface IdentityAuthenticationEmailVerificationResult {
-  success?: boolean;
-  message?: string | null;
   email?: string | null;
+  message?: string | null;
+  success?: boolean;
   userId?: string | null;
   verifiedAt?: string | null;
 }
@@ -2310,50 +2310,50 @@ export interface IdentityAuthenticationGoogleIdTokenInput {
 }
 
 export interface IdentityAuthenticationJwtKeyInfo {
-  keyId?: string | null;
   algorithm?: string | null;
-  isActive?: boolean;
-  validFrom?: string;
   expiresAt?: string;
+  isActive?: boolean;
+  keyId?: string | null;
+  keyVersion?: number;
   rotatedAt?: string | null;
   rotationReason?: string | null;
-  keyVersion?: number;
+  validFrom?: string;
 }
 
 export interface IdentityAuthenticationLocalSignInInput {
-  username?: string | null;
+  deviceFingerprint?: string | null;
   email: string;
+  emailOrUsername?: string | null;
   password: string;
   tenantId?: string | null;
-  deviceFingerprint?: string | null;
-  emailOrUsername?: string | null;
+  username?: string | null;
 }
 
 export interface IdentityAuthenticationLocalSignUpInput {
-  username: string;
   email: string;
-  password: string;
-  tenantId?: string | null;
   firstName?: string | null;
   lastName?: string | null;
+  password: string;
   phoneNumber?: string | null;
+  tenantId?: string | null;
+  username: string;
 }
 
 export interface IdentityAuthenticationLocationInfo {
-  ipAddress?: string | null;
+  city?: string | null;
   country?: string | null;
   countryCode?: string | null;
-  region?: string | null;
-  city?: string | null;
-  postalCode?: string | null;
+  displayLocation?: string | null;
+  ipAddress?: string | null;
+  isHosting?: boolean | null;
+  isProxy?: boolean | null;
+  isp?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-  timezone?: string | null;
-  isp?: string | null;
   organization?: string | null;
-  isProxy?: boolean | null;
-  isHosting?: boolean | null;
-  displayLocation?: string | null;
+  postalCode?: string | null;
+  region?: string | null;
+  timezone?: string | null;
 }
 
 export interface IdentityAuthenticationLockServiceAccountInput {
@@ -2361,17 +2361,17 @@ export interface IdentityAuthenticationLockServiceAccountInput {
 }
 
 export interface IdentityAuthenticationMagicLinkRequestResult {
-  success?: boolean;
-  message?: string | null;
-  expiresInMinutes?: number;
   developmentPreviewToken?: string | null;
+  expiresInMinutes?: number;
+  message?: string | null;
+  success?: boolean;
 }
 
 export interface IdentityAuthenticationMfaConfigurationOutput {
-  isEnabled?: boolean;
-  enabledMethods?: Array<string> | null;
-  enabledAt?: string | null;
   backupCodesRemaining?: number;
+  enabledAt?: string | null;
+  enabledMethods?: Array<string> | null;
+  isEnabled?: boolean;
 }
 
 export interface IdentityAuthenticationMfaErrorOutput {
@@ -2381,26 +2381,26 @@ export interface IdentityAuthenticationMfaErrorOutput {
 export type IdentityAuthenticationMfaMethod = 'Totp' | 'BackupCode' | 'Sms' | 'Email' | 'WebAuthn';
 
 export interface IdentityAuthenticationMfaMethodInfo {
+  description: string | null;
+  isAvailable: boolean;
+  isEnabled: boolean;
   method: IdentityAuthenticationMfaMethod;
   name: string | null;
-  description: string | null;
-  isEnabled: boolean;
-  isAvailable: boolean;
   priority: number;
 }
 
 export interface IdentityAuthenticationMfaMethodsOutput {
-  methods: Array<IdentityAuthenticationMfaMethodInfo> | null;
   defaultMethod?: IdentityAuthenticationMfaMethod;
+  methods: Array<IdentityAuthenticationMfaMethodInfo> | null;
 }
 
 export interface IdentityAuthenticationMfaSetupOutput {
-  isSuccess?: boolean;
+  backupCodes?: Array<string> | null;
   errorMessage?: string | null;
-  secretKey?: string | null;
+  isSuccess?: boolean;
   qrCodeData?: string | null;
   qrCodeUri?: string | null;
-  backupCodes?: Array<string> | null;
+  secretKey?: string | null;
 }
 
 export interface IdentityAuthenticationMfaSuccessOutput {
@@ -2408,8 +2408,8 @@ export interface IdentityAuthenticationMfaSuccessOutput {
 }
 
 export interface IdentityAuthenticationMfaVerificationOutput {
-  isValid?: boolean;
   accessToken?: string | null;
+  isValid?: boolean;
   refreshToken?: string | null;
 }
 
@@ -2419,35 +2419,35 @@ export interface IdentityAuthenticationOAuth2ErrorOutput {
 }
 
 export interface IdentityAuthenticationPasswordChangeInput {
+  confirmPassword: string;
   currentPassword: string;
   newPassword: string;
-  confirmPassword: string;
   revokeOtherSessions?: boolean;
 }
 
 export interface IdentityAuthenticationPasswordChangeResult {
-  success?: boolean;
   message?: string | null;
   sessionsRevoked?: number;
+  success?: boolean;
 }
 
 export interface IdentityAuthenticationPasswordResetRequestResult {
-  success?: boolean;
-  message?: string | null;
   expiresInMinutes?: number;
+  message?: string | null;
+  success?: boolean;
 }
 
 export interface IdentityAuthenticationPasswordResetResult {
-  success?: boolean;
   message?: string | null;
+  success?: boolean;
   userId?: string | null;
 }
 
 export interface IdentityAuthenticationPatchServiceAccountInput {
-  name?: string | null;
   description?: string | null;
-  scopes?: string | null;
   expiresAt?: string | null;
+  name?: string | null;
+  scopes?: string | null;
 }
 
 export interface IdentityAuthenticationRefreshTokenInput {
@@ -2456,8 +2456,8 @@ export interface IdentityAuthenticationRefreshTokenInput {
 }
 
 export interface IdentityAuthenticationRemoveRoleFromUserInput {
-  userId?: string;
   roleId?: string;
+  userId?: string;
 }
 
 export interface IdentityAuthenticationRequestMagicLinkInput {
@@ -2475,9 +2475,9 @@ export interface IdentityAuthenticationRevokeApiKeyInput {
 }
 
 export interface IdentityAuthenticationRevokeRefreshTokenInput {
-  token: string;
   ipAddress?: string | null;
   reason?: string | null;
+  token: string;
 }
 
 export type IdentityAuthenticationRiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
@@ -2497,77 +2497,77 @@ export interface IdentityAuthenticationSendEmailVerificationInput {
 }
 
 export interface IdentityAuthenticationServiceAccountAuditEntry {
-  id?: string;
-  timestamp?: string;
   action?: string | null;
-  performedBy?: string | null;
-  ipAddress?: string | null;
   details?: string | null;
+  id?: string;
+  ipAddress?: string | null;
+  performedBy?: string | null;
+  timestamp?: string;
 }
 
 export interface IdentityAuthenticationServiceAccountAuditLogOutput {
-  serviceAccountId?: string;
   entries?: Array<IdentityAuthenticationServiceAccountAuditEntry> | null;
-  totalCount?: number;
   page?: number;
   pageSize?: number;
+  serviceAccountId?: string;
+  totalCount?: number;
 }
 
 export interface IdentityAuthenticationServiceAccountCreatedOutput {
-  id?: string;
   clientId?: string | null;
   clientSecret?: string | null;
-  name?: string | null;
-  description?: string | null;
-  tenantId?: string | null;
-  scopes?: string | null;
   createdAt?: string;
+  description?: string | null;
   expiresAt?: string | null;
+  id?: string;
+  name?: string | null;
+  scopes?: string | null;
+  tenantId?: string | null;
   warning?: string | null;
 }
 
 export interface IdentityAuthenticationServiceAccountOutput {
-  id?: string;
+  authenticationCount?: number;
   clientId?: string | null;
-  name?: string | null;
-  description?: string | null;
-  tenantId?: string | null;
-  scopes?: string | null;
-  isActive?: boolean;
-  isLocked?: boolean;
-  expiresAt?: string | null;
   createdAt?: string;
   createdBy?: string | null;
+  description?: string | null;
+  expiresAt?: string | null;
+  id?: string;
+  isActive?: boolean;
+  isLocked?: boolean;
   lastAuthenticatedAt?: string | null;
-  authenticationCount?: number;
+  name?: string | null;
+  scopes?: string | null;
   secretRotationCount?: number;
+  tenantId?: string | null;
 }
 
 export interface IdentityAuthenticationSessionOutput {
-  id?: string;
-  deviceInfo?: IdentityAuthenticationDeviceInfo;
-  location?: IdentityAuthenticationLocationInfo;
-  ipAddress?: string | null;
   createdAt?: string;
-  lastUsedAt?: string;
+  deviceInfo?: IdentityAuthenticationDeviceInfo;
   expiresAt?: string;
-  isTrustedDevice?: boolean;
+  id?: string;
+  ipAddress?: string | null;
   isCurrent?: boolean;
+  isTrustedDevice?: boolean;
+  lastUsedAt?: string;
+  location?: IdentityAuthenticationLocationInfo;
 }
 
 export interface IdentityAuthenticationSessionSecurityAnalysis {
-  sessionId?: string;
-  userId?: string;
-  isSuspicious?: boolean;
-  unusualActivityDetected?: boolean;
-  riskScore?: number;
   activeSessionCount?: number;
-  totalDeviceCount?: number;
-  riskLevel?: IdentityAuthenticationRiskLevel;
-  securityFlags?: Array<string> | null;
-  riskFactors?: Array<string> | null;
-  metadata?: Record<string, string> | null;
   analyzedAt?: string;
+  isSuspicious?: boolean;
+  metadata?: Record<string, string> | null;
+  riskFactors?: Array<string> | null;
+  riskLevel?: IdentityAuthenticationRiskLevel;
+  riskScore?: number;
+  securityFlags?: Array<string> | null;
+  sessionId?: string;
+  totalDeviceCount?: number;
+  unusualActivityDetected?: boolean;
+  userId?: string;
 }
 
 export interface IdentityAuthenticationSessionSuccessOutput {
@@ -2580,30 +2580,30 @@ export interface IdentityAuthenticationSessionTerminationOutput {
 }
 
 export interface IdentityAuthenticationSignInOutput {
-  success?: boolean;
-  message?: string | null;
   accessToken?: string | null;
-  refreshToken?: string | null;
-  expiresAt?: string;
   accessTokenExpiresAt?: string;
-  refreshTokenExpiresAt?: string;
-  expiresIn?: number;
-  userId?: string;
-  email?: string | null;
-  sessionId?: string;
-  tempToken?: string | null;
-  mfaToken?: string | null;
-  user?: IdentityAuthenticationUser;
-  tenantId?: string | null;
-  availableTenants?: Array<TenantInfo> | null;
-  requiresMfa?: boolean;
-  mfaSessionId?: string | null;
-  requiresStepUp?: boolean;
-  stepUpToken?: string | null;
-  stepUpExpiresAt?: string | null;
-  riskLevel?: IdentityAuthenticationRiskLevel;
-  riskFactors?: Array<string> | null;
   availableMethods?: Array<string> | null;
+  availableTenants?: Array<TenantInfo> | null;
+  email?: string | null;
+  expiresAt?: string;
+  expiresIn?: number;
+  message?: string | null;
+  mfaSessionId?: string | null;
+  mfaToken?: string | null;
+  refreshToken?: string | null;
+  refreshTokenExpiresAt?: string;
+  requiresMfa?: boolean;
+  requiresStepUp?: boolean;
+  riskFactors?: Array<string> | null;
+  riskLevel?: IdentityAuthenticationRiskLevel;
+  sessionId?: string;
+  stepUpExpiresAt?: string | null;
+  stepUpToken?: string | null;
+  success?: boolean;
+  tempToken?: string | null;
+  tenantId?: string | null;
+  user?: IdentityAuthenticationUser;
+  userId?: string;
 }
 
 export interface IdentityAuthenticationSmsMfaSetupInput {
@@ -2611,9 +2611,9 @@ export interface IdentityAuthenticationSmsMfaSetupInput {
 }
 
 export interface IdentityAuthenticationSmsMfaSetupOutput {
+  expiresInSeconds: number;
   message: string | null;
   phoneNumberMasked: string | null;
-  expiresInSeconds: number;
 }
 
 export interface IdentityAuthenticationTrustDeviceInput {
@@ -2621,12 +2621,12 @@ export interface IdentityAuthenticationTrustDeviceInput {
 }
 
 export interface IdentityAuthenticationTrustedDeviceOutput {
-  id?: string;
-  deviceName?: string | null;
   deviceInfo?: IdentityAuthenticationDeviceInfo;
-  trustedAt?: string;
-  lastUsedAt?: string;
+  deviceName?: string | null;
   expiresAt?: string | null;
+  id?: string;
+  lastUsedAt?: string;
+  trustedAt?: string;
 }
 
 export interface IdentityAuthenticationUpdateCredentialNameInput {
@@ -2634,10 +2634,10 @@ export interface IdentityAuthenticationUpdateCredentialNameInput {
 }
 
 export interface IdentityAuthenticationUpdateRoleInput {
-  name?: string | null;
   description?: string | null;
-  permissions?: Array<string> | null;
   isActive?: boolean | null;
+  name?: string | null;
+  permissions?: Array<string> | null;
 }
 
 export interface IdentityAuthenticationUpdateScopesInput {
@@ -2645,115 +2645,115 @@ export interface IdentityAuthenticationUpdateScopesInput {
 }
 
 export interface IdentityAuthenticationUser {
-  id?: string;
+  createdAt?: string;
   email?: string | null;
-  username?: string | null;
+  emailVerified?: boolean;
   firstName?: string | null;
+  id?: string;
+  lastLoginAt?: string | null;
   lastName?: string | null;
   phoneNumber?: string | null;
-  emailVerified?: boolean;
   phoneNumberVerified?: boolean;
-  createdAt?: string;
-  lastLoginAt?: string | null;
+  username?: string | null;
 }
 
 export interface IdentityAuthenticationVerifyEmailInput {
-  token: string;
   tenantId?: string | null;
+  token: string;
 }
 
 export interface IdentityAuthenticationVerifyMfaInput {
-  userId?: string;
   code: string;
   method?: IdentityAuthenticationMfaMethod;
+  userId?: string;
 }
 
 export interface IdentityAuthenticationWeb3ChallengeInput {
-  walletAddress: string;
   chainId?: string | null;
+  walletAddress: string;
 }
 
 export interface IdentityAuthenticationWeb3ChallengeOutput {
   challenge?: string | null;
-  nonce?: string | null;
   expiresAt?: string;
+  nonce?: string | null;
 }
 
 export interface IdentityAuthenticationWeb3VerifyInput {
-  walletAddress: string;
-  signature: string;
-  nonce: string;
   chainId: string;
-  tenantId?: string | null;
   deviceFingerprint?: string | null;
+  nonce: string;
+  signature: string;
+  tenantId?: string | null;
+  walletAddress: string;
 }
 
 export interface IdentityAuthenticationWebAuthnAuthenticationOptionsResult {
-  success?: boolean;
   error?: string | null;
-  sessionId?: string | null;
-  optionsJson?: string | null;
   options?: Fido2NetLibAssertionOptions;
+  optionsJson?: string | null;
+  sessionId?: string | null;
+  success?: boolean;
 }
 
 export interface IdentityAuthenticationWebAuthnAuthenticationResult {
-  success?: boolean;
-  error?: string | null;
-  userId?: string | null;
-  credentialId?: string | null;
-  isPasswordless?: boolean;
-  email?: string | null;
   accessToken?: string | null;
-  refreshToken?: string | null;
   accessTokenExpiresAt?: string | null;
-  refreshTokenExpiresAt?: string | null;
+  credentialId?: string | null;
+  email?: string | null;
+  error?: string | null;
   expiresIn?: number;
+  isPasswordless?: boolean;
+  refreshToken?: string | null;
+  refreshTokenExpiresAt?: string | null;
+  success?: boolean;
+  userId?: string | null;
 }
 
 export type IdentityAuthenticationWebAuthnAuthenticatorType = 'Platform' | 'CrossPlatform';
 
 export interface IdentityAuthenticationWebAuthnCredentialInfo {
-  id?: string;
-  friendlyName?: string | null;
   authenticatorType?: IdentityAuthenticationWebAuthnAuthenticatorType;
-  createdAt?: string;
-  lastUsedAt?: string | null;
-  isPasswordless?: boolean;
-  isDefault?: boolean;
   backedUp?: boolean;
+  createdAt?: string;
+  friendlyName?: string | null;
+  id?: string;
+  isDefault?: boolean;
+  isPasswordless?: boolean;
+  lastUsedAt?: string | null;
 }
 
 export interface IdentityAuthenticationWebAuthnCredentialVerifyResult {
-  success?: boolean;
   error?: string | null;
-  isValid?: boolean;
   isExpired?: boolean;
   isRevoked?: boolean;
+  isValid?: boolean;
   lastUsedAt?: string | null;
   signatureCount?: number;
+  success?: boolean;
 }
 
 export interface IdentityAuthenticationWebAuthnRegistrationOptionsResult {
-  success?: boolean;
   error?: string | null;
-  sessionId?: string | null;
-  optionsJson?: string | null;
   options?: Fido2NetLibCredentialCreateOptions;
+  optionsJson?: string | null;
+  sessionId?: string | null;
+  success?: boolean;
 }
 
 export interface IdentityAuthenticationWebAuthnRegistrationResult {
-  success?: boolean;
-  error?: string | null;
   credentialId?: string | null;
+  error?: string | null;
   friendlyName?: string | null;
+  success?: boolean;
 }
 
 export interface IdentityAuthenticationWebAuthnStatusOutput {
-  isEnabled?: boolean;
   credentialCount?: number;
   hasPasswordlessCredential?: boolean;
   hasPlatformAuthenticator?: boolean;
   hasSecurityKey?: boolean;
+  isEnabled?: boolean;
 }
 
 export type IdentityAuthorizationPermissionType =
@@ -2861,18 +2861,18 @@ export type IdentityAuthorizationPermissionType =
   | 'Configure';
 
 export interface IdentityTenantsAddTenantMemberOutput {
-  success?: boolean;
-  message?: string | null;
   memberId?: string | null;
+  message?: string | null;
+  success?: boolean;
 }
 
 export interface IdentityTenantsAddUserMembershipInput {
-  tenantId?: string;
-  role?: string | null;
   invitedByEmail?: string | null;
-  requiresAcceptance?: boolean;
   inviteeEmail?: string | null;
   inviteeName?: string | null;
+  requiresAcceptance?: boolean;
+  role?: string | null;
+  tenantId?: string;
 }
 
 export interface IdentityTenantsArchiveInput {
@@ -2888,10 +2888,10 @@ export interface IdentityTenantsBulkArchiveTenantsCommand {
 }
 
 export interface IdentityTenantsBulkCreateTenantItem {
-  name?: string | null;
-  slug?: string | null;
   adminEmail?: string | null;
   description?: string | null;
+  name?: string | null;
+  slug?: string | null;
 }
 
 export interface IdentityTenantsBulkCreateTenantsCommand {
@@ -2903,8 +2903,8 @@ export interface IdentityTenantsBulkDeactivateTenantsCommand {
 }
 
 export interface IdentityTenantsBulkDeleteTenantsCommand {
-  tenantIds?: Array<string> | null;
   hardDelete?: boolean;
+  tenantIds?: Array<string> | null;
 }
 
 export interface IdentityTenantsBulkPurgeTenantsCommand {
@@ -2916,9 +2916,9 @@ export interface IdentityTenantsBulkUndeleteTenantsCommand {
 }
 
 export interface IdentityTenantsBulkUpdateTenantItem {
-  tenantId?: string;
-  name?: string | null;
   description?: string | null;
+  name?: string | null;
+  tenantId?: string;
 }
 
 export interface IdentityTenantsBulkUpdateTenantsCommand {
@@ -2926,10 +2926,10 @@ export interface IdentityTenantsBulkUpdateTenantsCommand {
 }
 
 export interface IdentityTenantsCreateTenantInput {
-  name?: string | null;
-  slug?: string | null;
   adminEmail?: string | null;
   description?: string | null;
+  name?: string | null;
+  slug?: string | null;
 }
 
 export interface IdentityTenantsGetUserMembershipsOutput {
@@ -2946,22 +2946,22 @@ export interface IdentityTenantsRecoverInput {
 }
 
 export interface IdentityTenantsReplaceTenantMetadataInput {
-  customFields?: Record<string, Record<string, unknown> | null> | null;
-  tags?: Array<string> | null;
-  externalReferences?: Record<string, string> | null;
+  adminNotes?: string | null;
   businessInfo?: IdentityTenantsUpdateTenantBusinessInfoInput;
   contactInfo?: IdentityTenantsUpdateTenantContactInfoInput;
-  adminNotes?: string | null;
+  customFields?: Record<string, Record<string, unknown> | null> | null;
+  externalReferences?: Record<string, string> | null;
+  tags?: Array<string> | null;
 }
 
 export interface IdentityTenantsReplaceTenantSettingsInput {
-  systemConfiguration?: IdentityTenantsUpdateTenantSystemConfigurationInput;
-  featureFlags?: Record<string, boolean> | null;
   businessRules?: IdentityTenantsUpdateTenantBusinessRulesInput;
-  userInterfaceSettings?: IdentityTenantsUpdateTenantUiSettingsInput;
-  securitySettings?: IdentityTenantsUpdateTenantSecuritySettingsInput;
+  featureFlags?: Record<string, boolean> | null;
   integrationSettings?: IdentityTenantsUpdateTenantIntegrationSettingsInput;
+  securitySettings?: IdentityTenantsUpdateTenantSecuritySettingsInput;
+  systemConfiguration?: IdentityTenantsUpdateTenantSystemConfigurationInput;
   systemLimits?: IdentityTenantsUpdateTenantSystemLimitsInput;
+  userInterfaceSettings?: IdentityTenantsUpdateTenantUiSettingsInput;
 }
 
 export interface IdentityTenantsSlugValidation {
@@ -2971,320 +2971,320 @@ export interface IdentityTenantsSlugValidation {
 }
 
 export interface IdentityTenantsTenant {
+  activeMemberCount?: number;
+  adminEmail?: string | null;
+  archivedAt?: string | null;
+  canAcceptMembers?: boolean;
+  createdAt: string;
+  deletedAt?: string | null;
+  description?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  hasActiveMembers?: boolean;
+  id?: string;
+  isActive?: boolean;
+  isArchived?: boolean;
+  isDefault?: boolean;
+  isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  isDefault?: boolean;
-  isArchived?: boolean;
-  archivedAt?: string | null;
-  tenantMembers?: Array<IdentityTenantsTenantMember> | null;
+  name: string;
+  slug: string;
   tenantDomains?: Array<IdentityTenantsTenantDomain> | null;
+  tenantId?: string | null;
+  tenantMembers?: Array<IdentityTenantsTenantMember> | null;
   tenantSettings?: IdentityTenantsTenantSettings;
   tenantStatistics?: IdentityTenantsTenantStatistics;
+  updatedAt: string;
   usageTrackingRecords?: Array<IdentityTenantsUsageTracking> | null;
-  name: string;
-  description?: string | null;
-  isActive?: boolean;
-  slug: string;
-  adminEmail?: string | null;
-  canAcceptMembers?: boolean;
-  activeMemberCount?: number;
-  hasActiveMembers?: boolean;
+  version?: number;
 }
 
 export interface IdentityTenantsTenantAddress {
-  street?: string | null;
   city?: string | null;
-  state?: string | null;
-  postalCode?: string | null;
   country?: string | null;
+  postalCode?: string | null;
+  state?: string | null;
+  street?: string | null;
 }
 
 export interface IdentityTenantsTenantAuditLogEntry {
-  id?: string;
-  tenantId?: string;
-  timestamp?: string;
   action?: string | null;
+  actorEmail?: string | null;
   actorId?: string | null;
   actorName?: string | null;
-  actorEmail?: string | null;
-  beforeValues?: Record<string, Record<string, unknown> | null> | null;
   afterValues?: Record<string, Record<string, unknown> | null> | null;
-  ipAddress?: string | null;
-  userAgent?: string | null;
+  beforeValues?: Record<string, Record<string, unknown> | null> | null;
   correlationId?: string | null;
+  id?: string;
+  ipAddress?: string | null;
   metadata?: Record<string, string> | null;
+  tenantId?: string;
+  timestamp?: string;
+  userAgent?: string | null;
 }
 
 export interface IdentityTenantsTenantBranding {
-  logoUrl?: string | null;
+  companyName?: string | null;
   faviconUrl?: string | null;
+  logoUrl?: string | null;
   primaryColor?: string | null;
   secondaryColor?: string | null;
-  companyName?: string | null;
 }
 
 export interface IdentityTenantsTenantBusinessInfo {
+  complianceRequirements?: Array<string> | null;
+  geographicRegion?: string | null;
   industry?: string | null;
   organizationSize?: string | null;
   tenantType?: string | null;
-  geographicRegion?: string | null;
-  complianceRequirements?: Array<string> | null;
 }
 
 export interface IdentityTenantsTenantBusinessRules {
-  workflowRules?: Record<string, Record<string, unknown> | null> | null;
-  validationRules?: Record<string, Record<string, unknown> | null> | null;
   approvalRules?: Record<string, Record<string, unknown> | null> | null;
   notificationRules?: Record<string, Record<string, unknown> | null> | null;
+  validationRules?: Record<string, Record<string, unknown> | null> | null;
+  workflowRules?: Record<string, Record<string, unknown> | null> | null;
 }
 
 export interface IdentityTenantsTenantContactInfo {
-  primaryContactName?: string | null;
-  primaryContactEmail?: string | null;
-  primaryContactPhone?: string | null;
-  organizationName?: string | null;
   address?: IdentityTenantsTenantAddress;
+  organizationName?: string | null;
+  primaryContactEmail?: string | null;
+  primaryContactName?: string | null;
+  primaryContactPhone?: string | null;
   website?: string | null;
 }
 
 export interface IdentityTenantsTenantCurrencySettings {
+  decimalPlaces?: number;
   defaultCurrency?: string | null;
   displayFormat?: string | null;
-  decimalPlaces?: number;
 }
 
 export interface IdentityTenantsTenantDomain {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
   createdAt: string;
-  updatedAt: string;
   deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  fullDomain?: string | null;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isMainDomain?: boolean;
+  isNew?: boolean;
+  isSecondaryDomain?: boolean;
+  subdomain?: string | null;
+  tenant?: IdentityTenantsTenant;
   tenantId: string;
   topLevelDomain: string;
-  subdomain?: string | null;
-  isMainDomain?: boolean;
-  isSecondaryDomain?: boolean;
+  updatedAt: string;
   userGroupId?: string | null;
-  fullDomain?: string | null;
-  tenant?: IdentityTenantsTenant;
+  version?: number;
 }
 
 export interface IdentityTenantsTenantIntegrationSettings {
-  externalServices?: Record<string, Record<string, unknown> | null> | null;
-  webhookSettings?: Record<string, Record<string, unknown> | null> | null;
   apiKeys?: Record<string, string> | null;
+  externalServices?: Record<string, Record<string, unknown> | null> | null;
   ssoConfiguration?: Record<string, Record<string, unknown> | null> | null;
+  webhookSettings?: Record<string, Record<string, unknown> | null> | null;
 }
 
 export interface IdentityTenantsTenantMember {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  childMembers?: Array<IdentityTenantsTenantMember> | null;
+  createdAt: string;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId: string;
-  userId: string;
-  parentMemberId?: string | null;
-  parentMember?: IdentityTenantsTenantMember;
-  childMembers?: Array<IdentityTenantsTenantMember> | null;
-  role: string;
   isActive?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   joinedAt?: string;
-  leftAt?: string | null;
   leaveReason?: string | null;
+  leftAt?: string | null;
   metadata?: string | null;
+  parentMember?: IdentityTenantsTenantMember;
+  parentMemberId?: string | null;
+  role: string;
   tenant?: IdentityTenantsTenant;
+  tenantId: string;
+  updatedAt: string;
+  userId: string;
+  version?: number;
 }
 
 export interface IdentityTenantsTenantMetadata {
-  id?: string;
-  customFields?: Record<string, Record<string, unknown> | null> | null;
-  tags?: Array<string> | null;
-  externalReferences?: Record<string, string> | null;
+  adminNotes?: string | null;
   businessInfo?: IdentityTenantsTenantBusinessInfo;
   contactInfo?: IdentityTenantsTenantContactInfo;
-  adminNotes?: string | null;
   createdAt?: string;
+  customFields?: Record<string, Record<string, unknown> | null> | null;
+  externalReferences?: Record<string, string> | null;
+  id?: string;
+  tags?: Array<string> | null;
   updatedAt?: string;
 }
 
 export interface IdentityTenantsTenantSecuritySettings {
+  apiRateLimits?: Record<string, number> | null;
+  ipWhitelist?: Array<string> | null;
   passwordPolicy?: Record<string, Record<string, unknown> | null> | null;
   sessionTimeout?: number;
   twoFactorRequired?: boolean;
-  ipWhitelist?: Array<string> | null;
-  apiRateLimits?: Record<string, number> | null;
 }
 
 export interface IdentityTenantsTenantSettings {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
+  allowUserRegistration?: boolean;
+  brandingSettings?: string | null;
   createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId: string;
+  defaultCurrency?: string | null;
   defaultLanguage?: string | null;
   defaultTimezone?: string | null;
-  defaultCurrency?: string | null;
-  allowUserRegistration?: boolean;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  enableApiAccess?: boolean;
+  enableAuditLogging?: boolean;
+  id?: string;
+  integrationSettingsJson?: string | null;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  maxUsers?: number | null;
+  notificationSettings?: string | null;
   requireRegistrationApproval?: boolean;
   requireTwoFactorAuth?: boolean;
-  maxUsers?: number | null;
-  storageQuota?: number | null;
-  enableAuditLogging?: boolean;
-  enableApiAccess?: boolean;
-  brandingSettings?: string | null;
-  notificationSettings?: string | null;
   securitySettings?: string | null;
-  integrationSettingsJson?: string | null;
+  storageQuota?: number | null;
   tenant?: IdentityTenantsTenant;
+  tenantId: string;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface IdentityTenantsTenantSettingsDto {
-  id?: string;
-  systemConfiguration?: IdentityTenantsTenantSystemConfiguration;
-  featureFlags?: Record<string, boolean> | null;
   businessRules?: IdentityTenantsTenantBusinessRules;
-  userInterfaceSettings?: IdentityTenantsTenantUiSettings;
-  securitySettings?: IdentityTenantsTenantSecuritySettings;
-  integrationSettings?: IdentityTenantsTenantIntegrationSettings;
-  systemLimits?: IdentityTenantsTenantSystemLimits;
   createdAt?: string;
+  featureFlags?: Record<string, boolean> | null;
+  id?: string;
+  integrationSettings?: IdentityTenantsTenantIntegrationSettings;
+  securitySettings?: IdentityTenantsTenantSecuritySettings;
+  systemConfiguration?: IdentityTenantsTenantSystemConfiguration;
+  systemLimits?: IdentityTenantsTenantSystemLimits;
   updatedAt?: string;
+  userInterfaceSettings?: IdentityTenantsTenantUiSettings;
 }
 
 export interface IdentityTenantsTenantStatistics {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  activeMembers?: number;
+  apiCalls?: number;
+  createdAt: string;
+  customMetrics?: string | null;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId: string;
-  statisticDate?: string;
-  totalMembers?: number;
-  activeMembers?: number;
   inactiveMembers?: number;
-  storageUsed?: number;
-  apiCalls?: number;
-  newMembers?: number;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   membersLeft?: number;
-  customMetrics?: string | null;
+  newMembers?: number;
+  statisticDate?: string;
+  storageUsed?: number;
   tenant?: IdentityTenantsTenant;
+  tenantId: string;
+  totalMembers?: number;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface IdentityTenantsTenantSystemConfiguration {
-  timeZone?: string | null;
-  locale?: string | null;
-  dateFormat?: string | null;
-  numberFormat?: string | null;
   currencySettings?: IdentityTenantsTenantCurrencySettings;
   customConfiguration?: Record<string, Record<string, unknown> | null> | null;
+  dateFormat?: string | null;
+  locale?: string | null;
+  numberFormat?: string | null;
+  timeZone?: string | null;
 }
 
 export interface IdentityTenantsTenantSystemLimits {
-  maxUsers?: number;
-  maxStorage?: number;
+  customLimits?: Record<string, number> | null;
   maxApiCalls?: number;
   maxProjects?: number;
-  customLimits?: Record<string, number> | null;
+  maxStorage?: number;
+  maxUsers?: number;
 }
 
 export interface IdentityTenantsTenantUiSettings {
-  theme?: string | null;
-  layout?: Record<string, Record<string, unknown> | null> | null;
   branding?: IdentityTenantsTenantBranding;
-  customCss?: string | null;
   componentSettings?: Record<string, Record<string, unknown> | null> | null;
+  customCss?: string | null;
+  layout?: Record<string, Record<string, unknown> | null> | null;
+  theme?: string | null;
 }
 
 export interface IdentityTenantsTenantValidationError {
-  field?: string | null;
   code?: string | null;
+  field?: string | null;
   message?: string | null;
 }
 
 export interface IdentityTenantsTenantValidationOutput {
-  isValid?: boolean;
   errors?: Array<IdentityTenantsTenantValidationError> | null;
-  warnings?: Array<IdentityTenantsTenantValidationWarning> | null;
-  suggestions?: Array<string> | null;
+  isValid?: boolean;
   slugValidation?: IdentityTenantsSlugValidation;
+  suggestions?: Array<string> | null;
+  warnings?: Array<IdentityTenantsTenantValidationWarning> | null;
 }
 
 export interface IdentityTenantsTenantValidationWarning {
-  field?: string | null;
   code?: string | null;
+  field?: string | null;
   message?: string | null;
 }
 
 export interface IdentityTenantsUpdateTenantAddressInput {
-  street?: string | null;
   city?: string | null;
-  state?: string | null;
-  postalCode?: string | null;
   country?: string | null;
+  postalCode?: string | null;
+  state?: string | null;
+  street?: string | null;
 }
 
 export interface IdentityTenantsUpdateTenantBrandingInput {
-  logoUrl?: string | null;
+  companyName?: string | null;
   faviconUrl?: string | null;
+  logoUrl?: string | null;
   primaryColor?: string | null;
   secondaryColor?: string | null;
-  companyName?: string | null;
 }
 
 export interface IdentityTenantsUpdateTenantBusinessInfoInput {
+  complianceRequirements?: Array<string> | null;
+  geographicRegion?: string | null;
   industry?: string | null;
   organizationSize?: string | null;
   tenantType?: string | null;
-  geographicRegion?: string | null;
-  complianceRequirements?: Array<string> | null;
 }
 
 export interface IdentityTenantsUpdateTenantBusinessRulesInput {
-  workflowRules?: Record<string, Record<string, unknown> | null> | null;
-  validationRules?: Record<string, Record<string, unknown> | null> | null;
   approvalRules?: Record<string, Record<string, unknown> | null> | null;
   notificationRules?: Record<string, Record<string, unknown> | null> | null;
+  validationRules?: Record<string, Record<string, unknown> | null> | null;
+  workflowRules?: Record<string, Record<string, unknown> | null> | null;
 }
 
 export interface IdentityTenantsUpdateTenantContactInfoInput {
-  primaryContactName?: string | null;
-  primaryContactEmail?: string | null;
-  primaryContactPhone?: string | null;
-  organizationName?: string | null;
   address?: IdentityTenantsUpdateTenantAddressInput;
+  organizationName?: string | null;
+  primaryContactEmail?: string | null;
+  primaryContactName?: string | null;
+  primaryContactPhone?: string | null;
   website?: string | null;
 }
 
 export interface IdentityTenantsUpdateTenantCurrencySettingsInput {
+  decimalPlaces?: number | null;
   defaultCurrency?: string | null;
   displayFormat?: string | null;
-  decimalPlaces?: number | null;
 }
 
 export interface IdentityTenantsUpdateTenantFeatureFlagsInput {
@@ -3292,73 +3292,73 @@ export interface IdentityTenantsUpdateTenantFeatureFlagsInput {
 }
 
 export interface IdentityTenantsUpdateTenantIntegrationSettingsInput {
-  externalServices?: Record<string, Record<string, unknown> | null> | null;
-  webhookSettings?: Record<string, Record<string, unknown> | null> | null;
   apiKeys?: Record<string, string> | null;
+  externalServices?: Record<string, Record<string, unknown> | null> | null;
   ssoConfiguration?: Record<string, Record<string, unknown> | null> | null;
+  webhookSettings?: Record<string, Record<string, unknown> | null> | null;
 }
 
 export interface IdentityTenantsUpdateTenantMemberInviteOutput {
-  success?: boolean;
-  message?: string | null;
-  memberId?: string | null;
   inviteStatus?: string | null;
+  memberId?: string | null;
+  message?: string | null;
+  success?: boolean;
 }
 
 export interface IdentityTenantsUpdateTenantMemberRoleOutput {
-  success?: boolean;
-  message?: string | null;
   memberId?: string;
+  message?: string | null;
   newRole?: string | null;
+  success?: boolean;
 }
 
 export interface IdentityTenantsUpdateTenantMetadataInput {
-  customFields?: Record<string, Record<string, unknown> | null> | null;
-  tags?: Array<string> | null;
-  externalReferences?: Record<string, string> | null;
+  adminNotes?: string | null;
   businessInfo?: IdentityTenantsUpdateTenantBusinessInfoInput;
   contactInfo?: IdentityTenantsUpdateTenantContactInfoInput;
-  adminNotes?: string | null;
+  customFields?: Record<string, Record<string, unknown> | null> | null;
+  externalReferences?: Record<string, string> | null;
+  tags?: Array<string> | null;
 }
 
 export interface IdentityTenantsUpdateTenantInput {
-  name?: string | null;
   description?: string | null;
+  name?: string | null;
 }
 
 export interface IdentityTenantsUpdateTenantSecuritySettingsInput {
+  apiRateLimits?: Record<string, number> | null;
+  ipWhitelist?: Array<string> | null;
   passwordPolicy?: Record<string, Record<string, unknown> | null> | null;
   sessionTimeout?: number | null;
   twoFactorRequired?: boolean | null;
-  ipWhitelist?: Array<string> | null;
-  apiRateLimits?: Record<string, number> | null;
 }
 
 export interface IdentityTenantsUpdateTenantSettingsInput {
-  systemConfiguration?: IdentityTenantsUpdateTenantSystemConfigurationInput;
-  featureFlags?: Record<string, boolean> | null;
   businessRules?: IdentityTenantsUpdateTenantBusinessRulesInput;
-  userInterfaceSettings?: IdentityTenantsUpdateTenantUiSettingsInput;
-  securitySettings?: IdentityTenantsUpdateTenantSecuritySettingsInput;
+  featureFlags?: Record<string, boolean> | null;
   integrationSettings?: IdentityTenantsUpdateTenantIntegrationSettingsInput;
+  securitySettings?: IdentityTenantsUpdateTenantSecuritySettingsInput;
+  systemConfiguration?: IdentityTenantsUpdateTenantSystemConfigurationInput;
   systemLimits?: IdentityTenantsUpdateTenantSystemLimitsInput;
+  userInterfaceSettings?: IdentityTenantsUpdateTenantUiSettingsInput;
 }
 
 export interface IdentityTenantsUpdateTenantSystemConfigurationInput {
-  timeZone?: string | null;
-  locale?: string | null;
-  dateFormat?: string | null;
-  numberFormat?: string | null;
   currencySettings?: IdentityTenantsUpdateTenantCurrencySettingsInput;
   customConfiguration?: Record<string, Record<string, unknown> | null> | null;
+  dateFormat?: string | null;
+  locale?: string | null;
+  numberFormat?: string | null;
+  timeZone?: string | null;
 }
 
 export interface IdentityTenantsUpdateTenantSystemLimitsInput {
-  maxUsers?: number | null;
-  maxStorage?: number | null;
+  customLimits?: Record<string, number> | null;
   maxApiCalls?: number | null;
   maxProjects?: number | null;
-  customLimits?: Record<string, number> | null;
+  maxStorage?: number | null;
+  maxUsers?: number | null;
 }
 
 export interface IdentityTenantsUpdateTenantTagsInput {
@@ -3366,11 +3366,11 @@ export interface IdentityTenantsUpdateTenantTagsInput {
 }
 
 export interface IdentityTenantsUpdateTenantUiSettingsInput {
-  theme?: string | null;
-  layout?: Record<string, Record<string, unknown> | null> | null;
   branding?: IdentityTenantsUpdateTenantBrandingInput;
-  customCss?: string | null;
   componentSettings?: Record<string, Record<string, unknown> | null> | null;
+  customCss?: string | null;
+  layout?: Record<string, Record<string, unknown> | null> | null;
+  theme?: string | null;
 }
 
 export interface IdentityTenantsUpdateUserMembershipInviteInput {
@@ -3382,51 +3382,51 @@ export interface IdentityTenantsUpdateUserMembershipRoleInput {
 }
 
 export interface IdentityTenantsUsageTracking {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  cost?: number;
+  createdAt: string;
+  date?: string;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId: string;
-  date?: string;
-  resourceType: string;
-  usageAmount?: number;
-  unit?: string | null;
-  cost?: number;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   metadata?: string | null;
+  resourceType: string;
   tenant?: IdentityTenantsTenant;
+  tenantId: string;
+  unit?: string | null;
+  updatedAt: string;
+  usageAmount?: number;
+  version?: number;
 }
 
 export interface IdentityTenantsUserMembership {
-  membershipId?: string;
-  tenantId?: string;
-  tenantName?: string | null;
-  tenantSlug?: string | null;
-  tenantIsActive?: boolean;
-  tenantDescription?: string | null;
-  role?: string | null;
-  isActive?: boolean;
-  joinedAt?: string;
-  leftAt?: string | null;
-  inviteStatus?: string | null;
-  invitedByEmail?: string | null;
-  inviteeEmail?: string | null;
-  inviteeName?: string | null;
-  invitedAt?: string | null;
-  lastInviteSentAt?: string | null;
   acceptedAt?: string | null;
   cancelledAt?: string | null;
   inviteResendCount?: number;
+  inviteStatus?: string | null;
+  invitedAt?: string | null;
+  invitedByEmail?: string | null;
+  inviteeEmail?: string | null;
+  inviteeName?: string | null;
+  isActive?: boolean;
+  joinedAt?: string;
+  lastInviteSentAt?: string | null;
+  leftAt?: string | null;
+  membershipId?: string;
+  role?: string | null;
+  tenantDescription?: string | null;
+  tenantId?: string;
+  tenantIsActive?: boolean;
+  tenantName?: string | null;
+  tenantSlug?: string | null;
 }
 
 export interface IdentityTenantsValidateTenantInput {
+  adminEmail?: string | null;
   name?: string | null;
   slug?: string | null;
-  adminEmail?: string | null;
 }
 
 export interface IdentityUsersBulkActivateUsersInput {
@@ -3461,14 +3461,14 @@ export interface IdentityUsersBulkDeleteUsersInput {
 }
 
 export interface IdentityUsersBulkNotificationInput {
+  filterCriteria?: IdentityUsersNotificationFilterCriteria;
   notificationIds?: Array<string> | null;
   operation?: string | null;
-  filterCriteria?: IdentityUsersNotificationFilterCriteria;
 }
 
 export interface IdentityUsersBulkPurgeUsersInput {
-  userIds?: Array<string> | null;
   strategy?: IdentityUsersPurgeStrategy;
+  userIds?: Array<string> | null;
 }
 
 export interface IdentityUsersBulkRestoreUsersInput {
@@ -3476,8 +3476,8 @@ export interface IdentityUsersBulkRestoreUsersInput {
 }
 
 export interface IdentityUsersBulkRestoreUsersOutput {
-  restoredUsers?: Array<IdentityUsersUserDto> | null;
   failedUserIds?: Array<string> | null;
+  restoredUsers?: Array<IdentityUsersUserDto> | null;
 }
 
 export interface IdentityUsersBulkSuspendUsersInput {
@@ -3485,8 +3485,8 @@ export interface IdentityUsersBulkSuspendUsersInput {
 }
 
 export interface IdentityUsersBulkSuspendUsersOutput {
-  suspendedUsers?: Array<IdentityUsersUserDto> | null;
   failedUserIds?: Array<string> | null;
+  suspendedUsers?: Array<IdentityUsersUserDto> | null;
 }
 
 export interface IdentityUsersBulkUnsuspendUsersInput {
@@ -3494,8 +3494,8 @@ export interface IdentityUsersBulkUnsuspendUsersInput {
 }
 
 export interface IdentityUsersBulkUnsuspendUsersOutput {
-  unsuspendedUsers?: Array<IdentityUsersUserDto> | null;
   failedUserIds?: Array<string> | null;
+  unsuspendedUsers?: Array<IdentityUsersUserDto> | null;
 }
 
 export interface IdentityUsersBulkUpdateUsersInput {
@@ -3516,20 +3516,20 @@ export interface IdentityUsersCreateUserRequestItem {
 
 export interface IdentityUsersNotificationAction {
   id?: string | null;
-  text?: string | null;
-  url?: string | null;
-  type?: string | null;
   isPrimary?: boolean;
+  text?: string | null;
+  type?: string | null;
+  url?: string | null;
 }
 
 export interface IdentityUsersNotificationFilterCriteria {
   categories?: Array<string> | null;
-  priorities?: Array<string> | null;
-  types?: Array<string> | null;
-  isRead?: boolean | null;
-  isArchived?: boolean | null;
   dateFrom?: string | null;
   dateTo?: string | null;
+  isArchived?: boolean | null;
+  isRead?: boolean | null;
+  priorities?: Array<string> | null;
+  types?: Array<string> | null;
 }
 
 export type IdentityUsersNotificationPriority = 'Low' | 'Normal' | 'High' | 'Urgent' | 'Critical';
@@ -3548,8 +3548,8 @@ export interface IdentityUsersReplaceUserLocalizationPreferencesInput {
 
 export interface IdentityUsersReplaceUserMetadataInput {
   customFields?: Record<string, Record<string, unknown>> | null;
-  tags?: Array<string> | null;
   externalReferences?: Record<string, string> | null;
+  tags?: Array<string> | null;
 }
 
 export interface IdentityUsersReplaceUserNotificationPreferencesInput {
@@ -3557,9 +3557,9 @@ export interface IdentityUsersReplaceUserNotificationPreferencesInput {
 }
 
 export interface IdentityUsersReplaceUserPreferencesInput {
+  accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
   generalPreferences?: Record<string, Record<string, unknown>> | null;
   notificationPreferences?: Record<string, Record<string, unknown>> | null;
-  accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
   privacyPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
@@ -3568,17 +3568,17 @@ export interface IdentityUsersReplaceUserPrivacyPreferencesInput {
 }
 
 export interface IdentityUsersReplaceUserProfileInput {
-  displayName?: string | null;
   bio?: string | null;
-  location?: string | null;
-  website?: string | null;
-  jobTitle?: string | null;
   company?: string | null;
-  timeZone?: string | null;
+  displayName?: string | null;
+  jobTitle?: string | null;
   language?: string | null;
+  location?: string | null;
   profileVisibility?: string | null;
   showEmail?: boolean;
   showLocation?: boolean;
+  timeZone?: string | null;
+  website?: string | null;
 }
 
 export interface IdentityUsersUpdateUserAccessibilityPreferencesInput {
@@ -3591,9 +3591,9 @@ export interface IdentityUsersUpdateUserLocalizationPreferencesInput {
 
 export interface IdentityUsersUpdateUserMetadataInput {
   customFields?: Record<string, Record<string, unknown>> | null;
+  externalReferences?: Record<string, string> | null;
   tagsToAdd?: Array<string> | null;
   tagsToRemove?: Array<string> | null;
-  externalReferences?: Record<string, string> | null;
 }
 
 export interface IdentityUsersUpdateUserNotificationPreferencesInput {
@@ -3601,9 +3601,9 @@ export interface IdentityUsersUpdateUserNotificationPreferencesInput {
 }
 
 export interface IdentityUsersUpdateUserPreferencesInput {
+  accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
   generalPreferences?: Record<string, Record<string, unknown>> | null;
   notificationPreferences?: Record<string, Record<string, unknown>> | null;
-  accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
   privacyPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
@@ -3612,17 +3612,17 @@ export interface IdentityUsersUpdateUserPrivacyPreferencesInput {
 }
 
 export interface IdentityUsersUpdateUserProfileInput {
-  displayName?: string | null;
   bio?: string | null;
-  location?: string | null;
-  website?: string | null;
-  jobTitle?: string | null;
   company?: string | null;
-  timeZone?: string | null;
+  displayName?: string | null;
+  jobTitle?: string | null;
   language?: string | null;
+  location?: string | null;
   profileVisibility?: string | null;
   showEmail?: boolean | null;
   showLocation?: boolean | null;
+  timeZone?: string | null;
+  website?: string | null;
 }
 
 export interface IdentityUsersUpdateUserInput {
@@ -3631,263 +3631,263 @@ export interface IdentityUsersUpdateUserInput {
 }
 
 export interface IdentityUsersUpdateUserRequestItem {
-  userId?: string;
   name?: string | null;
   phoneNumber?: string | null;
+  userId?: string;
 }
 
 export interface IdentityUsersUser {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  email: string;
-  username?: string | null;
-  name: string;
-  passwordHash?: string | null;
-  isEmailVerified?: boolean;
-  lastLoginAt?: string | null;
-  isActive?: boolean;
-  isSuspended?: boolean;
-  tokenVersion?: number;
-  status?: IdentityUsersUserStatus;
-  phoneNumber?: string | null;
-  lastSeenAt?: string | null;
-  profile?: IdentityUsersUserProfile;
-  metadata?: IdentityUsersUserMetadata;
-  preferences?: IdentityUsersUserPreferences;
-  notifications?: Array<IdentityUsersUserNotification> | null;
-  tenantMemberships?: Array<IdentityTenantsTenantMember> | null;
-  hasPassword?: boolean;
   canPerformActions?: boolean;
   canSignIn?: boolean;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  email: string;
+  hasPassword?: boolean;
+  id?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  isEmailVerified?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isSuspended?: boolean;
+  lastLoginAt?: string | null;
+  lastSeenAt?: string | null;
+  metadata?: IdentityUsersUserMetadata;
+  name: string;
+  notifications?: Array<IdentityUsersUserNotification> | null;
+  passwordHash?: string | null;
+  phoneNumber?: string | null;
+  preferences?: IdentityUsersUserPreferences;
+  profile?: IdentityUsersUserProfile;
+  status?: IdentityUsersUserStatus;
+  tenantId?: string | null;
+  tenantMemberships?: Array<IdentityTenantsTenantMember> | null;
+  tokenVersion?: number;
+  updatedAt: string;
+  username?: string | null;
+  version?: number;
 }
 
 export interface IdentityUsersUserAccessibilityPreferences {
-  highContrast?: boolean;
-  largeText?: boolean;
-  screenReader?: boolean;
-  reducedMotion?: boolean;
-  keyboardNavigation?: boolean;
-  fontSize?: number;
   colorScheme?: string | null;
   customSettings?: Record<string, Record<string, unknown>> | null;
+  fontSize?: number;
+  highContrast?: boolean;
+  keyboardNavigation?: boolean;
+  largeText?: boolean;
+  reducedMotion?: boolean;
+  screenReader?: boolean;
 }
 
 export interface IdentityUsersUserDto {
-  id?: string;
-  email?: string | null;
-  name?: string | null;
   createdAt?: string;
-  updatedAt?: string | null;
+  email?: string | null;
+  id?: string;
   isActive?: boolean;
-  phoneNumber?: string | null;
   lastSeenAt?: string | null;
+  name?: string | null;
+  phoneNumber?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface IdentityUsersUserLocalizationPreferences {
-  language?: string | null;
-  timezone?: string | null;
-  dateFormat?: string | null;
-  timeFormat?: string | null;
   currency?: string | null;
-  numberFormat?: Record<string, Record<string, unknown>> | null;
   customSettings?: Record<string, Record<string, unknown>> | null;
+  dateFormat?: string | null;
+  language?: string | null;
+  numberFormat?: Record<string, Record<string, unknown>> | null;
+  timeFormat?: string | null;
+  timezone?: string | null;
 }
 
 export interface IdentityUsersUserMetadata {
+  createdAt: string;
+  customFields?: string | null;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  externalReferences?: string | null;
+  id?: string;
+  isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  userId: string;
-  user?: IdentityUsersUser;
-  customFields?: string | null;
-  tags?: string | null;
-  externalReferences?: string | null;
   notes?: string | null;
+  tags?: string | null;
+  tenantId?: string | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId: string;
+  version?: number;
 }
 
 export interface IdentityUsersUserMetadataDto {
-  id?: string;
-  userId?: string;
-  customFields?: Record<string, Record<string, unknown>> | null;
-  tags?: Array<string> | null;
-  externalReferences?: Record<string, string> | null;
   createdAt?: string;
+  customFields?: Record<string, Record<string, unknown>> | null;
+  externalReferences?: Record<string, string> | null;
+  id?: string;
+  tags?: Array<string> | null;
   updatedAt?: string | null;
+  userId?: string;
   version?: string | null;
 }
 
 export interface IdentityUsersUserNotification {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  actionUrl?: string | null;
+  archivedAt?: string | null;
+  content: string;
+  createdAt: string;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  userId: string;
-  user?: IdentityUsersUser;
-  type: string;
-  title: string;
-  content: string;
-  priority?: IdentityUsersNotificationPriority;
-  isRead?: boolean;
   isArchived?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isRead?: boolean;
+  metadata?: string | null;
+  priority?: IdentityUsersNotificationPriority;
   readAt?: string | null;
-  archivedAt?: string | null;
-  senderId?: string | null;
-  source?: string | null;
   relatedEntityId?: string | null;
   relatedEntityType?: string | null;
-  actionUrl?: string | null;
-  metadata?: string | null;
+  senderId?: string | null;
+  source?: string | null;
+  tenantId?: string | null;
+  title: string;
+  type: string;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId: string;
+  version?: number;
 }
 
 export interface IdentityUsersUserNotificationDetail {
+  actions?: Array<IdentityUsersNotificationAction> | null;
   notification?: IdentityUsersUserNotificationDto;
   relatedNotifications?: Array<IdentityUsersUserNotificationDto> | null;
-  actions?: Array<IdentityUsersNotificationAction> | null;
 }
 
 export interface IdentityUsersUserNotificationDto {
-  id?: string;
-  userId?: string;
-  type?: string | null;
-  title?: string | null;
-  message?: string | null;
-  priority?: string | null;
-  category?: string | null;
-  isRead?: boolean;
-  isArchived?: boolean;
-  readAt?: string | null;
-  archivedAt?: string | null;
-  expiresAt?: string | null;
-  actionUrl?: string | null;
   actionText?: string | null;
-  imageUrl?: string | null;
-  metadata?: Record<string, Record<string, unknown>> | null;
+  actionUrl?: string | null;
+  archivedAt?: string | null;
+  category?: string | null;
   createdAt?: string;
+  expiresAt?: string | null;
+  id?: string;
+  imageUrl?: string | null;
+  isArchived?: boolean;
+  isRead?: boolean;
+  message?: string | null;
+  metadata?: Record<string, Record<string, unknown>> | null;
+  priority?: string | null;
+  readAt?: string | null;
+  title?: string | null;
+  type?: string | null;
   updatedAt?: string | null;
+  userId?: string;
   version?: string | null;
 }
 
 export interface IdentityUsersUserNotificationPreferences {
-  emailEnabled?: boolean;
-  pushEnabled?: boolean;
-  smsEnabled?: boolean;
-  inAppEnabled?: boolean;
-  frequency?: string | null;
-  quietHours?: Record<string, Record<string, unknown>> | null;
   categoryPreferences?: Record<string, Record<string, unknown>> | null;
+  emailEnabled?: boolean;
+  frequency?: string | null;
+  inAppEnabled?: boolean;
+  pushEnabled?: boolean;
+  quietHours?: Record<string, Record<string, unknown>> | null;
+  smsEnabled?: boolean;
 }
 
 export interface IdentityUsersUserPreferences {
+  accessibilityPreferences?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  generalPreferences?: string | null;
+  id?: string;
+  isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  userId: string;
-  user?: IdentityUsersUser;
-  generalPreferences?: string | null;
-  notificationPreferences?: string | null;
-  accessibilityPreferences?: string | null;
-  privacyPreferences?: string | null;
   localizationPreferences?: string | null;
+  notificationPreferences?: string | null;
+  privacyPreferences?: string | null;
+  tenantId?: string | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId: string;
+  version?: number;
 }
 
 export interface IdentityUsersUserPreferencesDto {
-  id?: string;
-  userId?: string;
-  generalPreferences?: Record<string, Record<string, unknown>> | null;
-  notificationPreferences?: Record<string, Record<string, unknown>> | null;
   accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
-  privacyPreferences?: Record<string, Record<string, unknown>> | null;
-  localizationPreferences?: Record<string, Record<string, unknown>> | null;
   createdAt?: string;
+  generalPreferences?: Record<string, Record<string, unknown>> | null;
+  id?: string;
+  localizationPreferences?: Record<string, Record<string, unknown>> | null;
+  notificationPreferences?: Record<string, Record<string, unknown>> | null;
+  privacyPreferences?: Record<string, Record<string, unknown>> | null;
   updatedAt?: string | null;
+  userId?: string;
   version?: string | null;
 }
 
 export interface IdentityUsersUserPrivacyPreferences {
-  profileVisibility?: string | null;
   activityTracking?: boolean;
-  dataCollection?: Record<string, Record<string, unknown>> | null;
-  thirdPartySharing?: Record<string, Record<string, unknown>> | null;
-  marketingEmails?: boolean;
   analyticsCookies?: boolean;
-  personalizedContent?: boolean;
   customSettings?: Record<string, Record<string, unknown>> | null;
+  dataCollection?: Record<string, Record<string, unknown>> | null;
+  marketingEmails?: boolean;
+  personalizedContent?: boolean;
+  profileVisibility?: string | null;
+  thirdPartySharing?: Record<string, Record<string, unknown>> | null;
 }
 
 export interface IdentityUsersUserProfile {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  userId: string;
-  user?: IdentityUsersUser;
-  displayName?: string | null;
-  bio?: string | null;
-  location?: string | null;
-  website?: string | null;
-  jobTitle?: string | null;
-  company?: string | null;
   avatarUrl?: string | null;
   bannerUrl?: string | null;
+  bio?: string | null;
+  company?: string | null;
+  createdAt: string;
   dateOfBirth?: string | null;
+  deletedAt?: string | null;
+  displayName?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
   gender?: string | null;
-  visibility?: IdentityUsersProfileVisibility;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   isVerified?: boolean;
+  jobTitle?: string | null;
+  location?: string | null;
+  tenantId?: string | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId: string;
+  version?: number;
+  visibility?: IdentityUsersProfileVisibility;
+  website?: string | null;
 }
 
 export interface IdentityUsersUserProfileDto {
-  id?: string;
-  userId?: string;
-  displayName?: string | null;
-  bio?: string | null;
-  location?: string | null;
-  website?: string | null;
-  jobTitle?: string | null;
-  company?: string | null;
   avatarUrl?: string | null;
   bannerUrl?: string | null;
-  timeZone?: string | null;
+  bio?: string | null;
+  company?: string | null;
+  createdAt?: string;
+  displayName?: string | null;
+  id?: string;
+  jobTitle?: string | null;
   language?: string | null;
+  location?: string | null;
   profileVisibility?: string | null;
   showEmail?: boolean;
   showLocation?: boolean;
-  createdAt?: string;
+  timeZone?: string | null;
   updatedAt?: string | null;
+  userId?: string;
   version?: string | null;
+  website?: string | null;
 }
 
 export interface IdentityUsersUserStatus {
@@ -3901,146 +3901,152 @@ export interface KeyValuePairStringAuthenticationExtensionsPRFValues {
 }
 
 export interface LaunchPadCreateLaunchPlanInput {
-  projectId?: string;
-  name?: string | null;
-  positioning?: string | null;
-  targetLaunchAt?: string | null;
   channels?: Array<string> | null;
   checklistItems?: Array<LaunchPadLaunchChecklistItemInput> | null;
+  name?: string | null;
+  positioning?: string | null;
+  projectId?: string;
+  targetLaunchAt?: string | null;
 }
 
 export interface LaunchPadLaunchChecklistItem {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  category: string;
+  completedAt?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  launchPlanId?: string;
-  launchPlan?: LaunchPadLaunchPlan;
-  title: string;
-  category: string;
-  isRequired?: boolean;
   isComplete?: boolean;
-  completedAt?: string | null;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isRequired?: boolean;
+  launchPlan?: LaunchPadLaunchPlan;
+  launchPlanId?: string;
+  tenantId?: string | null;
+  title: string;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface LaunchPadLaunchChecklistItemInput {
-  title?: string | null;
   category?: string | null;
   isComplete?: boolean;
   isRequired?: boolean;
+  title?: string | null;
 }
 
 export interface LaunchPadLaunchPlan {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  projectId?: string;
-  project?: ProjectsProject;
-  name: string;
-  positioning?: string | null;
-  targetLaunchAt?: string | null;
-  launchedAt?: string | null;
-  status?: LaunchPadLaunchPlanStatus;
   channels?: Array<string> | null;
   checklistItems?: Array<LaunchPadLaunchChecklistItem> | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  launchedAt?: string | null;
+  name: string;
+  positioning?: string | null;
+  project?: ProjectsProject;
+  projectId?: string;
   readinessPercent?: number;
+  status?: LaunchPadLaunchPlanStatus;
+  targetLaunchAt?: string | null;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export type LaunchPadLaunchPlanStatus = 'Draft' | 'Preparing' | 'Ready' | 'Launched' | 'Paused';
 
+export interface LearningAssessmentsAssessmentDefinition {
+  assessmentId?: string;
+  definition?: Record<string, unknown>;
+  definitionSchemaVersion?: number;
+}
+
 export interface LearningAssessmentsAssessment {
-  id?: string;
-  courseId?: string;
-  contentId?: string | null;
-  title?: string | null;
-  description?: string | null;
-  type?: LearningAssessmentsAssessmentType;
-  maxScore?: number;
-  passingScore?: number;
-  timeLimitMinutes?: number | null;
-  maxAttempts?: number | null;
-  isRequired?: boolean;
-  order?: number;
-  availableFrom?: string | null;
-  availableUntil?: string | null;
+  allowLateSubmissions?: boolean;
   assessmentGroupId?: string | null;
   assessmentGroupName?: string | null;
-  assessmentGroupWeightPercent?: number | null;
   assessmentGroupOrder?: number | null;
-  isAvailable?: boolean;
-  submissionModalities?: LearningAssessmentsSubmissionModality;
-  presentationMode?: LearningAssessmentsAssessmentPresentationMode;
+  assessmentGroupWeightPercent?: number | null;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  contentId?: string | null;
+  courseId?: string;
+  description?: string | null;
   dueAt?: string | null;
-  allowLateSubmissions?: boolean;
+  id?: string;
+  isAvailable?: boolean;
+  isRequired?: boolean;
   lateSubmissionDeadline?: string | null;
+  maxAttempts?: number | null;
+  maxScore?: number;
+  order?: number;
+  passingScore?: number;
+  presentationMode?: LearningAssessmentsAssessmentPresentationMode;
+  submissionModalities?: LearningAssessmentsSubmissionModality;
+  timeLimitMinutes?: number | null;
+  title?: string | null;
+  type?: LearningAssessmentsAssessmentType;
 }
 
 export interface LearningAssessmentsAssessmentGroupAnalytics {
+  assessmentCount?: number;
+  averagePercent?: number;
+  distribution?: Array<LearningAssessmentsAssessmentScoreBucket> | null;
+  gradedCount?: number;
   groupId?: string | null;
   groupName?: string | null;
-  weightPercent?: number | null;
-  assessmentCount?: number;
-  gradedCount?: number;
-  ungradedCount?: number;
-  averagePercent?: number;
   passRate?: number;
-  distribution?: Array<LearningAssessmentsAssessmentScoreBucket> | null;
+  ungradedCount?: number;
+  weightPercent?: number | null;
 }
 
 export interface LearningAssessmentsAssessmentGroup {
-  id?: string;
   courseId?: string;
-  name?: string | null;
   description?: string | null;
-  weightPercent?: number;
+  id?: string;
+  name?: string | null;
   order?: number;
+  weightPercent?: number;
 }
 
 export type LearningAssessmentsAssessmentPresentationMode = 'SingleStep' | 'Continuous';
 
 export interface LearningAssessmentsAssessmentScoreBucket {
-  label?: string | null;
-  minPercent?: number;
-  maxPercent?: number;
   count?: number;
+  label?: string | null;
+  maxPercent?: number;
+  minPercent?: number;
 }
 
 export interface LearningAssessmentsAssessmentSubmission {
-  id?: string;
   assessmentId?: string;
-  enrollmentId?: string;
-  userId?: string;
   attemptNumber?: number;
-  score?: number | null;
-  passed?: boolean | null;
-  startedAt?: string;
-  submittedAt?: string | null;
+  codePayload?: string | null;
+  enrollmentId?: string;
+  feedback?: string | null;
+  filePayload?: string | null;
   gradedAt?: string | null;
   gradedBy?: string | null;
-  feedback?: string | null;
-  status?: LearningAssessmentsSubmissionStatus;
+  id?: string;
   isLate?: boolean;
+  mediaPayload?: string | null;
+  passed?: boolean | null;
+  projectPayload?: string | null;
+  score?: number | null;
+  startedAt?: string;
+  status?: LearningAssessmentsSubmissionStatus;
+  structuredAnswerPayload?: string | null;
+  submittedAt?: string | null;
   submittedModalities?: LearningAssessmentsSubmissionModality;
   textPayload?: string | null;
-  filePayload?: string | null;
   urlPayload?: string | null;
-  codePayload?: string | null;
-  mediaPayload?: string | null;
-  projectPayload?: string | null;
-  structuredAnswerPayload?: string | null;
+  userId?: string;
 }
 
 export type LearningAssessmentsAssessmentType = 'Quiz' | 'Exam' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
@@ -4056,83 +4062,85 @@ export interface LearningAssessmentsCanAttemptOutput {
 }
 
 export interface LearningAssessmentsCourseAssessmentAnalytics {
-  courseId?: string;
   assessmentCount?: number;
-  gradedCount?: number;
-  ungradedCount?: number;
   averagePercent?: number;
-  passRate?: number;
+  courseId?: string;
   distribution?: Array<LearningAssessmentsAssessmentScoreBucket> | null;
+  gradedCount?: number;
   groups?: Array<LearningAssessmentsAssessmentGroupAnalytics> | null;
+  passRate?: number;
+  ungradedCount?: number;
 }
 
 export interface LearningAssessmentsCreateAssessmentGroupInput {
   courseId?: string;
-  name?: string | null;
-  weightPercent?: number;
-  order?: number;
   description?: string | null;
+  name?: string | null;
+  order?: number;
+  weightPercent?: number;
 }
 
 export interface LearningAssessmentsCreateAssessmentInput {
-  courseId?: string;
-  title?: string | null;
-  description?: string | null;
-  type?: LearningAssessmentsAssessmentType;
-  maxScore?: number;
-  passingScore?: number;
-  timeLimitMinutes?: number | null;
-  maxAttempts?: number | null;
-  isRequired?: boolean;
+  allowLateSubmissions?: boolean;
+  assessmentGroupId?: string | null;
   availableFrom?: string | null;
   availableUntil?: string | null;
-  assessmentGroupId?: string | null;
-  submissionModalities?: LearningAssessmentsSubmissionModality;
-  presentationMode?: LearningAssessmentsAssessmentPresentationMode;
+  courseId?: string;
+  description?: string | null;
   dueAt?: string | null;
-  allowLateSubmissions?: boolean;
+  isRequired?: boolean;
   lateSubmissionDeadline?: string | null;
+  maxAttempts?: number | null;
+  maxScore?: number;
+  passingScore?: number;
+  presentationMode?: LearningAssessmentsAssessmentPresentationMode;
+  submissionModalities?: LearningAssessmentsSubmissionModality;
+  timeLimitMinutes?: number | null;
+  title?: string | null;
+  type?: LearningAssessmentsAssessmentType;
 }
 
 export interface LearningAssessmentsGradeSubmissionInput {
-  score?: number;
-  gradedBy?: string | null;
   feedback?: string | null;
+  gradedBy?: string | null;
+  score?: number;
 }
 
 export interface LearningAssessmentsInteractiveVideoAssessmentCue {
-  id?: string;
   assessmentId?: string;
   contentId?: string;
   cueId?: string | null;
   cuePositionSeconds?: number | null;
+  id?: string;
 }
 
 export interface LearningAssessmentsLearnerAssessmentAttempt {
+  definition?: Record<string, unknown>;
+  definitionSchemaVersion?: number;
   submission?: LearningAssessmentsLearnerAssessmentSubmission;
 }
 
 export interface LearningAssessmentsLearnerAssessmentSubmission {
-  id?: string;
   assessmentId?: string;
-  enrollmentId?: string;
   attemptNumber?: number;
-  score?: number | null;
-  passed?: boolean | null;
-  startedAt?: string;
-  submittedAt?: string | null;
-  gradedAt?: string | null;
+  codePayload?: string | null;
+  enrollmentId?: string;
   feedback?: string | null;
-  status?: LearningAssessmentsSubmissionStatus;
+  filePayload?: string | null;
+  gradedAt?: string | null;
+  id?: string;
   isLate?: boolean;
+  mediaPayload?: string | null;
+  passed?: boolean | null;
+  projectPayload?: string | null;
+  score?: number | null;
+  startedAt?: string;
+  status?: LearningAssessmentsSubmissionStatus;
+  structuredAnswerPayload?: string | null;
+  submittedAt?: string | null;
   submittedModalities?: LearningAssessmentsSubmissionModality;
   textPayload?: string | null;
-  filePayload?: string | null;
   urlPayload?: string | null;
-  codePayload?: string | null;
-  mediaPayload?: string | null;
-  projectPayload?: string | null;
-  structuredAnswerPayload?: string | null;
 }
 
 export interface LearningAssessmentsLearnerInteractiveVideoAssessmentCue {
@@ -4156,96 +4164,101 @@ export type LearningAssessmentsSubmissionModality = string;
 export type LearningAssessmentsSubmissionStatus = 'InProgress' | 'Submitted' | 'Graded' | 'Returned' | 'Late';
 
 export interface LearningAssessmentsSubmitAssessmentInput {
-  textPayload?: string | null;
-  filePayload?: string | null;
-  urlPayload?: string | null;
   codePayload?: string | null;
+  filePayload?: string | null;
   mediaPayload?: string | null;
   projectPayload?: string | null;
   structuredAnswerPayload?: string | null;
+  textPayload?: string | null;
+  urlPayload?: string | null;
+}
+
+export interface LearningAssessmentsUpdateAssessmentDefinitionInput {
+  definition?: Record<string, unknown>;
+  definitionSchemaVersion?: number;
 }
 
 export interface LearningAssessmentsUpdateAssessmentGroupInput {
-  name?: string | null;
   description?: string | null;
-  weightPercent?: number | null;
+  name?: string | null;
   order?: number | null;
+  weightPercent?: number | null;
 }
 
 export interface LearningAssessmentsUpdateAssessmentInput {
-  title?: string | null;
-  description?: string | null;
-  maxScore?: number | null;
-  passingScore?: number | null;
-  timeLimitMinutes?: number | null;
-  maxAttempts?: number | null;
-  isRequired?: boolean | null;
+  allowLateSubmissions?: boolean | null;
+  assessmentGroupId?: string | null;
   availableFrom?: string | null;
   availableUntil?: string | null;
-  contentId?: string | null;
-  clearContentId?: boolean;
-  assessmentGroupId?: string | null;
   clearAssessmentGroupId?: boolean;
-  submissionModalities?: LearningAssessmentsSubmissionModality;
-  presentationMode?: LearningAssessmentsAssessmentPresentationMode;
-  dueAt?: string | null;
+  clearContentId?: boolean;
   clearDueAt?: boolean;
-  allowLateSubmissions?: boolean | null;
-  lateSubmissionDeadline?: string | null;
   clearLateSubmissionDeadline?: boolean;
+  contentId?: string | null;
+  description?: string | null;
+  dueAt?: string | null;
+  isRequired?: boolean | null;
+  lateSubmissionDeadline?: string | null;
+  maxAttempts?: number | null;
+  maxScore?: number | null;
+  passingScore?: number | null;
+  presentationMode?: LearningAssessmentsAssessmentPresentationMode;
+  submissionModalities?: LearningAssessmentsSubmissionModality;
+  timeLimitMinutes?: number | null;
+  title?: string | null;
 }
 
 export interface LearningCertificatesCertificate {
-  id?: string;
-  templateId?: string;
-  enrollmentId?: string;
-  userId?: string;
-  courseId?: string;
   certificateNumber?: string | null;
-  recipientName?: string | null;
+  courseId?: string;
   courseName?: string | null;
-  issuedAt?: string;
+  enrollmentId?: string;
   expiresAt?: string | null;
+  id?: string;
+  issuedAt?: string;
+  recipientName?: string | null;
   status?: LearningCertificatesCertificateStatus;
+  templateId?: string;
+  userId?: string;
 }
 
 export type LearningCertificatesCertificateStatus = 'Active' | 'Expired' | 'Revoked';
 
 export interface LearningCertificatesCertificateTemplateDetail {
-  id?: string;
   courseId?: string;
-  tenantId?: string | null;
-  name?: string | null;
+  createdAt?: string;
   description?: string | null;
+  id?: string;
+  isActive?: boolean;
+  isDefault?: boolean;
+  name?: string | null;
   templateHtml?: string | null;
   templateStyles?: string | null;
-  isDefault?: boolean;
-  isActive?: boolean;
-  createdAt?: string;
+  tenantId?: string | null;
   updatedAt?: string;
 }
 
 export interface LearningCertificatesCertificateTemplate {
-  id?: string;
   courseId?: string;
-  tenantId?: string | null;
-  name?: string | null;
-  description?: string | null;
-  isDefault?: boolean;
-  isActive?: boolean;
   createdAt?: string;
+  description?: string | null;
+  id?: string;
+  isActive?: boolean;
+  isDefault?: boolean;
+  name?: string | null;
+  tenantId?: string | null;
   updatedAt?: string;
 }
 
 export interface LearningCertificatesCertificateVerificationResult {
-  isValid?: boolean;
   certificateNumber?: string | null;
-  recipientName?: string | null;
   courseName?: string | null;
-  issuedAt?: string;
   expiresAt?: string | null;
-  status?: LearningCertificatesCertificateStatus;
+  isValid?: boolean;
+  issuedAt?: string;
   message?: string | null;
+  recipientName?: string | null;
+  status?: LearningCertificatesCertificateStatus;
 }
 
 export interface LearningCertificatesCreateCertificateTemplateInput {
@@ -4255,10 +4268,10 @@ export interface LearningCertificatesCreateCertificateTemplateInput {
 }
 
 export interface LearningCertificatesIssueCertificateInput {
-  templateId?: string;
-  enrollmentId?: string;
-  userId?: string;
   courseId?: string;
+  enrollmentId?: string;
+  templateId?: string;
+  userId?: string;
 }
 
 export interface LearningCertificatesRevokeCertificateInput {
@@ -4266,67 +4279,67 @@ export interface LearningCertificatesRevokeCertificateInput {
 }
 
 export interface LearningCertificatesUpdateCertificateTemplateInput {
-  name?: string | null;
   description?: string | null;
+  isActive?: boolean;
+  isDefault?: boolean;
+  name?: string | null;
   templateHtml?: string | null;
   templateStyles?: string | null;
-  isDefault?: boolean;
-  isActive?: boolean;
 }
 
 export interface LearningCohortsApplyCohortScheduleInput {
+  confirmAdvisories?: boolean;
   expectedVersion?: number;
   rules?: LearningCohortsPreviewCohortScheduleInput;
-  confirmAdvisories?: boolean;
 }
 
 export interface LearningCohortsAvailableCohortContent {
-  contentId?: string;
-  parentId?: string | null;
-  title?: string | null;
-  description?: string | null;
-  body?: string | null;
-  type?: LearningCoursesProgramContentType;
-  sortOrder?: number;
-  instructionalWeek?: number;
   availableFrom?: string | null;
   availableUntil?: string | null;
+  body?: string | null;
+  contentId?: string;
+  description?: string | null;
   dueAt?: string | null;
+  instructionalWeek?: number;
+  parentId?: string | null;
+  sortOrder?: number;
+  title?: string | null;
+  type?: LearningCoursesProgramContentType;
 }
 
 export interface LearningCohortsCohortCalendarEntry {
+  availableFrom?: string | null;
   cohortId?: string;
   cohortName?: string | null;
-  itemId?: string;
-  type?: LearningCohortsCohortScheduleItemType;
-  title?: string | null;
-  startsAt?: string | null;
-  endsAt?: string | null;
-  availableFrom?: string | null;
   dueAt?: string | null;
+  endsAt?: string | null;
+  itemId?: string;
+  startsAt?: string | null;
   status?: LearningCohortsCohortScheduleItemStatus;
+  title?: string | null;
+  type?: LearningCohortsCohortScheduleItemType;
 }
 
 export interface LearningCohortsCohort {
-  id?: string;
-  courseId?: string;
-  tenantId?: string | null;
-  name?: string | null;
-  description?: string | null;
-  startDate?: string;
-  endDate?: string;
-  maxCapacity?: number;
-  currentEnrollmentCount?: number;
   availableSpots?: number;
-  status?: LearningCohortsCohortStatus;
-  isOpen?: boolean;
   canEnroll?: boolean;
-  instructorId?: string | null;
-  meetingSchedule?: string | null;
-  createdAt?: string;
-  nextMeetingAt?: string | null;
   conflictCount?: number;
+  courseId?: string;
+  createdAt?: string;
+  currentEnrollmentCount?: number;
+  description?: string | null;
+  endDate?: string;
+  id?: string;
+  instructorId?: string | null;
+  isOpen?: boolean;
+  maxCapacity?: number;
+  meetingSchedule?: string | null;
+  name?: string | null;
+  nextMeetingAt?: string | null;
   schedule?: LearningCohortsCohortScheduleSummary;
+  startDate?: string;
+  status?: LearningCohortsCohortStatus;
+  tenantId?: string | null;
 }
 
 export type LearningCohortsCohortPacingMode = 'OneModulePerWeek' | 'OneLessonPerMeeting' | 'FixedLessonsPerWeek' | 'Manual';
@@ -4334,44 +4347,44 @@ export type LearningCohortsCohortPacingMode = 'OneModulePerWeek' | 'OneLessonPer
 export type LearningCohortsCohortReleasePolicy = 'Weekly' | 'BeforeMeeting' | 'Manual' | 'Immediately';
 
 export interface LearningCohortsCohortScheduleConflict {
+  assessmentId?: string | null;
   code?: string | null;
-  severity?: LearningCohortsScheduleConflictSeverity;
   message?: string | null;
   programContentId?: string | null;
-  assessmentId?: string | null;
+  severity?: LearningCohortsScheduleConflictSeverity;
 }
 
 export interface LearningCohortsCohortSchedule {
-  id?: string;
   cohortId?: string;
-  version?: number;
-  timezoneId?: string | null;
-  meetingDays?: Array<SystemDayOfWeek> | null;
-  meetingStartTime?: string;
-  meetingDurationMinutes?: number;
-  pacingMode?: LearningCohortsCohortPacingMode;
-  unitsPerPeriod?: number;
-  releasePolicy?: LearningCohortsCohortReleasePolicy;
+  id?: string;
   items?: Array<LearningCohortsCohortScheduleItem> | null;
+  meetingDays?: Array<SystemDayOfWeek> | null;
+  meetingDurationMinutes?: number;
+  meetingStartTime?: string;
+  pacingMode?: LearningCohortsCohortPacingMode;
+  releasePolicy?: LearningCohortsCohortReleasePolicy;
+  timezoneId?: string | null;
+  unitsPerPeriod?: number;
   unscheduledContentIds?: Array<string> | null;
+  version?: number;
 }
 
 export interface LearningCohortsCohortScheduleItem {
-  id?: string;
-  programContentId?: string | null;
   assessmentId?: string | null;
-  type?: LearningCohortsCohortScheduleItemType;
-  instructionalWeek?: number;
-  sortOrder?: number;
-  startsAt?: string | null;
-  endsAt?: string | null;
   availableFrom?: string | null;
   availableUntil?: string | null;
   dueAt?: string | null;
-  title?: string | null;
+  endsAt?: string | null;
+  id?: string;
+  instructionalWeek?: number;
   location?: string | null;
   meetingUrl?: string | null;
+  programContentId?: string | null;
+  sortOrder?: number;
+  startsAt?: string | null;
   status?: LearningCohortsCohortScheduleItemStatus;
+  title?: string | null;
+  type?: LearningCohortsCohortScheduleItemType;
   visibilityOverride?: LearningCohortsCohortVisibilityOverride;
 }
 
@@ -4380,34 +4393,34 @@ export type LearningCohortsCohortScheduleItemStatus = 'Draft' | 'Scheduled' | 'P
 export type LearningCohortsCohortScheduleItemType = 'ContentRelease' | 'LiveSession' | 'AssessmentWindow' | 'Milestone';
 
 export interface LearningCohortsCohortSchedulePreview {
-  items?: Array<LearningCohortsCohortSchedulePreviewItem> | null;
-  conflicts?: Array<LearningCohortsCohortScheduleConflict> | null;
   calculatedEndDate?: string;
+  conflicts?: Array<LearningCohortsCohortScheduleConflict> | null;
   hasBlockingConflicts?: boolean;
+  items?: Array<LearningCohortsCohortSchedulePreviewItem> | null;
 }
 
 export interface LearningCohortsCohortSchedulePreviewItem {
-  programContentId?: string | null;
   assessmentId?: string | null;
-  type?: LearningCohortsCohortScheduleItemType;
-  instructionalWeek?: number;
-  sortOrder?: number;
-  startsAt?: string | null;
-  endsAt?: string | null;
   availableFrom?: string | null;
   availableUntil?: string | null;
   dueAt?: string | null;
+  endsAt?: string | null;
+  instructionalWeek?: number;
+  programContentId?: string | null;
+  sortOrder?: number;
+  startsAt?: string | null;
   title?: string | null;
+  type?: LearningCohortsCohortScheduleItemType;
 }
 
 export interface LearningCohortsCohortScheduleSummary {
-  version?: number;
-  timezoneId?: string | null;
+  itemCount?: number;
   meetingDays?: Array<SystemDayOfWeek> | null;
   meetingStartTime?: string;
   pacingMode?: LearningCohortsCohortPacingMode;
   releasePolicy?: LearningCohortsCohortReleasePolicy;
-  itemCount?: number;
+  timezoneId?: string | null;
+  version?: number;
 }
 
 export type LearningCohortsCohortStatus = 'Scheduled' | 'Active' | 'Completed' | 'Cancelled';
@@ -4421,28 +4434,28 @@ export interface LearningCohortsCourseCohortCalendar {
 
 export interface LearningCohortsCreateCohortInput {
   courseId?: string;
+  description?: string | null;
+  endDate?: string;
+  instructorId?: string | null;
+  maxCapacity?: number;
+  meetingSchedule?: string | null;
   name?: string | null;
   startDate?: string;
-  endDate?: string;
-  maxCapacity?: number;
-  description?: string | null;
   tenantId?: string | null;
-  instructorId?: string | null;
-  meetingSchedule?: string | null;
 }
 
 export interface LearningCohortsPreviewCohortScheduleInput {
-  firstInstructionalDate?: string;
+  assessmentDueOffsetDays?: number;
   cohortEndDate?: string;
-  timezoneId?: string | null;
+  firstInstructionalDate?: string;
   meetingDays?: Array<SystemDayOfWeek> | null;
-  meetingStartTime?: string;
   meetingDurationMinutes?: number;
+  meetingStartTime?: string;
   pacingMode?: LearningCohortsCohortPacingMode;
-  unitsPerPeriod?: number;
   releasePolicy?: LearningCohortsCohortReleasePolicy;
   skippedDates?: Array<string> | null;
-  assessmentDueOffsetDays?: number;
+  timezoneId?: string | null;
+  unitsPerPeriod?: number;
 }
 
 export type LearningCohortsScheduleConflictSeverity = 'Advisory' | 'Blocking';
@@ -4450,31 +4463,31 @@ export type LearningCohortsScheduleConflictSeverity = 'Advisory' | 'Blocking';
 export type LearningCohortsScheduleShiftScope = 'Single' | 'Following';
 
 export interface LearningCohortsShiftCohortScheduleInput {
-  expectedVersion?: number;
   days?: number;
+  expectedVersion?: number;
   scope?: LearningCohortsScheduleShiftScope;
 }
 
 export interface LearningCohortsUpdateCohortInput {
-  name?: string | null;
   description?: string | null;
-  startDate?: string | null;
   endDate?: string | null;
-  maxCapacity?: number | null;
   instructorId?: string | null;
+  maxCapacity?: number | null;
   meetingSchedule?: string | null;
+  name?: string | null;
+  startDate?: string | null;
 }
 
 export interface LearningCohortsUpdateCohortScheduleItemInput {
-  title?: string | null;
-  startsAt?: string | null;
-  endsAt?: string | null;
   availableFrom?: string | null;
   availableUntil?: string | null;
   dueAt?: string | null;
+  endsAt?: string | null;
   location?: string | null;
   meetingUrl?: string | null;
+  startsAt?: string | null;
   status?: LearningCohortsCohortScheduleItemStatus;
+  title?: string | null;
   visibilityOverride?: LearningCohortsCohortVisibilityOverride;
 }
 
@@ -4484,21 +4497,21 @@ export interface LearningCohortsUpdateCohortScheduleInput {
 }
 
 export interface LearningCoursesActivityGrade {
-  id?: string;
-  contentInteractionId?: string;
-  graderProgramUserId?: string | null;
-  grade?: number;
-  feedback?: string | null;
-  gradingDetails?: string | null;
-  gradedAt?: string;
-  createdAt?: string;
-  updatedAt?: string;
   contentInteraction?: LearningCoursesContentInteractionSummary;
-  grader?: LearningCoursesGraderSummary;
-  isPassingGrade?: boolean;
+  contentInteractionId?: string;
+  createdAt?: string;
+  feedback?: string | null;
+  grade?: number;
   gradePercentage?: string | null;
+  gradedAt?: string;
+  grader?: LearningCoursesGraderSummary;
+  graderProgramUserId?: string | null;
+  gradingDetails?: string | null;
   hasFeedback?: boolean;
   hasGradingDetails?: boolean;
+  id?: string;
+  isPassingGrade?: boolean;
+  updatedAt?: string;
 }
 
 export interface LearningCoursesActivitySettings {}
@@ -4508,231 +4521,230 @@ export interface LearningCoursesCircularDependencyCheckResult {
 }
 
 export interface LearningCoursesCloneProgram {
-  newTitle?: string | null;
   newDescription?: string | null;
+  newTitle?: string | null;
 }
 
 export interface LearningCoursesCompleteContentInput {
-  programUserId?: string;
   contentId?: string;
+  programUserId?: string;
 }
 
 export interface LearningCoursesCompleteCourseCheckoutInput {
-  productId?: string;
-  paymentProviderReference?: string | null;
   paymentMethod?: string | null;
+  paymentProviderReference?: string | null;
+  productId?: string;
 }
 
 export interface LearningCoursesCompleteCourseCheckoutOutput {
-  courseId?: string;
-  productId?: string;
-  entitlementId?: string;
-  enrollmentIds?: Array<string> | null;
   alreadyHadAccess?: boolean;
   amount?: number;
+  courseId?: string;
   currency?: string | null;
+  enrollmentIds?: Array<string> | null;
+  entitlementId?: string;
   learningUrl?: string | null;
   paymentProviderReference?: string | null;
+  productId?: string;
 }
 
 export interface LearningCoursesCompletionRates {
-  programId?: string;
-  overallCompletionRate?: number;
-  contentCompletionRates?: Record<string, number> | null;
   completionTrends?: Array<LearningCoursesCompletionTrend> | null;
+  contentCompletionRates?: Record<string, number> | null;
+  overallCompletionRate?: number;
+  programId?: string;
 }
 
 export interface LearningCoursesCompletionTrend {
-  date?: string;
   completedCount?: number;
-  totalCount?: number;
+  date?: string;
   rate?: number;
+  totalCount?: number;
 }
 
 export interface LearningCoursesContentInteraction {
-  id?: string;
-  programUserId?: string;
-  contentId?: string;
-  status?: LearningCoursesProgressStatus;
-  submissionData?: string | null;
-  completionPercentage?: number;
-  timeSpentMinutes?: number | null;
-  timeSpentSeconds?: number;
-  firstAccessedAt?: string | null;
-  lastAccessedAt?: string | null;
-  completedAt?: string | null;
-  submittedAt?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-  content?: LearningCoursesContentSummary;
-  programUser?: LearningCoursesProgramUserSummary;
-  isSubmitted?: boolean;
-  isCompleted?: boolean;
   canModify?: boolean;
+  completedAt?: string | null;
+  completionPercentage?: number;
+  content?: LearningCoursesContentSummary;
+  contentId?: string;
+  createdAt?: string;
   durationInMinutes?: number;
   durationInSeconds?: number;
+  firstAccessedAt?: string | null;
+  id?: string;
+  isCompleted?: boolean;
+  isSubmitted?: boolean;
+  lastAccessedAt?: string | null;
+  programUser?: LearningCoursesProgramUserSummary;
+  programUserId?: string;
+  status?: LearningCoursesProgressStatus;
+  submissionData?: string | null;
+  submittedAt?: string | null;
+  timeSpentMinutes?: number | null;
+  timeSpentSeconds?: number;
+  updatedAt?: string;
 }
 
 export interface LearningCoursesContentInteractionEvent {
-  id?: string;
-  interactionId?: string;
-  type?: LearningCoursesContentInteractionEventType;
-  occurredAt?: string;
   durationSeconds?: number | null;
+  id?: string;
+  idempotencyKey?: string | null;
+  interactionId?: string;
+  occurredAt?: string;
+  payload?: string | null;
   positionSeconds?: number | null;
   progressPercentage?: number | null;
-  payload?: string | null;
-  idempotencyKey?: string | null;
+  type?: LearningCoursesContentInteractionEventType;
 }
 
 export type LearningCoursesContentInteractionEventType =
   'Opened' | 'Heartbeat' | 'Progressed' | 'Paused' | 'Resumed' | 'Seeked' | 'Completed' | 'QuizPresented' | 'QuizAnswered';
 
 export interface LearningCoursesContentInteractionSummary {
+  content?: LearningCoursesContentSummary;
+  contentId?: string;
   id?: string;
   programUserId?: string;
-  contentId?: string;
   status?: string | null;
-  submittedAt?: string | null;
-  content?: LearningCoursesContentSummary;
   student?: LearningCoursesStudentSummary;
+  submittedAt?: string | null;
 }
 
 export interface LearningCoursesContentProgress {
-  contentId?: string;
-  title?: string | null;
-  status?: LearningCoursesProgressStatus;
+  completedAt?: string | null;
   completionPercentage?: number;
+  contentId?: string;
   firstAccessedAt?: string | null;
   lastAccessedAt?: string | null;
-  completedAt?: string | null;
+  status?: LearningCoursesProgressStatus;
+  title?: string | null;
 }
 
 export interface LearningCoursesContentStats {
-  programId?: string;
-  totalContent?: number;
-  requiredContent?: number;
-  optionalContent?: number;
   contentByType?: {
-    Lesson?: number;
-    Page?: number;
     Assignment?: number;
-    Questionnaire?: number;
-    Discussion?: number;
-    Code?: number;
     Challenge?: number;
+    Code?: number;
+    Discussion?: number;
+    Lesson?: number;
+    Module?: number;
+    Page?: number;
+    Project?: number;
+    Questionnaire?: number;
     Reflection?: number;
     Survey?: number;
-    Project?: number;
-    Module?: number;
   } | null;
-  contentByVisibility?: { Public?: number; Internal?: number; Private?: number; Restricted?: number } | null;
-  topLevelContent?: number;
+  contentByVisibility?: { Internal?: number; Private?: number; Public?: number; Restricted?: number } | null;
   nestedContent?: number;
+  optionalContent?: number;
+  programId?: string;
+  requiredContent?: number;
+  topLevelContent?: number;
+  totalContent?: number;
 }
 
 export interface LearningCoursesContentSummary {
-  id?: string;
-  title?: string | null;
   contentType?: string | null;
   estimatedMinutes?: number | null;
+  id?: string;
+  title?: string | null;
 }
 
 export interface LearningCoursesCourseSupportTicketMessageInput {
-  message?: string | null;
   isInternal?: boolean;
+  message?: string | null;
 }
 
 export interface LearningCoursesCreateActivityGrade {
   contentInteractionId?: string;
-  graderProgramUserId?: string;
-  grade?: number;
   feedback?: string | null;
+  grade?: number;
+  graderProgramUserId?: string;
   gradingDetails?: string | null;
 }
 
 export interface LearningCoursesCreatePrerequisiteApiInput {
   courseId?: string;
-  prerequisiteCourseId?: string;
-  type?: LearningCoursesPrerequisiteType;
-  minimumGrade?: number | null;
   description?: string | null;
   displayOrder?: number;
+  minimumGrade?: number | null;
+  prerequisiteCourseId?: string;
   prerequisiteGroup?: string | null;
+  type?: LearningCoursesPrerequisiteType;
 }
 
 export interface LearningCoursesCreateProductFromProgram {
-  name?: string | null;
-  description?: string | null;
   basePrice?: number;
   currency?: string | null;
+  description?: string | null;
+  name?: string | null;
 }
 
 export interface LearningCoursesCreateProgramContent {
-  programId: string;
-  parentId?: string | null;
-  title: string;
-  description?: string | null;
-  type: LearningCoursesProgramContentType;
-  body?: string | null;
-  jsonBody?: Record<string, unknown> | null;
-  lessonFormat?: LearningCoursesLessonContentFormat;
   activitySettings?: LearningCoursesActivitySettings;
-  sortOrder?: number;
-  isRequired?: boolean;
-  gradingMethod?: LearningCoursesGradingMethod;
-  maxPoints?: number | null;
+  body?: string | null;
+  description?: string | null;
   estimatedMinutes?: number | null;
+  gradingMethod?: LearningCoursesGradingMethod;
+  isRequired?: boolean;
+  lessonFormat?: LearningCoursesLessonContentFormat;
+  maxPoints?: number | null;
+  parentId?: string | null;
+  programId: string;
+  sortOrder?: number;
+  title: string;
+  type: LearningCoursesProgramContentType;
   visibility?: LearningCoursesVisibility;
 }
 
 export interface LearningCoursesCreateProgram {
-  title?: string | null;
+  creatorId?: string | null;
   description?: string | null;
   slug?: string | null;
   thumbnail?: string | null;
-  creatorId?: string | null;
+  title?: string | null;
 }
 
 export interface LearningCoursesEngagementMetrics {
-  programId?: string;
-  dailyActiveUsers?: number;
-  weeklyActiveUsers?: number;
-  monthlyActiveUsers?: number;
   averageSessionDuration?: string;
-  totalSessions?: number;
-  retentionRate?: number;
   contentEngagement?: Record<string, number> | null;
+  dailyActiveUsers?: number;
+  monthlyActiveUsers?: number;
+  programId?: string;
+  retentionRate?: number;
+  totalSessions?: number;
+  weeklyActiveUsers?: number;
 }
 
 export type LearningCoursesEnrollmentStatus = 'Open' | 'Active' | 'Paused' | 'Cancelled' | 'Expired' | 'Completed' | 'Closed' | 'InviteOnly' | 'Waitlist';
 
 export interface LearningCoursesGradeStatistics {
-  totalGrades?: number;
   averageGrade?: number;
-  minGrade?: number;
-  maxGrade?: number;
-  passingRate?: number;
   averageGradeFormatted?: string | null;
-  passingRateFormatted?: string | null;
   hasGrades?: boolean;
+  maxGrade?: number;
+  minGrade?: number;
+  passingRate?: number;
+  passingRateFormatted?: string | null;
+  totalGrades?: number;
 }
 
 export interface LearningCoursesGraderSummary {
   id?: string;
+  role?: string | null;
   userDisplayName?: string | null;
   userEmail?: string | null;
-  role?: string | null;
 }
 
 export type LearningCoursesGradingMethod = 'None' | 'Instructor' | 'Peer' | 'Ai' | 'AutomatedTests';
 
-export type LearningCoursesLessonContentFormat = 'Markdown' | 'Lexical' | 'RevealJs' | 'Video' | 'Html' | 'ExternalLink';
+export type LearningCoursesLessonContentFormat = 'Markdown' | 'Lexical' | 'RevealJs' | 'Video';
 
 export interface LearningCoursesMonetization {
-  price?: number;
   currency?: string | null;
   isSubscription?: boolean;
+  price?: number;
   subscriptionDurationDays?: number | null;
 }
 
@@ -4748,108 +4760,108 @@ export interface LearningCoursesPrerequisiteCheckResult {
 }
 
 export interface LearningCoursesPrerequisite {
-  id?: string;
   courseId?: string;
-  prerequisiteCourseId?: string;
-  prerequisiteCourseName?: string | null;
-  tenantId?: string | null;
-  type?: LearningCoursesPrerequisiteType;
-  minimumGrade?: number | null;
+  createdAt?: string;
   description?: string | null;
   displayOrder?: number;
+  id?: string;
+  minimumGrade?: number | null;
+  prerequisiteCourseId?: string;
+  prerequisiteCourseName?: string | null;
   prerequisiteGroup?: string | null;
-  createdAt?: string;
+  tenantId?: string | null;
+  type?: LearningCoursesPrerequisiteType;
 }
 
 export interface LearningCoursesPrerequisiteStatus {
-  prerequisiteId?: string;
-  prerequisiteCourseId?: string;
-  courseName?: string | null;
-  type?: LearningCoursesPrerequisiteType;
-  isSatisfied?: boolean;
-  requiredGrade?: number | null;
   achievedGrade?: number | null;
+  courseName?: string | null;
+  isSatisfied?: boolean;
+  prerequisiteCourseId?: string;
+  prerequisiteId?: string;
   reason?: string | null;
+  requiredGrade?: number | null;
+  type?: LearningCoursesPrerequisiteType;
 }
 
 export type LearningCoursesPrerequisiteType = 'Required' | 'Recommended' | 'Corequisite';
 
 export interface LearningCoursesPricing {
-  price?: number;
   currency?: string | null;
-  isSubscription?: boolean;
-  subscriptionDurationDays?: number | null;
   isMonetizationEnabled?: boolean;
+  isSubscription?: boolean;
+  price?: number;
+  subscriptionDurationDays?: number | null;
 }
 
 export interface LearningCoursesProgramAnalytics {
+  activeUsers?: number;
+  additionalMetrics?: Record<string, Record<string, unknown>> | null;
+  averageCompletionTime?: string;
+  completedUsers?: number;
+  completionRate?: number;
+  lastActivity?: string | null;
   programId?: string;
   title?: string | null;
   totalUsers?: number;
-  activeUsers?: number;
-  completedUsers?: number;
-  completionRate?: number;
-  averageCompletionTime?: string;
   totalViews?: number;
-  lastActivity?: string | null;
-  additionalMetrics?: Record<string, Record<string, unknown>> | null;
 }
 
 export interface LearningCoursesProgramContent {
-  id?: string;
-  programId?: string;
-  parentId?: string | null;
-  title?: string | null;
-  description?: string | null;
-  type?: LearningCoursesProgramContentType;
-  body?: string | null;
-  jsonBody?: Record<string, unknown> | null;
-  lessonFormat?: LearningCoursesLessonContentFormat;
   activitySettings?: LearningCoursesActivitySettings;
-  sortOrder?: number;
-  isRequired?: boolean;
-  gradingMethod?: LearningCoursesGradingMethod;
-  maxPoints?: number | null;
-  estimatedMinutes?: number | null;
-  visibility?: LearningCoursesVisibility;
-  createdAt?: string;
-  updatedAt?: string | null;
-  programTitle?: string | null;
-  parentTitle?: string | null;
-  childrenCount?: number;
+  body?: Record<string, unknown> | null;
   children?: Array<LearningCoursesProgramContent> | null;
+  childrenCount?: number;
+  createdAt?: string;
+  description?: string | null;
+  estimatedMinutes?: number | null;
+  gradingMethod?: LearningCoursesGradingMethod;
+  id?: string;
+  isRequired?: boolean;
+  lessonFormat?: LearningCoursesLessonContentFormat;
+  maxPoints?: number | null;
+  parentId?: string | null;
+  parentTitle?: string | null;
+  programId?: string;
+  programTitle?: string | null;
+  sortOrder?: number;
+  title?: string | null;
+  type?: LearningCoursesProgramContentType;
+  updatedAt?: string | null;
+  visibility?: LearningCoursesVisibility;
 }
 
+/** Legacy values Page and Challenge are normalized on read and are not valid for new content. */
 export type LearningCoursesProgramContentType =
-  'Lesson' | 'Page' | 'Assignment' | 'Questionnaire' | 'Discussion' | 'Code' | 'Challenge' | 'Reflection' | 'Survey' | 'Project' | 'Module';
+  'Lesson' | 'Assignment' | 'Questionnaire' | 'Discussion' | 'Code' | 'Reflection' | 'Survey' | 'Project' | 'Module';
 
 export type LearningCoursesProgramDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
 export interface LearningCoursesProgram {
-  id?: string;
+  averageRating?: number;
+  category?: ProgramCategory;
+  createdAt?: string;
   creatorId?: string | null;
-  title?: string | null;
+  currentEnrollments?: number;
   description?: string | null;
+  difficulty?: LearningCoursesProgramDifficulty;
+  enrollmentDeadline?: string | null;
+  enrollmentStatus?: LearningCoursesEnrollmentStatus;
+  estimatedHours?: number | null;
+  id?: string;
+  isEnrollmentOpen?: boolean;
+  maxEnrollments?: number | null;
   metadata?: string | null;
-  visibility?: ContentVisibility;
+  skillsProvided?: string | null;
+  skillsRequired?: string | null;
   slug?: string | null;
   status?: ContentStatus;
   thumbnail?: string | null;
-  videoShowcaseUrl?: string | null;
-  estimatedHours?: number | null;
-  enrollmentStatus?: LearningCoursesEnrollmentStatus;
-  maxEnrollments?: number | null;
-  enrollmentDeadline?: string | null;
-  category?: ProgramCategory;
-  difficulty?: LearningCoursesProgramDifficulty;
-  skillsRequired?: string | null;
-  skillsProvided?: string | null;
-  currentEnrollments?: number;
-  averageRating?: number;
+  title?: string | null;
   totalRatings?: number;
-  isEnrollmentOpen?: boolean;
-  createdAt?: string;
   updatedAt?: string | null;
+  videoShowcaseUrl?: string | null;
+  visibility?: ContentVisibility;
 }
 
 export interface LearningCoursesProgramUserSummary {
@@ -4861,20 +4873,20 @@ export interface LearningCoursesProgramUserSummary {
 export type LearningCoursesProgressStatus = 'NotStarted' | 'InProgress' | 'Completed' | 'Submitted';
 
 export interface LearningCoursesRecordContentInteractionEventInput {
-  type?: LearningCoursesContentInteractionEventType;
   durationSeconds?: number | null;
-  positionSeconds?: number | null;
-  progressPercentage?: number | null;
-  payload?: string | null;
   idempotencyKey?: string | null;
   occurredAt?: string | null;
+  payload?: string | null;
+  positionSeconds?: number | null;
+  progressPercentage?: number | null;
+  type?: LearningCoursesContentInteractionEventType;
 }
 
 export interface LearningCoursesReflectionResponseResult {
-  responseId?: string;
-  submittedAt?: string | null;
   body?: string | null;
   respondentUserId?: string | null;
+  responseId?: string;
+  submittedAt?: string | null;
 }
 
 export interface LearningCoursesRejectProgram {
@@ -4894,20 +4906,20 @@ export interface LearningCoursesResolveCourseSupportTicketInput {
 }
 
 export interface LearningCoursesRevenueAnalytics {
-  programId?: string;
-  totalRevenue?: number;
-  monthlyRevenue?: number;
-  totalPurchases?: number;
-  monthlyPurchases?: number;
   averageRevenuePerUser?: number;
   conversionRate?: number;
+  monthlyPurchases?: number;
+  monthlyRevenue?: number;
+  programId?: string;
   revenueChart?: Array<LearningCoursesRevenueChart> | null;
+  totalPurchases?: number;
+  totalRevenue?: number;
 }
 
 export interface LearningCoursesRevenueChart {
   date?: string;
-  revenue?: number;
   purchases?: number;
+  revenue?: number;
 }
 
 export interface LearningCoursesScheduleProgram {
@@ -4915,18 +4927,18 @@ export interface LearningCoursesScheduleProgram {
 }
 
 export interface LearningCoursesSearchContent {
+  isRequired?: boolean | null;
+  parentId?: string | null;
   programId: string;
   searchTerm: string;
   type?: LearningCoursesProgramContentType;
   visibility?: LearningCoursesVisibility;
-  isRequired?: boolean | null;
-  parentId?: string | null;
 }
 
 export interface LearningCoursesSendCourseStudentMessageInput {
-  userIds?: Array<string> | null;
-  subject?: string | null;
   message?: string | null;
+  subject?: string | null;
+  userIds?: Array<string> | null;
 }
 
 export interface LearningCoursesSendCourseStudentMessageOutput {
@@ -4934,8 +4946,8 @@ export interface LearningCoursesSendCourseStudentMessageOutput {
 }
 
 export interface LearningCoursesStartContentInput {
-  programUserId?: string;
   contentId?: string;
+  programUserId?: string;
 }
 
 export interface LearningCoursesStudentSummary {
@@ -4945,8 +4957,8 @@ export interface LearningCoursesStudentSummary {
 }
 
 export interface LearningCoursesSubmitContentInput {
-  programUserId?: string;
   contentId?: string;
+  programUserId?: string;
   submissionData?: string | null;
 }
 
@@ -4955,119 +4967,118 @@ export interface LearningCoursesSubmitUserContent {
 }
 
 export interface LearningCoursesSurveyResponseResult {
-  responseId?: string;
-  submittedAt?: string | null;
   answers?: Record<string, Record<string, unknown>> | null;
   respondentUserId?: string | null;
+  responseId?: string;
+  submittedAt?: string | null;
 }
 
 export interface LearningCoursesUpdateActivityGrade {
-  grade?: number | null;
   feedback?: string | null;
+  grade?: number | null;
   gradingDetails?: string | null;
 }
 
 export interface LearningCoursesUpdatePrerequisiteApiInput {
-  type?: LearningCoursesPrerequisiteType;
-  minimumGrade?: number | null;
   description?: string | null;
   displayOrder?: number | null;
+  minimumGrade?: number | null;
   prerequisiteGroup?: string | null;
+  type?: LearningCoursesPrerequisiteType;
 }
 
 export interface LearningCoursesUpdatePricing {
-  price?: number | null;
   currency?: string | null;
   isSubscription?: boolean | null;
+  price?: number | null;
   subscriptionDurationDays?: number | null;
 }
 
 export interface LearningCoursesUpdateProgramContent {
-  id: string;
-  title?: string | null;
-  description?: string | null;
-  type?: LearningCoursesProgramContentType;
-  body?: string | null;
-  jsonBody?: Record<string, unknown> | null;
-  lessonFormat?: LearningCoursesLessonContentFormat;
   activitySettings?: LearningCoursesActivitySettings;
-  sortOrder?: number | null;
-  isRequired?: boolean | null;
-  gradingMethod?: LearningCoursesGradingMethod;
-  maxPoints?: number | null;
+  body?: string | null;
+  description?: string | null;
   estimatedMinutes?: number | null;
+  gradingMethod?: LearningCoursesGradingMethod;
+  id: string;
+  isRequired?: boolean | null;
+  lessonFormat?: LearningCoursesLessonContentFormat;
+  maxPoints?: number | null;
+  sortOrder?: number | null;
+  title?: string | null;
+  type?: LearningCoursesProgramContentType;
   visibility?: LearningCoursesVisibility;
 }
 
 export interface LearningCoursesUpdateProgram {
-  title?: string | null;
+  category?: ProgramCategory;
+  clearEnrollmentDeadline?: boolean;
+  clearMaxEnrollments?: boolean;
+  creatorId?: string | null;
   description?: string | null;
+  difficulty?: LearningCoursesProgramDifficulty;
+  enrollmentDeadline?: string | null;
+  enrollmentStatus?: LearningCoursesEnrollmentStatus;
+  estimatedHours?: number | null;
+  maxEnrollments?: number | null;
   metadata?: string | null;
+  skillsProvided?: string | null;
+  skillsRequired?: string | null;
   slug?: string | null;
   thumbnail?: string | null;
+  title?: string | null;
   videoShowcaseUrl?: string | null;
-  estimatedHours?: number | null;
   visibility?: ContentVisibility;
-  category?: ProgramCategory;
-  difficulty?: LearningCoursesProgramDifficulty;
-  skillsRequired?: string | null;
-  skillsProvided?: string | null;
-  creatorId?: string | null;
-  enrollmentStatus?: LearningCoursesEnrollmentStatus;
-  maxEnrollments?: number | null;
-  enrollmentDeadline?: string | null;
-  clearMaxEnrollments?: boolean;
-  clearEnrollmentDeadline?: boolean;
 }
 
 export interface LearningCoursesUpdateProgress {
-  status?: LearningCoursesProgressStatus;
-  lastAccessedAt?: string | null;
   additionalData?: Record<string, Record<string, unknown>> | null;
+  lastAccessedAt?: string | null;
+  status?: LearningCoursesProgressStatus;
 }
 
 export interface LearningCoursesUpdateProgressInput {
-  programUserId?: string;
-  contentId?: string;
   completionPercentage?: number;
+  contentId?: string;
+  programUserId?: string;
 }
 
 export interface LearningCoursesUpdateTimeSpentInput {
-  programUserId?: string;
-  contentId?: string;
   additionalMinutes?: number;
+  contentId?: string;
+  programUserId?: string;
 }
 
 export interface LearningCoursesUserProgress {
-  enrollmentId?: string;
-  courseId?: string;
-  userId?: string;
+  completedAt?: string | null;
   completionPercentage?: number;
+  contentProgress?: Array<LearningCoursesContentProgress> | null;
+  courseId?: string;
+  enrollmentId?: string;
   lastAccessedAt?: string | null;
   startedAt?: string | null;
-  completedAt?: string | null;
-  contentProgress?: Array<LearningCoursesContentProgress> | null;
+  userId?: string;
 }
 
 export type LearningCoursesVisibility = 'Public' | 'Internal' | 'Private' | 'Restricted';
 
 export interface LearningEnrollmentsEnrollUserInput {
+  cohortId?: string | null;
   courseId?: string;
   userId?: string;
-  cohortId?: string | null;
 }
 
 export interface LearningEnrollmentsEnrollment {
-  id?: string;
-  courseId?: string;
-  userId?: string;
   cohortId?: string | null;
-  status?: LearningEnrollmentsEnrollmentStatus;
-  enrolledAt?: string;
   completedAt?: string | null;
+  courseId?: string;
   droppedAt?: string | null;
-  progress?: number;
+  enrolledAt?: string;
+  id?: string;
   lastActivityAt?: string | null;
+  progress?: number;
+  status?: LearningEnrollmentsEnrollmentStatus;
+  userId?: string;
 }
 
 export type LearningEnrollmentsEnrollmentStatus = 'Active' | 'Paused' | 'Completed' | 'Dropped' | 'Expired';
@@ -5079,58 +5090,58 @@ export interface LearningEnrollmentsUpdateEnrollmentProgressInput {
 export type LearningExperienceDiscoveryCollectionType = 'Curated' | 'Category' | 'Skill' | 'Career' | 'Trending' | 'NewReleases';
 
 export interface LearningExperienceDiscoveryCourseCollection {
-  id?: string;
-  tenantId?: string | null;
-  curatorId?: string;
-  title?: string | null;
-  slug?: string | null;
-  description?: string | null;
-  imageUrl?: string | null;
-  isPublished?: boolean;
-  isFeatured?: boolean;
   courseCount?: number;
-  type?: LearningExperienceDiscoveryCollectionType;
   createdAt?: string;
+  curatorId?: string;
+  description?: string | null;
+  id?: string;
+  imageUrl?: string | null;
+  isFeatured?: boolean;
+  isPublished?: boolean;
+  slug?: string | null;
+  tenantId?: string | null;
+  title?: string | null;
+  type?: LearningExperienceDiscoveryCollectionType;
   updatedAt?: string;
 }
 
 export interface LearningExperienceDiscoveryCreateCourseCollection {
-  title?: string | null;
-  type?: LearningExperienceDiscoveryCollectionType;
   description?: string | null;
   imageUrl?: string | null;
+  title?: string | null;
+  type?: LearningExperienceDiscoveryCollectionType;
 }
 
 export interface LearningExperienceDiscoveryCreateFeaturedContent {
-  type?: LearningExperienceDiscoveryFeaturedContentType;
-  title?: string | null;
-  displayOrder?: number;
   courseId?: string | null;
-  learningPathId?: string | null;
-  subtitle?: string | null;
+  displayOrder?: number;
+  endsAt?: string | null;
   imageUrl?: string | null;
+  learningPathId?: string | null;
   linkUrl?: string | null;
   startsAt?: string | null;
-  endsAt?: string | null;
+  subtitle?: string | null;
   targetAudience?: string | null;
+  title?: string | null;
+  type?: LearningExperienceDiscoveryFeaturedContentType;
 }
 
 export interface LearningExperienceDiscoveryFeaturedContent {
-  id?: string;
   courseId?: string | null;
+  createdAt?: string;
+  displayOrder?: number;
+  endsAt?: string | null;
+  id?: string;
+  imageUrl?: string | null;
+  isActive?: boolean;
   learningPathId?: string | null;
+  linkUrl?: string | null;
+  startsAt?: string | null;
+  subtitle?: string | null;
+  targetAudience?: string | null;
   tenantId?: string | null;
   title?: string | null;
-  subtitle?: string | null;
-  imageUrl?: string | null;
-  linkUrl?: string | null;
   type?: LearningExperienceDiscoveryFeaturedContentType;
-  displayOrder?: number;
-  startsAt?: string | null;
-  endsAt?: string | null;
-  isActive?: boolean;
-  targetAudience?: string | null;
-  createdAt?: string;
   updatedAt?: string;
 }
 
@@ -5138,56 +5149,56 @@ export type LearningExperienceDiscoveryFeaturedContentType =
   'HeroBanner' | 'CategoryHighlight' | 'NewRelease' | 'TopRated' | 'TrendingNow' | 'StaffPick' | 'SeasonalPromotion';
 
 export interface LearningExperienceDiscoveryPopularSearchResult {
+  clickThroughRate?: number;
   query?: string | null;
   searchCount?: number;
   totalClicks?: number;
-  clickThroughRate?: number;
 }
 
 export interface LearningExperienceDiscoveryRecordSearchClick {
-  searchId?: string;
   clickedCourseId?: string;
+  searchId?: string;
 }
 
 export interface LearningExperienceDiscoveryRecordSearch {
+  filters?: string | null;
   query?: string | null;
   resultCount?: number;
-  filters?: string | null;
 }
 
 export interface LearningExperienceDiscoverySearchHistory {
+  clickedCourseId?: string | null;
+  createdAt?: string;
+  filters?: string | null;
   id?: string;
-  userId?: string | null;
   query?: string | null;
   resultCount?: number;
-  clickedCourseId?: string | null;
-  filters?: string | null;
-  createdAt?: string;
+  userId?: string | null;
 }
 
 export interface LearningExperienceDiscoveryUpdateCourseCollection {
-  title?: string | null;
   description?: string | null;
   imageUrl?: string | null;
   isFeatured?: boolean | null;
+  title?: string | null;
 }
 
 export interface LearningExperienceDiscoveryUpdateFeaturedContent {
-  title?: string | null;
-  subtitle?: string | null;
-  imageUrl?: string | null;
-  linkUrl?: string | null;
   displayOrder?: number | null;
-  startsAt?: string | null;
   endsAt?: string | null;
+  imageUrl?: string | null;
   isActive?: boolean | null;
+  linkUrl?: string | null;
+  startsAt?: string | null;
+  subtitle?: string | null;
   targetAudience?: string | null;
+  title?: string | null;
 }
 
 export interface LearningExperienceLearningPathsAddCourseToPath {
   courseId?: string;
-  order?: number;
   isRequired?: boolean;
+  order?: number;
 }
 
 export interface LearningExperienceLearningPathsCourseOrder {
@@ -5196,83 +5207,83 @@ export interface LearningExperienceLearningPathsCourseOrder {
 }
 
 export interface LearningExperienceLearningPathsCreateLearningPath {
-  title?: string | null;
-  difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
   description?: string | null;
-  imageUrl?: string | null;
+  difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
   estimatedHours?: number;
+  imageUrl?: string | null;
+  title?: string | null;
 }
 
 export interface LearningExperienceLearningPathsLearningPathCourse {
   courseId?: string;
-  order?: number;
   isRequired?: boolean;
+  order?: number;
 }
 
 export interface LearningExperienceLearningPathsLearningPathDetail {
-  id?: string;
-  tenantId?: string | null;
-  creatorId?: string;
-  title?: string | null;
-  slug?: string | null;
-  description?: string | null;
-  imageUrl?: string | null;
-  estimatedHours?: number;
-  difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
-  isPublished?: boolean;
-  isFeatured?: boolean;
-  enrollmentCount?: number;
   completionCount?: number;
   courses?: Array<LearningExperienceLearningPathsLearningPathCourse> | null;
   createdAt?: string;
+  creatorId?: string;
+  description?: string | null;
+  difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
+  enrollmentCount?: number;
+  estimatedHours?: number;
+  id?: string;
+  imageUrl?: string | null;
+  isFeatured?: boolean;
+  isPublished?: boolean;
+  slug?: string | null;
+  tenantId?: string | null;
+  title?: string | null;
   updatedAt?: string;
 }
 
 export type LearningExperienceLearningPathsLearningPathDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
 export interface LearningExperienceLearningPathsLearningPath {
-  id?: string;
-  tenantId?: string | null;
-  creatorId?: string;
-  title?: string | null;
-  slug?: string | null;
-  description?: string | null;
-  imageUrl?: string | null;
-  estimatedHours?: number;
-  difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
-  isPublished?: boolean;
-  isFeatured?: boolean;
-  enrollmentCount?: number;
   completionCount?: number;
   courseCount?: number;
   createdAt?: string;
+  creatorId?: string;
+  description?: string | null;
+  difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
+  enrollmentCount?: number;
+  estimatedHours?: number;
+  id?: string;
+  imageUrl?: string | null;
+  isFeatured?: boolean;
+  isPublished?: boolean;
+  slug?: string | null;
+  tenantId?: string | null;
+  title?: string | null;
   updatedAt?: string;
 }
 
 export interface LearningExperienceLearningPathsLearningPathEnrollment {
+  completedAt?: string | null;
+  coursesCompleted?: number;
+  createdAt?: string;
+  enrolledAt?: string;
   id?: string;
   learningPathId?: string;
-  userId?: string;
   progress?: number;
-  coursesCompleted?: number;
-  totalCourses?: number;
-  enrolledAt?: string;
-  completedAt?: string | null;
   status?: LearningExperienceLearningPathsLearningPathEnrollmentStatus;
-  createdAt?: string;
+  totalCourses?: number;
   updatedAt?: string;
+  userId?: string;
 }
 
 export type LearningExperienceLearningPathsLearningPathEnrollmentStatus = 'InProgress' | 'Completed' | 'Abandoned';
 
 export interface LearningExperienceLearningPathsLearningPathStatistics {
-  learningPathId?: string;
-  totalEnrollments?: number;
   activeEnrollments?: number;
+  averageCompletionTime?: string;
+  averageProgress?: number;
   completedEnrollments?: number;
   completionRate?: number;
-  averageProgress?: number;
-  averageCompletionTime?: string;
+  learningPathId?: string;
+  totalEnrollments?: number;
 }
 
 export interface LearningExperienceLearningPathsReorderCourses {
@@ -5280,12 +5291,12 @@ export interface LearningExperienceLearningPathsReorderCourses {
 }
 
 export interface LearningExperienceLearningPathsUpdateLearningPath {
-  title?: string | null;
   description?: string | null;
-  imageUrl?: string | null;
-  estimatedHours?: number | null;
   difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
+  estimatedHours?: number | null;
+  imageUrl?: string | null;
   isFeatured?: boolean | null;
+  title?: string | null;
 }
 
 export interface LearningExperienceLearningPathsUpdatePathProgress {
@@ -5297,90 +5308,90 @@ export interface LearningExperienceRecommendationsAddSkillInput {
 }
 
 export interface LearningExperienceRecommendationsCreateOrUpdateLearningProfile {
+  learningGoals?: Array<string> | null;
   preferredCategories?: Array<string> | null;
   preferredDifficulty?: string | null;
   preferredDuration?: string | null;
-  learningGoals?: Array<string> | null;
   skills?: Array<string> | null;
 }
 
 export interface LearningExperienceRecommendationsPopularCourse {
-  courseId?: string;
-  title?: string | null;
-  description?: string | null;
-  thumbnail?: string | null;
-  category?: string | null;
-  enrollmentCount?: number;
   averageRating?: number;
+  category?: string | null;
+  courseId?: string;
+  description?: string | null;
+  enrollmentCount?: number;
+  thumbnail?: string | null;
+  title?: string | null;
   totalRatings?: number;
 }
 
 export interface LearningExperienceRecommendationsRecommendation {
-  id?: string;
-  userId?: string;
   courseId?: string;
-  type?: LearningExperienceRecommendationsRecommendationType;
-  score?: number;
-  reason?: string | null;
-  isViewed?: boolean;
-  isDismissed?: boolean;
-  expiresAt?: string;
   createdAt?: string;
+  expiresAt?: string;
+  id?: string;
+  isDismissed?: boolean;
+  isViewed?: boolean;
+  reason?: string | null;
+  score?: number;
+  type?: LearningExperienceRecommendationsRecommendationType;
+  userId?: string;
 }
 
 export interface LearningExperienceRecommendationsRecommendationStatistics {
-  totalRecommendations?: number;
-  viewedCount?: number;
-  dismissedCount?: number;
-  convertedCount?: number;
   byType?: {
+    BasedOnHistory?: number;
+    InstructorFollowed?: number;
+    NextInPath?: number;
+    PeerRecommended?: number;
     PersonalizedAI?: number;
     PopularInCategory?: number;
-    TrendingNow?: number;
-    BasedOnHistory?: number;
     SimilarToCompleted?: number;
-    NextInPath?: number;
-    InstructorFollowed?: number;
-    PeerRecommended?: number;
+    TrendingNow?: number;
   } | null;
+  convertedCount?: number;
+  dismissedCount?: number;
+  totalRecommendations?: number;
+  viewedCount?: number;
 }
 
 export type LearningExperienceRecommendationsRecommendationType =
   'PersonalizedAI' | 'PopularInCategory' | 'TrendingNow' | 'BasedOnHistory' | 'SimilarToCompleted' | 'NextInPath' | 'InstructorFollowed' | 'PeerRecommended';
 
 export interface LearningExperienceRecommendationsSimilarCourse {
-  courseId?: string;
-  title?: string | null;
-  description?: string | null;
-  thumbnail?: string | null;
   category?: string | null;
-  similarityScore?: number;
+  courseId?: string;
+  description?: string | null;
   matchingTags?: Array<string> | null;
+  similarityScore?: number;
+  thumbnail?: string | null;
+  title?: string | null;
 }
 
 export interface LearningExperienceRecommendationsTrendingCourse {
-  courseId?: string;
-  title?: string | null;
-  description?: string | null;
-  thumbnail?: string | null;
   category?: string | null;
+  courseId?: string;
+  description?: string | null;
   recentEnrollments?: number;
+  thumbnail?: string | null;
+  title?: string | null;
   trendScore?: number;
 }
 
 export interface LearningExperienceRecommendationsUserLearningProfile {
+  createdAt?: string;
   id?: string;
-  userId?: string;
+  lastActivityAt?: string | null;
+  learningGoals?: Array<string> | null;
   preferredCategories?: Array<string> | null;
   preferredDifficulty?: string | null;
   preferredDuration?: string | null;
-  learningGoals?: Array<string> | null;
   skills?: Array<string> | null;
   totalCoursesCompleted?: number;
   totalHoursLearned?: number;
-  lastActivityAt?: string | null;
-  createdAt?: string;
   updatedAt?: string;
+  userId?: string;
 }
 
 export interface LearningExperienceSocialControllersUpdateReviewModerationInput {
@@ -5401,106 +5412,106 @@ export type LearningExperienceSocialFeedItemType =
   | 'SkillMilestone';
 
 export interface LearningExperienceSocialServicesCourseDiscussion {
-  id?: string;
-  courseId?: string;
-  contentId?: string | null;
   authorId?: string;
-  title?: string | null;
   content?: string | null;
+  contentId?: string | null;
+  courseId?: string;
+  createdAt?: string;
+  id?: string;
   isPinned?: boolean;
   isResolved?: boolean;
-  replyCount?: number;
-  viewCount?: number;
   lastActivityAt?: string | null;
-  createdAt?: string;
+  replyCount?: number;
+  title?: string | null;
+  viewCount?: number;
 }
 
 export interface LearningExperienceSocialServicesCourseLike {
-  id?: string;
   courseId?: string;
-  userId?: string;
   createdAt?: string;
+  id?: string;
+  userId?: string;
 }
 
 export interface LearningExperienceSocialServicesCourseRatingStats {
-  courseId?: string;
   averageRating?: number;
-  totalReviews?: number;
+  courseId?: string;
+  featuredReviewCount?: number;
   fiveStarCount?: number;
   fourStarCount?: number;
-  threeStarCount?: number;
-  twoStarCount?: number;
   oneStarCount?: number;
-  featuredReviewCount?: number;
+  threeStarCount?: number;
+  totalReviews?: number;
+  twoStarCount?: number;
 }
 
 export interface LearningExperienceSocialServicesCourseReview {
-  id?: string;
-  courseId?: string;
-  userId?: string;
-  rating?: number;
-  title?: string | null;
   content?: string | null;
-  isVerifiedPurchase?: boolean;
+  courseId?: string;
+  createdAt?: string;
   helpfulCount?: number;
+  id?: string;
   isApproved?: boolean;
   isFeatured?: boolean;
-  createdAt?: string;
+  isVerifiedPurchase?: boolean;
+  rating?: number;
+  title?: string | null;
+  userId?: string;
 }
 
 export interface LearningExperienceSocialServicesCourseWishlist {
-  id?: string;
   courseId?: string;
-  userId?: string;
+  createdAt?: string;
+  id?: string;
   notifyOnSale?: boolean;
   notifyOnUpdate?: boolean;
-  createdAt?: string;
+  userId?: string;
 }
 
 export interface LearningExperienceSocialServicesCreateDiscussionInput {
-  courseId?: string;
-  title?: string | null;
   content?: string | null;
   contentId?: string | null;
+  courseId?: string;
+  title?: string | null;
 }
 
 export interface LearningExperienceSocialServicesCreateReplyInput {
-  discussionId?: string;
   content?: string | null;
+  discussionId?: string;
   parentReplyId?: string | null;
 }
 
 export interface LearningExperienceSocialServicesCreateReviewInput {
+  content?: string | null;
   courseId?: string;
+  enrollmentId?: string | null;
   rating?: number;
   title?: string | null;
-  content?: string | null;
-  enrollmentId?: string | null;
 }
 
 export interface LearningExperienceSocialServicesDiscussionReply {
-  id?: string;
-  discussionId?: string;
   authorId?: string;
-  parentReplyId?: string | null;
   content?: string | null;
-  isAcceptedAnswer?: boolean;
-  upvoteCount?: number;
   createdAt?: string;
+  discussionId?: string;
+  id?: string;
+  isAcceptedAnswer?: boolean;
+  parentReplyId?: string | null;
+  upvoteCount?: number;
 }
 
 export interface LearningExperienceSocialServicesPersonalizedFeedItem {
-  id?: string;
-  itemType?: LearningExperienceSocialFeedItemType;
   courseId?: string | null;
-  discussionId?: string | null;
-  reviewId?: string | null;
-  learningPathId?: string | null;
-  relevanceScore?: number;
-  reason?: string | null;
-  isViewed?: boolean;
-  expiresAt?: string;
   createdAt?: string;
+  discussionId?: string | null;
+  expiresAt?: string;
+  id?: string;
+  isViewed?: boolean;
+  itemType?: LearningExperienceSocialFeedItemType;
+  learningPathId?: string | null;
+  reason?: string | null;
+  relevanceScore?: number;
+  reviewId?: string | null;
 }
 
 export interface LearningExperienceSocialServicesWishlistPreferencesInput {
@@ -5509,254 +5520,254 @@ export interface LearningExperienceSocialServicesWishlistPreferencesInput {
 }
 
 export interface LearningWorkspacesLearnerAnnouncement {
-  discussionId?: string;
-  courseId?: string;
-  courseTitle?: string | null;
-  courseSlug?: string | null;
-  title?: string | null;
   content?: string | null;
+  courseId?: string;
+  courseSlug?: string | null;
+  courseTitle?: string | null;
   createdAt?: string;
+  discussionId?: string;
   lastActivityAt?: string | null;
+  title?: string | null;
 }
 
 export interface LearningWorkspacesLearnerAssessmentDeadline {
   assessmentId?: string;
-  courseId?: string;
-  courseTitle?: string | null;
-  courseSlug?: string | null;
-  contentId?: string | null;
-  groupId?: string | null;
-  title?: string | null;
-  type?: string | null;
-  maxScore?: number;
-  passingScore?: number;
   availableFrom?: string | null;
   availableUntil?: string | null;
+  contentId?: string | null;
+  courseId?: string;
+  courseSlug?: string | null;
+  courseTitle?: string | null;
   dueAt?: string | null;
+  groupId?: string | null;
+  maxScore?: number;
+  passingScore?: number;
   submissionStatus?: string | null;
+  title?: string | null;
+  type?: string | null;
 }
 
 export interface LearningWorkspacesLearnerAssessment {
+  allowLateSubmissions?: boolean;
   assessmentId?: string;
-  contentId?: string | null;
-  groupId?: string | null;
-  title?: string | null;
-  description?: string | null;
-  type?: string | null;
-  maxScore?: number;
-  passingScore?: number;
-  timeLimitMinutes?: number | null;
-  maxAttempts?: number | null;
-  isRequired?: boolean;
-  order?: number;
   availableFrom?: string | null;
   availableUntil?: string | null;
+  contentId?: string | null;
+  description?: string | null;
   dueAt?: string | null;
-  allowLateSubmissions?: boolean;
+  groupId?: string | null;
+  isRequired?: boolean;
   lateSubmissionDeadline?: string | null;
-  submissionModalities?: string | null;
+  maxAttempts?: number | null;
+  maxScore?: number;
+  order?: number;
+  passingScore?: number;
   presentationMode?: string | null;
+  submissionModalities?: string | null;
+  timeLimitMinutes?: number | null;
+  title?: string | null;
+  type?: string | null;
 }
 
 export interface LearningWorkspacesLearnerAssessmentGroup {
+  description?: string | null;
   groupId?: string;
   name?: string | null;
-  description?: string | null;
-  weightPercent?: number;
   order?: number;
+  weightPercent?: number;
 }
 
 export interface LearningWorkspacesLearnerAssessmentSubmission {
-  submissionId?: string;
   assessmentId?: string;
-  enrollmentId?: string;
   attemptNumber?: number;
-  score?: number | null;
-  passed?: boolean | null;
-  startedAt?: string;
-  submittedAt?: string | null;
-  gradedAt?: string | null;
+  enrollmentId?: string;
   feedback?: string | null;
-  status?: string | null;
+  gradedAt?: string | null;
   isLate?: boolean;
+  passed?: boolean | null;
+  score?: number | null;
+  startedAt?: string;
+  status?: string | null;
+  submissionId?: string;
+  submittedAt?: string | null;
 }
 
 export interface LearningWorkspacesLearnerCertificate {
   certificateId?: string;
-  enrollmentId?: string;
+  certificateNumber?: string | null;
   courseId?: string;
   courseName?: string | null;
-  certificateNumber?: string | null;
-  recipientName?: string | null;
-  issuedAt?: string;
+  enrollmentId?: string;
   expiresAt?: string | null;
-  verificationUrl?: string | null;
+  issuedAt?: string;
+  recipientName?: string | null;
   status?: string | null;
+  verificationUrl?: string | null;
 }
 
 export interface LearningWorkspacesLearnerCohort {
   cohortId?: string;
-  name?: string | null;
-  description?: string | null;
-  startDate?: string;
-  endDate?: string;
-  maxCapacity?: number;
   currentEnrollmentCount?: number;
-  status?: string | null;
+  description?: string | null;
+  endDate?: string;
   instructorId?: string | null;
+  maxCapacity?: number;
   meetingSchedule?: string | null;
+  name?: string | null;
+  startDate?: string;
+  status?: string | null;
 }
 
 export interface LearningWorkspacesLearnerContent {
-  contentId?: string;
-  parentId?: string | null;
-  title?: string | null;
-  description?: string | null;
-  type?: string | null;
-  body?: string | null;
-  lessonFormat?: string | null;
   activitySettings?: string | null;
-  sortOrder?: number;
-  isRequired?: boolean;
-  gradingMethod?: string | null;
-  maxPoints?: number | null;
+  body?: string | null;
+  contentId?: string;
+  description?: string | null;
   estimatedMinutes?: number | null;
+  gradingMethod?: string | null;
+  isRequired?: boolean;
+  lessonFormat?: string | null;
+  maxPoints?: number | null;
+  parentId?: string | null;
+  sortOrder?: number;
+  title?: string | null;
+  type?: string | null;
   visibility?: string | null;
 }
 
 export interface LearningWorkspacesLearnerContentProgress {
+  attempts?: number;
+  completedAt?: string | null;
   contentId?: string;
-  status?: string | null;
-  progressPercentage?: number;
   firstAccessedAt?: string | null;
   lastAccessedAt?: string | null;
-  completedAt?: string | null;
-  timeSpentSeconds?: number;
-  score?: number | null;
   maxScore?: number | null;
-  attempts?: number;
+  progressPercentage?: number;
+  score?: number | null;
+  status?: string | null;
+  timeSpentSeconds?: number;
 }
 
 export interface LearningWorkspacesLearnerCourseSummary {
-  courseId?: string;
-  enrollmentId?: string;
-  title?: string | null;
-  slug?: string | null;
-  description?: string | null;
-  thumbnail?: string | null;
   category?: string | null;
-  difficulty?: string | null;
-  estimatedHours?: number | null;
-  enrollmentStatus?: string | null;
-  completionStatus?: string | null;
-  progressPercentage?: number;
-  finalGrade?: number | null;
-  enrolledAt?: string;
-  totalItems?: number;
   completedItems?: number;
-  remainingMinutes?: number;
+  completionStatus?: string | null;
+  courseId?: string;
   currentContentId?: string | null;
   currentContentTitle?: string | null;
   currentContentType?: string | null;
+  description?: string | null;
+  difficulty?: string | null;
+  enrolledAt?: string;
+  enrollmentId?: string;
+  enrollmentStatus?: string | null;
+  estimatedHours?: number | null;
+  finalGrade?: number | null;
+  progressPercentage?: number;
+  remainingMinutes?: number;
+  slug?: string | null;
+  thumbnail?: string | null;
+  title?: string | null;
+  totalItems?: number;
 }
 
 export interface LearningWorkspacesLearnerCourseWorkspace {
-  course?: LearningWorkspacesLearnerCourseSummary;
-  content?: Array<LearningWorkspacesLearnerContent> | null;
-  progress?: Array<LearningWorkspacesLearnerContentProgress> | null;
-  cohort?: LearningWorkspacesLearnerCohort;
-  calendar?: Array<LearningWorkspacesLearnerScheduleEntry> | null;
   assessmentGroups?: Array<LearningWorkspacesLearnerAssessmentGroup> | null;
   assessments?: Array<LearningWorkspacesLearnerAssessment> | null;
-  submissions?: Array<LearningWorkspacesLearnerAssessmentSubmission> | null;
-  discussions?: Array<LearningWorkspacesLearnerDiscussion> | null;
+  calendar?: Array<LearningWorkspacesLearnerScheduleEntry> | null;
   certificates?: Array<LearningWorkspacesLearnerCertificate> | null;
+  cohort?: LearningWorkspacesLearnerCohort;
+  content?: Array<LearningWorkspacesLearnerContent> | null;
+  course?: LearningWorkspacesLearnerCourseSummary;
+  discussions?: Array<LearningWorkspacesLearnerDiscussion> | null;
+  progress?: Array<LearningWorkspacesLearnerContentProgress> | null;
+  submissions?: Array<LearningWorkspacesLearnerAssessmentSubmission> | null;
 }
 
 export interface LearningWorkspacesLearnerDashboard {
+  announcements?: Array<LearningWorkspacesLearnerAnnouncement> | null;
+  certificates?: Array<LearningWorkspacesLearnerCertificate> | null;
   courses?: Array<LearningWorkspacesLearnerCourseSummary> | null;
-  upcoming?: Array<LearningWorkspacesLearnerScheduleEntry> | null;
   deadlines?: Array<LearningWorkspacesLearnerAssessmentDeadline> | null;
   grades?: Array<LearningWorkspacesLearnerGradeSummary> | null;
-  certificates?: Array<LearningWorkspacesLearnerCertificate> | null;
-  announcements?: Array<LearningWorkspacesLearnerAnnouncement> | null;
+  upcoming?: Array<LearningWorkspacesLearnerScheduleEntry> | null;
 }
 
 export interface LearningWorkspacesLearnerDiscussion {
-  discussionId?: string;
-  contentId?: string | null;
   authorId?: string;
-  title?: string | null;
   content?: string | null;
+  contentId?: string | null;
+  createdAt?: string;
+  discussionId?: string;
   isPinned?: boolean;
   isResolved?: boolean;
-  replyCount?: number;
-  viewCount?: number;
   lastActivityAt?: string | null;
-  createdAt?: string;
+  replyCount?: number;
+  title?: string | null;
+  viewCount?: number;
 }
 
 export interface LearningWorkspacesLearnerGradeItem {
   assessmentId?: string;
-  contentId?: string | null;
-  groupId?: string | null;
-  title?: string | null;
-  type?: string | null;
-  maxScore?: number;
-  passingScore?: number;
   availableFrom?: string | null;
   availableUntil?: string | null;
+  contentId?: string | null;
   dueAt?: string | null;
-  submissionStatus?: string | null;
-  score?: number | null;
-  passed?: boolean | null;
   feedback?: string | null;
   gradedAt?: string | null;
+  groupId?: string | null;
+  maxScore?: number;
+  passed?: boolean | null;
+  passingScore?: number;
+  score?: number | null;
+  submissionStatus?: string | null;
+  title?: string | null;
+  type?: string | null;
 }
 
 export interface LearningWorkspacesLearnerGradeSummary {
   courseId?: string;
-  courseTitle?: string | null;
   courseSlug?: string | null;
+  courseTitle?: string | null;
+  earnedPoints?: number | null;
   finalGrade?: number | null;
   gradedAssessments?: number;
-  totalAssessments?: number;
-  earnedPoints?: number | null;
-  possiblePoints?: number | null;
-  percentage?: number | null;
   groups?: Array<LearningWorkspacesLearnerAssessmentGroup> | null;
   items?: Array<LearningWorkspacesLearnerGradeItem> | null;
+  percentage?: number | null;
+  possiblePoints?: number | null;
+  totalAssessments?: number;
 }
 
 export interface LearningWorkspacesLearnerScheduleEntry {
-  courseId?: string;
-  courseTitle?: string | null;
-  courseSlug?: string | null;
-  cohortId?: string;
-  cohortName?: string | null;
-  scheduleItemId?: string;
-  contentId?: string | null;
   assessmentId?: string | null;
-  type?: string | null;
-  title?: string | null;
-  startsAt?: string | null;
-  endsAt?: string | null;
   availableFrom?: string | null;
   availableUntil?: string | null;
+  cohortId?: string;
+  cohortName?: string | null;
+  contentId?: string | null;
+  courseId?: string;
+  courseSlug?: string | null;
+  courseTitle?: string | null;
   dueAt?: string | null;
+  endsAt?: string | null;
   location?: string | null;
   meetingUrl?: string | null;
+  scheduleItemId?: string;
+  startsAt?: string | null;
   status?: string | null;
+  title?: string | null;
+  type?: string | null;
 }
 
 export interface LearningWorkspacesLearnerSearchResult {
-  id?: string;
   courseId?: string;
   courseSlug?: string | null;
-  kind?: string | null;
-  title?: string | null;
   description?: string | null;
+  id?: string;
+  kind?: string | null;
   route?: string | null;
+  title?: string | null;
 }
 
 export interface Money {
@@ -5765,11 +5776,11 @@ export interface Money {
 }
 
 export interface MvcProblemDetails {
-  type?: string | null;
-  title?: string | null;
-  status?: number | null;
   detail?: string | null;
   instance?: string | null;
+  status?: number | null;
+  title?: string | null;
+  type?: string | null;
   [key: string]: any;
 }
 
@@ -5780,19 +5791,19 @@ export type ObjectsAttestationConveyancePreference = 'None' | 'Indirect' | 'Dire
 export type ObjectsAttestationStatementFormatIdentifier = 'Packed' | 'Tpm' | 'AndroidKey' | 'AndroidSafetyNet' | 'FidoU2f' | 'Apple' | 'None';
 
 export interface ObjectsAuthenticationExtensionsClientInputs {
-  'example.extension.bool'?: boolean | null;
-  exts?: boolean | null;
-  uvm?: boolean | null;
   credProps?: boolean | null;
-  prf?: ObjectsAuthenticationExtensionsPRFInputs;
-  largeBlob?: ObjectsAuthenticationExtensionsLargeBlobInputs;
   credentialProtectionPolicy?: ObjectsCredentialProtectionPolicy;
   enforceCredentialProtectionPolicy?: boolean | null;
+  'example.extension.bool'?: boolean | null;
+  exts?: boolean | null;
+  largeBlob?: ObjectsAuthenticationExtensionsLargeBlobInputs;
+  prf?: ObjectsAuthenticationExtensionsPRFInputs;
+  uvm?: boolean | null;
 }
 
 export interface ObjectsAuthenticationExtensionsLargeBlobInputs {
-  support?: ObjectsLargeBlobSupport;
   read?: boolean;
+  support?: ObjectsLargeBlobSupport;
   write?: string | null;
 }
 
@@ -5817,9 +5828,9 @@ export type ObjectsCredentialProtectionPolicy = 'UserVerificationOptional' | 'Us
 export type ObjectsLargeBlobSupport = 'Required' | 'Preferred';
 
 export interface ObjectsPublicKeyCredentialDescriptor {
-  type?: ObjectsPublicKeyCredentialType;
   id?: string | null;
   transports?: Array<ObjectsAuthenticatorTransport> | null;
+  type?: ObjectsPublicKeyCredentialType;
 }
 
 export type ObjectsPublicKeyCredentialHint = 'SecurityKey' | 'ClientDevice' | 'Hybrid';
@@ -5831,123 +5842,123 @@ export type ObjectsResidentKeyRequirement = 'Required' | 'Preferred' | 'Discoura
 export type ObjectsUserVerificationRequirement = 'Required' | 'Preferred' | 'Discouraged';
 
 export interface PagedResultOfGameGuildCommerceProductsProductDto {
-  items?: Array<CommerceProductsProduct> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+  items?: Array<CommerceProductsProduct> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
 }
 
 export interface PagedResultOfGameGuildCommerceProductsPromoCodeDto {
-  items?: Array<CommerceProductsPromoCode> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+  items?: Array<CommerceProductsPromoCode> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
 }
 
 export interface PagedResultOfGameGuildCommerceProductsSupportTicketDto {
-  items?: Array<CommerceProductsSupportTicket> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+  items?: Array<CommerceProductsSupportTicket> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
 }
 
 export interface PagedResultOfGameGuildCommerceSubscriptionsSubscription {
-  items?: Array<CommerceSubscriptionsSubscription> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+  items?: Array<CommerceSubscriptionsSubscription> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
 }
 
 export interface PagedResultOfGameGuildCommerceSubscriptionsSubscriptionNotificationDto {
-  items?: Array<CommerceSubscriptionsSubscriptionNotification> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+  items?: Array<CommerceSubscriptionsSubscriptionNotification> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
 }
 
 export interface PagedResultOfGameGuildIdentityTenantsTenant {
-  items?: Array<IdentityTenantsTenant> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+  items?: Array<IdentityTenantsTenant> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
 }
 
 export interface PagedResultOfGameGuildIdentityTenantsTenantAuditLogEntry {
-  items?: Array<IdentityTenantsTenantAuditLogEntry> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+  items?: Array<IdentityTenantsTenantAuditLogEntry> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
 }
 
 export interface PagedResultOfGameGuildIdentityUsersUserDto {
-  items?: Array<IdentityUsersUserDto> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+  items?: Array<IdentityUsersUserDto> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
 }
 
 export interface PagedResultOfGameGuildIdentityUsersUserNotificationDto {
-  items?: Array<IdentityUsersUserNotificationDto> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+  items?: Array<IdentityUsersUserNotificationDto> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
 }
 
 export interface PagedResultOfGameGuildIdentityUsersUserProfileDto {
-  items?: Array<IdentityUsersUserProfileDto> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+  items?: Array<IdentityUsersUserProfileDto> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
 }
 
 export type ProgramCategory =
@@ -5973,65 +5984,65 @@ export type ProgramCategory =
 
 export interface ProjectsAddCollaboratorInput {
   email?: string | null;
-  permissions?: Array<IdentityAuthorizationPermissionType> | null;
   expiresAt?: string | null;
   message?: string | null;
+  permissions?: Array<IdentityAuthorizationPermissionType> | null;
   requireAcceptance?: boolean;
 }
 
 export interface ProjectsAddProjectCollaboratorInput {
-  userId: string;
-  role?: string | null;
   permissions?: string | null;
+  role?: string | null;
+  userId: string;
 }
 
 export interface ProjectsCollaborator {
   id?: string;
+  isActive?: boolean;
+  joinedAt?: string;
+  permissions?: string | null;
+  role?: string | null;
   userId?: string;
   userName?: string | null;
-  role?: string | null;
-  permissions?: string | null;
-  joinedAt?: string;
-  isActive?: boolean;
 }
 
 export interface ProjectsCreateProjectInput {
-  title: string;
+  categoryId?: string | null;
   description?: string | null;
-  shortDescription?: string | null;
+  downloadUrl?: string | null;
   imageUrl?: string | null;
   repositoryUrl?: string | null;
-  websiteUrl?: string | null;
-  downloadUrl?: string | null;
-  type?: ProjectsProjectType;
-  categoryId?: string | null;
-  visibility?: ContentVisibility;
+  shortDescription?: string | null;
   status?: ContentStatus;
   tags?: Array<string> | null;
+  title: string;
+  type?: ProjectsProjectType;
+  visibility?: ContentVisibility;
+  websiteUrl?: string | null;
 }
 
 export type ProjectsDevelopmentStatus = 'Planning' | 'InDevelopment' | 'Alpha' | 'Beta' | 'Released' | 'Completed' | 'OnHold' | 'Cancelled' | 'Archived';
 
 export interface ProjectsEffectivePermission {
+  expiresAt?: string | null;
+  isOwner?: boolean;
+  permissions?: Array<IdentityAuthorizationPermissionType> | null;
   resourceId?: string;
   resourceType?: string | null;
-  permissions?: Array<IdentityAuthorizationPermissionType> | null;
-  isOwner?: boolean;
-  expiresAt?: string | null;
 }
 
 export interface ProjectsInvitationResult {
-  success?: boolean;
   errorMessage?: string | null;
   invitationId?: string | null;
+  success?: boolean;
 }
 
 export interface ProjectsInviteProjectCollaboratorInput {
-  userId?: string | null;
   email?: string | null;
-  role?: string | null;
-  permissions?: string | null;
   expiresAt?: string | null;
+  permissions?: string | null;
+  role?: string | null;
+  userId?: string | null;
 }
 
 export interface ProjectsLinkProjectStoreProductInput {
@@ -6039,414 +6050,414 @@ export interface ProjectsLinkProjectStoreProductInput {
 }
 
 export interface ProjectsPermissionUpdateResult {
-  success?: boolean;
   errorMessage?: string | null;
+  success?: boolean;
 }
 
 export interface ProjectsProject {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  title: string;
-  slug: string;
-  shortDescription?: string | null;
-  description?: string | null;
-  imageUrl?: string | null;
-  type?: ProjectsProjectType;
-  developmentStatus?: ProjectsDevelopmentStatus;
-  status: ContentStatus;
-  visibility: ContentVisibility;
+  averageRating?: number | null;
   category?: ProjectsProjectCategory;
   categoryId?: string | null;
-  websiteUrl?: string | null;
-  repositoryUrl?: string | null;
-  socialLinks?: string | null;
-  downloadUrl?: string | null;
-  tags?: string | null;
-  featuredImageUrl?: string | null;
-  license?: string | null;
-  copyright?: string | null;
-  publishedAt?: string | null;
-  projectMetadata?: ProjectsProjectMetadata;
-  versions?: Array<ProjectsProjectVersion> | null;
   collaborators?: Array<ProjectsProjectCollaborator> | null;
-  releases?: Array<ProjectsProjectRelease> | null;
-  teams?: Array<ProjectsProjectTeam> | null;
-  followers?: Array<ProjectsProjectFollower> | null;
-  feedbacks?: Array<ProjectsProjectFeedback> | null;
-  jamSubmissions?: Array<ProjectsProjectJamSubmission> | null;
+  copyright?: string | null;
+  createdAt: string;
   createdBy?: IdentityUsersUser;
   createdById?: string | null;
-  isActive?: boolean;
-  latestVersion?: ProjectsProjectVersion;
-  followerCount?: number;
-  averageRating?: number | null;
+  deletedAt?: string | null;
+  description?: string | null;
+  developmentStatus?: ProjectsDevelopmentStatus;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  downloadUrl?: string | null;
+  featuredImageUrl?: string | null;
   feedbackCount?: number;
+  feedbacks?: Array<ProjectsProjectFeedback> | null;
+  followerCount?: number;
+  followers?: Array<ProjectsProjectFollower> | null;
+  id?: string;
+  imageUrl?: string | null;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
   isInJam?: boolean;
+  isNew?: boolean;
+  jamSubmissions?: Array<ProjectsProjectJamSubmission> | null;
+  latestVersion?: ProjectsProjectVersion;
+  license?: string | null;
+  projectMetadata?: ProjectsProjectMetadata;
+  publishedAt?: string | null;
+  releases?: Array<ProjectsProjectRelease> | null;
+  repositoryUrl?: string | null;
+  shortDescription?: string | null;
+  slug: string;
+  socialLinks?: string | null;
+  status: ContentStatus;
+  tags?: string | null;
   teamCount?: number;
+  teams?: Array<ProjectsProjectTeam> | null;
+  tenantId?: string | null;
+  title: string;
+  type?: ProjectsProjectType;
+  updatedAt: string;
+  version?: number;
+  versions?: Array<ProjectsProjectVersion> | null;
+  visibility: ContentVisibility;
+  websiteUrl?: string | null;
 }
 
 export interface ProjectsProjectCategory {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  createdAt: string;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   name: string;
   projects?: Array<ProjectsProject> | null;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface ProjectsProjectCollaborator {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  createdAt: string;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  projectId?: string;
-  project?: ProjectsProject;
-  userId?: string;
-  user?: IdentityUsersUser;
-  role: string;
-  permissions: string;
   isActive?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   joinedAt?: string;
   leftAt?: string | null;
+  permissions: string;
+  project?: ProjectsProject;
+  projectId?: string;
+  role: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId?: string;
+  version?: number;
 }
 
 export interface ProjectsProjectCollaboratorDto {
-  userId?: string;
-  userName?: string | null;
   email?: string | null;
-  profilePictureUrl?: string | null;
-  role?: string | null;
-  permissions?: Array<IdentityAuthorizationPermissionType> | null;
-  joinedAt?: string;
+  expiresAt?: string | null;
   invitedBy?: string | null;
   isOwner?: boolean;
-  expiresAt?: string | null;
+  joinedAt?: string;
+  permissions?: Array<IdentityAuthorizationPermissionType> | null;
+  profilePictureUrl?: string | null;
+  role?: string | null;
+  userId?: string;
+  userName?: string | null;
 }
 
 export interface ProjectsProjectFeedback {
+  categories?: string | null;
+  content?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  helpfulVotes?: number;
+  id?: string;
+  isDeleted?: boolean;
+  isFeatured?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  projectId?: string;
-  project?: ProjectsProject;
-  userId?: string;
-  user?: IdentityUsersUser;
-  rating?: number;
-  title: string;
-  content?: string | null;
-  categories?: string | null;
-  isFeatured?: boolean;
   isVerified?: boolean;
-  status?: ContentStatus;
-  helpfulVotes?: number;
-  totalVotes?: number;
   platform?: string | null;
+  project?: ProjectsProject;
+  projectId?: string;
   projectVersion?: string | null;
+  rating?: number;
+  status?: ContentStatus;
+  tenantId?: string | null;
+  title: string;
+  totalVotes?: number;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId?: string;
+  version?: number;
 }
 
 export interface ProjectsProjectFollower {
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  emailNotifications?: boolean;
+  followedAt?: string;
+  id?: string;
+  isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  projectId?: string;
-  project?: ProjectsProject;
-  userId?: string;
-  user?: IdentityUsersUser;
-  followedAt?: string;
   notificationSettings?: string | null;
-  emailNotifications?: boolean;
+  project?: ProjectsProject;
+  projectId?: string;
   pushNotifications?: boolean;
+  tenantId?: string | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId?: string;
+  version?: number;
 }
 
 export interface ProjectsProjectInvitation {
+  expiresAt?: string | null;
   id?: string;
+  invitedAt?: string;
+  invitedByUserId?: string;
+  invitedEmail?: string | null;
+  invitedUserId?: string | null;
+  permissions?: string | null;
   projectId?: string;
   projectTitle?: string | null;
-  invitedUserId?: string | null;
-  invitedEmail?: string | null;
-  invitedByUserId?: string;
-  role?: string | null;
-  permissions?: string | null;
-  token?: string | null;
-  status?: ProjectsProjectInvitationStatus;
-  invitedAt?: string;
-  expiresAt?: string | null;
   respondedAt?: string | null;
+  role?: string | null;
+  status?: ProjectsProjectInvitationStatus;
+  token?: string | null;
 }
 
 export type ProjectsProjectInvitationStatus = 'Pending' | 'Accepted' | 'Declined' | 'Revoked' | 'Expired';
 
 export interface ProjectsProjectJamSubmission {
+  awardDetails?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  finalScore?: number | null;
+  hasAward?: boolean;
+  id?: string;
+  isDeleted?: boolean;
+  isEligible?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  projectId?: string;
-  project?: ProjectsProject;
-  jamId?: string | null;
   jam?: GameJamsJam;
-  submittedAt?: string;
-  isEligible?: boolean;
-  submissionNotes?: string | null;
-  finalScore?: number | null;
-  ranking?: number | null;
-  hasAward?: boolean;
-  awardDetails?: string | null;
+  jamId?: string | null;
   metadata?: string | null;
+  project?: ProjectsProject;
+  projectId?: string;
+  ranking?: number | null;
   scores?: Array<GameJamsJamScore> | null;
+  submissionNotes?: string | null;
+  submittedAt?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface ProjectsProjectMetadata {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
   createdAt: string;
-  updatedAt: string;
   deletedAt?: string | null;
-  tenantId?: string | null;
-  project: ProjectsProject;
-  projectId?: string;
-  viewCount?: number;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
   downloadCount?: number;
   followerCount?: number;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  project: ProjectsProject;
+  projectId?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
+  viewCount?: number;
 }
 
 export interface ProjectsProjectRelease {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
+  buildNumber?: string | null;
+  checksum?: string | null;
   createdAt: string;
-  updatedAt: string;
   deletedAt?: string | null;
-  tenantId?: string | null;
-  projectId?: string;
-  project?: ProjectsProject;
-  title: string;
   description?: string | null;
-  releaseVersion: string;
-  releasedAt?: string;
-  isLatest?: boolean;
-  isPrerelease?: boolean;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  downloadCount?: number;
   downloadUrl?: string | null;
   fileSize?: number | null;
-  downloadCount?: number;
-  releaseNotes?: string | null;
-  checksum?: string | null;
-  systemRequirements?: string | null;
-  supportedPlatforms?: string | null;
-  releaseType?: string | null;
-  status?: ContentStatus;
-  buildNumber?: string | null;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isLatest?: boolean;
+  isNew?: boolean;
+  isPrerelease?: boolean;
+  project?: ProjectsProject;
+  projectId?: string;
   releaseMetadata?: string | null;
+  releaseNotes?: string | null;
+  releaseType?: string | null;
+  releaseVersion: string;
+  releasedAt?: string;
+  status?: ContentStatus;
+  supportedPlatforms?: string | null;
+  systemRequirements?: string | null;
+  tenantId?: string | null;
+  title: string;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface ProjectsProjectRoleTemplate {
-  name?: string | null;
   description?: string | null;
+  name?: string | null;
   permissions?: Array<IdentityAuthorizationPermissionType> | null;
 }
 
 export interface ProjectsProjectStatistics {
-  projectId?: string;
-  followerCount?: number;
-  feedbackCount?: number;
-  averageRating?: number | null;
-  totalDownloads?: number;
   activeTeamCount?: number;
-  collaboratorCount?: number;
-  releaseCount?: number;
-  jamSubmissionCount?: number;
+  averageRating?: number | null;
   awardCount?: number;
-  viewsLast30Days?: number;
-  downloadsLast30Days?: number;
-  newFollowersLast30Days?: number;
   calculatedAt?: string;
-  trendingScore?: number;
+  collaboratorCount?: number;
+  downloadsLast30Days?: number;
+  feedbackCount?: number;
+  followerCount?: number;
+  jamSubmissionCount?: number;
+  newFollowersLast30Days?: number;
   popularityRank?: number | null;
+  projectId?: string;
+  releaseCount?: number;
+  totalDownloads?: number;
+  trendingScore?: number;
+  viewsLast30Days?: number;
 }
 
 export interface ProjectsProjectStoreProductProjection {
   linkId?: string;
-  projectId?: string;
   productId?: string;
+  projectId?: string;
 }
 
 export interface ProjectsProjectTeam {
+  assignedAt?: string;
+  contributionPercentage?: number;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  endedAt?: string | null;
+  id?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  projectId?: string;
-  project?: ProjectsProject;
-  teamId?: string;
-  team?: ProjectsTeam;
-  role: string;
-  assignedAt?: string;
-  endedAt?: string | null;
-  isActive?: boolean;
-  permissions?: string | null;
   notes?: string | null;
-  contributionPercentage?: number;
+  permissions?: string | null;
+  project?: ProjectsProject;
+  projectId?: string;
+  role: string;
+  team?: ProjectsTeam;
+  teamId?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export type ProjectsProjectType = 'Game' | 'Tool' | 'Art' | 'Music' | 'Educational' | 'Plugin' | 'Template' | 'Library' | 'Other';
 
 export interface ProjectsProjectVersion {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
   createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  project: ProjectsProject;
-  projectId?: string;
-  versionNumber: string;
-  releaseNotes?: string | null;
-  status: string;
-  downloadCount?: number;
   createdBy: IdentityUsersUser;
   createdById?: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  downloadCount?: number;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  project: ProjectsProject;
+  projectId?: string;
+  releaseNotes?: string | null;
+  status: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
+  versionNumber: string;
 }
 
 export interface ProjectsShareProjectInput {
-  userId: string;
-  role?: string | null;
   permissions?: string | null;
+  role?: string | null;
+  userId: string;
 }
 
 export interface ProjectsShareProjectWithRoleInput {
+  expiresAt?: string | null;
+  message?: string | null;
+  notifyUsers?: boolean;
+  requireAcceptance?: boolean;
   roleName?: string | null;
   userEmails?: Array<string> | null;
   userIds?: Array<string> | null;
-  expiresAt?: string | null;
-  message?: string | null;
-  requireAcceptance?: boolean;
-  notifyUsers?: boolean;
 }
 
 export interface ProjectsShareResult {
-  success?: boolean;
   errorMessage?: string | null;
-  successCount?: number;
   failureCount?: number;
+  success?: boolean;
+  successCount?: number;
 }
 
 export interface ProjectsTeam {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  createdAt: string;
+  deletedAt?: string | null;
+  description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  name: string;
-  description?: string | null;
   isActive?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   members?: Array<ProjectsTeamMember> | null;
+  name: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface ProjectsTeamMember {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  createdAt: string;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  teamId?: string;
-  team?: ProjectsTeam;
-  userId?: string;
-  user?: IdentityUsersUser;
-  role?: string | null;
-  joinedAt?: string;
   isActive?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  joinedAt?: string;
+  role?: string | null;
+  team?: ProjectsTeam;
+  teamId?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId?: string;
+  version?: number;
 }
 
 export interface ProjectsUpdateCollaboratorInput {
-  permissions?: Array<IdentityAuthorizationPermissionType> | null;
   expiresAt?: string | null;
+  permissions?: Array<IdentityAuthorizationPermissionType> | null;
 }
 
 export interface ProjectsUpdateProjectCollaboratorInput {
-  role?: string | null;
   permissions?: string | null;
+  role?: string | null;
 }
 
 export interface ProjectsUpdateProjectInput {
-  title?: string | null;
+  categoryId?: string | null;
   description?: string | null;
-  shortDescription?: string | null;
+  downloadUrl?: string | null;
   imageUrl?: string | null;
   repositoryUrl?: string | null;
-  websiteUrl?: string | null;
-  downloadUrl?: string | null;
-  type?: ProjectsProjectType;
-  categoryId?: string | null;
-  visibility?: ContentVisibility;
+  shortDescription?: string | null;
   status?: ContentStatus;
   tags?: Array<string> | null;
+  title?: string | null;
+  type?: ProjectsProjectType;
+  visibility?: ContentVisibility;
+  websiteUrl?: string | null;
 }
 
 export interface ResourcesArchiveResourceUsageRecordsInput {
@@ -6463,113 +6474,113 @@ export interface ResourcesCleanupOrphanedResourcesInput {
 }
 
 export interface ResourcesEffectiveSettingOutput {
+  isUserOverride?: boolean;
   key?: string | null;
   value?: string | null;
-  isUserOverride?: boolean;
 }
 
 export interface ResourcesRecordTenantResourceUsageInput {
-  resourceUsageType?: ResourcesResourceUsageType;
   count?: number;
-  periodStart?: string;
-  periodEnd?: string;
   metadata?: Record<string, string> | null;
+  periodEnd?: string;
+  periodStart?: string;
+  resourceUsageType?: ResourcesResourceUsageType;
 }
 
 export interface ResourcesRecordUserResourceUsageInput {
-  resourceUsageType?: ResourcesResourceUsageType;
   count?: number;
-  periodStart?: string;
-  periodEnd?: string;
   metadata?: Record<string, string> | null;
+  periodEnd?: string;
+  periodStart?: string;
+  resourceUsageType?: ResourcesResourceUsageType;
 }
 
 export interface ResourcesResourceMetadata {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  category?: string | null;
+  createdAt: string;
+  dataType?: string | null;
+  deletedAt?: string | null;
+  description?: string | null;
+  displayOrder?: number;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  key: string;
-  value?: string | null;
-  dataType?: string | null;
-  description?: string | null;
-  category?: string | null;
-  isSystemManaged?: boolean;
   isActive?: boolean;
-  displayOrder?: number;
-  userId?: string | null;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isSystemManaged?: boolean;
+  key: string;
   resourceId?: string | null;
   rowVersion?: string | null;
+  tenantId?: string | null;
+  updatedAt: string;
+  userId?: string | null;
+  value?: string | null;
+  version?: number;
 }
 
 export interface ResourcesResourceQuotaEnforcementResult {
-  isAllowed?: boolean;
-  isSoftLimitExceeded?: boolean;
-  isHardLimitExceeded?: boolean;
   currentUsage?: number;
-  softLimit?: number | null;
-  hardLimit?: number | null;
-  usagePercentage?: number;
   excessAmount?: number;
+  hardLimit?: number | null;
+  isAllowed?: boolean;
+  isHardLimitExceeded?: boolean;
+  isSoftLimitExceeded?: boolean;
   message?: string | null;
-  type?: ResourcesResourceUsageType;
   nextReset?: string | null;
   remainingQuota?: number | null;
+  softLimit?: number | null;
+  type?: ResourcesResourceUsageType;
+  usagePercentage?: number;
 }
 
 export type ResourcesResourceQuotaPeriod = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Unlimited';
 
 export interface ResourcesResourceQuotaOutput {
-  id?: string;
-  tenantId?: string;
-  type?: ResourcesResourceUsageType;
-  limit?: number;
   currentUsage?: number;
-  remainingQuota?: number;
-  usagePercentage?: number;
-  softLimitPercentage?: number;
-  isActive?: boolean;
-  period?: ResourcesResourceQuotaPeriod;
-  lastResetDate?: string;
-  nextResetDate?: string;
   description?: string | null;
-  isSoftLimitExceeded?: boolean;
+  hardLimit?: number | null;
+  id?: string;
+  isActive?: boolean;
   isHardLimitExceeded?: boolean;
+  isSoftLimitExceeded?: boolean;
+  lastResetDate?: string;
+  limit?: number;
+  nextResetDate?: string;
+  period?: ResourcesResourceQuotaPeriod;
+  remainingQuota?: number;
   shouldReset?: boolean;
   softLimit?: number | null;
-  hardLimit?: number | null;
+  softLimitPercentage?: number;
+  tenantId?: string;
+  type?: ResourcesResourceUsageType;
+  usagePercentage?: number;
 }
 
 export interface ResourcesResourceSettings {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  allowUserOverride?: boolean;
+  category?: string | null;
+  createdAt: string;
+  dataType?: string | null;
+  defaultValue?: string | null;
+  deletedAt?: string | null;
+  description?: string | null;
+  displayOrder?: number;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  key: string;
-  value?: string | null;
-  defaultValue?: string | null;
-  dataType?: string | null;
-  description?: string | null;
-  category?: string | null;
-  isSystemManaged?: boolean;
   isActive?: boolean;
-  allowUserOverride?: boolean;
-  displayOrder?: number;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isSystemManaged?: boolean;
+  key: string;
+  rowVersion?: string | null;
+  tenantId?: string | null;
+  updatedAt: string;
   userId?: string | null;
   validationRules?: string | null;
-  rowVersion?: string | null;
+  value?: string | null;
+  version?: number;
 }
 
 export type ResourcesResourceUsageType =
@@ -6604,30 +6615,30 @@ export type ResourcesResourceUsageType =
   | 'AiTokens';
 
 export interface ResourcesSetQuotaInput {
-  softLimit?: number | null;
   hardLimit?: number | null;
-  period?: ResourcesResourceQuotaPeriod;
   isActive?: boolean;
+  period?: ResourcesResourceQuotaPeriod;
   resetTime?: string | null;
+  softLimit?: number | null;
 }
 
 export interface ResourcesSetResourceMetadataInput {
-  value?: string | null;
+  category?: string | null;
   dataType?: string | null;
   description?: string | null;
-  category?: string | null;
   displayOrder?: number | null;
+  value?: string | null;
 }
 
 export interface ResourcesSetResourceSettingsInput {
-  value?: string | null;
-  defaultValue?: string | null;
-  dataType?: string | null;
-  description?: string | null;
-  category?: string | null;
   allowUserOverride?: boolean | null;
+  category?: string | null;
+  dataType?: string | null;
+  defaultValue?: string | null;
+  description?: string | null;
   displayOrder?: number | null;
   validationRules?: string | null;
+  value?: string | null;
 }
 
 export interface ResourcesSetUserResourceSettingsInput {
@@ -6641,100 +6652,100 @@ export interface ResourcesToggleResourceQuotaInput {
 export type ResourcesTrendGranularity = 'Daily' | 'Weekly' | 'Monthly';
 
 export interface ResourcesUsageRecord {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  averagePerDay?: number | null;
+  count?: number;
+  createdAt: string;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  type?: ResourcesResourceUsageType;
-  count?: number;
-  usageAmount?: number;
-  periodStart?: string;
-  periodEnd?: string;
-  averagePerDay?: number | null;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  metadata?: string | null;
   peakUsage?: number | null;
   peakUsageDate?: string | null;
-  metadata?: string | null;
-  source?: string | null;
-  userId?: string | null;
+  periodEnd?: string;
+  periodStart?: string;
   resourceId?: string | null;
   resourceQuotaId?: string | null;
+  source?: string | null;
+  tenantId?: string | null;
+  type?: ResourcesResourceUsageType;
+  updatedAt: string;
+  usageAmount?: number;
+  userId?: string | null;
+  version?: number;
 }
 
 export interface ResourcesUsageTrendDataPoint {
   period?: string;
-  totalUsage?: number;
   tenantCount?: number;
+  totalUsage?: number;
 }
 
 export interface ResourcesUsageTrendsResult {
-  type?: ResourcesResourceUsageType;
-  startDate?: string;
+  dataPoints?: Array<ResourcesUsageTrendDataPoint> | null;
   endDate?: string;
   granularity?: ResourcesTrendGranularity;
-  dataPoints?: Array<ResourcesUsageTrendDataPoint> | null;
+  startDate?: string;
+  type?: ResourcesResourceUsageType;
 }
 
 export interface SocialBlogBlogPost {
-  id?: string;
+  allowComments?: boolean;
   authorId?: string;
-  tenantId?: string | null;
-  title?: string | null;
-  slug?: string | null;
-  excerpt?: string | null;
+  commentsCount?: number;
   content?: string | null;
   coverImageUrl?: string | null;
-  status?: SocialBlogBlogPostStatus;
-  publishedAt?: string | null;
-  isFeatured?: boolean;
-  allowComments?: boolean;
-  viewsCount?: number;
-  likesCount?: number;
-  commentsCount?: number;
-  readTimeMinutes?: number;
   createdAt?: string;
+  excerpt?: string | null;
+  id?: string;
+  isFeatured?: boolean;
+  likesCount?: number;
+  publishedAt?: string | null;
+  readTimeMinutes?: number;
+  slug?: string | null;
+  status?: SocialBlogBlogPostStatus;
+  tenantId?: string | null;
+  title?: string | null;
   updatedAt?: string;
+  viewsCount?: number;
 }
 
 export type SocialBlogBlogPostStatus = 'Draft' | 'Published' | 'Archived';
 
 export interface SocialBlogCreateBlogPostInput {
   authorId?: string;
-  title?: string | null;
-  slug?: string | null;
   content?: string | null;
+  slug?: string | null;
   tenantId?: string | null;
+  title?: string | null;
 }
 
 export interface SocialFeedAddFeedItemInput {
-  userId?: string;
+  authorId?: string;
+  contentCreatedAt?: string | null;
   contentId?: string;
   contentType?: SocialFeedFeedContentType;
-  authorId?: string;
   reason?: SocialFeedFeedItemReason;
-  contentCreatedAt?: string | null;
   relevanceScore?: number;
+  userId?: string;
 }
 
 export type SocialFeedFeedContentType = 'Post' | 'BlogPost' | 'CourseReview' | 'ProjectUpdate' | 'Achievement' | 'CourseCompletion';
 
 export interface SocialFeedFeedItem {
-  id?: string;
-  userId?: string;
+  authorId?: string;
+  contentCreatedAt?: string;
   contentId?: string;
   contentType?: SocialFeedFeedContentType;
-  authorId?: string;
-  relevanceScore?: number;
-  reason?: SocialFeedFeedItemReason;
-  isRead?: boolean;
-  isHidden?: boolean;
-  contentCreatedAt?: string;
   createdAt?: string;
+  id?: string;
+  isHidden?: boolean;
+  isRead?: boolean;
+  reason?: SocialFeedFeedItemReason;
+  relevanceScore?: number;
+  userId?: string;
 }
 
 export type SocialFeedFeedItemReason = 'Following' | 'Trending' | 'Recommended' | 'Mentioned' | 'Replied' | 'Liked' | 'InNetwork';
@@ -6748,46 +6759,46 @@ export interface SocialGroupsChangeSocialGroupMemberRoleInput {
 }
 
 export interface SocialGroupsCreateSocialGroupInput {
-  ownerId?: string;
+  description?: string | null;
   name?: string | null;
+  ownerId?: string;
   slug?: string | null;
+  tenantId?: string | null;
   type?: SocialGroupsSocialGroupType;
   visibility?: SocialGroupsSocialGroupVisibility;
-  description?: string | null;
-  tenantId?: string | null;
 }
 
 export interface SocialGroupsJoinSocialGroupInput {
-  userId?: string;
   requestedRole?: SocialGroupsSocialGroupMemberRole;
+  userId?: string;
 }
 
 export interface SocialGroupsSocialGroup {
-  id?: string;
-  tenantId?: string | null;
-  ownerId?: string;
-  name?: string | null;
-  slug?: string | null;
-  description?: string | null;
-  type?: SocialGroupsSocialGroupType;
-  visibility?: SocialGroupsSocialGroupVisibility;
-  status?: SocialGroupsSocialGroupStatus;
-  memberCount?: number;
-  pendingMemberCount?: number;
   createdAt?: string;
+  description?: string | null;
+  id?: string;
+  memberCount?: number;
+  name?: string | null;
+  ownerId?: string;
+  pendingMemberCount?: number;
+  slug?: string | null;
+  status?: SocialGroupsSocialGroupStatus;
+  tenantId?: string | null;
+  type?: SocialGroupsSocialGroupType;
   updatedAt?: string;
+  visibility?: SocialGroupsSocialGroupVisibility;
 }
 
 export interface SocialGroupsSocialGroupMember {
-  id?: string;
+  approvedByUserId?: string | null;
   groupId?: string;
-  userId?: string;
+  id?: string;
+  joinedAt?: string | null;
+  removedAt?: string | null;
+  requestedAt?: string;
   role?: SocialGroupsSocialGroupMemberRole;
   status?: SocialGroupsSocialGroupMembershipStatus;
-  requestedAt?: string;
-  joinedAt?: string | null;
-  approvedByUserId?: string | null;
-  removedAt?: string | null;
+  userId?: string;
 }
 
 export type SocialGroupsSocialGroupMemberRole = 'Owner' | 'Admin' | 'Moderator' | 'Member';
@@ -6801,49 +6812,49 @@ export type SocialGroupsSocialGroupType = 'StudyGroup' | 'ProjectTeam' | 'Intere
 export type SocialGroupsSocialGroupVisibility = 'Public' | 'Private' | 'InviteOnly';
 
 export interface SocialGroupsUpdateSocialGroupInput {
+  description?: string | null;
   name?: string | null;
   slug?: string | null;
   type?: SocialGroupsSocialGroupType;
   visibility?: SocialGroupsSocialGroupVisibility;
-  description?: string | null;
 }
 
 export interface SocialProfilesAddProfilePortfolioItemBody {
-  title?: string | null;
-  projectId?: string | null;
   description?: string | null;
-  url?: string | null;
+  displayOrder?: number;
   imageUrl?: string | null;
   isPinned?: boolean;
-  displayOrder?: number;
+  projectId?: string | null;
+  title?: string | null;
+  url?: string | null;
 }
 
 export interface SocialProfilesAddProfileSkillBody {
+  displayOrder?: number;
   name?: string | null;
   proficiency?: SocialProfilesProfileSkillProficiency;
-  displayOrder?: number;
 }
 
 export type SocialProfilesProfileAvailabilityStatus = 'NotSet' | 'OpenToWork' | 'OpenToCollaborate' | 'Busy' | 'Hidden';
 
 export interface SocialProfilesProfilePortfolioItem {
+  description?: string | null;
+  displayOrder?: number;
   id?: string;
+  imageUrl?: string | null;
+  isPinned?: boolean;
   profileId?: string;
   projectId?: string | null;
   title?: string | null;
-  description?: string | null;
   url?: string | null;
-  imageUrl?: string | null;
-  isPinned?: boolean;
-  displayOrder?: number;
 }
 
 export interface SocialProfilesProfileSkill {
+  displayOrder?: number;
   id?: string;
-  profileId?: string;
   name?: string | null;
   proficiency?: SocialProfilesProfileSkillProficiency;
-  displayOrder?: number;
+  profileId?: string;
 }
 
 export type SocialProfilesProfileSkillProficiency = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
@@ -6851,47 +6862,47 @@ export type SocialProfilesProfileSkillProficiency = 'Beginner' | 'Intermediate' 
 export type SocialProfilesProfileVisibility = 'Private' | 'Connections' | 'Public';
 
 export interface SocialProfilesSocialProfile {
-  id?: string;
-  userId?: string;
-  handle?: string | null;
-  displayName?: string | null;
-  bio?: string | null;
+  availabilityStatus?: SocialProfilesProfileAvailabilityStatus;
   avatarUrl?: string | null;
   bannerUrl?: string | null;
+  bio?: string | null;
+  completenessScore?: number;
+  displayName?: string | null;
+  followerCount?: number;
+  followingCount?: number;
+  handle?: string | null;
   headline?: string | null;
+  id?: string;
   location?: string | null;
-  timeZone?: string | null;
-  websiteUrl?: string | null;
-  socialLinksJson?: string | null;
-  visibility?: SocialProfilesProfileVisibility;
-  availabilityStatus?: SocialProfilesProfileAvailabilityStatus;
+  portfolioItems?: Array<SocialProfilesProfilePortfolioItem> | null;
+  postCount?: number;
+  projectCount?: number;
   showActivity?: boolean;
   showPortfolio?: boolean;
   showSkills?: boolean;
-  verifiedAt?: string | null;
-  completenessScore?: number;
-  followerCount?: number;
-  followingCount?: number;
-  postCount?: number;
-  projectCount?: number;
   skills?: Array<SocialProfilesProfileSkill> | null;
-  portfolioItems?: Array<SocialProfilesProfilePortfolioItem> | null;
+  socialLinksJson?: string | null;
+  timeZone?: string | null;
+  userId?: string;
+  verifiedAt?: string | null;
+  visibility?: SocialProfilesProfileVisibility;
+  websiteUrl?: string | null;
 }
 
 export interface SocialProfilesUpdateProfilePortfolioItemBody {
-  title?: string | null;
   description?: string | null;
-  url?: string | null;
+  displayOrder?: number;
   imageUrl?: string | null;
   isPinned?: boolean;
-  displayOrder?: number;
+  title?: string | null;
+  url?: string | null;
 }
 
 export interface SocialProfilesUpdateProfilePrivacyBody {
-  visibility?: SocialProfilesProfileVisibility;
   showActivity?: boolean;
   showPortfolio?: boolean;
   showSkills?: boolean;
+  visibility?: SocialProfilesProfileVisibility;
 }
 
 export interface SocialProfilesUpdateProfileStatsBody {
@@ -6902,27 +6913,27 @@ export interface SocialProfilesUpdateProfileStatsBody {
 }
 
 export interface SocialProfilesUpdateSocialProfileBody {
-  handle?: string | null;
-  displayName?: string | null;
-  bio?: string | null;
+  availabilityStatus?: SocialProfilesProfileAvailabilityStatus;
   avatarUrl?: string | null;
   bannerUrl?: string | null;
+  bio?: string | null;
+  displayName?: string | null;
+  handle?: string | null;
   headline?: string | null;
   location?: string | null;
+  socialLinksJson?: string | null;
   timeZone?: string | null;
   websiteUrl?: string | null;
-  socialLinksJson?: string | null;
-  availabilityStatus?: SocialProfilesProfileAvailabilityStatus;
 }
 
 export interface SocialReactionsReaction {
+  createdAt?: string;
   id?: string;
-  userId?: string;
   targetId?: string;
   targetType?: SocialReactionsReactionTargetType;
   type?: SocialReactionsReactionType;
-  createdAt?: string;
   updatedAt?: string;
+  userId?: string;
 }
 
 export type SocialReactionsReactionTargetType = 'Post' | 'Comment' | 'BlogPost' | 'CourseReview' | 'Discussion' | 'Reply';
@@ -6930,22 +6941,22 @@ export type SocialReactionsReactionTargetType = 'Post' | 'Comment' | 'BlogPost' 
 export type SocialReactionsReactionType = 'Like' | 'Love' | 'Insightful' | 'Celebrate' | 'Support' | 'Curious';
 
 export interface SocialReactionsRemoveReactionInput {
-  userId?: string;
   targetId?: string;
   targetType?: SocialReactionsReactionTargetType;
+  userId?: string;
 }
 
 export interface SocialReactionsSetReactionInput {
-  userId?: string;
   targetId?: string;
   targetType?: SocialReactionsReactionTargetType;
   type?: SocialReactionsReactionType;
+  userId?: string;
 }
 
 export interface SocialReactionsTargetReactionSummary {
+  counts?: { Celebrate?: number; Curious?: number; Insightful?: number; Like?: number; Love?: number; Support?: number } | null;
   targetId?: string;
   targetType?: SocialReactionsReactionTargetType;
-  counts?: { Like?: number; Love?: number; Insightful?: number; Celebrate?: number; Support?: number; Curious?: number } | null;
   total?: number;
 }
 
@@ -6953,20 +6964,20 @@ export type SystemDayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'T
 
 export interface TenantInfo {
   id?: string;
+  isActive?: boolean;
   name?: string | null;
   slug?: string | null;
-  isActive?: boolean;
 }
 
 export interface TestingLabAddTestingEventCommitteeMemberInput {
-  userId?: string;
   isChair?: boolean;
+  userId?: string;
 }
 
 export interface TestingLabAssignTestingLabRoleInput {
-  tenantId?: string | null;
-  roleName?: string | null;
   expiresAt?: string | null;
+  roleName?: string | null;
+  tenantId?: string | null;
 }
 
 export interface TestingLabAssignTestingProjectApplicationSlotInput {
@@ -6984,113 +6995,112 @@ export interface TestingLabCancelTestingEventInput {
 }
 
 export interface TestingLabCastTestingApplicationVoteInput {
-  decision?: TestingLabTestingApplicationVoteDecision;
   comments?: string | null;
+  decision?: TestingLabTestingApplicationVoteDecision;
 }
 
 export interface TestingLabConfigureTestingEventLearningInput {
-  courseId?: string;
   cohortId?: string | null;
+  courseId?: string;
   learningActivityId?: string;
   requirement?: TestingLabTestingLearningCompletionRequirement;
 }
 
 export interface TestingLabCreateSimpleTestingInput {
-  title: string;
   description?: string | null;
-  projectId?: string | null;
-  versionNumber: string;
   downloadUrl?: string | null;
-  instructionsType: TestingLabInstructionType;
-  instructionsContent?: string | null;
-  instructionsUrl?: string | null;
-  feedbackFormContent?: string | null;
-  maxTesters?: number | null;
-  startDate?: string | null;
   endDate?: string | null;
+  feedbackFormContent?: string | null;
+  instructionsContent?: string | null;
+  instructionsType: TestingLabInstructionType;
+  instructionsUrl?: string | null;
+  maxTesters?: number | null;
+  projectId?: string | null;
+  startDate?: string | null;
   teamIdentifier?: string | null;
+  title: string;
+  versionNumber: string;
 }
 
 export interface TestingLabCreateTestingEventInput {
-  name?: string | null;
-  description?: string | null;
-  mode?: TestingLabTestingEventMode;
-  approvalMode?: TestingLabTestingEventApprovalMode;
-  applicationsOpenAt?: string;
   applicationsCloseAt?: string;
-  startsAt?: string;
+  applicationsOpenAt?: string;
+  approvalMode?: TestingLabTestingEventApprovalMode;
+  description?: string | null;
   endsAt?: string;
+  mode?: TestingLabTestingEventMode;
+  name?: string | null;
   requiresFeedback?: boolean;
-  recurrence?: TestingLabTestingEventRecurrenceInput;
+  startsAt?: string;
 }
 
 export interface TestingLabCreateTestingLabRoleInput {
-  name?: string | null;
   description?: string | null;
+  name?: string | null;
   permissions?: TestingLabTestingLabPermissions;
 }
 
 export interface TestingLabCreateTestingLabSettings {
-  labName: string;
-  description?: string | null;
-  timezone: string;
-  defaultSessionDuration: number;
   allowPublicSignups?: boolean;
-  requireApproval?: boolean;
+  defaultSessionDuration: number;
+  description?: string | null;
   enableNotifications?: boolean;
+  labName: string;
   maxSimultaneousSessions: number;
+  requireApproval?: boolean;
+  timezone: string;
 }
 
 export interface TestingLabCreateTestingLocation {
-  name?: string | null;
-  description?: string | null;
   address?: string | null;
   city?: string | null;
-  state?: string | null;
-  postalCode?: string | null;
-  country?: string | null;
-  maxTestersCapacity?: number;
-  maxProjectsCapacity?: number;
-  equipmentAvailable?: string | null;
-  isVirtual?: boolean;
-  virtualUrl?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
+  country?: string | null;
+  description?: string | null;
+  equipmentAvailable?: string | null;
+  isVirtual?: boolean;
+  maxProjectsCapacity?: number;
+  maxTestersCapacity?: number;
+  name?: string | null;
+  postalCode?: string | null;
+  state?: string | null;
   status?: TestingLabLocationStatus;
+  virtualUrl?: string | null;
 }
 
 export interface TestingLabCreateTestingInput {
-  projectVersionId: string;
-  title: string;
   description?: string | null;
   downloadUrl?: string | null;
-  instructionsType: TestingLabInstructionType;
-  instructionsContent?: string | null;
-  instructionsUrl?: string | null;
-  instructionsFileId?: string | null;
-  feedbackFormContent?: string | null;
-  maxTesters?: number | null;
-  startDate: string;
   endDate: string;
+  feedbackFormContent?: string | null;
+  instructionsContent?: string | null;
+  instructionsFileId?: string | null;
+  instructionsType: TestingLabInstructionType;
+  instructionsUrl?: string | null;
+  maxTesters?: number | null;
+  projectVersionId: string;
+  startDate: string;
   status: TestingLabTestingRequestStatus;
+  title: string;
 }
 
 export interface TestingLabCreateTestingSession {
-  testingRequestId: string;
-  locationId: string;
-  sessionName: string;
-  sessionDate: string;
-  startTime: string;
   endTime: string;
-  maxTesters: number;
-  maxProjects: number;
-  status: TestingLabSessionStatus;
+  locationId: string;
   managerUserId: string;
+  maxProjects: number;
+  maxTesters: number;
+  sessionDate: string;
+  sessionName: string;
+  startTime: string;
+  status: TestingLabSessionStatus;
+  testingRequestId: string;
 }
 
 export interface TestingLabDecideTestingProjectApplicationInput {
-  slotId?: string | null;
   rationale?: string | null;
+  slotId?: string | null;
 }
 
 export type TestingLabFeedbackFormType = 'General' | 'BugReport' | 'Usability' | 'Performance' | 'Accessibility';
@@ -7098,46 +7108,46 @@ export type TestingLabFeedbackFormType = 'General' | 'BugReport' | 'Usability' |
 export type TestingLabFeedbackQuality = 'Low' | 'Medium' | 'High';
 
 export interface TestingLabFeedbackQualityRating {
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
   createdAt: string;
-  updatedAt: string;
   deletedAt?: string | null;
-  tenantId?: string | null;
-  feedbackId: string;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
   feedback?: TestingLabTestingFeedback;
-  ratedByUserId: string;
-  ratedBy?: IdentityUsersUser;
-  qualityRating: number;
-  reason?: string | null;
+  feedbackId: string;
+  id?: string;
+  isDeleted?: boolean;
   isGlobal?: boolean;
-  isPositive?: boolean;
   isNegative?: boolean;
+  isNew?: boolean;
+  isPositive?: boolean;
+  qualityRating: number;
+  ratedBy?: IdentityUsersUser;
+  ratedByUserId: string;
+  reason?: string | null;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface TestingLabFeedbackInput {
-  feedbackFormId?: string;
-  feedbackData?: string | null;
-  testingContext?: TestingLabTestingContext;
-  sessionId?: string | null;
   additionalNotes?: string | null;
+  feedbackData?: string | null;
+  feedbackFormId?: string;
+  sessionId?: string | null;
+  testingContext?: TestingLabTestingContext;
 }
 
 export interface TestingLabGrantResourcePermissionInput {
-  tenantId?: string | null;
   action?: string | null;
   expiresAt?: string | null;
+  tenantId?: string | null;
 }
 
 export type TestingLabInstructionType = 'Text' | 'Url' | 'File';
 
 export interface TestingLabLinkSessionProjectInput {
+  notes?: string | null;
   projectId?: string;
   projectVersionId?: string | null;
-  notes?: string | null;
 }
 
 export type TestingLabLocationStatus = 'Active' | 'Maintenance' | 'Inactive';
@@ -7145,35 +7155,35 @@ export type TestingLabLocationStatus = 'Active' | 'Maintenance' | 'Inactive';
 export type TestingLabParticipationStatus = 'Registered' | 'Active' | 'Completed' | 'Withdrawn' | 'Suspended';
 
 export interface TestingLabPublicTestingEventProjection {
-  id?: string;
-  name?: string | null;
-  description?: string | null;
-  mode?: TestingLabTestingEventMode;
-  approvalMode?: TestingLabTestingEventApprovalMode;
-  status?: TestingLabTestingEventStatus;
-  applicationsOpenAt?: string;
-  applicationsCloseAt?: string;
-  startsAt?: string;
-  endsAt?: string;
-  requiresFeedback?: boolean;
   applicationCount?: number;
+  applicationsCloseAt?: string;
+  applicationsOpenAt?: string;
+  approvalMode?: TestingLabTestingEventApprovalMode;
+  description?: string | null;
+  endsAt?: string;
+  id?: string;
+  mode?: TestingLabTestingEventMode;
+  name?: string | null;
+  requiresFeedback?: boolean;
   slots?: Array<TestingLabPublicTestingEventSlotProjection> | null;
+  startsAt?: string;
+  status?: TestingLabTestingEventStatus;
 }
 
 export interface TestingLabPublicTestingEventSlotProjection {
-  id?: string;
-  eventId?: string;
-  mode?: TestingLabTestingEventMode;
-  startsAt?: string;
-  endsAt?: string;
-  maxTesters?: number | null;
-  maxProjects?: number | null;
-  campusName?: string | null;
-  roomName?: string | null;
   approvedProjectCount?: number;
-  registeredTesterCount?: number;
-  availableTesterCount?: number | null;
   availableProjectCount?: number | null;
+  availableTesterCount?: number | null;
+  campusName?: string | null;
+  endsAt?: string;
+  eventId?: string;
+  id?: string;
+  maxProjects?: number | null;
+  maxTesters?: number | null;
+  mode?: TestingLabTestingEventMode;
+  registeredTesterCount?: number;
+  roomName?: string | null;
+  startsAt?: string;
 }
 
 export interface TestingLabRateFeedbackQuality {
@@ -7193,493 +7203,469 @@ export interface TestingLabReportFeedback {
 }
 
 export interface TestingLabSessionProjectProjection {
+  isActive?: boolean;
   linkId?: string;
-  sessionId?: string;
   projectId?: string;
   projectVersionId?: string | null;
-  isActive?: boolean;
+  sessionId?: string;
 }
 
 export interface TestingLabSessionRegistration {
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  sessionId: string;
-  session?: TestingLabTestingSession;
-  userId: string;
-  user?: IdentityUsersUser;
-  registrationType?: TestingLabRegistrationType;
-  status?: TestingLabRegistrationStatus;
-  registeredAt: string;
-  confirmedAt?: string | null;
+  attendanceDuration?: string | null;
+  attendanceStatus?: TestingLabAttendanceStatus;
+  attendedAt?: string | null;
   checkedInAt?: string | null;
   checkedOutAt?: string | null;
-  attendanceStatus?: TestingLabAttendanceStatus;
-  notes?: string | null;
-  registrationNotes?: string | null;
-  attendedAt?: string | null;
-  isGlobal?: boolean;
-  isConfirmed?: boolean;
+  confirmedAt?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
   isCheckedIn?: boolean;
   isCheckedOut?: boolean;
-  attendanceDuration?: string | null;
+  isConfirmed?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  notes?: string | null;
+  registeredAt: string;
+  registrationNotes?: string | null;
+  registrationType?: TestingLabRegistrationType;
+  session?: TestingLabTestingSession;
+  sessionId: string;
+  status?: TestingLabRegistrationStatus;
+  tenantId?: string | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId: string;
+  version?: number;
 }
 
 export interface TestingLabSessionRegistrationInput {
-  registrationType?: TestingLabRegistrationType;
   notes?: string | null;
+  registrationType?: TestingLabRegistrationType;
 }
 
 export type TestingLabSessionStatus = 'Scheduled' | 'Active' | 'Completed' | 'Cancelled';
 
 export interface TestingLabSessionWaitlist {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  createdAt: string;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  sessionId?: string;
-  session?: TestingLabTestingSession;
-  userId?: string;
-  user?: IdentityUsersUser;
-  registrationType: TestingLabRegistrationType;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   position: number;
   registrationNotes?: string | null;
+  registrationType: TestingLabRegistrationType;
+  session?: TestingLabTestingSession;
+  sessionId?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId?: string;
+  version?: number;
 }
 
 export interface TestingLabSubmitFeedback {
-  testingRequestId: string;
+  additionalNotes?: string | null;
   feedbackResponses: string;
   overallRating?: number | null;
-  wouldRecommend?: boolean | null;
-  additionalNotes?: string | null;
   sessionId?: string | null;
+  testingRequestId: string;
+  wouldRecommend?: boolean | null;
 }
 
 export interface TestingLabSubmitTestingEventFeedbackInput {
+  additionalNotes?: string | null;
   feedbackData?: string | null;
   overallRating?: number | null;
   wouldRecommend?: boolean | null;
-  additionalNotes?: string | null;
 }
 
 export interface TestingLabSubmitTestingProjectApplicationInput {
+  preferredAvailability?: string | null;
   projectId?: string;
   projectVersionId?: string | null;
-  preferredAvailability?: string | null;
 }
 
 export type TestingLabTestingApplicationStatus = 'Pending' | 'UnderReview' | 'Approved' | 'Rejected' | 'Waitlisted' | 'Withdrawn';
 
 export interface TestingLabTestingApplicationVote {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
+  application?: TestingLabTestingProjectApplication;
+  applicationId?: string;
+  comments?: string | null;
+  createdAt: string;
+  decision?: TestingLabTestingApplicationVoteDecision;
+  deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  applicationId?: string;
-  application?: TestingLabTestingProjectApplication;
-  reviewerId?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
   reviewer?: IdentityUsersUser;
-  decision?: TestingLabTestingApplicationVoteDecision;
-  comments?: string | null;
+  reviewerId?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export type TestingLabTestingApplicationVoteDecision = 'Approve' | 'Reject' | 'Abstain';
 
 export interface TestingLabTestingApplicationVoteProjection {
-  id?: string;
-  reviewerId?: string;
-  decision?: TestingLabTestingApplicationVoteDecision;
   comments?: string | null;
   createdAt?: string;
+  decision?: TestingLabTestingApplicationVoteDecision;
+  id?: string;
+  reviewerId?: string;
 }
 
 export interface TestingLabTestingCommitteeMember {
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  event?: TestingLabTestingEvent;
+  eventId?: string;
+  id?: string;
+  isActive?: boolean;
+  isChair?: boolean;
+  isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
   tenantId?: string | null;
-  eventId?: string;
-  event?: TestingLabTestingEvent;
-  userId?: string;
+  updatedAt: string;
   user?: IdentityUsersUser;
-  isChair?: boolean;
-  isActive?: boolean;
+  userId?: string;
+  version?: number;
 }
 
 export type TestingLabTestingContext = 'Online' | 'InPerson';
 
 export interface TestingLabTestingEvent {
-  isGlobal?: boolean;
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  name: string;
-  description?: string | null;
-  mode?: TestingLabTestingEventMode;
-  approvalMode?: TestingLabTestingEventApprovalMode;
-  status?: TestingLabTestingEventStatus;
-  managerUserId?: string;
-  manager?: IdentityUsersUser;
-  applicationsOpenAt?: string;
+  applications?: Array<TestingLabTestingProjectApplication> | null;
   applicationsCloseAt?: string;
-  startsAt?: string;
-  endsAt?: string;
-  recurrenceSeriesId?: string | null;
-  recurrenceOccurrence?: number | null;
-  recurrenceFrequency?: TestingLabTestingEventRecurrenceFrequency;
-  recurrenceInterval?: number | null;
-  recurrenceDaysOfWeek?: string | null;
-  recurrenceEndsAt?: string | null;
-  recurrenceOccurrenceCount?: number | null;
-  requiresFeedback?: boolean;
-  learningCompletionRequirement?: TestingLabTestingLearningCompletionRequirement;
-  courseId?: string | null;
-  cohortId?: string | null;
-  learningActivityId?: string | null;
+  applicationsOpenAt?: string;
+  approvalMode?: TestingLabTestingEventApprovalMode;
   cancellationReason?: string | null;
   cancelledAt?: string | null;
-  slots?: Array<TestingLabTestingEventSlot> | null;
-  applications?: Array<TestingLabTestingProjectApplication> | null;
+  cohortId?: string | null;
   committeeMembers?: Array<TestingLabTestingCommitteeMember> | null;
+  courseId?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  description?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  endsAt?: string;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  learningActivityId?: string | null;
+  learningCompletionRequirement?: TestingLabTestingLearningCompletionRequirement;
+  manager?: IdentityUsersUser;
+  managerUserId?: string;
+  mode?: TestingLabTestingEventMode;
+  name: string;
+  requiresFeedback?: boolean;
+  slots?: Array<TestingLabTestingEventSlot> | null;
+  startsAt?: string;
+  status?: TestingLabTestingEventStatus;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export type TestingLabTestingEventApprovalMode = 'ManagerOnly' | 'Committee';
 
 export interface TestingLabTestingEventCommitteeMemberProjection {
-  id?: string;
   eventId?: string;
+  id?: string;
+  isActive?: boolean;
+  isChair?: boolean;
+  userEmail?: string | null;
   userId?: string;
   userName?: string | null;
-  userEmail?: string | null;
-  isChair?: boolean;
-  isActive?: boolean;
 }
 
 export interface TestingLabTestingEventFeedbackProjection {
-  id?: string;
-  eventId?: string;
-  applicationId?: string;
-  testerUserId?: string;
-  feedbackData?: string | null;
-  overallRating?: number | null;
-  wouldRecommend?: boolean | null;
   additionalNotes?: string | null;
+  applicationId?: string;
+  eventId?: string;
+  feedbackData?: string | null;
+  id?: string;
+  overallRating?: number | null;
   submittedAt?: string;
+  testerUserId?: string;
+  wouldRecommend?: boolean | null;
 }
 
 export interface TestingLabTestingEventFeedbackReviewProjection {
-  obligationId?: string;
-  eventId?: string;
-  slotId?: string;
   applicationId?: string;
-  testerUserId?: string;
-  status?: TestingLabTestingFeedbackObligationStatus;
-  fulfilledAt?: string | null;
+  eventId?: string;
   feedback?: TestingLabTestingEventFeedbackProjection;
+  fulfilledAt?: string | null;
+  obligationId?: string;
+  slotId?: string;
+  status?: TestingLabTestingFeedbackObligationStatus;
+  testerUserId?: string;
 }
 
 export type TestingLabTestingEventMode = 'Online' | 'InPerson' | 'Hybrid';
 
 export interface TestingLabTestingEventProjection {
-  id?: string;
-  name?: string | null;
-  description?: string | null;
-  mode?: TestingLabTestingEventMode;
-  approvalMode?: TestingLabTestingEventApprovalMode;
-  status?: TestingLabTestingEventStatus;
-  managerUserId?: string;
-  applicationsOpenAt?: string;
-  applicationsCloseAt?: string;
-  startsAt?: string;
-  endsAt?: string;
-  requiresFeedback?: boolean;
-  learningCompletionRequirement?: TestingLabTestingLearningCompletionRequirement;
-  courseId?: string | null;
-  cohortId?: string | null;
-  learningActivityId?: string | null;
-  tenantId?: string | null;
-  slotCount?: number;
   applicationCount?: number;
-  recurrenceSeriesId?: string | null;
-  recurrenceOccurrence?: number | null;
-  recurrenceFrequency?: TestingLabTestingEventRecurrenceFrequency;
-  recurrenceInterval?: number | null;
-  recurrenceDaysOfWeek?: Array<SystemDayOfWeek> | null;
-  recurrenceEndsAt?: string | null;
-  recurrenceOccurrenceCount?: number | null;
-}
-
-export type TestingLabTestingEventRecurrenceFrequency = 'Daily' | 'Weekly' | 'Monthly';
-
-export interface TestingLabTestingEventRecurrenceInput {
-  frequency?: TestingLabTestingEventRecurrenceFrequency;
-  interval?: number;
-  daysOfWeek?: Array<SystemDayOfWeek> | null;
-  endsAt?: string | null;
-  occurrenceCount?: number | null;
+  applicationsCloseAt?: string;
+  applicationsOpenAt?: string;
+  approvalMode?: TestingLabTestingEventApprovalMode;
+  cohortId?: string | null;
+  courseId?: string | null;
+  description?: string | null;
+  endsAt?: string;
+  id?: string;
+  learningActivityId?: string | null;
+  learningCompletionRequirement?: TestingLabTestingLearningCompletionRequirement;
+  managerUserId?: string;
+  mode?: TestingLabTestingEventMode;
+  name?: string | null;
+  requiresFeedback?: boolean;
+  slotCount?: number;
+  startsAt?: string;
+  status?: TestingLabTestingEventStatus;
+  tenantId?: string | null;
 }
 
 export interface TestingLabTestingEventSlot {
+  campusName?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  endsAt?: string;
+  event?: TestingLabTestingEvent;
+  eventId?: string;
+  id?: string;
+  isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  eventId?: string;
-  event?: TestingLabTestingEvent;
-  locationId?: string | null;
-  location?: TestingLabTestingLocation;
-  mode?: TestingLabTestingEventMode;
-  startsAt?: string;
-  endsAt?: string;
-  maxTesters?: number | null;
-  maxProjects?: number | null;
-  campusName?: string | null;
-  roomName?: string | null;
-  meetingUrl?: string | null;
-  isTesterCapacityUnlimited?: boolean;
   isProjectCapacityUnlimited?: boolean;
+  isTesterCapacityUnlimited?: boolean;
+  location?: TestingLabTestingLocation;
+  locationId?: string | null;
+  maxProjects?: number | null;
+  maxTesters?: number | null;
+  meetingUrl?: string | null;
+  mode?: TestingLabTestingEventMode;
+  roomName?: string | null;
+  startsAt?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface TestingLabTestingEventSlotProjection {
-  id?: string;
-  eventId?: string;
-  locationId?: string | null;
-  mode?: TestingLabTestingEventMode;
-  startsAt?: string;
-  endsAt?: string;
-  maxTesters?: number | null;
-  maxProjects?: number | null;
-  campusName?: string | null;
-  roomName?: string | null;
-  meetingUrl?: string | null;
   approvedProjectCount?: number;
+  campusName?: string | null;
+  endsAt?: string;
+  eventId?: string;
+  id?: string;
+  locationId?: string | null;
+  maxProjects?: number | null;
+  maxTesters?: number | null;
+  meetingUrl?: string | null;
+  mode?: TestingLabTestingEventMode;
   registeredTesterCount?: number;
+  roomName?: string | null;
+  startsAt?: string;
 }
 
 export type TestingLabTestingEventStatus = 'Draft' | 'ApplicationsOpen' | 'ApplicationsClosed' | 'Scheduled' | 'Active' | 'Completed' | 'Cancelled';
 
 export interface TestingLabTestingFeedback {
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  testingRequestId?: string | null;
-  testingRequest?: TestingLabTestingInput;
-  feedbackFormId?: string | null;
-  feedbackForm?: TestingLabTestingFeedbackForm;
-  eventId?: string | null;
-  event?: TestingLabTestingEvent;
-  applicationId?: string | null;
-  application?: TestingLabTestingProjectApplication;
-  userId: string;
-  user?: IdentityUsersUser;
-  sessionId?: string | null;
-  session?: TestingLabTestingSession;
-  testingContext: TestingLabTestingContext;
-  feedbackData: string;
-  overallRating?: number | null;
-  wouldRecommend?: boolean | null;
   additionalNotes?: string | null;
+  application?: TestingLabTestingProjectApplication;
+  applicationId?: string | null;
+  averageQualityRating?: number | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  event?: TestingLabTestingEvent;
+  eventId?: string | null;
+  feedbackData: string;
+  feedbackForm?: TestingLabTestingFeedbackForm;
+  feedbackFormId?: string | null;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNegative?: boolean;
+  isNew?: boolean;
+  isPositive?: boolean;
   isReported?: boolean;
+  overallRating?: number | null;
   qualityRating?: TestingLabFeedbackQuality;
+  qualityRatings?: Array<TestingLabFeedbackQualityRating> | null;
   reportReason?: string | null;
+  reportedAt?: string | null;
+  reportedBy?: IdentityUsersUser;
   reportedById?: string | null;
   reportedByUserId?: string | null;
-  reportedBy?: IdentityUsersUser;
-  reportedAt?: string | null;
-  qualityRatings?: Array<TestingLabFeedbackQualityRating> | null;
-  isGlobal?: boolean;
-  isPositive?: boolean;
-  isNegative?: boolean;
-  averageQualityRating?: number | null;
+  session?: TestingLabTestingSession;
+  sessionId?: string | null;
+  tenantId?: string | null;
+  testingContext: TestingLabTestingContext;
+  testingRequest?: TestingLabTestingInput;
+  testingRequestId?: string | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId: string;
+  version?: number;
+  wouldRecommend?: boolean | null;
 }
 
 export interface TestingLabTestingFeedbackForm {
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
   createdAt: string;
-  updatedAt: string;
   deletedAt?: string | null;
-  tenantId?: string | null;
-  name: string;
   description?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  feedback?: Array<TestingLabTestingFeedback> | null;
   formData: string;
-  testingRequestId?: string | null;
   formSchema?: string | null;
-  isForOnline?: boolean;
-  isForSessions?: boolean;
-  isActive?: boolean;
   formType?: TestingLabFeedbackFormType;
   formVersion?: number;
-  tags?: string | null;
-  feedback?: Array<TestingLabTestingFeedback> | null;
+  id?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  isForOnline?: boolean;
+  isForSessions?: boolean;
   isGlobal?: boolean;
+  isNew?: boolean;
+  name: string;
   submissionCount?: number;
   tagArray?: Array<string> | null;
+  tags?: string | null;
+  tenantId?: string | null;
+  testingRequestId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface TestingLabTestingFeedbackObligationProjection {
-  id?: string;
-  eventId?: string;
-  slotId?: string;
   applicationId?: string;
-  testerUserId?: string;
+  eventId?: string;
   feedbackId?: string | null;
-  status?: TestingLabTestingFeedbackObligationStatus;
   fulfilledAt?: string | null;
+  id?: string;
+  slotId?: string;
+  status?: TestingLabTestingFeedbackObligationStatus;
+  testerUserId?: string;
 }
 
 export type TestingLabTestingFeedbackObligationStatus = 'Pending' | 'Fulfilled' | 'Waived';
 
 export interface TestingLabTestingLabAnalyticsReportProjection {
-  fromDate?: string;
-  toDate?: string;
-  generatedAt?: string;
   current?: TestingLabTestingLabAnalyticsSummaryProjection;
-  previous?: TestingLabTestingLabAnalyticsSummaryProjection;
-  locations?: TestingLabTestingLabLocationAnalyticsProjection;
-  trend?: Array<TestingLabTestingLabAnalyticsTrendProjection> | null;
   events?: Array<TestingLabTestingLabEventAnalyticsProjection> | null;
+  fromDate?: string;
+  generatedAt?: string;
+  locations?: TestingLabTestingLabLocationAnalyticsProjection;
+  previous?: TestingLabTestingLabAnalyticsSummaryProjection;
+  toDate?: string;
+  trend?: Array<TestingLabTestingLabAnalyticsTrendProjection> | null;
 }
 
 export interface TestingLabTestingLabAnalyticsSummaryProjection {
-  events?: number;
-  completedEvents?: number;
   applications?: number;
   approvedProjects?: number;
-  registeredTesters?: number;
   attendedTesters?: number;
-  feedback?: number;
   averageRating?: number | null;
-  recommendationRate?: number | null;
   capacity?: number;
+  completedEvents?: number;
+  events?: number;
+  feedback?: number;
   fillRate?: number;
+  recommendationRate?: number | null;
+  registeredTesters?: number;
 }
 
 export interface TestingLabTestingLabAnalyticsTrendProjection {
+  applications?: number;
+  attendance?: number;
   date?: string;
   events?: number;
-  applications?: number;
-  registrations?: number;
-  attendance?: number;
   feedback?: number;
+  registrations?: number;
 }
 
 export interface TestingLabTestingLabEventAnalyticsProjection {
-  eventId?: string;
-  name?: string | null;
-  status?: TestingLabTestingEventStatus;
-  mode?: TestingLabTestingEventMode;
-  startsAt?: string;
   applications?: number;
   approvedProjects?: number;
-  registeredTesters?: number;
   attendedTesters?: number;
-  feedback?: number;
   averageRating?: number | null;
   capacity?: number;
+  eventId?: string;
+  feedback?: number;
   fillRate?: number;
+  mode?: TestingLabTestingEventMode;
+  name?: string | null;
+  registeredTesters?: number;
+  startsAt?: string;
+  status?: TestingLabTestingEventStatus;
 }
 
 export interface TestingLabTestingLabLocationAnalyticsProjection {
-  total?: number;
   active?: number;
+  total?: number;
 }
 
 export interface TestingLabTestingLabPermissions {
-  canCreateSessions?: boolean;
-  canEditSessions?: boolean;
-  canDeleteSessions?: boolean;
-  canViewSessions?: boolean;
-  canCreateLocations?: boolean;
-  canEditLocations?: boolean;
-  canDeleteLocations?: boolean;
-  canViewLocations?: boolean;
-  canCreateFeedback?: boolean;
-  canEditFeedback?: boolean;
-  canDeleteFeedback?: boolean;
-  canViewFeedback?: boolean;
-  canModerateFeedback?: boolean;
-  canCreateRequests?: boolean;
-  canEditRequests?: boolean;
-  canDeleteRequests?: boolean;
-  canViewRequests?: boolean;
   canApproveRequests?: boolean;
+  canCreateFeedback?: boolean;
+  canCreateLocations?: boolean;
+  canCreateRequests?: boolean;
+  canCreateSessions?: boolean;
+  canDeleteFeedback?: boolean;
+  canDeleteLocations?: boolean;
+  canDeleteRequests?: boolean;
+  canDeleteSessions?: boolean;
+  canEditFeedback?: boolean;
+  canEditLocations?: boolean;
+  canEditRequests?: boolean;
+  canEditSessions?: boolean;
   canManageParticipants?: boolean;
+  canModerateFeedback?: boolean;
+  canViewFeedback?: boolean;
+  canViewLocations?: boolean;
   canViewParticipants?: boolean;
+  canViewRequests?: boolean;
+  canViewSessions?: boolean;
 }
 
 export interface TestingLabTestingLabResourcePermission {
   action?: string | null;
-  resourceType?: string | null;
-  resourceId?: string;
   expiresAt?: string | null;
+  resourceId?: string;
+  resourceType?: string | null;
 }
 
 export interface TestingLabTestingLabRoleTemplate {
-  id?: string;
-  name?: string | null;
   description?: string | null;
+  id?: string;
   isSystemRole?: boolean;
+  name?: string | null;
   permissions?: TestingLabTestingLabPermissions;
 }
 
 export interface TestingLabTestingLabSettings {
+  allowPublicSignups?: boolean;
+  createdAt?: string;
+  defaultSessionDuration?: number;
+  description?: string | null;
+  enableNotifications?: boolean;
   id?: string;
   labName?: string | null;
-  description?: string | null;
-  timezone?: string | null;
-  defaultSessionDuration?: number;
-  allowPublicSignups?: boolean;
-  requireApproval?: boolean;
-  enableNotifications?: boolean;
   maxSimultaneousSessions?: number;
+  requireApproval?: boolean;
   tenantId?: string | null;
-  createdAt?: string;
+  timezone?: string | null;
   updatedAt?: string;
 }
 
@@ -7687,357 +7673,326 @@ export interface TestingLabTestingLabSettings {
 export type TestingLabTestingLearningCompletionRequirement = string;
 
 export interface TestingLabTestingLocation {
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  name: string;
-  description?: string | null;
+  activeSessionCount?: number;
   address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  postalCode?: string | null;
-  country?: string | null;
   capacity?: number | null;
-  maxTestersCapacity?: number;
-  maxProjectsCapacity?: number;
-  equipment?: string | null;
-  equipmentAvailable?: string | null;
-  isVirtual?: boolean;
-  virtualUrl?: string | null;
-  status?: TestingLabLocationStatus;
+  city?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
-  sessions?: Array<TestingLabTestingSession> | null;
-  isGlobal?: boolean;
-  isAvailable?: boolean;
+  country?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  description?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  equipment?: string | null;
+  equipmentAvailable?: string | null;
   fullAddress?: string | null;
-  activeSessionCount?: number;
+  id?: string;
+  isAvailable?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isVirtual?: boolean;
+  maxProjectsCapacity?: number;
+  maxTestersCapacity?: number;
+  name: string;
+  postalCode?: string | null;
+  sessions?: Array<TestingLabTestingSession> | null;
+  state?: string | null;
+  status?: TestingLabLocationStatus;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
+  virtualUrl?: string | null;
 }
 
 export type TestingLabTestingMode = 'Online' | 'InPerson' | 'Hybrid';
 
 export interface TestingLabTestingParticipant {
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
+  canProvideFeedback?: boolean;
+  completedAt?: string | null;
   createdAt: string;
-  updatedAt: string;
   deletedAt?: string | null;
-  tenantId?: string | null;
-  testingRequestId: string;
-  testingRequest?: TestingLabTestingInput;
-  userId: string;
-  user?: IdentityUsersUser;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  feedback?: Array<TestingLabTestingFeedback> | null;
+  feedbackCount?: number;
+  id?: string;
   instructionsAcknowledged: boolean;
   instructionsAcknowledgedAt?: string | null;
-  startedAt: string;
-  completedAt?: string | null;
-  timeSpentMinutes?: number | null;
-  feedbackCount?: number;
-  status?: TestingLabParticipationStatus;
-  notes?: string | null;
-  feedback?: Array<TestingLabTestingFeedback> | null;
-  isGlobal?: boolean;
   isActive?: boolean;
   isCompleted?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  notes?: string | null;
   participationDuration?: string | null;
-  canProvideFeedback?: boolean;
+  startedAt: string;
+  status?: TestingLabParticipationStatus;
+  tenantId?: string | null;
+  testingRequest?: TestingLabTestingInput;
+  testingRequestId: string;
+  timeSpentMinutes?: number | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId: string;
+  version?: number;
 }
 
 export interface TestingLabTestingParticipantDirectoryItemProjection {
-  registrationId?: string;
-  eventId?: string;
-  eventName?: string | null;
-  slotId?: string;
-  mode?: TestingLabTestingEventMode;
-  startsAt?: string;
-  endsAt?: string;
-  campusName?: string | null;
-  roomName?: string | null;
-  userId?: string;
-  userName?: string | null;
-  userEmail?: string | null;
   avatarUrl?: string | null;
-  status?: TestingLabTestingSlotRegistrationStatus;
-  waitlistPosition?: number | null;
-  notes?: string | null;
-  registeredAt?: string;
+  campusName?: string | null;
   checkedInAt?: string | null;
   checkedOutAt?: string | null;
   completedAt?: string | null;
+  endsAt?: string;
+  eventId?: string;
+  eventName?: string | null;
+  mode?: TestingLabTestingEventMode;
+  notes?: string | null;
   pendingFeedbackCount?: number;
+  registeredAt?: string;
+  registrationId?: string;
+  roomName?: string | null;
+  slotId?: string;
+  startsAt?: string;
+  status?: TestingLabTestingSlotRegistrationStatus;
+  userEmail?: string | null;
+  userId?: string;
+  userName?: string | null;
+  waitlistPosition?: number | null;
 }
 
 export interface TestingLabTestingParticipantDirectoryProjection {
-  items?: Array<TestingLabTestingParticipantDirectoryItemProjection> | null;
-  totalCount?: number;
-  registeredCount?: number;
-  waitlistedCount?: number;
-  checkedInCount?: number;
   attendedCount?: number;
+  checkedInCount?: number;
   completedCount?: number;
+  items?: Array<TestingLabTestingParticipantDirectoryItemProjection> | null;
   noShowCount?: number;
+  registeredCount?: number;
+  totalCount?: number;
+  waitlistedCount?: number;
 }
 
 export type TestingLabTestingPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface TestingLabTestingProjectApplication {
+  assignedSlot?: TestingLabTestingEventSlot;
+  assignedSlotId?: string | null;
+  createdAt: string;
+  decidedAt?: string | null;
+  decidedBy?: IdentityUsersUser;
+  decidedByUserId?: string | null;
+  decisionRationale?: string | null;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  event?: TestingLabTestingEvent;
+  eventId?: string;
+  id?: string;
+  isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  eventId?: string;
-  event?: TestingLabTestingEvent;
-  projectId?: string;
-  project?: ProjectsProject;
-  projectVersionId?: string | null;
-  projectVersion?: ProjectsProjectVersion;
-  submittedByUserId?: string;
-  submittedBy?: IdentityUsersUser;
   preferredAvailability?: string | null;
+  project?: ProjectsProject;
+  projectId?: string;
+  projectVersion?: ProjectsProjectVersion;
+  projectVersionId?: string | null;
   status?: TestingLabTestingApplicationStatus;
-  assignedSlotId?: string | null;
-  assignedSlot?: TestingLabTestingEventSlot;
-  decidedByUserId?: string | null;
-  decidedBy?: IdentityUsersUser;
-  decisionRationale?: string | null;
-  decidedAt?: string | null;
+  submittedBy?: IdentityUsersUser;
+  submittedByUserId?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
   votes?: Array<TestingLabTestingApplicationVote> | null;
 }
 
 export interface TestingLabTestingProjectApplicationProjection {
-  id?: string;
-  eventId?: string;
-  projectId?: string;
-  projectVersionId?: string | null;
-  submittedByUserId?: string;
-  preferredAvailability?: string | null;
-  status?: TestingLabTestingApplicationStatus;
   assignedSlotId?: string | null;
+  decidedAt?: string | null;
   decidedByUserId?: string | null;
   decisionRationale?: string | null;
-  decidedAt?: string | null;
+  eventId?: string;
+  id?: string;
+  preferredAvailability?: string | null;
+  projectId?: string;
+  projectVersionId?: string | null;
+  status?: TestingLabTestingApplicationStatus;
+  submittedByUserId?: string;
   votes?: Array<TestingLabTestingApplicationVoteProjection> | null;
 }
 
 export interface TestingLabTestingInput {
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  projectVersionId?: string | null;
-  projectVersion?: ProjectsProjectVersion;
-  title: string;
-  description?: string | null;
-  downloadUrl?: string | null;
-  instructionsType: TestingLabInstructionType;
-  instructionsContent?: string | null;
-  instructionsUrl?: string | null;
-  instructionsFileId?: string | null;
-  feedbackFormContent?: string | null;
-  maxTesters?: number | null;
-  currentTesterCount?: number;
-  startDate: string;
-  endDate: string;
-  status: TestingLabTestingRequestStatus;
-  createdById: string;
-  createdBy?: IdentityUsersUser;
-  priority?: TestingLabTestingPriority;
-  estimatedDurationHours?: number | null;
-  mode?: TestingLabTestingMode;
-  sessions?: Array<TestingLabTestingSession> | null;
-  participants?: Array<TestingLabTestingParticipant> | null;
-  feedback?: Array<TestingLabTestingFeedback> | null;
-  feedbackForms?: Array<TestingLabTestingFeedbackForm> | null;
-  isGlobal?: boolean;
-  isActive?: boolean;
   acceptsNewTesters?: boolean;
   availableSpots?: number | null;
-  duration?: string;
-  daysRemaining?: number | null;
-}
-
-export interface TestingLabTestingRequestDetailProjection {
-  id?: string;
-  title?: string | null;
-  description?: string | null;
-  downloadUrl?: string | null;
-  instructionsContent?: string | null;
-  feedbackFormContent?: string | null;
-  maxTesters?: number | null;
+  createdAt: string;
+  createdBy?: IdentityUsersUser;
+  createdById: string;
   currentTesterCount?: number;
-  startDate?: string;
-  endDate?: string;
-  status?: TestingLabTestingRequestStatus;
-  projectVersionId?: string | null;
-  projectVersion?: TestingLabTestingRequestProjectVersionProjection;
+  daysRemaining?: number | null;
+  deletedAt?: string | null;
+  description?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  downloadUrl?: string | null;
+  duration?: string;
+  endDate: string;
+  estimatedDurationHours?: number | null;
+  feedback?: Array<TestingLabTestingFeedback> | null;
+  feedbackFormContent?: string | null;
+  feedbackForms?: Array<TestingLabTestingFeedbackForm> | null;
+  id?: string;
+  instructionsContent?: string | null;
+  instructionsFileId?: string | null;
+  instructionsType: TestingLabInstructionType;
+  instructionsUrl?: string | null;
+  isActive?: boolean;
   isDeleted?: boolean;
-}
-
-export interface TestingLabTestingRequestProjectProjection {
-  id?: string;
-  title?: string | null;
-  slug?: string | null;
-}
-
-export interface TestingLabTestingRequestProjectVersionProjection {
-  id?: string;
-  projectId?: string;
-  versionNumber?: string | null;
-  status?: string | null;
-  project?: TestingLabTestingRequestProjectProjection;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  maxTesters?: number | null;
+  mode?: TestingLabTestingMode;
+  participants?: Array<TestingLabTestingParticipant> | null;
+  priority?: TestingLabTestingPriority;
+  projectVersion?: ProjectsProjectVersion;
+  projectVersionId?: string | null;
+  sessions?: Array<TestingLabTestingSession> | null;
+  startDate: string;
+  status: TestingLabTestingRequestStatus;
+  tenantId?: string | null;
+  title: string;
+  updatedAt: string;
+  version?: number;
 }
 
 export type TestingLabTestingRequestStatus = 'Draft' | 'Open' | 'Active' | 'InProgress' | 'Paused' | 'Completed' | 'Cancelled';
 
 export interface TestingLabTestingSession {
-  isNew?: boolean;
-  isDeleted?: boolean;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  tenantId?: string | null;
-  eventSlotId?: string | null;
-  eventSlot?: TestingLabTestingEventSlot;
-  testingRequestId: string;
-  testingRequest?: TestingLabTestingInput;
-  locationId: string;
-  location?: TestingLabTestingLocation;
-  sessionName: string;
-  sessionDate: string;
-  startTime: string;
-  endTime: string;
-  maxTesters: number;
-  maxProjects: number;
-  registeredTesterCount?: number;
-  registeredProjectMemberCount?: number;
-  registeredProjectCount?: number;
-  status: TestingLabSessionStatus;
-  managerId: string;
-  manager?: IdentityUsersUser;
-  managerUserId?: string;
-  createdById: string;
-  createdBy?: IdentityUsersUser;
-  registrations?: Array<TestingLabSessionRegistration> | null;
-  feedback?: Array<TestingLabTestingFeedback> | null;
-  isGlobal?: boolean;
-  isActive?: boolean;
-  isCompleted?: boolean;
   allowsRegistration?: boolean;
   availableSpots?: number;
+  createdAt: string;
+  createdBy?: IdentityUsersUser;
+  createdById: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
   duration?: string;
+  endTime: string;
+  eventSlot?: TestingLabTestingEventSlot;
+  eventSlotId?: string | null;
+  feedback?: Array<TestingLabTestingFeedback> | null;
+  id?: string;
+  isActive?: boolean;
+  isCompleted?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  location?: TestingLabTestingLocation;
+  locationId: string;
+  manager?: IdentityUsersUser;
+  managerId: string;
+  managerUserId?: string;
+  maxProjects: number;
+  maxTesters: number;
+  registeredProjectCount?: number;
+  registeredProjectMemberCount?: number;
+  registeredTesterCount?: number;
+  registrations?: Array<TestingLabSessionRegistration> | null;
+  sessionDate: string;
+  sessionName: string;
+  startTime: string;
+  status: TestingLabSessionStatus;
+  tenantId?: string | null;
+  testingRequest?: TestingLabTestingInput;
+  testingRequestId: string;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface TestingLabTestingSlotRegistrationProjection {
-  id?: string;
-  eventId?: string;
-  slotId?: string;
-  userId?: string;
-  status?: TestingLabTestingSlotRegistrationStatus;
-  waitlistPosition?: number | null;
-  notes?: string | null;
-  registeredAt?: string;
-  promotedAt?: string | null;
   checkedInAt?: string | null;
   checkedOutAt?: string | null;
   completedAt?: string | null;
+  eventId?: string;
+  id?: string;
+  notes?: string | null;
   pendingFeedbackCount?: number;
+  promotedAt?: string | null;
+  registeredAt?: string;
+  slotId?: string;
+  status?: TestingLabTestingSlotRegistrationStatus;
+  userId?: string;
+  waitlistPosition?: number | null;
 }
 
 export type TestingLabTestingSlotRegistrationStatus = 'Registered' | 'Waitlisted' | 'CheckedIn' | 'Attended' | 'Completed' | 'Cancelled' | 'NoShow';
 
 export interface TestingLabUpdateAttendance {
-  userId?: string;
   attendanceStatus?: TestingLabAttendanceStatus;
+  userId?: string;
 }
 
 export interface TestingLabUpdateTestingEventInput {
-  name?: string | null;
-  description?: string | null;
-  mode?: TestingLabTestingEventMode;
-  approvalMode?: TestingLabTestingEventApprovalMode;
-  applicationsOpenAt?: string;
   applicationsCloseAt?: string;
-  startsAt?: string;
+  applicationsOpenAt?: string;
+  approvalMode?: TestingLabTestingEventApprovalMode;
+  description?: string | null;
   endsAt?: string;
+  mode?: TestingLabTestingEventMode;
+  name?: string | null;
   requiresFeedback?: boolean;
+  startsAt?: string;
 }
 
 export interface TestingLabUpdateTestingLabRoleInput {
-  name?: string | null;
   description?: string | null;
+  name?: string | null;
   permissions?: TestingLabTestingLabPermissions;
 }
 
 export interface TestingLabUpdateTestingLabSettings {
-  labName?: string | null;
-  description?: string | null;
-  timezone?: string | null;
-  defaultSessionDuration?: number | null;
   allowPublicSignups?: boolean | null;
-  requireApproval?: boolean | null;
+  defaultSessionDuration?: number | null;
+  description?: string | null;
   enableNotifications?: boolean | null;
+  labName?: string | null;
   maxSimultaneousSessions?: number | null;
+  requireApproval?: boolean | null;
+  timezone?: string | null;
 }
 
 export interface TestingLabUpdateTestingLocation {
-  name?: string | null;
-  description?: string | null;
   address?: string | null;
   city?: string | null;
-  state?: string | null;
-  postalCode?: string | null;
-  country?: string | null;
-  maxTestersCapacity?: number | null;
-  maxProjectsCapacity?: number | null;
-  equipmentAvailable?: string | null;
-  isVirtual?: boolean | null;
-  virtualUrl?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
+  country?: string | null;
+  description?: string | null;
+  equipmentAvailable?: string | null;
+  isVirtual?: boolean | null;
+  maxProjectsCapacity?: number | null;
+  maxTestersCapacity?: number | null;
+  name?: string | null;
+  postalCode?: string | null;
+  state?: string | null;
   status?: TestingLabLocationStatus;
+  virtualUrl?: string | null;
 }
 
 export interface TestingLabUpsertTestingEventSlotInput {
-  mode?: TestingLabTestingEventMode;
-  startsAt?: string;
-  endsAt?: string;
-  maxTesters?: number | null;
-  maxProjects?: number | null;
   campusName?: string | null;
-  roomName?: string | null;
-  meetingUrl?: string | null;
+  endsAt?: string;
   locationId?: string | null;
+  maxProjects?: number | null;
+  maxTesters?: number | null;
+  meetingUrl?: string | null;
+  mode?: TestingLabTestingEventMode;
+  roomName?: string | null;
+  startsAt?: string;
 }
 
 export interface TestingLabUserTestingLabPermissions {
-  userId?: string;
-  tenantId?: string | null;
   assignedRoles?: Array<string> | null;
   permissions?: TestingLabTestingLabPermissions;
   resourcePermissions?: Array<TestingLabTestingLabResourcePermission> | null;
+  tenantId?: string | null;
+  userId?: string;
 }
 
 // Zod Schema Declarations (to handle circular references)
@@ -8475,6 +8430,7 @@ export let LaunchPadLaunchChecklistItemSchema: z.ZodType<LaunchPadLaunchChecklis
 export let LaunchPadLaunchChecklistItemInputSchema: z.ZodType<LaunchPadLaunchChecklistItemInput>;
 export let LaunchPadLaunchPlanSchema: z.ZodType<LaunchPadLaunchPlan>;
 export let LaunchPadLaunchPlanStatusSchema: z.ZodType<LaunchPadLaunchPlanStatus>;
+export let LearningAssessmentsAssessmentDefinitionSchema: z.ZodType<LearningAssessmentsAssessmentDefinition>;
 export let LearningAssessmentsAssessmentSchema: z.ZodType<LearningAssessmentsAssessment>;
 export let LearningAssessmentsAssessmentGroupAnalyticsSchema: z.ZodType<LearningAssessmentsAssessmentGroupAnalytics>;
 export let LearningAssessmentsAssessmentGroupSchema: z.ZodType<LearningAssessmentsAssessmentGroup>;
@@ -8497,6 +8453,7 @@ export let LearningAssessmentsStartSubmissionInputSchema: z.ZodType<LearningAsse
 export let LearningAssessmentsSubmissionModalitySchema: z.ZodType<LearningAssessmentsSubmissionModality>;
 export let LearningAssessmentsSubmissionStatusSchema: z.ZodType<LearningAssessmentsSubmissionStatus>;
 export let LearningAssessmentsSubmitAssessmentInputSchema: z.ZodType<LearningAssessmentsSubmitAssessmentInput>;
+export let LearningAssessmentsUpdateAssessmentDefinitionInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentDefinitionInput>;
 export let LearningAssessmentsUpdateAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentGroupInput>;
 export let LearningAssessmentsUpdateAssessmentInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentInput>;
 export let LearningCertificatesCertificateSchema: z.ZodType<LearningCertificatesCertificate>;
@@ -8848,8 +8805,6 @@ export let TestingLabTestingEventFeedbackProjectionSchema: z.ZodType<TestingLabT
 export let TestingLabTestingEventFeedbackReviewProjectionSchema: z.ZodType<TestingLabTestingEventFeedbackReviewProjection>;
 export let TestingLabTestingEventModeSchema: z.ZodType<TestingLabTestingEventMode>;
 export let TestingLabTestingEventProjectionSchema: z.ZodType<TestingLabTestingEventProjection>;
-export let TestingLabTestingEventRecurrenceFrequencySchema: z.ZodType<TestingLabTestingEventRecurrenceFrequency>;
-export let TestingLabTestingEventRecurrenceInputSchema: z.ZodType<TestingLabTestingEventRecurrenceInput>;
 export let TestingLabTestingEventSlotSchema: z.ZodType<TestingLabTestingEventSlot>;
 export let TestingLabTestingEventSlotProjectionSchema: z.ZodType<TestingLabTestingEventSlotProjection>;
 export let TestingLabTestingEventStatusSchema: z.ZodType<TestingLabTestingEventStatus>;
@@ -8876,9 +8831,6 @@ export let TestingLabTestingPrioritySchema: z.ZodType<TestingLabTestingPriority>
 export let TestingLabTestingProjectApplicationSchema: z.ZodType<TestingLabTestingProjectApplication>;
 export let TestingLabTestingProjectApplicationProjectionSchema: z.ZodType<TestingLabTestingProjectApplicationProjection>;
 export let TestingLabTestingInputSchema: z.ZodType<TestingLabTestingInput>;
-export let TestingLabTestingRequestDetailProjectionSchema: z.ZodType<TestingLabTestingRequestDetailProjection>;
-export let TestingLabTestingRequestProjectProjectionSchema: z.ZodType<TestingLabTestingRequestProjectProjection>;
-export let TestingLabTestingRequestProjectVersionProjectionSchema: z.ZodType<TestingLabTestingRequestProjectVersionProjection>;
 export let TestingLabTestingRequestStatusSchema: z.ZodType<TestingLabTestingRequestStatus>;
 export let TestingLabTestingSessionSchema: z.ZodType<TestingLabTestingSession>;
 export let TestingLabTestingSlotRegistrationProjectionSchema: z.ZodType<TestingLabTestingSlotRegistrationProjection>;
@@ -8894,69 +8846,69 @@ export let TestingLabUserTestingLabPermissionsSchema: z.ZodType<TestingLabUserTe
 // Zod Schema Definitions
 /** Zod schema for AIAiChatMessage */
 AIAiChatMessageSchema = z.object({
-  role: z.string().nullable().optional(),
   content: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
 });
 
 /** Zod schema for AIAiChatInput */
 AIAiChatInputSchema = z.object({
-  provider: z.string().nullable().optional(),
-  model: z.string().nullable().optional(),
-  systemPrompt: z.string().nullable().optional(),
+  maxTokens: z.number().int().nullable().optional(),
   messages: z
     .array(z.lazy(() => AIAiChatMessageSchema))
     .nullable()
     .optional(),
+  model: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  systemPrompt: z.string().nullable().optional(),
   temperature: z.number().nullable().optional(),
-  maxTokens: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for AIAiCompletionOutput */
 AIAiCompletionOutputSchema = z.object({
-  provider: z.string().nullable().optional(),
-  model: z.string().nullable().optional(),
-  text: z.string().nullable().optional(),
   finishReason: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  text: z.string().nullable().optional(),
   usage: z.lazy(() => AIAiUsageSchema).optional(),
 });
 
 /** Zod schema for AIAiConversationHistoryEntry */
 AIAiConversationHistoryEntrySchema = z.object({
+  finishReason: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
-  userId: z.string().uuid().nullable().optional(),
-  requestKind: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
   model: z.string().nullable().optional(),
-  requestText: z.string().nullable().optional(),
-  systemPrompt: z.string().nullable().optional(),
-  responseText: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
   outcome: z.string().nullable().optional(),
   outcomeCode: z.string().nullable().optional(),
   outcomeReason: z.string().nullable().optional(),
-  finishReason: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  requestKind: z.string().nullable().optional(),
+  requestText: z.string().nullable().optional(),
+  responseText: z.string().nullable().optional(),
+  systemPrompt: z.string().nullable().optional(),
   usage: z.lazy(() => AIAiUsageSchema).optional(),
-  occurredAt: z.string().datetime().optional(),
+  userId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for AIAiGenerateInput */
 AIAiGenerateInputSchema = z.object({
-  provider: z.string().nullable().optional(),
-  model: z.string().nullable().optional(),
-  systemPrompt: z.string().nullable().optional(),
-  prompt: z.string().nullable().optional(),
-  temperature: z.number().nullable().optional(),
   maxTokens: z.number().int().nullable().optional(),
+  model: z.string().nullable().optional(),
+  prompt: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  systemPrompt: z.string().nullable().optional(),
+  temperature: z.number().nullable().optional(),
 });
 
 /** Zod schema for AIAiGeneratedContentDraftInput */
 AIAiGeneratedContentDraftInputSchema = z.object({
-  subject: z.string().nullable().optional(),
-  context: z.string().nullable().optional(),
   audience: z.string().nullable().optional(),
-  tone: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
-  model: z.string().nullable().optional(),
+  context: z.string().nullable().optional(),
   maxTokens: z.number().int().nullable().optional(),
+  model: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  subject: z.string().nullable().optional(),
+  tone: z.string().nullable().optional(),
 });
 
 /** Zod schema for AIAiGeneratedContentKind */
@@ -8964,41 +8916,41 @@ AIAiGeneratedContentKindSchema = z.enum(['Email', 'Report', 'ListingDescription'
 
 /** Zod schema for AIAiGeneratedContentInput */
 AIAiGeneratedContentInputSchema = z.object({
-  kind: z.lazy(() => AIAiGeneratedContentKindSchema).optional(),
-  subject: z.string().nullable().optional(),
-  context: z.string().nullable().optional(),
   audience: z.string().nullable().optional(),
-  tone: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
-  model: z.string().nullable().optional(),
+  context: z.string().nullable().optional(),
+  kind: z.lazy(() => AIAiGeneratedContentKindSchema).optional(),
   maxTokens: z.number().int().nullable().optional(),
+  model: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  subject: z.string().nullable().optional(),
+  tone: z.string().nullable().optional(),
 });
 
 /** Zod schema for AIAiPromptTemplate */
 AIAiPromptTemplateSchema = z.object({
-  id: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  key: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
-  systemPrompt: z.string().nullable().optional(),
-  prompt: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  createdByUserId: z.string().uuid().nullable().optional(),
+  description: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isSystemTemplate: z.boolean().optional(),
-  createdByUserId: z.string().uuid().nullable().optional(),
-  updatedByUserId: z.string().uuid().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
+  key: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  prompt: z.string().nullable().optional(),
+  systemPrompt: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
+  updatedByUserId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for AIAiPromptTemplateGenerateInput */
 AIAiPromptTemplateGenerateInputSchema = z.object({
-  variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
-  provider: z.string().nullable().optional(),
-  model: z.string().nullable().optional(),
-  temperature: z.number().nullable().optional(),
   maxTokens: z.number().int().nullable().optional(),
+  model: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  temperature: z.number().nullable().optional(),
+  variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
 });
 
 /** Zod schema for AIAiPromptTemplateRenderInput */
@@ -9008,51 +8960,51 @@ AIAiPromptTemplateRenderInputSchema = z.object({
 
 /** Zod schema for AIAiPromptTemplateRenderOutput */
 AIAiPromptTemplateRenderOutputSchema = z.object({
-  templateId: z.string().uuid().optional(),
   key: z.string().nullable().optional(),
-  systemPrompt: z.string().nullable().optional(),
   prompt: z.string().nullable().optional(),
+  systemPrompt: z.string().nullable().optional(),
+  templateId: z.string().uuid().optional(),
   variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
 });
 
 /** Zod schema for AIAiProviderStatus */
 AIAiProviderStatusSchema = z.object({
-  provider: z.string().nullable().optional(),
-  configured: z.boolean().optional(),
-  defaultModel: z.string().nullable().optional(),
   baseUrl: z.string().nullable().optional(),
+  configured: z.boolean().optional(),
   credentialsConfigured: z.boolean().optional(),
+  defaultModel: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
 });
 
 /** Zod schema for AIAiQuotaStatus */
 AIAiQuotaStatusSchema = z.object({
-  resourceType: z.string().nullable().optional(),
   currentUsage: z.number().int().optional(),
-  softLimit: z.number().int().nullable().optional(),
   hardLimit: z.number().int().nullable().optional(),
-  remaining: z.number().int().optional(),
-  usagePercent: z.number().optional(),
-  period: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
   lastReset: z.string().datetime().nullable().optional(),
   nextReset: z.string().datetime().nullable().optional(),
+  period: z.string().nullable().optional(),
+  remaining: z.number().int().optional(),
+  resourceType: z.string().nullable().optional(),
+  softLimit: z.number().int().nullable().optional(),
+  usagePercent: z.number().optional(),
 });
 
 /** Zod schema for AIAiQuotaStatusOutput */
 AIAiQuotaStatusOutputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
+  generatedAtUtc: z.string().datetime().optional(),
   quotas: z
     .array(z.lazy(() => AIAiQuotaStatusSchema))
     .nullable()
     .optional(),
-  generatedAtUtc: z.string().datetime().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for AIAiStatusOutput */
 AIAiStatusOutputSchema = z.object({
-  enabled: z.boolean().optional(),
-  defaultProvider: z.string().nullable().optional(),
   allowTenantOverrides: z.boolean().optional(),
+  defaultProvider: z.string().nullable().optional(),
+  enabled: z.boolean().optional(),
   providers: z
     .array(z.lazy(() => AIAiProviderStatusSchema))
     .nullable()
@@ -9068,80 +9020,77 @@ AIAiUsageSchema = z.object({
 
 /** Zod schema for AICreateAiPromptTemplateInput */
 AICreateAiPromptTemplateInputSchema = z.object({
+  category: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
   key: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   prompt: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  category: z.string().nullable().optional(),
   systemPrompt: z.string().nullable().optional(),
-  isActive: z.boolean().nullable().optional(),
 });
 
 /** Zod schema for AIUpdateAiPromptTemplateInput */
 AIUpdateAiPromptTemplateInputSchema = z.object({
+  category: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
   name: z.string().nullable().optional(),
   prompt: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  category: z.string().nullable().optional(),
   systemPrompt: z.string().nullable().optional(),
-  isActive: z.boolean().nullable().optional(),
 });
 
 /** Zod schema for APIControllersApplicationDetails */
 APIControllersApplicationDetailsSchema = z.object({
+  description: z.string().nullable().optional(),
+  informationalVersion: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   version: z.string().nullable().optional(),
-  informationalVersion: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersApplicationInfoOutput */
 APIControllersApplicationInfoOutputSchema = z.object({
   application: z.lazy(() => APIControllersApplicationDetailsSchema).optional(),
   build: z.lazy(() => APIControllersBuildDetailsSchema).optional(),
-  runtime: z.lazy(() => APIControllersRuntimeDetailsSchema).optional(),
   process: z.lazy(() => APIControllersProcessDetailsSchema).optional(),
+  runtime: z.lazy(() => APIControllersRuntimeDetailsSchema).optional(),
   timestamp: z.string().datetime().optional(),
 });
 
 /** Zod schema for APIControllersBuildDetails */
 APIControllersBuildDetailsSchema = z.object({
-  timestamp: z.string().datetime().nullable().optional(),
   configuration: z.string().nullable().optional(),
   framework: z.string().nullable().optional(),
+  timestamp: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for APIControllersDependencyHealthItem */
 APIControllersDependencyHealthItemSchema = z.object({
+  data: z.record(z.string(), z.string()).nullable().optional(),
+  description: z.string().nullable().optional(),
+  duration: z.string().optional(),
+  exception: z.string().nullable().optional(),
+  isHealthy: z.boolean().optional(),
   name: z.string().nullable().optional(),
   status: z.string().nullable().optional(),
-  duration: z.string().optional(),
-  description: z.string().nullable().optional(),
-  isHealthy: z.boolean().optional(),
   tags: z.array(z.string()).nullable().optional(),
-  data: z.record(z.string(), z.string()).nullable().optional(),
-  exception: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersDependencyHealthOutput */
 APIControllersDependencyHealthOutputSchema = z.object({
-  status: z.string().nullable().optional(),
-  totalDuration: z.string().optional(),
-  timestamp: z.string().datetime().optional(),
-  healthyCount: z.number().int().optional(),
-  unhealthyCount: z.number().int().optional(),
   dependencies: z
     .array(z.lazy(() => APIControllersDependencyHealthItemSchema))
     .nullable()
     .optional(),
   error: z.string().nullable().optional(),
+  healthyCount: z.number().int().optional(),
+  status: z.string().nullable().optional(),
+  timestamp: z.string().datetime().optional(),
+  totalDuration: z.string().optional(),
+  unhealthyCount: z.number().int().optional(),
 });
 
 /** Zod schema for APIControllersHealthinessOutput */
 APIControllersHealthinessOutputSchema = z.object({
-  status: z.string().nullable().optional(),
-  duration: z.string().optional(),
-  timestamp: z.string().datetime().optional(),
   checks: z
     .record(
       z.string(),
@@ -9149,21 +9098,24 @@ APIControllersHealthinessOutputSchema = z.object({
     )
     .nullable()
     .optional(),
+  duration: z.string().optional(),
   error: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  timestamp: z.string().datetime().optional(),
 });
 
 /** Zod schema for APIControllersHealthinessResponseItem */
 APIControllersHealthinessResponseItemSchema = z.object({
-  status: z.string().nullable().optional(),
-  duration: z.string().optional(),
-  description: z.string().nullable().optional(),
   data: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  description: z.string().nullable().optional(),
+  duration: z.string().optional(),
+  status: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersLivenessOutput */
 APIControllersLivenessOutputSchema = z.object({
-  status: z.string().nullable().optional(),
   alive: z.boolean().optional(),
+  status: z.string().nullable().optional(),
   timestamp: z.string().datetime().optional(),
   uptime: z.string().optional(),
   version: z.string().nullable().optional(),
@@ -9177,18 +9129,18 @@ APIControllersProcessDetailsSchema = z.object({
 
 /** Zod schema for APIControllersReadinessOutput */
 APIControllersReadinessOutputSchema = z.object({
-  status: z.string().nullable().optional(),
-  ready: z.boolean().optional(),
-  timestamp: z.string().datetime().optional(),
-  services: z.record(z.string(), z.boolean()).nullable().optional(),
   error: z.string().nullable().optional(),
+  ready: z.boolean().optional(),
+  services: z.record(z.string(), z.boolean()).nullable().optional(),
+  status: z.string().nullable().optional(),
+  timestamp: z.string().datetime().optional(),
 });
 
 /** Zod schema for APIControllersRuntimeDetails */
 APIControllersRuntimeDetailsSchema = z.object({
   dotNetVersion: z.string().nullable().optional(),
-  osDescription: z.string().nullable().optional(),
   osArchitecture: z.string().nullable().optional(),
+  osDescription: z.string().nullable().optional(),
   processArchitecture: z.string().nullable().optional(),
 });
 
@@ -9197,23 +9149,23 @@ BillingCycleSchema = z.enum(['Weekly', 'Monthly', 'Quarterly', 'SemiAnnually', '
 
 /** Zod schema for BulkOperationError */
 BulkOperationErrorSchema = z.object({
+  errorCode: z.string().nullable().optional(),
+  errorMessage: z.string().nullable().optional(),
   tenantId: z.string().uuid().optional(),
   tenantName: z.string().nullable().optional(),
-  errorMessage: z.string().nullable().optional(),
-  errorCode: z.string().nullable().optional(),
 });
 
 /** Zod schema for BulkOperationOutput */
 BulkOperationOutputSchema = z.object({
-  totalRequested: z.number().int().optional(),
-  successfulOperations: z.number().int().optional(),
-  failedOperations: z.number().int().optional(),
   errors: z
     .array(z.lazy(() => BulkOperationErrorSchema))
     .nullable()
     .optional(),
+  failedOperations: z.number().int().optional(),
   isComplete: z.boolean().optional(),
   successRate: z.number().optional(),
+  successfulOperations: z.number().int().optional(),
+  totalRequested: z.number().int().optional(),
 });
 
 /** Zod schema for CQRSIDomainEvent */
@@ -9225,11 +9177,11 @@ CQRSIDomainEventSchema = z.object({
 
 /** Zod schema for CommerceBillingInvoicePaymentRetryResult */
 CommerceBillingInvoicePaymentRetryResultSchema = z.object({
+  accepted: z.boolean().optional(),
+  code: z.string().nullable().optional(),
   invoiceId: z.string().uuid().optional(),
   invoiceNumber: z.string().nullable().optional(),
   invoiceStatus: z.lazy(() => CommerceBillingInvoiceStatusSchema).optional(),
-  accepted: z.boolean().optional(),
-  code: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
   retryScheduledAt: z.string().datetime().nullable().optional(),
 });
@@ -9245,8 +9197,8 @@ CommerceOrdersAddOrderItemInputSchema = z.object({
   productId: z.string().uuid().optional(),
   productPricingId: z.string().uuid().optional(),
   productPricingVersionId: z.string().uuid().optional(),
-  quantity: z.number().int().optional(),
   promoCode: z.string().nullable().optional(),
+  quantity: z.number().int().optional(),
 });
 
 /** Zod schema for CommerceOrdersCaptureOrderInput */
@@ -9257,8 +9209,8 @@ CommerceOrdersCaptureOrderInputSchema = z.object({
 /** Zod schema for CommerceOrdersCompleteOrderInput */
 CommerceOrdersCompleteOrderInputSchema = z.object({
   paymentId: z.string().uuid().nullable().optional(),
-  paymentProviderReference: z.string().nullable().optional(),
   paymentMethod: z.string().nullable().optional(),
+  paymentProviderReference: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceOrdersCreateOrderInput */
@@ -9268,75 +9220,75 @@ CommerceOrdersCreateOrderInputSchema = z.object({
 
 /** Zod schema for CommerceOrdersOrderCapture */
 CommerceOrdersOrderCaptureSchema = z.object({
-  id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  idempotencyKey: z.string().nullable().optional(),
-  status: z.lazy(() => CommerceOrdersOrderStatusSchema).optional(),
-  subtotal: z.number().optional(),
-  discountTotal: z.number().optional(),
-  taxAmount: z.number().optional(),
-  total: z.number().optional(),
-  currency: z.string().nullable().optional(),
-  paymentProviderReference: z.string().nullable().optional(),
-  paymentMethod: z.string().nullable().optional(),
-  paidAt: z.string().datetime().nullable().optional(),
-  refundedAt: z.string().datetime().nullable().optional(),
-  refundAmount: z.number().nullable().optional(),
-  refundReason: z.string().nullable().optional(),
+  clientActionToken: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
+  currency: z.string().nullable().optional(),
+  discountTotal: z.number().optional(),
+  id: z.string().uuid().optional(),
+  idempotencyKey: z.string().nullable().optional(),
   lineItems: z
     .array(z.lazy(() => CommerceOrdersOrderLineItemSchema))
     .nullable()
     .optional(),
-  paymentState: z.lazy(() => CommerceOrderChargeStateSchema).optional(),
+  paidAt: z.string().datetime().nullable().optional(),
   paymentId: z.string().uuid().nullable().optional(),
-  clientActionToken: z.string().nullable().optional(),
   paymentMessage: z.string().nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  paymentProviderReference: z.string().nullable().optional(),
+  paymentState: z.lazy(() => CommerceOrderChargeStateSchema).optional(),
+  refundAmount: z.number().nullable().optional(),
+  refundReason: z.string().nullable().optional(),
+  refundedAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => CommerceOrdersOrderStatusSchema).optional(),
+  subtotal: z.number().optional(),
+  taxAmount: z.number().optional(),
+  total: z.number().optional(),
+  updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceOrdersOrder */
 CommerceOrdersOrderSchema = z.object({
-  id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  idempotencyKey: z.string().nullable().optional(),
-  status: z.lazy(() => CommerceOrdersOrderStatusSchema).optional(),
-  subtotal: z.number().optional(),
-  discountTotal: z.number().optional(),
-  taxAmount: z.number().optional(),
-  total: z.number().optional(),
-  currency: z.string().nullable().optional(),
-  paymentProviderReference: z.string().nullable().optional(),
-  paymentMethod: z.string().nullable().optional(),
-  paidAt: z.string().datetime().nullable().optional(),
-  refundedAt: z.string().datetime().nullable().optional(),
-  refundAmount: z.number().nullable().optional(),
-  refundReason: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
+  currency: z.string().nullable().optional(),
+  discountTotal: z.number().optional(),
+  id: z.string().uuid().optional(),
+  idempotencyKey: z.string().nullable().optional(),
   lineItems: z
     .array(z.lazy(() => CommerceOrdersOrderLineItemSchema))
     .nullable()
     .optional(),
+  paidAt: z.string().datetime().nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  paymentProviderReference: z.string().nullable().optional(),
+  refundAmount: z.number().nullable().optional(),
+  refundReason: z.string().nullable().optional(),
+  refundedAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => CommerceOrdersOrderStatusSchema).optional(),
+  subtotal: z.number().optional(),
+  taxAmount: z.number().optional(),
+  total: z.number().optional(),
+  updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceOrdersOrderLineItem */
 CommerceOrdersOrderLineItemSchema = z.object({
+  basePrice: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  discountAmount: z.number().optional(),
   id: z.string().uuid().optional(),
+  isSubscription: z.boolean().optional(),
+  lineTotal: z.number().optional(),
+  priceVersion: z.number().int().optional(),
   productId: z.string().uuid().optional(),
+  productName: z.string().nullable().optional(),
   productPricingId: z.string().uuid().optional(),
   productPricingVersionId: z.string().uuid().optional(),
-  priceVersion: z.number().int().optional(),
-  productName: z.string().nullable().optional(),
-  unitPrice: z.number().optional(),
-  basePrice: z.number().optional(),
-  salePrice: z.number().nullable().optional(),
-  currency: z.string().nullable().optional(),
-  quantity: z.number().int().optional(),
-  discountAmount: z.number().optional(),
   promoCodesApplied: z.string().nullable().optional(),
-  lineTotal: z.number().optional(),
-  isSubscription: z.boolean().optional(),
+  quantity: z.number().int().optional(),
+  salePrice: z.number().nullable().optional(),
+  unitPrice: z.number().optional(),
 });
 
 /** Zod schema for CommerceOrdersOrderStatus */
@@ -9356,16 +9308,16 @@ CommerceOrdersOrderStatusSchema = z.enum([
 
 /** Zod schema for CommercePaymentsBillingChargesControllerCancelBillingChargeInput */
 CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema = z.object({
-  cancellationReason: z.string().nullable().optional(),
   canceledBy: z.string().uuid().nullable().optional(),
+  cancellationReason: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsBillingChargesControllerCreateBillingChargeInput */
 CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  subscriptionId: z.string().uuid().optional(),
   amount: z.number().optional(),
   paymentMethodId: z.string().nullable().optional(),
+  subscriptionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommercePaymentsBillingChargesControllerRefundBillingChargeInput */
@@ -9376,36 +9328,36 @@ CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema = z.objec
 
 /** Zod schema for CommercePaymentsCalculateTaxInput */
 CommercePaymentsCalculateTaxInputSchema = z.object({
-  jurisdictionCode: z.string().nullable(),
   amount: z.number(),
+  applicableExemptions: z.array(z.string()).nullable().optional(),
   currency: z.string().nullable(),
   customerType: z.string().nullable(),
-  productCategory: z.string().nullable().optional(),
   customerVatNumber: z.string().nullable().optional(),
   isTaxInclusive: z.boolean().optional(),
+  jurisdictionCode: z.string().nullable(),
+  productCategory: z.string().nullable().optional(),
   transactionDate: z.string().datetime().nullable().optional(),
-  applicableExemptions: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsCreateTaxJurisdictionInput */
 CommercePaymentsCreateTaxJurisdictionInputSchema = z.object({
   code: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
+  defaultRate: z.number().optional(),
+  name: z.string().nullable().optional(),
   state: z.string().nullable().optional(),
   taxType: z.string().nullable().optional(),
-  defaultRate: z.number().optional(),
 });
 
 /** Zod schema for CommercePaymentsCreateTaxRuleInput */
 CommercePaymentsCreateTaxRuleInputSchema = z.object({
-  jurisdictionCode: z.string().nullable().optional(),
-  productCategory: z.string().nullable().optional(),
   customerType: z.string().nullable().optional(),
-  rate: z.number().optional(),
+  description: z.string().nullable().optional(),
   effectiveFrom: z.string().datetime().optional(),
   effectiveTo: z.string().datetime().nullable().optional(),
-  description: z.string().nullable().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  productCategory: z.string().nullable().optional(),
+  rate: z.number().optional(),
 });
 
 /** Zod schema for CommercePaymentsCreateWalletInput */
@@ -9435,55 +9387,55 @@ CommercePaymentsModelsPatchWalletInputSchema = z.object({
 
 /** Zod schema for CommercePaymentsPatchTaxJurisdictionInput */
 CommercePaymentsPatchTaxJurisdictionInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  taxType: z.string().nullable().optional(),
   defaultRate: z.number().nullable().optional(),
   isActive: z.boolean().nullable().optional(),
+  name: z.string().nullable().optional(),
+  taxType: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsPatchTaxRuleInput */
 CommercePaymentsPatchTaxRuleInputSchema = z.object({
-  rate: z.number().nullable().optional(),
+  description: z.string().nullable().optional(),
   effectiveFrom: z.string().datetime().nullable().optional(),
   effectiveTo: z.string().datetime().nullable().optional(),
-  description: z.string().nullable().optional(),
   isActive: z.boolean().nullable().optional(),
+  rate: z.number().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentCancellationResult */
 CommercePaymentsPaymentCancellationResultSchema = z.object({
-  paymentId: z.string().uuid(),
-  cancellationReason: z.string().nullable(),
   canceledAt: z.string().datetime(),
   canceledBy: z.string().uuid().nullable().optional(),
-  success: z.boolean(),
+  cancellationReason: z.string().nullable(),
   errorMessage: z.string().nullable().optional(),
-  refundProcessed: z.boolean().optional(),
+  paymentId: z.string().uuid(),
   refundAmount: z.number().nullable().optional(),
+  refundProcessed: z.boolean().optional(),
+  success: z.boolean(),
 });
 
 /** Zod schema for CommercePaymentsPaymentResult */
 CommercePaymentsPaymentResultSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  success: z.boolean().optional(),
-  transactionId: z.string().nullable().optional(),
-  paymentId: z.string().nullable().optional(),
   amount: z.lazy(() => MoneySchema).optional(),
-  processedAt: z.string().datetime().nullable().optional(),
   failureReason: z.string().nullable().optional(),
-  paymentMethodId: z.string().nullable().optional(),
-  status: z.lazy(() => CommercePaymentsPaymentStatusSchema).optional(),
   invoiceId: z.string().uuid().nullable().optional(),
+  paymentId: z.string().nullable().optional(),
+  paymentMethodId: z.string().nullable().optional(),
+  processedAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => CommercePaymentsPaymentStatusSchema).optional(),
+  success: z.boolean().optional(),
+  tenantId: z.string().uuid().optional(),
+  transactionId: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentRetryResult */
 CommercePaymentsPaymentRetryResultSchema = z.object({
-  success: z.boolean().optional(),
-  retryAttempt: z.number().int().optional(),
+  failureReason: z.string().nullable().optional(),
+  maxRetriesReached: z.boolean().optional(),
   nextRetryAt: z.string().datetime().nullable().optional(),
   paymentResult: z.lazy(() => CommercePaymentsPaymentResultSchema).optional(),
-  maxRetriesReached: z.boolean().optional(),
-  failureReason: z.string().nullable().optional(),
+  retryAttempt: z.number().int().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentStatus */
@@ -9491,40 +9443,40 @@ CommercePaymentsPaymentStatusSchema = z.enum(['Pending', 'Processing', 'Succeede
 
 /** Zod schema for CommercePaymentsPaymentsControllerCancelPaymentInput */
 CommercePaymentsPaymentsControllerCancelPaymentInputSchema = z.object({
-  cancellationReason: z.string().nullable().optional(),
   canceledBy: z.string().uuid().nullable().optional(),
+  cancellationReason: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput */
 CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  subscriptionId: z.string().uuid().optional(),
   paymentMethodId: z.string().nullable().optional(),
+  subscriptionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentsControllerCreateSetupIntentInput */
 CommercePaymentsPaymentsControllerCreateSetupIntentInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  subscriptionId: z.string().uuid().optional(),
   customerEmail: z.string().nullable().optional(),
   customerName: z.string().nullable().optional(),
+  subscriptionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentsControllerCreateSetupIntentOutput */
 CommercePaymentsPaymentsControllerCreateSetupIntentOutputSchema = z.object({
-  subscriptionId: z.string().uuid().optional(),
+  clientSecret: z.string().nullable().optional(),
   customerId: z.string().nullable().optional(),
   setupIntentId: z.string().nullable().optional(),
-  clientSecret: z.string().nullable().optional(),
+  subscriptionId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentsControllerProcessPaymentInput */
 CommercePaymentsPaymentsControllerProcessPaymentInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  subscriptionId: z.string().uuid().optional(),
   amount: z.number().optional(),
   paymentMethodId: z.string().nullable().optional(),
+  subscriptionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentsControllerRefundInput */
@@ -9535,55 +9487,55 @@ CommercePaymentsPaymentsControllerRefundInputSchema = z.object({
 
 /** Zod schema for CommercePaymentsProcessRefundResult */
 CommercePaymentsProcessRefundResultSchema = z.object({
-  refundId: z.string().uuid(),
-  paymentId: z.string().uuid(),
-  refundedAmount: z.number(),
   currency: z.string().nullable(),
-  status: z.lazy(() => CommercePaymentsTransactionStatusSchema),
-  reason: z.string().nullable(),
-  processedAt: z.string().datetime(),
-  referenceNumber: z.string().nullable().optional(),
-  estimatedCompletionDate: z.string().datetime().nullable().optional(),
-  processingFee: z.number().optional(),
-  isSuccess: z.boolean().optional(),
   errorMessage: z.string().nullable().optional(),
+  estimatedCompletionDate: z.string().datetime().nullable().optional(),
+  isSuccess: z.boolean().optional(),
   isSuccessful: z.boolean().optional(),
+  paymentId: z.string().uuid(),
+  processedAt: z.string().datetime(),
+  processingFee: z.number().optional(),
+  reason: z.string().nullable(),
+  referenceNumber: z.string().nullable().optional(),
+  refundId: z.string().uuid(),
+  refundedAmount: z.number(),
+  status: z.lazy(() => CommercePaymentsTransactionStatusSchema),
 });
 
 /** Zod schema for CommercePaymentsTaxBreakdown */
 CommercePaymentsTaxBreakdownSchema = z.object({
-  taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
   description: z.string().nullable().optional(),
-  rate: z.number().optional(),
-  taxableAmount: z.number().optional(),
-  taxAmount: z.number().optional(),
   jurisdictionCode: z.string().nullable().optional(),
+  rate: z.number().optional(),
+  taxAmount: z.number().optional(),
+  taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
+  taxableAmount: z.number().optional(),
 });
 
 /** Zod schema for CommercePaymentsTaxCalculationResult */
 CommercePaymentsTaxCalculationResultSchema = z.object({
-  subtotalAmount: z.number().optional(),
-  taxAmount: z.number().optional(),
-  totalAmount: z.number().optional(),
   effectiveTaxRate: z.number().optional(),
+  exemptionReason: z.string().nullable().optional(),
+  isReverseCharge: z.boolean().optional(),
+  isTaxExempt: z.boolean().optional(),
   jurisdictionCode: z.string().nullable().optional(),
   jurisdictionName: z.string().nullable().optional(),
-  taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
-  taxDescription: z.string().nullable().optional(),
-  isTaxExempt: z.boolean().optional(),
-  isReverseCharge: z.boolean().optional(),
+  subtotalAmount: z.number().optional(),
+  taxAmount: z.number().optional(),
   taxBreakdowns: z
     .array(z.lazy(() => CommercePaymentsTaxBreakdownSchema))
     .nullable()
     .optional(),
-  exemptionReason: z.string().nullable().optional(),
+  taxDescription: z.string().nullable().optional(),
+  taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
+  totalAmount: z.number().optional(),
 });
 
 /** Zod schema for CommercePaymentsTaxExemptionValidationResult */
 CommercePaymentsTaxExemptionValidationResultSchema = z.object({
-  isValid: z.boolean().optional(),
-  exemptionType: z.string().nullable().optional(),
   exemptionRate: z.number().optional(),
+  exemptionType: z.string().nullable().optional(),
+  isValid: z.boolean().optional(),
   validFrom: z.string().datetime().nullable().optional(),
   validTo: z.string().datetime().nullable().optional(),
   validationMessage: z.string().nullable().optional(),
@@ -9592,47 +9544,47 @@ CommercePaymentsTaxExemptionValidationResultSchema = z.object({
 
 /** Zod schema for CommercePaymentsTaxJurisdiction */
 CommercePaymentsTaxJurisdictionSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  childJurisdictions: z
+    .array(z.lazy(() => CommercePaymentsTaxJurisdictionSchema))
+    .nullable()
+    .optional(),
+  code: z.string().min(1).max(20),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  code: z.string().min(1).max(20),
-  name: z.string().min(1).max(200),
-  type: z.lazy(() => CommercePaymentsTaxJurisdictionTypeSchema).optional(),
-  parentJurisdictionId: z.string().uuid().nullable().optional(),
-  parentJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
-  childJurisdictions: z
-    .array(z.lazy(() => CommercePaymentsTaxJurisdictionSchema))
-    .nullable()
-    .optional(),
   isActive: z.boolean().optional(),
-  taxRegistrationNumber: z.string().max(100).nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   isReverseChargeApplicable: z.boolean().optional(),
+  name: z.string().min(1).max(200),
+  parentJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
+  parentJurisdictionId: z.string().uuid().nullable().optional(),
+  taxRegistrationNumber: z.string().max(100).nullable().optional(),
   taxRules: z
     .array(z.lazy(() => CommercePaymentsTaxRuleSchema))
     .nullable()
     .optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => CommercePaymentsTaxJurisdictionTypeSchema).optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for CommercePaymentsTaxJurisdictionDto */
 CommercePaymentsTaxJurisdictionDtoSchema = z.object({
-  id: z.string().uuid().optional(),
   code: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
+  defaultRate: z.number().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  name: z.string().nullable().optional(),
   state: z.string().nullable().optional(),
   taxType: z.string().nullable().optional(),
-  defaultRate: z.number().optional(),
-  isActive: z.boolean().optional(),
 });
 
 /** Zod schema for CommercePaymentsTaxJurisdictionType */
@@ -9640,78 +9592,78 @@ CommercePaymentsTaxJurisdictionTypeSchema = z.enum(['Country', 'State', 'Provinc
 
 /** Zod schema for CommercePaymentsTaxRate */
 CommercePaymentsTaxRateSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().max(500).nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  taxJurisdictionId: z.string().uuid(),
-  taxJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
-  taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
-  rate: z.number().optional(),
-  productCategory: z.string().max(100).nullable().optional(),
   effectiveFrom: z.string().datetime().optional(),
   effectiveTo: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
-  minimumTaxableAmount: z.number().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   maximumTaxableAmount: z.number().nullable().optional(),
-  description: z.string().max(500).nullable().optional(),
+  minimumTaxableAmount: z.number().nullable().optional(),
+  productCategory: z.string().max(100).nullable().optional(),
+  rate: z.number().optional(),
+  taxJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
+  taxJurisdictionId: z.string().uuid(),
+  taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for CommercePaymentsTaxRule */
 CommercePaymentsTaxRuleSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  customerTypeFilter: z.lazy(() => CommercePaymentsCustomerTypeSchema).optional(),
+  defaultTaxRate: z.lazy(() => CommercePaymentsTaxRateSchema).optional(),
+  defaultTaxRateId: z.string().uuid().nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().max(1000).nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  name: z.string().min(1).max(200),
-  description: z.string().max(1000).nullable().optional(),
-  taxJurisdictionId: z.string().uuid(),
-  taxJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
-  ruleType: z.lazy(() => CommercePaymentsTaxRuleTypeSchema).optional(),
-  priority: z.number().int().optional(),
-  isActive: z.boolean().optional(),
   effectiveFrom: z.string().datetime().nullable().optional(),
   effectiveTo: z.string().datetime().nullable().optional(),
-  customerTypeFilter: z.lazy(() => CommercePaymentsCustomerTypeSchema).optional(),
-  productCategories: z.string().max(2000).nullable().optional(),
-  minimumAmount: z.number().nullable().optional(),
-  maximumAmount: z.number().nullable().optional(),
-  isTaxInclusive: z.boolean().optional(),
-  isReverseCharge: z.boolean().optional(),
   exemptionConditions: z.string().max(2000).nullable().optional(),
-  defaultTaxRateId: z.string().uuid().nullable().optional(),
-  defaultTaxRate: z.lazy(() => CommercePaymentsTaxRateSchema).optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isReverseCharge: z.boolean().optional(),
+  isTaxInclusive: z.boolean().optional(),
+  maximumAmount: z.number().nullable().optional(),
+  minimumAmount: z.number().nullable().optional(),
+  name: z.string().min(1).max(200),
+  priority: z.number().int().optional(),
+  productCategories: z.string().max(2000).nullable().optional(),
+  ruleType: z.lazy(() => CommercePaymentsTaxRuleTypeSchema).optional(),
+  taxJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
+  taxJurisdictionId: z.string().uuid(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for CommercePaymentsTaxRuleDto */
 CommercePaymentsTaxRuleDtoSchema = z.object({
-  id: z.string().uuid().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  productCategory: z.string().nullable().optional(),
   customerType: z.string().nullable().optional(),
-  rate: z.number().optional(),
+  description: z.string().nullable().optional(),
   effectiveFrom: z.string().datetime().optional(),
   effectiveTo: z.string().datetime().nullable().optional(),
-  description: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  productCategory: z.string().nullable().optional(),
+  rate: z.number().optional(),
 });
 
 /** Zod schema for CommercePaymentsTaxRuleType */
@@ -9725,70 +9677,70 @@ CommercePaymentsTransactionStatusSchema = z.enum(['Pending', 'Processing', 'Comp
 
 /** Zod schema for CommercePaymentsUserWallet */
 CommercePaymentsUserWalletSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  balance: z.number().optional(),
+  createdAt: z.string().datetime(),
+  currency: z.string().min(1).max(3),
+  dailyLimit: z.number().nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  userId: z.string().uuid(),
-  balance: z.number().optional(),
-  currency: z.string().min(1).max(3),
   isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
   isLocked: z.boolean().optional(),
-  lockReason: z.string().max(500).nullable().optional(),
+  isNew: z.boolean().optional(),
   lastTransactionAt: z.string().datetime().nullable().optional(),
-  dailyLimit: z.number().nullable().optional(),
+  lockReason: z.string().max(500).nullable().optional(),
   monthlyLimit: z.number().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
   transactions: z
     .array(z.lazy(() => CommercePaymentsWalletTransactionSchema))
     .nullable()
     .optional(),
+  updatedAt: z.string().datetime(),
+  userId: z.string().uuid(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for CommercePaymentsValidateTaxExemptionInput */
 CommercePaymentsValidateTaxExemptionInputSchema = z.object({
-  jurisdictionCode: z.string().nullable().optional(),
-  exemptionType: z.string().nullable().optional(),
-  exemptionCertificateNumber: z.string().nullable().optional(),
-  customerVatNumber: z.string().nullable().optional(),
   customerId: z.string().uuid().nullable().optional(),
+  customerVatNumber: z.string().nullable().optional(),
+  exemptionCertificateNumber: z.string().nullable().optional(),
+  exemptionType: z.string().nullable().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
   transactionDate: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsWalletTransaction */
 CommercePaymentsWalletTransactionSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  amount: z.number().optional(),
+  balanceAfter: z.number().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().min(1).max(500),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  walletId: z.string().uuid(),
-  wallet: z.lazy(() => CommercePaymentsUserWalletSchema).optional(),
-  type: z.lazy(() => CommercePaymentsWalletTransactionTypeSchema).optional(),
-  amount: z.number().optional(),
-  balanceAfter: z.number().optional(),
-  description: z.string().min(1).max(500),
-  referenceId: z.string().max(200).nullable().optional(),
-  status: z.lazy(() => CommercePaymentsTransactionStatusSchema).optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   metadata: z.string().max(2000).nullable().optional(),
   notes: z.string().max(1000).nullable().optional(),
   processedAt: z.string().datetime().nullable().optional(),
+  referenceId: z.string().max(200).nullable().optional(),
+  status: z.lazy(() => CommercePaymentsTransactionStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => CommercePaymentsWalletTransactionTypeSchema).optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+  wallet: z.lazy(() => CommercePaymentsUserWalletSchema).optional(),
+  walletId: z.string().uuid(),
 });
 
 /** Zod schema for CommercePaymentsWalletTransactionType */
@@ -9796,13 +9748,13 @@ CommercePaymentsWalletTransactionTypeSchema = z.enum(['Credit', 'Debit', 'Transf
 
 /** Zod schema for CommerceProductsAddSupportTicketMessageInput */
 CommerceProductsAddSupportTicketMessageInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  authorUserId: z.string().uuid().optional(),
-  authorName: z.string().nullable().optional(),
   authorEmail: z.string().nullable().optional(),
+  authorName: z.string().nullable().optional(),
   authorType: z.lazy(() => CommerceProductsSupportTicketMessageAuthorTypeSchema).optional(),
+  authorUserId: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
   isInternal: z.boolean().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsAppliedPromoCode */
@@ -9815,15 +9767,15 @@ CommerceProductsAppliedPromoCodeSchema = z.object({
 /** Zod schema for CommerceProductsApplyPromoCodesInput */
 CommerceProductsApplyPromoCodesInputSchema = z.object({
   orderAmount: z.number().optional(),
-  promoCodes: z.array(z.string()).nullable().optional(),
   productId: z.string().uuid().nullable().optional(),
+  promoCodes: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsAssignSupportTicketInput */
 CommerceProductsAssignSupportTicketInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  agentUserId: z.string().uuid().optional(),
   agentName: z.string().nullable().optional(),
+  agentUserId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsBatchCreateProductsInput */
@@ -9837,17 +9789,17 @@ CommerceProductsBatchCreateProductsInputSchema = z.object({
 
 /** Zod schema for CommerceProductsBatchProductCreateItem */
 CommerceProductsBatchProductCreateItemSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  shortDescription: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
-  isBundle: z.boolean().optional(),
-  creatorId: z.string().uuid().nullable().optional(),
-  bundleItems: z.array(z.string().uuid()).nullable().optional(),
-  referralCommissionPercentage: z.number().optional(),
-  maxAffiliateDiscount: z.number().optional(),
   affiliateCommissionPercentage: z.number().optional(),
+  bundleItems: z.array(z.string().uuid()).nullable().optional(),
+  creatorId: z.string().uuid().nullable().optional(),
+  description: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isBundle: z.boolean().optional(),
+  maxAffiliateDiscount: z.number().optional(),
+  name: z.string().nullable().optional(),
+  referralCommissionPercentage: z.number().optional(),
+  shortDescription: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
 /** Zod schema for CommerceProductsCheckMultipleAccessInput */
@@ -9857,124 +9809,124 @@ CommerceProductsCheckMultipleAccessInputSchema = z.object({
 
 /** Zod schema for CommerceProductsCloseSupportTicketInput */
 CommerceProductsCloseSupportTicketInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  agentUserId: z.string().uuid().optional(),
   agentName: z.string().nullable().optional(),
+  agentUserId: z.string().uuid().optional(),
   closingNotes: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsCreateProductInput */
 CommerceProductsCreateProductInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  shortDescription: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
-  isBundle: z.boolean().optional(),
-  creatorId: z.string().uuid().nullable().optional(),
-  bundleItems: z.array(z.string().uuid()).nullable().optional(),
-  referralCommissionPercentage: z.number().optional(),
-  maxAffiliateDiscount: z.number().optional(),
   affiliateCommissionPercentage: z.number().optional(),
+  bundleItems: z.array(z.string().uuid()).nullable().optional(),
+  creatorId: z.string().uuid().nullable().optional(),
+  description: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isBundle: z.boolean().optional(),
+  maxAffiliateDiscount: z.number().optional(),
+  name: z.string().nullable().optional(),
+  referralCommissionPercentage: z.number().optional(),
+  shortDescription: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
 /** Zod schema for CommerceProductsCreatePromoCodeInput */
 CommerceProductsCreatePromoCodeInputSchema = z.object({
   code: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
-  discountPercentage: z.number().nullable().optional(),
-  discountAmount: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
-  minimumOrderAmount: z.number().nullable().optional(),
-  maxUses: z.number().int().nullable().optional(),
-  maxUsesPerUser: z.number().int().nullable().optional(),
-  validFrom: z.string().datetime().nullable().optional(),
-  validUntil: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  discountAmount: z.number().nullable().optional(),
+  discountPercentage: z.number().nullable().optional(),
   isActive: z.boolean().optional(),
   isExclusive: z.boolean().optional(),
-  stackingPriority: z.number().int().optional(),
+  maxUses: z.number().int().nullable().optional(),
+  maxUsesPerUser: z.number().int().nullable().optional(),
+  minimumOrderAmount: z.number().nullable().optional(),
+  name: z.string().nullable().optional(),
   productId: z.string().uuid().nullable().optional(),
+  stackingPriority: z.number().int().optional(),
+  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
+  validFrom: z.string().datetime().nullable().optional(),
+  validUntil: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsCreateSupportTicketInput */
 CommerceProductsCreateSupportTicketInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
+  body: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
   customerId: z.string().uuid().optional(),
   customerName: z.string().nullable().optional(),
-  reporterUserId: z.string().uuid().optional(),
-  reporterName: z.string().nullable().optional(),
-  reporterEmail: z.string().nullable().optional(),
-  subject: z.string().nullable().optional(),
-  body: z.string().nullable().optional(),
   priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
-  category: z.string().nullable().optional(),
+  reporterEmail: z.string().nullable().optional(),
+  reporterName: z.string().nullable().optional(),
+  reporterUserId: z.string().uuid().optional(),
+  subject: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsEntitlementCheckResult */
 CommerceProductsEntitlementCheckResultSchema = z.object({
-  productId: z.string().uuid().optional(),
   hasAccess: z.boolean().optional(),
+  productId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsEntitlementInfo */
 CommerceProductsEntitlementInfoSchema = z.object({
+  accessEndDate: z.string().datetime().nullable().optional(),
+  accessStartDate: z.string().datetime().nullable().optional(),
+  acquisitionType: z.string().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  isSubscription: z.boolean().optional(),
+  pricePaid: z.number().optional(),
   productId: z.string().uuid().optional(),
   productName: z.string().nullable().optional(),
   status: z.string().nullable().optional(),
-  acquisitionType: z.string().nullable().optional(),
-  accessStartDate: z.string().datetime().nullable().optional(),
-  accessEndDate: z.string().datetime().nullable().optional(),
-  isSubscription: z.boolean().optional(),
   subscriptionStatus: z.string().nullable().optional(),
-  pricePaid: z.number().optional(),
-  currency: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsGrantEntitlementInput */
 CommerceProductsGrantEntitlementInputSchema = z.object({
-  userId: z.string().uuid().optional(),
-  productId: z.string().uuid().optional(),
   acquisitionType: z.lazy(() => CommerceProductsProductAcquisitionTypeSchema).optional(),
-  pricePaid: z.number().optional(),
   currency: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  pricePaid: z.number().optional(),
+  productId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsPatchProductInput */
 CommerceProductsPatchProductInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  shortDescription: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
-  isBundle: z.boolean().nullable().optional(),
-  bundleItems: z.array(z.string().uuid()).nullable().optional(),
-  referralCommissionPercentage: z.number().nullable().optional(),
-  maxAffiliateDiscount: z.number().nullable().optional(),
   affiliateCommissionPercentage: z.number().nullable().optional(),
+  bundleItems: z.array(z.string().uuid()).nullable().optional(),
+  description: z.string().nullable().optional(),
   expectedVersion: z.number().int().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isBundle: z.boolean().nullable().optional(),
+  maxAffiliateDiscount: z.number().nullable().optional(),
+  name: z.string().nullable().optional(),
+  referralCommissionPercentage: z.number().nullable().optional(),
+  shortDescription: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
 /** Zod schema for CommerceProductsPatchPromoCodeInput */
 CommerceProductsPatchPromoCodeInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
-  discountPercentage: z.number().nullable().optional(),
-  discountAmount: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
-  minimumOrderAmount: z.number().nullable().optional(),
-  maxUses: z.number().int().nullable().optional(),
-  maxUsesPerUser: z.number().int().nullable().optional(),
-  validFrom: z.string().datetime().nullable().optional(),
-  validUntil: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  discountAmount: z.number().nullable().optional(),
+  discountPercentage: z.number().nullable().optional(),
   isActive: z.boolean().nullable().optional(),
   isExclusive: z.boolean().nullable().optional(),
-  stackingPriority: z.number().int().nullable().optional(),
+  maxUses: z.number().int().nullable().optional(),
+  maxUsesPerUser: z.number().int().nullable().optional(),
+  minimumOrderAmount: z.number().nullable().optional(),
+  name: z.string().nullable().optional(),
   productId: z.string().uuid().nullable().optional(),
+  stackingPriority: z.number().int().nullable().optional(),
+  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
+  validFrom: z.string().datetime().nullable().optional(),
+  validUntil: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsProductAcquisitionType */
@@ -9982,40 +9934,40 @@ CommerceProductsProductAcquisitionTypeSchema = z.enum(['Purchase', 'Subscription
 
 /** Zod schema for CommerceProductsProduct */
 CommerceProductsProductSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
+  affiliateCommissionPercentage: z.number().optional(),
+  bundleItems: z.array(z.string().uuid()).nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  creatorId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
-  shortDescription: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
   imageUrl: z.string().nullable().optional(),
-  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
   isBundle: z.boolean().optional(),
   isPublished: z.boolean().optional(),
-  creatorId: z.string().uuid().nullable().optional(),
-  bundleItems: z.array(z.string().uuid()).nullable().optional(),
-  referralCommissionPercentage: z.number().optional(),
   maxAffiliateDiscount: z.number().optional(),
-  affiliateCommissionPercentage: z.number().optional(),
-  createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
+  name: z.string().nullable().optional(),
   pricing: z
     .array(z.lazy(() => CommerceProductsProductPricingSchema))
     .nullable()
     .optional(),
+  referralCommissionPercentage: z.number().optional(),
+  shortDescription: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
+  updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for CommerceProductsProductPricing */
 CommerceProductsProductPricingSchema = z.object({
-  id: z.string().uuid().optional(),
-  productId: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
   basePrice: z.number().optional(),
-  salePrice: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
-  saleStartDate: z.string().datetime().nullable().optional(),
-  saleEndDate: z.string().datetime().nullable().optional(),
-  isDefault: z.boolean().optional(),
   currentPrice: z.number().optional(),
+  id: z.string().uuid().optional(),
+  isDefault: z.boolean().optional(),
   isSaleActive: z.boolean().optional(),
+  name: z.string().nullable().optional(),
+  productId: z.string().uuid().optional(),
+  saleEndDate: z.string().datetime().nullable().optional(),
+  salePrice: z.number().nullable().optional(),
+  saleStartDate: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsProductType */
@@ -10038,41 +9990,41 @@ CommerceProductsProductTypeSchema = z.enum([
 
 /** Zod schema for CommerceProductsPromoCodeApplicationResult */
 CommerceProductsPromoCodeApplicationResultSchema = z.object({
-  originalAmount: z.number().optional(),
-  finalAmount: z.number().optional(),
-  totalDiscount: z.number().optional(),
   appliedCodes: z
     .array(z.lazy(() => CommerceProductsAppliedPromoCodeSchema))
     .nullable()
     .optional(),
+  finalAmount: z.number().optional(),
+  originalAmount: z.number().optional(),
   rejectedCodes: z
     .array(z.lazy(() => CommerceProductsRejectedPromoCodeSchema))
     .nullable()
     .optional(),
+  totalDiscount: z.number().optional(),
 });
 
 /** Zod schema for CommerceProductsPromoCode */
 CommerceProductsPromoCodeSchema = z.object({
-  id: z.string().uuid().optional(),
   code: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
-  discountPercentage: z.number().nullable().optional(),
-  discountAmount: z.number().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
   currency: z.string().nullable().optional(),
-  minimumOrderAmount: z.number().nullable().optional(),
-  maxUses: z.number().int().nullable().optional(),
-  maxUsesPerUser: z.number().int().nullable().optional(),
-  validFrom: z.string().datetime().nullable().optional(),
-  validUntil: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  discountAmount: z.number().nullable().optional(),
+  discountPercentage: z.number().nullable().optional(),
+  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isExclusive: z.boolean().optional(),
-  stackingPriority: z.number().int().optional(),
+  maxUses: z.number().int().nullable().optional(),
+  maxUsesPerUser: z.number().int().nullable().optional(),
+  minimumOrderAmount: z.number().nullable().optional(),
+  name: z.string().nullable().optional(),
   productId: z.string().uuid().nullable().optional(),
-  usageCount: z.number().int().optional(),
-  createdAt: z.string().datetime().optional(),
+  stackingPriority: z.number().int().optional(),
+  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
   updatedAt: z.string().datetime().optional(),
+  usageCount: z.number().int().optional(),
+  validFrom: z.string().datetime().nullable().optional(),
+  validUntil: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsPromoCodeType */
@@ -10080,25 +10032,25 @@ CommerceProductsPromoCodeTypeSchema = z.enum(['PercentageOff', 'FixedAmountOff',
 
 /** Zod schema for CommerceProductsPromoCodeUsage */
 CommerceProductsPromoCodeUsageSchema = z.object({
-  promoCodeId: z.string().uuid().optional(),
-  code: z.string().nullable().optional(),
-  totalUses: z.number().int().optional(),
-  uniqueUsers: z.number().int().optional(),
-  totalDiscountGiven: z.number().optional(),
   averageDiscountPerUse: z.number().optional(),
-  maxUses: z.number().int().nullable().optional(),
-  remainingUses: z.number().int().nullable().optional(),
+  code: z.string().nullable().optional(),
   firstUsedAt: z.string().datetime().nullable().optional(),
   lastUsedAt: z.string().datetime().nullable().optional(),
+  maxUses: z.number().int().nullable().optional(),
+  promoCodeId: z.string().uuid().optional(),
+  remainingUses: z.number().int().nullable().optional(),
+  totalDiscountGiven: z.number().optional(),
+  totalUses: z.number().int().optional(),
+  uniqueUsers: z.number().int().optional(),
 });
 
 /** Zod schema for CommerceProductsPromoCodeValidationResult */
 CommerceProductsPromoCodeValidationResultSchema = z.object({
-  isValid: z.boolean().optional(),
   code: z.string().nullable().optional(),
-  errorMessage: z.string().nullable().optional(),
   discountAmount: z.number().optional(),
   discountPercentage: z.number().nullable().optional(),
+  errorMessage: z.string().nullable().optional(),
+  isValid: z.boolean().optional(),
 });
 
 /** Zod schema for CommerceProductsRejectedPromoCode */
@@ -10109,40 +10061,29 @@ CommerceProductsRejectedPromoCodeSchema = z.object({
 
 /** Zod schema for CommerceProductsResolveSupportTicketInput */
 CommerceProductsResolveSupportTicketInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  agentUserId: z.string().uuid().optional(),
   agentName: z.string().nullable().optional(),
+  agentUserId: z.string().uuid().optional(),
   resolutionSummary: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsRevokeEntitlementInput */
 CommerceProductsRevokeEntitlementInputSchema = z.object({
-  userId: z.string().uuid().optional(),
   productId: z.string().uuid().optional(),
   reason: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsSupportTicket */
 CommerceProductsSupportTicketSchema = z.object({
-  id: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
+  assignedToName: z.string().nullable().optional(),
+  assignedToUserId: z.string().uuid().nullable().optional(),
+  category: z.string().nullable().optional(),
+  closedAt: z.string().datetime().nullable().optional(),
   customerId: z.string().uuid().optional(),
   customerName: z.string().nullable().optional(),
-  reporterUserId: z.string().uuid().optional(),
-  reporterName: z.string().nullable().optional(),
-  reporterEmail: z.string().nullable().optional(),
-  subject: z.string().nullable().optional(),
-  category: z.string().nullable().optional(),
-  status: z.lazy(() => CommerceProductsSupportTicketStatusSchema).optional(),
-  priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
-  assignedToUserId: z.string().uuid().nullable().optional(),
-  assignedToName: z.string().nullable().optional(),
-  openedAt: z.string().datetime().optional(),
   firstResponseAt: z.string().datetime().nullable().optional(),
-  responseDueBy: z.string().datetime().nullable().optional(),
-  resolvedAt: z.string().datetime().nullable().optional(),
-  closedAt: z.string().datetime().nullable().optional(),
-  resolutionSummary: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
   lastMessageAt: z.string().datetime().nullable().optional(),
   lastMessagePreview: z.string().nullable().optional(),
   messageCount: z.number().int().optional(),
@@ -10150,6 +10091,17 @@ CommerceProductsSupportTicketSchema = z.object({
     .array(z.lazy(() => CommerceProductsSupportTicketMessageSchema))
     .nullable()
     .optional(),
+  openedAt: z.string().datetime().optional(),
+  priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
+  reporterEmail: z.string().nullable().optional(),
+  reporterName: z.string().nullable().optional(),
+  reporterUserId: z.string().uuid().optional(),
+  resolutionSummary: z.string().nullable().optional(),
+  resolvedAt: z.string().datetime().nullable().optional(),
+  responseDueBy: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => CommerceProductsSupportTicketStatusSchema).optional(),
+  subject: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsSupportTicketMessageAuthorType */
@@ -10157,15 +10109,15 @@ CommerceProductsSupportTicketMessageAuthorTypeSchema = z.enum(['Customer', 'Agen
 
 /** Zod schema for CommerceProductsSupportTicketMessage */
 CommerceProductsSupportTicketMessageSchema = z.object({
-  id: z.string().uuid().optional(),
-  ticketId: z.string().uuid().optional(),
-  authorUserId: z.string().uuid().optional(),
-  authorName: z.string().nullable().optional(),
   authorEmail: z.string().nullable().optional(),
+  authorName: z.string().nullable().optional(),
   authorType: z.lazy(() => CommerceProductsSupportTicketMessageAuthorTypeSchema).optional(),
+  authorUserId: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
-  isInternal: z.boolean().optional(),
   createdAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  isInternal: z.boolean().optional(),
+  ticketId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsSupportTicketPriority */
@@ -10176,36 +10128,36 @@ CommerceProductsSupportTicketStatusSchema = z.enum(['Open', 'InProgress', 'Resol
 
 /** Zod schema for CommerceProductsUpdateProductInput */
 CommerceProductsUpdateProductInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  shortDescription: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
-  isBundle: z.boolean().nullable().optional(),
-  bundleItems: z.array(z.string().uuid()).nullable().optional(),
-  referralCommissionPercentage: z.number().nullable().optional(),
-  maxAffiliateDiscount: z.number().nullable().optional(),
   affiliateCommissionPercentage: z.number().nullable().optional(),
+  bundleItems: z.array(z.string().uuid()).nullable().optional(),
+  description: z.string().nullable().optional(),
   expectedVersion: z.number().int().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isBundle: z.boolean().nullable().optional(),
+  maxAffiliateDiscount: z.number().nullable().optional(),
+  name: z.string().nullable().optional(),
+  referralCommissionPercentage: z.number().nullable().optional(),
+  shortDescription: z.string().nullable().optional(),
+  type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
 /** Zod schema for CommerceProductsUpdatePromoCodeInput */
 CommerceProductsUpdatePromoCodeInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
-  discountPercentage: z.number().nullable().optional(),
-  discountAmount: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
-  minimumOrderAmount: z.number().nullable().optional(),
-  maxUses: z.number().int().nullable().optional(),
-  maxUsesPerUser: z.number().int().nullable().optional(),
-  validFrom: z.string().datetime().nullable().optional(),
-  validUntil: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  discountAmount: z.number().nullable().optional(),
+  discountPercentage: z.number().nullable().optional(),
   isActive: z.boolean().nullable().optional(),
   isExclusive: z.boolean().nullable().optional(),
-  stackingPriority: z.number().int().nullable().optional(),
+  maxUses: z.number().int().nullable().optional(),
+  maxUsesPerUser: z.number().int().nullable().optional(),
+  minimumOrderAmount: z.number().nullable().optional(),
+  name: z.string().nullable().optional(),
   productId: z.string().uuid().nullable().optional(),
+  stackingPriority: z.number().int().nullable().optional(),
+  type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
+  validFrom: z.string().datetime().nullable().optional(),
+  validUntil: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsValidatePromoCodeInput */
@@ -10217,33 +10169,33 @@ CommerceProductsValidatePromoCodeInputSchema = z.object({
 
 /** Zod schema for CommerceSubscriptionsBillingHistory */
 CommerceSubscriptionsBillingHistorySchema = z.object({
-  id: z.string().uuid().optional(),
-  subscriptionId: z.string().uuid().optional(),
-  billingDate: z.string().datetime().optional(),
   amount: z.number().optional(),
-  currency: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
-  externalPaymentId: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
+  billingDate: z.string().datetime().optional(),
   createdAt: z.string().datetime().optional(),
+  currency: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  externalPaymentId: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  status: z.string().nullable().optional(),
+  subscriptionId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput */
 CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInputSchema = z.object({
-  reason: z.lazy(() => CommerceSubscriptionsCancellationReasonSchema).optional(),
-  note: z.string().nullable().optional(),
   effectiveDate: z.string().datetime().nullable().optional(),
+  note: z.string().nullable().optional(),
+  reason: z.lazy(() => CommerceSubscriptionsCancellationReasonSchema).optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput */
 CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  planId: z.string().uuid().optional(),
-  createdByUserId: z.string().uuid().optional(),
-  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
   amount: z.number().optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  createdByUserId: z.string().uuid().optional(),
   fulfilledOrderId: z.string().uuid().nullable().optional(),
+  planId: z.string().uuid().optional(),
   startDate: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
   trialDays: z.number().int().nullable().optional(),
 });
 
@@ -10262,91 +10214,91 @@ CommerceSubscriptionsCancellationReasonSchema = z.enum([
 /** Zod schema for CommerceSubscriptionsClientModulesOutput */
 CommerceSubscriptionsClientModulesOutputSchema = z.object({
   clientId: z.string().uuid().optional(),
-  subscriptions: z.lazy(() => PagedResultOfGameGuildCommerceSubscriptionsSubscriptionSchema).optional(),
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
+  subscriptions: z.lazy(() => PagedResultOfGameGuildCommerceSubscriptionsSubscriptionSchema).optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsCreateClientInput */
 CommerceSubscriptionsCreateClientInputSchema = z.object({
+  adminEmail: z.string().nullable().optional(),
+  cnpj: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  fiscalData: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   name: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
-  adminEmail: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  cnpj: z.string().nullable().optional(),
   taxId: z.string().nullable().optional(),
-  fiscalData: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscription */
 CommerceSubscriptionsSubscriptionSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  amount: z.lazy(() => MoneySchema).optional(),
+  autoRenew: z.boolean().optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  billingCycleCount: z.number().int().optional(),
+  cancellationNote: z.string().max(1000).nullable().optional(),
+  cancellationReason: z.lazy(() => CommerceSubscriptionsCancellationReasonSchema).optional(),
+  cancelledAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime(),
+  createdByUserId: z.string().uuid(),
+  currentPeriodEnd: z.string().datetime().optional(),
+  currentPeriodStart: z.string().datetime().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  createdByUserId: z.string().uuid(),
-  fulfilledOrderId: z.string().uuid().nullable().optional(),
-  lastModifyingOrderId: z.string().uuid().nullable().optional(),
-  lastRenewalIdempotencyKey: z.string().max(100).nullable().optional(),
-  lastPaymentIdempotencyKey: z.string().max(100).nullable().optional(),
-  lockedPriceVersionId: z.string().uuid().nullable().optional(),
-  lastProcessedBillingCycle: z.number().int().optional(),
-  trialEndDate: z.string().datetime().nullable().optional(),
-  cancellationReason: z.lazy(() => CommerceSubscriptionsCancellationReasonSchema).optional(),
-  cancellationNote: z.string().max(1000).nullable().optional(),
-  cancelledAt: z.string().datetime().nullable().optional(),
-  externalId: z.string().max(100).nullable().optional(),
-  externalCustomerId: z.string().max(100).nullable().optional(),
-  autoRenew: z.boolean().optional(),
-  currentPeriodStart: z.string().datetime().optional(),
-  currentPeriodEnd: z.string().datetime().optional(),
-  billingCycleCount: z.number().int().optional(),
-  lastPaymentAt: z.string().datetime().nullable().optional(),
-  metadata: z.string().max(2000).nullable().optional(),
-  rowVersion: z.string().nullable().optional(),
-  plan: z.lazy(() => CommerceSubscriptionsSubscriptionPlanSchema).optional(),
-  status: z.lazy(() => CommerceSubscriptionsSubscriptionStatusSchema).optional(),
-  planId: z.string().uuid(),
-  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
-  amount: z.lazy(() => MoneySchema).optional(),
-  startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().nullable().optional(),
-  nextBillingDate: z.string().datetime().optional(),
+  externalCustomerId: z.string().max(100).nullable().optional(),
+  externalId: z.string().max(100).nullable().optional(),
+  fulfilledOrderId: z.string().uuid().nullable().optional(),
+  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
-  isTrialing: z.boolean().optional(),
   isCancelled: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isTrialing: z.boolean().optional(),
+  lastModifyingOrderId: z.string().uuid().nullable().optional(),
+  lastPaymentAt: z.string().datetime().nullable().optional(),
+  lastPaymentIdempotencyKey: z.string().max(100).nullable().optional(),
+  lastProcessedBillingCycle: z.number().int().optional(),
+  lastRenewalIdempotencyKey: z.string().max(100).nullable().optional(),
+  lockedPriceVersionId: z.string().uuid().nullable().optional(),
+  metadata: z.string().max(2000).nullable().optional(),
+  nextBillingDate: z.string().datetime().optional(),
+  plan: z.lazy(() => CommerceSubscriptionsSubscriptionPlanSchema).optional(),
+  planId: z.string().uuid(),
+  rowVersion: z.string().nullable().optional(),
+  startDate: z.string().datetime().optional(),
+  status: z.lazy(() => CommerceSubscriptionsSubscriptionStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  trialEndDate: z.string().datetime().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionChurnReport */
 CommerceSubscriptionsSubscriptionChurnReportSchema = z.object({
-  tenantId: z.string().uuid().nullable().optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  totalSubscriptions: z.number().int().optional(),
   activeSubscriptions: z.number().int().optional(),
   cancelledInPeriod: z.number().int().optional(),
   churnRate: z.number().optional(),
-  retentionRate: z.number().optional(),
-  monthlyRecurringRevenue: z.number().optional(),
+  endDate: z.string().datetime().optional(),
   generatedAt: z.string().datetime().optional(),
+  monthlyRecurringRevenue: z.number().optional(),
+  retentionRate: z.number().optional(),
+  startDate: z.string().datetime().optional(),
   statusBreakdown: z.record(z.string(), z.number().int()).nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  totalSubscriptions: z.number().int().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionDowngradeResult */
 CommerceSubscriptionsSubscriptionDowngradeResultSchema = z.object({
+  creditIssued: z.lazy(() => MoneySchema).optional(),
+  effectiveDate: z.string().datetime().nullable().optional(),
+  failureReason: z.string().nullable().optional(),
   success: z.boolean().optional(),
   updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
-  effectiveDate: z.string().datetime().nullable().optional(),
-  creditIssued: z.lazy(() => MoneySchema).optional(),
-  failureReason: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput */
@@ -10356,15 +10308,15 @@ CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInputSchema = z.obj
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput */
 CommerceSubscriptionsSubscriptionLifecycleControllerCancelInputSchema = z.object({
-  reason: z.string().nullable().optional(),
-  note: z.string().nullable().optional(),
   effectiveDate: z.string().datetime().nullable().optional(),
+  note: z.string().nullable().optional(),
+  reason: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput */
 CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInputSchema = z.object({
-  newPlanId: z.string().uuid().optional(),
   effectiveDate: z.string().datetime().nullable().optional(),
+  newPlanId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput */
@@ -10374,8 +10326,8 @@ CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInputSchema = z.obje
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInput */
 CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInputSchema = z.object({
-  externalSubscriptionId: z.string().nullable().optional(),
   externalCustomerId: z.string().nullable().optional(),
+  externalSubscriptionId: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInput */
@@ -10396,22 +10348,22 @@ CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInputSchema = z.objec
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput */
 CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema = z.object({
-  newPlanId: z.string().uuid().optional(),
   effectiveDate: z.string().datetime().nullable().optional(),
+  newPlanId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionNotification */
 CommerceSubscriptionsSubscriptionNotificationSchema = z.object({
-  id: z.string().uuid().optional(),
-  recipientId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  subscriptionId: z.string().uuid().nullable().optional(),
   channel: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  message: z.string().nullable().optional(),
-  isSent: z.boolean().optional(),
-  sentAt: z.string().datetime().nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  isSent: z.boolean().optional(),
+  message: z.string().nullable().optional(),
+  recipientId: z.string().uuid().optional(),
+  sentAt: z.string().datetime().nullable().optional(),
+  subscriptionId: z.string().uuid().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput */
@@ -10421,42 +10373,42 @@ CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotifi
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlan */
 CommerceSubscriptionsSubscriptionPlanSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  annualPriceInCents: z.number().int().nullable().optional(),
+  createdAt: z.string().datetime(),
+  currency: z.string().min(1).max(3),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().max(1000).nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
   externalId: z.string().max(100).nullable().optional(),
-  isFeatured: z.boolean().optional(),
-  sortOrder: z.number().int().optional(),
-  hasPrioritySupport: z.boolean().optional(),
+  features: z.string().max(2000).nullable().optional(),
   hasAdvancedAnalytics: z.boolean().optional(),
   hasCustomBranding: z.boolean().optional(),
-  features: z.string().max(2000).nullable().optional(),
+  hasPrioritySupport: z.boolean().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  maxUsers: z.number().int().nullable().optional(),
   metadata: z.string().max(4000).nullable().optional(),
-  trialPeriodDays: z.number().int().optional(),
+  monthlyPriceInCents: z.number().int().optional(),
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(50),
+  sortOrder: z.number().int().optional(),
   subscriptions: z
     .array(z.lazy(() => CommerceSubscriptionsSubscriptionSchema))
     .nullable()
     .optional(),
-  name: z.string().min(1).max(100),
-  slug: z.string().min(1).max(50),
-  description: z.string().max(1000).nullable().optional(),
-  monthlyPriceInCents: z.number().int().optional(),
-  annualPriceInCents: z.number().int().nullable().optional(),
-  currency: z.string().min(1).max(3),
-  isActive: z.boolean().optional(),
-  maxUsers: z.number().int().nullable().optional(),
-  maxStorageMb: z.number().int().nullable().optional(),
-  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  trialPeriodDays: z.number().int().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput */
@@ -10477,38 +10429,38 @@ CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInputSchema 
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInputSchema = z.object({
-  planId: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  planId: z.string().uuid().optional(),
   sortOrder: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInputSchema = z.object({
-  hasPrioritySupport: z.boolean().nullable().optional(),
+  features: z.string().nullable().optional(),
   hasAdvancedAnalytics: z.boolean().nullable().optional(),
   hasCustomBranding: z.boolean().nullable().optional(),
-  features: z.string().nullable().optional(),
+  hasPrioritySupport: z.boolean().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInputSchema = z.object({
-  maxUsers: z.number().int().nullable().optional(),
-  maxStorageMb: z.number().int().nullable().optional(),
   maxApiCallsPerMonth: z.number().int().nullable().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  maxUsers: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInputSchema = z.object({
-  monthlyPriceInCents: z.number().int().optional(),
   annualPriceInCents: z.number().int().nullable().optional(),
+  monthlyPriceInCents: z.number().int().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInputSchema = z.object({
-  users: z.number().int().optional(),
-  storageMb: z.number().int().optional(),
   apiCalls: z.number().int().optional(),
+  storageMb: z.number().int().optional(),
+  users: z.number().int().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput */
@@ -10519,27 +10471,27 @@ CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema = z.
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput */
 CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-  monthlyPriceInCents: z.number().int().optional(),
   currency: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  monthlyPriceInCents: z.number().int().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput */
 CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  monthlyPriceInCents: z.number().int().optional(),
   annualPriceInCents: z.number().int().nullable().optional(),
-  maxUsers: z.number().int().nullable().optional(),
-  maxStorageMb: z.number().int().nullable().optional(),
-  maxApiCallsPerMonth: z.number().int().nullable().optional(),
-  hasPrioritySupport: z.boolean().nullable().optional(),
+  description: z.string().nullable().optional(),
+  features: z.string().nullable().optional(),
   hasAdvancedAnalytics: z.boolean().nullable().optional(),
   hasCustomBranding: z.boolean().nullable().optional(),
-  features: z.string().nullable().optional(),
+  hasPrioritySupport: z.boolean().nullable().optional(),
+  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  maxUsers: z.number().int().nullable().optional(),
+  monthlyPriceInCents: z.number().int().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
   sortOrder: z.number().int().nullable().optional(),
 });
 
@@ -10548,63 +10500,63 @@ CommerceSubscriptionsSubscriptionStatusSchema = z.enum(['PendingActivation', 'Ac
 
 /** Zod schema for CommerceSubscriptionsSubscriptionUpgradeResult */
 CommerceSubscriptionsSubscriptionUpgradeResultSchema = z.object({
-  success: z.boolean().optional(),
-  updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
-  proratedAmount: z.lazy(() => MoneySchema).optional(),
   creditApplied: z.lazy(() => MoneySchema).optional(),
   failureReason: z.string().nullable().optional(),
+  proratedAmount: z.lazy(() => MoneySchema).optional(),
+  success: z.boolean().optional(),
+  updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionUsage */
 CommerceSubscriptionsSubscriptionUsageSchema = z.object({
-  subscriptionId: z.string().uuid().optional(),
-  usersCount: z.number().int().optional(),
-  maxUsers: z.number().int().nullable().optional(),
-  storageUsedMb: z.number().int().optional(),
-  maxStorageMb: z.number().int().nullable().optional(),
   apiCallsThisMonth: z.number().int().optional(),
-  maxApiCallsPerMonth: z.number().int().nullable().optional(),
   isOverLimit: z.boolean().optional(),
   limitWarnings: z.array(z.string()).nullable().optional(),
+  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  maxUsers: z.number().int().nullable().optional(),
+  storageUsedMb: z.number().int().optional(),
+  subscriptionId: z.string().uuid().optional(),
+  usersCount: z.number().int().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput */
 CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  planId: z.string().uuid().optional(),
-  createdByUserId: z.string().uuid().optional(),
-  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
   amount: z.number().optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  createdByUserId: z.string().uuid().optional(),
   currency: z.string().nullable().optional(),
   fulfilledOrderId: z.string().uuid().nullable().optional(),
+  planId: z.string().uuid().optional(),
   startDate: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
   trialDays: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput */
 CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema = z.object({
-  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
   autoRenew: z.boolean().nullable().optional(),
-  externalSubscriptionId: z.string().nullable().optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
   externalCustomerId: z.string().nullable().optional(),
+  externalSubscriptionId: z.string().nullable().optional(),
   metadata: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput */
 CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema = z.object({
-  planId: z.string().uuid().optional(),
-  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
   amount: z.number().optional(),
   autoRenew: z.boolean().optional(),
-  externalSubscriptionId: z.string().nullable().optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
   externalCustomerId: z.string().nullable().optional(),
+  externalSubscriptionId: z.string().nullable().optional(),
+  planId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceFERPACompleteFerpaInspectionRequestBody */
 ComplianceFERPACompleteFerpaInspectionRequestBodySchema = z.object({
-  processedByUserId: z.string().uuid().optional(),
   approved: z.boolean().optional(),
   notes: z.string().nullable().optional(),
+  processedByUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceFERPAEducationRecordKind */
@@ -10621,12 +10573,12 @@ ComplianceFERPAEducationRecordKindSchema = z.enum([
 
 /** Zod schema for ComplianceFERPAFerpaDirectoryInformationPolicy */
 ComplianceFERPAFerpaDirectoryInformationPolicySchema = z.object({
-  id: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
   allowedFieldsJson: z.string().nullable().optional(),
-  optOutEnabled: z.boolean().optional(),
   annualNoticeSentAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
   noticeUrl: z.string().nullable().optional(),
+  optOutEnabled: z.boolean().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for ComplianceFERPAFerpaDisclosureBasis */
@@ -10644,54 +10596,54 @@ ComplianceFERPAFerpaDisclosureBasisSchema = z.enum([
 
 /** Zod schema for ComplianceFERPAFerpaDisclosureConsent */
 ComplianceFERPAFerpaDisclosureConsentSchema = z.object({
-  id: z.string().uuid().optional(),
-  studentUserId: z.string().uuid().optional(),
-  guardianUserId: z.string().uuid().nullable().optional(),
-  recipient: z.string().nullable().optional(),
-  purpose: z.string().nullable().optional(),
-  scope: z.string().nullable().optional(),
   effectiveFrom: z.string().datetime().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  revokedAt: z.string().datetime().nullable().optional(),
+  guardianUserId: z.string().uuid().nullable().optional(),
+  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
+  purpose: z.string().nullable().optional(),
+  recipient: z.string().nullable().optional(),
+  revokedAt: z.string().datetime().nullable().optional(),
+  scope: z.string().nullable().optional(),
+  studentUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceFERPAFerpaDisclosureLog */
 ComplianceFERPAFerpaDisclosureLogSchema = z.object({
-  id: z.string().uuid().optional(),
-  studentUserId: z.string().uuid().optional(),
-  disclosedByUserId: z.string().uuid().optional(),
-  recipient: z.string().nullable().optional(),
   basis: z.lazy(() => ComplianceFERPAFerpaDisclosureBasisSchema).optional(),
-  purpose: z.string().nullable().optional(),
-  recordIdsJson: z.string().nullable().optional(),
   disclosedAt: z.string().datetime().optional(),
+  disclosedByUserId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  purpose: z.string().nullable().optional(),
+  recipient: z.string().nullable().optional(),
+  recordIdsJson: z.string().nullable().optional(),
+  studentUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceFERPAFerpaEducationRecord */
 ComplianceFERPAFerpaEducationRecordSchema = z.object({
-  id: z.string().uuid().optional(),
-  studentUserId: z.string().uuid().optional(),
-  recordKind: z.lazy(() => ComplianceFERPAEducationRecordKindSchema).optional(),
-  externalRecordId: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  protectionLevel: z.lazy(() => ComplianceFERPAFerpaRecordProtectionLevelSchema).optional(),
-  isDirectoryInformation: z.boolean().optional(),
-  retentionUntil: z.string().datetime().nullable().optional(),
-  metadataJson: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  externalRecordId: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isDirectoryInformation: z.boolean().optional(),
+  metadataJson: z.string().nullable().optional(),
+  protectionLevel: z.lazy(() => ComplianceFERPAFerpaRecordProtectionLevelSchema).optional(),
+  recordKind: z.lazy(() => ComplianceFERPAEducationRecordKindSchema).optional(),
+  retentionUntil: z.string().datetime().nullable().optional(),
+  studentUserId: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for ComplianceFERPAFerpaInspectionInput */
 ComplianceFERPAFerpaInspectionInputSchema = z.object({
+  deadline: z.string().datetime().optional(),
   id: z.string().uuid().optional(),
-  studentUserId: z.string().uuid().optional(),
+  processedAt: z.string().datetime().nullable().optional(),
+  processedByUserId: z.string().uuid().nullable().optional(),
+  processingNotes: z.string().nullable().optional(),
   requestedByUserId: z.string().uuid().optional(),
   status: z.lazy(() => ComplianceFERPAFerpaRequestStatusSchema).optional(),
-  deadline: z.string().datetime().optional(),
-  processedByUserId: z.string().uuid().nullable().optional(),
-  processedAt: z.string().datetime().nullable().optional(),
-  processingNotes: z.string().nullable().optional(),
+  studentUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceFERPAFerpaRecordProtectionLevel */
@@ -10702,55 +10654,55 @@ ComplianceFERPAFerpaRequestStatusSchema = z.enum(['Pending', 'InReview', 'Comple
 
 /** Zod schema for ComplianceFERPAGrantFerpaDisclosureConsentCommand */
 ComplianceFERPAGrantFerpaDisclosureConsentCommandSchema = z.object({
-  studentUserId: z.string().uuid().optional(),
-  recipient: z.string().nullable().optional(),
-  purpose: z.string().nullable().optional(),
-  scope: z.string().nullable().optional(),
   effectiveFrom: z.string().datetime().optional(),
-  guardianUserId: z.string().uuid().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  guardianUserId: z.string().uuid().nullable().optional(),
+  purpose: z.string().nullable().optional(),
+  recipient: z.string().nullable().optional(),
+  scope: z.string().nullable().optional(),
+  studentUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceFERPARecordFerpaDisclosureCommand */
 ComplianceFERPARecordFerpaDisclosureCommandSchema = z.object({
-  studentUserId: z.string().uuid().optional(),
-  disclosedByUserId: z.string().uuid().optional(),
-  recipient: z.string().nullable().optional(),
   basis: z.lazy(() => ComplianceFERPAFerpaDisclosureBasisSchema).optional(),
-  purpose: z.string().nullable().optional(),
-  scope: z.string().nullable().optional(),
-  recordIdsJson: z.string().nullable().optional(),
   disclosedAt: z.string().datetime().optional(),
+  disclosedByUserId: z.string().uuid().optional(),
+  purpose: z.string().nullable().optional(),
+  recipient: z.string().nullable().optional(),
+  recordIdsJson: z.string().nullable().optional(),
+  scope: z.string().nullable().optional(),
+  studentUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceFERPARegisterEducationRecordCommand */
 ComplianceFERPARegisterEducationRecordCommandSchema = z.object({
-  studentUserId: z.string().uuid().optional(),
-  recordKind: z.lazy(() => ComplianceFERPAEducationRecordKindSchema).optional(),
   externalRecordId: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  protectionLevel: z.lazy(() => ComplianceFERPAFerpaRecordProtectionLevelSchema).optional(),
   isDirectoryInformation: z.boolean().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  retentionUntil: z.string().datetime().nullable().optional(),
   metadataJson: z.string().nullable().optional(),
+  protectionLevel: z.lazy(() => ComplianceFERPAFerpaRecordProtectionLevelSchema).optional(),
+  recordKind: z.lazy(() => ComplianceFERPAEducationRecordKindSchema).optional(),
+  retentionUntil: z.string().datetime().nullable().optional(),
+  studentUserId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for ComplianceFERPASubmitFerpaInspectionRequestCommand */
 ComplianceFERPASubmitFerpaInspectionRequestCommandSchema = z.object({
-  studentUserId: z.string().uuid().optional(),
-  requestedByUserId: z.string().uuid().optional(),
   deadline: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
+  requestedByUserId: z.string().uuid().optional(),
+  studentUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceFERPAUpsertDirectoryInformationPolicyCommand */
 ComplianceFERPAUpsertDirectoryInformationPolicyCommandSchema = z.object({
-  tenantId: z.string().uuid().nullable().optional(),
   allowedFieldsJson: z.string().nullable().optional(),
-  optOutEnabled: z.boolean().optional(),
   annualNoticeSentAt: z.string().datetime().nullable().optional(),
   noticeUrl: z.string().nullable().optional(),
+  optOutEnabled: z.boolean().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for ContentStatus */
@@ -10761,37 +10713,37 @@ ContentVisibilitySchema = z.enum(['Private', 'Internal', 'Friends', 'Protected',
 
 /** Zod schema for ContentPagesContentResource */
 ContentPagesContentResourceSchema = z.object({
-  id: z.string().uuid().optional(),
-  slug: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  summary: z.string().nullable().optional(),
-  body: z.string().nullable().optional(),
-  resourceType: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
-  locale: z.string().nullable().optional(),
-  categorySlug: z.string().nullable().optional(),
-  tags: z.string().nullable().optional(),
   authorId: z.string().uuid().nullable().optional(),
   authorName: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  categorySlug: z.string().nullable().optional(),
   coverImageUrl: z.string().nullable().optional(),
-  videoUrl: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  customData: z.string().nullable().optional(),
   downloadUrl: z.string().nullable().optional(),
   externalUrl: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isFeatured: z.boolean().optional(),
   linkedEntityId: z.string().uuid().nullable().optional(),
   linkedEntityType: z.string().nullable().optional(),
-  metaTitle: z.string().nullable().optional(),
+  locale: z.string().nullable().optional(),
   metaDescription: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
   ogImageUrl: z.string().nullable().optional(),
-  structuredData: z.string().nullable().optional(),
-  readingTimeMinutes: z.number().int().nullable().optional(),
-  viewCount: z.number().int().optional(),
-  isFeatured: z.boolean().optional(),
-  sortOrder: z.number().int().optional(),
   publishedAt: z.string().datetime().nullable().optional(),
+  readingTimeMinutes: z.number().int().nullable().optional(),
+  resourceType: z.string().nullable().optional(),
   scheduledPublishAt: z.string().datetime().nullable().optional(),
-  customData: z.string().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
+  slug: z.string().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  status: z.string().nullable().optional(),
+  structuredData: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  tags: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
+  videoUrl: z.string().nullable().optional(),
+  viewCount: z.number().int().optional(),
 });
 
 /** Zod schema for ContentPagesContentResourceStatus */
@@ -10802,163 +10754,163 @@ ContentPagesContentResourceTypeSchema = z.enum(['Article', 'Tutorial', 'Document
 
 /** Zod schema for ContentPagesCreateContentResource */
 ContentPagesCreateContentResourceSchema = z.object({
-  slug: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  summary: z.string().nullable().optional(),
   body: z.string().nullable().optional(),
-  resourceType: z.lazy(() => ContentPagesContentResourceTypeSchema).optional(),
-  locale: z.string().nullable().optional(),
   categorySlug: z.string().nullable().optional(),
-  tags: z.string().nullable().optional(),
   coverImageUrl: z.string().nullable().optional(),
-  videoUrl: z.string().nullable().optional(),
+  customData: z.string().nullable().optional(),
   downloadUrl: z.string().nullable().optional(),
   externalUrl: z.string().nullable().optional(),
+  isFeatured: z.boolean().optional(),
   linkedEntityId: z.string().uuid().nullable().optional(),
   linkedEntityType: z.string().nullable().optional(),
-  metaTitle: z.string().nullable().optional(),
+  locale: z.string().nullable().optional(),
   metaDescription: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
   ogImageUrl: z.string().nullable().optional(),
-  structuredData: z.string().nullable().optional(),
   readingTimeMinutes: z.number().int().nullable().optional(),
-  isFeatured: z.boolean().optional(),
+  resourceType: z.lazy(() => ContentPagesContentResourceTypeSchema).optional(),
+  slug: z.string().nullable().optional(),
   sortOrder: z.number().int().optional(),
-  customData: z.string().nullable().optional(),
+  structuredData: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  tags: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  videoUrl: z.string().nullable().optional(),
 });
 
 /** Zod schema for ContentPagesCreateMarketingLead */
 ContentPagesCreateMarketingLeadSchema = z.object({
-  source: z.string().min(1).max(40),
-  name: z.string().max(120).nullable().optional(),
-  email: z.string().email().min(1).max(200),
   company: z.string().max(200).nullable().optional(),
-  topic: z.string().max(40).nullable().optional(),
-  plan: z.string().max(60).nullable().optional(),
-  message: z.string().max(4000).nullable().optional(),
+  email: z.string().email().min(1).max(200),
   locale: z.string().max(10).nullable().optional(),
+  message: z.string().max(4000).nullable().optional(),
+  name: z.string().max(120).nullable().optional(),
   pagePath: z.string().max(300).nullable().optional(),
+  plan: z.string().max(60).nullable().optional(),
   referrer: z.string().max(2000).nullable().optional(),
+  source: z.string().min(1).max(40),
+  topic: z.string().max(40).nullable().optional(),
   userAgent: z.string().max(500).nullable().optional(),
 });
 
 /** Zod schema for ContentPagesCreatePage */
 ContentPagesCreatePageSchema = z.object({
-  slug: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  canonicalUrl: z.string().nullable().optional(),
+  customData: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  pageType: z.lazy(() => ContentPagesPageTypeSchema).optional(),
   locale: z.string().nullable().optional(),
-  metaTitle: z.string().nullable().optional(),
   metaDescription: z.string().nullable().optional(),
   metaKeywords: z.string().nullable().optional(),
-  canonicalUrl: z.string().nullable().optional(),
-  robotsDirective: z.string().nullable().optional(),
-  ogTitle: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
   ogDescription: z.string().nullable().optional(),
   ogImageUrl: z.string().nullable().optional(),
+  ogTitle: z.string().nullable().optional(),
   ogType: z.string().nullable().optional(),
+  pageType: z.lazy(() => ContentPagesPageTypeSchema).optional(),
+  parentPageId: z.string().uuid().nullable().optional(),
+  robotsDirective: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  structuredData: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
   twitterCard: z.string().nullable().optional(),
   twitterSite: z.string().nullable().optional(),
-  structuredData: z.string().nullable().optional(),
-  body: z.string().nullable().optional(),
-  customData: z.string().nullable().optional(),
-  parentPageId: z.string().uuid().nullable().optional(),
-  sortOrder: z.number().int().optional(),
 });
 
 /** Zod schema for ContentPagesCreatePageSection */
 ContentPagesCreatePageSectionSchema = z.object({
-  sectionType: z.lazy(() => ContentPagesSectionTypeSchema).optional(),
-  heading: z.string().nullable().optional(),
-  subheading: z.string().nullable().optional(),
-  data: z.string().nullable().optional(),
-  sortOrder: z.number().int().optional(),
-  isVisible: z.boolean().optional(),
   cssClasses: z.string().nullable().optional(),
+  data: z.string().nullable().optional(),
+  heading: z.string().nullable().optional(),
+  isVisible: z.boolean().optional(),
+  sectionType: z.lazy(() => ContentPagesSectionTypeSchema).optional(),
+  sortOrder: z.number().int().optional(),
+  subheading: z.string().nullable().optional(),
 });
 
 /** Zod schema for ContentPagesMarketingLead */
 ContentPagesMarketingLeadSchema = z.object({
+  company: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  email: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
+  locale: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  pagePath: z.string().nullable().optional(),
+  plan: z.string().nullable().optional(),
+  referrer: z.string().nullable().optional(),
   source: z.string().nullable().optional(),
   status: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
-  email: z.string().nullable().optional(),
-  company: z.string().nullable().optional(),
   topic: z.string().nullable().optional(),
-  plan: z.string().nullable().optional(),
-  message: z.string().nullable().optional(),
-  locale: z.string().nullable().optional(),
-  pagePath: z.string().nullable().optional(),
-  referrer: z.string().nullable().optional(),
-  userAgent: z.string().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
+  userAgent: z.string().nullable().optional(),
 });
 
 /** Zod schema for ContentPagesOpenGraphMetadata */
 ContentPagesOpenGraphMetadataSchema = z.object({
-  slug: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
+  canonicalUrl: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  ogTitle: z.string().nullable().optional(),
   ogDescription: z.string().nullable().optional(),
   ogImageUrl: z.string().nullable().optional(),
+  ogTitle: z.string().nullable().optional(),
   ogType: z.string().nullable().optional(),
+  robotsDirective: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  structuredData: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
   twitterCard: z.string().nullable().optional(),
   twitterSite: z.string().nullable().optional(),
-  canonicalUrl: z.string().nullable().optional(),
-  robotsDirective: z.string().nullable().optional(),
-  structuredData: z.string().nullable().optional(),
 });
 
 /** Zod schema for ContentPagesPage */
 ContentPagesPageSchema = z.object({
-  id: z.string().uuid().optional(),
-  slug: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  canonicalUrl: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  customData: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  pageType: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
   locale: z.string().nullable().optional(),
-  metaTitle: z.string().nullable().optional(),
   metaDescription: z.string().nullable().optional(),
   metaKeywords: z.string().nullable().optional(),
-  canonicalUrl: z.string().nullable().optional(),
-  robotsDirective: z.string().nullable().optional(),
-  ogTitle: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
   ogDescription: z.string().nullable().optional(),
   ogImageUrl: z.string().nullable().optional(),
+  ogTitle: z.string().nullable().optional(),
   ogType: z.string().nullable().optional(),
-  twitterCard: z.string().nullable().optional(),
-  twitterSite: z.string().nullable().optional(),
-  structuredData: z.string().nullable().optional(),
-  body: z.string().nullable().optional(),
-  customData: z.string().nullable().optional(),
+  pageType: z.string().nullable().optional(),
   parentPageId: z.string().uuid().nullable().optional(),
-  sortOrder: z.number().int().optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  robotsDirective: z.string().nullable().optional(),
+  scheduledPublishAt: z.string().datetime().nullable().optional(),
   sections: z
     .array(z.lazy(() => ContentPagesPageSectionSchema))
     .nullable()
     .optional(),
-  publishedAt: z.string().datetime().nullable().optional(),
-  scheduledPublishAt: z.string().datetime().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
+  slug: z.string().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  status: z.string().nullable().optional(),
+  structuredData: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  twitterCard: z.string().nullable().optional(),
+  twitterSite: z.string().nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for ContentPagesPageSection */
 ContentPagesPageSectionSchema = z.object({
+  createdAt: z.string().datetime().optional(),
+  cssClasses: z.string().nullable().optional(),
+  data: z.string().nullable().optional(),
+  heading: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
+  isVisible: z.boolean().optional(),
   pageId: z.string().uuid().optional(),
   sectionType: z.string().nullable().optional(),
-  heading: z.string().nullable().optional(),
-  subheading: z.string().nullable().optional(),
-  data: z.string().nullable().optional(),
   sortOrder: z.number().int().optional(),
-  isVisible: z.boolean().optional(),
-  cssClasses: z.string().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
+  subheading: z.string().nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
@@ -10989,96 +10941,96 @@ ContentPagesSectionTypeSchema = z.enum([
 
 /** Zod schema for ContentPagesSitemapEntry */
 ContentPagesSitemapEntrySchema = z.object({
+  locale: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
-  locale: z.string().nullable().optional(),
 });
 
 /** Zod schema for ContentPagesUpdateContentResource */
 ContentPagesUpdateContentResourceSchema = z.object({
-  slug: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  summary: z.string().nullable().optional(),
   body: z.string().nullable().optional(),
-  resourceType: z.lazy(() => ContentPagesContentResourceTypeSchema).optional(),
-  status: z.lazy(() => ContentPagesContentResourceStatusSchema).optional(),
-  locale: z.string().nullable().optional(),
   categorySlug: z.string().nullable().optional(),
-  tags: z.string().nullable().optional(),
   coverImageUrl: z.string().nullable().optional(),
-  videoUrl: z.string().nullable().optional(),
+  customData: z.string().nullable().optional(),
   downloadUrl: z.string().nullable().optional(),
   externalUrl: z.string().nullable().optional(),
+  isFeatured: z.boolean().nullable().optional(),
   linkedEntityId: z.string().uuid().nullable().optional(),
   linkedEntityType: z.string().nullable().optional(),
-  metaTitle: z.string().nullable().optional(),
+  locale: z.string().nullable().optional(),
   metaDescription: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
   ogImageUrl: z.string().nullable().optional(),
-  structuredData: z.string().nullable().optional(),
   readingTimeMinutes: z.number().int().nullable().optional(),
-  isFeatured: z.boolean().nullable().optional(),
-  sortOrder: z.number().int().nullable().optional(),
+  resourceType: z.lazy(() => ContentPagesContentResourceTypeSchema).optional(),
   scheduledPublishAt: z.string().datetime().nullable().optional(),
-  customData: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+  status: z.lazy(() => ContentPagesContentResourceStatusSchema).optional(),
+  structuredData: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  tags: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  videoUrl: z.string().nullable().optional(),
 });
 
 /** Zod schema for ContentPagesUpdatePage */
 ContentPagesUpdatePageSchema = z.object({
-  slug: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  canonicalUrl: z.string().nullable().optional(),
+  customData: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  pageType: z.lazy(() => ContentPagesPageTypeSchema).optional(),
-  status: z.lazy(() => ContentPagesPageStatusSchema).optional(),
   locale: z.string().nullable().optional(),
-  metaTitle: z.string().nullable().optional(),
   metaDescription: z.string().nullable().optional(),
   metaKeywords: z.string().nullable().optional(),
-  canonicalUrl: z.string().nullable().optional(),
-  robotsDirective: z.string().nullable().optional(),
-  ogTitle: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
   ogDescription: z.string().nullable().optional(),
   ogImageUrl: z.string().nullable().optional(),
+  ogTitle: z.string().nullable().optional(),
   ogType: z.string().nullable().optional(),
+  pageType: z.lazy(() => ContentPagesPageTypeSchema).optional(),
+  parentPageId: z.string().uuid().nullable().optional(),
+  robotsDirective: z.string().nullable().optional(),
+  scheduledPublishAt: z.string().datetime().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+  status: z.lazy(() => ContentPagesPageStatusSchema).optional(),
+  structuredData: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
   twitterCard: z.string().nullable().optional(),
   twitterSite: z.string().nullable().optional(),
-  structuredData: z.string().nullable().optional(),
-  body: z.string().nullable().optional(),
-  customData: z.string().nullable().optional(),
-  parentPageId: z.string().uuid().nullable().optional(),
-  sortOrder: z.number().int().nullable().optional(),
-  scheduledPublishAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for ContentPagesUpdatePageSection */
 ContentPagesUpdatePageSectionSchema = z.object({
-  sectionType: z.lazy(() => ContentPagesSectionTypeSchema).optional(),
-  heading: z.string().nullable().optional(),
-  subheading: z.string().nullable().optional(),
-  data: z.string().nullable().optional(),
-  sortOrder: z.number().int().nullable().optional(),
-  isVisible: z.boolean().nullable().optional(),
   cssClasses: z.string().nullable().optional(),
+  data: z.string().nullable().optional(),
+  heading: z.string().nullable().optional(),
+  isVisible: z.boolean().nullable().optional(),
+  sectionType: z.lazy(() => ContentPagesSectionTypeSchema).optional(),
+  sortOrder: z.number().int().nullable().optional(),
+  subheading: z.string().nullable().optional(),
 });
 
 /** Zod schema for FeaturesBulkEvaluationInput */
 FeaturesBulkEvaluationInputSchema = z.object({
-  featureKeys: z.array(z.string()).nullable().optional(),
   context: z.lazy(() => FeaturesFeatureContextSchema).optional(),
+  featureKeys: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for FeaturesCapabilityAuditLog */
 FeaturesCapabilityAuditLogSchema = z.object({
-  id: z.string().uuid().optional(),
-  tenantId: z.string().uuid().optional(),
   capabilityKey: z.string().nullable().optional(),
-  oldValue: z.boolean().nullable().optional(),
-  newValue: z.boolean().optional(),
-  oldSource: z.string().nullable().optional(),
-  newSource: z.string().nullable().optional(),
-  changedByUserId: z.string().uuid().nullable().optional(),
   changeReason: z.string().nullable().optional(),
   changeType: z.string().nullable().optional(),
   changedAt: z.string().datetime().optional(),
+  changedByUserId: z.string().uuid().nullable().optional(),
+  id: z.string().uuid().optional(),
+  newSource: z.string().nullable().optional(),
+  newValue: z.boolean().optional(),
+  oldSource: z.string().nullable().optional(),
+  oldValue: z.boolean().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for FeaturesCapabilityCheckOutput */
@@ -11089,68 +11041,68 @@ FeaturesCapabilityCheckOutputSchema = z.object({
 
 /** Zod schema for FeaturesCreateFeatureInput */
 FeaturesCreateFeatureInputSchema = z.object({
-  key: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   isEnabled: z.boolean().optional(),
+  key: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for FeaturesFeatureContext */
 FeaturesFeatureContextSchema = z.object({
-  tenantId: z.string().uuid().nullable().optional(),
-  userId: z.string().uuid().nullable().optional(),
-  subscriptionPlanId: z.string().nullable().optional(),
-  environment: z.string().nullable().optional(),
-  permissions: z.array(z.string()).nullable().optional(),
-  customAttributes: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
-  userAgent: z.string().nullable().optional(),
-  ipAddress: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
+  customAttributes: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  environment: z.string().nullable().optional(),
+  ipAddress: z.string().nullable().optional(),
+  permissions: z.array(z.string()).nullable().optional(),
   requestTime: z.string().datetime().optional(),
+  subscriptionPlanId: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  userAgent: z.string().nullable().optional(),
+  userId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for FeaturesFeatureEvaluationInput */
 FeaturesFeatureEvaluationInputSchema = z.object({
-  featureKey: z.string().nullable().optional(),
-  defaultValue: z.record(z.string(), z.unknown()).nullable().optional(),
   context: z.lazy(() => FeaturesFeatureContextSchema).optional(),
+  defaultValue: z.record(z.string(), z.unknown()).nullable().optional(),
+  featureKey: z.string().nullable().optional(),
 });
 
 /** Zod schema for FeaturesFeatureFlag */
 FeaturesFeatureFlagSchema = z.object({
+  createdAt: z.string().datetime(),
+  defaultValue: z.record(z.string(), z.unknown()).nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  environment: z.string().nullable().optional(),
   id: z.string().uuid(),
+  isEnabled: z.boolean(),
   key: z.string().nullable(),
   name: z.string().nullable(),
-  description: z.string().nullable().optional(),
-  isEnabled: z.boolean(),
-  type: z.lazy(() => FeaturesFeatureFlagTypeSchema),
-  environment: z.string().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  defaultValue: z.record(z.string(), z.unknown()).nullable().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime().nullable().optional(),
-  deletedAt: z.string().datetime().nullable().optional(),
   targets: z
     .array(z.lazy(() => FeaturesFeatureFlagTargetSchema))
     .nullable()
     .optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => FeaturesFeatureFlagTypeSchema),
+  updatedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for FeaturesFeatureFlagTarget */
 FeaturesFeatureFlagTargetSchema = z.object({
-  id: z.string().uuid(),
-  featureFlagId: z.string().uuid(),
-  targetType: z.string().nullable(),
-  targetIdentifier: z.string().nullable(),
-  isEnabled: z.boolean(),
-  rolloutPercentage: z.number().int().optional(),
+  createdAt: z.string().datetime(),
   customValue: z.string().nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  featureFlagId: z.string().uuid(),
+  id: z.string().uuid(),
+  isEnabled: z.boolean(),
   metadata: z.string().nullable().optional(),
   priority: z.number().int().optional(),
-  createdAt: z.string().datetime(),
+  rolloutPercentage: z.number().int().optional(),
+  targetIdentifier: z.string().nullable(),
+  targetType: z.string().nullable(),
   updatedAt: z.string().datetime().nullable().optional(),
-  deletedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for FeaturesFeatureFlagType */
@@ -11159,209 +11111,209 @@ FeaturesFeatureFlagTypeSchema = z.enum(['Toggle', 'Numeric', 'String', 'Percenta
 /** Zod schema for FeaturesSetCapabilityOverrideInput */
 FeaturesSetCapabilityOverrideInputSchema = z.object({
   capability: z.string().nullable().optional(),
-  isEnabled: z.boolean().optional(),
-  source: z.string().nullable().optional(),
-  reason: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  isEnabled: z.boolean().optional(),
+  reason: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
 });
 
 /** Zod schema for FeaturesToggleFeatureInput */
 FeaturesToggleFeatureInputSchema = z.object({
+  environment: z.string().nullable().optional(),
   featureKey: z.string().nullable().optional(),
   isEnabled: z.boolean().optional(),
   reason: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
-  environment: z.string().nullable().optional(),
 });
 
 /** Zod schema for FeaturesUpdateFeatureInput */
 FeaturesUpdateFeatureInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  isEnabled: z.boolean().nullable().optional(),
-  rolloutPercentage: z.number().int().nullable().optional(),
-  enabledValue: z.string().nullable().optional(),
   defaultValue: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  enabledValue: z.string().nullable().optional(),
+  isEnabled: z.boolean().nullable().optional(),
+  name: z.string().nullable().optional(),
+  rolloutPercentage: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for Fido2NetLibAssertionOptions */
 Fido2NetLibAssertionOptionsSchema = z.object({
-  challenge: z.string().nullable().optional(),
-  timeout: z.number().int().optional(),
-  rpId: z.string().nullable().optional(),
   allowCredentials: z
     .array(z.lazy(() => ObjectsPublicKeyCredentialDescriptorSchema))
     .nullable()
     .optional(),
-  userVerification: z.lazy(() => ObjectsUserVerificationRequirementSchema).optional(),
+  challenge: z.string().nullable().optional(),
+  extensions: z.lazy(() => ObjectsAuthenticationExtensionsClientInputsSchema).optional(),
   hints: z
     .array(z.lazy(() => ObjectsPublicKeyCredentialHintSchema))
     .nullable()
     .optional(),
-  extensions: z.lazy(() => ObjectsAuthenticationExtensionsClientInputsSchema).optional(),
+  rpId: z.string().nullable().optional(),
+  timeout: z.number().int().optional(),
+  userVerification: z.lazy(() => ObjectsUserVerificationRequirementSchema).optional(),
 });
 
 /** Zod schema for Fido2NetLibAuthenticatorSelection */
 Fido2NetLibAuthenticatorSelectionSchema = z.object({
   authenticatorAttachment: z.lazy(() => ObjectsAuthenticatorAttachmentSchema).optional(),
-  residentKey: z.lazy(() => ObjectsResidentKeyRequirementSchema).optional(),
   requireResidentKey: z.boolean().optional(),
+  residentKey: z.lazy(() => ObjectsResidentKeyRequirementSchema).optional(),
   userVerification: z.lazy(() => ObjectsUserVerificationRequirementSchema).optional(),
 });
 
 /** Zod schema for Fido2NetLibCredentialCreateOptions */
 Fido2NetLibCredentialCreateOptionsSchema = z.object({
-  rp: z.lazy(() => Fido2NetLibPublicKeyCredentialRpEntitySchema),
-  user: z.lazy(() => Fido2NetLibFido2UserSchema),
-  challenge: z.string().nullable(),
-  pubKeyCredParams: z.array(z.lazy(() => Fido2NetLibPubKeyCredParamSchema)).nullable(),
-  timeout: z.number().int().optional(),
   attestation: z.lazy(() => ObjectsAttestationConveyancePreferenceSchema).optional(),
   attestationFormats: z
     .array(z.lazy(() => ObjectsAttestationStatementFormatIdentifierSchema))
     .nullable()
     .optional(),
   authenticatorSelection: z.lazy(() => Fido2NetLibAuthenticatorSelectionSchema).optional(),
-  hints: z
-    .array(z.lazy(() => ObjectsPublicKeyCredentialHintSchema))
-    .nullable()
-    .optional(),
+  challenge: z.string().nullable(),
   excludeCredentials: z
     .array(z.lazy(() => ObjectsPublicKeyCredentialDescriptorSchema))
     .nullable()
     .optional(),
   extensions: z.lazy(() => ObjectsAuthenticationExtensionsClientInputsSchema).optional(),
+  hints: z
+    .array(z.lazy(() => ObjectsPublicKeyCredentialHintSchema))
+    .nullable()
+    .optional(),
+  pubKeyCredParams: z.array(z.lazy(() => Fido2NetLibPubKeyCredParamSchema)).nullable(),
+  rp: z.lazy(() => Fido2NetLibPublicKeyCredentialRpEntitySchema),
+  timeout: z.number().int().optional(),
+  user: z.lazy(() => Fido2NetLibFido2UserSchema),
 });
 
 /** Zod schema for Fido2NetLibFido2User */
 Fido2NetLibFido2UserSchema = z.object({
-  name: z.string().nullable().optional(),
-  id: z.string().nullable().optional(),
   displayName: z.string().nullable().optional(),
+  id: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
 });
 
 /** Zod schema for Fido2NetLibPubKeyCredParam */
 Fido2NetLibPubKeyCredParamSchema = z.object({
-  type: z.lazy(() => ObjectsPublicKeyCredentialTypeSchema).optional(),
   alg: z.lazy(() => ObjectsCOSEAlgorithmSchema).optional(),
+  type: z.lazy(() => ObjectsPublicKeyCredentialTypeSchema).optional(),
 });
 
 /** Zod schema for Fido2NetLibPublicKeyCredentialRpEntity */
 Fido2NetLibPublicKeyCredentialRpEntitySchema = z.object({
+  icon: z.string().nullable().optional(),
   id: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
-  icon: z.string().nullable().optional(),
 });
 
 /** Zod schema for GameJamsAddJamCriteriaInput */
 GameJamsAddJamCriteriaInputSchema = z.object({
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  weight: z.number().optional(),
   maxScore: z.number().int().optional(),
+  name: z.string().nullable().optional(),
+  weight: z.number().optional(),
 });
 
 /** Zod schema for GameJamsCreateJamInput */
 GameJamsCreateJamInputSchema = z.object({
+  createdBy: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  endDate: z.string().datetime().optional(),
+  maxParticipants: z.number().int().nullable().optional(),
   name: z.string().nullable().optional(),
+  rules: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
   startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  createdBy: z.string().uuid().optional(),
-  theme: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  rules: z.string().nullable().optional(),
   submissionCriteria: z.string().nullable().optional(),
+  theme: z.string().nullable().optional(),
   votingEndDate: z.string().datetime().nullable().optional(),
-  maxParticipants: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for GameJamsJam */
 GameJamsJamSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  createdBy: z.string().uuid(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  name: z.string().min(1).max(255),
-  slug: z.string().min(1).max(255),
-  theme: z.string().max(500).nullable().optional(),
-  description: z.string().nullable().optional(),
-  rules: z.string().nullable().optional(),
-  submissionCriteria: z.string().nullable().optional(),
-  startDate: z.string().datetime(),
   endDate: z.string().datetime(),
-  votingEndDate: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   maxParticipants: z.number().int().nullable().optional(),
+  name: z.string().min(1).max(255),
   participantCount: z.number().int().optional(),
+  rules: z.string().nullable().optional(),
+  slug: z.string().min(1).max(255),
+  startDate: z.string().datetime(),
   status: z.lazy(() => GameJamsJamStatusSchema),
-  createdBy: z.string().uuid(),
+  submissionCriteria: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  theme: z.string().max(500).nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+  votingEndDate: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for GameJamsJamCriteria */
 GameJamsJamCriteriaSchema = z.object({
+  description: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
   jamId: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  weight: z.number().optional(),
   maxScore: z.number().int().optional(),
+  name: z.string().nullable().optional(),
+  weight: z.number().optional(),
 });
 
 /** Zod schema for GameJamsJamDto */
 GameJamsJamDtoSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-  theme: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  votingEndDate: z.string().datetime().nullable().optional(),
-  maxParticipants: z.number().int().nullable().optional(),
-  participantCount: z.number().int().optional(),
-  status: z.lazy(() => GameJamsJamStatusSchema).optional(),
   createdBy: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  endDate: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  maxParticipants: z.number().int().nullable().optional(),
+  name: z.string().nullable().optional(),
+  participantCount: z.number().int().optional(),
+  slug: z.string().nullable().optional(),
+  startDate: z.string().datetime().optional(),
+  status: z.lazy(() => GameJamsJamStatusSchema).optional(),
+  theme: z.string().nullable().optional(),
+  votingEndDate: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for GameJamsJamScore */
 GameJamsJamScoreSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  criteriaId: z.string().uuid(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  feedback: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  submissionId: z.string().uuid(),
-  criteriaId: z.string().uuid(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   judgeUserId: z.string().uuid(),
   score: z.number().int(),
-  feedback: z.string().nullable().optional(),
+  submissionId: z.string().uuid(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for GameJamsJamScoreDto */
 GameJamsJamScoreDtoSchema = z.object({
-  id: z.string().uuid().optional(),
-  submissionId: z.string().uuid().optional(),
   criteriaId: z.string().uuid().optional(),
+  feedback: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
   judgeUserId: z.string().uuid().optional(),
   score: z.number().int().optional(),
-  feedback: z.string().nullable().optional(),
+  submissionId: z.string().uuid().optional(),
 });
 
 /** Zod schema for GameJamsJamStatus */
@@ -11372,43 +11324,43 @@ GameJamsJamSubmissionSchema = z.object({
   id: z.string().uuid().optional(),
   jamId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
   submissionNotes: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for GameJamsScoreJamSubmissionInput */
 GameJamsScoreJamSubmissionInputSchema = z.object({
   criteriaId: z.string().uuid().optional(),
+  feedback: z.string().nullable().optional(),
   judgeUserId: z.string().uuid().optional(),
   score: z.number().int().optional(),
-  feedback: z.string().nullable().optional(),
 });
 
 /** Zod schema for GameJamsSubmitJamEntryInput */
 GameJamsSubmitJamEntryInputSchema = z.object({
+  notes: z.string().nullable().optional(),
   projectVersionId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
-  notes: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationApiKey */
 IdentityAuthenticationApiKeySchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
-  keyPrefix: z.string().nullable().optional(),
-  scopes: z.array(z.string()).nullable().optional(),
-  isActive: z.boolean().optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
-  lastUsedAt: z.string().datetime().nullable().optional(),
-  usageCount: z.number().int().optional(),
   createdAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  keyPrefix: z.string().nullable().optional(),
+  lastUsedAt: z.string().datetime().nullable().optional(),
+  name: z.string().nullable().optional(),
+  scopes: z.array(z.string()).nullable().optional(),
+  usageCount: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationAssignRoleToUserInput */
 IdentityAuthenticationAssignRoleToUserInputSchema = z.object({
-  userId: z.string().uuid().optional(),
-  roleId: z.string().uuid().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  roleId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationBackupCodesOutput */
@@ -11419,10 +11371,10 @@ IdentityAuthenticationBackupCodesOutputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationBackupCodesStatusOutput */
 IdentityAuthenticationBackupCodesStatusOutputSchema = z.object({
-  totalCount: z.number().int(),
-  remainingCount: z.number().int(),
-  usedCount: z.number().int(),
   hasBackupCodes: z.boolean(),
+  remainingCount: z.number().int(),
+  totalCount: z.number().int(),
+  usedCount: z.number().int(),
 });
 
 /** Zod schema for IdentityAuthenticationBeginWebAuthnAuthenticationInput */
@@ -11432,8 +11384,8 @@ IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationBeginWebAuthnRegistrationInput */
 IdentityAuthenticationBeginWebAuthnRegistrationInputSchema = z.object({
-  email: z.string().nullable().optional(),
   displayName: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
   preferredAuthenticatorType: z.lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema).optional(),
 });
 
@@ -11450,9 +11402,9 @@ IdentityAuthenticationCleanupResultSchema = z.object({
 /** Zod schema for IdentityAuthenticationClientCredentialsTokenOutput */
 IdentityAuthenticationClientCredentialsTokenOutputSchema = z.object({
   accessToken: z.string().nullable().optional(),
-  tokenType: z.string().nullable().optional(),
   expiresIn: z.number().int().optional(),
   scope: z.string().nullable().optional(),
+  tokenType: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationCompleteMfaSetupInput */
@@ -11463,10 +11415,10 @@ IdentityAuthenticationCompleteMfaSetupInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationCompletePasswordResetInput */
 IdentityAuthenticationCompletePasswordResetInputSchema = z.object({
-  token: z.string().min(1),
-  newPassword: z.string().min(8),
   confirmPassword: z.string().min(1),
+  newPassword: z.string().min(8),
   tenantId: z.string().uuid().nullable().optional(),
+  token: z.string().min(1),
 });
 
 /** Zod schema for IdentityAuthenticationCompleteWebAuthnAuthenticationInput */
@@ -11483,65 +11435,65 @@ IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationConsumeMagicLinkInput */
 IdentityAuthenticationConsumeMagicLinkInputSchema = z.object({
-  token: z.string().min(1),
-  tenantId: z.string().uuid().nullable().optional(),
   deviceFingerprint: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  token: z.string().min(1),
 });
 
 /** Zod schema for IdentityAuthenticationCreateApiKeyCommand */
 IdentityAuthenticationCreateApiKeyCommandSchema = z.object({
-  name: z.string().nullable(),
-  scopes: z.array(z.string()).nullable(),
   expiresAt: z.string().datetime().nullable().optional(),
   ipWhitelist: z.string().nullable().optional(),
+  name: z.string().nullable(),
+  scopes: z.array(z.string()).nullable(),
 });
 
 /** Zod schema for IdentityAuthenticationCreateApiKeyOutput */
 IdentityAuthenticationCreateApiKeyOutputSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
   apiKey: z.string().nullable().optional(),
-  keyPrefix: z.string().nullable().optional(),
-  scopes: z.array(z.string()).nullable().optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  keyPrefix: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  scopes: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationCreateRoleInput */
 IdentityAuthenticationCreateRoleInputSchema = z.object({
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
   permissions: z.array(z.string()).nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationCreateServiceAccountInput */
 IdentityAuthenticationCreateServiceAccountInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  scopes: z.string().nullable().optional(),
   allowedIpAddresses: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  name: z.string().nullable().optional(),
+  scopes: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationDeviceInfo */
 IdentityAuthenticationDeviceInfoSchema = z.object({
-  fingerprint: z.string().nullable().optional(),
-  deviceId: z.string().nullable().optional(),
-  ipAddress: z.string().nullable().optional(),
-  deviceName: z.string().nullable().optional(),
-  deviceType: z.string().nullable().optional(),
-  operatingSystem: z.string().nullable().optional(),
-  osVersion: z.string().nullable().optional(),
   browser: z.string().nullable().optional(),
   browserVersion: z.string().nullable().optional(),
+  deviceId: z.string().nullable().optional(),
+  deviceName: z.string().nullable().optional(),
+  deviceType: z.string().nullable().optional(),
+  fingerprint: z.string().nullable().optional(),
+  ipAddress: z.string().nullable().optional(),
+  isBot: z.boolean().optional(),
+  isMobile: z.boolean().optional(),
+  language: z.string().nullable().optional(),
+  operatingSystem: z.string().nullable().optional(),
+  osVersion: z.string().nullable().optional(),
   screenResolution: z.string().nullable().optional(),
   timezone: z.string().nullable().optional(),
-  language: z.string().nullable().optional(),
   userAgent: z.string().nullable().optional(),
-  isMobile: z.boolean().optional(),
-  isBot: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationDisableMfaInput */
@@ -11556,9 +11508,9 @@ IdentityAuthenticationEmailVerificationOutputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationEmailVerificationResult */
 IdentityAuthenticationEmailVerificationResultSchema = z.object({
-  success: z.boolean().optional(),
-  message: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+  success: z.boolean().optional(),
   userId: z.string().uuid().nullable().optional(),
   verifiedAt: z.string().datetime().nullable().optional(),
 });
@@ -11576,53 +11528,53 @@ IdentityAuthenticationGoogleIdTokenInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationJwtKeyInfo */
 IdentityAuthenticationJwtKeyInfoSchema = z.object({
-  keyId: z.string().nullable().optional(),
   algorithm: z.string().nullable().optional(),
-  isActive: z.boolean().optional(),
-  validFrom: z.string().datetime().optional(),
   expiresAt: z.string().datetime().optional(),
+  isActive: z.boolean().optional(),
+  keyId: z.string().nullable().optional(),
+  keyVersion: z.number().int().optional(),
   rotatedAt: z.string().datetime().nullable().optional(),
   rotationReason: z.string().nullable().optional(),
-  keyVersion: z.number().int().optional(),
+  validFrom: z.string().datetime().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationLocalSignInInput */
 IdentityAuthenticationLocalSignInInputSchema = z.object({
-  username: z.string().nullable().optional(),
+  deviceFingerprint: z.string().nullable().optional(),
   email: z.string().email().min(1),
+  emailOrUsername: z.string().nullable().optional(),
   password: z.string().min(1),
   tenantId: z.string().uuid().nullable().optional(),
-  deviceFingerprint: z.string().nullable().optional(),
-  emailOrUsername: z.string().nullable().optional(),
+  username: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationLocalSignUpInput */
 IdentityAuthenticationLocalSignUpInputSchema = z.object({
-  username: z.string().min(1),
   email: z.string().email().min(1),
-  password: z.string().min(8),
-  tenantId: z.string().uuid().nullable().optional(),
   firstName: z.string().nullable().optional(),
   lastName: z.string().nullable().optional(),
+  password: z.string().min(8),
   phoneNumber: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  username: z.string().min(1),
 });
 
 /** Zod schema for IdentityAuthenticationLocationInfo */
 IdentityAuthenticationLocationInfoSchema = z.object({
-  ipAddress: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
   countryCode: z.string().nullable().optional(),
-  region: z.string().nullable().optional(),
-  city: z.string().nullable().optional(),
-  postalCode: z.string().nullable().optional(),
+  displayLocation: z.string().nullable().optional(),
+  ipAddress: z.string().nullable().optional(),
+  isHosting: z.boolean().nullable().optional(),
+  isProxy: z.boolean().nullable().optional(),
+  isp: z.string().nullable().optional(),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
-  timezone: z.string().nullable().optional(),
-  isp: z.string().nullable().optional(),
   organization: z.string().nullable().optional(),
-  isProxy: z.boolean().nullable().optional(),
-  isHosting: z.boolean().nullable().optional(),
-  displayLocation: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  region: z.string().nullable().optional(),
+  timezone: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationLockServiceAccountInput */
@@ -11632,18 +11584,18 @@ IdentityAuthenticationLockServiceAccountInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationMagicLinkRequestResult */
 IdentityAuthenticationMagicLinkRequestResultSchema = z.object({
-  success: z.boolean().optional(),
-  message: z.string().nullable().optional(),
-  expiresInMinutes: z.number().int().optional(),
   developmentPreviewToken: z.string().nullable().optional(),
+  expiresInMinutes: z.number().int().optional(),
+  message: z.string().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationMfaConfigurationOutput */
 IdentityAuthenticationMfaConfigurationOutputSchema = z.object({
-  isEnabled: z.boolean().optional(),
-  enabledMethods: z.array(z.string()).nullable().optional(),
-  enabledAt: z.string().datetime().nullable().optional(),
   backupCodesRemaining: z.number().int().optional(),
+  enabledAt: z.string().datetime().nullable().optional(),
+  enabledMethods: z.array(z.string()).nullable().optional(),
+  isEnabled: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationMfaErrorOutput */
@@ -11656,28 +11608,28 @@ IdentityAuthenticationMfaMethodSchema = z.enum(['Totp', 'BackupCode', 'Sms', 'Em
 
 /** Zod schema for IdentityAuthenticationMfaMethodInfo */
 IdentityAuthenticationMfaMethodInfoSchema = z.object({
+  description: z.string().nullable(),
+  isAvailable: z.boolean(),
+  isEnabled: z.boolean(),
   method: z.lazy(() => IdentityAuthenticationMfaMethodSchema),
   name: z.string().nullable(),
-  description: z.string().nullable(),
-  isEnabled: z.boolean(),
-  isAvailable: z.boolean(),
   priority: z.number().int(),
 });
 
 /** Zod schema for IdentityAuthenticationMfaMethodsOutput */
 IdentityAuthenticationMfaMethodsOutputSchema = z.object({
-  methods: z.array(z.lazy(() => IdentityAuthenticationMfaMethodInfoSchema)).nullable(),
   defaultMethod: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
+  methods: z.array(z.lazy(() => IdentityAuthenticationMfaMethodInfoSchema)).nullable(),
 });
 
 /** Zod schema for IdentityAuthenticationMfaSetupOutput */
 IdentityAuthenticationMfaSetupOutputSchema = z.object({
-  isSuccess: z.boolean().optional(),
+  backupCodes: z.array(z.string()).nullable().optional(),
   errorMessage: z.string().nullable().optional(),
-  secretKey: z.string().nullable().optional(),
+  isSuccess: z.boolean().optional(),
   qrCodeData: z.string().nullable().optional(),
   qrCodeUri: z.string().nullable().optional(),
-  backupCodes: z.array(z.string()).nullable().optional(),
+  secretKey: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationMfaSuccessOutput */
@@ -11687,8 +11639,8 @@ IdentityAuthenticationMfaSuccessOutputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationMfaVerificationOutput */
 IdentityAuthenticationMfaVerificationOutputSchema = z.object({
-  isValid: z.boolean().optional(),
   accessToken: z.string().nullable().optional(),
+  isValid: z.boolean().optional(),
   refreshToken: z.string().nullable().optional(),
 });
 
@@ -11700,39 +11652,39 @@ IdentityAuthenticationOAuth2ErrorOutputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationPasswordChangeInput */
 IdentityAuthenticationPasswordChangeInputSchema = z.object({
+  confirmPassword: z.string().min(1),
   currentPassword: z.string().min(1),
   newPassword: z.string().min(8),
-  confirmPassword: z.string().min(1),
   revokeOtherSessions: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationPasswordChangeResult */
 IdentityAuthenticationPasswordChangeResultSchema = z.object({
-  success: z.boolean().optional(),
   message: z.string().nullable().optional(),
   sessionsRevoked: z.number().int().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationPasswordResetRequestResult */
 IdentityAuthenticationPasswordResetRequestResultSchema = z.object({
-  success: z.boolean().optional(),
-  message: z.string().nullable().optional(),
   expiresInMinutes: z.number().int().optional(),
+  message: z.string().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationPasswordResetResult */
 IdentityAuthenticationPasswordResetResultSchema = z.object({
-  success: z.boolean().optional(),
   message: z.string().nullable().optional(),
+  success: z.boolean().optional(),
   userId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationPatchServiceAccountInput */
 IdentityAuthenticationPatchServiceAccountInputSchema = z.object({
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  scopes: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  name: z.string().nullable().optional(),
+  scopes: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationRefreshTokenInput */
@@ -11743,8 +11695,8 @@ IdentityAuthenticationRefreshTokenInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationRemoveRoleFromUserInput */
 IdentityAuthenticationRemoveRoleFromUserInputSchema = z.object({
-  userId: z.string().uuid().optional(),
   roleId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationRequestMagicLinkInput */
@@ -11766,9 +11718,9 @@ IdentityAuthenticationRevokeApiKeyInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationRevokeRefreshTokenInput */
 IdentityAuthenticationRevokeRefreshTokenInputSchema = z.object({
-  token: z.string().min(1),
   ipAddress: z.string().nullable().optional(),
   reason: z.string().nullable().optional(),
+  token: z.string().min(1),
 });
 
 /** Zod schema for IdentityAuthenticationRiskLevel */
@@ -11793,85 +11745,85 @@ IdentityAuthenticationSendEmailVerificationInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationServiceAccountAuditEntry */
 IdentityAuthenticationServiceAccountAuditEntrySchema = z.object({
-  id: z.string().uuid().optional(),
-  timestamp: z.string().datetime().optional(),
   action: z.string().nullable().optional(),
-  performedBy: z.string().nullable().optional(),
-  ipAddress: z.string().nullable().optional(),
   details: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  ipAddress: z.string().nullable().optional(),
+  performedBy: z.string().nullable().optional(),
+  timestamp: z.string().datetime().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationServiceAccountAuditLogOutput */
 IdentityAuthenticationServiceAccountAuditLogOutputSchema = z.object({
-  serviceAccountId: z.string().uuid().optional(),
   entries: z
     .array(z.lazy(() => IdentityAuthenticationServiceAccountAuditEntrySchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
   page: z.number().int().optional(),
   pageSize: z.number().int().optional(),
+  serviceAccountId: z.string().uuid().optional(),
+  totalCount: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationServiceAccountCreatedOutput */
 IdentityAuthenticationServiceAccountCreatedOutputSchema = z.object({
-  id: z.string().uuid().optional(),
   clientId: z.string().nullable().optional(),
   clientSecret: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  scopes: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  description: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  scopes: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
   warning: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationServiceAccountOutput */
 IdentityAuthenticationServiceAccountOutputSchema = z.object({
-  id: z.string().uuid().optional(),
+  authenticationCount: z.number().int().optional(),
   clientId: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  scopes: z.string().nullable().optional(),
-  isActive: z.boolean().optional(),
-  isLocked: z.boolean().optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   createdBy: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  isLocked: z.boolean().optional(),
   lastAuthenticatedAt: z.string().datetime().nullable().optional(),
-  authenticationCount: z.number().int().optional(),
+  name: z.string().nullable().optional(),
+  scopes: z.string().nullable().optional(),
   secretRotationCount: z.number().int().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationSessionOutput */
 IdentityAuthenticationSessionOutputSchema = z.object({
-  id: z.string().uuid().optional(),
-  deviceInfo: z.lazy(() => IdentityAuthenticationDeviceInfoSchema).optional(),
-  location: z.lazy(() => IdentityAuthenticationLocationInfoSchema).optional(),
-  ipAddress: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
-  lastUsedAt: z.string().datetime().optional(),
+  deviceInfo: z.lazy(() => IdentityAuthenticationDeviceInfoSchema).optional(),
   expiresAt: z.string().datetime().optional(),
-  isTrustedDevice: z.boolean().optional(),
+  id: z.string().uuid().optional(),
+  ipAddress: z.string().nullable().optional(),
   isCurrent: z.boolean().optional(),
+  isTrustedDevice: z.boolean().optional(),
+  lastUsedAt: z.string().datetime().optional(),
+  location: z.lazy(() => IdentityAuthenticationLocationInfoSchema).optional(),
 });
 
 /** Zod schema for IdentityAuthenticationSessionSecurityAnalysis */
 IdentityAuthenticationSessionSecurityAnalysisSchema = z.object({
-  sessionId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  isSuspicious: z.boolean().optional(),
-  unusualActivityDetected: z.boolean().optional(),
-  riskScore: z.number().int().optional(),
   activeSessionCount: z.number().int().optional(),
-  totalDeviceCount: z.number().int().optional(),
-  riskLevel: z.lazy(() => IdentityAuthenticationRiskLevelSchema).optional(),
-  securityFlags: z.array(z.string()).nullable().optional(),
-  riskFactors: z.array(z.string()).nullable().optional(),
-  metadata: z.record(z.string(), z.string()).nullable().optional(),
   analyzedAt: z.string().datetime().optional(),
+  isSuspicious: z.boolean().optional(),
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+  riskFactors: z.array(z.string()).nullable().optional(),
+  riskLevel: z.lazy(() => IdentityAuthenticationRiskLevelSchema).optional(),
+  riskScore: z.number().int().optional(),
+  securityFlags: z.array(z.string()).nullable().optional(),
+  sessionId: z.string().uuid().optional(),
+  totalDeviceCount: z.number().int().optional(),
+  unusualActivityDetected: z.boolean().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationSessionSuccessOutput */
@@ -11887,33 +11839,33 @@ IdentityAuthenticationSessionTerminationOutputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationSignInOutput */
 IdentityAuthenticationSignInOutputSchema = z.object({
-  success: z.boolean().optional(),
-  message: z.string().nullable().optional(),
   accessToken: z.string().nullable().optional(),
-  refreshToken: z.string().nullable().optional(),
-  expiresAt: z.string().datetime().optional(),
   accessTokenExpiresAt: z.string().datetime().optional(),
-  refreshTokenExpiresAt: z.string().datetime().optional(),
-  expiresIn: z.number().int().optional(),
-  userId: z.string().uuid().optional(),
-  email: z.string().nullable().optional(),
-  sessionId: z.string().uuid().optional(),
-  tempToken: z.string().nullable().optional(),
-  mfaToken: z.string().nullable().optional(),
-  user: z.lazy(() => IdentityAuthenticationUserSchema).optional(),
-  tenantId: z.string().uuid().nullable().optional(),
+  availableMethods: z.array(z.string()).nullable().optional(),
   availableTenants: z
     .array(z.lazy(() => TenantInfoSchema))
     .nullable()
     .optional(),
-  requiresMfa: z.boolean().optional(),
+  email: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  expiresIn: z.number().int().optional(),
+  message: z.string().nullable().optional(),
   mfaSessionId: z.string().nullable().optional(),
+  mfaToken: z.string().nullable().optional(),
+  refreshToken: z.string().nullable().optional(),
+  refreshTokenExpiresAt: z.string().datetime().optional(),
+  requiresMfa: z.boolean().optional(),
   requiresStepUp: z.boolean().optional(),
-  stepUpToken: z.string().nullable().optional(),
-  stepUpExpiresAt: z.string().datetime().nullable().optional(),
-  riskLevel: z.lazy(() => IdentityAuthenticationRiskLevelSchema).optional(),
   riskFactors: z.array(z.string()).nullable().optional(),
-  availableMethods: z.array(z.string()).nullable().optional(),
+  riskLevel: z.lazy(() => IdentityAuthenticationRiskLevelSchema).optional(),
+  sessionId: z.string().uuid().optional(),
+  stepUpExpiresAt: z.string().datetime().nullable().optional(),
+  stepUpToken: z.string().nullable().optional(),
+  success: z.boolean().optional(),
+  tempToken: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  user: z.lazy(() => IdentityAuthenticationUserSchema).optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationSmsMfaSetupInput */
@@ -11923,9 +11875,9 @@ IdentityAuthenticationSmsMfaSetupInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationSmsMfaSetupOutput */
 IdentityAuthenticationSmsMfaSetupOutputSchema = z.object({
+  expiresInSeconds: z.number().int(),
   message: z.string().nullable(),
   phoneNumberMasked: z.string().nullable(),
-  expiresInSeconds: z.number().int(),
 });
 
 /** Zod schema for IdentityAuthenticationTrustDeviceInput */
@@ -11935,12 +11887,12 @@ IdentityAuthenticationTrustDeviceInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationTrustedDeviceOutput */
 IdentityAuthenticationTrustedDeviceOutputSchema = z.object({
-  id: z.string().uuid().optional(),
-  deviceName: z.string().nullable().optional(),
   deviceInfo: z.lazy(() => IdentityAuthenticationDeviceInfoSchema).optional(),
-  trustedAt: z.string().datetime().optional(),
-  lastUsedAt: z.string().datetime().optional(),
+  deviceName: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  lastUsedAt: z.string().datetime().optional(),
+  trustedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationUpdateCredentialNameInput */
@@ -11950,10 +11902,10 @@ IdentityAuthenticationUpdateCredentialNameInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationUpdateRoleInput */
 IdentityAuthenticationUpdateRoleInputSchema = z.object({
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  permissions: z.array(z.string()).nullable().optional(),
   isActive: z.boolean().nullable().optional(),
+  name: z.string().nullable().optional(),
+  permissions: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationUpdateScopesInput */
@@ -11963,76 +11915,76 @@ IdentityAuthenticationUpdateScopesInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationUser */
 IdentityAuthenticationUserSchema = z.object({
-  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
   email: z.string().nullable().optional(),
-  username: z.string().nullable().optional(),
+  emailVerified: z.boolean().optional(),
   firstName: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  lastLoginAt: z.string().datetime().nullable().optional(),
   lastName: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
-  emailVerified: z.boolean().optional(),
   phoneNumberVerified: z.boolean().optional(),
-  createdAt: z.string().datetime().optional(),
-  lastLoginAt: z.string().datetime().nullable().optional(),
+  username: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationVerifyEmailInput */
 IdentityAuthenticationVerifyEmailInputSchema = z.object({
-  token: z.string().min(1),
   tenantId: z.string().uuid().nullable().optional(),
+  token: z.string().min(1),
 });
 
 /** Zod schema for IdentityAuthenticationVerifyMfaInput */
 IdentityAuthenticationVerifyMfaInputSchema = z.object({
-  userId: z.string().uuid().optional(),
   code: z.string().min(1),
   method: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationWeb3ChallengeInput */
 IdentityAuthenticationWeb3ChallengeInputSchema = z.object({
-  walletAddress: z.string().min(1),
   chainId: z.string().nullable().optional(),
+  walletAddress: z.string().min(1),
 });
 
 /** Zod schema for IdentityAuthenticationWeb3ChallengeOutput */
 IdentityAuthenticationWeb3ChallengeOutputSchema = z.object({
   challenge: z.string().nullable().optional(),
-  nonce: z.string().nullable().optional(),
   expiresAt: z.string().datetime().optional(),
+  nonce: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationWeb3VerifyInput */
 IdentityAuthenticationWeb3VerifyInputSchema = z.object({
-  walletAddress: z.string().min(1),
-  signature: z.string().min(1),
-  nonce: z.string().min(1),
   chainId: z.string().min(1),
-  tenantId: z.string().uuid().nullable().optional(),
   deviceFingerprint: z.string().nullable().optional(),
+  nonce: z.string().min(1),
+  signature: z.string().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+  walletAddress: z.string().min(1),
 });
 
 /** Zod schema for IdentityAuthenticationWebAuthnAuthenticationOptionsResult */
 IdentityAuthenticationWebAuthnAuthenticationOptionsResultSchema = z.object({
-  success: z.boolean().optional(),
   error: z.string().nullable().optional(),
-  sessionId: z.string().nullable().optional(),
-  optionsJson: z.string().nullable().optional(),
   options: z.lazy(() => Fido2NetLibAssertionOptionsSchema).optional(),
+  optionsJson: z.string().nullable().optional(),
+  sessionId: z.string().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationWebAuthnAuthenticationResult */
 IdentityAuthenticationWebAuthnAuthenticationResultSchema = z.object({
-  success: z.boolean().optional(),
-  error: z.string().nullable().optional(),
-  userId: z.string().uuid().nullable().optional(),
-  credentialId: z.string().uuid().nullable().optional(),
-  isPasswordless: z.boolean().optional(),
-  email: z.string().nullable().optional(),
   accessToken: z.string().nullable().optional(),
-  refreshToken: z.string().nullable().optional(),
   accessTokenExpiresAt: z.string().datetime().nullable().optional(),
-  refreshTokenExpiresAt: z.string().datetime().nullable().optional(),
+  credentialId: z.string().uuid().nullable().optional(),
+  email: z.string().nullable().optional(),
+  error: z.string().nullable().optional(),
   expiresIn: z.number().int().optional(),
+  isPasswordless: z.boolean().optional(),
+  refreshToken: z.string().nullable().optional(),
+  refreshTokenExpiresAt: z.string().datetime().nullable().optional(),
+  success: z.boolean().optional(),
+  userId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationWebAuthnAuthenticatorType */
@@ -12040,51 +11992,51 @@ IdentityAuthenticationWebAuthnAuthenticatorTypeSchema = z.enum(['Platform', 'Cro
 
 /** Zod schema for IdentityAuthenticationWebAuthnCredentialInfo */
 IdentityAuthenticationWebAuthnCredentialInfoSchema = z.object({
-  id: z.string().uuid().optional(),
-  friendlyName: z.string().nullable().optional(),
   authenticatorType: z.lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema).optional(),
-  createdAt: z.string().datetime().optional(),
-  lastUsedAt: z.string().datetime().nullable().optional(),
-  isPasswordless: z.boolean().optional(),
-  isDefault: z.boolean().optional(),
   backedUp: z.boolean().optional(),
+  createdAt: z.string().datetime().optional(),
+  friendlyName: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isDefault: z.boolean().optional(),
+  isPasswordless: z.boolean().optional(),
+  lastUsedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationWebAuthnCredentialVerifyResult */
 IdentityAuthenticationWebAuthnCredentialVerifyResultSchema = z.object({
-  success: z.boolean().optional(),
   error: z.string().nullable().optional(),
-  isValid: z.boolean().optional(),
   isExpired: z.boolean().optional(),
   isRevoked: z.boolean().optional(),
+  isValid: z.boolean().optional(),
   lastUsedAt: z.string().datetime().nullable().optional(),
   signatureCount: z.number().int().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationWebAuthnRegistrationOptionsResult */
 IdentityAuthenticationWebAuthnRegistrationOptionsResultSchema = z.object({
-  success: z.boolean().optional(),
   error: z.string().nullable().optional(),
-  sessionId: z.string().nullable().optional(),
-  optionsJson: z.string().nullable().optional(),
   options: z.lazy(() => Fido2NetLibCredentialCreateOptionsSchema).optional(),
+  optionsJson: z.string().nullable().optional(),
+  sessionId: z.string().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationWebAuthnRegistrationResult */
 IdentityAuthenticationWebAuthnRegistrationResultSchema = z.object({
-  success: z.boolean().optional(),
-  error: z.string().nullable().optional(),
   credentialId: z.string().uuid().nullable().optional(),
+  error: z.string().nullable().optional(),
   friendlyName: z.string().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationWebAuthnStatusOutput */
 IdentityAuthenticationWebAuthnStatusOutputSchema = z.object({
-  isEnabled: z.boolean().optional(),
   credentialCount: z.number().int().optional(),
   hasPasswordlessCredential: z.boolean().optional(),
   hasPlatformAuthenticator: z.boolean().optional(),
   hasSecurityKey: z.boolean().optional(),
+  isEnabled: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthorizationPermissionType */
@@ -12195,19 +12147,19 @@ IdentityAuthorizationPermissionTypeSchema = z.enum([
 
 /** Zod schema for IdentityTenantsAddTenantMemberOutput */
 IdentityTenantsAddTenantMemberOutputSchema = z.object({
-  success: z.boolean().optional(),
-  message: z.string().nullable().optional(),
   memberId: z.string().uuid().nullable().optional(),
+  message: z.string().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityTenantsAddUserMembershipInput */
 IdentityTenantsAddUserMembershipInputSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  role: z.string().nullable().optional(),
   invitedByEmail: z.string().nullable().optional(),
-  requiresAcceptance: z.boolean().optional(),
   inviteeEmail: z.string().nullable().optional(),
   inviteeName: z.string().nullable().optional(),
+  requiresAcceptance: z.boolean().optional(),
+  role: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for IdentityTenantsArchiveInput */
@@ -12227,10 +12179,10 @@ IdentityTenantsBulkArchiveTenantsCommandSchema = z.object({
 
 /** Zod schema for IdentityTenantsBulkCreateTenantItem */
 IdentityTenantsBulkCreateTenantItemSchema = z.object({
-  name: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
   adminEmail: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsBulkCreateTenantsCommand */
@@ -12248,8 +12200,8 @@ IdentityTenantsBulkDeactivateTenantsCommandSchema = z.object({
 
 /** Zod schema for IdentityTenantsBulkDeleteTenantsCommand */
 IdentityTenantsBulkDeleteTenantsCommandSchema = z.object({
-  tenantIds: z.array(z.string().uuid()).nullable().optional(),
   hardDelete: z.boolean().optional(),
+  tenantIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsBulkPurgeTenantsCommand */
@@ -12264,9 +12216,9 @@ IdentityTenantsBulkUndeleteTenantsCommandSchema = z.object({
 
 /** Zod schema for IdentityTenantsBulkUpdateTenantItem */
 IdentityTenantsBulkUpdateTenantItemSchema = z.object({
-  tenantId: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for IdentityTenantsBulkUpdateTenantsCommand */
@@ -12279,10 +12231,10 @@ IdentityTenantsBulkUpdateTenantsCommandSchema = z.object({
 
 /** Zod schema for IdentityTenantsCreateTenantInput */
 IdentityTenantsCreateTenantInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
   adminEmail: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsGetUserMembershipsOutput */
@@ -12306,23 +12258,23 @@ IdentityTenantsRecoverInputSchema = z.object({
 
 /** Zod schema for IdentityTenantsReplaceTenantMetadataInput */
 IdentityTenantsReplaceTenantMetadataInputSchema = z.object({
-  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
-  tags: z.array(z.string()).nullable().optional(),
-  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  adminNotes: z.string().nullable().optional(),
   businessInfo: z.lazy(() => IdentityTenantsUpdateTenantBusinessInfoInputSchema).optional(),
   contactInfo: z.lazy(() => IdentityTenantsUpdateTenantContactInfoInputSchema).optional(),
-  adminNotes: z.string().nullable().optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsReplaceTenantSettingsInput */
 IdentityTenantsReplaceTenantSettingsInputSchema = z.object({
-  systemConfiguration: z.lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema).optional(),
-  featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
   businessRules: z.lazy(() => IdentityTenantsUpdateTenantBusinessRulesInputSchema).optional(),
-  userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
-  securitySettings: z.lazy(() => IdentityTenantsUpdateTenantSecuritySettingsInputSchema).optional(),
+  featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
   integrationSettings: z.lazy(() => IdentityTenantsUpdateTenantIntegrationSettingsInputSchema).optional(),
+  securitySettings: z.lazy(() => IdentityTenantsUpdateTenantSecuritySettingsInputSchema).optional(),
+  systemConfiguration: z.lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema).optional(),
   systemLimits: z.lazy(() => IdentityTenantsUpdateTenantSystemLimitsInputSchema).optional(),
+  userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
 });
 
 /** Zod schema for IdentityTenantsSlugValidation */
@@ -12334,380 +12286,380 @@ IdentityTenantsSlugValidationSchema = z.object({
 
 /** Zod schema for IdentityTenantsTenant */
 IdentityTenantsTenantSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  activeMemberCount: z.number().int().optional(),
+  adminEmail: z.string().max(255).nullable().optional(),
+  archivedAt: z.string().datetime().nullable().optional(),
+  canAcceptMembers: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().max(500).nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  hasActiveMembers: z.boolean().optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  isDefault: z.boolean().optional(),
+  isActive: z.boolean().optional(),
   isArchived: z.boolean().optional(),
-  archivedAt: z.string().datetime().nullable().optional(),
-  tenantMembers: z
-    .array(z.lazy(() => IdentityTenantsTenantMemberSchema))
-    .nullable()
-    .optional(),
+  isDefault: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(255),
   tenantDomains: z
     .array(z.lazy(() => IdentityTenantsTenantDomainSchema))
     .nullable()
     .optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  tenantMembers: z
+    .array(z.lazy(() => IdentityTenantsTenantMemberSchema))
+    .nullable()
+    .optional(),
   tenantSettings: z.lazy(() => IdentityTenantsTenantSettingsSchema).optional(),
   tenantStatistics: z.lazy(() => IdentityTenantsTenantStatisticsSchema).optional(),
+  updatedAt: z.string().datetime(),
   usageTrackingRecords: z
     .array(z.lazy(() => IdentityTenantsUsageTrackingSchema))
     .nullable()
     .optional(),
-  name: z.string().min(1).max(100),
-  description: z.string().max(500).nullable().optional(),
-  isActive: z.boolean().optional(),
-  slug: z.string().min(1).max(255),
-  adminEmail: z.string().max(255).nullable().optional(),
-  canAcceptMembers: z.boolean().optional(),
-  activeMemberCount: z.number().int().optional(),
-  hasActiveMembers: z.boolean().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantAddress */
 IdentityTenantsTenantAddressSchema = z.object({
-  street: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
-  state: z.string().nullable().optional(),
-  postalCode: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+  street: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantAuditLogEntry */
 IdentityTenantsTenantAuditLogEntrySchema = z.object({
-  id: z.string().uuid().optional(),
-  tenantId: z.string().uuid().optional(),
-  timestamp: z.string().datetime().optional(),
   action: z.string().nullable().optional(),
+  actorEmail: z.string().nullable().optional(),
   actorId: z.string().uuid().nullable().optional(),
   actorName: z.string().nullable().optional(),
-  actorEmail: z.string().nullable().optional(),
-  beforeValues: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   afterValues: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
-  ipAddress: z.string().nullable().optional(),
-  userAgent: z.string().nullable().optional(),
+  beforeValues: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   correlationId: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  ipAddress: z.string().nullable().optional(),
   metadata: z.record(z.string(), z.string()).nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  timestamp: z.string().datetime().optional(),
+  userAgent: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantBranding */
 IdentityTenantsTenantBrandingSchema = z.object({
-  logoUrl: z.string().nullable().optional(),
+  companyName: z.string().nullable().optional(),
   faviconUrl: z.string().nullable().optional(),
+  logoUrl: z.string().nullable().optional(),
   primaryColor: z.string().nullable().optional(),
   secondaryColor: z.string().nullable().optional(),
-  companyName: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantBusinessInfo */
 IdentityTenantsTenantBusinessInfoSchema = z.object({
+  complianceRequirements: z.array(z.string()).nullable().optional(),
+  geographicRegion: z.string().nullable().optional(),
   industry: z.string().nullable().optional(),
   organizationSize: z.string().nullable().optional(),
   tenantType: z.string().nullable().optional(),
-  geographicRegion: z.string().nullable().optional(),
-  complianceRequirements: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantBusinessRules */
 IdentityTenantsTenantBusinessRulesSchema = z.object({
-  workflowRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
-  validationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   approvalRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   notificationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  validationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  workflowRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantContactInfo */
 IdentityTenantsTenantContactInfoSchema = z.object({
-  primaryContactName: z.string().nullable().optional(),
-  primaryContactEmail: z.string().nullable().optional(),
-  primaryContactPhone: z.string().nullable().optional(),
-  organizationName: z.string().nullable().optional(),
   address: z.lazy(() => IdentityTenantsTenantAddressSchema).optional(),
+  organizationName: z.string().nullable().optional(),
+  primaryContactEmail: z.string().nullable().optional(),
+  primaryContactName: z.string().nullable().optional(),
+  primaryContactPhone: z.string().nullable().optional(),
   website: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantCurrencySettings */
 IdentityTenantsTenantCurrencySettingsSchema = z.object({
+  decimalPlaces: z.number().int().optional(),
   defaultCurrency: z.string().nullable().optional(),
   displayFormat: z.string().nullable().optional(),
-  decimalPlaces: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantDomain */
 IdentityTenantsTenantDomainSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  fullDomain: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isMainDomain: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isSecondaryDomain: z.boolean().optional(),
+  subdomain: z.string().max(100).nullable().optional(),
+  tenant: z.lazy(() => IdentityTenantsTenantSchema).optional(),
   tenantId: z.string().uuid(),
   topLevelDomain: z.string().min(1).max(255),
-  subdomain: z.string().max(100).nullable().optional(),
-  isMainDomain: z.boolean().optional(),
-  isSecondaryDomain: z.boolean().optional(),
+  updatedAt: z.string().datetime(),
   userGroupId: z.string().uuid().nullable().optional(),
-  fullDomain: z.string().nullable().optional(),
-  tenant: z.lazy(() => IdentityTenantsTenantSchema).optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantIntegrationSettings */
 IdentityTenantsTenantIntegrationSettingsSchema = z.object({
-  externalServices: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
-  webhookSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   apiKeys: z.record(z.string(), z.string()).nullable().optional(),
+  externalServices: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   ssoConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  webhookSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantMember */
 IdentityTenantsTenantMemberSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  childMembers: z
+    .array(z.lazy(() => IdentityTenantsTenantMemberSchema))
+    .nullable()
+    .optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid(),
-  userId: z.string().uuid(),
-  parentMemberId: z.string().uuid().nullable().optional(),
-  parentMember: z.lazy(() => IdentityTenantsTenantMemberSchema).optional(),
-  childMembers: z
-    .array(z.lazy(() => IdentityTenantsTenantMemberSchema))
-    .nullable()
-    .optional(),
-  role: z.string().min(1).max(100),
   isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   joinedAt: z.string().datetime().optional(),
-  leftAt: z.string().datetime().nullable().optional(),
   leaveReason: z.string().max(500).nullable().optional(),
+  leftAt: z.string().datetime().nullable().optional(),
   metadata: z.string().max(4000).nullable().optional(),
+  parentMember: z.lazy(() => IdentityTenantsTenantMemberSchema).optional(),
+  parentMemberId: z.string().uuid().nullable().optional(),
+  role: z.string().min(1).max(100),
   tenant: z.lazy(() => IdentityTenantsTenantSchema).optional(),
+  tenantId: z.string().uuid(),
+  updatedAt: z.string().datetime(),
+  userId: z.string().uuid(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantMetadata */
 IdentityTenantsTenantMetadataSchema = z.object({
-  id: z.string().uuid().optional(),
-  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
-  tags: z.array(z.string()).nullable().optional(),
-  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  adminNotes: z.string().nullable().optional(),
   businessInfo: z.lazy(() => IdentityTenantsTenantBusinessInfoSchema).optional(),
   contactInfo: z.lazy(() => IdentityTenantsTenantContactInfoSchema).optional(),
-  adminNotes: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  id: z.string().uuid().optional(),
+  tags: z.array(z.string()).nullable().optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantSecuritySettings */
 IdentityTenantsTenantSecuritySettingsSchema = z.object({
+  apiRateLimits: z.record(z.string(), z.number().int()).nullable().optional(),
+  ipWhitelist: z.array(z.string()).nullable().optional(),
   passwordPolicy: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   sessionTimeout: z.number().int().optional(),
   twoFactorRequired: z.boolean().optional(),
-  ipWhitelist: z.array(z.string()).nullable().optional(),
-  apiRateLimits: z.record(z.string(), z.number().int()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantSettings */
 IdentityTenantsTenantSettingsSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  allowUserRegistration: z.boolean().optional(),
+  brandingSettings: z.string().max(5000).nullable().optional(),
+  createdAt: z.string().datetime(),
+  defaultCurrency: z.string().max(3).nullable().optional(),
+  defaultLanguage: z.string().max(10).nullable().optional(),
+  defaultTimezone: z.string().max(50).nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  enableApiAccess: z.boolean().optional(),
+  enableAuditLogging: z.boolean().optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid(),
-  defaultLanguage: z.string().max(10).nullable().optional(),
-  defaultTimezone: z.string().max(50).nullable().optional(),
-  defaultCurrency: z.string().max(3).nullable().optional(),
-  allowUserRegistration: z.boolean().optional(),
+  integrationSettingsJson: z.string().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  maxUsers: z.number().int().nullable().optional(),
+  notificationSettings: z.string().max(5000).nullable().optional(),
   requireRegistrationApproval: z.boolean().optional(),
   requireTwoFactorAuth: z.boolean().optional(),
-  maxUsers: z.number().int().nullable().optional(),
-  storageQuota: z.number().int().nullable().optional(),
-  enableAuditLogging: z.boolean().optional(),
-  enableApiAccess: z.boolean().optional(),
-  brandingSettings: z.string().max(5000).nullable().optional(),
-  notificationSettings: z.string().max(5000).nullable().optional(),
   securitySettings: z.string().max(5000).nullable().optional(),
-  integrationSettingsJson: z.string().nullable().optional(),
+  storageQuota: z.number().int().nullable().optional(),
   tenant: z.lazy(() => IdentityTenantsTenantSchema).optional(),
+  tenantId: z.string().uuid(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantSettingsDto */
 IdentityTenantsTenantSettingsDtoSchema = z.object({
-  id: z.string().uuid().optional(),
-  systemConfiguration: z.lazy(() => IdentityTenantsTenantSystemConfigurationSchema).optional(),
-  featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
   businessRules: z.lazy(() => IdentityTenantsTenantBusinessRulesSchema).optional(),
-  userInterfaceSettings: z.lazy(() => IdentityTenantsTenantUiSettingsSchema).optional(),
-  securitySettings: z.lazy(() => IdentityTenantsTenantSecuritySettingsSchema).optional(),
-  integrationSettings: z.lazy(() => IdentityTenantsTenantIntegrationSettingsSchema).optional(),
-  systemLimits: z.lazy(() => IdentityTenantsTenantSystemLimitsSchema).optional(),
   createdAt: z.string().datetime().optional(),
+  featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
+  id: z.string().uuid().optional(),
+  integrationSettings: z.lazy(() => IdentityTenantsTenantIntegrationSettingsSchema).optional(),
+  securitySettings: z.lazy(() => IdentityTenantsTenantSecuritySettingsSchema).optional(),
+  systemConfiguration: z.lazy(() => IdentityTenantsTenantSystemConfigurationSchema).optional(),
+  systemLimits: z.lazy(() => IdentityTenantsTenantSystemLimitsSchema).optional(),
   updatedAt: z.string().datetime().optional(),
+  userInterfaceSettings: z.lazy(() => IdentityTenantsTenantUiSettingsSchema).optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantStatistics */
 IdentityTenantsTenantStatisticsSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  activeMembers: z.number().int().optional(),
+  apiCalls: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  customMetrics: z.string().max(10000).nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid(),
-  statisticDate: z.string().datetime().optional(),
-  totalMembers: z.number().int().optional(),
-  activeMembers: z.number().int().optional(),
   inactiveMembers: z.number().int().optional(),
-  storageUsed: z.number().int().optional(),
-  apiCalls: z.number().int().optional(),
-  newMembers: z.number().int().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   membersLeft: z.number().int().optional(),
-  customMetrics: z.string().max(10000).nullable().optional(),
+  newMembers: z.number().int().optional(),
+  statisticDate: z.string().datetime().optional(),
+  storageUsed: z.number().int().optional(),
   tenant: z.lazy(() => IdentityTenantsTenantSchema).optional(),
+  tenantId: z.string().uuid(),
+  totalMembers: z.number().int().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantSystemConfiguration */
 IdentityTenantsTenantSystemConfigurationSchema = z.object({
-  timeZone: z.string().nullable().optional(),
-  locale: z.string().nullable().optional(),
-  dateFormat: z.string().nullable().optional(),
-  numberFormat: z.string().nullable().optional(),
   currencySettings: z.lazy(() => IdentityTenantsTenantCurrencySettingsSchema).optional(),
   customConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  dateFormat: z.string().nullable().optional(),
+  locale: z.string().nullable().optional(),
+  numberFormat: z.string().nullable().optional(),
+  timeZone: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantSystemLimits */
 IdentityTenantsTenantSystemLimitsSchema = z.object({
-  maxUsers: z.number().int().optional(),
-  maxStorage: z.number().int().optional(),
+  customLimits: z.record(z.string(), z.number().int()).nullable().optional(),
   maxApiCalls: z.number().int().optional(),
   maxProjects: z.number().int().optional(),
-  customLimits: z.record(z.string(), z.number().int()).nullable().optional(),
+  maxStorage: z.number().int().optional(),
+  maxUsers: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantUiSettings */
 IdentityTenantsTenantUiSettingsSchema = z.object({
-  theme: z.string().nullable().optional(),
-  layout: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   branding: z.lazy(() => IdentityTenantsTenantBrandingSchema).optional(),
-  customCss: z.string().nullable().optional(),
   componentSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  customCss: z.string().nullable().optional(),
+  layout: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  theme: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantValidationError */
 IdentityTenantsTenantValidationErrorSchema = z.object({
-  field: z.string().nullable().optional(),
   code: z.string().nullable().optional(),
+  field: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantValidationOutput */
 IdentityTenantsTenantValidationOutputSchema = z.object({
-  isValid: z.boolean().optional(),
   errors: z
     .array(z.lazy(() => IdentityTenantsTenantValidationErrorSchema))
     .nullable()
     .optional(),
+  isValid: z.boolean().optional(),
+  slugValidation: z.lazy(() => IdentityTenantsSlugValidationSchema).optional(),
+  suggestions: z.array(z.string()).nullable().optional(),
   warnings: z
     .array(z.lazy(() => IdentityTenantsTenantValidationWarningSchema))
     .nullable()
     .optional(),
-  suggestions: z.array(z.string()).nullable().optional(),
-  slugValidation: z.lazy(() => IdentityTenantsSlugValidationSchema).optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantValidationWarning */
 IdentityTenantsTenantValidationWarningSchema = z.object({
-  field: z.string().nullable().optional(),
   code: z.string().nullable().optional(),
+  field: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantAddressInput */
 IdentityTenantsUpdateTenantAddressInputSchema = z.object({
-  street: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
-  state: z.string().nullable().optional(),
-  postalCode: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+  street: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantBrandingInput */
 IdentityTenantsUpdateTenantBrandingInputSchema = z.object({
-  logoUrl: z.string().nullable().optional(),
+  companyName: z.string().nullable().optional(),
   faviconUrl: z.string().nullable().optional(),
+  logoUrl: z.string().nullable().optional(),
   primaryColor: z.string().nullable().optional(),
   secondaryColor: z.string().nullable().optional(),
-  companyName: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantBusinessInfoInput */
 IdentityTenantsUpdateTenantBusinessInfoInputSchema = z.object({
+  complianceRequirements: z.array(z.string()).nullable().optional(),
+  geographicRegion: z.string().nullable().optional(),
   industry: z.string().nullable().optional(),
   organizationSize: z.string().nullable().optional(),
   tenantType: z.string().nullable().optional(),
-  geographicRegion: z.string().nullable().optional(),
-  complianceRequirements: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantBusinessRulesInput */
 IdentityTenantsUpdateTenantBusinessRulesInputSchema = z.object({
-  workflowRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
-  validationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   approvalRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   notificationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  validationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  workflowRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantContactInfoInput */
 IdentityTenantsUpdateTenantContactInfoInputSchema = z.object({
-  primaryContactName: z.string().nullable().optional(),
-  primaryContactEmail: z.string().nullable().optional(),
-  primaryContactPhone: z.string().nullable().optional(),
-  organizationName: z.string().nullable().optional(),
   address: z.lazy(() => IdentityTenantsUpdateTenantAddressInputSchema).optional(),
+  organizationName: z.string().nullable().optional(),
+  primaryContactEmail: z.string().nullable().optional(),
+  primaryContactName: z.string().nullable().optional(),
+  primaryContactPhone: z.string().nullable().optional(),
   website: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantCurrencySettingsInput */
 IdentityTenantsUpdateTenantCurrencySettingsInputSchema = z.object({
+  decimalPlaces: z.number().int().nullable().optional(),
   defaultCurrency: z.string().nullable().optional(),
   displayFormat: z.string().nullable().optional(),
-  decimalPlaces: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantFeatureFlagsInput */
@@ -12717,81 +12669,81 @@ IdentityTenantsUpdateTenantFeatureFlagsInputSchema = z.object({
 
 /** Zod schema for IdentityTenantsUpdateTenantIntegrationSettingsInput */
 IdentityTenantsUpdateTenantIntegrationSettingsInputSchema = z.object({
-  externalServices: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
-  webhookSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   apiKeys: z.record(z.string(), z.string()).nullable().optional(),
+  externalServices: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   ssoConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  webhookSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantMemberInviteOutput */
 IdentityTenantsUpdateTenantMemberInviteOutputSchema = z.object({
-  success: z.boolean().optional(),
-  message: z.string().nullable().optional(),
-  memberId: z.string().uuid().nullable().optional(),
   inviteStatus: z.string().nullable().optional(),
+  memberId: z.string().uuid().nullable().optional(),
+  message: z.string().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantMemberRoleOutput */
 IdentityTenantsUpdateTenantMemberRoleOutputSchema = z.object({
-  success: z.boolean().optional(),
-  message: z.string().nullable().optional(),
   memberId: z.string().uuid().optional(),
+  message: z.string().nullable().optional(),
   newRole: z.string().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantMetadataInput */
 IdentityTenantsUpdateTenantMetadataInputSchema = z.object({
-  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
-  tags: z.array(z.string()).nullable().optional(),
-  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  adminNotes: z.string().nullable().optional(),
   businessInfo: z.lazy(() => IdentityTenantsUpdateTenantBusinessInfoInputSchema).optional(),
   contactInfo: z.lazy(() => IdentityTenantsUpdateTenantContactInfoInputSchema).optional(),
-  adminNotes: z.string().nullable().optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantInput */
 IdentityTenantsUpdateTenantInputSchema = z.object({
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantSecuritySettingsInput */
 IdentityTenantsUpdateTenantSecuritySettingsInputSchema = z.object({
+  apiRateLimits: z.record(z.string(), z.number().int()).nullable().optional(),
+  ipWhitelist: z.array(z.string()).nullable().optional(),
   passwordPolicy: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   sessionTimeout: z.number().int().nullable().optional(),
   twoFactorRequired: z.boolean().nullable().optional(),
-  ipWhitelist: z.array(z.string()).nullable().optional(),
-  apiRateLimits: z.record(z.string(), z.number().int()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantSettingsInput */
 IdentityTenantsUpdateTenantSettingsInputSchema = z.object({
-  systemConfiguration: z.lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema).optional(),
-  featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
   businessRules: z.lazy(() => IdentityTenantsUpdateTenantBusinessRulesInputSchema).optional(),
-  userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
-  securitySettings: z.lazy(() => IdentityTenantsUpdateTenantSecuritySettingsInputSchema).optional(),
+  featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
   integrationSettings: z.lazy(() => IdentityTenantsUpdateTenantIntegrationSettingsInputSchema).optional(),
+  securitySettings: z.lazy(() => IdentityTenantsUpdateTenantSecuritySettingsInputSchema).optional(),
+  systemConfiguration: z.lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema).optional(),
   systemLimits: z.lazy(() => IdentityTenantsUpdateTenantSystemLimitsInputSchema).optional(),
+  userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantSystemConfigurationInput */
 IdentityTenantsUpdateTenantSystemConfigurationInputSchema = z.object({
-  timeZone: z.string().nullable().optional(),
-  locale: z.string().nullable().optional(),
-  dateFormat: z.string().nullable().optional(),
-  numberFormat: z.string().nullable().optional(),
   currencySettings: z.lazy(() => IdentityTenantsUpdateTenantCurrencySettingsInputSchema).optional(),
   customConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  dateFormat: z.string().nullable().optional(),
+  locale: z.string().nullable().optional(),
+  numberFormat: z.string().nullable().optional(),
+  timeZone: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantSystemLimitsInput */
 IdentityTenantsUpdateTenantSystemLimitsInputSchema = z.object({
-  maxUsers: z.number().int().nullable().optional(),
-  maxStorage: z.number().int().nullable().optional(),
+  customLimits: z.record(z.string(), z.number().int()).nullable().optional(),
   maxApiCalls: z.number().int().nullable().optional(),
   maxProjects: z.number().int().nullable().optional(),
-  customLimits: z.record(z.string(), z.number().int()).nullable().optional(),
+  maxStorage: z.number().int().nullable().optional(),
+  maxUsers: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantTagsInput */
@@ -12801,11 +12753,11 @@ IdentityTenantsUpdateTenantTagsInputSchema = z.object({
 
 /** Zod schema for IdentityTenantsUpdateTenantUiSettingsInput */
 IdentityTenantsUpdateTenantUiSettingsInputSchema = z.object({
-  theme: z.string().nullable().optional(),
-  layout: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   branding: z.lazy(() => IdentityTenantsUpdateTenantBrandingInputSchema).optional(),
-  customCss: z.string().nullable().optional(),
   componentSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  customCss: z.string().nullable().optional(),
+  layout: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  theme: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateUserMembershipInviteInput */
@@ -12820,56 +12772,56 @@ IdentityTenantsUpdateUserMembershipRoleInputSchema = z.object({
 
 /** Zod schema for IdentityTenantsUsageTracking */
 IdentityTenantsUsageTrackingSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  cost: z.number().optional(),
+  createdAt: z.string().datetime(),
+  date: z.string().datetime().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid(),
-  date: z.string().datetime().optional(),
-  resourceType: z.string().min(1).max(100),
-  usageAmount: z.number().int().optional(),
-  unit: z.string().max(50).nullable().optional(),
-  cost: z.number().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   metadata: z.string().max(4000).nullable().optional(),
+  resourceType: z.string().min(1).max(100),
   tenant: z.lazy(() => IdentityTenantsTenantSchema).optional(),
+  tenantId: z.string().uuid(),
+  unit: z.string().max(50).nullable().optional(),
+  updatedAt: z.string().datetime(),
+  usageAmount: z.number().int().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityTenantsUserMembership */
 IdentityTenantsUserMembershipSchema = z.object({
-  membershipId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().optional(),
-  tenantName: z.string().nullable().optional(),
-  tenantSlug: z.string().nullable().optional(),
-  tenantIsActive: z.boolean().optional(),
-  tenantDescription: z.string().nullable().optional(),
-  role: z.string().nullable().optional(),
-  isActive: z.boolean().optional(),
-  joinedAt: z.string().datetime().optional(),
-  leftAt: z.string().datetime().nullable().optional(),
-  inviteStatus: z.string().nullable().optional(),
-  invitedByEmail: z.string().nullable().optional(),
-  inviteeEmail: z.string().nullable().optional(),
-  inviteeName: z.string().nullable().optional(),
-  invitedAt: z.string().datetime().nullable().optional(),
-  lastInviteSentAt: z.string().datetime().nullable().optional(),
   acceptedAt: z.string().datetime().nullable().optional(),
   cancelledAt: z.string().datetime().nullable().optional(),
   inviteResendCount: z.number().int().optional(),
+  inviteStatus: z.string().nullable().optional(),
+  invitedAt: z.string().datetime().nullable().optional(),
+  invitedByEmail: z.string().nullable().optional(),
+  inviteeEmail: z.string().nullable().optional(),
+  inviteeName: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  joinedAt: z.string().datetime().optional(),
+  lastInviteSentAt: z.string().datetime().nullable().optional(),
+  leftAt: z.string().datetime().nullable().optional(),
+  membershipId: z.string().uuid().optional(),
+  role: z.string().nullable().optional(),
+  tenantDescription: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  tenantIsActive: z.boolean().optional(),
+  tenantName: z.string().nullable().optional(),
+  tenantSlug: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsValidateTenantInput */
 IdentityTenantsValidateTenantInputSchema = z.object({
+  adminEmail: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
-  adminEmail: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersBulkActivateUsersInput */
@@ -12921,15 +12873,15 @@ IdentityUsersBulkDeleteUsersInputSchema = z.object({
 
 /** Zod schema for IdentityUsersBulkNotificationInput */
 IdentityUsersBulkNotificationInputSchema = z.object({
+  filterCriteria: z.lazy(() => IdentityUsersNotificationFilterCriteriaSchema).optional(),
   notificationIds: z.array(z.string().uuid()).nullable().optional(),
   operation: z.string().nullable().optional(),
-  filterCriteria: z.lazy(() => IdentityUsersNotificationFilterCriteriaSchema).optional(),
 });
 
 /** Zod schema for IdentityUsersBulkPurgeUsersInput */
 IdentityUsersBulkPurgeUsersInputSchema = z.object({
-  userIds: z.array(z.string().uuid()).nullable().optional(),
   strategy: z.lazy(() => IdentityUsersPurgeStrategySchema).optional(),
+  userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersBulkRestoreUsersInput */
@@ -12939,11 +12891,11 @@ IdentityUsersBulkRestoreUsersInputSchema = z.object({
 
 /** Zod schema for IdentityUsersBulkRestoreUsersOutput */
 IdentityUsersBulkRestoreUsersOutputSchema = z.object({
+  failedUserIds: z.array(z.string().uuid()).nullable().optional(),
   restoredUsers: z
     .array(z.lazy(() => IdentityUsersUserDtoSchema))
     .nullable()
     .optional(),
-  failedUserIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersBulkSuspendUsersInput */
@@ -12953,11 +12905,11 @@ IdentityUsersBulkSuspendUsersInputSchema = z.object({
 
 /** Zod schema for IdentityUsersBulkSuspendUsersOutput */
 IdentityUsersBulkSuspendUsersOutputSchema = z.object({
+  failedUserIds: z.array(z.string().uuid()).nullable().optional(),
   suspendedUsers: z
     .array(z.lazy(() => IdentityUsersUserDtoSchema))
     .nullable()
     .optional(),
-  failedUserIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersBulkUnsuspendUsersInput */
@@ -12967,11 +12919,11 @@ IdentityUsersBulkUnsuspendUsersInputSchema = z.object({
 
 /** Zod schema for IdentityUsersBulkUnsuspendUsersOutput */
 IdentityUsersBulkUnsuspendUsersOutputSchema = z.object({
+  failedUserIds: z.array(z.string().uuid()).nullable().optional(),
   unsuspendedUsers: z
     .array(z.lazy(() => IdentityUsersUserDtoSchema))
     .nullable()
     .optional(),
-  failedUserIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersBulkUpdateUsersInput */
@@ -12999,21 +12951,21 @@ IdentityUsersCreateUserRequestItemSchema = z.object({
 /** Zod schema for IdentityUsersNotificationAction */
 IdentityUsersNotificationActionSchema = z.object({
   id: z.string().nullable().optional(),
-  text: z.string().nullable().optional(),
-  url: z.string().nullable().optional(),
-  type: z.string().nullable().optional(),
   isPrimary: z.boolean().optional(),
+  text: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersNotificationFilterCriteria */
 IdentityUsersNotificationFilterCriteriaSchema = z.object({
   categories: z.array(z.string()).nullable().optional(),
-  priorities: z.array(z.string()).nullable().optional(),
-  types: z.array(z.string()).nullable().optional(),
-  isRead: z.boolean().nullable().optional(),
-  isArchived: z.boolean().nullable().optional(),
   dateFrom: z.string().datetime().nullable().optional(),
   dateTo: z.string().datetime().nullable().optional(),
+  isArchived: z.boolean().nullable().optional(),
+  isRead: z.boolean().nullable().optional(),
+  priorities: z.array(z.string()).nullable().optional(),
+  types: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersNotificationPriority */
@@ -13038,8 +12990,8 @@ IdentityUsersReplaceUserLocalizationPreferencesInputSchema = z.object({
 /** Zod schema for IdentityUsersReplaceUserMetadataInput */
 IdentityUsersReplaceUserMetadataInputSchema = z.object({
   customFields: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
-  tags: z.array(z.string()).nullable().optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersReplaceUserNotificationPreferencesInput */
@@ -13049,9 +13001,9 @@ IdentityUsersReplaceUserNotificationPreferencesInputSchema = z.object({
 
 /** Zod schema for IdentityUsersReplaceUserPreferencesInput */
 IdentityUsersReplaceUserPreferencesInputSchema = z.object({
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
-  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
@@ -13062,17 +13014,17 @@ IdentityUsersReplaceUserPrivacyPreferencesInputSchema = z.object({
 
 /** Zod schema for IdentityUsersReplaceUserProfileInput */
 IdentityUsersReplaceUserProfileInputSchema = z.object({
-  displayName: z.string().nullable().optional(),
   bio: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
-  website: z.string().nullable().optional(),
-  jobTitle: z.string().nullable().optional(),
   company: z.string().nullable().optional(),
-  timeZone: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  jobTitle: z.string().nullable().optional(),
   language: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
   profileVisibility: z.string().nullable().optional(),
   showEmail: z.boolean().optional(),
   showLocation: z.boolean().optional(),
+  timeZone: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUpdateUserAccessibilityPreferencesInput */
@@ -13088,9 +13040,9 @@ IdentityUsersUpdateUserLocalizationPreferencesInputSchema = z.object({
 /** Zod schema for IdentityUsersUpdateUserMetadataInput */
 IdentityUsersUpdateUserMetadataInputSchema = z.object({
   customFields: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
   tagsToAdd: z.array(z.string()).nullable().optional(),
   tagsToRemove: z.array(z.string()).nullable().optional(),
-  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUpdateUserNotificationPreferencesInput */
@@ -13100,9 +13052,9 @@ IdentityUsersUpdateUserNotificationPreferencesInputSchema = z.object({
 
 /** Zod schema for IdentityUsersUpdateUserPreferencesInput */
 IdentityUsersUpdateUserPreferencesInputSchema = z.object({
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
-  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
@@ -13113,17 +13065,17 @@ IdentityUsersUpdateUserPrivacyPreferencesInputSchema = z.object({
 
 /** Zod schema for IdentityUsersUpdateUserProfileInput */
 IdentityUsersUpdateUserProfileInputSchema = z.object({
-  displayName: z.string().nullable().optional(),
   bio: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
-  website: z.string().nullable().optional(),
-  jobTitle: z.string().nullable().optional(),
   company: z.string().nullable().optional(),
-  timeZone: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  jobTitle: z.string().nullable().optional(),
   language: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
   profileVisibility: z.string().nullable().optional(),
   showEmail: z.boolean().nullable().optional(),
   showLocation: z.boolean().nullable().optional(),
+  timeZone: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUpdateUserInput */
@@ -13134,305 +13086,305 @@ IdentityUsersUpdateUserInputSchema = z.object({
 
 /** Zod schema for IdentityUsersUpdateUserRequestItem */
 IdentityUsersUpdateUserRequestItemSchema = z.object({
-  userId: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for IdentityUsersUser */
 IdentityUsersUserSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  canPerformActions: z.boolean().optional(),
+  canSignIn: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
   email: z.string().email().min(1).max(255),
-  username: z.string().max(256).nullable().optional(),
-  name: z.string().min(1).max(100),
-  passwordHash: z.string().max(512).nullable().optional(),
-  isEmailVerified: z.boolean().optional(),
-  lastLoginAt: z.string().datetime().nullable().optional(),
+  hasPassword: z.boolean().optional(),
+  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isEmailVerified: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   isSuspended: z.boolean().optional(),
-  tokenVersion: z.number().int().optional(),
-  status: z.lazy(() => IdentityUsersUserStatusSchema).optional(),
-  phoneNumber: z.string().max(20).nullable().optional(),
+  lastLoginAt: z.string().datetime().nullable().optional(),
   lastSeenAt: z.string().datetime().nullable().optional(),
-  profile: z.lazy(() => IdentityUsersUserProfileSchema).optional(),
   metadata: z.lazy(() => IdentityUsersUserMetadataSchema).optional(),
-  preferences: z.lazy(() => IdentityUsersUserPreferencesSchema).optional(),
+  name: z.string().min(1).max(100),
   notifications: z
     .array(z.lazy(() => IdentityUsersUserNotificationSchema))
     .nullable()
     .optional(),
+  passwordHash: z.string().max(512).nullable().optional(),
+  phoneNumber: z.string().max(20).nullable().optional(),
+  preferences: z.lazy(() => IdentityUsersUserPreferencesSchema).optional(),
+  profile: z.lazy(() => IdentityUsersUserProfileSchema).optional(),
+  status: z.lazy(() => IdentityUsersUserStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
   tenantMemberships: z
     .array(z.lazy(() => IdentityTenantsTenantMemberSchema))
     .nullable()
     .optional(),
-  hasPassword: z.boolean().optional(),
-  canPerformActions: z.boolean().optional(),
-  canSignIn: z.boolean().optional(),
+  tokenVersion: z.number().int().optional(),
+  updatedAt: z.string().datetime(),
+  username: z.string().max(256).nullable().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityUsersUserAccessibilityPreferences */
 IdentityUsersUserAccessibilityPreferencesSchema = z.object({
-  highContrast: z.boolean().optional(),
-  largeText: z.boolean().optional(),
-  screenReader: z.boolean().optional(),
-  reducedMotion: z.boolean().optional(),
-  keyboardNavigation: z.boolean().optional(),
-  fontSize: z.number().int().optional(),
   colorScheme: z.string().nullable().optional(),
   customSettings: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  fontSize: z.number().int().optional(),
+  highContrast: z.boolean().optional(),
+  keyboardNavigation: z.boolean().optional(),
+  largeText: z.boolean().optional(),
+  reducedMotion: z.boolean().optional(),
+  screenReader: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityUsersUserDto */
 IdentityUsersUserDtoSchema = z.object({
-  id: z.string().uuid().optional(),
-  email: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().nullable().optional(),
+  email: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
-  phoneNumber: z.string().nullable().optional(),
   lastSeenAt: z.string().datetime().nullable().optional(),
+  name: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUserLocalizationPreferences */
 IdentityUsersUserLocalizationPreferencesSchema = z.object({
-  language: z.string().nullable().optional(),
-  timezone: z.string().nullable().optional(),
-  dateFormat: z.string().nullable().optional(),
-  timeFormat: z.string().nullable().optional(),
   currency: z.string().nullable().optional(),
-  numberFormat: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   customSettings: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  dateFormat: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+  numberFormat: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  timeFormat: z.string().nullable().optional(),
+  timezone: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUserMetadata */
 IdentityUsersUserMetadataSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  customFields: z.string().max(50000).nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  userId: z.string().uuid(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  customFields: z.string().max(50000).nullable().optional(),
-  tags: z.string().max(10000).nullable().optional(),
   externalReferences: z.string().max(25000).nullable().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   notes: z.string().max(2000).nullable().optional(),
+  tags: z.string().max(10000).nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityUsersUserMetadataDto */
 IdentityUsersUserMetadataDtoSchema = z.object({
-  id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  customFields: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
-  tags: z.array(z.string()).nullable().optional(),
-  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  externalReferences: z.record(z.string(), z.string()).nullable().optional(),
+  id: z.string().uuid().optional(),
+  tags: z.array(z.string()).nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
+  userId: z.string().uuid().optional(),
   version: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUserNotification */
 IdentityUsersUserNotificationSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  actionUrl: z.string().max(500).nullable().optional(),
+  archivedAt: z.string().datetime().nullable().optional(),
+  content: z.string().min(1).max(2000),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  userId: z.string().uuid(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  type: z.string().min(1).max(50),
-  title: z.string().min(1).max(200),
-  content: z.string().min(1).max(2000),
-  priority: z.lazy(() => IdentityUsersNotificationPrioritySchema).optional(),
-  isRead: z.boolean().optional(),
   isArchived: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isRead: z.boolean().optional(),
+  metadata: z.string().max(10000).nullable().optional(),
+  priority: z.lazy(() => IdentityUsersNotificationPrioritySchema).optional(),
   readAt: z.string().datetime().nullable().optional(),
-  archivedAt: z.string().datetime().nullable().optional(),
-  senderId: z.string().uuid().nullable().optional(),
-  source: z.string().max(100).nullable().optional(),
   relatedEntityId: z.string().uuid().nullable().optional(),
   relatedEntityType: z.string().max(100).nullable().optional(),
-  actionUrl: z.string().max(500).nullable().optional(),
-  metadata: z.string().max(10000).nullable().optional(),
+  senderId: z.string().uuid().nullable().optional(),
+  source: z.string().max(100).nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().min(1).max(200),
+  type: z.string().min(1).max(50),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityUsersUserNotificationDetail */
 IdentityUsersUserNotificationDetailSchema = z.object({
+  actions: z
+    .array(z.lazy(() => IdentityUsersNotificationActionSchema))
+    .nullable()
+    .optional(),
   notification: z.lazy(() => IdentityUsersUserNotificationDtoSchema).optional(),
   relatedNotifications: z
     .array(z.lazy(() => IdentityUsersUserNotificationDtoSchema))
-    .nullable()
-    .optional(),
-  actions: z
-    .array(z.lazy(() => IdentityUsersNotificationActionSchema))
     .nullable()
     .optional(),
 });
 
 /** Zod schema for IdentityUsersUserNotificationDto */
 IdentityUsersUserNotificationDtoSchema = z.object({
-  id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  type: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  message: z.string().nullable().optional(),
-  priority: z.string().nullable().optional(),
-  category: z.string().nullable().optional(),
-  isRead: z.boolean().optional(),
-  isArchived: z.boolean().optional(),
-  readAt: z.string().datetime().nullable().optional(),
-  archivedAt: z.string().datetime().nullable().optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
-  actionUrl: z.string().nullable().optional(),
   actionText: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  metadata: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  actionUrl: z.string().nullable().optional(),
+  archivedAt: z.string().datetime().nullable().optional(),
+  category: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isArchived: z.boolean().optional(),
+  isRead: z.boolean().optional(),
+  message: z.string().nullable().optional(),
+  metadata: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  priority: z.string().nullable().optional(),
+  readAt: z.string().datetime().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
+  userId: z.string().uuid().optional(),
   version: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUserNotificationPreferences */
 IdentityUsersUserNotificationPreferencesSchema = z.object({
-  emailEnabled: z.boolean().optional(),
-  pushEnabled: z.boolean().optional(),
-  smsEnabled: z.boolean().optional(),
-  inAppEnabled: z.boolean().optional(),
-  frequency: z.string().nullable().optional(),
-  quietHours: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   categoryPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  emailEnabled: z.boolean().optional(),
+  frequency: z.string().nullable().optional(),
+  inAppEnabled: z.boolean().optional(),
+  pushEnabled: z.boolean().optional(),
+  quietHours: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  smsEnabled: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityUsersUserPreferences */
 IdentityUsersUserPreferencesSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  accessibilityPreferences: z.string().max(10000).nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  userId: z.string().uuid(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
   generalPreferences: z.string().max(10000).nullable().optional(),
-  notificationPreferences: z.string().max(10000).nullable().optional(),
-  accessibilityPreferences: z.string().max(10000).nullable().optional(),
-  privacyPreferences: z.string().max(10000).nullable().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   localizationPreferences: z.string().max(10000).nullable().optional(),
+  notificationPreferences: z.string().max(10000).nullable().optional(),
+  privacyPreferences: z.string().max(10000).nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityUsersUserPreferencesDto */
 IdentityUsersUserPreferencesDtoSchema = z.object({
-  id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
-  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
-  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
-  localizationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  id: z.string().uuid().optional(),
+  localizationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
+  userId: z.string().uuid().optional(),
   version: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUserPrivacyPreferences */
 IdentityUsersUserPrivacyPreferencesSchema = z.object({
-  profileVisibility: z.string().nullable().optional(),
   activityTracking: z.boolean().optional(),
-  dataCollection: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
-  thirdPartySharing: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
-  marketingEmails: z.boolean().optional(),
   analyticsCookies: z.boolean().optional(),
-  personalizedContent: z.boolean().optional(),
   customSettings: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  dataCollection: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  marketingEmails: z.boolean().optional(),
+  personalizedContent: z.boolean().optional(),
+  profileVisibility: z.string().nullable().optional(),
+  thirdPartySharing: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUserProfile */
 IdentityUsersUserProfileSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  avatarUrl: z.string().max(500).nullable().optional(),
+  bannerUrl: z.string().max(500).nullable().optional(),
+  bio: z.string().max(1000).nullable().optional(),
+  company: z.string().max(100).nullable().optional(),
+  createdAt: z.string().datetime(),
+  dateOfBirth: z.string().date().nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  displayName: z.string().max(100).nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  userId: z.string().uuid(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  displayName: z.string().max(100).nullable().optional(),
-  bio: z.string().max(1000).nullable().optional(),
-  location: z.string().max(100).nullable().optional(),
-  website: z.string().max(255).nullable().optional(),
-  jobTitle: z.string().max(100).nullable().optional(),
-  company: z.string().max(100).nullable().optional(),
-  avatarUrl: z.string().max(500).nullable().optional(),
-  bannerUrl: z.string().max(500).nullable().optional(),
-  dateOfBirth: z.string().date().nullable().optional(),
   gender: z.string().max(20).nullable().optional(),
-  visibility: z.lazy(() => IdentityUsersProfileVisibilitySchema).optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   isVerified: z.boolean().optional(),
+  jobTitle: z.string().max(100).nullable().optional(),
+  location: z.string().max(100).nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid(),
+  version: z.number().int().optional(),
+  visibility: z.lazy(() => IdentityUsersProfileVisibilitySchema).optional(),
+  website: z.string().max(255).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUserProfileDto */
 IdentityUsersUserProfileDtoSchema = z.object({
-  id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  displayName: z.string().nullable().optional(),
-  bio: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
-  website: z.string().nullable().optional(),
-  jobTitle: z.string().nullable().optional(),
-  company: z.string().nullable().optional(),
   avatarUrl: z.string().nullable().optional(),
   bannerUrl: z.string().nullable().optional(),
-  timeZone: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  company: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  displayName: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  jobTitle: z.string().nullable().optional(),
   language: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
   profileVisibility: z.string().nullable().optional(),
   showEmail: z.boolean().optional(),
   showLocation: z.boolean().optional(),
-  createdAt: z.string().datetime().optional(),
+  timeZone: z.string().nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
+  userId: z.string().uuid().optional(),
   version: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUserStatus */
@@ -13449,134 +13401,141 @@ KeyValuePairStringAuthenticationExtensionsPRFValuesSchema = z.object({
 
 /** Zod schema for LaunchPadCreateLaunchPlanInput */
 LaunchPadCreateLaunchPlanInputSchema = z.object({
-  projectId: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
-  positioning: z.string().nullable().optional(),
-  targetLaunchAt: z.string().datetime().nullable().optional(),
   channels: z.array(z.string()).nullable().optional(),
   checklistItems: z
     .array(z.lazy(() => LaunchPadLaunchChecklistItemInputSchema))
     .nullable()
     .optional(),
+  name: z.string().nullable().optional(),
+  positioning: z.string().nullable().optional(),
+  projectId: z.string().uuid().optional(),
+  targetLaunchAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for LaunchPadLaunchChecklistItem */
 LaunchPadLaunchChecklistItemSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  category: z.string().min(1).max(100),
+  completedAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  launchPlanId: z.string().uuid().optional(),
-  launchPlan: z.lazy(() => LaunchPadLaunchPlanSchema).optional(),
-  title: z.string().min(1).max(200),
-  category: z.string().min(1).max(100),
-  isRequired: z.boolean().optional(),
   isComplete: z.boolean().optional(),
-  completedAt: z.string().datetime().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isRequired: z.boolean().optional(),
+  launchPlan: z.lazy(() => LaunchPadLaunchPlanSchema).optional(),
+  launchPlanId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().min(1).max(200),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for LaunchPadLaunchChecklistItemInput */
 LaunchPadLaunchChecklistItemInputSchema = z.object({
-  title: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   isComplete: z.boolean().optional(),
   isRequired: z.boolean().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LaunchPadLaunchPlan */
 LaunchPadLaunchPlanSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
-  domainEvents: z
-    .array(z.lazy(() => CQRSIDomainEventSchema))
-    .nullable()
-    .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
-  name: z.string().min(1).max(200),
-  positioning: z.string().max(1000).nullable().optional(),
-  targetLaunchAt: z.string().datetime().nullable().optional(),
-  launchedAt: z.string().datetime().nullable().optional(),
-  status: z.lazy(() => LaunchPadLaunchPlanStatusSchema).optional(),
   channels: z.array(z.string()).nullable().optional(),
   checklistItems: z
     .array(z.lazy(() => LaunchPadLaunchChecklistItemSchema))
     .nullable()
     .optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  launchedAt: z.string().datetime().nullable().optional(),
+  name: z.string().min(1).max(200),
+  positioning: z.string().max(1000).nullable().optional(),
+  project: z.lazy(() => ProjectsProjectSchema).optional(),
+  projectId: z.string().uuid().optional(),
   readinessPercent: z.number().int().optional(),
+  status: z.lazy(() => LaunchPadLaunchPlanStatusSchema).optional(),
+  targetLaunchAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for LaunchPadLaunchPlanStatus */
 LaunchPadLaunchPlanStatusSchema = z.enum(['Draft', 'Preparing', 'Ready', 'Launched', 'Paused']);
 
+/** Zod schema for LearningAssessmentsAssessmentDefinition */
+LearningAssessmentsAssessmentDefinitionSchema = z.object({
+  assessmentId: z.string().uuid().optional(),
+  definition: z.record(z.string(), z.unknown()).optional(),
+  definitionSchemaVersion: z.number().int().optional(),
+});
+
 /** Zod schema for LearningAssessmentsAssessment */
 LearningAssessmentsAssessmentSchema = z.object({
-  id: z.string().uuid().optional(),
-  courseId: z.string().uuid().optional(),
-  contentId: z.string().uuid().nullable().optional(),
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
-  maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
-  timeLimitMinutes: z.number().int().nullable().optional(),
-  maxAttempts: z.number().int().nullable().optional(),
-  isRequired: z.boolean().optional(),
-  order: z.number().int().optional(),
-  availableFrom: z.string().datetime().nullable().optional(),
-  availableUntil: z.string().datetime().nullable().optional(),
+  allowLateSubmissions: z.boolean().optional(),
   assessmentGroupId: z.string().uuid().nullable().optional(),
   assessmentGroupName: z.string().nullable().optional(),
-  assessmentGroupWeightPercent: z.number().nullable().optional(),
   assessmentGroupOrder: z.number().int().nullable().optional(),
-  isAvailable: z.boolean().optional(),
-  submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
-  presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
+  assessmentGroupWeightPercent: z.number().nullable().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  courseId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
-  allowLateSubmissions: z.boolean().optional(),
+  id: z.string().uuid().optional(),
+  isAvailable: z.boolean().optional(),
+  isRequired: z.boolean().optional(),
   lateSubmissionDeadline: z.string().datetime().nullable().optional(),
+  maxAttempts: z.number().int().nullable().optional(),
+  maxScore: z.number().int().optional(),
+  order: z.number().int().optional(),
+  passingScore: z.number().int().optional(),
+  presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
+  submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
+  timeLimitMinutes: z.number().int().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
 });
 
 /** Zod schema for LearningAssessmentsAssessmentGroupAnalytics */
 LearningAssessmentsAssessmentGroupAnalyticsSchema = z.object({
-  groupId: z.string().uuid().nullable().optional(),
-  groupName: z.string().nullable().optional(),
-  weightPercent: z.number().nullable().optional(),
   assessmentCount: z.number().int().optional(),
-  gradedCount: z.number().int().optional(),
-  ungradedCount: z.number().int().optional(),
   averagePercent: z.number().optional(),
-  passRate: z.number().optional(),
   distribution: z
     .array(z.lazy(() => LearningAssessmentsAssessmentScoreBucketSchema))
     .nullable()
     .optional(),
+  gradedCount: z.number().int().optional(),
+  groupId: z.string().uuid().nullable().optional(),
+  groupName: z.string().nullable().optional(),
+  passRate: z.number().optional(),
+  ungradedCount: z.number().int().optional(),
+  weightPercent: z.number().nullable().optional(),
 });
 
 /** Zod schema for LearningAssessmentsAssessmentGroup */
 LearningAssessmentsAssessmentGroupSchema = z.object({
-  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  weightPercent: z.number().optional(),
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
   order: z.number().int().optional(),
+  weightPercent: z.number().optional(),
 });
 
 /** Zod schema for LearningAssessmentsAssessmentPresentationMode */
@@ -13584,36 +13543,36 @@ LearningAssessmentsAssessmentPresentationModeSchema = z.enum(['SingleStep', 'Con
 
 /** Zod schema for LearningAssessmentsAssessmentScoreBucket */
 LearningAssessmentsAssessmentScoreBucketSchema = z.object({
-  label: z.string().nullable().optional(),
-  minPercent: z.number().int().optional(),
-  maxPercent: z.number().int().optional(),
   count: z.number().int().optional(),
+  label: z.string().nullable().optional(),
+  maxPercent: z.number().int().optional(),
+  minPercent: z.number().int().optional(),
 });
 
 /** Zod schema for LearningAssessmentsAssessmentSubmission */
 LearningAssessmentsAssessmentSubmissionSchema = z.object({
-  id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
-  enrollmentId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
   attemptNumber: z.number().int().optional(),
-  score: z.number().int().nullable().optional(),
-  passed: z.boolean().nullable().optional(),
-  startedAt: z.string().datetime().optional(),
-  submittedAt: z.string().datetime().nullable().optional(),
+  codePayload: z.string().nullable().optional(),
+  enrollmentId: z.string().uuid().optional(),
+  feedback: z.string().nullable().optional(),
+  filePayload: z.string().nullable().optional(),
   gradedAt: z.string().datetime().nullable().optional(),
   gradedBy: z.string().uuid().nullable().optional(),
-  feedback: z.string().nullable().optional(),
-  status: z.lazy(() => LearningAssessmentsSubmissionStatusSchema).optional(),
+  id: z.string().uuid().optional(),
   isLate: z.boolean().optional(),
+  mediaPayload: z.string().nullable().optional(),
+  passed: z.boolean().nullable().optional(),
+  projectPayload: z.string().nullable().optional(),
+  score: z.number().int().nullable().optional(),
+  startedAt: z.string().datetime().optional(),
+  status: z.lazy(() => LearningAssessmentsSubmissionStatusSchema).optional(),
+  structuredAnswerPayload: z.string().nullable().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
   submittedModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
   textPayload: z.string().nullable().optional(),
-  filePayload: z.string().nullable().optional(),
   urlPayload: z.string().nullable().optional(),
-  codePayload: z.string().nullable().optional(),
-  mediaPayload: z.string().nullable().optional(),
-  projectPayload: z.string().nullable().optional(),
-  structuredAnswerPayload: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningAssessmentsAssessmentType */
@@ -13633,95 +13592,97 @@ LearningAssessmentsCanAttemptOutputSchema = z.object({
 
 /** Zod schema for LearningAssessmentsCourseAssessmentAnalytics */
 LearningAssessmentsCourseAssessmentAnalyticsSchema = z.object({
-  courseId: z.string().uuid().optional(),
   assessmentCount: z.number().int().optional(),
-  gradedCount: z.number().int().optional(),
-  ungradedCount: z.number().int().optional(),
   averagePercent: z.number().optional(),
-  passRate: z.number().optional(),
+  courseId: z.string().uuid().optional(),
   distribution: z
     .array(z.lazy(() => LearningAssessmentsAssessmentScoreBucketSchema))
     .nullable()
     .optional(),
+  gradedCount: z.number().int().optional(),
   groups: z
     .array(z.lazy(() => LearningAssessmentsAssessmentGroupAnalyticsSchema))
     .nullable()
     .optional(),
+  passRate: z.number().optional(),
+  ungradedCount: z.number().int().optional(),
 });
 
 /** Zod schema for LearningAssessmentsCreateAssessmentGroupInput */
 LearningAssessmentsCreateAssessmentGroupInputSchema = z.object({
   courseId: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
-  weightPercent: z.number().optional(),
-  order: z.number().int().optional(),
   description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  order: z.number().int().optional(),
+  weightPercent: z.number().optional(),
 });
 
 /** Zod schema for LearningAssessmentsCreateAssessmentInput */
 LearningAssessmentsCreateAssessmentInputSchema = z.object({
-  courseId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
-  maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
-  timeLimitMinutes: z.number().int().nullable().optional(),
-  maxAttempts: z.number().int().nullable().optional(),
-  isRequired: z.boolean().optional(),
+  allowLateSubmissions: z.boolean().optional(),
+  assessmentGroupId: z.string().uuid().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
-  assessmentGroupId: z.string().uuid().nullable().optional(),
-  submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
-  presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
+  courseId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
-  allowLateSubmissions: z.boolean().optional(),
+  isRequired: z.boolean().optional(),
   lateSubmissionDeadline: z.string().datetime().nullable().optional(),
+  maxAttempts: z.number().int().nullable().optional(),
+  maxScore: z.number().int().optional(),
+  passingScore: z.number().int().optional(),
+  presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
+  submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
+  timeLimitMinutes: z.number().int().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
 });
 
 /** Zod schema for LearningAssessmentsGradeSubmissionInput */
 LearningAssessmentsGradeSubmissionInputSchema = z.object({
-  score: z.number().int().optional(),
-  gradedBy: z.string().uuid().nullable().optional(),
   feedback: z.string().nullable().optional(),
+  gradedBy: z.string().uuid().nullable().optional(),
+  score: z.number().int().optional(),
 });
 
 /** Zod schema for LearningAssessmentsInteractiveVideoAssessmentCue */
 LearningAssessmentsInteractiveVideoAssessmentCueSchema = z.object({
-  id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
   contentId: z.string().uuid().optional(),
   cueId: z.string().nullable().optional(),
   cuePositionSeconds: z.number().nullable().optional(),
+  id: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningAssessmentsLearnerAssessmentAttempt */
 LearningAssessmentsLearnerAssessmentAttemptSchema = z.object({
+  definition: z.record(z.string(), z.unknown()).optional(),
+  definitionSchemaVersion: z.number().int().optional(),
   submission: z.lazy(() => LearningAssessmentsLearnerAssessmentSubmissionSchema).optional(),
 });
 
 /** Zod schema for LearningAssessmentsLearnerAssessmentSubmission */
 LearningAssessmentsLearnerAssessmentSubmissionSchema = z.object({
-  id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
-  enrollmentId: z.string().uuid().optional(),
   attemptNumber: z.number().int().optional(),
-  score: z.number().int().nullable().optional(),
-  passed: z.boolean().nullable().optional(),
-  startedAt: z.string().datetime().optional(),
-  submittedAt: z.string().datetime().nullable().optional(),
-  gradedAt: z.string().datetime().nullable().optional(),
+  codePayload: z.string().nullable().optional(),
+  enrollmentId: z.string().uuid().optional(),
   feedback: z.string().nullable().optional(),
-  status: z.lazy(() => LearningAssessmentsSubmissionStatusSchema).optional(),
+  filePayload: z.string().nullable().optional(),
+  gradedAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
   isLate: z.boolean().optional(),
+  mediaPayload: z.string().nullable().optional(),
+  passed: z.boolean().nullable().optional(),
+  projectPayload: z.string().nullable().optional(),
+  score: z.number().int().nullable().optional(),
+  startedAt: z.string().datetime().optional(),
+  status: z.lazy(() => LearningAssessmentsSubmissionStatusSchema).optional(),
+  structuredAnswerPayload: z.string().nullable().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
   submittedModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
   textPayload: z.string().nullable().optional(),
-  filePayload: z.string().nullable().optional(),
   urlPayload: z.string().nullable().optional(),
-  codePayload: z.string().nullable().optional(),
-  mediaPayload: z.string().nullable().optional(),
-  projectPayload: z.string().nullable().optional(),
-  structuredAnswerPayload: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningAssessmentsLearnerInteractiveVideoAssessmentCue */
@@ -13750,60 +13711,66 @@ LearningAssessmentsSubmissionStatusSchema = z.enum(['InProgress', 'Submitted', '
 
 /** Zod schema for LearningAssessmentsSubmitAssessmentInput */
 LearningAssessmentsSubmitAssessmentInputSchema = z.object({
-  textPayload: z.string().nullable().optional(),
-  filePayload: z.string().nullable().optional(),
-  urlPayload: z.string().nullable().optional(),
   codePayload: z.string().nullable().optional(),
+  filePayload: z.string().nullable().optional(),
   mediaPayload: z.string().nullable().optional(),
   projectPayload: z.string().nullable().optional(),
   structuredAnswerPayload: z.string().nullable().optional(),
+  textPayload: z.string().nullable().optional(),
+  urlPayload: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsUpdateAssessmentDefinitionInput */
+LearningAssessmentsUpdateAssessmentDefinitionInputSchema = z.object({
+  definition: z.record(z.string(), z.unknown()).optional(),
+  definitionSchemaVersion: z.number().int().optional(),
 });
 
 /** Zod schema for LearningAssessmentsUpdateAssessmentGroupInput */
 LearningAssessmentsUpdateAssessmentGroupInputSchema = z.object({
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  weightPercent: z.number().nullable().optional(),
+  name: z.string().nullable().optional(),
   order: z.number().int().nullable().optional(),
+  weightPercent: z.number().nullable().optional(),
 });
 
 /** Zod schema for LearningAssessmentsUpdateAssessmentInput */
 LearningAssessmentsUpdateAssessmentInputSchema = z.object({
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  maxScore: z.number().int().nullable().optional(),
-  passingScore: z.number().int().nullable().optional(),
-  timeLimitMinutes: z.number().int().nullable().optional(),
-  maxAttempts: z.number().int().nullable().optional(),
-  isRequired: z.boolean().nullable().optional(),
+  allowLateSubmissions: z.boolean().nullable().optional(),
+  assessmentGroupId: z.string().uuid().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
-  contentId: z.string().uuid().nullable().optional(),
-  clearContentId: z.boolean().optional(),
-  assessmentGroupId: z.string().uuid().nullable().optional(),
   clearAssessmentGroupId: z.boolean().optional(),
-  submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
-  presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
-  dueAt: z.string().datetime().nullable().optional(),
+  clearContentId: z.boolean().optional(),
   clearDueAt: z.boolean().optional(),
-  allowLateSubmissions: z.boolean().nullable().optional(),
-  lateSubmissionDeadline: z.string().datetime().nullable().optional(),
   clearLateSubmissionDeadline: z.boolean().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  description: z.string().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  isRequired: z.boolean().nullable().optional(),
+  lateSubmissionDeadline: z.string().datetime().nullable().optional(),
+  maxAttempts: z.number().int().nullable().optional(),
+  maxScore: z.number().int().nullable().optional(),
+  passingScore: z.number().int().nullable().optional(),
+  presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
+  submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
+  timeLimitMinutes: z.number().int().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCertificatesCertificate */
 LearningCertificatesCertificateSchema = z.object({
-  id: z.string().uuid().optional(),
-  templateId: z.string().uuid().optional(),
-  enrollmentId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  courseId: z.string().uuid().optional(),
   certificateNumber: z.string().nullable().optional(),
-  recipientName: z.string().nullable().optional(),
+  courseId: z.string().uuid().optional(),
   courseName: z.string().nullable().optional(),
-  issuedAt: z.string().datetime().optional(),
+  enrollmentId: z.string().uuid().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  issuedAt: z.string().datetime().optional(),
+  recipientName: z.string().nullable().optional(),
   status: z.lazy(() => LearningCertificatesCertificateStatusSchema).optional(),
+  templateId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningCertificatesCertificateStatus */
@@ -13811,42 +13778,42 @@ LearningCertificatesCertificateStatusSchema = z.enum(['Active', 'Expired', 'Revo
 
 /** Zod schema for LearningCertificatesCertificateTemplateDetail */
 LearningCertificatesCertificateTemplateDetailSchema = z.object({
-  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  name: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  isDefault: z.boolean().optional(),
+  name: z.string().nullable().optional(),
   templateHtml: z.string().nullable().optional(),
   templateStyles: z.string().nullable().optional(),
-  isDefault: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-  createdAt: z.string().datetime().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for LearningCertificatesCertificateTemplate */
 LearningCertificatesCertificateTemplateSchema = z.object({
-  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  isDefault: z.boolean().optional(),
-  isActive: z.boolean().optional(),
   createdAt: z.string().datetime().optional(),
+  description: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  isDefault: z.boolean().optional(),
+  name: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for LearningCertificatesCertificateVerificationResult */
 LearningCertificatesCertificateVerificationResultSchema = z.object({
-  isValid: z.boolean().optional(),
   certificateNumber: z.string().nullable().optional(),
-  recipientName: z.string().nullable().optional(),
   courseName: z.string().nullable().optional(),
-  issuedAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  status: z.lazy(() => LearningCertificatesCertificateStatusSchema).optional(),
+  isValid: z.boolean().optional(),
+  issuedAt: z.string().datetime().optional(),
   message: z.string().nullable().optional(),
+  recipientName: z.string().nullable().optional(),
+  status: z.lazy(() => LearningCertificatesCertificateStatusSchema).optional(),
 });
 
 /** Zod schema for LearningCertificatesCreateCertificateTemplateInput */
@@ -13858,10 +13825,10 @@ LearningCertificatesCreateCertificateTemplateInputSchema = z.object({
 
 /** Zod schema for LearningCertificatesIssueCertificateInput */
 LearningCertificatesIssueCertificateInputSchema = z.object({
-  templateId: z.string().uuid().optional(),
-  enrollmentId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
+  enrollmentId: z.string().uuid().optional(),
+  templateId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningCertificatesRevokeCertificateInput */
@@ -13871,71 +13838,71 @@ LearningCertificatesRevokeCertificateInputSchema = z.object({
 
 /** Zod schema for LearningCertificatesUpdateCertificateTemplateInput */
 LearningCertificatesUpdateCertificateTemplateInputSchema = z.object({
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  isDefault: z.boolean().optional(),
+  name: z.string().nullable().optional(),
   templateHtml: z.string().nullable().optional(),
   templateStyles: z.string().nullable().optional(),
-  isDefault: z.boolean().optional(),
-  isActive: z.boolean().optional(),
 });
 
 /** Zod schema for LearningCohortsApplyCohortScheduleInput */
 LearningCohortsApplyCohortScheduleInputSchema = z.object({
+  confirmAdvisories: z.boolean().optional(),
   expectedVersion: z.number().int().optional(),
   rules: z.lazy(() => LearningCohortsPreviewCohortScheduleInputSchema).optional(),
-  confirmAdvisories: z.boolean().optional(),
 });
 
 /** Zod schema for LearningCohortsAvailableCohortContent */
 LearningCohortsAvailableCohortContentSchema = z.object({
-  contentId: z.string().uuid().optional(),
-  parentId: z.string().uuid().nullable().optional(),
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  body: z.string().nullable().optional(),
-  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
-  sortOrder: z.number().int().optional(),
-  instructionalWeek: z.number().int().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
+  body: z.string().nullable().optional(),
+  contentId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
+  instructionalWeek: z.number().int().optional(),
+  parentId: z.string().uuid().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCohortsCohortCalendarEntry */
 LearningCohortsCohortCalendarEntrySchema = z.object({
+  availableFrom: z.string().datetime().nullable().optional(),
   cohortId: z.string().uuid().optional(),
   cohortName: z.string().nullable().optional(),
-  itemId: z.string().uuid().optional(),
-  type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
-  title: z.string().nullable().optional(),
-  startsAt: z.string().datetime().nullable().optional(),
-  endsAt: z.string().datetime().nullable().optional(),
-  availableFrom: z.string().datetime().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  itemId: z.string().uuid().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
   status: z.lazy(() => LearningCohortsCohortScheduleItemStatusSchema).optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCohortsCohort */
 LearningCohortsCohortSchema = z.object({
-  id: z.string().uuid().optional(),
-  courseId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  maxCapacity: z.number().int().optional(),
-  currentEnrollmentCount: z.number().int().optional(),
   availableSpots: z.number().int().optional(),
-  status: z.lazy(() => LearningCohortsCohortStatusSchema).optional(),
-  isOpen: z.boolean().optional(),
   canEnroll: z.boolean().optional(),
-  instructorId: z.string().uuid().nullable().optional(),
-  meetingSchedule: z.string().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
-  nextMeetingAt: z.string().datetime().nullable().optional(),
   conflictCount: z.number().int().optional(),
+  courseId: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  currentEnrollmentCount: z.number().int().optional(),
+  description: z.string().nullable().optional(),
+  endDate: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  instructorId: z.string().uuid().nullable().optional(),
+  isOpen: z.boolean().optional(),
+  maxCapacity: z.number().int().optional(),
+  meetingSchedule: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  nextMeetingAt: z.string().datetime().nullable().optional(),
   schedule: z.lazy(() => LearningCohortsCohortScheduleSummarySchema).optional(),
+  startDate: z.string().datetime().optional(),
+  status: z.lazy(() => LearningCohortsCohortStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for LearningCohortsCohortPacingMode */
@@ -13946,52 +13913,52 @@ LearningCohortsCohortReleasePolicySchema = z.enum(['Weekly', 'BeforeMeeting', 'M
 
 /** Zod schema for LearningCohortsCohortScheduleConflict */
 LearningCohortsCohortScheduleConflictSchema = z.object({
+  assessmentId: z.string().uuid().nullable().optional(),
   code: z.string().nullable().optional(),
-  severity: z.lazy(() => LearningCohortsScheduleConflictSeveritySchema).optional(),
   message: z.string().nullable().optional(),
   programContentId: z.string().uuid().nullable().optional(),
-  assessmentId: z.string().uuid().nullable().optional(),
+  severity: z.lazy(() => LearningCohortsScheduleConflictSeveritySchema).optional(),
 });
 
 /** Zod schema for LearningCohortsCohortSchedule */
 LearningCohortsCohortScheduleSchema = z.object({
-  id: z.string().uuid().optional(),
   cohortId: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  timezoneId: z.string().nullable().optional(),
-  meetingDays: z
-    .array(z.lazy(() => SystemDayOfWeekSchema))
-    .nullable()
-    .optional(),
-  meetingStartTime: z.string().optional(),
-  meetingDurationMinutes: z.number().int().optional(),
-  pacingMode: z.lazy(() => LearningCohortsCohortPacingModeSchema).optional(),
-  unitsPerPeriod: z.number().int().optional(),
-  releasePolicy: z.lazy(() => LearningCohortsCohortReleasePolicySchema).optional(),
+  id: z.string().uuid().optional(),
   items: z
     .array(z.lazy(() => LearningCohortsCohortScheduleItemSchema))
     .nullable()
     .optional(),
+  meetingDays: z
+    .array(z.lazy(() => SystemDayOfWeekSchema))
+    .nullable()
+    .optional(),
+  meetingDurationMinutes: z.number().int().optional(),
+  meetingStartTime: z.string().optional(),
+  pacingMode: z.lazy(() => LearningCohortsCohortPacingModeSchema).optional(),
+  releasePolicy: z.lazy(() => LearningCohortsCohortReleasePolicySchema).optional(),
+  timezoneId: z.string().nullable().optional(),
+  unitsPerPeriod: z.number().int().optional(),
   unscheduledContentIds: z.array(z.string().uuid()).nullable().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCohortsCohortScheduleItem */
 LearningCohortsCohortScheduleItemSchema = z.object({
-  id: z.string().uuid().optional(),
-  programContentId: z.string().uuid().nullable().optional(),
   assessmentId: z.string().uuid().nullable().optional(),
-  type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
-  instructionalWeek: z.number().int().optional(),
-  sortOrder: z.number().int().optional(),
-  startsAt: z.string().datetime().nullable().optional(),
-  endsAt: z.string().datetime().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
-  title: z.string().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  instructionalWeek: z.number().int().optional(),
   location: z.string().nullable().optional(),
   meetingUrl: z.string().nullable().optional(),
+  programContentId: z.string().uuid().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
   status: z.lazy(() => LearningCohortsCohortScheduleItemStatusSchema).optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
   visibilityOverride: z.lazy(() => LearningCohortsCohortVisibilityOverrideSchema).optional(),
 });
 
@@ -14003,37 +13970,36 @@ LearningCohortsCohortScheduleItemTypeSchema = z.enum(['ContentRelease', 'LiveSes
 
 /** Zod schema for LearningCohortsCohortSchedulePreview */
 LearningCohortsCohortSchedulePreviewSchema = z.object({
-  items: z
-    .array(z.lazy(() => LearningCohortsCohortSchedulePreviewItemSchema))
-    .nullable()
-    .optional(),
+  calculatedEndDate: z.string().date().optional(),
   conflicts: z
     .array(z.lazy(() => LearningCohortsCohortScheduleConflictSchema))
     .nullable()
     .optional(),
-  calculatedEndDate: z.string().date().optional(),
   hasBlockingConflicts: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => LearningCohortsCohortSchedulePreviewItemSchema))
+    .nullable()
+    .optional(),
 });
 
 /** Zod schema for LearningCohortsCohortSchedulePreviewItem */
 LearningCohortsCohortSchedulePreviewItemSchema = z.object({
-  programContentId: z.string().uuid().nullable().optional(),
   assessmentId: z.string().uuid().nullable().optional(),
-  type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
-  instructionalWeek: z.number().int().optional(),
-  sortOrder: z.number().int().optional(),
-  startsAt: z.string().datetime().nullable().optional(),
-  endsAt: z.string().datetime().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  instructionalWeek: z.number().int().optional(),
+  programContentId: z.string().uuid().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
   title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCohortsCohortScheduleSummary */
 LearningCohortsCohortScheduleSummarySchema = z.object({
-  version: z.number().int().optional(),
-  timezoneId: z.string().nullable().optional(),
+  itemCount: z.number().int().optional(),
   meetingDays: z
     .array(z.lazy(() => SystemDayOfWeekSchema))
     .nullable()
@@ -14041,7 +14007,8 @@ LearningCohortsCohortScheduleSummarySchema = z.object({
   meetingStartTime: z.string().optional(),
   pacingMode: z.lazy(() => LearningCohortsCohortPacingModeSchema).optional(),
   releasePolicy: z.lazy(() => LearningCohortsCohortReleasePolicySchema).optional(),
-  itemCount: z.number().int().optional(),
+  timezoneId: z.string().nullable().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCohortsCohortStatus */
@@ -14062,32 +14029,32 @@ LearningCohortsCourseCohortCalendarSchema = z.object({
 /** Zod schema for LearningCohortsCreateCohortInput */
 LearningCohortsCreateCohortInputSchema = z.object({
   courseId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  endDate: z.string().datetime().optional(),
+  instructorId: z.string().uuid().nullable().optional(),
+  maxCapacity: z.number().int().optional(),
+  meetingSchedule: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  maxCapacity: z.number().int().optional(),
-  description: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
-  instructorId: z.string().uuid().nullable().optional(),
-  meetingSchedule: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCohortsPreviewCohortScheduleInput */
 LearningCohortsPreviewCohortScheduleInputSchema = z.object({
-  firstInstructionalDate: z.string().date().optional(),
+  assessmentDueOffsetDays: z.number().int().optional(),
   cohortEndDate: z.string().date().optional(),
-  timezoneId: z.string().nullable().optional(),
+  firstInstructionalDate: z.string().date().optional(),
   meetingDays: z
     .array(z.lazy(() => SystemDayOfWeekSchema))
     .nullable()
     .optional(),
-  meetingStartTime: z.string().optional(),
   meetingDurationMinutes: z.number().int().optional(),
+  meetingStartTime: z.string().optional(),
   pacingMode: z.lazy(() => LearningCohortsCohortPacingModeSchema).optional(),
-  unitsPerPeriod: z.number().int().optional(),
   releasePolicy: z.lazy(() => LearningCohortsCohortReleasePolicySchema).optional(),
   skippedDates: z.array(z.string().date()).nullable().optional(),
-  assessmentDueOffsetDays: z.number().int().optional(),
+  timezoneId: z.string().nullable().optional(),
+  unitsPerPeriod: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCohortsScheduleConflictSeverity */
@@ -14098,33 +14065,33 @@ LearningCohortsScheduleShiftScopeSchema = z.enum(['Single', 'Following']);
 
 /** Zod schema for LearningCohortsShiftCohortScheduleInput */
 LearningCohortsShiftCohortScheduleInputSchema = z.object({
-  expectedVersion: z.number().int().optional(),
   days: z.number().int().optional(),
+  expectedVersion: z.number().int().optional(),
   scope: z.lazy(() => LearningCohortsScheduleShiftScopeSchema).optional(),
 });
 
 /** Zod schema for LearningCohortsUpdateCohortInput */
 LearningCohortsUpdateCohortInputSchema = z.object({
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  startDate: z.string().datetime().nullable().optional(),
   endDate: z.string().datetime().nullable().optional(),
-  maxCapacity: z.number().int().nullable().optional(),
   instructorId: z.string().uuid().nullable().optional(),
+  maxCapacity: z.number().int().nullable().optional(),
   meetingSchedule: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  startDate: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for LearningCohortsUpdateCohortScheduleItemInput */
 LearningCohortsUpdateCohortScheduleItemInputSchema = z.object({
-  title: z.string().nullable().optional(),
-  startsAt: z.string().datetime().nullable().optional(),
-  endsAt: z.string().datetime().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
   location: z.string().nullable().optional(),
   meetingUrl: z.string().nullable().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
   status: z.lazy(() => LearningCohortsCohortScheduleItemStatusSchema).optional(),
+  title: z.string().nullable().optional(),
   visibilityOverride: z.lazy(() => LearningCohortsCohortVisibilityOverrideSchema).optional(),
 });
 
@@ -14136,21 +14103,21 @@ LearningCohortsUpdateCohortScheduleInputSchema = z.object({
 
 /** Zod schema for LearningCoursesActivityGrade */
 LearningCoursesActivityGradeSchema = z.object({
-  id: z.string().uuid().optional(),
-  contentInteractionId: z.string().uuid().optional(),
-  graderProgramUserId: z.string().uuid().nullable().optional(),
-  grade: z.number().optional(),
-  feedback: z.string().nullable().optional(),
-  gradingDetails: z.string().nullable().optional(),
-  gradedAt: z.string().datetime().optional(),
-  createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
   contentInteraction: z.lazy(() => LearningCoursesContentInteractionSummarySchema).optional(),
-  grader: z.lazy(() => LearningCoursesGraderSummarySchema).optional(),
-  isPassingGrade: z.boolean().optional(),
+  contentInteractionId: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  feedback: z.string().nullable().optional(),
+  grade: z.number().optional(),
   gradePercentage: z.string().nullable().optional(),
+  gradedAt: z.string().datetime().optional(),
+  grader: z.lazy(() => LearningCoursesGraderSummarySchema).optional(),
+  graderProgramUserId: z.string().uuid().nullable().optional(),
+  gradingDetails: z.string().nullable().optional(),
   hasFeedback: z.boolean().optional(),
   hasGradingDetails: z.boolean().optional(),
+  id: z.string().uuid().optional(),
+  isPassingGrade: z.boolean().optional(),
+  updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for LearningCoursesActivitySettings */
@@ -14163,91 +14130,91 @@ LearningCoursesCircularDependencyCheckResultSchema = z.object({
 
 /** Zod schema for LearningCoursesCloneProgram */
 LearningCoursesCloneProgramSchema = z.object({
-  newTitle: z.string().nullable().optional(),
   newDescription: z.string().nullable().optional(),
+  newTitle: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesCompleteContentInput */
 LearningCoursesCompleteContentInputSchema = z.object({
-  programUserId: z.string().uuid().optional(),
   contentId: z.string().uuid().optional(),
+  programUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningCoursesCompleteCourseCheckoutInput */
 LearningCoursesCompleteCourseCheckoutInputSchema = z.object({
-  productId: z.string().uuid().optional(),
-  paymentProviderReference: z.string().nullable().optional(),
   paymentMethod: z.string().nullable().optional(),
+  paymentProviderReference: z.string().nullable().optional(),
+  productId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningCoursesCompleteCourseCheckoutOutput */
 LearningCoursesCompleteCourseCheckoutOutputSchema = z.object({
-  courseId: z.string().uuid().optional(),
-  productId: z.string().uuid().optional(),
-  entitlementId: z.string().uuid().optional(),
-  enrollmentIds: z.array(z.string().uuid()).nullable().optional(),
   alreadyHadAccess: z.boolean().optional(),
   amount: z.number().optional(),
+  courseId: z.string().uuid().optional(),
   currency: z.string().nullable().optional(),
+  enrollmentIds: z.array(z.string().uuid()).nullable().optional(),
+  entitlementId: z.string().uuid().optional(),
   learningUrl: z.string().nullable().optional(),
   paymentProviderReference: z.string().nullable().optional(),
+  productId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningCoursesCompletionRates */
 LearningCoursesCompletionRatesSchema = z.object({
-  programId: z.string().uuid().optional(),
-  overallCompletionRate: z.number().optional(),
-  contentCompletionRates: z.record(z.string(), z.number()).nullable().optional(),
   completionTrends: z
     .array(z.lazy(() => LearningCoursesCompletionTrendSchema))
     .nullable()
     .optional(),
+  contentCompletionRates: z.record(z.string(), z.number()).nullable().optional(),
+  overallCompletionRate: z.number().optional(),
+  programId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningCoursesCompletionTrend */
 LearningCoursesCompletionTrendSchema = z.object({
-  date: z.string().datetime().optional(),
   completedCount: z.number().int().optional(),
-  totalCount: z.number().int().optional(),
+  date: z.string().datetime().optional(),
   rate: z.number().optional(),
+  totalCount: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCoursesContentInteraction */
 LearningCoursesContentInteractionSchema = z.object({
-  id: z.string().uuid().optional(),
-  programUserId: z.string().uuid().optional(),
-  contentId: z.string().uuid().optional(),
-  status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
-  submissionData: z.string().nullable().optional(),
-  completionPercentage: z.number().optional(),
-  timeSpentMinutes: z.number().int().nullable().optional(),
-  timeSpentSeconds: z.number().int().optional(),
-  firstAccessedAt: z.string().datetime().nullable().optional(),
-  lastAccessedAt: z.string().datetime().nullable().optional(),
-  completedAt: z.string().datetime().nullable().optional(),
-  submittedAt: z.string().datetime().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
-  content: z.lazy(() => LearningCoursesContentSummarySchema).optional(),
-  programUser: z.lazy(() => LearningCoursesProgramUserSummarySchema).optional(),
-  isSubmitted: z.boolean().optional(),
-  isCompleted: z.boolean().optional(),
   canModify: z.boolean().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  completionPercentage: z.number().optional(),
+  content: z.lazy(() => LearningCoursesContentSummarySchema).optional(),
+  contentId: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
   durationInMinutes: z.number().int().optional(),
   durationInSeconds: z.number().int().optional(),
+  firstAccessedAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isCompleted: z.boolean().optional(),
+  isSubmitted: z.boolean().optional(),
+  lastAccessedAt: z.string().datetime().nullable().optional(),
+  programUser: z.lazy(() => LearningCoursesProgramUserSummarySchema).optional(),
+  programUserId: z.string().uuid().optional(),
+  status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
+  submissionData: z.string().nullable().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
+  timeSpentMinutes: z.number().int().nullable().optional(),
+  timeSpentSeconds: z.number().int().optional(),
+  updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for LearningCoursesContentInteractionEvent */
 LearningCoursesContentInteractionEventSchema = z.object({
-  id: z.string().uuid().optional(),
-  interactionId: z.string().uuid().optional(),
-  type: z.lazy(() => LearningCoursesContentInteractionEventTypeSchema).optional(),
-  occurredAt: z.string().datetime().optional(),
   durationSeconds: z.number().int().nullable().optional(),
+  id: z.string().uuid().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  interactionId: z.string().uuid().optional(),
+  occurredAt: z.string().datetime().optional(),
+  payload: z.string().nullable().optional(),
   positionSeconds: z.number().nullable().optional(),
   progressPercentage: z.number().nullable().optional(),
-  payload: z.string().nullable().optional(),
-  idempotencyKey: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCoursesContentInteractionEventTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCoursesContentInteractionEventType */
@@ -14265,141 +14232,140 @@ LearningCoursesContentInteractionEventTypeSchema = z.enum([
 
 /** Zod schema for LearningCoursesContentInteractionSummary */
 LearningCoursesContentInteractionSummarySchema = z.object({
+  content: z.lazy(() => LearningCoursesContentSummarySchema).optional(),
+  contentId: z.string().uuid().optional(),
   id: z.string().uuid().optional(),
   programUserId: z.string().uuid().optional(),
-  contentId: z.string().uuid().optional(),
   status: z.string().nullable().optional(),
-  submittedAt: z.string().datetime().nullable().optional(),
-  content: z.lazy(() => LearningCoursesContentSummarySchema).optional(),
   student: z.lazy(() => LearningCoursesStudentSummarySchema).optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesContentProgress */
 LearningCoursesContentProgressSchema = z.object({
-  contentId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
+  completedAt: z.string().datetime().nullable().optional(),
   completionPercentage: z.number().optional(),
+  contentId: z.string().uuid().optional(),
   firstAccessedAt: z.string().datetime().nullable().optional(),
   lastAccessedAt: z.string().datetime().nullable().optional(),
-  completedAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesContentStats */
 LearningCoursesContentStatsSchema = z.object({
-  programId: z.string().uuid().optional(),
-  totalContent: z.number().int().optional(),
-  requiredContent: z.number().int().optional(),
-  optionalContent: z.number().int().optional(),
   contentByType: z
     .object({
-      Lesson: z.number().int(),
-      Page: z.number().int(),
       Assignment: z.number().int(),
-      Questionnaire: z.number().int(),
-      Discussion: z.number().int(),
-      Code: z.number().int(),
       Challenge: z.number().int(),
+      Code: z.number().int(),
+      Discussion: z.number().int(),
+      Lesson: z.number().int(),
+      Module: z.number().int(),
+      Page: z.number().int(),
+      Project: z.number().int(),
+      Questionnaire: z.number().int(),
       Reflection: z.number().int(),
       Survey: z.number().int(),
-      Project: z.number().int(),
-      Module: z.number().int(),
     })
     .nullable()
     .optional(),
   contentByVisibility: z
     .object({
-      Public: z.number().int(),
       Internal: z.number().int(),
       Private: z.number().int(),
+      Public: z.number().int(),
       Restricted: z.number().int(),
     })
     .nullable()
     .optional(),
-  topLevelContent: z.number().int().optional(),
   nestedContent: z.number().int().optional(),
+  optionalContent: z.number().int().optional(),
+  programId: z.string().uuid().optional(),
+  requiredContent: z.number().int().optional(),
+  topLevelContent: z.number().int().optional(),
+  totalContent: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCoursesContentSummary */
 LearningCoursesContentSummarySchema = z.object({
-  id: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
   contentType: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
+  id: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesCourseSupportTicketMessageInput */
 LearningCoursesCourseSupportTicketMessageInputSchema = z.object({
-  message: z.string().nullable().optional(),
   isInternal: z.boolean().optional(),
+  message: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesCreateActivityGrade */
 LearningCoursesCreateActivityGradeSchema = z.object({
   contentInteractionId: z.string().uuid().optional(),
-  graderProgramUserId: z.string().uuid().optional(),
-  grade: z.number().optional(),
   feedback: z.string().nullable().optional(),
+  grade: z.number().optional(),
+  graderProgramUserId: z.string().uuid().optional(),
   gradingDetails: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesCreatePrerequisiteApiInput */
 LearningCoursesCreatePrerequisiteApiInputSchema = z.object({
   courseId: z.string().uuid().optional(),
-  prerequisiteCourseId: z.string().uuid().optional(),
-  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
-  minimumGrade: z.number().int().nullable().optional(),
   description: z.string().nullable().optional(),
   displayOrder: z.number().int().optional(),
+  minimumGrade: z.number().int().nullable().optional(),
+  prerequisiteCourseId: z.string().uuid().optional(),
   prerequisiteGroup: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCoursesCreateProductFromProgram */
 LearningCoursesCreateProductFromProgramSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
   basePrice: z.number().optional(),
   currency: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesCreateProgramContent */
 LearningCoursesCreateProgramContentSchema = z.object({
-  programId: z.string().uuid(),
-  parentId: z.string().uuid().nullable().optional(),
-  title: z.string().min(0).max(255),
-  description: z.string().nullable().optional(),
-  type: z.lazy(() => LearningCoursesProgramContentTypeSchema),
-  body: z.string().nullable().optional(),
-  jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
-  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
   activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
-  sortOrder: z.number().int().optional(),
-  isRequired: z.boolean().optional(),
-  gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
-  maxPoints: z.number().nullable().optional(),
+  body: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
+  gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
+  isRequired: z.boolean().optional(),
+  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
+  maxPoints: z.number().nullable().optional(),
+  parentId: z.string().uuid().nullable().optional(),
+  programId: z.string().uuid(),
+  sortOrder: z.number().int().optional(),
+  title: z.string().min(0).max(255),
+  type: z.lazy(() => LearningCoursesProgramContentTypeSchema),
   visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
 });
 
 /** Zod schema for LearningCoursesCreateProgram */
 LearningCoursesCreateProgramSchema = z.object({
-  title: z.string().nullable().optional(),
+  creatorId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
   thumbnail: z.string().nullable().optional(),
-  creatorId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesEngagementMetrics */
 LearningCoursesEngagementMetricsSchema = z.object({
-  programId: z.string().uuid().optional(),
-  dailyActiveUsers: z.number().int().optional(),
-  weeklyActiveUsers: z.number().int().optional(),
-  monthlyActiveUsers: z.number().int().optional(),
   averageSessionDuration: z.string().optional(),
-  totalSessions: z.number().int().optional(),
-  retentionRate: z.number().optional(),
   contentEngagement: z.record(z.string(), z.number().int()).nullable().optional(),
+  dailyActiveUsers: z.number().int().optional(),
+  monthlyActiveUsers: z.number().int().optional(),
+  programId: z.string().uuid().optional(),
+  retentionRate: z.number().optional(),
+  totalSessions: z.number().int().optional(),
+  weeklyActiveUsers: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCoursesEnrollmentStatus */
@@ -14407,35 +14373,35 @@ LearningCoursesEnrollmentStatusSchema = z.enum(['Open', 'Active', 'Paused', 'Can
 
 /** Zod schema for LearningCoursesGradeStatistics */
 LearningCoursesGradeStatisticsSchema = z.object({
-  totalGrades: z.number().int().optional(),
   averageGrade: z.number().optional(),
-  minGrade: z.number().optional(),
-  maxGrade: z.number().optional(),
-  passingRate: z.number().optional(),
   averageGradeFormatted: z.string().nullable().optional(),
-  passingRateFormatted: z.string().nullable().optional(),
   hasGrades: z.boolean().optional(),
+  maxGrade: z.number().optional(),
+  minGrade: z.number().optional(),
+  passingRate: z.number().optional(),
+  passingRateFormatted: z.string().nullable().optional(),
+  totalGrades: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCoursesGraderSummary */
 LearningCoursesGraderSummarySchema = z.object({
   id: z.string().uuid().optional(),
+  role: z.string().nullable().optional(),
   userDisplayName: z.string().nullable().optional(),
   userEmail: z.string().nullable().optional(),
-  role: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesGradingMethod */
 LearningCoursesGradingMethodSchema = z.enum(['None', 'Instructor', 'Peer', 'Ai', 'AutomatedTests']);
 
 /** Zod schema for LearningCoursesLessonContentFormat */
-LearningCoursesLessonContentFormatSchema = z.enum(['Markdown', 'Lexical', 'RevealJs', 'Video', 'Html', 'ExternalLink']);
+LearningCoursesLessonContentFormatSchema = z.enum(['Markdown', 'Lexical', 'RevealJs', 'Video']);
 
 /** Zod schema for LearningCoursesMonetization */
 LearningCoursesMonetizationSchema = z.object({
-  price: z.number().optional(),
   currency: z.string().nullable().optional(),
   isSubscription: z.boolean().optional(),
+  price: z.number().optional(),
   subscriptionDurationDays: z.number().int().nullable().optional(),
 });
 
@@ -14457,29 +14423,29 @@ LearningCoursesPrerequisiteCheckResultSchema = z.object({
 
 /** Zod schema for LearningCoursesPrerequisite */
 LearningCoursesPrerequisiteSchema = z.object({
-  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
-  prerequisiteCourseId: z.string().uuid().optional(),
-  prerequisiteCourseName: z.string().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
-  minimumGrade: z.number().int().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
   displayOrder: z.number().int().optional(),
+  id: z.string().uuid().optional(),
+  minimumGrade: z.number().int().nullable().optional(),
+  prerequisiteCourseId: z.string().uuid().optional(),
+  prerequisiteCourseName: z.string().nullable().optional(),
   prerequisiteGroup: z.string().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCoursesPrerequisiteStatus */
 LearningCoursesPrerequisiteStatusSchema = z.object({
-  prerequisiteId: z.string().uuid().optional(),
-  prerequisiteCourseId: z.string().uuid().optional(),
-  courseName: z.string().nullable().optional(),
-  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
-  isSatisfied: z.boolean().optional(),
-  requiredGrade: z.number().int().nullable().optional(),
   achievedGrade: z.number().int().nullable().optional(),
+  courseName: z.string().nullable().optional(),
+  isSatisfied: z.boolean().optional(),
+  prerequisiteCourseId: z.string().uuid().optional(),
+  prerequisiteId: z.string().uuid().optional(),
   reason: z.string().nullable().optional(),
+  requiredGrade: z.number().int().nullable().optional(),
+  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCoursesPrerequisiteType */
@@ -14487,100 +14453,87 @@ LearningCoursesPrerequisiteTypeSchema = z.enum(['Required', 'Recommended', 'Core
 
 /** Zod schema for LearningCoursesPricing */
 LearningCoursesPricingSchema = z.object({
-  price: z.number().optional(),
   currency: z.string().nullable().optional(),
-  isSubscription: z.boolean().optional(),
-  subscriptionDurationDays: z.number().int().nullable().optional(),
   isMonetizationEnabled: z.boolean().optional(),
+  isSubscription: z.boolean().optional(),
+  price: z.number().optional(),
+  subscriptionDurationDays: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesProgramAnalytics */
 LearningCoursesProgramAnalyticsSchema = z.object({
+  activeUsers: z.number().int().optional(),
+  additionalMetrics: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  averageCompletionTime: z.string().optional(),
+  completedUsers: z.number().int().optional(),
+  completionRate: z.number().optional(),
+  lastActivity: z.string().datetime().nullable().optional(),
   programId: z.string().uuid().optional(),
   title: z.string().nullable().optional(),
   totalUsers: z.number().int().optional(),
-  activeUsers: z.number().int().optional(),
-  completedUsers: z.number().int().optional(),
-  completionRate: z.number().optional(),
-  averageCompletionTime: z.string().optional(),
   totalViews: z.number().int().optional(),
-  lastActivity: z.string().datetime().nullable().optional(),
-  additionalMetrics: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesProgramContent */
 LearningCoursesProgramContentSchema = z.object({
-  id: z.string().uuid().optional(),
-  programId: z.string().uuid().optional(),
-  parentId: z.string().uuid().nullable().optional(),
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
-  body: z.string().nullable().optional(),
-  jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
-  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
   activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
-  sortOrder: z.number().int().optional(),
-  isRequired: z.boolean().optional(),
-  gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
-  maxPoints: z.number().nullable().optional(),
-  estimatedMinutes: z.number().int().nullable().optional(),
-  visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
-  createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().nullable().optional(),
-  programTitle: z.string().nullable().optional(),
-  parentTitle: z.string().nullable().optional(),
-  childrenCount: z.number().int().optional(),
+  body: z.record(z.string(), z.unknown()).nullable().optional(),
   children: z
     .array(z.lazy(() => LearningCoursesProgramContentSchema))
     .nullable()
     .optional(),
+  childrenCount: z.number().int().optional(),
+  createdAt: z.string().datetime().optional(),
+  description: z.string().nullable().optional(),
+  estimatedMinutes: z.number().int().nullable().optional(),
+  gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
+  id: z.string().uuid().optional(),
+  isRequired: z.boolean().optional(),
+  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
+  maxPoints: z.number().nullable().optional(),
+  parentId: z.string().uuid().nullable().optional(),
+  parentTitle: z.string().nullable().optional(),
+  programId: z.string().uuid().optional(),
+  programTitle: z.string().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+  visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
 });
 
-/** Zod schema for LearningCoursesProgramContentType */
-LearningCoursesProgramContentTypeSchema = z.enum([
-  'Lesson',
-  'Page',
-  'Assignment',
-  'Questionnaire',
-  'Discussion',
-  'Code',
-  'Challenge',
-  'Reflection',
-  'Survey',
-  'Project',
-  'Module',
-]);
+/** Zod schema for LearningCoursesProgramContentType. Legacy values Page and Challenge are normalized on read and are not valid for new content. */
+LearningCoursesProgramContentTypeSchema = z.enum(['Lesson', 'Assignment', 'Questionnaire', 'Discussion', 'Code', 'Reflection', 'Survey', 'Project', 'Module']);
 
 /** Zod schema for LearningCoursesProgramDifficulty */
 LearningCoursesProgramDifficultySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
 
 /** Zod schema for LearningCoursesProgram */
 LearningCoursesProgramSchema = z.object({
-  id: z.string().uuid().optional(),
+  averageRating: z.number().optional(),
+  category: z.lazy(() => ProgramCategorySchema).optional(),
+  createdAt: z.string().datetime().optional(),
   creatorId: z.string().uuid().nullable().optional(),
-  title: z.string().nullable().optional(),
+  currentEnrollments: z.number().int().optional(),
   description: z.string().nullable().optional(),
+  difficulty: z.lazy(() => LearningCoursesProgramDifficultySchema).optional(),
+  enrollmentDeadline: z.string().datetime().nullable().optional(),
+  enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
+  estimatedHours: z.number().int().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isEnrollmentOpen: z.boolean().optional(),
+  maxEnrollments: z.number().int().nullable().optional(),
   metadata: z.string().nullable().optional(),
-  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
+  skillsProvided: z.string().nullable().optional(),
+  skillsRequired: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
   status: z.lazy(() => ContentStatusSchema).optional(),
   thumbnail: z.string().nullable().optional(),
-  videoShowcaseUrl: z.string().nullable().optional(),
-  estimatedHours: z.number().int().nullable().optional(),
-  enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
-  maxEnrollments: z.number().int().nullable().optional(),
-  enrollmentDeadline: z.string().datetime().nullable().optional(),
-  category: z.lazy(() => ProgramCategorySchema).optional(),
-  difficulty: z.lazy(() => LearningCoursesProgramDifficultySchema).optional(),
-  skillsRequired: z.string().nullable().optional(),
-  skillsProvided: z.string().nullable().optional(),
-  currentEnrollments: z.number().int().optional(),
-  averageRating: z.number().optional(),
+  title: z.string().nullable().optional(),
   totalRatings: z.number().int().optional(),
-  isEnrollmentOpen: z.boolean().optional(),
-  createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
+  videoShowcaseUrl: z.string().nullable().optional(),
+  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
 });
 
 /** Zod schema for LearningCoursesProgramUserSummary */
@@ -14595,21 +14548,21 @@ LearningCoursesProgressStatusSchema = z.enum(['NotStarted', 'InProgress', 'Compl
 
 /** Zod schema for LearningCoursesRecordContentInteractionEventInput */
 LearningCoursesRecordContentInteractionEventInputSchema = z.object({
-  type: z.lazy(() => LearningCoursesContentInteractionEventTypeSchema).optional(),
   durationSeconds: z.number().int().nullable().optional(),
-  positionSeconds: z.number().nullable().optional(),
-  progressPercentage: z.number().nullable().optional(),
-  payload: z.string().nullable().optional(),
   idempotencyKey: z.string().nullable().optional(),
   occurredAt: z.string().datetime().nullable().optional(),
+  payload: z.string().nullable().optional(),
+  positionSeconds: z.number().nullable().optional(),
+  progressPercentage: z.number().nullable().optional(),
+  type: z.lazy(() => LearningCoursesContentInteractionEventTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCoursesReflectionResponseResult */
 LearningCoursesReflectionResponseResultSchema = z.object({
-  responseId: z.string().uuid().optional(),
-  submittedAt: z.string().datetime().nullable().optional(),
   body: z.string().nullable().optional(),
   respondentUserId: z.string().uuid().nullable().optional(),
+  responseId: z.string().uuid().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesRejectProgram */
@@ -14634,24 +14587,24 @@ LearningCoursesResolveCourseSupportTicketInputSchema = z.object({
 
 /** Zod schema for LearningCoursesRevenueAnalytics */
 LearningCoursesRevenueAnalyticsSchema = z.object({
-  programId: z.string().uuid().optional(),
-  totalRevenue: z.number().optional(),
-  monthlyRevenue: z.number().optional(),
-  totalPurchases: z.number().int().optional(),
-  monthlyPurchases: z.number().int().optional(),
   averageRevenuePerUser: z.number().optional(),
   conversionRate: z.number().optional(),
+  monthlyPurchases: z.number().int().optional(),
+  monthlyRevenue: z.number().optional(),
+  programId: z.string().uuid().optional(),
   revenueChart: z
     .array(z.lazy(() => LearningCoursesRevenueChartSchema))
     .nullable()
     .optional(),
+  totalPurchases: z.number().int().optional(),
+  totalRevenue: z.number().optional(),
 });
 
 /** Zod schema for LearningCoursesRevenueChart */
 LearningCoursesRevenueChartSchema = z.object({
   date: z.string().datetime().optional(),
-  revenue: z.number().optional(),
   purchases: z.number().int().optional(),
+  revenue: z.number().optional(),
 });
 
 /** Zod schema for LearningCoursesScheduleProgram */
@@ -14661,19 +14614,19 @@ LearningCoursesScheduleProgramSchema = z.object({
 
 /** Zod schema for LearningCoursesSearchContent */
 LearningCoursesSearchContentSchema = z.object({
+  isRequired: z.boolean().nullable().optional(),
+  parentId: z.string().uuid().nullable().optional(),
   programId: z.string().uuid(),
   searchTerm: z.string().min(0).max(255),
   type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
   visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
-  isRequired: z.boolean().nullable().optional(),
-  parentId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesSendCourseStudentMessageInput */
 LearningCoursesSendCourseStudentMessageInputSchema = z.object({
-  userIds: z.array(z.string().uuid()).nullable().optional(),
-  subject: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
+  subject: z.string().nullable().optional(),
+  userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesSendCourseStudentMessageOutput */
@@ -14683,8 +14636,8 @@ LearningCoursesSendCourseStudentMessageOutputSchema = z.object({
 
 /** Zod schema for LearningCoursesStartContentInput */
 LearningCoursesStartContentInputSchema = z.object({
-  programUserId: z.string().uuid().optional(),
   contentId: z.string().uuid().optional(),
+  programUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningCoursesStudentSummary */
@@ -14696,8 +14649,8 @@ LearningCoursesStudentSummarySchema = z.object({
 
 /** Zod schema for LearningCoursesSubmitContentInput */
 LearningCoursesSubmitContentInputSchema = z.object({
-  programUserId: z.string().uuid().optional(),
   contentId: z.string().uuid().optional(),
+  programUserId: z.string().uuid().optional(),
   submissionData: z.string().nullable().optional(),
 });
 
@@ -14708,110 +14661,109 @@ LearningCoursesSubmitUserContentSchema = z.object({
 
 /** Zod schema for LearningCoursesSurveyResponseResult */
 LearningCoursesSurveyResponseResultSchema = z.object({
-  responseId: z.string().uuid().optional(),
-  submittedAt: z.string().datetime().nullable().optional(),
   answers: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   respondentUserId: z.string().uuid().nullable().optional(),
+  responseId: z.string().uuid().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesUpdateActivityGrade */
 LearningCoursesUpdateActivityGradeSchema = z.object({
-  grade: z.number().nullable().optional(),
   feedback: z.string().nullable().optional(),
+  grade: z.number().nullable().optional(),
   gradingDetails: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesUpdatePrerequisiteApiInput */
 LearningCoursesUpdatePrerequisiteApiInputSchema = z.object({
-  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
-  minimumGrade: z.number().int().nullable().optional(),
   description: z.string().nullable().optional(),
   displayOrder: z.number().int().nullable().optional(),
+  minimumGrade: z.number().int().nullable().optional(),
   prerequisiteGroup: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCoursesUpdatePricing */
 LearningCoursesUpdatePricingSchema = z.object({
-  price: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
   isSubscription: z.boolean().nullable().optional(),
+  price: z.number().nullable().optional(),
   subscriptionDurationDays: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesUpdateProgramContent */
 LearningCoursesUpdateProgramContentSchema = z.object({
-  id: z.string().uuid(),
-  title: z.string().min(0).max(255).nullable().optional(),
-  description: z.string().nullable().optional(),
-  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
-  body: z.string().nullable().optional(),
-  jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
-  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
   activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
-  sortOrder: z.number().int().nullable().optional(),
-  isRequired: z.boolean().nullable().optional(),
-  gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
-  maxPoints: z.number().nullable().optional(),
+  body: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
+  gradingMethod: z.lazy(() => LearningCoursesGradingMethodSchema).optional(),
+  id: z.string().uuid(),
+  isRequired: z.boolean().nullable().optional(),
+  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
+  maxPoints: z.number().nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+  title: z.string().min(0).max(255).nullable().optional(),
+  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
   visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
 });
 
 /** Zod schema for LearningCoursesUpdateProgram */
 LearningCoursesUpdateProgramSchema = z.object({
-  title: z.string().nullable().optional(),
+  category: z.lazy(() => ProgramCategorySchema).optional(),
+  clearEnrollmentDeadline: z.boolean().optional(),
+  clearMaxEnrollments: z.boolean().optional(),
+  creatorId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
+  difficulty: z.lazy(() => LearningCoursesProgramDifficultySchema).optional(),
+  enrollmentDeadline: z.string().datetime().nullable().optional(),
+  enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
+  estimatedHours: z.number().int().nullable().optional(),
+  maxEnrollments: z.number().int().nullable().optional(),
   metadata: z.string().nullable().optional(),
+  skillsProvided: z.string().nullable().optional(),
+  skillsRequired: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
   thumbnail: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
   videoShowcaseUrl: z.string().nullable().optional(),
-  estimatedHours: z.number().int().nullable().optional(),
   visibility: z.lazy(() => ContentVisibilitySchema).optional(),
-  category: z.lazy(() => ProgramCategorySchema).optional(),
-  difficulty: z.lazy(() => LearningCoursesProgramDifficultySchema).optional(),
-  skillsRequired: z.string().nullable().optional(),
-  skillsProvided: z.string().nullable().optional(),
-  creatorId: z.string().uuid().nullable().optional(),
-  enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
-  maxEnrollments: z.number().int().nullable().optional(),
-  enrollmentDeadline: z.string().datetime().nullable().optional(),
-  clearMaxEnrollments: z.boolean().optional(),
-  clearEnrollmentDeadline: z.boolean().optional(),
 });
 
 /** Zod schema for LearningCoursesUpdateProgress */
 LearningCoursesUpdateProgressSchema = z.object({
-  status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
-  lastAccessedAt: z.string().datetime().nullable().optional(),
   additionalData: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  lastAccessedAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
 });
 
 /** Zod schema for LearningCoursesUpdateProgressInput */
 LearningCoursesUpdateProgressInputSchema = z.object({
-  programUserId: z.string().uuid().optional(),
-  contentId: z.string().uuid().optional(),
   completionPercentage: z.number().optional(),
+  contentId: z.string().uuid().optional(),
+  programUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningCoursesUpdateTimeSpentInput */
 LearningCoursesUpdateTimeSpentInputSchema = z.object({
-  programUserId: z.string().uuid().optional(),
-  contentId: z.string().uuid().optional(),
   additionalMinutes: z.number().int().optional(),
+  contentId: z.string().uuid().optional(),
+  programUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningCoursesUserProgress */
 LearningCoursesUserProgressSchema = z.object({
-  enrollmentId: z.string().uuid().optional(),
-  courseId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  completionPercentage: z.number().optional(),
-  lastAccessedAt: z.string().datetime().nullable().optional(),
-  startedAt: z.string().datetime().nullable().optional(),
   completedAt: z.string().datetime().nullable().optional(),
+  completionPercentage: z.number().optional(),
   contentProgress: z
     .array(z.lazy(() => LearningCoursesContentProgressSchema))
     .nullable()
     .optional(),
+  courseId: z.string().uuid().optional(),
+  enrollmentId: z.string().uuid().optional(),
+  lastAccessedAt: z.string().datetime().nullable().optional(),
+  startedAt: z.string().datetime().nullable().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningCoursesVisibility */
@@ -14819,23 +14771,23 @@ LearningCoursesVisibilitySchema = z.enum(['Public', 'Internal', 'Private', 'Rest
 
 /** Zod schema for LearningEnrollmentsEnrollUserInput */
 LearningEnrollmentsEnrollUserInputSchema = z.object({
+  cohortId: z.string().uuid().nullable().optional(),
   courseId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
-  cohortId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for LearningEnrollmentsEnrollment */
 LearningEnrollmentsEnrollmentSchema = z.object({
-  id: z.string().uuid().optional(),
-  courseId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
   cohortId: z.string().uuid().nullable().optional(),
-  status: z.lazy(() => LearningEnrollmentsEnrollmentStatusSchema).optional(),
-  enrolledAt: z.string().datetime().optional(),
   completedAt: z.string().datetime().nullable().optional(),
+  courseId: z.string().uuid().optional(),
   droppedAt: z.string().datetime().nullable().optional(),
-  progress: z.number().int().optional(),
+  enrolledAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
   lastActivityAt: z.string().datetime().nullable().optional(),
+  progress: z.number().int().optional(),
+  status: z.lazy(() => LearningEnrollmentsEnrollmentStatusSchema).optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningEnrollmentsEnrollmentStatus */
@@ -14851,61 +14803,61 @@ LearningExperienceDiscoveryCollectionTypeSchema = z.enum(['Curated', 'Category',
 
 /** Zod schema for LearningExperienceDiscoveryCourseCollection */
 LearningExperienceDiscoveryCourseCollectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  curatorId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  isPublished: z.boolean().optional(),
-  isFeatured: z.boolean().optional(),
   courseCount: z.number().int().optional(),
-  type: z.lazy(() => LearningExperienceDiscoveryCollectionTypeSchema).optional(),
   createdAt: z.string().datetime().optional(),
+  curatorId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isFeatured: z.boolean().optional(),
+  isPublished: z.boolean().optional(),
+  slug: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningExperienceDiscoveryCollectionTypeSchema).optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for LearningExperienceDiscoveryCreateCourseCollection */
 LearningExperienceDiscoveryCreateCourseCollectionSchema = z.object({
-  title: z.string().nullable().optional(),
-  type: z.lazy(() => LearningExperienceDiscoveryCollectionTypeSchema).optional(),
   description: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningExperienceDiscoveryCollectionTypeSchema).optional(),
 });
 
 /** Zod schema for LearningExperienceDiscoveryCreateFeaturedContent */
 LearningExperienceDiscoveryCreateFeaturedContentSchema = z.object({
-  type: z.lazy(() => LearningExperienceDiscoveryFeaturedContentTypeSchema).optional(),
-  title: z.string().nullable().optional(),
-  displayOrder: z.number().int().optional(),
   courseId: z.string().uuid().nullable().optional(),
-  learningPathId: z.string().uuid().nullable().optional(),
-  subtitle: z.string().nullable().optional(),
+  displayOrder: z.number().int().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
+  learningPathId: z.string().uuid().nullable().optional(),
   linkUrl: z.string().nullable().optional(),
   startsAt: z.string().datetime().nullable().optional(),
-  endsAt: z.string().datetime().nullable().optional(),
+  subtitle: z.string().nullable().optional(),
   targetAudience: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningExperienceDiscoveryFeaturedContentTypeSchema).optional(),
 });
 
 /** Zod schema for LearningExperienceDiscoveryFeaturedContent */
 LearningExperienceDiscoveryFeaturedContentSchema = z.object({
-  id: z.string().uuid().optional(),
   courseId: z.string().uuid().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  displayOrder: z.number().int().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
   learningPathId: z.string().uuid().nullable().optional(),
+  linkUrl: z.string().nullable().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
+  subtitle: z.string().nullable().optional(),
+  targetAudience: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   title: z.string().nullable().optional(),
-  subtitle: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  linkUrl: z.string().nullable().optional(),
   type: z.lazy(() => LearningExperienceDiscoveryFeaturedContentTypeSchema).optional(),
-  displayOrder: z.number().int().optional(),
-  startsAt: z.string().datetime().nullable().optional(),
-  endsAt: z.string().datetime().nullable().optional(),
-  isActive: z.boolean().optional(),
-  targetAudience: z.string().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
@@ -14922,62 +14874,62 @@ LearningExperienceDiscoveryFeaturedContentTypeSchema = z.enum([
 
 /** Zod schema for LearningExperienceDiscoveryPopularSearchResult */
 LearningExperienceDiscoveryPopularSearchResultSchema = z.object({
+  clickThroughRate: z.number().optional(),
   query: z.string().nullable().optional(),
   searchCount: z.number().int().optional(),
   totalClicks: z.number().int().optional(),
-  clickThroughRate: z.number().optional(),
 });
 
 /** Zod schema for LearningExperienceDiscoveryRecordSearchClick */
 LearningExperienceDiscoveryRecordSearchClickSchema = z.object({
-  searchId: z.string().uuid().optional(),
   clickedCourseId: z.string().uuid().optional(),
+  searchId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningExperienceDiscoveryRecordSearch */
 LearningExperienceDiscoveryRecordSearchSchema = z.object({
+  filters: z.string().nullable().optional(),
   query: z.string().nullable().optional(),
   resultCount: z.number().int().optional(),
-  filters: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceDiscoverySearchHistory */
 LearningExperienceDiscoverySearchHistorySchema = z.object({
+  clickedCourseId: z.string().uuid().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  filters: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
-  userId: z.string().uuid().nullable().optional(),
   query: z.string().nullable().optional(),
   resultCount: z.number().int().optional(),
-  clickedCourseId: z.string().uuid().nullable().optional(),
-  filters: z.string().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
+  userId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceDiscoveryUpdateCourseCollection */
 LearningExperienceDiscoveryUpdateCourseCollectionSchema = z.object({
-  title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
   isFeatured: z.boolean().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceDiscoveryUpdateFeaturedContent */
 LearningExperienceDiscoveryUpdateFeaturedContentSchema = z.object({
-  title: z.string().nullable().optional(),
-  subtitle: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  linkUrl: z.string().nullable().optional(),
   displayOrder: z.number().int().nullable().optional(),
-  startsAt: z.string().datetime().nullable().optional(),
   endsAt: z.string().datetime().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
   isActive: z.boolean().nullable().optional(),
+  linkUrl: z.string().nullable().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
+  subtitle: z.string().nullable().optional(),
   targetAudience: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceLearningPathsAddCourseToPath */
 LearningExperienceLearningPathsAddCourseToPathSchema = z.object({
   courseId: z.string().uuid().optional(),
-  order: z.number().int().optional(),
   isRequired: z.boolean().optional(),
+  order: z.number().int().optional(),
 });
 
 /** Zod schema for LearningExperienceLearningPathsCourseOrder */
@@ -14988,40 +14940,40 @@ LearningExperienceLearningPathsCourseOrderSchema = z.object({
 
 /** Zod schema for LearningExperienceLearningPathsCreateLearningPath */
 LearningExperienceLearningPathsCreateLearningPathSchema = z.object({
-  title: z.string().nullable().optional(),
-  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
   description: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
+  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
   estimatedHours: z.number().int().optional(),
+  imageUrl: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathCourse */
 LearningExperienceLearningPathsLearningPathCourseSchema = z.object({
   courseId: z.string().uuid().optional(),
-  order: z.number().int().optional(),
   isRequired: z.boolean().optional(),
+  order: z.number().int().optional(),
 });
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathDetail */
 LearningExperienceLearningPathsLearningPathDetailSchema = z.object({
-  id: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  creatorId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  estimatedHours: z.number().int().optional(),
-  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
-  isPublished: z.boolean().optional(),
-  isFeatured: z.boolean().optional(),
-  enrollmentCount: z.number().int().optional(),
   completionCount: z.number().int().optional(),
   courses: z
     .array(z.lazy(() => LearningExperienceLearningPathsLearningPathCourseSchema))
     .nullable()
     .optional(),
   createdAt: z.string().datetime().optional(),
+  creatorId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
+  enrollmentCount: z.number().int().optional(),
+  estimatedHours: z.number().int().optional(),
+  id: z.string().uuid().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isFeatured: z.boolean().optional(),
+  isPublished: z.boolean().optional(),
+  slug: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
@@ -15030,37 +14982,37 @@ LearningExperienceLearningPathsLearningPathDifficultySchema = z.enum(['Beginner'
 
 /** Zod schema for LearningExperienceLearningPathsLearningPath */
 LearningExperienceLearningPathsLearningPathSchema = z.object({
-  id: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  creatorId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  estimatedHours: z.number().int().optional(),
-  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
-  isPublished: z.boolean().optional(),
-  isFeatured: z.boolean().optional(),
-  enrollmentCount: z.number().int().optional(),
   completionCount: z.number().int().optional(),
   courseCount: z.number().int().optional(),
   createdAt: z.string().datetime().optional(),
+  creatorId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
+  enrollmentCount: z.number().int().optional(),
+  estimatedHours: z.number().int().optional(),
+  id: z.string().uuid().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isFeatured: z.boolean().optional(),
+  isPublished: z.boolean().optional(),
+  slug: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathEnrollment */
 LearningExperienceLearningPathsLearningPathEnrollmentSchema = z.object({
+  completedAt: z.string().datetime().nullable().optional(),
+  coursesCompleted: z.number().int().optional(),
+  createdAt: z.string().datetime().optional(),
+  enrolledAt: z.string().datetime().optional(),
   id: z.string().uuid().optional(),
   learningPathId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
   progress: z.number().int().optional(),
-  coursesCompleted: z.number().int().optional(),
-  totalCourses: z.number().int().optional(),
-  enrolledAt: z.string().datetime().optional(),
-  completedAt: z.string().datetime().nullable().optional(),
   status: z.lazy(() => LearningExperienceLearningPathsLearningPathEnrollmentStatusSchema).optional(),
-  createdAt: z.string().datetime().optional(),
+  totalCourses: z.number().int().optional(),
   updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathEnrollmentStatus */
@@ -15068,13 +15020,13 @@ LearningExperienceLearningPathsLearningPathEnrollmentStatusSchema = z.enum(['InP
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathStatistics */
 LearningExperienceLearningPathsLearningPathStatisticsSchema = z.object({
-  learningPathId: z.string().uuid().optional(),
-  totalEnrollments: z.number().int().optional(),
   activeEnrollments: z.number().int().optional(),
+  averageCompletionTime: z.string().optional(),
+  averageProgress: z.number().optional(),
   completedEnrollments: z.number().int().optional(),
   completionRate: z.number().optional(),
-  averageProgress: z.number().optional(),
-  averageCompletionTime: z.string().optional(),
+  learningPathId: z.string().uuid().optional(),
+  totalEnrollments: z.number().int().optional(),
 });
 
 /** Zod schema for LearningExperienceLearningPathsReorderCourses */
@@ -15087,12 +15039,12 @@ LearningExperienceLearningPathsReorderCoursesSchema = z.object({
 
 /** Zod schema for LearningExperienceLearningPathsUpdateLearningPath */
 LearningExperienceLearningPathsUpdateLearningPathSchema = z.object({
-  title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  estimatedHours: z.number().int().nullable().optional(),
   difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
+  estimatedHours: z.number().int().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
   isFeatured: z.boolean().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceLearningPathsUpdatePathProgress */
@@ -15107,58 +15059,58 @@ LearningExperienceRecommendationsAddSkillInputSchema = z.object({
 
 /** Zod schema for LearningExperienceRecommendationsCreateOrUpdateLearningProfile */
 LearningExperienceRecommendationsCreateOrUpdateLearningProfileSchema = z.object({
+  learningGoals: z.array(z.string()).nullable().optional(),
   preferredCategories: z.array(z.string()).nullable().optional(),
   preferredDifficulty: z.string().nullable().optional(),
   preferredDuration: z.string().nullable().optional(),
-  learningGoals: z.array(z.string()).nullable().optional(),
   skills: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceRecommendationsPopularCourse */
 LearningExperienceRecommendationsPopularCourseSchema = z.object({
-  courseId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  thumbnail: z.string().nullable().optional(),
-  category: z.string().nullable().optional(),
-  enrollmentCount: z.number().int().optional(),
   averageRating: z.number().optional(),
+  category: z.string().nullable().optional(),
+  courseId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  enrollmentCount: z.number().int().optional(),
+  thumbnail: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
   totalRatings: z.number().int().optional(),
 });
 
 /** Zod schema for LearningExperienceRecommendationsRecommendation */
 LearningExperienceRecommendationsRecommendationSchema = z.object({
-  id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
-  type: z.lazy(() => LearningExperienceRecommendationsRecommendationTypeSchema).optional(),
-  score: z.number().optional(),
-  reason: z.string().nullable().optional(),
-  isViewed: z.boolean().optional(),
-  isDismissed: z.boolean().optional(),
-  expiresAt: z.string().datetime().optional(),
   createdAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  isDismissed: z.boolean().optional(),
+  isViewed: z.boolean().optional(),
+  reason: z.string().nullable().optional(),
+  score: z.number().optional(),
+  type: z.lazy(() => LearningExperienceRecommendationsRecommendationTypeSchema).optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningExperienceRecommendationsRecommendationStatistics */
 LearningExperienceRecommendationsRecommendationStatisticsSchema = z.object({
-  totalRecommendations: z.number().int().optional(),
-  viewedCount: z.number().int().optional(),
-  dismissedCount: z.number().int().optional(),
-  convertedCount: z.number().int().optional(),
   byType: z
     .object({
+      BasedOnHistory: z.number().int(),
+      InstructorFollowed: z.number().int(),
+      NextInPath: z.number().int(),
+      PeerRecommended: z.number().int(),
       PersonalizedAI: z.number().int(),
       PopularInCategory: z.number().int(),
-      TrendingNow: z.number().int(),
-      BasedOnHistory: z.number().int(),
       SimilarToCompleted: z.number().int(),
-      NextInPath: z.number().int(),
-      InstructorFollowed: z.number().int(),
-      PeerRecommended: z.number().int(),
+      TrendingNow: z.number().int(),
     })
     .nullable()
     .optional(),
+  convertedCount: z.number().int().optional(),
+  dismissedCount: z.number().int().optional(),
+  totalRecommendations: z.number().int().optional(),
+  viewedCount: z.number().int().optional(),
 });
 
 /** Zod schema for LearningExperienceRecommendationsRecommendationType */
@@ -15175,40 +15127,40 @@ LearningExperienceRecommendationsRecommendationTypeSchema = z.enum([
 
 /** Zod schema for LearningExperienceRecommendationsSimilarCourse */
 LearningExperienceRecommendationsSimilarCourseSchema = z.object({
-  courseId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  thumbnail: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
-  similarityScore: z.number().optional(),
+  courseId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
   matchingTags: z.array(z.string()).nullable().optional(),
+  similarityScore: z.number().optional(),
+  thumbnail: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceRecommendationsTrendingCourse */
 LearningExperienceRecommendationsTrendingCourseSchema = z.object({
-  courseId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  thumbnail: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
+  courseId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
   recentEnrollments: z.number().int().optional(),
+  thumbnail: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
   trendScore: z.number().optional(),
 });
 
 /** Zod schema for LearningExperienceRecommendationsUserLearningProfile */
 LearningExperienceRecommendationsUserLearningProfileSchema = z.object({
+  createdAt: z.string().datetime().optional(),
   id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
+  lastActivityAt: z.string().datetime().nullable().optional(),
+  learningGoals: z.array(z.string()).nullable().optional(),
   preferredCategories: z.array(z.string()).nullable().optional(),
   preferredDifficulty: z.string().nullable().optional(),
   preferredDuration: z.string().nullable().optional(),
-  learningGoals: z.array(z.string()).nullable().optional(),
   skills: z.array(z.string()).nullable().optional(),
   totalCoursesCompleted: z.number().int().optional(),
   totalHoursLearned: z.number().int().optional(),
-  lastActivityAt: z.string().datetime().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialControllersUpdateReviewModerationInput */
@@ -15233,115 +15185,115 @@ LearningExperienceSocialFeedItemTypeSchema = z.enum([
 
 /** Zod schema for LearningExperienceSocialServicesCourseDiscussion */
 LearningExperienceSocialServicesCourseDiscussionSchema = z.object({
-  id: z.string().uuid().optional(),
-  courseId: z.string().uuid().optional(),
-  contentId: z.string().uuid().nullable().optional(),
   authorId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
   content: z.string().nullable().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  courseId: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
   isPinned: z.boolean().optional(),
   isResolved: z.boolean().optional(),
-  replyCount: z.number().int().optional(),
-  viewCount: z.number().int().optional(),
   lastActivityAt: z.string().datetime().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
+  replyCount: z.number().int().optional(),
+  title: z.string().nullable().optional(),
+  viewCount: z.number().int().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialServicesCourseLike */
 LearningExperienceSocialServicesCourseLikeSchema = z.object({
-  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialServicesCourseRatingStats */
 LearningExperienceSocialServicesCourseRatingStatsSchema = z.object({
-  courseId: z.string().uuid().optional(),
   averageRating: z.number().optional(),
-  totalReviews: z.number().int().optional(),
+  courseId: z.string().uuid().optional(),
+  featuredReviewCount: z.number().int().optional(),
   fiveStarCount: z.number().int().optional(),
   fourStarCount: z.number().int().optional(),
-  threeStarCount: z.number().int().optional(),
-  twoStarCount: z.number().int().optional(),
   oneStarCount: z.number().int().optional(),
-  featuredReviewCount: z.number().int().optional(),
+  threeStarCount: z.number().int().optional(),
+  totalReviews: z.number().int().optional(),
+  twoStarCount: z.number().int().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialServicesCourseReview */
 LearningExperienceSocialServicesCourseReviewSchema = z.object({
-  id: z.string().uuid().optional(),
-  courseId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  rating: z.number().int().optional(),
-  title: z.string().nullable().optional(),
   content: z.string().nullable().optional(),
-  isVerifiedPurchase: z.boolean().optional(),
+  courseId: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
   helpfulCount: z.number().int().optional(),
+  id: z.string().uuid().optional(),
   isApproved: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
-  createdAt: z.string().datetime().optional(),
+  isVerifiedPurchase: z.boolean().optional(),
+  rating: z.number().int().optional(),
+  title: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialServicesCourseWishlist */
 LearningExperienceSocialServicesCourseWishlistSchema = z.object({
-  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
   notifyOnSale: z.boolean().optional(),
   notifyOnUpdate: z.boolean().optional(),
-  createdAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialServicesCreateDiscussionInput */
 LearningExperienceSocialServicesCreateDiscussionInputSchema = z.object({
-  courseId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
   content: z.string().nullable().optional(),
   contentId: z.string().uuid().nullable().optional(),
+  courseId: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialServicesCreateReplyInput */
 LearningExperienceSocialServicesCreateReplyInputSchema = z.object({
-  discussionId: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
+  discussionId: z.string().uuid().optional(),
   parentReplyId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialServicesCreateReviewInput */
 LearningExperienceSocialServicesCreateReviewInputSchema = z.object({
+  content: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
+  enrollmentId: z.string().uuid().nullable().optional(),
   rating: z.number().int().optional(),
   title: z.string().nullable().optional(),
-  content: z.string().nullable().optional(),
-  enrollmentId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialServicesDiscussionReply */
 LearningExperienceSocialServicesDiscussionReplySchema = z.object({
-  id: z.string().uuid().optional(),
-  discussionId: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
-  parentReplyId: z.string().uuid().nullable().optional(),
   content: z.string().nullable().optional(),
-  isAcceptedAnswer: z.boolean().optional(),
-  upvoteCount: z.number().int().optional(),
   createdAt: z.string().datetime().optional(),
+  discussionId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  isAcceptedAnswer: z.boolean().optional(),
+  parentReplyId: z.string().uuid().nullable().optional(),
+  upvoteCount: z.number().int().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialServicesPersonalizedFeedItem */
 LearningExperienceSocialServicesPersonalizedFeedItemSchema = z.object({
-  id: z.string().uuid().optional(),
-  itemType: z.lazy(() => LearningExperienceSocialFeedItemTypeSchema).optional(),
   courseId: z.string().uuid().nullable().optional(),
-  discussionId: z.string().uuid().nullable().optional(),
-  reviewId: z.string().uuid().nullable().optional(),
-  learningPathId: z.string().uuid().nullable().optional(),
-  relevanceScore: z.number().optional(),
-  reason: z.string().nullable().optional(),
-  isViewed: z.boolean().optional(),
-  expiresAt: z.string().datetime().optional(),
   createdAt: z.string().datetime().optional(),
+  discussionId: z.string().uuid().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  isViewed: z.boolean().optional(),
+  itemType: z.lazy(() => LearningExperienceSocialFeedItemTypeSchema).optional(),
+  learningPathId: z.string().uuid().nullable().optional(),
+  reason: z.string().nullable().optional(),
+  relevanceScore: z.number().optional(),
+  reviewId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for LearningExperienceSocialServicesWishlistPreferencesInput */
@@ -15352,182 +15304,168 @@ LearningExperienceSocialServicesWishlistPreferencesInputSchema = z.object({
 
 /** Zod schema for LearningWorkspacesLearnerAnnouncement */
 LearningWorkspacesLearnerAnnouncementSchema = z.object({
-  discussionId: z.string().uuid().optional(),
-  courseId: z.string().uuid().optional(),
-  courseTitle: z.string().nullable().optional(),
-  courseSlug: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
   content: z.string().nullable().optional(),
+  courseId: z.string().uuid().optional(),
+  courseSlug: z.string().nullable().optional(),
+  courseTitle: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  discussionId: z.string().uuid().optional(),
   lastActivityAt: z.string().datetime().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerAssessmentDeadline */
 LearningWorkspacesLearnerAssessmentDeadlineSchema = z.object({
   assessmentId: z.string().uuid().optional(),
-  courseId: z.string().uuid().optional(),
-  courseTitle: z.string().nullable().optional(),
-  courseSlug: z.string().nullable().optional(),
-  contentId: z.string().uuid().nullable().optional(),
-  groupId: z.string().uuid().nullable().optional(),
-  title: z.string().nullable().optional(),
-  type: z.string().nullable().optional(),
-  maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  courseId: z.string().uuid().optional(),
+  courseSlug: z.string().nullable().optional(),
+  courseTitle: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
+  groupId: z.string().uuid().nullable().optional(),
+  maxScore: z.number().int().optional(),
+  passingScore: z.number().int().optional(),
   submissionStatus: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerAssessment */
 LearningWorkspacesLearnerAssessmentSchema = z.object({
+  allowLateSubmissions: z.boolean().optional(),
   assessmentId: z.string().uuid().optional(),
-  contentId: z.string().uuid().nullable().optional(),
-  groupId: z.string().uuid().nullable().optional(),
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  type: z.string().nullable().optional(),
-  maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
-  timeLimitMinutes: z.number().int().nullable().optional(),
-  maxAttempts: z.number().int().nullable().optional(),
-  isRequired: z.boolean().optional(),
-  order: z.number().int().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  description: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
-  allowLateSubmissions: z.boolean().optional(),
+  groupId: z.string().uuid().nullable().optional(),
+  isRequired: z.boolean().optional(),
   lateSubmissionDeadline: z.string().datetime().nullable().optional(),
-  submissionModalities: z.string().nullable().optional(),
+  maxAttempts: z.number().int().nullable().optional(),
+  maxScore: z.number().int().optional(),
+  order: z.number().int().optional(),
+  passingScore: z.number().int().optional(),
   presentationMode: z.string().nullable().optional(),
+  submissionModalities: z.string().nullable().optional(),
+  timeLimitMinutes: z.number().int().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerAssessmentGroup */
 LearningWorkspacesLearnerAssessmentGroupSchema = z.object({
+  description: z.string().nullable().optional(),
   groupId: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  weightPercent: z.number().optional(),
   order: z.number().int().optional(),
+  weightPercent: z.number().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerAssessmentSubmission */
 LearningWorkspacesLearnerAssessmentSubmissionSchema = z.object({
-  submissionId: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
-  enrollmentId: z.string().uuid().optional(),
   attemptNumber: z.number().int().optional(),
-  score: z.number().int().nullable().optional(),
-  passed: z.boolean().nullable().optional(),
-  startedAt: z.string().datetime().optional(),
-  submittedAt: z.string().datetime().nullable().optional(),
-  gradedAt: z.string().datetime().nullable().optional(),
+  enrollmentId: z.string().uuid().optional(),
   feedback: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
+  gradedAt: z.string().datetime().nullable().optional(),
   isLate: z.boolean().optional(),
+  passed: z.boolean().nullable().optional(),
+  score: z.number().int().nullable().optional(),
+  startedAt: z.string().datetime().optional(),
+  status: z.string().nullable().optional(),
+  submissionId: z.string().uuid().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerCertificate */
 LearningWorkspacesLearnerCertificateSchema = z.object({
   certificateId: z.string().uuid().optional(),
-  enrollmentId: z.string().uuid().optional(),
+  certificateNumber: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
   courseName: z.string().nullable().optional(),
-  certificateNumber: z.string().nullable().optional(),
-  recipientName: z.string().nullable().optional(),
-  issuedAt: z.string().datetime().optional(),
+  enrollmentId: z.string().uuid().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  verificationUrl: z.string().nullable().optional(),
+  issuedAt: z.string().datetime().optional(),
+  recipientName: z.string().nullable().optional(),
   status: z.string().nullable().optional(),
+  verificationUrl: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerCohort */
 LearningWorkspacesLearnerCohortSchema = z.object({
   cohortId: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  maxCapacity: z.number().int().optional(),
   currentEnrollmentCount: z.number().int().optional(),
-  status: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  endDate: z.string().datetime().optional(),
   instructorId: z.string().uuid().nullable().optional(),
+  maxCapacity: z.number().int().optional(),
   meetingSchedule: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  startDate: z.string().datetime().optional(),
+  status: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerContent */
 LearningWorkspacesLearnerContentSchema = z.object({
-  contentId: z.string().uuid().optional(),
-  parentId: z.string().uuid().nullable().optional(),
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  type: z.string().nullable().optional(),
-  body: z.string().nullable().optional(),
-  lessonFormat: z.string().nullable().optional(),
   activitySettings: z.string().nullable().optional(),
-  sortOrder: z.number().int().optional(),
-  isRequired: z.boolean().optional(),
-  gradingMethod: z.string().nullable().optional(),
-  maxPoints: z.number().int().nullable().optional(),
+  body: z.string().nullable().optional(),
+  contentId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
+  gradingMethod: z.string().nullable().optional(),
+  isRequired: z.boolean().optional(),
+  lessonFormat: z.string().nullable().optional(),
+  maxPoints: z.number().int().nullable().optional(),
+  parentId: z.string().uuid().nullable().optional(),
+  sortOrder: z.number().int().optional(),
+  title: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
   visibility: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerContentProgress */
 LearningWorkspacesLearnerContentProgressSchema = z.object({
+  attempts: z.number().int().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
   contentId: z.string().uuid().optional(),
-  status: z.string().nullable().optional(),
-  progressPercentage: z.number().optional(),
   firstAccessedAt: z.string().datetime().nullable().optional(),
   lastAccessedAt: z.string().datetime().nullable().optional(),
-  completedAt: z.string().datetime().nullable().optional(),
-  timeSpentSeconds: z.number().int().optional(),
-  score: z.number().nullable().optional(),
   maxScore: z.number().nullable().optional(),
-  attempts: z.number().int().optional(),
+  progressPercentage: z.number().optional(),
+  score: z.number().nullable().optional(),
+  status: z.string().nullable().optional(),
+  timeSpentSeconds: z.number().int().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerCourseSummary */
 LearningWorkspacesLearnerCourseSummarySchema = z.object({
-  courseId: z.string().uuid().optional(),
-  enrollmentId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  thumbnail: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
-  difficulty: z.string().nullable().optional(),
-  estimatedHours: z.number().int().nullable().optional(),
-  enrollmentStatus: z.string().nullable().optional(),
-  completionStatus: z.string().nullable().optional(),
-  progressPercentage: z.number().optional(),
-  finalGrade: z.number().nullable().optional(),
-  enrolledAt: z.string().datetime().optional(),
-  totalItems: z.number().int().optional(),
   completedItems: z.number().int().optional(),
-  remainingMinutes: z.number().int().optional(),
+  completionStatus: z.string().nullable().optional(),
+  courseId: z.string().uuid().optional(),
   currentContentId: z.string().uuid().nullable().optional(),
   currentContentTitle: z.string().nullable().optional(),
   currentContentType: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  difficulty: z.string().nullable().optional(),
+  enrolledAt: z.string().datetime().optional(),
+  enrollmentId: z.string().uuid().optional(),
+  enrollmentStatus: z.string().nullable().optional(),
+  estimatedHours: z.number().int().nullable().optional(),
+  finalGrade: z.number().nullable().optional(),
+  progressPercentage: z.number().optional(),
+  remainingMinutes: z.number().int().optional(),
+  slug: z.string().nullable().optional(),
+  thumbnail: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  totalItems: z.number().int().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerCourseWorkspace */
 LearningWorkspacesLearnerCourseWorkspaceSchema = z.object({
-  course: z.lazy(() => LearningWorkspacesLearnerCourseSummarySchema).optional(),
-  content: z
-    .array(z.lazy(() => LearningWorkspacesLearnerContentSchema))
-    .nullable()
-    .optional(),
-  progress: z
-    .array(z.lazy(() => LearningWorkspacesLearnerContentProgressSchema))
-    .nullable()
-    .optional(),
-  cohort: z.lazy(() => LearningWorkspacesLearnerCohortSchema).optional(),
-  calendar: z
-    .array(z.lazy(() => LearningWorkspacesLearnerScheduleEntrySchema))
-    .nullable()
-    .optional(),
   assessmentGroups: z
     .array(z.lazy(() => LearningWorkspacesLearnerAssessmentGroupSchema))
     .nullable()
@@ -15536,28 +15474,46 @@ LearningWorkspacesLearnerCourseWorkspaceSchema = z.object({
     .array(z.lazy(() => LearningWorkspacesLearnerAssessmentSchema))
     .nullable()
     .optional(),
-  submissions: z
-    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentSubmissionSchema))
-    .nullable()
-    .optional(),
-  discussions: z
-    .array(z.lazy(() => LearningWorkspacesLearnerDiscussionSchema))
+  calendar: z
+    .array(z.lazy(() => LearningWorkspacesLearnerScheduleEntrySchema))
     .nullable()
     .optional(),
   certificates: z
     .array(z.lazy(() => LearningWorkspacesLearnerCertificateSchema))
     .nullable()
     .optional(),
+  cohort: z.lazy(() => LearningWorkspacesLearnerCohortSchema).optional(),
+  content: z
+    .array(z.lazy(() => LearningWorkspacesLearnerContentSchema))
+    .nullable()
+    .optional(),
+  course: z.lazy(() => LearningWorkspacesLearnerCourseSummarySchema).optional(),
+  discussions: z
+    .array(z.lazy(() => LearningWorkspacesLearnerDiscussionSchema))
+    .nullable()
+    .optional(),
+  progress: z
+    .array(z.lazy(() => LearningWorkspacesLearnerContentProgressSchema))
+    .nullable()
+    .optional(),
+  submissions: z
+    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentSubmissionSchema))
+    .nullable()
+    .optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerDashboard */
 LearningWorkspacesLearnerDashboardSchema = z.object({
-  courses: z
-    .array(z.lazy(() => LearningWorkspacesLearnerCourseSummarySchema))
+  announcements: z
+    .array(z.lazy(() => LearningWorkspacesLearnerAnnouncementSchema))
     .nullable()
     .optional(),
-  upcoming: z
-    .array(z.lazy(() => LearningWorkspacesLearnerScheduleEntrySchema))
+  certificates: z
+    .array(z.lazy(() => LearningWorkspacesLearnerCertificateSchema))
+    .nullable()
+    .optional(),
+  courses: z
+    .array(z.lazy(() => LearningWorkspacesLearnerCourseSummarySchema))
     .nullable()
     .optional(),
   deadlines: z
@@ -15568,61 +15524,54 @@ LearningWorkspacesLearnerDashboardSchema = z.object({
     .array(z.lazy(() => LearningWorkspacesLearnerGradeSummarySchema))
     .nullable()
     .optional(),
-  certificates: z
-    .array(z.lazy(() => LearningWorkspacesLearnerCertificateSchema))
-    .nullable()
-    .optional(),
-  announcements: z
-    .array(z.lazy(() => LearningWorkspacesLearnerAnnouncementSchema))
+  upcoming: z
+    .array(z.lazy(() => LearningWorkspacesLearnerScheduleEntrySchema))
     .nullable()
     .optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerDiscussion */
 LearningWorkspacesLearnerDiscussionSchema = z.object({
-  discussionId: z.string().uuid().optional(),
-  contentId: z.string().uuid().nullable().optional(),
   authorId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
   content: z.string().nullable().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  discussionId: z.string().uuid().optional(),
   isPinned: z.boolean().optional(),
   isResolved: z.boolean().optional(),
-  replyCount: z.number().int().optional(),
-  viewCount: z.number().int().optional(),
   lastActivityAt: z.string().datetime().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
+  replyCount: z.number().int().optional(),
+  title: z.string().nullable().optional(),
+  viewCount: z.number().int().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerGradeItem */
 LearningWorkspacesLearnerGradeItemSchema = z.object({
   assessmentId: z.string().uuid().optional(),
-  contentId: z.string().uuid().nullable().optional(),
-  groupId: z.string().uuid().nullable().optional(),
-  title: z.string().nullable().optional(),
-  type: z.string().nullable().optional(),
-  maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
+  contentId: z.string().uuid().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
-  submissionStatus: z.string().nullable().optional(),
-  score: z.number().int().nullable().optional(),
-  passed: z.boolean().nullable().optional(),
   feedback: z.string().nullable().optional(),
   gradedAt: z.string().datetime().nullable().optional(),
+  groupId: z.string().uuid().nullable().optional(),
+  maxScore: z.number().int().optional(),
+  passed: z.boolean().nullable().optional(),
+  passingScore: z.number().int().optional(),
+  score: z.number().int().nullable().optional(),
+  submissionStatus: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerGradeSummary */
 LearningWorkspacesLearnerGradeSummarySchema = z.object({
   courseId: z.string().uuid().optional(),
-  courseTitle: z.string().nullable().optional(),
   courseSlug: z.string().nullable().optional(),
+  courseTitle: z.string().nullable().optional(),
+  earnedPoints: z.number().nullable().optional(),
   finalGrade: z.number().nullable().optional(),
   gradedAssessments: z.number().int().optional(),
-  totalAssessments: z.number().int().optional(),
-  earnedPoints: z.number().nullable().optional(),
-  possiblePoints: z.number().nullable().optional(),
-  percentage: z.number().nullable().optional(),
   groups: z
     .array(z.lazy(() => LearningWorkspacesLearnerAssessmentGroupSchema))
     .nullable()
@@ -15631,39 +15580,42 @@ LearningWorkspacesLearnerGradeSummarySchema = z.object({
     .array(z.lazy(() => LearningWorkspacesLearnerGradeItemSchema))
     .nullable()
     .optional(),
+  percentage: z.number().nullable().optional(),
+  possiblePoints: z.number().nullable().optional(),
+  totalAssessments: z.number().int().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerScheduleEntry */
 LearningWorkspacesLearnerScheduleEntrySchema = z.object({
-  courseId: z.string().uuid().optional(),
-  courseTitle: z.string().nullable().optional(),
-  courseSlug: z.string().nullable().optional(),
-  cohortId: z.string().uuid().optional(),
-  cohortName: z.string().nullable().optional(),
-  scheduleItemId: z.string().uuid().optional(),
-  contentId: z.string().uuid().nullable().optional(),
   assessmentId: z.string().uuid().nullable().optional(),
-  type: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  startsAt: z.string().datetime().nullable().optional(),
-  endsAt: z.string().datetime().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
+  cohortId: z.string().uuid().optional(),
+  cohortName: z.string().nullable().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  courseId: z.string().uuid().optional(),
+  courseSlug: z.string().nullable().optional(),
+  courseTitle: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
   location: z.string().nullable().optional(),
   meetingUrl: z.string().nullable().optional(),
+  scheduleItemId: z.string().uuid().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
   status: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningWorkspacesLearnerSearchResult */
 LearningWorkspacesLearnerSearchResultSchema = z.object({
-  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   courseSlug: z.string().nullable().optional(),
-  kind: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  kind: z.string().nullable().optional(),
   route: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for Money */
@@ -15675,11 +15627,11 @@ MoneySchema = z.object({
 /** Zod schema for MvcProblemDetails */
 MvcProblemDetailsSchema = z
   .object({
-    type: z.string().nullable().optional(),
-    title: z.string().nullable().optional(),
-    status: z.number().int().nullable().optional(),
     detail: z.string().nullable().optional(),
     instance: z.string().nullable().optional(),
+    status: z.number().int().nullable().optional(),
+    title: z.string().nullable().optional(),
+    type: z.string().nullable().optional(),
   })
   .catchall(z.record(z.string(), z.unknown()));
 
@@ -15694,20 +15646,20 @@ ObjectsAttestationStatementFormatIdentifierSchema = z.enum(['Packed', 'Tpm', 'An
 
 /** Zod schema for ObjectsAuthenticationExtensionsClientInputs */
 ObjectsAuthenticationExtensionsClientInputsSchema = z.object({
-  'example.extension.bool': z.boolean().nullable().optional(),
-  exts: z.boolean().nullable().optional(),
-  uvm: z.boolean().nullable().optional(),
   credProps: z.boolean().nullable().optional(),
-  prf: z.lazy(() => ObjectsAuthenticationExtensionsPRFInputsSchema).optional(),
-  largeBlob: z.lazy(() => ObjectsAuthenticationExtensionsLargeBlobInputsSchema).optional(),
   credentialProtectionPolicy: z.lazy(() => ObjectsCredentialProtectionPolicySchema).optional(),
   enforceCredentialProtectionPolicy: z.boolean().nullable().optional(),
+  'example.extension.bool': z.boolean().nullable().optional(),
+  exts: z.boolean().nullable().optional(),
+  largeBlob: z.lazy(() => ObjectsAuthenticationExtensionsLargeBlobInputsSchema).optional(),
+  prf: z.lazy(() => ObjectsAuthenticationExtensionsPRFInputsSchema).optional(),
+  uvm: z.boolean().nullable().optional(),
 });
 
 /** Zod schema for ObjectsAuthenticationExtensionsLargeBlobInputs */
 ObjectsAuthenticationExtensionsLargeBlobInputsSchema = z.object({
-  support: z.lazy(() => ObjectsLargeBlobSupportSchema).optional(),
   read: z.boolean().optional(),
+  support: z.lazy(() => ObjectsLargeBlobSupportSchema).optional(),
   write: z.string().nullable().optional(),
 });
 
@@ -15740,12 +15692,12 @@ ObjectsLargeBlobSupportSchema = z.enum(['Required', 'Preferred']);
 
 /** Zod schema for ObjectsPublicKeyCredentialDescriptor */
 ObjectsPublicKeyCredentialDescriptorSchema = z.object({
-  type: z.lazy(() => ObjectsPublicKeyCredentialTypeSchema).optional(),
   id: z.string().nullable().optional(),
   transports: z
     .array(z.lazy(() => ObjectsAuthenticatorTransportSchema))
     .nullable()
     .optional(),
+  type: z.lazy(() => ObjectsPublicKeyCredentialTypeSchema).optional(),
 });
 
 /** Zod schema for ObjectsPublicKeyCredentialHint */
@@ -15762,162 +15714,162 @@ ObjectsUserVerificationRequirementSchema = z.enum(['Required', 'Preferred', 'Dis
 
 /** Zod schema for PagedResultOfGameGuildCommerceProductsProductDto */
 PagedResultOfGameGuildCommerceProductsProductDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => CommerceProductsProductSchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
   pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
   totalPages: z.number().int().optional(),
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
 });
 
 /** Zod schema for PagedResultOfGameGuildCommerceProductsPromoCodeDto */
 PagedResultOfGameGuildCommerceProductsPromoCodeDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => CommerceProductsPromoCodeSchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
   pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
   totalPages: z.number().int().optional(),
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
 });
 
 /** Zod schema for PagedResultOfGameGuildCommerceProductsSupportTicketDto */
 PagedResultOfGameGuildCommerceProductsSupportTicketDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => CommerceProductsSupportTicketSchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
   pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
   totalPages: z.number().int().optional(),
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
 });
 
 /** Zod schema for PagedResultOfGameGuildCommerceSubscriptionsSubscription */
 PagedResultOfGameGuildCommerceSubscriptionsSubscriptionSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => CommerceSubscriptionsSubscriptionSchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
   pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
   totalPages: z.number().int().optional(),
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
 });
 
 /** Zod schema for PagedResultOfGameGuildCommerceSubscriptionsSubscriptionNotificationDto */
 PagedResultOfGameGuildCommerceSubscriptionsSubscriptionNotificationDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => CommerceSubscriptionsSubscriptionNotificationSchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
   pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
   totalPages: z.number().int().optional(),
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
 });
 
 /** Zod schema for PagedResultOfGameGuildIdentityTenantsTenant */
 PagedResultOfGameGuildIdentityTenantsTenantSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => IdentityTenantsTenantSchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
   pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
   totalPages: z.number().int().optional(),
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
 });
 
 /** Zod schema for PagedResultOfGameGuildIdentityTenantsTenantAuditLogEntry */
 PagedResultOfGameGuildIdentityTenantsTenantAuditLogEntrySchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => IdentityTenantsTenantAuditLogEntrySchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
   pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
   totalPages: z.number().int().optional(),
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
 });
 
 /** Zod schema for PagedResultOfGameGuildIdentityUsersUserDto */
 PagedResultOfGameGuildIdentityUsersUserDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => IdentityUsersUserDtoSchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
   pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
   totalPages: z.number().int().optional(),
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
 });
 
 /** Zod schema for PagedResultOfGameGuildIdentityUsersUserNotificationDto */
 PagedResultOfGameGuildIdentityUsersUserNotificationDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => IdentityUsersUserNotificationDtoSchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
   pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
   totalPages: z.number().int().optional(),
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
 });
 
 /** Zod schema for PagedResultOfGameGuildIdentityUsersUserProfileDto */
 PagedResultOfGameGuildIdentityUsersUserProfileDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => IdentityUsersUserProfileDtoSchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
   pageNumber: z.number().int().optional(),
   pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
   totalPages: z.number().int().optional(),
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
 });
 
 /** Zod schema for ProgramCategory */
@@ -15946,47 +15898,47 @@ ProgramCategorySchema = z.enum([
 /** Zod schema for ProjectsAddCollaboratorInput */
 ProjectsAddCollaboratorInputSchema = z.object({
   email: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  message: z.string().nullable().optional(),
   permissions: z
     .array(z.lazy(() => IdentityAuthorizationPermissionTypeSchema))
     .nullable()
     .optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
-  message: z.string().nullable().optional(),
   requireAcceptance: z.boolean().optional(),
 });
 
 /** Zod schema for ProjectsAddProjectCollaboratorInput */
 ProjectsAddProjectCollaboratorInputSchema = z.object({
-  userId: z.string().uuid(),
-  role: z.string().nullable().optional(),
   permissions: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  userId: z.string().uuid(),
 });
 
 /** Zod schema for ProjectsCollaborator */
 ProjectsCollaboratorSchema = z.object({
   id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  joinedAt: z.string().datetime().optional(),
+  permissions: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
   userName: z.string().nullable().optional(),
-  role: z.string().nullable().optional(),
-  permissions: z.string().nullable().optional(),
-  joinedAt: z.string().datetime().optional(),
-  isActive: z.boolean().optional(),
 });
 
 /** Zod schema for ProjectsCreateProjectInput */
 ProjectsCreateProjectInputSchema = z.object({
-  title: z.string().min(1).max(255),
+  categoryId: z.string().uuid().nullable().optional(),
   description: z.string().min(0).max(2000).nullable().optional(),
-  shortDescription: z.string().min(0).max(500).nullable().optional(),
+  downloadUrl: z.string().url().nullable().optional(),
   imageUrl: z.string().url().nullable().optional(),
   repositoryUrl: z.string().url().nullable().optional(),
-  websiteUrl: z.string().url().nullable().optional(),
-  downloadUrl: z.string().url().nullable().optional(),
-  type: z.lazy(() => ProjectsProjectTypeSchema).optional(),
-  categoryId: z.string().uuid().nullable().optional(),
-  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
+  shortDescription: z.string().min(0).max(500).nullable().optional(),
   status: z.lazy(() => ContentStatusSchema).optional(),
   tags: z.array(z.string()).nullable().optional(),
+  title: z.string().min(1).max(255),
+  type: z.lazy(() => ProjectsProjectTypeSchema).optional(),
+  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
+  websiteUrl: z.string().url().nullable().optional(),
 });
 
 /** Zod schema for ProjectsDevelopmentStatus */
@@ -15994,30 +15946,30 @@ ProjectsDevelopmentStatusSchema = z.enum(['Planning', 'InDevelopment', 'Alpha', 
 
 /** Zod schema for ProjectsEffectivePermission */
 ProjectsEffectivePermissionSchema = z.object({
-  resourceId: z.string().uuid().optional(),
-  resourceType: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  isOwner: z.boolean().optional(),
   permissions: z
     .array(z.lazy(() => IdentityAuthorizationPermissionTypeSchema))
     .nullable()
     .optional(),
-  isOwner: z.boolean().optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
+  resourceId: z.string().uuid().optional(),
+  resourceType: z.string().nullable().optional(),
 });
 
 /** Zod schema for ProjectsInvitationResult */
 ProjectsInvitationResultSchema = z.object({
-  success: z.boolean().optional(),
   errorMessage: z.string().nullable().optional(),
   invitationId: z.string().uuid().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for ProjectsInviteProjectCollaboratorInput */
 ProjectsInviteProjectCollaboratorInputSchema = z.object({
-  userId: z.string().uuid().nullable().optional(),
   email: z.string().nullable().optional(),
-  role: z.string().nullable().optional(),
-  permissions: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  permissions: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  userId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for ProjectsLinkProjectStoreProductInput */
@@ -16027,222 +15979,222 @@ ProjectsLinkProjectStoreProductInputSchema = z.object({
 
 /** Zod schema for ProjectsPermissionUpdateResult */
 ProjectsPermissionUpdateResultSchema = z.object({
-  success: z.boolean().optional(),
   errorMessage: z.string().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for ProjectsProject */
 ProjectsProjectSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
-  domainEvents: z
-    .array(z.lazy(() => CQRSIDomainEventSchema))
-    .nullable()
-    .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  title: z.string().min(1).max(500),
-  slug: z.string().min(1).max(500),
-  shortDescription: z.string().max(500).nullable().optional(),
-  description: z.string().nullable().optional(),
-  imageUrl: z.string().max(500).nullable().optional(),
-  type: z.lazy(() => ProjectsProjectTypeSchema).optional(),
-  developmentStatus: z.lazy(() => ProjectsDevelopmentStatusSchema).optional(),
-  status: z.lazy(() => ContentStatusSchema),
-  visibility: z.lazy(() => ContentVisibilitySchema),
+  averageRating: z.number().nullable().optional(),
   category: z.lazy(() => ProjectsProjectCategorySchema).optional(),
   categoryId: z.string().uuid().nullable().optional(),
-  websiteUrl: z.string().max(500).nullable().optional(),
-  repositoryUrl: z.string().max(500).nullable().optional(),
-  socialLinks: z.string().nullable().optional(),
-  downloadUrl: z.string().max(500).nullable().optional(),
-  tags: z.string().nullable().optional(),
-  featuredImageUrl: z.string().max(1000).nullable().optional(),
-  license: z.string().max(200).nullable().optional(),
-  copyright: z.string().max(500).nullable().optional(),
-  publishedAt: z.string().datetime().nullable().optional(),
-  projectMetadata: z.lazy(() => ProjectsProjectMetadataSchema).optional(),
-  versions: z
-    .array(z.lazy(() => ProjectsProjectVersionSchema))
-    .nullable()
-    .optional(),
   collaborators: z
     .array(z.lazy(() => ProjectsProjectCollaboratorSchema))
     .nullable()
     .optional(),
-  releases: z
-    .array(z.lazy(() => ProjectsProjectReleaseSchema))
+  copyright: z.string().max(500).nullable().optional(),
+  createdAt: z.string().datetime(),
+  createdBy: z.lazy(() => IdentityUsersUserSchema).optional(),
+  createdById: z.string().uuid().nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  developmentStatus: z.lazy(() => ProjectsDevelopmentStatusSchema).optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  teams: z
-    .array(z.lazy(() => ProjectsProjectTeamSchema))
-    .nullable()
-    .optional(),
-  followers: z
-    .array(z.lazy(() => ProjectsProjectFollowerSchema))
-    .nullable()
-    .optional(),
+  downloadUrl: z.string().max(500).nullable().optional(),
+  featuredImageUrl: z.string().max(1000).nullable().optional(),
+  feedbackCount: z.number().int().optional(),
   feedbacks: z
     .array(z.lazy(() => ProjectsProjectFeedbackSchema))
     .nullable()
     .optional(),
+  followerCount: z.number().int().optional(),
+  followers: z
+    .array(z.lazy(() => ProjectsProjectFollowerSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  imageUrl: z.string().max(500).nullable().optional(),
+  isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isInJam: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   jamSubmissions: z
     .array(z.lazy(() => ProjectsProjectJamSubmissionSchema))
     .nullable()
     .optional(),
-  createdBy: z.lazy(() => IdentityUsersUserSchema).optional(),
-  createdById: z.string().uuid().nullable().optional(),
-  isActive: z.boolean().optional(),
   latestVersion: z.lazy(() => ProjectsProjectVersionSchema).optional(),
-  followerCount: z.number().int().optional(),
-  averageRating: z.number().nullable().optional(),
-  feedbackCount: z.number().int().optional(),
-  isInJam: z.boolean().optional(),
+  license: z.string().max(200).nullable().optional(),
+  projectMetadata: z.lazy(() => ProjectsProjectMetadataSchema).optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  releases: z
+    .array(z.lazy(() => ProjectsProjectReleaseSchema))
+    .nullable()
+    .optional(),
+  repositoryUrl: z.string().max(500).nullable().optional(),
+  shortDescription: z.string().max(500).nullable().optional(),
+  slug: z.string().min(1).max(500),
+  socialLinks: z.string().nullable().optional(),
+  status: z.lazy(() => ContentStatusSchema),
+  tags: z.string().nullable().optional(),
   teamCount: z.number().int().optional(),
+  teams: z
+    .array(z.lazy(() => ProjectsProjectTeamSchema))
+    .nullable()
+    .optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().min(1).max(500),
+  type: z.lazy(() => ProjectsProjectTypeSchema).optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+  versions: z
+    .array(z.lazy(() => ProjectsProjectVersionSchema))
+    .nullable()
+    .optional(),
+  visibility: z.lazy(() => ContentVisibilitySchema),
+  websiteUrl: z.string().max(500).nullable().optional(),
 });
 
 /** Zod schema for ProjectsProjectCategory */
 ProjectsProjectCategorySchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   name: z.string().min(1).max(50),
   projects: z
     .array(z.lazy(() => ProjectsProjectSchema))
     .nullable()
     .optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsProjectCollaborator */
 ProjectsProjectCollaboratorSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
-  userId: z.string().uuid().optional(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  role: z.string().min(1).max(100),
-  permissions: z.string().min(1).max(500),
   isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   joinedAt: z.string().datetime().optional(),
   leftAt: z.string().datetime().nullable().optional(),
+  permissions: z.string().min(1).max(500),
+  project: z.lazy(() => ProjectsProjectSchema).optional(),
+  projectId: z.string().uuid().optional(),
+  role: z.string().min(1).max(100),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsProjectCollaboratorDto */
 ProjectsProjectCollaboratorDtoSchema = z.object({
-  userId: z.string().uuid().optional(),
-  userName: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
-  profilePictureUrl: z.string().nullable().optional(),
-  role: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  invitedBy: z.string().nullable().optional(),
+  isOwner: z.boolean().optional(),
+  joinedAt: z.string().datetime().optional(),
   permissions: z
     .array(z.lazy(() => IdentityAuthorizationPermissionTypeSchema))
     .nullable()
     .optional(),
-  joinedAt: z.string().datetime().optional(),
-  invitedBy: z.string().nullable().optional(),
-  isOwner: z.boolean().optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
+  profilePictureUrl: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+  userName: z.string().nullable().optional(),
 });
 
 /** Zod schema for ProjectsProjectFeedback */
 ProjectsProjectFeedbackSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  categories: z.string().max(500).nullable().optional(),
+  content: z.string().max(2000).nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
-  userId: z.string().uuid().optional(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  rating: z.number().int().min(1).max(5).optional(),
-  title: z.string().min(1).max(200),
-  content: z.string().max(2000).nullable().optional(),
-  categories: z.string().max(500).nullable().optional(),
-  isFeatured: z.boolean().optional(),
-  isVerified: z.boolean().optional(),
-  status: z.lazy(() => ContentStatusSchema).optional(),
   helpfulVotes: z.number().int().optional(),
-  totalVotes: z.number().int().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isVerified: z.boolean().optional(),
   platform: z.string().max(100).nullable().optional(),
+  project: z.lazy(() => ProjectsProjectSchema).optional(),
+  projectId: z.string().uuid().optional(),
   projectVersion: z.string().max(50).nullable().optional(),
+  rating: z.number().int().min(1).max(5).optional(),
+  status: z.lazy(() => ContentStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().min(1).max(200),
+  totalVotes: z.number().int().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsProjectFollower */
 ProjectsProjectFollowerSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
-  userId: z.string().uuid().optional(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  followedAt: z.string().datetime().optional(),
-  notificationSettings: z.string().max(1000).nullable().optional(),
   emailNotifications: z.boolean().optional(),
+  followedAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  notificationSettings: z.string().max(1000).nullable().optional(),
+  project: z.lazy(() => ProjectsProjectSchema).optional(),
+  projectId: z.string().uuid().optional(),
   pushNotifications: z.boolean().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsProjectInvitation */
 ProjectsProjectInvitationSchema = z.object({
+  expiresAt: z.string().datetime().nullable().optional(),
   id: z.string().uuid().optional(),
+  invitedAt: z.string().datetime().optional(),
+  invitedByUserId: z.string().uuid().optional(),
+  invitedEmail: z.string().nullable().optional(),
+  invitedUserId: z.string().uuid().nullable().optional(),
+  permissions: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
   projectTitle: z.string().nullable().optional(),
-  invitedUserId: z.string().uuid().nullable().optional(),
-  invitedEmail: z.string().nullable().optional(),
-  invitedByUserId: z.string().uuid().optional(),
-  role: z.string().nullable().optional(),
-  permissions: z.string().nullable().optional(),
-  token: z.string().nullable().optional(),
-  status: z.lazy(() => ProjectsProjectInvitationStatusSchema).optional(),
-  invitedAt: z.string().datetime().optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
   respondedAt: z.string().datetime().nullable().optional(),
+  role: z.string().nullable().optional(),
+  status: z.lazy(() => ProjectsProjectInvitationStatusSchema).optional(),
+  token: z.string().nullable().optional(),
 });
 
 /** Zod schema for ProjectsProjectInvitationStatus */
@@ -16250,99 +16202,99 @@ ProjectsProjectInvitationStatusSchema = z.enum(['Pending', 'Accepted', 'Declined
 
 /** Zod schema for ProjectsProjectJamSubmission */
 ProjectsProjectJamSubmissionSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  awardDetails: z.string().max(1000).nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
-  jamId: z.string().uuid().nullable().optional(),
-  jam: z.lazy(() => GameJamsJamSchema).optional(),
-  submittedAt: z.string().datetime().optional(),
-  isEligible: z.boolean().optional(),
-  submissionNotes: z.string().max(2000).nullable().optional(),
   finalScore: z.number().nullable().optional(),
-  ranking: z.number().int().nullable().optional(),
   hasAward: z.boolean().optional(),
-  awardDetails: z.string().max(1000).nullable().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isEligible: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  jam: z.lazy(() => GameJamsJamSchema).optional(),
+  jamId: z.string().uuid().nullable().optional(),
   metadata: z.string().max(2000).nullable().optional(),
+  project: z.lazy(() => ProjectsProjectSchema).optional(),
+  projectId: z.string().uuid().optional(),
+  ranking: z.number().int().nullable().optional(),
   scores: z
     .array(z.lazy(() => GameJamsJamScoreSchema))
     .nullable()
     .optional(),
+  submissionNotes: z.string().max(2000).nullable().optional(),
+  submittedAt: z.string().datetime().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsProjectMetadata */
 ProjectsProjectMetadataSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  project: z.lazy(() => ProjectsProjectSchema),
-  projectId: z.string().uuid().optional(),
-  viewCount: z.number().int().optional(),
   downloadCount: z.number().int().optional(),
   followerCount: z.number().int().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  project: z.lazy(() => ProjectsProjectSchema),
+  projectId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+  viewCount: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsProjectRelease */
 ProjectsProjectReleaseSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  buildNumber: z.string().max(100).nullable().optional(),
+  checksum: z.string().max(128).nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
-  title: z.string().min(1).max(200),
-  description: z.string().nullable().optional(),
-  releaseVersion: z.string().min(1).max(50),
-  releasedAt: z.string().datetime().optional(),
-  isLatest: z.boolean().optional(),
-  isPrerelease: z.boolean().optional(),
+  downloadCount: z.number().int().optional(),
   downloadUrl: z.string().max(500).nullable().optional(),
   fileSize: z.number().int().nullable().optional(),
-  downloadCount: z.number().int().optional(),
-  releaseNotes: z.string().nullable().optional(),
-  checksum: z.string().max(128).nullable().optional(),
-  systemRequirements: z.string().max(1000).nullable().optional(),
-  supportedPlatforms: z.string().max(500).nullable().optional(),
-  releaseType: z.string().max(50).nullable().optional(),
-  status: z.lazy(() => ContentStatusSchema).optional(),
-  buildNumber: z.string().max(100).nullable().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isLatest: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isPrerelease: z.boolean().optional(),
+  project: z.lazy(() => ProjectsProjectSchema).optional(),
+  projectId: z.string().uuid().optional(),
   releaseMetadata: z.string().max(2000).nullable().optional(),
+  releaseNotes: z.string().nullable().optional(),
+  releaseType: z.string().max(50).nullable().optional(),
+  releaseVersion: z.string().min(1).max(50),
+  releasedAt: z.string().datetime().optional(),
+  status: z.lazy(() => ContentStatusSchema).optional(),
+  supportedPlatforms: z.string().max(500).nullable().optional(),
+  systemRequirements: z.string().max(1000).nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().min(1).max(200),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsProjectRoleTemplate */
 ProjectsProjectRoleTemplateSchema = z.object({
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
   permissions: z
     .array(z.lazy(() => IdentityAuthorizationPermissionTypeSchema))
     .nullable()
@@ -16351,57 +16303,57 @@ ProjectsProjectRoleTemplateSchema = z.object({
 
 /** Zod schema for ProjectsProjectStatistics */
 ProjectsProjectStatisticsSchema = z.object({
-  projectId: z.string().uuid().optional(),
-  followerCount: z.number().int().optional(),
-  feedbackCount: z.number().int().optional(),
-  averageRating: z.number().nullable().optional(),
-  totalDownloads: z.number().int().optional(),
   activeTeamCount: z.number().int().optional(),
-  collaboratorCount: z.number().int().optional(),
-  releaseCount: z.number().int().optional(),
-  jamSubmissionCount: z.number().int().optional(),
+  averageRating: z.number().nullable().optional(),
   awardCount: z.number().int().optional(),
-  viewsLast30Days: z.number().int().optional(),
-  downloadsLast30Days: z.number().int().optional(),
-  newFollowersLast30Days: z.number().int().optional(),
   calculatedAt: z.string().datetime().optional(),
-  trendingScore: z.number().optional(),
+  collaboratorCount: z.number().int().optional(),
+  downloadsLast30Days: z.number().int().optional(),
+  feedbackCount: z.number().int().optional(),
+  followerCount: z.number().int().optional(),
+  jamSubmissionCount: z.number().int().optional(),
+  newFollowersLast30Days: z.number().int().optional(),
   popularityRank: z.number().int().nullable().optional(),
+  projectId: z.string().uuid().optional(),
+  releaseCount: z.number().int().optional(),
+  totalDownloads: z.number().int().optional(),
+  trendingScore: z.number().optional(),
+  viewsLast30Days: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsProjectStoreProductProjection */
 ProjectsProjectStoreProductProjectionSchema = z.object({
   linkId: z.string().uuid().optional(),
-  projectId: z.string().uuid().optional(),
   productId: z.string().uuid().optional(),
+  projectId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ProjectsProjectTeam */
 ProjectsProjectTeamSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  assignedAt: z.string().datetime().optional(),
+  contributionPercentage: z.number().min(0).max(100).optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
-  teamId: z.string().uuid().optional(),
-  team: z.lazy(() => ProjectsTeamSchema).optional(),
-  role: z.string().min(1).max(100),
-  assignedAt: z.string().datetime().optional(),
   endedAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
-  permissions: z.string().max(1000).nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   notes: z.string().max(1000).nullable().optional(),
-  contributionPercentage: z.number().min(0).max(100).optional(),
+  permissions: z.string().max(1000).nullable().optional(),
+  project: z.lazy(() => ProjectsProjectSchema).optional(),
+  projectId: z.string().uuid().optional(),
+  role: z.string().min(1).max(100),
+  team: z.lazy(() => ProjectsTeamSchema).optional(),
+  teamId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsProjectType */
@@ -16409,132 +16361,132 @@ ProjectsProjectTypeSchema = z.enum(['Game', 'Tool', 'Art', 'Music', 'Educational
 
 /** Zod schema for ProjectsProjectVersion */
 ProjectsProjectVersionSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  createdBy: z.lazy(() => IdentityUsersUserSchema),
+  createdById: z.string().uuid().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  downloadCount: z.number().int().optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   project: z.lazy(() => ProjectsProjectSchema),
   projectId: z.string().uuid().optional(),
-  versionNumber: z.string().min(1).max(50),
   releaseNotes: z.string().nullable().optional(),
   status: z.string().min(1).max(50),
-  downloadCount: z.number().int().optional(),
-  createdBy: z.lazy(() => IdentityUsersUserSchema),
-  createdById: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+  versionNumber: z.string().min(1).max(50),
 });
 
 /** Zod schema for ProjectsShareProjectInput */
 ProjectsShareProjectInputSchema = z.object({
-  userId: z.string().uuid(),
-  role: z.string().nullable().optional(),
   permissions: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  userId: z.string().uuid(),
 });
 
 /** Zod schema for ProjectsShareProjectWithRoleInput */
 ProjectsShareProjectWithRoleInputSchema = z.object({
+  expiresAt: z.string().datetime().nullable().optional(),
+  message: z.string().nullable().optional(),
+  notifyUsers: z.boolean().optional(),
+  requireAcceptance: z.boolean().optional(),
   roleName: z.string().nullable().optional(),
   userEmails: z.array(z.string()).nullable().optional(),
   userIds: z.array(z.string().uuid()).nullable().optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
-  message: z.string().nullable().optional(),
-  requireAcceptance: z.boolean().optional(),
-  notifyUsers: z.boolean().optional(),
 });
 
 /** Zod schema for ProjectsShareResult */
 ProjectsShareResultSchema = z.object({
-  success: z.boolean().optional(),
   errorMessage: z.string().nullable().optional(),
-  successCount: z.number().int().optional(),
   failureCount: z.number().int().optional(),
+  success: z.boolean().optional(),
+  successCount: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsTeam */
 ProjectsTeamSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().max(2000).nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  name: z.string().min(1).max(200),
-  description: z.string().max(2000).nullable().optional(),
   isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   members: z
     .array(z.lazy(() => ProjectsTeamMemberSchema))
     .nullable()
     .optional(),
+  name: z.string().min(1).max(200),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsTeamMember */
 ProjectsTeamMemberSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  teamId: z.string().uuid().optional(),
-  team: z.lazy(() => ProjectsTeamSchema).optional(),
-  userId: z.string().uuid().optional(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  role: z.string().max(100).nullable().optional(),
-  joinedAt: z.string().datetime().optional(),
   isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  joinedAt: z.string().datetime().optional(),
+  role: z.string().max(100).nullable().optional(),
+  team: z.lazy(() => ProjectsTeamSchema).optional(),
+  teamId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsUpdateCollaboratorInput */
 ProjectsUpdateCollaboratorInputSchema = z.object({
+  expiresAt: z.string().datetime().nullable().optional(),
   permissions: z
     .array(z.lazy(() => IdentityAuthorizationPermissionTypeSchema))
     .nullable()
     .optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for ProjectsUpdateProjectCollaboratorInput */
 ProjectsUpdateProjectCollaboratorInputSchema = z.object({
-  role: z.string().nullable().optional(),
   permissions: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
 });
 
 /** Zod schema for ProjectsUpdateProjectInput */
 ProjectsUpdateProjectInputSchema = z.object({
-  title: z.string().nullable().optional(),
+  categoryId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
-  shortDescription: z.string().nullable().optional(),
+  downloadUrl: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
   repositoryUrl: z.string().nullable().optional(),
-  websiteUrl: z.string().nullable().optional(),
-  downloadUrl: z.string().nullable().optional(),
-  type: z.lazy(() => ProjectsProjectTypeSchema).optional(),
-  categoryId: z.string().uuid().nullable().optional(),
-  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
+  shortDescription: z.string().nullable().optional(),
   status: z.lazy(() => ContentStatusSchema).optional(),
   tags: z.array(z.string()).nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => ProjectsProjectTypeSchema).optional(),
+  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
+  websiteUrl: z.string().nullable().optional(),
 });
 
 /** Zod schema for ResourcesArchiveResourceUsageRecordsInput */
@@ -16558,71 +16510,71 @@ ResourcesCleanupOrphanedResourcesInputSchema = z.object({
 
 /** Zod schema for ResourcesEffectiveSettingOutput */
 ResourcesEffectiveSettingOutputSchema = z.object({
+  isUserOverride: z.boolean().optional(),
   key: z.string().nullable().optional(),
   value: z.string().nullable().optional(),
-  isUserOverride: z.boolean().optional(),
 });
 
 /** Zod schema for ResourcesRecordTenantResourceUsageInput */
 ResourcesRecordTenantResourceUsageInputSchema = z.object({
-  resourceUsageType: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
   count: z.number().int().optional(),
-  periodStart: z.string().datetime().optional(),
-  periodEnd: z.string().datetime().optional(),
   metadata: z.record(z.string(), z.string()).nullable().optional(),
+  periodEnd: z.string().datetime().optional(),
+  periodStart: z.string().datetime().optional(),
+  resourceUsageType: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
 });
 
 /** Zod schema for ResourcesRecordUserResourceUsageInput */
 ResourcesRecordUserResourceUsageInputSchema = z.object({
-  resourceUsageType: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
   count: z.number().int().optional(),
-  periodStart: z.string().datetime().optional(),
-  periodEnd: z.string().datetime().optional(),
   metadata: z.record(z.string(), z.string()).nullable().optional(),
+  periodEnd: z.string().datetime().optional(),
+  periodStart: z.string().datetime().optional(),
+  resourceUsageType: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
 });
 
 /** Zod schema for ResourcesResourceMetadata */
 ResourcesResourceMetadataSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  category: z.string().max(100).nullable().optional(),
+  createdAt: z.string().datetime(),
+  dataType: z.string().max(50).nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().max(500).nullable().optional(),
+  displayOrder: z.number().int().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  key: z.string().min(1).max(100),
-  value: z.string().max(4000).nullable().optional(),
-  dataType: z.string().max(50).nullable().optional(),
-  description: z.string().max(500).nullable().optional(),
-  category: z.string().max(100).nullable().optional(),
-  isSystemManaged: z.boolean().optional(),
   isActive: z.boolean().optional(),
-  displayOrder: z.number().int().optional(),
-  userId: z.string().uuid().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isSystemManaged: z.boolean().optional(),
+  key: z.string().min(1).max(100),
   resourceId: z.string().uuid().nullable().optional(),
   rowVersion: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  userId: z.string().uuid().nullable().optional(),
+  value: z.string().max(4000).nullable().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ResourcesResourceQuotaEnforcementResult */
 ResourcesResourceQuotaEnforcementResultSchema = z.object({
-  isAllowed: z.boolean().optional(),
-  isSoftLimitExceeded: z.boolean().optional(),
-  isHardLimitExceeded: z.boolean().optional(),
   currentUsage: z.number().int().optional(),
-  softLimit: z.number().int().nullable().optional(),
-  hardLimit: z.number().int().nullable().optional(),
-  usagePercentage: z.number().optional(),
   excessAmount: z.number().int().optional(),
+  hardLimit: z.number().int().nullable().optional(),
+  isAllowed: z.boolean().optional(),
+  isHardLimitExceeded: z.boolean().optional(),
+  isSoftLimitExceeded: z.boolean().optional(),
   message: z.string().nullable().optional(),
-  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
   nextReset: z.string().datetime().nullable().optional(),
   remainingQuota: z.number().int().nullable().optional(),
+  softLimit: z.number().int().nullable().optional(),
+  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
+  usagePercentage: z.number().optional(),
 });
 
 /** Zod schema for ResourcesResourceQuotaPeriod */
@@ -16630,54 +16582,54 @@ ResourcesResourceQuotaPeriodSchema = z.enum(['Daily', 'Weekly', 'Monthly', 'Quar
 
 /** Zod schema for ResourcesResourceQuotaOutput */
 ResourcesResourceQuotaOutputSchema = z.object({
-  id: z.string().uuid().optional(),
-  tenantId: z.string().uuid().optional(),
-  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
-  limit: z.number().int().optional(),
   currentUsage: z.number().int().optional(),
-  remainingQuota: z.number().int().optional(),
-  usagePercentage: z.number().optional(),
-  softLimitPercentage: z.number().optional(),
-  isActive: z.boolean().optional(),
-  period: z.lazy(() => ResourcesResourceQuotaPeriodSchema).optional(),
-  lastResetDate: z.string().datetime().optional(),
-  nextResetDate: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
-  isSoftLimitExceeded: z.boolean().optional(),
+  hardLimit: z.number().int().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
   isHardLimitExceeded: z.boolean().optional(),
+  isSoftLimitExceeded: z.boolean().optional(),
+  lastResetDate: z.string().datetime().optional(),
+  limit: z.number().int().optional(),
+  nextResetDate: z.string().datetime().optional(),
+  period: z.lazy(() => ResourcesResourceQuotaPeriodSchema).optional(),
+  remainingQuota: z.number().int().optional(),
   shouldReset: z.boolean().optional(),
   softLimit: z.number().int().nullable().optional(),
-  hardLimit: z.number().int().nullable().optional(),
+  softLimitPercentage: z.number().optional(),
+  tenantId: z.string().uuid().optional(),
+  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
+  usagePercentage: z.number().optional(),
 });
 
 /** Zod schema for ResourcesResourceSettings */
 ResourcesResourceSettingsSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  allowUserOverride: z.boolean().optional(),
+  category: z.string().max(100).nullable().optional(),
+  createdAt: z.string().datetime(),
+  dataType: z.string().max(50).nullable().optional(),
+  defaultValue: z.string().max(4000).nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().max(500).nullable().optional(),
+  displayOrder: z.number().int().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  key: z.string().min(1).max(100),
-  value: z.string().max(4000).nullable().optional(),
-  defaultValue: z.string().max(4000).nullable().optional(),
-  dataType: z.string().max(50).nullable().optional(),
-  description: z.string().max(500).nullable().optional(),
-  category: z.string().max(100).nullable().optional(),
-  isSystemManaged: z.boolean().optional(),
   isActive: z.boolean().optional(),
-  allowUserOverride: z.boolean().optional(),
-  displayOrder: z.number().int().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isSystemManaged: z.boolean().optional(),
+  key: z.string().min(1).max(100),
+  rowVersion: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
   userId: z.string().uuid().nullable().optional(),
   validationRules: z.string().max(1000).nullable().optional(),
-  rowVersion: z.string().nullable().optional(),
+  value: z.string().max(4000).nullable().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ResourcesResourceUsageType */
@@ -16715,32 +16667,32 @@ ResourcesResourceUsageTypeSchema = z.enum([
 
 /** Zod schema for ResourcesSetQuotaInput */
 ResourcesSetQuotaInputSchema = z.object({
-  softLimit: z.number().int().nullable().optional(),
   hardLimit: z.number().int().nullable().optional(),
-  period: z.lazy(() => ResourcesResourceQuotaPeriodSchema).optional(),
   isActive: z.boolean().optional(),
+  period: z.lazy(() => ResourcesResourceQuotaPeriodSchema).optional(),
   resetTime: z.string().nullable().optional(),
+  softLimit: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for ResourcesSetResourceMetadataInput */
 ResourcesSetResourceMetadataInputSchema = z.object({
-  value: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
   dataType: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  category: z.string().nullable().optional(),
   displayOrder: z.number().int().nullable().optional(),
+  value: z.string().nullable().optional(),
 });
 
 /** Zod schema for ResourcesSetResourceSettingsInput */
 ResourcesSetResourceSettingsInputSchema = z.object({
-  value: z.string().nullable().optional(),
-  defaultValue: z.string().nullable().optional(),
-  dataType: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  category: z.string().nullable().optional(),
   allowUserOverride: z.boolean().nullable().optional(),
+  category: z.string().nullable().optional(),
+  dataType: z.string().nullable().optional(),
+  defaultValue: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   displayOrder: z.number().int().nullable().optional(),
   validationRules: z.string().nullable().optional(),
+  value: z.string().nullable().optional(),
 });
 
 /** Zod schema for ResourcesSetUserResourceSettingsInput */
@@ -16758,73 +16710,73 @@ ResourcesTrendGranularitySchema = z.enum(['Daily', 'Weekly', 'Monthly']);
 
 /** Zod schema for ResourcesUsageRecord */
 ResourcesUsageRecordSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  averagePerDay: z.number().nullable().optional(),
+  count: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
-  count: z.number().int().optional(),
-  usageAmount: z.number().int().optional(),
-  periodStart: z.string().datetime().optional(),
-  periodEnd: z.string().datetime().optional(),
-  averagePerDay: z.number().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  metadata: z.string().max(1000).nullable().optional(),
   peakUsage: z.number().int().nullable().optional(),
   peakUsageDate: z.string().datetime().nullable().optional(),
-  metadata: z.string().max(1000).nullable().optional(),
-  source: z.string().max(50).nullable().optional(),
-  userId: z.string().uuid().nullable().optional(),
+  periodEnd: z.string().datetime().optional(),
+  periodStart: z.string().datetime().optional(),
   resourceId: z.string().uuid().nullable().optional(),
   resourceQuotaId: z.string().uuid().nullable().optional(),
+  source: z.string().max(50).nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
+  updatedAt: z.string().datetime(),
+  usageAmount: z.number().int().optional(),
+  userId: z.string().uuid().nullable().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for ResourcesUsageTrendDataPoint */
 ResourcesUsageTrendDataPointSchema = z.object({
   period: z.string().datetime().optional(),
-  totalUsage: z.number().int().optional(),
   tenantCount: z.number().int().optional(),
+  totalUsage: z.number().int().optional(),
 });
 
 /** Zod schema for ResourcesUsageTrendsResult */
 ResourcesUsageTrendsResultSchema = z.object({
-  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  granularity: z.lazy(() => ResourcesTrendGranularitySchema).optional(),
   dataPoints: z
     .array(z.lazy(() => ResourcesUsageTrendDataPointSchema))
     .nullable()
     .optional(),
+  endDate: z.string().datetime().optional(),
+  granularity: z.lazy(() => ResourcesTrendGranularitySchema).optional(),
+  startDate: z.string().datetime().optional(),
+  type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
 });
 
 /** Zod schema for SocialBlogBlogPost */
 SocialBlogBlogPostSchema = z.object({
-  id: z.string().uuid().optional(),
+  allowComments: z.boolean().optional(),
   authorId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  title: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-  excerpt: z.string().nullable().optional(),
+  commentsCount: z.number().int().optional(),
   content: z.string().nullable().optional(),
   coverImageUrl: z.string().nullable().optional(),
-  status: z.lazy(() => SocialBlogBlogPostStatusSchema).optional(),
-  publishedAt: z.string().datetime().nullable().optional(),
-  isFeatured: z.boolean().optional(),
-  allowComments: z.boolean().optional(),
-  viewsCount: z.number().int().optional(),
-  likesCount: z.number().int().optional(),
-  commentsCount: z.number().int().optional(),
-  readTimeMinutes: z.number().int().optional(),
   createdAt: z.string().datetime().optional(),
+  excerpt: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isFeatured: z.boolean().optional(),
+  likesCount: z.number().int().optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  readTimeMinutes: z.number().int().optional(),
+  slug: z.string().nullable().optional(),
+  status: z.lazy(() => SocialBlogBlogPostStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
+  viewsCount: z.number().int().optional(),
 });
 
 /** Zod schema for SocialBlogBlogPostStatus */
@@ -16833,21 +16785,21 @@ SocialBlogBlogPostStatusSchema = z.enum(['Draft', 'Published', 'Archived']);
 /** Zod schema for SocialBlogCreateBlogPostInput */
 SocialBlogCreateBlogPostInputSchema = z.object({
   authorId: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
   content: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for SocialFeedAddFeedItemInput */
 SocialFeedAddFeedItemInputSchema = z.object({
-  userId: z.string().uuid().optional(),
+  authorId: z.string().uuid().optional(),
+  contentCreatedAt: z.string().datetime().nullable().optional(),
   contentId: z.string().uuid().optional(),
   contentType: z.lazy(() => SocialFeedFeedContentTypeSchema).optional(),
-  authorId: z.string().uuid().optional(),
   reason: z.lazy(() => SocialFeedFeedItemReasonSchema).optional(),
-  contentCreatedAt: z.string().datetime().nullable().optional(),
   relevanceScore: z.number().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialFeedFeedContentType */
@@ -16855,17 +16807,17 @@ SocialFeedFeedContentTypeSchema = z.enum(['Post', 'BlogPost', 'CourseReview', 'P
 
 /** Zod schema for SocialFeedFeedItem */
 SocialFeedFeedItemSchema = z.object({
-  id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
+  authorId: z.string().uuid().optional(),
+  contentCreatedAt: z.string().datetime().optional(),
   contentId: z.string().uuid().optional(),
   contentType: z.lazy(() => SocialFeedFeedContentTypeSchema).optional(),
-  authorId: z.string().uuid().optional(),
-  relevanceScore: z.number().optional(),
-  reason: z.lazy(() => SocialFeedFeedItemReasonSchema).optional(),
-  isRead: z.boolean().optional(),
-  isHidden: z.boolean().optional(),
-  contentCreatedAt: z.string().datetime().optional(),
   createdAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  isHidden: z.boolean().optional(),
+  isRead: z.boolean().optional(),
+  reason: z.lazy(() => SocialFeedFeedItemReasonSchema).optional(),
+  relevanceScore: z.number().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialFeedFeedItemReason */
@@ -16883,49 +16835,49 @@ SocialGroupsChangeSocialGroupMemberRoleInputSchema = z.object({
 
 /** Zod schema for SocialGroupsCreateSocialGroupInput */
 SocialGroupsCreateSocialGroupInputSchema = z.object({
-  ownerId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
+  ownerId: z.string().uuid().optional(),
   slug: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
   type: z.lazy(() => SocialGroupsSocialGroupTypeSchema).optional(),
   visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
-  description: z.string().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for SocialGroupsJoinSocialGroupInput */
 SocialGroupsJoinSocialGroupInputSchema = z.object({
-  userId: z.string().uuid().optional(),
   requestedRole: z.lazy(() => SocialGroupsSocialGroupMemberRoleSchema).optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialGroupsSocialGroup */
 SocialGroupsSocialGroupSchema = z.object({
-  id: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  ownerId: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  type: z.lazy(() => SocialGroupsSocialGroupTypeSchema).optional(),
-  visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
-  status: z.lazy(() => SocialGroupsSocialGroupStatusSchema).optional(),
-  memberCount: z.number().int().optional(),
-  pendingMemberCount: z.number().int().optional(),
   createdAt: z.string().datetime().optional(),
+  description: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  memberCount: z.number().int().optional(),
+  name: z.string().nullable().optional(),
+  ownerId: z.string().uuid().optional(),
+  pendingMemberCount: z.number().int().optional(),
+  slug: z.string().nullable().optional(),
+  status: z.lazy(() => SocialGroupsSocialGroupStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => SocialGroupsSocialGroupTypeSchema).optional(),
   updatedAt: z.string().datetime().optional(),
+  visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
 });
 
 /** Zod schema for SocialGroupsSocialGroupMember */
 SocialGroupsSocialGroupMemberSchema = z.object({
-  id: z.string().uuid().optional(),
+  approvedByUserId: z.string().uuid().nullable().optional(),
   groupId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  joinedAt: z.string().datetime().nullable().optional(),
+  removedAt: z.string().datetime().nullable().optional(),
+  requestedAt: z.string().datetime().optional(),
   role: z.lazy(() => SocialGroupsSocialGroupMemberRoleSchema).optional(),
   status: z.lazy(() => SocialGroupsSocialGroupMembershipStatusSchema).optional(),
-  requestedAt: z.string().datetime().optional(),
-  joinedAt: z.string().datetime().nullable().optional(),
-  approvedByUserId: z.string().uuid().nullable().optional(),
-  removedAt: z.string().datetime().nullable().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialGroupsSocialGroupMemberRole */
@@ -16945,29 +16897,29 @@ SocialGroupsSocialGroupVisibilitySchema = z.enum(['Public', 'Private', 'InviteOn
 
 /** Zod schema for SocialGroupsUpdateSocialGroupInput */
 SocialGroupsUpdateSocialGroupInputSchema = z.object({
+  description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
   type: z.lazy(() => SocialGroupsSocialGroupTypeSchema).optional(),
   visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
-  description: z.string().nullable().optional(),
 });
 
 /** Zod schema for SocialProfilesAddProfilePortfolioItemBody */
 SocialProfilesAddProfilePortfolioItemBodySchema = z.object({
-  title: z.string().nullable().optional(),
-  projectId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
-  url: z.string().nullable().optional(),
+  displayOrder: z.number().int().optional(),
   imageUrl: z.string().nullable().optional(),
   isPinned: z.boolean().optional(),
-  displayOrder: z.number().int().optional(),
+  projectId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
 });
 
 /** Zod schema for SocialProfilesAddProfileSkillBody */
 SocialProfilesAddProfileSkillBodySchema = z.object({
+  displayOrder: z.number().int().optional(),
   name: z.string().nullable().optional(),
   proficiency: z.lazy(() => SocialProfilesProfileSkillProficiencySchema).optional(),
-  displayOrder: z.number().int().optional(),
 });
 
 /** Zod schema for SocialProfilesProfileAvailabilityStatus */
@@ -16975,24 +16927,24 @@ SocialProfilesProfileAvailabilityStatusSchema = z.enum(['NotSet', 'OpenToWork', 
 
 /** Zod schema for SocialProfilesProfilePortfolioItem */
 SocialProfilesProfilePortfolioItemSchema = z.object({
+  description: z.string().nullable().optional(),
+  displayOrder: z.number().int().optional(),
   id: z.string().uuid().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isPinned: z.boolean().optional(),
   profileId: z.string().uuid().optional(),
   projectId: z.string().uuid().nullable().optional(),
   title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
   url: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  isPinned: z.boolean().optional(),
-  displayOrder: z.number().int().optional(),
 });
 
 /** Zod schema for SocialProfilesProfileSkill */
 SocialProfilesProfileSkillSchema = z.object({
+  displayOrder: z.number().int().optional(),
   id: z.string().uuid().optional(),
-  profileId: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
   proficiency: z.lazy(() => SocialProfilesProfileSkillProficiencySchema).optional(),
-  displayOrder: z.number().int().optional(),
+  profileId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialProfilesProfileSkillProficiency */
@@ -17003,55 +16955,55 @@ SocialProfilesProfileVisibilitySchema = z.enum(['Private', 'Connections', 'Publi
 
 /** Zod schema for SocialProfilesSocialProfile */
 SocialProfilesSocialProfileSchema = z.object({
-  id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  handle: z.string().nullable().optional(),
-  displayName: z.string().nullable().optional(),
-  bio: z.string().nullable().optional(),
+  availabilityStatus: z.lazy(() => SocialProfilesProfileAvailabilityStatusSchema).optional(),
   avatarUrl: z.string().nullable().optional(),
   bannerUrl: z.string().nullable().optional(),
-  headline: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
-  timeZone: z.string().nullable().optional(),
-  websiteUrl: z.string().nullable().optional(),
-  socialLinksJson: z.string().nullable().optional(),
-  visibility: z.lazy(() => SocialProfilesProfileVisibilitySchema).optional(),
-  availabilityStatus: z.lazy(() => SocialProfilesProfileAvailabilityStatusSchema).optional(),
-  showActivity: z.boolean().optional(),
-  showPortfolio: z.boolean().optional(),
-  showSkills: z.boolean().optional(),
-  verifiedAt: z.string().datetime().nullable().optional(),
+  bio: z.string().nullable().optional(),
   completenessScore: z.number().int().optional(),
+  displayName: z.string().nullable().optional(),
   followerCount: z.number().int().optional(),
   followingCount: z.number().int().optional(),
-  postCount: z.number().int().optional(),
-  projectCount: z.number().int().optional(),
-  skills: z
-    .array(z.lazy(() => SocialProfilesProfileSkillSchema))
-    .nullable()
-    .optional(),
+  handle: z.string().nullable().optional(),
+  headline: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  location: z.string().nullable().optional(),
   portfolioItems: z
     .array(z.lazy(() => SocialProfilesProfilePortfolioItemSchema))
     .nullable()
     .optional(),
+  postCount: z.number().int().optional(),
+  projectCount: z.number().int().optional(),
+  showActivity: z.boolean().optional(),
+  showPortfolio: z.boolean().optional(),
+  showSkills: z.boolean().optional(),
+  skills: z
+    .array(z.lazy(() => SocialProfilesProfileSkillSchema))
+    .nullable()
+    .optional(),
+  socialLinksJson: z.string().nullable().optional(),
+  timeZone: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+  verifiedAt: z.string().datetime().nullable().optional(),
+  visibility: z.lazy(() => SocialProfilesProfileVisibilitySchema).optional(),
+  websiteUrl: z.string().nullable().optional(),
 });
 
 /** Zod schema for SocialProfilesUpdateProfilePortfolioItemBody */
 SocialProfilesUpdateProfilePortfolioItemBodySchema = z.object({
-  title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  url: z.string().nullable().optional(),
+  displayOrder: z.number().int().optional(),
   imageUrl: z.string().nullable().optional(),
   isPinned: z.boolean().optional(),
-  displayOrder: z.number().int().optional(),
+  title: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
 });
 
 /** Zod schema for SocialProfilesUpdateProfilePrivacyBody */
 SocialProfilesUpdateProfilePrivacyBodySchema = z.object({
-  visibility: z.lazy(() => SocialProfilesProfileVisibilitySchema).optional(),
   showActivity: z.boolean().optional(),
   showPortfolio: z.boolean().optional(),
   showSkills: z.boolean().optional(),
+  visibility: z.lazy(() => SocialProfilesProfileVisibilitySchema).optional(),
 });
 
 /** Zod schema for SocialProfilesUpdateProfileStatsBody */
@@ -17064,28 +17016,28 @@ SocialProfilesUpdateProfileStatsBodySchema = z.object({
 
 /** Zod schema for SocialProfilesUpdateSocialProfileBody */
 SocialProfilesUpdateSocialProfileBodySchema = z.object({
-  handle: z.string().nullable().optional(),
-  displayName: z.string().nullable().optional(),
-  bio: z.string().nullable().optional(),
+  availabilityStatus: z.lazy(() => SocialProfilesProfileAvailabilityStatusSchema).optional(),
   avatarUrl: z.string().nullable().optional(),
   bannerUrl: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  handle: z.string().nullable().optional(),
   headline: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
+  socialLinksJson: z.string().nullable().optional(),
   timeZone: z.string().nullable().optional(),
   websiteUrl: z.string().nullable().optional(),
-  socialLinksJson: z.string().nullable().optional(),
-  availabilityStatus: z.lazy(() => SocialProfilesProfileAvailabilityStatusSchema).optional(),
 });
 
 /** Zod schema for SocialReactionsReaction */
 SocialReactionsReactionSchema = z.object({
+  createdAt: z.string().datetime().optional(),
   id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
   targetId: z.string().uuid().optional(),
   targetType: z.lazy(() => SocialReactionsReactionTargetTypeSchema).optional(),
   type: z.lazy(() => SocialReactionsReactionTypeSchema).optional(),
-  createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialReactionsReactionTargetType */
@@ -17096,34 +17048,34 @@ SocialReactionsReactionTypeSchema = z.enum(['Like', 'Love', 'Insightful', 'Celeb
 
 /** Zod schema for SocialReactionsRemoveReactionInput */
 SocialReactionsRemoveReactionInputSchema = z.object({
-  userId: z.string().uuid().optional(),
   targetId: z.string().uuid().optional(),
   targetType: z.lazy(() => SocialReactionsReactionTargetTypeSchema).optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialReactionsSetReactionInput */
 SocialReactionsSetReactionInputSchema = z.object({
-  userId: z.string().uuid().optional(),
   targetId: z.string().uuid().optional(),
   targetType: z.lazy(() => SocialReactionsReactionTargetTypeSchema).optional(),
   type: z.lazy(() => SocialReactionsReactionTypeSchema).optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialReactionsTargetReactionSummary */
 SocialReactionsTargetReactionSummarySchema = z.object({
-  targetId: z.string().uuid().optional(),
-  targetType: z.lazy(() => SocialReactionsReactionTargetTypeSchema).optional(),
   counts: z
     .object({
+      Celebrate: z.number().int(),
+      Curious: z.number().int(),
+      Insightful: z.number().int(),
       Like: z.number().int(),
       Love: z.number().int(),
-      Insightful: z.number().int(),
-      Celebrate: z.number().int(),
       Support: z.number().int(),
-      Curious: z.number().int(),
     })
     .nullable()
     .optional(),
+  targetId: z.string().uuid().optional(),
+  targetType: z.lazy(() => SocialReactionsReactionTargetTypeSchema).optional(),
   total: z.number().int().optional(),
 });
 
@@ -17133,22 +17085,22 @@ SystemDayOfWeekSchema = z.enum(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thu
 /** Zod schema for TenantInfo */
 TenantInfoSchema = z.object({
   id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
   name: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
-  isActive: z.boolean().optional(),
 });
 
 /** Zod schema for TestingLabAddTestingEventCommitteeMemberInput */
 TestingLabAddTestingEventCommitteeMemberInputSchema = z.object({
-  userId: z.string().uuid().optional(),
   isChair: z.boolean().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for TestingLabAssignTestingLabRoleInput */
 TestingLabAssignTestingLabRoleInputSchema = z.object({
-  tenantId: z.string().uuid().nullable().optional(),
-  roleName: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  roleName: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for TestingLabAssignTestingProjectApplicationSlotInput */
@@ -17171,122 +17123,121 @@ TestingLabCancelTestingEventInputSchema = z.object({
 
 /** Zod schema for TestingLabCastTestingApplicationVoteInput */
 TestingLabCastTestingApplicationVoteInputSchema = z.object({
-  decision: z.lazy(() => TestingLabTestingApplicationVoteDecisionSchema).optional(),
   comments: z.string().nullable().optional(),
+  decision: z.lazy(() => TestingLabTestingApplicationVoteDecisionSchema).optional(),
 });
 
 /** Zod schema for TestingLabConfigureTestingEventLearningInput */
 TestingLabConfigureTestingEventLearningInputSchema = z.object({
-  courseId: z.string().uuid().optional(),
   cohortId: z.string().uuid().nullable().optional(),
+  courseId: z.string().uuid().optional(),
   learningActivityId: z.string().uuid().optional(),
   requirement: z.lazy(() => TestingLabTestingLearningCompletionRequirementSchema).optional(),
 });
 
 /** Zod schema for TestingLabCreateSimpleTestingInput */
 TestingLabCreateSimpleTestingInputSchema = z.object({
-  title: z.string().min(1).max(255),
   description: z.string().nullable().optional(),
-  projectId: z.string().uuid().nullable().optional(),
-  versionNumber: z.string().min(1).max(50),
   downloadUrl: z.string().max(1000).nullable().optional(),
-  instructionsType: z.lazy(() => TestingLabInstructionTypeSchema),
-  instructionsContent: z.string().nullable().optional(),
-  instructionsUrl: z.string().max(500).nullable().optional(),
-  feedbackFormContent: z.string().nullable().optional(),
-  maxTesters: z.number().int().nullable().optional(),
-  startDate: z.string().datetime().nullable().optional(),
   endDate: z.string().datetime().nullable().optional(),
+  feedbackFormContent: z.string().nullable().optional(),
+  instructionsContent: z.string().nullable().optional(),
+  instructionsType: z.lazy(() => TestingLabInstructionTypeSchema),
+  instructionsUrl: z.string().max(500).nullable().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  projectId: z.string().uuid().nullable().optional(),
+  startDate: z.string().datetime().nullable().optional(),
   teamIdentifier: z.string().max(100).nullable().optional(),
+  title: z.string().min(1).max(255),
+  versionNumber: z.string().min(1).max(50),
 });
 
 /** Zod schema for TestingLabCreateTestingEventInput */
 TestingLabCreateTestingEventInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
-  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
-  applicationsOpenAt: z.string().datetime().optional(),
   applicationsCloseAt: z.string().datetime().optional(),
-  startsAt: z.string().datetime().optional(),
+  applicationsOpenAt: z.string().datetime().optional(),
+  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
+  description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  name: z.string().nullable().optional(),
   requiresFeedback: z.boolean().optional(),
-  recurrence: z.lazy(() => TestingLabTestingEventRecurrenceInputSchema).optional(),
+  startsAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for TestingLabCreateTestingLabRoleInput */
 TestingLabCreateTestingLabRoleInputSchema = z.object({
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
 });
 
 /** Zod schema for TestingLabCreateTestingLabSettings */
 TestingLabCreateTestingLabSettingsSchema = z.object({
-  labName: z.string().min(1).max(255),
-  description: z.string().max(1000).nullable().optional(),
-  timezone: z.string().min(1).max(50),
-  defaultSessionDuration: z.number().int().min(15).max(480),
   allowPublicSignups: z.boolean().optional(),
-  requireApproval: z.boolean().optional(),
+  defaultSessionDuration: z.number().int().min(15).max(480),
+  description: z.string().max(1000).nullable().optional(),
   enableNotifications: z.boolean().optional(),
+  labName: z.string().min(1).max(255),
   maxSimultaneousSessions: z.number().int().min(1).max(100),
+  requireApproval: z.boolean().optional(),
+  timezone: z.string().min(1).max(50),
 });
 
 /** Zod schema for TestingLabCreateTestingLocation */
 TestingLabCreateTestingLocationSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
-  state: z.string().nullable().optional(),
-  postalCode: z.string().nullable().optional(),
-  country: z.string().nullable().optional(),
-  maxTestersCapacity: z.number().int().optional(),
-  maxProjectsCapacity: z.number().int().optional(),
-  equipmentAvailable: z.string().nullable().optional(),
-  isVirtual: z.boolean().optional(),
-  virtualUrl: z.string().nullable().optional(),
   contactEmail: z.string().nullable().optional(),
   contactPhone: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  equipmentAvailable: z.string().nullable().optional(),
+  isVirtual: z.boolean().optional(),
+  maxProjectsCapacity: z.number().int().optional(),
+  maxTestersCapacity: z.number().int().optional(),
+  name: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
   status: z.lazy(() => TestingLabLocationStatusSchema).optional(),
+  virtualUrl: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabCreateTestingInput */
 TestingLabCreateTestingInputSchema = z.object({
-  projectVersionId: z.string().uuid(),
-  title: z.string().min(1).max(255),
   description: z.string().nullable().optional(),
   downloadUrl: z.string().max(1000).nullable().optional(),
-  instructionsType: z.lazy(() => TestingLabInstructionTypeSchema),
-  instructionsContent: z.string().nullable().optional(),
-  instructionsUrl: z.string().max(500).nullable().optional(),
-  instructionsFileId: z.string().uuid().nullable().optional(),
-  feedbackFormContent: z.string().nullable().optional(),
-  maxTesters: z.number().int().nullable().optional(),
-  startDate: z.string().datetime(),
   endDate: z.string().datetime(),
+  feedbackFormContent: z.string().nullable().optional(),
+  instructionsContent: z.string().nullable().optional(),
+  instructionsFileId: z.string().uuid().nullable().optional(),
+  instructionsType: z.lazy(() => TestingLabInstructionTypeSchema),
+  instructionsUrl: z.string().max(500).nullable().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  projectVersionId: z.string().uuid(),
+  startDate: z.string().datetime(),
   status: z.lazy(() => TestingLabTestingRequestStatusSchema),
+  title: z.string().min(1).max(255),
 });
 
 /** Zod schema for TestingLabCreateTestingSession */
 TestingLabCreateTestingSessionSchema = z.object({
-  testingRequestId: z.string().uuid(),
-  locationId: z.string().uuid(),
-  sessionName: z.string().min(1).max(255),
-  sessionDate: z.string().datetime(),
-  startTime: z.string().datetime(),
   endTime: z.string().datetime(),
-  maxTesters: z.number().int(),
-  maxProjects: z.number().int(),
-  status: z.lazy(() => TestingLabSessionStatusSchema),
+  locationId: z.string().uuid(),
   managerUserId: z.string().uuid(),
+  maxProjects: z.number().int(),
+  maxTesters: z.number().int(),
+  sessionDate: z.string().datetime(),
+  sessionName: z.string().min(1).max(255),
+  startTime: z.string().datetime(),
+  status: z.lazy(() => TestingLabSessionStatusSchema),
+  testingRequestId: z.string().uuid(),
 });
 
 /** Zod schema for TestingLabDecideTestingProjectApplicationInput */
 TestingLabDecideTestingProjectApplicationInputSchema = z.object({
-  slotId: z.string().uuid().nullable().optional(),
   rationale: z.string().nullable().optional(),
+  slotId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for TestingLabFeedbackFormType */
@@ -17297,43 +17248,43 @@ TestingLabFeedbackQualitySchema = z.enum(['Low', 'Medium', 'High']);
 
 /** Zod schema for TestingLabFeedbackQualityRating */
 TestingLabFeedbackQualityRatingSchema = z.object({
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  feedbackId: z.string().uuid(),
   feedback: z.lazy(() => TestingLabTestingFeedbackSchema).optional(),
-  ratedByUserId: z.string().uuid(),
-  ratedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
-  qualityRating: z.number().int().min(1).max(5),
-  reason: z.string().max(500).nullable().optional(),
+  feedbackId: z.string().uuid(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
-  isPositive: z.boolean().optional(),
   isNegative: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isPositive: z.boolean().optional(),
+  qualityRating: z.number().int().min(1).max(5),
+  ratedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
+  ratedByUserId: z.string().uuid(),
+  reason: z.string().max(500).nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabFeedbackInput */
 TestingLabFeedbackInputSchema = z.object({
-  feedbackFormId: z.string().uuid().optional(),
-  feedbackData: z.string().nullable().optional(),
-  testingContext: z.lazy(() => TestingLabTestingContextSchema).optional(),
-  sessionId: z.string().uuid().nullable().optional(),
   additionalNotes: z.string().nullable().optional(),
+  feedbackData: z.string().nullable().optional(),
+  feedbackFormId: z.string().uuid().optional(),
+  sessionId: z.string().uuid().nullable().optional(),
+  testingContext: z.lazy(() => TestingLabTestingContextSchema).optional(),
 });
 
 /** Zod schema for TestingLabGrantResourcePermissionInput */
 TestingLabGrantResourcePermissionInputSchema = z.object({
-  tenantId: z.string().uuid().nullable().optional(),
   action: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for TestingLabInstructionType */
@@ -17341,9 +17292,9 @@ TestingLabInstructionTypeSchema = z.enum(['Text', 'Url', 'File']);
 
 /** Zod schema for TestingLabLinkSessionProjectInput */
 TestingLabLinkSessionProjectInputSchema = z.object({
+  notes: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().nullable().optional(),
-  notes: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabLocationStatus */
@@ -17354,39 +17305,39 @@ TestingLabParticipationStatusSchema = z.enum(['Registered', 'Active', 'Completed
 
 /** Zod schema for TestingLabPublicTestingEventProjection */
 TestingLabPublicTestingEventProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
-  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
-  status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
-  applicationsOpenAt: z.string().datetime().optional(),
-  applicationsCloseAt: z.string().datetime().optional(),
-  startsAt: z.string().datetime().optional(),
-  endsAt: z.string().datetime().optional(),
-  requiresFeedback: z.boolean().optional(),
   applicationCount: z.number().int().optional(),
+  applicationsCloseAt: z.string().datetime().optional(),
+  applicationsOpenAt: z.string().datetime().optional(),
+  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
+  description: z.string().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  name: z.string().nullable().optional(),
+  requiresFeedback: z.boolean().optional(),
   slots: z
     .array(z.lazy(() => TestingLabPublicTestingEventSlotProjectionSchema))
     .nullable()
     .optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
 });
 
 /** Zod schema for TestingLabPublicTestingEventSlotProjection */
 TestingLabPublicTestingEventSlotProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  eventId: z.string().uuid().optional(),
-  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
-  startsAt: z.string().datetime().optional(),
-  endsAt: z.string().datetime().optional(),
-  maxTesters: z.number().int().nullable().optional(),
-  maxProjects: z.number().int().nullable().optional(),
-  campusName: z.string().nullable().optional(),
-  roomName: z.string().nullable().optional(),
   approvedProjectCount: z.number().int().optional(),
-  registeredTesterCount: z.number().int().optional(),
-  availableTesterCount: z.number().int().nullable().optional(),
   availableProjectCount: z.number().int().nullable().optional(),
+  availableTesterCount: z.number().int().nullable().optional(),
+  campusName: z.string().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
+  eventId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  maxProjects: z.number().int().nullable().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  registeredTesterCount: z.number().int().optional(),
+  roomName: z.string().nullable().optional(),
+  startsAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for TestingLabRateFeedbackQuality */
@@ -17412,52 +17363,52 @@ TestingLabReportFeedbackSchema = z.object({
 
 /** Zod schema for TestingLabSessionProjectProjection */
 TestingLabSessionProjectProjectionSchema = z.object({
+  isActive: z.boolean().optional(),
   linkId: z.string().uuid().optional(),
-  sessionId: z.string().uuid().optional(),
   projectId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().nullable().optional(),
-  isActive: z.boolean().optional(),
+  sessionId: z.string().uuid().optional(),
 });
 
 /** Zod schema for TestingLabSessionRegistration */
 TestingLabSessionRegistrationSchema = z.object({
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  attendanceDuration: z.string().nullable().optional(),
+  attendanceStatus: z.lazy(() => TestingLabAttendanceStatusSchema).optional(),
+  attendedAt: z.string().datetime().nullable().optional(),
+  checkedInAt: z.string().datetime().nullable().optional(),
+  checkedOutAt: z.string().datetime().nullable().optional(),
+  confirmedAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  sessionId: z.string().uuid(),
-  session: z.lazy(() => TestingLabTestingSessionSchema).optional(),
-  userId: z.string().uuid(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  registrationType: z.lazy(() => TestingLabRegistrationTypeSchema).optional(),
-  status: z.lazy(() => TestingLabRegistrationStatusSchema).optional(),
-  registeredAt: z.string().datetime(),
-  confirmedAt: z.string().datetime().nullable().optional(),
-  checkedInAt: z.string().datetime().nullable().optional(),
-  checkedOutAt: z.string().datetime().nullable().optional(),
-  attendanceStatus: z.lazy(() => TestingLabAttendanceStatusSchema).optional(),
-  notes: z.string().nullable().optional(),
-  registrationNotes: z.string().nullable().optional(),
-  attendedAt: z.string().datetime().nullable().optional(),
-  isGlobal: z.boolean().optional(),
-  isConfirmed: z.boolean().optional(),
   isCheckedIn: z.boolean().optional(),
   isCheckedOut: z.boolean().optional(),
-  attendanceDuration: z.string().nullable().optional(),
+  isConfirmed: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  notes: z.string().nullable().optional(),
+  registeredAt: z.string().datetime(),
+  registrationNotes: z.string().nullable().optional(),
+  registrationType: z.lazy(() => TestingLabRegistrationTypeSchema).optional(),
+  session: z.lazy(() => TestingLabTestingSessionSchema).optional(),
+  sessionId: z.string().uuid(),
+  status: z.lazy(() => TestingLabRegistrationStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabSessionRegistrationInput */
 TestingLabSessionRegistrationInputSchema = z.object({
-  registrationType: z.lazy(() => TestingLabRegistrationTypeSchema).optional(),
   notes: z.string().nullable().optional(),
+  registrationType: z.lazy(() => TestingLabRegistrationTypeSchema).optional(),
 });
 
 /** Zod schema for TestingLabSessionStatus */
@@ -17465,51 +17416,51 @@ TestingLabSessionStatusSchema = z.enum(['Scheduled', 'Active', 'Completed', 'Can
 
 /** Zod schema for TestingLabSessionWaitlist */
 TestingLabSessionWaitlistSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  sessionId: z.string().uuid().optional(),
-  session: z.lazy(() => TestingLabTestingSessionSchema).optional(),
-  userId: z.string().uuid().optional(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  registrationType: z.lazy(() => TestingLabRegistrationTypeSchema),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   position: z.number().int(),
   registrationNotes: z.string().nullable().optional(),
+  registrationType: z.lazy(() => TestingLabRegistrationTypeSchema),
+  session: z.lazy(() => TestingLabTestingSessionSchema).optional(),
+  sessionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabSubmitFeedback */
 TestingLabSubmitFeedbackSchema = z.object({
-  testingRequestId: z.string().uuid(),
+  additionalNotes: z.string().nullable().optional(),
   feedbackResponses: z.string().min(1),
   overallRating: z.number().int().min(1).max(10).nullable().optional(),
-  wouldRecommend: z.boolean().nullable().optional(),
-  additionalNotes: z.string().nullable().optional(),
   sessionId: z.string().uuid().nullable().optional(),
+  testingRequestId: z.string().uuid(),
+  wouldRecommend: z.boolean().nullable().optional(),
 });
 
 /** Zod schema for TestingLabSubmitTestingEventFeedbackInput */
 TestingLabSubmitTestingEventFeedbackInputSchema = z.object({
+  additionalNotes: z.string().nullable().optional(),
   feedbackData: z.string().nullable().optional(),
   overallRating: z.number().int().nullable().optional(),
   wouldRecommend: z.boolean().nullable().optional(),
-  additionalNotes: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabSubmitTestingProjectApplicationInput */
 TestingLabSubmitTestingProjectApplicationInputSchema = z.object({
+  preferredAvailability: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().nullable().optional(),
-  preferredAvailability: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingApplicationStatus */
@@ -17517,25 +17468,25 @@ TestingLabTestingApplicationStatusSchema = z.enum(['Pending', 'UnderReview', 'Ap
 
 /** Zod schema for TestingLabTestingApplicationVote */
 TestingLabTestingApplicationVoteSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  application: z.lazy(() => TestingLabTestingProjectApplicationSchema).optional(),
+  applicationId: z.string().uuid().optional(),
+  comments: z.string().max(2000).nullable().optional(),
+  createdAt: z.string().datetime(),
+  decision: z.lazy(() => TestingLabTestingApplicationVoteDecisionSchema).optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
   id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  applicationId: z.string().uuid().optional(),
-  application: z.lazy(() => TestingLabTestingProjectApplicationSchema).optional(),
-  reviewerId: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   reviewer: z.lazy(() => IdentityUsersUserSchema).optional(),
-  decision: z.lazy(() => TestingLabTestingApplicationVoteDecisionSchema).optional(),
-  comments: z.string().max(2000).nullable().optional(),
+  reviewerId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingApplicationVoteDecision */
@@ -17543,34 +17494,34 @@ TestingLabTestingApplicationVoteDecisionSchema = z.enum(['Approve', 'Reject', 'A
 
 /** Zod schema for TestingLabTestingApplicationVoteProjection */
 TestingLabTestingApplicationVoteProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  reviewerId: z.string().uuid().optional(),
-  decision: z.lazy(() => TestingLabTestingApplicationVoteDecisionSchema).optional(),
   comments: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  decision: z.lazy(() => TestingLabTestingApplicationVoteDecisionSchema).optional(),
+  id: z.string().uuid().optional(),
+  reviewerId: z.string().uuid().optional(),
 });
 
 /** Zod schema for TestingLabTestingCommitteeMember */
 TestingLabTestingCommitteeMemberSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  eventId: z.string().uuid().optional(),
   event: z.lazy(() => TestingLabTestingEventSchema).optional(),
-  userId: z.string().uuid().optional(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  isChair: z.boolean().optional(),
+  eventId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
+  isChair: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingContext */
@@ -17578,56 +17529,49 @@ TestingLabTestingContextSchema = z.enum(['Online', 'InPerson']);
 
 /** Zod schema for TestingLabTestingEvent */
 TestingLabTestingEventSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
-  domainEvents: z
-    .array(z.lazy(() => CQRSIDomainEventSchema))
-    .nullable()
-    .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  name: z.string().min(1).max(255),
-  description: z.string().max(2000).nullable().optional(),
-  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
-  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
-  status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
-  managerUserId: z.string().uuid().optional(),
-  manager: z.lazy(() => IdentityUsersUserSchema).optional(),
-  applicationsOpenAt: z.string().datetime().optional(),
-  applicationsCloseAt: z.string().datetime().optional(),
-  startsAt: z.string().datetime().optional(),
-  endsAt: z.string().datetime().optional(),
-  recurrenceSeriesId: z.string().uuid().nullable().optional(),
-  recurrenceOccurrence: z.number().int().nullable().optional(),
-  recurrenceFrequency: z.lazy(() => TestingLabTestingEventRecurrenceFrequencySchema).optional(),
-  recurrenceInterval: z.number().int().nullable().optional(),
-  recurrenceDaysOfWeek: z.string().max(64).nullable().optional(),
-  recurrenceEndsAt: z.string().datetime().nullable().optional(),
-  recurrenceOccurrenceCount: z.number().int().nullable().optional(),
-  requiresFeedback: z.boolean().optional(),
-  learningCompletionRequirement: z.lazy(() => TestingLabTestingLearningCompletionRequirementSchema).optional(),
-  courseId: z.string().uuid().nullable().optional(),
-  cohortId: z.string().uuid().nullable().optional(),
-  learningActivityId: z.string().uuid().nullable().optional(),
-  cancellationReason: z.string().max(1000).nullable().optional(),
-  cancelledAt: z.string().datetime().nullable().optional(),
-  slots: z
-    .array(z.lazy(() => TestingLabTestingEventSlotSchema))
-    .nullable()
-    .optional(),
   applications: z
     .array(z.lazy(() => TestingLabTestingProjectApplicationSchema))
     .nullable()
     .optional(),
+  applicationsCloseAt: z.string().datetime().optional(),
+  applicationsOpenAt: z.string().datetime().optional(),
+  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
+  cancellationReason: z.string().max(1000).nullable().optional(),
+  cancelledAt: z.string().datetime().nullable().optional(),
+  cohortId: z.string().uuid().nullable().optional(),
   committeeMembers: z
     .array(z.lazy(() => TestingLabTestingCommitteeMemberSchema))
     .nullable()
     .optional(),
+  courseId: z.string().uuid().nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().max(2000).nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  endsAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  learningActivityId: z.string().uuid().nullable().optional(),
+  learningCompletionRequirement: z.lazy(() => TestingLabTestingLearningCompletionRequirementSchema).optional(),
+  manager: z.lazy(() => IdentityUsersUserSchema).optional(),
+  managerUserId: z.string().uuid().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  name: z.string().min(1).max(255),
+  requiresFeedback: z.boolean().optional(),
+  slots: z
+    .array(z.lazy(() => TestingLabTestingEventSlotSchema))
+    .nullable()
+    .optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingEventApprovalMode */
@@ -17635,38 +17579,38 @@ TestingLabTestingEventApprovalModeSchema = z.enum(['ManagerOnly', 'Committee']);
 
 /** Zod schema for TestingLabTestingEventCommitteeMemberProjection */
 TestingLabTestingEventCommitteeMemberProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
   eventId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  isChair: z.boolean().optional(),
+  userEmail: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
   userName: z.string().nullable().optional(),
-  userEmail: z.string().nullable().optional(),
-  isChair: z.boolean().optional(),
-  isActive: z.boolean().optional(),
 });
 
 /** Zod schema for TestingLabTestingEventFeedbackProjection */
 TestingLabTestingEventFeedbackProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  eventId: z.string().uuid().optional(),
-  applicationId: z.string().uuid().optional(),
-  testerUserId: z.string().uuid().optional(),
-  feedbackData: z.string().nullable().optional(),
-  overallRating: z.number().int().nullable().optional(),
-  wouldRecommend: z.boolean().nullable().optional(),
   additionalNotes: z.string().nullable().optional(),
+  applicationId: z.string().uuid().optional(),
+  eventId: z.string().uuid().optional(),
+  feedbackData: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  overallRating: z.number().int().nullable().optional(),
   submittedAt: z.string().datetime().optional(),
+  testerUserId: z.string().uuid().optional(),
+  wouldRecommend: z.boolean().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingEventFeedbackReviewProjection */
 TestingLabTestingEventFeedbackReviewProjectionSchema = z.object({
-  obligationId: z.string().uuid().optional(),
-  eventId: z.string().uuid().optional(),
-  slotId: z.string().uuid().optional(),
   applicationId: z.string().uuid().optional(),
-  testerUserId: z.string().uuid().optional(),
-  status: z.lazy(() => TestingLabTestingFeedbackObligationStatusSchema).optional(),
-  fulfilledAt: z.string().datetime().nullable().optional(),
+  eventId: z.string().uuid().optional(),
   feedback: z.lazy(() => TestingLabTestingEventFeedbackProjectionSchema).optional(),
+  fulfilledAt: z.string().datetime().nullable().optional(),
+  obligationId: z.string().uuid().optional(),
+  slotId: z.string().uuid().optional(),
+  status: z.lazy(() => TestingLabTestingFeedbackObligationStatusSchema).optional(),
+  testerUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for TestingLabTestingEventMode */
@@ -17674,98 +17618,73 @@ TestingLabTestingEventModeSchema = z.enum(['Online', 'InPerson', 'Hybrid']);
 
 /** Zod schema for TestingLabTestingEventProjection */
 TestingLabTestingEventProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
-  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
-  status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
-  managerUserId: z.string().uuid().optional(),
-  applicationsOpenAt: z.string().datetime().optional(),
-  applicationsCloseAt: z.string().datetime().optional(),
-  startsAt: z.string().datetime().optional(),
-  endsAt: z.string().datetime().optional(),
-  requiresFeedback: z.boolean().optional(),
-  learningCompletionRequirement: z.lazy(() => TestingLabTestingLearningCompletionRequirementSchema).optional(),
-  courseId: z.string().uuid().nullable().optional(),
-  cohortId: z.string().uuid().nullable().optional(),
-  learningActivityId: z.string().uuid().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  slotCount: z.number().int().optional(),
   applicationCount: z.number().int().optional(),
-  recurrenceSeriesId: z.string().uuid().nullable().optional(),
-  recurrenceOccurrence: z.number().int().nullable().optional(),
-  recurrenceFrequency: z.lazy(() => TestingLabTestingEventRecurrenceFrequencySchema).optional(),
-  recurrenceInterval: z.number().int().nullable().optional(),
-  recurrenceDaysOfWeek: z
-    .array(z.lazy(() => SystemDayOfWeekSchema))
-    .nullable()
-    .optional(),
-  recurrenceEndsAt: z.string().datetime().nullable().optional(),
-  recurrenceOccurrenceCount: z.number().int().nullable().optional(),
-});
-
-/** Zod schema for TestingLabTestingEventRecurrenceFrequency */
-TestingLabTestingEventRecurrenceFrequencySchema = z.enum(['Daily', 'Weekly', 'Monthly']);
-
-/** Zod schema for TestingLabTestingEventRecurrenceInput */
-TestingLabTestingEventRecurrenceInputSchema = z.object({
-  frequency: z.lazy(() => TestingLabTestingEventRecurrenceFrequencySchema).optional(),
-  interval: z.number().int().optional(),
-  daysOfWeek: z
-    .array(z.lazy(() => SystemDayOfWeekSchema))
-    .nullable()
-    .optional(),
-  endsAt: z.string().datetime().nullable().optional(),
-  occurrenceCount: z.number().int().nullable().optional(),
+  applicationsCloseAt: z.string().datetime().optional(),
+  applicationsOpenAt: z.string().datetime().optional(),
+  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
+  cohortId: z.string().uuid().nullable().optional(),
+  courseId: z.string().uuid().nullable().optional(),
+  description: z.string().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  learningActivityId: z.string().uuid().nullable().optional(),
+  learningCompletionRequirement: z.lazy(() => TestingLabTestingLearningCompletionRequirementSchema).optional(),
+  managerUserId: z.string().uuid().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  name: z.string().nullable().optional(),
+  requiresFeedback: z.boolean().optional(),
+  slotCount: z.number().int().optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingEventSlot */
 TestingLabTestingEventSlotSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  campusName: z.string().max(200).nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  eventId: z.string().uuid().optional(),
-  event: z.lazy(() => TestingLabTestingEventSchema).optional(),
-  locationId: z.string().uuid().nullable().optional(),
-  location: z.lazy(() => TestingLabTestingLocationSchema).optional(),
-  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
-  startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().optional(),
-  maxTesters: z.number().int().nullable().optional(),
-  maxProjects: z.number().int().nullable().optional(),
-  campusName: z.string().max(200).nullable().optional(),
-  roomName: z.string().max(200).nullable().optional(),
-  meetingUrl: z.string().max(1000).nullable().optional(),
-  isTesterCapacityUnlimited: z.boolean().optional(),
+  event: z.lazy(() => TestingLabTestingEventSchema).optional(),
+  eventId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   isProjectCapacityUnlimited: z.boolean().optional(),
+  isTesterCapacityUnlimited: z.boolean().optional(),
+  location: z.lazy(() => TestingLabTestingLocationSchema).optional(),
+  locationId: z.string().uuid().nullable().optional(),
+  maxProjects: z.number().int().nullable().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  meetingUrl: z.string().max(1000).nullable().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  roomName: z.string().max(200).nullable().optional(),
+  startsAt: z.string().datetime().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingEventSlotProjection */
 TestingLabTestingEventSlotProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  eventId: z.string().uuid().optional(),
-  locationId: z.string().uuid().nullable().optional(),
-  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
-  startsAt: z.string().datetime().optional(),
-  endsAt: z.string().datetime().optional(),
-  maxTesters: z.number().int().nullable().optional(),
-  maxProjects: z.number().int().nullable().optional(),
-  campusName: z.string().nullable().optional(),
-  roomName: z.string().nullable().optional(),
-  meetingUrl: z.string().nullable().optional(),
   approvedProjectCount: z.number().int().optional(),
+  campusName: z.string().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
+  eventId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  locationId: z.string().uuid().nullable().optional(),
+  maxProjects: z.number().int().nullable().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  meetingUrl: z.string().nullable().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
   registeredTesterCount: z.number().int().optional(),
+  roomName: z.string().nullable().optional(),
+  startsAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for TestingLabTestingEventStatus */
@@ -17773,96 +17692,96 @@ TestingLabTestingEventStatusSchema = z.enum(['Draft', 'ApplicationsOpen', 'Appli
 
 /** Zod schema for TestingLabTestingFeedback */
 TestingLabTestingFeedbackSchema = z.object({
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  additionalNotes: z.string().nullable().optional(),
+  application: z.lazy(() => TestingLabTestingProjectApplicationSchema).optional(),
+  applicationId: z.string().uuid().nullable().optional(),
+  averageQualityRating: z.number().nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  testingRequestId: z.string().uuid().nullable().optional(),
-  testingRequest: z.lazy(() => TestingLabTestingInputSchema).optional(),
-  feedbackFormId: z.string().uuid().nullable().optional(),
-  feedbackForm: z.lazy(() => TestingLabTestingFeedbackFormSchema).optional(),
-  eventId: z.string().uuid().nullable().optional(),
   event: z.lazy(() => TestingLabTestingEventSchema).optional(),
-  applicationId: z.string().uuid().nullable().optional(),
-  application: z.lazy(() => TestingLabTestingProjectApplicationSchema).optional(),
-  userId: z.string().uuid(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  sessionId: z.string().uuid().nullable().optional(),
-  session: z.lazy(() => TestingLabTestingSessionSchema).optional(),
-  testingContext: z.lazy(() => TestingLabTestingContextSchema),
+  eventId: z.string().uuid().nullable().optional(),
   feedbackData: z.string().min(1),
-  overallRating: z.number().int().min(1).max(10).nullable().optional(),
-  wouldRecommend: z.boolean().nullable().optional(),
-  additionalNotes: z.string().nullable().optional(),
+  feedbackForm: z.lazy(() => TestingLabTestingFeedbackFormSchema).optional(),
+  feedbackFormId: z.string().uuid().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNegative: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isPositive: z.boolean().optional(),
   isReported: z.boolean().optional(),
+  overallRating: z.number().int().min(1).max(10).nullable().optional(),
   qualityRating: z.lazy(() => TestingLabFeedbackQualitySchema).optional(),
-  reportReason: z.string().max(500).nullable().optional(),
-  reportedById: z.string().uuid().nullable().optional(),
-  reportedByUserId: z.string().uuid().nullable().optional(),
-  reportedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
-  reportedAt: z.string().datetime().nullable().optional(),
   qualityRatings: z
     .array(z.lazy(() => TestingLabFeedbackQualityRatingSchema))
     .nullable()
     .optional(),
-  isGlobal: z.boolean().optional(),
-  isPositive: z.boolean().optional(),
-  isNegative: z.boolean().optional(),
-  averageQualityRating: z.number().nullable().optional(),
+  reportReason: z.string().max(500).nullable().optional(),
+  reportedAt: z.string().datetime().nullable().optional(),
+  reportedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
+  reportedById: z.string().uuid().nullable().optional(),
+  reportedByUserId: z.string().uuid().nullable().optional(),
+  session: z.lazy(() => TestingLabTestingSessionSchema).optional(),
+  sessionId: z.string().uuid().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  testingContext: z.lazy(() => TestingLabTestingContextSchema),
+  testingRequest: z.lazy(() => TestingLabTestingInputSchema).optional(),
+  testingRequestId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid(),
+  version: z.number().int().optional(),
+  wouldRecommend: z.boolean().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingFeedbackForm */
 TestingLabTestingFeedbackFormSchema = z.object({
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  name: z.string().min(1).max(200),
-  description: z.string().nullable().optional(),
-  formData: z.string().min(1),
-  testingRequestId: z.string().uuid().nullable().optional(),
-  formSchema: z.string().nullable().optional(),
-  isForOnline: z.boolean().optional(),
-  isForSessions: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-  formType: z.lazy(() => TestingLabFeedbackFormTypeSchema).optional(),
-  formVersion: z.number().int().optional(),
-  tags: z.string().max(500).nullable().optional(),
   feedback: z
     .array(z.lazy(() => TestingLabTestingFeedbackSchema))
     .nullable()
     .optional(),
+  formData: z.string().min(1),
+  formSchema: z.string().nullable().optional(),
+  formType: z.lazy(() => TestingLabFeedbackFormTypeSchema).optional(),
+  formVersion: z.number().int().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isForOnline: z.boolean().optional(),
+  isForSessions: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  name: z.string().min(1).max(200),
   submissionCount: z.number().int().optional(),
   tagArray: z.array(z.string()).nullable().optional(),
+  tags: z.string().max(500).nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  testingRequestId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingFeedbackObligationProjection */
 TestingLabTestingFeedbackObligationProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  eventId: z.string().uuid().optional(),
-  slotId: z.string().uuid().optional(),
   applicationId: z.string().uuid().optional(),
-  testerUserId: z.string().uuid().optional(),
+  eventId: z.string().uuid().optional(),
   feedbackId: z.string().uuid().nullable().optional(),
-  status: z.lazy(() => TestingLabTestingFeedbackObligationStatusSchema).optional(),
   fulfilledAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  slotId: z.string().uuid().optional(),
+  status: z.lazy(() => TestingLabTestingFeedbackObligationStatusSchema).optional(),
+  testerUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for TestingLabTestingFeedbackObligationStatus */
@@ -17870,124 +17789,124 @@ TestingLabTestingFeedbackObligationStatusSchema = z.enum(['Pending', 'Fulfilled'
 
 /** Zod schema for TestingLabTestingLabAnalyticsReportProjection */
 TestingLabTestingLabAnalyticsReportProjectionSchema = z.object({
-  fromDate: z.string().datetime().optional(),
-  toDate: z.string().datetime().optional(),
-  generatedAt: z.string().datetime().optional(),
   current: z.lazy(() => TestingLabTestingLabAnalyticsSummaryProjectionSchema).optional(),
-  previous: z.lazy(() => TestingLabTestingLabAnalyticsSummaryProjectionSchema).optional(),
-  locations: z.lazy(() => TestingLabTestingLabLocationAnalyticsProjectionSchema).optional(),
-  trend: z
-    .array(z.lazy(() => TestingLabTestingLabAnalyticsTrendProjectionSchema))
-    .nullable()
-    .optional(),
   events: z
     .array(z.lazy(() => TestingLabTestingLabEventAnalyticsProjectionSchema))
+    .nullable()
+    .optional(),
+  fromDate: z.string().datetime().optional(),
+  generatedAt: z.string().datetime().optional(),
+  locations: z.lazy(() => TestingLabTestingLabLocationAnalyticsProjectionSchema).optional(),
+  previous: z.lazy(() => TestingLabTestingLabAnalyticsSummaryProjectionSchema).optional(),
+  toDate: z.string().datetime().optional(),
+  trend: z
+    .array(z.lazy(() => TestingLabTestingLabAnalyticsTrendProjectionSchema))
     .nullable()
     .optional(),
 });
 
 /** Zod schema for TestingLabTestingLabAnalyticsSummaryProjection */
 TestingLabTestingLabAnalyticsSummaryProjectionSchema = z.object({
-  events: z.number().int().optional(),
-  completedEvents: z.number().int().optional(),
   applications: z.number().int().optional(),
   approvedProjects: z.number().int().optional(),
-  registeredTesters: z.number().int().optional(),
   attendedTesters: z.number().int().optional(),
-  feedback: z.number().int().optional(),
   averageRating: z.number().nullable().optional(),
-  recommendationRate: z.number().nullable().optional(),
   capacity: z.number().int().optional(),
+  completedEvents: z.number().int().optional(),
+  events: z.number().int().optional(),
+  feedback: z.number().int().optional(),
   fillRate: z.number().optional(),
+  recommendationRate: z.number().nullable().optional(),
+  registeredTesters: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingLabAnalyticsTrendProjection */
 TestingLabTestingLabAnalyticsTrendProjectionSchema = z.object({
+  applications: z.number().int().optional(),
+  attendance: z.number().int().optional(),
   date: z.string().datetime().optional(),
   events: z.number().int().optional(),
-  applications: z.number().int().optional(),
-  registrations: z.number().int().optional(),
-  attendance: z.number().int().optional(),
   feedback: z.number().int().optional(),
+  registrations: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingLabEventAnalyticsProjection */
 TestingLabTestingLabEventAnalyticsProjectionSchema = z.object({
-  eventId: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
-  status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
-  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
-  startsAt: z.string().datetime().optional(),
   applications: z.number().int().optional(),
   approvedProjects: z.number().int().optional(),
-  registeredTesters: z.number().int().optional(),
   attendedTesters: z.number().int().optional(),
-  feedback: z.number().int().optional(),
   averageRating: z.number().nullable().optional(),
   capacity: z.number().int().optional(),
+  eventId: z.string().uuid().optional(),
+  feedback: z.number().int().optional(),
   fillRate: z.number().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  name: z.string().nullable().optional(),
+  registeredTesters: z.number().int().optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
 });
 
 /** Zod schema for TestingLabTestingLabLocationAnalyticsProjection */
 TestingLabTestingLabLocationAnalyticsProjectionSchema = z.object({
-  total: z.number().int().optional(),
   active: z.number().int().optional(),
+  total: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingLabPermissions */
 TestingLabTestingLabPermissionsSchema = z.object({
-  canCreateSessions: z.boolean().optional(),
-  canEditSessions: z.boolean().optional(),
-  canDeleteSessions: z.boolean().optional(),
-  canViewSessions: z.boolean().optional(),
-  canCreateLocations: z.boolean().optional(),
-  canEditLocations: z.boolean().optional(),
-  canDeleteLocations: z.boolean().optional(),
-  canViewLocations: z.boolean().optional(),
-  canCreateFeedback: z.boolean().optional(),
-  canEditFeedback: z.boolean().optional(),
-  canDeleteFeedback: z.boolean().optional(),
-  canViewFeedback: z.boolean().optional(),
-  canModerateFeedback: z.boolean().optional(),
-  canCreateRequests: z.boolean().optional(),
-  canEditRequests: z.boolean().optional(),
-  canDeleteRequests: z.boolean().optional(),
-  canViewRequests: z.boolean().optional(),
   canApproveRequests: z.boolean().optional(),
+  canCreateFeedback: z.boolean().optional(),
+  canCreateLocations: z.boolean().optional(),
+  canCreateRequests: z.boolean().optional(),
+  canCreateSessions: z.boolean().optional(),
+  canDeleteFeedback: z.boolean().optional(),
+  canDeleteLocations: z.boolean().optional(),
+  canDeleteRequests: z.boolean().optional(),
+  canDeleteSessions: z.boolean().optional(),
+  canEditFeedback: z.boolean().optional(),
+  canEditLocations: z.boolean().optional(),
+  canEditRequests: z.boolean().optional(),
+  canEditSessions: z.boolean().optional(),
   canManageParticipants: z.boolean().optional(),
+  canModerateFeedback: z.boolean().optional(),
+  canViewFeedback: z.boolean().optional(),
+  canViewLocations: z.boolean().optional(),
   canViewParticipants: z.boolean().optional(),
+  canViewRequests: z.boolean().optional(),
+  canViewSessions: z.boolean().optional(),
 });
 
 /** Zod schema for TestingLabTestingLabResourcePermission */
 TestingLabTestingLabResourcePermissionSchema = z.object({
   action: z.string().nullable().optional(),
-  resourceType: z.string().nullable().optional(),
-  resourceId: z.string().uuid().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  resourceId: z.string().uuid().optional(),
+  resourceType: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingLabRoleTemplate */
 TestingLabTestingLabRoleTemplateSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
   isSystemRole: z.boolean().optional(),
+  name: z.string().nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
 });
 
 /** Zod schema for TestingLabTestingLabSettings */
 TestingLabTestingLabSettingsSchema = z.object({
+  allowPublicSignups: z.boolean().optional(),
+  createdAt: z.string().datetime().optional(),
+  defaultSessionDuration: z.number().int().optional(),
+  description: z.string().nullable().optional(),
+  enableNotifications: z.boolean().optional(),
   id: z.string().uuid().optional(),
   labName: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  timezone: z.string().nullable().optional(),
-  defaultSessionDuration: z.number().int().optional(),
-  allowPublicSignups: z.boolean().optional(),
-  requireApproval: z.boolean().optional(),
-  enableNotifications: z.boolean().optional(),
   maxSimultaneousSessions: z.number().int().optional(),
+  requireApproval: z.boolean().optional(),
   tenantId: z.string().uuid().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
+  timezone: z.string().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
@@ -17996,43 +17915,43 @@ TestingLabTestingLearningCompletionRequirementSchema = z.string();
 
 /** Zod schema for TestingLabTestingLocation */
 TestingLabTestingLocationSchema = z.object({
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  activeSessionCount: z.number().int().optional(),
+  address: z.string().max(500).nullable().optional(),
+  capacity: z.number().int().nullable().optional(),
+  city: z.string().max(100).nullable().optional(),
+  contactEmail: z.string().max(255).nullable().optional(),
+  contactPhone: z.string().max(50).nullable().optional(),
+  country: z.string().max(100).nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  name: z.string().min(1).max(200),
-  description: z.string().nullable().optional(),
-  address: z.string().max(500).nullable().optional(),
-  city: z.string().max(100).nullable().optional(),
-  state: z.string().max(100).nullable().optional(),
-  postalCode: z.string().max(20).nullable().optional(),
-  country: z.string().max(100).nullable().optional(),
-  capacity: z.number().int().nullable().optional(),
-  maxTestersCapacity: z.number().int().optional(),
-  maxProjectsCapacity: z.number().int().optional(),
   equipment: z.string().nullable().optional(),
   equipmentAvailable: z.string().nullable().optional(),
+  fullAddress: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isAvailable: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   isVirtual: z.boolean().optional(),
-  virtualUrl: z.string().max(500).nullable().optional(),
-  status: z.lazy(() => TestingLabLocationStatusSchema).optional(),
-  contactEmail: z.string().max(255).nullable().optional(),
-  contactPhone: z.string().max(50).nullable().optional(),
+  maxProjectsCapacity: z.number().int().optional(),
+  maxTestersCapacity: z.number().int().optional(),
+  name: z.string().min(1).max(200),
+  postalCode: z.string().max(20).nullable().optional(),
   sessions: z
     .array(z.lazy(() => TestingLabTestingSessionSchema))
     .nullable()
     .optional(),
-  isGlobal: z.boolean().optional(),
-  isAvailable: z.boolean().optional(),
-  fullAddress: z.string().nullable().optional(),
-  activeSessionCount: z.number().int().optional(),
+  state: z.string().max(100).nullable().optional(),
+  status: z.lazy(() => TestingLabLocationStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+  virtualUrl: z.string().max(500).nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingMode */
@@ -18040,79 +17959,79 @@ TestingLabTestingModeSchema = z.enum(['Online', 'InPerson', 'Hybrid']);
 
 /** Zod schema for TestingLabTestingParticipant */
 TestingLabTestingParticipantSchema = z.object({
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  canProvideFeedback: z.boolean().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  testingRequestId: z.string().uuid(),
-  testingRequest: z.lazy(() => TestingLabTestingInputSchema).optional(),
-  userId: z.string().uuid(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  instructionsAcknowledged: z.boolean(),
-  instructionsAcknowledgedAt: z.string().datetime().nullable().optional(),
-  startedAt: z.string().datetime(),
-  completedAt: z.string().datetime().nullable().optional(),
-  timeSpentMinutes: z.number().int().nullable().optional(),
-  feedbackCount: z.number().int().optional(),
-  status: z.lazy(() => TestingLabParticipationStatusSchema).optional(),
-  notes: z.string().nullable().optional(),
   feedback: z
     .array(z.lazy(() => TestingLabTestingFeedbackSchema))
     .nullable()
     .optional(),
-  isGlobal: z.boolean().optional(),
+  feedbackCount: z.number().int().optional(),
+  id: z.string().uuid().optional(),
+  instructionsAcknowledged: z.boolean(),
+  instructionsAcknowledgedAt: z.string().datetime().nullable().optional(),
   isActive: z.boolean().optional(),
   isCompleted: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  notes: z.string().nullable().optional(),
   participationDuration: z.string().nullable().optional(),
-  canProvideFeedback: z.boolean().optional(),
+  startedAt: z.string().datetime(),
+  status: z.lazy(() => TestingLabParticipationStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  testingRequest: z.lazy(() => TestingLabTestingInputSchema).optional(),
+  testingRequestId: z.string().uuid(),
+  timeSpentMinutes: z.number().int().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingParticipantDirectoryItemProjection */
 TestingLabTestingParticipantDirectoryItemProjectionSchema = z.object({
-  registrationId: z.string().uuid().optional(),
-  eventId: z.string().uuid().optional(),
-  eventName: z.string().nullable().optional(),
-  slotId: z.string().uuid().optional(),
-  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
-  startsAt: z.string().datetime().optional(),
-  endsAt: z.string().datetime().optional(),
-  campusName: z.string().nullable().optional(),
-  roomName: z.string().nullable().optional(),
-  userId: z.string().uuid().optional(),
-  userName: z.string().nullable().optional(),
-  userEmail: z.string().nullable().optional(),
   avatarUrl: z.string().nullable().optional(),
-  status: z.lazy(() => TestingLabTestingSlotRegistrationStatusSchema).optional(),
-  waitlistPosition: z.number().int().nullable().optional(),
-  notes: z.string().nullable().optional(),
-  registeredAt: z.string().datetime().optional(),
+  campusName: z.string().nullable().optional(),
   checkedInAt: z.string().datetime().nullable().optional(),
   checkedOutAt: z.string().datetime().nullable().optional(),
   completedAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
+  eventId: z.string().uuid().optional(),
+  eventName: z.string().nullable().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  notes: z.string().nullable().optional(),
   pendingFeedbackCount: z.number().int().optional(),
+  registeredAt: z.string().datetime().optional(),
+  registrationId: z.string().uuid().optional(),
+  roomName: z.string().nullable().optional(),
+  slotId: z.string().uuid().optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => TestingLabTestingSlotRegistrationStatusSchema).optional(),
+  userEmail: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+  userName: z.string().nullable().optional(),
+  waitlistPosition: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingParticipantDirectoryProjection */
 TestingLabTestingParticipantDirectoryProjectionSchema = z.object({
+  attendedCount: z.number().int().optional(),
+  checkedInCount: z.number().int().optional(),
+  completedCount: z.number().int().optional(),
   items: z
     .array(z.lazy(() => TestingLabTestingParticipantDirectoryItemProjectionSchema))
     .nullable()
     .optional(),
-  totalCount: z.number().int().optional(),
-  registeredCount: z.number().int().optional(),
-  waitlistedCount: z.number().int().optional(),
-  checkedInCount: z.number().int().optional(),
-  attendedCount: z.number().int().optional(),
-  completedCount: z.number().int().optional(),
   noShowCount: z.number().int().optional(),
+  registeredCount: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  waitlistedCount: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingPriority */
@@ -18120,35 +18039,35 @@ TestingLabTestingPrioritySchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
 /** Zod schema for TestingLabTestingProjectApplication */
 TestingLabTestingProjectApplicationSchema = z.object({
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  assignedSlot: z.lazy(() => TestingLabTestingEventSlotSchema).optional(),
+  assignedSlotId: z.string().uuid().nullable().optional(),
+  createdAt: z.string().datetime(),
+  decidedAt: z.string().datetime().nullable().optional(),
+  decidedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
+  decidedByUserId: z.string().uuid().nullable().optional(),
+  decisionRationale: z.string().max(2000).nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  eventId: z.string().uuid().optional(),
   event: z.lazy(() => TestingLabTestingEventSchema).optional(),
-  projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
-  projectVersionId: z.string().uuid().nullable().optional(),
-  projectVersion: z.lazy(() => ProjectsProjectVersionSchema).optional(),
-  submittedByUserId: z.string().uuid().optional(),
-  submittedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
+  eventId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   preferredAvailability: z.string().max(1000).nullable().optional(),
+  project: z.lazy(() => ProjectsProjectSchema).optional(),
+  projectId: z.string().uuid().optional(),
+  projectVersion: z.lazy(() => ProjectsProjectVersionSchema).optional(),
+  projectVersionId: z.string().uuid().nullable().optional(),
   status: z.lazy(() => TestingLabTestingApplicationStatusSchema).optional(),
-  assignedSlotId: z.string().uuid().nullable().optional(),
-  assignedSlot: z.lazy(() => TestingLabTestingEventSlotSchema).optional(),
-  decidedByUserId: z.string().uuid().nullable().optional(),
-  decidedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
-  decisionRationale: z.string().max(2000).nullable().optional(),
-  decidedAt: z.string().datetime().nullable().optional(),
+  submittedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
+  submittedByUserId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
   votes: z
     .array(z.lazy(() => TestingLabTestingApplicationVoteSchema))
     .nullable()
@@ -18157,17 +18076,17 @@ TestingLabTestingProjectApplicationSchema = z.object({
 
 /** Zod schema for TestingLabTestingProjectApplicationProjection */
 TestingLabTestingProjectApplicationProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  eventId: z.string().uuid().optional(),
-  projectId: z.string().uuid().optional(),
-  projectVersionId: z.string().uuid().nullable().optional(),
-  submittedByUserId: z.string().uuid().optional(),
-  preferredAvailability: z.string().nullable().optional(),
-  status: z.lazy(() => TestingLabTestingApplicationStatusSchema).optional(),
   assignedSlotId: z.string().uuid().nullable().optional(),
+  decidedAt: z.string().datetime().nullable().optional(),
   decidedByUserId: z.string().uuid().nullable().optional(),
   decisionRationale: z.string().nullable().optional(),
-  decidedAt: z.string().datetime().nullable().optional(),
+  eventId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  preferredAvailability: z.string().nullable().optional(),
+  projectId: z.string().uuid().optional(),
+  projectVersionId: z.string().uuid().nullable().optional(),
+  status: z.lazy(() => TestingLabTestingApplicationStatusSchema).optional(),
+  submittedByUserId: z.string().uuid().optional(),
   votes: z
     .array(z.lazy(() => TestingLabTestingApplicationVoteProjectionSchema))
     .nullable()
@@ -18176,94 +18095,60 @@ TestingLabTestingProjectApplicationProjectionSchema = z.object({
 
 /** Zod schema for TestingLabTestingInput */
 TestingLabTestingInputSchema = z.object({
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  acceptsNewTesters: z.boolean().optional(),
+  availableSpots: z.number().int().nullable().optional(),
+  createdAt: z.string().datetime(),
+  createdBy: z.lazy(() => IdentityUsersUserSchema).optional(),
+  createdById: z.string().uuid(),
+  currentTesterCount: z.number().int().optional(),
+  daysRemaining: z.number().int().nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  projectVersionId: z.string().uuid().nullable().optional(),
-  projectVersion: z.lazy(() => ProjectsProjectVersionSchema).optional(),
-  title: z.string().min(1).max(255),
-  description: z.string().nullable().optional(),
   downloadUrl: z.string().max(1000).nullable().optional(),
-  instructionsType: z.lazy(() => TestingLabInstructionTypeSchema),
-  instructionsContent: z.string().nullable().optional(),
-  instructionsUrl: z.string().max(500).nullable().optional(),
-  instructionsFileId: z.string().uuid().nullable().optional(),
-  feedbackFormContent: z.string().nullable().optional(),
-  maxTesters: z.number().int().nullable().optional(),
-  currentTesterCount: z.number().int().optional(),
-  startDate: z.string().datetime(),
+  duration: z.string().optional(),
   endDate: z.string().datetime(),
-  status: z.lazy(() => TestingLabTestingRequestStatusSchema),
-  createdById: z.string().uuid(),
-  createdBy: z.lazy(() => IdentityUsersUserSchema).optional(),
-  priority: z.lazy(() => TestingLabTestingPrioritySchema).optional(),
   estimatedDurationHours: z.number().int().nullable().optional(),
-  mode: z.lazy(() => TestingLabTestingModeSchema).optional(),
-  sessions: z
-    .array(z.lazy(() => TestingLabTestingSessionSchema))
-    .nullable()
-    .optional(),
-  participants: z
-    .array(z.lazy(() => TestingLabTestingParticipantSchema))
-    .nullable()
-    .optional(),
   feedback: z
     .array(z.lazy(() => TestingLabTestingFeedbackSchema))
     .nullable()
     .optional(),
+  feedbackFormContent: z.string().nullable().optional(),
   feedbackForms: z
     .array(z.lazy(() => TestingLabTestingFeedbackFormSchema))
     .nullable()
     .optional(),
-  isGlobal: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-  acceptsNewTesters: z.boolean().optional(),
-  availableSpots: z.number().int().nullable().optional(),
-  duration: z.string().optional(),
-  daysRemaining: z.number().int().nullable().optional(),
-});
-
-/** Zod schema for TestingLabTestingRequestDetailProjection */
-TestingLabTestingRequestDetailProjectionSchema = z.object({
   id: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  downloadUrl: z.string().nullable().optional(),
   instructionsContent: z.string().nullable().optional(),
-  feedbackFormContent: z.string().nullable().optional(),
-  maxTesters: z.number().int().nullable().optional(),
-  currentTesterCount: z.number().int().optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  status: z.lazy(() => TestingLabTestingRequestStatusSchema).optional(),
-  projectVersionId: z.string().uuid().nullable().optional(),
-  projectVersion: z.lazy(() => TestingLabTestingRequestProjectVersionProjectionSchema).optional(),
+  instructionsFileId: z.string().uuid().nullable().optional(),
+  instructionsType: z.lazy(() => TestingLabInstructionTypeSchema),
+  instructionsUrl: z.string().max(500).nullable().optional(),
+  isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
-});
-
-/** Zod schema for TestingLabTestingRequestProjectProjection */
-TestingLabTestingRequestProjectProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  title: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-});
-
-/** Zod schema for TestingLabTestingRequestProjectVersionProjection */
-TestingLabTestingRequestProjectVersionProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  projectId: z.string().uuid().optional(),
-  versionNumber: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
-  project: z.lazy(() => TestingLabTestingRequestProjectProjectionSchema).optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  mode: z.lazy(() => TestingLabTestingModeSchema).optional(),
+  participants: z
+    .array(z.lazy(() => TestingLabTestingParticipantSchema))
+    .nullable()
+    .optional(),
+  priority: z.lazy(() => TestingLabTestingPrioritySchema).optional(),
+  projectVersion: z.lazy(() => ProjectsProjectVersionSchema).optional(),
+  projectVersionId: z.string().uuid().nullable().optional(),
+  sessions: z
+    .array(z.lazy(() => TestingLabTestingSessionSchema))
+    .nullable()
+    .optional(),
+  startDate: z.string().datetime(),
+  status: z.lazy(() => TestingLabTestingRequestStatusSchema),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().min(1).max(255),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingRequestStatus */
@@ -18271,70 +18156,70 @@ TestingLabTestingRequestStatusSchema = z.enum(['Draft', 'Open', 'Active', 'InPro
 
 /** Zod schema for TestingLabTestingSession */
 TestingLabTestingSessionSchema = z.object({
-  isNew: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  allowsRegistration: z.boolean().optional(),
+  availableSpots: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  createdBy: z.lazy(() => IdentityUsersUserSchema).optional(),
+  createdById: z.string().uuid(),
+  deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
-  version: z.number().int().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  eventSlotId: z.string().uuid().nullable().optional(),
-  eventSlot: z.lazy(() => TestingLabTestingEventSlotSchema).optional(),
-  testingRequestId: z.string().uuid(),
-  testingRequest: z.lazy(() => TestingLabTestingInputSchema).optional(),
-  locationId: z.string().uuid(),
-  location: z.lazy(() => TestingLabTestingLocationSchema).optional(),
-  sessionName: z.string().min(1).max(255),
-  sessionDate: z.string().datetime(),
-  startTime: z.string().datetime(),
+  duration: z.string().optional(),
   endTime: z.string().datetime(),
-  maxTesters: z.number().int(),
-  maxProjects: z.number().int(),
-  registeredTesterCount: z.number().int().optional(),
-  registeredProjectMemberCount: z.number().int().optional(),
-  registeredProjectCount: z.number().int().optional(),
-  status: z.lazy(() => TestingLabSessionStatusSchema),
-  managerId: z.string().uuid(),
-  manager: z.lazy(() => IdentityUsersUserSchema).optional(),
-  managerUserId: z.string().uuid().optional(),
-  createdById: z.string().uuid(),
-  createdBy: z.lazy(() => IdentityUsersUserSchema).optional(),
-  registrations: z
-    .array(z.lazy(() => TestingLabSessionRegistrationSchema))
-    .nullable()
-    .optional(),
+  eventSlot: z.lazy(() => TestingLabTestingEventSlotSchema).optional(),
+  eventSlotId: z.string().uuid().nullable().optional(),
   feedback: z
     .array(z.lazy(() => TestingLabTestingFeedbackSchema))
     .nullable()
     .optional(),
-  isGlobal: z.boolean().optional(),
+  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isCompleted: z.boolean().optional(),
-  allowsRegistration: z.boolean().optional(),
-  availableSpots: z.number().int().optional(),
-  duration: z.string().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  location: z.lazy(() => TestingLabTestingLocationSchema).optional(),
+  locationId: z.string().uuid(),
+  manager: z.lazy(() => IdentityUsersUserSchema).optional(),
+  managerId: z.string().uuid(),
+  managerUserId: z.string().uuid().optional(),
+  maxProjects: z.number().int(),
+  maxTesters: z.number().int(),
+  registeredProjectCount: z.number().int().optional(),
+  registeredProjectMemberCount: z.number().int().optional(),
+  registeredTesterCount: z.number().int().optional(),
+  registrations: z
+    .array(z.lazy(() => TestingLabSessionRegistrationSchema))
+    .nullable()
+    .optional(),
+  sessionDate: z.string().datetime(),
+  sessionName: z.string().min(1).max(255),
+  startTime: z.string().datetime(),
+  status: z.lazy(() => TestingLabSessionStatusSchema),
+  tenantId: z.string().uuid().nullable().optional(),
+  testingRequest: z.lazy(() => TestingLabTestingInputSchema).optional(),
+  testingRequestId: z.string().uuid(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingSlotRegistrationProjection */
 TestingLabTestingSlotRegistrationProjectionSchema = z.object({
-  id: z.string().uuid().optional(),
-  eventId: z.string().uuid().optional(),
-  slotId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  status: z.lazy(() => TestingLabTestingSlotRegistrationStatusSchema).optional(),
-  waitlistPosition: z.number().int().nullable().optional(),
-  notes: z.string().nullable().optional(),
-  registeredAt: z.string().datetime().optional(),
-  promotedAt: z.string().datetime().nullable().optional(),
   checkedInAt: z.string().datetime().nullable().optional(),
   checkedOutAt: z.string().datetime().nullable().optional(),
   completedAt: z.string().datetime().nullable().optional(),
+  eventId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  notes: z.string().nullable().optional(),
   pendingFeedbackCount: z.number().int().optional(),
+  promotedAt: z.string().datetime().nullable().optional(),
+  registeredAt: z.string().datetime().optional(),
+  slotId: z.string().uuid().optional(),
+  status: z.lazy(() => TestingLabTestingSlotRegistrationStatusSchema).optional(),
+  userId: z.string().uuid().optional(),
+  waitlistPosition: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingSlotRegistrationStatus */
@@ -18342,82 +18227,82 @@ TestingLabTestingSlotRegistrationStatusSchema = z.enum(['Registered', 'Waitliste
 
 /** Zod schema for TestingLabUpdateAttendance */
 TestingLabUpdateAttendanceSchema = z.object({
-  userId: z.string().uuid().optional(),
   attendanceStatus: z.lazy(() => TestingLabAttendanceStatusSchema).optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for TestingLabUpdateTestingEventInput */
 TestingLabUpdateTestingEventInputSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
-  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
-  applicationsOpenAt: z.string().datetime().optional(),
   applicationsCloseAt: z.string().datetime().optional(),
-  startsAt: z.string().datetime().optional(),
+  applicationsOpenAt: z.string().datetime().optional(),
+  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
+  description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  name: z.string().nullable().optional(),
   requiresFeedback: z.boolean().optional(),
+  startsAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for TestingLabUpdateTestingLabRoleInput */
 TestingLabUpdateTestingLabRoleInputSchema = z.object({
-  name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
 });
 
 /** Zod schema for TestingLabUpdateTestingLabSettings */
 TestingLabUpdateTestingLabSettingsSchema = z.object({
-  labName: z.string().max(255).nullable().optional(),
-  description: z.string().max(1000).nullable().optional(),
-  timezone: z.string().max(50).nullable().optional(),
-  defaultSessionDuration: z.number().int().min(15).max(480).nullable().optional(),
   allowPublicSignups: z.boolean().nullable().optional(),
-  requireApproval: z.boolean().nullable().optional(),
+  defaultSessionDuration: z.number().int().min(15).max(480).nullable().optional(),
+  description: z.string().max(1000).nullable().optional(),
   enableNotifications: z.boolean().nullable().optional(),
+  labName: z.string().max(255).nullable().optional(),
   maxSimultaneousSessions: z.number().int().min(1).max(100).nullable().optional(),
+  requireApproval: z.boolean().nullable().optional(),
+  timezone: z.string().max(50).nullable().optional(),
 });
 
 /** Zod schema for TestingLabUpdateTestingLocation */
 TestingLabUpdateTestingLocationSchema = z.object({
-  name: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
-  state: z.string().nullable().optional(),
-  postalCode: z.string().nullable().optional(),
-  country: z.string().nullable().optional(),
-  maxTestersCapacity: z.number().int().nullable().optional(),
-  maxProjectsCapacity: z.number().int().nullable().optional(),
-  equipmentAvailable: z.string().nullable().optional(),
-  isVirtual: z.boolean().nullable().optional(),
-  virtualUrl: z.string().nullable().optional(),
   contactEmail: z.string().nullable().optional(),
   contactPhone: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  equipmentAvailable: z.string().nullable().optional(),
+  isVirtual: z.boolean().nullable().optional(),
+  maxProjectsCapacity: z.number().int().nullable().optional(),
+  maxTestersCapacity: z.number().int().nullable().optional(),
+  name: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
   status: z.lazy(() => TestingLabLocationStatusSchema).optional(),
+  virtualUrl: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabUpsertTestingEventSlotInput */
 TestingLabUpsertTestingEventSlotInputSchema = z.object({
-  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
-  startsAt: z.string().datetime().optional(),
-  endsAt: z.string().datetime().optional(),
-  maxTesters: z.number().int().nullable().optional(),
-  maxProjects: z.number().int().nullable().optional(),
   campusName: z.string().nullable().optional(),
-  roomName: z.string().nullable().optional(),
-  meetingUrl: z.string().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
   locationId: z.string().uuid().nullable().optional(),
+  maxProjects: z.number().int().nullable().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  meetingUrl: z.string().nullable().optional(),
+  mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  roomName: z.string().nullable().optional(),
+  startsAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for TestingLabUserTestingLabPermissions */
 TestingLabUserTestingLabPermissionsSchema = z.object({
-  userId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
   assignedRoles: z.array(z.string()).nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
   resourcePermissions: z
     .array(z.lazy(() => TestingLabTestingLabResourcePermissionSchema))
     .nullable()
     .optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  userId: z.string().uuid().optional(),
 });
