@@ -23,11 +23,7 @@ export default async function ContentPage({
   }
 
   const treeModel = buildContentTreeModel(courseId, content.items, course);
-  const totalLessons = content.items.filter(
-    (item) =>
-      item.type !== "Module" &&
-      (treeModel.hasModules ? Boolean(item.parentId) : true),
-  ).length;
+  const totalLessons = content.items.filter((item) => item.type !== "Module").length;
   const publishedCount = content.items.filter(
     (item) => item.type !== "Module" && item.status === "published",
   ).length;
