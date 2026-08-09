@@ -227,6 +227,30 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<Assessment>(Error.NotFound("Assessment", "Assessment not found"));
             }
 
+            if (request.DefinitionSchemaVersion == 2)
+            {
+                try
+                {
+                    var def = JsonSerializer.Deserialize<CodingAssignmentDefinition>(
+                        request.Definition.GetRawText(),
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    if (def?.Kind == "coding")
+                    {
+                        var validator = new CodingAssignmentDefinitionValidator();
+                        var validation = await validator.ValidateAsync(def).ConfigureAwait(false);
+                        if (!validation.IsValid)
+                        {
+                            var messages = string.Join("; ", validation.Errors.Select(e => e.ErrorMessage));
+                            return Result.Failure<Assessment>(Error.Validation("CodingDefinition.Invalid", messages));
+                        }
+                    }
+                }
+                catch
+                {
+                    // Not a valid v2 coding payload — fall through to generic storage
+                }
+            }
+
             assessment.SetDefinition(request.Definition, request.DefinitionSchemaVersion);
             _context.Set<Assessment>().Update(assessment);
             await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -269,6 +293,23 @@ public class AssessmentService : IAssessmentService
             return null;
         }
     }
+
+    public async Task<CodingAssignmentDefinition?> GetPublicCodingDefinitionAsync(Guid assessmentId, CancellationToken ct = default)
+    {
+        var def = await GetCodingDefinitionAsync(assessmentId, ct).ConfigureAwait(false);
+        if (def?.TestPlan?.Cases == null) return def;
+
+        return def with
+        {
+            TestPlan = def.TestPlan with
+            {
+                Cases = def.TestPlan.Cases.Where(c => !c.Hidden).ToList()
+            }
+        };
+    }
+
+    public Task<CodingAssignmentDefinition?> GetFullCodingDefinitionAsync(Guid assessmentId, CancellationToken ct = default)
+        => GetCodingDefinitionAsync(assessmentId, ct);
 
     public async Task<Result> UpdateCodingDefinitionAsync(
         Guid assessmentId,
