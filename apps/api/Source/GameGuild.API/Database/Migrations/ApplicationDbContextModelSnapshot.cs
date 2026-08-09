@@ -4545,8 +4545,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("RootSourceStampId")
-                        .IsUnique()
-                        .HasDatabaseName("ux_economy_credit_lots_root_source");
+                        .HasDatabaseName("ix_economy_credit_lots_root_source");
 
                     b.HasIndex("WalletId");
 
