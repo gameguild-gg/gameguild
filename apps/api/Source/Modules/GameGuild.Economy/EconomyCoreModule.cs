@@ -21,6 +21,7 @@ public sealed class EconomyCoreModule : ModuleBase
         services.AddScoped<IHardCoinFundingGateway, PostgreSqlHardCoinFundingGateway>();
         services.AddScoped<IHardToSoftConversionGateway, PostgreSqlHardToSoftConversionGateway>();
         services.AddScoped<IFifoFragmentReservationGateway, PostgreSqlFifoFragmentReservationGateway>();
+        services.AddScoped<IProviderReversalGateway, PostgreSqlProviderReversalGateway>();
         services.AddScoped<IFifoTransferGateway, PostgreSqlFifoTransferGateway>();
         return services;
     }
