@@ -528,3 +528,14 @@ internal sealed class RegisteredPostingReceiptRow
     public string JournalHash { get; set; } = string.Empty;
     public bool Duplicate { get; set; }
 }
+
+internal sealed class FifoFragmentReservationReceiptRow
+{
+    public Guid ReservationId { get; set; }
+    public Guid ParentLotId { get; set; }
+    public Guid RootSourceStampId { get; set; }
+    public long ReversalEpoch { get; set; }
+    public long StartInclusive { get; set; }
+    public long EndExclusive { get; set; }
+    public long AmountUnits { get; set; }
+}
