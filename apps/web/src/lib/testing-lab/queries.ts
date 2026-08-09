@@ -18,6 +18,7 @@ import {
   type TestingLabTestingSession,
 } from '@game-guild/client';
 import { cache } from 'react';
+import { mapTestingRequestDetail } from './testing-request-detail';
 
 export type TestingRequestStatus = 'Draft' | 'Open' | 'Active' | 'InProgress' | 'Paused' | 'Completed' | 'Cancelled' | number;
 export type TestingSessionStatus = 'Scheduled' | 'Active' | 'Completed' | 'Cancelled' | number;
@@ -129,6 +130,7 @@ function createTestingLabModules() {
   });
 
   return {
+    client,
     requests: new GeneratedApi.TestinglabTestingrequestsModule(client),
     sessions: new GeneratedApi.TestinglabTestingsessionsModule(client),
     locations: new GeneratedApi.TestinglabTestinglocationsModule(client),
@@ -139,6 +141,18 @@ function createTestingLabModules() {
     permissions: new GeneratedApi.TestinglabPermissionModule(client),
     projects: new GeneratedApi.ProjectsModule(client),
   };
+}
+
+function getOperationFailureMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const { message } = error;
+    if (typeof message === 'string' && message.trim().length > 0) {
+      return message;
+    }
+  }
+
+  return 'Unknown error';
 }
 
 async function readResult<T>(operation: Promise<Result<T, ApiError>>, label: string): Promise<ApiReadResult<T>> {
@@ -152,7 +166,7 @@ async function readResult<T>(operation: Promise<Result<T, ApiError>>, label: str
   } catch (error) {
     return {
       data: null,
-      issue: `${label} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      issue: `${label} failed: ${getOperationFailureMessage(error)}`,
     };
   }
 }
@@ -327,14 +341,17 @@ export interface TestingRequestDetailData {
 export const getTestingRequestDetail = cache(async (requestId: string): Promise<TestingRequestDetailData> => {
   const api = createTestingLabModules();
   const [request, sessions, participants, feedback] = await Promise.all([
-    readResult(api.requests.getTestingRequests1(requestId), 'Testing request'),
+    readResult(
+      api.requests.getTestingRequests1(requestId),
+      'Testing request',
+    ),
     readResult(api.sessions.getTestingSessionsByRequest(requestId), 'Request sessions'),
     readResult(api.participants.getTestingRequestsParticipants(requestId), 'Request participants'),
     readResult(api.feedback.getTestingRequestsFeedback(requestId), 'Request feedback'),
   ]);
 
   return {
-    request: request.data ? mapRequest(request.data) : null,
+    request: request.data ? mapTestingRequestDetail(request.data) : null,
     sessions: compact((sessions.data ?? []).map(mapSession)),
     participants: participants.data ?? [],
     feedback: feedback.data ?? [],
