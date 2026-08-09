@@ -71,9 +71,19 @@ public sealed class AuthorizationTenantResolver : IAuthorizationTenantResolver
         cancellationToken.ThrowIfCancellationRequested();
 
         return Task.FromResult(
-            ResolveFromRequest(context)
+            ResolveFromMiddlewareContext(context)
+            ?? ResolveFromRequest(context)
             ?? ResolveFromClaims(context.User)
             ?? GetUserDefaultTenant(context.User));
+    }
+
+    private static string? ResolveFromMiddlewareContext(HttpContext context)
+    {
+        return context.Items.TryGetValue(HttpContextKeys.AuthorizationTenantId, out var value)
+               && value is Guid tenantId
+               && tenantId != Guid.Empty
+            ? tenantId.ToString()
+            : null;
     }
 
     /// <inheritdoc />

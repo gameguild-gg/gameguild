@@ -54,6 +54,14 @@ async function warmTestingLabSsr() {
 }
 
 
+async function warmTestingLabEventSsr(eventId) {
+  const response = await fetch(`${webBaseUrl}/en-US/testing-lab/events/${eventId}`);
+  if (!response.ok) {
+    throw new Error(`Testing Lab event SSR warmup failed with ${response.status}.`);
+  }
+  await response.arrayBuffer();
+}
+
 async function bootstrap() {
   const auth = await apiRequest('/v1/auth/sign-in', {
     method: 'POST',
@@ -263,6 +271,7 @@ async function run() {
   await mkdir(artifactsDirectory, { recursive: true });
   const fixture = await bootstrap();
   await warmTestingLabSsr();
+  await warmTestingLabEventSsr(fixture.event.id);
   const browser = await chromium.launch({ headless });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage();
@@ -423,6 +432,7 @@ async function run() {
     await waitForText(page, 'Testing location archived.');
     await confirmDialog.waitFor({ state: 'hidden' });
     await visit(page, '/dashboard/testing-lab/settings/locations?status=archived', 'archived Testing Lab locations');
+    await waitForClientHydration(page);
     await waitForText(page, updatedLocationName);
     locationRow = page.getByRole('row').filter({ hasText: updatedLocationName });
     await locationRow.getByRole('button', { name: 'Restore', exact: true }).click();
