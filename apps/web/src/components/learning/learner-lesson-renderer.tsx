@@ -5,7 +5,6 @@ import type { LearningCoursesLessonContentFormat } from '@game-guild/client';
 import { MarkdownRenderer } from '@game-guild/content-rendering';
 import { Button } from '@game-guild/ui/components/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import DOMPurify from 'dompurify';
 import Image from 'next/image';
 import { createElement, type ReactNode, useRef, useState } from 'react';
 
@@ -100,31 +99,11 @@ function VideoRenderer({ courseId, enrollmentId, itemId, content }: { courseId: 
     return <video aria-label="Video lesson" controls preload="metadata" src={src} className="aspect-video w-full bg-black" onPlay={(event) => send('Opened', event.currentTarget)} onPause={(event) => send('Paused', event.currentTarget)} onEnded={(event) => send('Completed', event.currentTarget)} onTimeUpdate={(event) => { const second = Math.floor(event.currentTarget.currentTime); if (second - lastHeartbeat.current >= 15) { lastHeartbeat.current = second; send('Progressed', event.currentTarget); } }} />;
 }
 
-function ExternalLinkCard({ href }: { href: string }) {
-    return (
-        <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10">
-            Open external resource
-        </a>
-    );
-}
-
 export function LearnerLessonRenderer({ courseId, enrollmentId, itemId, format, content }: { courseId: string; enrollmentId?: string; itemId: string; format?: LearningCoursesLessonContentFormat; content: unknown }) {
     switch (format ?? 'Markdown') {
         case 'Lexical': return <LexicalRenderer content={content} />;
         case 'RevealJs': return <RevealRenderer content={content} />;
         case 'Video': return <VideoRenderer courseId={courseId} enrollmentId={enrollmentId} itemId={itemId} content={content} />;
-        case 'Html': {
-            const html = textContent(content);
-            return html
-                ? <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />
-                : <p className="text-sm text-muted-foreground">This HTML lesson has no published content.</p>;
-        }
-        case 'ExternalLink': {
-            const url = textContent(content);
-            return url
-                ? <ExternalLinkCard href={url} />
-                : <p className="text-sm text-muted-foreground">This link lesson has no published URL.</p>;
-        }
         case 'Markdown':
         default: {
             const markdown = textContent(content);

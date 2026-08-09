@@ -8,6 +8,8 @@ public class UpdateTestingRequestDto {
 
   public string? Description { get; set; }
 
+  [MaxLength(500)] public string? DownloadUrl { get; set; }
+
   public InstructionType? InstructionsType { get; set; }
 
   public string? InstructionsContent { get; set; }
@@ -17,6 +19,8 @@ public class UpdateTestingRequestDto {
   public Guid? InstructionsFileId { get; set; }
 
   public int? MaxTesters { get; set; }
+
+  public string? FeedbackFormContent { get; set; }
 
   public DateTime? StartDate { get; set; }
 
@@ -31,6 +35,8 @@ public class UpdateTestingRequestDto {
 
     if (Description != null) testingRequest.Description = Description;
 
+    if (DownloadUrl != null) testingRequest.DownloadUrl = DownloadUrl;
+
     if (InstructionsType.HasValue) testingRequest.InstructionsType = InstructionsType.Value;
 
     if (InstructionsContent != null) testingRequest.InstructionsContent = InstructionsContent;
@@ -40,6 +46,8 @@ public class UpdateTestingRequestDto {
     if (InstructionsFileId.HasValue) testingRequest.InstructionsFileId = InstructionsFileId.Value;
 
     if (MaxTesters.HasValue) testingRequest.MaxTesters = MaxTesters.Value;
+
+    if (FeedbackFormContent != null) testingRequest.FeedbackFormContent = FeedbackFormContent;
 
     if (StartDate.HasValue) testingRequest.StartDate = StartDate.Value;
 

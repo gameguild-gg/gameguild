@@ -67,19 +67,21 @@ public class TestingRequestsController(
     // PUT: testing/requests/{id}
     [HttpPut("requests/{id}")]
     [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Edit)]
-    public async Task<ActionResult<TestingRequest>> UpdateTestingRequest(Guid id, TestingRequest request)
+    public async Task<ActionResult<TestingRequest>> UpdateTestingRequest(Guid id, UpdateTestingRequestDto requestDto)
     {
-        if (id != request.Id) return BadRequest("ID mismatch");
+        var existingRequest = await requestService.GetTestingRequestByIdAsync(id).ConfigureAwait(false);
+        if (existingRequest == null) return NotFound("The requested testing request was not found.");
 
         try
         {
-            var updatedRequest = await requestService.UpdateTestingRequestAsync(request).ConfigureAwait(false);
+            requestDto.UpdateTestingRequest(existingRequest);
+            var updatedRequest = await requestService.UpdateTestingRequestAsync(existingRequest).ConfigureAwait(false);
             return Ok(updatedRequest);
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Testing request {RequestId} not found or could not be updated", id);
-            return NotFound("The requested testing request was not found or could not be updated.");
+            _logger.LogWarning(ex, "Testing request {RequestId} could not be updated", id);
+            return BadRequest("The requested testing request could not be updated.");
         }
     }
 

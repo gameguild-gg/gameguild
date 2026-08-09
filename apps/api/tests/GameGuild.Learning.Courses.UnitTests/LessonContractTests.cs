@@ -267,7 +267,7 @@ public sealed class LessonContractTests
         var dto = new UpdateProgramContentDto
         {
             Id = content.Id,
-            JsonBody = JsonDocument.Parse("""{"root":{"type":"root","children":[]}}"""),
+            JsonBody = JsonDocument.Parse("""{"root":{"type":"root","children":[]}}""").RootElement.Clone(),
         };
 
         content.ApplyUpdates(dto);

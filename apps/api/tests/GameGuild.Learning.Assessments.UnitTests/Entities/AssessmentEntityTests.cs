@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using System.Reflection;
+using System.Text.Json;
 using Xunit;
 
 namespace GameGuild.Learning.Assessments.Tests;
@@ -37,6 +38,31 @@ public class AssessmentEntityTests
     {
         var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 50, 25, isRequired: false);
         assessment.IsRequired.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SetDefinition_ShouldPersistStructuredPayloadAndSchemaVersion()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 70);
+        using var definition = JsonDocument.Parse("{\"blocks\":{\"question-1\":{\"kind\":\"multiple-choice\"}},\"order\":[\"question-1\"]}");
+
+        assessment.SetDefinition(definition.RootElement, 2);
+
+        assessment.DefinitionSchemaVersion.Should().Be(2);
+        assessment.DefinitionPayload.Should().Be(definition.RootElement.GetRawText());
+    }
+
+    [Fact]
+    public void SetDefinition_ShouldRejectUndefinedPayloadOrInvalidSchemaVersion()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 70);
+        using var definition = JsonDocument.Parse("{}");
+
+        var undefinedAction = () => assessment.SetDefinition(default, 1);
+        var versionAction = () => assessment.SetDefinition(definition.RootElement, 0);
+
+        undefinedAction.Should().Throw<ArgumentException>();
+        versionAction.Should().Throw<ArgumentOutOfRangeException>();
     }
 
     [Theory]

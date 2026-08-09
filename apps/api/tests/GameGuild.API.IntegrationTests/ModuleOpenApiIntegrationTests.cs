@@ -111,6 +111,67 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
     }
 
     [Fact]
+    public async Task Swagger_ShouldHideLegacyProgramContentTypes()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var document = JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsObject();
+        var schema = document["components"]!["schemas"]!["Learning_Courses_ProgramContentType"]!.AsObject();
+        var values = schema["enum"]!.AsArray().Select(value => value!.GetValue<string>()).ToArray();
+
+        values.Should().NotContain(["Page", "Challenge"]);
+        values.Should().Contain(["Lesson", "Assignment", "Questionnaire", "Module"]);
+    }
+    [Fact]
+    public async Task Swagger_ShouldHideLegacyAssessmentExamTypeAndExposeDefinitionRoutes()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var document = JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsObject();
+        var types = document["components"]!["schemas"]!["Learning_Assessments_AssessmentType"]!["enum"]!
+            .AsArray()
+            .Select(value => value!.GetValue<string>())
+            .ToArray();
+        var paths = document["paths"]!.AsObject();
+
+        types.Should().NotContain("Exam");
+        types.Should().Contain(["Quiz", "Assignment", "Project", "PeerReview", "SelfAssessment"]);
+        paths.Should().ContainKey("/v1/assessments/{id}/definition");
+    }
+
+    [Fact]
+    public async Task Swagger_ShouldExposeStructuredLessonBodies()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var document = JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsObject();
+        var schemas = document["components"]!["schemas"]!.AsObject();
+
+        foreach (var name in
+                 new[]
+                 {
+                     "Learning_Courses_ProgramContentDto",
+                     "Learning_Courses_CreateProgramContentDto",
+                     "Learning_Courses_UpdateProgramContentDto",
+                 })
+        {
+            schemas[name]!["properties"]!.AsObject().Should().ContainKey("jsonBody");
+        }
+    }
+
+    [Fact]
     public async Task Runtime_ShouldNotRouteUnverifiedOrderOperations()
     {
         using var client = _factory.CreateClient();

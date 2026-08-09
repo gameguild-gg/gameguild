@@ -70,6 +70,23 @@ public class Assessment : EntityBase
         UpdatedAt = SystemClock.UtcNow;
     }
 
+    public void SetDefinition(JsonElement definition, int definitionSchemaVersion)
+    {
+        if (definition.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
+        {
+            throw new ArgumentException("Assessment definition must be a JSON value.", nameof(definition));
+        }
+
+        if (definitionSchemaVersion < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(definitionSchemaVersion), "Assessment definition schema version must be at least one.");
+        }
+
+        DefinitionPayload = definition.GetRawText();
+        DefinitionSchemaVersion = definitionSchemaVersion;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
     public void SetTimeLimit(int? timeLimitMinutes)
     {
         TimeLimitMinutes = timeLimitMinutes;

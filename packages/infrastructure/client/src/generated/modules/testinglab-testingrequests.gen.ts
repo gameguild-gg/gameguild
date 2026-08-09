@@ -76,11 +76,11 @@ export class TestinglabTestingrequestsModule {
 
   /**
    */
-  async putTestingRequests(id: string, body: Types.TestingLabTestingInput): Promise<Result<Types.TestingLabTestingInput, ApiError>> {
+  async putTestingRequests(id: string, body: Types.TestingLabUpdateTestingInput): Promise<Result<Types.TestingLabTestingInput, ApiError>> {
     const url = `/v1/testing/requests/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabTestingInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabUpdateTestingInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

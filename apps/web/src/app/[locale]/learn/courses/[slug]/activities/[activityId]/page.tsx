@@ -73,12 +73,9 @@ export default async function LearnerActivityPage({
 
   if (!activity) notFound();
   const title = activity.kind === 'assessment' ? activity.assessment.title || 'Assessment' : activity.title;
-  const type =
-    activity.kind === 'assessment'
-      ? activity.assessment.type === 'Exam'
-        ? 'Quiz'
-        : activity.assessment.type
-      : activity.contentType;
+  const type = activity.kind === 'assessment'
+    ? activity.assessment.type
+    : activity.contentType;
   const routes = createLearnerRoutes();
 
   return (

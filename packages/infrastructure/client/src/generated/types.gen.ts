@@ -3961,6 +3961,12 @@ export interface LaunchPadLaunchPlan {
 
 export type LaunchPadLaunchPlanStatus = 'Draft' | 'Preparing' | 'Ready' | 'Launched' | 'Paused';
 
+export interface LearningAssessmentsAssessmentDefinition {
+  assessmentId?: string;
+  definitionSchemaVersion?: number;
+  definition?: Record<string, unknown>;
+}
+
 export interface LearningAssessmentsAssessment {
   id?: string;
   courseId?: string;
@@ -4043,7 +4049,8 @@ export interface LearningAssessmentsAssessmentSubmission {
   structuredAnswerPayload?: string | null;
 }
 
-export type LearningAssessmentsAssessmentType = 'Quiz' | 'Exam' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
+/** Legacy value Exam is normalized on read and is not valid for new assessments. */
+export type LearningAssessmentsAssessmentType = 'Quiz' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
 
 export interface LearningAssessmentsAssignAssessmentGroupInput {
   assessmentGroupId?: string | null;
@@ -4163,6 +4170,11 @@ export interface LearningAssessmentsSubmitAssessmentInput {
   mediaPayload?: string | null;
   projectPayload?: string | null;
   structuredAnswerPayload?: string | null;
+}
+
+export interface LearningAssessmentsUpdateAssessmentDefinitionInput {
+  definitionSchemaVersion?: number;
+  definition?: Record<string, unknown>;
 }
 
 export interface LearningAssessmentsUpdateAssessmentGroupInput {
@@ -4820,8 +4832,9 @@ export interface LearningCoursesProgramContent {
   children?: Array<LearningCoursesProgramContent> | null;
 }
 
+/** Legacy values Page and Challenge are normalized on read and are not valid for new content. */
 export type LearningCoursesProgramContentType =
-  'Lesson' | 'Page' | 'Assignment' | 'Questionnaire' | 'Discussion' | 'Code' | 'Challenge' | 'Reflection' | 'Survey' | 'Project' | 'Module';
+  'Lesson' | 'Assignment' | 'Questionnaire' | 'Discussion' | 'Code' | 'Reflection' | 'Survey' | 'Project' | 'Module';
 
 export type LearningCoursesProgramDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
@@ -8020,6 +8033,22 @@ export interface TestingLabUpdateTestingLocation {
   status?: TestingLabLocationStatus;
 }
 
+export interface TestingLabUpdateTestingInput {
+  projectVersionId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  downloadUrl?: string | null;
+  instructionsType?: TestingLabInstructionType;
+  instructionsContent?: string | null;
+  instructionsUrl?: string | null;
+  instructionsFileId?: string | null;
+  maxTesters?: number | null;
+  feedbackFormContent?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  status?: TestingLabTestingRequestStatus;
+}
+
 export interface TestingLabUpsertTestingEventSlotInput {
   mode?: TestingLabTestingEventMode;
   startsAt?: string;
@@ -8475,6 +8504,7 @@ export let LaunchPadLaunchChecklistItemSchema: z.ZodType<LaunchPadLaunchChecklis
 export let LaunchPadLaunchChecklistItemInputSchema: z.ZodType<LaunchPadLaunchChecklistItemInput>;
 export let LaunchPadLaunchPlanSchema: z.ZodType<LaunchPadLaunchPlan>;
 export let LaunchPadLaunchPlanStatusSchema: z.ZodType<LaunchPadLaunchPlanStatus>;
+export let LearningAssessmentsAssessmentDefinitionSchema: z.ZodType<LearningAssessmentsAssessmentDefinition>;
 export let LearningAssessmentsAssessmentSchema: z.ZodType<LearningAssessmentsAssessment>;
 export let LearningAssessmentsAssessmentGroupAnalyticsSchema: z.ZodType<LearningAssessmentsAssessmentGroupAnalytics>;
 export let LearningAssessmentsAssessmentGroupSchema: z.ZodType<LearningAssessmentsAssessmentGroup>;
@@ -8497,6 +8527,7 @@ export let LearningAssessmentsStartSubmissionInputSchema: z.ZodType<LearningAsse
 export let LearningAssessmentsSubmissionModalitySchema: z.ZodType<LearningAssessmentsSubmissionModality>;
 export let LearningAssessmentsSubmissionStatusSchema: z.ZodType<LearningAssessmentsSubmissionStatus>;
 export let LearningAssessmentsSubmitAssessmentInputSchema: z.ZodType<LearningAssessmentsSubmitAssessmentInput>;
+export let LearningAssessmentsUpdateAssessmentDefinitionInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentDefinitionInput>;
 export let LearningAssessmentsUpdateAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentGroupInput>;
 export let LearningAssessmentsUpdateAssessmentInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentInput>;
 export let LearningCertificatesCertificateSchema: z.ZodType<LearningCertificatesCertificate>;
@@ -8888,6 +8919,7 @@ export let TestingLabUpdateTestingEventInputSchema: z.ZodType<TestingLabUpdateTe
 export let TestingLabUpdateTestingLabRoleInputSchema: z.ZodType<TestingLabUpdateTestingLabRoleInput>;
 export let TestingLabUpdateTestingLabSettingsSchema: z.ZodType<TestingLabUpdateTestingLabSettings>;
 export let TestingLabUpdateTestingLocationSchema: z.ZodType<TestingLabUpdateTestingLocation>;
+export let TestingLabUpdateTestingInputSchema: z.ZodType<TestingLabUpdateTestingInput>;
 export let TestingLabUpsertTestingEventSlotInputSchema: z.ZodType<TestingLabUpsertTestingEventSlotInput>;
 export let TestingLabUserTestingLabPermissionsSchema: z.ZodType<TestingLabUserTestingLabPermissions>;
 
@@ -13525,6 +13557,13 @@ LaunchPadLaunchPlanSchema = z.object({
 /** Zod schema for LaunchPadLaunchPlanStatus */
 LaunchPadLaunchPlanStatusSchema = z.enum(['Draft', 'Preparing', 'Ready', 'Launched', 'Paused']);
 
+/** Zod schema for LearningAssessmentsAssessmentDefinition */
+LearningAssessmentsAssessmentDefinitionSchema = z.object({
+  assessmentId: z.string().uuid().optional(),
+  definitionSchemaVersion: z.number().int().optional(),
+  definition: z.record(z.string(), z.unknown()).optional(),
+});
+
 /** Zod schema for LearningAssessmentsAssessment */
 LearningAssessmentsAssessmentSchema = z.object({
   id: z.string().uuid().optional(),
@@ -13616,8 +13655,8 @@ LearningAssessmentsAssessmentSubmissionSchema = z.object({
   structuredAnswerPayload: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsAssessmentType */
-LearningAssessmentsAssessmentTypeSchema = z.enum(['Quiz', 'Exam', 'Assignment', 'Project', 'PeerReview', 'SelfAssessment']);
+/** Zod schema for LearningAssessmentsAssessmentType. Legacy value Exam is normalized on read and is not valid for new assessments. */
+LearningAssessmentsAssessmentTypeSchema = z.enum(['Quiz', 'Assignment', 'Project', 'PeerReview', 'SelfAssessment']);
 
 /** Zod schema for LearningAssessmentsAssignAssessmentGroupInput */
 LearningAssessmentsAssignAssessmentGroupInputSchema = z.object({
@@ -13757,6 +13796,12 @@ LearningAssessmentsSubmitAssessmentInputSchema = z.object({
   mediaPayload: z.string().nullable().optional(),
   projectPayload: z.string().nullable().optional(),
   structuredAnswerPayload: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsUpdateAssessmentDefinitionInput */
+LearningAssessmentsUpdateAssessmentDefinitionInputSchema = z.object({
+  definitionSchemaVersion: z.number().int().optional(),
+  definition: z.record(z.string(), z.unknown()).optional(),
 });
 
 /** Zod schema for LearningAssessmentsUpdateAssessmentGroupInput */
@@ -14537,20 +14582,8 @@ LearningCoursesProgramContentSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningCoursesProgramContentType */
-LearningCoursesProgramContentTypeSchema = z.enum([
-  'Lesson',
-  'Page',
-  'Assignment',
-  'Questionnaire',
-  'Discussion',
-  'Code',
-  'Challenge',
-  'Reflection',
-  'Survey',
-  'Project',
-  'Module',
-]);
+/** Zod schema for LearningCoursesProgramContentType. Legacy values Page and Challenge are normalized on read and are not valid for new content. */
+LearningCoursesProgramContentTypeSchema = z.enum(['Lesson', 'Assignment', 'Questionnaire', 'Discussion', 'Code', 'Reflection', 'Survey', 'Project', 'Module']);
 
 /** Zod schema for LearningCoursesProgramDifficulty */
 LearningCoursesProgramDifficultySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
@@ -18395,6 +18428,23 @@ TestingLabUpdateTestingLocationSchema = z.object({
   contactEmail: z.string().nullable().optional(),
   contactPhone: z.string().nullable().optional(),
   status: z.lazy(() => TestingLabLocationStatusSchema).optional(),
+});
+
+/** Zod schema for TestingLabUpdateTestingInput */
+TestingLabUpdateTestingInputSchema = z.object({
+  projectVersionId: z.string().uuid().nullable().optional(),
+  title: z.string().max(255).nullable().optional(),
+  description: z.string().nullable().optional(),
+  downloadUrl: z.string().max(500).nullable().optional(),
+  instructionsType: z.lazy(() => TestingLabInstructionTypeSchema).optional(),
+  instructionsContent: z.string().nullable().optional(),
+  instructionsUrl: z.string().max(500).nullable().optional(),
+  instructionsFileId: z.string().uuid().nullable().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  feedbackFormContent: z.string().nullable().optional(),
+  startDate: z.string().datetime().nullable().optional(),
+  endDate: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => TestingLabTestingRequestStatusSchema).optional(),
 });
 
 /** Zod schema for TestingLabUpsertTestingEventSlotInput */
