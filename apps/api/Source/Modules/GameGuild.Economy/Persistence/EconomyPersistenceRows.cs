@@ -520,3 +520,11 @@ internal sealed class EconomyRiskAuditEvidenceRow
     public string Payload { get; set; } = string.Empty;
     public DateTimeOffset RecordedAt { get; set; }
 }
+
+internal sealed class RegisteredPostingReceiptRow
+{
+    public Guid PostingId { get; set; }
+    public long JournalSequence { get; set; }
+    public string JournalHash { get; set; } = string.Empty;
+    public bool Duplicate { get; set; }
+}
