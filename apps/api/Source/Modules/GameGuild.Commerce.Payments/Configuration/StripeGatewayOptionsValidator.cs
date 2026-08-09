@@ -18,11 +18,8 @@ public sealed class StripeGatewayOptionsValidator(
             return ValidateOptionsResult.Success;
 
         if (options.UseSimulation)
-            // todo: improve this!! I relaxed this so I could run locally. This should be reverted to the original line commented.
-            logger?.LogWarning(
-                "Stripe simulation is enabled in {EnvironmentName}; payments will use the simulator, not a real provider.",
-                environment.EnvironmentName);
-            // return ValidateOptionsResult.Fail($"Stripe simulation is not permitted in {environment.EnvironmentName}.");    
+            return ValidateOptionsResult.Fail(
+                "Stripe simulation is not permitted in " + environment.EnvironmentName + ".");
 
         var warnings = new List<string>();
         if (string.IsNullOrWhiteSpace(options.ApiKey))

@@ -10,13 +10,33 @@ public sealed class EconomyRiskCompositionOptions
     public const string SectionName = "Modules:Economy.Risk";
 
     public bool ValueMovingDecisionsEnabled { get; set; }
+
+    public string[] EnabledCapabilities { get; set; } = [];
+}
+
+public enum EconomyValueMovementCapability
+{
+    ConfirmHardCoinFunding = 1,
+    ConvertHardToSoft = 2,
+    ReverseProviderFunding = 3,
+    Transfer = 4,
+    IssueAdReward = 5,
+    BountyEscrow = 6,
+    BountyClaim = 7,
+    MarketplaceSettlement = 8,
+    PayoutExecution = 9,
+    AdminWithdrawalExecution = 10
 }
 
 public interface IEconomyValueMovementDecisionGate
 {
     bool IsEnabled { get; }
 
+    bool IsCapabilityEnabled(EconomyValueMovementCapability capability);
+
     void EnsureEnabled();
+
+    void EnsureEnabled(EconomyValueMovementCapability capability);
 }
 
 internal sealed class EconomyValueMovementDecisionGate(
@@ -24,11 +44,49 @@ internal sealed class EconomyValueMovementDecisionGate(
 {
     public bool IsEnabled => options.Value.ValueMovingDecisionsEnabled;
 
+    public bool IsCapabilityEnabled(EconomyValueMovementCapability capability) =>
+        IsEnabled && EconomyValueMovementCapabilities.Parse(options.Value.EnabledCapabilities).Contains(capability);
+
     public void EnsureEnabled()
     {
         if (!IsEnabled)
             throw new EconomyValueMovementDisabledException(
                 "Economy value-moving decisions are disabled until an explicit capability rollout is configured.");
+    }
+
+    public void EnsureEnabled(EconomyValueMovementCapability capability)
+    {
+        EnsureEnabled();
+        if (!IsCapabilityEnabled(capability))
+            throw new EconomyValueMovementDisabledException(
+                "Economy capability " + capability + " is disabled until explicitly enabled for rollout.");
+    }
+}
+
+public static class EconomyValueMovementCapabilities
+{
+    public static IReadOnlySet<EconomyValueMovementCapability> Parse(IEnumerable<string>? configuredCapabilities)
+    {
+        var capabilities = new HashSet<EconomyValueMovementCapability>();
+        foreach (var configuredCapability in configuredCapabilities ?? [])
+        {
+            if (!Enum.TryParse<EconomyValueMovementCapability>(configuredCapability, ignoreCase: true, out var capability) ||
+                !Enum.IsDefined(capability))
+                throw new EconomyCapabilityConfigurationException(
+                    "Unknown Economy value-moving capability " + configuredCapability + ".");
+            capabilities.Add(capability);
+        }
+
+        return capabilities;
+    }
+
+    public static void Validate(EconomyRiskCompositionOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var enabledCapabilities = Parse(options.EnabledCapabilities);
+        if (options.ValueMovingDecisionsEnabled && enabledCapabilities.Count == 0)
+            throw new EconomyCapabilityConfigurationException(
+                "ValueMovingDecisionsEnabled requires at least one explicitly enabled Economy capability.");
     }
 }
 
@@ -41,10 +99,24 @@ public static class EconomyRiskCompositionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
         services.AddOptions<EconomyRiskCompositionOptions>()
-            .Bind(configuration.GetSection(EconomyRiskCompositionOptions.SectionName));
+            .Bind(configuration.GetSection(EconomyRiskCompositionOptions.SectionName))
+            .Validate(options =>
+            {
+                try
+                {
+                    EconomyValueMovementCapabilities.Validate(options);
+                    return true;
+                }
+                catch (EconomyCapabilityConfigurationException)
+                {
+                    return false;
+                }
+            }, "Invalid Economy capability configuration.")
+            .ValidateOnStart();
         services.TryAddSingleton<IEconomyValueMovementDecisionGate, EconomyValueMovementDecisionGate>();
         return services;
     }
 }
 
 public sealed class EconomyValueMovementDisabledException(string message) : InvalidOperationException(message);
+public sealed class EconomyCapabilityConfigurationException(string message) : InvalidOperationException(message);
