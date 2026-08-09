@@ -1872,6 +1872,73 @@ export interface ContentPagesUpdatePageSection {
   cssClasses?: string | null;
 }
 
+export type EconomyContractsCurrencyCode = 'HardCoin' | 'SoftCoin';
+
+export interface EconomyContractsEconomyWalletSummary {
+  walletId?: string;
+  state?: EconomyContractsWalletLifecycleState;
+  createdAt?: string;
+  pendingHard?: number;
+  pendingSoft?: number;
+  purchasedHard?: number;
+  earnedHard?: number;
+  restrictedHard?: number;
+  soft?: number;
+  heldHard?: number;
+  heldSoft?: number;
+  availableHardToSpend?: number;
+  availableSoftToSpend?: number;
+  withdrawableHard?: number;
+  outstandingHardDebt?: number;
+  projectionRebuiltAt?: string;
+  sourceJournalSequence?: number;
+}
+
+export interface EconomyContractsEconomyWalletTransaction {
+  postingGroupId?: string;
+  journalEntryId?: string;
+  journalSequence?: number;
+  templateKind?: EconomyContractsPostingTemplateKind;
+  status?: EconomyContractsPostingStatus;
+  recordedAt?: string;
+  side?: EconomyContractsEntrySide;
+  currency?: EconomyContractsCurrencyCode;
+  amountUnits?: number;
+  provenance?: EconomyContractsProvenanceKind;
+}
+
+export type EconomyContractsEntrySide = 'Debit' | 'Credit';
+
+export type EconomyContractsPostingStatus = 'Accepted' | 'Rejected' | 'Duplicate';
+
+export type EconomyContractsPostingTemplateKind =
+  | 'ConfirmedTopUpMint'
+  | 'ProviderReversalFull'
+  | 'ProviderReversalPartial'
+  | 'Spend'
+  | 'HardToSoftConversion'
+  | 'SystemBackedGrant'
+  | 'Burn'
+  | 'Escrow'
+  | 'Reclaim'
+  | 'Refund'
+  | 'PayoutReservation'
+  | 'PayoutSuccess'
+  | 'PayoutFailure'
+  | 'AdminWithdrawalReservation'
+  | 'AdminWithdrawalSuccess'
+  | 'AdminWithdrawalFailure'
+  | 'HardToSoftConversionFee'
+  | 'ProviderConvertedSoftReversal'
+  | 'ProviderReversalDebt'
+  | 'ProviderReversalLoss'
+  | 'AdRewardIssuance';
+
+export type EconomyContractsProvenanceKind =
+  'PurchasedHard' | 'EarnedHard' | 'ConvertedSoft' | 'AdRewardSoft' | 'SystemGrantSoft' | 'RefundRestoration' | 'EscrowReturn';
+
+export type EconomyContractsWalletLifecycleState = 'Active' | 'Frozen' | 'Closed' | 'UnderReview';
+
 export interface FeaturesBulkEvaluationInput {
   featureKeys?: Array<string> | null;
   context?: FeaturesFeatureContext;
@@ -8264,6 +8331,14 @@ export let ContentPagesSitemapEntrySchema: z.ZodType<ContentPagesSitemapEntry>;
 export let ContentPagesUpdateContentResourceSchema: z.ZodType<ContentPagesUpdateContentResource>;
 export let ContentPagesUpdatePageSchema: z.ZodType<ContentPagesUpdatePage>;
 export let ContentPagesUpdatePageSectionSchema: z.ZodType<ContentPagesUpdatePageSection>;
+export let EconomyContractsCurrencyCodeSchema: z.ZodType<EconomyContractsCurrencyCode>;
+export let EconomyContractsEconomyWalletSummarySchema: z.ZodType<EconomyContractsEconomyWalletSummary>;
+export let EconomyContractsEconomyWalletTransactionSchema: z.ZodType<EconomyContractsEconomyWalletTransaction>;
+export let EconomyContractsEntrySideSchema: z.ZodType<EconomyContractsEntrySide>;
+export let EconomyContractsPostingStatusSchema: z.ZodType<EconomyContractsPostingStatus>;
+export let EconomyContractsPostingTemplateKindSchema: z.ZodType<EconomyContractsPostingTemplateKind>;
+export let EconomyContractsProvenanceKindSchema: z.ZodType<EconomyContractsProvenanceKind>;
+export let EconomyContractsWalletLifecycleStateSchema: z.ZodType<EconomyContractsWalletLifecycleState>;
 export let FeaturesBulkEvaluationInputSchema: z.ZodType<FeaturesBulkEvaluationInput>;
 export let FeaturesCapabilityAuditLogSchema: z.ZodType<FeaturesCapabilityAuditLog>;
 export let FeaturesCapabilityCheckOutputSchema: z.ZodType<FeaturesCapabilityCheckOutput>;
@@ -11091,6 +11166,89 @@ ContentPagesUpdatePageSectionSchema = z.object({
   isVisible: z.boolean().nullable().optional(),
   cssClasses: z.string().nullable().optional(),
 });
+
+/** Zod schema for EconomyContractsCurrencyCode */
+EconomyContractsCurrencyCodeSchema = z.enum(['HardCoin', 'SoftCoin']);
+
+/** Zod schema for EconomyContractsEconomyWalletSummary */
+EconomyContractsEconomyWalletSummarySchema = z.object({
+  walletId: z.string().uuid().optional(),
+  state: z.lazy(() => EconomyContractsWalletLifecycleStateSchema).optional(),
+  createdAt: z.string().datetime().optional(),
+  pendingHard: z.number().int().optional(),
+  pendingSoft: z.number().int().optional(),
+  purchasedHard: z.number().int().optional(),
+  earnedHard: z.number().int().optional(),
+  restrictedHard: z.number().int().optional(),
+  soft: z.number().int().optional(),
+  heldHard: z.number().int().optional(),
+  heldSoft: z.number().int().optional(),
+  availableHardToSpend: z.number().int().optional(),
+  availableSoftToSpend: z.number().int().optional(),
+  withdrawableHard: z.number().int().optional(),
+  outstandingHardDebt: z.number().int().optional(),
+  projectionRebuiltAt: z.string().datetime().optional(),
+  sourceJournalSequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyContractsEconomyWalletTransaction */
+EconomyContractsEconomyWalletTransactionSchema = z.object({
+  postingGroupId: z.string().uuid().optional(),
+  journalEntryId: z.string().uuid().optional(),
+  journalSequence: z.number().int().optional(),
+  templateKind: z.lazy(() => EconomyContractsPostingTemplateKindSchema).optional(),
+  status: z.lazy(() => EconomyContractsPostingStatusSchema).optional(),
+  recordedAt: z.string().datetime().optional(),
+  side: z.lazy(() => EconomyContractsEntrySideSchema).optional(),
+  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
+  amountUnits: z.number().int().optional(),
+  provenance: z.lazy(() => EconomyContractsProvenanceKindSchema).optional(),
+});
+
+/** Zod schema for EconomyContractsEntrySide */
+EconomyContractsEntrySideSchema = z.enum(['Debit', 'Credit']);
+
+/** Zod schema for EconomyContractsPostingStatus */
+EconomyContractsPostingStatusSchema = z.enum(['Accepted', 'Rejected', 'Duplicate']);
+
+/** Zod schema for EconomyContractsPostingTemplateKind */
+EconomyContractsPostingTemplateKindSchema = z.enum([
+  'ConfirmedTopUpMint',
+  'ProviderReversalFull',
+  'ProviderReversalPartial',
+  'Spend',
+  'HardToSoftConversion',
+  'SystemBackedGrant',
+  'Burn',
+  'Escrow',
+  'Reclaim',
+  'Refund',
+  'PayoutReservation',
+  'PayoutSuccess',
+  'PayoutFailure',
+  'AdminWithdrawalReservation',
+  'AdminWithdrawalSuccess',
+  'AdminWithdrawalFailure',
+  'HardToSoftConversionFee',
+  'ProviderConvertedSoftReversal',
+  'ProviderReversalDebt',
+  'ProviderReversalLoss',
+  'AdRewardIssuance',
+]);
+
+/** Zod schema for EconomyContractsProvenanceKind */
+EconomyContractsProvenanceKindSchema = z.enum([
+  'PurchasedHard',
+  'EarnedHard',
+  'ConvertedSoft',
+  'AdRewardSoft',
+  'SystemGrantSoft',
+  'RefundRestoration',
+  'EscrowReturn',
+]);
+
+/** Zod schema for EconomyContractsWalletLifecycleState */
+EconomyContractsWalletLifecycleStateSchema = z.enum(['Active', 'Frozen', 'Closed', 'UnderReview']);
 
 /** Zod schema for FeaturesBulkEvaluationInput */
 FeaturesBulkEvaluationInputSchema = z.object({
