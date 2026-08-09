@@ -4739,10 +4739,6 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("RootSourceStampId", "ReversalEpoch")
                         .HasDatabaseName("ix_economy_fragment_root_ranges_root_epoch");
 
-                    b.HasIndex("RootSourceStampId", "ReversalEpoch", "StartInclusive", "EndExclusive")
-                        .IsUnique()
-                        .HasDatabaseName("ux_economy_fragment_root_ranges_owner_interval");
-
                     b.ToTable("economy_fragment_root_ranges", null, t =>
                         {
                             t.HasCheckConstraint("ck_economy_fragment_root_ranges_half_open", "\"StartInclusive\" >= 0 AND \"EndExclusive\" > \"StartInclusive\"");
