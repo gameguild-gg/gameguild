@@ -70,10 +70,10 @@ vi.mock("@game-guild/client", () => ({
       putCourses = mocks.putCourses;
       postCoursesUsers = mocks.postCoursesUsers;
       deleteCoursesUsers = mocks.deleteCoursesUsers;
-      postCoursesContentReorder = mocks.postCoursesContentReorder;
     },
     LearningCoursesProgramcontentModule: class {
       postCoursesContent = mocks.postCoursesContent;
+      postCoursesContentReorder = mocks.postCoursesContentReorder;
       deleteCoursesContent = mocks.deleteCoursesContent;
     },
     LearningCoursesProgramlifecycleModule: class {
@@ -777,7 +777,7 @@ describe("learning server actions", () => {
     );
   });
 
-  it('uses the generated program contract to reorder course content', async () => {
+  it('uses the generated content contract to reorder course content', async () => {
     mocks.resolveCourseId.mockResolvedValueOnce('1caa16bb-6810-4e53-bb0d-91f0d5702333');
 
     const result = await reorderContent("creature-design-by-admin", [

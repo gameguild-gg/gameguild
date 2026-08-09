@@ -15,6 +15,7 @@ import type { LessonContentFormat } from "@/lib/learning/lesson-formats";
 import {
   createServerClient,
   GeneratedApi,
+  type LearningAssessmentsCreateAssessmentInput,
   type LearningAssessmentsUpdateAssessmentInput,
   type LearningCoursesMonetization,
   type LearningCoursesCloneProgram,
@@ -256,8 +257,8 @@ export async function reorderContent(
 ): Promise<ActionResult<null>> {
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const { programs } = createCourseModules();
-    const result = await programs.postCoursesContentReorder(resolvedCourseId, {
+    const { content } = createCourseModules();
+    const result = await content.postCoursesContentReorder(resolvedCourseId, {
       contentIds,
     });
 
@@ -1380,13 +1381,16 @@ export interface UpdateAssessmentDefinitionInput {
   definitionSchemaVersion?: number;
 }
 
-function normalizeAssessmentDefinitionPayload(definition: unknown): unknown {
-  if (typeof definition !== "string") {
-    return definition ?? { order: [], blocks: {} };
+function normalizeAssessmentDefinitionPayload(definition: unknown): Record<string, unknown> {
+  const value = typeof definition === "string"
+    ? (definition.trim() ? JSON.parse(definition.trim()) : { order: [], blocks: {} })
+    : definition ?? { order: [], blocks: {} };
+
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("Assessment definition must be a JSON object.");
   }
 
-  const trimmed = definition.trim();
-  return trimmed ? JSON.parse(trimmed) : { order: [], blocks: {} };
+  return value as Record<string, unknown>;
 }
 
 export async function updateAssessmentDefinition(
@@ -1400,7 +1404,7 @@ export async function updateAssessmentDefinition(
       input.assessmentId,
       {
         definitionSchemaVersion: input.definitionSchemaVersion ?? 1,
-        definition: definition as Record<string, unknown>,
+        definition,
       },
     );
 

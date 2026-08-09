@@ -10,7 +10,7 @@ export function getPreferredSubmissionModality(
     assessmentType: LearningAssessmentsAssessmentType | undefined,
     configured: LearningAssessmentsSubmissionModality | undefined,
 ): LearningAssessmentsSubmissionModality {
-    if (assessmentType === 'Quiz' || assessmentType === 'Exam') return 'StructuredAnswer';
+    if (assessmentType === 'Quiz') return 'StructuredAnswer';
     if (assessmentType === 'Project') return 'Project';
     return configured && configured !== 'None' ? configured : 'Text';
 }
