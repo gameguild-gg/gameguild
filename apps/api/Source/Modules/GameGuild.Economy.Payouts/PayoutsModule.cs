@@ -7,8 +7,12 @@ public sealed class PayoutsModule : ModuleBase
 {
     public override string Name => "Economy.Payouts";
     public override bool EnabledByDefault => false;
+
     public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
-        => services;
+    {
+        services.AddScoped<IPayoutOperationStore, PostgreSqlPayoutOperationStore>();
+        return services;
+    }
 }
 
 public static class PayoutsCompositionExtensions
