@@ -7,7 +7,7 @@ namespace GameGuild.Economy.Payouts.UnitTests;
 public sealed class PayoutsModuleTests
 {
     [Fact]
-    public void ModuleAndCompositionHookRemainDisabledAndRouteFree()
+    public void ModuleAndCompositionHookRemainDisabledAndRegisterOnlyDurablePersistence()
     {
         var module = new PayoutsModule();
         var services = new ServiceCollection();
@@ -17,6 +17,11 @@ public sealed class PayoutsModuleTests
         module.EnabledByDefault.Should().BeFalse();
         module.ConfigureServices(services, configuration).Should().BeSameAs(services);
         services.AddPayoutsComposition(configuration).Should().BeSameAs(services);
-        services.Should().BeEmpty();
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IPayoutOperationStore) &&
+            descriptor.ImplementationType == typeof(PostgreSqlPayoutOperationStore) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(PayoutCoordinator));
+        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(DbContext));
     }
 }
