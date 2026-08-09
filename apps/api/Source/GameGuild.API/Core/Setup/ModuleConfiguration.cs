@@ -19,6 +19,7 @@ public sealed class ModuleConfiguration
         "Compliance.FERPA",
         "ContentPages",
         "Courses",
+        "Economy.Core",
         "Features",
         "GameJams",
         "Learning.Certificates",
@@ -53,7 +54,6 @@ public sealed class ModuleConfiguration
     /// </summary>
     public static readonly string[] DefaultDisabledModules =
     [
-        "Economy.Core",
         "Economy.AdRewards",
         "Economy.Bounties",
         "Economy.Marketplace",

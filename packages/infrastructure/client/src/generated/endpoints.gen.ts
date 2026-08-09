@@ -4938,6 +4938,36 @@ export const postApiSocialDiscussionsResolveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get my Economy wallet
+ */
+export type GetEconomyWalletInput = void;
+export type GetEconomyWalletOutput = Types.EconomyContractsEconomyWalletSummary;
+export const getEconomyWalletEndpoint = {
+  operationId: 'getEconomyWallet' as const,
+  method: 'GET' as const,
+  path: '/api/v1/economy/wallet' as const,
+  tags: ['Economy'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * List my Economy wallet transactions
+ */
+export interface GetEconomyWalletTransactionsInput {
+  query?: {
+    take?: number;
+  };
+}
+export type GetEconomyWalletTransactionsOutput = Array<Types.EconomyContractsEconomyWalletTransaction>;
+export const getEconomyWalletTransactionsEndpoint = {
+  operationId: 'getEconomyWalletTransactions' as const,
+  method: 'GET' as const,
+  path: '/api/v1/economy/wallet/transactions' as const,
+  tags: ['Economy'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiLearningEnrollmentsInput {
   id: string;
 }
@@ -14318,6 +14348,8 @@ export const endpoints = {
   postApiSocialDiscussionsPin: postApiSocialDiscussionsPinEndpoint,
   postApiSocialDiscussionsUnpin: postApiSocialDiscussionsUnpinEndpoint,
   postApiSocialDiscussionsResolve: postApiSocialDiscussionsResolveEndpoint,
+  getEconomyWallet: getEconomyWalletEndpoint,
+  getEconomyWalletTransactions: getEconomyWalletTransactionsEndpoint,
   getApiLearningEnrollments: getApiLearningEnrollmentsEndpoint,
   getApiLearningEnrollmentsUsers: getApiLearningEnrollmentsUsersEndpoint,
   getApiLearningEnrollmentsCourses: getApiLearningEnrollmentsCoursesEndpoint,

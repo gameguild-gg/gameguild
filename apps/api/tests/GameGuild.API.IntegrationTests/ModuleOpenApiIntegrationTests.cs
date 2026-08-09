@@ -186,4 +186,19 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
         verifiedResponse.StatusCode.Should().NotBe(HttpStatusCode.NotFound);
         verifiedResponse.StatusCode.Should().NotBe(HttpStatusCode.MethodNotAllowed);
     }
+    [Fact]
+    public async Task Swagger_ShouldExposeAuthenticatedEconomyWalletReadRoutes()
+    {
+        using var client = _factory.CreateClient();
+        var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var document = JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsObject();
+        var paths = document["paths"]!.AsObject().Select(path => path.Key).ToArray();
+
+        paths.Should().Contain(path => path.EndsWith("/economy/wallet", StringComparison.Ordinal));
+        paths.Should().Contain(path => path.EndsWith("/economy/wallet/transactions", StringComparison.Ordinal));
+    }
+
 }
