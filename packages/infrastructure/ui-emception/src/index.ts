@@ -1,5 +1,7 @@
 export { default as Ide } from './components/Ide';
 export type { IdeProps, IdeHandle } from './components/Ide';
+export { default as TestResultsPanel } from './components/TestResultsPanel';
+export type { TestResultsPanelProps, TestReport, TestCaseResult } from './components/TestResultsPanel';
 export { parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './components/ide-types';
 export type {
   BundleFile,
