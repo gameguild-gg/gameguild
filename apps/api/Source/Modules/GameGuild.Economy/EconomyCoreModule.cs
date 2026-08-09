@@ -19,6 +19,7 @@ public sealed class EconomyCoreModule : ModuleBase
         services.AddEconomyRiskComposition(configuration);
         services.AddScoped<IRegisteredPostingGateway, PostgreSqlRegisteredPostingGateway>();
         services.AddScoped<IHardCoinFundingGateway, PostgreSqlHardCoinFundingGateway>();
+        services.AddScoped<IHardToSoftConversionGateway, PostgreSqlHardToSoftConversionGateway>();
         services.AddScoped<IFifoFragmentReservationGateway, PostgreSqlFifoFragmentReservationGateway>();
         services.AddScoped<IFifoTransferGateway, PostgreSqlFifoTransferGateway>();
         return services;
