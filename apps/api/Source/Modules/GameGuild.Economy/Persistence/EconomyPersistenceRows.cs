@@ -529,6 +529,16 @@ internal sealed class RegisteredPostingReceiptRow
     public bool Duplicate { get; set; }
 }
 
+internal sealed class ProviderReversalReceiptRow
+{
+    public Guid OperationId { get; set; }
+    public long RecoveredHardUnits { get; set; }
+    public long RecoveredConvertedSoftUnits { get; set; }
+    public long ResponsibleDebtHardUnits { get; set; }
+    public long PlatformLossHardUnits { get; set; }
+    public bool Duplicate { get; set; }
+}
+
 internal sealed class FifoFragmentReservationReceiptRow
 {
     public Guid ReservationId { get; set; }
