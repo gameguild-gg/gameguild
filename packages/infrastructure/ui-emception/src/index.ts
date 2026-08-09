@@ -1,5 +1,5 @@
 export { default as Ide } from './components/Ide';
-export type { IdeProps } from './components/Ide';
+export type { IdeProps, IdeHandle } from './components/Ide';
 export { parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './components/ide-types';
 export type {
   BundleFile,
