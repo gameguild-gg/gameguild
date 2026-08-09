@@ -1,7 +1,7 @@
 import type { OnMount } from '@monaco-editor/react';
-import { bootInWorker, DEFAULT_MANIFEST_URL } from '@gameguild/emception-browser';
+import { bootInWorker, DEFAULT_MANIFEST_URL, wrapWorkerClient } from '@gameguild/emception-browser';
 import { Terminal } from '@xterm/xterm';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
@@ -66,9 +66,18 @@ export interface IdeProps {
   workspaceUrl?: string;
 }
 
+/** Imperative handle exposed by `<Ide ref={...}>`. */
+export interface IdeHandle {
+  runTests: import('@gameguild/emception-browser').EmceptionAPI['runTests'];
+  compileAndRun: import('@gameguild/emception-browser').EmceptionAPI['compileAndRun'];
+  getFiles(): Promise<Array<{ path: string; content: string }>>;
+  setFiles(files: Array<{ path: string; content: string }>): Promise<void>;
+  reset(): Promise<void>;
+}
+
 type WorkerBoot = Awaited<ReturnType<typeof bootInWorker>>;
 
-export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFEST_URL, workspaceConfig, workspaceUrl }: IdeProps) {
+export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFEST_URL, workspaceConfig, workspaceUrl }, ref) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -77,6 +86,7 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
   /** The div inside whichever DockGroupPanel currently shows the canvas tab */
   const canvasHostElRef = useRef<HTMLDivElement | null>(null);
   const orchestratorRef = useRef<WorkerBoot | null>(null);
+  const apiRef = useRef<import('@gameguild/emception-browser').EmceptionAPI | null>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const terminalLogRef = useRef<HTMLPreElement | null>(null);
   /** Tracks blob URLs created for SDL output so they can be revoked on reset/unmount */
@@ -345,6 +355,7 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
           if (log.current) log.current.textContent = '';
         };
         orchestratorRef.current = result;
+        apiRef.current = wrapWorkerClient(result.client);
         // Expose worker client on window for E2E / debug access
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).__emception_client__ = result.client;
@@ -371,6 +382,7 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
       mounted = false;
       orchestratorRef.current?.client.terminate();
       orchestratorRef.current = null;
+      apiRef.current = null;
     };
   }, [terminalReady, manifestUrl, doBootstrap]);
 
@@ -381,6 +393,36 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
       sdlScriptRef.current?.remove();
     };
   }, []);
+
+  useImperativeHandle(ref, () => ({
+    runTests: async (plan) => {
+      const api = apiRef.current;
+      if (!api) throw new Error('Worker not booted yet');
+      return api.runTests(plan);
+    },
+    compileAndRun: async (sourceOrFiles?, opts?) => {
+      const api = apiRef.current;
+      if (!api) throw new Error('Worker not booted yet');
+      return api.compileAndRun(sourceOrFiles, opts);
+    },
+    getFiles: async () => {
+      return Object.values(filesRef.current)
+        .filter((f) => f.type === 'text')
+        .map(({ path, content }) => ({ path, content }));
+    },
+    setFiles: async (newFiles) => {
+      const updated: Record<string, WorkspaceFile> = {};
+      for (const { path, content } of newFiles) {
+        updated[path] = { path, type: 'text', content };
+      }
+      setFiles((prev) => ({ ...prev, ...updated }));
+      filesRef.current = { ...filesRef.current, ...updated };
+      await syncFilesToVfs({ ...filesRef.current, ...updated });
+    },
+    reset: async () => {
+      await orchestratorRef.current?.client.resetVfs();
+    },
+  }), [syncFilesToVfs]);
 
   const ensureOpenTab = useCallback(
     (path: string, group: DockGroup = 'main') => {
@@ -1646,6 +1688,7 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
     const { client } = orchestratorRef.current;
     client.terminate();
     orchestratorRef.current = null;
+    apiRef.current = null;
     setExecutionPhase('idle');
     setIsReady(false);
     setStatus('Stopped — rebooting...');
@@ -1929,4 +1972,4 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
       </div>
     </div>
   );
-}
+});
