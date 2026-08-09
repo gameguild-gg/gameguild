@@ -1,4 +1,5 @@
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Funding;
 using GameGuild.Economy.Risk;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ public sealed class EconomyCoreModule : ModuleBase
 
         services.AddEconomyRiskComposition(configuration);
         services.AddScoped<IRegisteredPostingGateway, PostgreSqlRegisteredPostingGateway>();
+        services.AddScoped<IHardCoinFundingGateway, PostgreSqlHardCoinFundingGateway>();
         return services;
     }
 }

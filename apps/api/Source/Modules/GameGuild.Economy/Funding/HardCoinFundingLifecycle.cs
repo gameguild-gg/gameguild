@@ -82,6 +82,7 @@ public sealed record AdRewardIssuanceResult(PostingResult Posting, CreditLot Out
 public sealed record ProviderMonetaryLeg
 {
     private const char Separator = '\u001f';
+    private const int MaximumPersistentSourceReferenceLength = 256;
 
     public ProviderMonetaryLeg(
         string provider,
@@ -96,6 +97,8 @@ public sealed record ProviderMonetaryLeg
         ProviderObject = Normalize(providerObject, nameof(providerObject));
         MonetaryLeg = Normalize(monetaryLeg, nameof(monetaryLeg));
         Key = string.Join(Separator, Provider, Environment, ConnectedAccount, ProviderObject, MonetaryLeg);
+        if (Key.Length > MaximumPersistentSourceReferenceLength)
+            throw new ArgumentOutOfRangeException(nameof(provider), "Provider monetary leg identity exceeds the persistent source reference limit.");
     }
 
     public string Provider { get; }
