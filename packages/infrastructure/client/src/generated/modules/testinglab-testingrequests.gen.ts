@@ -56,7 +56,7 @@ export class TestinglabTestingrequestsModule {
 
   /**
    */
-  async getTestingRequests1(id: string): Promise<Result<Types.TestingLabTestingInput, ApiError>> {
+  async getTestingRequests1(id: string): Promise<Result<Types.TestingLabTestingRequestDetailProjection, ApiError>> {
     const url = `/v1/testing/requests/${id}`;
 
     const result = await this.client.request({
@@ -67,7 +67,7 @@ export class TestinglabTestingrequestsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.TestingLabTestingInputSchema, result.data, 'response');
+      const validatedData = safeParse(Types.TestingLabTestingRequestDetailProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

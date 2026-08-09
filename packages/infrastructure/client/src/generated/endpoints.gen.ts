@@ -11648,7 +11648,7 @@ export const postTestingRequestsEndpoint = {
 export interface GetTestingRequests1Input {
   id: string;
 }
-export type GetTestingRequests1Output = Types.TestingLabTestingInput;
+export type GetTestingRequests1Output = Types.TestingLabTestingRequestDetailProjection;
 export const getTestingRequests1Endpoint = {
   operationId: 'getTestingRequests1' as const,
   method: 'GET' as const,
