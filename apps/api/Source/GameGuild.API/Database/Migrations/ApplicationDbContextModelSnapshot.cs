@@ -15471,6 +15471,29 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<DateTime>("EndsAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("RecurrenceDaysOfWeek")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("RecurrenceEndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RecurrenceFrequency")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("RecurrenceInterval")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RecurrenceOccurrence")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RecurrenceOccurrenceCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("RecurrenceSeriesId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("LearningActivityId")
                         .HasColumnType("uuid");
 
@@ -15520,6 +15543,9 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("TenantId", "Status", "StartsAt");
+
+                    b.HasIndex("RecurrenceSeriesId", "RecurrenceOccurrence")
+                        .HasDatabaseName("IX_testing_events_recurrence_series_occurrence");
 
                     b.ToTable("testing_events", (string)null);
                 });

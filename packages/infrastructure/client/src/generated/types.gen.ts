@@ -7021,6 +7021,7 @@ export interface TestingLabCreateTestingEventInput {
   startsAt?: string;
   endsAt?: string;
   requiresFeedback?: boolean;
+  recurrence?: TestingLabTestingEventRecurrenceInput;
 }
 
 export interface TestingLabCreateTestingLabRoleInput {
@@ -7353,6 +7354,13 @@ export interface TestingLabTestingEvent {
   applicationsCloseAt?: string;
   startsAt?: string;
   endsAt?: string;
+  recurrenceSeriesId?: string | null;
+  recurrenceOccurrence?: number | null;
+  recurrenceFrequency?: TestingLabTestingEventRecurrenceFrequency;
+  recurrenceInterval?: number | null;
+  recurrenceDaysOfWeek?: string | null;
+  recurrenceEndsAt?: string | null;
+  recurrenceOccurrenceCount?: number | null;
   requiresFeedback?: boolean;
   learningCompletionRequirement?: TestingLabTestingLearningCompletionRequirement;
   courseId?: string | null;
@@ -7422,6 +7430,23 @@ export interface TestingLabTestingEventProjection {
   tenantId?: string | null;
   slotCount?: number;
   applicationCount?: number;
+  recurrenceSeriesId?: string | null;
+  recurrenceOccurrence?: number | null;
+  recurrenceFrequency?: TestingLabTestingEventRecurrenceFrequency;
+  recurrenceInterval?: number | null;
+  recurrenceDaysOfWeek?: Array<SystemDayOfWeek> | null;
+  recurrenceEndsAt?: string | null;
+  recurrenceOccurrenceCount?: number | null;
+}
+
+export type TestingLabTestingEventRecurrenceFrequency = 'Daily' | 'Weekly' | 'Monthly';
+
+export interface TestingLabTestingEventRecurrenceInput {
+  frequency?: TestingLabTestingEventRecurrenceFrequency;
+  interval?: number;
+  daysOfWeek?: Array<SystemDayOfWeek> | null;
+  endsAt?: string | null;
+  occurrenceCount?: number | null;
 }
 
 export interface TestingLabTestingEventSlot {
@@ -8823,6 +8848,8 @@ export let TestingLabTestingEventFeedbackProjectionSchema: z.ZodType<TestingLabT
 export let TestingLabTestingEventFeedbackReviewProjectionSchema: z.ZodType<TestingLabTestingEventFeedbackReviewProjection>;
 export let TestingLabTestingEventModeSchema: z.ZodType<TestingLabTestingEventMode>;
 export let TestingLabTestingEventProjectionSchema: z.ZodType<TestingLabTestingEventProjection>;
+export let TestingLabTestingEventRecurrenceFrequencySchema: z.ZodType<TestingLabTestingEventRecurrenceFrequency>;
+export let TestingLabTestingEventRecurrenceInputSchema: z.ZodType<TestingLabTestingEventRecurrenceInput>;
 export let TestingLabTestingEventSlotSchema: z.ZodType<TestingLabTestingEventSlot>;
 export let TestingLabTestingEventSlotProjectionSchema: z.ZodType<TestingLabTestingEventSlotProjection>;
 export let TestingLabTestingEventStatusSchema: z.ZodType<TestingLabTestingEventStatus>;
@@ -17184,6 +17211,7 @@ TestingLabCreateTestingEventInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().optional(),
   requiresFeedback: z.boolean().optional(),
+  recurrence: z.lazy(() => TestingLabTestingEventRecurrenceInputSchema).optional(),
 });
 
 /** Zod schema for TestingLabCreateTestingLabRoleInput */
@@ -17574,6 +17602,13 @@ TestingLabTestingEventSchema = z.object({
   applicationsCloseAt: z.string().datetime().optional(),
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().optional(),
+  recurrenceSeriesId: z.string().uuid().nullable().optional(),
+  recurrenceOccurrence: z.number().int().nullable().optional(),
+  recurrenceFrequency: z.lazy(() => TestingLabTestingEventRecurrenceFrequencySchema).optional(),
+  recurrenceInterval: z.number().int().nullable().optional(),
+  recurrenceDaysOfWeek: z.string().max(64).nullable().optional(),
+  recurrenceEndsAt: z.string().datetime().nullable().optional(),
+  recurrenceOccurrenceCount: z.number().int().nullable().optional(),
   requiresFeedback: z.boolean().optional(),
   learningCompletionRequirement: z.lazy(() => TestingLabTestingLearningCompletionRequirementSchema).optional(),
   courseId: z.string().uuid().nullable().optional(),
@@ -17658,6 +17693,31 @@ TestingLabTestingEventProjectionSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
   slotCount: z.number().int().optional(),
   applicationCount: z.number().int().optional(),
+  recurrenceSeriesId: z.string().uuid().nullable().optional(),
+  recurrenceOccurrence: z.number().int().nullable().optional(),
+  recurrenceFrequency: z.lazy(() => TestingLabTestingEventRecurrenceFrequencySchema).optional(),
+  recurrenceInterval: z.number().int().nullable().optional(),
+  recurrenceDaysOfWeek: z
+    .array(z.lazy(() => SystemDayOfWeekSchema))
+    .nullable()
+    .optional(),
+  recurrenceEndsAt: z.string().datetime().nullable().optional(),
+  recurrenceOccurrenceCount: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for TestingLabTestingEventRecurrenceFrequency */
+TestingLabTestingEventRecurrenceFrequencySchema = z.enum(['Daily', 'Weekly', 'Monthly']);
+
+/** Zod schema for TestingLabTestingEventRecurrenceInput */
+TestingLabTestingEventRecurrenceInputSchema = z.object({
+  frequency: z.lazy(() => TestingLabTestingEventRecurrenceFrequencySchema).optional(),
+  interval: z.number().int().optional(),
+  daysOfWeek: z
+    .array(z.lazy(() => SystemDayOfWeekSchema))
+    .nullable()
+    .optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  occurrenceCount: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingEventSlot */

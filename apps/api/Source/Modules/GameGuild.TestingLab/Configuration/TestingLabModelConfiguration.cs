@@ -329,6 +329,8 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
             builder.Property(testingEvent => testingEvent.ApprovalMode).HasConversion<string>().HasMaxLength(40);
             builder.Property(testingEvent => testingEvent.Status).HasConversion<string>().HasMaxLength(40);
             builder.Property(testingEvent => testingEvent.LearningCompletionRequirement).HasConversion<string>().HasMaxLength(100);
+            builder.Property(testingEvent => testingEvent.RecurrenceFrequency).HasConversion<string>().HasMaxLength(20);
+            builder.Property(testingEvent => testingEvent.RecurrenceDaysOfWeek).HasMaxLength(64);
             builder.HasOne(testingEvent => testingEvent.Manager)
                 .WithMany()
                 .HasForeignKey(testingEvent => testingEvent.ManagerUserId)
@@ -347,6 +349,8 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Cascade);
             builder.HasIndex(testingEvent => testingEvent.TenantId);
             builder.HasIndex(testingEvent => new { testingEvent.TenantId, testingEvent.Status, testingEvent.StartsAt });
+            builder.HasIndex(testingEvent => new { testingEvent.RecurrenceSeriesId, testingEvent.RecurrenceOccurrence })
+                .HasDatabaseName("IX_testing_events_recurrence_series_occurrence");
         });
     }
 

@@ -30,7 +30,7 @@ vi.mock('@/lib/testing-lab/events-actions', () => ({
   waitlistTestingEventApplication: vi.fn(),
 }));
 
-import { TestingEventApplications } from './testing-event-management';
+import { CreateTestingEventDialog, TestingEventApplications } from './testing-event-management';
 
 describe('TestingEventApplications', () => {
   it('shows human labels and refreshes the SSR view after review starts', async () => {
@@ -98,5 +98,26 @@ describe('TestingEventApplications', () => {
     expect(
       await screen.findByRole('combobox', { name: 'Testing slot' }),
     ).toBeInTheDocument();
+  });
+
+  it('uses a guarded drawer and mirrors the start into the initial event end', () => {
+    render(<CreateTestingEventDialog />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'New event' }));
+    const startsAt = screen.getByLabelText('Event starts') as HTMLInputElement;
+    const endsAt = screen.getByLabelText('Event ends') as HTMLInputElement;
+
+    fireEvent.change(startsAt, { target: { value: '2026-08-10T19:00' } });
+
+    expect(endsAt.value).toBe('2026-08-10T19:00');
+
+    fireEvent.change(screen.getByLabelText('Event name'), { target: { value: 'Community playtest' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.getByRole('alertdialog')).toHaveTextContent('Discard testing event draft?');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+
+    expect(screen.getByText('Create testing event')).toBeInTheDocument();
   });
 });
