@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   postCoursesContent: vi.fn(),
   postCoursesContentReorder: vi.fn(),
   deleteCoursesContent: vi.fn(),
+  postAssessments: vi.fn(),
   putAssessments: vi.fn(),
   deleteAssessments: vi.fn(),
   getCourses1: vi.fn(),
@@ -56,6 +57,7 @@ vi.mock("@game-guild/client", () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
     LearningAssessmentsModule: class {
+      postAssessments = mocks.postAssessments;
       putAssessments = mocks.putAssessments;
       deleteAssessments = mocks.deleteAssessments;
       postAssessmentsGroups = mocks.postAssessmentsGroups;
@@ -128,6 +130,8 @@ vi.mock("@/lib/learning/course-launch", () => ({
 const {
   createCertificateTemplate,
   addContent,
+  createAssessment,
+  updateAssessmentDefinition,
   updateCertificateTemplate,
   deleteCertificateTemplate,
   deleteContent,
@@ -156,6 +160,7 @@ describe("learning server actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getToken.mockResolvedValue("access-token");
+    mocks.resolveCourseId.mockReset();
     mocks.resolveCourseId.mockImplementation(
       async (courseId: string) => courseId,
     );
@@ -760,13 +765,16 @@ describe("learning server actions", () => {
     });
 
     expect(result).toEqual({ success: true, data: { id: 'content-1' } });
-    expect(JSON.parse(mocks.fetch.mock.calls[0]![1]!.body as string)).toEqual(expect.objectContaining({
-      programId: '1caa16bb-6810-4e53-bb0d-91f0d5702333',
-      parentId: '9ec3b854-89ca-4757-83fb-cfc823da1a5e',
-      title: 'Camera blocking walkthrough',
-      type: 'Lesson',
-      lessonFormat: 'Video',
-    }));
+    expect(mocks.postCoursesContent).toHaveBeenCalledWith(
+      '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+      expect.objectContaining({
+        programId: '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+        parentId: '9ec3b854-89ca-4757-83fb-cfc823da1a5e',
+        title: 'Camera blocking walkthrough',
+        type: 'Lesson',
+        lessonFormat: 'Video',
+      }),
+    );
   });
 
   it('uses the generated program contract to reorder course content', async () => {
