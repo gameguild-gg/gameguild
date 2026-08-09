@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+    <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="GameGuild.Economy.UnitTests" />
