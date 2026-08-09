@@ -26,7 +26,8 @@ public sealed class EconomyRiskCompositionTests
     {
         var values = new Dictionary<string, string?>
         {
-            [$"{EconomyRiskCompositionOptions.SectionName}:ValueMovingDecisionsEnabled"] = "true"
+            [EconomyRiskCompositionOptions.SectionName + ":ValueMovingDecisionsEnabled"] = "true",
+            [EconomyRiskCompositionOptions.SectionName + ":EnabledCapabilities:0"] = "ConfirmHardCoinFunding"
         };
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
         var services = new ServiceCollection();
@@ -36,7 +37,13 @@ public sealed class EconomyRiskCompositionTests
         var gate = provider.GetRequiredService<IEconomyValueMovementDecisionGate>();
 
         gate.IsEnabled.Should().BeTrue();
+        gate.IsCapabilityEnabled(EconomyValueMovementCapability.ConfirmHardCoinFunding).Should().BeTrue();
+        gate.IsCapabilityEnabled(EconomyValueMovementCapability.PayoutExecution).Should().BeFalse();
         FluentActions.Invoking(gate.EnsureEnabled).Should().NotThrow();
+        FluentActions.Invoking(() => gate.EnsureEnabled(EconomyValueMovementCapability.ConfirmHardCoinFunding))
+            .Should().NotThrow();
+        FluentActions.Invoking(() => gate.EnsureEnabled(EconomyValueMovementCapability.PayoutExecution))
+            .Should().Throw<EconomyValueMovementDisabledException>();
     }
 
     [Fact]
@@ -47,5 +54,37 @@ public sealed class EconomyRiskCompositionTests
             .Should().Throw<ArgumentNullException>();
         FluentActions.Invoking(() => new ServiceCollection().AddEconomyRiskComposition(null!))
             .Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void ValueMovingDecisionsRequireNamedCapabilities()
+    {
+        var values = new Dictionary<string, string?>
+        {
+            [EconomyRiskCompositionOptions.SectionName + ":ValueMovingDecisionsEnabled"] = "true"
+        };
+        var services = new ServiceCollection();
+        services.AddEconomyRiskComposition(new ConfigurationBuilder().AddInMemoryCollection(values).Build());
+
+        using var provider = services.BuildServiceProvider();
+        FluentActions.Invoking(() => provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<EconomyRiskCompositionOptions>>().Value)
+            .Should().Throw<Microsoft.Extensions.Options.OptionsValidationException>();
+    }
+
+    [Theory]
+    [InlineData("Unknown")]
+    [InlineData("confirm-hard-coin-funding")]
+    public void ValueMovingCapabilitiesRejectUnknownNames(string capability)
+    {
+        var values = new Dictionary<string, string?>
+        {
+            [EconomyRiskCompositionOptions.SectionName + ":EnabledCapabilities:0"] = capability
+        };
+        var services = new ServiceCollection();
+        services.AddEconomyRiskComposition(new ConfigurationBuilder().AddInMemoryCollection(values).Build());
+
+        using var provider = services.BuildServiceProvider();
+        FluentActions.Invoking(() => provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<EconomyRiskCompositionOptions>>().Value)
+            .Should().Throw<Microsoft.Extensions.Options.OptionsValidationException>();
     }
 }
