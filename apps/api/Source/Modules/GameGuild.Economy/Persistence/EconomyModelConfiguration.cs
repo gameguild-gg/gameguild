@@ -19,6 +19,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         ConfigureChain(modelBuilder);
         ConfigureReserves(modelBuilder);
         ConfigureRisk(modelBuilder);
+        ConfigureRegisteredPostingReceipt(modelBuilder);
     }
 
     private static void ConfigureWallets(ModelBuilder modelBuilder)
@@ -951,6 +952,18 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .WithMany()
                 .HasForeignKey(row => row.RiskDecisionId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+    private static void ConfigureRegisteredPostingReceipt(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<RegisteredPostingReceiptRow>(builder =>
+        {
+            builder.HasNoKey();
+            builder.ToView(null);
+            builder.Property(row => row.PostingId).HasColumnName("posting_id");
+            builder.Property(row => row.JournalSequence).HasColumnName("journal_sequence");
+            builder.Property(row => row.JournalHash).HasColumnName("journal_hash");
+            builder.Property(row => row.Duplicate).HasColumnName("duplicate");
         });
     }
 }

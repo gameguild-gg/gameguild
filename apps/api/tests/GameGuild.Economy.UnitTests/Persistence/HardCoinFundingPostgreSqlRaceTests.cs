@@ -26,7 +26,7 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
 
     public Task DisposeAsync() => _container.DisposeAsync().AsTask();
 
-    [Fact]
+    [DockerFact]
     public async Task ConfirmationVersusFailure_HasOneTerminalWinnerAndAtMostOneMintRoot()
     {
         await ResetSchemaAsync();
@@ -77,7 +77,7 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
         }
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ProviderLegAndCumulativeReversal_AreEnforcedByPostgreSql()
     {
         await ResetSchemaAsync();
@@ -273,5 +273,13 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
     {
         protected override void OnModelCreating(ModelBuilder modelBuilder) =>
             new EconomyModelConfiguration().Configure(modelBuilder);
+    }
+    private sealed class DockerFactAttribute : FactAttribute
+    {
+        public DockerFactAttribute()
+        {
+            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
+                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
+        }
     }
 }
