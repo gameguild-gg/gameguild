@@ -411,6 +411,31 @@ export const deleteAssessmentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAssessmentsDefinitionInput {
+  id: string;
+}
+export type GetAssessmentsDefinitionOutput = Types.LearningAssessmentsAssessmentDefinition;
+export const getAssessmentsDefinitionEndpoint = {
+  operationId: 'getAssessmentsDefinition' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/{id}/definition' as const,
+  tags: ['Learning/assessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutAssessmentsDefinitionInput {
+  id: string;
+  body?: Types.LearningAssessmentsUpdateAssessmentDefinitionInput;
+}
+export type PutAssessmentsDefinitionOutput = Types.LearningAssessmentsAssessmentDefinition;
+export const putAssessmentsDefinitionEndpoint = {
+  operationId: 'putAssessmentsDefinition' as const,
+  method: 'PUT' as const,
+  path: '/v1/assessments/{id}/definition' as const,
+  tags: ['Learning/assessments'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAssessmentsCourseInput {
   courseId: string;
 }
@@ -11659,7 +11684,7 @@ export const getTestingRequests1Endpoint = {
 
 export interface PutTestingRequestsInput {
   id: string;
-  body?: Types.TestingLabTestingInput;
+  body?: Types.TestingLabUpdateTestingInput;
 }
 export type PutTestingRequestsOutput = Types.TestingLabTestingInput;
 export const putTestingRequestsEndpoint = {
@@ -13987,6 +14012,8 @@ export const endpoints = {
   getAssessments: getAssessmentsEndpoint,
   putAssessments: putAssessmentsEndpoint,
   deleteAssessments: deleteAssessmentsEndpoint,
+  getAssessmentsDefinition: getAssessmentsDefinitionEndpoint,
+  putAssessmentsDefinition: putAssessmentsDefinitionEndpoint,
   getAssessmentsCourse: getAssessmentsCourseEndpoint,
   getAssessmentsCourseGroups: getAssessmentsCourseGroupsEndpoint,
   getAssessmentsCourseAnalytics: getAssessmentsCourseAnalyticsEndpoint,

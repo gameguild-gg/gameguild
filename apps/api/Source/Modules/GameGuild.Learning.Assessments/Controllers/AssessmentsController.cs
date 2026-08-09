@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
+
 namespace GameGuild.Learning.Assessments;
 
 /// <summary>
@@ -74,6 +76,19 @@ public class AssessmentsController : BaseApiController
         }
 
         return Ok(AssessmentDto.FromEntity(assessment));
+    }
+
+    /// <summary>
+    /// Gets the structured authoring definition for an assessment.
+    /// </summary>
+    [HttpGet("{id:guid}/definition")]
+    public async Task<ActionResult<AssessmentDefinitionDto>> GetAssessmentDefinition(Guid id)
+    {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
+        return Ok(AssessmentDefinitionDto.FromEntity(assessment));
     }
 
     /// <summary>
@@ -197,6 +212,29 @@ public class AssessmentsController : BaseApiController
         }
 
         return Ok(AssessmentDto.FromEntity(result.Value));
+    }
+
+    /// <summary>
+    /// Replaces the structured authoring definition for an assessment.
+    /// </summary>
+    [HttpPut("{id:guid}/definition")]
+    public async Task<ActionResult<AssessmentDefinitionDto>> UpdateAssessmentDefinition(
+        Guid id,
+        [FromBody] UpdateAssessmentDefinitionRequest request)
+    {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
+        var result = await _assessmentService.UpdateAssessmentDefinitionAsync(id, request).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
+                : BadRequest(result.Error);
+        }
+
+        return Ok(AssessmentDefinitionDto.FromEntity(result.Value));
     }
 
     /// <summary>
@@ -685,6 +723,18 @@ public sealed record AssessmentDto(
         entity.DueAt,
         entity.AllowLateSubmissions,
         entity.LateSubmissionDeadline);
+}
+
+public sealed record AssessmentDefinitionDto(
+    Guid AssessmentId,
+    int DefinitionSchemaVersion,
+    JsonElement Definition)
+{
+    public static AssessmentDefinitionDto FromEntity(Assessment entity)
+    {
+        using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(entity.DefinitionPayload) ? "{}" : entity.DefinitionPayload);
+        return new AssessmentDefinitionDto(entity.Id, entity.DefinitionSchemaVersion, document.RootElement.Clone());
+    }
 }
 
 public sealed record InteractiveVideoAssessmentCueDto(

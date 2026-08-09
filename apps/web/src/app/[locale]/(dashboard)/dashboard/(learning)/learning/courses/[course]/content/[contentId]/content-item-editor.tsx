@@ -42,7 +42,6 @@ import {
 } from "./lesson-content-editor";
 import { LessonCodeEditor } from "./lesson-code-editor";
 import { LessonVideoEditor } from "./lesson-video-editor";
-import { LessonExternalLinkEditor } from "./lesson-external-link-editor";
 import { QuizContentEditor } from "./quiz-content-editor";
 
 function formatContentTypeLabel(type: ContentItemDetail["type"]) {
@@ -96,7 +95,6 @@ export function ContentItemEditor({
   // ponytail: simple string refs; one source of truth per format, swapped on format change.
   const codeBodyRef = useRef<string>(item.content ?? "");
   const videoUrlRef = useRef<string>(item.content ?? "");
-  const externalLinkRef = useRef<string>(item.content ?? "");
   const quizContentRef = useRef<string | undefined>(
     item.type === "Questionnaire" ? (item.content ?? undefined) : undefined,
   );
@@ -111,9 +109,8 @@ export function ContentItemEditor({
     if (item.jsonBody || parseLexicalState(item.content)) return "Lexical";
     return "Markdown";
   }, [item.lessonFormat, item.content]);
-  const [selectedFormat, setSelectedFormat] = useState<string>(
-    initialSelectedFormat,
-  );
+  const [selectedFormat, setSelectedFormat] =
+    useState<LearningCoursesLessonContentFormat>(initialSelectedFormat);
 
   const handleEditorChange = useCallback((state: SerializedEditorState) => {
     editorStateRef.current = state;
@@ -145,15 +142,11 @@ export function ContentItemEditor({
             | undefined;
           break;
         case "Markdown":
-        case "Html":
         case "RevealJs":
           bodyToSave = codeBodyRef.current || undefined;
           break;
         case "Video":
           bodyToSave = videoUrlRef.current || undefined;
-          break;
-        case "ExternalLink":
-          bodyToSave = externalLinkRef.current || undefined;
           break;
       }
     } else if (isQuiz) {
@@ -201,13 +194,10 @@ export function ContentItemEditor({
       case "Lexical":
         return editorStateRef.current;
       case "Markdown":
-      case "Html":
       case "RevealJs":
         return codeBodyRef.current;
       case "Video":
         return videoUrlRef.current;
-      case "ExternalLink":
-        return externalLinkRef.current;
       default:
         return "";
     }
@@ -314,16 +304,6 @@ export function ContentItemEditor({
                   />
                 )}
 
-              {isLesson && selectedFormat === "Html" && !previewMode && (
-                <LessonCodeEditor
-                  key={item.id}
-                  initialValue={codeBodyRef.current}
-                  language="html"
-                  placeholder="Write lesson content in HTML."
-                  onChange={(v) => (codeBodyRef.current = v)}
-                />
-              )}
-
               {isLesson &&
                 selectedFormat === "RevealJs" &&
                 !previewMode && (
@@ -344,27 +324,12 @@ export function ContentItemEditor({
                 />
               )}
 
-              {isLesson &&
-                selectedFormat === "ExternalLink" &&
-                !previewMode && (
-                  <LessonExternalLinkEditor
-                    key={item.id}
-                    initialValue={externalLinkRef.current}
-                    onChange={(v) => (externalLinkRef.current = v)}
-                  />
-                )}
-
               {isLesson && previewMode && (
-                <div
-                  data-testid="lesson-preview"
-                  className="rounded-lg border border-gray-200 p-4 dark:border-gray-700 min-h-[400px]"
-                >
+                <div data-testid="lesson-preview" className="rounded-md border p-4">
                   <LearnerLessonRenderer
                     courseId={courseId}
                     itemId={item.id}
-                    format={
-                      selectedFormat as LearningCoursesLessonContentFormat
-                    }
+                    format={selectedFormat}
                     content={previewContent}
                   />
                 </div>

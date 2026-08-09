@@ -17,7 +17,7 @@ public class UpdateProgramContentDto {
 
   public string? Body { get; set; }
 
-  public JsonDocument? JsonBody { get; set; }
+  public JsonElement? JsonBody { get; set; }
 
   public LessonContentFormat? LessonFormat { get; set; }
 
