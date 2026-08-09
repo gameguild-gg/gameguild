@@ -7,7 +7,7 @@ namespace GameGuild.Economy.Treasury.UnitTests;
 public sealed class TreasuryModuleTests
 {
     [Fact]
-    public void ModuleAndCompositionHookRemainDisabledAndCannotMutateCore()
+    public void ModuleAndCompositionHookRemainDisabledAndRegisterOnlyDurablePersistence()
     {
         var module = new TreasuryModule();
         var services = new ServiceCollection();
@@ -17,6 +17,15 @@ public sealed class TreasuryModuleTests
         module.EnabledByDefault.Should().BeFalse();
         module.ConfigureServices(services, configuration).Should().BeSameAs(services);
         services.AddTreasuryComposition(configuration).Should().BeSameAs(services);
-        services.Should().BeEmpty();
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IAdminWithdrawalStore) &&
+            descriptor.ImplementationType == typeof(PostgreSqlAdminWithdrawalStore) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IAdminWithdrawalAuditTrail) &&
+            descriptor.ImplementationType == typeof(PostgreSqlAdminWithdrawalAuditTrail) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(AdminWithdrawalCoordinator));
+        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(DbContext));
     }
 }
