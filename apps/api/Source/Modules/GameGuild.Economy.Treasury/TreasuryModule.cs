@@ -7,8 +7,18 @@ public sealed class TreasuryModule : ModuleBase
 {
     public override string Name => "Economy.Treasury";
     public override bool EnabledByDefault => false;
-    public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
-        => services;
+
+    public override IServiceCollection ConfigureServices(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        services.AddScoped<IAdminWithdrawalStore, PostgreSqlAdminWithdrawalStore>();
+        services.AddScoped<IAdminWithdrawalAuditTrail, PostgreSqlAdminWithdrawalAuditTrail>();
+        return services;
+    }
 }
 
 public static class TreasuryCompositionExtensions
