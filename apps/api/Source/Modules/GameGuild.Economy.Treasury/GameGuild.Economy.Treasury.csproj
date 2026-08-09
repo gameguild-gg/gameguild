@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <ProjectReference Include="..\GameGuild.Economy\GameGuild.Economy.csproj" />
     <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
   </ItemGroup>

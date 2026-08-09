@@ -13,25 +13,25 @@ public sealed class AdminWithdrawalCoordinator
     private const long UsdNanosPerCent = 10_000_000;
     private readonly object _gate = new();
     private readonly InMemoryLedgerKernelStore _ledger;
-    private readonly InMemoryAdminWithdrawalStore _operations;
+    private readonly IAdminWithdrawalStore _operations;
     private readonly RootReversalFenceRegistry _rootFences;
     private readonly TreasuryOperationGate _treasuryGate;
     private readonly CoreReserveAuthority _reserveAuthority;
     private readonly IAdminWithdrawalProvider _provider;
     private readonly IAdminWithdrawalProviderEvidenceVerifier _providerEvidence;
-    private readonly AdminWithdrawalAuditTrail _audit;
+    private readonly IAdminWithdrawalAuditTrail _audit;
     private readonly AdminWithdrawalExecutionGate _execution;
     private long _nextFencingToken;
 
     public AdminWithdrawalCoordinator(
         InMemoryLedgerKernelStore ledger,
-        InMemoryAdminWithdrawalStore operations,
+        IAdminWithdrawalStore operations,
         RootReversalFenceRegistry rootFences,
         TreasuryOperationGate treasuryGate,
         CoreReserveAuthority reserveAuthority,
         IAdminWithdrawalProvider provider,
         IAdminWithdrawalProviderEvidenceVerifier providerEvidence,
-        AdminWithdrawalAuditTrail audit,
+        IAdminWithdrawalAuditTrail audit,
         AdminWithdrawalExecutionGate execution)
     {
         _ledger = ledger ?? throw new ArgumentNullException(nameof(ledger));
