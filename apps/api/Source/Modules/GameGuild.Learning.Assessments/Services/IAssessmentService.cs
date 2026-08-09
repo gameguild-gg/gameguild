@@ -1,3 +1,4 @@
+using System.Text.Json;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -32,6 +33,11 @@ public interface IAssessmentService
     /// Updates an existing assessment
     /// </summary>
     Task<Result<Assessment>> UpdateAssessmentAsync(Guid id, UpdateAssessmentRequest request);
+
+    /// <summary>
+    /// Replaces the structured authoring definition for an assessment.
+    /// </summary>
+    Task<Result<Assessment>> UpdateAssessmentDefinitionAsync(Guid id, UpdateAssessmentDefinitionRequest request);
 
     /// <summary>
     /// Deletes an assessment
@@ -185,6 +191,14 @@ public sealed record UpdateAssessmentRequest(
 /// <summary>
 /// Request to create a weighted assessment group.
 /// </summary>
+/// <summary>
+/// Request to replace an assessment authoring definition.
+/// </summary>
+public sealed record UpdateAssessmentDefinitionRequest(
+    int DefinitionSchemaVersion,
+    JsonElement Definition
+);
+
 public sealed record CreateAssessmentGroupRequest(
     Guid CourseId,
     string Name,

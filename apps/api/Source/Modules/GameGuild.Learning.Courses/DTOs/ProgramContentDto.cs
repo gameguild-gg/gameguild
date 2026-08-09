@@ -22,7 +22,7 @@ public class ProgramContentDto {
 
   public string? Body { get; set; }
 
-  public JsonDocument? JsonBody { get; set; }
+  public JsonElement? JsonBody { get; set; }
 
   [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
   public LessonContentFormat? LessonFormat { get; set; }

@@ -31,7 +31,7 @@ public static class ProgramContentMappingExtensions
       Description = content.Description ?? string.Empty,
       Type = normalizedType,
       Body = FormatBody(content.Body),
-      JsonBody = content.JsonBody is null ? null : JsonDocument.Parse(content.JsonBody),
+      JsonBody = content.JsonBody is null ? null : JsonDocument.Parse(content.JsonBody).RootElement.Clone(),
       LessonFormat = isLesson ? content.LessonFormat ?? LessonContentFormatInference.FromBody(content.Body) : null,
       ActivitySettings = content.GetActivitySettings(),
       SortOrder = content.SortOrder,

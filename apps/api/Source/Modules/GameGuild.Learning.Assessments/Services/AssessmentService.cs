@@ -212,6 +212,36 @@ public class AssessmentService : IAssessmentService
         }
     }
 
+    public async Task<Result<Assessment>> UpdateAssessmentDefinitionAsync(
+        Guid id,
+        UpdateAssessmentDefinitionRequest request)
+    {
+        try
+        {
+            var assessment = await GetAssessmentByIdAsync(id).ConfigureAwait(false);
+            if (assessment == null)
+            {
+                return Result.Failure<Assessment>(Error.NotFound("Assessment", "Assessment not found"));
+            }
+
+            assessment.SetDefinition(request.Definition, request.DefinitionSchemaVersion);
+            _context.Set<Assessment>().Update(assessment);
+            await _context.SaveChangesAsync().ConfigureAwait(false);
+
+            _logger.LogInformation("Assessment definition updated: {AssessmentId}", id);
+            return Result.Success(assessment);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure<Assessment>(Error.Validation("Assessment.InvalidDefinition", ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating assessment definition {AssessmentId}", id);
+            return Result.Failure<Assessment>(Error.Failure("UpdateAssessmentDefinition", "Failed to update assessment definition"));
+        }
+    }
+
     public async Task<Result> DeleteAssessmentAsync(Guid id)
     {
         try
