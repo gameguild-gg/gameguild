@@ -64,6 +64,14 @@ export interface IdeProps {
   manifestUrl?: string;
   workspaceConfig?: WorkspaceConfig;
   workspaceUrl?: string;
+  /** Fired after ref.runTests() resolves with a structured TestReport. */
+  onTestReport?: (report: import('@gameguild/emception-browser').EmceptionAPI extends { runTests: (...a: any[]) => Promise<infer R> } ? R : never) => void;
+  /** Tee'd from tty.write — receives raw text written to the terminal (stdout path). */
+  onStdout?: (chunk: string) => void;
+  /** Tee'd from tty.writeError — receives raw text written to the terminal (stderr path). */
+  onStderr?: (chunk: string) => void;
+  /** Fired when a compile-and-run or test execution finishes, with the exit code. */
+  onExecutionComplete?: (exitCode: number) => void;
 }
 
 /** Imperative handle exposed by `<Ide ref={...}>`. */
@@ -77,7 +85,7 @@ export interface IdeHandle {
 
 type WorkerBoot = Awaited<ReturnType<typeof bootInWorker>>;
 
-export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFEST_URL, workspaceConfig, workspaceUrl }, ref) {
+export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFEST_URL, workspaceConfig, workspaceUrl, onTestReport, onStdout, onStderr, onExecutionComplete }, ref) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -96,6 +104,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
   /** Tracks the live SDL3 Emscripten module so its RAF loop can be stopped */
 
   const sdlModuleRef = useRef<{ pauseMainLoop?: () => void } | null>(null);
+
+  const onTestReportRef = useRef(onTestReport);
+  onTestReportRef.current = onTestReport;
+  const onStdoutRef = useRef(onStdout);
+  onStdoutRef.current = onStdout;
+  const onStderrRef = useRef(onStderr);
+  onStderrRef.current = onStderr;
+  const onExecutionCompleteRef = useRef(onExecutionComplete);
+  onExecutionCompleteRef.current = onExecutionComplete;
+  const lastExitCodeRef = useRef(0);
 
   // Resolve the active workspace config: prop > fetched bundle > default preset
   const [activePresetId, setActivePresetId] = useState<string>(workspaceConfig?.id ?? DEFAULT_PRESET.id);
@@ -354,6 +372,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
           origClear();
           if (log.current) log.current.textContent = '';
         };
+        const origTtyWrite = result.tty.write.bind(result.tty);
+        result.tty.write = (data: string) => {
+          origTtyWrite(data);
+          try { onStdoutRef.current?.(data); } catch { /* swallow callback errors */ }
+        };
+        const origTtyWriteError = result.tty.writeError.bind(result.tty);
+        result.tty.writeError = (data: string) => {
+          origTtyWriteError(data);
+          try { onStderrRef.current?.(data); } catch { /* swallow callback errors */ }
+        };
         orchestratorRef.current = result;
         apiRef.current = wrapWorkerClient(result.client);
         // Expose worker client on window for E2E / debug access
@@ -398,7 +426,9 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
     runTests: async (plan) => {
       const api = apiRef.current;
       if (!api) throw new Error('Worker not booted yet');
-      return api.runTests(plan);
+      const report = await api.runTests(plan);
+      try { onTestReportRef.current?.(report); } catch { /* swallow */ }
+      return report;
     },
     compileAndRun: async (sourceOrFiles?, opts?) => {
       const api = apiRef.current;
@@ -738,6 +768,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
   const handleCompile = async () => {
     if (!orchestratorRef.current || !activeFile || activeFile.type !== 'text') return;
     stoppedRef.current = false;
+    lastExitCodeRef.current = 0;
     setExecutionPhase('compiling');
     setActiveTerminalId('terminal-1');
     const P = '[Emception:IDE]';
@@ -1587,6 +1618,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       }
     } finally {
       console.log(`${P} COMPILE & RUN COMPLETE`);
+      try { onExecutionCompleteRef.current?.(lastExitCodeRef.current); } catch { /* swallow */ }
       restoreEditorFocus();
     }
   };
@@ -1650,6 +1682,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       });
 
       setExecutionPhase('idle');
+      lastExitCodeRef.current = runResult.exitCode;
       const duration = ((performance.now() - tTotal) / 1000).toFixed(1);
       if (runResult.exitCode === 0) {
         setStatus(`Tests passed (${duration}s)`);
@@ -1665,6 +1698,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
         tty.writeError(String(e));
       }
     } finally {
+      try { onExecutionCompleteRef.current?.(lastExitCodeRef.current); } catch { /* swallow */ }
       restoreEditorFocus();
     }
   };
