@@ -38,7 +38,6 @@ import type {
     WorkspaceBuildConfig,
     WorkspaceAPI,
 } from 'emception';
-import { bootInWorker } from './index';
 import type { RunOptions as BrowserRunOptions } from './tool-runner';
 import { WorkerClient } from './worker-client';
 
@@ -99,6 +98,11 @@ export async function createEmception(opts: CreateEmceptionOptions = {}): Promis
                 "Pass `tty: 'none'` for headless mode.",
             );
         }
+        // Lazy import: avoid pulling the heavy boot chain (which transitively
+        // references a `*.py?raw` asset via the emscripten subprocess shim)
+        // into hosts that only need headless mode, and to keep this module
+        // loadable from pure-Node test runners.
+        const { bootInWorker } = await import('./index');
         const { client } = await bootInWorker(manifestUrl, opts.container);
         return wrap(client);
     }
@@ -202,17 +206,57 @@ function wrap(client: WorkerClient): EmceptionAPI {
         importZip: async (_blob: Blob) => { throw new Error('importZip is not supported in the browser embedder'); },
     };
 
-    return {
+    const api: EmceptionAPI = {
         workspace,
         run,
-        compileAndRun: async (_sourceOrFiles?, _opts?) => {
-            throw new Error(
-                'compileAndRun: use workspace.writeFile() + run() directly in the browser embedder, ' +
-                'or use compileAndRun() from @gameguild/emception-browser/presets for the argv-based pipeline.',
-            );
+        compileAndRun: async (sourceOrFiles?, opts?) => {
+            const { compileAndRun: pipeline } = await import('./presets');
+            const stdinStr = typeof opts?.stdin === 'string' && opts.stdin !== 'none' ? opts.stdin : undefined;
+            let stdoutBuf = '';
+            let stderrBuf = '';
+            const onStdout = sinkToCallback(opts?.stdout, encoder, (s) => { stdoutBuf += s; });
+            const onStderr = sinkToCallback(opts?.stderr, encoder, (s) => { stderrBuf += s; });
+            const toolchain = (opts?.build?.toolchain as ToolchainPreset | undefined) ?? currentBuild.toolchain;
+            // ponytail: CompileAndRunOptions has no timeoutMs field; the
+            // underlying free-fn does not plumb timeouts through. Skip
+            // silently until presets gains a timeout hook.
+            const pipelineOpts = {
+                toolchain,
+                source: typeof sourceOrFiles === 'string'
+                    ? sourceOrFiles
+                    : Array.isArray(sourceOrFiles) && sourceOrFiles.length > 0
+                        ? sourceOrFiles[0]!
+                        : (opts?.sources?.[0] ?? ''),
+                cwd: opts?.cwd,
+                stdin: stdinStr,
+                onStdout,
+                onStderr,
+            };
+            const result = await pipeline(api, pipelineOpts);
+            if (result.finalPhase === 'run' && result.run) {
+                // presets types `.run` as the browser ToolResult (no timing);
+                // api.run actually enriches it at runtime, so cast is sound.
+                const r = result.run as ToolResult;
+                return {
+                    exitCode: r.exitCode,
+                    stdout: stdoutBuf || r.stdout,
+                    stderr: stderrBuf || r.stderr,
+                    durationMs: r.durationMs,
+                    timedOut: r.timedOut,
+                };
+            }
+            const failed = (result.compile ?? result.link ?? result.run) as ToolResult | undefined;
+            return {
+                exitCode: result.exitCode,
+                stdout: stdoutBuf || failed?.stdout || '',
+                stderr: stderrBuf || failed?.stderr || '',
+                durationMs: failed?.durationMs ?? 0,
+                timedOut: false,
+            };
         },
-        runTests: async (_plan, _opts?) => {
-            throw new Error('runTests is not yet supported in the browser embedder');
+        runTests: async (plan, opts) => {
+            const { runTests: engine } = await import('emception/testing');
+            return engine(api, plan, opts);
         },
         on,
         dispose: () => {
@@ -220,4 +264,34 @@ function wrap(client: WorkerClient): EmceptionAPI {
             client.terminate();
         },
     };
+    return api;
+}
+
+/**
+ * Build an {@link EmceptionAPI} façade on top of an already-booted
+ * {@link WorkerClient}. Exposed for hosts (e.g. the bundled IDE) that boot
+ * the worker themselves via {@link bootInWorker} and need the same
+ * high-level surface that {@link createEmception} returns.
+ */
+export function wrapWorkerClient(client: WorkerClient): EmceptionAPI {
+    return wrap(client);
+}
+
+/**
+ * Translate a `stdout`/`stderr` RunOptions sink into the `(text: string) => void`
+ * callback shape that `presets.compileAndRun` expects. `'capture'` accumulates
+ * into the supplied `onCapture` setter; function sinks receive encoded bytes.
+ */
+function sinkToCallback(
+    sink: RunOptions['stdout'] | RunOptions['stderr'] | undefined,
+    encoder: TextEncoder,
+    onCapture: (text: string) => void,
+): ((text: string) => void) | undefined {
+    if (sink === undefined || sink === 'none') return undefined;
+    if (sink === 'capture') return onCapture;
+    if (typeof sink === 'function') {
+        const fn = sink as (chunk: Uint8Array) => void | Promise<void>;
+        return (text: string) => { fn(encoder.encode(text)); };
+    }
+    return undefined;
 }
