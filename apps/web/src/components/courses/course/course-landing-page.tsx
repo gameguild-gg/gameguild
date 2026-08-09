@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation';
 import type { Program, ProgramContent } from '@/lib/api/generated';
 import { ProgramContentType } from '@/lib/api/generated';
 import type { Product } from '@/lib/courses/actions/enrollment.actions';
+import { getLearningAppCourseContentUrl } from '@/lib/learning-app';
 import type { CourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
 import { getCourseCategoryName, getCourseLevelConfig } from '@/lib/courses/services/course.service';
 import {
@@ -211,7 +212,7 @@ function getViewerCta(
   const signInHref = courseSlug ? `/sign-in?redirectTo=${encodeURIComponent(`/courses/${courseSlug}`)}` : '/sign-in';
 
   if (viewerAccess.state === 'has-access' && course.slug) {
-    return { label: 'Continue learning', href: `/courses/${course.slug}/content`, kind: 'continue' };
+    return { label: 'Continue learning', href: getLearningAppCourseContentUrl(course.slug), kind: 'continue' };
   }
 
   if (viewerAccess.state === 'signed-out') {

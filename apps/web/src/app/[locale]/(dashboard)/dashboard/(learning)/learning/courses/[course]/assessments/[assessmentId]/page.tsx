@@ -2,9 +2,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import {
   getAssessment,
-  getAssessmentDefinition,
   getCourseAssessmentGroups,
-  getCourseContent,
 } from "@/lib/learning";
 import { AssessmentEditor } from "./assessment-editor";
 
@@ -18,13 +16,10 @@ export default async function AssessmentDetailPage({
 }: PageProps<"/[locale]/dashboard/learning/courses/[course]/assessments/[assessmentId]">): Promise<React.JSX.Element> {
   const { course: courseId, assessmentId } = await params;
 
-  const [assessment, assessmentDefinition, assessmentGroups, courseContent] =
-    await Promise.all([
-      getAssessment(assessmentId),
-      getAssessmentDefinition(assessmentId),
-      getCourseAssessmentGroups(courseId),
-      getCourseContent(courseId),
-    ]);
+  const [assessment, assessmentGroups] = await Promise.all([
+    getAssessment(assessmentId),
+    getCourseAssessmentGroups(courseId),
+  ]);
 
   if (!assessment) {
     notFound();
@@ -34,9 +29,7 @@ export default async function AssessmentDetailPage({
     <AssessmentEditor
       courseId={courseId}
       assessment={assessment}
-      assessmentDefinition={assessmentDefinition}
       assessmentGroups={assessmentGroups}
-      contentItems={courseContent.items}
     />
   );
 }

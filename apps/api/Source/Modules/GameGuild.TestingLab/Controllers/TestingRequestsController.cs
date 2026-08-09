@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
@@ -16,7 +17,8 @@ namespace GameGuild.TestingLab;
 public class TestingRequestsController(
     ITestingRequestOperations requestService,
     IActorContextAccessor actorContextAccessor,
-    ILogger<TestingRequestsController> _logger) : BaseApiController
+    ILogger<TestingRequestsController> _logger,
+    IMediator mediator) : BaseApiController
 {
     // GET: testing/requests
     [HttpGet("requests")]
@@ -30,12 +32,10 @@ public class TestingRequestsController(
     // GET: testing/requests/{id}
     [HttpGet("requests/{id}")]
     [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
-    public async Task<ActionResult<TestingRequest>> GetTestingRequest(Guid id)
-    {
-        var request = await requestService.GetTestingRequestByIdAsync(id).ConfigureAwait(false);
-        if (request == null) return NotFound();
-        return Ok(request);
-    }
+    public async Task<ActionResult<TestingRequestDetailProjection>> GetTestingRequest(
+        Guid id,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(new GetTestingRequestDetailQuery(id), cancellationToken).ConfigureAwait(false));
 
     // GET: testing/requests/{id}/details
     [HttpGet("requests/{id}/details")]

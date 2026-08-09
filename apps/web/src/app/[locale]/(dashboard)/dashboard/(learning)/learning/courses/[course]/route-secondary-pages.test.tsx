@@ -28,7 +28,6 @@ const mocks = vi.hoisted(() => ({
   getCourseContent: vi.fn(),
   getContentItem: vi.fn(),
   getAssessment: vi.fn(),
-  getAssessmentDefinition: vi.fn(),
   getCourseAssessments: vi.fn(),
   getCourseAssessmentGroups: vi.fn(),
   getCourseCertificates: vi.fn(),
@@ -79,7 +78,6 @@ vi.mock("@/lib/learning", () => ({
   getCourseContent: mocks.getCourseContent,
   getContentItem: mocks.getContentItem,
   getAssessment: mocks.getAssessment,
-  getAssessmentDefinition: mocks.getAssessmentDefinition,
   getCourseAssessments: mocks.getCourseAssessments,
   getCourseAssessmentGroups: mocks.getCourseAssessmentGroups,
   getCourseCertificates: mocks.getCourseCertificates,
@@ -101,14 +99,12 @@ vi.mock("./content/[contentId]/content-item-editor", () => ({
 vi.mock("./assessments/[assessmentId]/assessment-editor", () => ({
   AssessmentEditor: ({
     assessment,
-    assessmentDefinition,
     assessmentGroups,
   }: {
     assessment: { title: string };
-    assessmentDefinition: unknown;
     assessmentGroups: unknown[];
   }) => (
-    <div data-testid="assessment-editor">{`${assessment.title}:${assessmentDefinition ? 1 : 0}:${assessmentGroups.length}`}</div>
+    <div data-testid="assessment-editor">{`${assessment.title}:${assessmentGroups.length}`}</div>
   ),
 }));
 
@@ -404,11 +400,6 @@ describe("course-management secondary route pages", () => {
       id: "assessment-1",
       title: "Quiz 1",
     });
-    mocks.getAssessmentDefinition.mockResolvedValue({
-      assessmentId: "assessment-1",
-      definitionSchemaVersion: 1,
-      definition: { order: [], blocks: {} },
-    });
     mocks.getCourseAssessments.mockResolvedValue({
       assessments: [{ id: "assessment-1", title: "Quiz 1" }],
       total: 1,
@@ -673,7 +664,7 @@ describe("course-management secondary route pages", () => {
       } as never),
     );
     expect(screen.getByTestId("assessment-editor")).toHaveTextContent(
-      "Quiz 1:1:1",
+      "Quiz 1:1",
     );
 
     render(

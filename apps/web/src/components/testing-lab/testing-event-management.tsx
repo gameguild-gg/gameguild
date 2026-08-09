@@ -30,6 +30,7 @@ import type {
   TestingLabTestingSlotRegistrationProjection,
 } from '@game-guild/client';
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@game-guild/ui/components/alert-dialog';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import {
@@ -44,6 +45,7 @@ import {
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@game-guild/ui/components/sheet';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import {
   AlertCircle,
@@ -60,7 +62,7 @@ import {
   UserRoundCheck,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition, type FormEvent, type ReactNode } from 'react';
+import { useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
 
 type Action = (formData: FormData) => Promise<TestingEventActionResult<unknown>>;
 
@@ -257,17 +259,162 @@ function EventFields({ event }: { event?: TestingLabTestingEventProjection }) {
   );
 }
 
-export function CreateTestingEventDialog() {
+function EventRecurrenceFields({ onDirty }: { onDirty: () => void }) {
+  const [frequency, setFrequency] = useState('');
+  const [endMode, setEndMode] = useState('count');
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
   return (
-    <EventActionDialog
-      trigger={<Button><Plus className="mr-2 size-4" />New event</Button>}
-      title="Create testing event"
-      description="Create the application window first. Project capacity is reserved only after approval."
-      submitLabel="Create event"
-      action={createTestingEvent}
-    >
-      <EventFields />
-    </EventActionDialog>
+    <fieldset className="space-y-4 rounded-md border p-4">
+      <legend className="px-1 text-sm font-medium">Repeats</legend>
+      <div className="space-y-2">
+        <Label>Frequency</Label>
+        <Select value={frequency || 'none'} onValueChange={(value) => { setFrequency(value === 'none' ? '' : value); onDirty(); }}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Does not repeat</SelectItem>
+            <SelectItem value="Daily">Daily</SelectItem>
+            <SelectItem value="Weekly">Weekly</SelectItem>
+            <SelectItem value="Monthly">Monthly</SelectItem>
+          </SelectContent>
+        </Select>
+        <input type="hidden" name="recurrenceFrequency" value={frequency} />
+      </div>
+      {frequency ? (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="recurrence-interval">Repeat every</Label>
+              <Input id="recurrence-interval" name="recurrenceInterval" type="number" min="1" max="52" defaultValue="1" required />
+            </div>
+            <div className="space-y-2">
+              <Label>Ends</Label>
+              <Select value={endMode} onValueChange={(value) => { setEndMode(value); onDirty(); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="count">After a number of events</SelectItem>
+                  <SelectItem value="date">On a date</SelectItem>
+                </SelectContent>
+              </Select>
+              <input type="hidden" name="recurrenceEndMode" value={endMode} />
+            </div>
+          </div>
+          {frequency === 'Weekly' ? (
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium">Repeats on</legend>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {days.map((day) => (
+                  <label key={day} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
+                    <input name="recurrenceDaysOfWeek" type="checkbox" value={day} onChange={onDirty} />
+                    {day}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+          {endMode === 'date' ? (
+            <div className="space-y-2">
+              <Label htmlFor="recurrence-ends-at">Repeat until</Label>
+              <Input id="recurrence-ends-at" name="recurrenceEndsAt" type="datetime-local" required />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="recurrence-count">Number of events</Label>
+              <Input id="recurrence-count" name="recurrenceOccurrenceCount" type="number" min="1" max="104" defaultValue="4" required />
+            </div>
+          )}
+        </>
+      ) : null}
+    </fieldset>
+  );
+}
+
+export function CreateTestingEventDialog() {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [open, setOpen] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const [result, setResult] = useState<TestingEventActionResult<unknown> | null>(null);
+
+  function resetDraft() {
+    formRef.current?.reset();
+    setDirty(false);
+    setResult(null);
+  }
+
+  function closeDrawer() {
+    resetDraft();
+    setDiscardOpen(false);
+    setOpen(false);
+  }
+
+  function requestClose() {
+    if (pending) return;
+    if (dirty) setDiscardOpen(true);
+    else closeDrawer();
+  }
+
+  function trackChanges(event: FormEvent<HTMLFormElement>) {
+    setDirty(true);
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) || target.name !== 'startsAt') return;
+    const end = formRef.current?.elements.namedItem('endsAt');
+    if (!(end instanceof HTMLInputElement) || (end.value && new Date(end.value) >= new Date(target.value))) return;
+    end.value = target.value;
+  }
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    startTransition(async () => {
+      const next = await createTestingEvent(new FormData(form));
+      if (next.success) {
+        closeDrawer();
+        router.refresh();
+        return;
+      }
+      setResult(next);
+    });
+  }
+
+  return (
+    <>
+      <Button onClick={() => { resetDraft(); setOpen(true); }}><Plus className="mr-2 size-4" />New event</Button>
+      <Sheet open={open} onOpenChange={(next) => { if (next) setOpen(true); else requestClose(); }}>
+        <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-xl">
+          <form ref={formRef} onSubmit={submit} onChange={trackChanges} className="flex min-h-0 flex-1 flex-col">
+            <SheetHeader className="border-b px-6 py-5">
+              <SheetTitle>Create testing event</SheetTitle>
+              <SheetDescription>Create the application window first. Project capacity is reserved only after approval.</SheetDescription>
+            </SheetHeader>
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5">
+              {result ? <ActionMessage result={result} /> : null}
+              <EventFields />
+              <p className="text-xs text-muted-foreground">Event end starts at the selected event start. Set a later end time before saving.</p>
+              <EventRecurrenceFields onDirty={() => setDirty(true)} />
+            </div>
+            <SheetFooter className="border-t px-6 py-4 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" disabled={pending} onClick={requestClose}>Cancel</Button>
+              <Button type="submit" disabled={pending}>{pending ? 'Creating event...' : 'Create event'}</Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
+      <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard testing event draft?</AlertDialogTitle>
+            <AlertDialogDescription>Your unsaved event details and recurrence schedule will be lost.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={closeDrawer}>Discard draft</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 

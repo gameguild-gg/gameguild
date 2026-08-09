@@ -3,16 +3,11 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AssessmentEditor } from "./assessment-editor";
-import {
-  deleteAssessment,
-  updateAssessment,
-  updateAssessmentDefinition,
-} from "@/lib/learning/actions";
+import { deleteAssessment, updateAssessment } from "@/lib/learning/actions";
 import type {
   Assessment,
   AssessmentGroup,
 } from "@/lib/learning/queries/assessments";
-import type { ContentItem } from "@/lib/learning/types";
 
 const routerMocks = vi.hoisted(() => ({
   back: vi.fn(),
@@ -39,28 +34,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/learning/actions", () => ({
   updateAssessment: vi.fn(),
-  updateAssessmentDefinition: vi.fn(),
   deleteAssessment: vi.fn(),
-}));
-
-vi.mock("./quiz-assessment-editor", () => ({
-  QuizAssessmentEditor: ({
-    onChange,
-  }: {
-    onChange: (definition: unknown) => void;
-  }) => (
-    <button
-      type="button"
-      onClick={() =>
-        onChange({
-          order: [["1", "quiz"]],
-          blocks: { "1": { type: "SINGLE_CHOICE" } },
-        })
-      }
-    >
-      Mock quiz editor
-    </button>
-  ),
 }));
 
 const assessment = {
@@ -100,45 +74,10 @@ const groups = [
   },
 ] satisfies AssessmentGroup[];
 
-const contentItems = [
-  {
-    id: "module-1",
-    courseId: "course-1",
-    parentId: null,
-    title: "Foundations",
-    description: null,
-    type: "Module",
-    order: 0,
-    status: "published",
-    duration: null,
-    metadata: {},
-    createdAt: "2026-07-01T00:00:00.000Z",
-    updatedAt: "2026-07-01T00:00:00.000Z",
-  },
-  {
-    id: "lesson-1",
-    courseId: "course-1",
-    parentId: "module-1",
-    title: "Course overview",
-    description: null,
-    type: "Lesson",
-    order: 0,
-    status: "published",
-    duration: 20,
-    metadata: {},
-    createdAt: "2026-07-01T00:00:00.000Z",
-    updatedAt: "2026-07-01T00:00:00.000Z",
-  },
-] satisfies ContentItem[];
-
 describe("AssessmentEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(updateAssessment).mockResolvedValue({
-      success: true,
-      data: null,
-    });
-    vi.mocked(updateAssessmentDefinition).mockResolvedValue({
       success: true,
       data: null,
     });
@@ -202,7 +141,6 @@ describe("AssessmentEditor", () => {
     fireEvent.change(screen.getByLabelText(/max attempts/i), {
       target: { value: "3" },
     });
-    await user.click(screen.getByRole("button", { name: /mock quiz editor/i }));
 
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
@@ -221,47 +159,11 @@ describe("AssessmentEditor", () => {
         availableUntil: "2026-08-05T10:00",
         assessmentGroupId: "group-quizzes",
         clearAssessmentGroupId: false,
-        contentId: null,
-        clearContentId: true,
         presentationMode: "Continuous",
-      });
-      expect(updateAssessmentDefinition).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        definition: {
-          order: [["1", "quiz"]],
-          blocks: { "1": { type: "SINGLE_CHOICE" } },
-        },
-        definitionSchemaVersion: 1,
       });
     });
     expect(routerMocks.refresh).toHaveBeenCalled();
     expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
-  });
-
-  it("links the assessment to an instructional lesson", async () => {
-    const user = userEvent.setup();
-    render(
-      <AssessmentEditor
-        courseId="course-1"
-        assessment={assessment}
-        assessmentGroups={groups}
-        contentItems={contentItems}
-      />,
-    );
-
-    await user.click(screen.getByLabelText(/linked lesson/i));
-    await user.click(screen.getByRole("option", { name: /course overview/i }));
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
-
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith(
-        expect.objectContaining({
-          contentId: "lesson-1",
-          clearContentId: false,
-        }),
-      );
-    });
   });
 
   it("shows API errors and deletes after explicit confirmation", async () => {

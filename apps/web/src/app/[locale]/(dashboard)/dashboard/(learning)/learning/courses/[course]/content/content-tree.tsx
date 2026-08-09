@@ -4,10 +4,8 @@ import {
   addContent,
   deleteContent,
   reorderContent,
-  updateAssessment,
   updateContent,
 } from "@/lib/learning/actions";
-import type { Assessment } from "@/lib/learning/queries/assessments";
 import type {
   ContentItem,
   LearningCoursesProgramContentType,
@@ -82,7 +80,6 @@ import {
   Flag,
   GripVertical,
   HelpCircle,
-  Link2,
   Loader2,
   MessageSquare,
   Plus,
@@ -95,7 +92,6 @@ interface ContentTreeProps {
   courseId: string;
   modules: ContentItem[];
   allItems: ContentItem[];
-  assessments?: Assessment[];
   virtualModuleIds?: string[];
 }
 
@@ -206,7 +202,6 @@ export function ContentTree({
   courseId,
   modules,
   allItems,
-  assessments = [],
   virtualModuleIds = [],
 }: ContentTreeProps) {
   const router = useRouter();
@@ -285,11 +280,6 @@ export function ContentTree({
   const [editTarget, setEditTarget] = useState<ContentItem | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
-
-  const [assessmentTarget, setAssessmentTarget] = useState<ContentItem | null>(
-    null,
-  );
-  const [assessmentError, setAssessmentError] = useState("");
 
   const [error, setError] = useState("");
 
@@ -485,31 +475,6 @@ export function ContentTree({
         router.refresh();
       } else {
         setError(result.error);
-      }
-    });
-  }
-
-  function openAssessmentDialog(item: ContentItem) {
-    setAssessmentTarget(item);
-    setAssessmentError("");
-  }
-
-  function handleAssessmentLink(assessment: Assessment) {
-    if (!assessmentTarget) return;
-    const isLinkedToTarget = assessment.contentId === assessmentTarget.id;
-    setAssessmentError("");
-    startTransition(async () => {
-      const result = await updateAssessment({
-        courseId,
-        assessmentId: assessment.id,
-        contentId: isLinkedToTarget ? null : assessmentTarget.id,
-        ...(isLinkedToTarget ? { clearContentId: true } : {}),
-      });
-      if (result.success) {
-        setAssessmentTarget(null);
-        router.refresh();
-      } else {
-        setAssessmentError(result.error);
       }
     });
   }
@@ -726,11 +691,6 @@ export function ContentTree({
                                         const subchildren = allItems
                                           .filter((i) => i.parentId === item.id)
                                           .sort((a, b) => a.order - b.order);
-                                        const linkedAssessments =
-                                          assessments.filter(
-                                            (assessment) =>
-                                              assessment.contentId === item.id,
-                                          );
                                         const isSubmodule =
                                           subchildren.length > 0;
                                         const config = typeConfig[
@@ -772,21 +732,6 @@ export function ContentTree({
                                                     <p className="text-sm font-medium">
                                                       {item.title}
                                                     </p>
-                                                    {linkedAssessments.length >
-                                                      0 && (
-                                                      <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                                                        <Link2
-                                                          className="size-3"
-                                                          aria-hidden="true"
-                                                        />
-                                                        {linkedAssessments
-                                                          .map(
-                                                            (assessment) =>
-                                                              assessment.title,
-                                                          )
-                                                          .join(", ")}
-                                                      </p>
-                                                    )}
                                                     {isSubmodule && (
                                                       <p className="text-xs text-muted-foreground">
                                                         {subchildren.length}{" "}
@@ -824,21 +769,6 @@ export function ContentTree({
                                                       onClick={() =>
                                                         navigateToContentItem(
                                                           item.id,
-                                                        )
-                                                      }
-                                                      className="size-7"
-                                                    />
-                                                    <ContentActionButton
-                                                      label={
-                                                        linkedAssessments.length >
-                                                        0
-                                                          ? "Manage assessments"
-                                                          : "Attach assessment"
-                                                      }
-                                                      icon={Link2}
-                                                      onClick={() =>
-                                                        openAssessmentDialog(
-                                                          item,
                                                         )
                                                       }
                                                       className="size-7"
@@ -1034,75 +964,6 @@ export function ContentTree({
           </div>
         </SortableContext>
       </DndContext>
-
-      {/* ── Add Module Dialog ── */}
-      <Dialog
-        open={assessmentTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) setAssessmentTarget(null);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Attach assessment</DialogTitle>
-            <DialogDescription>
-              Link graded work to {assessmentTarget?.title}. Select a linked
-              assessment again to detach it.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2 py-2">
-            {assessments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Create an assessment before linking graded work to this lesson.
-              </p>
-            ) : (
-              assessments.map((assessment) => {
-                const isLinkedToTarget =
-                  assessment.contentId === assessmentTarget?.id;
-                const isLinkedElsewhere =
-                  Boolean(assessment.contentId) && !isLinkedToTarget;
-                return (
-                  <Button
-                    key={assessment.id}
-                    type="button"
-                    variant={isLinkedToTarget ? "secondary" : "outline"}
-                    className="h-auto w-full justify-between gap-3 py-3 text-left"
-                    disabled={isPending || isLinkedElsewhere}
-                    onClick={() => handleAssessmentLink(assessment)}
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate font-medium">
-                        {assessment.title}
-                      </span>
-                      <span className="block text-xs text-muted-foreground">
-                        {isLinkedToTarget
-                          ? "Linked to this lesson"
-                          : isLinkedElsewhere
-                            ? "Linked to another lesson"
-                            : assessment.type +
-                              " / " +
-                              assessment.maxScore +
-                              " points"}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-xs">
-                      {isLinkedToTarget ? "Detach" : "Attach"}
-                    </span>
-                  </Button>
-                );
-              })
-            )}
-            {assessmentError && (
-              <p className="text-sm text-destructive">{assessmentError}</p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAssessmentTarget(null)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={showAddModule} onOpenChange={setShowAddModule}>
         <DialogContent>

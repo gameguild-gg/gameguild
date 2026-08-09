@@ -333,6 +333,26 @@ describe("CourseLandingPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("sends enrolled learners to the canonical learning host", () => {
+    render(
+      <CourseLandingPage
+        course={advancedAiCourse}
+        viewerAccess={{ state: "has-access" }}
+      />,
+    );
+
+    const continueLinks = screen.getAllByRole("link", {
+      name: /continue learning/i,
+    });
+    expect(continueLinks).not.toHaveLength(0);
+    for (const link of continueLinks) {
+      expect(link).toHaveAttribute(
+        "href",
+        "http://localhost:3002/courses/ai4games2/content",
+      );
+    }
+  });
+
   it("renders checkout CTA instead of free enrollment when products are linked", () => {
     render(
       <CourseLandingPage

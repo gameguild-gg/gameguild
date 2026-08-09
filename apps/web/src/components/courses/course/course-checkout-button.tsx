@@ -14,10 +14,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { completeCourseCheckout, type Product } from '@/lib/courses/actions/enrollment.actions';
+import { getLearningAppCourseContentUrl } from '@/lib/learning-app';
 import { cn } from '@/lib/utils';
 import { ArrowRight, CheckCircle2, CreditCard, Loader2, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useState } from 'react';
 
 interface CourseCheckoutButtonProps {
   readonly courseSlug: string;
@@ -42,7 +43,7 @@ function formatPrice(product: Product): string {
 
 export function CourseCheckoutButton({ courseSlug, products, className, buttonClassName }: CourseCheckoutButtonProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(products[0]?.id ?? '');
   const [error, setError] = useState<string | null>(null);
@@ -52,13 +53,14 @@ export function CourseCheckoutButton({ courseSlug, products, className, buttonCl
     [products, selectedProductId],
   );
 
-  const handleCheckout = () => {
-    if (!selectedProduct) return;
+  const handleCheckout = async () => {
+    if (!selectedProduct || isSubmitting) return;
 
-    startTransition(async () => {
-      setError(null);
-      setSuccess(null);
+    setIsSubmitting(true);
+    setError(null);
+    setSuccess(null);
 
+    try {
       const result = await completeCourseCheckout(courseSlug, selectedProduct.id);
 
       if (!result.success) {
@@ -67,9 +69,12 @@ export function CourseCheckoutButton({ courseSlug, products, className, buttonCl
       }
 
       setSuccess(result.message);
-      router.refresh();
-      router.push(result.learningUrl ?? `/courses/${courseSlug}/content`);
-    });
+      router.push(result.learningUrl ?? getLearningAppCourseContentUrl(courseSlug));
+    } catch (checkoutError) {
+      setError(checkoutError instanceof Error ? checkoutError.message : 'Could not complete checkout.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!selectedProduct) {
@@ -185,11 +190,11 @@ export function CourseCheckoutButton({ courseSlug, products, className, buttonCl
         </div>
 
         <DialogFooter className="border-t bg-muted/20 px-6 py-4">
-          <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isPending}>
+          <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
             Review course
           </Button>
-          <Button onClick={handleCheckout} disabled={isPending}>
-            {isPending ? (
+          <Button onClick={() => void handleCheckout()} disabled={isSubmitting}>
+            {isSubmitting ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
                 Completing checkout...

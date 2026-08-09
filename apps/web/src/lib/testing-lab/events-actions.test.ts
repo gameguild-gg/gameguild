@@ -94,6 +94,33 @@ describe('Testing Lab event actions', () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/testing-lab/events');
   });
 
+  it('forwards a weekly recurrence to the generated client', async () => {
+    mocks.events.postTestingEvents.mockResolvedValue({ ok: true, data: { id: 'event-2' } });
+    const input = form({
+      name: 'Weekly playtest',
+      mode: 'Online',
+      approvalMode: 'ManagerOnly',
+      applicationsOpenAt: '2026-08-01T09:00',
+      applicationsCloseAt: '2026-08-02T18:00',
+      startsAt: '2026-08-03T18:00',
+      endsAt: '2026-08-03T20:00',
+      recurrenceFrequency: 'Weekly',
+      recurrenceInterval: '1',
+      recurrenceEndMode: 'count',
+      recurrenceOccurrenceCount: '3',
+    });
+    input.append('recurrenceDaysOfWeek', 'Monday');
+
+    const result = await createTestingEvent(input);
+
+    expect(result.success).toBe(true);
+    expect(mocks.events.postTestingEvents).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recurrence: { frequency: 'Weekly', interval: 1, daysOfWeek: ['Monday'], occurrenceCount: 3, endsAt: null },
+      }),
+    );
+  });
+
   it('requires campus and room for an in-person slot before calling the API', async () => {
     const result = await createTestingEventSlot(
       form({

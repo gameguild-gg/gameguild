@@ -212,43 +212,6 @@ public class AssessmentService : IAssessmentService
         }
     }
 
-    public async Task<Result<Assessment>> UpdateAssessmentDefinitionAsync(Guid id, UpdateAssessmentDefinitionRequest request)
-    {
-        try
-        {
-            var assessment = await GetAssessmentByIdAsync(id).ConfigureAwait(false);
-            if (assessment == null)
-            {
-                return Result.Failure<Assessment>(Error.NotFound("Assessment", "Assessment not found"));
-            }
-
-            assessment.SetDefinition(request.Definition.GetRawText(), request.DefinitionSchemaVersion);
-            if (assessment.Type == AssessmentType.Quiz &&
-                (assessment.SubmissionModalities & SubmissionModality.StructuredAnswer) == 0)
-            {
-                assessment.SetDeliveryContract(
-                    assessment.SubmissionModalities | SubmissionModality.StructuredAnswer,
-                    assessment.PresentationMode);
-            }
-
-            _context.Set<Assessment>().Update(assessment);
-            await _context.SaveChangesAsync().ConfigureAwait(false);
-
-            _logger.LogInformation("Assessment definition updated: {AssessmentId}", id);
-
-            return Result.Success(assessment);
-        }
-        catch (ArgumentException ex)
-        {
-            return Result.Failure<Assessment>(Error.Validation("AssessmentDefinition.Invalid", ex.Message));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating assessment definition {AssessmentId}", id);
-            return Result.Failure<Assessment>(Error.Failure("UpdateAssessmentDefinition", "Failed to update assessment definition"));
-        }
-    }
-
     public async Task<Result> DeleteAssessmentAsync(Guid id)
     {
         try
@@ -765,18 +728,6 @@ public class AssessmentService : IAssessmentService
             }
 
             submission.Submit(isLate, submittedAt);
-            if (assessment.Type == AssessmentType.Quiz &&
-                (submission.SubmittedModalities & SubmissionModality.StructuredAnswer) != 0 &&
-                AssessmentDefinitionContract.TryGradeDeterministicQuiz(
-                    assessment.DefinitionPayload,
-                    submission.StructuredAnswerPayload,
-                    assessment.MaxScore,
-                    out var score,
-                    out var feedback))
-            {
-                // Server grading is authoritative; client-provided correctness metadata is ignored.
-                submission.Grade(score, assessment.PassingScore, assessment.MaxScore, gradedBy: null, feedback);
-            }
 
             _context.Set<AssessmentSubmission>().Update(submission);
             await _context.SaveChangesAsync().ConfigureAwait(false);

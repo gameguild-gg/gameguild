@@ -2,6 +2,7 @@
 
 import { auth, getToken } from '@/auth';
 import { createServerClient, GeneratedApi, type ApiError } from '@game-guild/client';
+import { getLearningAppCourseContentUrl } from '@/lib/learning-app';
 
 export type EnrollmentStatusCode = 0 | 1 | 2;
 
@@ -30,6 +31,7 @@ export interface EnrollmentResult {
     success: boolean;
     message: string;
     enrollmentId?: string;
+    learningUrl?: string;
 }
 
 export interface CourseCheckoutResult {
@@ -222,7 +224,7 @@ export async function getProductsContainingCourse(courseSlug: string): Promise<P
 
         const productResults = await Promise.all(
             productIds.map(async (productId) => {
-                const result = await products.getProducts1(productId, { includePricing: true });
+                const result = await products.getProducts(productId, { includePricing: true });
                 return result.ok ? mapStorefrontProduct(result.data) : null;
             })
         );
@@ -271,6 +273,7 @@ export async function enrollInFreeCourse(courseSlug: string): Promise<Enrollment
         return {
             success: true,
             message: 'Enrollment complete. You can continue in the learning app now.',
+            learningUrl: getLearningAppCourseContentUrl(courseSlug),
         };
     } catch (error) {
         return {
@@ -332,7 +335,7 @@ export async function completeCourseCheckout(courseSlug: string, productId: stri
         return {
             success: true,
             message: 'Checkout complete. Your course access is active.',
-            learningUrl: result.data.learningUrl,
+            learningUrl: getLearningAppCourseContentUrl(courseSlug),
             amount: result.data.amount,
             currency: result.data.currency,
             entitlementId: result.data.entitlementId,
