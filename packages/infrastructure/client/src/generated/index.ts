@@ -3,7 +3,7 @@
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
- * Generated from: http://localhost:8080/swagger/v1/swagger.json
+ * Generated from: captured-openapi
  *
  * To regenerate, run: pnpm generate
  */

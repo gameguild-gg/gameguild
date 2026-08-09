@@ -71,6 +71,17 @@ function createModules() {
   };
 }
 
+function getOperationFailureMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const { message } = error;
+    if (typeof message === 'string' && message.trim().length > 0) return message;
+  }
+
+  return 'Unknown error';
+}
+
 async function read<T>(operation: Promise<Result<T, ApiError>>, label: string) {
   try {
     const result = await operation;
@@ -82,7 +93,7 @@ async function read<T>(operation: Promise<Result<T, ApiError>>, label: string) {
   } catch (error) {
     return {
       data: null,
-      issue: `${label} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      issue: `${label} failed: ${getOperationFailureMessage(error)}`,
     };
   }
 }
@@ -134,7 +145,7 @@ export async function getTestingEventManagerData(
     read(api.events.getTestingEvents1(eventId), 'Event'),
     read(api.events.getTestingEventsSlots(eventId), 'Slots'),
     read(
-      api.events.getTestingEventsApplications1(eventId, {
+      api.events.getTestingEventsApplications(eventId, {
         status: options.applicationStatus,
         skip: 0,
         take: 100,

@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
     getTestingEvents: vi.fn(),
     getTestingEvents1: vi.fn(),
     getTestingEventsSlots: vi.fn(),
+    getTestingEventsApplications: vi.fn(),
     getTestingEventsApplications1: vi.fn(),
     getTestingEventsCommittee: vi.fn(),
     getTestingEventsPublic: vi.fn(),
@@ -76,7 +77,7 @@ describe('Testing Lab event queries', () => {
       ok: true,
       data: [{ id: 'slot-1', eventId: 'event-1', registeredTesterCount: 3 }],
     });
-    mocks.events.getTestingEventsApplications1.mockResolvedValue({
+    mocks.events.getTestingEventsApplications.mockResolvedValue({
       ok: true,
       data: [{ id: 'application-1', eventId: 'event-1', status: 'Pending' }],
     });
@@ -207,11 +208,12 @@ describe('Testing Lab event queries', () => {
     expect(result.committee).toHaveLength(1);
     expect(result.registrationsBySlot['slot-1']).toHaveLength(1);
     expect(result.accessIssues).toEqual([]);
-    expect(mocks.events.getTestingEventsApplications1).toHaveBeenCalledWith('event-1', {
+    expect(mocks.events.getTestingEventsApplications).toHaveBeenCalledWith('event-1', {
       status: 'Pending',
       skip: 0,
       take: 100,
     });
+    expect(mocks.events.getTestingEventsApplications1).not.toHaveBeenCalled();
     expect(mocks.participation.getTestingEventsSlotsRegistrations).toHaveBeenCalledWith('slot-1');
   });
 
@@ -224,7 +226,7 @@ describe('Testing Lab event queries', () => {
     expect(mocks.participation.getTestingEventsFeedback).toHaveBeenCalledWith('event-1');
   });
   it('keeps partial manager data and reports generated-client failures', async () => {
-    mocks.events.getTestingEventsApplications1.mockResolvedValue({
+    mocks.events.getTestingEventsApplications.mockResolvedValue({
       ok: false,
       error: { message: 'Forbidden', status: 403 },
     });
@@ -234,6 +236,18 @@ describe('Testing Lab event queries', () => {
     expect(result.event?.id).toBe('event-1');
     expect(result.applications).toEqual([]);
     expect(result.accessIssues).toContain('Applications returned 403: Forbidden');
+  });
+
+  it('retains structured generated-client error messages instead of hiding them', async () => {
+    mocks.events.getTestingEvents1.mockRejectedValue({
+      name: 'ApiError',
+      message: 'Response validation failed: event details are malformed',
+    });
+
+    const result = await getTestingEventManagerData('event-1');
+
+    expect(result.event).toBeNull();
+    expect(result.accessIssues).toContain('Event failed: Response validation failed: event details are malformed');
   });
 
   it('loads the anonymous public event directory without requiring actor state', async () => {
