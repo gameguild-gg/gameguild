@@ -29,6 +29,21 @@ public sealed class TestingEvent : EntityBase
 
     public DateTime EndsAt { get; private set; }
 
+    public Guid? RecurrenceSeriesId { get; private set; }
+
+    public int? RecurrenceOccurrence { get; private set; }
+
+    public TestingEventRecurrenceFrequency? RecurrenceFrequency { get; private set; }
+
+    public int? RecurrenceInterval { get; private set; }
+
+    [MaxLength(64)]
+    public string? RecurrenceDaysOfWeek { get; private set; }
+
+    public DateTime? RecurrenceEndsAt { get; private set; }
+
+    public int? RecurrenceOccurrenceCount { get; private set; }
+
     public bool RequiresFeedback { get; private set; }
 
     public TestingLearningCompletionRequirement LearningCompletionRequirement { get; private set; }
@@ -65,7 +80,14 @@ public sealed class TestingEvent : EntityBase
         bool requiresFeedback,
         TestingEventApprovalMode approvalMode,
         Guid? tenantId,
-        string? description = null)
+        string? description = null,
+        Guid? recurrenceSeriesId = null,
+        int? recurrenceOccurrence = null,
+        TestingEventRecurrenceFrequency? recurrenceFrequency = null,
+        int? recurrenceInterval = null,
+        string? recurrenceDaysOfWeek = null,
+        DateTime? recurrenceEndsAt = null,
+        int? recurrenceOccurrenceCount = null)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Event name is required.", nameof(name));
         if (managerUserId == Guid.Empty) throw new ArgumentException("Manager is required.", nameof(managerUserId));
@@ -87,6 +109,13 @@ public sealed class TestingEvent : EntityBase
             RequiresFeedback = requiresFeedback,
             ApprovalMode = approvalMode,
             TenantId = tenantId,
+            RecurrenceSeriesId = recurrenceSeriesId,
+            RecurrenceOccurrence = recurrenceOccurrence,
+            RecurrenceFrequency = recurrenceFrequency,
+            RecurrenceInterval = recurrenceInterval,
+            RecurrenceDaysOfWeek = recurrenceDaysOfWeek,
+            RecurrenceEndsAt = recurrenceEndsAt,
+            RecurrenceOccurrenceCount = recurrenceOccurrenceCount,
         };
     }
 

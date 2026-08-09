@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
@@ -50,6 +51,58 @@ public sealed class TestingEventHandlerTests : IDisposable
         result.Value.ManagerUserId.Should().Be(_managerId);
         result.Value.TenantId.Should().Be(_tenantId);
         (await _context.Set<TestingEvent>().SingleAsync()).ManagerUserId.Should().Be(_managerId);
+    }
+
+    [Fact]
+    public async Task CreateEvent_OmitsNullRecurrenceFrequencyFromJsonContract()
+    {
+        var result = await CreateEventHandler().Handle(new CreateTestingEventCommand(
+            "One-off playtest",
+            null,
+            TestingEventMode.Online,
+            TestingEventApprovalMode.ManagerOnly,
+            SystemClock.UtcNow.AddDays(-1),
+            SystemClock.UtcNow.AddDays(1),
+            SystemClock.UtcNow.AddDays(2),
+            SystemClock.UtcNow.AddDays(2).AddHours(2),
+            true), default);
+
+        result.IsSuccess.Should().BeTrue();
+        var json = JsonSerializer.Serialize(result.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        json.Should().NotContain("\"recurrenceFrequency\":");
+    }
+
+    [Fact]
+    public async Task CreateEvent_ExpandsWeeklyRecurrenceIntoConcreteOccurrences()
+    {
+        var handler = CreateEventHandler();
+        var startsAt = new DateTime(2026, 8, 3, 18, 0, 0, DateTimeKind.Utc);
+
+        var result = await handler.Handle(new CreateTestingEventCommand(
+            "Weekly playtest",
+            null,
+            TestingEventMode.Online,
+            TestingEventApprovalMode.ManagerOnly,
+            startsAt.AddDays(-14),
+            startsAt.AddDays(-1),
+            startsAt,
+            startsAt.AddHours(2),
+            true,
+            new TestingEventRecurrenceRequest(
+                TestingEventRecurrenceFrequency.Weekly,
+                1,
+                [DayOfWeek.Monday],
+                null,
+                3)), default);
+
+        result.IsSuccess.Should().BeTrue();
+        var events = await _context.Set<TestingEvent>().OrderBy(item => item.StartsAt).ToListAsync();
+        events.Should().HaveCount(3);
+        events.Select(item => item.StartsAt).Should().Equal(startsAt, startsAt.AddDays(7), startsAt.AddDays(14));
+        events[0].RecurrenceSeriesId.Should().NotBeNull();
+        events.Should().OnlyContain(item => item.RecurrenceSeriesId == events[0].RecurrenceSeriesId);
+        events.Select(item => item.RecurrenceOccurrence).Should().Equal(1, 2, 3);
     }
 
     [Fact]
@@ -238,6 +291,30 @@ public sealed class TestingEventHandlerTests : IDisposable
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().ContainSingle().Which.Id.Should().Be(visible.Id);
+    }
+
+    [Fact]
+    public async Task RequestDetailQuery_ReturnsStableProjectionWhenProjectVersionIsMissing()
+    {
+        var testingRequest = new TestingRequest
+        {
+            TenantId = _tenantId,
+            CreatedById = _managerId,
+            Title = "No version linked",
+            StartDate = SystemClock.UtcNow,
+            EndDate = SystemClock.UtcNow.AddDays(1),
+            Status = TestingRequestStatus.Open,
+            InstructionsType = InstructionType.Text,
+        };
+        _context.Add(testingRequest);
+        await _context.SaveChangesAsync();
+
+        var result = await new TestingRequestDetailQueryHandler(_context, _actorAccessor)
+            .Handle(new GetTestingRequestDetailQuery(testingRequest.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Id.Should().Be(testingRequest.Id);
+        result.Value.ProjectVersion.Should().BeNull();
     }
 
     [Fact]
@@ -491,6 +568,7 @@ public sealed class TestingEventHandlerTests : IDisposable
         public DbSet<TestingCommitteeMember> TestingCommitteeMembers => Set<TestingCommitteeMember>();
         public DbSet<TestingApplicationVote> TestingApplicationVotes => Set<TestingApplicationVote>();
         public DbSet<TestingSession> TestingSessions => Set<TestingSession>();
+        public DbSet<TestingRequest> TestingRequests => Set<TestingRequest>();
         public DbSet<SessionRegistration> SessionRegistrations => Set<SessionRegistration>();
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException();

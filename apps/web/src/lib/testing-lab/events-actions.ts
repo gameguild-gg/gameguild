@@ -9,6 +9,9 @@ import {
   type TestingLabTestingApplicationVoteDecision,
   type TestingLabTestingEventApprovalMode,
   type TestingLabTestingEventMode,
+  type SystemDayOfWeek,
+  type TestingLabCreateTestingEventInput,
+  type TestingLabTestingEventRecurrenceFrequency,
   type TestingLabTestingLearningCompletionRequirement,
 } from '@game-guild/client';
 import { revalidatePath } from 'next/cache';
@@ -91,22 +94,93 @@ function required(formData: FormData, keys: string[], message: string): TestingE
   return keys.every((key) => text(formData, key)) ? null : { success: false, error: message };
 }
 
-function eventInput(formData: FormData) {
+function recurrenceFrequency(value: string): TestingLabTestingEventRecurrenceFrequency | null {
+  return value === 'Daily' || value === 'Weekly' || value === 'Monthly' ? value : null;
+}
+
+function dayOfWeek(value: string): SystemDayOfWeek | null {
+  const daysOfWeek: SystemDayOfWeek[] = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ];
+  return daysOfWeek.includes(value as SystemDayOfWeek) ? (value as SystemDayOfWeek) : null;
+}
+
+function recurrenceInput(formData: FormData): {
+  data: TestingLabCreateTestingEventInput['recurrence'] | null;
+  error: string | null;
+} {
+  const frequency = recurrenceFrequency(text(formData, 'recurrenceFrequency'));
+  if (!frequency) return { data: null, error: null };
+
+  const interval = optionalNumber(formData, 'recurrenceInterval') ?? 1;
+  if (!Number.isInteger(interval) || interval < 1 || interval > 52)
+    return { data: null, error: 'Repeat interval must be between 1 and 52.' };
+
+  const daysOfWeek = formData
+    .getAll('recurrenceDaysOfWeek')
+    .map((value) => (typeof value === 'string' ? dayOfWeek(value) : null))
+    .filter((value): value is SystemDayOfWeek => value !== null);
+  if (frequency === 'Weekly' && daysOfWeek.length === 0)
+    return { data: null, error: 'Choose at least one weekday for a weekly event.' };
+
+  const endsByDate = text(formData, 'recurrenceEndMode') === 'date';
+  const endsAt = endsByDate ? isoDate(formData, 'recurrenceEndsAt') : null;
+  const occurrenceCount = endsByDate ? null : optionalNumber(formData, 'recurrenceOccurrenceCount');
+  if (endsByDate && !endsAt) return { data: null, error: 'Choose when the recurrence ends.' };
+  if (
+    !endsByDate &&
+    (!occurrenceCount || !Number.isInteger(occurrenceCount) || occurrenceCount < 1 || occurrenceCount > 104)
+  )
+    return { data: null, error: 'Choose between 1 and 104 occurrences.' };
+
+  return {
+    data: {
+      frequency,
+      interval,
+      daysOfWeek: daysOfWeek.length > 0 ? daysOfWeek : null,
+      endsAt,
+      occurrenceCount,
+    },
+    error: null,
+  };
+}
+
+function eventInput(formData: FormData): {
+  data: TestingLabCreateTestingEventInput | null;
+  error: string | null;
+} {
   const applicationsOpenAt = isoDate(formData, 'applicationsOpenAt');
   const applicationsCloseAt = isoDate(formData, 'applicationsCloseAt');
   const startsAt = isoDate(formData, 'startsAt');
   const endsAt = isoDate(formData, 'endsAt');
-  if (!applicationsOpenAt || !applicationsCloseAt || !startsAt || !endsAt) return null;
+  if (!applicationsOpenAt || !applicationsCloseAt || !startsAt || !endsAt)
+    return { data: null, error: 'Enter valid event dates.' };
+  if (new Date(endsAt) <= new Date(startsAt))
+    return { data: null, error: 'Event end must be after its start.' };
+
+  const recurrence = recurrenceInput(formData);
+  if (recurrence.error) return { data: null, error: recurrence.error };
+
   return {
-    name: text(formData, 'name'),
-    description: optionalText(formData, 'description'),
-    mode: (text(formData, 'mode') || 'Online') as TestingLabTestingEventMode,
-    approvalMode: (text(formData, 'approvalMode') || 'ManagerOnly') as TestingLabTestingEventApprovalMode,
-    applicationsOpenAt,
-    applicationsCloseAt,
-    startsAt,
-    endsAt,
-    requiresFeedback: checked(formData, 'requiresFeedback'),
+    data: {
+      name: text(formData, 'name'),
+      description: optionalText(formData, 'description'),
+      mode: (text(formData, 'mode') || 'Online') as TestingLabTestingEventMode,
+      approvalMode: (text(formData, 'approvalMode') || 'ManagerOnly') as TestingLabTestingEventApprovalMode,
+      applicationsOpenAt,
+      applicationsCloseAt,
+      startsAt,
+      endsAt,
+      requiresFeedback: checked(formData, 'requiresFeedback'),
+      recurrence: recurrence.data ?? undefined,
+    },
+    error: null,
   };
 }
 
@@ -118,15 +192,17 @@ export async function createTestingEvent(formData: FormData): Promise<TestingEve
   );
   if (invalid) return invalid;
   const input = eventInput(formData);
-  if (!input) return { success: false, error: 'Enter valid event dates.' };
-  return complete(createModules().events.postTestingEvents(input), 'Testing event created.');
+  if (!input.data) return { success: false, error: input.error ?? 'Enter valid event dates.' };
+  return complete(createModules().events.postTestingEvents(input.data), 'Testing event created.');
 }
 
 export async function updateTestingEvent(formData: FormData): Promise<TestingEventActionResult<{ id?: string }>> {
   const eventId = text(formData, 'eventId');
   const input = eventInput(formData);
-  if (!eventId || !input) return { success: false, error: 'Event and valid event details are required.' };
-  return complete(createModules().events.putTestingEvents(eventId, input), 'Testing event updated.', eventId);
+  if (!eventId || !input.data)
+    return { success: false, error: input.error ?? 'Event and valid event details are required.' };
+  const { recurrence: _recurrence, ...updateInput } = input.data;
+  return complete(createModules().events.putTestingEvents(eventId, updateInput), 'Testing event updated.', eventId);
 }
 
 export async function deleteTestingEvent(formData: FormData): Promise<TestingEventActionResult<boolean>> {

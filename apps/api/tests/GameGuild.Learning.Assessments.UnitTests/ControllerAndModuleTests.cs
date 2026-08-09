@@ -79,7 +79,6 @@ public class ControllerAndModuleTests
         typeof(IAssessmentService).GetMethod("GetCourseAssessmentGroupsAsync").Should().NotBeNull();
         typeof(IAssessmentService).GetMethod("CreateAssessmentGroupAsync").Should().NotBeNull();
         typeof(IAssessmentService).GetMethod("AssignAssessmentToGroupAsync").Should().NotBeNull();
-        typeof(IAssessmentService).GetMethod("UpdateAssessmentDefinitionAsync").Should().NotBeNull();
     }
 
     [Fact]

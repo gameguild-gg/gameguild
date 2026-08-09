@@ -1,6 +1,21 @@
+using System.Text.Json.Serialization;
 using GameGuild.CQRS;
 
 namespace GameGuild.TestingLab;
+
+public enum TestingEventRecurrenceFrequency
+{
+    Daily,
+    Weekly,
+    Monthly,
+}
+
+public sealed record TestingEventRecurrenceRequest(
+    TestingEventRecurrenceFrequency Frequency,
+    int Interval,
+    IReadOnlyList<DayOfWeek>? DaysOfWeek,
+    DateTime? EndsAt,
+    int? OccurrenceCount);
 
 public sealed record TestingEventProjection(
     Guid Id,
@@ -21,7 +36,15 @@ public sealed record TestingEventProjection(
     Guid? LearningActivityId,
     Guid? TenantId,
     int SlotCount,
-    int ApplicationCount);
+    int ApplicationCount,
+    Guid? RecurrenceSeriesId = null,
+    int? RecurrenceOccurrence = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    TestingEventRecurrenceFrequency? RecurrenceFrequency = null,
+    int? RecurrenceInterval = null,
+    IReadOnlyList<DayOfWeek>? RecurrenceDaysOfWeek = null,
+    DateTime? RecurrenceEndsAt = null,
+    int? RecurrenceOccurrenceCount = null);
 
 public sealed record TestingEventSlotProjection(
     Guid Id,
@@ -84,7 +107,8 @@ public sealed record CreateTestingEventCommand(
     DateTime ApplicationsCloseAt,
     DateTime StartsAt,
     DateTime EndsAt,
-    bool RequiresFeedback) : ICommand<Result<TestingEventProjection>>;
+    bool RequiresFeedback,
+    TestingEventRecurrenceRequest? Recurrence = null) : ICommand<Result<TestingEventProjection>>;
 
 public sealed record UpdateTestingEventCommand(
     Guid EventId,
@@ -197,7 +221,8 @@ public sealed record CreateTestingEventRequest(
     DateTime ApplicationsCloseAt,
     DateTime StartsAt,
     DateTime EndsAt,
-    bool RequiresFeedback);
+    bool RequiresFeedback,
+    TestingEventRecurrenceRequest? Recurrence = null);
 
 public sealed record UpdateTestingEventRequest(
     string Name,

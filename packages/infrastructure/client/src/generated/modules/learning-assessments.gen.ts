@@ -212,53 +212,6 @@ export class LearningAssessmentsModule {
 
   /**
    */
-  async getAssessmentsDefinition(id: string): Promise<Result<Types.LearningAssessmentsAssessmentDefinition, ApiError>> {
-    const url = `/v1/assessments/${id}/definition`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningAssessmentsAssessmentDefinitionSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async putAssessmentsDefinition(
-    id: string,
-    body: Types.LearningAssessmentsUpdateAssessmentDefinitionInput,
-  ): Promise<Result<Types.LearningAssessmentsAssessmentDefinition, ApiError>> {
-    const url = `/v1/assessments/${id}/definition`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsUpdateAssessmentDefinitionInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningAssessmentsAssessmentDefinitionSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async putAssessmentsGroup(
     id: string,
     body: Types.LearningAssessmentsAssignAssessmentGroupInput,
