@@ -55,7 +55,8 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             request.ApplicationsCloseAt,
             request.StartsAt,
             request.EndsAt,
-            request.RequiresFeedback), cancellationToken).ConfigureAwait(false);
+            request.RequiresFeedback,
+            request.Recurrence), cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetEvent), new { eventId = result.Value.Id }, result.Value)
             : ToActionResult(result);
