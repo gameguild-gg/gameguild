@@ -560,9 +560,6 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.HasKey(row => row.Id);
             builder.HasIndex(row => new { row.RootSourceStampId, row.ReversalEpoch })
                 .HasDatabaseName("ix_economy_fragment_root_ranges_root_epoch");
-            builder.HasIndex(row => new { row.RootSourceStampId, row.ReversalEpoch, row.StartInclusive, row.EndExclusive })
-                .IsUnique()
-                .HasDatabaseName("ux_economy_fragment_root_ranges_owner_interval");
             builder.HasOne<EconomySourceStampRow>()
                 .WithMany()
                 .HasForeignKey(row => row.RootSourceStampId)

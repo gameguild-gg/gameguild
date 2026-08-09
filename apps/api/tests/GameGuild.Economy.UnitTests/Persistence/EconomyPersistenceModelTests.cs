@@ -63,13 +63,12 @@ public sealed class EconomyPersistenceModelTests
         "ix_economy_lot_lineage_edges_parent_lot",
         "ix_economy_projection_reconciliation_events_wallet_detected",
         "ix_economy_wallet_balance_projections_review_state",
-        "ux_economy_credit_lots_root_source",
+        "ix_economy_credit_lots_root_source",
         "ux_economy_dispatch_snapshots_hash",
         "ux_economy_dispute_fragment_ranges_freeze_interval",
         "ux_economy_provider_dispute_events_dispute_sequence",
         "ux_economy_provider_disputes_active_source",
         "ux_economy_entry_allocations_line_parent",
-        "ux_economy_fragment_root_ranges_owner_interval",
         "ux_economy_funding_claims_provider_leg",
         "ux_economy_funding_claims_posting_group",
         "ux_economy_funding_claims_root_lot",
@@ -218,11 +217,10 @@ public sealed class EconomyPersistenceModelTests
             "economy_provider_fact_allocations",
             "ux_economy_provider_fact_allocations_provider_leg",
             "Provider", "Environment", "ConnectedAccount", "ProviderObject", "ProviderMonetaryLeg");
-        AssertUniqueIndex(
-            model,
-            "economy_credit_lots",
-            "ux_economy_credit_lots_root_source",
-            "RootSourceStampId");
+        var rootLot = model.GetEntityTypes().Single(entity => entity.GetTableName() == "economy_credit_lots");
+        var rootLotIndex = rootLot.GetIndexes().Single(index => index.GetDatabaseName() == "ix_economy_credit_lots_root_source");
+        rootLotIndex.IsUnique.Should().BeFalse();
+        rootLotIndex.Properties.Select(property => property.Name).Should().Equal("RootSourceStampId");
         AssertUniqueIndex(
             model,
             "economy_reserve_asset_allocations",
