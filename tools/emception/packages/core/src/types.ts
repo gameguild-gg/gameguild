@@ -262,13 +262,17 @@ export interface ToolResult {
  * - `'clang-query'` — run a Clang AST matcher without executing the binary.
  * - `'doctest'` — compile with doctest enabled and run the test binary.
  * - `'custom'` — arbitrary async function; return a {@link TestCaseResult}.
+ *
+ * `weight` is the optional per-case weight used by `computeScore`; it defaults
+ * to 1 when omitted. It lives only on the plan, never on `TestCaseResult` —
+ * the report stays serializable as-is.
  */
 export type TestCase =
-  | { kind: 'stdio'; stdin?: string; expectedStdout: string | RegExp; expectedStderr?: string | RegExp; expectedExit?: number; name?: string }
-  | { kind: 'stdio-file'; inFile: string; expectedOutFile: string; name?: string }
-  | { kind: 'clang-query'; matcher: string; expect: 'found' | 'not-found' | { minCount: number }; name?: string }
-  | { kind: 'doctest'; sourceFiles: string[]; name?: string }
-  | { kind: 'custom'; run: (em: EmceptionAPI) => Promise<TestCaseResult>; name?: string };
+  | { kind: 'stdio'; stdin?: string; expectedStdout: string | RegExp; expectedStderr?: string | RegExp; expectedExit?: number; name?: string; weight?: number }
+  | { kind: 'stdio-file'; inFile: string; expectedOutFile: string; name?: string; weight?: number }
+  | { kind: 'clang-query'; matcher: string; expect: 'found' | 'not-found' | { minCount: number }; name?: string; weight?: number }
+  | { kind: 'doctest'; sourceFiles: string[]; name?: string; weight?: number }
+  | { kind: 'custom'; run: (em: EmceptionAPI) => Promise<TestCaseResult>; name?: string; weight?: number };
 
 /**
  * Full test plan executed by {@link EmceptionAPI.runTests}.

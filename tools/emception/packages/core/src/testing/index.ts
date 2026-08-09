@@ -14,4 +14,5 @@ export {
     type DoctestReport
 } from './doctest/parse.js';
 export { runTests, type TestKindHandler } from './engine.js';
+export { computeScore, type ScoreResult } from './score.js';
 
