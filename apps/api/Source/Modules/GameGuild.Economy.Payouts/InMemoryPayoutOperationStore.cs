@@ -7,7 +7,22 @@ public sealed record PayoutProviderEventRecord(
     PayoutOperationState ResultingState,
     DateTimeOffset RecordedAt);
 
-public sealed class InMemoryPayoutOperationStore
+public interface IPayoutOperationStore
+{
+    PayoutOperation Get(Guid operationId);
+    PayoutOperation? FindReplay(string idempotencyKey, string requestHash);
+    void Add(PayoutOperation operation);
+    PayoutOperation Update(PayoutOperation operation, long expectedVersion);
+    PayoutProviderEventRecord? FindProviderEvent(string eventId, string eventHash);
+    PayoutProviderEventRecord RecordProviderEvent(
+        string eventId,
+        string eventHash,
+        PayoutOperation resultingOperation,
+        long expectedVersion,
+        DateTimeOffset recordedAt);
+}
+
+public sealed class InMemoryPayoutOperationStore : IPayoutOperationStore
 {
     private readonly object _gate = new();
     private readonly Dictionary<Guid, PayoutOperation> _operations = [];

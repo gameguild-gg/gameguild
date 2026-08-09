@@ -14,7 +14,7 @@ public sealed class PayoutCoordinator
 {
     private readonly object _gate = new();
     private readonly InMemoryLedgerKernelStore _ledger;
-    private readonly InMemoryPayoutOperationStore _operations;
+    private readonly IPayoutOperationStore _operations;
     private readonly RootReversalFenceRegistry _rootFences;
     private readonly RiskDecisionAuthorizer _riskAuthorizer;
     private readonly CoreReserveAuthority _reserveAuthority;
@@ -35,7 +35,7 @@ public sealed class PayoutCoordinator
 
     public PayoutCoordinator(
         InMemoryLedgerKernelStore ledger,
-        InMemoryPayoutOperationStore operations,
+        IPayoutOperationStore operations,
         RootReversalFenceRegistry rootFences,
         RiskDecisionAuthorizer riskAuthorizer,
         CoreReserveAuthority reserveAuthority,

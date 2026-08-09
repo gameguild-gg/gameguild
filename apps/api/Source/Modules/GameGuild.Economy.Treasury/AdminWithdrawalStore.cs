@@ -4,7 +4,31 @@ using System.Text;
 
 namespace GameGuild.Economy.Treasury;
 
-public sealed class InMemoryAdminWithdrawalStore
+public interface IAdminWithdrawalStore
+{
+    AdminWithdrawalRun? FindReplay(string key, string requestHash);
+    AdminWithdrawalRun? FindPeriod(DateOnly periodStart);
+    void Add(AdminWithdrawalRun run);
+    AdminWithdrawalRun Get(Guid runId);
+    AdminWithdrawalRun Update(AdminWithdrawalRun run, long expectedVersion);
+    Guid? FindProviderEvent(string eventId, string eventHash);
+    void RecordProviderEvent(string eventId, string eventHash, AdminWithdrawalRun run, long expectedVersion);
+}
+
+public interface IAdminWithdrawalAuditTrail
+{
+    AdminWithdrawalAuditEvent Append(
+        Guid runId,
+        string kind,
+        Guid? actorId,
+        string evidence,
+        DateTimeOffset occurredAt);
+
+    IReadOnlyList<AdminWithdrawalAuditEvent> Events(Guid runId);
+    bool Verify(Guid runId);
+}
+
+public sealed class InMemoryAdminWithdrawalStore : IAdminWithdrawalStore
 {
     private readonly object _gate = new();
     private readonly Dictionary<Guid, AdminWithdrawalRun> _runs = [];
@@ -124,7 +148,7 @@ public sealed record AdminWithdrawalAuditEvent(
     string PreviousHash,
     string Hash);
 
-public sealed class AdminWithdrawalAuditTrail
+public sealed class AdminWithdrawalAuditTrail : IAdminWithdrawalAuditTrail
 {
     private readonly object _gate = new();
     private readonly Dictionary<Guid, List<AdminWithdrawalAuditEvent>> _events = [];
@@ -199,7 +223,7 @@ public sealed class AdminWithdrawalAuditTrail
             kind,
             actorId?.ToString("N") ?? string.Empty,
             evidence,
-            occurredAt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture),
+            occurredAt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.ffffff'Z'", CultureInfo.InvariantCulture),
             previousHash);
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }
