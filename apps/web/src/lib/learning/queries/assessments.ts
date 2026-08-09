@@ -5,7 +5,9 @@ import {
   type LearningAssessmentsAssessment,
   type LearningAssessmentsAssessmentDefinition,
   type LearningAssessmentsAssessmentGroup,
+  type LearningAssessmentsAssessmentPresentationMode,
   type LearningAssessmentsAssessmentScoreBucket,
+  type LearningAssessmentsAssessmentType,
   type LearningAssessmentsCourseAssessmentAnalytics,
   type LearningCertificatesCertificate,
   type LearningCertificatesCertificateTemplate,
@@ -34,8 +36,8 @@ function createAssessmentsModule() {
 // TYPES (re-exported for convenience)
 // =============================================================================
 
-export type AssessmentType = 'Quiz' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
-export type AssessmentPresentationMode = 'SingleStep' | 'Continuous';
+export type AssessmentType = LearningAssessmentsAssessmentType;
+export type AssessmentPresentationMode = LearningAssessmentsAssessmentPresentationMode;
 
 export interface Assessment {
   id: string;
@@ -66,6 +68,12 @@ export interface Assessment {
 export interface CourseAssessments {
   assessments: Assessment[];
   total: number;
+}
+
+export interface AssessmentDefinitionViewModel {
+  assessmentId: string;
+  definitionSchemaVersion: number;
+  definition: Record<string, unknown>;
 }
 
 export interface AssessmentGroup {
@@ -274,7 +282,7 @@ export const getAssessment = cache(async (assessmentId: string): Promise<Assessm
   }
 });
 
-export const getAssessmentDefinition = cache(async (assessmentId: string): Promise<AssessmentDefinition | null> => {
+export const getAssessmentDefinition = cache(async (assessmentId: string): Promise<AssessmentDefinitionViewModel | null> => {
   try {
     const result = await createAssessmentsModule().getAssessmentsDefinition(assessmentId);
     if (!result.ok) return null;

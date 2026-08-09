@@ -133,17 +133,22 @@ export async function updateTestingRequest(formData: FormData): Promise<TestingL
   const current = await api.requests.getTestingRequests1(requestId);
   if (!current.ok) return { success: false, error: current.error.message };
 
+  const startDate = isoDate(formData, 'startDate') ?? current.data.startDate;
+  const endDate = isoDate(formData, 'endDate') ?? current.data.endDate;
+  if (!startDate || !endDate) {
+    return { success: false, error: 'Testing requests require both a start and end date.' };
+  }
+
   return complete(
     api.requests.putTestingRequests(requestId, {
-      ...current.data,
       title: text(formData, 'title'),
       description: optionalText(formData, 'description'),
       downloadUrl: optionalText(formData, 'downloadUrl'),
       instructionsContent: optionalText(formData, 'instructionsContent'),
       feedbackFormContent: optionalText(formData, 'feedbackFormContent'),
       maxTesters: optionalNumber(formData, 'maxTesters'),
-      startDate: isoDate(formData, 'startDate') ?? current.data.startDate,
-      endDate: isoDate(formData, 'endDate') ?? current.data.endDate,
+      startDate,
+      endDate,
       status: (text(formData, 'status') || current.data.status) as TestingLabTestingRequestStatus,
     }),
     'Testing request updated.',

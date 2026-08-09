@@ -5,7 +5,10 @@
 // components without pulling in server-only modules (auth, next/headers).
 // =============================================================================
 
-import type { LearningCoursesProgramContentType } from "@game-guild/client";
+import type {
+  LearningCoursesLessonContentFormat,
+  LearningCoursesProgramContentType,
+} from "@game-guild/client";
 
 export type { LearningCoursesProgramContentType } from "@game-guild/client";
 
@@ -125,6 +128,8 @@ export interface CourseContentViewModel {
  */
 export interface CourseContentItemDetailViewModel extends CourseContentItemViewModel {
   content: string | null;
+  jsonBody: Record<string, unknown> | null;
+  lessonFormat: LearningCoursesLessonContentFormat | null;
   settings: Record<string, unknown>;
 }
 

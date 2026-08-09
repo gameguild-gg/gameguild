@@ -7,6 +7,7 @@ import {
   type LearningCoursesProgram,
   type LearningCoursesProgramContent,
   type LearningCoursesProgramContentType,
+  type LearningCoursesLessonContentFormat,
 } from "@game-guild/client";
 import { cache } from "react";
 
@@ -107,6 +108,23 @@ function normalizeProgramContentType(
   if (type === "Page") return "Lesson";
   if (type === "Challenge") return "Assignment";
   return type ?? "Lesson";
+}
+
+function normalizeLessonContentFormat(
+  format: string | null | undefined,
+): LearningCoursesLessonContentFormat | null {
+  switch (format) {
+    case "Markdown":
+    case "Lexical":
+    case "RevealJs":
+    case "Video":
+      return format;
+    case null:
+    case undefined:
+      return null;
+    default:
+      return "Markdown";
+  }
 }
 
 function isGuid(value: string): boolean {
@@ -315,7 +333,7 @@ function mapContentDetailDto(
       gradingMethod: dto.gradingMethod ?? null,
       maxPoints: dto.maxPoints ?? null,
     },
-    lessonFormat: dto.lessonFormat ?? null,
+    lessonFormat: normalizeLessonContentFormat(dto.lessonFormat),
   };
 }
 
