@@ -2,6 +2,7 @@ import { Blob as NodeBlob } from 'node:buffer';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  client: { request: vi.fn() },
   requests: {
     getTestingRequests1: vi.fn(),
     getTestingRequests: vi.fn(),
@@ -26,7 +27,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/auth', () => ({ getToken: vi.fn(async () => 'token') }));
 vi.mock('@game-guild/client', () => ({
-  createServerClient: vi.fn(() => ({})),
+  createServerClient: vi.fn(() => ({ request: mocks.requests.getTestingRequests1 })),
   GeneratedApi: {
     TestinglabTestingrequestsModule: vi.fn(function TestinglabTestingrequestsModule() {
       return mocks.requests;
@@ -69,6 +70,10 @@ import {
 describe('Testing Lab operational queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.requests.getTestingRequests1.mockResolvedValue({
+      ok: true,
+      data: { id: 'request-1', title: 'Arena playtest', status: 'Open', projectVersion: null },
+    });
     mocks.requests.getTestingRequests1.mockResolvedValue({
       ok: true,
       data: { id: 'request-1', title: 'Arena playtest', status: 'Open' },
@@ -176,6 +181,46 @@ describe('Testing Lab operational queries', () => {
     expect(detail.participants).toHaveLength(1);
     expect(detail.feedback).toHaveLength(1);
     expect(detail.accessIssues).toEqual([]);
+  });
+
+  it('loads a request when projectVersion is absent', async () => {
+    const detail = await getTestingRequestDetail('request-1');
+
+    expect(detail.request).toMatchObject({
+      id: 'request-1',
+      title: 'Arena playtest',
+      projectVersion: null,
+    });
+    expect(detail.accessIssues).toEqual([]);
+    expect(mocks.requests.getTestingRequests1).toHaveBeenCalledWith("request-1");
+  });
+
+  it('rejects an unknown request status instead of treating it as a valid detail', async () => {
+    mocks.requests.getTestingRequests1.mockResolvedValue({
+      ok: true,
+      data: { id: 'request-1', title: 'Arena playtest', status: 'UnexpectedStatus' },
+    });
+
+    const detail = await getTestingRequestDetail('request-1');
+
+    expect(detail.request).toBeNull();
+  });
+
+  it('preserves structured transport validation messages for request details', async () => {
+    mocks.requests.getTestingRequests1.mockRejectedValue({
+      name: 'ApiError',
+      code: 'VALIDATION_ERROR',
+      status: 400,
+      message: 'Response validation failed: createdAt must be an ISO datetime.',
+      metadata: { context: 'response' },
+    });
+
+    const detail = await getTestingRequestDetail('request-validation-error');
+
+    expect(detail.request).toBeNull();
+    expect(detail.accessIssues).toContain(
+      'Testing request failed: Response validation failed: createdAt must be an ISO datetime.',
+    );
   });
 
   it('loads session details with registrations, waitlist, and projects', async () => {

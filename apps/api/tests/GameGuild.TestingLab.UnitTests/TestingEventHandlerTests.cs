@@ -241,6 +241,30 @@ public sealed class TestingEventHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task RequestDetailQuery_ReturnsStableProjectionWhenProjectVersionIsMissing()
+    {
+        var testingRequest = new TestingRequest
+        {
+            TenantId = _tenantId,
+            CreatedById = _managerId,
+            Title = "No version linked",
+            StartDate = SystemClock.UtcNow,
+            EndDate = SystemClock.UtcNow.AddDays(1),
+            Status = TestingRequestStatus.Open,
+            InstructionsType = InstructionType.Text,
+        };
+        _context.Add(testingRequest);
+        await _context.SaveChangesAsync();
+
+        var result = await new TestingRequestDetailQueryHandler(_context, _actorAccessor)
+            .Handle(new GetTestingRequestDetailQuery(testingRequest.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Id.Should().Be(testingRequest.Id);
+        result.Value.ProjectVersion.Should().BeNull();
+    }
+
+    [Fact]
     public async Task CreateAndListSlots_UsesEventScheduleAndTenant()
     {
         var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
@@ -491,6 +515,7 @@ public sealed class TestingEventHandlerTests : IDisposable
         public DbSet<TestingCommitteeMember> TestingCommitteeMembers => Set<TestingCommitteeMember>();
         public DbSet<TestingApplicationVote> TestingApplicationVotes => Set<TestingApplicationVote>();
         public DbSet<TestingSession> TestingSessions => Set<TestingSession>();
+        public DbSet<TestingRequest> TestingRequests => Set<TestingRequest>();
         public DbSet<SessionRegistration> SessionRegistrations => Set<SessionRegistration>();
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException();

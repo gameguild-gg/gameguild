@@ -1,5 +1,5 @@
 {
-  "hash": "3b4ed388d51005f0d3f87733ab542fe2ee035de0f250a2e724212f67f559d237",
+  "hash": "6df51259f10d35c21ada7d8077510d40fe44328c882ac38c140c3b24c56fccdc",
   "apiVersion": "1.0",
-  "source": "http://localhost:8080/swagger/v1/swagger.json"
+  "source": "captured-openapi"
 }

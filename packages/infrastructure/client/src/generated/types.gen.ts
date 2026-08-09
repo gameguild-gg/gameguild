@@ -7851,6 +7851,37 @@ export interface TestingLabTestingInput {
   daysRemaining?: number | null;
 }
 
+export interface TestingLabTestingRequestDetailProjection {
+  id?: string;
+  title?: string | null;
+  description?: string | null;
+  downloadUrl?: string | null;
+  instructionsContent?: string | null;
+  feedbackFormContent?: string | null;
+  maxTesters?: number | null;
+  currentTesterCount?: number;
+  startDate?: string;
+  endDate?: string;
+  status?: TestingLabTestingRequestStatus;
+  projectVersionId?: string | null;
+  projectVersion?: TestingLabTestingRequestProjectVersionProjection;
+  isDeleted?: boolean;
+}
+
+export interface TestingLabTestingRequestProjectProjection {
+  id?: string;
+  title?: string | null;
+  slug?: string | null;
+}
+
+export interface TestingLabTestingRequestProjectVersionProjection {
+  id?: string;
+  projectId?: string;
+  versionNumber?: string | null;
+  status?: string | null;
+  project?: TestingLabTestingRequestProjectProjection;
+}
+
 export type TestingLabTestingRequestStatus = 'Draft' | 'Open' | 'Active' | 'InProgress' | 'Paused' | 'Completed' | 'Cancelled';
 
 export interface TestingLabTestingSession {
@@ -8818,6 +8849,9 @@ export let TestingLabTestingPrioritySchema: z.ZodType<TestingLabTestingPriority>
 export let TestingLabTestingProjectApplicationSchema: z.ZodType<TestingLabTestingProjectApplication>;
 export let TestingLabTestingProjectApplicationProjectionSchema: z.ZodType<TestingLabTestingProjectApplicationProjection>;
 export let TestingLabTestingInputSchema: z.ZodType<TestingLabTestingInput>;
+export let TestingLabTestingRequestDetailProjectionSchema: z.ZodType<TestingLabTestingRequestDetailProjection>;
+export let TestingLabTestingRequestProjectProjectionSchema: z.ZodType<TestingLabTestingRequestProjectProjection>;
+export let TestingLabTestingRequestProjectVersionProjectionSchema: z.ZodType<TestingLabTestingRequestProjectVersionProjection>;
 export let TestingLabTestingRequestStatusSchema: z.ZodType<TestingLabTestingRequestStatus>;
 export let TestingLabTestingSessionSchema: z.ZodType<TestingLabTestingSession>;
 export let TestingLabTestingSlotRegistrationProjectionSchema: z.ZodType<TestingLabTestingSlotRegistrationProjection>;
@@ -18136,6 +18170,40 @@ TestingLabTestingInputSchema = z.object({
   availableSpots: z.number().int().nullable().optional(),
   duration: z.string().optional(),
   daysRemaining: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for TestingLabTestingRequestDetailProjection */
+TestingLabTestingRequestDetailProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  downloadUrl: z.string().nullable().optional(),
+  instructionsContent: z.string().nullable().optional(),
+  feedbackFormContent: z.string().nullable().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  currentTesterCount: z.number().int().optional(),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  status: z.lazy(() => TestingLabTestingRequestStatusSchema).optional(),
+  projectVersionId: z.string().uuid().nullable().optional(),
+  projectVersion: z.lazy(() => TestingLabTestingRequestProjectVersionProjectionSchema).optional(),
+  isDeleted: z.boolean().optional(),
+});
+
+/** Zod schema for TestingLabTestingRequestProjectProjection */
+TestingLabTestingRequestProjectProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+});
+
+/** Zod schema for TestingLabTestingRequestProjectVersionProjection */
+TestingLabTestingRequestProjectVersionProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  projectId: z.string().uuid().optional(),
+  versionNumber: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  project: z.lazy(() => TestingLabTestingRequestProjectProjectionSchema).optional(),
 });
 
 /** Zod schema for TestingLabTestingRequestStatus */

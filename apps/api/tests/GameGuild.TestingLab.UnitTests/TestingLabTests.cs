@@ -186,7 +186,8 @@ public sealed class TestingRequestsControllerAuthorizationTests
         var controller = new TestingRequestsController(
             requestService.Object,
             actorAccessor,
-            NullLogger<TestingRequestsController>.Instance);
+            NullLogger<TestingRequestsController>.Instance,
+            new Mock<IMediator>().Object);
 
         var result = await controller.SubmitSimpleTestingRequest(new CreateSimpleTestingRequestDto
         {
