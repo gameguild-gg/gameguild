@@ -40,6 +40,14 @@ public sealed class HardCoinFundingLifecycleTests
             .Should().Throw<ArgumentException>();
     }
 
+    [Fact]
+    public void ProviderMonetaryLeg_RejectsIdentityThatExceedsPersistentSourceReferenceLimit()
+    {
+        FluentActions.Invoking(() => new ProviderMonetaryLeg(
+                new string('p', 252), "live", "acct", "pi", "capture"))
+            .Should().Throw<ArgumentOutOfRangeException>();
+    }
+
     [Theory]
     [InlineData(1, 1)]
     [InlineData(100, 100)]
