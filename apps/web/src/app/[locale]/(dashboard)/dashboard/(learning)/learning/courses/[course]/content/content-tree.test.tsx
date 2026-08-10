@@ -14,6 +14,7 @@ import { TooltipProvider } from "@game-guild/ui/components/tooltip";
 import {
   addContent,
   deleteContent,
+  moveContent,
   reorderContent,
   updateContent,
 } from "@/lib/learning/actions";
@@ -47,6 +48,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/learning/actions", () => ({
   addContent: vi.fn(),
   deleteContent: vi.fn(),
+  moveContent: vi.fn(),
   reorderContent: vi.fn(),
   updateContent: vi.fn(),
 }));
@@ -135,6 +137,7 @@ describe("ContentTree course management", () => {
       data: { id: "created-content" },
     });
     vi.mocked(deleteContent).mockResolvedValue({ success: true, data: null });
+    vi.mocked(moveContent).mockResolvedValue({ success: true, data: null });
     vi.mocked(reorderContent).mockResolvedValue({ success: true, data: null });
     vi.mocked(updateContent).mockResolvedValue({ success: true, data: null });
   });

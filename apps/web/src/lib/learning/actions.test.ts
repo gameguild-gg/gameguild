@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   resolveCourseId: vi.fn(),
   postCoursesContent: vi.fn(),
   postCoursesContentReorder: vi.fn(),
+  postCoursesContentMove: vi.fn(),
   deleteCoursesContent: vi.fn(),
   postAssessments: vi.fn(),
   putAssessments: vi.fn(),
@@ -74,6 +75,7 @@ vi.mock("@game-guild/client", () => ({
     LearningCoursesProgramcontentModule: class {
       postCoursesContent = mocks.postCoursesContent;
       postCoursesContentReorder = mocks.postCoursesContentReorder;
+      postCoursesContentMove = mocks.postCoursesContentMove;
       deleteCoursesContent = mocks.deleteCoursesContent;
     },
     LearningCoursesProgramlifecycleModule: class {
@@ -136,6 +138,7 @@ const {
   deleteCertificateTemplate,
   deleteContent,
   reorderContent,
+  moveContent,
   createCourseDiscussion,
   createDiscussionReply,
   addCourseSupportTicketMessage,
@@ -175,6 +178,10 @@ describe("learning server actions", () => {
       }),
     );
     mocks.postCoursesContentReorder.mockResolvedValue({
+      ok: true,
+      data: undefined,
+    });
+    mocks.postCoursesContentMove.mockResolvedValue({
       ok: true,
       data: undefined,
     });
@@ -796,6 +803,60 @@ describe("learning server actions", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
       "/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content",
     );
+  });
+
+  it('uses the generated content contract to move course content', async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce('1caa16bb-6810-4e53-bb0d-91f0d5702333');
+
+    const result = await moveContent(
+      'creature-design-by-admin',
+      'content-9',
+      'parent-2',
+      3,
+    );
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.postCoursesContentMove).toHaveBeenCalledWith(
+      '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+      'content-9',
+      { contentId: 'content-9', newParentId: 'parent-2', newSortOrder: 3 },
+    );
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(
+      '/dashboard/learning/courses/creature-design-by-admin/content',
+    );
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(
+      '/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content',
+    );
+  });
+
+  it('maps a null newParentId through moveContent for top-level orphan moves', async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce('1caa16bb-6810-4e53-bb0d-91f0d5702333');
+
+    const result = await moveContent(
+      'creature-design-by-admin',
+      'content-9',
+      null,
+      0,
+    );
+
+    expect(result).toEqual({ success: true, data: null });
+    expect(mocks.postCoursesContentMove).toHaveBeenCalledWith(
+      '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+      'content-9',
+      { contentId: 'content-9', newParentId: null, newSortOrder: 0 },
+    );
+  });
+
+  it('surfaces moveContent API failures without revalidating', async () => {
+    mocks.postCoursesContentMove.mockResolvedValueOnce({
+      ok: false,
+      error: { detail: 'Sort order conflict.' },
+    });
+
+    const result = await moveContent('course-1', 'content-9', null, 0);
+
+    expect(result).toEqual({ success: false, error: 'Sort order conflict.' });
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
   it("revalidates the assessment hub after creating an assessment", async () => {
