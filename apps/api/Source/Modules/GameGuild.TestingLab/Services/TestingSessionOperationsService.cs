@@ -275,8 +275,11 @@ public class TestingSessionOperationsService(
     private Guid RequireTenantId()
     {
         var actor = actorContextAccessor.ActorContext;
-        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid == null || actor.TenantId == null)
-            throw new UnauthorizedAccessException("An authenticated tenant actor is required for Testing Lab sessions.");
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid == null)
+            throw new AuthenticationRequiredException("Testing Lab session access requires an authenticated actor.");
+
+        if (actor.TenantId == null)
+            throw new AccessDeniedException("Testing Lab session access requires an active tenant membership.");
 
         return actor.TenantId.Value;
     }

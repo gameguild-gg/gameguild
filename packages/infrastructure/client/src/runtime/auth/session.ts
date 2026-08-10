@@ -156,8 +156,39 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
       refreshTokenExpires = new Date(data.refreshTokenExpiresAt as string).getTime();
     }
 
+    const refreshedUser =
+      typeof data.user === 'object' && data.user !== null && !Array.isArray(data.user)
+        ? (data.user as Record<string, unknown>)
+        : undefined;
+
+    const user = refreshedUser
+      ? {
+          ...token.user,
+          id: typeof refreshedUser.id === 'string' ? refreshedUser.id : token.user.id,
+          email:
+            typeof refreshedUser.email === 'string' || refreshedUser.email === null
+              ? (refreshedUser.email as string | null)
+              : token.user.email,
+          name:
+            typeof refreshedUser.displayName === 'string'
+              ? refreshedUser.displayName
+              : typeof refreshedUser.username === 'string'
+                ? refreshedUser.username
+                : typeof refreshedUser.name === 'string' || refreshedUser.name === null
+                  ? (refreshedUser.name as string | null)
+                  : token.user.name,
+          image:
+            typeof refreshedUser.profilePictureUrl === 'string'
+              ? refreshedUser.profilePictureUrl
+              : typeof refreshedUser.image === 'string' || refreshedUser.image === null
+                ? (refreshedUser.image as string | null)
+                : token.user.image,
+        }
+      : token.user;
+
     return {
       ...token,
+      user,
       accessToken: data.accessToken as string,
       refreshToken: (data.refreshToken as string) || token.refreshToken,
       accessTokenExpires,

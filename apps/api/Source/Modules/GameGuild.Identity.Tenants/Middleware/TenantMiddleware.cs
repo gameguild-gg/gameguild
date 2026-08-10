@@ -294,7 +294,7 @@ public static class TenantMiddlewareExtensions
 {
     /// <summary>
     ///     Adds the tenant resolution middleware to the application pipeline.
-    ///     Should be placed after routing but before authentication.
+    ///     Should be placed after authentication so tenant membership can be validated.
     /// </summary>
     /// <param name="app">The application builder</param>
     /// <returns>The application builder for chaining</returns>
