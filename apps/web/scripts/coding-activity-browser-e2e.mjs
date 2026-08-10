@@ -214,6 +214,24 @@ async function run() {
       await runTests.click().catch(() => {});
     }
 
+    // Task 12: if Run Tests fired onTestReport, the public-test estimate
+    // banner must show passed/total + estimated score. Best-effort — the
+    // worker is mocked so the banner may legitimately not appear.
+    const banner = page.locator('[data-testid="public-test-estimate-banner"]');
+    if (await banner.count()) {
+      const text = (await banner.innerText()).toLowerCase();
+      if (!text.includes('passed')) {
+        throw new Error(`Banner missing "passed": ${text}`);
+      }
+      if (!text.includes('estimated score')) {
+        throw new Error(`Banner missing "estimated score": ${text}`);
+      }
+      await page.screenshot({
+        path: resolve(evidenceDir, 'estimate-banner.png'),
+        fullPage: true,
+      });
+    }
+
     // Submit must always be available on the coding path.
     const submit = page.getByRole('button', { name: /^Submit$/ });
     await submit.waitFor({ timeout: 30_000 });

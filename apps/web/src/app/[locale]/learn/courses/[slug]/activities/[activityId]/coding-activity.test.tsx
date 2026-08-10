@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   submitAssessment: vi.fn(),
   useRouterPush: vi.fn(),
   IdeRender: vi.fn(),
+  computeScore: vi.fn(),
 }));
 
 vi.mock('@/lib/learner/courses', () => ({
@@ -25,6 +26,9 @@ vi.mock('@/lib/learning/queries/assessments', () => ({
 }));
 vi.mock('@/lib/learner/activity-actions', () => ({
   submitAssessment: mocks.submitAssessment,
+}));
+vi.mock('@/lib/emception/scoring', () => ({
+  computeScore: mocks.computeScore,
 }));
 vi.mock('next/navigation', () => ({
   notFound: () => {
@@ -130,6 +134,7 @@ describe('coding activity page routing', () => {
     );
     mocks.auth.mockResolvedValue(null);
     mocks.getMyProjects.mockResolvedValue([]);
+    mocks.computeScore.mockReturnValue({ score: 0, passed: false, feedback: '' });
     stubIde();
   });
 
@@ -264,5 +269,84 @@ describe('coding activity page routing', () => {
     expect(mocks.useRouterPush).toHaveBeenCalledWith(
       '/courses/test-course/activities',
     );
+  });
+
+  it('renders the public-test estimate banner with computed score when Ide fires onTestReport', async () => {
+    // 2 cases weights [2,3], both pass → passedWeight=5, totalWeight=5,
+    // score = round(5/5 * 100) = 100.
+    mocks.computeScore.mockReturnValue({ score: 100, passed: true, feedback: '' });
+    mocks.getCodingDefinitionPublic.mockResolvedValue({
+      kind: 'coding',
+      language: 'cpp',
+      workspaceConfig: { files: { 'main.cpp': { encoding: 'text', content: '' } } },
+      testPlan: {
+        cases: [
+          { kind: 'stdio', name: 't1', weight: 2 },
+          { kind: 'stdio', name: 't2', weight: 3 },
+        ],
+      },
+      maxScore: 100,
+      passingScore: 60,
+    });
+
+    render(await LearnerActivityPage(pageParams()));
+
+    const ide = await screen.findByTestId('mock-ide');
+    expect(ide).toBeInTheDocument();
+
+    const lastCall = mocks.IdeRender.mock.calls.at(-1);
+    const onTestReport = lastCall?.[0]?.onTestReport;
+    expect(typeof onTestReport).toBe('function');
+
+    onTestReport({
+      passed: 2,
+      failed: 0,
+      totalDurationMs: 0,
+      cases: [
+        { name: 't1', passed: true, durationMs: 0 },
+        { name: 't2', passed: true, durationMs: 0 },
+      ],
+    });
+
+    const banner = await screen.findByTestId('public-test-estimate-banner');
+    expect(banner.textContent).toContain('2/2 passed');
+    expect(banner.textContent).toContain('estimated score: 100/100');
+    expect(banner.textContent).toContain('estimate based on public tests only');
+    expect(mocks.computeScore).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId('public-test-estimate-unavailable')).toBeNull();
+  });
+
+  it('renders "Estimate unavailable" without crashing when computeScore throws', async () => {
+    mocks.computeScore.mockImplementation(() => {
+      throw new Error('NaN weight');
+    });
+    mocks.getCodingDefinitionPublic.mockResolvedValue({
+      kind: 'coding',
+      language: 'cpp',
+      workspaceConfig: { files: { 'main.cpp': { encoding: 'text', content: '' } } },
+      testPlan: { cases: [{ kind: 'stdio', name: 't1', weight: NaN }] },
+      maxScore: 100,
+      passingScore: 60,
+    });
+
+    render(await LearnerActivityPage(pageParams()));
+
+    await screen.findByTestId('mock-ide');
+    const lastCall = mocks.IdeRender.mock.calls.at(-1);
+    const onTestReport = lastCall?.[0]?.onTestReport;
+    expect(typeof onTestReport).toBe('function');
+
+    onTestReport({
+      passed: 1,
+      failed: 0,
+      totalDurationMs: 0,
+      cases: [{ name: 't1', passed: true, durationMs: 0 }],
+    });
+
+    const unavailable = await screen.findByTestId(
+      'public-test-estimate-unavailable',
+    );
+    expect(unavailable.textContent).toContain('Estimate unavailable');
+    expect(screen.queryByTestId('public-test-estimate-banner')).toBeNull();
   });
 });
