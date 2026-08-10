@@ -49,9 +49,25 @@ public class LocalAuthServiceTests
         _enumerationProtectionMock.Setup(x => x.GetGenericErrorMessage(It.IsAny<string>())).Returns("Authentication failed");
         _enumerationProtectionMock.Setup(x => x.AddTimingProtectionDelayAsync(It.IsAny<bool>(), It.IsAny<DateTime>())).Returns(Task.CompletedTask);
         _publisherMock.Setup(x => x.Publish(It.IsAny<UserSignedUpNotification>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        var tenantId = Guid.NewGuid();
         _senderMock
             .Setup(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new GetUserMembershipsResponse());
+            .ReturnsAsync(new GetUserMembershipsResponse
+            {
+                TotalCount = 1,
+                Memberships =
+                [
+                    new UserMembershipDto
+                    {
+                        TenantId = tenantId,
+                        TenantName = "Default tenant",
+                        TenantSlug = "default-tenant",
+                        TenantIsActive = true,
+                        Role = "Member",
+                        IsActive = true
+                    }
+                ]
+            });
         _senderMock
             .Setup(x => x.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Tenant?)null);
@@ -141,6 +157,33 @@ public class LocalAuthServiceTests
         result.RefreshToken.Should().Be("refresh-token");
         result.UserId.Should().Be(userId);
         result.Email.Should().Be("user@example.com");
+    }
+
+    [Fact]
+    public async Task LocalSignInAsync_ValidCredentialsWithoutActiveMembership_ThrowsAccessDeniedException()
+    {
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword("Password1!");
+        var user = User.CreateWithPassword("unassigned@example.com", "unassigned", passwordHash);
+        var userId = user.Id;
+
+        _userRepoMock.Setup(x => x.GetByEmailAsync("unassigned@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _anomalyDetectionMock.Setup(x => x.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new AuthenticationAnomalyResult { RiskLevel = RiskLevel.Low });
+        _senderMock
+            .Setup(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetUserMembershipsResponse());
+
+        var request = new LocalSignInRequest { Email = "unassigned@example.com", Password = "Password1!" };
+
+        await Assert.ThrowsAsync<AccessDeniedException>(() => _sut.LocalSignInAsync(request));
+
+        _jwtTokenServiceMock.Verify(
+            x => x.GenerateAccessTokenAsync(
+                It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

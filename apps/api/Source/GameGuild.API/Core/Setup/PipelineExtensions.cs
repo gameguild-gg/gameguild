@@ -39,8 +39,8 @@ public static class PipelineExtensions
                 branch => branch.UseHttpsRedirection());
         }
 
-        // 05. Exception Handler (global error handling for non-development)
-        if (!app.Environment.IsDevelopment()) app.UseExceptionHandler();
+        // 05. Exception Handler (typed 401/403/4xx/5xx problem details in every environment)
+        app.UseMiddleware<ExceptionHandlingMiddleware>();
 
         // 06. Correlation ID (distributed tracing, reads/generates X-Correlation-Id header)
         app.UseCorrelationId();
@@ -73,15 +73,15 @@ public static class PipelineExtensions
         // 14. Response Compression (gzip/brotli for smaller payloads)
         app.UseResponseCompression();
 
-        // 15. Tenant Resolution (multi-tenant context, after routing, before auth)
-        // Resolves tenant from: X-Tenant-Id header > Host domain > Query string > Default tenant
-        app.UseTenantResolution();
-
-        // 16. Authentication (identify user from JWT/cookies)
+        // 15. Authentication (identify user from JWT/cookies before validating tenant membership)
         app.UseAuthentication();
 
-        // 17. Actor Context (build immutable ActorContext from claims + tenant)
-        // SECURITY: Must be after Authentication (needs ClaimsPrincipal) and Tenant Resolution
+        // 16. Tenant Resolution (multi-tenant context, after authentication)
+        // Resolves tenant from: X-Tenant-Id header > Host domain > Query string > Default tenant
+        // SECURITY: Authenticated users are checked against the resolved tenant membership.
+        app.UseTenantResolution();
+
+        // 17. Actor Context (build immutable ActorContext from authenticated claims + tenant)
         // SECURITY: Must be before Authorization (authorization handlers use ActorContext)
         app.UseActorContext();
 
