@@ -108,15 +108,9 @@ if (importSnapshotCourses)
     return;
 }
 
-// Trigger fail-closed value-movement option validation before migrations or HTTP listeners.
-var economyRiskOptions = app.Services.GetRequiredService<IOptions<GameGuild.Economy.Risk.EconomyRiskCompositionOptions>>().Value;
+// Validate optional Stripe composition without making provider credentials a startup requirement.
 var stripeGatewayOptions = app.Services.GetRequiredService<IOptions<StripeGatewayOptions>>().Value;
 var billingConfiguration = app.Services.GetRequiredService<IOptions<BillingConfiguration>>().Value;
-EconomyProviderCapabilityGuard.ThrowIfInvalid(
-    economyRiskOptions,
-    stripeGatewayOptions,
-    billingConfiguration,
-    app.Environment.EnvironmentName);
 StripeProviderConfigurationGuard.ThrowIfInvalid(
     stripeGatewayOptions,
     billingConfiguration,
