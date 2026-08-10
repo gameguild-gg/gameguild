@@ -22,6 +22,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     xz-utils \
     bzip2 \
+    # CPython build deps (CPython 3.13 needs zlib to bootstrap pip via wheels;
+    # other libs cover ssl/ffi/bz2/sqlite/lzma/readline/ncurses modules that
+    # the bundled cpython compiles). ubuntu-latest ships these pre-installed;
+    # bookworm-slim does not.
+    zlib1g-dev \
+    libssl-dev \
+    libffi-dev \
+    libbz2-dev \
+    libsqlite3-dev \
+    liblzma-dev \
+    libreadline-dev \
+    libncursesw5-dev \
+    uuid-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
