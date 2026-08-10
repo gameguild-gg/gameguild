@@ -79,7 +79,7 @@ async function complete<T>(
 ): Promise<TestingEventActionResult<T>> {
   try {
     const result = await operation;
-    if (!result.ok) return { success: false, error: result.error.message };
+    if (!result.ok) return { success: false, error: result.error.detail || result.error.message };
     revalidateEvent(eventId);
     return { success: true, data: (result.data ?? null) as ActionData<T>, message };
   } catch (error) {
@@ -161,6 +161,10 @@ function eventInput(formData: FormData): {
   const endsAt = isoDate(formData, 'endsAt');
   if (!applicationsOpenAt || !applicationsCloseAt || !startsAt || !endsAt)
     return { data: null, error: 'Enter valid event dates.' };
+  if (new Date(applicationsCloseAt) <= new Date(applicationsOpenAt))
+    return { data: null, error: 'Applications must close after they open.' };
+  if (new Date(startsAt) < new Date(applicationsCloseAt))
+    return { data: null, error: 'The event must start after applications close.' };
   if (new Date(endsAt) <= new Date(startsAt))
     return { data: null, error: 'Event end must be after its start.' };
 

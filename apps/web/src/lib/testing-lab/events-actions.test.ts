@@ -94,6 +94,58 @@ describe('Testing Lab event actions', () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/testing-lab/events');
   });
 
+  it('shows the API validation detail instead of its generic validation code', async () => {
+    mocks.events.postTestingEvents.mockResolvedValue({
+      ok: false,
+      error: { message: 'TestingLab.Validation', detail: 'The event must start after applications close.' },
+    });
+
+    const result = await createTestingEvent(
+      form({
+        name: 'Campus showcase',
+        applicationsOpenAt: '2026-08-01T09:00',
+        applicationsCloseAt: '2026-08-05T18:00',
+        startsAt: '2026-08-08T18:00',
+        endsAt: '2026-08-08T21:00',
+      }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: 'The event must start after applications close.',
+    });
+  });
+
+  it('rejects an application window that closes before it opens', async () => {
+    const result = await createTestingEvent(
+      form({
+        name: 'Invalid application window',
+        applicationsOpenAt: '2026-08-05T18:00',
+        applicationsCloseAt: '2026-08-05T09:00',
+        startsAt: '2026-08-08T18:00',
+        endsAt: '2026-08-08T21:00',
+      }),
+    );
+
+    expect(result).toEqual({ success: false, error: 'Applications must close after they open.' });
+    expect(mocks.events.postTestingEvents).not.toHaveBeenCalled();
+  });
+
+  it('rejects an event that starts before applications close', async () => {
+    const result = await createTestingEvent(
+      form({
+        name: 'Invalid event schedule',
+        applicationsOpenAt: '2026-08-01T09:00',
+        applicationsCloseAt: '2026-08-08T18:00',
+        startsAt: '2026-08-08T09:00',
+        endsAt: '2026-08-08T21:00',
+      }),
+    );
+
+    expect(result).toEqual({ success: false, error: 'The event must start after applications close.' });
+    expect(mocks.events.postTestingEvents).not.toHaveBeenCalled();
+  });
+
   it('forwards a weekly recurrence to the generated client', async () => {
     mocks.events.postTestingEvents.mockResolvedValue({ ok: true, data: { id: 'event-2' } });
     const input = form({
