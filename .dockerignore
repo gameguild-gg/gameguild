@@ -48,13 +48,19 @@ apps/website/.next/
 !packages/**
 packages/**/node_modules/
 
-# Allow emception toolchain sources (packages + base tsconfig + coi-serviceworker)
+# Allow emception toolchain sources (packages + tsconfigs + coi-serviceworker + scripts + userland)
 !tools/emception/package.json
 !tools/emception/tsconfig.base.json
+!tools/emception/tsconfig.json
+!tools/emception/tsconfig.lib.json
 !tools/emception/packages/**
 tools/emception/packages/**/node_modules/
 tools/emception/packages/**/dist/
 tools/emception/packages/**/*.tsbuildinfo
+!tools/emception/scripts/**
+tools/emception/scripts/**/node_modules/
+tools/emception/scripts/**/*.tsbuildinfo
+!tools/emception/userland/**
 !tools/emception/public/coi-serviceworker.js
 
 # emception-ui package is now used by apps/web — included in build context.
