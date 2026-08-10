@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# emception CDN payload (copied from tools/emception by sync:emception at build)
+/public/emception/
+
 # production
 /build
 
