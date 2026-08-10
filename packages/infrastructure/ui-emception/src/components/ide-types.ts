@@ -1,3 +1,26 @@
+export interface GradingCase {
+  kind: string;
+  name?: string;
+  weight?: number;
+  hidden?: boolean;
+  stdin?: string;
+  expectedStdout?: string | RegExp;
+  expectedStderr?: string | RegExp;
+  expectedExit?: number;
+  inFile?: string;
+  expectedOutFile?: string;
+  matcher?: string;
+  expect?: 'found' | 'not-found' | { minCount: number };
+  sourceFiles?: string[];
+  run?: unknown;
+}
+
+export interface GradingPlan {
+  cases: GradingCase[];
+  build?: Record<string, unknown>;
+  timeoutMsPerCase?: number;
+}
+
 export type TabType = 'text' | 'image' | 'canvas';
 export type DockGroup = 'main' | 'right' | 'bottom';
 
