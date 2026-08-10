@@ -1,9 +1,11 @@
-/**
- * @deprecated Import explicit presentation contracts from './view-models'.
- *
- * This compatibility facade contains no independent API contracts. It only
- * aliases the view models while dashboard imports are migrated incrementally.
- */
+// =============================================================================
+// LEARNING MODULE TYPE ALIASES
+// =============================================================================
+// Client-safe public names for dashboard learning contracts.
+// =============================================================================
+
+export type { LearningCoursesProgramContentType } from "@game-guild/client";
+
 export type {
   CourseAnalyticsViewModel as CourseAnalytics,
   CourseContentItemDetailViewModel as ContentItemDetail,
@@ -14,6 +16,4 @@ export type {
   CoursePricingModel,
   CourseStudentsViewModel as CourseStudents,
   CourseViewModel as CourseDetails,
-} from './view-models';
-
-export type { LearningCoursesProgramContentType } from '@game-guild/client';
+} from "./view-models";

@@ -3,6 +3,7 @@
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { createAssessmentGroup, deleteAssessmentGroup, updateAssessmentGroup } from '@/lib/learning/actions';
 import type { Assessment, AssessmentGroup, AssessmentType, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
+import type { ContentItem } from '@/lib/learning/types';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent } from '@game-guild/ui/components/card';
@@ -43,6 +44,7 @@ interface AssessmentsListProps {
   courseId: string;
   assessments: Assessment[];
   total: number;
+  gradedContentItems?: ContentItem[];
   assessmentGroups?: AssessmentGroup[];
   analytics?: CourseAssessmentAnalytics | null;
 }
@@ -196,6 +198,7 @@ export function AssessmentsList({
   courseId,
   assessments,
   total,
+  gradedContentItems = [],
   assessmentGroups = [],
   analytics = null,
 }: AssessmentsListProps) {
@@ -219,6 +222,11 @@ export function AssessmentsList({
     () => buildGroupedAssessments(assessments, assessmentGroups),
     [assessments, assessmentGroups],
   );
+  const contentOwnedActivities = React.useMemo(() => {
+    const assessmentContentIds = new Set(assessments.map((assessment) => assessment.contentId).filter(Boolean));
+    return gradedContentItems.filter((item) => item.gradingConfig?.enabled && !assessmentContentIds.has(item.id));
+  }, [assessments, gradedContentItems]);
+  const visibleTotal = total + contentOwnedActivities.length;
   const weightTotal = React.useMemo(
     () => assessmentGroups.reduce((sum, group) => sum + group.weightPercent, 0),
     [assessmentGroups],
@@ -348,7 +356,7 @@ export function AssessmentsList({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold">Assessments</h2>
-          <Badge variant="secondary">{total}</Badge>
+          <Badge variant="secondary">{visibleTotal}</Badge>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={() => setShowCreateGroup(true)}>
@@ -373,7 +381,7 @@ export function AssessmentsList({
       {analytics && <AssessmentAnalyticsPanel analytics={analytics} />}
 
       {/* Empty state */}
-      {assessments.length === 0 && assessmentGroups.length === 0 && (
+      {visibleTotal === 0 && assessmentGroups.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <ClipboardList className="text-muted-foreground mb-4 size-12" />
@@ -383,6 +391,56 @@ export function AssessmentsList({
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {contentOwnedActivities.length > 0 && (
+        <div className="overflow-hidden rounded-xl border bg-card">
+          <section data-testid="content-owned-graded-activities">
+            <div className="flex min-h-12 items-center gap-3 bg-muted/60 px-4 py-3">
+              <GripVertical className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
+              <ChevronDown className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-semibold">Content grading</h3>
+                <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                  Content-owned activities configured from the content editor.
+                </p>
+              </div>
+              <Badge variant="outline" className="shrink-0 rounded-full bg-background">
+                Temporary
+              </Badge>
+            </div>
+
+            <div className="divide-y">
+              {contentOwnedActivities.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/dashboard/learning/courses/${courseId}/content/${item.id}`}
+                  className="group flex min-h-16 items-center gap-3 px-4 py-3 transition hover:bg-muted/45"
+                >
+                  <GripVertical className="text-muted-foreground/70 size-4 shrink-0" aria-hidden="true" />
+                  <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md">
+                    <ClipboardList className="size-4" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold underline-offset-2 group-hover:underline">
+                      {item.title}
+                    </span>
+                    <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                      <span>{item.gradingConfig?.gradebook.maxScore ?? item.maxPoints ?? 0} pts</span>
+                      <span>{item.gradingConfig?.validationMode === 'protected' ? 'protected draft' : 'public practice'}</span>
+                    </span>
+                  </span>
+                  <Badge variant="secondary" className="hidden shrink-0 sm:inline-flex">
+                    {item.type === 'Questionnaire' ? 'Quiz' : item.type}
+                  </Badge>
+                  <Badge variant="outline" className="hidden shrink-0 sm:inline-flex">
+                    Content
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+          </section>
+        </div>
       )}
 
       {/* Weighted grade groups */}

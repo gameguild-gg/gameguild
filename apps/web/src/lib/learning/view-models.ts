@@ -6,9 +6,11 @@
 // =============================================================================
 
 import type {
+  LearningCoursesGradingMethod,
   LearningCoursesLessonContentFormat,
   LearningCoursesProgramContentType,
 } from "@game-guild/client";
+import type { ContentGradingConfig } from "@game-guild/grading";
 
 export type { LearningCoursesProgramContentType } from "@game-guild/client";
 
@@ -111,6 +113,9 @@ export interface CourseContentItemViewModel {
   status: "draft" | "published" | "archived";
   duration: number | null;
   metadata: Record<string, unknown>;
+  gradingMethod: LearningCoursesGradingMethod | null;
+  maxPoints: number | null;
+  gradingConfig: ContentGradingConfig | null;
   createdAt: string;
   updatedAt: string;
 }
