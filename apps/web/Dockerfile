@@ -7,8 +7,15 @@ WORKDIR /repo
 COPY pnpm-workspace.yaml package.json .npmrc* ./
 COPY apps/web/package.json ./apps/web/
 COPY packages ./packages
+COPY tools/emception/package.json ./tools/emception/
+COPY tools/emception/tsconfig.base.json ./tools/emception/
+COPY tools/emception/packages ./tools/emception/packages
+COPY tools/emception/public/coi-serviceworker.js ./tools/emception/public/coi-serviceworker.js
 
 RUN pnpm install --no-frozen-lockfile --prefer-offline
+
+# Build emception workspace packages (they ship TS source; dist/ required by apps/web build)
+RUN pnpm --dir tools/emception run build:packages
 
 FROM deps AS builder
 ARG GIT_HASH

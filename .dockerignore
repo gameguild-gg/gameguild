@@ -48,5 +48,13 @@ apps/website/.next/
 !packages/**
 packages/**/node_modules/
 
-# Exclude unfinished/emception-only workspace package from web/learning image installs.
-packages/infrastructure/ui-emception/**
+# Allow emception toolchain sources (packages + base tsconfig + coi-serviceworker)
+!tools/emception/package.json
+!tools/emception/tsconfig.base.json
+!tools/emception/packages/**
+tools/emception/packages/**/node_modules/
+tools/emception/packages/**/dist/
+tools/emception/packages/**/*.tsbuildinfo
+!tools/emception/public/coi-serviceworker.js
+
+# emception-ui package is now used by apps/web — included in build context.
