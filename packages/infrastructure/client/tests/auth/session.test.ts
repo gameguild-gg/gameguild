@@ -291,6 +291,43 @@ describe('Session Management', () => {
       expect(result.refreshToken).toBe('new-refresh-token');
     });
 
+    it('should replace tenant metadata returned by the refresh endpoint', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          accessToken: 'new-access-token',
+          refreshToken: 'new-refresh-token',
+          expiresIn: 3600,
+          tenantId: 'tenant-current',
+          availableTenants: [{ id: 'tenant-current', name: 'Current workspace' }],
+          user: {
+            id: 'user-1',
+            email: 'updated@example.com',
+            username: 'updated-user',
+          },
+        }),
+      });
+
+      const token: JWTPayload = {
+        user: { id: 'user-1', email: 'stale@example.com', name: 'Stale user' },
+        accessToken: 'old-token',
+        refreshToken: 'old-refresh',
+        accessTokenExpires: Date.now(),
+        tenantId: 'tenant-stale',
+        availableTenants: [{ id: 'tenant-stale', name: 'Stale workspace' }],
+      };
+
+      const result = await refreshAccessToken(token, mockConfig);
+
+      expect(result.tenantId).toBe('tenant-current');
+      expect(result.availableTenants).toEqual([{ id: 'tenant-current', name: 'Current workspace' }]);
+      expect(result.user).toMatchObject({
+        id: 'user-1',
+        email: 'updated@example.com',
+        name: 'updated-user',
+      });
+    });
+
     it('should throw on non-ok response', async () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
