@@ -25,7 +25,10 @@ public sealed class TreasuryModuleTests
             descriptor.ServiceType == typeof(IAdminWithdrawalAuditTrail) &&
             descriptor.ImplementationType == typeof(PostgreSqlAdminWithdrawalAuditTrail) &&
             descriptor.Lifetime == ServiceLifetime.Scoped);
-        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(AdminWithdrawalCoordinator));
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IDurableAdminWithdrawalWorkflow) &&
+            descriptor.ImplementationType == typeof(PostgreSqlDurableAdminWithdrawalWorkflow) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(AdminWithdrawalCoordinator));
         services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(DbContext));
     }
 }

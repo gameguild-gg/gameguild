@@ -18,11 +18,14 @@
     <PackageReference Include="coverlet.msbuild" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Source\Modules\GameGuild.Economy.Payouts\GameGuild.Economy.Payouts.csproj" />
+    <ProjectReference Include="..\..\Source\GameGuild.API\GameGuild.API.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
