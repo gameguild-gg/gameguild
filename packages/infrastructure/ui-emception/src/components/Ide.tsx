@@ -5,8 +5,9 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffec
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
-import type { DockGroup, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
+import type { DockGroup, GradingPlan, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
 import { DEFAULT_IMAGE, SDL_CANVAS_PATH, WORKSPACE_STORAGE_KEY, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
+import TestResultsPanel from './TestResultsPanel';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
 import TerminalPanel from './TerminalPanel';
 import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets';
@@ -64,13 +65,21 @@ export interface IdeProps {
   manifestUrl?: string;
   workspaceConfig?: WorkspaceConfig;
   workspaceUrl?: string;
-  /** Fired after ref.runTests() resolves with a structured TestReport. */
+   /** Grading-aware test plan. When present, a "Run Tests" button appears. */
+  testPlan?: GradingPlan;
+   /** 'public' strips hidden cases; 'full' runs all. Defaults to 'full'. */
+  testMode?: 'public' | 'full';
+   /** Score scale maximum (preview only). Defaults to 100. */
+  maxScore?: number;
+   /** Minimum score to pass (preview only). Defaults to 60. */
+  passingScore?: number;
+   /** Fired after ref.runTests() resolves with a structured TestReport. */
   onTestReport?: (report: import('@gameguild/emception-browser').EmceptionAPI extends { runTests: (...a: any[]) => Promise<infer R> } ? R : never) => void;
-  /** Tee'd from tty.write — receives raw text written to the terminal (stdout path). */
+   /** Tee'd from tty.write — receives raw text written to the terminal (stdout path). */
   onStdout?: (chunk: string) => void;
-  /** Tee'd from tty.writeError — receives raw text written to the terminal (stderr path). */
+   /** Tee'd from tty.writeError — receives raw text written to the terminal (stderr path). */
   onStderr?: (chunk: string) => void;
-  /** Fired when a compile-and-run or test execution finishes, with the exit code. */
+   /** Fired when a compile-and-run or test execution finishes, with the exit code. */
   onExecutionComplete?: (exitCode: number) => void;
 }
 
@@ -85,7 +94,7 @@ export interface IdeHandle {
 
 type WorkerBoot = Awaited<ReturnType<typeof bootInWorker>>;
 
-export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFEST_URL, workspaceConfig, workspaceUrl, onTestReport, onStdout, onStderr, onExecutionComplete }, ref) {
+export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFEST_URL, workspaceConfig, workspaceUrl, onTestReport, onStdout, onStderr, onExecutionComplete, testPlan, testMode = 'full', maxScore = 100, passingScore = 60 }, ref) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -114,6 +123,8 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
   const onExecutionCompleteRef = useRef(onExecutionComplete);
   onExecutionCompleteRef.current = onExecutionComplete;
   const lastExitCodeRef = useRef(0);
+  const [lastReport, setLastReport] = useState<import('./TestResultsPanel').TestReport | null>(null);
+  const [testRunning, setTestRunning] = useState(false);
 
   // Resolve the active workspace config: prop > fetched bundle > default preset
   const [activePresetId, setActivePresetId] = useState<string>(workspaceConfig?.id ?? DEFAULT_PRESET.id);
@@ -224,9 +235,36 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
     return () => {
       cancelled = true;
     };
-  }, [workspaceUrl]);
+    }, [workspaceUrl]);
 
-  // ── Sync workspace files into the Worker VFS (/home/user) ─────
+    // ── Run Tests button handler ───────────────────────────────────
+     const handleRunTests = useCallback(async () => {
+    if (!apiRef.current || !testPlan) return;
+    setTestRunning(true);
+    setLastReport(null);
+    try {
+      const filteredCases = testMode === 'public'
+         ? testPlan.cases
+             .filter((c) => !c.hidden)
+             .map(({ hidden: _hidden, ...rest }) => rest)
+         : testPlan.cases;
+      const runPlan = {
+        cases: filteredCases,
+        build: testPlan.build,
+        timeoutMsPerCase: testPlan.timeoutMsPerCase,
+       };
+      const report = await apiRef.current.runTests(runPlan as any);
+      setLastReport(report);
+      try { onTestReportRef.current?.(report); } catch { /* swallow */ }
+      setStatus('Tests complete');
+      } catch (err) {
+      setStatus(`Test error: ${(err as Error).message}`);
+      } finally {
+      setTestRunning(false);
+      }
+    }, [testPlan, testMode]);
+
+    // ── Sync workspace files into the Worker VFS (/home/user) ─────
   const syncFilesToVfs = useCallback(async (filesToSync: Record<string, WorkspaceFile>) => {
     const orch = orchestratorRef.current;
     if (!orch) return;
@@ -1853,6 +1891,26 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
               ✓ Test
             </button>
           )}
+          {testPlan && (
+            <button
+              data-testid="run-tests-button"
+              onClick={handleRunTests}
+              disabled={testRunning}
+              style={{
+                height: 24,
+                padding: '0 0.75rem',
+                fontSize: '0.8rem',
+                fontWeight: 500,
+                borderRadius: 4,
+                border: 'none',
+                cursor: testRunning ? 'not-allowed' : 'pointer',
+                background: testRunning ? '#313244' : '#fab387',
+                color: testRunning ? '#585b70' : '#11111b',
+              }}
+            >
+              {testRunning ? 'Running…' : 'Run Tests'}
+            </button>
+          )}
           <button
             onClick={resetWorkspace}
             style={{
@@ -2004,6 +2062,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
         {activeFile && <span>{activeFile.path}</span>}
         {activeFile?.type === 'text' && <span style={{ marginLeft: 'auto' }}>{inferLanguage(activeFileName).toUpperCase()}</span>}
       </div>
+      {lastReport && (
+        <div style={{ marginTop: '0.5rem' }}>
+          <TestResultsPanel
+            report={lastReport}
+            maxScore={maxScore}
+            passingScore={passingScore}
+            weights={testPlan?.cases.map((c) => c.weight ?? 1)}
+          />
+        </div>
+      )}
     </div>
   );
 });

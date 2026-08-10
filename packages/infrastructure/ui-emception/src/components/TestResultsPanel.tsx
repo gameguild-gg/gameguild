@@ -21,21 +21,27 @@ export interface TestResultsPanelProps {
   /** When provided, compute + display a weighted score. */
   maxScore?: number;
   passingScore?: number;
+  /** Per-case weights for weighted scoring. Falls back to weight=1 per case. */
+  weights?: number[];
 }
 
-/** Minimal weighted score — mirrors computeScore logic from emception/testing/score.ts. */
-function computeLocalScore(report: TestReport, maxScore: number, passingScore: number): { score: number; passed: boolean } {
-  // Without per-case weights (we don't have the plan here), each case has weight 1.
-  const total = report.cases.length || 1;
-  const score = Math.round((report.passed / total) * maxScore);
+/** Weighted score — mirrors computeScore logic from emception/testing/score.ts. */
+function computeLocalScore(report: TestReport, maxScore: number, passingScore: number, weights?: number[]): { score: number; passed: boolean } {
+  const caseWeights = weights ?? report.cases.map(() => 1);
+  const totalWeight = caseWeights.reduce((sum, w) => sum + w, 0) || 1;
+  let passedWeight = 0;
+  report.cases.forEach((r, i) => {
+    if (r.passed) passedWeight += caseWeights[i] ?? 1;
+  });
+  const score = Math.round((passedWeight / totalWeight) * maxScore);
   return { score, passed: score >= passingScore };
 }
 
-export default function TestResultsPanel({ report, maxScore, passingScore }: TestResultsPanelProps) {
+export default function TestResultsPanel({ report, maxScore, passingScore, weights }: TestResultsPanelProps) {
   const [expandedCase, setExpandedCase] = useState<number | null>(null);
   const total = report.cases.length;
   const hasScore = maxScore != null && passingScore != null;
-  const scoreResult = hasScore ? computeLocalScore(report, maxScore!, passingScore!) : null;
+  const scoreResult = hasScore ? computeLocalScore(report, maxScore!, passingScore!, weights) : null;
 
   return (
     <div
