@@ -12,11 +12,7 @@ public sealed class StripeGatewayOptionsValidatorTests
     [Theory]
     [InlineData("Staging")]
     [InlineData("Production")]
-
-
-    // todo: rollback to rejection when we move to production
-    /*
-        public void Validate_RejectsSimulationOutsideDevelopmentAndTesting(string environmentName)
+    public void Validate_RejectsSimulationOutsideDevelopmentAndTesting(string environmentName)
     {
         var validator = CreateValidator(environmentName);
         var options = CreateConfiguredOptions();
@@ -25,28 +21,7 @@ public sealed class StripeGatewayOptionsValidatorTests
         var result = validator.Validate(Options.DefaultName, options);
 
         result.Failed.Should().BeTrue();
-        result.FailureMessage.Should()
-            .Be($"Stripe simulation is not permitted in {environmentName}.");
-    }
-    */
-    public void Validate_WarnsAndSucceedsWhenSimulationOutsideDevelopmentAndTesting(string environmentName)
-    {
-        var logger = new Mock<ILogger<StripeGatewayOptionsValidator>>();
-        var validator = CreateValidator(environmentName, logger);
-        var options = CreateConfiguredOptions();
-        options.UseSimulation = true;
-
-        var result = validator.Validate(Options.DefaultName, options);
-
-        result.Succeeded.Should().BeTrue();
-        logger.Verify(
-            x => x.Log(
-                LogLevel.Warning,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((state, type) => true),
-                It.IsAny<Exception?>(),
-                It.Is<Func<It.IsAnyType, Exception?, string>>((formatter, type) => true)),
-            Times.Once);
+        result.FailureMessage.Should().Be("Stripe simulation is not permitted in " + environmentName + ".");
     }
 
     [Theory]
