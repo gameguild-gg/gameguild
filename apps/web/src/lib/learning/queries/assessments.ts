@@ -376,3 +376,38 @@ export const getCertificateTemplate = cache(async (templateId: string): Promise<
     templateStyles: template.templateStyles ?? null,
   };
 });
+
+// =============================================================================
+// CODING DEFINITION (public — hidden cases already stripped server-side)
+// =============================================================================
+
+/** Shape returned by GET /v1.0/assessments/{id}/coding-definition/public. */
+export interface CodingDefinition {
+  kind: string;
+  language: string;
+  workspaceConfig: Record<string, unknown> | null;
+  testPlan: Record<string, unknown> | null;
+  maxScore: number;
+  passingScore: number;
+}
+
+/**
+ * Fetch the public coding definition for an assessment (enrollment-gated).
+ * Hidden test cases are stripped server-side. Returns null when absent.
+ */
+export const getCodingDefinitionPublic = cache(
+  async (assessmentId: string): Promise<CodingDefinition | null> => {
+    try {
+      const client = getApiClient();
+      const result = await client.request<CodingDefinition>({
+        method: 'GET',
+        path: `/v1.0/assessments/${assessmentId}/coding-definition/public`,
+      });
+      if (!result.ok) return null;
+      return result.data;
+    } catch (err) {
+      console.error('Error fetching public coding definition:', err);
+      return null;
+    }
+  },
+);

@@ -49,3 +49,6 @@ export {
     type PythonPreset
 } from './presets';
 
+// Façade wrapper for hosts that boot the worker themselves (e.g. the IDE).
+export { wrapWorkerClient } from './createEmception';
+

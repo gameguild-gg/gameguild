@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import path from "node:path";
+import { COI_LEARN_RULES } from "./src/lib/emception/coi-headers";
 
 const configuredDevOrigins = process.env.NEXT_ALLOWED_DEV_ORIGINS?.split(",")
   .map((origin) => origin.trim())
@@ -24,6 +25,13 @@ const nextConfig: NextConfig = {
     "@game-guild/content-rendering",
     "@game-guild/courses",
     "@game-guild/dotnet-wasm",
+    "@game-guild/emception-ui",
+    "emception",
+    "@gameguild/emception-browser",
+    "@gameguild/emception-react",
+    "@gameguild/emception-webcomponent",
+    "@gameguild/emception-ide",
+    "@gameguild/emception-xterm",
     "mermaid",
     "@mermaid-js/parser",
     "langium",
@@ -122,6 +130,7 @@ const nextConfig: NextConfig = {
           { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
+      ...COI_LEARN_RULES,
       {
         source: "/wasm/:path*.wasm",
         headers: [

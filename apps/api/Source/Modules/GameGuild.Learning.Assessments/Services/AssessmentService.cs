@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using FluentValidation;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -224,6 +227,30 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<Assessment>(Error.NotFound("Assessment", "Assessment not found"));
             }
 
+            if (request.DefinitionSchemaVersion == 2)
+            {
+                try
+                {
+                    var def = JsonSerializer.Deserialize<CodingAssignmentDefinition>(
+                        request.Definition.GetRawText(),
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    if (def?.Kind == "coding")
+                    {
+                        var validator = new CodingAssignmentDefinitionValidator();
+                        var validation = await validator.ValidateAsync(def).ConfigureAwait(false);
+                        if (!validation.IsValid)
+                        {
+                            var messages = string.Join("; ", validation.Errors.Select(e => e.ErrorMessage));
+                            return Result.Failure<Assessment>(Error.Validation("CodingDefinition.Invalid", messages));
+                        }
+                    }
+                }
+                catch
+                {
+                    // Not a valid v2 coding payload — fall through to generic storage
+                }
+            }
+
             assessment.SetDefinition(request.Definition, request.DefinitionSchemaVersion);
             _context.Set<Assessment>().Update(assessment);
             await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -239,6 +266,87 @@ public class AssessmentService : IAssessmentService
         {
             _logger.LogError(ex, "Error updating assessment definition {AssessmentId}", id);
             return Result.Failure<Assessment>(Error.Failure("UpdateAssessmentDefinition", "Failed to update assessment definition"));
+        }
+    }
+
+    public async Task<CodingAssignmentDefinition?> GetCodingDefinitionAsync(Guid assessmentId, CancellationToken ct = default)
+    {
+        var assessment = await _context.Set<Assessment>()
+            .FirstOrDefaultAsync(a => a.Id == assessmentId && a.DeletedAt == null, ct)
+            .ConfigureAwait(false);
+
+        if (assessment?.DefinitionPayload == null || assessment.DefinitionSchemaVersion != 2)
+        {
+            return null;
+        }
+
+        try
+        {
+            var def = JsonSerializer.Deserialize<CodingAssignmentDefinition>(
+                assessment.DefinitionPayload,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return def?.Kind == "coding" ? def : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public async Task<CodingAssignmentDefinition?> GetPublicCodingDefinitionAsync(Guid assessmentId, CancellationToken ct = default)
+    {
+        var def = await GetCodingDefinitionAsync(assessmentId, ct).ConfigureAwait(false);
+        if (def?.TestPlan?.Cases == null) return def;
+
+        return def with
+        {
+            TestPlan = def.TestPlan with
+            {
+                Cases = def.TestPlan.Cases.Where(c => !c.Hidden).ToList()
+            }
+        };
+    }
+
+    public Task<CodingAssignmentDefinition?> GetFullCodingDefinitionAsync(Guid assessmentId, CancellationToken ct = default)
+        => GetCodingDefinitionAsync(assessmentId, ct);
+
+    public async Task<Result> UpdateCodingDefinitionAsync(
+        Guid assessmentId,
+        CodingAssignmentDefinition def,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var assessment = await _context.Set<Assessment>()
+                .FirstOrDefaultAsync(a => a.Id == assessmentId && a.DeletedAt == null, ct)
+                .ConfigureAwait(false);
+
+            if (assessment == null)
+            {
+                return Result.Failure(Error.NotFound("Assessment", "Assessment not found"));
+            }
+
+            var validator = new CodingAssignmentDefinitionValidator();
+            var validation = await validator.ValidateAsync(def, ct).ConfigureAwait(false);
+            if (!validation.IsValid)
+            {
+                var messages = string.Join("; ", validation.Errors.Select(e => e.ErrorMessage));
+                return Result.Failure(Error.Validation("CodingDefinition.Invalid", messages));
+            }
+
+            var json = JsonSerializer.SerializeToElement(def);
+            assessment.SetDefinition(json, 2);
+            _context.Set<Assessment>().Update(assessment);
+            await _context.SaveChangesAsync(ct).ConfigureAwait(false);
+
+            _logger.LogInformation("Coding definition updated: {AssessmentId}", assessmentId);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating coding definition {AssessmentId}", assessmentId);
+            return Result.Failure(Error.Failure("UpdateCodingDefinition", "Failed to update coding definition"));
         }
     }
 
