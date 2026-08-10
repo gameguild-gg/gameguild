@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "predev": "pnpm run sync:emception",
     "build": "next build --webpack",
+    "prebuild": "pnpm run sync:emception",
+    "sync:emception": "node scripts/sync-emception-cdn.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
