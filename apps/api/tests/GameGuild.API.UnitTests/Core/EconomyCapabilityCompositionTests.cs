@@ -1,5 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Setup;
+using GameGuild.Commerce.Billing;
+using GameGuild.Commerce.Payments;
 using GameGuild.Compliance.FinancialCrime;
 using GameGuild.Economy.Risk;
 using GameGuild.TrustSafety;
@@ -27,5 +29,63 @@ public sealed class EconomyCapabilityCompositionTests
             .Should().Be(ExternalRiskOutcome.Unavailable);
         (await trustSafety.ReadAsync("actor-token", now)).Outcome
             .Should().Be(ExternalRiskOutcome.Unavailable);
+    }
+
+    [Fact]
+    public void ProviderBackedCapabilityRequiresVerifiedReplaySafeStripeIngress()
+    {
+        var economy = new EconomyRiskCompositionOptions
+        {
+            ValueMovingDecisionsEnabled = true,
+            EnabledCapabilities = [nameof(EconomyValueMovementCapability.ConfirmHardCoinFunding)]
+        };
+        var gateway = new StripeGatewayOptions
+        {
+            IsEnabled = true,
+            UseSimulation = false,
+            AccountId = "acct_platform",
+            LiveMode = false
+        };
+        var billing = new BillingConfiguration
+        {
+            Stripe = new StripeSettings
+            {
+                AccountId = "acct_platform",
+                LiveMode = false,
+                WebhookSecret = "whsec_economy",
+                WebhookEndpointId = "we_economy",
+                ApiVersion = "2025-01-27.acacia",
+                WebhookToleranceSeconds = 300
+            },
+            Webhook = new WebhookSettings
+            {
+                VerifySignatures = true,
+                StorePayloads = true
+            }
+        };
+
+        FluentActions.Invoking(() => EconomyProviderCapabilityGuard.ThrowIfInvalid(
+                economy, gateway, billing, "Staging"))
+            .Should().NotThrow();
+
+        billing.Stripe.WebhookSecret = string.Empty;
+        FluentActions.Invoking(() => EconomyProviderCapabilityGuard.ThrowIfInvalid(
+                economy, gateway, billing, "Staging"))
+            .Should().Throw<EconomyProviderConfigurationException>()
+            .WithMessage("*WebhookSecret*");
+    }
+
+    [Fact]
+    public void NonProviderCapabilityDoesNotRequireStripeIngress()
+    {
+        var economy = new EconomyRiskCompositionOptions
+        {
+            ValueMovingDecisionsEnabled = true,
+            EnabledCapabilities = [nameof(EconomyValueMovementCapability.Transfer)]
+        };
+
+        FluentActions.Invoking(() => EconomyProviderCapabilityGuard.ThrowIfInvalid(
+                economy, new StripeGatewayOptions(), new BillingConfiguration(), "Production"))
+            .Should().NotThrow();
     }
 }

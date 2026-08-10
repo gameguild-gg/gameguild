@@ -4545,8 +4545,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("RootSourceStampId")
-                        .IsUnique()
-                        .HasDatabaseName("ux_economy_credit_lots_root_source");
+                        .HasDatabaseName("ix_economy_credit_lots_root_source");
 
                     b.HasIndex("WalletId");
 
@@ -4739,10 +4738,6 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("RootSourceStampId", "ReversalEpoch")
                         .HasDatabaseName("ix_economy_fragment_root_ranges_root_epoch");
-
-                    b.HasIndex("RootSourceStampId", "ReversalEpoch", "StartInclusive", "EndExclusive")
-                        .IsUnique()
-                        .HasDatabaseName("ux_economy_fragment_root_ranges_owner_interval");
 
                     b.ToTable("economy_fragment_root_ranges", null, t =>
                         {

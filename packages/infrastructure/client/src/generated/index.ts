@@ -56,6 +56,7 @@ export * from './modules/learning-courses-students.gen.js';
 export * from './modules/learning-courses-supporttickets.gen.js';
 export * from './modules/learning-experience-discovery.gen.js';
 export * from './modules/learning-experience-social-discussions.gen.js';
+export * from './modules/economy.gen.js';
 export * from './modules/learning-enrollments.gen.js';
 export * from './modules/commerce-products-entitlements.gen.js';
 export * from './modules/features-flags.gen.js';

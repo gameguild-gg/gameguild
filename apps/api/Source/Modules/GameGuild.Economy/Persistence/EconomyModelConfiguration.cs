@@ -20,6 +20,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         ConfigureReserves(modelBuilder);
         ConfigureRisk(modelBuilder);
         ConfigureRegisteredPostingReceipt(modelBuilder);
+        ConfigureFifoFragmentReservationReceipt(modelBuilder);
+        ConfigureProviderReversalReceipt(modelBuilder);
     }
 
     private static void ConfigureWallets(ModelBuilder modelBuilder)
@@ -465,8 +467,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             });
             builder.HasKey(row => row.Id);
             builder.HasIndex(row => row.RootSourceStampId)
-                .IsUnique()
-                .HasDatabaseName("ux_economy_credit_lots_root_source");
+                .HasDatabaseName("ix_economy_credit_lots_root_source");
             builder.HasOne<EconomyWalletRow>()
                 .WithMany()
                 .HasForeignKey(row => row.WalletId)
@@ -560,9 +561,6 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.HasKey(row => row.Id);
             builder.HasIndex(row => new { row.RootSourceStampId, row.ReversalEpoch })
                 .HasDatabaseName("ix_economy_fragment_root_ranges_root_epoch");
-            builder.HasIndex(row => new { row.RootSourceStampId, row.ReversalEpoch, row.StartInclusive, row.EndExclusive })
-                .IsUnique()
-                .HasDatabaseName("ux_economy_fragment_root_ranges_owner_interval");
             builder.HasOne<EconomySourceStampRow>()
                 .WithMany()
                 .HasForeignKey(row => row.RootSourceStampId)
@@ -954,6 +952,22 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
+    private static void ConfigureFifoFragmentReservationReceipt(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<FifoFragmentReservationReceiptRow>(builder =>
+        {
+            builder.HasNoKey();
+            builder.ToView(null);
+            builder.Property(row => row.ReservationId).HasColumnName("reservation_id");
+            builder.Property(row => row.ParentLotId).HasColumnName("parent_lot_id");
+            builder.Property(row => row.RootSourceStampId).HasColumnName("root_source_stamp_id");
+            builder.Property(row => row.ReversalEpoch).HasColumnName("reversal_epoch");
+            builder.Property(row => row.StartInclusive).HasColumnName("start_inclusive");
+            builder.Property(row => row.EndExclusive).HasColumnName("end_exclusive");
+            builder.Property(row => row.AmountUnits).HasColumnName("amount_units");
+        });
+    }
+
     private static void ConfigureRegisteredPostingReceipt(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<RegisteredPostingReceiptRow>(builder =>
@@ -963,6 +977,21 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.Property(row => row.PostingId).HasColumnName("posting_id");
             builder.Property(row => row.JournalSequence).HasColumnName("journal_sequence");
             builder.Property(row => row.JournalHash).HasColumnName("journal_hash");
+            builder.Property(row => row.Duplicate).HasColumnName("duplicate");
+        });
+    }
+
+    private static void ConfigureProviderReversalReceipt(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ProviderReversalReceiptRow>(builder =>
+        {
+            builder.HasNoKey();
+            builder.ToView(null);
+            builder.Property(row => row.OperationId).HasColumnName("operation_id");
+            builder.Property(row => row.RecoveredHardUnits).HasColumnName("recovered_hard_units");
+            builder.Property(row => row.RecoveredConvertedSoftUnits).HasColumnName("recovered_converted_soft_units");
+            builder.Property(row => row.ResponsibleDebtHardUnits).HasColumnName("responsible_debt_hard_units");
+            builder.Property(row => row.PlatformLossHardUnits).HasColumnName("platform_loss_hard_units");
             builder.Property(row => row.Duplicate).HasColumnName("duplicate");
         });
     }
