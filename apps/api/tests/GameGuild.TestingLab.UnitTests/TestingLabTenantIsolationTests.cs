@@ -57,7 +57,7 @@ public sealed class TestingLabTenantIsolationTests
     }
 
     [Fact]
-    public async Task LocationsQuery_ShouldRejectActorWithoutTenant()
+    public async Task LocationsQuery_ShouldRequireAuthentication_WhenActorIsAnonymous()
     {
         await using var context = CreateContext();
         var anonymousActor = new ActorContextAccessor();
@@ -66,8 +66,33 @@ public sealed class TestingLabTenantIsolationTests
 
         var act = () => service.GetTestingLocationsAsync();
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>()
-            .WithMessage("*authenticated tenant actor*");
+        await act.Should().ThrowAsync<AuthenticationRequiredException>();
+    }
+
+    [Fact]
+    public async Task LocationsQuery_ShouldForbidAuthenticatedActorWithoutTenant()
+    {
+        await using var context = CreateContext();
+        var actor = new ActorContextAccessor();
+        actor.SetActorContext(ActorContextBuilder.ForUser(Guid.NewGuid()).Build());
+        var service = CreateService<TestingLocationOperationsService>(context, actor);
+
+        var act = () => service.GetTestingLocationsAsync();
+
+        await act.Should().ThrowAsync<AccessDeniedException>();
+    }
+
+    [Fact]
+    public async Task SessionsQuery_ShouldForbidAuthenticatedActorWithoutTenant()
+    {
+        await using var context = CreateContext();
+        var actor = new ActorContextAccessor();
+        actor.SetActorContext(ActorContextBuilder.ForUser(Guid.NewGuid()).Build());
+        var service = CreateService<TestingSessionOperationsService>(context, actor);
+
+        var act = () => service.GetTestingSessionsAsync();
+
+        await act.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]

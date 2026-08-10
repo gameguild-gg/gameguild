@@ -127,6 +127,7 @@ public class LocalAuthService(
             var authenticatedUser = await userRepository.GetByIdAsync(userId!.Value, cancellationToken).ConfigureAwait(false);
             var tokenVersion = authenticatedUser?.TokenVersion ?? 1;
             var tenantAccessContext = await ResolveTenantAccessContextAsync(userId.Value, request.TenantId, cancellationToken).ConfigureAwait(false);
+            RequireActiveTenantAccess(tenantAccessContext);
 
             // Create tokens and response
             var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
@@ -162,6 +163,10 @@ public class LocalAuthService(
                 TenantId = tenantAccessContext.TenantId,
                 AvailableTenants = tenantAccessContext.AvailableTenants
             };
+        }
+        catch (SecurityException)
+        {
+            throw;
         }
         catch (UnauthorizedAccessException)
         {
@@ -310,6 +315,7 @@ public class LocalAuthService(
         var tokenVersion = user?.TokenVersion ?? 1;
         var tenantAccessContext = await ResolveTenantAccessContextAsync(userId, request.TenantId, cancellationToken).ConfigureAwait(false);
         var userEmail = user?.Email ?? $"user{userId}@game-guild.com";
+        RequireActiveTenantAccess(tenantAccessContext);
 
         // Create device info for refresh token
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
@@ -354,6 +360,14 @@ public class LocalAuthService(
             TenantId = tenantAccessContext.TenantId,
             AvailableTenants = tenantAccessContext.AvailableTenants
         };
+    }
+
+    private static TenantAccessContext RequireActiveTenantAccess(TenantAccessContext tenantAccessContext)
+    {
+        if (tenantAccessContext.TenantId.HasValue)
+            return tenantAccessContext;
+
+        throw new AccessDeniedException("Authenticated user has no active tenant membership.");
     }
 
     private async Task<TenantAccessContext> ResolveTenantAccessContextAsync(Guid userId, Guid? requestedTenantId, CancellationToken cancellationToken)
