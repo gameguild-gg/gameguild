@@ -7,6 +7,10 @@ import {
 import { getCourseAccessData } from '@/lib/learner/courses';
 import { getCourseLearnerContext, getMyProjects } from '@/lib/learner/records';
 import { createLearnerRoutes } from '@/lib/learner/routes';
+import {
+  getCodingDefinitionPublic,
+  type CodingDefinition,
+} from '@/lib/learning/queries/assessments';
 import { MarkdownRenderer } from '@game-guild/content-rendering';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
@@ -14,11 +18,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { ArrowLeft, CalendarClock, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { CodingActivityClient } from './coding-activity-client';
 
 function promptBody(value: unknown): string {
   if (typeof value === 'string') return value;
   if (value && typeof value === 'object') return JSON.stringify(value, null, 2);
   return '';
+}
+
+/** submissionModalities is a comma-separated string of C# [Flags] enum names — "Code", not 8. */
+function allowsCodeModality(modalities: string | undefined): boolean {
+  if (!modalities) return false;
+  return modalities
+    .split(',')
+    .map((entry) => entry.trim())
+    .includes('Code');
 }
 
 export default async function LearnerActivityPage({
@@ -34,6 +48,8 @@ export default async function LearnerActivityPage({
 
   const context = await getCourseLearnerContext(access.course.id);
   let activity: LearnerActivityDescriptor | null = null;
+  let codingDef: CodingDefinition | null = null;
+  let useCodingExperience = false;
   let description = '';
   let dueAt: string | null | undefined;
   let points: number | undefined;
@@ -51,6 +67,22 @@ export default async function LearnerActivityPage({
     description = assessment.description || '';
     dueAt = assessment.dueAt;
     points = assessment.maxScore;
+
+    const codingEligible =
+      Boolean(assessment.id) &&
+      (assessment.type === 'Assignment' || assessment.type === 'Project') &&
+      allowsCodeModality(assessment.submissionModalities);
+    if (codingEligible && assessment.id) {
+      const candidate = await getCodingDefinitionPublic(assessment.id);
+      if (
+        candidate &&
+        candidate.kind === 'coding' &&
+        candidate.workspaceConfig !== null
+      ) {
+        codingDef = candidate;
+        useCodingExperience = true;
+      }
+    }
   } else if (activityId.startsWith('content-')) {
     const contentId = activityId.slice('content-'.length);
     const item = access.course.modules
@@ -121,12 +153,29 @@ export default async function LearnerActivityPage({
           <CardTitle className="text-lg">Your response</CardTitle>
         </CardHeader>
         <CardContent>
-          <LearnerActivityForm
-            courseId={access.course.id}
-            courseSlug={slug}
-            enrollmentId={access.course.enrollmentId}
-            activity={activity}
-          />
+          {activity.kind === 'assessment' &&
+          useCodingExperience &&
+          codingDef &&
+          activity.assessment.id ? (
+            <CodingActivityClient
+              assessmentId={activity.assessment.id}
+              enrollmentId={access.course.enrollmentId}
+              courseId={access.course.id}
+              slug={slug}
+              workspaceConfig={codingDef.workspaceConfig}
+              testPlan={codingDef.testPlan}
+              manifestUrl={process.env.NEXT_PUBLIC_EMCEPTION_MANIFEST_URL}
+              maxScore={codingDef.maxScore}
+              passingScore={codingDef.passingScore}
+            />
+          ) : (
+            <LearnerActivityForm
+              courseId={access.course.id}
+              courseSlug={slug}
+              enrollmentId={access.course.enrollmentId}
+              activity={activity}
+            />
+          )}
         </CardContent>
       </Card>
     </div>
