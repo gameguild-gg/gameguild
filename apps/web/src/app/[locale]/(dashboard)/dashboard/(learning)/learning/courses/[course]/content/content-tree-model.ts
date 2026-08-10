@@ -74,6 +74,9 @@ export function buildContentTreeModel(
     status: 'published',
     duration: null,
     metadata: {},
+    gradingMethod: null,
+    maxPoints: null,
+    gradingConfig: null,
     createdAt: course.createdAt,
     updatedAt: course.updatedAt,
   };

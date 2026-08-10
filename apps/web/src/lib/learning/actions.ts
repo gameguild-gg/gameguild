@@ -141,6 +141,8 @@ export async function addContent(
 
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const jsonBody =
+      type === 'Questionnaire' ? { order: [], blocks: {} } : undefined;
     const contentBody: LearningCoursesCreateProgramContent = {
       programId: resolvedCourseId,
       title: title.trim(),
@@ -150,6 +152,7 @@ export async function addContent(
       isRequired: true,
       visibility: "Public",
       ...(parentId ? { parentId } : {}),
+      ...(jsonBody ? { jsonBody } : {}),
       ...(type === 'Lesson' && lessonFormat ? { lessonFormat } : {}),
     };
 

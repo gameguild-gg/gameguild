@@ -760,32 +760,61 @@ describe("learning server actions", () => {
     );
   });
 
-  it('sends lesson format when creating a lesson with an explicit format', async () => {
-    mocks.resolveCourseId.mockResolvedValueOnce('1caa16bb-6810-4e53-bb0d-91f0d5702333');
+  it("sends lesson format when creating a lesson with an explicit format", async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce(
+      "1caa16bb-6810-4e53-bb0d-91f0d5702333",
+    );
 
     const result = await addContent({
-      courseId: 'creature-design-by-admin',
-      parentId: '9ec3b854-89ca-4757-83fb-cfc823da1a5e',
-      title: 'Camera blocking walkthrough',
-      type: 'Lesson',
-      lessonFormat: 'Video',
+      courseId: "creature-design-by-admin",
+      parentId: "9ec3b854-89ca-4757-83fb-cfc823da1a5e",
+      title: "Camera blocking walkthrough",
+      type: "Lesson",
+      lessonFormat: "Video",
     });
 
-    expect(result).toEqual({ success: true, data: { id: 'content-1' } });
+    expect(result).toEqual({ success: true, data: { id: "content-1" } });
     expect(mocks.postCoursesContent).toHaveBeenCalledWith(
-      '1caa16bb-6810-4e53-bb0d-91f0d5702333',
+      "1caa16bb-6810-4e53-bb0d-91f0d5702333",
       expect.objectContaining({
-        programId: '1caa16bb-6810-4e53-bb0d-91f0d5702333',
-        parentId: '9ec3b854-89ca-4757-83fb-cfc823da1a5e',
-        title: 'Camera blocking walkthrough',
-        type: 'Lesson',
-        lessonFormat: 'Video',
+        programId: "1caa16bb-6810-4e53-bb0d-91f0d5702333",
+        parentId: "9ec3b854-89ca-4757-83fb-cfc823da1a5e",
+        title: "Camera blocking walkthrough",
+        type: "Lesson",
+        lessonFormat: "Video",
       }),
     );
   });
 
-  it('uses the generated content contract to reorder course content', async () => {
-    mocks.resolveCourseId.mockResolvedValueOnce('1caa16bb-6810-4e53-bb0d-91f0d5702333');
+  it("creates questionnaire content with an empty structured jsonBody", async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce(
+      "1caa16bb-6810-4e53-bb0d-91f0d5702333",
+    );
+
+    const result = await addContent({
+      courseId: "creature-design-by-admin",
+      parentId: "9ec3b854-89ca-4757-83fb-cfc823da1a5e",
+      title: "Entry quiz",
+      type: "Questionnaire",
+    });
+
+    expect(result).toEqual({ success: true, data: { id: "content-1" } });
+    expect(mocks.postCoursesContent).toHaveBeenCalledWith(
+      "1caa16bb-6810-4e53-bb0d-91f0d5702333",
+      expect.objectContaining({
+        programId: "1caa16bb-6810-4e53-bb0d-91f0d5702333",
+        parentId: "9ec3b854-89ca-4757-83fb-cfc823da1a5e",
+        title: "Entry quiz",
+        type: "Questionnaire",
+        jsonBody: { order: [], blocks: {} },
+      }),
+    );
+  });
+
+  it("uses the generated program contract to reorder course content", async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce(
+      "1caa16bb-6810-4e53-bb0d-91f0d5702333",
+    );
 
     const result = await reorderContent("creature-design-by-admin", [
       "module-2",

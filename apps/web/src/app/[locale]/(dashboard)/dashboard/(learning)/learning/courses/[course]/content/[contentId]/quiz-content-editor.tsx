@@ -1,13 +1,42 @@
-'use client';
+"use client";
 
-import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
-import { Label } from '@game-guild/ui/components/label';
-import { Skeleton } from '@/components/ui/skeleton';
-import { serializeProject, storageToBlocks } from '@/components/block-content-editor/lib/storage/editor/block-storage';
-import type { BlockArray, BlockStorage } from '@/components/block-content-editor/lib/storage/editor/block-structure';
+import { lazy, Suspense, useCallback, useMemo, useState } from "react";
+import type {
+  ContentGradingConfig,
+  GradingValidationMode,
+} from "@game-guild/grading";
+import {
+  createDisabledGradingConfig,
+  createQuizGradingConfig,
+  readContentGradingConfig,
+  sumGradedItemPoints,
+  syncQuizGradingConfig,
+  writeContentGradingConfig,
+} from "@game-guild/grading";
+import { Badge } from "@game-guild/ui/components/badge";
+import { Input } from "@game-guild/ui/components/input";
+import { Label } from "@game-guild/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@game-guild/ui/components/select";
+import { Switch } from "@game-guild/ui/components/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  blocksToStorage,
+  storageToBlocks,
+} from "@/components/block-content-editor/lib/storage/editor/block-storage";
+import type {
+  BlockArray,
+  BlockStorage,
+} from "@/components/block-content-editor/lib/storage/editor/block-structure";
 
 const BlockArrayEditor = lazy(async () => {
-  const mod = await import('@/components/block-content-editor/engines/blocks/block-array-editor');
+  const mod =
+    await import("@/components/block-content-editor/engines/blocks/block-array-editor");
   return { default: mod.BlockArrayEditor };
 });
 
@@ -20,39 +49,275 @@ function EditorLoadingState() {
   );
 }
 
-function parseQuizBlocks(raw: string | null | undefined): BlockArray {
-  if (!raw || raw.trim().length === 0) return [];
-  try {
-    const parsed = JSON.parse(raw) as BlockStorage;
-    return storageToBlocks(parsed);
-  } catch {
-    return [];
-  }
+interface ParsedQuizContent {
+  blocks: BlockArray;
+  grading: ContentGradingConfig;
+}
+
+function parseQuizContent(raw: Record<string, unknown> | null | undefined): ParsedQuizContent {
+  const fallback = {
+    blocks: [],
+    grading: createDisabledGradingConfig(),
+  } satisfies ParsedQuizContent;
+
+  if (!isBlockStorage(raw)) return fallback;
+
+  return {
+    blocks: storageToBlocks(raw),
+    grading: readContentGradingConfig(raw) ?? createDisabledGradingConfig(),
+  };
+}
+
+function isBlockStorage(value: unknown): value is BlockStorage {
+  const candidate = value as { order?: unknown; blocks?: unknown } | null;
+
+  return Boolean(
+    candidate &&
+      Array.isArray(candidate.order) &&
+      candidate.blocks &&
+      typeof candidate.blocks === "object" &&
+      !Array.isArray(candidate.blocks),
+  );
+}
+
+function serializeQuizContent(
+  blocks: BlockArray,
+  grading: ContentGradingConfig,
+): Record<string, unknown> {
+  const storage = blocksToStorage(blocks);
+  const syncedGrading = grading.enabled
+    ? syncQuizGradingConfig(blocks, grading)
+    : grading;
+  const body = writeContentGradingConfig(
+    storage as unknown as Record<string, unknown>,
+    syncedGrading,
+  );
+  return body;
 }
 
 interface QuizContentEditorProps {
-  initialContent: string | null | undefined;
-  onChange: (content: string) => void;
+  initialContent: Record<string, unknown> | null | undefined;
+  onChange: (content: Record<string, unknown>) => void;
 }
 
-export function QuizContentEditor({ initialContent, onChange }: QuizContentEditorProps) {
-  const initialBlocks = useMemo(() => parseQuizBlocks(initialContent), [initialContent]);
-  const [blocks, setBlocks] = useState<BlockArray>(initialBlocks);
+export function QuizContentEditor({
+  initialContent,
+  onChange,
+}: QuizContentEditorProps) {
+  const initialQuizContent = useMemo(
+    () => parseQuizContent(initialContent),
+    [initialContent],
+  );
+  const [blocks, setBlocks] = useState<BlockArray>(initialQuizContent.blocks);
+  const [gradingConfig, setGradingConfig] = useState<ContentGradingConfig>(
+    initialQuizContent.grading,
+  );
 
-  const handleBlocksChange = useCallback(
-    (nextBlocks: BlockArray) => {
-      setBlocks(nextBlocks);
-      onChange(serializeProject(nextBlocks));
+  const syncedGradingConfig = useMemo(
+    () =>
+      gradingConfig.enabled
+        ? syncQuizGradingConfig(blocks, gradingConfig)
+        : gradingConfig,
+    [blocks, gradingConfig],
+  );
+  const gradedItemCount = Object.keys(syncedGradingConfig.items).length;
+  const gradedPoints = sumGradedItemPoints(syncedGradingConfig);
+
+  const emitChange = useCallback(
+    (nextBlocks: BlockArray, nextGrading: ContentGradingConfig) => {
+      onChange(serializeQuizContent(nextBlocks, nextGrading));
     },
     [onChange],
   );
 
+  const handleBlocksChange = useCallback(
+    (nextBlocks: BlockArray) => {
+      const nextGrading = gradingConfig.enabled
+        ? syncQuizGradingConfig(nextBlocks, gradingConfig)
+        : gradingConfig;
+      setBlocks(nextBlocks);
+      setGradingConfig(nextGrading);
+      emitChange(nextBlocks, nextGrading);
+    },
+    [emitChange, gradingConfig],
+  );
+
+  const updateGrading = useCallback(
+    (updater: (current: ContentGradingConfig) => ContentGradingConfig) => {
+      setGradingConfig((current) => {
+        const next = updater(current);
+        emitChange(blocks, next);
+        return next;
+      });
+    },
+    [blocks, emitChange],
+  );
+
+  const handleGradingEnabledChange = useCallback(
+    (enabled: boolean) => {
+      updateGrading(() =>
+        enabled
+          ? createQuizGradingConfig(blocks)
+          : createDisabledGradingConfig(),
+      );
+    },
+    [blocks, updateGrading],
+  );
+
+  const handleValidationModeChange = useCallback(
+    (validationMode: GradingValidationMode) => {
+      updateGrading((current) => ({
+        ...syncQuizGradingConfig(
+          blocks,
+          current.enabled ? current : createQuizGradingConfig(blocks),
+        ),
+        validationMode,
+        gradebook: {
+          ...current.gradebook,
+          maxScore: Math.max(
+            1,
+            current.gradebook.maxScore || gradedPoints || 1,
+          ),
+          official: false,
+        },
+      }));
+    },
+    [blocks, gradedPoints, updateGrading],
+  );
+
+  const handleMaxScoreChange = useCallback(
+    (value: string) => {
+      const maxScore = Math.max(1, Number(value) || 1);
+      updateGrading((current) => ({
+        ...syncQuizGradingConfig(
+          blocks,
+          current.enabled ? current : createQuizGradingConfig(blocks),
+        ),
+        gradebook: {
+          ...current.gradebook,
+          maxScore,
+          official: false,
+        },
+      }));
+    },
+    [blocks, updateGrading],
+  );
+
+  const handlePassingScoreChange = useCallback(
+    (value: string) => {
+      const passingScore = value.trim()
+        ? Math.max(0, Number(value) || 0)
+        : undefined;
+      updateGrading((current) => ({
+        ...syncQuizGradingConfig(
+          blocks,
+          current.enabled ? current : createQuizGradingConfig(blocks),
+        ),
+        gradebook: {
+          ...current.gradebook,
+          passingScore,
+          official: false,
+        },
+      }));
+    },
+    [blocks, updateGrading],
+  );
+
   return (
-    <div className="space-y-2">
-      <Label>Quiz editor</Label>
-      <p className="text-muted-foreground text-xs">
-        Use the quiz block editor to build your questions.
-      </p>
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Quiz editor</Label>
+        <p className="text-muted-foreground text-xs">
+          Use the quiz block editor to build your questions.
+        </p>
+      </div>
+
+      <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="quiz-grading-enabled">Grading</Label>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <Badge
+                variant={syncedGradingConfig.enabled ? "secondary" : "outline"}
+              >
+                {syncedGradingConfig.enabled
+                  ? `${gradedItemCount} items`
+                  : "Off"}
+              </Badge>
+              {syncedGradingConfig.enabled && (
+                <span>{gradedPoints} configured pts</span>
+              )}
+            </div>
+          </div>
+          <Switch
+            id="quiz-grading-enabled"
+            checked={syncedGradingConfig.enabled}
+            onCheckedChange={handleGradingEnabledChange}
+          />
+        </div>
+
+        {syncedGradingConfig.enabled && (
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="quiz-validation-mode">Validation</Label>
+              <Select
+                value={syncedGradingConfig.validationMode}
+                onValueChange={(value) =>
+                  handleValidationModeChange(value as GradingValidationMode)
+                }
+              >
+                <SelectTrigger id="quiz-validation-mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">Public practice</SelectItem>
+                  <SelectItem value="protected">Protected draft</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quiz-max-score">Max score</Label>
+              <Input
+                id="quiz-max-score"
+                type="number"
+                min={1}
+                value={syncedGradingConfig.gradebook.maxScore}
+                onChange={(event) =>
+                  handleMaxScoreChange(event.currentTarget.value)
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quiz-passing-score">Passing score</Label>
+              <Input
+                id="quiz-passing-score"
+                type="number"
+                min={0}
+                value={syncedGradingConfig.gradebook.passingScore ?? ""}
+                onChange={(event) =>
+                  handlePassingScoreChange(event.currentTarget.value)
+                }
+              />
+            </div>
+          </div>
+        )}
+
+        {syncedGradingConfig.enabled && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Badge variant="outline">
+              {syncedGradingConfig.validationMode === "protected"
+                ? "Protected"
+                : "Public"}
+            </Badge>
+            <Badge variant="outline">
+              {syncedGradingConfig.gradebook.official ? "Official" : "Practice"}
+            </Badge>
+          </div>
+        )}
+      </div>
+
       <div className="min-h-[400px] overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="max-h-[600px] overflow-y-auto">
           <div className="w-full bg-white p-4 dark:bg-gray-900">

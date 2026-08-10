@@ -58,6 +58,15 @@ vi.mock("./lesson-code-editor", () => ({
   ),
 }));
 
+vi.mock(
+  "@/components/block-content-editor/engines/blocks/block-array-editor",
+  () => ({
+    BlockArrayEditor: ({ blocks }: { blocks: unknown[] }) => (
+      <div data-testid="block-array-editor">Blocks: {blocks.length}</div>
+    ),
+  }),
+);
+
 const item = {
   id: "content-1",
   parentId: "module-1",
@@ -68,12 +77,30 @@ const item = {
   status: "published",
   duration: 20,
   metadata: {},
-  content: "<p>Answer all questions.</p>",
-  jsonBody: null,
+  gradingMethod: null,
+  maxPoints: null,
+  gradingConfig: null,
+  content: null,
+  jsonBody: { order: [], blocks: {} },
   settings: { isRequired: true },
   lessonFormat: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-02T00:00:00.000Z",
+} satisfies ContentItemDetail;
+
+const quizItemWithBlock = {
+  ...item,
+  id: "content-2",
+  jsonBody: {
+    order: [["1", "quiz"]],
+    blocks: {
+      "1": {
+        type: "TRUE_FALSE",
+        question: "Stored question",
+        correctAnswer: true,
+      },
+    },
+  },
 } satisfies ContentItemDetail;
 
 const lessonItemMarkdownEmpty = {
@@ -86,6 +113,9 @@ const lessonItemMarkdownEmpty = {
   status: "published",
   duration: 15,
   metadata: {},
+  gradingMethod: null,
+  maxPoints: null,
+  gradingConfig: null,
   content: "",
   jsonBody: null,
   settings: { isRequired: true },
@@ -104,6 +134,9 @@ const lessonItemMarkdownBody = {
   status: "published",
   duration: 15,
   metadata: {},
+  gradingMethod: null,
+  maxPoints: null,
+  gradingConfig: null,
   content: "# existing markdown",
   jsonBody: null,
   settings: { isRequired: true },
@@ -124,6 +157,9 @@ const lessonItemLexical = {
   status: "published",
   duration: 15,
   metadata: {},
+  gradingMethod: null,
+  maxPoints: null,
+  gradingConfig: null,
   content: "",
   jsonBody: {
     root: {
@@ -170,6 +206,18 @@ describe("ContentItemEditor", () => {
     ).toBeInTheDocument();
   });
 
+  it("loads quiz blocks from structured jsonBody", async () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={quizItemWithBlock}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(await screen.findByText("Blocks: 1")).toBeInTheDocument();
+  });
+
   it("validates title before updating lesson content", async () => {
     const user = userEvent.setup();
     render(
@@ -187,7 +235,7 @@ describe("ContentItemEditor", () => {
     expect(updateContent).not.toHaveBeenCalled();
   });
 
-  it("saves edited quiz metadata and refreshes the dashboard route", async () => {
+  it("saves edited quiz metadata and structured jsonBody, then refreshes the dashboard route", async () => {
     const user = userEvent.setup();
     render(
       <ContentItemEditor
@@ -214,7 +262,8 @@ describe("ContentItemEditor", () => {
         contentId: "content-1",
         title: "Updated quiz",
         description: "Updated description.",
-        body: "<p>Answer all questions.</p>",
+        body: undefined,
+        jsonBody: item.jsonBody,
         visibility: "Public",
         isRequired: true,
         estimatedMinutes: 35,
@@ -222,6 +271,46 @@ describe("ContentItemEditor", () => {
     });
     expect(routerMocks.refresh).toHaveBeenCalled();
     expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
+  });
+
+  it("saves quiz grading metadata inside structured jsonBody", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("switch", { name: /grading/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          courseId: "course-1",
+          contentId: "content-1",
+          title: "Intro quiz",
+        }),
+      );
+    });
+
+    const jsonBody = vi.mocked(updateContent).mock.calls[0]![0].jsonBody as {
+      grading?: {
+        enabled?: boolean;
+        validationMode?: string;
+        gradebook?: { official?: boolean };
+      };
+    };
+    expect(vi.mocked(updateContent).mock.calls[0]![0].body).toBeUndefined();
+    expect(jsonBody.grading).toMatchObject({
+      enabled: true,
+      validationMode: "public",
+      gradebook: {
+        official: false,
+      },
+    });
   });
 
   it("shows update errors and routes cancel back to the course content deterministically", async () => {
@@ -367,9 +456,7 @@ describe("ContentItemEditor", () => {
     // Body seeded from item.content; renderer sees it without typing into Monaco.
     await user.click(previewButton);
 
-    expect(
-      screen.getByRole("button", { name: /^edit$/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^edit$/i })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /^preview$/i }),
     ).not.toBeInTheDocument();
