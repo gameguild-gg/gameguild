@@ -1,4 +1,5 @@
 import { getToken } from "@/auth";
+import { readContentGradingConfig } from "@game-guild/grading";
 import {
   createServerClient,
   GeneratedApi,
@@ -99,17 +100,6 @@ function mapVisibility(
   return "private";
 }
 
-type LegacyProgramContentType =
-  LearningCoursesProgramContentType | "Page" | "Challenge";
-
-function normalizeProgramContentType(
-  type: LegacyProgramContentType | undefined,
-): LearningCoursesProgramContentType {
-  if (type === "Page") return "Lesson";
-  if (type === "Challenge") return "Assignment";
-  return type ?? "Lesson";
-}
-
 function normalizeLessonContentFormat(
   format: string | null | undefined,
 ): LearningCoursesLessonContentFormat | null {
@@ -118,6 +108,8 @@ function normalizeLessonContentFormat(
     case "Lexical":
     case "RevealJs":
     case "Video":
+    case "Html":
+    case "ExternalLink":
       return format;
     case null:
     case undefined:
@@ -301,21 +293,28 @@ export const getCourseAnalytics = cache(
 /**
  * Map a LearningCoursesProgramContent DTO to the frontend CourseContentItemViewModel shape.
  */
+function readDtoGradingConfig(dto: LearningCoursesProgramContent) {
+  return readContentGradingConfig(dto.jsonBody ?? null);
+}
+
 function mapContentDto(
   dto: LearningCoursesProgramContent,
 ): CourseContentItemViewModel {
+  const gradingConfig = readDtoGradingConfig(dto);
+
   return {
     id: dto.id!,
     parentId: dto.parentId ?? null,
     order: dto.sortOrder ?? 0,
-    type: normalizeProgramContentType(
-      dto.type as LegacyProgramContentType | undefined,
-    ),
+    type: dto.type ?? "Lesson",
     title: dto.title ?? "",
     description: dto.description ?? null,
     status: dto.visibility === "Public" ? "published" : "draft",
     duration: dto.estimatedMinutes ?? null,
     metadata: {},
+    gradingMethod: dto.gradingMethod ?? null,
+    maxPoints: dto.maxPoints ?? null,
+    gradingConfig,
     createdAt: dto.createdAt ?? new Date().toISOString(),
     updatedAt: dto.updatedAt ?? dto.createdAt ?? new Date().toISOString(),
   };
@@ -324,6 +323,8 @@ function mapContentDto(
 function mapContentDetailDto(
   dto: LearningCoursesProgramContent,
 ): CourseContentItemDetailViewModel {
+  const gradingConfig = readDtoGradingConfig(dto);
+
   return {
     ...mapContentDto(dto),
     content: dto.body ?? null,
@@ -332,6 +333,7 @@ function mapContentDetailDto(
       isRequired: dto.isRequired,
       gradingMethod: dto.gradingMethod ?? null,
       maxPoints: dto.maxPoints ?? null,
+      gradingConfig,
     },
     lessonFormat: normalizeLessonContentFormat(dto.lessonFormat),
   };

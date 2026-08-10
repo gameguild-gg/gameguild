@@ -50,22 +50,6 @@ interface LessonContentEditorProps {
   onChange: (state: SerializedEditorState) => void;
 }
 
-/** Parse stored body string into a Lexical SerializedEditorState, or null. */
-export function parseLexicalState(
-  raw: string | null | undefined,
-): SerializedEditorState | null {
-  if (!raw || raw.trim().length === 0) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object" && "root" in parsed) {
-      return parsed as SerializedEditorState;
-    }
-  } catch {
-    // Not valid Lexical JSON.
-  }
-  return null;
-}
-
 function EditorLoadingState() {
   return (
     <div className="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-gray-700">

@@ -6,6 +6,7 @@
 "use client"
 
 import { useState, useCallback, useMemo } from "react"
+import { gradeQuizAnswer } from "@game-guild/grading"
 import {
   type QuizEntry,
   type QuizAnswerState,
@@ -80,6 +81,19 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
   }, [])
 
   const checkAnswers = useCallback(() => {
+    const packageResult = gradeQuizAnswer(entry, answerState)
+    if (packageResult.status === "graded") {
+      setIsCorrect(packageResult.isCorrect === true)
+      setShowFeedback(true)
+      return
+    }
+
+    if (packageResult.status === "pending") {
+      setIsCorrect(true)
+      setShowFeedback(true)
+      return
+    }
+
     let correct = false
 
     switch (entry.type) {

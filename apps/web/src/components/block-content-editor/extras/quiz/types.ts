@@ -7,6 +7,17 @@
 import type { SerializedEditorState } from "lexical"
 
 // ============================================================================
+// Question Entry Base
+// ============================================================================
+
+interface QuizEntryBase {
+  stem: string // The question text
+  points?: number
+  feedback?: QuizFeedback
+  settings: QuizSettings
+}
+
+// ============================================================================
 // Enums
 // ============================================================================
 
@@ -49,17 +60,6 @@ export interface QuizSettings {
   shuffleOptions?: boolean
   showFeedback?: boolean // Whether to show correct/incorrect feedback after submission
   showCorrectAnswer?: boolean // Whether to reveal the correct answer after submission
-}
-
-// ============================================================================
-// Question Entry Base
-// ============================================================================
-
-interface QuizEntryBase {
-  stem: string // The question text
-  points?: number
-  feedback?: QuizFeedback
-  settings: QuizSettings
 }
 
 // ============================================================================
