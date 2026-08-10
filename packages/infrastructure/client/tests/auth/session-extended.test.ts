@@ -203,6 +203,10 @@ describe('refreshAccessToken', () => {
           refreshToken: 'new-rt',
           expiresIn: 3600,
           refreshTokenExpiresAt: '2025-12-31T00:00:00Z',
+          tenantId: 'tenant-2',
+          availableTenants: [
+            { id: 'tenant-2', name: 'Production' },
+          ],
         }),
         { status: 200 }
       )
@@ -213,6 +217,8 @@ describe('refreshAccessToken', () => {
       accessToken: 'old-at',
       refreshToken: 'old-rt',
       accessTokenExpires: Date.now() - 1000,
+      tenantId: 'tenant-1',
+      availableTenants: [{ id: 'tenant-1', name: 'Development' }],
     } as JWTPayload;
 
     const result = await refreshAccessToken(token, makeConfig());
@@ -220,6 +226,12 @@ describe('refreshAccessToken', () => {
     expect(result.accessToken).toBe('new-at');
     expect(result.refreshToken).toBe('new-rt');
     expect(result.accessTokenExpires).toBeGreaterThan(Date.now());
+    expect(result.tenantId).toBe('tenant-2');
+    expect(result.availableTenants).toEqual([{ id: 'tenant-2', name: 'Production' }]);
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:5000/v1/auth/tokens:refresh',
+      expect.objectContaining({ body: JSON.stringify({ refreshToken: 'old-rt', tenantId: 'tenant-1' }) }),
+    );
 
     mockFetch.mockRestore();
   });

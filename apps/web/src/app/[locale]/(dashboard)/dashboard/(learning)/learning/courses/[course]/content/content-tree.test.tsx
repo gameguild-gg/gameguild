@@ -63,6 +63,9 @@ const moduleItem = {
   status: "published",
   duration: null,
   metadata: {},
+  gradingMethod: null,
+  maxPoints: null,
+  gradingConfig: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
 } satisfies ContentItem;
@@ -86,6 +89,9 @@ const lessonItem = {
   status: "published",
   duration: 20,
   metadata: {},
+  gradingMethod: null,
+  maxPoints: null,
+  gradingConfig: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
 } satisfies ContentItem;

@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssessmentsList } from './assessments-list';
 import { createAssessmentGroup, deleteAssessmentGroup, updateAssessmentGroup } from '@/lib/learning/actions';
 import type { Assessment, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
+import type { ContentItem } from '@/lib/learning/types';
 
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
@@ -102,6 +103,43 @@ const assignmentAssessment = {
   assessmentGroupWeightPercent: null,
   assessmentGroupOrder: null,
 } as unknown as Assessment;
+
+const gradedQuizContent = {
+  id: 'content-quiz-1',
+  parentId: null,
+  order: 0,
+  type: 'Questionnaire',
+  title: 'Practice quiz',
+  description: null,
+  status: 'published',
+  duration: null,
+  metadata: {},
+  gradingMethod: null,
+  maxPoints: null,
+  gradingConfig: {
+    enabled: true,
+    schemaVersion: 1,
+    validationMode: 'public',
+    gradebook: {
+      maxScore: 3,
+      official: false,
+      required: true,
+    },
+    policy: {
+      feedbackMode: 'immediate',
+      presentationMode: 'continuous',
+    },
+    items: {
+      question_1: {
+        contentBlockId: 'question_1',
+        points: 3,
+        gradingKind: 'deterministic',
+      },
+    },
+  },
+  createdAt: '2024-01-01T00:00:00.000Z',
+  updatedAt: '2024-01-01T00:00:00.000Z',
+} satisfies ContentItem;
 
 const assessmentGroups = [
   {
@@ -293,6 +331,26 @@ describe('AssessmentsList weighted groups', () => {
     expect(screen.getByText(/graded content will appear here after grading is enabled from the content editor/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /create first assessment/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /add assessment/i })).not.toBeInTheDocument();
+  });
+
+  it('projects content-owned graded activities without direct assessment records', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={[]}
+        total={0}
+        gradedContentItems={[gradedQuizContent]}
+      />,
+    );
+
+    const contentSection = screen.getByTestId('content-owned-graded-activities');
+    const link = within(contentSection).getByRole('link', { name: /practice quiz/i });
+
+    expect(link).toHaveAttribute('href', '/dashboard/learning/courses/course-1/content/content-quiz-1');
+    expect(within(contentSection).getByText('3 pts')).toBeInTheDocument();
+    expect(within(contentSection).getByText('public practice')).toBeInTheDocument();
+    expect(within(contentSection).getByText('Quiz')).toBeInTheDocument();
+    expect(screen.queryByText('No assessments yet')).not.toBeInTheDocument();
   });
 
   it('creates a weighted group and validates group weights before calling the API', async () => {

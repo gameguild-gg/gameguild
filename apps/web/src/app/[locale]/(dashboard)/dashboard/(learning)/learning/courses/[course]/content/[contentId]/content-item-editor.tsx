@@ -36,10 +36,7 @@ import { updateContent } from "@/lib/learning/actions";
 import { CONTENT_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
 import { getLessonFormatLabel } from "@/lib/learning/lesson-formats";
 import { LearnerLessonRenderer } from "@/components/learning/learner-lesson-renderer";
-import {
-  LessonContentEditor,
-  parseLexicalState,
-} from "./lesson-content-editor";
+import { LessonContentEditor } from "./lesson-content-editor";
 import { LessonCodeEditor } from "./lesson-code-editor";
 import { LessonVideoEditor } from "./lesson-video-editor";
 import { QuizContentEditor } from "./quiz-content-editor";
@@ -80,13 +77,13 @@ export function ContentItemEditor({
   const [saved, setSaved] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
 
+  const isLesson = item.type === "Lesson";
+  const isQuiz = item.type === "Questionnaire";
+
   // ── Lexical editor state (Lesson only) ──
-  // jsonBody is the structured object now; parseLexicalState(item.content) is legacy fallback.
   const initialLexicalState = useMemo(
-    () =>
-      (item.jsonBody as SerializedEditorState | null) ??
-      parseLexicalState(item.content),
-    [item.jsonBody, item.content],
+    () => item.jsonBody as SerializedEditorState | null,
+    [item.jsonBody],
   );
   const editorStateRef = useRef<SerializedEditorState | null>(
     initialLexicalState,
@@ -95,20 +92,22 @@ export function ContentItemEditor({
   // ponytail: simple string refs; one source of truth per format, swapped on format change.
   const codeBodyRef = useRef<string>(item.content ?? "");
   const videoUrlRef = useRef<string>(item.content ?? "");
-  const quizContentRef = useRef<string | undefined>(
-    item.type === "Questionnaire" ? (item.content ?? undefined) : undefined,
+  const externalLinkRef = useRef<string>(item.content ?? "");
+  const initialQuizContent = useMemo(
+    () => (isQuiz ? (item.jsonBody ?? undefined) : undefined),
+    [isQuiz, item.jsonBody],
+  );
+  const quizContentRef = useRef<Record<string, unknown> | undefined>(
+    initialQuizContent,
   );
 
-  const isLesson = item.type === "Lesson";
-  const isQuiz = item.type === "Questionnaire";
-
   // ── Selected lesson format ──
-  // Backward-compat: legacy lessons have null lessonFormat but Lexical content.
   const initialSelectedFormat = useMemo(() => {
+    if (!isLesson) return "Markdown";
     if (item.lessonFormat) return item.lessonFormat;
-    if (item.jsonBody || parseLexicalState(item.content)) return "Lexical";
+    if (item.jsonBody) return "Lexical";
     return "Markdown";
-  }, [item.lessonFormat, item.content]);
+  }, [isLesson, item.lessonFormat, item.jsonBody]);
   const [selectedFormat, setSelectedFormat] =
     useState<LearningCoursesLessonContentFormat>(initialSelectedFormat);
 
@@ -116,9 +115,12 @@ export function ContentItemEditor({
     editorStateRef.current = state;
   }, []);
 
-  const handleQuizContentChange = useCallback((content: string) => {
-    quizContentRef.current = content;
-  }, []);
+  const handleQuizContentChange = useCallback(
+    (content: Record<string, unknown>) => {
+      quizContentRef.current = content;
+    },
+    [],
+  );
 
   const contentTypeLabel = formatContentTypeLabel(item.type);
 
@@ -130,16 +132,15 @@ export function ContentItemEditor({
     setError(null);
     setSaved(false);
 
-    // Lesson: Lexical → jsonBody (object); text formats → body (string).
-    // Quiz: body string via quizContentRef. jsonBody unused on those paths.
+    // Lesson: Lexical -> jsonBody (object); text formats -> body (string).
+    // Quiz is structured content and must persist in jsonBody.
     let bodyToSave: string | undefined;
     let jsonBodyToSave: Record<string, unknown> | undefined;
     if (isLesson) {
       switch (selectedFormat) {
         case "Lexical":
           jsonBodyToSave = (editorStateRef.current ?? undefined) as
-            | Record<string, unknown>
-            | undefined;
+            Record<string, unknown> | undefined;
           break;
         case "Markdown":
         case "RevealJs":
@@ -150,7 +151,7 @@ export function ContentItemEditor({
           break;
       }
     } else if (isQuiz) {
-      bodyToSave = quizContentRef.current;
+      jsonBodyToSave = quizContentRef.current;
     }
 
     startTransition(async () => {
@@ -163,6 +164,7 @@ export function ContentItemEditor({
         ...(isLesson
           ? { jsonBody: jsonBodyToSave, lessonFormat: selectedFormat }
           : {}),
+        ...(isQuiz ? { jsonBody: jsonBodyToSave } : {}),
         visibility,
         isRequired,
         estimatedMinutes: estimatedMinutes
@@ -292,29 +294,35 @@ export function ContentItemEditor({
                 />
               )}
 
-              {isLesson &&
-                selectedFormat === "Markdown" &&
-                !previewMode && (
-                  <LessonCodeEditor
-                    key={item.id}
-                    initialValue={codeBodyRef.current}
-                    language="markdown"
-                    placeholder="Write lesson content in Markdown."
-                    onChange={(v) => (codeBodyRef.current = v)}
-                  />
-                )}
+              {isLesson && selectedFormat === "Markdown" && !previewMode && (
+                <LessonCodeEditor
+                  key={item.id}
+                  initialValue={codeBodyRef.current}
+                  language="markdown"
+                  placeholder="Write lesson content in Markdown."
+                  onChange={(v) => (codeBodyRef.current = v)}
+                />
+              )}
 
-              {isLesson &&
-                selectedFormat === "RevealJs" &&
-                !previewMode && (
-                  <LessonCodeEditor
-                    key={item.id}
-                    initialValue={codeBodyRef.current}
-                    language="markdown"
-                    placeholder="Author slides in Markdown — separate slides with --- on its own line."
-                    onChange={(v) => (codeBodyRef.current = v)}
-                  />
-                )}
+              {isLesson && selectedFormat === "Html" && !previewMode && (
+                <LessonCodeEditor
+                  key={item.id}
+                  initialValue={codeBodyRef.current}
+                  language="html"
+                  placeholder="Write lesson content in HTML."
+                  onChange={(v) => (codeBodyRef.current = v)}
+                />
+              )}
+
+              {isLesson && selectedFormat === "RevealJs" && !previewMode && (
+                <LessonCodeEditor
+                  key={item.id}
+                  initialValue={codeBodyRef.current}
+                  language="markdown"
+                  placeholder="Author slides in Markdown — separate slides with --- on its own line."
+                  onChange={(v) => (codeBodyRef.current = v)}
+                />
+              )}
 
               {isLesson && selectedFormat === "Video" && !previewMode && (
                 <LessonVideoEditor
@@ -325,7 +333,10 @@ export function ContentItemEditor({
               )}
 
               {isLesson && previewMode && (
-                <div data-testid="lesson-preview" className="rounded-md border p-4">
+                <div
+                  data-testid="lesson-preview"
+                  className="rounded-md border p-4"
+                >
                   <LearnerLessonRenderer
                     courseId={courseId}
                     itemId={item.id}
@@ -338,7 +349,7 @@ export function ContentItemEditor({
               {isQuiz && (
                 <QuizContentEditor
                   key={item.id}
-                  initialContent={item.content}
+                  initialContent={initialQuizContent}
                   onChange={handleQuizContentChange}
                 />
               )}
