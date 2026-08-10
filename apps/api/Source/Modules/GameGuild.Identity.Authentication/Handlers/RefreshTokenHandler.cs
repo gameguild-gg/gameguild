@@ -28,9 +28,13 @@ public sealed class RefreshTokenHandler(IAuthService authService, IUserRepositor
             throw new RequestValidationException(errors);
         }
 
-        _logger.LogInformation("Processing refresh token request with token: {RefreshToken}", command.RefreshToken);
+        _logger.LogInformation("Processing refresh token request");
 
-        var refreshRequest = new RefreshTokenRequest { RefreshToken = command.RefreshToken };
+        var refreshRequest = new RefreshTokenRequest
+        {
+            RefreshToken = command.RefreshToken,
+            TenantId = command.TenantId
+        };
 
         try
         {

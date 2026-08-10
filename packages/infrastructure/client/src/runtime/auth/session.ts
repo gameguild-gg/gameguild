@@ -129,7 +129,10 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
     const response = await fetch(refreshUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken: token.refreshToken }),
+      body: JSON.stringify({
+        refreshToken: token.refreshToken,
+        ...(token.tenantId ? { tenantId: token.tenantId } : {}),
+      }),
     });
 
     if (!response.ok) {
@@ -159,6 +162,11 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
       refreshToken: (data.refreshToken as string) || token.refreshToken,
       accessTokenExpires,
       refreshTokenExpires: refreshTokenExpires ?? token.refreshTokenExpires,
+      tenantId:
+        typeof data.tenantId === 'string' || data.tenantId === null ? (data.tenantId as string | null) : token.tenantId,
+      availableTenants: Array.isArray(data.availableTenants)
+        ? (data.availableTenants as Array<{ id: string; name: string }>)
+        : token.availableTenants,
     };
   } catch (error) {
     if (error instanceof TokenRefreshError) throw error;
