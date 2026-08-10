@@ -279,6 +279,39 @@ export async function reorderContent(
   }
 }
 
+export async function moveContent(
+  courseId: string,
+  contentId: string,
+  newParentId: string | null,
+  newSortOrder: number,
+): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const { content } = createCourseModules();
+    const result = await content.postCoursesContentMove(
+      resolvedCourseId,
+      contentId,
+      {
+        contentId,
+        newParentId: newParentId ?? null,
+        newSortOrder,
+      },
+    );
+
+    if (result.ok) {
+      revalidateCourseContentPaths(courseId, resolvedCourseId);
+      return { success: true, data: null };
+    }
+
+    return { success: false, error: extractError(result.error) };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
 // ── Course CRUD actions ──
 
 export interface CreateCourseInput {

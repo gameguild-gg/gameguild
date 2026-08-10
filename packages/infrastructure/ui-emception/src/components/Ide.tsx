@@ -1,12 +1,13 @@
 import type { OnMount } from '@monaco-editor/react';
-import { bootInWorker, DEFAULT_MANIFEST_URL } from '@gameguild/emception-browser';
+import { bootInWorker, DEFAULT_MANIFEST_URL, wrapWorkerClient } from '@gameguild/emception-browser';
 import { Terminal } from '@xterm/xterm';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
-import type { DockGroup, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
+import type { DockGroup, GradingPlan, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
 import { DEFAULT_IMAGE, SDL_CANVAS_PATH, WORKSPACE_STORAGE_KEY, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
+import TestResultsPanel from './TestResultsPanel';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
 import TerminalPanel from './TerminalPanel';
 import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets';
@@ -64,11 +65,36 @@ export interface IdeProps {
   manifestUrl?: string;
   workspaceConfig?: WorkspaceConfig;
   workspaceUrl?: string;
+   /** Grading-aware test plan. When present, a "Run Tests" button appears. */
+  testPlan?: GradingPlan;
+   /** 'public' strips hidden cases; 'full' runs all. Defaults to 'full'. */
+  testMode?: 'public' | 'full';
+   /** Score scale maximum (preview only). Defaults to 100. */
+  maxScore?: number;
+   /** Minimum score to pass (preview only). Defaults to 60. */
+  passingScore?: number;
+   /** Fired after ref.runTests() resolves with a structured TestReport. */
+  onTestReport?: (report: import('@gameguild/emception-browser').EmceptionAPI extends { runTests: (...a: any[]) => Promise<infer R> } ? R : never) => void;
+   /** Tee'd from tty.write — receives raw text written to the terminal (stdout path). */
+  onStdout?: (chunk: string) => void;
+   /** Tee'd from tty.writeError — receives raw text written to the terminal (stderr path). */
+  onStderr?: (chunk: string) => void;
+   /** Fired when a compile-and-run or test execution finishes, with the exit code. */
+  onExecutionComplete?: (exitCode: number) => void;
+}
+
+/** Imperative handle exposed by `<Ide ref={...}>`. */
+export interface IdeHandle {
+  runTests: import('@gameguild/emception-browser').EmceptionAPI['runTests'];
+  compileAndRun: import('@gameguild/emception-browser').EmceptionAPI['compileAndRun'];
+  getFiles(): Promise<Array<{ path: string; content: string }>>;
+  setFiles(files: Array<{ path: string; content: string }>): Promise<void>;
+  reset(): Promise<void>;
 }
 
 type WorkerBoot = Awaited<ReturnType<typeof bootInWorker>>;
 
-export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFEST_URL, workspaceConfig, workspaceUrl }: IdeProps) {
+export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFEST_URL, workspaceConfig, workspaceUrl, onTestReport, onStdout, onStderr, onExecutionComplete, testPlan, testMode = 'full', maxScore = 100, passingScore = 60 }, ref) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -77,6 +103,7 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
   /** The div inside whichever DockGroupPanel currently shows the canvas tab */
   const canvasHostElRef = useRef<HTMLDivElement | null>(null);
   const orchestratorRef = useRef<WorkerBoot | null>(null);
+  const apiRef = useRef<import('@gameguild/emception-browser').EmceptionAPI | null>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const terminalLogRef = useRef<HTMLPreElement | null>(null);
   /** Tracks blob URLs created for SDL output so they can be revoked on reset/unmount */
@@ -86,6 +113,18 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
   /** Tracks the live SDL3 Emscripten module so its RAF loop can be stopped */
 
   const sdlModuleRef = useRef<{ pauseMainLoop?: () => void } | null>(null);
+
+  const onTestReportRef = useRef(onTestReport);
+  onTestReportRef.current = onTestReport;
+  const onStdoutRef = useRef(onStdout);
+  onStdoutRef.current = onStdout;
+  const onStderrRef = useRef(onStderr);
+  onStderrRef.current = onStderr;
+  const onExecutionCompleteRef = useRef(onExecutionComplete);
+  onExecutionCompleteRef.current = onExecutionComplete;
+  const lastExitCodeRef = useRef(0);
+  const [lastReport, setLastReport] = useState<import('./TestResultsPanel').TestReport | null>(null);
+  const [testRunning, setTestRunning] = useState(false);
 
   // Resolve the active workspace config: prop > fetched bundle > default preset
   const [activePresetId, setActivePresetId] = useState<string>(workspaceConfig?.id ?? DEFAULT_PRESET.id);
@@ -196,9 +235,36 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
     return () => {
       cancelled = true;
     };
-  }, [workspaceUrl]);
+    }, [workspaceUrl]);
 
-  // ── Sync workspace files into the Worker VFS (/home/user) ─────
+    // ── Run Tests button handler ───────────────────────────────────
+     const handleRunTests = useCallback(async () => {
+    if (!apiRef.current || !testPlan) return;
+    setTestRunning(true);
+    setLastReport(null);
+    try {
+      const filteredCases = testMode === 'public'
+         ? testPlan.cases
+             .filter((c) => !c.hidden)
+             .map(({ hidden: _hidden, ...rest }) => rest)
+         : testPlan.cases;
+      const runPlan = {
+        cases: filteredCases,
+        build: testPlan.build,
+        timeoutMsPerCase: testPlan.timeoutMsPerCase,
+       };
+      const report = await apiRef.current.runTests(runPlan as any);
+      setLastReport(report);
+      try { onTestReportRef.current?.(report); } catch { /* swallow */ }
+      setStatus('Tests complete');
+      } catch (err) {
+      setStatus(`Test error: ${(err as Error).message}`);
+      } finally {
+      setTestRunning(false);
+      }
+    }, [testPlan, testMode]);
+
+    // ── Sync workspace files into the Worker VFS (/home/user) ─────
   const syncFilesToVfs = useCallback(async (filesToSync: Record<string, WorkspaceFile>) => {
     const orch = orchestratorRef.current;
     if (!orch) return;
@@ -344,7 +410,18 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
           origClear();
           if (log.current) log.current.textContent = '';
         };
+        const origTtyWrite = result.tty.write.bind(result.tty);
+        result.tty.write = (data: string) => {
+          origTtyWrite(data);
+          try { onStdoutRef.current?.(data); } catch { /* swallow callback errors */ }
+        };
+        const origTtyWriteError = result.tty.writeError.bind(result.tty);
+        result.tty.writeError = (data: string) => {
+          origTtyWriteError(data);
+          try { onStderrRef.current?.(data); } catch { /* swallow callback errors */ }
+        };
         orchestratorRef.current = result;
+        apiRef.current = wrapWorkerClient(result.client);
         // Expose worker client on window for E2E / debug access
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).__emception_client__ = result.client;
@@ -371,6 +448,7 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
       mounted = false;
       orchestratorRef.current?.client.terminate();
       orchestratorRef.current = null;
+      apiRef.current = null;
     };
   }, [terminalReady, manifestUrl, doBootstrap]);
 
@@ -381,6 +459,38 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
       sdlScriptRef.current?.remove();
     };
   }, []);
+
+  useImperativeHandle(ref, () => ({
+    runTests: async (plan) => {
+      const api = apiRef.current;
+      if (!api) throw new Error('Worker not booted yet');
+      const report = await api.runTests(plan);
+      try { onTestReportRef.current?.(report); } catch { /* swallow */ }
+      return report;
+    },
+    compileAndRun: async (sourceOrFiles?, opts?) => {
+      const api = apiRef.current;
+      if (!api) throw new Error('Worker not booted yet');
+      return api.compileAndRun(sourceOrFiles, opts);
+    },
+    getFiles: async () => {
+      return Object.values(filesRef.current)
+        .filter((f) => f.type === 'text')
+        .map(({ path, content }) => ({ path, content }));
+    },
+    setFiles: async (newFiles) => {
+      const updated: Record<string, WorkspaceFile> = {};
+      for (const { path, content } of newFiles) {
+        updated[path] = { path, type: 'text', content };
+      }
+      setFiles((prev) => ({ ...prev, ...updated }));
+      filesRef.current = { ...filesRef.current, ...updated };
+      await syncFilesToVfs({ ...filesRef.current, ...updated });
+    },
+    reset: async () => {
+      await orchestratorRef.current?.client.resetVfs();
+    },
+  }), [syncFilesToVfs]);
 
   const ensureOpenTab = useCallback(
     (path: string, group: DockGroup = 'main') => {
@@ -696,6 +806,7 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
   const handleCompile = async () => {
     if (!orchestratorRef.current || !activeFile || activeFile.type !== 'text') return;
     stoppedRef.current = false;
+    lastExitCodeRef.current = 0;
     setExecutionPhase('compiling');
     setActiveTerminalId('terminal-1');
     const P = '[Emception:IDE]';
@@ -1545,6 +1656,7 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
       }
     } finally {
       console.log(`${P} COMPILE & RUN COMPLETE`);
+      try { onExecutionCompleteRef.current?.(lastExitCodeRef.current); } catch { /* swallow */ }
       restoreEditorFocus();
     }
   };
@@ -1608,6 +1720,7 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
       });
 
       setExecutionPhase('idle');
+      lastExitCodeRef.current = runResult.exitCode;
       const duration = ((performance.now() - tTotal) / 1000).toFixed(1);
       if (runResult.exitCode === 0) {
         setStatus(`Tests passed (${duration}s)`);
@@ -1623,6 +1736,7 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
         tty.writeError(String(e));
       }
     } finally {
+      try { onExecutionCompleteRef.current?.(lastExitCodeRef.current); } catch { /* swallow */ }
       restoreEditorFocus();
     }
   };
@@ -1646,6 +1760,7 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
     const { client } = orchestratorRef.current;
     client.terminate();
     orchestratorRef.current = null;
+    apiRef.current = null;
     setExecutionPhase('idle');
     setIsReady(false);
     setStatus('Stopped — rebooting...');
@@ -1774,6 +1889,26 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
               }}
             >
               ✓ Test
+            </button>
+          )}
+          {testPlan && (
+            <button
+              data-testid="run-tests-button"
+              onClick={handleRunTests}
+              disabled={testRunning}
+              style={{
+                height: 24,
+                padding: '0 0.75rem',
+                fontSize: '0.8rem',
+                fontWeight: 500,
+                borderRadius: 4,
+                border: 'none',
+                cursor: testRunning ? 'not-allowed' : 'pointer',
+                background: testRunning ? '#313244' : '#fab387',
+                color: testRunning ? '#585b70' : '#11111b',
+              }}
+            >
+              {testRunning ? 'Running…' : 'Run Tests'}
             </button>
           )}
           <button
@@ -1927,6 +2062,16 @@ export default function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFES
         {activeFile && <span>{activeFile.path}</span>}
         {activeFile?.type === 'text' && <span style={{ marginLeft: 'auto' }}>{inferLanguage(activeFileName).toUpperCase()}</span>}
       </div>
+      {lastReport && (
+        <div style={{ marginTop: '0.5rem' }}>
+          <TestResultsPanel
+            report={lastReport}
+            maxScore={maxScore}
+            passingScore={passingScore}
+            weights={testPlan?.cases.map((c) => c.weight ?? 1)}
+          />
+        </div>
+      )}
     </div>
   );
-}
+});

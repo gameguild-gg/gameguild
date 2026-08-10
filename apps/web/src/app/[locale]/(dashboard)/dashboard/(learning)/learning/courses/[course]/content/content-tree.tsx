@@ -3,6 +3,7 @@
 import {
   addContent,
   deleteContent,
+  moveContent,
   reorderContent,
   updateContent,
 } from "@/lib/learning/actions";
@@ -17,9 +18,10 @@ import {
 } from "@/lib/learning/lesson-formats";
 import type { DragEndEvent } from "@dnd-kit/core";
 import {
-  closestCenter,
+  closestCorners,
   DndContext,
   PointerSensor,
+  useDroppable,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -158,6 +160,17 @@ function SortableItem({
   return <>{children({ ref: setNodeRef, style, listeners, isDragging })}</>;
 }
 
+function DroppableCardArea({
+  moduleId,
+  children,
+}: {
+  moduleId: string;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef } = useDroppable({ id: `module-drop-${moduleId}` });
+  return <div ref={setNodeRef}>{children}</div>;
+}
+
 function ContentActionButton({
   label,
   icon: Icon,
@@ -252,6 +265,24 @@ export function ContentTree({
     return parentId;
   };
 
+  // Real modules are draggable + sortable. Virtual modules (e.g. the synthetic
+  // "Unassigned" bucket) render outside the SortableContext and never reach the
+  // reorder API — sending a virtual id to /content:reorder snaps the drag back.
+  const { realModules, virtualModules } = React.useMemo(() => {
+    const real: ContentItem[] = [];
+    const virtual: ContentItem[] = [];
+    for (const module of modules) {
+      if (virtualModuleIdSet.has(module.id)) virtual.push(module);
+      else real.push(module);
+    }
+    return { realModules: real, virtualModules: virtual };
+  }, [modules, virtualModuleIdSet]);
+
+  const realModuleIds = React.useMemo(
+    () => new Set(realModules.map((m) => m.id)),
+    [realModules],
+  );
+
   // Add Module dialog state
   const [showAddModule, setShowAddModule] = useState(false);
   const [moduleTitle, setModuleTitle] = useState("");
@@ -291,37 +322,22 @@ export function ContentTree({
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
-  function handleModuleDragEnd(event: DragEndEvent) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = modules.findIndex((m) => m.id === active.id);
-    const newIndex = modules.findIndex((m) => m.id === over.id);
-    if (oldIndex < 0 || newIndex < 0) return;
-    const newIds = arrayMove(
-      modules.map((m) => m.id),
-      oldIndex,
-      newIndex,
-    );
-    setError("");
-    startTransition(async () => {
-      const result = await reorderContent(courseId, newIds);
-      if (result.success) {
-        router.refresh();
-      } else {
-        setError(result.error);
-      }
-    });
-  }
+    if (!over) return;
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    if (activeId === overId) return;
 
-  function makeLessonDragEnd(parentId: string, children: ContentItem[]) {
-    return (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-      const oldIndex = children.findIndex((c) => c.id === active.id);
-      const newIndex = children.findIndex((c) => c.id === over.id);
+    // Module reorder: only real modules are draggable, so the payload never
+    // contains a virtual id.
+    if (realModuleIds.has(activeId)) {
+      if (!realModuleIds.has(overId)) return;
+      const oldIndex = realModules.findIndex((m) => m.id === activeId);
+      const newIndex = realModules.findIndex((m) => m.id === overId);
       if (oldIndex < 0 || newIndex < 0) return;
       const newIds = arrayMove(
-        children.map((c) => c.id),
+        realModules.map((m) => m.id),
         oldIndex,
         newIndex,
       );
@@ -334,7 +350,74 @@ export function ContentTree({
           setError(result.error);
         }
       });
-    };
+      return;
+    }
+
+    // Lesson drag (same-module reorder or cross-module move). Find source +
+    // dest modules by walking allItems parentage. Virtual dest maps to
+    // newParentId: null (top-level orphan).
+    const sourceModule = modules.find((m) =>
+      allItems.some((i) => i.id === activeId && i.parentId === m.id),
+    );
+    if (!sourceModule) return;
+
+    const MODULE_DROP_PREFIX = "module-drop-";
+    let destModule: ContentItem | undefined;
+    if (overId.startsWith(MODULE_DROP_PREFIX)) {
+      const moduleId = overId.slice(MODULE_DROP_PREFIX.length);
+      destModule = modules.find((m) => m.id === moduleId);
+    } else {
+      destModule = modules.find((m) =>
+        allItems.some((i) => i.id === overId && i.parentId === m.id),
+      );
+    }
+    if (!destModule) return;
+
+    const destChildren = allItems
+      .filter((i) => i.parentId === destModule.id)
+      .sort((a, b) => a.order - b.order);
+
+    if (sourceModule.id === destModule.id) {
+      const oldIndex = destChildren.findIndex((c) => c.id === activeId);
+      const newIndex = destChildren.findIndex((c) => c.id === overId);
+      if (oldIndex < 0 || newIndex < 0) return;
+      const newIds = arrayMove(
+        destChildren.map((c) => c.id),
+        oldIndex,
+        newIndex,
+      );
+      setError("");
+      startTransition(async () => {
+        const result = await reorderContent(courseId, newIds);
+        if (result.success) {
+          router.refresh();
+        } else {
+          setError(result.error);
+        }
+      });
+      return;
+    }
+
+    const overIsDropArea = overId.startsWith(MODULE_DROP_PREFIX);
+    const dropIndex = overIsDropArea
+      ? destChildren.length
+      : destChildren.findIndex((c) => c.id === overId);
+    const newSortOrder = dropIndex < 0 ? destChildren.length : dropIndex;
+    const newParentId = isVirtualModule(destModule.id) ? null : destModule.id;
+    setError("");
+    startTransition(async () => {
+      const result = await moveContent(
+        courseId,
+        activeId,
+        newParentId,
+        newSortOrder,
+      );
+      if (result.success) {
+        router.refresh();
+      } else {
+        setError(result.error);
+      }
+    });
   }
 
   function openAddSubmoduleDialog(parentId: string) {
@@ -388,7 +471,7 @@ export function ContentTree({
         title: moduleTitle.trim(),
         description: moduleDescription.trim(),
         type: "Module",
-        sortOrder: modules.length,
+        sortOrder: realModules.length,
       });
       if (result.success) {
         setShowAddModule(false);
@@ -496,7 +579,7 @@ export function ContentTree({
   }
 
   function handleMoveModule(moduleId: string, direction: "up" | "down") {
-    const ids = modules.map((m) => m.id);
+    const ids = realModules.map((m) => m.id);
     const idx = ids.indexOf(moduleId);
     if (idx < 0) return;
     const swapIdx = direction === "up" ? idx - 1 : idx + 1;
@@ -538,429 +621,451 @@ export function ContentTree({
     });
   }
 
+  const renderModuleCard = (
+    module: ContentItem,
+    displayIndex: number,
+    moduleIsVirtual: boolean,
+    sortableProps?: {
+      listeners: Record<string, Function> | undefined;
+      isDragging: boolean;
+    },
+  ) => {
+    const children = allItems
+      .filter((i) => i.parentId === module.id)
+      .sort((a, b) => a.order - b.order);
+    const isOpen = openModules.has(module.id);
+    const realModuleIndex = realModules.findIndex((m) => m.id === module.id);
+    const moveDownDisabled =
+      isPending ||
+      realModuleIndex < 0 ||
+      realModuleIndex === realModules.length - 1;
+
+    return (
+      <Collapsible
+        open={isOpen}
+        onOpenChange={() => toggleModule(module.id)}
+      >
+        <Card className={sortableProps?.isDragging ? "opacity-50" : ""}>
+          <CardHeader className="flex flex-row items-center gap-3 pb-3">
+            {sortableProps?.listeners && (
+              <button
+                type="button"
+                className="cursor-grab touch-none"
+                {...sortableProps.listeners}
+              >
+                <GripVertical className="size-5 text-muted-foreground" />
+              </button>
+            )}
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+              >
+                {isOpen ? (
+                  <ChevronDown className="size-4" />
+                ) : (
+                  <ChevronRight className="size-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
+              {displayIndex + 1}
+            </div>
+            <div className="flex-1">
+              <CardTitle className="text-base">
+                {module.title}
+              </CardTitle>
+              {module.description && (
+                <CardDescription className="mt-0.5 text-xs">
+                  {module.description}
+                </CardDescription>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={
+                  statusVariant[module.status] ?? "outline"
+                }
+              >
+                {module.status}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {children.length} items
+              </span>
+              {!moduleIsVirtual && (
+                <div className="flex items-center gap-1">
+                  <ContentActionButton
+                    label="Edit module"
+                    icon={Edit}
+                    onClick={() => openEditModuleDialog(module)}
+                  />
+                  <ContentActionButton
+                    label="Duplicate module"
+                    icon={Copy}
+                    onClick={() => handleDuplicate(module)}
+                    disabled={isPending}
+                  />
+                  <ContentActionButton
+                    label="Add submodule"
+                    icon={Plus}
+                    onClick={() =>
+                      openAddSubmoduleDialog(module.id)
+                    }
+                  />
+                  <ContentActionButton
+                    label="Move module up"
+                    icon={ArrowUp}
+                    onClick={() =>
+                      handleMoveModule(module.id, "up")
+                    }
+                    disabled={isPending || realModuleIndex <= 0}
+                  />
+                  <ContentActionButton
+                    label="Move module down"
+                    icon={ArrowDown}
+                    onClick={() =>
+                      handleMoveModule(module.id, "down")
+                    }
+                    disabled={moveDownDisabled}
+                  />
+                  <ContentActionButton
+                    label="Delete module"
+                    icon={Trash2}
+                    onClick={() =>
+                      setDeleteTarget({
+                        id: module.id,
+                        title: module.title,
+                        isModule: true,
+                      })
+                    }
+                    destructive
+                  />
+                </div>
+              )}
+            </div>
+          </CardHeader>
+          <CollapsibleContent>
+            <DroppableCardArea moduleId={module.id}>
+              <CardContent className="pt-0">
+                {children.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-muted-foreground">
+                    No content items yet
+                  </p>
+                ) : (
+                  <SortableContext
+                    items={children.map((c) => c.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="divide-y rounded-lg border">
+                      {children.map((item, itemIndex) => {
+                        const subchildren = allItems
+                          .filter((i) => i.parentId === item.id)
+                          .sort((a, b) => a.order - b.order);
+                        const isSubmodule =
+                          subchildren.length > 0;
+                        const config = typeConfig[
+                          item.type
+                        ] ?? {
+                          icon: FileText,
+                          label: item.type,
+                        };
+                        const Icon = config.icon;
+                        return (
+                          <SortableItem
+                            key={item.id}
+                            id={item.id}
+                          >
+                            {({
+                              ref: itemRef,
+                              style: itemStyle,
+                              listeners: itemListeners,
+                              isDragging: itemDragging,
+                            }) => (
+                              <div
+                                ref={itemRef}
+                                style={itemStyle}
+                              >
+                                <div
+                                  className={`group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50 ${itemDragging ? "opacity-50" : ""}`}
+                                >
+                                  <button
+                                    type="button"
+                                    className="cursor-grab touch-none"
+                                    {...itemListeners}
+                                  >
+                                    <GripVertical className="size-4 text-muted-foreground/50" />
+                                  </button>
+                                  <div className="flex size-8 items-center justify-center rounded bg-muted">
+                                    <Icon className="size-4 text-muted-foreground" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium">
+                                      {item.title}
+                                    </p>
+                                    {isSubmodule && (
+                                      <p className="text-xs text-muted-foreground">
+                                        {subchildren.length}{" "}
+                                        sub-items
+                                      </p>
+                                    )}
+                                  </div>
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs capitalize"
+                                  >
+                                    {config.label}
+                                  </Badge>
+                                  <Badge
+                                    variant={
+                                      statusVariant[
+                                        item.status
+                                      ] ?? "outline"
+                                    }
+                                    className="text-xs"
+                                  >
+                                    {item.status}
+                                  </Badge>
+                                  {item.duration != null &&
+                                    item.duration > 0 && (
+                                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <Clock className="size-3" />
+                                        {item.duration}m
+                                      </span>
+                                    )}
+                                  <div className="flex items-center gap-1">
+                                    <ContentActionButton
+                                      label={`Edit ${config.label}`}
+                                      icon={Edit}
+                                      onClick={() =>
+                                        navigateToContentItem(
+                                          item.id,
+                                        )
+                                      }
+                                      className="size-7"
+                                    />
+                                    <ContentActionButton
+                                      label="Duplicate"
+                                      icon={Copy}
+                                      onClick={() =>
+                                        handleDuplicate(item)
+                                      }
+                                      disabled={isPending}
+                                      className="size-7"
+                                    />
+                                    <ContentActionButton
+                                      label="Move up"
+                                      icon={ArrowUp}
+                                      onClick={() =>
+                                        handleMoveLesson(
+                                          module.id,
+                                          item.id,
+                                          "up",
+                                        )
+                                      }
+                                      disabled={
+                                        isPending ||
+                                        itemIndex === 0
+                                      }
+                                      className="size-7"
+                                    />
+                                    <ContentActionButton
+                                      label="Move down"
+                                      icon={ArrowDown}
+                                      onClick={() =>
+                                        handleMoveLesson(
+                                          module.id,
+                                          item.id,
+                                          "down",
+                                        )
+                                      }
+                                      disabled={
+                                        isPending ||
+                                        itemIndex ===
+                                          children.length - 1
+                                      }
+                                      className="size-7"
+                                    />
+                                    <ContentActionButton
+                                      label="Delete"
+                                      icon={Trash2}
+                                      onClick={() =>
+                                        setDeleteTarget({
+                                          id: item.id,
+                                          title: item.title,
+                                          isModule: false,
+                                        })
+                                      }
+                                      destructive
+                                      className="size-7"
+                                    />
+                                  </div>
+                                </div>
+                                {isSubmodule && (
+                                  <div className="ml-8 border-l pl-4 pb-2">
+                                    {subchildren.map((sub) => {
+                                      const subConfig =
+                                        typeConfig[
+                                          sub.type
+                                        ] ?? {
+                                          icon: FileText,
+                                          label: sub.type,
+                                        };
+                                      const SubIcon =
+                                        subConfig.icon;
+                                      return (
+                                        <div
+                                          key={sub.id}
+                                          className="group flex items-center gap-3 px-4 py-2 transition-colors hover:bg-muted/30"
+                                        >
+                                          <div className="flex size-6 items-center justify-center rounded bg-muted">
+                                            <SubIcon className="size-3 text-muted-foreground" />
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="text-sm">
+                                              {sub.title}
+                                            </p>
+                                          </div>
+                                          <Badge
+                                            variant="outline"
+                                            className="text-xs"
+                                          >
+                                            {subConfig.label}
+                                          </Badge>
+                                          <Badge
+                                            variant={
+                                              statusVariant[
+                                                sub.status
+                                              ] ?? "outline"
+                                            }
+                                            className="text-xs"
+                                          >
+                                            {sub.status}
+                                          </Badge>
+                                          <div className="flex items-center gap-1">
+                                            <ContentActionButton
+                                              label="Edit"
+                                              icon={Edit}
+                                              onClick={() =>
+                                                navigateToContentItem(
+                                                  sub.id,
+                                                )
+                                              }
+                                              className="size-6"
+                                            />
+                                            <ContentActionButton
+                                              label="Delete"
+                                              icon={Trash2}
+                                              onClick={() =>
+                                                setDeleteTarget(
+                                                  {
+                                                    id: sub.id,
+                                                    title:
+                                                      sub.title,
+                                                    isModule: false,
+                                                  },
+                                                )
+                                              }
+                                              destructive
+                                              className="size-6"
+                                            />
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="mt-1 w-full text-xs text-muted-foreground"
+                                      onClick={() =>
+                                        openAddLessonDialog(
+                                          item.id,
+                                        )
+                                      }
+                                    >
+                                      <Plus className="mr-1 size-3" />
+                                      Add to {item.title}
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </SortableItem>
+                        );
+                      })}
+                    </div>
+                  </SortableContext>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2 w-full text-muted-foreground"
+                  onClick={() => openAddLessonDialog(module.id)}
+                >
+                  <Plus className="mr-2 size-4" />
+                  {moduleIsVirtual
+                    ? "Add Content Item"
+                    : "Add Lesson"}
+                </Button>
+              </CardContent>
+            </DroppableCardArea>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+    );
+  };
+
   return (
     <>
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleModuleDragEnd}
+        collisionDetection={closestCorners}
+        onDragEnd={handleDragEnd}
       >
-        <SortableContext
-          items={modules.map((m) => m.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="space-y-4">
-            {modules.map((module, index) => {
-              const children = allItems
-                .filter((i) => i.parentId === module.id)
-                .sort((a, b) => a.order - b.order);
-              const isOpen = openModules.has(module.id);
-              const moduleIsVirtual = isVirtualModule(module.id);
+        <div className="space-y-4">
+          <SortableContext
+            items={realModules.map((m) => m.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {realModules.map((module, index) => (
+              <SortableItem key={module.id} id={module.id}>
+                {({ ref, style, listeners, isDragging }) => (
+                  <div ref={ref} style={style}>
+                    {renderModuleCard(module, index, false, {
+                      listeners,
+                      isDragging,
+                    })}
+                  </div>
+                )}
+              </SortableItem>
+            ))}
+          </SortableContext>
 
-              return (
-                <SortableItem key={module.id} id={module.id}>
-                  {({ ref, style, listeners, isDragging }) => (
-                    <div ref={ref} style={style}>
-                      <Collapsible
-                        open={isOpen}
-                        onOpenChange={() => toggleModule(module.id)}
-                      >
-                        <Card className={isDragging ? "opacity-50" : ""}>
-                          <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                            <button
-                              type="button"
-                              className="cursor-grab touch-none"
-                              {...listeners}
-                            >
-                              <GripVertical className="size-5 text-muted-foreground" />
-                            </button>
-                            <CollapsibleTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-8"
-                              >
-                                {isOpen ? (
-                                  <ChevronDown className="size-4" />
-                                ) : (
-                                  <ChevronRight className="size-4" />
-                                )}
-                              </Button>
-                            </CollapsibleTrigger>
-                            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
-                              {index + 1}
-                            </div>
-                            <div className="flex-1">
-                              <CardTitle className="text-base">
-                                {module.title}
-                              </CardTitle>
-                              {module.description && (
-                                <CardDescription className="mt-0.5 text-xs">
-                                  {module.description}
-                                </CardDescription>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant={
-                                  statusVariant[module.status] ?? "outline"
-                                }
-                              >
-                                {module.status}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {children.length} items
-                              </span>
-                              {!moduleIsVirtual && (
-                                <div className="flex items-center gap-1">
-                                  <ContentActionButton
-                                    label="Edit module"
-                                    icon={Edit}
-                                    onClick={() => openEditModuleDialog(module)}
-                                  />
-                                  <ContentActionButton
-                                    label="Duplicate module"
-                                    icon={Copy}
-                                    onClick={() => handleDuplicate(module)}
-                                    disabled={isPending}
-                                  />
-                                  <ContentActionButton
-                                    label="Add submodule"
-                                    icon={Plus}
-                                    onClick={() =>
-                                      openAddSubmoduleDialog(module.id)
-                                    }
-                                  />
-                                  <ContentActionButton
-                                    label="Move module up"
-                                    icon={ArrowUp}
-                                    onClick={() =>
-                                      handleMoveModule(module.id, "up")
-                                    }
-                                    disabled={isPending || index === 0}
-                                  />
-                                  <ContentActionButton
-                                    label="Move module down"
-                                    icon={ArrowDown}
-                                    onClick={() =>
-                                      handleMoveModule(module.id, "down")
-                                    }
-                                    disabled={
-                                      isPending || index === modules.length - 1
-                                    }
-                                  />
-                                  <ContentActionButton
-                                    label="Delete module"
-                                    icon={Trash2}
-                                    onClick={() =>
-                                      setDeleteTarget({
-                                        id: module.id,
-                                        title: module.title,
-                                        isModule: true,
-                                      })
-                                    }
-                                    destructive
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </CardHeader>
-                          <CollapsibleContent>
-                            <CardContent className="pt-0">
-                              {children.length === 0 ? (
-                                <p className="py-4 text-center text-sm text-muted-foreground">
-                                  No content items yet
-                                </p>
-                              ) : (
-                                <DndContext
-                                  sensors={sensors}
-                                  collisionDetection={closestCenter}
-                                  onDragEnd={makeLessonDragEnd(
-                                    module.id,
-                                    children,
-                                  )}
-                                >
-                                  <SortableContext
-                                    items={children.map((c) => c.id)}
-                                    strategy={verticalListSortingStrategy}
-                                  >
-                                    <div className="divide-y rounded-lg border">
-                                      {children.map((item, itemIndex) => {
-                                        const subchildren = allItems
-                                          .filter((i) => i.parentId === item.id)
-                                          .sort((a, b) => a.order - b.order);
-                                        const isSubmodule =
-                                          subchildren.length > 0;
-                                        const config = typeConfig[
-                                          item.type
-                                        ] ?? {
-                                          icon: FileText,
-                                          label: item.type,
-                                        };
-                                        const Icon = config.icon;
-                                        return (
-                                          <SortableItem
-                                            key={item.id}
-                                            id={item.id}
-                                          >
-                                            {({
-                                              ref: itemRef,
-                                              style: itemStyle,
-                                              listeners: itemListeners,
-                                              isDragging: itemDragging,
-                                            }) => (
-                                              <div
-                                                ref={itemRef}
-                                                style={itemStyle}
-                                              >
-                                                <div
-                                                  className={`group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50 ${itemDragging ? "opacity-50" : ""}`}
-                                                >
-                                                  <button
-                                                    type="button"
-                                                    className="cursor-grab touch-none"
-                                                    {...itemListeners}
-                                                  >
-                                                    <GripVertical className="size-4 text-muted-foreground/50" />
-                                                  </button>
-                                                  <div className="flex size-8 items-center justify-center rounded bg-muted">
-                                                    <Icon className="size-4 text-muted-foreground" />
-                                                  </div>
-                                                  <div className="flex-1">
-                                                    <p className="text-sm font-medium">
-                                                      {item.title}
-                                                    </p>
-                                                    {isSubmodule && (
-                                                      <p className="text-xs text-muted-foreground">
-                                                        {subchildren.length}{" "}
-                                                        sub-items
-                                                      </p>
-                                                    )}
-                                                  </div>
-                                                  <Badge
-                                                    variant="outline"
-                                                    className="text-xs capitalize"
-                                                  >
-                                                    {config.label}
-                                                  </Badge>
-                                                  <Badge
-                                                    variant={
-                                                      statusVariant[
-                                                        item.status
-                                                      ] ?? "outline"
-                                                    }
-                                                    className="text-xs"
-                                                  >
-                                                    {item.status}
-                                                  </Badge>
-                                                  {item.duration != null &&
-                                                    item.duration > 0 && (
-                                                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                        <Clock className="size-3" />
-                                                        {item.duration}m
-                                                      </span>
-                                                    )}
-                                                  <div className="flex items-center gap-1">
-                                                    <ContentActionButton
-                                                      label={`Edit ${config.label}`}
-                                                      icon={Edit}
-                                                      onClick={() =>
-                                                        navigateToContentItem(
-                                                          item.id,
-                                                        )
-                                                      }
-                                                      className="size-7"
-                                                    />
-                                                    <ContentActionButton
-                                                      label="Duplicate"
-                                                      icon={Copy}
-                                                      onClick={() =>
-                                                        handleDuplicate(item)
-                                                      }
-                                                      disabled={isPending}
-                                                      className="size-7"
-                                                    />
-                                                    <ContentActionButton
-                                                      label="Move up"
-                                                      icon={ArrowUp}
-                                                      onClick={() =>
-                                                        handleMoveLesson(
-                                                          module.id,
-                                                          item.id,
-                                                          "up",
-                                                        )
-                                                      }
-                                                      disabled={
-                                                        isPending ||
-                                                        itemIndex === 0
-                                                      }
-                                                      className="size-7"
-                                                    />
-                                                    <ContentActionButton
-                                                      label="Move down"
-                                                      icon={ArrowDown}
-                                                      onClick={() =>
-                                                        handleMoveLesson(
-                                                          module.id,
-                                                          item.id,
-                                                          "down",
-                                                        )
-                                                      }
-                                                      disabled={
-                                                        isPending ||
-                                                        itemIndex ===
-                                                          children.length - 1
-                                                      }
-                                                      className="size-7"
-                                                    />
-                                                    <ContentActionButton
-                                                      label="Delete"
-                                                      icon={Trash2}
-                                                      onClick={() =>
-                                                        setDeleteTarget({
-                                                          id: item.id,
-                                                          title: item.title,
-                                                          isModule: false,
-                                                        })
-                                                      }
-                                                      destructive
-                                                      className="size-7"
-                                                    />
-                                                  </div>
-                                                </div>
-                                                {isSubmodule && (
-                                                  <div className="ml-8 border-l pl-4 pb-2">
-                                                    {subchildren.map((sub) => {
-                                                      const subConfig =
-                                                        typeConfig[
-                                                          sub.type
-                                                        ] ?? {
-                                                          icon: FileText,
-                                                          label: sub.type,
-                                                        };
-                                                      const SubIcon =
-                                                        subConfig.icon;
-                                                      return (
-                                                        <div
-                                                          key={sub.id}
-                                                          className="group flex items-center gap-3 px-4 py-2 transition-colors hover:bg-muted/30"
-                                                        >
-                                                          <div className="flex size-6 items-center justify-center rounded bg-muted">
-                                                            <SubIcon className="size-3 text-muted-foreground" />
-                                                          </div>
-                                                          <div className="flex-1">
-                                                            <p className="text-sm">
-                                                              {sub.title}
-                                                            </p>
-                                                          </div>
-                                                          <Badge
-                                                            variant="outline"
-                                                            className="text-xs"
-                                                          >
-                                                            {subConfig.label}
-                                                          </Badge>
-                                                          <Badge
-                                                            variant={
-                                                              statusVariant[
-                                                                sub.status
-                                                              ] ?? "outline"
-                                                            }
-                                                            className="text-xs"
-                                                          >
-                                                            {sub.status}
-                                                          </Badge>
-                                                          <div className="flex items-center gap-1">
-                                                            <ContentActionButton
-                                                              label="Edit"
-                                                              icon={Edit}
-                                                              onClick={() =>
-                                                                navigateToContentItem(
-                                                                  sub.id,
-                                                                )
-                                                              }
-                                                              className="size-6"
-                                                            />
-                                                            <ContentActionButton
-                                                              label="Delete"
-                                                              icon={Trash2}
-                                                              onClick={() =>
-                                                                setDeleteTarget(
-                                                                  {
-                                                                    id: sub.id,
-                                                                    title:
-                                                                      sub.title,
-                                                                    isModule: false,
-                                                                  },
-                                                                )
-                                                              }
-                                                              destructive
-                                                              className="size-6"
-                                                            />
-                                                          </div>
-                                                        </div>
-                                                      );
-                                                    })}
-                                                    <Button
-                                                      variant="ghost"
-                                                      size="sm"
-                                                      className="mt-1 w-full text-xs text-muted-foreground"
-                                                      onClick={() =>
-                                                        openAddLessonDialog(
-                                                          item.id,
-                                                        )
-                                                      }
-                                                    >
-                                                      <Plus className="mr-1 size-3" />
-                                                      Add to {item.title}
-                                                    </Button>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            )}
-                                          </SortableItem>
-                                        );
-                                      })}
-                                    </div>
-                                  </SortableContext>
-                                </DndContext>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="mt-2 w-full text-muted-foreground"
-                                onClick={() => openAddLessonDialog(module.id)}
-                              >
-                                <Plus className="mr-2 size-4" />
-                                {moduleIsVirtual
-                                  ? "Add Content Item"
-                                  : "Add Lesson"}
-                              </Button>
-                            </CardContent>
-                          </CollapsibleContent>
-                        </Card>
-                      </Collapsible>
-                    </div>
-                  )}
-                </SortableItem>
-              );
-            })}
+          {virtualModules.map((module, vIndex) => (
+            <div key={module.id}>
+              {renderModuleCard(
+                module,
+                realModules.length + vIndex,
+                true,
+              )}
+            </div>
+          ))}
 
-            {/* Add Module button at the bottom */}
-            <Button
-              variant="outline"
-              className="w-full border-dashed"
-              onClick={() => {
-                setModuleTitle("");
-                setModuleDescription("");
-                setError("");
-                setShowAddModule(true);
-              }}
-            >
-              <Plus className="mr-2 size-4" />
-              Add Module
-            </Button>
-          </div>
-        </SortableContext>
+          {/* Add Module button at the bottom */}
+          <Button
+            variant="outline"
+            className="w-full border-dashed"
+            onClick={() => {
+              setModuleTitle("");
+              setModuleDescription("");
+              setError("");
+              setShowAddModule(true);
+            }}
+          >
+            <Plus className="mr-2 size-4" />
+            Add Module
+          </Button>
+        </div>
       </DndContext>
 
       <Dialog open={showAddModule} onOpenChange={setShowAddModule}>

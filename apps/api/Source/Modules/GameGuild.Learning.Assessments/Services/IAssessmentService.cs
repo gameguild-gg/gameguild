@@ -94,6 +94,28 @@ public interface IAssessmentService
     /// </summary>
     Task<IEnumerable<InteractiveVideoAssessmentCue>> GetInteractiveVideoCuesForContentAsync(Guid assessmentId, Guid contentId);
 
+    // ===== CODING DEFINITION (v2) =====
+
+    /// <summary>
+    /// Returns the v2 coding definition for an assessment, or null when the payload is absent, v1, or not kind "coding".
+    /// </summary>
+    Task<CodingAssignmentDefinition?> GetCodingDefinitionAsync(Guid assessmentId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns the v2 coding definition with hidden test cases stripped. Null when payload is absent, v1, or not kind "coding".
+    /// </summary>
+    Task<CodingAssignmentDefinition?> GetPublicCodingDefinitionAsync(Guid assessmentId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns the unredacted v2 coding definition (all test cases including hidden). Null when payload is absent, v1, or not kind "coding".
+    /// </summary>
+    Task<CodingAssignmentDefinition?> GetFullCodingDefinitionAsync(Guid assessmentId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Validates and persists a v2 coding definition into Assessment.DefinitionPayload (jsonb).
+    /// </summary>
+    Task<Result> UpdateCodingDefinitionAsync(Guid assessmentId, CodingAssignmentDefinition def, CancellationToken ct = default);
+
     // ===== SUBMISSION MANAGEMENT =====
 
     /// <summary>
