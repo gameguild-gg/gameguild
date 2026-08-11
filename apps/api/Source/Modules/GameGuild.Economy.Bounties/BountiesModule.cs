@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GameGuild.Economy.Bounties;
 
@@ -8,7 +9,12 @@ public sealed class BountiesModule : ModuleBase
     public override string Name => "Economy.Bounties";
     public override bool EnabledByDefault => false;
     public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
-        => services;
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
+        services.TryAddScoped<IBountyEscrowStore, PostgreSqlBountyEscrowStore>();
+        return services;
+    }
 }
 
 public static class BountiesCompositionExtensions
