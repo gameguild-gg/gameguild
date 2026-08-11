@@ -4968,6 +4968,21 @@ export const getEconomyWalletTransactionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Convert my confirmed HardCoin balance into SoftCoin
+ */
+export interface PostEconomyConversionsHardToSoftInput {
+  body?: Types.EconomyCommandsConvertMyHardToSoftInput;
+}
+export type PostEconomyConversionsHardToSoftOutput = Types.EconomyFundingSelfServiceHardToSoftConversionReceipt;
+export const postEconomyConversionsHardToSoftEndpoint = {
+  operationId: 'postEconomyConversionsHardToSoft' as const,
+  method: 'POST' as const,
+  path: '/api/v1/economy/conversions/hard-to-soft' as const,
+  tags: ['Economy'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiLearningEnrollmentsInput {
   id: string;
 }
@@ -14350,6 +14365,7 @@ export const endpoints = {
   postApiSocialDiscussionsResolve: postApiSocialDiscussionsResolveEndpoint,
   getEconomyWallet: getEconomyWalletEndpoint,
   getEconomyWalletTransactions: getEconomyWalletTransactionsEndpoint,
+  postEconomyConversionsHardToSoft: postEconomyConversionsHardToSoftEndpoint,
   getApiLearningEnrollments: getApiLearningEnrollmentsEndpoint,
   getApiLearningEnrollmentsUsers: getApiLearningEnrollmentsUsersEndpoint,
   getApiLearningEnrollmentsCourses: getApiLearningEnrollmentsCoursesEndpoint,
