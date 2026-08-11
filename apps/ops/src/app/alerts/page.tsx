@@ -38,7 +38,10 @@ const SEVERITY_BADGE: Record<Severity, string> = {
 };
 
 function timeAgo(iso: string): string {
-  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (!iso) return "unknown";
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "unknown";
+  const mins = Math.floor((Date.now() - date.getTime()) / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
@@ -48,7 +51,7 @@ function timeAgo(iso: string): string {
 
 export default function AlertsPage() {
   const { data, isLoading, error } = useAlerts();
-  const alerts = (data as Alert[] | undefined) ?? [];
+  const alerts = Array.isArray(data) ? (data as Alert[]) : [];
 
   if (isLoading) {
     return <div className="text-muted-foreground">Loading alerts…</div>;

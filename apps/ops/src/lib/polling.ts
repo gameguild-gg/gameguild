@@ -6,11 +6,20 @@ export const POLL_INTERVAL = 15000;
 
 // ponytail: 10 explicit hooks, no factory. Each is tree-shakeable and the
 // queryKey is self-documenting at the call site.
+//
+// Every queryFn checks res.ok before parsing JSON. Without this, a 500 with
+// body {error:"..."} resolves successfully and TanStack Query stores that
+// object as `data` — pages then call .map() on it and crash. Throwing on
+// non-2xx routes the response into `error` so the page's error branch renders.
 
 export function useNodes() {
   return useQuery({
     queryKey: ["nodes"],
-    queryFn: () => fetch("/api/nodes").then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch("/api/nodes");
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      return res.json();
+    },
     refetchInterval: POLL_INTERVAL,
   });
 }
@@ -18,7 +27,11 @@ export function useNodes() {
 export function usePods() {
   return useQuery({
     queryKey: ["pods"],
-    queryFn: () => fetch("/api/pods").then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch("/api/pods");
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      return res.json();
+    },
     refetchInterval: POLL_INTERVAL,
   });
 }
@@ -26,7 +39,11 @@ export function usePods() {
 export function useEvents() {
   return useQuery({
     queryKey: ["events"],
-    queryFn: () => fetch("/api/events").then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch("/api/events");
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      return res.json();
+    },
     refetchInterval: POLL_INTERVAL,
   });
 }
@@ -34,7 +51,11 @@ export function useEvents() {
 export function useLonghorn() {
   return useQuery({
     queryKey: ["longhorn"],
-    queryFn: () => fetch("/api/longhorn").then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch("/api/longhorn");
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      return res.json();
+    },
     refetchInterval: POLL_INTERVAL,
   });
 }
@@ -42,7 +63,11 @@ export function useLonghorn() {
 export function useCnpg() {
   return useQuery({
     queryKey: ["cnpg"],
-    queryFn: () => fetch("/api/cnpg").then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch("/api/cnpg");
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      return res.json();
+    },
     refetchInterval: POLL_INTERVAL,
   });
 }
@@ -50,7 +75,11 @@ export function useCnpg() {
 export function useGarage() {
   return useQuery({
     queryKey: ["garage"],
-    queryFn: () => fetch("/api/garage").then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch("/api/garage");
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      return res.json();
+    },
     refetchInterval: POLL_INTERVAL,
   });
 }
@@ -58,7 +87,11 @@ export function useGarage() {
 export function useAlerts() {
   return useQuery({
     queryKey: ["alerts"],
-    queryFn: () => fetch("/api/alerts").then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch("/api/alerts");
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      return res.json();
+    },
     refetchInterval: POLL_INTERVAL,
   });
 }
@@ -66,7 +99,11 @@ export function useAlerts() {
 export function useServices() {
   return useQuery({
     queryKey: ["services"],
-    queryFn: () => fetch("/api/services").then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch("/api/services");
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      return res.json();
+    },
     refetchInterval: POLL_INTERVAL,
   });
 }
@@ -74,7 +111,11 @@ export function useServices() {
 export function useVelero() {
   return useQuery({
     queryKey: ["velero"],
-    queryFn: () => fetch("/api/velero").then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch("/api/velero");
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      return res.json();
+    },
     refetchInterval: POLL_INTERVAL,
   });
 }
@@ -88,6 +129,7 @@ export function usePrometheus(query: string, options?: { enabled?: boolean }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),
       });
+      if (!res.ok) throw new Error(`API ${res.status}`);
       return res.json();
     },
     enabled: options?.enabled,
