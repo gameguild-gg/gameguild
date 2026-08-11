@@ -7,6 +7,8 @@ using GameGuild.Economy.Risk;
 using GameGuild.TrustSafety;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 
 namespace GameGuild.API.UnitTests.Core;
 
@@ -87,5 +89,27 @@ public sealed class EconomyCapabilityCompositionTests
         FluentActions.Invoking(() => EconomyProviderCapabilityGuard.ThrowIfInvalid(
                 economy, new StripeGatewayOptions(), new BillingConfiguration(), "Production"))
             .Should().NotThrow();
+    }
+
+    [Fact]
+    public void ProviderReadinessIsComposedWithoutMakingStripeAStartupRequirement()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IHostEnvironment>(new TestHostEnvironment("Staging"));
+        services.AddEconomyCapabilityComposition(new ConfigurationBuilder().Build());
+
+        using var provider = services.BuildServiceProvider();
+        var readiness = provider.GetRequiredService<IEconomyProviderCapabilityReadiness>();
+
+        readiness.Assess(EconomyValueMovementCapability.PayoutExecution)
+            .State.Should().Be(EconomyCapabilityReadinessState.Disabled);
+    }
+
+    private sealed class TestHostEnvironment(string environmentName) : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = environmentName;
+        public string ApplicationName { get; set; } = "GameGuild.API.UnitTests";
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 }

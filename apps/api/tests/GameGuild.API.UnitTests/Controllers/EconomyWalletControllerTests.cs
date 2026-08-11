@@ -1,10 +1,12 @@
 using FluentAssertions;
 using GameGuild.API.Controllers;
+using GameGuild.API.Setup;
 using GameGuild.CQRS;
 using GameGuild.Economy.Commands;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Payouts;
 using GameGuild.Economy.Payouts.Queries;
+using GameGuild.Economy.Risk;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -17,7 +19,7 @@ public sealed class EconomyWalletControllerTests
     public async Task ConvertMyHardToSoft_WhenActorHasNoSelfServiceContext_ReturnsForbid()
     {
         var sender = new Mock<ISender>(MockBehavior.Strict);
-        var controller = new EconomyWalletController(sender.Object, new ActorContextAccessor());
+        var controller = CreateController(sender.Object, new ActorContextAccessor());
 
         var result = await controller.ConvertMyHardToSoft(
             new ConvertMyHardToSoftRequest(100, 0, Guid.NewGuid(), "conversion-key"),
@@ -52,7 +54,7 @@ public sealed class EconomyWalletControllerTests
             Permissions = new HashSet<string>(),
             IsAuthenticated = true,
         });
-        var controller = new EconomyWalletController(sender.Object, accessor);
+        var controller = CreateController(sender.Object, accessor);
 
         var result = await controller.ConvertMyHardToSoft(request, CancellationToken.None);
 
@@ -66,12 +68,12 @@ public sealed class EconomyWalletControllerTests
     public async Task ListMyPayouts_RequiresSelfServiceContextAndAValidTake()
     {
         var sender = new Mock<ISender>(MockBehavior.Strict);
-        var controller = new EconomyWalletController(sender.Object, new ActorContextAccessor());
+        var controller = CreateController(sender.Object, new ActorContextAccessor());
 
         (await controller.ListMyPayouts(50, CancellationToken.None)).Should().BeOfType<ForbidResult>();
 
         var accessor = CreateAccessor();
-        controller = new EconomyWalletController(sender.Object, accessor);
+        controller = CreateController(sender.Object, accessor);
         (await controller.ListMyPayouts(0, CancellationToken.None)).Should().BeOfType<BadRequestObjectResult>();
         sender.Verify(value => value.Send(
             It.IsAny<ListMyPayoutOperationsQuery>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -92,7 +94,7 @@ public sealed class EconomyWalletControllerTests
                 It.Is<ListMyPayoutOperationsQuery>(query => query.PayeeId == actorId && query.Take == 25),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<EconomyPayoutOperationDto>)[payout]);
-        var controller = new EconomyWalletController(sender.Object, CreateAccessor(actorId));
+        var controller = CreateController(sender.Object, CreateAccessor(actorId));
 
         var result = await controller.ListMyPayouts(25, CancellationToken.None);
 
@@ -110,7 +112,7 @@ public sealed class EconomyWalletControllerTests
                 It.Is<GetMyPayoutOperationQuery>(query => query.PayeeId == actorId && query.OperationId == operationId),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((EconomyPayoutOperationDto?)null);
-        var controller = new EconomyWalletController(sender.Object, CreateAccessor(actorId));
+        var controller = CreateController(sender.Object, CreateAccessor(actorId));
 
         var result = await controller.GetMyPayout(operationId, CancellationToken.None);
 
@@ -121,7 +123,7 @@ public sealed class EconomyWalletControllerTests
     public async Task GetMyPayout_RequiresSelfServiceContext()
     {
         var sender = new Mock<ISender>(MockBehavior.Strict);
-        var controller = new EconomyWalletController(sender.Object, new ActorContextAccessor());
+        var controller = CreateController(sender.Object, new ActorContextAccessor());
 
         var result = await controller.GetMyPayout(Guid.NewGuid(), CancellationToken.None);
 
@@ -146,11 +148,44 @@ public sealed class EconomyWalletControllerTests
                 It.Is<GetMyPayoutOperationQuery>(query => query.PayeeId == actorId && query.OperationId == operationId),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(payout);
-        var controller = new EconomyWalletController(sender.Object, CreateAccessor(actorId));
+        var controller = CreateController(sender.Object, CreateAccessor(actorId));
 
         var result = await controller.GetMyPayout(operationId, CancellationToken.None);
 
         result.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(payout);
+    }
+
+    [Fact]
+    public void GetMyCapabilityReadiness_ReturnsOnlySelfServiceCapabilityStates()
+    {
+        var readiness = new Mock<IEconomyProviderCapabilityReadiness>(MockBehavior.Strict);
+        readiness.Setup(value => value.Assess(EconomyValueMovementCapability.ConvertHardToSoft))
+            .Returns(new EconomyCapabilityReadinessResult(
+                EconomyValueMovementCapability.ConvertHardToSoft,
+                EconomyCapabilityReadinessState.Ready,
+                []));
+        readiness.Setup(value => value.Assess(EconomyValueMovementCapability.PayoutExecution))
+            .Returns(new EconomyCapabilityReadinessResult(
+                EconomyValueMovementCapability.PayoutExecution,
+                EconomyCapabilityReadinessState.ProviderNotReady,
+                ["Provider configuration is incomplete."]));
+        var controller = new EconomyWalletController(
+            Mock.Of<ISender>(),
+            CreateAccessor(),
+            readiness.Object);
+
+        var result = controller.GetMyCapabilityReadiness();
+
+        result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeEquivalentTo(
+        new EconomySelfServiceCapabilityDto[]
+        {
+            new EconomySelfServiceCapabilityDto(
+                EconomyValueMovementCapability.ConvertHardToSoft,
+                EconomyCapabilityReadinessState.Ready),
+            new EconomySelfServiceCapabilityDto(
+                EconomyValueMovementCapability.PayoutExecution,
+                EconomyCapabilityReadinessState.ProviderNotReady)
+        });
     }
 
     private static ActorContextAccessor CreateAccessor(Guid? actorId = null)
@@ -167,4 +202,9 @@ public sealed class EconomyWalletControllerTests
         });
         return accessor;
     }
+
+    private static EconomyWalletController CreateController(ISender sender, IActorContextAccessor accessor) => new(
+        sender,
+        accessor,
+        Mock.Of<IEconomyProviderCapabilityReadiness>());
 }

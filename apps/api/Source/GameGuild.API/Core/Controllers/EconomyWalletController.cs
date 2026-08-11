@@ -1,10 +1,12 @@
 using Asp.Versioning;
+using GameGuild.API.Setup;
 using GameGuild.CQRS;
 using GameGuild.Economy.Commands;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Payouts.Queries;
 using GameGuild.Economy.Queries;
+using GameGuild.Economy.Risk;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -12,11 +14,18 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.API.Controllers;
 
+public sealed record EconomySelfServiceCapabilityDto(
+    EconomyValueMovementCapability Capability,
+    EconomyCapabilityReadinessState State);
+
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/economy")]
 [Tags("economy")]
 [Authorize]
-public sealed class EconomyWalletController(ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController
+public sealed class EconomyWalletController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor,
+    IEconomyProviderCapabilityReadiness capabilityReadiness) : BaseApiController
 {
     [HttpGet("wallet")]
     [EndpointSummary("Get my Economy wallet")]
@@ -57,6 +66,28 @@ public sealed class EconomyWalletController(ISender sender, IActorContextAccesso
         ArgumentNullException.ThrowIfNull(request);
         var receipt = await sender.Send(new ConvertMyHardToSoftCommand(request), cancellationToken).ConfigureAwait(false);
         return Ok(receipt);
+    }
+
+    [HttpGet("capabilities")]
+    [EndpointSummary("Get my Economy capability readiness")]
+    [ProducesResponseType(typeof(IReadOnlyList<EconomySelfServiceCapabilityDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public IActionResult GetMyCapabilityReadiness()
+    {
+        if (!HasSelfServiceContext())
+            return Forbid();
+
+        EconomyValueMovementCapability[] capabilities =
+        [
+            EconomyValueMovementCapability.ConvertHardToSoft,
+            EconomyValueMovementCapability.PayoutExecution
+        ];
+        var result = capabilities
+            .Select(capability => new EconomySelfServiceCapabilityDto(
+                capability,
+                capabilityReadiness.Assess(capability).State))
+            .ToArray();
+        return Ok(result);
     }
 
     [HttpGet("payouts")]
