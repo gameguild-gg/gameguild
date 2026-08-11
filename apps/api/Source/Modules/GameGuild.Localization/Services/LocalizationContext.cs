@@ -11,6 +11,10 @@ public class LocalizationContext : ILocalizationContext
 {
     private static readonly CultureInfo DefaultCulture = CultureInfo.GetCultureInfo("en-US");
     private static readonly TimeZoneInfo DefaultTimeZone = TimeZoneInfo.Utc;
+    private static readonly HashSet<string> SupportedCultureNames = CultureInfo
+        .GetCultures(CultureTypes.SpecificCultures | CultureTypes.NeutralCultures)
+        .Select(culture => culture.Name)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
     
     private readonly CultureInfo _currentCulture;
     private readonly CultureInfo _currentUiCulture;
@@ -86,7 +90,10 @@ public class LocalizationContext : ILocalizationContext
                 {
                     // Parse first language from header (e.g., "en-US,en;q=0.9" -> "en-US")
                     var primaryLanguage = acceptLanguage.Split(',')[0].Split(';')[0].Trim();
-                    return CultureInfo.GetCultureInfo(primaryLanguage);
+                    if (SupportedCultureNames.Contains(primaryLanguage))
+                    {
+                        return CultureInfo.GetCultureInfo(primaryLanguage);
+                    }
                 }
                 catch (CultureNotFoundException)
                 {

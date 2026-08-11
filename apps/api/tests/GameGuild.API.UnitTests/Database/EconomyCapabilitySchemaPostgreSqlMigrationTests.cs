@@ -104,7 +104,8 @@ public sealed class EconomyCapabilitySchemaPostgreSqlMigrationTests
         await migrator.MigrateAsync(RollupMigration);
         await migrator.MigrateAsync(RollupMigration);
         (await CapabilityTableCountAsync(connection)).Should().Be(ExpectedTables.Length);
-        (await context.Database.GetPendingMigrationsAsync()).Should().BeEmpty();
+        var appliedMigrations = await context.Database.GetAppliedMigrationsAsync();
+        appliedMigrations.Count(migration => migration == RollupMigration).Should().Be(1);
     }
 
     private static async Task AssertAiCostConstraintsAsync(NpgsqlConnection connection)

@@ -17,5 +17,6 @@ public partial class ReconcileEconomyWalletDebtPersistence : Migration
 
     protected override void Down(MigrationBuilder migrationBuilder)
     {
+        RestoreWalletDebtPersistence(migrationBuilder);
     }
 }

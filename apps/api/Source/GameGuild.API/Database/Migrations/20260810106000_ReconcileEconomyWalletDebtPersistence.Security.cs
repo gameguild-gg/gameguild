@@ -6,6 +6,19 @@ namespace GameGuild.API.Database.Migrations;
 
 public partial class ReconcileEconomyWalletDebtPersistence
 {
+    private static void RestoreWalletDebtPersistence(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.Sql(
+            """
+            DROP TABLE IF EXISTS public.economy_wallet_debt_events;
+            DROP TABLE IF EXISTS public.economy_wallet_debts;
+            ALTER TABLE public.economy_wallet_debt_events_legacy RENAME TO economy_wallet_debt_events;
+            ALTER TABLE public.economy_wallet_debts_legacy RENAME TO economy_wallet_debts;
+            """);
+
+        HardenEconomyProviderReversalWriter.InstallHardenedProviderReversalWriter(migrationBuilder);
+    }
+
     private static void ReconcileWalletDebtPersistence(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.Sql(
