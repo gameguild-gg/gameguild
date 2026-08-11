@@ -31,6 +31,11 @@ apps/web/.next/
 apps/learning/node_modules/
 apps/learning/.next/
 
+# Allow ops app and its contents
+!apps/ops/**
+apps/ops/node_modules/
+apps/ops/.next/
+
 # Allow website app and its contents
 !apps/website/**
 apps/website/node_modules/
