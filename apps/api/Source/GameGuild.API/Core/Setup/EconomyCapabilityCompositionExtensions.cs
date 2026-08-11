@@ -65,14 +65,15 @@ public sealed class EconomyProviderCapabilityReadiness(
         ArgumentNullException.ThrowIfNull(billingOptions);
         ArgumentNullException.ThrowIfNull(hostEnvironment);
 
-        EconomyRiskCompositionOptions economy = economyOptions.Value;
+        EconomyRiskCompositionOptions economy;
         IReadOnlySet<EconomyValueMovementCapability> enabledCapabilities;
         try
         {
+            economy = economyOptions.Value;
             EconomyValueMovementCapabilities.Validate(economy);
             enabledCapabilities = EconomyValueMovementCapabilities.Parse(economy.EnabledCapabilities);
         }
-        catch (EconomyCapabilityConfigurationException exception)
+        catch (Exception exception) when (exception is EconomyCapabilityConfigurationException or OptionsValidationException)
         {
             return new EconomyCapabilityReadinessResult(
                 capability,
