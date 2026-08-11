@@ -46,6 +46,7 @@ public sealed class SecurityServiceCollectionExtensionsTests
     [InlineData("Admin")]
     [InlineData("SystemAdmin")]
     [InlineData("TenantAdmin")]
+    [InlineData("Owner")]
     public async Task UserManagementPolicies_ShouldAuthorizeAdministrativeRoles(string role)
     {
         using var serviceProvider = BuildServiceProvider();
@@ -73,6 +74,29 @@ public sealed class SecurityServiceCollectionExtensionsTests
         var principal = CreatePrincipal("User");
 
         var result = await AuthorizeAsync(serviceProvider, principal, Policies.UsersCreate);
+
+        Assert.False(result.Succeeded);
+    }
+
+    [Fact]
+    public async Task SystemAdminPolicy_ShouldAuthorizeOnlySystemAdmin()
+    {
+        using var serviceProvider = BuildServiceProvider();
+
+        var result = await AuthorizeAsync(serviceProvider, CreatePrincipal("SystemAdmin"), Policies.SystemAdmin);
+
+        Assert.True(result.Succeeded);
+    }
+
+    [Theory]
+    [InlineData("Admin")]
+    [InlineData("TenantAdmin")]
+    [InlineData("Owner")]
+    public async Task SystemAdminPolicy_ShouldRejectTenantScopedAdministrativeRoles(string role)
+    {
+        using var serviceProvider = BuildServiceProvider();
+
+        var result = await AuthorizeAsync(serviceProvider, CreatePrincipal(role), Policies.SystemAdmin);
 
         Assert.False(result.Succeeded);
     }

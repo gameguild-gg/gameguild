@@ -63,8 +63,28 @@ public class RemoveTenantMemberCommandHandlerTests
 
         var result = await _handler.Handle(new TestRemoveTenantMemberCommand(tenantId, userId), CancellationToken.None);
 
-        result.Success.Should().BeTrue();
-        _memberRepositoryMock.Verify(r => r.DeleteAsync(member.Id, It.IsAny<CancellationToken>()), Times.Once);
+        result.Success.Should().BeFalse();
+        _memberRepositoryMock.Verify(r => r.DeleteAsync(member.Id, It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_WhenTenantIsDefault_Should_RejectRemoval()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenant = new Tenant { Id = tenantId, Name = "GameGuild", Slug = "gameguild", IsDefault = true };
+        var member = new TenantMember { TenantId = tenantId, UserId = userId, Role = "Member", Tenant = tenant };
+
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        var result = await _handler.Handle(new TestRemoveTenantMemberCommand(tenantId, userId), CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("default tenant");
+        _memberRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private sealed record TestRemoveTenantMemberCommand(Guid TenantId, Guid UserId)

@@ -99,6 +99,38 @@ public class TenantMiddlewareSecurityTests
     }
 
     [Fact]
+    public async Task Should_NotTreatTenantAdminAsSystemAdmin_WhenNotMemberOfResolvedTenant()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var tenant = new Tenant { Id = tenantId, Name = "Other tenant", Slug = "other", IsActive = true };
+        var context = CreateHttpContext(
+            isAuthenticated: true,
+            userId: userId,
+            tenantIdHeader: tenantId.ToString(),
+            roles: ["Admin"]);
+
+        _mediatorMock
+            .Setup(m => m.Send(It.Is<GetTenantByIdQuery>(q => q.TenantId == tenantId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+        _memberRepoMock
+            .Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantMember?)null);
+
+        await _middleware.InvokeAsync(
+            context,
+            _mediatorMock.Object,
+            _domainRepoMock.Object,
+            _memberRepoMock.Object);
+
+        context.Response.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        _nextMock.Verify(n => n(context), Times.Never);
+        _memberRepoMock.Verify(
+            r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task Should_Return403_WhenAuthenticatedUserNotMember()
     {
         // Arrange

@@ -29,7 +29,10 @@ internal static class DefaultTenantMembershipProvisioner
         var existingMembership = memberships.Memberships
             .FirstOrDefault(membership => membership.TenantId == defaultTenant.Id);
 
-        if (existingMembership?.IsActive == true)
+        var hasValidInviteState = string.IsNullOrWhiteSpace(existingMembership?.InviteStatus) ||
+                                  string.Equals(existingMembership.InviteStatus, TenantMemberInviteStatuses.Accepted, StringComparison.OrdinalIgnoreCase);
+
+        if (existingMembership?.IsActive == true && hasValidInviteState)
         {
             return;
         }

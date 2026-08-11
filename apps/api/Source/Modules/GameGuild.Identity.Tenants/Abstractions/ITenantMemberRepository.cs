@@ -33,6 +33,15 @@ public interface ITenantMemberRepository
     Task<TenantMember?> GetByUserAndTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Get a tenant member even when it was soft-deleted. This recovery-only query
+    ///     exists so the mandatory default-tenant membership can be restored safely.
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <param name="tenantId">The tenant ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task<TenantMember?> GetByUserAndTenantIncludingDeletedAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Create a new tenant member
     /// </summary>
     /// <param name="member">The tenant member to create</param>
