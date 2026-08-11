@@ -16,16 +16,14 @@ public sealed class HardToSoftConversionWorkflowTests
     [Fact]
     public void RequestReceiptAndRejection_ExposeTheirExactValues()
     {
-        var decisionId = Guid.NewGuid();
         var postingId = Guid.NewGuid();
         var feePostingId = Guid.NewGuid();
-        var request = new SelfServiceHardToSoftConversionRequest(100, 3, decisionId, "conversion-key");
+        var request = new SelfServiceHardToSoftConversionRequest(100, 3, "conversion-key");
         var receipt = new SelfServiceHardToSoftConversionReceipt(postingId, feePostingId, 17, "journal-hash", true);
         var rejection = new EconomySelfServiceCommandRejectedException("rejected");
 
         request.PrincipalHardCoinUnits.Should().Be(100);
         request.FeeHardCoinUnits.Should().Be(3);
-        request.RiskDecisionId.Should().Be(decisionId);
         request.IdempotencyKey.Should().Be("conversion-key");
         receipt.PrincipalPostingId.Should().Be(postingId);
         receipt.FeePostingId.Should().Be(feePostingId);
@@ -75,13 +73,13 @@ public sealed class HardToSoftConversionWorkflowTests
         Func<Task> cancelled = () => workflow.ConvertAsync(valid, new CancellationToken(canceled: true));
         Func<Task> invalidPrincipal = () => workflow.ConvertAsync(valid with { PrincipalHardCoinUnits = 0 }, CancellationToken.None);
         Func<Task> invalidFee = () => workflow.ConvertAsync(valid with { FeeHardCoinUnits = -1 }, CancellationToken.None);
-        Func<Task> missingDecision = () => workflow.ConvertAsync(valid with { RiskDecisionId = Guid.Empty }, CancellationToken.None);
+        Func<Task> emptyIdempotencyKey = () => workflow.ConvertAsync(valid with { IdempotencyKey = string.Empty }, CancellationToken.None);
 
         await nullRequest.Should().ThrowAsync<ArgumentNullException>();
         await cancelled.Should().ThrowAsync<OperationCanceledException>();
         await invalidPrincipal.Should().ThrowAsync<ArgumentOutOfRangeException>();
         await invalidFee.Should().ThrowAsync<ArgumentOutOfRangeException>();
-        await missingDecision.Should().ThrowAsync<EconomySelfServiceCommandRejectedException>();
+        await emptyIdempotencyKey.Should().ThrowAsync<ArgumentException>();
         enabled.EnsuredCapabilities.Should().OnlyContain(capability => capability == EconomyValueMovementCapability.ConvertHardToSoft);
     }
 
@@ -132,11 +130,12 @@ public sealed class HardToSoftConversionWorkflowTests
     }
 
     [Fact]
-    public async Task ConvertAsync_RequiresAnActiveWalletAndARequestBoundRiskDecision()
+    public async Task ConvertAsync_RequiresAnActiveWalletBeforeIssuingTheServerBoundRiskDecision()
     {
         await using var context = CreateContext();
         var accessor = SetActorContext(out var actorId, out var tenantId);
-        var workflow = CreateWorkflow(context, accessor, new EnabledGate());
+        var issuer = new RejectingRiskDecisionIssuer();
+        var workflow = CreateWorkflow(context, accessor, new EnabledGate(), riskDecisionIssuer: issuer);
         var request = Request();
 
         try
@@ -155,21 +154,12 @@ public sealed class HardToSoftConversionWorkflowTests
             });
             await context.SaveChangesAsync();
 
-            Func<Task> missingDecision = () => workflow.ConvertAsync(request, CancellationToken.None);
-            await missingDecision.Should().ThrowAsync<EconomySelfServiceCommandRejectedException>()
-                .WithMessage("*not bound to this idempotent conversion request*");
-
-            context.Set<EconomyRiskDecisionRow>().Add(new EconomyRiskDecisionRow
-            {
-                Id = request.RiskDecisionId,
-                IdempotencyKey = "other-key",
-                SourceRoots = "[]"
-            });
-            await context.SaveChangesAsync();
-
-            Func<Task> mismatchedDecision = () => workflow.ConvertAsync(request, CancellationToken.None);
-            await mismatchedDecision.Should().ThrowAsync<EconomySelfServiceCommandRejectedException>()
-                .WithMessage("*not bound to this idempotent conversion request*");
+            Func<Task> decisionRejected = () => workflow.ConvertAsync(request, CancellationToken.None);
+            await decisionRejected.Should().ThrowAsync<EconomySelfServiceCommandRejectedException>()
+                .WithMessage("*issuer rejected*");
+            issuer.Requests.Should().ContainSingle().Which.Should().Match<HardToSoftConversionRiskDecisionRequest>(issued =>
+                issued.ActorId == actorId && issued.TenantId == tenantId &&
+                issued.TotalHardCoinUnits == request.PrincipalHardCoinUnits + request.FeeHardCoinUnits);
         }
         finally
         {
@@ -241,12 +231,15 @@ public sealed class HardToSoftConversionWorkflowTests
         var accessor = SetActorContext(actorId, tenantId);
         try
         {
-            var workflow = CreateWorkflow(context, accessor, new EnabledGate());
+            var workflow = CreateWorkflow(
+                context,
+                accessor,
+                new EnabledGate(),
+                riskDecisionIssuer: new FixedRiskDecisionIssuer(decisionId, [rootId]));
             return await workflow.ConvertAsync(
                 new SelfServiceHardToSoftConversionRequest(
                     principalHardCoinUnits,
                     feeHardCoinUnits,
-                    decisionId,
                     key),
                 CancellationToken.None);
         }
@@ -264,15 +257,20 @@ public sealed class HardToSoftConversionWorkflowTests
     private static SelfServiceHardToSoftConversionRequest Request() => new(
         100,
         0,
-        Guid.NewGuid(),
         $"conversion-{Guid.NewGuid():N}");
 
     private static PostgreSqlHardToSoftConversionWorkflow CreateWorkflow(
         ApplicationDbContext context,
         ActorContextAccessor accessor,
         IEconomyValueMovementDecisionGate gate,
-        IHardToSoftConversionRiskEvidenceVerifier? evidenceVerifier = null) =>
-        new(context, accessor, gate, evidenceVerifier ?? AllowingEvidenceVerifier.Instance);
+        IHardToSoftConversionRiskEvidenceVerifier? evidenceVerifier = null,
+        IHardToSoftConversionRiskDecisionIssuer? riskDecisionIssuer = null) =>
+        new(
+            context,
+            accessor,
+            gate,
+            evidenceVerifier ?? AllowingEvidenceVerifier.Instance,
+            riskDecisionIssuer ?? new RejectingRiskDecisionIssuer());
 
     private static ActorContextAccessor SetActorContext(out Guid actorId, out Guid tenantId)
     {
@@ -330,10 +328,18 @@ public sealed class HardToSoftConversionWorkflowTests
     {
         public static readonly AllowingEvidenceVerifier Instance = new();
 
-        public Task VerifyAsync(Guid actorId, Guid tenantId, CancellationToken cancellationToken)
+        public Task<IReadOnlyList<ExternalRiskEvidence>> VerifyAsync(
+            Guid actorId,
+            Guid tenantId,
+            CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return Task.CompletedTask;
+            var now = DateTimeOffset.UtcNow;
+            return Task.FromResult<IReadOnlyList<ExternalRiskEvidence>>(
+            [
+                new(ExternalRiskSource.FinancialCrime, 1, now.AddMinutes(-1), now.AddMinutes(5), ExternalRiskOutcome.Allow, "financial-crime"),
+                new(ExternalRiskSource.TrustSafety, 1, now.AddMinutes(-1), now.AddMinutes(5), ExternalRiskOutcome.Allow, "trust-safety")
+            ]);
         }
     }
 
@@ -341,10 +347,39 @@ public sealed class HardToSoftConversionWorkflowTests
     {
         public int Calls { get; private set; }
 
-        public Task VerifyAsync(Guid actorId, Guid tenantId, CancellationToken cancellationToken)
+        public Task<IReadOnlyList<ExternalRiskEvidence>> VerifyAsync(
+            Guid actorId,
+            Guid tenantId,
+            CancellationToken cancellationToken)
         {
             Calls++;
             throw new ExternalRiskEvidenceException("External fraud-control evidence did not allow conversion.");
+        }
+    }
+
+    private sealed class RejectingRiskDecisionIssuer : IHardToSoftConversionRiskDecisionIssuer
+    {
+        public List<HardToSoftConversionRiskDecisionRequest> Requests { get; } = [];
+
+        public Task<HardToSoftConversionRiskDecision> IssueAsync(
+            HardToSoftConversionRiskDecisionRequest request,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Requests.Add(request);
+            throw new EconomySelfServiceCommandRejectedException("The server-bound risk decision issuer rejected this conversion.");
+        }
+    }
+
+    private sealed class FixedRiskDecisionIssuer(Guid decisionId, IReadOnlyList<Guid> roots)
+        : IHardToSoftConversionRiskDecisionIssuer
+    {
+        public Task<HardToSoftConversionRiskDecision> IssueAsync(
+            HardToSoftConversionRiskDecisionRequest request,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(new HardToSoftConversionRiskDecision(decisionId, roots));
         }
     }
 }
