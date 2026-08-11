@@ -487,6 +487,59 @@ describe('community member queries', () => {
     });
   });
 
+  it('does not grant current super-admin state from a cancelled membership', async () => {
+    mocks.clientRequest.mockImplementation(async ({ path }: { path: string }) => {
+      if (path === '/v1/users') {
+        return {
+          ok: true,
+          data: {
+            totalCount: 1,
+            items: [
+              {
+                id: '00000000-0000-0000-0000-000000000111',
+                email: 'member@example.com',
+                name: 'Signed In Member',
+                isActive: true,
+                createdAt: '2026-06-01T00:00:00.000Z',
+              },
+            ],
+          },
+        };
+      }
+
+      if (path === '/v1/users/00000000-0000-0000-0000-000000000111/memberships') {
+        return {
+          ok: true,
+          data: {
+            memberships: [
+              {
+                tenantId: '10000000-0000-0000-0000-000000000000',
+                tenantName: 'GameGuild Platform',
+                role: 'SystemAdmin',
+                isActive: false,
+                inviteStatus: 'Cancelled',
+              },
+            ],
+          },
+        };
+      }
+
+      throw new Error(`Unexpected path ${path}`);
+    });
+
+    const directory = await getMemberAccessDirectory({ limit: 50 });
+
+    expect(directory.members[0]).toMatchObject({
+      role: 'NoAccess',
+      isSuperAdmin: false,
+      primaryMembership: {
+        role: 'SystemAdmin',
+        isActive: false,
+        inviteStatus: 'Cancelled',
+      },
+    });
+  });
+
   it('wires the tenant provider into the community API client', async () => {
     mocks.clientRequest.mockResolvedValue({ ok: true, data: { items: [], totalCount: 0 } });
     mocks.getSocialGroups.mockResolvedValue({ ok: true, data: [] });

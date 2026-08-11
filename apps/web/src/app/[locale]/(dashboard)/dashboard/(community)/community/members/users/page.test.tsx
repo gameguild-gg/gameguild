@@ -176,6 +176,36 @@ describe('community users page', () => {
     expect(within(row!).getByRole('button', { name: 'Cancel invite' })).toBeInTheDocument();
   });
 
+  it('labels a cancelled membership as having no active access', async () => {
+    mocks.getMemberAccessDirectory.mockResolvedValue({
+      total: 1,
+      currentUserId: 'user-cancelled',
+      error: null,
+      members: [
+        buildMemberAccessRow({
+          id: 'user-cancelled',
+          username: 'cancelled',
+          displayName: 'Cancelled User',
+          email: 'cancelled@game-guild.com',
+          role: 'NoAccess',
+          membershipIsActive: false,
+          inviteStatus: 'Cancelled',
+          invitedByEmail: 'admin@game-guild.com',
+          isSuperAdmin: false,
+          isCurrentUser: true,
+        }),
+      ],
+    });
+
+    render(await UsersPage({ searchParams: Promise.resolve({}) }));
+
+    const row = screen.getByText('Cancelled User').closest('tr');
+    expect(row).not.toBeNull();
+    expect(within(row!).getByText('No active access')).toBeInTheDocument();
+    expect(within(row!).getByText('Invite cancelled')).toBeInTheDocument();
+    expect(within(row!).queryByText('SystemAdmin')).not.toBeInTheDocument();
+  });
+
   it('opens an invite dialog with user and workspace fields', async () => {
     const user = userEvent.setup();
     mocks.getMemberAccessDirectory.mockResolvedValue({
