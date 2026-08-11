@@ -17,50 +17,18 @@ export class AuthWebauthnModule {
 
   /**
    */
-  async postAuthWebauthnRegistrationBegin(
-    body: Types.IdentityAuthenticationBeginWebAuthnRegistrationInput,
-  ): Promise<Result<Types.IdentityAuthenticationWebAuthnRegistrationOptionsResult, ApiError>> {
-    const url = '/v1/auth/webauthn/registration:begin';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationBeginWebAuthnRegistrationInputSchema, body, 'request');
+  async getAuthWebauthn(): Promise<Result<Types.IdentityAuthenticationWebAuthnStatusOutput, ApiError>> {
+    const url = '/v1/auth/webauthn';
 
     const result = await this.client.request({
-      method: 'POST',
+      method: 'GET',
       path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationWebAuthnRegistrationOptionsResultSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postAuthWebauthnRegistrationComplete(
-    body: Types.IdentityAuthenticationCompleteWebAuthnRegistrationInput,
-  ): Promise<Result<Types.IdentityAuthenticationWebAuthnRegistrationResult, ApiError>> {
-    const url = '/v1/auth/webauthn/registration:complete';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationWebAuthnRegistrationResultSchema, result.data, 'response');
+      const validatedData = safeParse(Types.IdentityAuthenticationWebAuthnStatusOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -221,18 +189,50 @@ export class AuthWebauthnModule {
 
   /**
    */
-  async getAuthWebauthn(): Promise<Result<Types.IdentityAuthenticationWebAuthnStatusOutput, ApiError>> {
-    const url = '/v1/auth/webauthn';
+  async postAuthWebauthnRegistrationBegin(
+    body: Types.IdentityAuthenticationBeginWebAuthnRegistrationInput,
+  ): Promise<Result<Types.IdentityAuthenticationWebAuthnRegistrationOptionsResult, ApiError>> {
+    const url = '/v1/auth/webauthn/registration:begin';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationBeginWebAuthnRegistrationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: 'GET',
+      method: 'POST',
       path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationWebAuthnStatusOutputSchema, result.data, 'response');
+      const validatedData = safeParse(Types.IdentityAuthenticationWebAuthnRegistrationOptionsResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAuthWebauthnRegistrationComplete(
+    body: Types.IdentityAuthenticationCompleteWebAuthnRegistrationInput,
+  ): Promise<Result<Types.IdentityAuthenticationWebAuthnRegistrationResult, ApiError>> {
+    const url = '/v1/auth/webauthn/registration:complete';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationWebAuthnRegistrationResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
