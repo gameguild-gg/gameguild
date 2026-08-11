@@ -10,6 +10,7 @@ public sealed record PayoutProviderEventRecord(
 public interface IPayoutOperationStore
 {
     PayoutOperation Get(Guid operationId);
+    IReadOnlyList<PayoutOperation> ListForPayee(Guid payeeId, int take);
     PayoutOperation? FindReplay(string idempotencyKey, string requestHash);
     void Add(PayoutOperation operation);
     PayoutOperation Update(PayoutOperation operation, long expectedVersion);
@@ -45,6 +46,23 @@ public sealed class InMemoryPayoutOperationStore : IPayoutOperationStore
             return _operations.TryGetValue(operationId, out var operation)
                 ? operation
                 : throw new KeyNotFoundException($"Payout operation {operationId:N} was not found.");
+    }
+
+    public IReadOnlyList<PayoutOperation> ListForPayee(Guid payeeId, int take)
+    {
+        if (payeeId == Guid.Empty)
+            throw new ArgumentException("Payee ID is required.", nameof(payeeId));
+        if (take is < 1 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(take), "Take must be between 1 and 100.");
+
+        lock (_gate)
+        {
+            return [.. _operations.Values
+                .Where(operation => operation.PayeeId == payeeId)
+                .OrderByDescending(operation => operation.CreatedAt)
+                .ThenByDescending(operation => operation.Id)
+                .Take(take)];
+        }
     }
 
     public PayoutOperation? FindReplay(string idempotencyKey, string requestHash)

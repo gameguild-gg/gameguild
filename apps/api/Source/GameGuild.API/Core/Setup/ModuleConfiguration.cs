@@ -33,6 +33,7 @@ public sealed class ModuleConfiguration
         "Notifications",
         "Orders",
         "Payments",
+        "Economy.Payouts",
         "Products",
         "Projects",
         "TestingLab",
@@ -57,7 +58,6 @@ public sealed class ModuleConfiguration
         "Economy.AdRewards",
         "Economy.Bounties",
         "Economy.Marketplace",
-        "Economy.Payouts",
         "Economy.Treasury",
         "Compliance.FinancialCrime",
         "TrustSafety"
