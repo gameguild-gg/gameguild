@@ -24,6 +24,16 @@ public sealed class StripeGatewayOptionsValidatorTests
         result.FailureMessage.Should().Be("Stripe simulation is not permitted in " + environmentName + ".");
     }
 
+    [Fact]
+    public void Validate_AllowsUnconfiguredStripeProviderInProduction()
+    {
+        var validator = CreateValidator(Environments.Production);
+
+        var result = validator.Validate(Options.DefaultName, new StripeGatewayOptions());
+
+        result.Succeeded.Should().BeTrue();
+    }
+
     [Theory]
     [InlineData("Staging")]
     [InlineData("Production")]

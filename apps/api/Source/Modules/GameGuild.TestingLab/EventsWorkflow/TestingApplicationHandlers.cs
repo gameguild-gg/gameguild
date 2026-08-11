@@ -25,6 +25,7 @@ public sealed class TestingApplicationHandlers(
     IQueryHandler<GetMyTestingProjectApplicationsQuery, Result<IReadOnlyList<TestingProjectApplicationProjection>>>,    IQueryHandler<GetTestingEventApplicationsQuery, Result<IReadOnlyList<TestingProjectApplicationProjection>>>
 {
     private readonly IProjectLifecycleLock _capacityLock = capacityLock ?? new ProjectLifecycleLock(context);
+    private bool IsSystemAdmin => actorContextAccessor.ActorContext.IsSystemAdmin;
 
     public async Task<Result<TestingProjectApplicationProjection>> Handle(
         SubmitTestingProjectApplicationCommand request,
@@ -152,7 +153,7 @@ public sealed class TestingApplicationHandlers(
             member.IsActive &&
             member.DeletedAt == null,
             cancellationToken).ConfigureAwait(false);
-        if (!isReviewer)
+        if (!isReviewer && !IsSystemAdmin)
             return Result.Failure<TestingApplicationVoteProjection>(Error.Forbidden("TestingLab.CommitteeMemberRequired", "Only active committee members can vote."));
         var duplicate = await context.Set<TestingApplicationVote>().AnyAsync(vote =>
             vote.ApplicationId == application.Id &&
@@ -282,7 +283,7 @@ public sealed class TestingApplicationHandlers(
         if (loaded.Error != null) return Result.Failure<TestingProjectApplicationProjection>(loaded.Error);
         var application = loaded.Application!;
         var actor = loaded.Actor!;
-        var canReview = application.Event.ManagerUserId == actor.UserId || await context.Set<TestingCommitteeMember>().AnyAsync(member =>
+        var canReview = IsSystemAdmin || application.Event.ManagerUserId == actor.UserId || await context.Set<TestingCommitteeMember>().AnyAsync(member =>
             member.EventId == application.EventId &&
             member.UserId == actor.UserId &&
             member.IsActive &&
@@ -312,7 +313,7 @@ public sealed class TestingApplicationHandlers(
             member.IsActive &&
             member.DeletedAt == null,
             cancellationToken).ConfigureAwait(false);
-        if (testingEvent.ManagerUserId != actor.UserId && !isCommitteeMember)
+        if (testingEvent.ManagerUserId != actor.UserId && !isCommitteeMember && !IsSystemAdmin)
             return Result.Failure<IReadOnlyList<TestingProjectApplicationProjection>>(Error.Forbidden("TestingLab.EventReviewerRequired", "Event manager or committee access is required."));
 
         var query = context.Set<TestingProjectApplication>()
@@ -377,7 +378,7 @@ public sealed class TestingApplicationHandlers(
     {
         var loaded = await LoadApplicationAsync(applicationId, cancellationToken).ConfigureAwait(false);
         if (loaded.Error != null) return loaded;
-        return loaded.Application!.Event.ManagerUserId == loaded.Actor!.UserId
+        return loaded.Application!.Event.ManagerUserId == loaded.Actor!.UserId || IsSystemAdmin
             ? loaded
             : new(null, null, Error.Forbidden("TestingLab.EventManagerRequired", "Only the event manager can decide applications."));
     }

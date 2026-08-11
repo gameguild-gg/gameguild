@@ -27,6 +27,8 @@ public sealed class TestingParticipationHandlers(
     IQueryHandler<GetMyTestingFeedbackObligationsQuery, Result<IReadOnlyList<TestingFeedbackObligationProjection>>>,
     IQueryHandler<GetTestingEventFeedbackQuery, Result<IReadOnlyList<TestingEventFeedbackReviewProjection>>>
 {
+    private bool IsSystemAdmin => actorContextAccessor.ActorContext.IsSystemAdmin;
+
     private static readonly TestingSlotRegistrationStatus[] CapacityStatuses =
     [
         TestingSlotRegistrationStatus.Registered,
@@ -120,7 +122,7 @@ public sealed class TestingParticipationHandlers(
     {
         var loaded = await LoadRegistrationAsync(request.RegistrationId, cancellationToken).ConfigureAwait(false);
         if (loaded.Error != null) return Result.Failure<TestingSlotRegistrationProjection>(loaded.Error);
-        var managerOverride = loaded.Registration!.Event.ManagerUserId == loaded.Actor!.UserId;
+        var managerOverride = loaded.Registration!.Event.ManagerUserId == loaded.Actor!.UserId || IsSystemAdmin;
         if (!managerOverride && loaded.Registration.UserId != loaded.Actor.UserId)
             return Result.Failure<TestingSlotRegistrationProjection>(
                 Error.Forbidden("TestingLab.RegistrationOwnerRequired", "Only the tester or event manager can cancel this registration."));
@@ -276,7 +278,8 @@ public sealed class TestingParticipationHandlers(
         var loaded = await LoadRegistrationAsync(request.RegistrationId, cancellationToken).ConfigureAwait(false);
         if (loaded.Error != null) return Result.Failure<TestingSlotRegistrationProjection>(loaded.Error);
         if (loaded.Registration!.UserId != loaded.Actor!.UserId &&
-            loaded.Registration.Event.ManagerUserId != loaded.Actor.UserId)
+            loaded.Registration.Event.ManagerUserId != loaded.Actor.UserId &&
+            !IsSystemAdmin)
             return Result.Failure<TestingSlotRegistrationProjection>(
                 Error.Forbidden("TestingLab.RegistrationOwnerRequired", "Only the tester or event manager can complete participation."));
         var pending = await context.Set<TestingFeedbackObligation>().AnyAsync(candidate =>
@@ -328,7 +331,7 @@ public sealed class TestingParticipationHandlers(
         if (slot == null)
             return Result.Failure<IReadOnlyList<TestingSlotRegistrationProjection>>(
                 Error.NotFound("TestingLab.EventSlotNotFound", "Testing event slot not found."));
-        if (slot.Event.ManagerUserId != actor.UserId)
+        if (slot.Event.ManagerUserId != actor.UserId && !IsSystemAdmin)
             return Result.Failure<IReadOnlyList<TestingSlotRegistrationProjection>>(
                 Error.Forbidden("TestingLab.EventManagerRequired", "Only the event manager can list slot registrations."));
 
@@ -500,7 +503,7 @@ public sealed class TestingParticipationHandlers(
         if (testingEvent == null)
             return Result.Failure<IReadOnlyList<TestingEventFeedbackReviewProjection>>(
                 Error.NotFound("TestingLab.EventNotFound", "Testing event not found."));
-        if (testingEvent.ManagerUserId != actor.UserId)
+        if (testingEvent.ManagerUserId != actor.UserId && !IsSystemAdmin)
             return Result.Failure<IReadOnlyList<TestingEventFeedbackReviewProjection>>(
                 Error.Forbidden(
                     "TestingLab.EventManagerRequired",
@@ -635,7 +638,7 @@ public sealed class TestingParticipationHandlers(
     {
         var loaded = await LoadRegistrationAsync(registrationId, cancellationToken).ConfigureAwait(false);
         if (loaded.Error != null) return loaded;
-        return loaded.Registration!.Event.ManagerUserId == loaded.Actor!.UserId
+        return loaded.Registration!.Event.ManagerUserId == loaded.Actor!.UserId || IsSystemAdmin
             ? loaded
             : new(null, null, Error.Forbidden("TestingLab.EventManagerRequired", "Only the event manager can manage attendance."));
     }
