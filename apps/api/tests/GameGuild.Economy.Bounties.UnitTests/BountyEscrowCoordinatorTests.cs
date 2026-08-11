@@ -29,6 +29,21 @@ public sealed class BountyEscrowCoordinatorTests
     }
 
     [Fact]
+    public void PositionFactory_SelectsOnlyConfirmedServerLotsWithoutCoordinatorState()
+    {
+        var harness = new Harness();
+        var confirmed = harness.Lot(5, ProvenanceKind.PurchasedHard, Now.AddDays(-2), 1);
+        var future = harness.Lot(5, ProvenanceKind.PurchasedHard, Now.AddHours(1), 2);
+
+        var position = BountyEscrowPositionFactory.Create(harness.PostCommand(5, [future, confirmed]));
+
+        position.Status.Should().Be(BountyStatus.Open);
+        position.EscrowFragments.Should().ContainSingle();
+        position.EscrowFragments[0].ParentLot.Id.Should().Be(confirmed.Id);
+        position.EscrowFragments[0].Amount.Should().Be(new CoinAmount(CurrencyCode.HardCoin, 5));
+    }
+
+    [Fact]
     public void Claim_HardBountyCreatesFreshEarnedSourceAndIndependentMaturity()
     {
         var harness = new Harness();
