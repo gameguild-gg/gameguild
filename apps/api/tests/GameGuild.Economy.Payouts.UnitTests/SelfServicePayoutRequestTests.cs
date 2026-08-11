@@ -127,6 +127,28 @@ public sealed class SelfServicePayoutRequestTests
     }
 
     [Fact]
+    public async Task CancelRequiresAnAuthenticatedTenantActor()
+    {
+        var handler = new CancelMyPayoutRequestCommandHandler(
+            new ActorContextAccessor(),
+            new InMemoryPayoutRequestStore());
+
+        await FluentActions.Invoking(() => handler.Handle(
+                new CancelMyPayoutRequestCommand(Guid.NewGuid()), CancellationToken.None))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public void CancelRejectsAClockThatMovesBackwards()
+    {
+        var timestamp = DateTimeOffset.UtcNow;
+        var request = CreateRequest(Guid.NewGuid(), PayoutRequestState.Submitted, timestamp);
+
+        FluentActions.Invoking(() => request.Cancel(timestamp.AddSeconds(-1)))
+            .Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
     public async Task ListReturnsOnlyThePayeesRequests()
     {
         var payeeId = Guid.NewGuid();
@@ -141,6 +163,10 @@ public sealed class SelfServicePayoutRequestTests
         var result = await handler.Handle(new ListMyPayoutRequestsQuery(payeeId, 10), CancellationToken.None);
 
         result.Select(item => item.Id).Should().Equal(latest.Id, older.Id);
+        result.Should().OnlyContain(item => item.HardCoinUnits == 250);
+        result.Select(item => item.State).Should().Equal(PayoutRequestState.Cancelled, PayoutRequestState.Submitted);
+        result[0].CreatedAt.Should().Be(latest.CreatedAt);
+        result[0].UpdatedAt.Should().Be(latest.UpdatedAt);
     }
 
     [Fact]
