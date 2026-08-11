@@ -83,7 +83,7 @@ public sealed class PostgreSqlFifoFragmentReservationGateway : IFifoFragmentRese
                         {(int)request.Provenance},
                         {request.Amount.Units},
                         {(int)request.Purpose},
-                        {request.ReservedAt});
+                        {request.ReservedAt})
                     """)
                 .AsNoTracking()
                 .AsEnumerable()
@@ -121,7 +121,7 @@ public sealed class PostgreSqlFifoFragmentReservationGateway : IFifoFragmentRese
         {
             return _db.Database.SqlQuery<long>($"""
                     SELECT economy_private.transition_fifo_fragment_reservations_v1(
-                        {operationId}, {(int)expected}, {(int)next}, {terminalAt}) AS "Value";
+                        {operationId}, {(int)expected}, {(int)next}, {terminalAt}) AS "Value"
                     """)
                 .Single();
         }

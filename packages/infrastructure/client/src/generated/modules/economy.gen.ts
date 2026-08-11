@@ -51,6 +51,33 @@ export class EconomyModule {
 
     return result as Result<Array<Types.EconomyContractsEconomyWalletTransaction>, ApiError>;
   }
+
+  /**
+   * Convert my confirmed HardCoin balance into SoftCoin
+   */
+  async postEconomyConversionsHardToSoft(
+    body: Types.EconomyCommandsConvertMyHardToSoftInput,
+  ): Promise<Result<Types.EconomyFundingSelfServiceHardToSoftConversionReceipt, ApiError>> {
+    const url = '/api/v1/economy/conversions/hard-to-soft';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.EconomyCommandsConvertMyHardToSoftInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyFundingSelfServiceHardToSoftConversionReceiptSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
 export function createEconomyModule(client: ApiClient): EconomyModule {

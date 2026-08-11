@@ -21,7 +21,7 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
             throw new ArgumentException("Payout operation ID is required.", nameof(operationId));
 
         var row = ReadOperations($"""
-            SELECT * FROM economy_private.read_payout_operation_by_id_v1({operationId});
+            SELECT * FROM economy_private.read_payout_operation_by_id_v1({operationId})
             """).SingleOrDefault();
 
         return row is null
@@ -35,7 +35,7 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
         ArgumentException.ThrowIfNullOrWhiteSpace(requestHash);
 
         var row = ReadOperations($"""
-            SELECT * FROM economy_private.read_payout_operation_by_idempotency_v1({idempotencyKey.Trim()});
+            SELECT * FROM economy_private.read_payout_operation_by_idempotency_v1({idempotencyKey.Trim()})
             """).SingleOrDefault();
 
         if (row is null)
@@ -102,7 +102,7 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
 
         var row = _db.Set<PayoutProviderEventRow>()
             .FromSqlInterpolated($"""
-                SELECT * FROM economy_private.read_payout_provider_event_v1({eventId.Trim()});
+                SELECT * FROM economy_private.read_payout_provider_event_v1({eventId.Trim()})
                 """)
             .AsNoTracking()
             .SingleOrDefault();

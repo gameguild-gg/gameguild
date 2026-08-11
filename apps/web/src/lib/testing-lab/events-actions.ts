@@ -72,6 +72,12 @@ function revalidateEvent(eventId?: string) {
   }
 }
 
+function errorDetail(error: unknown) {
+  if (!error || typeof error !== 'object') return null;
+  const detail = Reflect.get(error, 'detail');
+  return typeof detail === 'string' && detail.trim() ? detail : null;
+}
+
 async function complete<T>(
   operation: Promise<Result<T, ApiError>>,
   message: string,
@@ -85,7 +91,7 @@ async function complete<T>(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'The Testing Lab event operation failed.',
+      error: errorDetail(error) ?? (error instanceof Error ? error.message : 'The Testing Lab event operation failed.'),
     };
   }
 }
@@ -170,6 +176,8 @@ function eventInput(formData: FormData): {
 
   const recurrence = recurrenceInput(formData);
   if (recurrence.error) return { data: null, error: recurrence.error };
+  if (recurrence.data?.endsAt && new Date(recurrence.data.endsAt) < new Date(startsAt))
+    return { data: null, error: 'Recurrence end must not precede the event start.' };
 
   return {
     data: {

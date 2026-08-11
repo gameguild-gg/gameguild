@@ -49,7 +49,7 @@ public sealed class PostgreSqlRegisteredPostingGateway : IRegisteredPostingGatew
                         CAST({payload.Allocations} AS jsonb),
                         CAST({payload.RootRanges} AS jsonb),
                         CAST({payload.ExpectedReversalEpochs} AS jsonb),
-                        {request.DispatchSnapshotHash});
+                        {request.DispatchSnapshotHash})
                     """)
                 .AsNoTracking()
                 .Single();

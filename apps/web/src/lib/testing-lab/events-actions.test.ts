@@ -116,6 +116,28 @@ describe('Testing Lab event actions', () => {
     });
   });
 
+  it('shows validation detail when the generated client rejects the request', async () => {
+    mocks.events.postTestingEvents.mockRejectedValue({
+      message: 'TestingLab.Validation',
+      detail: 'Recurrence end must not precede the event start.',
+    });
+
+    const result = await createTestingEvent(
+      form({
+        name: 'Recurring playtest',
+        applicationsOpenAt: '2026-08-01T09:00',
+        applicationsCloseAt: '2026-08-05T18:00',
+        startsAt: '2026-08-08T18:00',
+        endsAt: '2026-08-08T21:00',
+      }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Recurrence end must not precede the event start.',
+    });
+  });
+
   it('rejects an application window that closes before it opens', async () => {
     const result = await createTestingEvent(
       form({
@@ -171,6 +193,25 @@ describe('Testing Lab event actions', () => {
         recurrence: { frequency: 'Weekly', interval: 1, daysOfWeek: ['Monday'], occurrenceCount: 3, endsAt: null },
       }),
     );
+  });
+
+  it('rejects a recurrence end before the first event starts', async () => {
+    const result = await createTestingEvent(
+      form({
+        name: 'Invalid recurring playtest',
+        applicationsOpenAt: '2026-08-01T09:00',
+        applicationsCloseAt: '2026-08-02T18:00',
+        startsAt: '2026-08-03T18:00',
+        endsAt: '2026-08-03T20:00',
+        recurrenceFrequency: 'Daily',
+        recurrenceInterval: '1',
+        recurrenceEndMode: 'date',
+        recurrenceEndsAt: '2026-08-03T17:00',
+      }),
+    );
+
+    expect(result).toEqual({ success: false, error: 'Recurrence end must not precede the event start.' });
+    expect(mocks.events.postTestingEvents).not.toHaveBeenCalled();
   });
 
   it('requires campus and room for an in-person slot before calling the API', async () => {
