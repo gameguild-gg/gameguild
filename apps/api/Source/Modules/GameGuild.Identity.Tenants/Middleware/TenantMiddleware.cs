@@ -98,7 +98,15 @@ public class TenantMiddleware(
             var userId = GetAuthenticatedUserId(context);
             if (userId.HasValue)
             {
-                var isMember = await ValidateTenantMembershipAsync(
+                // A SystemAdmin is a platform actor, not merely a tenant-local
+                // administrator. Requiring a membership for every tenant makes a
+                // valid super admin appear authenticated yet unable to operate.
+                var isSystemAdmin = Authorization.Utilities.ClaimsExtractor
+                    .GetRoles(context.User)
+                    .Any(role => role.Equals("SystemAdmin", StringComparison.OrdinalIgnoreCase) ||
+                                 role.Equals("Admin", StringComparison.OrdinalIgnoreCase));
+
+                var isMember = isSystemAdmin || await ValidateTenantMembershipAsync(
                     userId.Value,
                     tenant.Id,
                     tenantMemberRepository,

@@ -46,6 +46,7 @@ public class PaymentEndpointsIntegrationTests : IClassFixture<WebApplicationFact
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+                services.AddDefaultTenantMembership();
 
                 services.AddAuthentication(options =>
                 {
@@ -55,6 +56,7 @@ public class PaymentEndpointsIntegrationTests : IClassFixture<WebApplicationFact
             });
         });
 
+        TestTenantMembershipServices.SeedDefaultTenant(_factory.Services);
         _client = _factory.CreateClient();
         _client.DefaultRequestHeaders.Add("X-Tenant-Id", TestAuthHandler.DefaultTenantId.ToString());
     }

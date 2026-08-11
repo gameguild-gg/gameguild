@@ -3,6 +3,7 @@ using GameGuild.API.Database;
 using GameGuild.Commerce;
 using GameGuild.Commerce.Products;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Tenants;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -77,6 +78,7 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
             });
         });
 
+        SeedAuthenticatedTenantMembership(_factory);
         _client = _factory.CreateClient();
     }
 
@@ -84,6 +86,38 @@ public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory
     {
         _client?.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private static void SeedAuthenticatedTenantMembership(WebApplicationFactory<GameGuild.API.Program> factory)
+    {
+        using var scope = factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        if (!context.Set<Tenant>().Any(tenant => tenant.Id == TestTenantIdValue))
+        {
+            context.Set<Tenant>().Add(new Tenant
+            {
+                Id = TestTenantIdValue,
+                Name = "Orders Integration Test Tenant",
+                Slug = "orders-integration-test",
+                AdminEmail = "orders-integration-admin@example.test",
+                IsActive = true
+            });
+        }
+
+        if (!context.Set<TenantMember>().Any(member =>
+                member.UserId == TestUserIdValue && member.TenantId == TestTenantIdValue))
+        {
+            context.Set<TenantMember>().Add(new TenantMember
+            {
+                UserId = TestUserIdValue,
+                TenantId = TestTenantIdValue,
+                Role = "Member",
+                IsActive = true
+            });
+        }
+
+        context.SaveChanges();
     }
 
     [Fact]

@@ -68,6 +68,37 @@ public class TenantMiddlewareSecurityTests
     }
 
     [Fact]
+    public async Task Should_AllowSystemAdmin_WhenNotMemberOfResolvedTenant()
+    {
+        // A platform-level administrator must be able to operate across tenants even
+        // when they do not hold a tenant-local membership.
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var tenant = new Tenant { Id = tenantId, Name = "Other tenant", Slug = "other", IsActive = true };
+        var context = CreateHttpContext(
+            isAuthenticated: true,
+            userId: userId,
+            tenantIdHeader: tenantId.ToString(),
+            roles: ["SystemAdmin"]);
+
+        _mediatorMock
+            .Setup(m => m.Send(It.Is<GetTenantByIdQuery>(q => q.TenantId == tenantId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        await _middleware.InvokeAsync(
+            context,
+            _mediatorMock.Object,
+            _domainRepoMock.Object,
+            _memberRepoMock.Object);
+
+        context.Response.StatusCode.Should().Be(200);
+        _nextMock.Verify(n => n(context), Times.Once);
+        _memberRepoMock.Verify(
+            r => r.GetByUserAndTenantAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task Should_Return403_WhenAuthenticatedUserNotMember()
     {
         // Arrange
@@ -333,7 +364,8 @@ public class TenantMiddlewareSecurityTests
         bool isAuthenticated,
         Guid? userId,
         string? tenantIdHeader,
-        string path = "/api/test")
+        string path = "/api/test",
+        IEnumerable<string>? roles = null)
     {
         var context = new DefaultHttpContext();
         context.Request.Path = path;
@@ -349,6 +381,7 @@ public class TenantMiddlewareSecurityTests
             {
                 new(ClaimTypes.NameIdentifier, userId.Value.ToString())
             };
+            claims.AddRange((roles ?? []).Select(role => new Claim(ClaimTypes.Role, role)));
             context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Test"));
         }
         else
