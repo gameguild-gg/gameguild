@@ -847,7 +847,7 @@ export async function getMemberAccessDirectory(options?: {
         const member = mapUserToMember(user);
         const membershipResult = member.id ? await getUserMemberships(client, member.id) : { memberships: [], error: 'User id is missing.' };
         const primaryMembership = selectPrimaryMembership(membershipResult.memberships);
-        const role = primaryMembership?.role ?? member.role;
+        const role = primaryMembership?.isActive ? (primaryMembership.role ?? 'Member') : 'NoAccess';
 
         return {
           member,
