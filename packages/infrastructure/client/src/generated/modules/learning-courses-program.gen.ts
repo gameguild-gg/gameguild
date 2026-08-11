@@ -252,24 +252,6 @@ export class LearningCoursesProgramModule {
 
   /**
    */
-  async postCoursesContentReorder(id: string, body: Types.LearningCoursesReorderContent): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${id}/content:reorder`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesReorderContentSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async postCoursesMeContentComplete(id: string, contentId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${id}/me/content/${contentId}:complete`;
 
