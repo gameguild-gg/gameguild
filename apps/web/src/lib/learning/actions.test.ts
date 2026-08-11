@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
   resolveCourseId: vi.fn(),
   postCoursesContent: vi.fn(),
-  postCoursesContentReorder1: vi.fn(),
+  postCoursesContentReorder: vi.fn(),
   postCoursesContentMove: vi.fn(),
   deleteCoursesContent: vi.fn(),
   postAssessments: vi.fn(),
@@ -74,7 +74,7 @@ vi.mock("@game-guild/client", () => ({
     },
     LearningCoursesProgramcontentModule: class {
       postCoursesContent = mocks.postCoursesContent;
-      postCoursesContentReorder1 = mocks.postCoursesContentReorder1;
+      postCoursesContentReorder = mocks.postCoursesContentReorder;
       postCoursesContentMove = mocks.postCoursesContentMove;
       deleteCoursesContent = mocks.deleteCoursesContent;
     },
@@ -177,7 +177,7 @@ describe("learning server actions", () => {
         headers: { "Content-Type": "application/json" },
       }),
     );
-    mocks.postCoursesContentReorder1.mockResolvedValue({
+    mocks.postCoursesContentReorder.mockResolvedValue({
       ok: true,
       data: undefined,
     });
@@ -822,7 +822,7 @@ describe("learning server actions", () => {
     ]);
 
     expect(result).toEqual({ success: true, data: null });
-    expect(mocks.postCoursesContentReorder1).toHaveBeenCalledWith(
+    expect(mocks.postCoursesContentReorder).toHaveBeenCalledWith(
       "1caa16bb-6810-4e53-bb0d-91f0d5702333",
       { contentIds: ["module-2", "module-1"] },
     );
