@@ -49,6 +49,38 @@ export class FeaturesCapabilitiesModule {
 
   /**
    */
+  async getTenantsCapabilitiesAuditLog(
+    tenantId: string,
+    query?: { capability?: string; fromDate?: string; toDate?: string },
+  ): Promise<Result<Array<Types.FeaturesCapabilityAuditLog>, ApiError>> {
+    const url = `/v1/tenants/${tenantId}/capabilities/audit-log`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.FeaturesCapabilityAuditLog>, ApiError>;
+  }
+
+  /**
+   */
+  async postTenantsCapabilitiesSync(tenantId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/tenants/${tenantId}/capabilities/sync`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getTenantsCapabilities1(tenantId: string, capability: string): Promise<Result<Types.FeaturesCapabilityCheckOutput, ApiError>> {
     const url = `/v1/tenants/${tenantId}/capabilities/${capability}`;
 
@@ -80,38 +112,6 @@ export class FeaturesCapabilitiesModule {
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postTenantsCapabilitiesSync(tenantId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/tenants/${tenantId}/capabilities/sync`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getTenantsCapabilitiesAuditLog(
-    tenantId: string,
-    query?: { capability?: string; fromDate?: string; toDate?: string },
-  ): Promise<Result<Array<Types.FeaturesCapabilityAuditLog>, ApiError>> {
-    const url = `/v1/tenants/${tenantId}/capabilities/audit-log`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.FeaturesCapabilityAuditLog>, ApiError>;
   }
 }
 

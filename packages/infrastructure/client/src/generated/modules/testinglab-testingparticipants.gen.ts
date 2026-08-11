@@ -17,6 +17,34 @@ export class TestinglabTestingparticipantsModule {
 
   /**
    */
+  async getTestingAttendanceStudents(): Promise<Result<void, ApiError>> {
+    const url = '/v1/testing/attendance/students';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getTestingRequestsParticipants(requestId: string): Promise<Result<Array<Types.TestingLabTestingParticipant>, ApiError>> {
+    const url = `/v1/testing/requests/${requestId}/participants`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.TestingLabTestingParticipant>, ApiError>;
+  }
+
+  /**
+   */
   async postTestingRequestsParticipants(requestId: string, userId: string): Promise<Result<Types.TestingLabTestingParticipant, ApiError>> {
     const url = `/v1/testing/requests/${requestId}/participants/${userId}`;
 
@@ -47,20 +75,6 @@ export class TestinglabTestingparticipantsModule {
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getTestingRequestsParticipants(requestId: string): Promise<Result<Array<Types.TestingLabTestingParticipant>, ApiError>> {
-    const url = `/v1/testing/requests/${requestId}/participants`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.TestingLabTestingParticipant>, ApiError>;
   }
 
   /**
@@ -191,20 +205,6 @@ export class TestinglabTestingparticipantsModule {
    */
   async getTestingUsersActivity(userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/testing/users/${userId}/activity`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getTestingAttendanceStudents(): Promise<Result<void, ApiError>> {
-    const url = '/v1/testing/attendance/students';
 
     const result = await this.client.request({
       method: 'GET',
