@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
   postAssessments: vi.fn(),
   putAssessments: vi.fn(),
   deleteAssessments: vi.fn(),
-  getCourses1: vi.fn(),
+  getCoursesById: vi.fn(),
   putCourses: vi.fn(),
   postCoursesPublish: vi.fn(),
   postCoursesRestore: vi.fn(),
@@ -67,7 +67,7 @@ vi.mock("@game-guild/client", () => ({
       putAssessmentsDefinition = mocks.putAssessmentsDefinition;
     },
     LearningCoursesProgramModule: class {
-      getCourses1 = mocks.getCourses1;
+      getCoursesById = mocks.getCoursesById;
       putCourses = mocks.putCourses;
       postCoursesUsers = mocks.postCoursesUsers;
       deleteCoursesUsers = mocks.deleteCoursesUsers;
@@ -192,7 +192,7 @@ describe("learning server actions", () => {
     });
     mocks.putAssessments.mockResolvedValue({ ok: true, data: undefined });
     mocks.deleteAssessments.mockResolvedValue({ ok: true, data: undefined });
-    mocks.getCourses1.mockResolvedValue({
+    mocks.getCoursesById.mockResolvedValue({
       ok: true,
       data: {
         id: "course-1",
