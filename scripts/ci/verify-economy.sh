@@ -246,13 +246,13 @@ with open(sys.argv[1], encoding="utf-8") as handle:
 for entry in manifest.get("projects", []):
     production = entry["productionProject"].replace("\\", "/")
     print("production", production, sep="\t")
-        assemblies = ",".join(entry.get("coverageAssemblies", []))
-        prefixes = ",".join(value.replace("\\", "/") for value in entry.get("coveragePathPrefixes", []))
-        minimum_branch_rate = str(entry.get("minimumBranchRate", 1))
-        for test in entry.get("testProjects", []):
-            normalized = test.replace("\\", "/")
-            print("test", normalized, sep="\t")
-            print("coverage", normalized, assemblies, prefixes, minimum_branch_rate, sep="\t")
+    assemblies = ",".join(entry.get("coverageAssemblies", []))
+    prefixes = ",".join(value.replace("\\", "/") for value in entry.get("coveragePathPrefixes", []))
+    minimum_branch_rate = str(entry.get("minimumBranchRate", 1))
+    for test in entry.get("testProjects", []):
+        normalized = test.replace("\\", "/")
+        print("test", normalized, sep="\t")
+        print("coverage", normalized, assemblies, prefixes, minimum_branch_rate, sep="\t")
 for contract in manifest.get("providerContractProjects", []):
     print("provider", contract["project"].replace("\\", "/"), contract["filter"], sep="\t")
 PY

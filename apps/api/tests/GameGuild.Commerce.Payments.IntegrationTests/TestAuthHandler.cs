@@ -1,8 +1,14 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using GameGuild.API.Database;
+using GameGuild.Identity.Tenants;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Moq;
 
 namespace GameGuild.Commerce.Payments.IntegrationTests;
 
@@ -65,5 +71,52 @@ public sealed class TestAuthHandler(
                 .SelectMany(value => value?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [])
                 .Where(value => !string.IsNullOrWhiteSpace(value));
         }
+    }
+}
+
+/// <summary>
+///     Supplies the tenant context used by these endpoint-focused tests. Production
+///     code still validates persisted memberships; the test authentication handler
+///     generates a fresh subject for many requests, so its test-only repository
+///     models that subject's active membership in the test tenant.
+/// </summary>
+internal static class TestTenantMembershipServices
+{
+    public static void AddDefaultTenantMembership(this IServiceCollection services)
+    {
+        var members = new Mock<ITenantMemberRepository>();
+        members
+            .Setup(repository => repository.GetByUserAndTenantAsync(
+                It.IsAny<Guid>(),
+                TestAuthHandler.DefaultTenantId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid userId, Guid tenantId, CancellationToken _) => new TenantMember
+            {
+                UserId = userId,
+                TenantId = tenantId,
+                Role = "Member",
+                IsActive = true
+            });
+
+        services.RemoveAll<ITenantMemberRepository>();
+        services.AddSingleton<ITenantMemberRepository>(members.Object);
+    }
+
+    public static void SeedDefaultTenant(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        if (context.Set<Tenant>().Any(tenant => tenant.Id == TestAuthHandler.DefaultTenantId)) return;
+
+        context.Set<Tenant>().Add(new Tenant
+        {
+            Id = TestAuthHandler.DefaultTenantId,
+            Name = "Payments Integration Test Tenant",
+            Slug = "payments-integration-test",
+            AdminEmail = "payments-integration-admin@example.test",
+            IsDefault = true,
+            IsActive = true
+        });
+        context.SaveChanges();
     }
 }

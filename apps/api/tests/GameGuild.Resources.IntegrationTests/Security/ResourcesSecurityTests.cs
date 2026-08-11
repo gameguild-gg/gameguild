@@ -49,6 +49,7 @@ public class ResourcesSecurityTests : IAsyncLifetime, IDisposable
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
             "TestScheme",
             $"{userId}|{tenantId}|{isSystemAdmin}");
+        client.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId.ToString());
         return client;
     }
 

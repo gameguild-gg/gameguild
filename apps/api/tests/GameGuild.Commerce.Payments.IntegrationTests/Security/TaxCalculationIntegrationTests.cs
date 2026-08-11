@@ -50,6 +50,7 @@ public class TaxCalculationIntegrationTests : IClassFixture<WebApplicationFactor
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+                services.AddDefaultTenantMembership();
 
                 services.AddHttpLogging(o => { });
 
@@ -61,7 +62,9 @@ public class TaxCalculationIntegrationTests : IClassFixture<WebApplicationFactor
             });
         });
 
+        TestTenantMembershipServices.SeedDefaultTenant(_factory.Services);
         _client = _factory.CreateClient();
+        _client.DefaultRequestHeaders.Add("X-Tenant-Id", TestAuthHandler.DefaultTenantId.ToString());
     }
 
     #region Multi-Jurisdiction Tax Rate Tests
@@ -85,7 +88,9 @@ public class TaxCalculationIntegrationTests : IClassFixture<WebApplicationFactor
         var response = await _client.PostAsJsonAsync("/api/v1/payments/tax/calculate", request);
 
         // Assert
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Created);
+        response.StatusCode.Should().BeOneOf(
+            [HttpStatusCode.OK, HttpStatusCode.Created],
+            await response.Content.ReadAsStringAsync());
         var result = await response.Content.ReadFromJsonAsync<TaxCalculationResultDto>();
 
         // California sales tax is approximately 7.25% base rate

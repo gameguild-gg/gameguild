@@ -2,6 +2,8 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using GameGuild.API.Database;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -19,6 +21,9 @@ namespace GameGuild.Resources.IntegrationTests.Infrastructure;
 /// </summary>
 public class PostgreSqlWebApplicationFactory : WebApplicationFactory<GameGuild.API.Program>
 {
+    private static readonly Guid TenantA = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    private static readonly Guid TenantB = Guid.Parse("22222222-2222-2222-2222-222222222222");
+    private static readonly Guid UserA = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private readonly string _connectionString;
 
     public PostgreSqlWebApplicationFactory(string connectionString)
@@ -61,6 +66,7 @@ public class PostgreSqlWebApplicationFactory : WebApplicationFactory<GameGuild.A
             using var scope = sp.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             context.Database.EnsureCreated();
+            SeedAuthorizationFixtures(context);
 
             // Add test authentication scheme
             services.AddAuthentication(options =>
@@ -75,6 +81,58 @@ public class PostgreSqlWebApplicationFactory : WebApplicationFactory<GameGuild.A
 
             services.AddHttpLogging(_ => { });
         });
+    }
+
+    private static void SeedAuthorizationFixtures(ApplicationDbContext context)
+    {
+        if (!context.Set<Tenant>().Any(tenant => tenant.Id == TenantA))
+        {
+            context.Set<Tenant>().Add(new Tenant
+            {
+                Id = TenantA,
+                Name = "Resources Integration Tenant A",
+                Slug = "resources-integration-a",
+                AdminEmail = "resources-integration-a@example.test",
+                IsActive = true
+            });
+        }
+
+        if (!context.Set<Tenant>().Any(tenant => tenant.Id == TenantB))
+        {
+            context.Set<Tenant>().Add(new Tenant
+            {
+                Id = TenantB,
+                Name = "Resources Integration Tenant B",
+                Slug = "resources-integration-b",
+                AdminEmail = "resources-integration-b@example.test",
+                IsActive = true
+            });
+        }
+
+        if (!context.Set<User>().Any(user => user.Id == UserA))
+        {
+            context.Set<User>().Add(new User
+            {
+                Id = UserA,
+                Email = "resources-integration-user-a@example.test",
+                Username = "resources-integration-user-a",
+                Name = "Resources Integration User A",
+                IsActive = true
+            });
+        }
+
+        if (!context.Set<TenantMember>().Any(member => member.UserId == UserA && member.TenantId == TenantA))
+        {
+            context.Set<TenantMember>().Add(new TenantMember
+            {
+                UserId = UserA,
+                TenantId = TenantA,
+                Role = "Member",
+                IsActive = true
+            });
+        }
+
+        context.SaveChanges();
     }
 }
 

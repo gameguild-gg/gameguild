@@ -48,6 +48,7 @@ public class WalletEndpointsIntegrationTests : IClassFixture<WebApplicationFacto
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+                services.AddDefaultTenantMembership();
 
                 // Authorization matrix tests intentionally exercise permission claims from
                 // the test token instead of loading grants from the application database.
@@ -67,6 +68,7 @@ public class WalletEndpointsIntegrationTests : IClassFixture<WebApplicationFacto
             });
         });
 
+        TestTenantMembershipServices.SeedDefaultTenant(_factory.Services);
         _client = _factory.CreateClient();
     }
 
@@ -79,7 +81,7 @@ public class WalletEndpointsIntegrationTests : IClassFixture<WebApplicationFacto
 
         var response = await _client.SendAsync(request);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.Should().Be(HttpStatusCode.Created, await response.Content.ReadAsStringAsync());
         var content = await response.Content.ReadAsStringAsync();
         content.Should().Contain(subjectId.ToString());
     }
@@ -261,6 +263,7 @@ public class WalletEndpointsIntegrationTests : IClassFixture<WebApplicationFacto
         request.Headers.Add("X-Test-Subject", subjectId.ToString());
         if (!string.IsNullOrWhiteSpace(roles)) request.Headers.Add("X-Test-Roles", roles);
         if (!string.IsNullOrWhiteSpace(permissions)) request.Headers.Add("X-Test-Permissions", permissions);
+        if (!omitTenant) request.Headers.Add("X-Tenant-Id", TestAuthHandler.DefaultTenantId.ToString());
         if (omitTenant) request.Headers.Add("X-Test-No-Tenant", "true");
         return request;
     }
