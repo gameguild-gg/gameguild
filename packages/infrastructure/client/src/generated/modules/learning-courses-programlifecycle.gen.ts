@@ -17,8 +17,8 @@ export class LearningCoursesProgramlifecycleModule {
 
   /**
    */
-  async postCoursesSubmit(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
-    const url = `/v1/courses/${id}:submit`;
+  async postCoursesApprove(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
+    const url = `/v1/courses/${id}:approve`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -37,8 +37,28 @@ export class LearningCoursesProgramlifecycleModule {
 
   /**
    */
-  async postCoursesApprove(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
-    const url = `/v1/courses/${id}:approve`;
+  async postCoursesArchive(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
+    const url = `/v1/courses/${id}:archive`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesProgramSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postCoursesPublish(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
+    const url = `/v1/courses/${id}:publish`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -81,46 +101,6 @@ export class LearningCoursesProgramlifecycleModule {
 
   /**
    */
-  async postCoursesWithdraw(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
-    const url = `/v1/courses/${id}:withdraw`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesProgramSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postCoursesArchive(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
-    const url = `/v1/courses/${id}:archive`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesProgramSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async postCoursesRestore(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
     const url = `/v1/courses/${id}:restore`;
 
@@ -141,8 +121,32 @@ export class LearningCoursesProgramlifecycleModule {
 
   /**
    */
-  async postCoursesPublish(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
-    const url = `/v1/courses/${id}:publish`;
+  async postCoursesSchedule(id: string, body: Types.LearningCoursesScheduleProgram): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
+    const url = `/v1/courses/${id}:schedule`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCoursesScheduleProgramSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesProgramSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postCoursesSubmit(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
+    const url = `/v1/courses/${id}:submit`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -181,16 +185,12 @@ export class LearningCoursesProgramlifecycleModule {
 
   /**
    */
-  async postCoursesSchedule(id: string, body: Types.LearningCoursesScheduleProgram): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
-    const url = `/v1/courses/${id}:schedule`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesScheduleProgramSchema, body, 'request');
+  async postCoursesWithdraw(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
+    const url = `/v1/courses/${id}:withdraw`;
 
     const result = await this.client.request({
       method: 'POST',
       path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 
