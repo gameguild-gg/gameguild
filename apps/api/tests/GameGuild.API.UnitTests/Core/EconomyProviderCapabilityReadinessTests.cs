@@ -3,6 +3,8 @@ using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
 using GameGuild.Economy.Risk;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -56,6 +58,25 @@ public sealed class EconomyProviderCapabilityReadinessTests
 
         readiness.Assess(EconomyValueMovementCapability.PayoutExecution)
             .State.Should().Be(EconomyCapabilityReadinessState.Ready);
+    }
+
+    [Fact]
+    public void InvalidCapabilityConfiguration_IsReportedWithoutBlockingComposition()
+    {
+        var values = new Dictionary<string, string?>
+        {
+            [EconomyRiskCompositionOptions.SectionName + ":ValueMovingDecisionsEnabled"] = "true"
+        };
+        var services = new ServiceCollection();
+        services.AddSingleton<IHostEnvironment>(new TestHostEnvironment("Staging"));
+        services.AddEconomyCapabilityComposition(
+            new ConfigurationBuilder().AddInMemoryCollection(values).Build());
+
+        using var provider = services.BuildServiceProvider();
+        var readiness = provider.GetRequiredService<IEconomyProviderCapabilityReadiness>();
+
+        readiness.Assess(EconomyValueMovementCapability.ConvertHardToSoft)
+            .State.Should().Be(EconomyCapabilityReadinessState.InvalidConfiguration);
     }
 
     private static EconomyProviderCapabilityReadiness CreateReadiness(
