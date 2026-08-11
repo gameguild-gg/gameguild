@@ -62,11 +62,12 @@ describe("GET /api/nodes", () => {
           },
           status: {
             conditions: [{ type: "Ready", status: "False" }],
+            addresses: [{ type: "InternalIP", address: "10.0.0.2" }],
           },
         },
       ],
     });
-    promOk(flannelResult(["bowser"]));
+    promOk(flannelResult(["10.0.0.1:9100"]));
 
     const res = await GET();
     expect(res.status).toBe(200);
