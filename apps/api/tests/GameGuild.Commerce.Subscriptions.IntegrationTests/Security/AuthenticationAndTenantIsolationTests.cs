@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Commerce.Subscriptions.IntegrationTests;
+using GameGuild.Identity.Tenants;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -249,6 +250,7 @@ public class AuthenticationAndTenantIsolationTests : IClassFixture<WebApplicatio
 
         // Create client with tenant2 context (different from subscription's tenant)
         var tenant2Id = Guid.NewGuid();
+        await EnsureTenantMembershipAsync(tenant2Id);
         var clientWithTenant2 = CreateAuthenticatedClientWithTenant(tenant2Id);
 
         // Act - Try to access tenant1's subscription from tenant2's context
@@ -271,6 +273,7 @@ public class AuthenticationAndTenantIsolationTests : IClassFixture<WebApplicatio
 
         // Create client with tenant2 context
         var tenant2Id = Guid.NewGuid();
+        await EnsureTenantMembershipAsync(tenant2Id);
         var clientWithTenant2 = CreateAuthenticatedClientWithTenant(tenant2Id);
 
         // Act - List subscriptions from tenant2's context
@@ -291,6 +294,7 @@ public class AuthenticationAndTenantIsolationTests : IClassFixture<WebApplicatio
 
         // Create client with tenant2 context (different from subscription's tenant)
         var tenant2Id = Guid.NewGuid();
+        await EnsureTenantMembershipAsync(tenant2Id);
         var clientWithTenant2 = CreateAuthenticatedClientWithTenant(tenant2Id);
 
         // Act
@@ -310,6 +314,7 @@ public class AuthenticationAndTenantIsolationTests : IClassFixture<WebApplicatio
 
         var tenant2Id = Guid.NewGuid();
         var tenant2SubscriptionId = await SeedSubscriptionForTenantAsync(tenant2Id);
+        await EnsureTenantMembershipAsync(tenant2Id);
         var clientWithTenant2 = CreateAuthenticatedClientWithTenant(tenant2Id);
 
         // Act
@@ -399,6 +404,8 @@ public class AuthenticationAndTenantIsolationTests : IClassFixture<WebApplicatio
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        await EnsureTenantMembershipAsync(dbContext, tenantId);
+
         var planId = await SeedSubscriptionPlanAsync(dbContext);
 
         var subscription = new Subscription(
@@ -430,6 +437,43 @@ public class AuthenticationAndTenantIsolationTests : IClassFixture<WebApplicatio
         await dbContext.SaveChangesAsync();
 
         return plan.Id;
+    }
+
+    private async Task EnsureTenantMembershipAsync(Guid tenantId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await EnsureTenantMembershipAsync(dbContext, tenantId);
+    }
+
+    private static async Task EnsureTenantMembershipAsync(ApplicationDbContext dbContext, Guid tenantId)
+    {
+        if (!await dbContext.Set<Tenant>().AnyAsync(tenant => tenant.Id == tenantId))
+        {
+            dbContext.Set<Tenant>().Add(new Tenant
+            {
+                Id = tenantId,
+                Name = $"Subscription integration tenant {tenantId:N}",
+                Slug = $"subscription-integration-{tenantId:N}",
+                AdminEmail = "subscriptions-integration-admin@example.test",
+                IsActive = true
+            });
+        }
+
+        if (!await dbContext.Set<TenantMember>().AnyAsync(member =>
+                member.TenantId == tenantId && member.UserId == TestAuthHandler.DefaultUserId))
+        {
+            dbContext.Set<TenantMember>().Add(new TenantMember
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                UserId = TestAuthHandler.DefaultUserId,
+                Role = "Member",
+                IsActive = true
+            });
+        }
+
+        await dbContext.SaveChangesAsync();
     }
 
     private HttpClient CreateAuthenticatedClientWithTenant(Guid tenantId)

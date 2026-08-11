@@ -13,6 +13,7 @@ public sealed class TestAuthHandler(
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     public const string SchemeName = "Test";
+    public static readonly Guid DefaultUserId = Guid.Parse("33333333-3333-3333-3333-333333333333");
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -21,7 +22,7 @@ public sealed class TestAuthHandler(
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, "integration-test-user"),
+            new Claim(ClaimTypes.NameIdentifier, DefaultUserId.ToString()),
             new Claim(ClaimTypes.Name, "Integration Test User"),
             new Claim("tenant_id", Request.Headers["X-Tenant-Id"].FirstOrDefault() ?? Guid.NewGuid().ToString())
         };

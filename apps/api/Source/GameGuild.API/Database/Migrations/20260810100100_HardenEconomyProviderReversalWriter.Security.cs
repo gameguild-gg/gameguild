@@ -6,7 +6,7 @@ namespace GameGuild.API.Database.Migrations;
 
 public partial class HardenEconomyProviderReversalWriter
 {
-    private static void InstallHardenedProviderReversalWriter(MigrationBuilder migrationBuilder)
+    internal static void InstallHardenedProviderReversalWriter(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.Sql(
             """

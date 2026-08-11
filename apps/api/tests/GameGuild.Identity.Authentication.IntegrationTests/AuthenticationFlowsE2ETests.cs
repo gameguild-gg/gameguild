@@ -78,6 +78,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
 
         // Ensure database is created
         _dbContext.Database.EnsureCreated();
+        SeedDefaultTenant(_dbContext);
     }
 
     #region Local Authentication E2E Tests
@@ -675,5 +676,22 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         _scope?.Dispose();
         _dbContext?.Dispose();
         _client?.Dispose();
+    }
+
+    private static void SeedDefaultTenant(ApplicationDbContext dbContext)
+    {
+        if (dbContext.Set<Tenant>().Any(tenant => tenant.IsDefault)) return;
+
+        dbContext.Set<Tenant>().Add(new Tenant
+        {
+            Id = Guid.NewGuid(),
+            Name = "Authentication Integration Default Tenant",
+            Slug = "authentication-integration-default",
+            Description = "Default tenant required by the authentication integration fixture.",
+            AdminEmail = "authentication-integration-admin@example.test",
+            IsActive = true,
+            IsDefault = true
+        });
+        dbContext.SaveChanges();
     }
 }
