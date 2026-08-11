@@ -100,7 +100,9 @@ public enum PostingTemplateKind
     ProviderConvertedSoftReversal = 18,
     ProviderReversalDebt = 19,
     ProviderReversalLoss = 20,
-    AdRewardIssuance = 21
+    AdRewardIssuance = 21,
+    BountyEscrow = 22,
+    BountyClaim = 23
 }
 
 public enum PostingStatus
