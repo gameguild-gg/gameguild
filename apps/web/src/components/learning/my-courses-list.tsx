@@ -1,13 +1,10 @@
+import { Link } from '@/i18n/navigation';
 import type { CourseAttendanceData } from '@/lib/learner/courses';
-import { createLearnerRoutes } from '@/lib/learner/routes';
 import { Badge } from '@game-guild/ui/components/badge';
 import { BookOpen, ChevronRight, Clock3 } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 
 export function MyCoursesList({ courses }: { courses: CourseAttendanceData[] }) {
-  const routes = createLearnerRoutes();
-
   return (
     <div className="space-y-8">
       <header className="border-b pb-6">
@@ -25,7 +22,7 @@ export function MyCoursesList({ courses }: { courses: CourseAttendanceData[] }) 
           <p className="mt-2 max-w-md text-sm text-muted-foreground">
             Enrolled courses appear here after access is confirmed.
           </p>
-          <Link href={routes.catalog} className="mt-5 text-sm font-medium text-primary hover:underline">
+          <Link href="/courses" className="mt-5 text-sm font-medium text-primary hover:underline">
             Browse the course catalog
           </Link>
         </section>
@@ -34,7 +31,7 @@ export function MyCoursesList({ courses }: { courses: CourseAttendanceData[] }) 
           {courses.map((course) => (
             <Link
               key={course.id}
-              href={routes.course(course.slug)}
+              href={`/learn/courses/${course.slug}`}
               className="grid gap-4 py-5 transition-colors hover:bg-muted/40 sm:grid-cols-[8rem_minmax(0,1fr)_10rem_auto] sm:items-center sm:px-3"
             >
               <div className="relative aspect-video overflow-hidden rounded-md bg-muted">

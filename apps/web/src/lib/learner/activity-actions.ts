@@ -260,7 +260,7 @@ export async function createCourseDiscussion(
           "The discussion could not be created.",
         ),
       };
-    revalidatePath(`/courses/${courseSlug}/community`);
+    revalidatePath(`/learn/courses/${courseSlug}/community`);
     return { success: true };
   } catch (error) {
     return {
@@ -297,8 +297,8 @@ export async function createCourseDiscussionReply(
         error: errorMessage(result.error, "The reply could not be published."),
       };
 
-    revalidatePath(`/courses/${courseSlug}/community`);
-    revalidatePath(`/courses/${courseSlug}/community/${discussionId}`);
+    revalidatePath(`/learn/courses/${courseSlug}/community`);
+    revalidatePath(`/learn/courses/${courseSlug}/community/${discussionId}`);
     return { success: true };
   } catch (error) {
     return {

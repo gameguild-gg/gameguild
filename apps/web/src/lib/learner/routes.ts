@@ -1,5 +1,7 @@
+import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { LearnerRoutes } from "@game-guild/courses/components/learner";
+import { hasLocale } from "next-intl";
 
 export function normalizeLearnerPathname(pathname: string): string {
   const segments = pathname.split("/").filter(Boolean);
@@ -7,9 +9,6 @@ export function normalizeLearnerPathname(pathname: string): string {
   if (
     routing.locales.includes(segments[0] as (typeof routing.locales)[number])
   ) {
-    segments.shift();
-  }
-  if (segments[0] === "learn") {
     segments.shift();
   }
 
@@ -26,21 +25,30 @@ export interface LearningNavigationRoutes extends LearnerRoutes {
 }
 
 export function createLearnerRoutes(
+  locale: string = routing.defaultLocale,
   webOrigin = process.env.NEXT_PUBLIC_WEB_URL || "https://gameguild.gg",
 ): LearningNavigationRoutes {
+  const resolvedLocale = hasLocale(routing.locales, locale)
+    ? locale
+    : routing.defaultLocale;
+  const path = (href: string) =>
+    getPathname({ href, locale: resolvedLocale });
+
   return {
-    home: "/",
-    courses: "/courses",
-    calendar: "/calendar",
-    grades: "/grades",
-    certificates: "/certificates",
+    home: path("/learn"),
+    courses: path("/learn/courses"),
+    calendar: path("/learn/calendar"),
+    grades: path("/learn/grades"),
+    certificates: path("/learn/certificates"),
     catalog: new URL("/courses", webOrigin).toString().replace(/\/$/, ""),
-    course: (slug) => `/courses/${slug}`,
-    content: (slug) => `/courses/${slug}/content`,
-    lesson: (slug, lessonId) => `/courses/${slug}/lessons/${lessonId}`,
-    activities: (slug) => `/courses/${slug}/activities`,
-    activity: (slug, activityId) => `/courses/${slug}/activities/${activityId}`,
-    community: (slug) => `/courses/${slug}/community`,
+    course: (slug) => path(`/learn/courses/${slug}`),
+    content: (slug) => path(`/learn/courses/${slug}/content`),
+    lesson: (slug, lessonId) =>
+      path(`/learn/courses/${slug}/lessons/${lessonId}`),
+    activities: (slug) => path(`/learn/courses/${slug}/activities`),
+    activity: (slug, activityId) =>
+      path(`/learn/courses/${slug}/activities/${activityId}`),
+    community: (slug) => path(`/learn/courses/${slug}/community`),
   };
 }
 

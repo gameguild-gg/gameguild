@@ -1,5 +1,6 @@
 "use client";
 
+import { Link, useRouter } from "@/i18n/navigation";
 import { createCourseDiscussionReply } from "@/lib/learner/activity-actions";
 import type {
   LearningExperienceSocialServicesCourseDiscussion,
@@ -20,8 +21,6 @@ import {
   Send,
   ThumbsUp,
 } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 interface CourseDiscussionThreadProps {
@@ -73,7 +72,7 @@ export function CourseDiscussionThread({
     <div className="mx-auto w-full max-w-4xl space-y-8">
       <header className="space-y-5 border-b pb-6">
         <Button asChild size="sm" variant="ghost">
-          <Link href={`/courses/${courseSlug}/community`}>
+          <Link href={`/learn/courses/${courseSlug}/community`}>
             <ArrowLeft className="size-4" />
             Back to community
           </Link>

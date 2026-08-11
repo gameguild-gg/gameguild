@@ -1,5 +1,6 @@
 "use client";
 
+import { Link, useRouter } from "@/i18n/navigation";
 import type { CourseAccessState } from "@/lib/learner/courses";
 import { enrollInCourse } from "@/lib/learner/enrollment-actions";
 import { Button } from "@game-guild/ui/components/button";
@@ -10,8 +11,6 @@ import {
   CheckCircle2,
   LockKeyhole,
 } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 type GateAccess = Exclude<
@@ -43,7 +42,7 @@ export function CourseAccessGate({ access }: { access: GateAccess }) {
         return;
       }
       setMessage("Enrollment confirmed");
-      router.replace(`/courses/${course.slug}/content`);
+      router.replace(`/learn/courses/${course.slug}/content`);
     });
   };
 

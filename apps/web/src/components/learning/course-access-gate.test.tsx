@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -10,14 +11,17 @@ vi.mock('@/lib/learner/enrollment-actions', () => ({
   enrollInCourse: mocks.enroll,
 }));
 
-vi.mock('next/navigation', () => ({
+vi.mock('@/i18n/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
+  Link: ({ children, href, ...props }: { children: ReactNode; href: string }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
 }));
 
 const { CourseAccessGate } = await import('./course-access-gate');
 
 describe('CourseAccessGate', () => {
-  it('enters course content after a successful free enrollment', async () => {
+  it('enters course content through the App Router after enrollment', async () => {
     mocks.enroll.mockResolvedValue({ success: true });
 
     render(
@@ -37,7 +41,7 @@ describe('CourseAccessGate', () => {
 
     await waitFor(() => {
       expect(mocks.enroll).toHaveBeenCalledWith('course-1');
-      expect(mocks.replace).toHaveBeenCalledWith('/courses/game-production/content');
+      expect(mocks.replace).toHaveBeenCalledWith('/learn/courses/game-production/content');
     });
   });
 });

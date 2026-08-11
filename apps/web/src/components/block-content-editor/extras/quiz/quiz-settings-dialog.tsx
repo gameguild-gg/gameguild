@@ -151,6 +151,7 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
   if (!isOpen) return null
 
   const EditorComponent = getEditorComponent(currentEntry.type)
+  const hasTrustedFeedback = showFeedback && isCorrect !== null
 
   return (
     <BlockEditorShell
@@ -298,7 +299,7 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                             answerState={answerState}
                             onAnswerChange={updateAnswerState}
                             disabled={false}
-                            showFeedback={showFeedback}
+                            showFeedback={hasTrustedFeedback}
                           />
 
                           {/* Submit button - h-12 matches Feedback/Submitted height */}
@@ -313,9 +314,9 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                           )}
 
                           {/* Feedback */}
-                          {showFeedback && (currentEntry.settings.showFeedback ?? true) && (
+                          {hasTrustedFeedback && (currentEntry.settings.showFeedback ?? true) && (
                             <QuizFeedback
-                              isCorrect={isCorrect}
+                              isCorrect={isCorrect === true}
                               correctFeedback={currentEntry.feedback?.correct || ""}
                               incorrectFeedback={currentEntry.feedback?.incorrect || ""}
                               allowRetry={currentEntry.settings.allowRetry}
@@ -325,7 +326,7 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                           )}
 
                           {/* Submitted without feedback - h-12 matches Submit button height */}
-                          {showFeedback && !(currentEntry.settings.showFeedback ?? true) && (
+                          {showFeedback && (!hasTrustedFeedback || !(currentEntry.settings.showFeedback ?? true)) && (
                             <div className="flex items-center justify-between gap-3 rounded-lg px-4 h-12 py-0 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
                               <span className="font-medium">Answer submitted.</span>
                               {currentEntry.settings.allowRetry ? (

@@ -1,36 +1,44 @@
 import { describe, expect, it } from 'vitest';
 import {
   GradingConfigValidationError,
-  assertPublicIsNotOfficial,
-  createDisabledGradingConfig,
-  isOfficialGrade,
-  normalizeGradingConfig,
+  createDisabledGradingDefinition,
+  isGradebookBound,
+  normalizeGradingDefinition,
   sumGradedItemPoints,
-  validateGradingConfig,
+  validateGradingDefinition,
 } from './index';
 
-describe('grading config contracts', () => {
+describe('grading definition contracts', () => {
   it('keeps disabled grading inert', () => {
-    expect(createDisabledGradingConfig()).toEqual({
+    expect(createDisabledGradingDefinition()).toEqual({
       enabled: false,
       schemaVersion: 1,
-      validationMode: 'public',
-      gradebook: {
-        maxScore: 0,
-        official: false,
+      outcome: {
+        uses: ['feedback'],
+        gradebook: null,
       },
-      policy: {},
+      score: {
+        maxScore: 0,
+      },
+      attempts: {},
+      feedback: {},
+      presentation: {},
       items: {},
     });
   });
 
-  it('normalizes public grading as non-official', () => {
-    const config = normalizeGradingConfig({
+  it('keeps feedback-only grading out of the gradebook', () => {
+    const definition = normalizeGradingDefinition({
       enabled: true,
-      validationMode: 'public',
-      gradebook: {
+      outcome: {
+        uses: ['feedback'],
+        gradebook: {
+          groupId: 'ignored',
+          includeInFinalGrade: true,
+        },
+      },
+      score: {
         maxScore: 10,
-        official: true,
       },
       items: {
         q1: {
@@ -41,36 +49,35 @@ describe('grading config contracts', () => {
       },
     });
 
-    expect(config.gradebook.official).toBe(false);
-    expect(isOfficialGrade(config)).toBe(false);
+    expect(definition.outcome.uses).toEqual(['feedback']);
+    expect(definition.outcome.gradebook).toBeNull();
+    expect(isGradebookBound(definition)).toBe(false);
   });
 
-  it('rejects explicit public official grading', () => {
-    expect(() =>
-      assertPublicIsNotOfficial({
-        enabled: true,
-        schemaVersion: 1,
-        validationMode: 'public',
-        gradebook: {
-          maxScore: 10,
-          official: true,
-        },
-        policy: {},
-        items: {},
-      }),
-    ).toThrow(GradingConfigValidationError);
-  });
-
-  it('treats protected official grading as official', () => {
-    const config = validateGradingConfig({
+  it('normalizes gradebook placement when the result should count there', () => {
+    const definition = validateGradingDefinition({
       enabled: true,
       schemaVersion: 1,
-      validationMode: 'protected',
-      gradebook: {
-        maxScore: 10,
-        official: true,
+      outcome: {
+        uses: ['feedback', 'gradebook', 'gradebook'],
+        gradebook: {
+          groupId: 'group-1',
+          weight: 20,
+          required: false,
+          includeInFinalGrade: true,
+        },
       },
-      policy: {},
+      score: {
+        maxScore: 10,
+        passingScore: 7,
+      },
+      attempts: {},
+      feedback: {
+        mode: 'after-submit',
+      },
+      presentation: {
+        mode: 'single-step',
+      },
       items: {
         q1: {
           contentBlockId: 'q1',
@@ -85,19 +92,42 @@ describe('grading config contracts', () => {
       },
     });
 
-    expect(isOfficialGrade(config)).toBe(true);
-    expect(sumGradedItemPoints(config)).toBe(10);
+    expect(definition.outcome.uses).toEqual(['feedback', 'gradebook']);
+    expect(definition.outcome.gradebook).toEqual({
+      groupId: 'group-1',
+      weight: 20,
+      required: false,
+      includeInFinalGrade: true,
+    });
+    expect(isGradebookBound(definition)).toBe(true);
+    expect(sumGradedItemPoints(definition)).toBe(10);
+  });
+
+  it('rejects unsupported result uses', () => {
+    expect(() =>
+      validateGradingDefinition({
+        enabled: true,
+        outcome: {
+          uses: ['analytics'],
+        },
+        score: {
+          maxScore: 1,
+        },
+        items: {},
+      }),
+    ).toThrow(GradingConfigValidationError);
   });
 
   it('rejects enabled grading without a positive max score', () => {
     expect(() =>
-      validateGradingConfig({
+      validateGradingDefinition({
         enabled: true,
-        validationMode: 'protected',
-        gradebook: {
+        outcome: {
+          uses: ['feedback'],
+        },
+        score: {
           maxScore: 0,
         },
-        policy: {},
         items: {},
       }),
     ).toThrow(GradingConfigValidationError);
