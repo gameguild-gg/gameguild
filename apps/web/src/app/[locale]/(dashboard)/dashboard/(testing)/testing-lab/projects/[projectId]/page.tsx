@@ -5,22 +5,67 @@ import { TestingLabAccessIssues, TestingLabEmptyState } from '@/components/testi
 import { Link } from '@/i18n/navigation';
 import { deleteTestingRequest, removeTestingParticipant, restoreTestingRequest } from '@/lib/testing-lab/actions';
 import { getMembers } from '@/lib/community/queries/members';
-import { getTestingRequestDetail, normalizeTestingRequestStatus } from '@/lib/testing-lab';
+import { getTestingLabProjectDetail, normalizeTestingRequestStatus } from '@/lib/testing-lab';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { ClipboardList, Download } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
-export default async function TestingProjectDetailPage({ params }: { params: Promise<{ requestId: string }> }) {
-  const { requestId } = await params;
-  const [detail, memberDirectory] = await Promise.all([getTestingRequestDetail(requestId), getMembers({ page: 1, limit: 100 })]);
-  if (!detail.request && detail.accessIssues.length === 0) notFound();
+export default async function TestingProjectDetailPage({ params }: { params: Promise<{ projectId: string }> }) {
+  const { projectId } = await params;
+  const [detail, memberDirectory] = await Promise.all([getTestingLabProjectDetail(projectId), getMembers({ page: 1, limit: 100 })]);
+  if (!detail.project && !detail.request && detail.accessIssues.length === 0) notFound();
   const request = detail.request;
   if (!request) {
     return (
-      <div className="p-6">
+      <div className="space-y-6 p-4 lg:p-6">
+        <TestingLabPageHeader
+          icon={ClipboardList}
+          title={detail.project?.title ?? 'Project'}
+          description={detail.project?.description ?? 'Shared project available for Testing Lab planning.'}
+          actions={
+            <Button asChild variant="outline">
+              <Link href="/dashboard/testing-lab/events">Browse testing events</Link>
+            </Button>
+          }
+        />
         <TestingLabAccessIssues issues={detail.accessIssues} />
+        {detail.project ? (
+          <>
+            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Project status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Badge variant="outline">{String(detail.project.status ?? 'Draft')}</Badge>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Testing Lab</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">Not submitted</CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Development</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">{detail.project.developmentStatus ?? 'Not specified'}</CardContent>
+              </Card>
+            </section>
+            <TestingLabEmptyState
+              title="Not submitted to Testing Lab yet"
+              description="This shared project has no Testing Lab brief or event application. Choose an event to submit the project for manager review."
+              action={
+                <Button asChild>
+                  <Link href="/dashboard/testing-lab/events">Choose a testing event</Link>
+                </Button>
+              }
+            />
+          </>
+        ) : null}
       </div>
     );
   }

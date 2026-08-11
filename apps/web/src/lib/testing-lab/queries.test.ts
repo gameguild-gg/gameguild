@@ -3,14 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getToken: vi.fn(),
   createServerClient: vi.fn(),
-  requests: { getTestingRequests: vi.fn() },
+  requests: { getTestingRequests: vi.fn(), getTestingRequests1: vi.fn() },
   sessions: {
     getTestingSessions: vi.fn(),
     getTestingPublicSessions: vi.fn(),
   },
   locations: { getTestingLocations: vi.fn() },
   analytics: {},
-  projects: { getProjects: vi.fn() },
+  projects: { getProjects: vi.fn(), getProjects1: vi.fn() },
 }));
 
 vi.mock('@/auth', () => ({
@@ -56,6 +56,7 @@ import {
   getPublicTestingLabDirectory,
   getTestingLabDashboard,
   getTestingLabLocations,
+  getTestingLabProjectDetail,
   getTestingProjectOptions,
   normalizeTestingLocationStatus,
   normalizeTestingRequestStatus,
@@ -87,6 +88,17 @@ describe('testing lab queries', () => {
     mocks.projects.getProjects.mockResolvedValue({
       ok: true,
       data: [{ id: 'project-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' }],
+    });
+    mocks.projects.getProjects1.mockResolvedValue({
+      ok: true,
+      data: {
+        id: 'project-1',
+        title: 'Arena Tactics',
+        slug: 'arena-tactics',
+        status: 'Published',
+        shortDescription: 'A shared project ready for testing.',
+        developmentStatus: 'InDevelopment',
+      },
     });
   });
 
@@ -194,5 +206,26 @@ describe('testing lab queries', () => {
       sortBy: 'UpdatedAt',
       sortDirection: 'DESC',
     });
+  });
+
+  it('resolves a shared project without treating it as a missing Testing Lab request', async () => {
+    mocks.requests.getTestingRequests.mockResolvedValue({ ok: true, data: [] });
+
+    const detail = await getTestingLabProjectDetail('project-1');
+
+    expect(detail.project).toMatchObject({
+      id: 'project-1',
+      title: 'Arena Tactics',
+      description: 'A shared project ready for testing.',
+    });
+    expect(detail.request).toBeNull();
+    expect(detail.accessIssues).toEqual([]);
+    expect(mocks.projects.getProjects1).toHaveBeenCalledWith('project-1', {
+      includeTeam: false,
+      includeReleases: true,
+      includeCollaborators: false,
+      includeStatistics: true,
+    });
+    expect(mocks.requests.getTestingRequests1).not.toHaveBeenCalled();
   });
 });
