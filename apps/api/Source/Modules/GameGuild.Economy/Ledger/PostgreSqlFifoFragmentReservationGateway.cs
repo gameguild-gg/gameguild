@@ -11,7 +11,8 @@ public enum PersistedFragmentReservationPurpose
     AdminWithdrawal = 2,
     HardToSoftConversion = 3,
     Spend = 4,
-    ProviderReversal = 5
+    ProviderReversal = 5,
+    BountyEscrow = 6
 }
 
 public enum PersistedFragmentReservationStatus
@@ -73,18 +74,7 @@ public sealed class PostgreSqlFifoFragmentReservationGateway : IFifoFragmentRese
 
         try
         {
-            return _db.Set<FifoFragmentReservationReceiptRow>()
-                .FromSqlInterpolated($"""
-                    SELECT *
-                    FROM economy_private.reserve_fifo_fragments_v1(
-                        {request.OperationId},
-                        {request.WalletId.Value},
-                        {(int)request.Currency},
-                        {(int)request.Provenance},
-                        {request.Amount.Units},
-                        {(int)request.Purpose},
-                        {request.ReservedAt})
-                    """)
+            return ReservationReceipts(request)
                 .AsNoTracking()
                 .AsEnumerable()
                 .Select(row => new PersistedFragmentReservation(
@@ -107,6 +97,34 @@ public sealed class PostgreSqlFifoFragmentReservationGateway : IFifoFragmentRese
                 "The persistent Economy FIFO reservation writer rejected the request.", exception);
         }
     }
+
+    private IQueryable<FifoFragmentReservationReceiptRow> ReservationReceipts(
+        FifoFragmentReservationRequest request) =>
+        request.Purpose == PersistedFragmentReservationPurpose.BountyEscrow
+            ? _db.Set<FifoFragmentReservationReceiptRow>()
+                .FromSqlInterpolated($"""
+                    SELECT *
+                    FROM economy_private.reserve_bounty_fifo_fragments_v1(
+                        {request.OperationId},
+                        {request.WalletId.Value},
+                        {(int)request.Currency},
+                        {(int)request.Provenance},
+                        {request.Amount.Units},
+                        {(int)request.Purpose},
+                        {request.ReservedAt})
+                    """)
+            : _db.Set<FifoFragmentReservationReceiptRow>()
+                .FromSqlInterpolated($"""
+                    SELECT *
+                    FROM economy_private.reserve_fifo_fragments_v1(
+                        {request.OperationId},
+                        {request.WalletId.Value},
+                        {(int)request.Currency},
+                        {(int)request.Provenance},
+                        {request.Amount.Units},
+                        {(int)request.Purpose},
+                        {request.ReservedAt})
+                    """);
 
     public long Transition(
         Guid operationId,
