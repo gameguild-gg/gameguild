@@ -81,8 +81,11 @@ public static class BountyReclaimPostingFactory
             }
         }
 
-        if (remainingReturn != 0 || lines.Count == 0 || allocations.Sum(item => item.AmountUnits) != escrow.Amount.Units)
-            throw new InvalidOperationException("Bounty reclaim fragment partition is incomplete.");
+        EnsurePartitionComplete(
+            remainingReturn,
+            lines.Count,
+            allocations.Sum(item => item.AmountUnits),
+            escrow.Amount.Units);
 
         var posting = new PostingRequest(
             DeterministicPostingId(escrow.Id, request.IdempotencyKey),
@@ -175,6 +178,16 @@ public static class BountyReclaimPostingFactory
             throw new InvalidOperationException("Bounty reclaim root ranges do not conserve the escrow fragment.");
 
         return (returned, fee);
+    }
+
+    private static void EnsurePartitionComplete(
+        long remainingReturn,
+        int lineCount,
+        long allocatedUnits,
+        long escrowUnits)
+    {
+        if (remainingReturn != 0 || lineCount == 0 || allocatedUnits != escrowUnits)
+            throw new InvalidOperationException("Bounty reclaim fragment partition is incomplete.");
     }
 
     private static PostingId DeterministicPostingId(BountyId bountyId, IdempotencyKey idempotencyKey)
