@@ -302,6 +302,7 @@ public static class PostingMatrix
             return;
         }
 
+        var feeOrBurnPairSeen = false;
         for (var index = 0; index < lines.Length; index += 2)
         {
             var debit = lines[index];
@@ -320,16 +321,19 @@ public static class PostingMatrix
 
             if (credit.WalletId is null)
             {
+                feeOrBurnPairSeen = true;
                 var expectedFeeAccount = currency == CurrencyCode.HardCoin
                     ? EconomyAccountCode.FeeRevenueHard
                     : EconomyAccountCode.SoftCoinReserve;
                 Match(credit, EntrySide.Credit, expectedFeeAccount, currency, false, null, errors);
-                if (index + 2 != lines.Length)
-                    Add(errors, PostingErrorCode.InvalidAccountShape,
-                        "The bounty reclaim fee/burn pair must be the last posting pair.");
                 continue;
             }
 
+            if (feeOrBurnPairSeen)
+            {
+                Add(errors, PostingErrorCode.InvalidAccountShape,
+                    "Bounty reclaim return pairs cannot follow a fee or burn pair.");
+            }
             ValidateLiability(credit, EntrySide.Credit, credit.Provenance, errors);
             if (credit.Provenance is null)
                 Add(errors, PostingErrorCode.InvalidProvenance,

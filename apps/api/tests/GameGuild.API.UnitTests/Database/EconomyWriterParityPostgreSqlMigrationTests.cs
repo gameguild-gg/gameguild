@@ -121,6 +121,39 @@ public sealed class EconomyWriterParityPostgreSqlMigrationTests
             CanonicalLines(PostingTemplateKind.ProviderConvertedSoftReversal))).Should().BeTrue();
     }
 
+    [DockerFact]
+    public async Task BountyReclaimValidatorAcceptsFeePairsAfterReturnPairs()
+    {
+        await using var container = new PostgreSqlBuilder()
+            .WithImage("postgres:16-alpine")
+            .WithDatabase("economy_writer_bounty_fee_validation")
+            .WithUsername("test")
+            .WithPassword("test")
+            .WithCleanUp(true)
+            .Build();
+        await container.StartAsync();
+
+        await using var context = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseNpgsql(container.GetConnectionString())
+                .Options);
+        await context.Database.MigrateAsync();
+
+        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await connection.OpenAsync();
+
+        var lines = Enumerable.Range(0, 10)
+            .SelectMany(index => new[]
+            {
+                Line(1, 9, 1, 1),
+                index < 8
+                    ? Line(2, 2, 1, 1, DestinationWallet, 1)
+                    : Line(2, 14, 1, 1)
+            })
+            .ToList();
+
+        (await ValidateAsync(connection, PostingTemplateKind.BountyReclaim, lines)).Should().BeTrue();
+    }
     private static async Task<bool> ValidateAsync(
         NpgsqlConnection connection,
         PostingTemplateKind kind,
