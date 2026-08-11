@@ -4,12 +4,12 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  getTestingRequestDetail: vi.fn(),
+  getTestingLabProjectDetail: vi.fn(),
   getMembers: vi.fn(),
 }));
 
 vi.mock('@/lib/testing-lab', () => ({
-  getTestingRequestDetail: mocks.getTestingRequestDetail,
+  getTestingLabProjectDetail: mocks.getTestingLabProjectDetail,
   normalizeTestingRequestStatus: (status: string) => status,
 }));
 vi.mock('@/lib/community/queries/members', () => ({
@@ -30,7 +30,8 @@ import TestingProjectDetailPage from './page';
 
 describe('Testing Project detail', () => {
   it('uses human participant labels and a dialog for participant management', async () => {
-    mocks.getTestingRequestDetail.mockResolvedValue({
+    mocks.getTestingLabProjectDetail.mockResolvedValue({
+      project: { id: 'project-1', title: 'Asterion' },
       request: {
         id: 'request-1',
         title: 'Asterion usability pass',
@@ -58,7 +59,7 @@ describe('Testing Project detail', () => {
     const user = userEvent.setup();
     const view = render(
       await TestingProjectDetailPage({
-        params: Promise.resolve({ requestId: 'request-1' }),
+        params: Promise.resolve({ projectId: 'request-1' }),
       }),
     );
 
@@ -69,5 +70,33 @@ describe('Testing Project detail', () => {
     await user.click(screen.getByRole('button', { name: 'Add participant' }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Add a participant' })).toBeInTheDocument();
+  });
+
+  it('renders a shared project without surfacing a request-not-found error', async () => {
+    mocks.getTestingLabProjectDetail.mockResolvedValue({
+      project: {
+        id: 'project-1',
+        title: 'Asterion',
+        description: 'A shared platform project.',
+        status: 'Published',
+        developmentStatus: 'InDevelopment',
+      },
+      request: null,
+      sessions: [],
+      participants: [],
+      feedback: [],
+      accessIssues: [],
+    });
+    mocks.getMembers.mockResolvedValue({ members: [], total: 0 });
+
+    render(
+      await TestingProjectDetailPage({
+        params: Promise.resolve({ projectId: 'project-1' }),
+      }),
+    );
+
+    expect(screen.getByText('Not submitted to Testing Lab yet')).toBeInTheDocument();
+    expect(screen.getByText('A shared platform project.')).toBeInTheDocument();
+    expect(screen.queryByText(/Testing request returned 404/i)).not.toBeInTheDocument();
   });
 });
