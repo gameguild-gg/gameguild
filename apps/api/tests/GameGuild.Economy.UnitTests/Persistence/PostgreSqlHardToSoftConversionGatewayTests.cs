@@ -351,10 +351,10 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
     {
         await ExecuteAsync(connection, $"""
             INSERT INTO public.economy_reserve_heads (
-                \"Version\", \"IsActive\", \"PolicyVersion\", \"AuthorizationEpoch\", \"ObservedAt\", \"ExpiresAt\",
-                \"HardFaceValueUsdMinor\", \"RequiredHardReserveUsdMinor\", \"SoftFaceValueUsdNanos\",
-                \"StressedExpectedRedemptionCostUsdNanos\", \"RequiredSoftReserveUsdNanos\", \"HardBackingUsdNanos\",
-                \"SoftBackingUsdNanos\", \"Coverage\", \"EvidenceHash\", \"ActivatedAt\")
+                "Version", "IsActive", "PolicyVersion", "AuthorizationEpoch", "ObservedAt", "ExpiresAt",
+                "HardFaceValueUsdMinor", "RequiredHardReserveUsdMinor", "SoftFaceValueUsdNanos",
+                "StressedExpectedRedemptionCostUsdNanos", "RequiredSoftReserveUsdNanos", "HardBackingUsdNanos",
+                "SoftBackingUsdNanos", "Coverage", "EvidenceHash", "ActivatedAt")
             VALUES (
                 1, true, 1, 1, '{Now.AddMinutes(-1):O}', '{Now.AddMinutes(5):O}',
                 0, 0, 0, 0, 0, 0, 0, 1, 'covered-reserve-evidence', '{Now:O}');
