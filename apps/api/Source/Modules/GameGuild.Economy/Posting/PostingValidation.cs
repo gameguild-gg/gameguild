@@ -330,8 +330,10 @@ public static class PostingMatrix
             }
 
             if (feeOrBurnPairSeen)
+            {
                 Add(errors, PostingErrorCode.InvalidAccountShape,
                     "Bounty reclaim return pairs cannot follow a fee or burn pair.");
+            }
             ValidateLiability(credit, EntrySide.Credit, credit.Provenance, errors);
             if (credit.Provenance is null)
                 Add(errors, PostingErrorCode.InvalidProvenance,
