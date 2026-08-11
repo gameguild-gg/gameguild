@@ -246,7 +246,7 @@ public class GetUsersQueryHandlerTests
             ActorKind = ActorKind.User,
             SubjectId = Guid.Parse("81818181-8181-8181-8181-818181818181").ToString(),
             TenantId = tenantId,
-            Roles = new HashSet<string> { "Admin" },
+            Roles = new HashSet<string> { "SystemAdmin" },
             Permissions = new HashSet<string>(),
             TypedAttributes = ActorAttributes.Empty,
             IsAuthenticated = true
