@@ -11,6 +11,7 @@ public sealed class PayoutsModule : ModuleBase
     public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IPayoutOperationStore, PostgreSqlPayoutOperationStore>();
+        services.AddScoped<IPayoutRequestStore, PostgreSqlPayoutRequestStore>();
 
         // Read-only payout status is safe without a payout provider. Write workflows remain
         // opt-in because they require provider evidence verification and execution gates.

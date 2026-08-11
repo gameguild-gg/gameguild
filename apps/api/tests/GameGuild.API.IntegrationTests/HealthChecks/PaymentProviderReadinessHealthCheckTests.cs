@@ -85,8 +85,24 @@ public sealed class PaymentProviderReadinessHealthCheckTests
             "2026-06-01");
     }
 
+    [Fact]
+    public async Task CheckHealthAsync_WhenProductionProviderIsDisabled_ReturnsHealthy()
+    {
+        var options = new StripeGatewayOptions
+        {
+            IsEnabled = false,
+            UseSimulation = false
+        };
+        var healthCheck = CreateHealthCheck(options, Environments.Production);
+
+        var result = await healthCheck.CheckHealthAsync(new HealthCheckContext());
+
+        result.Status.Should().Be(HealthStatus.Healthy);
+        result.Description.Should().Be("Payment provider is disabled.");
+        result.Data.Should().Contain("enabled", false);
+    }
+
     [Theory]
-    [InlineData(false, false, "sk_live_sensitive-api-key", "pk_live_sensitive-publishable-key")]
     [InlineData(true, true, "sk_live_sensitive-api-key", "pk_live_sensitive-publishable-key")]
     [InlineData(true, false, "", "pk_live_sensitive-publishable-key")]
     [InlineData(true, false, "sk_live_sensitive-api-key", "")]

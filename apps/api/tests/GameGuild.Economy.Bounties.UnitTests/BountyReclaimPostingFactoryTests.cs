@@ -83,6 +83,34 @@ public sealed class BountyReclaimPostingFactoryTests
     }
 
     [Fact]
+    public void Create_AllowsMultipleFeePairsAfterAllReturnPairs()
+    {
+        var posterId = Guid.NewGuid();
+        var posterWalletId = WalletId.New();
+        var request = new DurableBountyReclaimRequest(
+            BountyId.New(), posterId, posterWalletId, ReclaimedAt,
+            new IdempotencyKey("multi-fee-bounty-reclaim"), Authority(posterId),
+            new ReserveVersion(2), new PolicyVersion(3));
+        var escrow = CreateEscrow(
+            request.BountyId,
+            posterId,
+            posterWalletId,
+            CurrencyCode.HardCoin,
+            200_000,
+            Enumerable.Range(0, 10).Select(_ => Fragment(1, ProvenanceKind.PurchasedHard)).ToArray());
+
+        var posting = BountyReclaimPostingFactory.Create(escrow, request);
+
+        posting.Posting.Lines.Should().HaveCount(20);
+        posting.Posting.Lines
+            .Where(line => line.Side == EntrySide.Credit && line.WalletId == posterWalletId)
+            .Should().HaveCount(8);
+        posting.Posting.Lines
+            .Where(line => line.Side == EntrySide.Credit && line.Account == EconomyAccountCode.FeeRevenueHard)
+            .Should().HaveCount(2);
+    }
+
+    [Fact]
     public void Create_RejectsAReclaimBeforeTheBountyExpires()
     {
         var posterId = Guid.NewGuid();
