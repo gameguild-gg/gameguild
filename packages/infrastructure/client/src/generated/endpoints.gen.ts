@@ -6708,13 +6708,13 @@ export const getCoursesContentChildrenEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface PostCoursesByProgramIdContentReorderInput {
+export interface PostCoursesContentReorderInput {
   programId: string;
   body?: Types.LearningCoursesReorderContent;
 }
-export type PostCoursesByProgramIdContentReorderOutput = void;
-export const postCoursesByProgramIdContentReorderEndpoint = {
-  operationId: 'postCoursesByProgramIdContentReorder' as const,
+export type PostCoursesContentReorderOutput = void;
+export const postCoursesContentReorderEndpoint = {
+  operationId: 'postCoursesContentReorder' as const,
   method: 'POST' as const,
   path: '/v1/courses/{programId}/content/reorder' as const,
   tags: ['Learning/courses/programContent'] as const,
@@ -6938,19 +6938,6 @@ export const postCoursesSelfEnrollEndpoint = {
   operationId: 'postCoursesSelfEnroll' as const,
   method: 'POST' as const,
   path: '/v1/courses/{id}:self-enroll' as const,
-  tags: ['Learning/courses/program'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface PostCoursesByIdContentReorderInput {
-  id: string;
-  body?: Types.LearningCoursesReorderContent;
-}
-export type PostCoursesByIdContentReorderOutput = void;
-export const postCoursesByIdContentReorderEndpoint = {
-  operationId: 'postCoursesByIdContentReorder' as const,
-  method: 'POST' as const,
-  path: '/v1/courses/{id}/content:reorder' as const,
   tags: ['Learning/courses/program'] as const,
   requiresAuth: true,
 } as const;
@@ -14421,7 +14408,7 @@ export const endpoints = {
   deleteCoursesContent: deleteCoursesContentEndpoint,
   postCoursesContentSubmit: postCoursesContentSubmitEndpoint,
   getCoursesContentChildren: getCoursesContentChildrenEndpoint,
-  postCoursesByProgramIdContentReorder: postCoursesByProgramIdContentReorderEndpoint,
+  postCoursesContentReorder: postCoursesContentReorderEndpoint,
   postCoursesContentMove: postCoursesContentMoveEndpoint,
   getCoursesContentRequired: getCoursesContentRequiredEndpoint,
   getCoursesContentByType: getCoursesContentByTypeEndpoint,
@@ -14439,7 +14426,6 @@ export const endpoints = {
   postCoursesClone: postCoursesCloneEndpoint,
   getCoursesSlug: getCoursesSlugEndpoint,
   postCoursesSelfEnroll: postCoursesSelfEnrollEndpoint,
-  postCoursesByIdContentReorder: postCoursesByIdContentReorderEndpoint,
   postCoursesUsers: postCoursesUsersEndpoint,
   deleteCoursesUsers: deleteCoursesUsersEndpoint,
   getCoursesUsers: getCoursesUsersEndpoint,
