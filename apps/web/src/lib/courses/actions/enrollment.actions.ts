@@ -224,7 +224,7 @@ export async function getProductsContainingCourse(courseSlug: string): Promise<P
 
         const productResults = await Promise.all(
             productIds.map(async (productId) => {
-                const result = await products.getProducts(productId, { includePricing: true });
+                const result = await products.getProducts1(productId, { includePricing: true });
                 return result.ok ? mapStorefrontProduct(result.data) : null;
             })
         );
