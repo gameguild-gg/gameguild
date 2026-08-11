@@ -332,6 +332,74 @@ public sealed class PostgreSqlGatewayValidationTests
     }
 
     [Fact]
+    public void FundingConfirmationTranslatesRelationalWriterFailuresAfterResolvingAccounts()
+    {
+        using var context = CreateContext();
+        var source = new SourceStampId(Guid.NewGuid());
+        var wallet = new WalletId(Guid.NewGuid());
+        var key = new IdempotencyKey("funding-relational-writer-failure");
+        context.Set<EconomySourceStampRow>().Add(new EconomySourceStampRow
+        {
+            Id = source.Value,
+            EvidenceHash = "observed-evidence",
+            ObservedAt = Now
+        });
+        context.Set<EconomyFundingClaimRow>().Add(new EconomyFundingClaimRow
+        {
+            SourceStampId = source.Value,
+            WalletId = wallet.Value,
+            Provider = "stripe",
+            Environment = "test",
+            ConnectedAccount = "platform",
+            ProviderObject = "payment",
+            ProviderMonetaryLeg = "principal",
+            AuthoritativeUsdMinorUnits = 100,
+            ObservedAt = Now,
+            Version = 1
+        });
+        context.Set<EconomyAccountRow>().AddRange(
+            new EconomyAccountRow
+            {
+                Id = Guid.NewGuid(),
+                Code = EconomyAccountCode.ExternalClearingHard,
+                Currency = CurrencyCode.HardCoin,
+                CreatedAt = Now
+            },
+            new EconomyAccountRow
+            {
+                Id = Guid.NewGuid(),
+                WalletId = wallet.Value,
+                Code = EconomyAccountCode.PurchasedHardLiability,
+                Currency = CurrencyCode.HardCoin,
+                Provenance = ProvenanceKind.PurchasedHard,
+                CreatedAt = Now
+            });
+        context.SaveChanges();
+        var command = new ConfirmObservedTopUpCommand(
+            PostingId.New(),
+            key,
+            source,
+            CreditLotId.New(),
+            new ReserveVersion(1),
+            new PolicyVersion(1),
+            "provider-confirmation",
+            Now,
+            FundingAuthorizationFixture.Create(
+                PostingTemplateKind.ConfirmedTopUpMint,
+                key,
+                wallet,
+                new CoinAmount(CurrencyCode.HardCoin, 100),
+                [source],
+                Now));
+
+        Action act = () => new PostgreSqlHardCoinFundingGateway(context)
+            .Confirm(new PersistedHardCoinFundingConfirmation(command, Authority()));
+
+        act.Should().Throw<RegisteredPostingRejectedException>()
+            .WithMessage("*funding writer rejected the confirmation*");
+    }
+
+    [Fact]
     public void PersistedEconomyRecords_ExposeEveryPersistenceResult()
     {
         var operation = Guid.NewGuid();

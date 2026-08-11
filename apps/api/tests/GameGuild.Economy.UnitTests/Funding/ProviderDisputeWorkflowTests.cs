@@ -199,6 +199,30 @@ public sealed class ProviderDisputeWorkflowTests
     }
 
     [Fact]
+    public void OpenDispute_RejectsAnAmountBelowTheCommittedReversalBaseline()
+    {
+        var fixture = Setup(5);
+        fixture.Store.Execute(transaction =>
+        {
+            transaction.SetProviderReversalState(new ProviderReversalState(
+                fixture.SourceId,
+                5,
+                2,
+                0,
+                0,
+                0,
+                0,
+                []));
+            return 0;
+        });
+
+        FluentActions.Invoking(() => fixture.Disputes.Handle(Notification(
+                fixture.SourceId, "evt-below-baseline", 1, 1, ProviderDisputeStatus.Open)))
+            .Should().Throw<ProviderMonetaryTotalExceededException>()
+            .WithMessage("*cannot precede already committed reversals*");
+    }
+
+    [Fact]
     public void WonDispute_RejectsAProviderReversalStateThatDisagreesWithItsBaseline()
     {
         var fixture = Setup(5);
