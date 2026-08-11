@@ -5,11 +5,13 @@ const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   revalidatePath: vi.fn(),
   events: {
+    postTestingEventsArchive: vi.fn(),
     postTestingEvents: vi.fn(),
     postTestingEventsSlots: vi.fn(),
     postTestingEventsApplicationsReject: vi.fn(),
     postTestingEventsOpenApplications: vi.fn(),
     postTestingEventsCommittee: vi.fn(),
+    postTestingEventsRestore: vi.fn(),
   },
   participation: {
     deleteTestingEventsRegistrations: vi.fn(),
@@ -40,10 +42,12 @@ vi.mock('@game-guild/client', () => ({
 
 import {
   addTestingEventCommitteeMember,
+  archiveTestingEvent,
   cancelTestingEventRegistration,
   createTestingEvent,
   createTestingEventSlot,
   rejectTestingEventApplication,
+  restoreTestingEvent,
   submitTestingEventFeedback,
   transitionTestingEvent,
 } from './events-actions';
@@ -88,10 +92,23 @@ describe('Testing Lab event actions', () => {
         mode: 'InPerson',
         approvalMode: 'Committee',
         requiresFeedback: true,
-        startsAt: expect.stringMatching(/^2026-08-08T/),
+        startsAt: '2026-08-08T18:00:00.000Z',
       }),
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/testing-lab/events');
+  });
+
+  it('archives and restores an event through the generated client', async () => {
+    mocks.events.postTestingEventsArchive.mockResolvedValue({ ok: true, data: true });
+    mocks.events.postTestingEventsRestore.mockResolvedValue({ ok: true, data: true });
+
+    const archived = await archiveTestingEvent(form({ eventId: 'event-1' }));
+    const restored = await restoreTestingEvent(form({ eventId: 'event-1' }));
+
+    expect(archived).toMatchObject({ success: true, message: 'Testing event archived.' });
+    expect(restored).toMatchObject({ success: true, message: 'Testing event restored.' });
+    expect(mocks.events.postTestingEventsArchive).toHaveBeenCalledWith('event-1');
+    expect(mocks.events.postTestingEventsRestore).toHaveBeenCalledWith('event-1');
   });
 
   it('shows the API validation detail instead of its generic validation code', async () => {

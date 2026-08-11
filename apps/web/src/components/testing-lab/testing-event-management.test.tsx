@@ -18,10 +18,12 @@ vi.mock('@/lib/testing-lab/events-actions', () => ({
   configureTestingEventLearning: vi.fn(),
   createTestingEvent: vi.fn(),
   createTestingEventSlot: vi.fn(),
+  archiveTestingEvent: vi.fn(),
   deleteTestingEvent: vi.fn(),
   deleteTestingEventSlot: vi.fn(),
   rejectTestingEventApplication: vi.fn(),
   removeTestingEventCommitteeMember: vi.fn(),
+  restoreTestingEvent: vi.fn(),
   transitionTestingEvent: vi.fn(),
   updateTestingEventAttendance: vi.fn(),
   updateTestingEvent: vi.fn(),
@@ -30,7 +32,12 @@ vi.mock('@/lib/testing-lab/events-actions', () => ({
   waitlistTestingEventApplication: vi.fn(),
 }));
 
-import { CreateTestingEventDialog, TestingEventApplications } from './testing-event-management';
+import {
+  CreateTestingEventDialog,
+  EditTestingEventDialog,
+  ManageTestingEventSlotDialog,
+  TestingEventApplications,
+} from './testing-event-management';
 
 describe('TestingEventApplications', () => {
   it('shows human labels and refreshes the SSR view after review starts', async () => {
@@ -141,5 +148,57 @@ describe('TestingEventApplications', () => {
 
     expect(screen.queryByRole('button', { name: 'New event' })).not.toBeInTheDocument();
     expect((screen.getByLabelText('Event starts') as HTMLInputElement).value).toMatch(/^2030-08-19T/);
+  });
+
+  it('preserves API wall-clock values when editing an event', () => {
+    const timezoneOffset = vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(180);
+    render(
+      <EditTestingEventDialog
+        event={{
+          id: 'event-1',
+          name: 'Timezone-safe playtest',
+          applicationsOpenAt: '2026-08-11T17:00:00Z',
+          applicationsCloseAt: '2026-08-13T16:00:00Z',
+          startsAt: '2026-08-13T17:00:00Z',
+          endsAt: '2026-08-13T19:00:00Z',
+          mode: 'Online',
+          approvalMode: 'ManagerOnly',
+          status: 'Draft',
+          requiresFeedback: true,
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect((screen.getByLabelText('Applications open') as HTMLInputElement).value).toBe('2026-08-11T17:00');
+    expect((screen.getByLabelText('Applications close') as HTMLInputElement).value).toBe('2026-08-13T16:00');
+    expect((screen.getByLabelText('Event starts') as HTMLInputElement).value).toBe('2026-08-13T17:00');
+    expect((screen.getByLabelText('Event ends') as HTMLInputElement).value).toBe('2026-08-13T19:00');
+    timezoneOffset.mockRestore();
+  });
+
+  it('preserves API wall-clock values when editing a slot', () => {
+    const timezoneOffset = vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(180);
+    render(
+      <ManageTestingEventSlotDialog
+        eventId="event-1"
+        slot={{
+          id: 'slot-1',
+          eventId: 'event-1',
+          mode: 'InPerson',
+          startsAt: '2026-08-13T17:30:00Z',
+          endsAt: '2026-08-13T18:30:00Z',
+          campusName: 'QA Campus',
+          roomName: 'QA Room 101',
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit slot' }));
+
+    expect((screen.getByLabelText('Starts') as HTMLInputElement).value).toBe('2026-08-13T17:30');
+    expect((screen.getByLabelText('Ends') as HTMLInputElement).value).toBe('2026-08-13T18:30');
+    timezoneOffset.mockRestore();
   });
 });

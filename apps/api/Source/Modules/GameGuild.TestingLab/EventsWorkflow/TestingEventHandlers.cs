@@ -11,6 +11,8 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
     ICommandHandler<CreateTestingEventCommand, Result<TestingEventProjection>>,
     ICommandHandler<UpdateTestingEventCommand, Result<TestingEventProjection>>,
     ICommandHandler<DeleteTestingEventCommand, Result<bool>>,
+    ICommandHandler<ArchiveTestingEventCommand, Result<bool>>,
+    ICommandHandler<RestoreTestingEventCommand, Result<bool>>,
     ICommandHandler<OpenTestingEventApplicationsCommand, Result<TestingEventProjection>>,
     ICommandHandler<CloseTestingEventApplicationsCommand, Result<TestingEventProjection>>,
     ICommandHandler<ScheduleTestingEventCommand, Result<TestingEventProjection>>,
@@ -25,6 +27,7 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
     ICommandHandler<RemoveTestingEventCommitteeMemberCommand, Result<bool>>,
     IQueryHandler<GetTestingEventQuery, Result<TestingEventProjection>>,
     IQueryHandler<GetTestingEventsQuery, Result<IReadOnlyList<TestingEventProjection>>>,
+    IQueryHandler<GetArchivedTestingEventsQuery, Result<IReadOnlyList<TestingEventProjection>>>,
     IQueryHandler<GetPublicTestingEventsQuery, Result<IReadOnlyList<PublicTestingEventProjection>>>,
     IQueryHandler<GetPublicTestingEventQuery, Result<PublicTestingEventProjection>>,
     IQueryHandler<GetTestingEventSlotsQuery, Result<IReadOnlyList<TestingEventSlotProjection>>>,
@@ -121,6 +124,31 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
 
         testingEvent.DeletedAt = SystemClock.UtcNow;
         testingEvent.Touch();
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(true);
+    }
+
+    public async Task<Result<bool>> Handle(ArchiveTestingEventCommand request, CancellationToken cancellationToken)
+    {
+        var authorization = await GetManagedEventAsync(request.EventId, cancellationToken).ConfigureAwait(false);
+        if (authorization.Error != null) return Result.Failure<bool>(authorization.Error);
+        var testingEvent = authorization.Event!;
+        if (testingEvent.Status is not (TestingEventStatus.Completed or TestingEventStatus.Cancelled))
+            return Result.Failure<bool>(Validation("Only completed or cancelled events can be archived."));
+
+        testingEvent.DeletedAt = SystemClock.UtcNow;
+        testingEvent.Touch();
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(true);
+    }
+
+    public async Task<Result<bool>> Handle(RestoreTestingEventCommand request, CancellationToken cancellationToken)
+    {
+        var authorization = await GetManagedArchivedEventAsync(request.EventId, cancellationToken).ConfigureAwait(false);
+        if (authorization.Error != null) return Result.Failure<bool>(authorization.Error);
+
+        authorization.Event!.Restore();
+        authorization.Event.Touch();
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Result.Success(true);
     }
@@ -319,6 +347,28 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
         if (request.Status.HasValue) query = query.Where(testingEvent => testingEvent.Status == request.Status.Value);
         var events = await query
             .OrderByDescending(testingEvent => testingEvent.StartsAt)
+            .Skip(Math.Max(0, request.Skip))
+            .Take(Math.Clamp(request.Take, 1, 100))
+            .Select(EventProjection)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return Result.Success<IReadOnlyList<TestingEventProjection>>(events);
+    }
+
+    public async Task<Result<IReadOnlyList<TestingEventProjection>>> Handle(
+        GetArchivedTestingEventsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
+        if (actor.Error != null) return Result.Failure<IReadOnlyList<TestingEventProjection>>(actor.Error);
+        var events = await context.Set<TestingEvent>()
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(testingEvent =>
+                testingEvent.TenantId == actor.TenantId &&
+                testingEvent.DeletedAt != null &&
+                testingEvent.Status != TestingEventStatus.Draft)
+            .OrderByDescending(testingEvent => testingEvent.DeletedAt)
             .Skip(Math.Max(0, request.Skip))
             .Take(Math.Clamp(request.Take, 1, 100))
             .Select(EventProjection)
@@ -643,6 +693,26 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
             .ConfigureAwait(false);
         if (testingEvent == null)
             return new(null, Error.NotFound("TestingLab.EventNotFound", "Testing event not found."));
+        if (testingEvent.ManagerUserId != actor.UserId && !IsSystemAdmin)
+            return new(null, Error.Forbidden("TestingLab.EventManagerRequired", "Only the event manager can perform this operation."));
+        return new(testingEvent, null);
+    }
+
+    private async Task<ManagedEvent> GetManagedArchivedEventAsync(Guid eventId, CancellationToken cancellationToken)
+    {
+        var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
+        if (actor.Error != null) return new(null, actor.Error);
+        var testingEvent = await context.Set<TestingEvent>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(candidate =>
+                candidate.Id == eventId &&
+                candidate.TenantId == actor.TenantId &&
+                candidate.DeletedAt != null &&
+                candidate.Status != TestingEventStatus.Draft,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (testingEvent == null)
+            return new(null, Error.NotFound("TestingLab.ArchivedEventNotFound", "Archived testing event not found."));
         if (testingEvent.ManagerUserId != actor.UserId && !IsSystemAdmin)
             return new(null, Error.Forbidden("TestingLab.EventManagerRequired", "Only the event manager can perform this operation."));
         return new(testingEvent, null);
