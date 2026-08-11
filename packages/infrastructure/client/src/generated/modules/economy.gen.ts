@@ -80,6 +80,21 @@ export class EconomyModule {
   }
 
   /**
+   * Get my Economy capability readiness
+   */
+  async getEconomyCapabilities(): Promise<Result<Array<Types.APIControllersEconomySelfServiceCapability>, ApiError>> {
+    const url = '/api/v1/economy/capabilities';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.APIControllersEconomySelfServiceCapability>, ApiError>;
+  }
+
+  /**
    * List my payout operations
    */
   async getEconomyPayouts(query?: { take?: number }): Promise<Result<Array<Types.EconomyPayoutsQueriesEconomyPayoutOperation>, ApiError>> {

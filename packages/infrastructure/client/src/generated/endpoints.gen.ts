@@ -5008,6 +5008,19 @@ export const postEconomyConversionsHardToSoftEndpoint = {
 } as const;
 
 /**
+ * Get my Economy capability readiness
+ */
+export type GetEconomyCapabilitiesInput = void;
+export type GetEconomyCapabilitiesOutput = Array<Types.APIControllersEconomySelfServiceCapability>;
+export const getEconomyCapabilitiesEndpoint = {
+  operationId: 'getEconomyCapabilities' as const,
+  method: 'GET' as const,
+  path: '/api/v1/economy/capabilities' as const,
+  tags: ['Economy'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * List my payout operations
  */
 export interface GetEconomyPayoutsInput {
@@ -14424,6 +14437,7 @@ export const endpoints = {
   getEconomyWallet: getEconomyWalletEndpoint,
   getEconomyWalletTransactions: getEconomyWalletTransactionsEndpoint,
   postEconomyConversionsHardToSoft: postEconomyConversionsHardToSoftEndpoint,
+  getEconomyCapabilities: getEconomyCapabilitiesEndpoint,
   getEconomyPayouts: getEconomyPayoutsEndpoint,
   getEconomyPayouts1: getEconomyPayouts1Endpoint,
   getApiLearningEnrollments: getApiLearningEnrollmentsEndpoint,
