@@ -167,15 +167,27 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
 
     private static async Task ExecuteAsWriterAsync(NpgsqlConnection connection, FormattableString sql)
     {
-        await ExecuteLiteralAsync(connection, "SET ROLE gameguild_economy_writer;");
+        await SetWriterRoleAsync(connection);
         try
         {
             await ExecuteAsync(connection, sql);
         }
         finally
         {
-            await ExecuteLiteralAsync(connection, "RESET ROLE;");
+            await ResetRoleAsync(connection);
         }
+    }
+
+    private static async Task SetWriterRoleAsync(NpgsqlConnection connection)
+    {
+        await using var command = new NpgsqlCommand("SET ROLE gameguild_economy_writer;", connection);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task ResetRoleAsync(NpgsqlConnection connection)
+    {
+        await using var command = new NpgsqlCommand("RESET ROLE;", connection);
+        await command.ExecuteNonQueryAsync();
     }
 
     private static async Task ExecuteAsync(NpgsqlConnection connection, FormattableString sql)
@@ -191,11 +203,6 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
         return value is null or DBNull ? default! : (T)value;
     }
 
-    private static async Task ExecuteLiteralAsync(NpgsqlConnection connection, string sql)
-    {
-        await using var command = new NpgsqlCommand(sql, connection);
-        await command.ExecuteNonQueryAsync();
-    }
 
     private static NpgsqlCommand CreateCommand(NpgsqlConnection connection, FormattableString sql)
     {
