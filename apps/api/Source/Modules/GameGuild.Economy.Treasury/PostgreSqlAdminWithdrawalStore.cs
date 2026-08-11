@@ -146,7 +146,7 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
         ArgumentException.ThrowIfNullOrWhiteSpace(requestHash);
 
         var row = ReadRuns($"""
-                SELECT * FROM economy_private.read_admin_withdrawal_run_by_idempotency_v1({key.Trim()});
+                SELECT * FROM economy_private.read_admin_withdrawal_run_by_idempotency_v1({key.Trim()})
                 """)
             .SingleOrDefault();
         if (row is null) return null;
@@ -159,7 +159,7 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
     public AdminWithdrawalRun? FindPeriod(DateOnly periodStart)
     {
         var row = ReadRuns($"""
-                SELECT * FROM economy_private.read_active_admin_withdrawal_run_by_period_v1({periodStart});
+                SELECT * FROM economy_private.read_active_admin_withdrawal_run_by_period_v1({periodStart})
                 """)
             .SingleOrDefault();
         return row is null ? null : ToContract(row);
@@ -199,7 +199,7 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
         if (runId == Guid.Empty) throw new ArgumentException("Run ID is required.", nameof(runId));
 
         var row = ReadRuns($"""
-                SELECT * FROM economy_private.read_admin_withdrawal_run_by_id_v1({runId});
+                SELECT * FROM economy_private.read_admin_withdrawal_run_by_id_v1({runId})
                 """)
             .SingleOrDefault();
         return row is null
@@ -231,7 +231,7 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
 
         var row = _db.Set<AdminWithdrawalProviderEventRow>()
             .FromSqlInterpolated($"""
-                SELECT * FROM economy_private.read_admin_withdrawal_provider_event_v1({eventId.Trim()});
+                SELECT * FROM economy_private.read_admin_withdrawal_provider_event_v1({eventId.Trim()})
                 """)
             .AsNoTracking()
             .SingleOrDefault();
@@ -239,6 +239,9 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
         if (!string.Equals(row.EventHash, eventHash, StringComparison.Ordinal))
             throw new AdminWithdrawalEvidenceException(
                 "The provider event ID is bound to different evidence.");
+        if (row.RecordedAt == default)
+            throw new AdminWithdrawalEvidenceException(
+                "The provider event has an invalid recorded timestamp.");
         return row.RunId;
     }
 
@@ -337,7 +340,7 @@ public sealed class PostgreSqlAdminWithdrawalAuditTrail : IAdminWithdrawalAuditT
         var item = _db.Database.SqlQuery<AdminWithdrawalAuditEventProjection>($"""
             SELECT "RunId", "Sequence", "Kind", "ActorId", "Evidence", "OccurredAt", "PreviousHash", "Hash"
             FROM economy_private.append_admin_withdrawal_audit_event_v1(
-                {runId}, {kind.Trim()}, {actorId}, {evidence.Trim()}, {occurredAt});
+                {runId}, {kind.Trim()}, {actorId}, {evidence.Trim()}, {occurredAt})
             """).Single();
 
         return item.ToContract();
@@ -346,9 +349,10 @@ public sealed class PostgreSqlAdminWithdrawalAuditTrail : IAdminWithdrawalAuditT
     public IReadOnlyList<AdminWithdrawalAuditEvent> Events(Guid runId) =>
         _db.Set<AdminWithdrawalAuditEventRow>()
             .FromSqlInterpolated($"""
-                SELECT * FROM economy_private.read_admin_withdrawal_audit_events_v1({runId});
+                SELECT * FROM economy_private.read_admin_withdrawal_audit_events_v1({runId})
                 """)
             .AsNoTracking()
+            .AsEnumerable()
             .OrderBy(item => item.Sequence)
             .Select(item => new AdminWithdrawalAuditEvent(
                 item.RunId,
@@ -360,6 +364,7 @@ public sealed class PostgreSqlAdminWithdrawalAuditTrail : IAdminWithdrawalAuditT
                 item.PreviousHash,
                 item.Hash))
             .ToArray();
+
 
     public bool Verify(Guid runId)
     {
