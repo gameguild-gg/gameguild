@@ -97,6 +97,47 @@ public sealed class EconomyFifoReservationMigrationTests
         next.Sum(row => row.AmountUnits).Should().Be(20);
     }
 
+    [DockerFact]
+    public async Task WriterRejectsAnObservedSourceForHardToSoftReservations()
+    {
+        await using var container = new PostgreSqlBuilder()
+            .WithImage("postgres:16-alpine")
+            .WithDatabase("economy_fifo_observed_source")
+            .WithUsername("test")
+            .WithPassword("test")
+            .WithCleanUp(true)
+            .Build();
+        await container.StartAsync();
+
+        await using var context = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseNpgsql(container.GetConnectionString())
+                .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
+                .Options);
+        await context.Database.MigrateAsync();
+
+        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await connection.OpenAsync();
+        var walletId = Guid.NewGuid();
+        var rootId = Guid.NewGuid();
+        await SeedLotAsync(
+            connection,
+            walletId,
+            rootId,
+            Guid.NewGuid(),
+            10,
+            Now.AddMinutes(-2),
+            1,
+            sourceState: 1,
+            sourceConfirmedAt: null);
+
+        var exception = await Assert.ThrowsAsync<PostgresException>(
+            () => ReserveAsync(connection, Guid.NewGuid(), walletId, 10));
+
+        exception.SqlState.Should().Be("42501");
+        exception.MessageText.Should().Contain("confirmed source stamp");
+    }
+
     private static async Task SeedLotAsync(
         NpgsqlConnection connection,
         Guid walletId,
@@ -104,8 +145,16 @@ public sealed class EconomyFifoReservationMigrationTests
         Guid lotId,
         long amountUnits,
         DateTimeOffset confirmedAt,
-        long sequence)
+        long sequence,
+        int sourceState = 2,
+        DateTimeOffset? sourceConfirmedAt = null)
     {
+        var sourceConfirmedAtSql = sourceConfirmedAt is { } timestamp
+            ? $"'{timestamp:O}'"
+            : sourceState == 2
+                ? $"'{confirmedAt:O}'"
+                : "NULL";
+
         if (sequence == 1)
         {
             await ExecuteAsync(connection, $"""
@@ -120,8 +169,8 @@ public sealed class EconomyFifoReservationMigrationTests
                 "EvidenceHash", "Provenance", "State", "ActorId", "TenantId", "PostingReferenceId",
                 "PolicyVersion", "AuthoritativeUnits", "ObservedAt", "ConfirmedAt")
             VALUES (
-                '{rootId}', 'test', '{rootId:N}', 'leg', NULL, NULL, 'evidence-{rootId:N}', 1, 2,
-                '{Guid.NewGuid()}', '{Guid.NewGuid()}', NULL, 1, {amountUnits}, '{confirmedAt:O}', '{confirmedAt:O}');
+                '{rootId}', 'test', '{rootId:N}', 'leg', NULL, NULL, 'evidence-{rootId:N}', 1, {sourceState},
+                '{Guid.NewGuid()}', '{Guid.NewGuid()}', NULL, 1, {amountUnits}, '{confirmedAt:O}', {sourceConfirmedAtSql});
 
             INSERT INTO public.economy_credit_lots (
                 "Id", "WalletId", "RootSourceStampId", "Currency", "AmountUnits", "Provenance", "CreditedAt",
