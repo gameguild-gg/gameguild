@@ -116,6 +116,28 @@ describe('Testing Lab event actions', () => {
     });
   });
 
+  it('replaces a generic TestingLab.Validation response with actionable guidance', async () => {
+    mocks.events.postTestingEvents.mockResolvedValue({
+      ok: false,
+      error: { message: 'TestingLab.Validation' },
+    });
+
+    const result = await createTestingEvent(
+      form({
+        name: 'Campus showcase',
+        applicationsOpenAt: '2026-08-01T09:00',
+        applicationsCloseAt: '2026-08-05T18:00',
+        startsAt: '2026-08-08T18:00',
+        endsAt: '2026-08-08T21:00',
+      }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Check that applications close before the event starts and the event ends after it starts.',
+    });
+  });
+
   it('shows validation detail when the generated client rejects the request', async () => {
     mocks.events.postTestingEvents.mockRejectedValue({
       message: 'TestingLab.Validation',

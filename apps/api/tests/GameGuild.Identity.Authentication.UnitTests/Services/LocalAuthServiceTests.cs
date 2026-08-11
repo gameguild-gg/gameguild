@@ -187,6 +187,83 @@ public class LocalAuthServiceTests
     }
 
     [Fact]
+    public async Task LocalSignInAsync_InactiveDefaultMembership_ReactivatesItBeforeIssuingTenantToken()
+    {
+        var defaultTenant = new Tenant
+        {
+            Id = Guid.NewGuid(),
+            Name = "GameGuild",
+            Slug = "gameguild",
+            IsDefault = true,
+            IsActive = true
+        };
+        var user = User.CreateWithPassword(
+            "admin@example.com",
+            "admin",
+            BCrypt.Net.BCrypt.HashPassword("Password1!"));
+        AddTenantMemberCommand? capturedCommand = null;
+        Guid? capturedTenantId = null;
+
+        _userRepoMock.Setup(x => x.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _userRepoMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _anomalyDetectionMock.Setup(x => x.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new AuthenticationAnomalyResult { RiskLevel = RiskLevel.Low });
+        _senderMock.Setup(x => x.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(defaultTenant);
+        _senderMock
+            .SetupSequence(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetUserMembershipsResponse
+            {
+                TotalCount = 1,
+                Memberships =
+                [
+                    new UserMembershipDto
+                    {
+                        TenantId = defaultTenant.Id,
+                        TenantName = defaultTenant.Name,
+                        TenantSlug = defaultTenant.Slug,
+                        TenantIsActive = true,
+                        Role = "SystemAdmin",
+                        IsActive = false
+                    }
+                ]
+            })
+            .ReturnsAsync(new GetUserMembershipsResponse
+            {
+                TotalCount = 1,
+                Memberships =
+                [
+                    new UserMembershipDto
+                    {
+                        TenantId = defaultTenant.Id,
+                        TenantName = defaultTenant.Name,
+                        TenantSlug = defaultTenant.Slug,
+                        TenantIsActive = true,
+                        Role = "SystemAdmin",
+                        IsActive = true
+                    }
+                ]
+            });
+        _senderMock
+            .Setup(x => x.Send(It.IsAny<AddTenantMemberCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<AddTenantMemberResponse>, CancellationToken>((request, _) => capturedCommand = (AddTenantMemberCommand)request)
+            .ReturnsAsync(new AddTenantMemberResponse { Success = true, MemberId = Guid.NewGuid() });
+        _jwtTokenServiceMock
+            .Setup(x => x.GenerateAccessTokenAsync(user.Id, user.Email, It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Callback<Guid, string, string[], Guid?, int, CancellationToken>((_, _, _, tenantId, _, _) => capturedTenantId = tenantId)
+            .ReturnsAsync("access-token");
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(user.Id, It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("refresh-token");
+
+        var result = await _sut.LocalSignInAsync(new LocalSignInRequest { Email = user.Email, Password = "Password1!" });
+
+        result.TenantId.Should().Be(defaultTenant.Id);
+        capturedCommand.Should().NotBeNull();
+        capturedCommand!.TenantId.Should().Be(defaultTenant.Id);
+        capturedCommand.Role.Should().Be("SystemAdmin");
+        capturedTenantId.Should().Be(defaultTenant.Id);
+    }
+
+    [Fact]
     public async Task LocalSignInAsync_ValidCredentials_HighRisk_RequiresStepUp()
     {
         var passwordHash = BCrypt.Net.BCrypt.HashPassword("Password1!");
@@ -582,6 +659,60 @@ public class LocalAuthServiceTests
         result.AccessToken.Should().Be("new-access-token");
         result.RefreshToken.Should().Be("new-refresh-token");
         result.UserId.Should().Be(userId);
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_InactiveDefaultMembership_ReactivatesItBeforeIssuingTenantToken()
+    {
+        var defaultTenant = new Tenant
+        {
+            Id = Guid.NewGuid(),
+            Name = "GameGuild",
+            Slug = "gameguild",
+            IsDefault = true,
+            IsActive = true
+        };
+        var user = User.CreateWithPassword("refresh@example.com", "refresh", BCrypt.Net.BCrypt.HashPassword("Password1!"));
+        var storedToken = new RefreshToken
+        {
+            UserId = user.Id,
+            Token = "hashed",
+            ExpiresAt = SystemClock.UtcNow.AddDays(5),
+            IsRevoked = false
+        };
+        AddTenantMemberCommand? capturedCommand = null;
+
+        _refreshTokenHasherMock.Setup(x => x.HashToken("valid-token")).Returns("hashed");
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("hashed", default)).ReturnsAsync(storedToken);
+        _userRepoMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _senderMock.Setup(x => x.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(defaultTenant);
+        _senderMock
+            .SetupSequence(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetUserMembershipsResponse
+            {
+                TotalCount = 1,
+                Memberships = [new UserMembershipDto { TenantId = defaultTenant.Id, Role = "Member", IsActive = false }]
+            })
+            .ReturnsAsync(new GetUserMembershipsResponse
+            {
+                TotalCount = 1,
+                Memberships = [new UserMembershipDto { TenantId = defaultTenant.Id, TenantName = defaultTenant.Name, TenantSlug = defaultTenant.Slug, TenantIsActive = true, Role = "Member", IsActive = true }]
+            });
+        _senderMock
+            .Setup(x => x.Send(It.IsAny<AddTenantMemberCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<AddTenantMemberResponse>, CancellationToken>((request, _) => capturedCommand = (AddTenantMemberCommand)request)
+            .ReturnsAsync(new AddTenantMemberResponse { Success = true, MemberId = Guid.NewGuid() });
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(user.Id, user.Email, It.IsAny<string[]>(), defaultTenant.Id, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("new-access-token");
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(user.Id, It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("new-refresh-token");
+        _refreshTokenRepoMock.Setup(x => x.UpdateAsync(It.IsAny<RefreshToken>(), default)).ReturnsAsync(storedToken);
+
+        var result = await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "valid-token" });
+
+        result.TenantId.Should().Be(defaultTenant.Id);
+        capturedCommand.Should().NotBeNull();
+        capturedCommand!.Role.Should().Be("Member");
     }
 
     [Fact]
