@@ -78,6 +78,14 @@ function errorDetail(error: unknown) {
   return typeof detail === 'string' && detail.trim() ? detail : null;
 }
 
+function readableError(message: string | null | undefined, detail?: string | null) {
+  if (detail?.trim()) return detail;
+  if (message === 'TestingLab.Validation') {
+    return 'Check that applications close before the event starts and the event ends after it starts.';
+  }
+  return message || 'The Testing Lab event operation failed.';
+}
+
 async function complete<T>(
   operation: Promise<Result<T, ApiError>>,
   message: string,
@@ -85,13 +93,13 @@ async function complete<T>(
 ): Promise<TestingEventActionResult<T>> {
   try {
     const result = await operation;
-    if (!result.ok) return { success: false, error: result.error.detail || result.error.message };
+    if (!result.ok) return { success: false, error: readableError(result.error.message, result.error.detail) };
     revalidateEvent(eventId);
     return { success: true, data: (result.data ?? null) as ActionData<T>, message };
   } catch (error) {
     return {
       success: false,
-      error: errorDetail(error) ?? (error instanceof Error ? error.message : 'The Testing Lab event operation failed.'),
+      error: readableError(error instanceof Error ? error.message : null, errorDetail(error)),
     };
   }
 }

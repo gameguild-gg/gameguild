@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getTestingLabAnalytics: vi.fn(),
   getTestingLabDashboard: vi.fn(),
+  getTestingEventsDirectory: vi.fn(),
   normalizeTestingRequestStatus: vi.fn(),
   normalizeTestingSessionStatus: vi.fn(),
 }));
@@ -14,6 +15,16 @@ vi.mock('@/lib/testing-lab', () => ({
   getTestingLabDashboard: mocks.getTestingLabDashboard,
   normalizeTestingRequestStatus: mocks.normalizeTestingRequestStatus,
   normalizeTestingSessionStatus: mocks.normalizeTestingSessionStatus,
+}));
+
+vi.mock('@/lib/testing-lab/events-queries', () => ({
+  getTestingEventsDirectory: mocks.getTestingEventsDirectory,
+}));
+
+vi.mock('@/components/testing-lab/testing-lab-calendar', () => ({
+  TestingLabCalendar: ({ events }: { events: Array<{ name?: string }> }) => (
+    <section aria-label="Testing Lab calendar">{events.map((event) => <span key={event.name}>{event.name}</span>)}</section>
+  ),
 }));
 
 vi.mock('@/i18n/navigation', () => ({
@@ -27,7 +38,7 @@ vi.mock('@/i18n/navigation', () => ({
 import TestingLabPage from './page';
 
 describe('testing lab dashboard page', () => {
-  it('renders live Testing Lab metrics and routed operations', async () => {
+  it('renders live Testing Lab metrics and the Testing Lab calendar', async () => {
     mocks.normalizeTestingRequestStatus.mockReturnValue('Open');
     mocks.normalizeTestingSessionStatus.mockReturnValue('Scheduled');
     mocks.getTestingLabDashboard.mockResolvedValue({
@@ -71,14 +82,17 @@ describe('testing lab dashboard page', () => {
       trend: [],
       events: [],
     });
+    mocks.getTestingEventsDirectory.mockResolvedValue({
+      accessIssues: [],
+      events: [{ id: 'event-1', name: 'Campus playtest', startsAt: '2026-08-10T18:00:00.000Z' }],
+    });
 
     render(await TestingLabPage());
 
     expect(screen.getByRole('heading', { name: 'Testing Lab' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /public lab/i })).toHaveAttribute('href', '/testing-lab');
-    expect(screen.getByRole('heading', { name: 'Operations' })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: /projects/i }).some((link) => link.getAttribute('href') === '/dashboard/testing-lab/projects')).toBe(true);
-    expect(screen.getAllByRole('link').some((link) => link.getAttribute('href') === '/dashboard/testing-lab/analytics')).toBe(true);
+    expect(screen.getByRole('region', { name: 'Testing Lab calendar' })).toBeInTheDocument();
+    expect(screen.getByText('Campus playtest')).toBeInTheDocument();
     expect(screen.getByText('20%')).toBeInTheDocument();
     expect(screen.getByText('Combat prototype playtest')).toBeInTheDocument();
     expect(screen.getByText('Friday feedback lab')).toBeInTheDocument();

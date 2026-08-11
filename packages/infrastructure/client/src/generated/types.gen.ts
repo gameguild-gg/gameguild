@@ -218,6 +218,11 @@ export interface APIControllersDependencyHealthOutput {
   error?: string | null;
 }
 
+export interface APIControllersEconomySelfServiceCapability {
+  capability?: EconomyRiskEconomyValueMovementCapability;
+  state?: APISetupEconomyCapabilityReadinessState;
+}
+
 export interface APIControllersHealthinessOutput {
   status?: string | null;
   duration?: string;
@@ -260,6 +265,8 @@ export interface APIControllersRuntimeDetails {
   osArchitecture?: string | null;
   processArchitecture?: string | null;
 }
+
+export type APISetupEconomyCapabilityReadinessState = 'Disabled' | 'Ready' | 'ProviderNotReady' | 'InvalidConfiguration';
 
 export type BillingCycle = 'Weekly' | 'Monthly' | 'Quarterly' | 'SemiAnnually' | 'Annually' | 'Biannually';
 
@@ -1953,6 +1960,28 @@ export interface EconomyFundingSelfServiceHardToSoftConversionReceipt {
   journalHash?: string | null;
   isDuplicate?: boolean;
 }
+
+export type EconomyPayoutsPayoutOperationState = 'Reserved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
+
+export interface EconomyPayoutsQueriesEconomyPayoutOperation {
+  id?: string;
+  hardCoinUnits?: number;
+  state?: EconomyPayoutsPayoutOperationState;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type EconomyRiskEconomyValueMovementCapability =
+  | 'ConfirmHardCoinFunding'
+  | 'ConvertHardToSoft'
+  | 'ReverseProviderFunding'
+  | 'Transfer'
+  | 'IssueAdReward'
+  | 'BountyEscrow'
+  | 'BountyClaim'
+  | 'MarketplaceSettlement'
+  | 'PayoutExecution'
+  | 'AdminWithdrawalExecution';
 
 export interface FeaturesBulkEvaluationInput {
   featureKeys?: Array<string> | null;
@@ -4139,9 +4168,37 @@ export interface LearningAssessmentsAssignAssessmentGroupInput {
   clearAssessmentGroup?: boolean;
 }
 
+export interface LearningAssessmentsBundleFile {
+  encoding?: string | null;
+  content?: string | null;
+}
+
 export interface LearningAssessmentsCanAttemptOutput {
   canAttempt?: boolean;
   currentAttemptCount?: number;
+}
+
+export interface LearningAssessmentsCodingAssignmentDefinition {
+  kind?: string | null;
+  language?: string | null;
+  workspaceConfig?: LearningAssessmentsWorkspaceConfig;
+  testPlan?: LearningAssessmentsCodingTestPlan;
+  maxScore?: number;
+  passingScore?: number;
+}
+
+export interface LearningAssessmentsCodingTestPlan {
+  build?: LearningAssessmentsNativeBuildConfig;
+  cases?: Array<LearningAssessmentsTestCase> | null;
+  timeoutMsPerCase?: number | null;
+}
+
+export interface LearningAssessmentsCompileConfig {
+  tool?: string | null;
+  args?: Array<string> | null;
+  cwd?: string | null;
+  output?: string | null;
+  toolchain?: string | null;
 }
 
 export interface LearningAssessmentsCourseAssessmentAnalytics {
@@ -4235,6 +4292,25 @@ export interface LearningAssessmentsLinkInteractiveVideoCueInput {
   cuePositionSeconds?: number | null;
 }
 
+export interface LearningAssessmentsNativeBuildConfig {
+  toolchain?: string | null;
+  compiler?: string | null;
+  flags?: Array<string> | null;
+  ldflags?: Array<string> | null;
+  defines?: Record<string, string> | null;
+  includePaths?: Array<string> | null;
+  libPaths?: Array<string> | null;
+  libs?: Array<string> | null;
+  sources?: Array<string> | null;
+  output?: string | null;
+}
+
+export interface LearningAssessmentsRunConfig {
+  type?: string | null;
+  tool?: string | null;
+  args?: Array<string> | null;
+}
+
 export interface LearningAssessmentsStartSubmissionInput {
   enrollmentId?: string;
 }
@@ -4252,6 +4328,18 @@ export interface LearningAssessmentsSubmitAssessmentInput {
   mediaPayload?: string | null;
   projectPayload?: string | null;
   structuredAnswerPayload?: string | null;
+}
+
+export interface LearningAssessmentsTestCase {
+  weight?: number | null;
+  hidden?: boolean;
+}
+
+export interface LearningAssessmentsTestConfig {
+  tool?: string | null;
+  compileArgs?: Array<string> | null;
+  runArgs?: Array<string> | null;
+  framework?: string | null;
 }
 
 export interface LearningAssessmentsUpdateAssessmentDefinitionInput {
@@ -4287,6 +4375,23 @@ export interface LearningAssessmentsUpdateAssessmentInput {
   allowLateSubmissions?: boolean | null;
   lateSubmissionDeadline?: string | null;
   clearLateSubmissionDeadline?: boolean;
+}
+
+export interface LearningAssessmentsWorkspaceConfig {
+  id?: string | null;
+  label?: string | null;
+  version?: number | null;
+  compile?: LearningAssessmentsCompileConfig;
+  run?: LearningAssessmentsRunConfig;
+  test?: LearningAssessmentsTestConfig;
+  features?: LearningAssessmentsWorkspaceFeatures;
+  files?: Record<string, LearningAssessmentsBundleFile> | null;
+}
+
+export interface LearningAssessmentsWorkspaceFeatures {
+  canvas?: boolean | null;
+  terminalInput?: boolean | null;
+  showTestButton?: boolean | null;
 }
 
 export interface LearningCertificatesCertificate {
@@ -8176,12 +8281,14 @@ export let APIControllersApplicationInfoOutputSchema: z.ZodType<APIControllersAp
 export let APIControllersBuildDetailsSchema: z.ZodType<APIControllersBuildDetails>;
 export let APIControllersDependencyHealthItemSchema: z.ZodType<APIControllersDependencyHealthItem>;
 export let APIControllersDependencyHealthOutputSchema: z.ZodType<APIControllersDependencyHealthOutput>;
+export let APIControllersEconomySelfServiceCapabilitySchema: z.ZodType<APIControllersEconomySelfServiceCapability>;
 export let APIControllersHealthinessOutputSchema: z.ZodType<APIControllersHealthinessOutput>;
 export let APIControllersHealthinessResponseItemSchema: z.ZodType<APIControllersHealthinessResponseItem>;
 export let APIControllersLivenessOutputSchema: z.ZodType<APIControllersLivenessOutput>;
 export let APIControllersProcessDetailsSchema: z.ZodType<APIControllersProcessDetails>;
 export let APIControllersReadinessOutputSchema: z.ZodType<APIControllersReadinessOutput>;
 export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDetails>;
+export let APISetupEconomyCapabilityReadinessStateSchema: z.ZodType<APISetupEconomyCapabilityReadinessState>;
 export let BillingCycleSchema: z.ZodType<BillingCycle>;
 export let BulkOperationErrorSchema: z.ZodType<BulkOperationError>;
 export let BulkOperationOutputSchema: z.ZodType<BulkOperationOutput>;
@@ -8356,6 +8463,9 @@ export let EconomyContractsPostingTemplateKindSchema: z.ZodType<EconomyContracts
 export let EconomyContractsProvenanceKindSchema: z.ZodType<EconomyContractsProvenanceKind>;
 export let EconomyContractsWalletLifecycleStateSchema: z.ZodType<EconomyContractsWalletLifecycleState>;
 export let EconomyFundingSelfServiceHardToSoftConversionReceiptSchema: z.ZodType<EconomyFundingSelfServiceHardToSoftConversionReceipt>;
+export let EconomyPayoutsPayoutOperationStateSchema: z.ZodType<EconomyPayoutsPayoutOperationState>;
+export let EconomyPayoutsQueriesEconomyPayoutOperationSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutOperation>;
+export let EconomyRiskEconomyValueMovementCapabilitySchema: z.ZodType<EconomyRiskEconomyValueMovementCapability>;
 export let FeaturesBulkEvaluationInputSchema: z.ZodType<FeaturesBulkEvaluationInput>;
 export let FeaturesCapabilityAuditLogSchema: z.ZodType<FeaturesCapabilityAuditLog>;
 export let FeaturesCapabilityCheckOutputSchema: z.ZodType<FeaturesCapabilityCheckOutput>;
@@ -8605,7 +8715,11 @@ export let LearningAssessmentsAssessmentScoreBucketSchema: z.ZodType<LearningAss
 export let LearningAssessmentsAssessmentSubmissionSchema: z.ZodType<LearningAssessmentsAssessmentSubmission>;
 export let LearningAssessmentsAssessmentTypeSchema: z.ZodType<LearningAssessmentsAssessmentType>;
 export let LearningAssessmentsAssignAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsAssignAssessmentGroupInput>;
+export let LearningAssessmentsBundleFileSchema: z.ZodType<LearningAssessmentsBundleFile>;
 export let LearningAssessmentsCanAttemptOutputSchema: z.ZodType<LearningAssessmentsCanAttemptOutput>;
+export let LearningAssessmentsCodingAssignmentDefinitionSchema: z.ZodType<LearningAssessmentsCodingAssignmentDefinition>;
+export let LearningAssessmentsCodingTestPlanSchema: z.ZodType<LearningAssessmentsCodingTestPlan>;
+export let LearningAssessmentsCompileConfigSchema: z.ZodType<LearningAssessmentsCompileConfig>;
 export let LearningAssessmentsCourseAssessmentAnalyticsSchema: z.ZodType<LearningAssessmentsCourseAssessmentAnalytics>;
 export let LearningAssessmentsCreateAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsCreateAssessmentGroupInput>;
 export let LearningAssessmentsCreateAssessmentInputSchema: z.ZodType<LearningAssessmentsCreateAssessmentInput>;
@@ -8615,13 +8729,19 @@ export let LearningAssessmentsLearnerAssessmentAttemptSchema: z.ZodType<Learning
 export let LearningAssessmentsLearnerAssessmentSubmissionSchema: z.ZodType<LearningAssessmentsLearnerAssessmentSubmission>;
 export let LearningAssessmentsLearnerInteractiveVideoAssessmentCueSchema: z.ZodType<LearningAssessmentsLearnerInteractiveVideoAssessmentCue>;
 export let LearningAssessmentsLinkInteractiveVideoCueInputSchema: z.ZodType<LearningAssessmentsLinkInteractiveVideoCueInput>;
+export let LearningAssessmentsNativeBuildConfigSchema: z.ZodType<LearningAssessmentsNativeBuildConfig>;
+export let LearningAssessmentsRunConfigSchema: z.ZodType<LearningAssessmentsRunConfig>;
 export let LearningAssessmentsStartSubmissionInputSchema: z.ZodType<LearningAssessmentsStartSubmissionInput>;
 export let LearningAssessmentsSubmissionModalitySchema: z.ZodType<LearningAssessmentsSubmissionModality>;
 export let LearningAssessmentsSubmissionStatusSchema: z.ZodType<LearningAssessmentsSubmissionStatus>;
 export let LearningAssessmentsSubmitAssessmentInputSchema: z.ZodType<LearningAssessmentsSubmitAssessmentInput>;
+export let LearningAssessmentsTestCaseSchema: z.ZodType<LearningAssessmentsTestCase>;
+export let LearningAssessmentsTestConfigSchema: z.ZodType<LearningAssessmentsTestConfig>;
 export let LearningAssessmentsUpdateAssessmentDefinitionInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentDefinitionInput>;
 export let LearningAssessmentsUpdateAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentGroupInput>;
 export let LearningAssessmentsUpdateAssessmentInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentInput>;
+export let LearningAssessmentsWorkspaceConfigSchema: z.ZodType<LearningAssessmentsWorkspaceConfig>;
+export let LearningAssessmentsWorkspaceFeaturesSchema: z.ZodType<LearningAssessmentsWorkspaceFeatures>;
 export let LearningCertificatesCertificateSchema: z.ZodType<LearningCertificatesCertificate>;
 export let LearningCertificatesCertificateStatusSchema: z.ZodType<LearningCertificatesCertificateStatus>;
 export let LearningCertificatesCertificateTemplateDetailSchema: z.ZodType<LearningCertificatesCertificateTemplateDetail>;
@@ -9261,6 +9381,12 @@ APIControllersDependencyHealthOutputSchema = z.object({
   error: z.string().nullable().optional(),
 });
 
+/** Zod schema for APIControllersEconomySelfServiceCapability */
+APIControllersEconomySelfServiceCapabilitySchema = z.object({
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  state: z.lazy(() => APISetupEconomyCapabilityReadinessStateSchema).optional(),
+});
+
 /** Zod schema for APIControllersHealthinessOutput */
 APIControllersHealthinessOutputSchema = z.object({
   status: z.string().nullable().optional(),
@@ -9315,6 +9441,9 @@ APIControllersRuntimeDetailsSchema = z.object({
   osArchitecture: z.string().nullable().optional(),
   processArchitecture: z.string().nullable().optional(),
 });
+
+/** Zod schema for APISetupEconomyCapabilityReadinessState */
+APISetupEconomyCapabilityReadinessStateSchema = z.enum(['Disabled', 'Ready', 'ProviderNotReady', 'InvalidConfiguration']);
 
 /** Zod schema for BillingCycle */
 BillingCycleSchema = z.enum(['Weekly', 'Monthly', 'Quarterly', 'SemiAnnually', 'Annually', 'Biannually']);
@@ -11283,6 +11412,32 @@ EconomyFundingSelfServiceHardToSoftConversionReceiptSchema = z.object({
   journalHash: z.string().nullable().optional(),
   isDuplicate: z.boolean().optional(),
 });
+
+/** Zod schema for EconomyPayoutsPayoutOperationState */
+EconomyPayoutsPayoutOperationStateSchema = z.enum(['Reserved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
+
+/** Zod schema for EconomyPayoutsQueriesEconomyPayoutOperation */
+EconomyPayoutsQueriesEconomyPayoutOperationSchema = z.object({
+  id: z.string().uuid().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  state: z.lazy(() => EconomyPayoutsPayoutOperationStateSchema).optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for EconomyRiskEconomyValueMovementCapability */
+EconomyRiskEconomyValueMovementCapabilitySchema = z.enum([
+  'ConfirmHardCoinFunding',
+  'ConvertHardToSoft',
+  'ReverseProviderFunding',
+  'Transfer',
+  'IssueAdReward',
+  'BountyEscrow',
+  'BountyClaim',
+  'MarketplaceSettlement',
+  'PayoutExecution',
+  'AdminWithdrawalExecution',
+]);
 
 /** Zod schema for FeaturesBulkEvaluationInput */
 FeaturesBulkEvaluationInputSchema = z.object({
@@ -13856,10 +14011,45 @@ LearningAssessmentsAssignAssessmentGroupInputSchema = z.object({
   clearAssessmentGroup: z.boolean().optional(),
 });
 
+/** Zod schema for LearningAssessmentsBundleFile */
+LearningAssessmentsBundleFileSchema = z.object({
+  encoding: z.string().nullable().optional(),
+  content: z.string().nullable().optional(),
+});
+
 /** Zod schema for LearningAssessmentsCanAttemptOutput */
 LearningAssessmentsCanAttemptOutputSchema = z.object({
   canAttempt: z.boolean().optional(),
   currentAttemptCount: z.number().int().optional(),
+});
+
+/** Zod schema for LearningAssessmentsCodingAssignmentDefinition */
+LearningAssessmentsCodingAssignmentDefinitionSchema = z.object({
+  kind: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+  workspaceConfig: z.lazy(() => LearningAssessmentsWorkspaceConfigSchema).optional(),
+  testPlan: z.lazy(() => LearningAssessmentsCodingTestPlanSchema).optional(),
+  maxScore: z.number().int().optional(),
+  passingScore: z.number().int().optional(),
+});
+
+/** Zod schema for LearningAssessmentsCodingTestPlan */
+LearningAssessmentsCodingTestPlanSchema = z.object({
+  build: z.lazy(() => LearningAssessmentsNativeBuildConfigSchema).optional(),
+  cases: z
+    .array(z.lazy(() => LearningAssessmentsTestCaseSchema))
+    .nullable()
+    .optional(),
+  timeoutMsPerCase: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsCompileConfig */
+LearningAssessmentsCompileConfigSchema = z.object({
+  tool: z.string().nullable().optional(),
+  args: z.array(z.string()).nullable().optional(),
+  cwd: z.string().nullable().optional(),
+  output: z.string().nullable().optional(),
+  toolchain: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningAssessmentsCourseAssessmentAnalytics */
@@ -13968,6 +14158,27 @@ LearningAssessmentsLinkInteractiveVideoCueInputSchema = z.object({
   cuePositionSeconds: z.number().nullable().optional(),
 });
 
+/** Zod schema for LearningAssessmentsNativeBuildConfig */
+LearningAssessmentsNativeBuildConfigSchema = z.object({
+  toolchain: z.string().nullable().optional(),
+  compiler: z.string().nullable().optional(),
+  flags: z.array(z.string()).nullable().optional(),
+  ldflags: z.array(z.string()).nullable().optional(),
+  defines: z.record(z.string(), z.string()).nullable().optional(),
+  includePaths: z.array(z.string()).nullable().optional(),
+  libPaths: z.array(z.string()).nullable().optional(),
+  libs: z.array(z.string()).nullable().optional(),
+  sources: z.array(z.string()).nullable().optional(),
+  output: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsRunConfig */
+LearningAssessmentsRunConfigSchema = z.object({
+  type: z.string().nullable().optional(),
+  tool: z.string().nullable().optional(),
+  args: z.array(z.string()).nullable().optional(),
+});
+
 /** Zod schema for LearningAssessmentsStartSubmissionInput */
 LearningAssessmentsStartSubmissionInputSchema = z.object({
   enrollmentId: z.string().uuid().optional(),
@@ -13988,6 +14199,20 @@ LearningAssessmentsSubmitAssessmentInputSchema = z.object({
   mediaPayload: z.string().nullable().optional(),
   projectPayload: z.string().nullable().optional(),
   structuredAnswerPayload: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsTestCase */
+LearningAssessmentsTestCaseSchema = z.object({
+  weight: z.number().nullable().optional(),
+  hidden: z.boolean().optional(),
+});
+
+/** Zod schema for LearningAssessmentsTestConfig */
+LearningAssessmentsTestConfigSchema = z.object({
+  tool: z.string().nullable().optional(),
+  compileArgs: z.array(z.string()).nullable().optional(),
+  runArgs: z.array(z.string()).nullable().optional(),
+  framework: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningAssessmentsUpdateAssessmentDefinitionInput */
@@ -14026,6 +14251,31 @@ LearningAssessmentsUpdateAssessmentInputSchema = z.object({
   allowLateSubmissions: z.boolean().nullable().optional(),
   lateSubmissionDeadline: z.string().datetime().nullable().optional(),
   clearLateSubmissionDeadline: z.boolean().optional(),
+});
+
+/** Zod schema for LearningAssessmentsWorkspaceConfig */
+LearningAssessmentsWorkspaceConfigSchema = z.object({
+  id: z.string().nullable().optional(),
+  label: z.string().nullable().optional(),
+  version: z.number().int().nullable().optional(),
+  compile: z.lazy(() => LearningAssessmentsCompileConfigSchema).optional(),
+  run: z.lazy(() => LearningAssessmentsRunConfigSchema).optional(),
+  test: z.lazy(() => LearningAssessmentsTestConfigSchema).optional(),
+  features: z.lazy(() => LearningAssessmentsWorkspaceFeaturesSchema).optional(),
+  files: z
+    .record(
+      z.string(),
+      z.lazy(() => LearningAssessmentsBundleFileSchema),
+    )
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningAssessmentsWorkspaceFeatures */
+LearningAssessmentsWorkspaceFeaturesSchema = z.object({
+  canvas: z.boolean().nullable().optional(),
+  terminalInput: z.boolean().nullable().optional(),
+  showTestButton: z.boolean().nullable().optional(),
 });
 
 /** Zod schema for LearningCertificatesCertificate */

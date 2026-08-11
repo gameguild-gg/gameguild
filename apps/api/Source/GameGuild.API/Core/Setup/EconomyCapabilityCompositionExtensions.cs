@@ -3,6 +3,9 @@ using GameGuild.Commerce.Payments;
 using GameGuild.Compliance.FinancialCrime;
 using GameGuild.Economy.Risk;
 using GameGuild.TrustSafety;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.API.Setup;
 
@@ -17,7 +20,100 @@ public static class EconomyCapabilityCompositionExtensions
         services.AddEconomyRiskComposition(configuration);
         services.AddFinancialCrimeComposition();
         services.AddTrustSafetyComposition();
+        services.TryAddSingleton<IEconomyProviderCapabilityReadiness, EconomyProviderCapabilityReadiness>();
         return services;
+    }
+}
+
+public enum EconomyCapabilityReadinessState
+{
+    Disabled = 1,
+    Ready = 2,
+    ProviderNotReady = 3,
+    InvalidConfiguration = 4
+}
+
+public sealed record EconomyCapabilityReadinessResult(
+    EconomyValueMovementCapability Capability,
+    EconomyCapabilityReadinessState State,
+    IReadOnlyList<string> Diagnostics)
+{
+    public bool IsReady => State == EconomyCapabilityReadinessState.Ready;
+}
+
+/// <summary>
+/// Evaluates a value-moving capability at operation time. It intentionally does not run during
+/// application startup: optional providers must not prevent safe reads or unrelated modules from running.
+/// </summary>
+public interface IEconomyProviderCapabilityReadiness
+{
+    EconomyCapabilityReadinessResult Assess(EconomyValueMovementCapability capability);
+
+    void EnsureReady(EconomyValueMovementCapability capability);
+}
+
+public sealed class EconomyProviderCapabilityReadiness(
+    IOptions<EconomyRiskCompositionOptions> economyOptions,
+    IOptions<StripeGatewayOptions> gatewayOptions,
+    IOptions<BillingConfiguration> billingOptions,
+    IHostEnvironment hostEnvironment) : IEconomyProviderCapabilityReadiness
+{
+    public EconomyCapabilityReadinessResult Assess(EconomyValueMovementCapability capability)
+    {
+        ArgumentNullException.ThrowIfNull(economyOptions);
+        ArgumentNullException.ThrowIfNull(gatewayOptions);
+        ArgumentNullException.ThrowIfNull(billingOptions);
+        ArgumentNullException.ThrowIfNull(hostEnvironment);
+
+        EconomyRiskCompositionOptions economy = economyOptions.Value;
+        IReadOnlySet<EconomyValueMovementCapability> enabledCapabilities;
+        try
+        {
+            EconomyValueMovementCapabilities.Validate(economy);
+            enabledCapabilities = EconomyValueMovementCapabilities.Parse(economy.EnabledCapabilities);
+        }
+        catch (EconomyCapabilityConfigurationException exception)
+        {
+            return new EconomyCapabilityReadinessResult(
+                capability,
+                EconomyCapabilityReadinessState.InvalidConfiguration,
+                [exception.Message]);
+        }
+
+        if (!economy.ValueMovingDecisionsEnabled || !enabledCapabilities.Contains(capability))
+            return new EconomyCapabilityReadinessResult(
+                capability,
+                EconomyCapabilityReadinessState.Disabled,
+                ["The capability is not enabled for rollout."]);
+
+        if (!EconomyProviderCapabilityGuard.IsProviderBacked(capability))
+            return new EconomyCapabilityReadinessResult(
+                capability,
+                EconomyCapabilityReadinessState.Ready,
+                []);
+
+        var failures = EconomyProviderCapabilityGuard.EvaluateProviderConfiguration(
+            gatewayOptions.Value,
+            billingOptions.Value,
+            hostEnvironment.EnvironmentName);
+        return failures.Count == 0
+            ? new EconomyCapabilityReadinessResult(capability, EconomyCapabilityReadinessState.Ready, [])
+            : new EconomyCapabilityReadinessResult(
+                capability,
+                EconomyCapabilityReadinessState.ProviderNotReady,
+                failures);
+    }
+
+    public void EnsureReady(EconomyValueMovementCapability capability)
+    {
+        var readiness = Assess(capability);
+        if (readiness.IsReady)
+            return;
+
+        var message = string.Join(" ", readiness.Diagnostics);
+        if (readiness.State == EconomyCapabilityReadinessState.Disabled)
+            throw new EconomyValueMovementDisabledException(message);
+        throw new EconomyProviderConfigurationException(message);
     }
 }
 
@@ -48,6 +144,23 @@ public static class EconomyProviderCapabilityGuard
             !ProviderBackedCapabilities.Any(enabledCapabilities.Contains))
             return;
 
+        var failures = EvaluateProviderConfiguration(gateway, billing, environmentName);
+        if (failures.Count != 0)
+            throw new EconomyProviderConfigurationException(string.Join(" ", failures));
+    }
+
+    public static bool IsProviderBacked(EconomyValueMovementCapability capability) =>
+        ProviderBackedCapabilities.Contains(capability);
+
+    public static IReadOnlyList<string> EvaluateProviderConfiguration(
+        StripeGatewayOptions gateway,
+        BillingConfiguration billing,
+        string environmentName)
+    {
+        ArgumentNullException.ThrowIfNull(gateway);
+        ArgumentNullException.ThrowIfNull(billing);
+        ArgumentException.ThrowIfNullOrWhiteSpace(environmentName);
+
         var failures = new List<string>();
         if (!gateway.IsEnabled)
             failures.Add("Payments:Stripe:IsEnabled must be true.");
@@ -73,8 +186,7 @@ public static class EconomyProviderCapabilityGuard
             (!gateway.LiveMode || !billing.Stripe.LiveMode))
             failures.Add("Stripe live mode is required in Production.");
 
-        if (failures.Count != 0)
-            throw new EconomyProviderConfigurationException(string.Join(" ", failures));
+        return failures;
     }
 
     private static bool IsDevelopmentOrTest(string environmentName) =>
