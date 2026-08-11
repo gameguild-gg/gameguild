@@ -194,6 +194,129 @@ public class AddTenantMemberCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenDefaultTenantRequiresAcceptance_Should_Create_Active_Base_Membership()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenant = new Tenant { Id = tenantId, Name = "GameGuild", Slug = "gameguild", IsDefault = true };
+        TenantMember? capturedMember = null;
+
+        _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantMember?)null);
+        _memberRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
+            .Callback<TenantMember, CancellationToken>((member, _) => capturedMember = member)
+            .ReturnsAsync((TenantMember member, CancellationToken _) => member);
+
+        var result = await _handler.Handle(
+            new TestAddTenantMemberCommand(
+                tenantId,
+                userId,
+                "Member",
+                "admin@game-guild.com",
+                RequiresAcceptance: true,
+                InviteeEmail: "member@example.com"),
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        capturedMember.Should().NotBeNull();
+        capturedMember!.IsActive.Should().BeTrue("the base tenant membership is mandatory");
+        capturedMember.LeftAt.Should().BeNull();
+        capturedMember.LeaveReason.Should().BeNull();
+        TenantMemberInviteMetadata.FromJson(capturedMember.Metadata).InviteStatus
+            .Should().NotBe(TenantMemberInviteStatuses.Pending);
+    }
+
+    [Fact]
+    public async Task Handle_WhenDefaultMembershipIsInactive_Should_Reactivate_Even_WhenAcceptanceWasRequested()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var now = DateTime.UtcNow;
+        var tenant = new Tenant { Id = tenantId, Name = "GameGuild", Slug = "gameguild", IsDefault = true };
+        var member = new TenantMember
+        {
+            TenantId = tenantId,
+            UserId = userId,
+            Role = "Member",
+            IsActive = false,
+            LeftAt = now,
+            LeaveReason = "Invite cancelled",
+            Metadata = TenantMemberInviteMetadata.CreatePending("admin@example.com", now, "member@example.com")
+                .MarkCancelled(now)
+                .ToJson()
+        };
+
+        _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _memberRepositoryMock.Setup(r => r.UpdateAsync(member, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+
+        var result = await _handler.Handle(
+            new TestAddTenantMemberCommand(
+                tenantId,
+                userId,
+                "Member",
+                "admin@game-guild.com",
+                RequiresAcceptance: true,
+                InviteeEmail: "member@example.com"),
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        member.IsActive.Should().BeTrue("the base tenant membership cannot be deactivated");
+        member.LeftAt.Should().BeNull();
+        member.LeaveReason.Should().BeNull();
+        TenantMemberInviteMetadata.FromJson(member.Metadata).InviteStatus
+            .Should().Be(TenantMemberInviteStatuses.Accepted);
+    }
+
+    [Fact]
+    public async Task Handle_WhenRecoveringDefaultSystemAdmin_Should_PreserveExistingRole()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var now = DateTime.UtcNow;
+        var tenant = new Tenant { Id = tenantId, Name = "GameGuild", Slug = "gameguild", IsDefault = true };
+        var member = new TenantMember
+        {
+            TenantId = tenantId,
+            UserId = userId,
+            Role = "SystemAdmin",
+            IsActive = false,
+            LeftAt = now,
+            LeaveReason = "Legacy cancelled membership",
+            Metadata = TenantMemberInviteMetadata.CreatePending("admin@example.com", now, "member@example.com")
+                .MarkCancelled(now)
+                .ToJson()
+        };
+
+        _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _memberRepositoryMock.Setup(r => r.UpdateAsync(member, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+
+        var result = await _handler.Handle(
+            new TestAddTenantMemberCommand(
+                tenantId,
+                userId,
+                "Member"),
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        member.IsActive.Should().BeTrue();
+        member.Role.Should().Be("SystemAdmin", "base-tenant recovery must never downgrade an existing platform role");
+        member.LeftAt.Should().BeNull();
+        member.LeaveReason.Should().BeNull();
+        TenantMemberInviteMetadata.FromJson(member.Metadata).InviteStatus
+            .Should().Be(TenantMemberInviteStatuses.Accepted);
+    }
+
+    [Fact]
     public async Task Handle_WhenRequiresAcceptanceAndInviteeEmail_Should_Send_Invite_Email()
     {
         var tenantId = Guid.NewGuid();

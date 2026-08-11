@@ -98,7 +98,7 @@ public class ActorContextTests
         {
             Roles = new HashSet<string> { "SystemAdmin" }
         };
-        var stringSystemAdminContext = regularContext with
+        var tenantAdminContext = regularContext with
         {
             Roles = new HashSet<string> { "Admin" }
         };
@@ -107,7 +107,7 @@ public class ActorContextTests
         regularContext.HasAnyPermission(Array.Empty<object>()).Should().BeFalse();
         regularContext.HasAnyPermission(new TestPermission("projects:read"), new TestPermission("users:read")).Should().BeTrue();
         regularContext.HasAnyPermission(new TestPermission("users:read")).Should().BeFalse();
-        stringSystemAdminContext.HasAnyPermission("anything:anything").Should().BeTrue();
+        tenantAdminContext.HasAnyPermission("anything:anything").Should().BeFalse();
         systemAdminContext.HasAnyPermission(new TestPermission("anything:anything")).Should().BeTrue();
     }
 
@@ -127,7 +127,7 @@ public class ActorContextTests
         };
         var systemAdminContext = regularContext with
         {
-            Roles = new HashSet<string> { "Admin" },
+            Roles = new HashSet<string> { "SystemAdmin" },
             Permissions = new HashSet<string>()
         };
 
@@ -198,7 +198,7 @@ public class ActorContextTests
     }
 
     [Fact]
-    public void IsSystemAdmin_And_IsTenantAdmin_Should_Return_True_For_Admin_Role()
+    public void Admin_Role_Should_Be_TenantAdmin_Without_SystemAdmin_Access()
     {
         var context = new ActorContext
         {
@@ -212,7 +212,8 @@ public class ActorContextTests
             IsAuthenticated = true
         };
 
-        context.IsSystemAdmin.Should().BeTrue();
+        context.IsSystemAdmin.Should().BeFalse();
+        context.HasPermission("anything:anything").Should().BeFalse();
         context.IsTenantAdmin.Should().BeTrue();
     }
 

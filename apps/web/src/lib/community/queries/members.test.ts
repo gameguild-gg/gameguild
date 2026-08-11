@@ -487,6 +487,112 @@ describe('community member queries', () => {
     });
   });
 
+  it('does not treat a tenant Admin role as a global super admin', async () => {
+    mocks.clientRequest.mockImplementation(async ({ path }: { path: string }) => {
+      if (path === '/v1/users') {
+        return {
+          ok: true,
+          data: {
+            totalCount: 1,
+            items: [
+              {
+                id: '00000000-0000-0000-0000-000000000111',
+                email: 'member@example.com',
+                name: 'Tenant Admin',
+                isActive: true,
+                createdAt: '2026-06-01T00:00:00.000Z',
+              },
+            ],
+          },
+        };
+      }
+
+      if (path === '/v1/users/00000000-0000-0000-0000-000000000111/memberships') {
+        return {
+          ok: true,
+          data: {
+            memberships: [
+              {
+                tenantId: '10000000-0000-0000-0000-000000000000',
+                tenantName: 'GameGuild Platform',
+                tenantIsDefault: true,
+                role: 'Admin',
+                isActive: true,
+              },
+            ],
+          },
+        };
+      }
+
+      throw new Error(`Unexpected path ${path}`);
+    });
+
+    const directory = await getMemberAccessDirectory({ limit: 50 });
+
+    expect(directory.members[0]).toMatchObject({
+      role: 'Admin',
+      isSuperAdmin: false,
+    });
+  });
+
+  it('selects the default tenant membership as the role-management target', async () => {
+    mocks.clientRequest.mockImplementation(async ({ path }: { path: string }) => {
+      if (path === '/v1/users') {
+        return {
+          ok: true,
+          data: {
+            totalCount: 1,
+            items: [
+              {
+                id: '00000000-0000-0000-0000-000000000111',
+                email: 'member@example.com',
+                name: 'Multi Tenant Member',
+                isActive: true,
+                createdAt: '2026-06-01T00:00:00.000Z',
+              },
+            ],
+          },
+        };
+      }
+
+      if (path === '/v1/users/00000000-0000-0000-0000-000000000111/memberships') {
+        return {
+          ok: true,
+          data: {
+            memberships: [
+              {
+                tenantId: '20000000-0000-0000-0000-000000000000',
+                tenantName: 'Project Studio',
+                tenantIsDefault: false,
+                role: 'TenantAdmin',
+                isActive: true,
+              },
+              {
+                tenantId: '10000000-0000-0000-0000-000000000000',
+                tenantName: 'GameGuild Platform',
+                tenantIsDefault: true,
+                role: 'Member',
+                isActive: true,
+              },
+            ],
+          },
+        };
+      }
+
+      throw new Error(`Unexpected path ${path}`);
+    });
+
+    const directory = await getMemberAccessDirectory({ limit: 50 });
+
+    expect(directory.members[0]).toMatchObject({
+      role: 'Member',
+      primaryMembership: {
+        tenantId: '10000000-0000-0000-0000-000000000000',
+        tenantIsDefault: true,
+      },
+    });
+  });
+
   it('does not grant current super-admin state from a cancelled membership', async () => {
     mocks.clientRequest.mockImplementation(async ({ path }: { path: string }) => {
       if (path === '/v1/users') {

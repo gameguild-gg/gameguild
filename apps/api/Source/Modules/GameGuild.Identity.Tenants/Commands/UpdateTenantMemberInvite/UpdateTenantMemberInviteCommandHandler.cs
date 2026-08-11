@@ -26,6 +26,16 @@ public sealed class UpdateTenantMemberInviteCommandHandler(
             };
         }
 
+        if (request.Action == TenantMemberInviteAction.Cancel && member.Tenant?.IsDefault == true)
+        {
+            return new UpdateTenantMemberInviteResponse
+            {
+                Success = false,
+                Message = "The default tenant membership cannot be cancelled.",
+                MemberId = member.Id
+            };
+        }
+
         var metadata = TenantMemberInviteMetadata.FromJson(member.Metadata);
         if (!IsPendingInvite(member, metadata))
         {

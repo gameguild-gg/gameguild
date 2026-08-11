@@ -173,7 +173,8 @@ public sealed class SessionProjectHandlers(
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
         var isSessionTenantAdmin = tenantRole != null && TenantRole.FromString(tenantRole).IsAdmin;
-        if (session.ManagerId != actorId && session.CreatedById != actorId && !isSessionTenantAdmin)
+        if (session.ManagerId != actorId && session.CreatedById != actorId &&
+            !isSessionTenantAdmin && !actor.IsSystemAdmin)
             return new(null, Error.Forbidden("TestingLab.SessionForbidden", "Session manager or creator access is required."));
 
         return new(session, null);

@@ -283,6 +283,22 @@ public sealed class SessionProjectChannelTests : IDisposable
     }
 
     [Fact]
+    public async Task List_Should_Authorize_SystemAdmin_Without_Session_Ownership()
+    {
+        var session = AddSession(_tenantId, Guid.NewGuid());
+        _actorAccessor.SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.ForUser(_actorId)
+                .WithTenantId(_tenantId)
+                .WithRole("SystemAdmin")
+                .Build());
+        await _context.SaveChangesAsync();
+
+        var result = await CreateHandler().Handle(new GetSessionProjectLinksQuery(session.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task List_Should_Deny_Inactive_Session_Manager()
     {
         var session = AddSession(_tenantId, _actorId);

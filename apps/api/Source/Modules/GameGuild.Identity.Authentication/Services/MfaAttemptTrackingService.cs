@@ -248,7 +248,10 @@ public sealed class MfaAttemptTrackingService(
         // Check if the current user has an elevated role that should require MFA.
         // This inspects the ClaimsPrincipal from HttpContext (populated by JWT middleware).
         var user = httpContextAccessor.HttpContext?.User;
-        if (user?.IsInRole("Admin") == true || user?.IsInRole("SuperAdmin") == true)
+        if (user?.IsInRole("SystemAdmin") == true ||
+            user?.IsInRole("Admin") == true ||
+            user?.IsInRole("TenantAdmin") == true ||
+            user?.IsInRole("Owner") == true)
         {
             return Task.FromResult(true);
         }
