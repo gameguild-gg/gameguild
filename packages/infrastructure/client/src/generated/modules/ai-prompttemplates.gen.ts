@@ -56,7 +56,7 @@ export class AiPrompttemplatesModule {
 
   /**
    */
-  async getAiPromptTemplates1(id: string): Promise<Result<Types.AIAiPromptTemplate, ApiError>> {
+  async getAiPromptTemplatesById(id: string): Promise<Result<Types.AIAiPromptTemplate, ApiError>> {
     const url = `/v1/ai/prompt-templates/${id}`;
 
     const result = await this.client.request({

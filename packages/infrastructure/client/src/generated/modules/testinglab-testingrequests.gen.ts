@@ -56,7 +56,7 @@ export class TestinglabTestingrequestsModule {
 
   /**
    */
-  async getTestingRequests1(id: string): Promise<Result<Types.TestingLabTestingRequestDetailProjection, ApiError>> {
+  async getTestingRequestsById(id: string): Promise<Result<Types.TestingLabTestingRequestDetailProjection, ApiError>> {
     const url = `/v1/testing/requests/${id}`;
 
     const result = await this.client.request({

@@ -4,11 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   client: { request: vi.fn() },
   requests: {
-    getTestingRequests1: vi.fn(),
+    getTestingRequestsById: vi.fn(),
     getTestingRequests: vi.fn(),
   },
   sessions: {
-    getTestingSessions1: vi.fn(),
+    getTestingSessionsById: vi.fn(),
     getTestingSessionsByRequest: vi.fn(),
     getTestingSessions: vi.fn(),
     getTestingSessionsProjects: vi.fn(),
@@ -27,7 +27,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/auth', () => ({ getToken: vi.fn(async () => 'token') }));
 vi.mock('@game-guild/client', () => ({
-  createServerClient: vi.fn(() => ({ request: mocks.requests.getTestingRequests1 })),
+  createServerClient: vi.fn(() => ({ request: mocks.requests.getTestingRequestsById })),
   GeneratedApi: {
     TestinglabTestingrequestsModule: vi.fn(function TestinglabTestingrequestsModule() {
       return mocks.requests;
@@ -70,11 +70,11 @@ import {
 describe('Testing Lab operational queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requests.getTestingRequests1.mockResolvedValue({
+    mocks.requests.getTestingRequestsById.mockResolvedValue({
       ok: true,
       data: { id: 'request-1', title: 'Arena playtest', status: 'Open', projectVersion: null },
     });
-    mocks.requests.getTestingRequests1.mockResolvedValue({
+    mocks.requests.getTestingRequestsById.mockResolvedValue({
       ok: true,
       data: { id: 'request-1', title: 'Arena playtest', status: 'Open' },
     });
@@ -101,7 +101,7 @@ describe('Testing Lab operational queries', () => {
         },
       ],
     });
-    mocks.sessions.getTestingSessions1.mockResolvedValue({
+    mocks.sessions.getTestingSessionsById.mockResolvedValue({
       ok: true,
       data: { id: 'session-1', sessionName: 'Friday lab', status: 'Scheduled' },
     });
@@ -192,11 +192,11 @@ describe('Testing Lab operational queries', () => {
       projectVersion: null,
     });
     expect(detail.accessIssues).toEqual([]);
-    expect(mocks.requests.getTestingRequests1).toHaveBeenCalledWith("request-1");
+    expect(mocks.requests.getTestingRequestsById).toHaveBeenCalledWith("request-1");
   });
 
   it('rejects an unknown request status instead of treating it as a valid detail', async () => {
-    mocks.requests.getTestingRequests1.mockResolvedValue({
+    mocks.requests.getTestingRequestsById.mockResolvedValue({
       ok: true,
       data: { id: 'request-1', title: 'Arena playtest', status: 'UnexpectedStatus' },
     });
@@ -207,7 +207,7 @@ describe('Testing Lab operational queries', () => {
   });
 
   it('preserves structured transport validation messages for request details', async () => {
-    mocks.requests.getTestingRequests1.mockRejectedValue({
+    mocks.requests.getTestingRequestsById.mockRejectedValue({
       name: 'ApiError',
       code: 'VALIDATION_ERROR',
       status: 400,

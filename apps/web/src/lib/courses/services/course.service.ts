@@ -164,7 +164,7 @@ async function fetchCourseBySlugResult(slug: string): Promise<CourseLookupResult
 
         let programContents: ProgramContent[] | undefined;
         if (program.id) {
-            const contentResult = await content.getCoursesContent(program.id);
+            const contentResult = await content.getCoursesByProgramIdContent(program.id);
 
             if (contentResult.ok && Array.isArray(contentResult.data)) {
                 programContents = contentResult.data.map(mapProgramContent);

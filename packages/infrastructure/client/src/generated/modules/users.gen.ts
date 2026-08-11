@@ -266,7 +266,7 @@ export class UsersModule {
    *
    * Activates a user account by ID.
    */
-  async postUsersActivate1(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async postUsersByUserIdActivate(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}:activate`;
 
     const result = await this.client.request({
@@ -289,7 +289,7 @@ export class UsersModule {
    *
    * Deactivates a user account by ID.
    */
-  async postUsersDeactivate1(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async postUsersByUserIdDeactivate(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}:deactivate`;
 
     const result = await this.client.request({
@@ -312,7 +312,7 @@ export class UsersModule {
    *
    * Suspends a user account by ID.
    */
-  async postUsersSuspend1(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async postUsersByUserIdSuspend(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}:suspend`;
 
     const result = await this.client.request({
@@ -335,7 +335,7 @@ export class UsersModule {
    *
    * Unsuspends a user account by ID.
    */
-  async postUsersUnsuspend1(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async postUsersByUserIdUnsuspend(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}:unsuspend`;
 
     const result = await this.client.request({
@@ -358,7 +358,7 @@ export class UsersModule {
    *
    * Restores a soft-deleted user by ID.
    */
-  async postUsersUndelete1(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async postUsersByUserIdUndelete(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}:undelete`;
 
     const result = await this.client.request({
@@ -381,7 +381,7 @@ export class UsersModule {
    *
    * Permanently deletes a user by ID (irreversible).
    */
-  async postUsersPurge1(userId: string): Promise<Result<void, ApiError>> {
+  async postUsersByUserIdPurge(userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}:purge`;
 
     const result = await this.client.request({
@@ -457,7 +457,7 @@ export class UsersModule {
    *
    * Retrieves detailed information for a specific user by their unique identifier.
    */
-  async getUsers1(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async getUsersByUserId(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}`;
 
     const result = await this.client.request({

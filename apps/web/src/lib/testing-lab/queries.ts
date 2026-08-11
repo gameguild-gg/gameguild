@@ -348,7 +348,7 @@ export const getTestingRequestDetail = cache(async (requestId: string): Promise<
   const api = createTestingLabModules();
   const [request, sessions, participants, feedback] = await Promise.all([
     readResult(
-      api.requests.getTestingRequests1(requestId),
+      api.requests.getTestingRequestsById(requestId),
       'Testing request',
     ),
     readResult(api.sessions.getTestingSessionsByRequest(requestId), 'Request sessions'),
@@ -397,7 +397,7 @@ function mapProjectDetail(project: ProjectsProject): TestingProjectDetailSummary
 export const getTestingLabProjectDetail = cache(async (projectOrRequestId: string): Promise<TestingLabProjectDetailData> => {
   const api = createTestingLabModules();
   const projectResult = await readResult(
-    api.projects.getProjects1(projectOrRequestId, {
+    api.projects.getProjectsById(projectOrRequestId, {
       includeTeam: false,
       includeReleases: true,
       includeCollaborators: false,
@@ -432,7 +432,7 @@ export const getTestingLabProjectDetail = cache(async (projectOrRequestId: strin
     };
   }
 
-  const requestResult = await readResult(api.requests.getTestingRequests1(projectOrRequestId), 'Testing request');
+  const requestResult = await readResult(api.requests.getTestingRequestsById(projectOrRequestId), 'Testing request');
   if (requestResult.data) {
     const requestDetail = await getTestingRequestDetail(projectOrRequestId);
     const requestProject = requestDetail.request?.projectVersion?.project;
@@ -473,7 +473,7 @@ export interface TestingSessionDetailData {
 export const getTestingSessionDetail = cache(async (sessionId: string): Promise<TestingSessionDetailData> => {
   const api = createTestingLabModules();
   const [session, registrations, waitlist, projects] = await Promise.all([
-    readResult(api.sessions.getTestingSessions1(sessionId), 'Testing session'),
+    readResult(api.sessions.getTestingSessionsById(sessionId), 'Testing session'),
     readResult(api.participants.getTestingSessionsRegistrations(sessionId), 'Session registrations'),
     readResult(api.participants.getTestingSessionsWaitlist(sessionId), 'Session waitlist'),
     readResult(api.sessions.getTestingSessionsProjects(sessionId, { includeInactive: true }), 'Session projects'),

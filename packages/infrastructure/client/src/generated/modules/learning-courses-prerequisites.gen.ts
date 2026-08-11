@@ -141,7 +141,7 @@ export class LearningCoursesPrerequisitesModule {
 
   /**
    */
-  async getApiPrerequisitesCourseCheck(courseId: string): Promise<Result<Types.LearningCoursesPrerequisiteCheckResult, ApiError>> {
+  async getApiPrerequisitesCourseByCourseIdCheck(courseId: string): Promise<Result<Types.LearningCoursesPrerequisiteCheckResult, ApiError>> {
     const url = `/api/prerequisites/course/${courseId}/check`;
 
     const result = await this.client.request({
@@ -161,7 +161,10 @@ export class LearningCoursesPrerequisitesModule {
 
   /**
    */
-  async getApiPrerequisitesCourseCheck1(courseId: string, userId: string): Promise<Result<Types.LearningCoursesPrerequisiteCheckResult, ApiError>> {
+  async getApiPrerequisitesCourseByCourseIdCheckByUserId(
+    courseId: string,
+    userId: string,
+  ): Promise<Result<Types.LearningCoursesPrerequisiteCheckResult, ApiError>> {
     const url = `/api/prerequisites/course/${courseId}/check/${userId}`;
 
     const result = await this.client.request({

@@ -20,7 +20,7 @@ export class UsersResourcesMetadataModule {
    *
    * Retrieves all resource metadata entries for a specific user.
    */
-  async getUsersResourcesMetadata(userId: string): Promise<Result<Array<Types.ResourcesResourceMetadata>, ApiError>> {
+  async getUsersByUserIdResourcesMetadata(userId: string): Promise<Result<Array<Types.ResourcesResourceMetadata>, ApiError>> {
     const url = `/v1/users/${userId}/resources/metadata`;
 
     const result = await this.client.request({
@@ -37,7 +37,7 @@ export class UsersResourcesMetadataModule {
    *
    * Retrieves a specific resource metadata entry by its key for a user.
    */
-  async getUsersResourcesMetadata1(userId: string, key: string): Promise<Result<Types.ResourcesResourceMetadata, ApiError>> {
+  async getUsersByUserIdResourcesMetadataByKey(userId: string, key: string): Promise<Result<Types.ResourcesResourceMetadata, ApiError>> {
     const url = `/v1/users/${userId}/resources/metadata/${key}`;
 
     const result = await this.client.request({

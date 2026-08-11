@@ -16,6 +16,9 @@ import { HTTP_METHODS, ASP_NET_PATTERNS } from './codegen/constants.js';
 export function normalizeSpec(spec: OpenApiSpec): OpenApiSpec {
   const normalized = structuredClone(spec);
 
+  // Keep compatibility aliases in the API, but expose only the canonical route in the SDK.
+  removeRedundantApiVersionAliases(normalized);
+
   // Normalize operation IDs
   normalizeOperationIds(normalized);
 
@@ -32,10 +35,61 @@ export function normalizeSpec(spec: OpenApiSpec): OpenApiSpec {
 }
 
 /**
- * Ensure all operations have unique, camelCase operation IDs
+ * Remove exact /api/vN aliases when the same operation is also exposed at /vN.
+ *
+ * Some controllers retain both routes for backwards compatibility. Generating both into the
+ * SDK creates duplicate methods for the same action, so prefer the canonical non-/api route.
+ */
+function removeRedundantApiVersionAliases(spec: OpenApiSpec): void {
+  const paths = spec.paths ?? {};
+
+  for (const [path, pathItem] of Object.entries(paths)) {
+    if (!pathItem || !/^\/api\/v\d+(?:\/|$)/i.test(path)) continue;
+
+    const canonicalPath = path.replace(/^\/api(?=\/v\d+(?:\/|$))/i, '');
+    const canonicalPathItem = paths[canonicalPath];
+    if (!canonicalPathItem) continue;
+
+    if (areEquivalentRouteAliases(pathItem, canonicalPathItem)) {
+      delete paths[path];
+    }
+  }
+}
+
+function areEquivalentRouteAliases(
+  alias: OpenAPIV3.PathItemObject,
+  canonical: OpenAPIV3.PathItemObject,
+): boolean {
+  const comparable = (pathItem: OpenAPIV3.PathItemObject): string => {
+    const clone = structuredClone(pathItem) as OpenAPIV3.PathItemObject;
+
+    for (const method of HTTP_METHODS) {
+      const operation = clone[method] as OpenAPIV3.OperationObject | undefined;
+      if (operation) delete operation.operationId;
+    }
+
+    return JSON.stringify(clone);
+  };
+
+  return comparable(alias) === comparable(canonical);
+}
+
+interface OperationIdCandidate {
+  path: string;
+  method: string;
+  operation: OpenAPIV3.OperationObject;
+  baseId: string;
+}
+
+/**
+ * Ensure all operations have stable, semantic, camelCase operation IDs.
+ *
+ * Path parameters are omitted while an ID is unique so existing concise names remain stable.
+ * When paths collide, every member of that group is regenerated with its parameter names.
+ * Unresolved collisions are rejected instead of silently publishing getThing1/getThing2.
  */
 function normalizeOperationIds(spec: OpenApiSpec): void {
-  const usedIds = new Set<string>();
+  const candidates: OperationIdCandidate[] = [];
 
   for (const [path, pathItem] of Object.entries(spec.paths || {})) {
     if (!pathItem) continue;
@@ -44,54 +98,111 @@ function normalizeOperationIds(spec: OpenApiSpec): void {
       const operation = pathItem[method] as OpenAPIV3.OperationObject | undefined;
       if (!operation) continue;
 
-      let operationId = operation.operationId;
+      const baseId = operation.operationId
+        ? normalizeOperationIdName(operation.operationId)
+        : generateOperationId(path, method, operation.tags?.[0], false);
 
-      if (!operationId) {
-        // Generate operation ID from path and method
-        operationId = generateOperationId(path, method, operation.tags?.[0]);
-      } else {
-        // Normalize existing operation ID
-        operationId = normalizeOperationIdName(operationId);
-      }
-
-      // Ensure uniqueness
-      let uniqueId = operationId;
-      let counter = 1;
-      while (usedIds.has(uniqueId)) {
-        uniqueId = `${operationId}${counter}`;
-        counter++;
-      }
-
-      usedIds.add(uniqueId);
-      operation.operationId = uniqueId;
+      candidates.push({ path, method, operation, baseId });
     }
+  }
+
+  const groups = new Map<string, OperationIdCandidate[]>();
+  for (const candidate of candidates) {
+    const group = groups.get(candidate.baseId) ?? [];
+    group.push(candidate);
+    groups.set(candidate.baseId, group);
+  }
+
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      group[0].operation.operationId = group[0].baseId;
+      continue;
+    }
+
+    for (const candidate of group) {
+      candidate.operation.operationId = generateOperationId(
+        candidate.path,
+        candidate.method,
+        candidate.operation.tags?.[0],
+        true,
+      );
+    }
+  }
+
+  const assigned = new Map<string, OperationIdCandidate>();
+  for (const candidate of candidates) {
+    const operationId = candidate.operation.operationId!;
+    const previous = assigned.get(operationId);
+    if (previous) {
+      throw new Error(
+        `Unable to create a unique OpenAPI operation ID without a numeric suffix: ` +
+          `${previous.method.toUpperCase()} ${previous.path} and ` +
+          `${candidate.method.toUpperCase()} ${candidate.path} both resolve to ${operationId}. ` +
+          `Assign explicit unique operationIds or remove the duplicate route.`,
+      );
+    }
+
+    assigned.set(operationId, candidate);
   }
 }
 
 /**
  * Generate operation ID from path and method
  */
-function generateOperationId(path: string, method: string, tag?: string): string {
-  // Remove path parameters and clean up
+function generateOperationId(
+  path: string,
+  method: string,
+  tag?: string,
+  includePathParameters = false,
+): string {
+  if (!includePathParameters) {
+    // Preserve the established concise names for operations that do not collide.
+    const cleanPath = path
+      .replace(/\{[^}]+\}/g, '')
+      .replace(/^\/api\/v\d+\/?/, '')
+      .replace(/^\/v\d+\/?/, '')
+      .replace(/:/g, '_')
+      .replace(/\//g, '_')
+      .replace(/^_|_$/g, '');
+    const parts = sanitizeIdentifier(cleanPath).split('_').filter(Boolean);
+
+    let conciseName: string;
+    if (parts.length === 0) {
+      conciseName = tag ? `${method}${tag}` : method;
+    } else {
+      conciseName = `${method}${parts.map(capitalize).join('')}`;
+    }
+
+    return toCamelCase(conciseName);
+  }
+
+  // Remove API version prefixes and split route segments, preserving custom actions.
   const cleanPath = path
-    .replace(/\{[^}]+\}/g, '') // Remove {param}
     .replace(/^\/api\/v\d+\/?/, '') // Remove /api/v1/
     .replace(/^\/v\d+\/?/, '') // Remove /v1/
-    .replace(/:/g, '_') // Convert custom action separators (:revoke) to _
-    .replace(/\//g, '_') // Replace / with _
-    .replace(/^_|_$/g, ''); // Remove leading/trailing _
+    .replace(/^\/+|\/+$/g, '');
 
-  // Sanitize to valid identifier (handles dashes, remaining special chars)
-  const sanitized = sanitizeIdentifier(cleanPath);
+  const parts: string[] = [];
+  for (const segment of cleanPath.split('/').filter(Boolean)) {
+    for (const token of segment.split(':').filter(Boolean)) {
+      const parameterMatch = token.match(/^\{([^}:]+)(?::[^}]+)?\}$/);
+      if (parameterMatch) {
+        if (includePathParameters) {
+          parts.push('By', sanitizeIdentifier(parameterMatch[1]));
+        }
+        continue;
+      }
 
-  const parts = sanitized.split('_').filter(Boolean);
+      parts.push(...sanitizeIdentifier(token).split('_').filter(Boolean));
+    }
+  }
 
   // Build operation name
   let name: string;
   if (parts.length === 0) {
     name = tag ? `${method}${tag}` : method;
   } else {
-    const resource = parts.map(capitalize).join('');
+    const resource = parts.map(toPascalCase).join('');
     name = `${method}${resource}`;
   }
 

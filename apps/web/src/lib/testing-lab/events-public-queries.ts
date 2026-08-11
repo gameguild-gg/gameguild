@@ -90,7 +90,7 @@ export async function getPublicTestingEventExperience(
   eventId: string,
 ): Promise<PublicTestingEventExperience> {
   const publicApi = createPublicModules();
-  const eventPromise = read(publicApi.events.getTestingEventsPublic1(eventId), 'Public event');
+  const eventPromise = read(publicApi.events.getTestingEventsPublicByEventId(eventId), 'Public event');
   const session = await auth().catch(() => null);
   const eventResult = await eventPromise;
   const isAuthenticated = Boolean(session?.user);

@@ -94,7 +94,7 @@ export class LearningCoursesProgramModule {
 
   /**
    */
-  async getCourses1(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
+  async getCoursesById(id: string): Promise<Result<Types.LearningCoursesProgram, ApiError>> {
     const url = `/v1/courses/${id}`;
 
     const result = await this.client.request({
@@ -236,7 +236,7 @@ export class LearningCoursesProgramModule {
 
   /**
    */
-  async postCoursesContentReorder1(id: string, body: Types.LearningCoursesReorderContent): Promise<Result<void, ApiError>> {
+  async postCoursesByIdContentReorder(id: string, body: Types.LearningCoursesReorderContent): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${id}/content:reorder`;
 
     // Validate request body

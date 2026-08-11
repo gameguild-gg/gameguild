@@ -389,7 +389,7 @@ export class CommerceSubscriptionsPlansModule {
    *
    * Retrieves detailed information for a specific subscription plan.
    */
-  async getSubscriptionPlans1(planId: string): Promise<Result<void, ApiError>> {
+  async getSubscriptionPlansByPlanId(planId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/subscription-plans/${planId}`;
 
     const result = await this.client.request({

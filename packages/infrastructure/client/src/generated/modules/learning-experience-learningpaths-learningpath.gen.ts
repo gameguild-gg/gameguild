@@ -144,7 +144,7 @@ export class LearningExperienceLearningpathsLearningpathModule {
 
   /**
    */
-  async getLearningPaths1(id: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>> {
+  async getLearningPathsById(id: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>> {
     const url = `/v1/learning-paths/${id}`;
 
     const result = await this.client.request({

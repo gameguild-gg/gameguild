@@ -65,7 +65,7 @@ export class ContentPagesResourcesModule {
 
   /**
    */
-  async getContentResources1(id: string): Promise<Result<Types.ContentPagesContentResource, ApiError>> {
+  async getContentResourcesById(id: string): Promise<Result<Types.ContentPagesContentResource, ApiError>> {
     const url = `/v1/content-resources/${id}`;
 
     const result = await this.client.request({

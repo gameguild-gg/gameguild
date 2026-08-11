@@ -6,13 +6,13 @@ const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   events: {
     getTestingEvents: vi.fn(),
-    getTestingEvents1: vi.fn(),
+    getTestingEventsByEventId: vi.fn(),
     getTestingEventsSlots: vi.fn(),
-    getTestingEventsApplications: vi.fn(),
-    getTestingEventsApplications1: vi.fn(),
+    getTestingEventsApplicationsByApplicationId: vi.fn(),
+    getTestingEventsByEventIdApplications: vi.fn(),
     getTestingEventsCommittee: vi.fn(),
     getTestingEventsPublic: vi.fn(),
-    getTestingEventsPublic1: vi.fn(),
+    getTestingEventsPublicByEventId: vi.fn(),
     getTestingEventsApplicationsMe: vi.fn(),
   },
   participation: {
@@ -69,7 +69,7 @@ describe('Testing Lab event queries', () => {
         },
       ],
     });
-    mocks.events.getTestingEvents1.mockResolvedValue({
+    mocks.events.getTestingEventsByEventId.mockResolvedValue({
       ok: true,
       data: { id: 'event-1', name: 'Friday campus lab', status: 'ApplicationsOpen' },
     });
@@ -77,7 +77,7 @@ describe('Testing Lab event queries', () => {
       ok: true,
       data: [{ id: 'slot-1', eventId: 'event-1', registeredTesterCount: 3 }],
     });
-    mocks.events.getTestingEventsApplications1.mockResolvedValue({
+    mocks.events.getTestingEventsByEventIdApplications.mockResolvedValue({
       ok: true,
       data: [{ id: 'application-1', eventId: 'event-1', status: 'Pending' }],
     });
@@ -125,7 +125,7 @@ describe('Testing Lab event queries', () => {
         },
       ],
     });
-    mocks.events.getTestingEventsPublic1.mockResolvedValue({
+    mocks.events.getTestingEventsPublicByEventId.mockResolvedValue({
       ok: true,
       data: {
         id: 'event-1',
@@ -208,12 +208,12 @@ describe('Testing Lab event queries', () => {
     expect(result.committee).toHaveLength(1);
     expect(result.registrationsBySlot['slot-1']).toHaveLength(1);
     expect(result.accessIssues).toEqual([]);
-    expect(mocks.events.getTestingEventsApplications1).toHaveBeenCalledWith('event-1', {
+    expect(mocks.events.getTestingEventsByEventIdApplications).toHaveBeenCalledWith('event-1', {
       status: 'Pending',
       skip: 0,
       take: 100,
     });
-    expect(mocks.events.getTestingEventsApplications).not.toHaveBeenCalled();
+    expect(mocks.events.getTestingEventsApplicationsByApplicationId).not.toHaveBeenCalled();
     expect(mocks.participation.getTestingEventsSlotsRegistrations).toHaveBeenCalledWith('slot-1');
   });
 
@@ -226,7 +226,7 @@ describe('Testing Lab event queries', () => {
     expect(mocks.participation.getTestingEventsFeedback).toHaveBeenCalledWith('event-1');
   });
   it('keeps partial manager data and reports generated-client failures', async () => {
-    mocks.events.getTestingEventsApplications1.mockResolvedValue({
+    mocks.events.getTestingEventsByEventIdApplications.mockResolvedValue({
       ok: false,
       error: { message: 'Forbidden', status: 403 },
     });
@@ -239,7 +239,7 @@ describe('Testing Lab event queries', () => {
   });
 
   it('retains structured generated-client error messages instead of hiding them', async () => {
-    mocks.events.getTestingEvents1.mockRejectedValue({
+    mocks.events.getTestingEventsByEventId.mockRejectedValue({
       name: 'ApiError',
       message: 'Response validation failed: event details are malformed',
     });
@@ -274,7 +274,7 @@ describe('Testing Lab event queries', () => {
     expect(result.feedbackObligations).toHaveLength(1);
     expect(result.isAuthenticated).toBe(true);
     expect(result.accessIssues).toEqual([]);
-    expect(mocks.events.getTestingEventsPublic1.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(mocks.events.getTestingEventsPublicByEventId.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.auth.mock.invocationCallOrder[0]!,
     );
     expect(mocks.createServerClient).toHaveBeenNthCalledWith(1, {

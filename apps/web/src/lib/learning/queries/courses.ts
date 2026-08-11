@@ -43,7 +43,7 @@ type UserLookupResult =
   | { ok: false; error?: unknown };
 
 type UserLookupModule = {
-  getUsers1(userId: string): Promise<UserLookupResult>;
+  getUsersByUserId(userId: string): Promise<UserLookupResult>;
 };
 
 function createUsersModule(): UserLookupModule | null {
@@ -69,7 +69,7 @@ async function getCreatorHandles(programs: ProgramDto[]): Promise<Map<string, st
       }
 
       try {
-        const result = await users.getUsers1(creatorId);
+        const result = await users.getUsersByUserId(creatorId);
         if (!result.ok) {
           handles.set(creatorId, fallback);
           return;

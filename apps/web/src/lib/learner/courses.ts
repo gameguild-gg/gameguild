@@ -320,7 +320,7 @@ export async function getCourseAttendanceData(
     const course = mapCourse(courseResult.data);
     const courseId = course.id;
     const [contentResult, progressResult] = await Promise.all([
-      content.getCoursesContent(courseId),
+      content.getCoursesByProgramIdContent(courseId),
       authenticatedModules?.programs
         ? authenticatedModules.programs.getCoursesMeProgress(courseId)
         : Promise.resolve(undefined),

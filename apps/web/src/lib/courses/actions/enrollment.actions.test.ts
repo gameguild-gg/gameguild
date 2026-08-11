@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
     getCoursesSlug: vi.fn(),
     getCoursesProducts: vi.fn(),
     postCoursesSelfEnroll: vi.fn(),
-    getProducts1: vi.fn(),
+    getProductsByProductId: vi.fn(),
     request: vi.fn(),
 }));
 
@@ -25,7 +25,7 @@ vi.mock('@game-guild/client', () => ({
             postCoursesSelfEnroll = mocks.postCoursesSelfEnroll;
         },
         CommerceProductsModule: class {
-            getProducts1 = mocks.getProducts1;
+            getProductsByProductId = mocks.getProductsByProductId;
         },
     },
 }));
@@ -55,7 +55,7 @@ describe('enrollInFreeCourse', () => {
                 id: 'enrollment-1',
             },
         });
-        mocks.getProducts1.mockResolvedValue({
+        mocks.getProductsByProductId.mockResolvedValue({
             ok: true,
             data: {
                 id: 'product-1',
@@ -127,7 +127,7 @@ describe('getProductsContainingCourse', () => {
             ok: true,
             data: ['product-1', 'product-2', 'product-1'],
         });
-        mocks.getProducts1
+        mocks.getProductsByProductId
             .mockResolvedValueOnce({
                 ok: true,
                 data: {
@@ -164,9 +164,9 @@ describe('getProductsContainingCourse', () => {
 
         expect(mocks.getCoursesSlug).toHaveBeenCalledWith('intro-to-game-dev');
         expect(mocks.getCoursesProducts).toHaveBeenCalledWith('course-1');
-        expect(mocks.getProducts1).toHaveBeenCalledTimes(2);
-        expect(mocks.getProducts1).toHaveBeenNthCalledWith(1, 'product-1', { includePricing: true });
-        expect(mocks.getProducts1).toHaveBeenNthCalledWith(2, 'product-2', { includePricing: true });
+        expect(mocks.getProductsByProductId).toHaveBeenCalledTimes(2);
+        expect(mocks.getProductsByProductId).toHaveBeenNthCalledWith(1, 'product-1', { includePricing: true });
+        expect(mocks.getProductsByProductId).toHaveBeenNthCalledWith(2, 'product-2', { includePricing: true });
         expect(result).toEqual([
             {
                 id: 'product-1',
@@ -199,7 +199,7 @@ describe('getProductsContainingCourse', () => {
         const result = await getProductsContainingCourse('intro-to-game-dev');
 
         expect(result).toEqual([]);
-        expect(mocks.getProducts1).not.toHaveBeenCalled();
+        expect(mocks.getProductsByProductId).not.toHaveBeenCalled();
     });
 });
 

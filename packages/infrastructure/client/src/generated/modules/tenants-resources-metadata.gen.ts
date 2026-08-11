@@ -20,7 +20,10 @@ export class TenantsResourcesMetadataModule {
    *
    * Retrieves all resource metadata entries for a specific tenant, optionally filtered by category.
    */
-  async getTenantsResourcesMetadata(tenantId: string, query?: { category?: string }): Promise<Result<Array<Types.ResourcesResourceMetadata>, ApiError>> {
+  async getTenantsByTenantIdResourcesMetadata(
+    tenantId: string,
+    query?: { category?: string },
+  ): Promise<Result<Array<Types.ResourcesResourceMetadata>, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources/metadata`;
 
     const result = await this.client.request({
@@ -38,7 +41,7 @@ export class TenantsResourcesMetadataModule {
    *
    * Retrieves a specific resource metadata entry by its key for a tenant.
    */
-  async getTenantsResourcesMetadata1(tenantId: string, key: string): Promise<Result<Types.ResourcesResourceMetadata, ApiError>> {
+  async getTenantsByTenantIdResourcesMetadataByKey(tenantId: string, key: string): Promise<Result<Types.ResourcesResourceMetadata, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources/metadata/${key}`;
 
     const result = await this.client.request({

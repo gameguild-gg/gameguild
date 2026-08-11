@@ -58,7 +58,7 @@ export class AuthServiceaccountsModule {
 
   /**
    */
-  async getAuthServiceAccounts1(serviceAccountId: string): Promise<Result<Types.IdentityAuthenticationServiceAccountOutput, ApiError>> {
+  async getAuthServiceAccountsByServiceAccountId(serviceAccountId: string): Promise<Result<Types.IdentityAuthenticationServiceAccountOutput, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}`;
 
     const result = await this.client.request({

@@ -3,14 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getToken: vi.fn(),
   createServerClient: vi.fn(),
-  requests: { getTestingRequests: vi.fn(), getTestingRequests1: vi.fn() },
+  requests: { getTestingRequests: vi.fn(), getTestingRequestsById: vi.fn() },
   sessions: {
     getTestingSessions: vi.fn(),
     getTestingPublicSessions: vi.fn(),
   },
   locations: { getTestingLocations: vi.fn() },
   analytics: {},
-  projects: { getProjects: vi.fn(), getProjects1: vi.fn() },
+  projects: { getProjects: vi.fn(), getProjectsById: vi.fn() },
 }));
 
 vi.mock('@/auth', () => ({
@@ -89,7 +89,7 @@ describe('testing lab queries', () => {
       ok: true,
       data: [{ id: 'project-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' }],
     });
-    mocks.projects.getProjects1.mockResolvedValue({
+    mocks.projects.getProjectsById.mockResolvedValue({
       ok: true,
       data: {
         id: 'project-1',
@@ -220,12 +220,12 @@ describe('testing lab queries', () => {
     });
     expect(detail.request).toBeNull();
     expect(detail.accessIssues).toEqual([]);
-    expect(mocks.projects.getProjects1).toHaveBeenCalledWith('project-1', {
+    expect(mocks.projects.getProjectsById).toHaveBeenCalledWith('project-1', {
       includeTeam: false,
       includeReleases: true,
       includeCollaborators: false,
       includeStatistics: true,
     });
-    expect(mocks.requests.getTestingRequests1).not.toHaveBeenCalled();
+    expect(mocks.requests.getTestingRequestsById).not.toHaveBeenCalled();
   });
 });

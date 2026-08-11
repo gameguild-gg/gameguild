@@ -70,7 +70,7 @@ export class CommerceProductsPromocodesModule {
 
   /**
    */
-  async getPromoCodes1(promoCodeId: string): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
+  async getPromoCodesByPromoCodeId(promoCodeId: string): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}`;
 
     const result = await this.client.request({

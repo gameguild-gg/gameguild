@@ -56,7 +56,7 @@ export class TestinglabTestingsessionsModule {
 
   /**
    */
-  async getTestingSessions1(id: string): Promise<Result<Types.TestingLabTestingSession, ApiError>> {
+  async getTestingSessionsById(id: string): Promise<Result<Types.TestingLabTestingSession, ApiError>> {
     const url = `/v1/testing/sessions/${id}`;
 
     const result = await this.client.request({

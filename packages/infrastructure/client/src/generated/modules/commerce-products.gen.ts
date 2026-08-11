@@ -17,7 +17,7 @@ export class CommerceProductsModule {
 
   /**
    */
-  async getProducts(
+  async getProductsByProductId(
     productId: string,
     query?: { includePricing?: boolean; includeUnpublished?: boolean },
   ): Promise<Result<Types.CommerceProductsProduct, ApiError>> {
@@ -137,7 +137,7 @@ export class CommerceProductsModule {
 
   /**
    */
-  async getProducts1(query?: {
+  async getProducts(query?: {
     type?: Types.CommerceProductsProductType;
     creatorId?: string;
     searchTerm?: string;

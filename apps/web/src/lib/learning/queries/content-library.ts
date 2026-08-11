@@ -87,7 +87,7 @@ export const getLearningContentLibrary = cache(async (): Promise<{
         .filter((course) => Boolean(course.id))
         .map(async (course) => {
           const courseId = String(course.id);
-          const contentResult = await content.getCoursesContent(courseId);
+          const contentResult = await content.getCoursesByProgramIdContent(courseId);
 
           if (!contentResult.ok) {
             return [];

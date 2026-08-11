@@ -263,7 +263,7 @@ export class TenantsModule {
    *
    * Activates a tenant organization by ID.
    */
-  async postTenantsActivate1(tenantId: string): Promise<Result<void, ApiError>> {
+  async postTenantsByTenantIdActivate(tenantId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}:activate`;
 
     const result = await this.client.request({
@@ -280,7 +280,7 @@ export class TenantsModule {
    *
    * Deactivates a tenant organization by ID.
    */
-  async postTenantsDeactivate1(tenantId: string): Promise<Result<void, ApiError>> {
+  async postTenantsByTenantIdDeactivate(tenantId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}:deactivate`;
 
     const result = await this.client.request({
@@ -297,7 +297,7 @@ export class TenantsModule {
    *
    * Archives a tenant organization by ID.
    */
-  async postTenantsArchive1(tenantId: string, body: Types.IdentityTenantsArchiveInput): Promise<Result<void, ApiError>> {
+  async postTenantsByTenantIdArchive(tenantId: string, body: Types.IdentityTenantsArchiveInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}:archive`;
 
     // Validate request body
@@ -318,7 +318,7 @@ export class TenantsModule {
    *
    * Undeletes a previously soft-deleted (archived) tenant organization.
    */
-  async postTenantsUndelete1(tenantId: string, body: Types.IdentityTenantsRecoverInput): Promise<Result<void, ApiError>> {
+  async postTenantsByTenantIdUndelete(tenantId: string, body: Types.IdentityTenantsRecoverInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}:undelete`;
 
     // Validate request body
@@ -339,7 +339,7 @@ export class TenantsModule {
    *
    * Permanently and irreversibly deletes a tenant organization. Admin operation requiring proper authorization.
    */
-  async postTenantsPurge1(tenantId: string): Promise<Result<void, ApiError>> {
+  async postTenantsByTenantIdPurge(tenantId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}:purge`;
 
     const result = await this.client.request({
@@ -481,7 +481,7 @@ export class TenantsModule {
    *
    * Retrieves detailed information for a specific tenant by their unique identifier.
    */
-  async getTenants1(tenantId: string): Promise<Result<Types.IdentityTenantsTenant, ApiError>> {
+  async getTenantsByTenantId(tenantId: string): Promise<Result<Types.IdentityTenantsTenant, ApiError>> {
     const url = `/v1/tenants/${tenantId}`;
 
     const result = await this.client.request({

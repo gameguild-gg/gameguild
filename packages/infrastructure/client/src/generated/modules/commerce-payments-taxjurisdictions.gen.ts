@@ -55,7 +55,7 @@ export class CommercePaymentsTaxjurisdictionsModule {
    *
    * Retrieves detailed information for a specific tax jurisdiction.
    */
-  async getTaxJurisdictions1(jurisdictionId: string): Promise<Result<Types.CommercePaymentsTaxJurisdictionDto, ApiError>> {
+  async getTaxJurisdictionsByJurisdictionId(jurisdictionId: string): Promise<Result<Types.CommercePaymentsTaxJurisdictionDto, ApiError>> {
     const url = `/api/v1/tax-jurisdictions/${jurisdictionId}`;
 
     const result = await this.client.request({

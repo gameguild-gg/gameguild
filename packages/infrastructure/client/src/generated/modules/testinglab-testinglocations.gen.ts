@@ -60,7 +60,7 @@ export class TestinglabTestinglocationsModule {
 
   /**
    */
-  async getTestingLocations1(id: string): Promise<Result<Types.TestingLabTestingLocation, ApiError>> {
+  async getTestingLocationsById(id: string): Promise<Result<Types.TestingLabTestingLocation, ApiError>> {
     const url = `/v1/testing/locations/${id}`;
 
     const result = await this.client.request({

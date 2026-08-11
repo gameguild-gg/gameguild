@@ -60,7 +60,7 @@ export class CommercePaymentsTaxrulesModule {
    *
    * Retrieves detailed information for a specific tax rule.
    */
-  async getTaxRules1(ruleId: string): Promise<Result<Types.CommercePaymentsTaxRuleDto, ApiError>> {
+  async getTaxRulesByRuleId(ruleId: string): Promise<Result<Types.CommercePaymentsTaxRuleDto, ApiError>> {
     const url = `/api/v1/tax-rules/${ruleId}`;
 
     const result = await this.client.request({

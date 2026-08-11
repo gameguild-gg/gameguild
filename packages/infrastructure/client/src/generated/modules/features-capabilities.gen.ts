@@ -17,7 +17,7 @@ export class FeaturesCapabilitiesModule {
 
   /**
    */
-  async getTenantsCapabilities(tenantId: string): Promise<Result<Record<string, boolean>, ApiError>> {
+  async getTenantsByTenantIdCapabilities(tenantId: string): Promise<Result<Record<string, boolean>, ApiError>> {
     const url = `/v1/tenants/${tenantId}/capabilities`;
 
     const result = await this.client.request({
@@ -49,7 +49,7 @@ export class FeaturesCapabilitiesModule {
 
   /**
    */
-  async getTenantsCapabilities1(tenantId: string, capability: string): Promise<Result<Types.FeaturesCapabilityCheckOutput, ApiError>> {
+  async getTenantsByTenantIdCapabilitiesByCapability(tenantId: string, capability: string): Promise<Result<Types.FeaturesCapabilityCheckOutput, ApiError>> {
     const url = `/v1/tenants/${tenantId}/capabilities/${capability}`;
 
     const result = await this.client.request({

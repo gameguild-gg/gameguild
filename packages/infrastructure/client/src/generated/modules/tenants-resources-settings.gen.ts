@@ -20,7 +20,10 @@ export class TenantsResourcesSettingsModule {
    *
    * Retrieves all resource settings for a specific tenant, optionally filtered by category.
    */
-  async getTenantsResourcesSettings(tenantId: string, query?: { category?: string }): Promise<Result<Array<Types.ResourcesResourceSettings>, ApiError>> {
+  async getTenantsByTenantIdResourcesSettings(
+    tenantId: string,
+    query?: { category?: string },
+  ): Promise<Result<Array<Types.ResourcesResourceSettings>, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources/settings`;
 
     const result = await this.client.request({
@@ -38,7 +41,7 @@ export class TenantsResourcesSettingsModule {
    *
    * Retrieves a specific resource setting by its key for a tenant.
    */
-  async getTenantsResourcesSettings1(tenantId: string, key: string): Promise<Result<Types.ResourcesResourceSettings, ApiError>> {
+  async getTenantsByTenantIdResourcesSettingsByKey(tenantId: string, key: string): Promise<Result<Types.ResourcesResourceSettings, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources/settings/${key}`;
 
     const result = await this.client.request({

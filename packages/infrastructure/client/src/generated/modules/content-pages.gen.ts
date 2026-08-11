@@ -63,7 +63,7 @@ export class ContentPagesModule {
 
   /**
    */
-  async getPages1(id: string): Promise<Result<Types.ContentPagesPage, ApiError>> {
+  async getPagesById(id: string): Promise<Result<Types.ContentPagesPage, ApiError>> {
     const url = `/v1/pages/${id}`;
 
     const result = await this.client.request({
@@ -196,7 +196,7 @@ export class ContentPagesModule {
 
   /**
    */
-  async getPagesSections(pageId: string): Promise<Result<Array<Types.ContentPagesPageSection>, ApiError>> {
+  async getPagesByPageIdSections(pageId: string): Promise<Result<Array<Types.ContentPagesPageSection>, ApiError>> {
     const url = `/v1/pages/${pageId}/sections`;
 
     const result = await this.client.request({
@@ -234,7 +234,7 @@ export class ContentPagesModule {
 
   /**
    */
-  async getPagesSections1(pageId: string, sectionId: string): Promise<Result<Types.ContentPagesPageSection, ApiError>> {
+  async getPagesByPageIdSectionsBySectionId(pageId: string, sectionId: string): Promise<Result<Types.ContentPagesPageSection, ApiError>> {
     const url = `/v1/pages/${pageId}/sections/${sectionId}`;
 
     const result = await this.client.request({

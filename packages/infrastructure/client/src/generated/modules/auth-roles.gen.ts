@@ -50,7 +50,7 @@ export class AuthRolesModule {
 
   /**
    */
-  async getRoles1(roleId: string): Promise<Result<void, ApiError>> {
+  async getRolesByRoleId(roleId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/roles/${roleId}`;
 
     const result = await this.client.request({

@@ -201,7 +201,7 @@ function mapSupportTicket(dto: CommerceProductsSupportTicket): SupportTicket {
  */
 export const getCourseSupportTickets = cache(async (courseId: string): Promise<CourseSupportTickets> => {
   const resolvedCourseId = await resolveCourseId(courseId);
-  const result = await createSupportModules().tickets.getCoursesSupportTickets(resolvedCourseId, {
+  const result = await createSupportModules().tickets.getCoursesByCourseIdSupportTickets(resolvedCourseId, {
     skip: 0,
     take: 100,
   });
@@ -225,7 +225,7 @@ export const getCourseSupportTickets = cache(async (courseId: string): Promise<C
  */
 export const getSupportTicket = cache(async (courseId: string, ticketId: string): Promise<SupportTicketDetail | null> => {
   const resolvedCourseId = await resolveCourseId(courseId);
-  const result = await createSupportModules().tickets.getCoursesSupportTickets1(resolvedCourseId, ticketId);
+  const result = await createSupportModules().tickets.getCoursesByCourseIdSupportTicketsByTicketId(resolvedCourseId, ticketId);
   if (!result.ok) return null;
 
   const dto = result.data;

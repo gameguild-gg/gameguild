@@ -20,7 +20,7 @@ export class UsersResourcesSettingsModule {
    *
    * Retrieves all resource setting overrides for a specific user.
    */
-  async getUsersResourcesSettings(userId: string): Promise<Result<Array<Types.ResourcesResourceSettings>, ApiError>> {
+  async getUsersByUserIdResourcesSettings(userId: string): Promise<Result<Array<Types.ResourcesResourceSettings>, ApiError>> {
     const url = `/v1/users/${userId}/resources/settings`;
 
     const result = await this.client.request({
@@ -37,7 +37,7 @@ export class UsersResourcesSettingsModule {
    *
    * Retrieves a specific resource setting override by its key for a user.
    */
-  async getUsersResourcesSettings1(userId: string, key: string): Promise<Result<Types.ResourcesResourceSettings, ApiError>> {
+  async getUsersByUserIdResourcesSettingsByKey(userId: string, key: string): Promise<Result<Types.ResourcesResourceSettings, ApiError>> {
     const url = `/v1/users/${userId}/resources/settings/${key}`;
 
     const result = await this.client.request({

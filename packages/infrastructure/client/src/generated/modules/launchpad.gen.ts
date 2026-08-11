@@ -56,7 +56,7 @@ export class LaunchpadModule {
 
   /**
    */
-  async getLaunchPad1(id: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
+  async getLaunchPadById(id: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
     const url = `/v1/launch-pad/${id}`;
 
     const result = await this.client.request({

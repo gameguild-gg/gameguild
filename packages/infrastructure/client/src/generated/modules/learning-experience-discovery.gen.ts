@@ -82,7 +82,7 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async getDiscoveryFeatured1(id: string): Promise<Result<Types.LearningExperienceDiscoveryFeaturedContent, ApiError>> {
+  async getDiscoveryFeaturedById(id: string): Promise<Result<Types.LearningExperienceDiscoveryFeaturedContent, ApiError>> {
     const url = `/v1/discovery/featured/${id}`;
 
     const result = await this.client.request({
@@ -251,7 +251,7 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async getDiscoveryCollections1(id: string): Promise<Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>> {
+  async getDiscoveryCollectionsById(id: string): Promise<Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>> {
     const url = `/v1/discovery/collections/${id}`;
 
     const result = await this.client.request({

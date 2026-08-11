@@ -70,7 +70,7 @@ export class ProjectsModule {
 
   /**
    */
-  async getProjects1(
+  async getProjectsById(
     id: string,
     query?: { includeTeam?: boolean; includeReleases?: boolean; includeCollaborators?: boolean; includeStatistics?: boolean },
   ): Promise<Result<Types.ProjectsProject, ApiError>> {
