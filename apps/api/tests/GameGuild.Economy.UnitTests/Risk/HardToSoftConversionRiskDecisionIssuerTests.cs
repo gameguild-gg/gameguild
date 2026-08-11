@@ -41,6 +41,33 @@ public sealed class HardToSoftConversionRiskDecisionIssuerTests
     }
 
     [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task IssueAsync_RejectsMissingRequiredIdentifiersBeforeTouchingPersistence(int missingIdentifier)
+    {
+        var request = Request();
+        request = missingIdentifier switch
+        {
+            0 => request with { ActorId = Guid.Empty },
+            1 => request with { TenantId = Guid.Empty },
+            2 => request with { ReservationOperationId = Guid.Empty },
+            _ => throw new ArgumentOutOfRangeException(nameof(missingIdentifier))
+        };
+        var issuer = new PostgreSqlHardToSoftConversionRiskDecisionIssuer(
+            null!,
+            Options.Create(new SelfServiceHardToSoftRiskDecisionOptions
+            {
+                MaxHardCoinUnitsPerDay = 200
+            }));
+
+        var act = () => issuer.IssueAsync(request, CancellationToken.None);
+
+        await act.Should().ThrowAsync<ArgumentException>()
+            .WithParameterName("request");
+    }
+
+    [Theory]
     [InlineData(29)]
     [InlineData(901)]
     public async Task IssueAsync_RejectsAnUnsafeDecisionLifetimeBeforeTouchingPersistence(int lifetimeSeconds)
