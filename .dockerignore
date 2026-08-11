@@ -65,6 +65,10 @@ tools/emception/packages/**/*.tsbuildinfo
 !tools/emception/scripts/**
 tools/emception/scripts/**/node_modules/
 tools/emception/scripts/**/*.tsbuildinfo
+!tools/emception/src/**
+tools/emception/src/**/*.js
+tools/emception/src/**/*.js.map
+tools/emception/src/**/*.d.ts
 !tools/emception/userland/**
 # Exclude stale local build artifacts (gitignored locally; .dockerignore
 # re-includes them via the userland allowlist above). Without these excludes,
