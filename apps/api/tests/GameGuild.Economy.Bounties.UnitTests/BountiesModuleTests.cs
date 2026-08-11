@@ -7,7 +7,7 @@ namespace GameGuild.Economy.Bounties.UnitTests;
 public sealed class BountiesModuleTests
 {
     [Fact]
-    public void ModuleAndCompositionHookRemainDisabledAndRouteFree()
+    public void ModuleRemainsDisabledByDefaultAndRegistersOnlyThePersistentStore()
     {
         var module = new BountiesModule();
         var services = new ServiceCollection();
@@ -17,6 +17,9 @@ public sealed class BountiesModuleTests
         module.EnabledByDefault.Should().BeFalse();
         module.ConfigureServices(services, configuration).Should().BeSameAs(services);
         services.AddBountiesComposition(configuration).Should().BeSameAs(services);
-        services.Should().BeEmpty();
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(IBountyEscrowStore) &&
+            descriptor.ImplementationType == typeof(PostgreSqlBountyEscrowStore) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
     }
 }
