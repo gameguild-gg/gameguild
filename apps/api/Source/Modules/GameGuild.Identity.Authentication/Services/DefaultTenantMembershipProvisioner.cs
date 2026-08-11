@@ -26,13 +26,22 @@ internal static class DefaultTenantMembershipProvisioner
             .Send(new GetUserMembershipsQuery(userId, IncludeInactive: true), cancellationToken)
             .ConfigureAwait(false);
 
-        if (memberships.Memberships.Any(membership => membership.TenantId == defaultTenant.Id))
+        var existingMembership = memberships.Memberships
+            .FirstOrDefault(membership => membership.TenantId == defaultTenant.Id);
+
+        if (existingMembership?.IsActive == true)
         {
             return;
         }
 
+        // AddTenantMemberCommand reactivates inactive memberships. Preserve the existing
+        // role so a cancelled SystemAdmin is never silently downgraded to Member.
+        var role = string.IsNullOrWhiteSpace(existingMembership?.Role)
+            ? MemberRole
+            : existingMembership.Role.Trim();
+
         var result = await sender
-            .Send(new AddTenantMemberCommand(defaultTenant.Id, userId, MemberRole), cancellationToken)
+            .Send(new AddTenantMemberCommand(defaultTenant.Id, userId, role), cancellationToken)
             .ConfigureAwait(false);
 
         if (!result.Success && !string.Equals(result.Message, ExistingMembershipMessage, StringComparison.Ordinal))

@@ -334,6 +334,49 @@ public class OAuthAuthServiceTests
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task GoogleIdTokenSignInAsync_InactiveDefaultMembership_ReactivatesAndPreservesRole()
+    {
+        var defaultTenant = new Tenant
+        {
+            Id = Guid.NewGuid(),
+            Name = "GameGuild",
+            Slug = "gameguild",
+            IsDefault = true,
+            IsActive = true
+        };
+        var user = User.CreateOAuthUser("user@example.com", "System administrator");
+        AddTenantMemberCommand? capturedCommand = null;
+
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync("google", "google-sub-default", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ExternalLogin { Id = Guid.NewGuid(), UserId = user.Id, Provider = "google", ProviderKey = "google-sub-default" });
+        _userRepoMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _senderMock.Setup(x => x.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(defaultTenant);
+        _senderMock
+            .SetupSequence(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetUserMembershipsResponse
+            {
+                TotalCount = 1,
+                Memberships = [new UserMembershipDto { TenantId = defaultTenant.Id, Role = "SystemAdmin", IsActive = false }]
+            })
+            .ReturnsAsync(new GetUserMembershipsResponse
+            {
+                TotalCount = 1,
+                Memberships = [new UserMembershipDto { TenantId = defaultTenant.Id, TenantName = defaultTenant.Name, TenantSlug = defaultTenant.Slug, TenantIsActive = true, Role = "SystemAdmin", IsActive = true }]
+            });
+        _senderMock
+            .Setup(x => x.Send(It.IsAny<AddTenantMemberCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<AddTenantMemberResponse>, CancellationToken>((request, _) => capturedCommand = (AddTenantMemberCommand)request)
+            .ReturnsAsync(new AddTenantMemberResponse { Success = true, MemberId = Guid.NewGuid() });
+
+        var result = await CreateSut().GoogleIdTokenSignInAsync(Request());
+
+        result.TenantId.Should().Be(defaultTenant.Id);
+        capturedCommand.Should().NotBeNull();
+        capturedCommand!.Role.Should().Be("SystemAdmin");
+    }
     // ── (5) Exactly one refresh row ─────────────────────────────────────────
     //   Folded into baseline (0): GenerateRefreshTokenAsync once, CreateAsync never.
 
