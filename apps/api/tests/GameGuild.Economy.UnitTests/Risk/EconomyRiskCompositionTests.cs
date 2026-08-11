@@ -87,4 +87,19 @@ public sealed class EconomyRiskCompositionTests
         FluentActions.Invoking(() => provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<EconomyRiskCompositionOptions>>().Value)
             .Should().Throw<Microsoft.Extensions.Options.OptionsValidationException>();
     }
+
+    [Fact]
+    public void InvalidCapabilityConfigurationDoesNotRegisterAStartupValidator()
+    {
+        var values = new Dictionary<string, string?>
+        {
+            [EconomyRiskCompositionOptions.SectionName + ":ValueMovingDecisionsEnabled"] = "true"
+        };
+        var services = new ServiceCollection();
+
+        services.AddEconomyRiskComposition(new ConfigurationBuilder().AddInMemoryCollection(values).Build());
+
+        services.Should().NotContain(descriptor =>
+            descriptor.ServiceType == typeof(Microsoft.Extensions.Options.IStartupValidator));
+    }
 }
