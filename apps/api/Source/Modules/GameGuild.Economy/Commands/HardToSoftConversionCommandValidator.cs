@@ -1,0 +1,18 @@
+using FluentValidation;
+
+namespace GameGuild.Economy.Commands;
+
+public sealed class ConvertMyHardToSoftCommandValidator : AbstractValidator<ConvertMyHardToSoftCommand>
+{
+    public ConvertMyHardToSoftCommandValidator()
+    {
+        RuleFor(command => command.Request).NotNull();
+        When(command => command.Request is not null, () =>
+        {
+            RuleFor(command => command.Request.PrincipalHardCoinUnits).GreaterThan(0);
+            RuleFor(command => command.Request.FeeHardCoinUnits).GreaterThanOrEqualTo(0);
+            RuleFor(command => command.Request.RiskDecisionId).NotEmpty();
+            RuleFor(command => command.Request.IdempotencyKey).NotEmpty().MaximumLength(128);
+        });
+    }
+}
