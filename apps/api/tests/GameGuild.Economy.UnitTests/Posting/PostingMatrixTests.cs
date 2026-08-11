@@ -21,6 +21,8 @@ public sealed class PostingMatrixTests
         PostingTemplateKind.AdRewardIssuance,
         PostingTemplateKind.Burn,
         PostingTemplateKind.Escrow,
+        PostingTemplateKind.BountyEscrow,
+        PostingTemplateKind.BountyClaim,
         PostingTemplateKind.Reclaim,
         PostingTemplateKind.Refund,
         PostingTemplateKind.PayoutReservation,
@@ -36,7 +38,7 @@ public sealed class PostingMatrixTests
     {
         var registered = Enum.GetValues<PostingTemplateKind>();
 
-        registered.Should().HaveCount(21);
+        registered.Should().HaveCount(23);
         registered.Select(kind => kind.ToString()).Should().NotContain(name =>
             name.Contains("Observed", StringComparison.OrdinalIgnoreCase) ||
             name.Contains("FailedMint", StringComparison.OrdinalIgnoreCase));
@@ -308,6 +310,39 @@ public sealed class PostingMatrixTests
     }
 
     [Fact]
+    public void BountyEscrow_PreservesEachHardCoinProvenanceAccount()
+    {
+        var wallet = WalletId.New();
+        var request = PostingFixture.Valid(PostingTemplateKind.BountyEscrow) with
+        {
+            Lines =
+            [
+                PostingFixture.Line(1, EntrySide.Debit, EconomyAccountCode.PurchasedHardLiability,
+                    CurrencyCode.HardCoin, 6, wallet, ProvenanceKind.PurchasedHard),
+                PostingFixture.Line(2, EntrySide.Debit, EconomyAccountCode.EarnedHardLiability,
+                    CurrencyCode.HardCoin, 4, wallet, ProvenanceKind.EarnedHard),
+                PostingFixture.Line(3, EntrySide.Credit, EconomyAccountCode.HardCoinEscrow,
+                    CurrencyCode.HardCoin, 10)
+            ]
+        };
+
+        PostingMatrix.Validate(request).IsValid.Should().BeTrue();
+
+        var malformed = request with
+        {
+            Lines =
+            [
+                request.Lines[0],
+                request.Lines[1] with { Account = EconomyAccountCode.PurchasedHardLiability },
+                request.Lines[2]
+            ]
+        };
+
+        PostingMatrix.Validate(malformed).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidAccountShape);
+    }
+
+    [Fact]
     public void InvalidCurrencyFromDeserialization_IsReportedWithoutEscapingValidator()
     {
         var burn = PostingFixture.Valid(PostingTemplateKind.Burn);
@@ -450,6 +485,18 @@ internal static class PostingFixture
                 {
                     Line(1, EntrySide.Debit, EconomyAccountCode.PurchasedHardLiability, CurrencyCode.HardCoin, 10, WalletId.New(), ProvenanceKind.PurchasedHard),
                     Line(2, EntrySide.Credit, EconomyAccountCode.HardCoinEscrow, CurrencyCode.HardCoin, 10)
+                }, null),
+            PostingTemplateKind.BountyEscrow => (PostingAuthority.WalletOwner,
+                new[]
+                {
+                    Line(1, EntrySide.Debit, EconomyAccountCode.PurchasedHardLiability, CurrencyCode.HardCoin, 10, WalletId.New(), ProvenanceKind.PurchasedHard),
+                    Line(2, EntrySide.Credit, EconomyAccountCode.HardCoinEscrow, CurrencyCode.HardCoin, 10)
+                }, null),
+            PostingTemplateKind.BountyClaim => (PostingAuthority.EscrowCoordinator,
+                new[]
+                {
+                    Line(1, EntrySide.Debit, EconomyAccountCode.HardCoinEscrow, CurrencyCode.HardCoin, 10),
+                    Line(2, EntrySide.Credit, EconomyAccountCode.EarnedHardLiability, CurrencyCode.HardCoin, 10, WalletId.New(), ProvenanceKind.EarnedHard)
                 }, null),
             PostingTemplateKind.Reclaim => (PostingAuthority.EscrowCoordinator,
                 new[]
