@@ -23,6 +23,10 @@ public sealed class BountiesModuleTests
                 item.ImplementationType == typeof(PostgreSqlBountyEscrowStore) &&
                 item.Lifetime == ServiceLifetime.Scoped),
             descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
+                item.ServiceType == typeof(IBountyTerminalEventStore) &&
+                item.ImplementationType == typeof(PostgreSqlBountyTerminalEventStore) &&
+                item.Lifetime == ServiceLifetime.Scoped),
+            descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
                 item.ServiceType == typeof(IBountyPostableLotReader) &&
                 item.ImplementationType == typeof(PostgreSqlBountyPostableLotReader) &&
                 item.Lifetime == ServiceLifetime.Scoped),
