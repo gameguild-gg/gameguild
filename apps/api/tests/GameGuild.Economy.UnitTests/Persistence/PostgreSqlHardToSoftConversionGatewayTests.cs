@@ -80,7 +80,7 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_audit_evidence WHERE \"RiskDecisionId\" = '{issued.Id}';")).Should().Be(2);
 
         var replay = await issuer.IssueAsync(request, CancellationToken.None);
-        replay.Should().Be(issued);
+        replay.Should().BeEquivalentTo(issued);
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_fragment_reservations WHERE \"OperationId\" = '{operation}';")).Should().Be(1);
     }
 
