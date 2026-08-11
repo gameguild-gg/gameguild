@@ -20,7 +20,8 @@ public sealed class DurableBountyEscrowPostWorkflowTests
         var reader = new RecordingLotReader([lot]);
         var reservations = new RecordingReservations(lot);
         var store = new RecordingStore();
-        var workflow = new PostgreSqlDurableBountyEscrowPostWorkflow(context, reader, reservations, store);
+        var postings = new RecordingPostings();
+        var workflow = new PostgreSqlDurableBountyEscrowPostWorkflow(context, reader, reservations, store, postings);
 
         var posted = await workflow.PostAsync(request);
 
@@ -36,6 +37,12 @@ public sealed class DurableBountyEscrowPostWorkflowTests
             request.PostedAt));
         store.CreateCommands.Should().ContainSingle().Which.Position.EscrowFragments
             .Should().ContainSingle().Which.ParentLot.Id.Should().Be(lot.Id);
+        postings.Requests.Should().ContainSingle().Which.Posting.Template.Kind.Should().Be(PostingTemplateKind.BountyEscrow);
+        reservations.Transitions.Should().ContainSingle().Which.Should().Be((
+            request.Id.Value,
+            PersistedFragmentReservationStatus.Reserved,
+            PersistedFragmentReservationStatus.Consumed,
+            request.PostedAt));
         context.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
     }
 
@@ -49,7 +56,8 @@ public sealed class DurableBountyEscrowPostWorkflowTests
             context,
             new RecordingLotReader([]),
             new RecordingReservations(CreateLot(7)),
-            new RecordingStore(replay));
+            new RecordingStore(replay),
+            new RecordingPostings());
 
         var posted = await workflow.PostAsync(request);
 
@@ -67,12 +75,33 @@ public sealed class DurableBountyEscrowPostWorkflowTests
             context,
             new RecordingLotReader([lot]),
             new RecordingReservations(lot, mismatchedRoot: true),
-            new RecordingStore());
+            new RecordingStore(),
+            new RecordingPostings());
 
         await FluentActions.Invoking(() => workflow.PostAsync(request))
             .Should().ThrowAsync<RegisteredPostingRejectedException>();
 
         context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Post_RollsBackWhenReservedFragmentsCannotBecomeConsumed()
+    {
+        var lot = CreateLot(7);
+        var request = CreateRequest(7);
+        var context = new RecordingContext();
+        var workflow = new PostgreSqlDurableBountyEscrowPostWorkflow(
+            context,
+            new RecordingLotReader([lot]),
+            new RecordingReservations(lot, transitionCount: 0),
+            new RecordingStore(),
+            new RecordingPostings());
+
+        await FluentActions.Invoking(() => workflow.PostAsync(request))
+            .Should().ThrowAsync<RegisteredPostingRejectedException>();
+
+        context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+        context.Transactions.Single().CommitCalled.Should().BeFalse();
     }
 
     [Fact]
@@ -85,7 +114,8 @@ public sealed class DurableBountyEscrowPostWorkflowTests
             context,
             reader,
             new RecordingReservations(CreateLot(7)),
-            new RecordingStore());
+            new RecordingStore(),
+            new RecordingPostings());
 
         await FluentActions.Invoking(() => workflow.PostAsync(request))
             .Should().ThrowAsync<ArgumentException>();
@@ -94,18 +124,28 @@ public sealed class DurableBountyEscrowPostWorkflowTests
         context.Transactions.Should().BeEmpty();
     }
 
-    private static DurableBountyEscrowPostRequest CreateRequest(long units) => new(
-        BountyId.New(),
-        Guid.NewGuid(),
-        WalletId.New(),
-        WalletId.New(),
-        new CoinAmount(CurrencyCode.HardCoin, units),
-        BountyEligibilityRequirements.None,
-        0,
-        Now,
-        Now.AddDays(7),
-        new IdempotencyKey($"bounty-post-{Guid.NewGuid():N}"),
-        "request-hash");
+    private static DurableBountyEscrowPostRequest CreateRequest(long units)
+    {
+        var posterId = Guid.NewGuid();
+        return new DurableBountyEscrowPostRequest(
+            BountyId.New(),
+            posterId,
+            WalletId.New(),
+            WalletId.New(),
+            new CoinAmount(CurrencyCode.HardCoin, units),
+            BountyEligibilityRequirements.None,
+            0,
+            Now,
+            Now.AddDays(7),
+            new IdempotencyKey($"bounty-post-{Guid.NewGuid():N}"),
+            "request-hash",
+            Authority(posterId),
+            new ReserveVersion(3),
+            new PolicyVersion(4));
+    }
+
+    private static RegisteredPostingAuthority Authority(Guid actorId) => new(
+        Guid.NewGuid(), actorId, Guid.NewGuid(), Guid.NewGuid(), "bounty-post", 1);
 
     private static CreditLot CreateLot(long units)
     {
@@ -187,9 +227,13 @@ public sealed class DurableBountyEscrowPostWorkflowTests
             lot.JournalSequence, lot.State, lot.Ranges, lot.TraceUnitsPerCoinUnit);
     }
 
-    private sealed class RecordingReservations(CreditLot lot, bool mismatchedRoot = false) : IFifoFragmentReservationGateway
+    private sealed class RecordingReservations(
+        CreditLot lot,
+        bool mismatchedRoot = false,
+        long transitionCount = 1) : IFifoFragmentReservationGateway
     {
         public List<FifoFragmentReservationRequest> Requests { get; } = [];
+        public List<(Guid OperationId, PersistedFragmentReservationStatus Expected, PersistedFragmentReservationStatus Next, DateTimeOffset TerminalAt)> Transitions { get; } = [];
         public IReadOnlyList<PersistedFragmentReservation> Reserve(FifoFragmentReservationRequest request)
         {
             Requests.Add(request);
@@ -203,8 +247,11 @@ public sealed class DurableBountyEscrowPostWorkflowTests
                 Guid.NewGuid(), request.OperationId, lot.Id, root, range.Epoch, range, request.Amount)];
         }
 
-        public long Transition(Guid operationId, PersistedFragmentReservationStatus expected, PersistedFragmentReservationStatus next, DateTimeOffset terminalAt) =>
-            throw new NotSupportedException();
+        public long Transition(Guid operationId, PersistedFragmentReservationStatus expected, PersistedFragmentReservationStatus next, DateTimeOffset terminalAt)
+        {
+            Transitions.Add((operationId, expected, next, terminalAt));
+            return transitionCount;
+        }
     }
 
     private sealed class RecordingStore(PersistedBountyEscrow? replay = null) : IBountyEscrowStore
@@ -226,7 +273,21 @@ public sealed class DurableBountyEscrowPostWorkflowTests
                 command.Position.PostedAt,
                 command.Position.ExpiresAt,
                 command.IdempotencyKey,
-                command.RequestHash));
+                command.RequestHash,
+                Authority(command.Position.PosterId),
+                new ReserveVersion(3),
+                new PolicyVersion(4)));
+        }
+    }
+
+    private sealed class RecordingPostings : IRegisteredPostingGateway
+    {
+        public List<RegisteredPostingRequest> Requests { get; } = [];
+
+        public RegisteredPostingReceipt Post(RegisteredPostingRequest request)
+        {
+            Requests.Add(request);
+            return new RegisteredPostingReceipt(request.Posting.Id, 1, "journal-hash", false);
         }
     }
 }

@@ -14,7 +14,11 @@ public sealed record DurableBountyEscrowPostRequest(
     DateTimeOffset PostedAt,
     DateTimeOffset ExpiresAt,
     IdempotencyKey IdempotencyKey,
-    string RequestHash);
+    string RequestHash,
+    RegisteredPostingAuthority Authority,
+    ReserveVersion ReserveVersion,
+    PolicyVersion PolicyVersion,
+    string? DispatchSnapshotHash = null);
 
 public interface IDurableBountyEscrowPostWorkflow
 {
@@ -31,7 +35,8 @@ public sealed class PostgreSqlDurableBountyEscrowPostWorkflow(
     IApplicationDbContext dbContext,
     IBountyPostableLotReader lots,
     IFifoFragmentReservationGateway reservations,
-    IBountyEscrowStore escrows) : IDurableBountyEscrowPostWorkflow
+    IBountyEscrowStore escrows,
+    IRegisteredPostingGateway postings) : IDurableBountyEscrowPostWorkflow
 {
     public async Task<PersistedBountyEscrow> PostAsync(
         DurableBountyEscrowPostRequest request,
@@ -78,11 +83,27 @@ public sealed class PostgreSqlDurableBountyEscrowPostWorkflow(
                     request.PostedAt)))
                 .ToArray();
             EnsureReservationsMatch(position, persistedReservations);
+            var receipt = postings.Post(BountyEscrowPostingFactory.Create(
+                position,
+                PostingId.New(),
+                request.Authority,
+                request.ReserveVersion,
+                request.PolicyVersion,
+                request.DispatchSnapshotHash));
 
             var persisted = escrows.Create(new CreateBountyEscrowPersistenceCommand(
                 position,
                 request.IdempotencyKey,
-                request.RequestHash.Trim()));
+                request.RequestHash.Trim(),
+                receipt.PostingId));
+            var consumed = reservations.Transition(
+                request.Id.Value,
+                PersistedFragmentReservationStatus.Reserved,
+                PersistedFragmentReservationStatus.Consumed,
+                request.PostedAt);
+            if (consumed != persistedReservations.Length)
+                throw new RegisteredPostingRejectedException(
+                    "Bounty FIFO reservations could not be consumed atomically with the escrow posting.");
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return persisted;
         }
@@ -142,6 +163,8 @@ public sealed class PostgreSqlDurableBountyEscrowPostWorkflow(
             throw new ArgumentException("Bounty request hashes cannot exceed 128 characters.", nameof(request));
         if (request.PosterId == Guid.Empty)
             throw new ArgumentException("Poster ID is required.", nameof(request));
+        if (request.Authority.ActorId != request.PosterId)
+            throw new ArgumentException("The bounty posting authority must be the poster.", nameof(request));
         if (request.PosterWalletId == request.EscrowWalletId)
             throw new ArgumentException("Poster and escrow wallets must be distinct.", nameof(request));
         if (request.ExpiresAt <= request.PostedAt)
