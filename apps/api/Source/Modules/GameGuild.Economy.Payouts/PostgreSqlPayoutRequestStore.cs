@@ -127,7 +127,7 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
         return request;
     }
 
-    private IQueryable<PayoutRequestRow> Read(string sql, params object?[] parameters) =>
+    private IQueryable<PayoutRequestRow> Read(string sql, params object[] parameters) =>
         _db.Database.SqlQueryRaw<PayoutRequestRow>(sql, parameters).AsNoTracking();
 
     private void Execute(FormattableString sql)
