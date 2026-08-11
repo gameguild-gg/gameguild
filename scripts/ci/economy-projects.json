@@ -30,7 +30,8 @@
     {
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Treasury/GameGuild.Economy.Treasury.csproj",
       "testProjects": ["apps/api/tests/GameGuild.Economy.Treasury.UnitTests/GameGuild.Economy.Treasury.UnitTests.csproj"],
-      "coverageAssemblies": ["GameGuild.Economy.Treasury"]
+      "coverageAssemblies": ["GameGuild.Economy.Treasury"],
+      "minimumBranchRate": 0.98
     },
     {
       "productionProject": "apps/api/Source/Modules/GameGuild.AI/GameGuild.AI.csproj",
