@@ -263,7 +263,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         // Assert
         signInResult.TenantId.Should().Be(tenantTwo.Id);
         signInResult.AvailableTenants.Should().NotBeNull();
-        signInResult.AvailableTenants!.Should().HaveCount(2);
+        signInResult.AvailableTenants!.Should().HaveCount(3, "every authenticated user is provisioned into the default tenant");
         signInResult.AvailableTenants.Should().Contain(tenant => tenant.Id == tenantOne.Id && tenant.Name == tenantOne.Name);
         signInResult.AvailableTenants.Should().Contain(tenant => tenant.Id == tenantTwo.Id && tenant.Name == tenantTwo.Name);
     }

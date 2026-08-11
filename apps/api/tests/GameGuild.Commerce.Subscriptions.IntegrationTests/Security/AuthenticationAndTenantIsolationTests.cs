@@ -484,6 +484,7 @@ public class AuthenticationAndTenantIsolationTests : IClassFixture<WebApplicatio
         client.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId.ToString());
         // Add a mock auth token (your test infrastructure should handle this)
         client.DefaultRequestHeaders.Add("Authorization", "Bearer test_token_for_integration_tests");
+        client.DefaultRequestHeaders.Add("X-Test-Subject", TestAuthHandler.DefaultUserId.ToString());
         return client;
     }
 

@@ -67,20 +67,19 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
     }
 
     [Fact]
-    public async Task RootEndpoint_ShouldRedirect_ToSwaggerDocumentation()
+    public async Task RootEndpoint_ShouldReturnApiMetadata_OutsideDevelopmentAndStaging()
     {
         // Arrange
-        using var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false
-        });
+        using var client = _factory.CreateClient();
 
         // Act
         var response = await client.GetAsync("/");
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Redirect);
-        response.Headers.Location?.ToString().Should().Contain("documentation");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsObject();
+        body["name"]!.GetValue<string>().Should().Be("GameGuild API");
+        body["environment"]!.GetValue<string>().Should().Be("Testing");
     }
 
     [Fact]
@@ -213,7 +212,7 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
     [Theory]
     [InlineData("Staging")]
     [InlineData("Production")]
-    public void Application_ShouldRefuseToListen_WhenWebhookVerificationIsNotConfigured(string environmentName)
+    public void Application_ShouldStart_WhenWebhookVerificationIsNotConfigured(string environmentName)
     {
         using var factory = CreateCommerceConfiguredFactory(environmentName, configuration =>
         {
@@ -222,7 +221,7 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
 
         Action start = () => factory.CreateClient();
 
-        start.Should().Throw<Exception>();
+        start.Should().NotThrow();
     }
 
     [Fact]
