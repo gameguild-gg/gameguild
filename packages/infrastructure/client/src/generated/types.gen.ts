@@ -1872,6 +1872,13 @@ export interface ContentPagesUpdatePageSection {
   cssClasses?: string | null;
 }
 
+export interface EconomyCommandsConvertMyHardToSoftInput {
+  principalHardCoinUnits?: number;
+  feeHardCoinUnits?: number;
+  riskDecisionId?: string;
+  idempotencyKey?: string | null;
+}
+
 export type EconomyContractsCurrencyCode = 'HardCoin' | 'SoftCoin';
 
 export interface EconomyContractsEconomyWalletSummary {
@@ -1938,6 +1945,14 @@ export type EconomyContractsProvenanceKind =
   'PurchasedHard' | 'EarnedHard' | 'ConvertedSoft' | 'AdRewardSoft' | 'SystemGrantSoft' | 'RefundRestoration' | 'EscrowReturn';
 
 export type EconomyContractsWalletLifecycleState = 'Active' | 'Frozen' | 'Closed' | 'UnderReview';
+
+export interface EconomyFundingSelfServiceHardToSoftConversionReceipt {
+  principalPostingId?: string;
+  feePostingId?: string | null;
+  journalSequence?: number;
+  journalHash?: string | null;
+  isDuplicate?: boolean;
+}
 
 export interface FeaturesBulkEvaluationInput {
   featureKeys?: Array<string> | null;
@@ -8331,6 +8346,7 @@ export let ContentPagesSitemapEntrySchema: z.ZodType<ContentPagesSitemapEntry>;
 export let ContentPagesUpdateContentResourceSchema: z.ZodType<ContentPagesUpdateContentResource>;
 export let ContentPagesUpdatePageSchema: z.ZodType<ContentPagesUpdatePage>;
 export let ContentPagesUpdatePageSectionSchema: z.ZodType<ContentPagesUpdatePageSection>;
+export let EconomyCommandsConvertMyHardToSoftInputSchema: z.ZodType<EconomyCommandsConvertMyHardToSoftInput>;
 export let EconomyContractsCurrencyCodeSchema: z.ZodType<EconomyContractsCurrencyCode>;
 export let EconomyContractsEconomyWalletSummarySchema: z.ZodType<EconomyContractsEconomyWalletSummary>;
 export let EconomyContractsEconomyWalletTransactionSchema: z.ZodType<EconomyContractsEconomyWalletTransaction>;
@@ -8339,6 +8355,7 @@ export let EconomyContractsPostingStatusSchema: z.ZodType<EconomyContractsPostin
 export let EconomyContractsPostingTemplateKindSchema: z.ZodType<EconomyContractsPostingTemplateKind>;
 export let EconomyContractsProvenanceKindSchema: z.ZodType<EconomyContractsProvenanceKind>;
 export let EconomyContractsWalletLifecycleStateSchema: z.ZodType<EconomyContractsWalletLifecycleState>;
+export let EconomyFundingSelfServiceHardToSoftConversionReceiptSchema: z.ZodType<EconomyFundingSelfServiceHardToSoftConversionReceipt>;
 export let FeaturesBulkEvaluationInputSchema: z.ZodType<FeaturesBulkEvaluationInput>;
 export let FeaturesCapabilityAuditLogSchema: z.ZodType<FeaturesCapabilityAuditLog>;
 export let FeaturesCapabilityCheckOutputSchema: z.ZodType<FeaturesCapabilityCheckOutput>;
@@ -11167,6 +11184,14 @@ ContentPagesUpdatePageSectionSchema = z.object({
   cssClasses: z.string().nullable().optional(),
 });
 
+/** Zod schema for EconomyCommandsConvertMyHardToSoftInput */
+EconomyCommandsConvertMyHardToSoftInputSchema = z.object({
+  principalHardCoinUnits: z.number().int().optional(),
+  feeHardCoinUnits: z.number().int().optional(),
+  riskDecisionId: z.string().uuid().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+});
+
 /** Zod schema for EconomyContractsCurrencyCode */
 EconomyContractsCurrencyCodeSchema = z.enum(['HardCoin', 'SoftCoin']);
 
@@ -11249,6 +11274,15 @@ EconomyContractsProvenanceKindSchema = z.enum([
 
 /** Zod schema for EconomyContractsWalletLifecycleState */
 EconomyContractsWalletLifecycleStateSchema = z.enum(['Active', 'Frozen', 'Closed', 'UnderReview']);
+
+/** Zod schema for EconomyFundingSelfServiceHardToSoftConversionReceipt */
+EconomyFundingSelfServiceHardToSoftConversionReceiptSchema = z.object({
+  principalPostingId: z.string().uuid().optional(),
+  feePostingId: z.string().uuid().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  journalHash: z.string().nullable().optional(),
+  isDuplicate: z.boolean().optional(),
+});
 
 /** Zod schema for FeaturesBulkEvaluationInput */
 FeaturesBulkEvaluationInputSchema = z.object({

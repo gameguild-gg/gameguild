@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace GameGuild.Economy.Ledger;
@@ -17,7 +19,7 @@ internal static class RegisteredPostingPayloadFactory
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(accountIds);
-        nextId ??= Guid.NewGuid;
+        nextId ??= CreateDeterministicIdFactory(request.Posting.Id.Value);
 
         var lines = request.Posting.Lines
             .OrderBy(line => line.Sequence)
@@ -91,6 +93,15 @@ internal static class RegisteredPostingPayloadFactory
             })));
     }
 
+    private static Func<Guid> CreateDeterministicIdFactory(Guid postingId)
+    {
+        var index = 0;
+        return () =>
+        {
+            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes($"{postingId:N}:registered-posting:{index++}"));
+            return new Guid(bytes.AsSpan(0, 16));
+        };
+    }
     private static Guid GetAccountId(IReadOnlyDictionary<int, Guid> accountIds, int sequence) =>
         accountIds.TryGetValue(sequence, out var accountId) && accountId != Guid.Empty
             ? accountId

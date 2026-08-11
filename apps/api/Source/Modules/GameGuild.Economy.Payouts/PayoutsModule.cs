@@ -11,6 +11,8 @@ public sealed class PayoutsModule : ModuleBase
     public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IPayoutOperationStore, PostgreSqlPayoutOperationStore>();
+        services.AddScoped<IDurablePayoutReservationWorkflow, PostgreSqlDurablePayoutReservationWorkflow>();
+        services.AddScoped<IDurablePayoutSettlementWorkflow, PostgreSqlDurablePayoutSettlementWorkflow>();
         return services;
     }
 }

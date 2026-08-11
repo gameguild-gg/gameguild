@@ -27,9 +27,9 @@ public sealed record ProtectedPostingCommand(
 
 public sealed class CoreProtectedPostingGate
 {
-    private readonly RiskDecisionAuthorizer _authorizer;
+    private readonly IRiskDecisionAuthorizer _authorizer;
 
-    public CoreProtectedPostingGate(RiskDecisionAuthorizer authorizer)
+    public CoreProtectedPostingGate(IRiskDecisionAuthorizer authorizer)
     {
         ArgumentNullException.ThrowIfNull(authorizer);
         _authorizer = authorizer;
