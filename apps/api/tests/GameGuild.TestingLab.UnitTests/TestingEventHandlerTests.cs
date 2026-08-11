@@ -367,6 +367,38 @@ public sealed class TestingEventHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task SystemAdmin_CanReviewAndManageAnEventOwnedByAnotherMember()
+    {
+        var systemAdminId = Guid.NewGuid();
+        AddActor(systemAdminId, TenantRole.Member);
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        await _context.SaveChangesAsync();
+        SetActor(systemAdminId, "SystemAdmin");
+
+        var applications = await CreateApplicationHandler().Handle(
+            new GetTestingEventApplicationsQuery(testingEvent.Id),
+            default);
+        var committee = await CreateEventHandler().Handle(
+            new GetTestingEventCommitteeQuery(testingEvent.Id),
+            default);
+        var update = await CreateEventHandler().Handle(new UpdateTestingEventCommand(
+            testingEvent.Id,
+            testingEvent.Name,
+            testingEvent.Description,
+            testingEvent.Mode,
+            testingEvent.ApprovalMode,
+            testingEvent.ApplicationsOpenAt,
+            testingEvent.ApplicationsCloseAt,
+            testingEvent.StartsAt,
+            testingEvent.EndsAt,
+            testingEvent.RequiresFeedback), default);
+
+        applications.IsSuccess.Should().BeTrue();
+        committee.IsSuccess.Should().BeTrue();
+        update.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task DeleteEvent_RejectsEventAfterApplicationsOpen()
     {
         var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
@@ -552,8 +584,12 @@ public sealed class TestingEventHandlerTests : IDisposable
         });
     }
 
-    private void SetActor(Guid userId) => _actorAccessor.SetActorContext(
-        ActorContextBuilder.ForUser(userId).WithTenantId(_tenantId).Build());
+    private void SetActor(Guid userId, string? role = null)
+    {
+        var builder = ActorContextBuilder.ForUser(userId).WithTenantId(_tenantId);
+        if (!string.IsNullOrWhiteSpace(role)) builder.WithRole(role);
+        _actorAccessor.SetActorContext(builder.Build());
+    }
 
     private sealed class TestContext(DbContextOptions<TestContext> options) : DbContext(options), IApplicationDbContext
     {
