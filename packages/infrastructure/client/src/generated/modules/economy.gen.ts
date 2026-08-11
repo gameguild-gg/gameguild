@@ -113,7 +113,7 @@ export class EconomyModule {
   /**
    * Get my payout operation
    */
-  async getEconomyPayouts1(operationId: string): Promise<Result<Types.EconomyPayoutsQueriesEconomyPayoutOperation, ApiError>> {
+  async getEconomyPayoutsByOperationId(operationId: string): Promise<Result<Types.EconomyPayoutsQueriesEconomyPayoutOperation, ApiError>> {
     const url = `/api/v1/economy/payouts/${operationId}`;
 
     const result = await this.client.request({

@@ -66,14 +66,14 @@ export async function getDashboardNotificationSummary(userId: string): Promise<D
   try {
     const notifications = new GeneratedApi.UsersNotificationsModule(getApiClient());
     const [recentResult, unreadResult] = await Promise.all([
-      notifications.getUsersNotifications(userId, {
+      notifications.getUsersByUserIdNotifications(userId, {
         page: 1,
         pageSize: 5,
         isArchived: false,
         sortBy: 'createdAt',
         sortDirection: 'desc',
       }),
-      notifications.getUsersNotifications(userId, {
+      notifications.getUsersByUserIdNotifications(userId, {
         page: 1,
         pageSize: 1,
         isArchived: false,

@@ -129,7 +129,7 @@ export class CommercePaymentsWalletsModule {
   /**
    * Get wallet by ID
    */
-  async getWallets1(walletId: string): Promise<Result<void, ApiError>> {
+  async getWalletsByWalletId(walletId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/wallets/${walletId}`;
 
     const result = await this.client.request({

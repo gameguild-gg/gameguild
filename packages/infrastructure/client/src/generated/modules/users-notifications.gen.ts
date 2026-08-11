@@ -18,7 +18,7 @@ export class UsersNotificationsModule {
   /**
    * Get user notifications with pagination, search, and sorting
    */
-  async getUsersNotifications(
+  async getUsersByUserIdNotifications(
     userId: string,
     query?: {
       page?: number;
@@ -55,7 +55,7 @@ export class UsersNotificationsModule {
   /**
    * Mark multiple notifications as read for a user
    */
-  async postUsersNotificationsMarkAsRead(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+  async postUsersByUserIdNotificationsMarkAsRead(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:mark-as-read`;
 
     // Validate request body
@@ -74,7 +74,7 @@ export class UsersNotificationsModule {
   /**
    * Mark multiple notifications as unread for a user
    */
-  async postUsersNotificationsMarkAsUnread(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+  async postUsersByUserIdNotificationsMarkAsUnread(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:mark-as-unread`;
 
     // Validate request body
@@ -93,7 +93,7 @@ export class UsersNotificationsModule {
   /**
    * Archive multiple notifications for a user
    */
-  async postUsersNotificationsArchive(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+  async postUsersByUserIdNotificationsArchive(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:archive`;
 
     // Validate request body
@@ -112,7 +112,7 @@ export class UsersNotificationsModule {
   /**
    * Unarchive multiple notifications for a user
    */
-  async postUsersNotificationsUnarchive(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+  async postUsersByUserIdNotificationsUnarchive(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:unarchive`;
 
     // Validate request body
@@ -131,7 +131,10 @@ export class UsersNotificationsModule {
   /**
    * Get detailed notification by ID
    */
-  async getUsersNotifications1(userId: string, notificationId: string): Promise<Result<Types.IdentityUsersUserNotificationDetail, ApiError>> {
+  async getUsersByUserIdNotificationsByNotificationId(
+    userId: string,
+    notificationId: string,
+  ): Promise<Result<Types.IdentityUsersUserNotificationDetail, ApiError>> {
     const url = `/v1/users/${userId}/notifications/${notificationId}`;
 
     const result = await this.client.request({
@@ -167,7 +170,7 @@ export class UsersNotificationsModule {
   /**
    * Mark notification as read
    */
-  async postUsersNotificationsMarkAsRead1(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
+  async postUsersByUserIdNotificationsByNotificationIdMarkAsRead(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications/${notificationId}:mark-as-read`;
 
     const result = await this.client.request({
@@ -182,7 +185,7 @@ export class UsersNotificationsModule {
   /**
    * Mark notification as unread
    */
-  async postUsersNotificationsMarkAsUnread1(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
+  async postUsersByUserIdNotificationsByNotificationIdMarkAsUnread(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications/${notificationId}:mark-as-unread`;
 
     const result = await this.client.request({
@@ -197,7 +200,7 @@ export class UsersNotificationsModule {
   /**
    * Archive notification
    */
-  async postUsersNotificationsArchive1(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
+  async postUsersByUserIdNotificationsByNotificationIdArchive(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications/${notificationId}:archive`;
 
     const result = await this.client.request({
@@ -212,7 +215,7 @@ export class UsersNotificationsModule {
   /**
    * Unarchive notification
    */
-  async postUsersNotificationsUnarchive1(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
+  async postUsersByUserIdNotificationsByNotificationIdUnarchive(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications/${notificationId}:unarchive`;
 
     const result = await this.client.request({

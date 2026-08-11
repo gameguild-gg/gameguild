@@ -142,10 +142,10 @@ export async function getTestingEventManagerData(
 ): Promise<TestingEventManagerData> {
   const api = createModules();
   const [eventResult, slotsResult, applicationsResult, committeeResult] = await Promise.all([
-    read(api.events.getTestingEvents1(eventId), 'Event'),
+    read(api.events.getTestingEventsByEventId(eventId), 'Event'),
     read(api.events.getTestingEventsSlots(eventId), 'Slots'),
     read(
-      api.events.getTestingEventsApplications1(eventId, {
+      api.events.getTestingEventsByEventIdApplications(eventId, {
         status: options.applicationStatus,
         skip: 0,
         take: 100,

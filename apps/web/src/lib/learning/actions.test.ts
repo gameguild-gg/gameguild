@@ -6,13 +6,13 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
   resolveCourseId: vi.fn(),
   postCoursesContent: vi.fn(),
-  postCoursesContentReorder1: vi.fn(),
+  postCoursesByProgramIdContentReorder: vi.fn(),
   postCoursesContentMove: vi.fn(),
   deleteCoursesContent: vi.fn(),
   postAssessments: vi.fn(),
   putAssessments: vi.fn(),
   deleteAssessments: vi.fn(),
-  getCourses1: vi.fn(),
+  getCoursesById: vi.fn(),
   putCourses: vi.fn(),
   postCoursesPublish: vi.fn(),
   postCoursesRestore: vi.fn(),
@@ -67,14 +67,14 @@ vi.mock("@game-guild/client", () => ({
       putAssessmentsDefinition = mocks.putAssessmentsDefinition;
     },
     LearningCoursesProgramModule: class {
-      getCourses1 = mocks.getCourses1;
+      getCoursesById = mocks.getCoursesById;
       putCourses = mocks.putCourses;
       postCoursesUsers = mocks.postCoursesUsers;
       deleteCoursesUsers = mocks.deleteCoursesUsers;
     },
     LearningCoursesProgramcontentModule: class {
       postCoursesContent = mocks.postCoursesContent;
-      postCoursesContentReorder1 = mocks.postCoursesContentReorder1;
+      postCoursesByProgramIdContentReorder = mocks.postCoursesByProgramIdContentReorder;
       postCoursesContentMove = mocks.postCoursesContentMove;
       deleteCoursesContent = mocks.deleteCoursesContent;
     },
@@ -177,7 +177,7 @@ describe("learning server actions", () => {
         headers: { "Content-Type": "application/json" },
       }),
     );
-    mocks.postCoursesContentReorder1.mockResolvedValue({
+    mocks.postCoursesByProgramIdContentReorder.mockResolvedValue({
       ok: true,
       data: undefined,
     });
@@ -192,7 +192,7 @@ describe("learning server actions", () => {
     });
     mocks.putAssessments.mockResolvedValue({ ok: true, data: undefined });
     mocks.deleteAssessments.mockResolvedValue({ ok: true, data: undefined });
-    mocks.getCourses1.mockResolvedValue({
+    mocks.getCoursesById.mockResolvedValue({
       ok: true,
       data: {
         id: "course-1",
@@ -822,7 +822,7 @@ describe("learning server actions", () => {
     ]);
 
     expect(result).toEqual({ success: true, data: null });
-    expect(mocks.postCoursesContentReorder1).toHaveBeenCalledWith(
+    expect(mocks.postCoursesByProgramIdContentReorder).toHaveBeenCalledWith(
       "1caa16bb-6810-4e53-bb0d-91f0d5702333",
       { contentIds: ["module-2", "module-1"] },
     );

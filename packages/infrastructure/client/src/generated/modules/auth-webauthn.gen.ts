@@ -135,7 +135,7 @@ export class AuthWebauthnModule {
 
   /**
    */
-  async getAuthWebauthnCredentials1(credentialId: string): Promise<Result<Types.IdentityAuthenticationWebAuthnCredentialInfo, ApiError>> {
+  async getAuthWebauthnCredentialsByCredentialId(credentialId: string): Promise<Result<Types.IdentityAuthenticationWebAuthnCredentialInfo, ApiError>> {
     const url = `/v1/auth/webauthn/credentials/${credentialId}`;
 
     const result = await this.client.request({

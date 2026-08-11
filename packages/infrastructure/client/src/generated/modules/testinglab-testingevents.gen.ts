@@ -75,7 +75,7 @@ export class TestinglabTestingeventsModule {
 
   /**
    */
-  async getTestingEventsPublic1(eventId: string): Promise<Result<Types.TestingLabPublicTestingEventProjection, ApiError>> {
+  async getTestingEventsPublicByEventId(eventId: string): Promise<Result<Types.TestingLabPublicTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/public/${eventId}`;
 
     const result = await this.client.request({
@@ -95,7 +95,7 @@ export class TestinglabTestingeventsModule {
 
   /**
    */
-  async getTestingEvents1(eventId: string): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+  async getTestingEventsByEventId(eventId: string): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}`;
 
     const result = await this.client.request({
@@ -445,7 +445,7 @@ export class TestinglabTestingeventsModule {
 
   /**
    */
-  async getTestingEventsApplications(
+  async getTestingEventsByEventIdApplications(
     eventId: string,
     query?: { status?: Types.TestingLabTestingApplicationStatus; skip?: number; take?: number },
   ): Promise<Result<Array<Types.TestingLabTestingProjectApplicationProjection>, ApiError>> {
@@ -505,7 +505,7 @@ export class TestinglabTestingeventsModule {
 
   /**
    */
-  async getTestingEventsApplications1(applicationId: string): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
+  async getTestingEventsApplicationsByApplicationId(applicationId: string): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}`;
 
     const result = await this.client.request({

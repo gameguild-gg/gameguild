@@ -130,7 +130,7 @@ export async function updateTestingRequest(formData: FormData): Promise<TestingL
 
   const requestId = text(formData, 'requestId');
   const api = createModules();
-  const current = await api.requests.getTestingRequests1(requestId);
+  const current = await api.requests.getTestingRequestsById(requestId);
   if (!current.ok) return { success: false, error: current.error.message };
 
   const startDate = isoDate(formData, 'startDate') ?? current.data.startDate;
@@ -218,7 +218,7 @@ export async function updateTestingSession(formData: FormData): Promise<TestingL
   const sessionId = text(formData, 'sessionId');
   if (!sessionId) return { success: false, error: 'Session is required.' };
   const api = createModules();
-  const current = await api.sessions.getTestingSessions1(sessionId);
+  const current = await api.sessions.getTestingSessionsById(sessionId);
   if (!current.ok) return { success: false, error: current.error.message };
 
   return complete(

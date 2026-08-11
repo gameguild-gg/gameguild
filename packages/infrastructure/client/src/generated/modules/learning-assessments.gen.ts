@@ -480,7 +480,7 @@ export class LearningAssessmentsModule {
 
   /**
    */
-  async getAssessmentsSubmissions(submissionId: string): Promise<Result<void, ApiError>> {
+  async getAssessmentsSubmissionsBySubmissionId(submissionId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/submissions/${submissionId}`;
 
     const result = await this.client.request({
@@ -494,7 +494,7 @@ export class LearningAssessmentsModule {
 
   /**
    */
-  async getAssessmentsSubmissions1(assessmentId: string): Promise<Result<Array<Types.LearningAssessmentsAssessmentSubmission>, ApiError>> {
+  async getAssessmentsByAssessmentIdSubmissions(assessmentId: string): Promise<Result<Array<Types.LearningAssessmentsAssessmentSubmission>, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/submissions`;
 
     const result = await this.client.request({

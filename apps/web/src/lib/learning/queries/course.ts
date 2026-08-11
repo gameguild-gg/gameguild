@@ -134,7 +134,7 @@ async function resolveCreatorHandle(
   const { users } = createCourseModules();
 
   try {
-    const result = await users.getUsers1(creatorId);
+    const result = await users.getUsersByUserId(creatorId);
     if (!result.ok) return fallback;
 
     return (
@@ -214,7 +214,7 @@ async function fetchCourseById(
 ): Promise<CourseViewModel | null> {
   try {
     const { programs } = createCourseModules();
-    const result = await programs.getCourses1(courseId);
+    const result = await programs.getCoursesById(courseId);
     if (!result.ok) return null;
 
     return mapProgramDtoToCourseViewModel(
@@ -361,7 +361,7 @@ export const getCourseContent = cache(
     try {
       const resolvedCourseId = await resolveCourseId(courseId);
       const { content } = createCourseModules();
-      const result = await content.getCoursesContent(resolvedCourseId);
+      const result = await content.getCoursesByProgramIdContent(resolvedCourseId);
 
       if (!result.ok) return { items: [], total: 0 };
 
@@ -398,14 +398,14 @@ export const getContentItem = cache(
     try {
       const resolvedCourseId = await resolveCourseId(courseId);
       const { content } = createCourseModules();
-      const result = await content.getCoursesContent1(
+      const result = await content.getCoursesByProgramIdContentById(
         resolvedCourseId,
         contentId,
       );
 
       if (result.ok) return mapContentDetailDto(result.data);
 
-      const courseContent = await content.getCoursesContent(resolvedCourseId);
+      const courseContent = await content.getCoursesByProgramIdContent(resolvedCourseId);
       const fallbackDto = courseContent.ok
         ? findContentDto(courseContent.data, contentId)
         : null;
@@ -439,7 +439,7 @@ export const getCourseStudents = cache(
 
           if (dto.userId) {
             try {
-              const userResult = await users.getUsers1(dto.userId);
+              const userResult = await users.getUsersByUserId(dto.userId);
               if (userResult.ok) identity = userResult.data;
             } catch {
               // The roster remains usable if an individual identity lookup fails.

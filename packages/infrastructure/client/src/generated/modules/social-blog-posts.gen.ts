@@ -62,7 +62,7 @@ export class SocialBlogPostsModule {
 
   /**
    */
-  async getApiSocialBlog1(id: string): Promise<Result<void, ApiError>> {
+  async getApiSocialBlogById(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/${id}`;
 
     const result = await this.client.request({

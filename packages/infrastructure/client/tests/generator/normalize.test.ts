@@ -51,6 +51,130 @@ describe('OpenAPI Spec Normalizer', () => {
     expect(operation.operationId).toBe('getAllUsers');
   });
 
+  it('should disambiguate colliding routes with semantic path parameter names', () => {
+    const spec: OpenApiSpec = {
+      ...simpleSpec,
+      paths: {
+        '/v1/products': {
+          get: { responses: { '200': { description: 'Success' } } },
+        },
+        '/v1/products/{productId}': {
+          get: { responses: { '200': { description: 'Success' } } },
+        },
+        '/v1/testing/events/{eventId}/applications': {
+          get: { responses: { '200': { description: 'Success' } } },
+        },
+        '/v1/testing/events/applications/{applicationId}': {
+          get: { responses: { '200': { description: 'Success' } } },
+        },
+        '/v1/courses/{programId}/content/reorder': {
+          post: { responses: { '204': { description: 'Success' } } },
+        },
+        '/v1/courses/{id}/content:reorder': {
+          post: { responses: { '204': { description: 'Success' } } },
+        },
+      },
+    } as OpenApiSpec;
+
+    const normalized = normalizeSpec(spec);
+
+    expect((normalized.paths['/v1/products'] as any).get.operationId).toBe('getProducts');
+    expect((normalized.paths['/v1/products/{productId}'] as any).get.operationId).toBe(
+      'getProductsByProductId',
+    );
+    expect(
+      (normalized.paths['/v1/testing/events/{eventId}/applications'] as any).get.operationId,
+    ).toBe('getTestingEventsByEventIdApplications');
+    expect(
+      (normalized.paths['/v1/testing/events/applications/{applicationId}'] as any).get.operationId,
+    ).toBe('getTestingEventsApplicationsByApplicationId');
+    expect(
+      (normalized.paths['/v1/courses/{programId}/content/reorder'] as any).post.operationId,
+    ).toBe('postCoursesByProgramIdContentReorder');
+    expect(
+      (normalized.paths['/v1/courses/{id}/content:reorder'] as any).post.operationId,
+    ).toBe('postCoursesByIdContentReorder');
+
+    const operationIds = Object.values(normalized.paths).flatMap((pathItem: any) =>
+      Object.values(pathItem).map((operation: any) => operation.operationId),
+    );
+    expect(operationIds).not.toContain('getProducts1');
+    expect(operationIds.some((operationId) => /\d+$/.test(operationId))).toBe(false);
+  });
+
+  it('should remove redundant api version aliases before assigning operation IDs', () => {
+    const spec: OpenApiSpec = {
+      ...simpleSpec,
+      paths: {
+        '/v1/clients': {
+          get: {
+            tags: ['Clients'],
+            summary: 'List clients',
+            responses: { '200': { description: 'Success' } },
+          },
+        },
+        '/api/v1/clients': {
+          get: {
+            tags: ['Clients'],
+            summary: 'List clients',
+            responses: { '200': { description: 'Success' } },
+          },
+        },
+        '/v1/clients/{clientId}': {
+          get: {
+            tags: ['Clients'],
+            summary: 'Get client',
+            responses: { '200': { description: 'Success' } },
+          },
+        },
+        '/api/v1/clients/{clientId}': {
+          get: {
+            tags: ['Clients'],
+            summary: 'Get client',
+            responses: { '200': { description: 'Success' } },
+          },
+        },
+      },
+    } as OpenApiSpec;
+
+    const normalized = normalizeSpec(spec);
+
+    expect(normalized.paths).toHaveProperty('/v1/clients');
+    expect(normalized.paths).toHaveProperty('/v1/clients/{clientId}');
+    expect(normalized.paths).not.toHaveProperty('/api/v1/clients');
+    expect(normalized.paths).not.toHaveProperty('/api/v1/clients/{clientId}');
+    expect((normalized.paths['/v1/clients'] as any).get.operationId).toBe('getClients');
+    expect((normalized.paths['/v1/clients/{clientId}'] as any).get.operationId).toBe(
+      'getClientsByClientId',
+    );
+  });
+
+  it('should reject unresolved operation ID collisions instead of appending a number', () => {
+    const spec: OpenApiSpec = {
+      ...simpleSpec,
+      paths: {
+        '/v1/clients': {
+          get: {
+            operationId: 'getClients',
+            summary: 'Canonical clients',
+            responses: { '200': { description: 'Success' } },
+          },
+        },
+        '/api/v1/clients': {
+          get: {
+            operationId: 'getClients',
+            summary: 'Different operation that cannot be treated as an alias',
+            responses: { '200': { description: 'Success' } },
+          },
+        },
+      },
+    } as OpenApiSpec;
+
+    expect(() => normalizeSpec(spec)).toThrowError(
+      /Unable to create a unique OpenAPI operation ID without a numeric suffix/,
+    );
+  });
+
   it('should normalize tag names to PascalCase', () => {
     const spec: OpenApiSpec = {
       ...simpleSpec,

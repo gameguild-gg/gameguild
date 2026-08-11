@@ -17,7 +17,7 @@ export class LearningCoursesSupportticketsModule {
 
   /**
    */
-  async getCoursesSupportTickets(
+  async getCoursesByCourseIdSupportTickets(
     courseId: string,
     query?: { skip?: number; take?: number },
   ): Promise<Result<Types.PagedResultOfGameGuildCommerceProductsSupportTicketDto, ApiError>> {
@@ -41,7 +41,7 @@ export class LearningCoursesSupportticketsModule {
 
   /**
    */
-  async getCoursesSupportTickets1(courseId: string, ticketId: string): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
+  async getCoursesByCourseIdSupportTicketsByTicketId(courseId: string, ticketId: string): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
     const url = `/v1/courses/${courseId}/support/tickets/${ticketId}`;
 
     const result = await this.client.request({

@@ -438,7 +438,7 @@ export class CommerceSubscriptionsModule {
    *
    * Retrieves detailed information for a specific subscription.
    */
-  async getSubscriptions1(subscriptionId: string): Promise<Result<void, ApiError>> {
+  async getSubscriptionsBySubscriptionId(subscriptionId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscriptions/${subscriptionId}`;
 
     const result = await this.client.request({

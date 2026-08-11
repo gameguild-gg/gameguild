@@ -65,7 +65,7 @@ export class SocialGroupsSocialgroupsModule {
 
   /**
    */
-  async getApiSocialGroups1(id: string): Promise<Result<Types.SocialGroupsSocialGroup, ApiError>> {
+  async getApiSocialGroupsById(id: string): Promise<Result<Types.SocialGroupsSocialGroup, ApiError>> {
     const url = `/api/social/groups/${id}`;
 
     const result = await this.client.request({

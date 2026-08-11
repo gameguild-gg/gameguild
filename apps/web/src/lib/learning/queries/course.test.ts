@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   clientRequest: vi.fn(),
-  getCourses1: vi.fn(),
+  getCoursesById: vi.fn(),
   getCoursesSlug: vi.fn(),
   getCoursesAnalytics: vi.fn(),
   getCoursesUsers: vi.fn(),
-  getCoursesContent: vi.fn(),
-  getCoursesContent1: vi.fn(),
-  getUsers1: vi.fn(),
+  getCoursesByProgramIdContent: vi.fn(),
+  getCoursesByProgramIdContentById: vi.fn(),
+  getUsersByUserId: vi.fn(),
   getApiLearningEnrollmentsCourses: vi.fn(),
   getToken: vi.fn(),
 }));
@@ -22,20 +22,20 @@ vi.mock("@game-guild/client", () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
     LearningCoursesProgramModule: class {
-      getCourses1 = mocks.getCourses1;
+      getCoursesById = mocks.getCoursesById;
       getCoursesSlug = mocks.getCoursesSlug;
       getCoursesAnalytics = mocks.getCoursesAnalytics;
       getCoursesUsers = mocks.getCoursesUsers;
     },
     LearningCoursesProgramcontentModule: class {
-      getCoursesContent = mocks.getCoursesContent;
-      getCoursesContent1 = mocks.getCoursesContent1;
+      getCoursesByProgramIdContent = mocks.getCoursesByProgramIdContent;
+      getCoursesByProgramIdContentById = mocks.getCoursesByProgramIdContentById;
     },
     LearningEnrollmentsModule: class {
       getApiLearningEnrollmentsCourses = mocks.getApiLearningEnrollmentsCourses;
     },
     UsersModule: class {
-      getUsers1 = mocks.getUsers1;
+      getUsersByUserId = mocks.getUsersByUserId;
     },
   },
 }));
@@ -53,15 +53,15 @@ describe("course analytics query", () => {
     vi.restoreAllMocks();
     mocks.createServerClient.mockReturnValue({});
     mocks.clientRequest.mockReset();
-    mocks.getCourses1.mockReset();
+    mocks.getCoursesById.mockReset();
     mocks.getCoursesSlug.mockReset();
     mocks.getToken.mockResolvedValue("access-token");
     mocks.getCoursesSlug.mockReset();
     mocks.getApiLearningEnrollmentsCourses.mockReset();
     mocks.getCoursesUsers.mockReset();
-    mocks.getCoursesContent.mockReset();
-    mocks.getCoursesContent1.mockReset();
-    mocks.getUsers1.mockReset();
+    mocks.getCoursesByProgramIdContent.mockReset();
+    mocks.getCoursesByProgramIdContentById.mockReset();
+    mocks.getUsersByUserId.mockReset();
   });
 
   it("resolves dashboard course slugs through the authenticated slug endpoint", async () => {
@@ -125,7 +125,7 @@ describe("course analytics query", () => {
   });
 
   it("keeps legacy UUID route params working through the course ID endpoint", async () => {
-    mocks.getCourses1.mockResolvedValue({
+    mocks.getCoursesById.mockResolvedValue({
       ok: true,
       data: {
         id: "08691da8-245e-4d9e-b729-83c9023ba061",
@@ -140,7 +140,7 @@ describe("course analytics query", () => {
 
     const course = await getCourse("08691da8-245e-4d9e-b729-83c9023ba061");
 
-    expect(mocks.getCourses1).toHaveBeenCalledWith(
+    expect(mocks.getCoursesById).toHaveBeenCalledWith(
       "08691da8-245e-4d9e-b729-83c9023ba061",
     );
     expect(mocks.clientRequest).not.toHaveBeenCalled();
@@ -149,7 +149,7 @@ describe("course analytics query", () => {
 
   it("loads authenticated course identity through the no-store HTTP query helper", async () => {
     const courseId = "28691da8-245e-4d9e-b729-83c9023ba063";
-    mocks.getCourses1.mockResolvedValue({
+    mocks.getCoursesById.mockResolvedValue({
       ok: true,
       data: {
         id: courseId,
@@ -164,13 +164,13 @@ describe("course analytics query", () => {
 
     const course = await getCourse(courseId);
 
-    expect(mocks.getCourses1).toHaveBeenCalledWith(courseId);
+    expect(mocks.getCoursesById).toHaveBeenCalledWith(courseId);
     expect(course?.status).toBe("published");
   });
 
   it("normalizes numeric archived status returned by compatibility endpoints", async () => {
     const courseId = "38691da8-245e-4d9e-b729-83c9023ba064";
-    mocks.getCourses1.mockResolvedValue({
+    mocks.getCoursesById.mockResolvedValue({
       ok: true,
       data: {
         id: courseId,
@@ -216,7 +216,7 @@ describe("course analytics query", () => {
       sortOrder: 0,
       children: [],
     };
-    mocks.getCoursesContent.mockResolvedValue({
+    mocks.getCoursesByProgramIdContent.mockResolvedValue({
       ok: true,
       data: [
         {
@@ -324,7 +324,7 @@ describe("course analytics query", () => {
         },
       ],
     });
-    mocks.getUsers1.mockResolvedValue({
+    mocks.getUsersByUserId.mockResolvedValue({
       ok: true,
       data: { id: "user-1", name: "Ada Learner", email: "ada@example.com" },
     });
@@ -334,7 +334,7 @@ describe("course analytics query", () => {
     expect(mocks.getCoursesUsers).toHaveBeenCalledWith("course-1", {
       take: 200,
     });
-    expect(mocks.getUsers1).toHaveBeenCalledWith("user-1");
+    expect(mocks.getUsersByUserId).toHaveBeenCalledWith("user-1");
     expect(result).toEqual({
       students: [
         {

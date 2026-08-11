@@ -985,7 +985,7 @@ export async function getGroup(groupId: string): Promise<{ group: MemberGroup | 
   try {
     const client = getApiClient();
     const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
-    const result = await socialGroups.getApiSocialGroups1(groupId);
+    const result = await socialGroups.getApiSocialGroupsById(groupId);
 
     if (!result.ok) return { group: null, error: result.error.message };
 

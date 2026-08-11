@@ -56,7 +56,7 @@ export class GamejamsModule {
 
   /**
    */
-  async getApiGameJams1(id: string): Promise<Result<void, ApiError>> {
+  async getApiGameJamsById(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/game-jams/${id}`;
 
     const result = await this.client.request({

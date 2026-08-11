@@ -299,12 +299,12 @@ export const postAiPromptTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetAiPromptTemplates1Input {
+export interface GetAiPromptTemplatesByIdInput {
   id: string;
 }
-export type GetAiPromptTemplates1Output = Types.AIAiPromptTemplate;
-export const getAiPromptTemplates1Endpoint = {
-  operationId: 'getAiPromptTemplates1' as const,
+export type GetAiPromptTemplatesByIdOutput = Types.AIAiPromptTemplate;
+export const getAiPromptTemplatesByIdEndpoint = {
+  operationId: 'getAiPromptTemplatesById' as const,
   method: 'GET' as const,
   path: '/v1/ai/prompt-templates/{id}' as const,
   tags: ['Ai/promptTemplates'] as const,
@@ -637,24 +637,24 @@ export const postAssessmentsSubmissionsGradeEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetAssessmentsSubmissionsInput {
+export interface GetAssessmentsSubmissionsBySubmissionIdInput {
   submissionId: string;
 }
-export type GetAssessmentsSubmissionsOutput = void;
-export const getAssessmentsSubmissionsEndpoint = {
-  operationId: 'getAssessmentsSubmissions' as const,
+export type GetAssessmentsSubmissionsBySubmissionIdOutput = void;
+export const getAssessmentsSubmissionsBySubmissionIdEndpoint = {
+  operationId: 'getAssessmentsSubmissionsBySubmissionId' as const,
   method: 'GET' as const,
   path: '/v1/assessments/submissions/{submissionId}' as const,
   tags: ['Learning/assessments'] as const,
   requiresAuth: true,
 } as const;
 
-export interface GetAssessmentsSubmissions1Input {
+export interface GetAssessmentsByAssessmentIdSubmissionsInput {
   assessmentId: string;
 }
-export type GetAssessmentsSubmissions1Output = Array<Types.LearningAssessmentsAssessmentSubmission>;
-export const getAssessmentsSubmissions1Endpoint = {
-  operationId: 'getAssessmentsSubmissions1' as const,
+export type GetAssessmentsByAssessmentIdSubmissionsOutput = Array<Types.LearningAssessmentsAssessmentSubmission>;
+export const getAssessmentsByAssessmentIdSubmissionsEndpoint = {
+  operationId: 'getAssessmentsByAssessmentIdSubmissions' as const,
   method: 'GET' as const,
   path: '/v1/assessments/{assessmentId}/submissions' as const,
   tags: ['Learning/assessments'] as const,
@@ -1194,12 +1194,12 @@ export const postRolesEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetRoles1Input {
+export interface GetRolesByRoleIdInput {
   roleId: string;
 }
-export type GetRoles1Output = void;
-export const getRoles1Endpoint = {
-  operationId: 'getRoles1' as const,
+export type GetRolesByRoleIdOutput = void;
+export const getRolesByRoleIdEndpoint = {
+  operationId: 'getRolesByRoleId' as const,
   method: 'GET' as const,
   path: '/v1/roles/{roleId}' as const,
   tags: ['Auth/roles'] as const,
@@ -1296,12 +1296,12 @@ export const postAuthServiceAccountsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetAuthServiceAccounts1Input {
+export interface GetAuthServiceAccountsByServiceAccountIdInput {
   serviceAccountId: string;
 }
-export type GetAuthServiceAccounts1Output = Types.IdentityAuthenticationServiceAccountOutput;
-export const getAuthServiceAccounts1Endpoint = {
-  operationId: 'getAuthServiceAccounts1' as const,
+export type GetAuthServiceAccountsByServiceAccountIdOutput = Types.IdentityAuthenticationServiceAccountOutput;
+export const getAuthServiceAccountsByServiceAccountIdEndpoint = {
+  operationId: 'getAuthServiceAccountsByServiceAccountId' as const,
   method: 'GET' as const,
   path: '/v1/auth/service-accounts/{serviceAccountId}' as const,
   tags: ['Auth/serviceAccounts'] as const,
@@ -1719,12 +1719,12 @@ export const getAuthWebauthnCredentialsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetAuthWebauthnCredentials1Input {
+export interface GetAuthWebauthnCredentialsByCredentialIdInput {
   credentialId: string;
 }
-export type GetAuthWebauthnCredentials1Output = Types.IdentityAuthenticationWebAuthnCredentialInfo;
-export const getAuthWebauthnCredentials1Endpoint = {
-  operationId: 'getAuthWebauthnCredentials1' as const,
+export type GetAuthWebauthnCredentialsByCredentialIdOutput = Types.IdentityAuthenticationWebAuthnCredentialInfo;
+export const getAuthWebauthnCredentialsByCredentialIdEndpoint = {
+  operationId: 'getAuthWebauthnCredentialsByCredentialId' as const,
   method: 'GET' as const,
   path: '/v1/auth/webauthn/credentials/{credentialId}' as const,
   tags: ['Auth/webauthn'] as const,
@@ -2118,12 +2118,12 @@ export const postApiSocialBlogEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetApiSocialBlog1Input {
+export interface GetApiSocialBlogByIdInput {
   id: string;
 }
-export type GetApiSocialBlog1Output = void;
-export const getApiSocialBlog1Endpoint = {
-  operationId: 'getApiSocialBlog1' as const,
+export type GetApiSocialBlogByIdOutput = void;
+export const getApiSocialBlogByIdEndpoint = {
+  operationId: 'getApiSocialBlogById' as const,
   method: 'GET' as const,
   path: '/api/social/blog/{id}' as const,
   tags: ['Social/blog/posts'] as const,
@@ -2181,12 +2181,12 @@ export const postApiSocialBlogViewsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetTenantsCapabilitiesInput {
+export interface GetTenantsByTenantIdCapabilitiesInput {
   tenantId: string;
 }
-export type GetTenantsCapabilitiesOutput = Record<string, boolean>;
-export const getTenantsCapabilitiesEndpoint = {
-  operationId: 'getTenantsCapabilities' as const,
+export type GetTenantsByTenantIdCapabilitiesOutput = Record<string, boolean>;
+export const getTenantsByTenantIdCapabilitiesEndpoint = {
+  operationId: 'getTenantsByTenantIdCapabilities' as const,
   method: 'GET' as const,
   path: '/v1/tenants/{tenantId}/capabilities' as const,
   tags: ['Features/capabilities'] as const,
@@ -2206,13 +2206,13 @@ export const postTenantsCapabilitiesEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetTenantsCapabilities1Input {
+export interface GetTenantsByTenantIdCapabilitiesByCapabilityInput {
   tenantId: string;
   capability: string;
 }
-export type GetTenantsCapabilities1Output = Types.FeaturesCapabilityCheckOutput;
-export const getTenantsCapabilities1Endpoint = {
-  operationId: 'getTenantsCapabilities1' as const,
+export type GetTenantsByTenantIdCapabilitiesByCapabilityOutput = Types.FeaturesCapabilityCheckOutput;
+export const getTenantsByTenantIdCapabilitiesByCapabilityEndpoint = {
+  operationId: 'getTenantsByTenantIdCapabilitiesByCapability' as const,
   method: 'GET' as const,
   path: '/v1/tenants/{tenantId}/capabilities/{capability}' as const,
   tags: ['Features/capabilities'] as const,
@@ -2450,45 +2450,6 @@ export const postClientsEndpoint = {
 } as const;
 
 /**
- * List B2B client accounts
- *
- * Lists client accounts through the canonical tenant page query.
- */
-export interface GetClients1Input {
-  query?: {
-    page?: number;
-    pageSize?: number;
-    status?: string;
-    searchTerm?: string;
-  };
-}
-export type GetClients1Output = Types.PagedResultOfGameGuildIdentityTenantsTenant;
-export const getClients1Endpoint = {
-  operationId: 'getClients1' as const,
-  method: 'GET' as const,
-  path: '/api/v1/clients' as const,
-  tags: ['Commerce/subscriptions/clients'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
- * Create a B2B client account
- *
- * Creates a client account using the canonical tenant creation workflow.
- */
-export interface PostClients1Input {
-  body?: Types.CommerceSubscriptionsCreateClientInput;
-}
-export type PostClients1Output = void;
-export const postClients1Endpoint = {
-  operationId: 'postClients1' as const,
-  method: 'POST' as const,
-  path: '/api/v1/clients' as const,
-  tags: ['Commerce/subscriptions/clients'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
  * Get a B2B client account
  */
 export interface GetClientByIdInput {
@@ -2531,53 +2492,6 @@ export const deleteClientsEndpoint = {
   operationId: 'deleteClients' as const,
   method: 'DELETE' as const,
   path: '/v1/clients/{clientId}' as const,
-  tags: ['Commerce/subscriptions/clients'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
- * Get a B2B client account
- */
-export interface GetClients2Input {
-  clientId: string;
-}
-export type GetClients2Output = Types.IdentityTenantsTenant;
-export const getClients2Endpoint = {
-  operationId: 'getClients2' as const,
-  method: 'GET' as const,
-  path: '/api/v1/clients/{clientId}' as const,
-  tags: ['Commerce/subscriptions/clients'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
- * Update a B2B client account
- */
-export interface PutClients1Input {
-  clientId: string;
-  body?: Types.IdentityTenantsUpdateTenantInput;
-}
-export type PutClients1Output = void;
-export const putClients1Endpoint = {
-  operationId: 'putClients1' as const,
-  method: 'PUT' as const,
-  path: '/api/v1/clients/{clientId}' as const,
-  tags: ['Commerce/subscriptions/clients'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
- * Archive a B2B client account
- */
-export interface DeleteClients1Input {
-  clientId: string;
-  body?: Types.IdentityTenantsArchiveInput;
-}
-export type DeleteClients1Output = void;
-export const deleteClients1Endpoint = {
-  operationId: 'deleteClients1' as const,
-  method: 'DELETE' as const,
-  path: '/api/v1/clients/{clientId}' as const,
   tags: ['Commerce/subscriptions/clients'] as const,
   requiresAuth: true,
 } as const;
@@ -2632,60 +2546,6 @@ export const patchClientsModulesEndpoint = {
   operationId: 'patchClientsModules' as const,
   method: 'PATCH' as const,
   path: '/v1/clients/{clientId}/modules' as const,
-  tags: ['Commerce/subscriptions/clients'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
- * List contracted modules for a B2B client
- *
- * Returns subscription-backed modules plus tenant feature flags for a client account.
- */
-export interface GetClientsModules1Input {
-  clientId: string;
-  query?: {
-    page?: number;
-    pageSize?: number;
-    status?: Types.CommerceSubscriptionsSubscriptionStatus;
-  };
-}
-export type GetClientsModules1Output = Types.CommerceSubscriptionsClientModulesOutput;
-export const getClientsModules1Endpoint = {
-  operationId: 'getClientsModules1' as const,
-  method: 'GET' as const,
-  path: '/api/v1/clients/{clientId}/modules' as const,
-  tags: ['Commerce/subscriptions/clients'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
- * Update contracted module toggles for a B2B client
- */
-export interface PutClientsModules1Input {
-  clientId: string;
-  body?: Types.IdentityTenantsUpdateTenantFeatureFlagsInput;
-}
-export type PutClientsModules1Output = void;
-export const putClientsModules1Endpoint = {
-  operationId: 'putClientsModules1' as const,
-  method: 'PUT' as const,
-  path: '/api/v1/clients/{clientId}/modules' as const,
-  tags: ['Commerce/subscriptions/clients'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
- * Update contracted module toggles for a B2B client
- */
-export interface PatchClientsModules1Input {
-  clientId: string;
-  body?: Types.IdentityTenantsUpdateTenantFeatureFlagsInput;
-}
-export type PatchClientsModules1Output = void;
-export const patchClientsModules1Endpoint = {
-  operationId: 'patchClientsModules1' as const,
-  method: 'PATCH' as const,
-  path: '/api/v1/clients/{clientId}/modules' as const,
   tags: ['Commerce/subscriptions/clients'] as const,
   requiresAuth: true,
 } as const;
@@ -3334,12 +3194,12 @@ export const postSubscriptionsEndpoint = {
  *
  * Retrieves detailed information for a specific subscription.
  */
-export interface GetSubscriptions1Input {
+export interface GetSubscriptionsBySubscriptionIdInput {
   subscriptionId: string;
 }
-export type GetSubscriptions1Output = void;
-export const getSubscriptions1Endpoint = {
-  operationId: 'getSubscriptions1' as const,
+export type GetSubscriptionsBySubscriptionIdOutput = void;
+export const getSubscriptionsBySubscriptionIdEndpoint = {
+  operationId: 'getSubscriptionsBySubscriptionId' as const,
   method: 'GET' as const,
   path: '/api/v1/subscriptions/{subscriptionId}' as const,
   tags: ['Commerce/subscriptions'] as const,
@@ -3737,12 +3597,12 @@ export const postSubscriptionPlansCompareEndpoint = {
  *
  * Retrieves detailed information for a specific subscription plan.
  */
-export interface GetSubscriptionPlans1Input {
+export interface GetSubscriptionPlansByPlanIdInput {
   planId: string;
 }
-export type GetSubscriptionPlans1Output = void;
-export const getSubscriptionPlans1Endpoint = {
-  operationId: 'getSubscriptionPlans1' as const,
+export type GetSubscriptionPlansByPlanIdOutput = void;
+export const getSubscriptionPlansByPlanIdEndpoint = {
+  operationId: 'getSubscriptionPlansByPlanId' as const,
   method: 'GET' as const,
   path: '/v1/subscription-plans/{planId}' as const,
   tags: ['Commerce/subscriptions/plans'] as const,
@@ -4032,12 +3892,12 @@ export const postPagesEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetPages1Input {
+export interface GetPagesByIdInput {
   id: string;
 }
-export type GetPages1Output = Types.ContentPagesPage;
-export const getPages1Endpoint = {
-  operationId: 'getPages1' as const,
+export type GetPagesByIdOutput = Types.ContentPagesPage;
+export const getPagesByIdEndpoint = {
+  operationId: 'getPagesById' as const,
   method: 'GET' as const,
   path: '/v1/pages/{id}' as const,
   tags: ['Content/pages'] as const,
@@ -4119,12 +3979,12 @@ export const postPagesUnpublishEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetPagesSectionsInput {
+export interface GetPagesByPageIdSectionsInput {
   pageId: string;
 }
-export type GetPagesSectionsOutput = Array<Types.ContentPagesPageSection>;
-export const getPagesSectionsEndpoint = {
-  operationId: 'getPagesSections' as const,
+export type GetPagesByPageIdSectionsOutput = Array<Types.ContentPagesPageSection>;
+export const getPagesByPageIdSectionsEndpoint = {
+  operationId: 'getPagesByPageIdSections' as const,
   method: 'GET' as const,
   path: '/v1/pages/{pageId}/sections' as const,
   tags: ['Content/pages'] as const,
@@ -4144,13 +4004,13 @@ export const postPagesSectionsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetPagesSections1Input {
+export interface GetPagesByPageIdSectionsBySectionIdInput {
   pageId: string;
   sectionId: string;
 }
-export type GetPagesSections1Output = Types.ContentPagesPageSection;
-export const getPagesSections1Endpoint = {
-  operationId: 'getPagesSections1' as const,
+export type GetPagesByPageIdSectionsBySectionIdOutput = Types.ContentPagesPageSection;
+export const getPagesByPageIdSectionsBySectionIdEndpoint = {
+  operationId: 'getPagesByPageIdSectionsBySectionId' as const,
   method: 'GET' as const,
   path: '/v1/pages/{pageId}/sections/{sectionId}' as const,
   tags: ['Content/pages'] as const,
@@ -4242,12 +4102,12 @@ export const postContentResourcesEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetContentResources1Input {
+export interface GetContentResourcesByIdInput {
   id: string;
 }
-export type GetContentResources1Output = Types.ContentPagesContentResource;
-export const getContentResources1Endpoint = {
-  operationId: 'getContentResources1' as const,
+export type GetContentResourcesByIdOutput = Types.ContentPagesContentResource;
+export const getContentResourcesByIdEndpoint = {
+  operationId: 'getContentResourcesById' as const,
   method: 'GET' as const,
   path: '/v1/content-resources/{id}' as const,
   tags: ['Content/pages/resources'] as const,
@@ -4500,29 +4360,29 @@ export const postCoursesStudentsMessageEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetCoursesSupportTicketsInput {
+export interface GetCoursesByCourseIdSupportTicketsInput {
   courseId: string;
   query?: {
     skip?: number;
     take?: number;
   };
 }
-export type GetCoursesSupportTicketsOutput = Types.PagedResultOfGameGuildCommerceProductsSupportTicketDto;
-export const getCoursesSupportTicketsEndpoint = {
-  operationId: 'getCoursesSupportTickets' as const,
+export type GetCoursesByCourseIdSupportTicketsOutput = Types.PagedResultOfGameGuildCommerceProductsSupportTicketDto;
+export const getCoursesByCourseIdSupportTicketsEndpoint = {
+  operationId: 'getCoursesByCourseIdSupportTickets' as const,
   method: 'GET' as const,
   path: '/v1/courses/{courseId}/support/tickets' as const,
   tags: ['Learning/courses/supportTickets'] as const,
   requiresAuth: true,
 } as const;
 
-export interface GetCoursesSupportTickets1Input {
+export interface GetCoursesByCourseIdSupportTicketsByTicketIdInput {
   courseId: string;
   ticketId: string;
 }
-export type GetCoursesSupportTickets1Output = Types.CommerceProductsSupportTicket;
-export const getCoursesSupportTickets1Endpoint = {
-  operationId: 'getCoursesSupportTickets1' as const,
+export type GetCoursesByCourseIdSupportTicketsByTicketIdOutput = Types.CommerceProductsSupportTicket;
+export const getCoursesByCourseIdSupportTicketsByTicketIdEndpoint = {
+  operationId: 'getCoursesByCourseIdSupportTicketsByTicketId' as const,
   method: 'GET' as const,
   path: '/v1/courses/{courseId}/support/tickets/{ticketId}' as const,
   tags: ['Learning/courses/supportTickets'] as const,
@@ -4605,12 +4465,12 @@ export const getDiscoveryFeaturedTypeEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetDiscoveryFeatured1Input {
+export interface GetDiscoveryFeaturedByIdInput {
   id: string;
 }
-export type GetDiscoveryFeatured1Output = Types.LearningExperienceDiscoveryFeaturedContent;
-export const getDiscoveryFeatured1Endpoint = {
-  operationId: 'getDiscoveryFeatured1' as const,
+export type GetDiscoveryFeaturedByIdOutput = Types.LearningExperienceDiscoveryFeaturedContent;
+export const getDiscoveryFeaturedByIdEndpoint = {
+  operationId: 'getDiscoveryFeaturedById' as const,
   method: 'GET' as const,
   path: '/v1/discovery/featured/{id}' as const,
   tags: ['Learning/experience/discovery'] as const,
@@ -4720,12 +4580,12 @@ export const getDiscoveryCollectionsSlugEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetDiscoveryCollections1Input {
+export interface GetDiscoveryCollectionsByIdInput {
   id: string;
 }
-export type GetDiscoveryCollections1Output = Types.LearningExperienceDiscoveryCourseCollection;
-export const getDiscoveryCollections1Endpoint = {
-  operationId: 'getDiscoveryCollections1' as const,
+export type GetDiscoveryCollectionsByIdOutput = Types.LearningExperienceDiscoveryCourseCollection;
+export const getDiscoveryCollectionsByIdEndpoint = {
+  operationId: 'getDiscoveryCollectionsById' as const,
   method: 'GET' as const,
   path: '/v1/discovery/collections/{id}' as const,
   tags: ['Learning/experience/discovery'] as const,
@@ -5040,12 +4900,12 @@ export const getEconomyPayoutsEndpoint = {
 /**
  * Get my payout operation
  */
-export interface GetEconomyPayouts1Input {
+export interface GetEconomyPayoutsByOperationIdInput {
   operationId: string;
 }
-export type GetEconomyPayouts1Output = Types.EconomyPayoutsQueriesEconomyPayoutOperation;
-export const getEconomyPayouts1Endpoint = {
-  operationId: 'getEconomyPayouts1' as const,
+export type GetEconomyPayoutsByOperationIdOutput = Types.EconomyPayoutsQueriesEconomyPayoutOperation;
+export const getEconomyPayoutsByOperationIdEndpoint = {
+  operationId: 'getEconomyPayoutsByOperationId' as const,
   method: 'GET' as const,
   path: '/api/v1/economy/payouts/{operationId}' as const,
   tags: ['Economy'] as const,
@@ -5502,12 +5362,12 @@ export const postApiGameJamsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetApiGameJams1Input {
+export interface GetApiGameJamsByIdInput {
   id: string;
 }
-export type GetApiGameJams1Output = void;
-export const getApiGameJams1Endpoint = {
-  operationId: 'getApiGameJams1' as const,
+export type GetApiGameJamsByIdOutput = void;
+export const getApiGameJamsByIdEndpoint = {
+  operationId: 'getApiGameJamsById' as const,
   method: 'GET' as const,
   path: '/api/game-jams/{id}' as const,
   tags: ['GameJams'] as const,
@@ -5706,12 +5566,12 @@ export const postLaunchPadEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetLaunchPad1Input {
+export interface GetLaunchPadByIdInput {
   id: string;
 }
-export type GetLaunchPad1Output = Types.LaunchPadLaunchPlan;
-export const getLaunchPad1Endpoint = {
-  operationId: 'getLaunchPad1' as const,
+export type GetLaunchPadByIdOutput = Types.LaunchPadLaunchPlan;
+export const getLaunchPadByIdEndpoint = {
+  operationId: 'getLaunchPadById' as const,
   method: 'GET' as const,
   path: '/v1/launch-pad/{id}' as const,
   tags: ['LaunchPad'] as const,
@@ -5889,12 +5749,12 @@ export const getLearningPathsSlugEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetLearningPaths1Input {
+export interface GetLearningPathsByIdInput {
   id: string;
 }
-export type GetLearningPaths1Output = Types.LearningExperienceLearningPathsLearningPathDetail;
-export const getLearningPaths1Endpoint = {
-  operationId: 'getLearningPaths1' as const,
+export type GetLearningPathsByIdOutput = Types.LearningExperienceLearningPathsLearningPathDetail;
+export const getLearningPathsByIdEndpoint = {
+  operationId: 'getLearningPathsById' as const,
   method: 'GET' as const,
   path: '/v1/learning-paths/{id}' as const,
   tags: ['Learning/experience/learningPaths/learningPath'] as const,
@@ -6532,25 +6392,25 @@ export const getApiPrerequisitesCourseChainEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetApiPrerequisitesCourseCheckInput {
+export interface GetApiPrerequisitesCourseByCourseIdCheckInput {
   courseId: string;
 }
-export type GetApiPrerequisitesCourseCheckOutput = Types.LearningCoursesPrerequisiteCheckResult;
-export const getApiPrerequisitesCourseCheckEndpoint = {
-  operationId: 'getApiPrerequisitesCourseCheck' as const,
+export type GetApiPrerequisitesCourseByCourseIdCheckOutput = Types.LearningCoursesPrerequisiteCheckResult;
+export const getApiPrerequisitesCourseByCourseIdCheckEndpoint = {
+  operationId: 'getApiPrerequisitesCourseByCourseIdCheck' as const,
   method: 'GET' as const,
   path: '/api/prerequisites/course/{courseId}/check' as const,
   tags: ['Learning/courses/prerequisites'] as const,
   requiresAuth: true,
 } as const;
 
-export interface GetApiPrerequisitesCourseCheck1Input {
+export interface GetApiPrerequisitesCourseByCourseIdCheckByUserIdInput {
   courseId: string;
   userId: string;
 }
-export type GetApiPrerequisitesCourseCheck1Output = Types.LearningCoursesPrerequisiteCheckResult;
-export const getApiPrerequisitesCourseCheck1Endpoint = {
-  operationId: 'getApiPrerequisitesCourseCheck1' as const,
+export type GetApiPrerequisitesCourseByCourseIdCheckByUserIdOutput = Types.LearningCoursesPrerequisiteCheckResult;
+export const getApiPrerequisitesCourseByCourseIdCheckByUserIdEndpoint = {
+  operationId: 'getApiPrerequisitesCourseByCourseIdCheckByUserId' as const,
   method: 'GET' as const,
   path: '/api/prerequisites/course/{courseId}/check/{userId}' as const,
   tags: ['Learning/courses/prerequisites'] as const,
@@ -6583,16 +6443,16 @@ export const getApiPrerequisitesCourseWouldCreateCycleEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetProductsInput {
+export interface GetProductsByProductIdInput {
   productId: string;
   query?: {
     includePricing?: boolean;
     includeUnpublished?: boolean;
   };
 }
-export type GetProductsOutput = Types.CommerceProductsProduct;
-export const getProductsEndpoint = {
-  operationId: 'getProducts' as const,
+export type GetProductsByProductIdOutput = Types.CommerceProductsProduct;
+export const getProductsByProductIdEndpoint = {
+  operationId: 'getProductsByProductId' as const,
   method: 'GET' as const,
   path: '/v1/products/{productId}' as const,
   tags: ['Commerce/products'] as const,
@@ -6671,7 +6531,7 @@ export const getProductsPricingEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetProducts1Input {
+export interface GetProductsInput {
   query?: {
     type?: Types.CommerceProductsProductType;
     creatorId?: string;
@@ -6684,9 +6544,9 @@ export interface GetProducts1Input {
     sortDirection?: string;
   };
 }
-export type GetProducts1Output = Types.PagedResultOfGameGuildCommerceProductsProductDto;
-export const getProducts1Endpoint = {
-  operationId: 'getProducts1' as const,
+export type GetProductsOutput = Types.PagedResultOfGameGuildCommerceProductsProductDto;
+export const getProductsEndpoint = {
+  operationId: 'getProducts' as const,
   method: 'GET' as const,
   path: '/v1/products' as const,
   tags: ['Commerce/products'] as const,
@@ -6753,15 +6613,15 @@ export const postProductsArchiveEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetCoursesContentInput {
+export interface GetCoursesByProgramIdContentInput {
   programId: string;
   query?: {
     level?: string;
   };
 }
-export type GetCoursesContentOutput = Array<Types.LearningCoursesProgramContent>;
-export const getCoursesContentEndpoint = {
-  operationId: 'getCoursesContent' as const,
+export type GetCoursesByProgramIdContentOutput = Array<Types.LearningCoursesProgramContent>;
+export const getCoursesByProgramIdContentEndpoint = {
+  operationId: 'getCoursesByProgramIdContent' as const,
   method: 'GET' as const,
   path: '/v1/courses/{programId}/content' as const,
   tags: ['Learning/courses/programContent'] as const,
@@ -6781,13 +6641,13 @@ export const postCoursesContentEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetCoursesContent1Input {
+export interface GetCoursesByProgramIdContentByIdInput {
   programId: string;
   id: string;
 }
-export type GetCoursesContent1Output = Types.LearningCoursesProgramContent;
-export const getCoursesContent1Endpoint = {
-  operationId: 'getCoursesContent1' as const,
+export type GetCoursesByProgramIdContentByIdOutput = Types.LearningCoursesProgramContent;
+export const getCoursesByProgramIdContentByIdEndpoint = {
+  operationId: 'getCoursesByProgramIdContentById' as const,
   method: 'GET' as const,
   path: '/v1/courses/{programId}/content/{id}' as const,
   tags: ['Learning/courses/programContent'] as const,
@@ -6848,13 +6708,13 @@ export const getCoursesContentChildrenEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface PostCoursesContentReorderInput {
+export interface PostCoursesByProgramIdContentReorderInput {
   programId: string;
   body?: Types.LearningCoursesReorderContent;
 }
-export type PostCoursesContentReorderOutput = void;
-export const postCoursesContentReorderEndpoint = {
-  operationId: 'postCoursesContentReorder' as const,
+export type PostCoursesByProgramIdContentReorderOutput = void;
+export const postCoursesByProgramIdContentReorderEndpoint = {
+  operationId: 'postCoursesByProgramIdContentReorder' as const,
   method: 'POST' as const,
   path: '/v1/courses/{programId}/content/reorder' as const,
   tags: ['Learning/courses/programContent'] as const,
@@ -6996,12 +6856,12 @@ export const getCoursesMeEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetCourses1Input {
+export interface GetCoursesByIdInput {
   id: string;
 }
-export type GetCourses1Output = Types.LearningCoursesProgram;
-export const getCourses1Endpoint = {
-  operationId: 'getCourses1' as const,
+export type GetCoursesByIdOutput = Types.LearningCoursesProgram;
+export const getCoursesByIdEndpoint = {
+  operationId: 'getCoursesById' as const,
   method: 'GET' as const,
   path: '/v1/courses/{id}' as const,
   tags: ['Learning/courses/program'] as const,
@@ -7082,13 +6942,13 @@ export const postCoursesSelfEnrollEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface PostCoursesContentReorder1Input {
+export interface PostCoursesByIdContentReorderInput {
   id: string;
   body?: Types.LearningCoursesReorderContent;
 }
-export type PostCoursesContentReorder1Output = void;
-export const postCoursesContentReorder1Endpoint = {
-  operationId: 'postCoursesContentReorder1' as const,
+export type PostCoursesByIdContentReorderOutput = void;
+export const postCoursesByIdContentReorderEndpoint = {
+  operationId: 'postCoursesByIdContentReorder' as const,
   method: 'POST' as const,
   path: '/v1/courses/{id}/content:reorder' as const,
   tags: ['Learning/courses/program'] as const,
@@ -7615,7 +7475,7 @@ export const postProjectsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetProjects1Input {
+export interface GetProjectsByIdInput {
   id: string;
   query?: {
     includeTeam?: boolean;
@@ -7624,9 +7484,9 @@ export interface GetProjects1Input {
     includeStatistics?: boolean;
   };
 }
-export type GetProjects1Output = Types.ProjectsProject;
-export const getProjects1Endpoint = {
-  operationId: 'getProjects1' as const,
+export type GetProjectsByIdOutput = Types.ProjectsProject;
+export const getProjectsByIdEndpoint = {
+  operationId: 'getProjectsById' as const,
   method: 'GET' as const,
   path: '/v1/projects/{id}' as const,
   tags: ['Projects'] as const,
@@ -8048,12 +7908,12 @@ export const postPromoCodesEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetPromoCodes1Input {
+export interface GetPromoCodesByPromoCodeIdInput {
   promoCodeId: string;
 }
-export type GetPromoCodes1Output = Types.CommerceProductsPromoCode;
-export const getPromoCodes1Endpoint = {
-  operationId: 'getPromoCodes1' as const,
+export type GetPromoCodesByPromoCodeIdOutput = Types.CommerceProductsPromoCode;
+export const getPromoCodesByPromoCodeIdEndpoint = {
+  operationId: 'getPromoCodesByPromoCodeId' as const,
   method: 'GET' as const,
   path: '/v1/promo-codes/{promoCodeId}' as const,
   tags: ['Commerce/products/promoCodes'] as const,
@@ -8876,12 +8736,12 @@ export const postApiSocialGroupsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetApiSocialGroups1Input {
+export interface GetApiSocialGroupsByIdInput {
   id: string;
 }
-export type GetApiSocialGroups1Output = Types.SocialGroupsSocialGroup;
-export const getApiSocialGroups1Endpoint = {
-  operationId: 'getApiSocialGroups1' as const,
+export type GetApiSocialGroupsByIdOutput = Types.SocialGroupsSocialGroup;
+export const getApiSocialGroupsByIdEndpoint = {
+  operationId: 'getApiSocialGroupsById' as const,
   method: 'GET' as const,
   path: '/api/social/groups/{id}' as const,
   tags: ['Social/groups/socialGroups'] as const,
@@ -9152,12 +9012,12 @@ export const postTaxJurisdictionsEndpoint = {
  *
  * Retrieves detailed information for a specific tax jurisdiction.
  */
-export interface GetTaxJurisdictions1Input {
+export interface GetTaxJurisdictionsByJurisdictionIdInput {
   jurisdictionId: string;
 }
-export type GetTaxJurisdictions1Output = Types.CommercePaymentsTaxJurisdictionDto;
-export const getTaxJurisdictions1Endpoint = {
-  operationId: 'getTaxJurisdictions1' as const,
+export type GetTaxJurisdictionsByJurisdictionIdOutput = Types.CommercePaymentsTaxJurisdictionDto;
+export const getTaxJurisdictionsByJurisdictionIdEndpoint = {
+  operationId: 'getTaxJurisdictionsByJurisdictionId' as const,
   method: 'GET' as const,
   path: '/api/v1/tax-jurisdictions/{jurisdictionId}' as const,
   tags: ['Commerce/payments/taxJurisdictions'] as const,
@@ -9237,12 +9097,12 @@ export const postTaxRulesEndpoint = {
  *
  * Retrieves detailed information for a specific tax rule.
  */
-export interface GetTaxRules1Input {
+export interface GetTaxRulesByRuleIdInput {
   ruleId: string;
 }
-export type GetTaxRules1Output = Types.CommercePaymentsTaxRuleDto;
-export const getTaxRules1Endpoint = {
-  operationId: 'getTaxRules1' as const,
+export type GetTaxRulesByRuleIdOutput = Types.CommercePaymentsTaxRuleDto;
+export const getTaxRulesByRuleIdEndpoint = {
+  operationId: 'getTaxRulesByRuleId' as const,
   method: 'GET' as const,
   path: '/api/v1/tax-rules/{ruleId}' as const,
   tags: ['Commerce/payments/taxRules'] as const,
@@ -9534,12 +9394,12 @@ export const postTenantsPurgeEndpoint = {
  *
  * Activates a tenant organization by ID.
  */
-export interface PostTenantsActivate1Input {
+export interface PostTenantsByTenantIdActivateInput {
   tenantId: string;
 }
-export type PostTenantsActivate1Output = void;
-export const postTenantsActivate1Endpoint = {
-  operationId: 'postTenantsActivate1' as const,
+export type PostTenantsByTenantIdActivateOutput = void;
+export const postTenantsByTenantIdActivateEndpoint = {
+  operationId: 'postTenantsByTenantIdActivate' as const,
   method: 'POST' as const,
   path: '/v1/tenants/{tenantId}:activate' as const,
   tags: ['Tenants'] as const,
@@ -9551,12 +9411,12 @@ export const postTenantsActivate1Endpoint = {
  *
  * Deactivates a tenant organization by ID.
  */
-export interface PostTenantsDeactivate1Input {
+export interface PostTenantsByTenantIdDeactivateInput {
   tenantId: string;
 }
-export type PostTenantsDeactivate1Output = void;
-export const postTenantsDeactivate1Endpoint = {
-  operationId: 'postTenantsDeactivate1' as const,
+export type PostTenantsByTenantIdDeactivateOutput = void;
+export const postTenantsByTenantIdDeactivateEndpoint = {
+  operationId: 'postTenantsByTenantIdDeactivate' as const,
   method: 'POST' as const,
   path: '/v1/tenants/{tenantId}:deactivate' as const,
   tags: ['Tenants'] as const,
@@ -9568,13 +9428,13 @@ export const postTenantsDeactivate1Endpoint = {
  *
  * Archives a tenant organization by ID.
  */
-export interface PostTenantsArchive1Input {
+export interface PostTenantsByTenantIdArchiveInput {
   tenantId: string;
   body?: Types.IdentityTenantsArchiveInput;
 }
-export type PostTenantsArchive1Output = void;
-export const postTenantsArchive1Endpoint = {
-  operationId: 'postTenantsArchive1' as const,
+export type PostTenantsByTenantIdArchiveOutput = void;
+export const postTenantsByTenantIdArchiveEndpoint = {
+  operationId: 'postTenantsByTenantIdArchive' as const,
   method: 'POST' as const,
   path: '/v1/tenants/{tenantId}:archive' as const,
   tags: ['Tenants'] as const,
@@ -9586,13 +9446,13 @@ export const postTenantsArchive1Endpoint = {
  *
  * Undeletes a previously soft-deleted (archived) tenant organization.
  */
-export interface PostTenantsUndelete1Input {
+export interface PostTenantsByTenantIdUndeleteInput {
   tenantId: string;
   body?: Types.IdentityTenantsRecoverInput;
 }
-export type PostTenantsUndelete1Output = void;
-export const postTenantsUndelete1Endpoint = {
-  operationId: 'postTenantsUndelete1' as const,
+export type PostTenantsByTenantIdUndeleteOutput = void;
+export const postTenantsByTenantIdUndeleteEndpoint = {
+  operationId: 'postTenantsByTenantIdUndelete' as const,
   method: 'POST' as const,
   path: '/v1/tenants/{tenantId}:undelete' as const,
   tags: ['Tenants'] as const,
@@ -9604,12 +9464,12 @@ export const postTenantsUndelete1Endpoint = {
  *
  * Permanently and irreversibly deletes a tenant organization. Admin operation requiring proper authorization.
  */
-export interface PostTenantsPurge1Input {
+export interface PostTenantsByTenantIdPurgeInput {
   tenantId: string;
 }
-export type PostTenantsPurge1Output = void;
-export const postTenantsPurge1Endpoint = {
-  operationId: 'postTenantsPurge1' as const,
+export type PostTenantsByTenantIdPurgeOutput = void;
+export const postTenantsByTenantIdPurgeEndpoint = {
+  operationId: 'postTenantsByTenantIdPurge' as const,
   method: 'POST' as const,
   path: '/v1/tenants/{tenantId}:purge' as const,
   tags: ['Tenants'] as const,
@@ -9723,12 +9583,12 @@ export const postTenantsValidateEndpoint = {
  *
  * Retrieves detailed information for a specific tenant by their unique identifier.
  */
-export interface GetTenants1Input {
+export interface GetTenantsByTenantIdInput {
   tenantId: string;
 }
-export type GetTenants1Output = Types.IdentityTenantsTenant;
-export const getTenants1Endpoint = {
-  operationId: 'getTenants1' as const,
+export type GetTenantsByTenantIdOutput = Types.IdentityTenantsTenant;
+export const getTenantsByTenantIdEndpoint = {
+  operationId: 'getTenantsByTenantId' as const,
   method: 'GET' as const,
   path: '/v1/tenants/{tenantId}' as const,
   tags: ['Tenants'] as const,
@@ -10006,12 +9866,12 @@ export const patchTenantsMetadataTagsEndpoint = {
  *
  * Retrieves all configured resource quotas for a specific tenant organization.
  */
-export interface GetTenantsQuotasInput {
+export interface GetTenantsByTenantIdQuotasInput {
   tenantId: string;
 }
-export type GetTenantsQuotasOutput = Array<Types.ResourcesResourceQuotaOutput>;
-export const getTenantsQuotasEndpoint = {
-  operationId: 'getTenantsQuotas' as const,
+export type GetTenantsByTenantIdQuotasOutput = Array<Types.ResourcesResourceQuotaOutput>;
+export const getTenantsByTenantIdQuotasEndpoint = {
+  operationId: 'getTenantsByTenantIdQuotas' as const,
   method: 'GET' as const,
   path: '/v1/tenants/{tenantId}/quotas' as const,
   tags: ['Tenants/quotas'] as const,
@@ -10023,13 +9883,13 @@ export const getTenantsQuotasEndpoint = {
  *
  * Retrieves the quota configuration for a specific resource type for a tenant.
  */
-export interface GetTenantsQuotas1Input {
+export interface GetTenantsByTenantIdQuotasByTypeInput {
   tenantId: string;
   type: Types.ResourcesResourceUsageType;
 }
-export type GetTenantsQuotas1Output = Types.ResourcesResourceQuotaOutput;
-export const getTenantsQuotas1Endpoint = {
-  operationId: 'getTenantsQuotas1' as const,
+export type GetTenantsByTenantIdQuotasByTypeOutput = Types.ResourcesResourceQuotaOutput;
+export const getTenantsByTenantIdQuotasByTypeEndpoint = {
+  operationId: 'getTenantsByTenantIdQuotasByType' as const,
   method: 'GET' as const,
   path: '/v1/tenants/{tenantId}/quotas/{type}' as const,
   tags: ['Tenants/quotas'] as const,
@@ -10311,15 +10171,15 @@ export const postTenantsResourcesResetEndpoint = {
  *
  * Retrieves all resource metadata entries for a specific tenant, optionally filtered by category.
  */
-export interface GetTenantsResourcesMetadataInput {
+export interface GetTenantsByTenantIdResourcesMetadataInput {
   tenantId: string;
   query?: {
     category?: string;
   };
 }
-export type GetTenantsResourcesMetadataOutput = Array<Types.ResourcesResourceMetadata>;
-export const getTenantsResourcesMetadataEndpoint = {
-  operationId: 'getTenantsResourcesMetadata' as const,
+export type GetTenantsByTenantIdResourcesMetadataOutput = Array<Types.ResourcesResourceMetadata>;
+export const getTenantsByTenantIdResourcesMetadataEndpoint = {
+  operationId: 'getTenantsByTenantIdResourcesMetadata' as const,
   method: 'GET' as const,
   path: '/v1/tenants/{tenantId}/resources/metadata' as const,
   tags: ['Tenants/resources/metadata'] as const,
@@ -10331,13 +10191,13 @@ export const getTenantsResourcesMetadataEndpoint = {
  *
  * Retrieves a specific resource metadata entry by its key for a tenant.
  */
-export interface GetTenantsResourcesMetadata1Input {
+export interface GetTenantsByTenantIdResourcesMetadataByKeyInput {
   tenantId: string;
   key: string;
 }
-export type GetTenantsResourcesMetadata1Output = Types.ResourcesResourceMetadata;
-export const getTenantsResourcesMetadata1Endpoint = {
-  operationId: 'getTenantsResourcesMetadata1' as const,
+export type GetTenantsByTenantIdResourcesMetadataByKeyOutput = Types.ResourcesResourceMetadata;
+export const getTenantsByTenantIdResourcesMetadataByKeyEndpoint = {
+  operationId: 'getTenantsByTenantIdResourcesMetadataByKey' as const,
   method: 'GET' as const,
   path: '/v1/tenants/{tenantId}/resources/metadata/{key}' as const,
   tags: ['Tenants/resources/metadata'] as const,
@@ -10386,15 +10246,15 @@ export const deleteTenantsResourcesMetadataEndpoint = {
  *
  * Retrieves all resource settings for a specific tenant, optionally filtered by category.
  */
-export interface GetTenantsResourcesSettingsInput {
+export interface GetTenantsByTenantIdResourcesSettingsInput {
   tenantId: string;
   query?: {
     category?: string;
   };
 }
-export type GetTenantsResourcesSettingsOutput = Array<Types.ResourcesResourceSettings>;
-export const getTenantsResourcesSettingsEndpoint = {
-  operationId: 'getTenantsResourcesSettings' as const,
+export type GetTenantsByTenantIdResourcesSettingsOutput = Array<Types.ResourcesResourceSettings>;
+export const getTenantsByTenantIdResourcesSettingsEndpoint = {
+  operationId: 'getTenantsByTenantIdResourcesSettings' as const,
   method: 'GET' as const,
   path: '/v1/tenants/{tenantId}/resources/settings' as const,
   tags: ['Tenants/resources/settings'] as const,
@@ -10406,13 +10266,13 @@ export const getTenantsResourcesSettingsEndpoint = {
  *
  * Retrieves a specific resource setting by its key for a tenant.
  */
-export interface GetTenantsResourcesSettings1Input {
+export interface GetTenantsByTenantIdResourcesSettingsByKeyInput {
   tenantId: string;
   key: string;
 }
-export type GetTenantsResourcesSettings1Output = Types.ResourcesResourceSettings;
-export const getTenantsResourcesSettings1Endpoint = {
-  operationId: 'getTenantsResourcesSettings1' as const,
+export type GetTenantsByTenantIdResourcesSettingsByKeyOutput = Types.ResourcesResourceSettings;
+export const getTenantsByTenantIdResourcesSettingsByKeyEndpoint = {
+  operationId: 'getTenantsByTenantIdResourcesSettingsByKey' as const,
   method: 'GET' as const,
   path: '/v1/tenants/{tenantId}/resources/settings/{key}' as const,
   tags: ['Tenants/resources/settings'] as const,
@@ -10880,24 +10740,24 @@ export const getTestingEventsPublicEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetTestingEventsPublic1Input {
+export interface GetTestingEventsPublicByEventIdInput {
   eventId: string;
 }
-export type GetTestingEventsPublic1Output = Types.TestingLabPublicTestingEventProjection;
-export const getTestingEventsPublic1Endpoint = {
-  operationId: 'getTestingEventsPublic1' as const,
+export type GetTestingEventsPublicByEventIdOutput = Types.TestingLabPublicTestingEventProjection;
+export const getTestingEventsPublicByEventIdEndpoint = {
+  operationId: 'getTestingEventsPublicByEventId' as const,
   method: 'GET' as const,
   path: '/v1/testing/events/public/{eventId}' as const,
   tags: ['TestingLab/testingEvents'] as const,
   requiresAuth: true,
 } as const;
 
-export interface GetTestingEvents1Input {
+export interface GetTestingEventsByEventIdInput {
   eventId: string;
 }
-export type GetTestingEvents1Output = Types.TestingLabTestingEventProjection;
-export const getTestingEvents1Endpoint = {
-  operationId: 'getTestingEvents1' as const,
+export type GetTestingEventsByEventIdOutput = Types.TestingLabTestingEventProjection;
+export const getTestingEventsByEventIdEndpoint = {
+  operationId: 'getTestingEventsByEventId' as const,
   method: 'GET' as const,
   path: '/v1/testing/events/{eventId}' as const,
   tags: ['TestingLab/testingEvents'] as const,
@@ -11105,7 +10965,7 @@ export const deleteTestingEventsCommitteeEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetTestingEventsApplicationsInput {
+export interface GetTestingEventsByEventIdApplicationsInput {
   eventId: string;
   query?: {
     status?: Types.TestingLabTestingApplicationStatus;
@@ -11113,9 +10973,9 @@ export interface GetTestingEventsApplicationsInput {
     take?: number;
   };
 }
-export type GetTestingEventsApplicationsOutput = Array<Types.TestingLabTestingProjectApplicationProjection>;
-export const getTestingEventsApplicationsEndpoint = {
-  operationId: 'getTestingEventsApplications' as const,
+export type GetTestingEventsByEventIdApplicationsOutput = Array<Types.TestingLabTestingProjectApplicationProjection>;
+export const getTestingEventsByEventIdApplicationsEndpoint = {
+  operationId: 'getTestingEventsByEventIdApplications' as const,
   method: 'GET' as const,
   path: '/v1/testing/events/{eventId}/applications' as const,
   tags: ['TestingLab/testingEvents'] as const,
@@ -11149,12 +11009,12 @@ export const getTestingEventsApplicationsMeEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetTestingEventsApplications1Input {
+export interface GetTestingEventsApplicationsByApplicationIdInput {
   applicationId: string;
 }
-export type GetTestingEventsApplications1Output = Types.TestingLabTestingProjectApplicationProjection;
-export const getTestingEventsApplications1Endpoint = {
-  operationId: 'getTestingEventsApplications1' as const,
+export type GetTestingEventsApplicationsByApplicationIdOutput = Types.TestingLabTestingProjectApplicationProjection;
+export const getTestingEventsApplicationsByApplicationIdEndpoint = {
+  operationId: 'getTestingEventsApplicationsByApplicationId' as const,
   method: 'GET' as const,
   path: '/v1/testing/events/applications/{applicationId}' as const,
   tags: ['TestingLab/testingEvents'] as const,
@@ -11561,12 +11421,12 @@ export const postTestingLocationsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetTestingLocations1Input {
+export interface GetTestingLocationsByIdInput {
   id: string;
 }
-export type GetTestingLocations1Output = Types.TestingLabTestingLocation;
-export const getTestingLocations1Endpoint = {
-  operationId: 'getTestingLocations1' as const,
+export type GetTestingLocationsByIdOutput = Types.TestingLabTestingLocation;
+export const getTestingLocationsByIdEndpoint = {
+  operationId: 'getTestingLocationsById' as const,
   method: 'GET' as const,
   path: '/v1/testing/locations/{id}' as const,
   tags: ['TestingLab/testingLocations'] as const,
@@ -11784,12 +11644,12 @@ export const postTestingRequestsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetTestingRequests1Input {
+export interface GetTestingRequestsByIdInput {
   id: string;
 }
-export type GetTestingRequests1Output = Types.TestingLabTestingRequestDetailProjection;
-export const getTestingRequests1Endpoint = {
-  operationId: 'getTestingRequests1' as const,
+export type GetTestingRequestsByIdOutput = Types.TestingLabTestingRequestDetailProjection;
+export const getTestingRequestsByIdEndpoint = {
+  operationId: 'getTestingRequestsById' as const,
   method: 'GET' as const,
   path: '/v1/testing/requests/{id}' as const,
   tags: ['TestingLab/testingRequests'] as const,
@@ -11966,12 +11826,12 @@ export const postTestingSessionsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetTestingSessions1Input {
+export interface GetTestingSessionsByIdInput {
   id: string;
 }
-export type GetTestingSessions1Output = Types.TestingLabTestingSession;
-export const getTestingSessions1Endpoint = {
-  operationId: 'getTestingSessions1' as const,
+export type GetTestingSessionsByIdOutput = Types.TestingLabTestingSession;
+export const getTestingSessionsByIdEndpoint = {
+  operationId: 'getTestingSessionsById' as const,
   method: 'GET' as const,
   path: '/v1/testing/sessions/{id}' as const,
   tags: ['TestingLab/testingSessions'] as const,
@@ -12354,12 +12214,12 @@ export const postUsersPurgeEndpoint = {
  *
  * Activates a user account by ID.
  */
-export interface PostUsersActivate1Input {
+export interface PostUsersByUserIdActivateInput {
   userId: string;
 }
-export type PostUsersActivate1Output = Types.IdentityUsersUserDto;
-export const postUsersActivate1Endpoint = {
-  operationId: 'postUsersActivate1' as const,
+export type PostUsersByUserIdActivateOutput = Types.IdentityUsersUserDto;
+export const postUsersByUserIdActivateEndpoint = {
+  operationId: 'postUsersByUserIdActivate' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}:activate' as const,
   tags: ['Users'] as const,
@@ -12371,12 +12231,12 @@ export const postUsersActivate1Endpoint = {
  *
  * Deactivates a user account by ID.
  */
-export interface PostUsersDeactivate1Input {
+export interface PostUsersByUserIdDeactivateInput {
   userId: string;
 }
-export type PostUsersDeactivate1Output = Types.IdentityUsersUserDto;
-export const postUsersDeactivate1Endpoint = {
-  operationId: 'postUsersDeactivate1' as const,
+export type PostUsersByUserIdDeactivateOutput = Types.IdentityUsersUserDto;
+export const postUsersByUserIdDeactivateEndpoint = {
+  operationId: 'postUsersByUserIdDeactivate' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}:deactivate' as const,
   tags: ['Users'] as const,
@@ -12388,12 +12248,12 @@ export const postUsersDeactivate1Endpoint = {
  *
  * Suspends a user account by ID.
  */
-export interface PostUsersSuspend1Input {
+export interface PostUsersByUserIdSuspendInput {
   userId: string;
 }
-export type PostUsersSuspend1Output = Types.IdentityUsersUserDto;
-export const postUsersSuspend1Endpoint = {
-  operationId: 'postUsersSuspend1' as const,
+export type PostUsersByUserIdSuspendOutput = Types.IdentityUsersUserDto;
+export const postUsersByUserIdSuspendEndpoint = {
+  operationId: 'postUsersByUserIdSuspend' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}:suspend' as const,
   tags: ['Users'] as const,
@@ -12405,12 +12265,12 @@ export const postUsersSuspend1Endpoint = {
  *
  * Unsuspends a user account by ID.
  */
-export interface PostUsersUnsuspend1Input {
+export interface PostUsersByUserIdUnsuspendInput {
   userId: string;
 }
-export type PostUsersUnsuspend1Output = Types.IdentityUsersUserDto;
-export const postUsersUnsuspend1Endpoint = {
-  operationId: 'postUsersUnsuspend1' as const,
+export type PostUsersByUserIdUnsuspendOutput = Types.IdentityUsersUserDto;
+export const postUsersByUserIdUnsuspendEndpoint = {
+  operationId: 'postUsersByUserIdUnsuspend' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}:unsuspend' as const,
   tags: ['Users'] as const,
@@ -12422,12 +12282,12 @@ export const postUsersUnsuspend1Endpoint = {
  *
  * Restores a soft-deleted user by ID.
  */
-export interface PostUsersUndelete1Input {
+export interface PostUsersByUserIdUndeleteInput {
   userId: string;
 }
-export type PostUsersUndelete1Output = Types.IdentityUsersUserDto;
-export const postUsersUndelete1Endpoint = {
-  operationId: 'postUsersUndelete1' as const,
+export type PostUsersByUserIdUndeleteOutput = Types.IdentityUsersUserDto;
+export const postUsersByUserIdUndeleteEndpoint = {
+  operationId: 'postUsersByUserIdUndelete' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}:undelete' as const,
   tags: ['Users'] as const,
@@ -12439,12 +12299,12 @@ export const postUsersUndelete1Endpoint = {
  *
  * Permanently deletes a user by ID (irreversible).
  */
-export interface PostUsersPurge1Input {
+export interface PostUsersByUserIdPurgeInput {
   userId: string;
 }
-export type PostUsersPurge1Output = void;
-export const postUsersPurge1Endpoint = {
-  operationId: 'postUsersPurge1' as const,
+export type PostUsersByUserIdPurgeOutput = void;
+export const postUsersByUserIdPurgeEndpoint = {
+  operationId: 'postUsersByUserIdPurge' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}:purge' as const,
   tags: ['Users'] as const,
@@ -12498,12 +12358,12 @@ export const postUsersEndpoint = {
  *
  * Retrieves detailed information for a specific user by their unique identifier.
  */
-export interface GetUsers1Input {
+export interface GetUsersByUserIdInput {
   userId: string;
 }
-export type GetUsers1Output = Types.IdentityUsersUserDto;
-export const getUsers1Endpoint = {
-  operationId: 'getUsers1' as const,
+export type GetUsersByUserIdOutput = Types.IdentityUsersUserDto;
+export const getUsersByUserIdEndpoint = {
+  operationId: 'getUsersByUserId' as const,
   method: 'GET' as const,
   path: '/v1/users/{userId}' as const,
   tags: ['Users'] as const,
@@ -12790,7 +12650,7 @@ export const patchUsersMetadataEndpoint = {
 /**
  * Get user notifications with pagination, search, and sorting
  */
-export interface GetUsersNotificationsInput {
+export interface GetUsersByUserIdNotificationsInput {
   userId: string;
   query?: {
     page?: number;
@@ -12806,9 +12666,9 @@ export interface GetUsersNotificationsInput {
     toDate?: string;
   };
 }
-export type GetUsersNotificationsOutput = Types.PagedResultOfGameGuildIdentityUsersUserNotificationDto;
-export const getUsersNotificationsEndpoint = {
-  operationId: 'getUsersNotifications' as const,
+export type GetUsersByUserIdNotificationsOutput = Types.PagedResultOfGameGuildIdentityUsersUserNotificationDto;
+export const getUsersByUserIdNotificationsEndpoint = {
+  operationId: 'getUsersByUserIdNotifications' as const,
   method: 'GET' as const,
   path: '/v1/users/{userId}/notifications' as const,
   tags: ['Users/notifications'] as const,
@@ -12818,13 +12678,13 @@ export const getUsersNotificationsEndpoint = {
 /**
  * Mark multiple notifications as read for a user
  */
-export interface PostUsersNotificationsMarkAsReadInput {
+export interface PostUsersByUserIdNotificationsMarkAsReadInput {
   userId: string;
   body?: Types.IdentityUsersBulkNotificationInput;
 }
-export type PostUsersNotificationsMarkAsReadOutput = void;
-export const postUsersNotificationsMarkAsReadEndpoint = {
-  operationId: 'postUsersNotificationsMarkAsRead' as const,
+export type PostUsersByUserIdNotificationsMarkAsReadOutput = void;
+export const postUsersByUserIdNotificationsMarkAsReadEndpoint = {
+  operationId: 'postUsersByUserIdNotificationsMarkAsRead' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}/notifications:mark-as-read' as const,
   tags: ['Users/notifications'] as const,
@@ -12834,13 +12694,13 @@ export const postUsersNotificationsMarkAsReadEndpoint = {
 /**
  * Mark multiple notifications as unread for a user
  */
-export interface PostUsersNotificationsMarkAsUnreadInput {
+export interface PostUsersByUserIdNotificationsMarkAsUnreadInput {
   userId: string;
   body?: Types.IdentityUsersBulkNotificationInput;
 }
-export type PostUsersNotificationsMarkAsUnreadOutput = void;
-export const postUsersNotificationsMarkAsUnreadEndpoint = {
-  operationId: 'postUsersNotificationsMarkAsUnread' as const,
+export type PostUsersByUserIdNotificationsMarkAsUnreadOutput = void;
+export const postUsersByUserIdNotificationsMarkAsUnreadEndpoint = {
+  operationId: 'postUsersByUserIdNotificationsMarkAsUnread' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}/notifications:mark-as-unread' as const,
   tags: ['Users/notifications'] as const,
@@ -12850,13 +12710,13 @@ export const postUsersNotificationsMarkAsUnreadEndpoint = {
 /**
  * Archive multiple notifications for a user
  */
-export interface PostUsersNotificationsArchiveInput {
+export interface PostUsersByUserIdNotificationsArchiveInput {
   userId: string;
   body?: Types.IdentityUsersBulkNotificationInput;
 }
-export type PostUsersNotificationsArchiveOutput = void;
-export const postUsersNotificationsArchiveEndpoint = {
-  operationId: 'postUsersNotificationsArchive' as const,
+export type PostUsersByUserIdNotificationsArchiveOutput = void;
+export const postUsersByUserIdNotificationsArchiveEndpoint = {
+  operationId: 'postUsersByUserIdNotificationsArchive' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}/notifications:archive' as const,
   tags: ['Users/notifications'] as const,
@@ -12866,13 +12726,13 @@ export const postUsersNotificationsArchiveEndpoint = {
 /**
  * Unarchive multiple notifications for a user
  */
-export interface PostUsersNotificationsUnarchiveInput {
+export interface PostUsersByUserIdNotificationsUnarchiveInput {
   userId: string;
   body?: Types.IdentityUsersBulkNotificationInput;
 }
-export type PostUsersNotificationsUnarchiveOutput = void;
-export const postUsersNotificationsUnarchiveEndpoint = {
-  operationId: 'postUsersNotificationsUnarchive' as const,
+export type PostUsersByUserIdNotificationsUnarchiveOutput = void;
+export const postUsersByUserIdNotificationsUnarchiveEndpoint = {
+  operationId: 'postUsersByUserIdNotificationsUnarchive' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}/notifications:unarchive' as const,
   tags: ['Users/notifications'] as const,
@@ -12882,13 +12742,13 @@ export const postUsersNotificationsUnarchiveEndpoint = {
 /**
  * Get detailed notification by ID
  */
-export interface GetUsersNotifications1Input {
+export interface GetUsersByUserIdNotificationsByNotificationIdInput {
   userId: string;
   notificationId: string;
 }
-export type GetUsersNotifications1Output = Types.IdentityUsersUserNotificationDetail;
-export const getUsersNotifications1Endpoint = {
-  operationId: 'getUsersNotifications1' as const,
+export type GetUsersByUserIdNotificationsByNotificationIdOutput = Types.IdentityUsersUserNotificationDetail;
+export const getUsersByUserIdNotificationsByNotificationIdEndpoint = {
+  operationId: 'getUsersByUserIdNotificationsByNotificationId' as const,
   method: 'GET' as const,
   path: '/v1/users/{userId}/notifications/{notificationId}' as const,
   tags: ['Users/notifications'] as const,
@@ -12914,13 +12774,13 @@ export const headUsersNotificationsEndpoint = {
 /**
  * Mark notification as read
  */
-export interface PostUsersNotificationsMarkAsRead1Input {
+export interface PostUsersByUserIdNotificationsByNotificationIdMarkAsReadInput {
   userId: string;
   notificationId: string;
 }
-export type PostUsersNotificationsMarkAsRead1Output = void;
-export const postUsersNotificationsMarkAsRead1Endpoint = {
-  operationId: 'postUsersNotificationsMarkAsRead1' as const,
+export type PostUsersByUserIdNotificationsByNotificationIdMarkAsReadOutput = void;
+export const postUsersByUserIdNotificationsByNotificationIdMarkAsReadEndpoint = {
+  operationId: 'postUsersByUserIdNotificationsByNotificationIdMarkAsRead' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}/notifications/{notificationId}:mark-as-read' as const,
   tags: ['Users/notifications'] as const,
@@ -12930,13 +12790,13 @@ export const postUsersNotificationsMarkAsRead1Endpoint = {
 /**
  * Mark notification as unread
  */
-export interface PostUsersNotificationsMarkAsUnread1Input {
+export interface PostUsersByUserIdNotificationsByNotificationIdMarkAsUnreadInput {
   userId: string;
   notificationId: string;
 }
-export type PostUsersNotificationsMarkAsUnread1Output = void;
-export const postUsersNotificationsMarkAsUnread1Endpoint = {
-  operationId: 'postUsersNotificationsMarkAsUnread1' as const,
+export type PostUsersByUserIdNotificationsByNotificationIdMarkAsUnreadOutput = void;
+export const postUsersByUserIdNotificationsByNotificationIdMarkAsUnreadEndpoint = {
+  operationId: 'postUsersByUserIdNotificationsByNotificationIdMarkAsUnread' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}/notifications/{notificationId}:mark-as-unread' as const,
   tags: ['Users/notifications'] as const,
@@ -12946,13 +12806,13 @@ export const postUsersNotificationsMarkAsUnread1Endpoint = {
 /**
  * Archive notification
  */
-export interface PostUsersNotificationsArchive1Input {
+export interface PostUsersByUserIdNotificationsByNotificationIdArchiveInput {
   userId: string;
   notificationId: string;
 }
-export type PostUsersNotificationsArchive1Output = void;
-export const postUsersNotificationsArchive1Endpoint = {
-  operationId: 'postUsersNotificationsArchive1' as const,
+export type PostUsersByUserIdNotificationsByNotificationIdArchiveOutput = void;
+export const postUsersByUserIdNotificationsByNotificationIdArchiveEndpoint = {
+  operationId: 'postUsersByUserIdNotificationsByNotificationIdArchive' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}/notifications/{notificationId}:archive' as const,
   tags: ['Users/notifications'] as const,
@@ -12962,13 +12822,13 @@ export const postUsersNotificationsArchive1Endpoint = {
 /**
  * Unarchive notification
  */
-export interface PostUsersNotificationsUnarchive1Input {
+export interface PostUsersByUserIdNotificationsByNotificationIdUnarchiveInput {
   userId: string;
   notificationId: string;
 }
-export type PostUsersNotificationsUnarchive1Output = void;
-export const postUsersNotificationsUnarchive1Endpoint = {
-  operationId: 'postUsersNotificationsUnarchive1' as const,
+export type PostUsersByUserIdNotificationsByNotificationIdUnarchiveOutput = void;
+export const postUsersByUserIdNotificationsByNotificationIdUnarchiveEndpoint = {
+  operationId: 'postUsersByUserIdNotificationsByNotificationIdUnarchive' as const,
   method: 'POST' as const,
   path: '/v1/users/{userId}/notifications/{notificationId}:unarchive' as const,
   tags: ['Users/notifications'] as const,
@@ -13418,12 +13278,12 @@ export const patchUsersProfileEndpoint = {
  *
  * Retrieves all configured resource quotas for a specific user.
  */
-export interface GetUsersQuotasInput {
+export interface GetUsersByUserIdQuotasInput {
   userId: string;
 }
-export type GetUsersQuotasOutput = Array<Types.ResourcesResourceQuotaOutput>;
-export const getUsersQuotasEndpoint = {
-  operationId: 'getUsersQuotas' as const,
+export type GetUsersByUserIdQuotasOutput = Array<Types.ResourcesResourceQuotaOutput>;
+export const getUsersByUserIdQuotasEndpoint = {
+  operationId: 'getUsersByUserIdQuotas' as const,
   method: 'GET' as const,
   path: '/v1/users/{userId}/quotas' as const,
   tags: ['Users/quotas'] as const,
@@ -13435,13 +13295,13 @@ export const getUsersQuotasEndpoint = {
  *
  * Retrieves the quota configuration for a specific resource type for a user.
  */
-export interface GetUsersQuotas1Input {
+export interface GetUsersByUserIdQuotasByTypeInput {
   userId: string;
   type: Types.ResourcesResourceUsageType;
 }
-export type GetUsersQuotas1Output = Types.ResourcesResourceQuotaOutput;
-export const getUsersQuotas1Endpoint = {
-  operationId: 'getUsersQuotas1' as const,
+export type GetUsersByUserIdQuotasByTypeOutput = Types.ResourcesResourceQuotaOutput;
+export const getUsersByUserIdQuotasByTypeEndpoint = {
+  operationId: 'getUsersByUserIdQuotasByType' as const,
   method: 'GET' as const,
   path: '/v1/users/{userId}/quotas/{type}' as const,
   tags: ['Users/quotas'] as const,
@@ -13721,12 +13581,12 @@ export const postUsersResourcesResetEndpoint = {
  *
  * Retrieves all resource metadata entries for a specific user.
  */
-export interface GetUsersResourcesMetadataInput {
+export interface GetUsersByUserIdResourcesMetadataInput {
   userId: string;
 }
-export type GetUsersResourcesMetadataOutput = Array<Types.ResourcesResourceMetadata>;
-export const getUsersResourcesMetadataEndpoint = {
-  operationId: 'getUsersResourcesMetadata' as const,
+export type GetUsersByUserIdResourcesMetadataOutput = Array<Types.ResourcesResourceMetadata>;
+export const getUsersByUserIdResourcesMetadataEndpoint = {
+  operationId: 'getUsersByUserIdResourcesMetadata' as const,
   method: 'GET' as const,
   path: '/v1/users/{userId}/resources/metadata' as const,
   tags: ['Users/resources/metadata'] as const,
@@ -13738,13 +13598,13 @@ export const getUsersResourcesMetadataEndpoint = {
  *
  * Retrieves a specific resource metadata entry by its key for a user.
  */
-export interface GetUsersResourcesMetadata1Input {
+export interface GetUsersByUserIdResourcesMetadataByKeyInput {
   userId: string;
   key: string;
 }
-export type GetUsersResourcesMetadata1Output = Types.ResourcesResourceMetadata;
-export const getUsersResourcesMetadata1Endpoint = {
-  operationId: 'getUsersResourcesMetadata1' as const,
+export type GetUsersByUserIdResourcesMetadataByKeyOutput = Types.ResourcesResourceMetadata;
+export const getUsersByUserIdResourcesMetadataByKeyEndpoint = {
+  operationId: 'getUsersByUserIdResourcesMetadataByKey' as const,
   method: 'GET' as const,
   path: '/v1/users/{userId}/resources/metadata/{key}' as const,
   tags: ['Users/resources/metadata'] as const,
@@ -13775,12 +13635,12 @@ export const putUsersResourcesMetadataEndpoint = {
  *
  * Retrieves all resource setting overrides for a specific user.
  */
-export interface GetUsersResourcesSettingsInput {
+export interface GetUsersByUserIdResourcesSettingsInput {
   userId: string;
 }
-export type GetUsersResourcesSettingsOutput = Array<Types.ResourcesResourceSettings>;
-export const getUsersResourcesSettingsEndpoint = {
-  operationId: 'getUsersResourcesSettings' as const,
+export type GetUsersByUserIdResourcesSettingsOutput = Array<Types.ResourcesResourceSettings>;
+export const getUsersByUserIdResourcesSettingsEndpoint = {
+  operationId: 'getUsersByUserIdResourcesSettings' as const,
   method: 'GET' as const,
   path: '/v1/users/{userId}/resources/settings' as const,
   tags: ['Users/resources/settings'] as const,
@@ -13792,13 +13652,13 @@ export const getUsersResourcesSettingsEndpoint = {
  *
  * Retrieves a specific resource setting override by its key for a user.
  */
-export interface GetUsersResourcesSettings1Input {
+export interface GetUsersByUserIdResourcesSettingsByKeyInput {
   userId: string;
   key: string;
 }
-export type GetUsersResourcesSettings1Output = Types.ResourcesResourceSettings;
-export const getUsersResourcesSettings1Endpoint = {
-  operationId: 'getUsersResourcesSettings1' as const,
+export type GetUsersByUserIdResourcesSettingsByKeyOutput = Types.ResourcesResourceSettings;
+export const getUsersByUserIdResourcesSettingsByKeyEndpoint = {
+  operationId: 'getUsersByUserIdResourcesSettingsByKey' as const,
   method: 'GET' as const,
   path: '/v1/users/{userId}/resources/settings/{key}' as const,
   tags: ['Users/resources/settings'] as const,
@@ -13916,12 +13776,12 @@ export const getWalletsEndpoint = {
 /**
  * Get wallet by ID
  */
-export interface GetWallets1Input {
+export interface GetWalletsByWalletIdInput {
   walletId: string;
 }
-export type GetWallets1Output = void;
-export const getWallets1Endpoint = {
-  operationId: 'getWallets1' as const,
+export type GetWalletsByWalletIdOutput = void;
+export const getWalletsByWalletIdEndpoint = {
+  operationId: 'getWalletsByWalletId' as const,
   method: 'GET' as const,
   path: '/api/v1/wallets/{walletId}' as const,
   tags: ['Commerce/payments/wallets'] as const,
@@ -14117,7 +13977,7 @@ export const endpoints = {
   getAiQuotas: getAiQuotasEndpoint,
   getAiPromptTemplates: getAiPromptTemplatesEndpoint,
   postAiPromptTemplates: postAiPromptTemplatesEndpoint,
-  getAiPromptTemplates1: getAiPromptTemplates1Endpoint,
+  getAiPromptTemplatesById: getAiPromptTemplatesByIdEndpoint,
   putAiPromptTemplates: putAiPromptTemplatesEndpoint,
   deleteAiPromptTemplates: deleteAiPromptTemplatesEndpoint,
   postAiPromptTemplatesRender: postAiPromptTemplatesRenderEndpoint,
@@ -14144,8 +14004,8 @@ export const endpoints = {
   postAssessmentsSubmissionsStart: postAssessmentsSubmissionsStartEndpoint,
   postAssessmentsSubmissionsSubmit: postAssessmentsSubmissionsSubmitEndpoint,
   postAssessmentsSubmissionsGrade: postAssessmentsSubmissionsGradeEndpoint,
-  getAssessmentsSubmissions: getAssessmentsSubmissionsEndpoint,
-  getAssessmentsSubmissions1: getAssessmentsSubmissions1Endpoint,
+  getAssessmentsSubmissionsBySubmissionId: getAssessmentsSubmissionsBySubmissionIdEndpoint,
+  getAssessmentsByAssessmentIdSubmissions: getAssessmentsByAssessmentIdSubmissionsEndpoint,
   getAssessmentsMySubmissions: getAssessmentsMySubmissionsEndpoint,
   getAssessmentsCanAttempt: getAssessmentsCanAttemptEndpoint,
   postAuthSignUp: postAuthSignUpEndpoint,
@@ -14179,7 +14039,7 @@ export const endpoints = {
   postAuthMfaDisable: postAuthMfaDisableEndpoint,
   getRoles: getRolesEndpoint,
   postRoles: postRolesEndpoint,
-  getRoles1: getRoles1Endpoint,
+  getRolesByRoleId: getRolesByRoleIdEndpoint,
   putRoles: putRolesEndpoint,
   deleteRoles: deleteRolesEndpoint,
   getRolesUser: getRolesUserEndpoint,
@@ -14187,7 +14047,7 @@ export const endpoints = {
   postRolesRemove: postRolesRemoveEndpoint,
   getAuthServiceAccounts: getAuthServiceAccountsEndpoint,
   postAuthServiceAccounts: postAuthServiceAccountsEndpoint,
-  getAuthServiceAccounts1: getAuthServiceAccounts1Endpoint,
+  getAuthServiceAccountsByServiceAccountId: getAuthServiceAccountsByServiceAccountIdEndpoint,
   deleteAuthServiceAccounts: deleteAuthServiceAccountsEndpoint,
   patchAuthServiceAccounts: patchAuthServiceAccountsEndpoint,
   headAuthServiceAccounts: headAuthServiceAccountsEndpoint,
@@ -14216,7 +14076,7 @@ export const endpoints = {
   postAuthWebauthnAuthenticationBegin: postAuthWebauthnAuthenticationBeginEndpoint,
   postAuthWebauthnAuthenticationComplete: postAuthWebauthnAuthenticationCompleteEndpoint,
   getAuthWebauthnCredentials: getAuthWebauthnCredentialsEndpoint,
-  getAuthWebauthnCredentials1: getAuthWebauthnCredentials1Endpoint,
+  getAuthWebauthnCredentialsByCredentialId: getAuthWebauthnCredentialsByCredentialIdEndpoint,
   deleteAuthWebauthnCredentials: deleteAuthWebauthnCredentialsEndpoint,
   patchAuthWebauthnCredentials: patchAuthWebauthnCredentialsEndpoint,
   headAuthWebauthnCredentials: headAuthWebauthnCredentialsEndpoint,
@@ -14242,14 +14102,14 @@ export const endpoints = {
   postBillingWebhooksWebhookEventsRetry: postBillingWebhooksWebhookEventsRetryEndpoint,
   getApiSocialBlog: getApiSocialBlogEndpoint,
   postApiSocialBlog: postApiSocialBlogEndpoint,
-  getApiSocialBlog1: getApiSocialBlog1Endpoint,
+  getApiSocialBlogById: getApiSocialBlogByIdEndpoint,
   postApiSocialBlogPublish: postApiSocialBlogPublishEndpoint,
   postApiSocialBlogUnpublish: postApiSocialBlogUnpublishEndpoint,
   postApiSocialBlogFeature: postApiSocialBlogFeatureEndpoint,
   postApiSocialBlogViews: postApiSocialBlogViewsEndpoint,
-  getTenantsCapabilities: getTenantsCapabilitiesEndpoint,
+  getTenantsByTenantIdCapabilities: getTenantsByTenantIdCapabilitiesEndpoint,
   postTenantsCapabilities: postTenantsCapabilitiesEndpoint,
-  getTenantsCapabilities1: getTenantsCapabilities1Endpoint,
+  getTenantsByTenantIdCapabilitiesByCapability: getTenantsByTenantIdCapabilitiesByCapabilityEndpoint,
   deleteTenantsCapabilities: deleteTenantsCapabilitiesEndpoint,
   postTenantsCapabilitiesSync: postTenantsCapabilitiesSyncEndpoint,
   getTenantsCapabilitiesAuditLog: getTenantsCapabilitiesAuditLogEndpoint,
@@ -14267,20 +14127,12 @@ export const endpoints = {
   getApiCertificatesExpiring: getApiCertificatesExpiringEndpoint,
   getClients: getClientsEndpoint,
   postClients: postClientsEndpoint,
-  getClients1: getClients1Endpoint,
-  postClients1: postClients1Endpoint,
   getClientById: getClientByIdEndpoint,
   putClients: putClientsEndpoint,
   deleteClients: deleteClientsEndpoint,
-  getClients2: getClients2Endpoint,
-  putClients1: putClients1Endpoint,
-  deleteClients1: deleteClients1Endpoint,
   getClientsModules: getClientsModulesEndpoint,
   putClientsModules: putClientsModulesEndpoint,
   patchClientsModules: patchClientsModulesEndpoint,
-  getClientsModules1: getClientsModules1Endpoint,
-  putClientsModules1: putClientsModules1Endpoint,
-  patchClientsModules1: patchClientsModules1Endpoint,
   postApiCohorts: postApiCohortsEndpoint,
   getApiCohorts: getApiCohortsEndpoint,
   putApiCohorts: putApiCohortsEndpoint,
@@ -14323,7 +14175,7 @@ export const endpoints = {
   postSubscriptionsExternalIds: postSubscriptionsExternalIdsEndpoint,
   getSubscriptions: getSubscriptionsEndpoint,
   postSubscriptions: postSubscriptionsEndpoint,
-  getSubscriptions1: getSubscriptions1Endpoint,
+  getSubscriptionsBySubscriptionId: getSubscriptionsBySubscriptionIdEndpoint,
   putSubscriptions: putSubscriptionsEndpoint,
   deleteSubscriptions: deleteSubscriptionsEndpoint,
   patchSubscriptions: patchSubscriptionsEndpoint,
@@ -14345,7 +14197,7 @@ export const endpoints = {
   getSubscriptionPlans: getSubscriptionPlansEndpoint,
   postSubscriptionPlans: postSubscriptionPlansEndpoint,
   postSubscriptionPlansCompare: postSubscriptionPlansCompareEndpoint,
-  getSubscriptionPlans1: getSubscriptionPlans1Endpoint,
+  getSubscriptionPlansByPlanId: getSubscriptionPlansByPlanIdEndpoint,
   putSubscriptionPlans: putSubscriptionPlansEndpoint,
   deleteSubscriptionPlans: deleteSubscriptionPlansEndpoint,
   headSubscriptionPlans: headSubscriptionPlansEndpoint,
@@ -14367,23 +14219,23 @@ export const endpoints = {
   getMarketingLeadById: getMarketingLeadByIdEndpoint,
   getPages: getPagesEndpoint,
   postPages: postPagesEndpoint,
-  getPages1: getPages1Endpoint,
+  getPagesById: getPagesByIdEndpoint,
   putPages: putPagesEndpoint,
   deletePages: deletePagesEndpoint,
   getPagesBySlug: getPagesBySlugEndpoint,
   getPagesSitemap: getPagesSitemapEndpoint,
   postPagesPublish: postPagesPublishEndpoint,
   postPagesUnpublish: postPagesUnpublishEndpoint,
-  getPagesSections: getPagesSectionsEndpoint,
+  getPagesByPageIdSections: getPagesByPageIdSectionsEndpoint,
   postPagesSections: postPagesSectionsEndpoint,
-  getPagesSections1: getPagesSections1Endpoint,
+  getPagesByPageIdSectionsBySectionId: getPagesByPageIdSectionsBySectionIdEndpoint,
   putPagesSections: putPagesSectionsEndpoint,
   deletePagesSections: deletePagesSectionsEndpoint,
   postPagesSectionsReorder: postPagesSectionsReorderEndpoint,
   getOg: getOgEndpoint,
   getContentResources: getContentResourcesEndpoint,
   postContentResources: postContentResourcesEndpoint,
-  getContentResources1: getContentResources1Endpoint,
+  getContentResourcesById: getContentResourcesByIdEndpoint,
   putContentResources: putContentResourcesEndpoint,
   deleteContentResources: deleteContentResourcesEndpoint,
   getContentResourcesBySlug: getContentResourcesBySlugEndpoint,
@@ -14401,14 +14253,14 @@ export const endpoints = {
   putCourseInteractionsTimeSpent: putCourseInteractionsTimeSpentEndpoint,
   postVCoursesCheckoutComplete: postVCoursesCheckoutCompleteEndpoint,
   postCoursesStudentsMessage: postCoursesStudentsMessageEndpoint,
-  getCoursesSupportTickets: getCoursesSupportTicketsEndpoint,
-  getCoursesSupportTickets1: getCoursesSupportTickets1Endpoint,
+  getCoursesByCourseIdSupportTickets: getCoursesByCourseIdSupportTicketsEndpoint,
+  getCoursesByCourseIdSupportTicketsByTicketId: getCoursesByCourseIdSupportTicketsByTicketIdEndpoint,
   postCoursesSupportTicketsMessages: postCoursesSupportTicketsMessagesEndpoint,
   postCoursesSupportTicketsResolve: postCoursesSupportTicketsResolveEndpoint,
   getDiscoveryFeatured: getDiscoveryFeaturedEndpoint,
   postDiscoveryFeatured: postDiscoveryFeaturedEndpoint,
   getDiscoveryFeaturedType: getDiscoveryFeaturedTypeEndpoint,
-  getDiscoveryFeatured1: getDiscoveryFeatured1Endpoint,
+  getDiscoveryFeaturedById: getDiscoveryFeaturedByIdEndpoint,
   putDiscoveryFeatured: putDiscoveryFeaturedEndpoint,
   deleteDiscoveryFeatured: deleteDiscoveryFeaturedEndpoint,
   patchDiscoveryFeaturedToggle: patchDiscoveryFeaturedToggleEndpoint,
@@ -14416,7 +14268,7 @@ export const endpoints = {
   postDiscoveryCollections: postDiscoveryCollectionsEndpoint,
   getDiscoveryCollectionsFeatured: getDiscoveryCollectionsFeaturedEndpoint,
   getDiscoveryCollectionsSlug: getDiscoveryCollectionsSlugEndpoint,
-  getDiscoveryCollections1: getDiscoveryCollections1Endpoint,
+  getDiscoveryCollectionsById: getDiscoveryCollectionsByIdEndpoint,
   putDiscoveryCollections: putDiscoveryCollectionsEndpoint,
   deleteDiscoveryCollections: deleteDiscoveryCollectionsEndpoint,
   getDiscoveryCollectionsCurator: getDiscoveryCollectionsCuratorEndpoint,
@@ -14439,7 +14291,7 @@ export const endpoints = {
   postEconomyConversionsHardToSoft: postEconomyConversionsHardToSoftEndpoint,
   getEconomyCapabilities: getEconomyCapabilitiesEndpoint,
   getEconomyPayouts: getEconomyPayoutsEndpoint,
-  getEconomyPayouts1: getEconomyPayouts1Endpoint,
+  getEconomyPayoutsByOperationId: getEconomyPayoutsByOperationIdEndpoint,
   getApiLearningEnrollments: getApiLearningEnrollmentsEndpoint,
   getApiLearningEnrollmentsUsers: getApiLearningEnrollmentsUsersEndpoint,
   getApiLearningEnrollmentsCourses: getApiLearningEnrollmentsCoursesEndpoint,
@@ -14474,7 +14326,7 @@ export const endpoints = {
   postApiSocialFeedHide: postApiSocialFeedHideEndpoint,
   getApiGameJams: getApiGameJamsEndpoint,
   postApiGameJams: postApiGameJamsEndpoint,
-  getApiGameJams1: getApiGameJams1Endpoint,
+  getApiGameJamsById: getApiGameJamsByIdEndpoint,
   postApiGameJamsStatus: postApiGameJamsStatusEndpoint,
   getApiGameJamsSubmissions: getApiGameJamsSubmissionsEndpoint,
   postApiGameJamsSubmissions: postApiGameJamsSubmissionsEndpoint,
@@ -14489,7 +14341,7 @@ export const endpoints = {
   getMetrics: getMetricsEndpoint,
   getLaunchPad: getLaunchPadEndpoint,
   postLaunchPad: postLaunchPadEndpoint,
-  getLaunchPad1: getLaunchPad1Endpoint,
+  getLaunchPadById: getLaunchPadByIdEndpoint,
   getLaunchPadProjects: getLaunchPadProjectsEndpoint,
   postLaunchPadChecklistComplete: postLaunchPadChecklistCompleteEndpoint,
   postLaunchPadPublish: postLaunchPadPublishEndpoint,
@@ -14502,7 +14354,7 @@ export const endpoints = {
   getLearningPathsFeatured: getLearningPathsFeaturedEndpoint,
   getLearningPathsPopular: getLearningPathsPopularEndpoint,
   getLearningPathsSlug: getLearningPathsSlugEndpoint,
-  getLearningPaths1: getLearningPaths1Endpoint,
+  getLearningPathsById: getLearningPathsByIdEndpoint,
   putLearningPaths: putLearningPathsEndpoint,
   deleteLearningPaths: deleteLearningPathsEndpoint,
   getLearningPathsCreator: getLearningPathsCreatorEndpoint,
@@ -14546,30 +14398,30 @@ export const endpoints = {
   getApiPrerequisitesCourse: getApiPrerequisitesCourseEndpoint,
   getApiPrerequisitesDependents: getApiPrerequisitesDependentsEndpoint,
   getApiPrerequisitesCourseChain: getApiPrerequisitesCourseChainEndpoint,
-  getApiPrerequisitesCourseCheck: getApiPrerequisitesCourseCheckEndpoint,
-  getApiPrerequisitesCourseCheck1: getApiPrerequisitesCourseCheck1Endpoint,
+  getApiPrerequisitesCourseByCourseIdCheck: getApiPrerequisitesCourseByCourseIdCheckEndpoint,
+  getApiPrerequisitesCourseByCourseIdCheckByUserId: getApiPrerequisitesCourseByCourseIdCheckByUserIdEndpoint,
   postApiPrerequisitesCourseReorder: postApiPrerequisitesCourseReorderEndpoint,
   getApiPrerequisitesCourseWouldCreateCycle: getApiPrerequisitesCourseWouldCreateCycleEndpoint,
-  getProducts: getProductsEndpoint,
+  getProductsByProductId: getProductsByProductIdEndpoint,
   putProducts: putProductsEndpoint,
   deleteProducts: deleteProductsEndpoint,
   patchProducts: patchProductsEndpoint,
   headProducts: headProductsEndpoint,
   getProductsPricing: getProductsPricingEndpoint,
-  getProducts1: getProducts1Endpoint,
+  getProducts: getProductsEndpoint,
   postProducts: postProductsEndpoint,
   postProductsBatchCreate: postProductsBatchCreateEndpoint,
   postProductsActivate: postProductsActivateEndpoint,
   postProductsDeactivate: postProductsDeactivateEndpoint,
   postProductsArchive: postProductsArchiveEndpoint,
-  getCoursesContent: getCoursesContentEndpoint,
+  getCoursesByProgramIdContent: getCoursesByProgramIdContentEndpoint,
   postCoursesContent: postCoursesContentEndpoint,
-  getCoursesContent1: getCoursesContent1Endpoint,
+  getCoursesByProgramIdContentById: getCoursesByProgramIdContentByIdEndpoint,
   putCoursesContent: putCoursesContentEndpoint,
   deleteCoursesContent: deleteCoursesContentEndpoint,
   postCoursesContentSubmit: postCoursesContentSubmitEndpoint,
   getCoursesContentChildren: getCoursesContentChildrenEndpoint,
-  postCoursesContentReorder: postCoursesContentReorderEndpoint,
+  postCoursesByProgramIdContentReorder: postCoursesByProgramIdContentReorderEndpoint,
   postCoursesContentMove: postCoursesContentMoveEndpoint,
   getCoursesContentRequired: getCoursesContentRequiredEndpoint,
   getCoursesContentByType: getCoursesContentByTypeEndpoint,
@@ -14580,14 +14432,14 @@ export const endpoints = {
   postCourses: postCoursesEndpoint,
   getCoursesPublic: getCoursesPublicEndpoint,
   getCoursesMe: getCoursesMeEndpoint,
-  getCourses1: getCourses1Endpoint,
+  getCoursesById: getCoursesByIdEndpoint,
   putCourses: putCoursesEndpoint,
   deleteCourses: deleteCoursesEndpoint,
   getCoursesWithContent: getCoursesWithContentEndpoint,
   postCoursesClone: postCoursesCloneEndpoint,
   getCoursesSlug: getCoursesSlugEndpoint,
   postCoursesSelfEnroll: postCoursesSelfEnrollEndpoint,
-  postCoursesContentReorder1: postCoursesContentReorder1Endpoint,
+  postCoursesByIdContentReorder: postCoursesByIdContentReorderEndpoint,
   postCoursesUsers: postCoursesUsersEndpoint,
   deleteCoursesUsers: deleteCoursesUsersEndpoint,
   getCoursesUsers: getCoursesUsersEndpoint,
@@ -14628,7 +14480,7 @@ export const endpoints = {
   postProjectsPermissionsShareWithRole: postProjectsPermissionsShareWithRoleEndpoint,
   getProjects: getProjectsEndpoint,
   postProjects: postProjectsEndpoint,
-  getProjects1: getProjects1Endpoint,
+  getProjectsById: getProjectsByIdEndpoint,
   putProjects: putProjectsEndpoint,
   deleteProjects: deleteProjectsEndpoint,
   getProjectsSlug: getProjectsSlugEndpoint,
@@ -14659,7 +14511,7 @@ export const endpoints = {
   getStoreProductsProjects: getStoreProductsProjectsEndpoint,
   getPromoCodes: getPromoCodesEndpoint,
   postPromoCodes: postPromoCodesEndpoint,
-  getPromoCodes1: getPromoCodes1Endpoint,
+  getPromoCodesByPromoCodeId: getPromoCodesByPromoCodeIdEndpoint,
   putPromoCodes: putPromoCodesEndpoint,
   deletePromoCodes: deletePromoCodesEndpoint,
   patchPromoCodes: patchPromoCodesEndpoint,
@@ -14720,7 +14572,7 @@ export const endpoints = {
   deleteApiSocialProfilesPortfolio: deleteApiSocialProfilesPortfolioEndpoint,
   getApiSocialGroups: getApiSocialGroupsEndpoint,
   postApiSocialGroups: postApiSocialGroupsEndpoint,
-  getApiSocialGroups1: getApiSocialGroups1Endpoint,
+  getApiSocialGroupsById: getApiSocialGroupsByIdEndpoint,
   putApiSocialGroups: putApiSocialGroupsEndpoint,
   postApiSocialGroupsActivate: postApiSocialGroupsActivateEndpoint,
   postApiSocialGroupsArchive: postApiSocialGroupsArchiveEndpoint,
@@ -14740,12 +14592,12 @@ export const endpoints = {
   postSupportTicketsClose: postSupportTicketsCloseEndpoint,
   getTaxJurisdictions: getTaxJurisdictionsEndpoint,
   postTaxJurisdictions: postTaxJurisdictionsEndpoint,
-  getTaxJurisdictions1: getTaxJurisdictions1Endpoint,
+  getTaxJurisdictionsByJurisdictionId: getTaxJurisdictionsByJurisdictionIdEndpoint,
   deleteTaxJurisdictions: deleteTaxJurisdictionsEndpoint,
   patchTaxJurisdictions: patchTaxJurisdictionsEndpoint,
   getTaxRules: getTaxRulesEndpoint,
   postTaxRules: postTaxRulesEndpoint,
-  getTaxRules1: getTaxRules1Endpoint,
+  getTaxRulesByRuleId: getTaxRulesByRuleIdEndpoint,
   deleteTaxRules: deleteTaxRulesEndpoint,
   patchTaxRules: patchTaxRulesEndpoint,
   postPaymentsTaxCalculate: postPaymentsTaxCalculateEndpoint,
@@ -14763,17 +14615,17 @@ export const endpoints = {
   postTenantsArchive: postTenantsArchiveEndpoint,
   postTenantsUndelete: postTenantsUndeleteEndpoint,
   postTenantsPurge: postTenantsPurgeEndpoint,
-  postTenantsActivate1: postTenantsActivate1Endpoint,
-  postTenantsDeactivate1: postTenantsDeactivate1Endpoint,
-  postTenantsArchive1: postTenantsArchive1Endpoint,
-  postTenantsUndelete1: postTenantsUndelete1Endpoint,
-  postTenantsPurge1: postTenantsPurge1Endpoint,
+  postTenantsByTenantIdActivate: postTenantsByTenantIdActivateEndpoint,
+  postTenantsByTenantIdDeactivate: postTenantsByTenantIdDeactivateEndpoint,
+  postTenantsByTenantIdArchive: postTenantsByTenantIdArchiveEndpoint,
+  postTenantsByTenantIdUndelete: postTenantsByTenantIdUndeleteEndpoint,
+  postTenantsByTenantIdPurge: postTenantsByTenantIdPurgeEndpoint,
   getTenantsAuditLog: getTenantsAuditLogEndpoint,
   getTenants: getTenantsEndpoint,
   postTenants: postTenantsEndpoint,
   getTenantsPayments: getTenantsPaymentsEndpoint,
   postTenantsValidate: postTenantsValidateEndpoint,
-  getTenants1: getTenants1Endpoint,
+  getTenantsByTenantId: getTenantsByTenantIdEndpoint,
   putTenants: putTenantsEndpoint,
   deleteTenants: deleteTenantsEndpoint,
   patchTenants: patchTenantsEndpoint,
@@ -14789,8 +14641,8 @@ export const endpoints = {
   getTenantsMetadataTags: getTenantsMetadataTagsEndpoint,
   putTenantsMetadataTags: putTenantsMetadataTagsEndpoint,
   patchTenantsMetadataTags: patchTenantsMetadataTagsEndpoint,
-  getTenantsQuotas: getTenantsQuotasEndpoint,
-  getTenantsQuotas1: getTenantsQuotas1Endpoint,
+  getTenantsByTenantIdQuotas: getTenantsByTenantIdQuotasEndpoint,
+  getTenantsByTenantIdQuotasByType: getTenantsByTenantIdQuotasByTypeEndpoint,
   putTenantsQuotas: putTenantsQuotasEndpoint,
   deleteTenantsQuotas: deleteTenantsQuotasEndpoint,
   postTenantsQuotasReset: postTenantsQuotasResetEndpoint,
@@ -14802,12 +14654,12 @@ export const endpoints = {
   postTenantsResourcesRecord: postTenantsResourcesRecordEndpoint,
   postTenantsResourcesRecordWithQuotaCheck: postTenantsResourcesRecordWithQuotaCheckEndpoint,
   postTenantsResourcesReset: postTenantsResourcesResetEndpoint,
-  getTenantsResourcesMetadata: getTenantsResourcesMetadataEndpoint,
-  getTenantsResourcesMetadata1: getTenantsResourcesMetadata1Endpoint,
+  getTenantsByTenantIdResourcesMetadata: getTenantsByTenantIdResourcesMetadataEndpoint,
+  getTenantsByTenantIdResourcesMetadataByKey: getTenantsByTenantIdResourcesMetadataByKeyEndpoint,
   putTenantsResourcesMetadata: putTenantsResourcesMetadataEndpoint,
   deleteTenantsResourcesMetadata: deleteTenantsResourcesMetadataEndpoint,
-  getTenantsResourcesSettings: getTenantsResourcesSettingsEndpoint,
-  getTenantsResourcesSettings1: getTenantsResourcesSettings1Endpoint,
+  getTenantsByTenantIdResourcesSettings: getTenantsByTenantIdResourcesSettingsEndpoint,
+  getTenantsByTenantIdResourcesSettingsByKey: getTenantsByTenantIdResourcesSettingsByKeyEndpoint,
   putTenantsResourcesSettings: putTenantsResourcesSettingsEndpoint,
   deleteTenantsResourcesSettings: deleteTenantsResourcesSettingsEndpoint,
   getTenantsResourcesSettingsEffective: getTenantsResourcesSettingsEffectiveEndpoint,
@@ -14838,8 +14690,8 @@ export const endpoints = {
   getTestingEvents: getTestingEventsEndpoint,
   postTestingEvents: postTestingEventsEndpoint,
   getTestingEventsPublic: getTestingEventsPublicEndpoint,
-  getTestingEventsPublic1: getTestingEventsPublic1Endpoint,
-  getTestingEvents1: getTestingEvents1Endpoint,
+  getTestingEventsPublicByEventId: getTestingEventsPublicByEventIdEndpoint,
+  getTestingEventsByEventId: getTestingEventsByEventIdEndpoint,
   putTestingEvents: putTestingEventsEndpoint,
   deleteTestingEvents: deleteTestingEventsEndpoint,
   postTestingEventsOpenApplications: postTestingEventsOpenApplicationsEndpoint,
@@ -14856,10 +14708,10 @@ export const endpoints = {
   getTestingEventsCommittee: getTestingEventsCommitteeEndpoint,
   postTestingEventsCommittee: postTestingEventsCommitteeEndpoint,
   deleteTestingEventsCommittee: deleteTestingEventsCommitteeEndpoint,
-  getTestingEventsApplications: getTestingEventsApplicationsEndpoint,
+  getTestingEventsByEventIdApplications: getTestingEventsByEventIdApplicationsEndpoint,
   postTestingEventsApplications: postTestingEventsApplicationsEndpoint,
   getTestingEventsApplicationsMe: getTestingEventsApplicationsMeEndpoint,
-  getTestingEventsApplications1: getTestingEventsApplications1Endpoint,
+  getTestingEventsApplicationsByApplicationId: getTestingEventsApplicationsByApplicationIdEndpoint,
   postTestingEventsApplicationsWithdraw: postTestingEventsApplicationsWithdrawEndpoint,
   postTestingEventsApplicationsReview: postTestingEventsApplicationsReviewEndpoint,
   postTestingEventsApplicationsVotes: postTestingEventsApplicationsVotesEndpoint,
@@ -14891,7 +14743,7 @@ export const endpoints = {
   getApiTestingLabSettingsExists: getApiTestingLabSettingsExistsEndpoint,
   getTestingLocations: getTestingLocationsEndpoint,
   postTestingLocations: postTestingLocationsEndpoint,
-  getTestingLocations1: getTestingLocations1Endpoint,
+  getTestingLocationsById: getTestingLocationsByIdEndpoint,
   putTestingLocations: putTestingLocationsEndpoint,
   deleteTestingLocations: deleteTestingLocationsEndpoint,
   postTestingLocationsRestore: postTestingLocationsRestoreEndpoint,
@@ -14909,7 +14761,7 @@ export const endpoints = {
   getTestingAttendanceStudents: getTestingAttendanceStudentsEndpoint,
   getTestingRequests: getTestingRequestsEndpoint,
   postTestingRequests: postTestingRequestsEndpoint,
-  getTestingRequests1: getTestingRequests1Endpoint,
+  getTestingRequestsById: getTestingRequestsByIdEndpoint,
   putTestingRequests: putTestingRequestsEndpoint,
   deleteTestingRequests: deleteTestingRequestsEndpoint,
   getTestingRequestsDetails: getTestingRequestsDetailsEndpoint,
@@ -14924,7 +14776,7 @@ export const endpoints = {
   getTestingRequestsStatistics: getTestingRequestsStatisticsEndpoint,
   getTestingSessions: getTestingSessionsEndpoint,
   postTestingSessions: postTestingSessionsEndpoint,
-  getTestingSessions1: getTestingSessions1Endpoint,
+  getTestingSessionsById: getTestingSessionsByIdEndpoint,
   putTestingSessions: putTestingSessionsEndpoint,
   deleteTestingSessions: deleteTestingSessionsEndpoint,
   getTestingSessionsDetails: getTestingSessionsDetailsEndpoint,
@@ -14951,15 +14803,15 @@ export const endpoints = {
   postUsersUnsuspend: postUsersUnsuspendEndpoint,
   postUsersUndelete: postUsersUndeleteEndpoint,
   postUsersPurge: postUsersPurgeEndpoint,
-  postUsersActivate1: postUsersActivate1Endpoint,
-  postUsersDeactivate1: postUsersDeactivate1Endpoint,
-  postUsersSuspend1: postUsersSuspend1Endpoint,
-  postUsersUnsuspend1: postUsersUnsuspend1Endpoint,
-  postUsersUndelete1: postUsersUndelete1Endpoint,
-  postUsersPurge1: postUsersPurge1Endpoint,
+  postUsersByUserIdActivate: postUsersByUserIdActivateEndpoint,
+  postUsersByUserIdDeactivate: postUsersByUserIdDeactivateEndpoint,
+  postUsersByUserIdSuspend: postUsersByUserIdSuspendEndpoint,
+  postUsersByUserIdUnsuspend: postUsersByUserIdUnsuspendEndpoint,
+  postUsersByUserIdUndelete: postUsersByUserIdUndeleteEndpoint,
+  postUsersByUserIdPurge: postUsersByUserIdPurgeEndpoint,
   getUsers: getUsersEndpoint,
   postUsers: postUsersEndpoint,
-  getUsers1: getUsers1Endpoint,
+  getUsersByUserId: getUsersByUserIdEndpoint,
   putUsers: putUsersEndpoint,
   deleteUsers: deleteUsersEndpoint,
   patchUsers: patchUsersEndpoint,
@@ -14977,17 +14829,17 @@ export const endpoints = {
   getUsersMetadata: getUsersMetadataEndpoint,
   putUsersMetadata: putUsersMetadataEndpoint,
   patchUsersMetadata: patchUsersMetadataEndpoint,
-  getUsersNotifications: getUsersNotificationsEndpoint,
-  postUsersNotificationsMarkAsRead: postUsersNotificationsMarkAsReadEndpoint,
-  postUsersNotificationsMarkAsUnread: postUsersNotificationsMarkAsUnreadEndpoint,
-  postUsersNotificationsArchive: postUsersNotificationsArchiveEndpoint,
-  postUsersNotificationsUnarchive: postUsersNotificationsUnarchiveEndpoint,
-  getUsersNotifications1: getUsersNotifications1Endpoint,
+  getUsersByUserIdNotifications: getUsersByUserIdNotificationsEndpoint,
+  postUsersByUserIdNotificationsMarkAsRead: postUsersByUserIdNotificationsMarkAsReadEndpoint,
+  postUsersByUserIdNotificationsMarkAsUnread: postUsersByUserIdNotificationsMarkAsUnreadEndpoint,
+  postUsersByUserIdNotificationsArchive: postUsersByUserIdNotificationsArchiveEndpoint,
+  postUsersByUserIdNotificationsUnarchive: postUsersByUserIdNotificationsUnarchiveEndpoint,
+  getUsersByUserIdNotificationsByNotificationId: getUsersByUserIdNotificationsByNotificationIdEndpoint,
   headUsersNotifications: headUsersNotificationsEndpoint,
-  postUsersNotificationsMarkAsRead1: postUsersNotificationsMarkAsRead1Endpoint,
-  postUsersNotificationsMarkAsUnread1: postUsersNotificationsMarkAsUnread1Endpoint,
-  postUsersNotificationsArchive1: postUsersNotificationsArchive1Endpoint,
-  postUsersNotificationsUnarchive1: postUsersNotificationsUnarchive1Endpoint,
+  postUsersByUserIdNotificationsByNotificationIdMarkAsRead: postUsersByUserIdNotificationsByNotificationIdMarkAsReadEndpoint,
+  postUsersByUserIdNotificationsByNotificationIdMarkAsUnread: postUsersByUserIdNotificationsByNotificationIdMarkAsUnreadEndpoint,
+  postUsersByUserIdNotificationsByNotificationIdArchive: postUsersByUserIdNotificationsByNotificationIdArchiveEndpoint,
+  postUsersByUserIdNotificationsByNotificationIdUnarchive: postUsersByUserIdNotificationsByNotificationIdUnarchiveEndpoint,
   getUsersPreferences: getUsersPreferencesEndpoint,
   putUsersPreferences: putUsersPreferencesEndpoint,
   patchUsersPreferences: patchUsersPreferencesEndpoint,
@@ -15016,8 +14868,8 @@ export const endpoints = {
   getUsersProfile: getUsersProfileEndpoint,
   putUsersProfile: putUsersProfileEndpoint,
   patchUsersProfile: patchUsersProfileEndpoint,
-  getUsersQuotas: getUsersQuotasEndpoint,
-  getUsersQuotas1: getUsersQuotas1Endpoint,
+  getUsersByUserIdQuotas: getUsersByUserIdQuotasEndpoint,
+  getUsersByUserIdQuotasByType: getUsersByUserIdQuotasByTypeEndpoint,
   putUsersQuotas: putUsersQuotasEndpoint,
   deleteUsersQuotas: deleteUsersQuotasEndpoint,
   postUsersQuotasReset: postUsersQuotasResetEndpoint,
@@ -15029,11 +14881,11 @@ export const endpoints = {
   postUsersResourcesRecord: postUsersResourcesRecordEndpoint,
   postUsersResourcesRecordWithQuotaCheck: postUsersResourcesRecordWithQuotaCheckEndpoint,
   postUsersResourcesReset: postUsersResourcesResetEndpoint,
-  getUsersResourcesMetadata: getUsersResourcesMetadataEndpoint,
-  getUsersResourcesMetadata1: getUsersResourcesMetadata1Endpoint,
+  getUsersByUserIdResourcesMetadata: getUsersByUserIdResourcesMetadataEndpoint,
+  getUsersByUserIdResourcesMetadataByKey: getUsersByUserIdResourcesMetadataByKeyEndpoint,
   putUsersResourcesMetadata: putUsersResourcesMetadataEndpoint,
-  getUsersResourcesSettings: getUsersResourcesSettingsEndpoint,
-  getUsersResourcesSettings1: getUsersResourcesSettings1Endpoint,
+  getUsersByUserIdResourcesSettings: getUsersByUserIdResourcesSettingsEndpoint,
+  getUsersByUserIdResourcesSettingsByKey: getUsersByUserIdResourcesSettingsByKeyEndpoint,
   putUsersResourcesSettings: putUsersResourcesSettingsEndpoint,
   getWallet: getWalletEndpoint,
   postWallet: postWalletEndpoint,
@@ -15041,7 +14893,7 @@ export const endpoints = {
   postWalletLock: postWalletLockEndpoint,
   postWalletUnlock: postWalletUnlockEndpoint,
   getWallets: getWalletsEndpoint,
-  getWallets1: getWallets1Endpoint,
+  getWalletsByWalletId: getWalletsByWalletIdEndpoint,
   deleteWallets: deleteWalletsEndpoint,
   patchWallets: patchWalletsEndpoint,
   headWallets: headWalletsEndpoint,
