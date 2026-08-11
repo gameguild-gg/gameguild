@@ -77,7 +77,7 @@ public sealed class PostgreSqlProviderReversalGateway : IProviderReversalGateway
                         {request.Authority.RiskOperationFingerprint},
                         {request.Authority.ExpectedCounterVersion},
                         {command.OccurredAt},
-                        {request.DispatchSnapshotHash});
+                        {request.DispatchSnapshotHash})
                     """)
                 .AsNoTracking()
                 .Single();
