@@ -17,7 +17,6 @@ namespace GameGuild.Commerce.Subscriptions;
 public sealed class ClientsController(ISender sender) : BaseApiController
 {
     [HttpPost("v{version:apiVersion}/clients")]
-    [HttpPost("api/v{version:apiVersion}/clients")]
     [EndpointSummary("Create a B2B client account")]
     [EndpointDescription("Creates a client account using the canonical tenant creation workflow.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -54,7 +53,6 @@ public sealed class ClientsController(ISender sender) : BaseApiController
     }
 
     [HttpGet("v{version:apiVersion}/clients")]
-    [HttpGet("api/v{version:apiVersion}/clients")]
     [EndpointSummary("List B2B client accounts")]
     [EndpointDescription("Lists client accounts through the canonical tenant page query.")]
     [ProducesResponseType<PagedResult<Tenant>>(StatusCodes.Status200OK)]
@@ -73,7 +71,6 @@ public sealed class ClientsController(ISender sender) : BaseApiController
     }
 
     [HttpGet("v{version:apiVersion}/clients/{clientId:guid}", Name = "GetClientById")]
-    [HttpGet("api/v{version:apiVersion}/clients/{clientId:guid}")]
     [EndpointSummary("Get a B2B client account")]
     [ProducesResponseType<Tenant>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -84,7 +81,6 @@ public sealed class ClientsController(ISender sender) : BaseApiController
     }
 
     [HttpPut("v{version:apiVersion}/clients/{clientId:guid}")]
-    [HttpPut("api/v{version:apiVersion}/clients/{clientId:guid}")]
     [EndpointSummary("Update a B2B client account")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -97,7 +93,6 @@ public sealed class ClientsController(ISender sender) : BaseApiController
     }
 
     [HttpDelete("v{version:apiVersion}/clients/{clientId:guid}")]
-    [HttpDelete("api/v{version:apiVersion}/clients/{clientId:guid}")]
     [EndpointSummary("Archive a B2B client account")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -110,7 +105,6 @@ public sealed class ClientsController(ISender sender) : BaseApiController
     }
 
     [HttpGet("v{version:apiVersion}/clients/{clientId:guid}/modules")]
-    [HttpGet("api/v{version:apiVersion}/clients/{clientId:guid}/modules")]
     [EndpointSummary("List contracted modules for a B2B client")]
     [EndpointDescription("Returns subscription-backed modules plus tenant feature flags for a client account.")]
     [ProducesResponseType<ClientModulesResponse>(StatusCodes.Status200OK)]
@@ -131,9 +125,7 @@ public sealed class ClientsController(ISender sender) : BaseApiController
     }
 
     [HttpPatch("v{version:apiVersion}/clients/{clientId:guid}/modules")]
-    [HttpPatch("api/v{version:apiVersion}/clients/{clientId:guid}/modules")]
     [HttpPut("v{version:apiVersion}/clients/{clientId:guid}/modules")]
-    [HttpPut("api/v{version:apiVersion}/clients/{clientId:guid}/modules")]
     [EndpointSummary("Update contracted module toggles for a B2B client")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

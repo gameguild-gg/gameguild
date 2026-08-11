@@ -104,8 +104,8 @@ export class LearningCoursesProgramcontentModule {
 
   /**
    */
-  async postCoursesContentReorder(programId: string, body: Types.LearningCoursesReorderContent): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${programId}/content/reorder`;
+  async deleteCoursesContent(programId: string, id: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${programId}/content/${id}`;
 
     const result = await this.client.request({
       method: 'DELETE',
