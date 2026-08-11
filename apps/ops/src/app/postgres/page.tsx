@@ -45,8 +45,8 @@ export default function PostgresPage() {
       </Alert>
     );
 
-  const clusters: CnpgCluster[] = data?.clusters ?? [];
-  const instances: CnpgInstance[] = data?.instances ?? [];
+  const clusters: CnpgCluster[] = Array.isArray(data?.clusters) ? data.clusters : [];
+  const instances: CnpgInstance[] = Array.isArray(data?.instances) ? data.instances : [];
   const cluster = clusters[0];
 
   return (

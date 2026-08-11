@@ -52,8 +52,8 @@ function phaseTone(phase: string): string {
 export default function BackupsPage() {
   const { data, isLoading, error } = useVelero();
   const velero = data as Velero | undefined;
-  const schedules = velero?.schedules ?? [];
-  const lastBackups = velero?.lastBackups ?? [];
+  const schedules = Array.isArray(velero?.schedules) ? velero.schedules : [];
+  const lastBackups = Array.isArray(velero?.lastBackups) ? velero.lastBackups : [];
 
   if (isLoading) {
     return <div className="text-muted-foreground">Loading backups…</div>;

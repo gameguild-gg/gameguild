@@ -22,7 +22,7 @@ type Service = {
 
 export default function ServicesPage() {
   const { data, isLoading, error } = useServices();
-  const services = (data as Service[] | undefined) ?? [];
+  const services = Array.isArray(data) ? (data as Service[]) : [];
 
   if (isLoading) {
     return <div className="text-muted-foreground">Loading services…</div>;
