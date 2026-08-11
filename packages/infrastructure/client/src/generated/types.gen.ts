@@ -218,6 +218,11 @@ export interface APIControllersDependencyHealthOutput {
   error?: string | null;
 }
 
+export interface APIControllersEconomySelfServiceCapability {
+  capability?: EconomyRiskEconomyValueMovementCapability;
+  state?: APISetupEconomyCapabilityReadinessState;
+}
+
 export interface APIControllersHealthinessOutput {
   status?: string | null;
   duration?: string;
@@ -260,6 +265,8 @@ export interface APIControllersRuntimeDetails {
   osArchitecture?: string | null;
   processArchitecture?: string | null;
 }
+
+export type APISetupEconomyCapabilityReadinessState = 'Disabled' | 'Ready' | 'ProviderNotReady' | 'InvalidConfiguration';
 
 export type BillingCycle = 'Weekly' | 'Monthly' | 'Quarterly' | 'SemiAnnually' | 'Annually' | 'Biannually';
 
@@ -1963,6 +1970,18 @@ export interface EconomyPayoutsQueriesEconomyPayoutOperation {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export type EconomyRiskEconomyValueMovementCapability =
+  | 'ConfirmHardCoinFunding'
+  | 'ConvertHardToSoft'
+  | 'ReverseProviderFunding'
+  | 'Transfer'
+  | 'IssueAdReward'
+  | 'BountyEscrow'
+  | 'BountyClaim'
+  | 'MarketplaceSettlement'
+  | 'PayoutExecution'
+  | 'AdminWithdrawalExecution';
 
 export interface FeaturesBulkEvaluationInput {
   featureKeys?: Array<string> | null;
@@ -8262,12 +8281,14 @@ export let APIControllersApplicationInfoOutputSchema: z.ZodType<APIControllersAp
 export let APIControllersBuildDetailsSchema: z.ZodType<APIControllersBuildDetails>;
 export let APIControllersDependencyHealthItemSchema: z.ZodType<APIControllersDependencyHealthItem>;
 export let APIControllersDependencyHealthOutputSchema: z.ZodType<APIControllersDependencyHealthOutput>;
+export let APIControllersEconomySelfServiceCapabilitySchema: z.ZodType<APIControllersEconomySelfServiceCapability>;
 export let APIControllersHealthinessOutputSchema: z.ZodType<APIControllersHealthinessOutput>;
 export let APIControllersHealthinessResponseItemSchema: z.ZodType<APIControllersHealthinessResponseItem>;
 export let APIControllersLivenessOutputSchema: z.ZodType<APIControllersLivenessOutput>;
 export let APIControllersProcessDetailsSchema: z.ZodType<APIControllersProcessDetails>;
 export let APIControllersReadinessOutputSchema: z.ZodType<APIControllersReadinessOutput>;
 export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDetails>;
+export let APISetupEconomyCapabilityReadinessStateSchema: z.ZodType<APISetupEconomyCapabilityReadinessState>;
 export let BillingCycleSchema: z.ZodType<BillingCycle>;
 export let BulkOperationErrorSchema: z.ZodType<BulkOperationError>;
 export let BulkOperationOutputSchema: z.ZodType<BulkOperationOutput>;
@@ -8444,6 +8465,7 @@ export let EconomyContractsWalletLifecycleStateSchema: z.ZodType<EconomyContract
 export let EconomyFundingSelfServiceHardToSoftConversionReceiptSchema: z.ZodType<EconomyFundingSelfServiceHardToSoftConversionReceipt>;
 export let EconomyPayoutsPayoutOperationStateSchema: z.ZodType<EconomyPayoutsPayoutOperationState>;
 export let EconomyPayoutsQueriesEconomyPayoutOperationSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutOperation>;
+export let EconomyRiskEconomyValueMovementCapabilitySchema: z.ZodType<EconomyRiskEconomyValueMovementCapability>;
 export let FeaturesBulkEvaluationInputSchema: z.ZodType<FeaturesBulkEvaluationInput>;
 export let FeaturesCapabilityAuditLogSchema: z.ZodType<FeaturesCapabilityAuditLog>;
 export let FeaturesCapabilityCheckOutputSchema: z.ZodType<FeaturesCapabilityCheckOutput>;
@@ -9359,6 +9381,12 @@ APIControllersDependencyHealthOutputSchema = z.object({
   error: z.string().nullable().optional(),
 });
 
+/** Zod schema for APIControllersEconomySelfServiceCapability */
+APIControllersEconomySelfServiceCapabilitySchema = z.object({
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  state: z.lazy(() => APISetupEconomyCapabilityReadinessStateSchema).optional(),
+});
+
 /** Zod schema for APIControllersHealthinessOutput */
 APIControllersHealthinessOutputSchema = z.object({
   status: z.string().nullable().optional(),
@@ -9413,6 +9441,9 @@ APIControllersRuntimeDetailsSchema = z.object({
   osArchitecture: z.string().nullable().optional(),
   processArchitecture: z.string().nullable().optional(),
 });
+
+/** Zod schema for APISetupEconomyCapabilityReadinessState */
+APISetupEconomyCapabilityReadinessStateSchema = z.enum(['Disabled', 'Ready', 'ProviderNotReady', 'InvalidConfiguration']);
 
 /** Zod schema for BillingCycle */
 BillingCycleSchema = z.enum(['Weekly', 'Monthly', 'Quarterly', 'SemiAnnually', 'Annually', 'Biannually']);
@@ -11393,6 +11424,20 @@ EconomyPayoutsQueriesEconomyPayoutOperationSchema = z.object({
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
 });
+
+/** Zod schema for EconomyRiskEconomyValueMovementCapability */
+EconomyRiskEconomyValueMovementCapabilitySchema = z.enum([
+  'ConfirmHardCoinFunding',
+  'ConvertHardToSoft',
+  'ReverseProviderFunding',
+  'Transfer',
+  'IssueAdReward',
+  'BountyEscrow',
+  'BountyClaim',
+  'MarketplaceSettlement',
+  'PayoutExecution',
+  'AdminWithdrawalExecution',
+]);
 
 /** Zod schema for FeaturesBulkEvaluationInput */
 FeaturesBulkEvaluationInputSchema = z.object({
