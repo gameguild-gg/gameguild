@@ -15,11 +15,12 @@
  * by the preview components.
  */
 
-import type { Block, BlockArray, BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
+import type { Block, BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { blockToPreviewNode } from "@/components/block-content-editor/lib/storage/editor/block-storage"
 
 // Import all preview components
 import { PreviewQuiz } from "@/components/block-content-editor/plugins/preview-components/preview-quiz"
+import type { QuizSubmissionMode } from "@/components/block-content-editor/extras/quiz/hooks/use-quiz-answers"
 import { PreviewImage } from "@/components/block-content-editor/plugins/preview-components/preview-image"
 import { PreviewGallery } from "@/components/block-content-editor/plugins/preview-components/preview-gallery"
 import { PreviewMarkdown } from "@/components/block-content-editor/plugins/preview-components/preview-markdown"
@@ -40,12 +41,13 @@ import { PreviewRichText } from "@/components/block-content-editor/plugins/previ
 
 interface BlockContentRendererProps {
   block: Block
+  quizSubmissionMode?: QuizSubmissionMode
 }
 
-export function BlockContentRenderer({ block }: BlockContentRendererProps) {
+export function BlockContentRenderer({ block, quizSubmissionMode }: BlockContentRendererProps) {
   switch (block.type) {
     case "quiz":
-      return <PreviewQuiz node={blockToPreviewNode(block)} />
+      return <PreviewQuiz node={blockToPreviewNode(block)} submissionMode={quizSubmissionMode} />
     case "code-studio":
       return <PreviewCodeStudio data={block.data} />
     case "image":
@@ -88,9 +90,10 @@ export function BlockContentRenderer({ block }: BlockContentRendererProps) {
 interface BlockArrayViewerProps {
   blocks: BlockArray
   className?: string
+  quizSubmissionMode?: QuizSubmissionMode
 }
 
-export function BlockArrayViewer({ blocks, className }: BlockArrayViewerProps) {
+export function BlockArrayViewer({ blocks, className, quizSubmissionMode }: BlockArrayViewerProps) {
   if (!blocks || blocks.length === 0) {
     return (
       <div className="py-16 text-center text-sm text-gray-500 dark:text-gray-400">
@@ -102,7 +105,7 @@ export function BlockArrayViewer({ blocks, className }: BlockArrayViewerProps) {
   return (
     <div className={className ?? "prose prose-stone dark:prose-invert max-w-none space-y-4"}>
       {blocks.map((block) => (
-        <BlockContentRenderer key={block.id} block={block} />
+        <BlockContentRenderer key={block.id} block={block} quizSubmissionMode={quizSubmissionMode} />
       ))}
     </div>
   )

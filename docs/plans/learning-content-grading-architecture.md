@@ -368,6 +368,19 @@ Main work:
 - update docs and tests to match server-only behavior;
 - prepare backend-facing schemas/test vectors for Part 3.
 
+### Part 2.5: Quiz Adapter Hardening
+
+Part 2.5 closes the safety and precision gaps found after the Part 2 review, before the backend starts trusting the quiz adapter.
+
+Main work:
+
+- make quiz learner redaction type-aware for every authored quiz type;
+- remove answer-key leaks from matching, ordering, categorization, dropdown, word bank, numeric, formula, hotspot, and highlight learner payloads;
+- align `gradingKind` with the adapter's real deterministic/manual/external/unsupported capabilities;
+- normalize structured answer payloads by whitelisting allowed learner answer fields;
+- add backend-facing test vectors for deterministic, manual, and unsupported quiz cases;
+- keep frontend quiz runtime as answer collection/submission state only, not client correctness.
+
 ### Part 3: Backend Integration
 
 Part 3 connects server-side grading to the existing Learning backend.

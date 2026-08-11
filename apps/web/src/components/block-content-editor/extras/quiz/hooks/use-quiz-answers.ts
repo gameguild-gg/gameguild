@@ -1,14 +1,68 @@
+/**
+ * Quiz Answer Validation Hook
+ * Manages quiz state and answer validation for all question types.
+ */
+
 "use client"
 
 import { useCallback, useState } from "react"
+import { gradeQuizAnswer } from "@game-guild/grading"
 import {
   type QuizAnswerState,
   type QuizEntry,
+  QuizEntryType,
   createEmptyAnswerState,
+  type FillBlankNumberInput,
+  FillBlankInputType,
+  type FillBlankTextInput,
 } from "../types"
+import { evaluateFormula, generateVariableValue, validateFormula } from "../utils/formula-evaluator"
+
+export type QuizSubmissionMode = "local-practice" | "server-graded"
 
 interface UseQuizAnswersProps {
   entry: QuizEntry
+  submissionMode?: QuizSubmissionMode
+}
+
+/**
+ * Extracts a normalized formatting structure from a Lexical editor state.
+ * Accepts either the serialized JSON string or a parsed `SerializedEditorState`
+ * object. Returns an array of `{ type, format, children }` per node, stripping
+ * text content so only structure and formatting flags are compared.
+ */
+function extractFormattingStructure(input: string | object): unknown[] | null {
+  try {
+    const state = typeof input === "string" ? JSON.parse(input) : input
+    const root = (state as { root?: { children?: unknown[] } })?.root
+    if (!root?.children) return null
+
+    function normalizeNode(node: Record<string, unknown>): Record<string, unknown> {
+      const result: Record<string, unknown> = { type: node.type }
+
+      if (node.format !== undefined) result.format = node.format
+      if (node.tag !== undefined) result.tag = node.tag
+      if (node.listType !== undefined) result.listType = node.listType
+
+      if (Array.isArray(node.children)) {
+        result.children = (node.children as Record<string, unknown>[]).map(normalizeNode)
+      }
+
+      return result
+    }
+
+    return (root.children as Record<string, unknown>[]).map(normalizeNode)
+  } catch {
+    return null
+  }
+}
+
+function compareFormattingStructure(expected: string | object, userSerialized: string): boolean {
+  const expectedStructure = extractFormattingStructure(expected)
+  const user = extractFormattingStructure(userSerialized)
+  if (!expectedStructure || !user) return false
+
+  return JSON.stringify(expectedStructure) === JSON.stringify(user)
 }
 
 interface UseQuizAnswersReturn {
@@ -20,7 +74,10 @@ interface UseQuizAnswersReturn {
   resetQuiz: () => void
 }
 
-export function useQuizAnswers(_props: UseQuizAnswersProps): UseQuizAnswersReturn {
+export function useQuizAnswers({
+  entry,
+  submissionMode = "local-practice",
+}: UseQuizAnswersProps): UseQuizAnswersReturn {
   const [answerState, setAnswerState] = useState<QuizAnswerState>(createEmptyAnswerState())
   const [showFeedback, setShowFeedback] = useState(false)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
@@ -30,10 +87,365 @@ export function useQuizAnswers(_props: UseQuizAnswersProps): UseQuizAnswersRetur
   }, [])
 
   const checkAnswers = useCallback(() => {
-    // The browser may collect answers, but correctness is always produced by the server.
-    setIsCorrect(null)
+    if (submissionMode === "server-graded") {
+      setIsCorrect(null)
+      setShowFeedback(true)
+      return
+    }
+
+    const packageResult = gradeQuizAnswer(entry, answerState)
+    if (packageResult.status === "graded") {
+      setIsCorrect(packageResult.isCorrect === true)
+      setShowFeedback(true)
+      return
+    }
+
+    if (packageResult.status === "pending") {
+      setIsCorrect(true)
+      setShowFeedback(true)
+      return
+    }
+
+    let correct = false
+
+    switch (entry.type) {
+      case QuizEntryType.SingleChoice: {
+        const selectedId = answerState.selectedOptionIds[0]
+        correct = selectedId === entry.correctOptionId
+        break
+      }
+
+      case QuizEntryType.MultipleChoice: {
+        const selected = new Set(answerState.selectedOptionIds)
+        const correctIds = new Set(entry.correctOptionIds)
+        correct =
+          selected.size === correctIds.size &&
+          [...selected].every((id) => correctIds.has(id))
+        break
+      }
+
+      case QuizEntryType.TrueFalse: {
+        const selectedId = answerState.selectedOptionIds[0]
+        correct = selectedId === (entry.correctAnswer ? "true" : "false")
+        break
+      }
+
+      case QuizEntryType.FillInTheBlank: {
+        correct = entry.blanks.every((blank) => {
+          const rawAnswer = (answerState.textAnswers[blank.id] || "").trim()
+          if (!rawAnswer) return false
+
+          switch (blank.input.type) {
+            case FillBlankInputType.Text: {
+              const textInput = blank.input as FillBlankTextInput
+              const caseSensitive = textInput.caseSensitive ?? false
+              return textInput.acceptedAnswers.some((accepted) =>
+                caseSensitive
+                  ? rawAnswer === accepted
+                  : rawAnswer.toLowerCase() === accepted.toLowerCase(),
+              )
+            }
+
+            case FillBlankInputType.Number: {
+              const numberInput = blank.input as FillBlankNumberInput
+              let numericStr = rawAnswer
+
+              if (numberInput.unit) {
+                numericStr = numericStr
+                  .replace(new RegExp(`\\s*${numberInput.unit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`), "")
+                  .trim()
+
+                if (numberInput.requireUnit && numericStr === rawAnswer) return false
+              }
+
+              const userNumber = Number.parseFloat(numericStr)
+              if (Number.isNaN(userNumber)) return false
+              if (!(numberInput.allowNegative ?? true) && userNumber < 0) return false
+
+              if (numberInput.requiredPrecision !== undefined) {
+                const decimalPart = numericStr.includes(".") ? numericStr.split(".")[1] || "" : ""
+                if (decimalPart.length !== numberInput.requiredPrecision) return false
+              }
+
+              const tolerance = numberInput.tolerance ?? 0
+              return Math.abs(userNumber - numberInput.correctValue) <= tolerance
+            }
+
+            case FillBlankInputType.Dropdown:
+              return rawAnswer === blank.input.options[0]
+
+            case FillBlankInputType.WordBank: {
+              const userWord = rawAnswer.includes("|") ? rawAnswer.split("|")[0] : rawAnswer
+              return userWord === blank.input.words[0]
+            }
+
+            default:
+              return false
+          }
+        })
+        break
+      }
+
+      case QuizEntryType.ShortAnswer: {
+        const userAnswer = (answerState.textAnswers.main || "").trim()
+        const caseSensitive = entry.caseSensitive ?? false
+        correct = entry.acceptedAnswers.some((accepted) =>
+          caseSensitive
+            ? userAnswer === accepted
+            : userAnswer.toLowerCase() === accepted.toLowerCase(),
+        )
+        break
+      }
+
+      case QuizEntryType.Essay: {
+        const expectedPlain = (entry.correctAnswerPlain || "").trim()
+        if (!expectedPlain) {
+          correct = true
+          break
+        }
+
+        const userPlain = (answerState.textAnswers.main_plain || "").trim()
+        const textMatch = userPlain.toLowerCase() === expectedPlain.toLowerCase()
+
+        if (!textMatch) {
+          correct = false
+          break
+        }
+
+        if (entry.requireFormatting && entry.correctAnswer) {
+          const userSerialized = answerState.textAnswers.main || ""
+          correct = compareFormattingStructure(entry.correctAnswer, userSerialized)
+        } else {
+          correct = true
+        }
+        break
+      }
+
+      case QuizEntryType.Matching: {
+        const userAssignments = new Map<string, string>()
+        answerState.selectedOptionIds.forEach((sel) => {
+          const idx = sel.indexOf(":")
+          if (idx > 0) {
+            userAssignments.set(sel.substring(0, idx), sel.substring(idx + 1))
+          }
+        })
+
+        if (userAssignments.size !== entry.pairs.length) {
+          correct = false
+        } else {
+          correct = entry.pairs.every((pair) => userAssignments.get(pair.id) === pair.right)
+        }
+        break
+      }
+
+      case QuizEntryType.Ordering: {
+        const userOrder = answerState.ordering
+        const correctOrder = [...entry.items]
+          .sort((a, b) => a.correctPosition - b.correctPosition)
+          .map((item) => item.id)
+        correct =
+          userOrder.length === correctOrder.length &&
+          userOrder.every((id, index) => id === correctOrder[index])
+        break
+      }
+
+      case QuizEntryType.Categorization: {
+        correct = entry.items.every((item) => {
+          const assignedCategories = new Set(answerState.categorizations[item.id] || [])
+          const correctCategories = new Set(item.correctCategoryIds)
+          return (
+            assignedCategories.size === correctCategories.size &&
+            [...assignedCategories].every((id) => correctCategories.has(id))
+          )
+        })
+        break
+      }
+
+      case QuizEntryType.Rating: {
+        correct = entry.correctRating !== undefined
+          ? answerState.rating === entry.correctRating
+          : answerState.rating !== undefined
+        break
+      }
+
+      case QuizEntryType.Numeric: {
+        const userStr = (answerState.textAnswers.main || "").trim()
+        if (!userStr) {
+          correct = false
+          break
+        }
+
+        const storedValsNumeric = answerState.textAnswers.formula_values
+        if (!storedValsNumeric) {
+          correct = false
+          break
+        }
+
+        try {
+          const values = JSON.parse(storedValsNumeric) as Record<string, number>
+          const expected = evaluateFormula(entry.formula, values)
+          const userNum = Number.parseFloat(userStr)
+
+          if (Number.isNaN(userNum)) {
+            correct = false
+            break
+          }
+
+          const diff = Math.abs(userNum - expected)
+          if (entry.toleranceType === "percentage") {
+            const threshold = Math.abs(expected) * (entry.tolerance / 100)
+            correct = diff <= threshold
+          } else {
+            correct = diff <= entry.tolerance
+          }
+        } catch {
+          correct = false
+        }
+        break
+      }
+
+      case QuizEntryType.Formula: {
+        const userStr = (answerState.textAnswers.main || "").trim()
+        if (!userStr) {
+          correct = false
+          break
+        }
+
+        const storedVals = answerState.textAnswers.formula_values
+        if (!storedVals) {
+          correct = false
+          break
+        }
+
+        try {
+          const values = JSON.parse(storedVals) as Record<string, number>
+          const varNames = entry.variables.map((v) => v.name).filter(Boolean)
+          const validationError = validateFormula(userStr, varNames)
+
+          if (validationError) {
+            correct = false
+            break
+          }
+
+          const numTests = 5
+          const testResults: Array<{
+            values: Record<string, number>
+            userResult: number
+            expected: number
+            passed: boolean
+          }> = []
+
+          const userResult0 = evaluateFormula(userStr, values)
+          const expected0 = evaluateFormula(entry.formula, values)
+          const diff0 = Math.abs(userResult0 - expected0)
+          const threshold0 = entry.toleranceType === "percentage"
+            ? Math.abs(expected0) * (entry.tolerance / 100)
+            : entry.tolerance
+
+          testResults.push({
+            values: { ...values },
+            userResult: userResult0,
+            expected: expected0,
+            passed: diff0 <= threshold0,
+          })
+
+          for (let i = 1; i < numTests; i++) {
+            const testVals: Record<string, number> = {}
+            for (const variable of entry.variables) {
+              if (variable.name) {
+                testVals[variable.name] = generateVariableValue(variable.min, variable.max, variable.decimals)
+              }
+            }
+
+            const userResult = evaluateFormula(userStr, testVals)
+            const expected = evaluateFormula(entry.formula, testVals)
+            const diff = Math.abs(userResult - expected)
+            const threshold = entry.toleranceType === "percentage"
+              ? Math.abs(expected) * (entry.tolerance / 100)
+              : entry.tolerance
+
+            testResults.push({
+              values: testVals,
+              userResult,
+              expected,
+              passed: diff <= threshold,
+            })
+          }
+
+          setAnswerState((prev) => ({
+            ...prev,
+            textAnswers: {
+              ...prev.textAnswers,
+              formula_test_results: JSON.stringify(testResults),
+            },
+          }))
+
+          correct = testResults.every((result) => result.passed)
+        } catch {
+          correct = false
+        }
+        break
+      }
+
+      case QuizEntryType.Hotspot: {
+        const hx = Number.parseFloat(answerState.textAnswers.hotspot_x || "")
+        const hy = Number.parseFloat(answerState.textAnswers.hotspot_y || "")
+
+        if (Number.isNaN(hx) || Number.isNaN(hy)) {
+          correct = false
+          break
+        }
+
+        let withinAny = false
+        for (const hotspot of entry.hotspots) {
+          if (hotspot.zones.length === 0) continue
+
+          const outermostRadius = Math.max(...hotspot.zones.map((zone) => zone.radius))
+          const dx = (hx - hotspot.x) / 100 * entry.imageWidth
+          const dy = (hy - hotspot.y) / 100 * entry.imageHeight
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          const threshold = outermostRadius / 100 * entry.imageWidth
+
+          if (distance <= threshold) {
+            withinAny = true
+            break
+          }
+        }
+
+        correct = withinAny
+        break
+      }
+
+      case QuizEntryType.Highlight: {
+        try {
+          const studentSpans = JSON.parse(answerState.textAnswers.highlight_spans || "[]") as Array<{
+            start: number
+            end: number
+          }>
+
+          if (studentSpans.length === 0 && entry.highlights.length > 0) {
+            correct = false
+            break
+          }
+
+          const allCorrectCovered = entry.highlights.every((highlight) =>
+            studentSpans.some((span) => span.start < highlight.end && span.end > highlight.start),
+          )
+          const noFalsePositives = studentSpans.every((span) =>
+            entry.highlights.some((highlight) => span.start < highlight.end && span.end > highlight.start),
+          )
+
+          correct = allCorrectCovered && noFalsePositives
+        } catch {
+          correct = false
+        }
+        break
+      }
+    }
+
+    setIsCorrect(correct)
     setShowFeedback(true)
-  }, [])
+  }, [answerState, entry, submissionMode])
 
   const resetQuiz = useCallback(() => {
     setAnswerState(createEmptyAnswerState())

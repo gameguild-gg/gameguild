@@ -7,14 +7,15 @@
 
 import { QuizFeedback } from "./quiz-feedback"
 import { QuizRenderer } from "./renderers/quiz-renderer"
-import { useQuizAnswers } from "./hooks/use-quiz-answers"
+import { type QuizSubmissionMode, useQuizAnswers } from "./hooks/use-quiz-answers"
 import { type QuizEntry, QuizEntryType } from "./types"
 
 interface QuizDisplayProps {
   entry: QuizEntry
+  submissionMode?: QuizSubmissionMode
 }
 
-export function QuizDisplay({ entry }: QuizDisplayProps) {
+export function QuizDisplay({ entry, submissionMode }: QuizDisplayProps) {
   const {
     answerState,
     updateAnswerState,
@@ -22,8 +23,8 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
     isCorrect,
     checkAnswers,
     resetQuiz,
-  } = useQuizAnswers({ entry })
-  const hasTrustedFeedback = showFeedback && isCorrect !== null
+  } = useQuizAnswers({ entry, submissionMode })
+  const hasAnswerFeedback = showFeedback && isCorrect !== null
 
   return (
     <div className="space-y-4">
@@ -38,7 +39,7 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
         answerState={answerState}
         onAnswerChange={updateAnswerState}
         disabled={false}
-        showFeedback={hasTrustedFeedback}
+        showFeedback={hasAnswerFeedback}
       />
 
       {/* Submit button - h-12 ensures Submit/Feedback/Submitted all share
@@ -53,7 +54,7 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
       )}
 
       {/* Feedback */}
-      {hasTrustedFeedback && (entry.settings.showFeedback ?? true) && (
+      {hasAnswerFeedback && (entry.settings.showFeedback ?? true) && (
         <QuizFeedback
           isCorrect={isCorrect === true}
           correctFeedback={entry.feedback?.correct || ""}
@@ -65,7 +66,7 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
       )}
 
       {/* Submitted without feedback - h-12 matches Submit button height */}
-      {showFeedback && !hasTrustedFeedback && (
+      {showFeedback && !hasAnswerFeedback && (
         <div className="flex items-center justify-between gap-3 rounded-lg px-4 h-12 py-0 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
           <span className="font-medium">Answer submitted.</span>
           {entry.settings.allowRetry && (
@@ -79,7 +80,7 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
         </div>
       )}
 
-      {hasTrustedFeedback && !(entry.settings.showFeedback ?? true) && (
+      {hasAnswerFeedback && !(entry.settings.showFeedback ?? true) && (
         <div className="flex items-center justify-between gap-3 rounded-lg px-4 h-12 py-0 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
           <span className="font-medium">Answer submitted.</span>
           {entry.settings.allowRetry && (

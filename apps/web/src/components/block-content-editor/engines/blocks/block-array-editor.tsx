@@ -34,6 +34,7 @@ import { BlockContentRenderer } from "./block-array-viewer"
 import { InlineRichTextEditor } from "../../extras/rich-text/inline-rich-text-editor"
 import type { RichTextData } from "../../nodes/rich-text-node"
 import { DragPreview, useBlockDragDrop } from "./block-drag-drop"
+import type { QuizSubmissionMode } from "../../extras/quiz/hooks/use-quiz-answers"
 
 // ============================================================================
 // Insert Line — the "seam" between blocks where new blocks can be added
@@ -84,9 +85,10 @@ interface BlockCardProps {
   /** Called during drag with the insertion index (before=index, after=index+1) */
   onDragHover?: (insertIndex: number) => void
   onDropHere?: () => void
+  quizSubmissionMode?: QuizSubmissionMode
 }
 
-function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit, onUpdate, readOnly, hideRemove, onDragStart, onDragEnd, isDragSource, onDragHover, onDropHere }: BlockCardProps) {
+function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit, onUpdate, readOnly, hideRemove, onDragStart, onDragEnd, isDragSource, onDragHover, onDropHere, quizSubmissionMode }: BlockCardProps) {
   const config = BLOCK_REGISTRY[block.type]
 
   if (!config) return null
@@ -202,7 +204,7 @@ function BlockCard({ block, index, total, onMoveUp, onMoveDown, onRemove, onEdit
       ) : (
         <div className="p-4">
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <BlockContentRenderer block={block} />
+            <BlockContentRenderer block={block} quizSubmissionMode={quizSubmissionMode} />
           </div>
         </div>
       )}
@@ -233,9 +235,11 @@ interface BlockArrayEditorProps {
   singleBlockMode?: boolean
   /** Called when drag state changes (for parent zoom) */
   onDragStateChange?: (dragging: boolean) => void
+  /** How quiz blocks behave when the preview Submit button is clicked. */
+  quizSubmissionMode?: QuizSubmissionMode
 }
 
-export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBlockTypes, projectType, defaultPickerTab, hideBlockTypesTab, singleBlockMode, onDragStateChange }: BlockArrayEditorProps) {
+export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBlockTypes, projectType, defaultPickerTab, hideBlockTypesTab, singleBlockMode, onDragStateChange, quizSubmissionMode }: BlockArrayEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [insertIndex, setInsertIndex] = useState<number | null>(null)
   const projectTypeStructure = projectType ? getProjectTypeStructure(projectType) : {}
@@ -261,7 +265,17 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
   const blockRefsMap = useRef<Map<number, HTMLDivElement>>(new Map())
 
   // Drag-and-drop (extracted to useBlockDragDrop)
-  const drag = useBlockDragDrop({ blocks, onChange, onDragStateChange, scrollToIndexRef })
+  const {
+    containerRef,
+    dragIndex,
+    dropTargetIndex,
+    handleContainerDragLeave,
+    handleContainerDragOver,
+    handleDragEnd,
+    handleDragStart,
+    isDragging,
+    setDropTargetIndex,
+  } = useBlockDragDrop({ blocks, onChange, onDragStateChange, scrollToIndexRef })
 
 
 
@@ -298,7 +312,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
     onChange(next)
   }, [blocks, onChange])
 
-  const handleEditorSave = useCallback((data: any) => {
+  const handleEditorSave = useCallback((data: unknown) => {
     if (editingIndex === null || !editingBlock) return
     const updatedBlock: Block = { id: editingBlock.id, type: editingBlock.type, data }
     const next = [...blocks]
@@ -378,16 +392,16 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
       {/* Block list with insert lines / drag preview */}
       {blocks.length > 0 && (
         <div
-          ref={drag.containerRef}
-          onDragOver={drag.isDragging ? drag.handleContainerDragOver : undefined}
-          onDragLeave={drag.isDragging ? drag.handleContainerDragLeave : undefined}
+          ref={containerRef}
+          onDragOver={isDragging ? handleContainerDragOver : undefined}
+          onDragLeave={isDragging ? handleContainerDragLeave : undefined}
         >
           {/* Insert line before first block (normal mode) */}
-          {!readOnly && !drag.isDragging && !effectiveSingleBlockMode && <InsertLine onInsert={() => openPickerAt(0)} />}
+          {!readOnly && !isDragging && !effectiveSingleBlockMode && <InsertLine onInsert={() => openPickerAt(0)} />}
 
           {/* Drag preview before first block */}
-          {drag.isDragging && drag.dropTargetIndex === 0 && drag.dragIndex !== null && (
-            <DragPreview onDragOver={drag.handleContainerDragOver} onDrop={() => drag.handleDragEnd()} />
+          {isDragging && dropTargetIndex === 0 && dragIndex !== null && (
+            <DragPreview onDragOver={handleContainerDragOver} onDrop={() => handleDragEnd()} />
           )}
 
           {blocks.map((block, index) => (
@@ -403,20 +417,21 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
                 onUpdate={(data) => handleInlineBlockUpdate(index, data)}
                 readOnly={readOnly}
                 hideRemove={effectiveSingleBlockMode}
-                onDragStart={() => drag.handleDragStart(index)}
-                onDragEnd={drag.handleDragEnd}
-                isDragSource={drag.dragIndex === index}
-                onDragHover={drag.isDragging ? (targetIdx) => drag.setDropTargetIndex(targetIdx) : undefined}
-                onDropHere={drag.isDragging ? () => drag.handleDragEnd() : undefined}
+                onDragStart={() => handleDragStart(index)}
+                onDragEnd={handleDragEnd}
+                isDragSource={dragIndex === index}
+                onDragHover={isDragging ? (targetIdx) => setDropTargetIndex(targetIdx) : undefined}
+                onDropHere={isDragging ? () => handleDragEnd() : undefined}
+                quizSubmissionMode={quizSubmissionMode}
               />
 
               {/* Drag preview after this block */}
-              {drag.isDragging && drag.dropTargetIndex === index + 1 && drag.dragIndex !== null && (
-                <DragPreview onDragOver={drag.handleContainerDragOver} onDrop={() => drag.handleDragEnd()} />
+              {isDragging && dropTargetIndex === index + 1 && dragIndex !== null && (
+                <DragPreview onDragOver={handleContainerDragOver} onDrop={() => handleDragEnd()} />
               )}
 
               {/* Insert line after each block (normal mode; oculto em single-block) */}
-              {!readOnly && !drag.isDragging && !effectiveSingleBlockMode && <InsertLine onInsert={() => openPickerAt(index + 1)} />}
+              {!readOnly && !isDragging && !effectiveSingleBlockMode && <InsertLine onInsert={() => openPickerAt(index + 1)} />}
             </div>
           ))}
         </div>
