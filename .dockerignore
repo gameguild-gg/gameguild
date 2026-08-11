@@ -31,6 +31,11 @@ apps/web/.next/
 apps/learning/node_modules/
 apps/learning/.next/
 
+# Allow ops app and its contents
+!apps/ops/**
+apps/ops/node_modules/
+apps/ops/.next/
+
 # Allow website app and its contents
 !apps/website/**
 apps/website/node_modules/
@@ -60,7 +65,22 @@ tools/emception/packages/**/*.tsbuildinfo
 !tools/emception/scripts/**
 tools/emception/scripts/**/node_modules/
 tools/emception/scripts/**/*.tsbuildinfo
+!tools/emception/src/**
+tools/emception/src/**/*.js
+tools/emception/src/**/*.js.map
+tools/emception/src/**/*.d.ts
 !tools/emception/userland/**
+# Exclude stale local build artifacts (gitignored locally; .dockerignore
+# re-includes them via the userland allowlist above). Without these excludes,
+# macOS-specific paths (e.g. /opt/homebrew/...) leak into the Linux container
+# and break CPython/LLVM builds.
+tools/emception/userland/**/build-*/
+tools/emception/userland/**/sysroot-staging/
+tools/emception/build/
+tools/emception/sysroot/
+tools/emception/dist/
+tools/emception/tools/emsdk/
+tools/emception/public/cdn/
 !tools/emception/public/coi-serviceworker.js
 
 # emception-ui package is now used by apps/web — included in build context.

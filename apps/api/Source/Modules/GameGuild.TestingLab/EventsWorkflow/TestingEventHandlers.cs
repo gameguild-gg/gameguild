@@ -30,6 +30,8 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
     IQueryHandler<GetTestingEventSlotsQuery, Result<IReadOnlyList<TestingEventSlotProjection>>>,
     IQueryHandler<GetTestingEventCommitteeQuery, Result<IReadOnlyList<TestingEventCommitteeMemberProjection>>>
 {
+    private bool IsSystemAdmin => actorContextAccessor.ActorContext.IsSystemAdmin;
+
     public async Task<Result<TestingEventProjection>> Handle(CreateTestingEventCommand request, CancellationToken cancellationToken)
     {
         var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
@@ -641,7 +643,7 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
             .ConfigureAwait(false);
         if (testingEvent == null)
             return new(null, Error.NotFound("TestingLab.EventNotFound", "Testing event not found."));
-        if (testingEvent.ManagerUserId != actor.UserId)
+        if (testingEvent.ManagerUserId != actor.UserId && !IsSystemAdmin)
             return new(null, Error.Forbidden("TestingLab.EventManagerRequired", "Only the event manager can perform this operation."));
         return new(testingEvent, null);
     }
