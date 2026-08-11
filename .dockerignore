@@ -53,34 +53,19 @@ apps/website/.next/
 !packages/**
 packages/**/node_modules/
 
-# Allow emception toolchain sources (packages + tsconfigs + coi-serviceworker + scripts + userland)
+# Allow emception toolchain TS sources (workspace packages + meta-package source).
+# WASM build no longer runs in Docker (npm emception@latest provides cdn/), so
+# userland/, scripts/, and the heavy build-output excludes are gone.
 !tools/emception/package.json
 !tools/emception/tsconfig.base.json
-!tools/emception/tsconfig.json
-!tools/emception/tsconfig.lib.json
 !tools/emception/packages/**
 tools/emception/packages/**/node_modules/
 tools/emception/packages/**/dist/
 tools/emception/packages/**/*.tsbuildinfo
-!tools/emception/scripts/**
-tools/emception/scripts/**/node_modules/
-tools/emception/scripts/**/*.tsbuildinfo
 !tools/emception/src/**
 tools/emception/src/**/*.js
 tools/emception/src/**/*.js.map
 tools/emception/src/**/*.d.ts
-!tools/emception/userland/**
-# Exclude stale local build artifacts (gitignored locally; .dockerignore
-# re-includes them via the userland allowlist above). Without these excludes,
-# macOS-specific paths (e.g. /opt/homebrew/...) leak into the Linux container
-# and break CPython/LLVM builds.
-tools/emception/userland/**/build-*/
-tools/emception/userland/**/sysroot-staging/
-tools/emception/build/
-tools/emception/sysroot/
-tools/emception/dist/
-tools/emception/tools/emsdk/
-tools/emception/public/cdn/
 !tools/emception/public/coi-serviceworker.js
 
 # emception-ui package is now used by apps/web — included in build context.

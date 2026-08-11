@@ -1,72 +1,9 @@
 # syntax=docker/dockerfile:1.6
 
-# ─── emception-wasm: build the WASM toolchain + CDN bundles ─────────────────
-# Heavy stage: ~40m build, ~12GB intermediate. Cached by BuildKit as long as
-# tools/emception/** source is unchanged. Output is only the public/cdn tree
-# (~180MB), copied into deps via COPY --from=emception-wasm below.
-#
-# Uses bookworm-slim (glibc) instead of alpine: emsdk ships prebuilt clang/llvm
-# linked against glibc; on alpine (musl) the binaries fail to execute.
-FROM node:20-bookworm-slim AS emception-wasm
-
-# Native deps for the WASM build (mirrors .github/workflows/emception.yml L113-117)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    brotli \
-    build-essential \
-    cmake \
-    ninja-build \
-    pkg-config \
-    python3 \
-    git \
-    curl \
-    ca-certificates \
-    xz-utils \
-    bzip2 \
-    # CPython build deps (CPython 3.13 needs zlib to bootstrap pip via wheels;
-    # other libs cover ssl/ffi/bz2/sqlite/lzma/readline/ncurses modules that
-    # the bundled cpython compiles). ubuntu-latest ships these pre-installed;
-    # bookworm-slim does not.
-    zlib1g-dev \
-    libssl-dev \
-    libffi-dev \
-    libbz2-dev \
-    libsqlite3-dev \
-    liblzma-dev \
-    libreadline-dev \
-    libncursesw5-dev \
-    uuid-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
-WORKDIR /repo
-
-# Copy emception toolchain sources. BuildKit caches each COPY layer; if
-# tools/emception/** is unchanged, the subsequent build:all layer also hits
-# cache (no rebuild).
-COPY pnpm-workspace.yaml .npmrc ./
-COPY tools/emception/package.json ./tools/emception/
-COPY tools/emception/tsconfig.base.json ./tools/emception/
-COPY tools/emception/tsconfig.json ./tools/emception/
-COPY tools/emception/tsconfig.lib.json ./tools/emception/
-COPY tools/emception/packages ./tools/emception/packages
-COPY tools/emception/scripts ./tools/emception/scripts
-COPY tools/emception/src ./tools/emception/src
-COPY tools/emception/userland ./tools/emception/userland
-COPY tools/emception/public/coi-serviceworker.js ./tools/emception/public/coi-serviceworker.js
-
-# Strip root package.json to bare minimum — full root has workspace:* devDeps
-# (@game-guild/eslint-config etc.) that aren't copied into this stage. pnpm
-# install is for emception workspace only.
-RUN echo '{"name":"game-guild","version":"0.1.0","private":true,"packageManager":"pnpm@10.0.0"}' > package.json
-
-# Install emception workspace deps (npm-run-all, tsx, typescript)
-RUN pnpm install --no-frozen-lockfile --prefer-offline
-
-# Build the WASM toolchain + CDN bundles. This is the 40m step.
-# Outputs to /repo/tools/emception/public/cdn/ (manifest.json + .tar.br bundles).
-RUN pnpm --dir tools/emception run build:all
-
 # ─── deps: workspace install + emception TS packages ────────────────────────
+# WASM CDN bundles are pulled from npm emception@latest (saves the ~40m local
+# emsdk/llvm/cpython build the previous Dockerfile ran). Only the cdn/ subset
+# of the npm tarball is extracted (~180MB).
 FROM node:20-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
 WORKDIR /repo
@@ -78,13 +15,20 @@ COPY tools/emception/package.json ./tools/emception/
 COPY tools/emception/tsconfig.base.json ./tools/emception/
 COPY tools/emception/packages ./tools/emception/packages
 COPY tools/emception/public/coi-serviceworker.js ./tools/emception/public/coi-serviceworker.js
-# Pull the built WASM CDN from the heavy stage (single COPY; only ~180MB).
-COPY --from=emception-wasm /repo/tools/emception/public/cdn ./tools/emception/public/cdn
 
 RUN pnpm install --no-frozen-lockfile --prefer-offline
 
-# Build emception workspace packages (they ship TS source; dist/ required by apps/web build)
+# Build emception workspace packages (ship TS source; dist/ required by apps/web build)
 RUN pnpm --dir tools/emception run build:packages
+
+# Fetch WASM CDN bundles from npm emception@latest (replaces 40m local build).
+# Extracts only the cdn/ subset of the npm tarball.
+RUN mkdir -p /repo/tools/emception/public/cdn /tmp/emception-extract && \
+    cd /tmp/emception-extract && \
+    npm pack emception@latest && \
+    tar xzf emception-*.tgz && \
+    cp -r /tmp/emception-extract/package/cdn/. /repo/tools/emception/public/cdn/ && \
+    rm -rf /tmp/emception-extract
 
 FROM deps AS builder
 ARG GIT_HASH

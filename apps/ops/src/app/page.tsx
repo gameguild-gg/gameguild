@@ -130,10 +130,10 @@ export default function OverviewPage() {
           ? "yellow"
           : "red";
 
-  const podByNode = (pods.data?.nodes ?? {}) as Record<
-    string,
-    { status?: string }[]
-  >;
+  const podByNode =
+    pods.data && typeof pods.data === "object" && pods.data.nodes && typeof pods.data.nodes === "object"
+      ? (pods.data.nodes as Record<string, { status?: string }[]>)
+      : {};
   const allPods = Object.values(podByNode).flat();
   const runningPods = allPods.filter((p) => p?.status === "Running").length;
   const failedPods = allPods.filter((p) =>
@@ -150,15 +150,20 @@ export default function OverviewPage() {
   const alertsStatus: Status =
     critical > 0 ? "red" : warning > 0 ? "yellow" : "green";
 
-  const lhVolumes: { robustness?: string }[] = longhorn.data?.volumes ?? [];
+  const lhVolumes: { robustness?: string }[] = Array.isArray(longhorn.data?.volumes)
+    ? longhorn.data.volumes
+    : [];
   const healthy = lhVolumes.filter((v) => v?.robustness === "healthy").length;
   const degraded = lhVolumes.filter((v) => v?.robustness === "degraded").length;
   const faulted = lhVolumes.filter((v) => v?.robustness === "faulted").length;
   const lhStatus: Status =
     faulted > 0 ? "red" : degraded > 0 ? "yellow" : "green";
 
-  const clusters: { instances?: number; readyInstances?: number }[] =
-    cnpg.data?.clusters ?? [];
+  const clusters: { instances?: number; readyInstances?: number }[] = Array.isArray(
+    cnpg.data?.clusters,
+  )
+    ? cnpg.data.clusters
+    : [];
   const totalInstances = clusters.reduce((s, c) => s + (c?.instances ?? 0), 0);
   const readyInstances = clusters.reduce(
     (s, c) => s + (c?.readyInstances ?? 0),
