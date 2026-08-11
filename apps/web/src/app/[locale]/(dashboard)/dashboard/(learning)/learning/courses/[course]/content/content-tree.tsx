@@ -16,10 +16,11 @@ import {
   LESSON_FORMATS,
   type LessonContentFormat,
 } from "@/lib/learning/lesson-formats";
-import type { DragEndEvent } from "@dnd-kit/core";
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import {
   closestCorners,
   DndContext,
+  DragOverlay,
   PointerSensor,
   useDroppable,
   useSensor,
@@ -153,10 +154,16 @@ function SortableItem({
     transition,
     isDragging,
   } = useSortable({ id });
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  // ponytail: freeze source at origin while DragOverlay (root-level) follows
+  // pointer. useSortable's transform only animates inside its own
+  // SortableContext — without this, the dragged item vanishes when crossing
+  // into another module's container.
+  const style: React.CSSProperties = isDragging
+    ? { opacity: 0 }
+    : {
+        transform: CSS.Transform.toString(transform),
+        transition,
+      };
   return <>{children({ ref: setNodeRef, style, listeners, isDragging })}</>;
 }
 
@@ -317,12 +324,22 @@ export function ContentTree({
     null,
   );
 
+  // Active drag item — drives the root-level DragOverlay so the preview can
+  // cross parent container boundaries (each module owns its own
+  // SortableContext, which would otherwise trap the visual).
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
+
   // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
+  function handleDragStart(event: DragStartEvent) {
+    setActiveItemId(String(event.active.id));
+  }
+
   function handleDragEnd(event: DragEndEvent) {
+    setActiveItemId(null);
     const { active, over } = event;
     if (!over) return;
     const activeId = String(active.id);
@@ -619,6 +636,26 @@ export function ContentTree({
         setError(result.error);
       }
     });
+  }
+
+  function renderDragPreview(itemId: string) {
+    const item = allItems.find((i) => i.id === itemId) ??
+      modules.find((m) => m.id === itemId);
+    if (!item) return null;
+    const config = typeConfig[item.type] ?? {
+      icon: FileText,
+      label: item.type,
+    };
+    const Icon = config.icon;
+    return (
+      <div className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3 shadow-2xl rotate-1 cursor-grabbing">
+        <Icon className="size-4 text-primary" />
+        <span className="text-sm font-medium">{item.title}</span>
+        <Badge variant="outline" className="text-xs capitalize">
+          {config.label}
+        </Badge>
+      </div>
+    );
   }
 
   const renderModuleCard = (
@@ -1020,7 +1057,9 @@ export function ContentTree({
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragCancel={() => setActiveItemId(null)}
       >
         <div className="space-y-4">
           <SortableContext
@@ -1066,6 +1105,10 @@ export function ContentTree({
             Add Module
           </Button>
         </div>
+
+        <DragOverlay dropAnimation={null}>
+          {activeItemId ? renderDragPreview(activeItemId) : null}
+        </DragOverlay>
       </DndContext>
 
       <Dialog open={showAddModule} onOpenChange={setShowAddModule}>
