@@ -244,24 +244,6 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
     return Ok(progress);
   }
 
-  // ===== CONTENT MANAGEMENT ENDPOINTS =====
-  // NOTE: POST/PUT/DELETE for content are in ProgramContentController to avoid route conflicts.
-  // Only reorder endpoint is kept here since it uses a unique action-style route.
-
-  /// <summary> Reorder content in a program (resource-level edit permission) </summary>
-  [HttpPost("{id}/content:reorder")]
-  [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit)]
-  public async Task<ActionResult> ReorderContent(Guid id, [FromBody] ReorderContentDto reorderDto)
-  {
-    if (!ModelState.IsValid) return BadRequest(ModelState);
-
-    var program = await programService.ReorderContentAsync(id, reorderDto.ContentIds).ConfigureAwait(false);
-
-    if (program == null) return NotFound();
-
-    return NoContent();
-  }
-
   // ===== USER PARTICIPATION ENDPOINTS =====
 
   /// <summary> Add a user to a program (resource-level edit permission) </summary>

@@ -309,7 +309,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 2. Read the course back ─────────────────────────────────────────────
   it('reads the created course by ID', async () => {
-    const result = await programs.getCoursesById(courseId);
+    const result = await programs.getCourses1(courseId);
 
     const course = unwrap(result, 'Get course by ID');
 
@@ -389,7 +389,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(course.skillsRequired).toBe('portfolio fundamentals, peer critique');
     expect(course.skillsProvided).toBe('boss AI systems, Steam launch planning');
 
-    const readResult = await programs.getCoursesById(courseId);
+    const readResult = await programs.getCourses1(courseId);
     const persistedCourse = unwrap(readResult, 'Read storefront metadata');
     const persistedMetadata = JSON.parse(persistedCourse.metadata ?? '{}');
 
@@ -789,7 +789,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 8. List content for the course ──────────────────────────────────────
   it('lists all content for the course', async () => {
-    const result = await content.getCoursesByProgramIdContent(courseId);
+    const result = await content.getCoursesContent(courseId);
 
     const contentItems = unwrap(result, 'List course content');
     expect(Array.isArray(contentItems)).toBe(true);
@@ -806,7 +806,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 9. Get a single content item ────────────────────────────────────────
   it('gets a single content item by ID', async () => {
-    const result = await content.getCoursesByProgramIdContentById(courseId, lessonContentId);
+    const result = await content.getCoursesContent1(courseId, lessonContentId);
 
     const contentItem = unwrap(result, 'Get single content');
     expect(contentItem.id).toBe(lessonContentId);
@@ -831,7 +831,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 11. Get top-level content ───────────────────────────────────────────
   it('gets top-level content items', async () => {
-    const result = await content.getCoursesByProgramIdContent(courseId, { level: 'top' });
+    const result = await content.getCoursesContent(courseId, { level: 'top' });
 
     const contentItems = unwrap(result, 'Get top-level content');
     expect(Array.isArray(contentItems)).toBe(true);
@@ -841,7 +841,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
   // ── 12. Reorder content ─────────────────────────────────────────────────
   it('reorders content items', async () => {
     // Flip the order: assignment first, lesson second
-    const result = await content.postCoursesByProgramIdContentReorder(courseId, {
+    const result = await content.postCoursesContentReorder(courseId, {
       contentIds: [assignmentContentId, lessonContentId],
     });
 
@@ -1503,7 +1503,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(result.ok).toBe(true);
 
     // Verify it's gone
-    const getResult = await content.getCoursesByProgramIdContentById(courseId, assignmentContentId);
+    const getResult = await content.getCoursesContent1(courseId, assignmentContentId);
     expect(getResult.ok).toBe(false);
   });
 
@@ -1521,7 +1521,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(result.ok).toBe(true);
 
     // Verify it's gone
-    const getResult = await programs.getCoursesById(courseId);
+    const getResult = await programs.getCourses1(courseId);
     expect(getResult.ok).toBe(false);
   });
 

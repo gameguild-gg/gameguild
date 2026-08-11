@@ -6,13 +6,13 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
   resolveCourseId: vi.fn(),
   postCoursesContent: vi.fn(),
-  postCoursesByProgramIdContentReorder: vi.fn(),
+  postCoursesContentReorder: vi.fn(),
   postCoursesContentMove: vi.fn(),
   deleteCoursesContent: vi.fn(),
   postAssessments: vi.fn(),
   putAssessments: vi.fn(),
   deleteAssessments: vi.fn(),
-  getCoursesById: vi.fn(),
+  getCourses1: vi.fn(),
   putCourses: vi.fn(),
   postCoursesPublish: vi.fn(),
   postCoursesRestore: vi.fn(),
@@ -67,14 +67,14 @@ vi.mock("@game-guild/client", () => ({
       putAssessmentsDefinition = mocks.putAssessmentsDefinition;
     },
     LearningCoursesProgramModule: class {
-      getCoursesById = mocks.getCoursesById;
+      getCourses1 = mocks.getCourses1;
       putCourses = mocks.putCourses;
       postCoursesUsers = mocks.postCoursesUsers;
       deleteCoursesUsers = mocks.deleteCoursesUsers;
     },
     LearningCoursesProgramcontentModule: class {
       postCoursesContent = mocks.postCoursesContent;
-      postCoursesByProgramIdContentReorder = mocks.postCoursesByProgramIdContentReorder;
+      postCoursesContentReorder = mocks.postCoursesContentReorder;
       postCoursesContentMove = mocks.postCoursesContentMove;
       deleteCoursesContent = mocks.deleteCoursesContent;
     },
@@ -177,7 +177,7 @@ describe("learning server actions", () => {
         headers: { "Content-Type": "application/json" },
       }),
     );
-    mocks.postCoursesByProgramIdContentReorder.mockResolvedValue({
+    mocks.postCoursesContentReorder.mockResolvedValue({
       ok: true,
       data: undefined,
     });
@@ -192,7 +192,7 @@ describe("learning server actions", () => {
     });
     mocks.putAssessments.mockResolvedValue({ ok: true, data: undefined });
     mocks.deleteAssessments.mockResolvedValue({ ok: true, data: undefined });
-    mocks.getCoursesById.mockResolvedValue({
+    mocks.getCourses1.mockResolvedValue({
       ok: true,
       data: {
         id: "course-1",
@@ -822,7 +822,7 @@ describe("learning server actions", () => {
     ]);
 
     expect(result).toEqual({ success: true, data: null });
-    expect(mocks.postCoursesByProgramIdContentReorder).toHaveBeenCalledWith(
+    expect(mocks.postCoursesContentReorder).toHaveBeenCalledWith(
       "1caa16bb-6810-4e53-bb0d-91f0d5702333",
       { contentIds: ["module-2", "module-1"] },
     );

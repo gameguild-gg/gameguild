@@ -261,7 +261,7 @@ export async function reorderContent(
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { content } = createCourseModules();
-    const result = await content.postCoursesByProgramIdContentReorder(resolvedCourseId, {
+    const result = await content.postCoursesContentReorder(resolvedCourseId, {
       contentIds,
     });
 
@@ -863,7 +863,7 @@ async function updateCourseMetadataSection(
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { programs } = createCourseModules();
-    const courseResult = await programs.getCoursesById(resolvedCourseId);
+    const courseResult = await programs.getCourses1(resolvedCourseId);
     if (!courseResult.ok)
       return { success: false, error: extractError(courseResult.error) };
 

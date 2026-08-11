@@ -267,7 +267,7 @@ export function ContentTree({
 
   // Real modules are draggable + sortable. Virtual modules (e.g. the synthetic
   // "Unassigned" bucket) render outside the SortableContext and never reach the
-  // reorder API — sending a virtual id to /content:reorder snaps the drag back.
+  // reorder API — sending a virtual id to /content/reorder snaps the drag back.
   const { realModules, virtualModules } = React.useMemo(() => {
     const real: ContentItem[] = [];
     const virtual: ContentItem[] = [];
