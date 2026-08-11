@@ -1,6 +1,6 @@
 export const CURRENT_GRADING_SCHEMA_VERSION = 1;
 
-export type GradingValidationMode = 'public' | 'protected';
+export type GradingResultUse = 'feedback' | 'gradebook';
 
 export type FeedbackMode = 'immediate' | 'after-submit' | 'after-close' | 'manual';
 
@@ -8,31 +8,50 @@ export type PresentationMode = 'continuous' | 'single-step';
 
 export type GradingKind = 'deterministic' | 'manual' | 'external';
 
-export interface ContentGradingConfig {
+export interface ContentGradingDefinition {
   enabled: boolean;
   schemaVersion: number;
-  validationMode: GradingValidationMode;
-  gradebook: GradebookConfig;
-  policy: GradingPolicy;
+  outcome: GradingOutcomePolicy;
+  score: ScorePolicy;
+  attempts: AttemptPolicy;
+  feedback: FeedbackPolicy;
+  presentation: PresentationPolicy;
   items: Record<string, GradedItemConfig>;
 }
 
-export interface GradebookConfig {
-  maxScore: number;
-  passingScore?: number;
-  weight?: number;
-  groupId?: string | null;
-  required?: boolean;
-  official?: boolean;
+export interface GradingOutcomePolicy {
+  uses: GradingResultUse[];
+  gradebook?: GradebookPlacement | null;
 }
 
-export interface GradingPolicy {
+export interface GradebookPlacement {
+  groupId?: string | null;
+  weight?: number;
+  required?: boolean;
+  includeInFinalGrade?: boolean;
+}
+
+export interface ScorePolicy {
+  maxScore: number;
+  passingScore?: number;
+}
+
+export interface AttemptPolicy {
   maxAttempts?: number | null;
   timeLimitMinutes?: number | null;
   availableFrom?: string | null;
   availableUntil?: string | null;
-  feedbackMode?: FeedbackMode;
-  presentationMode?: PresentationMode;
+  dueAt?: string | null;
+  allowLateSubmissions?: boolean;
+  lateSubmissionDeadline?: string | null;
+}
+
+export interface FeedbackPolicy {
+  mode?: FeedbackMode;
+}
+
+export interface PresentationPolicy {
+  mode?: PresentationMode;
 }
 
 export interface GradedItemConfig {
@@ -78,7 +97,7 @@ export interface GradeResult {
 }
 
 export interface GradeSubmissionArgs {
-  grading: ContentGradingConfig;
+  grading: ContentGradingDefinition;
   payload: StructuredAnswerPayload;
   answerKey?: AnswerKey;
   contentBody?: unknown;

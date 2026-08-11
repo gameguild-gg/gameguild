@@ -1,22 +1,22 @@
-import { tryParseGradingConfig, validateGradingConfig } from './config';
-import type { ContentGradingConfig } from './types';
+import { tryParseGradingDefinition, validateGradingDefinition } from './config';
+import type { ContentGradingDefinition } from './types';
 
 export const CONTENT_GRADING_STORAGE_KEY = 'grading';
 
 type ObjectRecord = Record<string, unknown>;
 type ContentBodyWithGrading<T extends ObjectRecord> = Omit<T, typeof CONTENT_GRADING_STORAGE_KEY> & {
-  [CONTENT_GRADING_STORAGE_KEY]?: ContentGradingConfig;
+  [CONTENT_GRADING_STORAGE_KEY]?: ContentGradingDefinition;
 };
 
-export function readContentGradingConfig(contentBody: unknown): ContentGradingConfig | null {
+export function readContentGradingDefinition(contentBody: unknown): ContentGradingDefinition | null {
   const body = parseObject(contentBody);
   if (!body || !(CONTENT_GRADING_STORAGE_KEY in body)) return null;
-  return tryParseGradingConfig(body[CONTENT_GRADING_STORAGE_KEY]);
+  return tryParseGradingDefinition(body[CONTENT_GRADING_STORAGE_KEY]);
 }
 
-export function writeContentGradingConfig<T extends ObjectRecord>(
+export function writeContentGradingDefinition<T extends ObjectRecord>(
   contentBody: T,
-  grading: ContentGradingConfig | null | undefined,
+  grading: ContentGradingDefinition | null | undefined,
 ): ContentBodyWithGrading<T> {
   const next: ContentBodyWithGrading<T> = { ...contentBody };
   if (!grading || !grading.enabled) {
@@ -24,7 +24,7 @@ export function writeContentGradingConfig<T extends ObjectRecord>(
     return next;
   }
 
-  next[CONTENT_GRADING_STORAGE_KEY] = validateGradingConfig(grading);
+  next[CONTENT_GRADING_STORAGE_KEY] = validateGradingDefinition(grading);
   return next;
 }
 

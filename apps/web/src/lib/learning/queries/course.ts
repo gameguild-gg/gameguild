@@ -1,5 +1,5 @@
 import { getToken } from "@/auth";
-import { readContentGradingConfig } from "@game-guild/grading";
+import { readContentGradingDefinition } from "@game-guild/grading";
 import {
   createServerClient,
   GeneratedApi,
@@ -294,7 +294,7 @@ export const getCourseAnalytics = cache(
  * Map a LearningCoursesProgramContent DTO to the frontend CourseContentItemViewModel shape.
  */
 function readDtoGradingConfig(dto: LearningCoursesProgramContent) {
-  return readContentGradingConfig(dto.jsonBody ?? null);
+  return readContentGradingDefinition(dto.jsonBody ?? null);
 }
 
 function mapContentDto(
