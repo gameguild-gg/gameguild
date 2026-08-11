@@ -3,6 +3,8 @@ import { k8sCore } from "../../../lib/k8s";
 import { prometheusQuery } from "../../../lib/prometheus";
 import { hostnameToZone } from "../../../lib/zones";
 
+export const dynamic = "force-dynamic";
+
 interface NodeRow {
   name: string;
   zone: string;

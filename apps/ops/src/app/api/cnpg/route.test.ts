@@ -34,18 +34,27 @@ describe("cnpg route", () => {
         {
           metadata: {
             name: "gameguild-pg-6",
-            labels: { "cnpg.io/cluster": "gameguild-pg", role: "primary" },
+            labels: {
+              "cnpg.io/cluster": "gameguild-pg",
+              "cnpg.io/instanceRole": "primary",
+            },
           },
           spec: { nodeName: "mario" },
           status: { conditions: [{ type: "Ready", status: "True" }] },
         },
         {
-          metadata: { name: "gameguild-pg-7", labels: { role: "replica" } },
+          metadata: {
+            name: "gameguild-pg-7",
+            labels: { "cnpg.io/instanceRole": "replica" },
+          },
           spec: { nodeName: "luigi" },
           status: { conditions: [{ type: "Ready", status: "True" }] },
         },
         {
-          metadata: { name: "gameguild-pg-8", labels: { role: "replica" } },
+          metadata: {
+            name: "gameguild-pg-8",
+            labels: { "cnpg.io/instanceRole": "replica" },
+          },
           spec: { nodeName: "peach" },
           status: { conditions: [{ type: "Ready", status: "False" }] },
         },
@@ -69,8 +78,13 @@ describe("cnpg route", () => {
     expect(body.instances).toHaveLength(3);
     expect(body.instances[0]).toMatchObject({
       name: "gameguild-pg-6",
+      role: "primary",
       ready: true,
       node: "mario",
+    });
+    expect(body.instances[1]).toMatchObject({
+      name: "gameguild-pg-7",
+      role: "replica",
     });
     expect(body.instances[2].ready).toBe(false);
   });
