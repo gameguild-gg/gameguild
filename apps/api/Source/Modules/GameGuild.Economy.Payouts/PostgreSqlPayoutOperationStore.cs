@@ -29,6 +29,22 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
             : ToContract(row);
     }
 
+    public IReadOnlyList<PayoutOperation> ListForPayee(Guid payeeId, int take)
+    {
+        if (payeeId == Guid.Empty)
+            throw new ArgumentException("Payee ID is required.", nameof(payeeId));
+        if (take is < 1 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(take), "Take must be between 1 and 100.");
+
+        return ReadOperations($"""
+            SELECT * FROM economy_private.read_payout_operations_by_payee_v1({payeeId}, {take})
+            """)
+            .OrderByDescending(row => row.CreatedAt)
+            .ThenByDescending(row => row.Id)
+            .Select(ToContract)
+            .ToArray();
+    }
+
     public PayoutOperation? FindReplay(string idempotencyKey, string requestHash)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
