@@ -9,6 +9,7 @@ using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Subscriptions;
 using GameGuild.Compliance.Audit;
 using GameGuild.Compliance.FERPA;
+using GameGuild.Economy;
 using GameGuild.Economy.Payouts;
 using GameGuild.Features;
 using GameGuild.Identity.Authentication;
@@ -226,6 +227,13 @@ public static class InfrastructureLayerExtensions
         stepStopwatch.Restart();
         services.AddEconomyCapabilityComposition(configuration);
         logger.LogInformation("Economy Risk/FinancialCrime/TrustSafety composition registered in {ElapsedMs}ms",
+            stepStopwatch.ElapsedMilliseconds);
+
+        // The wallet controller is part of the enabled Economy.Core surface. Register its
+        // fail-closed workflows and persistence gateways independently of provider rollout.
+        stepStopwatch.Restart();
+        services.AddEconomyCoreComposition(configuration);
+        logger.LogInformation("Economy Core composition registered in {ElapsedMs}ms",
             stepStopwatch.ElapsedMilliseconds);
 
         // Read-only payout status is available with no provider or payout execution enabled.
