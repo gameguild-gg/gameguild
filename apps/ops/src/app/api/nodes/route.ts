@@ -70,7 +70,11 @@ export async function GET() {
       const ready =
         conditions.find((c) => c.type === "Ready")?.status === "True";
       const flannelHealthy =
-        flannelNodes.size === 0 ? false : flannelNodes.has(name);
+        flannelNodes.size === 0
+          ? false
+          : (node.status?.addresses ?? []).some((a) =>
+              flannelNodes.has(a.address),
+            );
 
       return { name, zone, role, ready, flannelHealthy };
     });
