@@ -207,7 +207,8 @@ public sealed class HardToSoftConversionWorkflowTests
             key,
             totalHardCoinUnits,
             key,
-            timestamp);
+            timestamp,
+            $"workflow-capability-{Guid.NewGuid():N}");
         await PostgreSqlHardToSoftConversionGatewayTests.ReserveRiskCounterAsync(
             connection,
             decisionId,
