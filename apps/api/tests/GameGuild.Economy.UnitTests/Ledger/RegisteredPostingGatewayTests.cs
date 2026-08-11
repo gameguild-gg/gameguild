@@ -77,6 +77,21 @@ public sealed class RegisteredPostingGatewayTests
     }
 
     [Fact]
+    public void PayloadUsesStableIdentifiersForAnIdempotentRetry()
+    {
+        var request = new RegisteredPostingRequest(Authority(), Posting());
+        var accounts = new Dictionary<int, Guid>
+        {
+            [1] = Guid.Parse("40000000-0000-0000-0000-000000000001"),
+            [2] = Guid.Parse("40000000-0000-0000-0000-000000000002")
+        };
+
+        var original = RegisteredPostingPayloadFactory.Create(request, accounts);
+        var retry = RegisteredPostingPayloadFactory.Create(request, accounts);
+
+        retry.Should().Be(original);
+    }
+    [Fact]
     public void PayloadRejectsConflictingReversalEpochsForTheSameRoot()
     {
         var root = new SourceStampId(Guid.NewGuid());
@@ -104,6 +119,63 @@ public sealed class RegisteredPostingGatewayTests
         create.Should().Throw<ArgumentOutOfRangeException>();
     }
 
+    [Fact]
+    public void AuthorityAndRequest_TrimAndExposeSecurityBindings()
+    {
+        var capability = Guid.NewGuid();
+        var actor = Guid.NewGuid();
+        var tenant = Guid.NewGuid();
+        var risk = Guid.NewGuid();
+        var authority = new RegisteredPostingAuthority(capability, actor, tenant, risk, " operation ", 2);
+        var allocation = new RegisteredPostingAllocation(
+            1, CreditLotId.New(), 100,
+            [
+                new RootTraceRange(new SourceStampId(Guid.Parse("30000000-0000-0000-0000-000000000002")), 100, 100, 1),
+                new RootTraceRange(new SourceStampId(Guid.Parse("30000000-0000-0000-0000-000000000001")), 0, 100, 1)
+            ]);
+        var request = new RegisteredPostingRequest(authority, Posting(), [allocation], " snapshot ");
+
+        authority.CapabilityId.Should().Be(capability);
+        authority.ActorId.Should().Be(actor);
+        authority.TenantId.Should().Be(tenant);
+        authority.RiskDecisionId.Should().Be(risk);
+        authority.RiskOperationFingerprint.Should().Be("operation");
+        authority.ExpectedCounterVersion.Should().Be(2);
+        allocation.LineSequence.Should().Be(1);
+        allocation.AmountUnits.Should().Be(100);
+        allocation.RootRanges.Select(range => range.Root.Value)
+            .Should().BeInAscendingOrder();
+        request.Authority.Should().Be(authority);
+        request.Allocations.Should().ContainSingle().Which.Should().Be(allocation);
+        request.DispatchSnapshotHash.Should().Be("snapshot");
+
+        Action missingActor = () => new RegisteredPostingAuthority(capability, Guid.Empty, tenant, risk, "operation", 1);
+        Action missingTenant = () => new RegisteredPostingAuthority(capability, actor, Guid.Empty, risk, "operation", 1);
+        Action missingRisk = () => new RegisteredPostingAuthority(capability, actor, tenant, Guid.Empty, "operation", 1);
+        Action blankFingerprint = () => new RegisteredPostingAuthority(capability, actor, tenant, risk, " ", 1);
+        Action invalidCounter = () => new RegisteredPostingAuthority(capability, actor, tenant, risk, "operation", 0);
+        missingActor.Should().Throw<ArgumentException>();
+        missingTenant.Should().Throw<ArgumentException>();
+        missingRisk.Should().Throw<ArgumentException>();
+        blankFingerprint.Should().Throw<ArgumentException>();
+        invalidCounter.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void PayloadRejectsMissingOrEmptyProvisionedAccount()
+    {
+        var request = new RegisteredPostingRequest(Authority(), Posting());
+
+        Action missing = () => RegisteredPostingPayloadFactory.Create(request, new Dictionary<int, Guid>());
+        Action empty = () => RegisteredPostingPayloadFactory.Create(request, new Dictionary<int, Guid>
+        {
+            [1] = Guid.Empty,
+            [2] = Guid.Empty
+        });
+
+        missing.Should().Throw<RegisteredPostingRejectedException>();
+        empty.Should().Throw<RegisteredPostingRejectedException>();
+    }
     private static RegisteredPostingAuthority Authority() => new(
         Guid.Parse("50000000-0000-0000-0000-000000000001"),
         Guid.Parse("50000000-0000-0000-0000-000000000002"),

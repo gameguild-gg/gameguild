@@ -60,30 +60,29 @@ public sealed class PostgreSqlHardToSoftConversionGateway : IHardToSoftConversio
         if (command.Authorization.SourceRoots.Count == 0)
             throw new RegisteredPostingRejectedException("A conversion requires an explicit source-root authorization.");
 
+        Guid? feePostingId = command.FeeHardCoinUnits == 0
+            ? null
+            : command.FeePostingId.Value;
+
         try
         {
             var receipt = _db.Set<RegisteredPostingReceiptRow>()
                 .FromSqlInterpolated($"""
                     SELECT *
-                    FROM economy_private.post_authorized_hard_to_soft_conversion_v1(
-                        {request.Authority.CapabilityId},
+                    FROM economy_private.post_self_service_hard_to_soft_conversion_v1(
                         {request.Authority.ActorId},
                         {request.Authority.TenantId},
                         {command.PrincipalPostingId.Value},
-                        {command.FeePostingId.Value},
+                        {feePostingId},
                         {command.IdempotencyKey.Value},
-                        {command.PolicyVersion.Value},
-                        {command.ReserveVersion.Value},
                         {request.Authority.RiskDecisionId},
-                        {request.Authority.RiskOperationFingerprint},
-                        {request.Authority.ExpectedCounterVersion},
                         {command.WalletId.Value},
                         {command.OutputLotId.Value},
                         {command.Authorization.SourceRoots.Select(root => root.Value).ToArray()},
                         {command.PrincipalHardCoinUnits},
                         {command.FeeHardCoinUnits},
                         {command.RequestedAt},
-                        {request.DispatchSnapshotHash});
+                        {request.DispatchSnapshotHash})
                     """)
                 .AsNoTracking()
                 .Single();
@@ -112,7 +111,7 @@ public sealed class PostgreSqlHardToSoftConversionGateway : IHardToSoftConversio
                        false AS duplicate
                 FROM public.economy_posting_groups posting
                 JOIN public.economy_journal_entries entry ON entry."PostingGroupId" = posting."Id"
-                WHERE posting."Id" = {feePostingId.Value};
+                WHERE posting."Id" = {feePostingId.Value}
                 """)
             .AsNoTracking()
             .SingleOrDefault()
