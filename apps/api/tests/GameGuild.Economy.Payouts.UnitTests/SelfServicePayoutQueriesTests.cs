@@ -23,6 +23,8 @@ public sealed class SelfServicePayoutQueriesTests
         result[0].Id.Should().Be(latest.Id);
         result[0].HardCoinUnits.Should().Be(200);
         result[0].State.Should().Be(PayoutOperationState.Reserved);
+        result[0].CreatedAt.Should().Be(latest.CreatedAt);
+        result[0].UpdatedAt.Should().Be(latest.UpdatedAt);
     }
 
     [Fact]

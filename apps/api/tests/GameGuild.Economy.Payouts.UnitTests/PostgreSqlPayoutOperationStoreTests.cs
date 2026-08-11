@@ -40,6 +40,7 @@ public sealed class PostgreSqlPayoutOperationStoreTests
 
         store.Add(operation);
         store.Get(operation.Id).Should().BeEquivalentTo(operation);
+        store.ListForPayee(operation.PayeeId, 10).Should().ContainSingle().Which.Should().BeEquivalentTo(operation);
         FluentActions.Invoking(() => store.Get(Guid.NewGuid()))
             .Should().Throw<KeyNotFoundException>();
         store.FindReplay(operation.IdempotencyKey.Value, operation.RequestHash)
@@ -98,6 +99,9 @@ public sealed class PostgreSqlPayoutOperationStoreTests
         var operation = Operation();
 
         FluentActions.Invoking(() => store.Get(Guid.Empty)).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.ListForPayee(Guid.Empty, 10)).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), 0)).Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), 101)).Should().Throw<ArgumentOutOfRangeException>();
         FluentActions.Invoking(() => store.FindReplay("", "hash")).Should().Throw<ArgumentException>();
         FluentActions.Invoking(() => store.FindReplay("key", "")).Should().Throw<ArgumentException>();
         FluentActions.Invoking(() => store.Add(null!)).Should().Throw<ArgumentNullException>();
