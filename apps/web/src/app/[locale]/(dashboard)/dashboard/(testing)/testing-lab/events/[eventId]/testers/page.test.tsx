@@ -7,7 +7,8 @@ const mocks = vi.hoisted(() => ({
   getTestingProjectOptions: vi.fn(),
 }));
 
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/navigation')>()),
   useRouter: () => ({ refresh: vi.fn() }),
 }));
 

@@ -15,8 +15,6 @@ interface SharedAuthCookieConfig {
 
 interface AllowedAuthRedirectOptions {
   fallback?: string;
-  learningOrigin: string;
-  webOrigin: string;
 }
 
 export function createSharedAuthCookieConfig({
@@ -46,38 +44,11 @@ export function createSharedAuthCookieConfig({
 
 export function resolveAllowedAuthRedirect(
   value: unknown,
-  {
-    fallback = "/dashboard",
-    learningOrigin,
-    webOrigin,
-  }: AllowedAuthRedirectOptions,
+  { fallback = "/dashboard" }: AllowedAuthRedirectOptions = {},
 ): string {
   const redirectTo = typeof value === "string" ? value.trim() : "";
-  if (!redirectTo) {
-    return fallback;
-  }
 
-  if (redirectTo.startsWith("/") && !redirectTo.startsWith("//")) {
-    return redirectTo;
-  }
-
-  try {
-    const target = new URL(redirectTo);
-    const allowedOrigins = new Set([
-      new URL(learningOrigin).origin,
-      new URL(webOrigin).origin,
-    ]);
-
-    if (
-      !target.username &&
-      !target.password &&
-      allowedOrigins.has(target.origin)
-    ) {
-      return target.toString();
-    }
-  } catch {
-    // Invalid and non-relative values fall back to a local safe route.
-  }
-
-  return fallback;
+  return redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+    ? redirectTo
+    : fallback;
 }

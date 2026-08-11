@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { enrollInFreeCourse } from '@/lib/courses/actions/enrollment.actions';
-import { getLearningAppCourseContentUrl } from '@/lib/learning-app';
+import { getLearnerCourseContentHref } from '@/lib/learner/paths';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -36,7 +36,7 @@ export function CourseSelfEnrollButton({ courseSlug, className, buttonClassName 
             }
 
             setSuccess(result.message);
-            router.push(result.learningUrl ?? getLearningAppCourseContentUrl(courseSlug));
+            router.push(result.learningUrl ?? getLearnerCourseContentHref(courseSlug));
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Could not complete enrollment.');
         } finally {

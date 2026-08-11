@@ -12,16 +12,7 @@ export default async function Page({
   const session = await auth();
   // authenticated suppresses the One Tap prompt; signed-in users landing
   // on /sign-in don't get pestered, and GIS forbids prompt() in that case.
-  const redirectTo = resolveAllowedAuthRedirect(params?.redirectTo, {
-    learningOrigin:
-      process.env.LEARNING_PUBLIC_URL ||
-      process.env.NEXT_PUBLIC_LEARNING_APP_URL ||
-      'https://learning.gameguild.gg',
-    webOrigin:
-      process.env.WEB_PUBLIC_URL ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      'https://gameguild.gg',
-  });
+  const redirectTo = resolveAllowedAuthRedirect(params?.redirectTo);
 
   return (
     <>

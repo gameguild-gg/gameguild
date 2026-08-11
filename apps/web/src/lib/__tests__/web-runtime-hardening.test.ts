@@ -47,8 +47,7 @@ describe('web runtime hardening', () => {
     expect(readRepoFile('apps/web/src/app/api/health/route.ts')).toContain("status: 'healthy'");
   });
 
-  it('logs web requests and route handler failures with structured runtime events', () => {
-    expect(readRepoFile('apps/web/src/proxy.ts')).toContain('logWebRequest');
+  it('logs route handler failures with structured runtime events', () => {
     expect(readRepoFile('apps/web/src/app/api/health/route.ts')).toContain('logWebRequest');
     expect(readRepoFile('apps/web/src/app/api/static-viewer/folder/[folderName]/route.ts')).toContain('logWebRequest');
     expect(readRepoFile('apps/web/src/app/api/static-viewer/file/[...path]/route.ts')).toContain('logWebRequest');

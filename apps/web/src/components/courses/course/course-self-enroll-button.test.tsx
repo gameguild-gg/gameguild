@@ -28,7 +28,7 @@ describe("CourseSelfEnrollButton", () => {
     mocks.enrollInFreeCourse.mockResolvedValue({
       success: true,
       message: "Enrollment complete. You can continue in the learning app now.",
-      learningUrl: "https://learning.gameguild.gg/courses/ai4games/content",
+      learningUrl: "/learn/courses/ai4games/content",
     });
   });
 
@@ -41,7 +41,7 @@ describe("CourseSelfEnrollButton", () => {
 
     await waitFor(() => {
       expect(mocks.push).toHaveBeenCalledWith(
-        "https://learning.gameguild.gg/courses/ai4games/content",
+        "/learn/courses/ai4games/content",
       );
     });
 

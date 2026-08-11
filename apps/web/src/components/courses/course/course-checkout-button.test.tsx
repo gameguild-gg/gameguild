@@ -27,7 +27,7 @@ describe('CourseCheckoutButton', () => {
     mocks.completeCourseCheckout.mockResolvedValue({
       success: true,
       message: 'Checkout complete. Your course access is active.',
-      learningUrl: 'https://learning.gameguild.gg/courses/paid-course/content',
+      learningUrl: '/learn/courses/paid-course/content',
     });
   });
 
@@ -56,7 +56,7 @@ describe('CourseCheckoutButton', () => {
 
     expect(mocks.completeCourseCheckout).toHaveBeenCalledWith('paid-course', 'product-1');
     expect(mocks.refresh).not.toHaveBeenCalled();
-    expect(mocks.push).toHaveBeenCalledWith('https://learning.gameguild.gg/courses/paid-course/content');
+    expect(mocks.push).toHaveBeenCalledWith('/learn/courses/paid-course/content');
   });
 
   it('allows selecting a different product before checkout', async () => {

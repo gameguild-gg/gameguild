@@ -3,6 +3,8 @@ import { routing } from "@/i18n/routing";
 import type { LearnerRoutes } from "@game-guild/courses/components/learner";
 import { hasLocale } from "next-intl";
 
+export { getLearnerCourseContentHref, getLearnerSignInHref } from "./paths";
+
 export function normalizeLearnerPathname(pathname: string): string {
   const segments = pathname.split("/").filter(Boolean);
 
@@ -31,8 +33,7 @@ export function createLearnerRoutes(
   const resolvedLocale = hasLocale(routing.locales, locale)
     ? locale
     : routing.defaultLocale;
-  const path = (href: string) =>
-    getPathname({ href, locale: resolvedLocale });
+  const path = (href: string) => getPathname({ href, locale: resolvedLocale });
 
   return {
     home: path("/learn"),
@@ -50,23 +51,4 @@ export function createLearnerRoutes(
       path(`/learn/courses/${slug}/activities/${activityId}`),
     community: (slug) => path(`/learn/courses/${slug}/community`),
   };
-}
-
-interface CentralSignInInput {
-  learningOrigin: string;
-  pathname: string;
-  webOrigin: string;
-}
-
-export function getCentralSignInUrl({
-  learningOrigin,
-  pathname,
-  webOrigin,
-}: CentralSignInInput): string {
-  const allowedLearningOrigin = new URL(learningOrigin);
-  const returnUrl = new URL(pathname, allowedLearningOrigin);
-  const signInUrl = new URL("/sign-in", webOrigin);
-  signInUrl.searchParams.set("redirectTo", returnUrl.toString());
-
-  return signInUrl.toString();
 }

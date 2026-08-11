@@ -57,34 +57,17 @@ describe("cross-domain auth", () => {
     });
   });
 
-  it("allows local routes and the configured website and learning origins", () => {
-    const options = {
-      learningOrigin: "https://learning.gameguild.gg",
-      webOrigin: "https://gameguild.gg",
-    };
-
-    expect(resolveAllowedAuthRedirect("/dashboard", options)).toBe(
-      "/dashboard",
-    );
+  it("allows local application routes", () => {
+    expect(resolveAllowedAuthRedirect("/dashboard")).toBe("/dashboard");
     expect(
       resolveAllowedAuthRedirect(
-        "https://learning.gameguild.gg/courses/game-ai/lessons/intro?mode=focus",
-        options,
+        "/pt-BR/learn/courses/game-ai/lessons/intro?mode=focus",
       ),
-    ).toBe(
-      "https://learning.gameguild.gg/courses/game-ai/lessons/intro?mode=focus",
-    );
-    expect(
-      resolveAllowedAuthRedirect("https://gameguild.gg/courses", options),
-    ).toBe("https://gameguild.gg/courses");
+    ).toBe("/pt-BR/learn/courses/game-ai/lessons/intro?mode=focus");
   });
 
-  it("rejects protocol-relative, foreign, malformed, and credential-bearing redirects", () => {
-    const options = {
-      fallback: "/dashboard",
-      learningOrigin: "https://learning.gameguild.gg",
-      webOrigin: "https://gameguild.gg",
-    };
+  it("rejects protocol-relative, absolute, malformed, and non-string redirects", () => {
+    const options = { fallback: "/dashboard" };
 
     expect(resolveAllowedAuthRedirect("//evil.example/path", options)).toBe(
       "/dashboard",
@@ -100,7 +83,7 @@ describe("cross-domain auth", () => {
     ).toBe("/dashboard");
     expect(
       resolveAllowedAuthRedirect(
-        "https://admin:secret@learning.gameguild.gg/path",
+        "https://gameguild.gg/learn/courses/game-ai",
         options,
       ),
     ).toBe("/dashboard");

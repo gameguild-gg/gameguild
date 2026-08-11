@@ -2,7 +2,7 @@
 
 import { auth, getToken } from '@/auth';
 import { createServerClient, GeneratedApi, type ApiError } from '@game-guild/client';
-import { getLearningAppCourseContentUrl } from '@/lib/learning-app';
+import { getLearnerCourseContentHref } from '@/lib/learner/paths';
 
 export type EnrollmentStatusCode = 0 | 1 | 2;
 
@@ -273,7 +273,7 @@ export async function enrollInFreeCourse(courseSlug: string): Promise<Enrollment
         return {
             success: true,
             message: 'Enrollment complete. You can continue in the learning app now.',
-            learningUrl: getLearningAppCourseContentUrl(courseSlug),
+            learningUrl: getLearnerCourseContentHref(courseSlug),
         };
     } catch (error) {
         return {
@@ -335,7 +335,7 @@ export async function completeCourseCheckout(courseSlug: string, productId: stri
         return {
             success: true,
             message: 'Checkout complete. Your course access is active.',
-            learningUrl: getLearningAppCourseContentUrl(courseSlug),
+            learningUrl: getLearnerCourseContentHref(courseSlug),
             amount: result.data.amount,
             currency: result.data.currency,
             entitlementId: result.data.entitlementId,

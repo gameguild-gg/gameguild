@@ -19,16 +19,11 @@ const webBaseUrl = (
   process.env.NEXT_PUBLIC_APP_URL ??
   "http://gameguild.localhost:3011"
 ).replace(/\/$/, "");
-const learningBaseUrl = (
-  process.env.LEARNING_E2E_BASE_URL ??
-  process.env.NEXT_PUBLIC_LEARNING_APP_URL ??
-  "http://learning.gameguild.localhost:3011"
-).replace(/\/$/, "");
-const expectedCookieDomain =
-  process.env.LEARNING_E2E_COOKIE_DOMAIN ??
-  (new URL(learningBaseUrl).hostname.endsWith(".localhost")
-    ? ".gameguild.localhost"
-    : undefined);
+const learningBaseUrl = `${webBaseUrl}/learn`;
+const expectedCookieDomain = process.env.LEARNING_E2E_COOKIE_DOMAIN;
+function getLearningPath(path) {
+  return new URL(`${learningBaseUrl}${path}`).pathname;
+}
 const adminEmail = process.env.E2E_SYSTEM_ADMIN_EMAIL ?? "admin@game-guild.com";
 const adminPassword = process.env.E2E_SYSTEM_ADMIN_PASSWORD ?? "Admin123!";
 const headless = !["0", "false", "no"].includes(
@@ -1197,11 +1192,7 @@ async function run() {
         !redirectTo
       )
         return false;
-      const target = new URL(redirectTo);
-      return (
-        target.origin === new URL(learningBaseUrl).origin &&
-        target.pathname === `/courses/${courseSlug}/content`
-      );
+      return redirectTo === getLearningPath(`/courses/${courseSlug}/content`);
     });
     await learnerPage.getByLabel("Email").fill(fixture.studentEmail);
     await learnerPage
@@ -1213,7 +1204,7 @@ async function run() {
     await learnerPage.waitForURL(
       (url) =>
         url.origin === new URL(learningBaseUrl).origin &&
-        url.pathname === `/courses/${courseSlug}/content`,
+        url.pathname === getLearningPath(`/courses/${courseSlug}/content`),
       { timeout: 45_000 },
     );
     assertSharedAuthCookie(

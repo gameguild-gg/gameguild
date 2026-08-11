@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { Program } from "@/lib/api/generated";
 import type { Product } from "@/lib/courses/actions/enrollment.actions";
-import { getLearningAppCourseContentUrl } from "@/lib/learning-app";
+import { getLearnerCourseContentHref } from "@/lib/learner/paths";
 import type { CourseViewerAccess } from "@/lib/courses/services/course-viewer-access";
 import {
   getCourseCategoryName,
@@ -50,7 +50,7 @@ function getPrimaryCta(
   if (viewerAccess?.state === "has-access" && courseSlug) {
     return {
       label: "Continue learning",
-      href: getLearningAppCourseContentUrl(courseSlug),
+      href: getLearnerCourseContentHref(courseSlug),
       kind: "link",
     };
   }

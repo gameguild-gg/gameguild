@@ -333,7 +333,7 @@ describe("CourseLandingPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("sends enrolled learners to the canonical learning host", () => {
+  it("sends enrolled learners to the native learner workspace", () => {
     render(
       <CourseLandingPage
         course={advancedAiCourse}
@@ -348,7 +348,7 @@ describe("CourseLandingPage", () => {
     for (const link of continueLinks) {
       expect(link).toHaveAttribute(
         "href",
-        "http://localhost:3002/courses/ai4games2/content",
+        "/learn/courses/ai4games2/content",
       );
     }
   });
