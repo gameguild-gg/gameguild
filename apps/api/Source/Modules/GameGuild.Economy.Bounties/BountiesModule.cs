@@ -18,6 +18,8 @@ public sealed class BountiesModule : ModuleBase
         services.TryAddScoped<IDurableBountyEscrowPostWorkflow, PostgreSqlDurableBountyEscrowPostWorkflow>();
         services.TryAddScoped<IBountyTerminalClaimWriter, PostgreSqlBountyTerminalClaimWriter>();
         services.TryAddScoped<IDurableBountyClaimWorkflow, PostgreSqlDurableBountyClaimWorkflow>();
+        services.TryAddScoped<IBountyTerminalReclaimWriter, PostgreSqlBountyTerminalReclaimWriter>();
+        services.TryAddScoped<IDurableBountyReclaimWorkflow, PostgreSqlDurableBountyReclaimWorkflow>();
         return services;
     }
 }

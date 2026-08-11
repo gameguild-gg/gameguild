@@ -292,6 +292,13 @@ Balance alone is insufficient. Every group also stores an immutable `operation_t
 
 Every template records the effective policy version and all variable fees/rates applied. Fixed parity is a domain/schema invariant, not a mutable policy. A later policy change cannot reinterpret a historical transaction.
 
+For durable bounty reclaims, every returned fragment restores the poster's original provenance,
+confirmation timestamp, maturity timestamp, cash-out eligibility, and root-trace ranges. A configured
+hard-coin reclaim fee is recorded in `FeeRevenueHard`; a configured soft-coin reclaim fee is an explicit
+burn to `SoftCoinReserve`. Both paths preserve the exact source ranges on immutable debit allocations.
+The configured rate can be zero and remains policy-versioned; changing a future rate never rewrites a
+historical reclaim.
+
 User conversions and system-backed grants accept an integer hard principal, so the resulting grant is always an exact multiple of `1,000 SC`. Ad-backed rewards may use individual SC units because their backing source is estimated ad revenue rather than a hard-coin debit.
 
 ## Fungibility, Credit Lots, And Provenance

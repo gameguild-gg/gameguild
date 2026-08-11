@@ -164,6 +164,21 @@ public sealed record DurableBountyClaimRequest(
     PolicyVersion PolicyVersion,
     string? DispatchSnapshotHash = null);
 
+/// <summary>
+/// Server-side reclaim command. The workflow reads the escrowed fragments itself and restores
+/// their original provenance, confirmation and maturity metadata. Callers nominate no lots.
+/// </summary>
+public sealed record DurableBountyReclaimRequest(
+    BountyId BountyId,
+    Guid PosterId,
+    WalletId PosterWalletId,
+    DateTimeOffset ReclaimedAt,
+    IdempotencyKey IdempotencyKey,
+    RegisteredPostingAuthority Authority,
+    ReserveVersion ReserveVersion,
+    PolicyVersion PolicyVersion,
+    string? DispatchSnapshotHash = null);
+
 public sealed class BountyClaimResult
 {
     internal BountyClaimResult(
