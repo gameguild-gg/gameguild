@@ -3,6 +3,8 @@ using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
 using GameGuild.Economy.Risk;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -34,7 +36,8 @@ public sealed class EconomyProviderCapabilityReadinessTests
     public void EnabledPayoutCapability_IsNotReadyWhenStripeIsDisabled()
     {
         var readiness = CreateReadiness(
-            enabledCapabilities: [nameof(EconomyValueMovementCapability.PayoutExecution)]);
+            enabledCapabilities: [nameof(EconomyValueMovementCapability.PayoutExecution)],
+            payoutWriteWorkflowEnabled: true);
 
         readiness.Assess(EconomyValueMovementCapability.PayoutExecution)
             .State.Should().Be(EconomyCapabilityReadinessState.ProviderNotReady);
@@ -45,6 +48,7 @@ public sealed class EconomyProviderCapabilityReadinessTests
     {
         var readiness = CreateReadiness(
             enabledCapabilities: [nameof(EconomyValueMovementCapability.PayoutExecution)],
+            payoutWriteWorkflowEnabled: true,
             gateway: new StripeGatewayOptions
             {
                 IsEnabled = true,
@@ -58,18 +62,70 @@ public sealed class EconomyProviderCapabilityReadinessTests
             .State.Should().Be(EconomyCapabilityReadinessState.Ready);
     }
 
+    [Fact]
+    public void EnabledPayoutCapability_IsReportedAsDisabledUntilTheDurableWriteWorkflowIsEnabled()
+    {
+        var readiness = CreateReadiness(
+            enabledCapabilities: [nameof(EconomyValueMovementCapability.PayoutExecution)],
+            gateway: new StripeGatewayOptions
+            {
+                IsEnabled = true,
+                UseSimulation = false,
+                AccountId = "acct_platform",
+                LiveMode = false
+            },
+            billing: CreateBilling());
+
+        var result = readiness.Assess(EconomyValueMovementCapability.PayoutExecution);
+
+        result.State.Should().Be(EconomyCapabilityReadinessState.Disabled);
+        result.Diagnostics.Should().ContainSingle()
+            .Which.Should().Contain("durable payout write workflow");
+    }
+
+    [Fact]
+    public void InvalidCapabilityConfiguration_IsReportedWithoutBlockingComposition()
+    {
+        var values = new Dictionary<string, string?>
+        {
+            [EconomyRiskCompositionOptions.SectionName + ":ValueMovingDecisionsEnabled"] = "true"
+        };
+        var services = new ServiceCollection();
+        services.AddSingleton<IHostEnvironment>(new TestHostEnvironment("Staging"));
+        services.AddEconomyCapabilityComposition(
+            new ConfigurationBuilder().AddInMemoryCollection(values).Build());
+
+        using var provider = services.BuildServiceProvider();
+        var readiness = provider.GetRequiredService<IEconomyProviderCapabilityReadiness>();
+
+        readiness.Assess(EconomyValueMovementCapability.ConvertHardToSoft)
+            .State.Should().Be(EconomyCapabilityReadinessState.InvalidConfiguration);
+    }
+
     private static EconomyProviderCapabilityReadiness CreateReadiness(
         string[]? enabledCapabilities = null,
+        bool payoutWriteWorkflowEnabled = false,
         StripeGatewayOptions? gateway = null,
-        BillingConfiguration? billing = null) => new(
-        Options.Create(new EconomyRiskCompositionOptions
-        {
-            ValueMovingDecisionsEnabled = enabledCapabilities is not null,
-            EnabledCapabilities = enabledCapabilities ?? []
-        }),
-        Options.Create(gateway ?? new StripeGatewayOptions()),
-        Options.Create(billing ?? new BillingConfiguration()),
-        new TestHostEnvironment("Staging"));
+        BillingConfiguration? billing = null)
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Modules:Economy.Payouts:WriteWorkflowEnabled"] = payoutWriteWorkflowEnabled.ToString()
+            })
+            .Build();
+
+        return new EconomyProviderCapabilityReadiness(
+            Options.Create(new EconomyRiskCompositionOptions
+            {
+                ValueMovingDecisionsEnabled = enabledCapabilities is not null,
+                EnabledCapabilities = enabledCapabilities ?? []
+            }),
+            Options.Create(gateway ?? new StripeGatewayOptions()),
+            Options.Create(billing ?? new BillingConfiguration()),
+            new TestHostEnvironment("Staging"),
+            configuration);
+    }
 
     private static BillingConfiguration CreateBilling() => new()
     {
