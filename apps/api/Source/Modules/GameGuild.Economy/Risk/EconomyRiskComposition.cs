@@ -111,8 +111,10 @@ public static class EconomyRiskCompositionExtensions
                 {
                     return false;
                 }
-            }, "Invalid Economy capability configuration.")
-            .ValidateOnStart();
+            }, "Invalid Economy capability configuration.");
+
+        // Economy value movement is opt-in and all operation paths fail closed. Invalid
+        // rollout configuration must not make safe reads or unrelated modules unavailable.
         services.TryAddSingleton<IEconomyValueMovementDecisionGate, EconomyValueMovementDecisionGate>();
         return services;
     }
