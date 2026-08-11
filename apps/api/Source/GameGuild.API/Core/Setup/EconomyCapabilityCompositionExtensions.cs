@@ -17,6 +17,7 @@ public static class EconomyCapabilityCompositionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
+        services.TryAddSingleton(configuration);
         services.AddEconomyRiskComposition(configuration);
         services.AddFinancialCrimeComposition();
         services.AddTrustSafetyComposition();
@@ -56,7 +57,8 @@ public sealed class EconomyProviderCapabilityReadiness(
     IOptions<EconomyRiskCompositionOptions> economyOptions,
     IOptions<StripeGatewayOptions> gatewayOptions,
     IOptions<BillingConfiguration> billingOptions,
-    IHostEnvironment hostEnvironment) : IEconomyProviderCapabilityReadiness
+    IHostEnvironment hostEnvironment,
+    IConfiguration configuration) : IEconomyProviderCapabilityReadiness
 {
     public EconomyCapabilityReadinessResult Assess(EconomyValueMovementCapability capability)
     {
@@ -86,6 +88,15 @@ public sealed class EconomyProviderCapabilityReadiness(
                 capability,
                 EconomyCapabilityReadinessState.Disabled,
                 ["The capability is not enabled for rollout."]);
+
+        // Payout status reads are always available, but payout writes are composed only when the
+        // durable reservation and settlement workflows have been explicitly enabled.
+        if (capability == EconomyValueMovementCapability.PayoutExecution &&
+            !configuration.GetValue<bool>("Modules:Economy.Payouts:WriteWorkflowEnabled"))
+            return new EconomyCapabilityReadinessResult(
+                capability,
+                EconomyCapabilityReadinessState.Disabled,
+                ["The durable payout write workflow is not enabled for rollout."]);
 
         if (!EconomyProviderCapabilityGuard.IsProviderBacked(capability))
             return new EconomyCapabilityReadinessResult(
