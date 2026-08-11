@@ -127,16 +127,138 @@ public sealed class DurablePayoutSettlementWorkflowTests
             .Should().ThrowAsync<InvalidOperationException>();
     }
 
+    [Fact]
+    public async Task DispatchAndProviderEvent_RejectMalformedRequestsBeforeTheyCanChangeAPayout()
+    {
+        var operation = CreateOperation();
+        var context = new RecordingContext();
+        var workflow = CreateWorkflow(context, new InMemoryPayoutOperationStore());
+
+        await FluentActions.Invoking(() => workflow.BeginDispatchAsync(new DurablePayoutDispatchRequest(
+                Guid.Empty, 1, 1, 1, "snapshot", Time)))
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Invoking(() => workflow.BeginDispatchAsync(new DurablePayoutDispatchRequest(
+                operation.Id, 0, 1, 1, "snapshot", Time)))
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await FluentActions.Invoking(() => workflow.BeginDispatchAsync(new DurablePayoutDispatchRequest(
+                operation.Id, 1, 0, 1, "snapshot", Time)))
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await FluentActions.Invoking(() => workflow.BeginDispatchAsync(new DurablePayoutDispatchRequest(
+                operation.Id, 1, 1, 0, "snapshot", Time)))
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await FluentActions.Invoking(() => workflow.BeginDispatchAsync(new DurablePayoutDispatchRequest(
+                operation.Id, 1, 1, 1, new string('x', 129), Time)))
+            .Should().ThrowAsync<ArgumentException>();
+
+        var eventWithNoOperation = CreateProviderEvent(operation, PayoutProviderOutcome.Failed) with { OperationId = Guid.Empty };
+        await FluentActions.Invoking(() => workflow.ApplyProviderEventAsync(new DurablePayoutProviderEventRequest(
+                eventWithNoOperation,
+                CreateTerminalAuthority(operation))))
+            .Should().ThrowAsync<ArgumentException>();
+        var nonTerminalEvent = CreateProviderEvent(operation, PayoutProviderOutcome.Failed) with { Outcome = PayoutProviderOutcome.Submitted };
+        await FluentActions.Invoking(() => workflow.ApplyProviderEventAsync(new DurablePayoutProviderEventRequest(
+                nonTerminalEvent,
+                CreateTerminalAuthority(operation))))
+            .Should().ThrowAsync<PayoutEvidenceException>();
+
+        context.Transactions.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ProviderEvent_RejectsUnorderedOrPredatedTerminalEvidence()
+    {
+        var reserved = CreateOperation();
+        var reservedStore = new InMemoryPayoutOperationStore();
+        reservedStore.Add(reserved);
+        var reservedContext = new RecordingContext();
+        var reservedWorkflow = CreateWorkflow(reservedContext, reservedStore);
+
+        await FluentActions.Invoking(() => reservedWorkflow.ApplyProviderEventAsync(new DurablePayoutProviderEventRequest(
+                CreateProviderEvent(reserved, PayoutProviderOutcome.Failed),
+                CreateTerminalAuthority(reserved))))
+            .Should().ThrowAsync<PayoutStaleCommandException>();
+
+        var dispatching = reserved.Transition(PayoutOperationState.Dispatching, Time.AddMinutes(1), dispatchSnapshotHash: "snapshot");
+        var dispatchingStore = new InMemoryPayoutOperationStore();
+        dispatchingStore.Add(dispatching);
+        var dispatchingContext = new RecordingContext();
+        var dispatchingWorkflow = CreateWorkflow(dispatchingContext, dispatchingStore);
+        var predatedEvent = CreateProviderEvent(dispatching, PayoutProviderOutcome.Failed) with { ObservedAt = Time.AddMinutes(-1) };
+
+        await FluentActions.Invoking(() => dispatchingWorkflow.ApplyProviderEventAsync(new DurablePayoutProviderEventRequest(
+                predatedEvent,
+                CreateTerminalAuthority(dispatching))))
+            .Should().ThrowAsync<PayoutEvidenceException>();
+
+        reservedContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+        dispatchingContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ProviderEvent_RejectsInvalidEvidenceBeforeOpeningTheSettlementTransaction()
+    {
+        var operation = CreateOperation().Transition(PayoutOperationState.Dispatching, Time.AddMinutes(1), dispatchSnapshotHash: "snapshot");
+        var context = new RecordingContext();
+        var workflow = CreateWorkflow(context, new InMemoryPayoutOperationStore(), evidence: new RejectProviderEvidence());
+
+        await FluentActions.Invoking(() => workflow.ApplyProviderEventAsync(new DurablePayoutProviderEventRequest(
+                CreateProviderEvent(operation, PayoutProviderOutcome.Failed),
+                CreateTerminalAuthority(operation))))
+            .Should().ThrowAsync<PayoutEvidenceException>();
+
+        context.Transactions.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ProviderEvent_ReturnsTheConcurrentReplayAndRollsBackWithoutPosting()
+    {
+        var operation = CreateOperation().Transition(PayoutOperationState.Dispatching, Time.AddMinutes(1), dispatchSnapshotHash: "snapshot");
+        var context = new RecordingContext();
+        var reservations = new RecordingReservations();
+        var postings = new RecordingPostings();
+        var workflow = CreateWorkflow(context, new ReplayOnSecondProviderEventLookupStore(operation), reservations, postings);
+
+        var replay = await workflow.ApplyProviderEventAsync(new DurablePayoutProviderEventRequest(
+            CreateProviderEvent(operation, PayoutProviderOutcome.Failed),
+            CreateTerminalAuthority(operation)));
+
+        replay.Should().BeSameAs(operation);
+        reservations.Transitions.Should().BeEmpty();
+        postings.Requests.Should().BeEmpty();
+        context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ProviderEvent_RollsBackWhenNoReservedFragmentCanBeTransitioned()
+    {
+        var operation = CreateOperation().Transition(PayoutOperationState.Dispatching, Time.AddMinutes(1), dispatchSnapshotHash: "snapshot");
+        var store = new InMemoryPayoutOperationStore();
+        store.Add(operation);
+        var context = new RecordingContext();
+        var reservations = new RecordingReservations(transitionCount: 0);
+        var postings = new RecordingPostings();
+        var workflow = CreateWorkflow(context, store, reservations, postings);
+
+        await FluentActions.Invoking(() => workflow.ApplyProviderEventAsync(new DurablePayoutProviderEventRequest(
+                CreateProviderEvent(operation, PayoutProviderOutcome.Failed),
+                CreateTerminalAuthority(operation))))
+            .Should().ThrowAsync<PayoutStaleCommandException>();
+
+        postings.Requests.Should().ContainSingle();
+        context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+    }
+
     private static PostgreSqlDurablePayoutSettlementWorkflow CreateWorkflow(
         RecordingContext context,
-        InMemoryPayoutOperationStore store,
+        IPayoutOperationStore store,
         RecordingReservations? reservations = null,
-        RecordingPostings? postings = null) => new(
+        RecordingPostings? postings = null,
+        IPayoutProviderEvidenceVerifier? evidence = null) => new(
         context,
         store,
         reservations ?? new RecordingReservations(),
         postings ?? new RecordingPostings(),
-        new AcceptProviderEvidence());
+        evidence ?? new AcceptProviderEvidence());
 
     private static PayoutOperation CreateOperation() => new(
         Guid.NewGuid(),
@@ -218,14 +340,14 @@ public sealed class DurablePayoutSettlementWorkflowTests
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 
-    private sealed class RecordingReservations : IFifoFragmentReservationGateway
+    private sealed class RecordingReservations(long transitionCount = 1) : IFifoFragmentReservationGateway
     {
         public List<ReservationTransition> Transitions { get; } = [];
         public IReadOnlyList<PersistedFragmentReservation> Reserve(FifoFragmentReservationRequest request) => [];
         public long Transition(Guid operationId, PersistedFragmentReservationStatus expected, PersistedFragmentReservationStatus next, DateTimeOffset terminalAt)
         {
             Transitions.Add(new ReservationTransition(operationId, expected, next, terminalAt));
-            return 1;
+            return transitionCount;
         }
     }
 
@@ -243,6 +365,27 @@ public sealed class DurablePayoutSettlementWorkflowTests
     {
         public bool Verify(PayoutDispatchReceipt receipt) => true;
         public bool Verify(PayoutProviderEvent providerEvent) => true;
+    }
+
+    private sealed class RejectProviderEvidence : IPayoutProviderEvidenceVerifier
+    {
+        public bool Verify(PayoutDispatchReceipt receipt) => false;
+        public bool Verify(PayoutProviderEvent providerEvent) => false;
+    }
+
+    private sealed class ReplayOnSecondProviderEventLookupStore(PayoutOperation operation) : IPayoutOperationStore
+    {
+        private int _providerEventLookups;
+
+        public PayoutOperation Get(Guid operationId) => operation;
+        public IReadOnlyList<PayoutOperation> ListForPayee(Guid payeeId, int take) => throw new NotSupportedException();
+        public PayoutOperation? FindReplay(string idempotencyKey, string requestHash) => throw new NotSupportedException();
+        public void Add(PayoutOperation payoutOperation) => throw new NotSupportedException();
+        public PayoutOperation Update(PayoutOperation payoutOperation, long expectedVersion) => throw new NotSupportedException();
+        public PayoutProviderEventRecord? FindProviderEvent(string eventId, string eventHash) => ++_providerEventLookups == 2
+            ? new PayoutProviderEventRecord(eventId, eventHash, operation.Id, operation.State, Time)
+            : null;
+        public PayoutProviderEventRecord RecordProviderEvent(string eventId, string eventHash, PayoutOperation resultingOperation, long expectedVersion, DateTimeOffset recordedAt) => throw new NotSupportedException();
     }
 
     private sealed record ReservationTransition(
