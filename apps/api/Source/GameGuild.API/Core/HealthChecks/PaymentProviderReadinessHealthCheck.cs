@@ -55,16 +55,20 @@ internal sealed class PaymentProviderReadinessHealthCheck(
 
             if (!options.IsEnabled)
             {
-                return Task.FromResult(HealthCheckResult.Healthy("Payment provider is disabled.", data));
+                return Task.FromResult(environment.IsProduction()
+                    ? HealthCheckResult.Unhealthy("Payment provider configuration is not ready.", data: data)
+                    : HealthCheckResult.Healthy("Payment provider is disabled.", data));
             }
 
             return Task.FromResult(isReady
                 ? HealthCheckResult.Healthy("Payment provider configuration is ready.", data)
-                : HealthCheckResult.Degraded("Payment provider configuration is not ready.", data: data));
+                : environment.IsProduction()
+                    ? HealthCheckResult.Unhealthy("Payment provider configuration is not ready.", data: data)
+                    : HealthCheckResult.Degraded("Payment provider configuration is not ready.", data: data));
         }
         catch
         {
-            return Task.FromResult(HealthCheckResult.Degraded("Payment provider readiness check failed."));
+            return Task.FromResult(HealthCheckResult.Unhealthy("Payment provider readiness check failed."));
         }
     }
 

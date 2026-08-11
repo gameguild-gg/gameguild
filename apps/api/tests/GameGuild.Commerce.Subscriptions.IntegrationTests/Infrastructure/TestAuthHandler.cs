@@ -14,15 +14,20 @@ public sealed class TestAuthHandler(
 {
     public const string SchemeName = "Test";
     public static readonly Guid DefaultUserId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+    private const string DefaultSubject = "integration-test-user";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         if (!Request.Headers.ContainsKey("Authorization"))
             return Task.FromResult(AuthenticateResult.NoResult());
 
+        var subject = Request.Headers.TryGetValue("X-Test-Subject", out var subjectValues)
+            ? subjectValues.ToString()
+            : DefaultSubject;
+
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, DefaultUserId.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, subject),
             new Claim(ClaimTypes.Name, "Integration Test User"),
             new Claim("tenant_id", Request.Headers["X-Tenant-Id"].FirstOrDefault() ?? Guid.NewGuid().ToString())
         };
