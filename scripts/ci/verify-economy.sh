@@ -226,15 +226,18 @@ declare -a economy_production=()
 declare -a economy_tests=()
 declare -a economy_coverage_records=()
 declare -a provider_contracts=()
-while IFS=$'\t' read -r record_type first second third; do
+while IFS=$'\t' read -r record_type first second third fourth; do
   record_type="$(normalize_shell_record_field "$record_type")"
   first="$(normalize_shell_record_field "$first")"
   second="$(normalize_shell_record_field "$second")"
   third="$(normalize_shell_record_field "$third")"
+  fourth="$(normalize_shell_record_field "$fourth")"
   case "$record_type" in
     production) economy_production+=("$first") ;;
     test) economy_tests+=("$first") ;;
-    coverage) economy_coverage_records+=("$first"$'\t'"$second"$'\t'"$third") ;;
+    coverage)
+      economy_coverage_records+=("$first"$'\t'"$second"$'\t'"$third"$'\t'"$fourth")
+      ;;
     provider) provider_contracts+=("$first"$'\t'"$second") ;;
   esac
 done < <("$PYTHON_BIN" - "$manifest_path" <<'PY'
@@ -247,7 +250,7 @@ for entry in manifest.get("projects", []):
     production = entry["productionProject"].replace("\\", "/")
     print("production", production, sep="\t")
     assemblies = ",".join(entry.get("coverageAssemblies", []))
-    prefixes = ",".join(value.replace("\\", "/") for value in entry.get("coveragePathPrefixes", []))
+    prefixes = ",".join(value.replace("\\", "/") for value in entry.get("coveragePathPrefixes", [])) or "__all__"
     minimum_branch_rate = str(entry.get("minimumBranchRate", 1))
     for test in entry.get("testProjects", []):
         normalized = test.replace("\\", "/")
@@ -325,6 +328,7 @@ fi
 
 for record in "${economy_coverage_records[@]}"; do
   IFS=$'\t' read -r test_project assemblies_csv path_prefixes_csv minimum_branch_rate <<< "$record"
+  [[ "$path_prefixes_csv" == '__all__' ]] && path_prefixes_csv=''
   test_name="$(basename "${test_project%.csproj}")"
   results="$artifact_root/trx/economy/$test_name"
   mkdir -p "$results"

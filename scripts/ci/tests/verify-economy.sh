@@ -146,6 +146,22 @@ test_manifest_record_fields_normalize_windows_line_endings() {
   assert_equal "$assembly" 'GameGuild.Economy' 'Windows Python output must not alter assembly names'
 }
 
+test_coverage_record_fields_preserve_empty_prefixes() {
+  local record_type first second third fourth
+  local -a records=()
+  while IFS=$'\t' read -r record_type first second third fourth; do
+    [[ "$record_type" == 'coverage' ]] || continue
+    records+=("$first"$'\t'"$second"$'\t'"$third"$'\t'"$fourth")
+  done <<< $'coverage\tEconomy.UnitTests.csproj\tGameGuild.Economy\t__all__\t0.98'
+
+  IFS=$'\t' read -r first second third fourth <<< "${records[0]}"
+  [[ "$third" == '__all__' ]] && third=''
+  assert_equal "$first" 'Economy.UnitTests.csproj' 'coverage test project must be preserved' || return 1
+  assert_equal "$second" 'GameGuild.Economy' 'coverage assembly must be preserved' || return 1
+  assert_equal "$third" '' 'an empty prefix list must remain empty' || return 1
+  assert_equal "$fourth" '0.98' 'branch threshold must not shift into the prefixes field'
+}
+
 test_warning_scope_finds_commerce_projects() {
   local root="$fixture_root/warning-scope"
   local production='apps/api/Source/Modules/GameGuild.Commerce.Payments/GameGuild.Commerce.Payments.csproj'
@@ -309,6 +325,7 @@ run_test 'published API uses its published content root' test_published_api_uses
 run_test 'manifest rejects undeclared Economy projects' test_manifest_rejects_undeclared_project
 run_test 'manifest accepts declared Economy projects and tests' test_manifest_accepts_declared_projects
 run_test 'manifest records normalize Windows line endings' test_manifest_record_fields_normalize_windows_line_endings
+run_test 'coverage records preserve empty prefixes and branch threshold' test_coverage_record_fields_preserve_empty_prefixes
 run_test 'warning scope resolves touched Commerce projects' test_warning_scope_finds_commerce_projects
 run_test 'readiness requires consecutive successful probes' test_readiness_requires_consecutive_successes
 run_test 'process cleanup terminates Bash background processes' test_process_cleanup_stops_background_process
