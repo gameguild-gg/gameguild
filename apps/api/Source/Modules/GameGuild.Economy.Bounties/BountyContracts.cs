@@ -148,6 +148,22 @@ public sealed record ReclaimBountyCommand(
     DateTimeOffset ReclaimedAt,
     IdempotencyKey IdempotencyKey);
 
+/// <summary>
+/// Server-side claim command. The workflow obtains all spendable fragments from the persisted
+/// bounty escrow; callers can never nominate ledger lots or root trace ranges.
+/// </summary>
+public sealed record DurableBountyClaimRequest(
+    BountyId BountyId,
+    Guid ClaimantId,
+    WalletId ClaimantWalletId,
+    DateTimeOffset ClaimedAt,
+    IdempotencyKey IdempotencyKey,
+    string EvidenceHash,
+    RegisteredPostingAuthority Authority,
+    ReserveVersion ReserveVersion,
+    PolicyVersion PolicyVersion,
+    string? DispatchSnapshotHash = null);
+
 public sealed class BountyClaimResult
 {
     internal BountyClaimResult(
