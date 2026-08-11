@@ -97,6 +97,51 @@ public sealed class SelfServicePayoutRequestTests
     }
 
     [Fact]
+    public async Task CreateRequiresAnExistingWallet()
+    {
+        var handler = new CreateMyPayoutRequestCommandHandler(
+            new WalletSender(null),
+            AuthenticatedAccessor(Guid.NewGuid()),
+            new InMemoryPayoutRequestStore());
+
+        await FluentActions.Invoking(() => handler.Handle(
+                new CreateMyPayoutRequestCommand(new CreateMyPayoutRequestRequest(250, "request-1")),
+                CancellationToken.None))
+            .Should().ThrowAsync<PayoutRequestWalletUnavailableException>();
+    }
+
+    [Theory]
+    [InlineData(false, "00000000-0000-0000-0000-000000000001", true)]
+    [InlineData(true, "not-a-guid", true)]
+    [InlineData(true, "00000000-0000-0000-0000-000000000001", false)]
+    public async Task CreateRequiresEachPartOfAnAuthenticatedTenantActor(
+        bool authenticated,
+        string subjectId,
+        bool hasTenant)
+    {
+        var accessor = new ActorContextAccessor();
+        accessor.SetActorContext(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = subjectId,
+            TenantId = hasTenant ? Guid.NewGuid() : null,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            TypedAttributes = ActorAttributes.Empty,
+            IsAuthenticated = authenticated
+        });
+        var handler = new CreateMyPayoutRequestCommandHandler(
+            new WalletSender(CreateWallet(Guid.NewGuid())),
+            accessor,
+            new InMemoryPayoutRequestStore());
+
+        await FluentActions.Invoking(() => handler.Handle(
+                new CreateMyPayoutRequestCommand(new CreateMyPayoutRequestRequest(250, "request-1")),
+                CancellationToken.None))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
     public async Task CancelOnlyChangesTheAuthenticatedPayeesSubmittedRequest()
     {
         var actorId = Guid.NewGuid();
@@ -237,11 +282,11 @@ public sealed class SelfServicePayoutRequestTests
             timestamp);
     }
 
-    private sealed class WalletSender(EconomyWalletSummaryDto wallet) : ISender
+    private sealed class WalletSender(EconomyWalletSummaryDto? wallet) : ISender
     {
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default) =>
             request is GetMyEconomyWalletQuery
-                ? Task.FromResult((TResponse)(object)wallet)
+                ? Task.FromResult((TResponse)(object?)wallet!)
                 : throw new InvalidOperationException($"Unexpected request {request.GetType().Name}.");
 
         public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
