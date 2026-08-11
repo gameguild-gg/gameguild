@@ -282,6 +282,10 @@ public static class PostingMatrix
                       (line.Provenance != ProvenanceKind.EarnedHard && line.Account != EconomyAccountCode.PurchasedHardLiability)))
                 Add(errors, PostingErrorCode.InvalidAccountShape,
                     "HardCoin bounty escrow legs must retain the liability account that matches their provenance.");
+            else if (currency == CurrencyCode.SoftCoin &&
+                     line.Provenance is ProvenanceKind.PurchasedHard or ProvenanceKind.EarnedHard)
+                Add(errors, PostingErrorCode.InvalidProvenance,
+                    "SoftCoin bounty escrow legs cannot carry HardCoin provenance.");
         }
     }
 

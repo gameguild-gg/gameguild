@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Posting;
 
 namespace GameGuild.Economy.Bounties.UnitTests;
 
@@ -56,6 +57,29 @@ public sealed class BountyEscrowPostingFactoryTests
                 new PolicyVersion(7)))
             .Should().Throw<ArgumentException>()
             .WithMessage("*posting user*");
+    }
+
+    [Fact]
+    public void PostingMatrix_RejectsHardCoinProvenanceOnSoftCoinEscrow()
+    {
+        var request = new PostingRequest(
+            PostingId.New(),
+            new PostingTemplate(PostingTemplateKind.BountyEscrow, PostingTemplate.CurrentVersion),
+            new IdempotencyKey("soft-bounty-escrow"),
+            PostingAuthority.WalletOwner,
+            new ReserveVersion(3),
+            new PolicyVersion(7),
+            null,
+            PostedAt,
+            [
+                new PostingLine(1, EntrySide.Debit, EconomyAccountCode.SoftCoinLiability,
+                    new CoinAmount(CurrencyCode.SoftCoin, 100), WalletId.New(), null, ProvenanceKind.PurchasedHard),
+                new PostingLine(2, EntrySide.Credit, EconomyAccountCode.SoftCoinEscrow,
+                    new CoinAmount(CurrencyCode.SoftCoin, 100), null, null, null)
+            ]);
+
+        PostingMatrix.Validate(request).Errors
+            .Should().Contain(error => error.Code == PostingErrorCode.InvalidProvenance);
     }
 
     private static BountyEscrowPosition CreatePosition(Guid posterId, WalletId posterWallet)

@@ -28,6 +28,7 @@ internal sealed class BountyEscrowFragmentRow
     public Guid Id { get; set; }
     public Guid BountyId { get; set; }
     public Guid ParentLotId { get; set; }
+    public Guid? EscrowLotId { get; set; }
     public CurrencyCode Currency { get; set; }
     public ProvenanceKind Provenance { get; set; }
     public long AmountUnits { get; set; }
@@ -91,6 +92,9 @@ public sealed class BountiesModelConfiguration : IModelConfiguration
             builder.Property(row => row.Id).ValueGeneratedNever();
             builder.Property(row => row.SelectedRootRanges).HasColumnType("jsonb");
             builder.HasIndex(row => new { row.BountyId, row.ParentLotId }).IsUnique();
+            builder.HasIndex(row => new { row.BountyId, row.EscrowLotId })
+                .IsUnique()
+                .HasFilter("\"EscrowLotId\" IS NOT NULL");
             builder.HasOne<BountyRow>().WithMany().HasForeignKey(row => row.BountyId).OnDelete(DeleteBehavior.Restrict);
         });
 
