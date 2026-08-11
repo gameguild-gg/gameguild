@@ -29,6 +29,7 @@ internal sealed class BountyEscrowFragmentRow
     public Guid BountyId { get; set; }
     public Guid ParentLotId { get; set; }
     public CurrencyCode Currency { get; set; }
+    public ProvenanceKind Provenance { get; set; }
     public long AmountUnits { get; set; }
     public long TraceUnitsPerCoinUnit { get; set; }
     public string SelectedRootRanges { get; set; } = "[]";
@@ -84,6 +85,7 @@ public sealed class BountiesModelConfiguration : IModelConfiguration
             {
                 table.HasCheckConstraint("ck_economy_bounty_escrow_fragments_amount_positive", "\"AmountUnits\" > 0");
                 table.HasCheckConstraint("ck_economy_bounty_escrow_fragments_scale_positive", "\"TraceUnitsPerCoinUnit\" > 0");
+                table.HasCheckConstraint("ck_economy_bounty_escrow_fragments_provenance", "\"Provenance\" BETWEEN 1 AND 7");
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.Id).ValueGeneratedNever();
