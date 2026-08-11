@@ -204,6 +204,9 @@ public static class InfrastructureServiceCollectionExtensions
             .AddCheck<PaymentProviderReadinessHealthCheck>(
                 "payment-provider",
                 tags: ["ready", "dependency"])
+            .AddCheck<EconomyCapabilityReadinessHealthCheck>(
+                "economy-capabilities",
+                tags: ["dependency"])
             .AddCheck<BillingInboxReadinessHealthCheck>(
                 "billing-inbox",
                 tags: ["ready", "dependency"]);
