@@ -22,18 +22,27 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
     public PayoutRequest? FindReplay(Guid payeeId, string idempotencyKey, string requestHash)
     {
         if (payeeId == Guid.Empty)
+        {
             throw new ArgumentException("Payee ID is required.", nameof(payeeId));
+        }
+
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(requestHash);
 
-        var row = Read($"""
-            SELECT * FROM economy_private.read_payout_request_by_idempotency_v1({payeeId}, {idempotencyKey.Trim()})
-            """).SingleOrDefault();
+        var row = Read(
+            "SELECT * FROM economy_private.read_payout_request_by_idempotency_v1({0}, {1})",
+            payeeId,
+            idempotencyKey.Trim()).SingleOrDefault();
         if (row is null)
+        {
             return null;
+        }
+
         if (!string.Equals(row.RequestHash, requestHash, StringComparison.Ordinal))
+        {
             throw new PayoutRequestReplayConflictException(
                 "Payout request idempotency key was reused with different inputs.");
+        }
 
         return ToContract(row);
     }
@@ -59,13 +68,19 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
     public PayoutRequest GetForPayee(Guid requestId, Guid payeeId)
     {
         if (requestId == Guid.Empty)
+        {
             throw new ArgumentException("Payout request ID is required.", nameof(requestId));
-        if (payeeId == Guid.Empty)
-            throw new ArgumentException("Payee ID is required.", nameof(payeeId));
+        }
 
-        var row = Read($"""
-            SELECT * FROM economy_private.read_payout_request_by_id_for_payee_v1({requestId}, {payeeId})
-            """).SingleOrDefault();
+        if (payeeId == Guid.Empty)
+        {
+            throw new ArgumentException("Payee ID is required.", nameof(payeeId));
+        }
+
+        var row = Read(
+            "SELECT * FROM economy_private.read_payout_request_by_id_for_payee_v1({0}, {1})",
+            requestId,
+            payeeId).SingleOrDefault();
         return row is null
             ? throw new KeyNotFoundException($"Payout request {requestId:N} was not found.")
             : ToContract(row);
@@ -74,13 +89,19 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
     public IReadOnlyList<PayoutRequest> ListForPayee(Guid payeeId, int take)
     {
         if (payeeId == Guid.Empty)
+        {
             throw new ArgumentException("Payee ID is required.", nameof(payeeId));
-        if (take is < 1 or > 100)
-            throw new ArgumentOutOfRangeException(nameof(take), "Take must be between 1 and 100.");
+        }
 
-        return Read($"""
-            SELECT * FROM economy_private.read_payout_requests_by_payee_v1({payeeId}, {take})
-            """)
+        if (take is < 1 or > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(take), "Take must be between 1 and 100.");
+        }
+
+        return Read(
+                "SELECT * FROM economy_private.read_payout_requests_by_payee_v1({0}, {1})",
+                payeeId,
+                take)
             .OrderByDescending(row => row.CreatedAt)
             .ThenByDescending(row => row.Id)
             .Select(ToContract)
@@ -91,7 +112,9 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
     {
         ArgumentNullException.ThrowIfNull(request);
         if (expectedVersion <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(expectedVersion));
+        }
 
         Execute($"""
             SELECT economy_private.transition_payout_request_v1(
@@ -104,8 +127,8 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
         return request;
     }
 
-    private IQueryable<PayoutRequestRow> Read(FormattableString sql) =>
-        _db.Database.SqlQuery<PayoutRequestRow>(sql).AsNoTracking();
+    private IQueryable<PayoutRequestRow> Read(string sql, params object?[] parameters) =>
+        _db.Database.SqlQueryRaw<PayoutRequestRow>(sql, parameters).AsNoTracking();
 
     private void Execute(FormattableString sql)
     {

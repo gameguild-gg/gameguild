@@ -60,12 +60,12 @@ public partial class AddEconomyPayoutRequestPersistence : Migration
             table: "economy_payout_requests",
             columns: new[] { "PayeeId", "CreatedAt" });
 
-        InstallPayoutRequestSecurity(migrationBuilder);
+        PayoutRequestPersistenceSql.Install(migrationBuilder);
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        RemovePayoutRequestSecurity(migrationBuilder);
+        PayoutRequestPersistenceSql.Remove(migrationBuilder);
         migrationBuilder.DropTable(name: "economy_payout_requests");
     }
 }

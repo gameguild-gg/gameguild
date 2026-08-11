@@ -47,15 +47,21 @@ public sealed class CreateMyPayoutRequestCommandHandler(
             ?? throw new PayoutRequestWalletUnavailableException(
                 "Create an Economy wallet before requesting a payout.");
         if (wallet.State != WalletLifecycleState.Active)
+        {
             throw new PayoutRequestWalletUnavailableException(
                 "An active Economy wallet is required before requesting a payout.");
+        }
         var requestHash = ComputeRequestHash(actor, wallet.WalletId, command.Request.HardCoinUnits);
         var replay = requests.FindReplay(actor, command.Request.IdempotencyKey.Trim(), requestHash);
         if (replay is not null)
+        {
             return EconomyPayoutRequestDto.From(replay);
+        }
         if (command.Request.HardCoinUnits > wallet.WithdrawableHard)
+        {
             throw new PayoutRequestInsufficientWithdrawableFundsException(
                 "The payout request exceeds HardCoin value that is confirmed and eligible for withdrawal.");
+        }
 
         var now = DateTimeOffset.UtcNow;
         var request = new PayoutRequest(
@@ -101,7 +107,9 @@ public sealed class CancelMyPayoutRequestCommandHandler(
         cancellationToken.ThrowIfCancellationRequested();
         var actor = actorContextAccessor.ActorContext;
         if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } actorId || !actor.TenantId.HasValue)
+        {
             throw new UnauthorizedAccessException("An authenticated tenant actor is required for payout requests.");
+        }
 
         var current = requests.GetForPayee(command.RequestId, actorId);
         var cancelled = current.Cancel(DateTimeOffset.UtcNow);

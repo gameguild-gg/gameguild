@@ -113,11 +113,17 @@ public sealed class PostgreSqlPayoutRequestStoreTests
     {
         public DbSet<T> Set<T>() where T : class => throw new NotSupportedException();
 
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             throw new NotSupportedException();
+        }
 
-        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             throw new NotSupportedException();
+        }
     }
 
     private sealed class DockerFactAttribute : FactAttribute
@@ -125,7 +131,9 @@ public sealed class PostgreSqlPayoutRequestStoreTests
         public DockerFactAttribute()
         {
             if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
+            {
                 Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
+            }
         }
     }
 }

@@ -284,16 +284,28 @@ public sealed class SelfServicePayoutRequestTests
 
     private sealed class WalletSender(EconomyWalletSummaryDto? wallet) : ISender
     {
-        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default) =>
-            request is GetMyEconomyWalletQuery
+        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return request is GetMyEconomyWalletQuery
                 ? Task.FromResult((TResponse)(object?)wallet!)
                 : throw new InvalidOperationException($"Unexpected request {request.GetType().Name}.");
+        }
 
         public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
-            where TRequest : IRequest => throw new InvalidOperationException("No void request is expected.");
+            where TRequest : IRequest
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ArgumentNullException.ThrowIfNull(request);
+            throw new InvalidOperationException("No void request is expected.");
+        }
 
-        public Task<object?> Send(object request, CancellationToken cancellationToken = default) =>
+        public Task<object?> Send(object request, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ArgumentNullException.ThrowIfNull(request);
             throw new InvalidOperationException("No dynamic request is expected.");
+        }
     }
 
     private sealed class InMemoryPayoutRequestStore : IPayoutRequestStore
@@ -307,9 +319,13 @@ public sealed class SelfServicePayoutRequestTests
             var item = _items.SingleOrDefault(candidate =>
                 candidate.PayeeId == payeeId && candidate.IdempotencyKey.Value == idempotencyKey);
             if (item is null)
+            {
                 return null;
+            }
             if (!string.Equals(item.RequestHash, requestHash, StringComparison.Ordinal))
+            {
                 throw new PayoutRequestReplayConflictException("Payout request idempotency key was reused with different inputs.");
+            }
             return item;
         }
 
@@ -317,7 +333,9 @@ public sealed class SelfServicePayoutRequestTests
         {
             if (_items.Any(item =>
                     item.PayeeId == request.PayeeId && item.IdempotencyKey.Value == request.IdempotencyKey.Value))
+            {
                 throw new PayoutRequestReplayConflictException("Payout request idempotency key was reused.");
+            }
             _items.Add(request);
         }
 
@@ -334,7 +352,9 @@ public sealed class SelfServicePayoutRequestTests
         {
             var index = _items.FindIndex(item => item.Id == request.Id);
             if (index < 0 || _items[index].Version != expectedVersion)
+            {
                 throw new PayoutRequestStaleCommandException("Payout request version is stale.");
+            }
             _items[index] = request;
             return request;
         }
