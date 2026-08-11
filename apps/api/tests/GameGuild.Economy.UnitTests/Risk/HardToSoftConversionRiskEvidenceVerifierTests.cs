@@ -22,6 +22,26 @@ public sealed class HardToSoftConversionRiskEvidenceVerifierTests
         financialCrime.SubjectReferences[0].Should().HaveLength(64).And.NotContain(actorId.ToString("N"));
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task VerifyAsync_RejectsMissingActorOrTenant(bool missingActor)
+    {
+        var observed = DateTimeOffset.UtcNow;
+        var financialCrime = new FinancialCrimeSource(AllowFinancialCrime(observed));
+        var trustSafety = new TrustSafetySource(AllowTrustSafety(observed));
+        var verifier = new HardToSoftConversionRiskEvidenceVerifier(financialCrime, trustSafety);
+        var actorId = missingActor ? Guid.Empty : Guid.NewGuid();
+        var tenantId = missingActor ? Guid.NewGuid() : Guid.Empty;
+
+        var act = () => verifier.VerifyAsync(actorId, tenantId, CancellationToken.None);
+
+        var exception = await act.Should().ThrowAsync<ArgumentException>();
+        exception.Which.ParamName.Should().Be(missingActor ? "actorId" : "tenantId");
+        financialCrime.SubjectReferences.Should().BeEmpty();
+        trustSafety.SubjectReferences.Should().BeEmpty();
+    }
+
     [Fact]
     public async Task VerifyAsync_FailsClosedWhenEitherSourceDoesNotAllowTheOperation()
     {
