@@ -353,6 +353,9 @@ export function QuizContentEditor({
                 blocks={blocks}
                 onChange={handleBlocksChange}
                 projectType="quiz"
+                quizSubmissionMode={
+                  syncedGradingConfig.enabled ? "server-graded" : "local-practice"
+                }
               />
             </Suspense>
           </div>
