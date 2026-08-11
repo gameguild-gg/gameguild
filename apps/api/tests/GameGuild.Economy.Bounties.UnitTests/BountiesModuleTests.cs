@@ -33,6 +33,14 @@ public sealed class BountiesModuleTests
             descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
                 item.ServiceType == typeof(IDurableBountyEscrowPostWorkflow) &&
                 item.ImplementationType == typeof(PostgreSqlDurableBountyEscrowPostWorkflow) &&
+                item.Lifetime == ServiceLifetime.Scoped),
+            descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
+                item.ServiceType == typeof(IBountyTerminalClaimWriter) &&
+                item.ImplementationType == typeof(PostgreSqlBountyTerminalClaimWriter) &&
+                item.Lifetime == ServiceLifetime.Scoped),
+            descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
+                item.ServiceType == typeof(IDurableBountyClaimWorkflow) &&
+                item.ImplementationType == typeof(PostgreSqlDurableBountyClaimWorkflow) &&
                 item.Lifetime == ServiceLifetime.Scoped));
         typeof(IBountyTerminalEventStore).GetMethod("Complete").Should().BeNull(
             "a terminal state transition must be coupled to its immutable ledger posting");

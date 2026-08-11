@@ -16,6 +16,8 @@ public sealed class BountiesModule : ModuleBase
         services.TryAddScoped<IBountyTerminalEventStore, PostgreSqlBountyTerminalEventStore>();
         services.TryAddScoped<IBountyPostableLotReader, PostgreSqlBountyPostableLotReader>();
         services.TryAddScoped<IDurableBountyEscrowPostWorkflow, PostgreSqlDurableBountyEscrowPostWorkflow>();
+        services.TryAddScoped<IBountyTerminalClaimWriter, PostgreSqlBountyTerminalClaimWriter>();
+        services.TryAddScoped<IDurableBountyClaimWorkflow, PostgreSqlDurableBountyClaimWorkflow>();
         return services;
     }
 }
