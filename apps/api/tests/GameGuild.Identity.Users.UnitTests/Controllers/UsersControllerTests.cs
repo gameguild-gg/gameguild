@@ -18,7 +18,7 @@ public class UsersControllerTests
 
     public UsersControllerTests()
     {
-        _actorContextAccessor.Setup(x => x.ActorContext).Returns(CreateActorContext(roles: new[] { "Admin" }));
+        _actorContextAccessor.Setup(x => x.ActorContext).Returns(CreateActorContext(roles: new[] { "SystemAdmin" }));
         _controller = new UsersController(_sender.Object, _actorContextAccessor.Object, _membershipChecker.Object)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
