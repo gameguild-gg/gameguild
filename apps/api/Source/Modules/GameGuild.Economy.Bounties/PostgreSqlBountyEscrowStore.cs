@@ -29,6 +29,7 @@ public sealed record PersistedBountyEscrow(
 public sealed record PersistedBountyEscrowFragment(
     CreditLotId ParentLotId,
     CoinAmount Amount,
+    ProvenanceKind Provenance,
     long TraceUnitsPerCoinUnit,
     IReadOnlyList<RootTraceRange> SelectedRanges);
 
@@ -104,7 +105,7 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
         try
         {
             _db.Database.ExecuteSqlInterpolated($"""
-                SELECT economy_private.create_bounty_escrow_v1(
+                SELECT economy_private.create_bounty_escrow_v2(
                     {command.Position.Id.Value},
                     {command.Position.PosterId},
                     {command.Position.PosterWalletId.Value},
@@ -144,6 +145,7 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
             .Select(fragment => new PersistedBountyEscrowFragment(
                 new CreditLotId(fragment.ParentLotId),
                 new CoinAmount(fragment.Currency, fragment.AmountUnits),
+                fragment.Provenance,
                 fragment.TraceUnitsPerCoinUnit,
                 DeserializeRanges(fragment.SelectedRootRanges)))
             .ToArray();
@@ -170,8 +172,8 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
 
     private IQueryable<BountyEscrowFragmentProjection> ReadFragments(Guid bountyId) =>
         _db.Database.SqlQuery<BountyEscrowFragmentProjection>($"""
-            SELECT "ParentLotId", "Currency", "AmountUnits", "TraceUnitsPerCoinUnit", "SelectedRootRanges"
-            FROM economy_private.read_bounty_escrow_fragments_v1({bountyId})
+            SELECT "ParentLotId", "Currency", "Provenance", "AmountUnits", "TraceUnitsPerCoinUnit", "SelectedRootRanges"
+            FROM economy_private.read_bounty_escrow_fragments_v2({bountyId})
             """);
 
     private static IReadOnlyList<RootTraceRange> DeserializeRanges(string payload)
@@ -190,6 +192,7 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
         position.EscrowFragments.Select(fragment => new FragmentPayload(
             fragment.ParentLot.Id.Value,
             (int)fragment.Amount.Currency,
+            (int)fragment.ParentLot.Provenance,
             fragment.Amount.Units,
             fragment.ParentLot.TraceUnitsPerCoinUnit,
             fragment.SelectedRanges.Select(range => new RootRangePayload(
@@ -205,6 +208,7 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
     private sealed record FragmentPayload(
         Guid ParentLotId,
         int Currency,
+        int Provenance,
         long AmountUnits,
         long TraceUnitsPerCoinUnit,
         RootRangePayload[] SelectedRootRanges);
@@ -219,6 +223,7 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
     {
         public Guid ParentLotId { get; init; }
         public CurrencyCode Currency { get; init; }
+        public ProvenanceKind Provenance { get; init; }
         public long AmountUnits { get; init; }
         public long TraceUnitsPerCoinUnit { get; init; }
         public string SelectedRootRanges { get; init; } = "[]";

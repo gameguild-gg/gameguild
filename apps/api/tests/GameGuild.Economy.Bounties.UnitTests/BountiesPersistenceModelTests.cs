@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Economy.Bounties.Persistence;
+using GameGuild.Economy.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -27,6 +28,8 @@ public sealed class BountiesPersistenceModelTests
                 index.Properties.Select(property => property.Name).SequenceEqual(new[] { "BountyId" }));
         Entity(entities, "economy_bounty_escrow_fragments").GetCheckConstraints()
             .Should().Contain(constraint => constraint.Name == "ck_economy_bounty_escrow_fragments_amount_positive");
+        Entity(entities, "economy_bounty_escrow_fragments").FindProperty("Provenance")!
+            .ClrType.Should().Be(typeof(ProvenanceKind));
     }
 
     [Fact]
