@@ -71,7 +71,7 @@ public partial class PersistBountyEscrowLedgerLots
                                OR ((line->>'provenance')::integer <> 2 AND (line->>'account_code')::integer = 2)))
                            OR (currency = 2 AND NOT (
                                (line->>'provenance')::integer BETWEEN 3 AND 7
-                               AND (line->>'account_code')::integer = 4))) THEN
+                               AND (line->>'account_code')::integer = 4)))) THEN
                     RETURN false;
                 END IF;
 
