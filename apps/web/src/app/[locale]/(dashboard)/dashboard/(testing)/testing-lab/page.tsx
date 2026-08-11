@@ -1,47 +1,20 @@
+import { TestingLabCalendar } from '@/components/testing-lab/testing-lab-calendar';
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
 import { TestingLabAccessIssues, TestingLabEmptyState } from '@/components/testing-lab/testing-lab-state';
 import { Link } from '@/i18n/navigation';
 import { getTestingLabAnalytics, getTestingLabDashboard, normalizeTestingRequestStatus, normalizeTestingSessionStatus } from '@/lib/testing-lab';
+import { getTestingEventsDirectory } from '@/lib/testing-lab/events-queries';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
-import { ArrowRight, BarChart3, CalendarDays, FlaskConical, FolderKanban, Settings, Users } from 'lucide-react';
-
-const workstreams = [
-  {
-    title: 'Events',
-    description: 'Application windows, approval, independent slots, attendance, and required feedback.',
-    href: '/dashboard/testing-lab/events',
-    icon: CalendarDays,
-  },
-  {
-    title: 'Projects',
-    description: 'Project builds, testing briefs, event applications, and lifecycle.',
-    href: '/dashboard/testing-lab/projects',
-    icon: FolderKanban,
-  },
-  {
-    title: 'Participants',
-    description: 'Testers, registrations, waitlists, and attendance follow-up.',
-    href: '/dashboard/testing-lab/participants',
-    icon: Users,
-  },
-  {
-    title: 'Analytics',
-    description: 'Live demand, capacity, completion, ratings, and recommendation analytics.',
-    href: '/dashboard/testing-lab/analytics',
-    icon: BarChart3,
-  },
-  {
-    title: 'Settings',
-    description: 'General defaults, locations, access roles, and permissions.',
-    href: '/dashboard/testing-lab/settings',
-    icon: Settings,
-  },
-];
+import { ArrowRight, FlaskConical } from 'lucide-react';
 
 export default async function TestingLabPage() {
-  const [directory, analytics] = await Promise.all([getTestingLabDashboard(), getTestingLabAnalytics()]);
-  const issues = [...directory.accessIssues, ...analytics.accessIssues];
+  const [directory, analytics, events] = await Promise.all([
+    getTestingLabDashboard(),
+    getTestingLabAnalytics(),
+    getTestingEventsDirectory({ take: 100 }),
+  ]);
+  const issues = [...directory.accessIssues, ...analytics.accessIssues, ...events.accessIssues];
 
   return (
     <div className="space-y-6 p-4 lg:p-6">
@@ -91,31 +64,7 @@ export default async function TestingLabPage() {
         ))}
       </section>
 
-      <section>
-        <div className="mb-3">
-          <h2 className="text-lg font-semibold">Operations</h2>
-          <p className="text-sm text-muted-foreground">Each workflow has its own focused workspace and API-backed actions.</p>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {workstreams.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link key={item.href} href={item.href} className="group rounded-md border p-4 transition-colors hover:bg-muted/35">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex gap-3">
-                    <Icon className="mt-0.5 size-5 text-muted-foreground" />
-                    <div>
-                      <h3 className="font-medium">{item.title}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-                    </div>
-                  </div>
-                  <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+      <TestingLabCalendar events={events.events} />
 
       <section className="grid gap-6 xl:grid-cols-2">
         <div>
