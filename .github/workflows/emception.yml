@@ -3,23 +3,7 @@ name: Emception CI/CD
 on:
   push:
     branches:
-      - develop
-    paths:
-      - '.github/workflows/emception.yml'
-      - 'apps/web/src/types/global.d.ts'
-      - 'demos/emception-*/**'
-      - 'docs/frontend/emception-workspace-config.md'
-      - 'package.json'
-      - 'packages/infrastructure/ui-emception/**'
-      - 'pnpm-workspace.yaml'
-      - 'scripts/emception/**'
-      - 'scripts/sync-emception-cdn.mjs'
-      - 'tools/emception/**'
-      - 'tsconfig.json'
-      - 'turbo.json'
-  pull_request:
-    branches:
-      - develop
+      - main
     paths:
       - '.github/workflows/emception.yml'
       - 'apps/web/src/types/global.d.ts'
