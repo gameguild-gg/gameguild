@@ -21,7 +21,14 @@ public sealed class PayoutsModuleTests
             descriptor.ServiceType == typeof(IPayoutOperationStore) &&
             descriptor.ImplementationType == typeof(PostgreSqlPayoutOperationStore) &&
             descriptor.Lifetime == ServiceLifetime.Scoped);
-        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(PayoutCoordinator));
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IDurablePayoutReservationWorkflow) &&
+            descriptor.ImplementationType == typeof(PostgreSqlDurablePayoutReservationWorkflow) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IDurablePayoutSettlementWorkflow) &&
+            descriptor.ImplementationType == typeof(PostgreSqlDurablePayoutSettlementWorkflow) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(PayoutCoordinator));
         services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(DbContext));
     }
 }

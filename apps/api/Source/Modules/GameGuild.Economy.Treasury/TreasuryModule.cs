@@ -17,6 +17,7 @@ public sealed class TreasuryModule : ModuleBase
 
         services.AddScoped<IAdminWithdrawalStore, PostgreSqlAdminWithdrawalStore>();
         services.AddScoped<IAdminWithdrawalAuditTrail, PostgreSqlAdminWithdrawalAuditTrail>();
+        services.AddScoped<IDurableAdminWithdrawalWorkflow, PostgreSqlDurableAdminWithdrawalWorkflow>();
         return services;
     }
 }
