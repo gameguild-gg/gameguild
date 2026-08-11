@@ -210,7 +210,8 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
         string idempotencyKey,
         long hardUnits = 10,
         string operationFingerprint = "durable-hard-to-soft-conversion",
-        DateTimeOffset? timestamp = null)
+        DateTimeOffset? timestamp = null,
+        string capabilityName = "hard-to-soft-gateway")
     {
         var now = timestamp ?? Now;
         await ExecuteAsync(connection, $"""
@@ -223,7 +224,7 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
                 ('{Guid.NewGuid()}', NULL, 14, 1, NULL, '{now.AddMinutes(-3):O}'),
                 ('{Guid.NewGuid()}', '{wallet}', 4, 2, 3, '{now.AddMinutes(-3):O}');
             INSERT INTO public.economy_registered_capabilities ("Id", "Name", "AllowedTemplateKinds", "IsEnabled", "CreatedAt", "RevokedAt")
-            VALUES ('{capability}', 'hard-to-soft-gateway', '[5,17]'::jsonb, true, '{now.AddMinutes(-3):O}', NULL);
+            VALUES ('{capability}', '{capabilityName}', '[5,17]'::jsonb, true, '{now.AddMinutes(-3):O}', NULL);
             INSERT INTO public.economy_risk_counters (
                 "Id", "Dimension", "SubjectHash", "Operation", "Currency", "WindowStartedAt", "WindowEndsAt",
                 "CounterVersion", "MaxUnits", "UsedUnits", "UpdatedAt")
