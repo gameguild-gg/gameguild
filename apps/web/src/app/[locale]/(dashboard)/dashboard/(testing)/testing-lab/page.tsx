@@ -1,8 +1,13 @@
 import { TestingLabCalendar } from '@/components/testing-lab/testing-lab-calendar';
-import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
+import { TestingLabOperationsNavigation, TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
 import { TestingLabAccessIssues, TestingLabEmptyState } from '@/components/testing-lab/testing-lab-state';
 import { Link } from '@/i18n/navigation';
-import { getTestingLabAnalytics, getTestingLabDashboard, normalizeTestingRequestStatus, normalizeTestingSessionStatus } from '@/lib/testing-lab';
+import {
+  getTestingLabAnalytics,
+  getTestingLabDashboard,
+  normalizeTestingRequestStatus,
+  normalizeTestingSessionStatus,
+} from '@/lib/testing-lab';
 import { getTestingEventsDirectory } from '@/lib/testing-lab/events-queries';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
@@ -22,6 +27,7 @@ export default async function TestingLabPage() {
         icon={FlaskConical}
         title="Testing Lab"
         description="Operate real project testing from build intake through moderated sessions, participant attendance, feedback, and evidence-backed reports."
+        navigation={<TestingLabOperationsNavigation />}
         actions={
           <>
             <Button asChild variant="outline">
@@ -42,15 +48,24 @@ export default async function TestingLabPage() {
 
       <TestingLabAccessIssues issues={[...new Set(issues)]} />
 
-      <section aria-label="Testing Lab metrics" className="grid overflow-hidden rounded-md border sm:grid-cols-2 xl:grid-cols-4">
+      <section
+        aria-label="Testing Lab metrics"
+        className="grid overflow-hidden rounded-md border sm:grid-cols-2 xl:grid-cols-4"
+      >
         {[
           ['Applications', analytics.current.applications, `${analytics.current.approvedProjects} approved projects`],
           ['Events', analytics.current.events, `${analytics.current.completedEvents} completed`],
-          ['Capacity fill', `${analytics.current.fillRate}%`, `${analytics.current.registeredTesters}/${analytics.current.capacity} seats`],
+          [
+            'Capacity fill',
+            `${analytics.current.fillRate}%`,
+            `${analytics.current.registeredTesters}/${analytics.current.capacity} seats`,
+          ],
           [
             'Feedback',
             analytics.current.feedback,
-            analytics.current.averageRating === null ? 'No ratings yet' : `${analytics.current.averageRating}/10 average`,
+            analytics.current.averageRating === null
+              ? 'No ratings yet'
+              : `${analytics.current.averageRating}/10 average`,
           ],
         ].map(([label, value, detail]) => (
           <div
@@ -64,7 +79,7 @@ export default async function TestingLabPage() {
         ))}
       </section>
 
-      <TestingLabCalendar events={events.events} />
+      <TestingLabCalendar events={events.events} eventAnalytics={analytics.events} />
 
       <section className="grid gap-6 xl:grid-cols-2">
         <div>
@@ -75,7 +90,10 @@ export default async function TestingLabPage() {
             </Button>
           </div>
           {directory.requests.length === 0 ? (
-            <TestingLabEmptyState title="No testing requests" description="Submit a project build to begin a structured testing cycle." />
+            <TestingLabEmptyState
+              title="No testing requests"
+              description="Submit a project build to begin a structured testing cycle."
+            />
           ) : (
             <div className="divide-y rounded-md border">
               {directory.requests.slice(0, 5).map((request) => (
@@ -86,7 +104,9 @@ export default async function TestingLabPage() {
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{request.title}</p>
-                    <p className="truncate text-xs text-muted-foreground">{request.description ?? 'No objective provided'}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {request.description ?? 'No objective provided'}
+                    </p>
                   </div>
                   <Badge variant="outline">{normalizeTestingRequestStatus(request.status)}</Badge>
                 </Link>
@@ -102,7 +122,10 @@ export default async function TestingLabPage() {
             </Button>
           </div>
           {directory.sessions.length === 0 ? (
-            <TestingLabEmptyState title="No testing sessions" description="Schedule a moderated window after a testing request is ready." />
+            <TestingLabEmptyState
+              title="No testing sessions"
+              description="Schedule a moderated window after a testing request is ready."
+            />
           ) : (
             <div className="divide-y rounded-md border">
               {directory.sessions.slice(0, 5).map((session) => (
@@ -113,7 +136,9 @@ export default async function TestingLabPage() {
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{session.sessionName}</p>
-                    <p className="truncate text-xs text-muted-foreground">{session.location?.name ?? 'Location not assigned'}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {session.location?.name ?? 'Location not assigned'}
+                    </p>
                   </div>
                   <Badge variant="outline">{normalizeTestingSessionStatus(session.status)}</Badge>
                 </Link>

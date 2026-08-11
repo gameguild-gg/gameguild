@@ -95,9 +95,7 @@ describe('TestingEventApplications', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
 
-    expect(
-      await screen.findByRole('combobox', { name: 'Testing slot' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('combobox', { name: 'Testing slot' })).toBeInTheDocument();
   });
 
   it('uses a guarded drawer and opens with a valid event schedule', () => {
@@ -125,7 +123,9 @@ describe('TestingEventApplications', () => {
 
     expect(new Date(endsAt.value).valueOf() - new Date(startsAt.value).valueOf()).toBe(2 * 60 * 60 * 1000);
 
-    fireEvent.change(screen.getByLabelText('Event name'), { target: { value: 'Community playtest' } });
+    fireEvent.change(screen.getByLabelText('Event name'), {
+      target: { value: 'Community playtest' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(screen.getByRole('alertdialog')).toHaveTextContent('Discard testing event draft?');
@@ -133,5 +133,13 @@ describe('TestingEventApplications', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
 
     expect(screen.getByText('Create testing event')).toBeInTheDocument();
+  });
+  it('opens as a controlled sheet with the calendar day prefilled', () => {
+    render(
+      <CreateTestingEventDialog open showTrigger={false} initialDate={new Date(2030, 7, 19)} onOpenChange={vi.fn()} />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'New event' })).not.toBeInTheDocument();
+    expect((screen.getByLabelText('Event starts') as HTMLInputElement).value).toMatch(/^2030-08-19T/);
   });
 });

@@ -22,8 +22,19 @@ vi.mock('@/lib/testing-lab/events-queries', () => ({
 }));
 
 vi.mock('@/components/testing-lab/testing-lab-calendar', () => ({
-  TestingLabCalendar: ({ events }: { events: Array<{ name?: string }> }) => (
-    <section aria-label="Testing Lab calendar">{events.map((event) => <span key={event.name}>{event.name}</span>)}</section>
+  TestingLabCalendar: ({
+    events,
+    eventAnalytics,
+  }: {
+    events: Array<{ name?: string }>;
+    eventAnalytics: Array<{ eventId: string; capacity: number }>;
+  }) => (
+    <section aria-label="Testing Lab calendar">
+      {events.map((event) => (
+        <span key={event.name}>{event.name}</span>
+      ))}
+      <span>Calendar capacity {eventAnalytics[0]?.capacity}</span>
+    </section>
   ),
 }));
 
@@ -80,19 +91,45 @@ describe('testing lab dashboard page', () => {
       previous: null,
       locations: { total: 1, active: 1 },
       trend: [],
-      events: [],
+      events: [
+        {
+          eventId: 'event-1',
+          registeredTesters: 2,
+          capacity: 10,
+          fillRate: 20,
+        },
+      ],
     });
     mocks.getTestingEventsDirectory.mockResolvedValue({
       accessIssues: [],
-      events: [{ id: 'event-1', name: 'Campus playtest', startsAt: '2026-08-10T18:00:00.000Z' }],
+      events: [
+        {
+          id: 'event-1',
+          name: 'Campus playtest',
+          startsAt: '2026-08-10T18:00:00.000Z',
+        },
+      ],
     });
 
     render(await TestingLabPage());
 
     expect(screen.getByRole('heading', { name: 'Testing Lab' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /public lab/i })).toHaveAttribute('href', '/testing-lab');
+    const workspaceNavigation = screen.getByRole('navigation', {
+      name: 'Testing Lab operations',
+    });
+    expect(workspaceNavigation.closest('header')).not.toBeNull();
+    expect(screen.getByRole('link', { name: /events workspace/i })).toHaveAttribute(
+      'href',
+      '/dashboard/testing-lab/events',
+    );
+    expect(screen.getByRole('link', { name: /projects workspace/i })).toHaveAttribute(
+      'href',
+      '/dashboard/testing-lab/projects',
+    );
     expect(screen.getByRole('region', { name: 'Testing Lab calendar' })).toBeInTheDocument();
     expect(screen.getByText('Campus playtest')).toBeInTheDocument();
+    expect(screen.getByText('Calendar capacity 10')).toBeInTheDocument();
     expect(screen.getByText('20%')).toBeInTheDocument();
     expect(screen.getByText('Combat prototype playtest')).toBeInTheDocument();
     expect(screen.getByText('Friday feedback lab')).toBeInTheDocument();
