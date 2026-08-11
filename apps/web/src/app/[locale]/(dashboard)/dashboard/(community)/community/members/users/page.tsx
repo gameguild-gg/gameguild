@@ -26,6 +26,10 @@ function getRoleBadgeVariant(role: string) {
   return 'outline';
 }
 
+function getRoleLabel(role: string) {
+  return role === 'NoAccess' ? 'No active access' : role;
+}
+
 function getWorkspaceOptions(members: Awaited<ReturnType<typeof getMemberAccessDirectory>>['members']) {
   const workspaces = new Map<string, { tenantId: string; label: string }>();
 
@@ -271,7 +275,7 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                     </TableCell>
                     <TableCell className="text-sm">{row.member.email}</TableCell>
                     <TableCell>
-                      <Badge variant={getRoleBadgeVariant(row.role)}>{row.role}</Badge>
+                      <Badge variant={getRoleBadgeVariant(row.role)}>{getRoleLabel(row.role)}</Badge>
                       {row.isCurrentUser ? <Badge variant="outline" className="ml-2">You</Badge> : null}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">

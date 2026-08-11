@@ -24,9 +24,57 @@ public sealed class AddTenantMemberCommandHandler(
         // Check if member already exists
         var existingMember = await memberRepository.GetByUserAndTenantAsync(request.UserId, request.TenantId, cancellationToken).ConfigureAwait(false);
 
-        if (existingMember != null) { return new AddTenantMemberResponse { Success = false, Message = "User is already a member of this tenant" }; }
-
         var now = SystemClock.UtcNow;
+        if (existingMember != null)
+        {
+            if (existingMember.IsActive)
+            {
+                return new AddTenantMemberResponse { Success = false, Message = "User is already a member of this tenant" };
+            }
+
+            existingMember.UpdateRole(request.Role);
+            existingMember.JoinedAt = now;
+
+            if (request.RequiresAcceptance)
+            {
+                existingMember.IsActive = false;
+                existingMember.LeftAt = null;
+                existingMember.LeaveReason = null;
+                existingMember.Metadata = TenantMemberInviteMetadata.CreatePending(
+                        request.InvitedByEmail,
+                        now,
+                        request.InviteeEmail,
+                        request.InviteeName)
+                    .ToJson();
+            }
+            else
+            {
+                existingMember.Activate();
+                if (!string.IsNullOrWhiteSpace(existingMember.Metadata))
+                {
+                    existingMember.Metadata = TenantMemberInviteMetadata.FromJson(existingMember.Metadata)
+                        .MarkAccepted(now)
+                        .ToJson();
+                }
+            }
+
+            await memberRepository.UpdateAsync(existingMember, cancellationToken).ConfigureAwait(false);
+
+            if (request.RequiresAcceptance)
+            {
+                await SendInviteEmailAsync(tenant, request, cancellationToken).ConfigureAwait(false);
+            }
+
+            tenant.AddDomainEvent(new TenantMemberAddedEvent(request.TenantId, request.UserId, request.InvitedByEmail ?? "unknown@email.com", request.Role));
+
+            return new AddTenantMemberResponse
+            {
+                Success = true,
+                Message = request.RequiresAcceptance ? "Membership invite recreated" : "Member reactivated successfully",
+                MemberId = existingMember.Id
+            };
+        }
+
         var member = new TenantMember { TenantId = request.TenantId, UserId = request.UserId, Role = request.Role, JoinedAt = now, IsActive = true };
 
         if (request.RequiresAcceptance)
