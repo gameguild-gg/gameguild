@@ -841,7 +841,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
   // ── 12. Reorder content ─────────────────────────────────────────────────
   it('reorders content items', async () => {
     // Flip the order: assignment first, lesson second
-    const result = await content.postCoursesContentReorder(courseId, {
+    const result = await content.postCoursesContentReorder1(courseId, {
       contentIds: [assignmentContentId, lessonContentId],
     });
 

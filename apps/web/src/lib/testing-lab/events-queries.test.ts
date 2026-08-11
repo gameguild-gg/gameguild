@@ -77,7 +77,7 @@ describe('Testing Lab event queries', () => {
       ok: true,
       data: [{ id: 'slot-1', eventId: 'event-1', registeredTesterCount: 3 }],
     });
-    mocks.events.getTestingEventsApplications.mockResolvedValue({
+    mocks.events.getTestingEventsApplications1.mockResolvedValue({
       ok: true,
       data: [{ id: 'application-1', eventId: 'event-1', status: 'Pending' }],
     });
@@ -208,12 +208,12 @@ describe('Testing Lab event queries', () => {
     expect(result.committee).toHaveLength(1);
     expect(result.registrationsBySlot['slot-1']).toHaveLength(1);
     expect(result.accessIssues).toEqual([]);
-    expect(mocks.events.getTestingEventsApplications).toHaveBeenCalledWith('event-1', {
+    expect(mocks.events.getTestingEventsApplications1).toHaveBeenCalledWith('event-1', {
       status: 'Pending',
       skip: 0,
       take: 100,
     });
-    expect(mocks.events.getTestingEventsApplications1).not.toHaveBeenCalled();
+    expect(mocks.events.getTestingEventsApplications).not.toHaveBeenCalled();
     expect(mocks.participation.getTestingEventsSlotsRegistrations).toHaveBeenCalledWith('slot-1');
   });
 
@@ -226,7 +226,7 @@ describe('Testing Lab event queries', () => {
     expect(mocks.participation.getTestingEventsFeedback).toHaveBeenCalledWith('event-1');
   });
   it('keeps partial manager data and reports generated-client failures', async () => {
-    mocks.events.getTestingEventsApplications.mockResolvedValue({
+    mocks.events.getTestingEventsApplications1.mockResolvedValue({
       ok: false,
       error: { message: 'Forbidden', status: 403 },
     });

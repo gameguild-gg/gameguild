@@ -261,7 +261,7 @@ export async function reorderContent(
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { content } = createCourseModules();
-    const result = await content.postCoursesContentReorder(resolvedCourseId, {
+    const result = await content.postCoursesContentReorder1(resolvedCourseId, {
       contentIds,
     });
 
