@@ -50,6 +50,7 @@ COPY tools/emception/tsconfig.json ./tools/emception/
 COPY tools/emception/tsconfig.lib.json ./tools/emception/
 COPY tools/emception/packages ./tools/emception/packages
 COPY tools/emception/scripts ./tools/emception/scripts
+COPY tools/emception/src ./tools/emception/src
 COPY tools/emception/userland ./tools/emception/userland
 COPY tools/emception/public/coi-serviceworker.js ./tools/emception/public/coi-serviceworker.js
 
