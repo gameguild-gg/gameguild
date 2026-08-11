@@ -3,8 +3,11 @@ using GameGuild.API.Database;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Persistence;
 using GameGuild.Economy.UnitTests.Funding;
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
+using System.Reflection;
 
 namespace GameGuild.Economy.UnitTests.Persistence;
 
@@ -237,6 +240,132 @@ public sealed class PostgreSqlGatewayValidationTests
             .WithMessage("*account that is not provisioned*");
     }
 
+    [Fact]
+    public void RegisteredPostingTranslatesWriterFailuresAfterResolvingProvisionedAccounts()
+    {
+        using var context = CreateContext();
+        var posting = Posting(lines: [Line(1)]);
+        var line = posting.Lines.Single();
+        context.Set<EconomyAccountRow>().Add(new EconomyAccountRow
+        {
+            Id = Guid.NewGuid(),
+            WalletId = line.WalletId!.Value.Value,
+            Code = line.Account,
+            Currency = line.Amount.Currency,
+            Provenance = line.Provenance,
+            CreatedAt = Now
+        });
+        context.SaveChanges();
+        var request = new RegisteredPostingRequest(Authority(), posting);
+
+        Action act = () => new PostgreSqlRegisteredPostingGateway(context).Post(request);
+
+        act.Should().Throw<RegisteredPostingRejectedException>()
+            .WithMessage("*registered economy writer rejected the posting*");
+    }
+
+    [Fact]
+    public void RegisteredPostingClassifiesEveryDatabaseFailureShape()
+    {
+        var method = typeof(PostgreSqlRegisteredPostingGateway).GetMethod(
+            "IsDatabaseFailure",
+            BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        bool Classifies(Exception exception) => (bool)method.Invoke(null, [exception])!;
+
+        Classifies(new TestDbException()).Should().BeTrue();
+        Classifies(new DbUpdateException()).Should().BeTrue();
+        Classifies(new InvalidOperationException()).Should().BeTrue();
+        Classifies(new Exception("wrapper", new TestDbException())).Should().BeTrue();
+        Classifies(new ArgumentException()).Should().BeFalse();
+    }
+
+    [Fact]
+    public void FundingConfirmationRejectsAnUnprovisionedAccountBeforeWriting()
+    {
+        using var context = CreateContext();
+        var source = new SourceStampId(Guid.NewGuid());
+        var wallet = new WalletId(Guid.NewGuid());
+        var key = new IdempotencyKey("funding-unprovisioned-account");
+        context.Set<EconomySourceStampRow>().Add(new EconomySourceStampRow
+        {
+            Id = source.Value,
+            EvidenceHash = "observed-evidence",
+            ObservedAt = Now
+        });
+        context.Set<EconomyFundingClaimRow>().Add(new EconomyFundingClaimRow
+        {
+            SourceStampId = source.Value,
+            WalletId = wallet.Value,
+            Provider = "stripe",
+            Environment = "test",
+            ConnectedAccount = "platform",
+            ProviderObject = "payment",
+            ProviderMonetaryLeg = "principal",
+            AuthoritativeUsdMinorUnits = 100,
+            ObservedAt = Now,
+            Version = 1
+        });
+        context.SaveChanges();
+        var command = new ConfirmObservedTopUpCommand(
+            PostingId.New(),
+            key,
+            source,
+            CreditLotId.New(),
+            new ReserveVersion(1),
+            new PolicyVersion(1),
+            "provider-confirmation",
+            Now,
+            FundingAuthorizationFixture.Create(
+                PostingTemplateKind.ConfirmedTopUpMint,
+                key,
+                wallet,
+                new CoinAmount(CurrencyCode.HardCoin, 100),
+                [source],
+                Now));
+
+        Action act = () => new PostgreSqlHardCoinFundingGateway(context)
+            .Confirm(new PersistedHardCoinFundingConfirmation(command, Authority()));
+
+        act.Should().Throw<RegisteredPostingRejectedException>()
+            .WithMessage("*economy account that is not provisioned*");
+    }
+
+    [Fact]
+    public void PersistedEconomyRecords_ExposeEveryPersistenceResult()
+    {
+        var operation = Guid.NewGuid();
+        var lot = CreditLotId.New();
+        var root = SourceStampId.New();
+        var reservation = new PersistedFragmentReservation(
+            Guid.NewGuid(),
+            operation,
+            lot,
+            root,
+            2,
+            new RootTraceRange(root, 0, 1_000, 2),
+            new CoinAmount(CurrencyCode.HardCoin, 1));
+        var reversal = new PersistedProviderReversalReceipt(
+            PostingId.New(),
+            1,
+            2,
+            3,
+            4,
+            true);
+
+        reservation.OperationId.Should().Be(operation);
+        reservation.ParentLotId.Should().Be(lot);
+        reservation.RootSourceStampId.Should().Be(root);
+        reservation.ReversalEpoch.Should().Be(2);
+        reservation.Range.Should().Be(new RootTraceRange(root, 0, 1_000, 2));
+        reversal.OperationId.Should().NotBe(default);
+        reversal.RecoveredHardUnits.Should().Be(1);
+        reversal.RecoveredConvertedSoftUnits.Should().Be(2);
+        reversal.ResponsibleDebtHardUnits.Should().Be(3);
+        reversal.PlatformLossHardUnits.Should().Be(4);
+        reversal.IsDuplicate.Should().BeTrue();
+    }
+
     private static ApplicationDbContext CreateContext() => new(
         new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
@@ -334,4 +463,6 @@ public sealed class PostgreSqlGatewayValidationTests
         new WalletId(Guid.NewGuid()),
         null,
         ProvenanceKind.ConvertedSoft);
+
+    private sealed class TestDbException : DbException;
 }
