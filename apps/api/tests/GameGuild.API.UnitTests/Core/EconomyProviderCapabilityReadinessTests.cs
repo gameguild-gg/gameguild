@@ -36,7 +36,8 @@ public sealed class EconomyProviderCapabilityReadinessTests
     public void EnabledPayoutCapability_IsNotReadyWhenStripeIsDisabled()
     {
         var readiness = CreateReadiness(
-            enabledCapabilities: [nameof(EconomyValueMovementCapability.PayoutExecution)]);
+            enabledCapabilities: [nameof(EconomyValueMovementCapability.PayoutExecution)],
+            payoutWriteWorkflowEnabled: true);
 
         readiness.Assess(EconomyValueMovementCapability.PayoutExecution)
             .State.Should().Be(EconomyCapabilityReadinessState.ProviderNotReady);
@@ -44,6 +45,25 @@ public sealed class EconomyProviderCapabilityReadinessTests
 
     [Fact]
     public void EnabledPayoutCapability_IsReadyWithReplaySafeStripeConfiguration()
+    {
+        var readiness = CreateReadiness(
+            enabledCapabilities: [nameof(EconomyValueMovementCapability.PayoutExecution)],
+            payoutWriteWorkflowEnabled: true,
+            gateway: new StripeGatewayOptions
+            {
+                IsEnabled = true,
+                UseSimulation = false,
+                AccountId = "acct_platform",
+                LiveMode = false
+            },
+            billing: CreateBilling());
+
+        readiness.Assess(EconomyValueMovementCapability.PayoutExecution)
+            .State.Should().Be(EconomyCapabilityReadinessState.Ready);
+    }
+
+    [Fact]
+    public void EnabledPayoutCapability_IsReportedAsDisabledUntilTheDurableWriteWorkflowIsEnabled()
     {
         var readiness = CreateReadiness(
             enabledCapabilities: [nameof(EconomyValueMovementCapability.PayoutExecution)],
@@ -56,8 +76,11 @@ public sealed class EconomyProviderCapabilityReadinessTests
             },
             billing: CreateBilling());
 
-        readiness.Assess(EconomyValueMovementCapability.PayoutExecution)
-            .State.Should().Be(EconomyCapabilityReadinessState.Ready);
+        var result = readiness.Assess(EconomyValueMovementCapability.PayoutExecution);
+
+        result.State.Should().Be(EconomyCapabilityReadinessState.Disabled);
+        result.Diagnostics.Should().ContainSingle()
+            .Which.Should().Contain("durable payout write workflow");
     }
 
     [Fact]
@@ -81,16 +104,28 @@ public sealed class EconomyProviderCapabilityReadinessTests
 
     private static EconomyProviderCapabilityReadiness CreateReadiness(
         string[]? enabledCapabilities = null,
+        bool payoutWriteWorkflowEnabled = false,
         StripeGatewayOptions? gateway = null,
-        BillingConfiguration? billing = null) => new(
-        Options.Create(new EconomyRiskCompositionOptions
-        {
-            ValueMovingDecisionsEnabled = enabledCapabilities is not null,
-            EnabledCapabilities = enabledCapabilities ?? []
-        }),
-        Options.Create(gateway ?? new StripeGatewayOptions()),
-        Options.Create(billing ?? new BillingConfiguration()),
-        new TestHostEnvironment("Staging"));
+        BillingConfiguration? billing = null)
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Modules:Economy.Payouts:WriteWorkflowEnabled"] = payoutWriteWorkflowEnabled.ToString()
+            })
+            .Build();
+
+        return new EconomyProviderCapabilityReadiness(
+            Options.Create(new EconomyRiskCompositionOptions
+            {
+                ValueMovingDecisionsEnabled = enabledCapabilities is not null,
+                EnabledCapabilities = enabledCapabilities ?? []
+            }),
+            Options.Create(gateway ?? new StripeGatewayOptions()),
+            Options.Create(billing ?? new BillingConfiguration()),
+            new TestHostEnvironment("Staging"),
+            configuration);
+    }
 
     private static BillingConfiguration CreateBilling() => new()
     {
