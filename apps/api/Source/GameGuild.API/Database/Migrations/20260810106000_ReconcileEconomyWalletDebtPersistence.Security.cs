@@ -229,7 +229,7 @@ public partial class ReconcileEconomyWalletDebtPersistence
                                   AND counter."CounterVersion" = p_expected_counter_version) THEN
                                 RAISE EXCEPTION 'provider reversal risk authorization is missing, stale, or consumed' USING ERRCODE = '42501';
                             END IF;
-            
+
                             FOR candidate IN
                                 WITH source_ranges AS (
                                     SELECT lot."Id" AS lot_id, lot."WalletId" AS wallet_id, lot."Currency" AS currency,
@@ -351,7 +351,7 @@ public partial class ReconcileEconomyWalletDebtPersistence
                                         "UpdatedAt" = EXCLUDED."UpdatedAt",
                                         "Version" = public.economy_wallet_debts."Version" + 1
                                     RETURNING "OutstandingHardUnits" INTO debt_outstanding_hard_units;
-            
+
                                     SELECT COALESCE(max("Sequence"), 0) + 1 INTO debt_event_sequence
                                     FROM public.economy_wallet_debt_events
                                     WHERE "WalletId" = claim."WalletId";
