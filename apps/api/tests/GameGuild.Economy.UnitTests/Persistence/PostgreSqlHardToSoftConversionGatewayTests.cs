@@ -3,12 +3,13 @@ using GameGuild.API.Database;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Risk;
 using GameGuild.Economy.UnitTests.Funding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using Testcontainers.PostgreSql;
-using System.Text.Json;
 
 namespace GameGuild.Economy.UnitTests.Persistence;
 
@@ -49,52 +50,36 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
             "seeded-decision-not-used-by-issuer");
         await InsertCurrentCoveredReserveHeadAsync(connection);
 
-        var evidence = JsonSerializer.Serialize(new[]
-        {
-            new
+        var issuer = new PostgreSqlHardToSoftConversionRiskDecisionIssuer(
+            context,
+            Options.Create(new SelfServiceHardToSoftRiskDecisionOptions
             {
-                source = 1,
-                version = "financial-crime-v1",
-                issuedAt = Now.AddMinutes(-1),
-                expiresAt = Now.AddMinutes(5),
-                outcome = 1,
-                evidenceHash = "financial-crime-evidence",
-                isAuditable = true
-            },
-            new
-            {
-                source = 2,
-                version = "trust-safety-v1",
-                issuedAt = Now.AddMinutes(-1),
-                expiresAt = Now.AddMinutes(5),
-                outcome = 1,
-                evidenceHash = "trust-safety-evidence",
-                isAuditable = true
-            }
-        });
-
-        var issued = await IssueSelfServiceDecisionAsync(
-            connection,
+                MaxHardCoinUnitsPerDay = 100,
+                DecisionLifetimeSeconds = 300
+            }));
+        var request = new HardToSoftConversionRiskDecisionRequest(
             actor,
             tenant,
-            wallet,
+            new WalletId(wallet),
             operation,
-            idempotencyKey,
-            evidence);
+            new IdempotencyKey(idempotencyKey),
+            FeeHardCoinUnits: 0,
+            TotalHardCoinUnits: 10,
+            ExternalEvidence:
+            [
+                new(ExternalRiskSource.FinancialCrime, 1, Now.AddMinutes(-1), Now.AddMinutes(5), ExternalRiskOutcome.Allow, "financial-crime-evidence"),
+                new(ExternalRiskSource.TrustSafety, 1, Now.AddMinutes(-1), Now.AddMinutes(5), ExternalRiskOutcome.Allow, "trust-safety-evidence")
+            ],
+            RequestedAt: Now);
 
-        issued.SourceRoots.Should().Be($"[\"{root}\"]");
+        var issued = await issuer.IssueAsync(request, CancellationToken.None);
+
+        issued.SourceRoots.Should().Equal(root);
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_fragment_reservations WHERE \"OperationId\" = '{operation}' AND \"RootSourceStampId\" = '{root}' AND \"Purpose\" = 3;")).Should().Be(1);
-        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_counter_reservations WHERE \"RiskDecisionId\" = '{issued.RiskDecisionId}' AND \"AmountUnits\" = 10;")).Should().Be(1);
-        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_audit_evidence WHERE \"RiskDecisionId\" = '{issued.RiskDecisionId}';")).Should().Be(2);
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_counter_reservations WHERE \"RiskDecisionId\" = '{issued.Id}' AND \"AmountUnits\" = 10;")).Should().Be(1);
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_audit_evidence WHERE \"RiskDecisionId\" = '{issued.Id}';")).Should().Be(2);
 
-        var replay = await IssueSelfServiceDecisionAsync(
-            connection,
-            actor,
-            tenant,
-            wallet,
-            operation,
-            idempotencyKey,
-            evidence);
+        var replay = await issuer.IssueAsync(request, CancellationToken.None);
         replay.Should().Be(issued);
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_fragment_reservations WHERE \"OperationId\" = '{operation}';")).Should().Be(1);
     }
