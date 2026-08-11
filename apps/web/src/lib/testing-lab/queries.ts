@@ -116,6 +116,7 @@ export interface TestingProjectOption {
 interface ApiReadResult<T> {
   data: T | null;
   issue?: string;
+  status?: number | string;
 }
 
 function getApiUrl() {
@@ -162,6 +163,7 @@ async function readResult<T>(operation: Promise<Result<T, ApiError>>, label: str
     return {
       data: null,
       issue: `${label} returned ${result.error.status ?? 'an error'}: ${result.error.message}`,
+      status: result.error.status,
     };
   } catch (error) {
     return {
@@ -169,6 +171,10 @@ async function readResult<T>(operation: Promise<Result<T, ApiError>>, label: str
       issue: `${label} failed: ${getOperationFailureMessage(error)}`,
     };
   }
+}
+
+function isNotFound(result: ApiReadResult<unknown>) {
+  return String(result.status) === '404';
 }
 
 function mapProject(project: ProjectsProject): TestingProjectOption | null {
@@ -356,6 +362,103 @@ export const getTestingRequestDetail = cache(async (requestId: string): Promise<
     participants: participants.data ?? [],
     feedback: feedback.data ?? [],
     accessIssues: [request.issue, sessions.issue, participants.issue, feedback.issue].filter(Boolean) as string[],
+  };
+});
+
+export interface TestingProjectDetailSummary extends TestingProjectOption {
+  description?: string | null;
+  downloadUrl?: string | null;
+  developmentStatus?: string | null;
+}
+
+export interface TestingLabProjectDetailData extends TestingRequestDetailData {
+  project: TestingProjectDetailSummary | null;
+}
+
+function mapProjectDetail(project: ProjectsProject): TestingProjectDetailSummary | null {
+  if (!project.id) return null;
+
+  return {
+    id: project.id,
+    title: project.title || project.slug || project.id,
+    slug: project.slug,
+    status: project.status,
+    description: project.shortDescription ?? project.description,
+    downloadUrl: project.downloadUrl,
+    developmentStatus: project.developmentStatus ?? null,
+  };
+}
+
+/**
+ * Resolves the shared Project first. Older dashboard links used a TestingRequest id
+ * at this route, so that identifier remains supported without treating a valid
+ * Project id as a failed Testing Lab request.
+ */
+export const getTestingLabProjectDetail = cache(async (projectOrRequestId: string): Promise<TestingLabProjectDetailData> => {
+  const api = createTestingLabModules();
+  const projectResult = await readResult(
+    api.projects.getProjects1(projectOrRequestId, {
+      includeTeam: false,
+      includeReleases: true,
+      includeCollaborators: false,
+      includeStatistics: true,
+    }),
+    'Project',
+  );
+
+  if (projectResult.data) {
+    const project = mapProjectDetail(projectResult.data);
+    const requestsResult = await readResult(api.requests.getTestingRequests({ skip: 0, take: 200 }), 'Testing requests');
+    const linkedRequest = compact((requestsResult.data ?? []).map(mapRequest)).find(
+      (request) => request.projectVersion?.projectId === project?.id,
+    );
+
+    if (!linkedRequest) {
+      return {
+        project,
+        request: null,
+        sessions: [],
+        participants: [],
+        feedback: [],
+        accessIssues: requestsResult.issue ? [requestsResult.issue] : [],
+      };
+    }
+
+    const requestDetail = await getTestingRequestDetail(linkedRequest.id);
+    return {
+      ...requestDetail,
+      project,
+      accessIssues: [requestsResult.issue, ...requestDetail.accessIssues].filter(Boolean) as string[],
+    };
+  }
+
+  const requestResult = await readResult(api.requests.getTestingRequests1(projectOrRequestId), 'Testing request');
+  if (requestResult.data) {
+    const requestDetail = await getTestingRequestDetail(projectOrRequestId);
+    const requestProject = requestDetail.request?.projectVersion?.project;
+
+    return {
+      ...requestDetail,
+      project: requestProject
+        ? {
+            id: requestProject.id,
+            title: requestProject.title ?? requestProject.slug ?? requestProject.id,
+            slug: requestProject.slug,
+            status: requestProject.status,
+          }
+        : null,
+    };
+  }
+
+  return {
+    project: null,
+    request: null,
+    sessions: [],
+    participants: [],
+    feedback: [],
+    accessIssues: [projectResult, requestResult]
+      .filter((result) => result.issue && !isNotFound(result))
+      .map((result) => result.issue!),
   };
 });
 
