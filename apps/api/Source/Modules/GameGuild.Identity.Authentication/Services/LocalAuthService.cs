@@ -126,6 +126,7 @@ public class LocalAuthService(
             // Fetch user again to get token version
             var authenticatedUser = await userRepository.GetByIdAsync(userId!.Value, cancellationToken).ConfigureAwait(false);
             var tokenVersion = authenticatedUser?.TokenVersion ?? 1;
+            await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId.Value, cancellationToken).ConfigureAwait(false);
             var tenantAccessContext = await ResolveTenantAccessContextAsync(userId.Value, request.TenantId, cancellationToken).ConfigureAwait(false);
             RequireActiveTenantAccess(tenantAccessContext);
 
@@ -313,6 +314,7 @@ public class LocalAuthService(
         var userId = storedToken.UserId;
         var user = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         var tokenVersion = user?.TokenVersion ?? 1;
+        await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId, cancellationToken).ConfigureAwait(false);
         var tenantAccessContext = await ResolveTenantAccessContextAsync(userId, request.TenantId, cancellationToken).ConfigureAwait(false);
         var userEmail = user?.Email ?? $"user{userId}@game-guild.com";
         RequireActiveTenantAccess(tenantAccessContext);
