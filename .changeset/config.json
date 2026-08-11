@@ -3,11 +3,25 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "game-guild/game-guild"
+      "repo": "gameguild-gg/gameguild"
     }
   ],
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "emception-workspace",
+      "emception",
+      "@gameguild/emception-browser",
+      "@gameguild/emception-xterm",
+      "@gameguild/emception-react",
+      "@gameguild/emception-webcomponent",
+      "@gameguild/emception-ide",
+      "@gameguild/emception-demo-next",
+      "@gameguild/emception-demo-react",
+      "@gameguild/emception-demo-run-react",
+      "@gameguild/emception-demo-run-webcomponent"
+    ]
+  ],
   "linked": [
     [
       "@game-guild/eslint-config",
