@@ -192,9 +192,7 @@ services:
         API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
         API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:8080}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
-        LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:-http://localhost:3000}
         AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
-        UNIFIED_LEARNING_ENABLED: ${UNIFIED_LEARNING_ENABLED:-true}
     image: game-guild-web
     container_name: game-guild-web
     profiles: ["app"]
@@ -205,11 +203,8 @@ services:
       - API_URL=${API_INTERNAL_URL:-http://api:8080}
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:-http://localhost:8080}
       - NEXT_PUBLIC_APP_URL=${WEB_PUBLIC_URL:-http://localhost:3000}
-      - NEXT_PUBLIC_LEARNING_APP_URL=${LEARNING_PUBLIC_URL:-http://localhost:3000}
       - WEB_PUBLIC_URL=${WEB_PUBLIC_URL:-http://localhost:3000}
-      - LEARNING_PUBLIC_URL=${LEARNING_PUBLIC_URL:-http://localhost:3000}
       - AUTH_COOKIE_DOMAIN=${AUTH_COOKIE_DOMAIN:-}
-      - UNIFIED_LEARNING_ENABLED=${UNIFIED_LEARNING_ENABLED:-true}
       - NEXTAUTH_URL=${WEB_PUBLIC_URL:-http://localhost:3000}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
       - AUTH_SECRET=${AUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}

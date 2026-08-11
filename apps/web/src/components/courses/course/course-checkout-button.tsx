@@ -14,7 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { completeCourseCheckout, type Product } from '@/lib/courses/actions/enrollment.actions';
-import { getLearningAppCourseContentUrl } from '@/lib/learning-app';
+import { getLearnerCourseContentHref } from '@/lib/learner/paths';
 import { cn } from '@/lib/utils';
 import { ArrowRight, CheckCircle2, CreditCard, Loader2, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -69,7 +69,7 @@ export function CourseCheckoutButton({ courseSlug, products, className, buttonCl
       }
 
       setSuccess(result.message);
-      router.push(result.learningUrl ?? getLearningAppCourseContentUrl(courseSlug));
+      router.push(result.learningUrl ?? getLearnerCourseContentHref(courseSlug));
     } catch (checkoutError) {
       setError(checkoutError instanceof Error ? checkoutError.message : 'Could not complete checkout.');
     } finally {

@@ -21,11 +21,7 @@ const webBaseUrl = (
   process.env.NEXT_PUBLIC_APP_URL ??
   "http://gameguild.localhost:3011"
 ).replace(/\/$/, "");
-const learningBaseUrl = (
-  process.env.LEARNING_E2E_BASE_URL ??
-  process.env.NEXT_PUBLIC_LEARNING_APP_URL ??
-  "http://learning.gameguild.localhost:3011"
-).replace(/\/$/, "");
+const learningBaseUrl = `${webBaseUrl}/learn`;
 const existingTenantId =
   process.env.API_TENANT_ID ?? process.env.TENANT_ID ?? undefined;
 const evidenceDir = resolve(
@@ -35,11 +31,10 @@ const evidenceDir = resolve(
 const headless = !["0", "false", "no"].includes(
   (process.env.LEARNING_E2E_HEADLESS ?? "true").toLowerCase(),
 );
-const expectedCookieDomain =
-  process.env.LEARNING_E2E_COOKIE_DOMAIN ??
-  (new URL(learningBaseUrl).hostname.endsWith(".localhost")
-    ? ".gameguild.localhost"
-    : undefined);
+const expectedCookieDomain = process.env.LEARNING_E2E_COOKIE_DOMAIN;
+function getLearningPath(path) {
+  return new URL(`${learningBaseUrl}${path}`).pathname;
+}
 const refreshWaitMs = Number.parseInt(
   process.env.LEARNING_E2E_REFRESH_WAIT_MS ?? "0",
   10,
@@ -513,11 +508,7 @@ async function runLearnerJourney(fixture) {
         !redirectTo
       )
         return false;
-      const target = new URL(redirectTo);
-      return (
-        target.origin === new URL(learningBaseUrl).origin &&
-        target.pathname === `/courses/${fixture.slug}`
-      );
+      return redirectTo === getLearningPath(`/courses/${fixture.slug}`);
     });
     await assertNoErrorSurface(page, "Learner sign-in redirect");
     await page.getByRole("link", { name: /Sign up|Create one/ }).click();
@@ -538,7 +529,7 @@ async function runLearnerJourney(fixture) {
     await page.waitForURL(
       (url) =>
         url.origin === new URL(learningBaseUrl).origin &&
-        url.pathname === `/courses/${fixture.slug}`,
+        url.pathname === getLearningPath(`/courses/${fixture.slug}`),
       { timeout: 45_000 },
     );
     await waitForLearningReady(page);
@@ -578,7 +569,7 @@ async function runLearnerJourney(fixture) {
     await page.waitForURL(
       (url) =>
         url.origin === new URL(learningBaseUrl).origin &&
-        url.pathname === `/courses/${fixture.slug}/content`,
+        url.pathname === getLearningPath(`/courses/${fixture.slug}/content`),
       { timeout: 45_000 },
     );
     await page
@@ -594,7 +585,7 @@ async function runLearnerJourney(fixture) {
 
     await visit(page, "/", /^Welcome back,/);
     await page.getByText(fixture.title, { exact: true }).first().waitFor();
-    await page.goto(`${learningBaseUrl}/catalog`, {
+    await page.goto(`${webBaseUrl}/courses`, {
       waitUntil: "domcontentloaded",
     });
     await page.waitForURL(
@@ -602,7 +593,7 @@ async function runLearnerJourney(fixture) {
         url.origin === new URL(webBaseUrl).origin &&
         url.pathname.endsWith("/courses"),
     );
-    await assertNoErrorSurface(page, "Learning catalog redirect");
+    await assertNoErrorSurface(page, "Course catalog");
     await page.getByText(fixture.title, { exact: true }).first().waitFor();
     await visit(page, `/courses/${fixture.slug}/content`, "Course content");
     await page
@@ -611,7 +602,10 @@ async function runLearnerJourney(fixture) {
     await page.waitForURL(
       (url) =>
         url.origin === new URL(learningBaseUrl).origin &&
-        url.pathname === `/courses/${fixture.slug}/lessons/${fixture.lessonId}`,
+        url.pathname ===
+          getLearningPath(
+            `/courses/${fixture.slug}/lessons/${fixture.lessonId}`,
+          ),
     );
     await page
       .getByRole("heading", { name: "Build a readable game loop", exact: true })
@@ -821,14 +815,7 @@ async function runLearnerJourney(fixture) {
     await visit(page, "/certificates", "Certificates");
     await page.getByText("No certificates issued yet").first().waitFor();
 
-    await page.goto(`${learningBaseUrl}/assignments`, {
-      waitUntil: "domcontentloaded",
-    });
-    await page.waitForURL(
-      (url) =>
-        url.origin === new URL(learningBaseUrl).origin &&
-        url.pathname === "/activities",
-    );
+    await visit(page, "/activities");
 
     for (const viewport of learningViewports) {
       await page.setViewportSize({
@@ -886,7 +873,7 @@ async function runLearnerJourney(fixture) {
     await page.waitForURL(
       (url) =>
         url.origin === new URL(learningBaseUrl).origin &&
-        url.pathname === `/courses/${fixture.slug}`,
+        url.pathname === getLearningPath(`/courses/${fixture.slug}`),
       { timeout: 45_000 },
     );
     await waitForLearningReady(page);

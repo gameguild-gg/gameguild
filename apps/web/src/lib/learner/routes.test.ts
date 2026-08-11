@@ -5,7 +5,7 @@ vi.mock('@/i18n/navigation', () => ({
     locale === 'en-US' ? href : `/${locale}${href}`,
 }));
 
-const { createLearnerRoutes, getCentralSignInUrl } = await import('./routes');
+const { createLearnerRoutes, getLearnerCourseContentHref, getLearnerSignInHref } = await import('./routes');
 
 describe('learner routes', () => {
   it('uses App Router paths and delegates locale prefixes to next-intl', () => {
@@ -33,15 +33,20 @@ describe('learner routes', () => {
     expect(routes.course('game-ai')).toBe('/learn/courses/game-ai');
   });
 
-  it('creates an allowlisted central sign-in return URL', () => {
+  it('builds course content links inside the native learner workspace', () => {
+    expect(getLearnerCourseContentHref('ai games/intro')).toBe(
+      '/learn/courses/ai%20games%2Fintro/content',
+    );
+  });
+
+  it('creates a local sign-in URL that returns to the exact learner route', () => {
     expect(
-      getCentralSignInUrl({
-        learningOrigin: 'https://learning.gameguild.gg',
-        pathname: '/courses/game-ai/lessons/intro?mode=focus',
-        webOrigin: 'https://gameguild.gg',
+      getLearnerSignInHref({
+        pathname: '/pt-BR/learn/courses/game-ai/lessons/intro',
+        search: 'mode=focus',
       }),
     ).toBe(
-      'https://gameguild.gg/sign-in?redirectTo=https%3A%2F%2Flearning.gameguild.gg%2Fcourses%2Fgame-ai%2Flessons%2Fintro%3Fmode%3Dfocus',
+      '/sign-in?redirectTo=%2Fpt-BR%2Flearn%2Fcourses%2Fgame-ai%2Flessons%2Fintro%3Fmode%3Dfocus',
     );
   });
 });

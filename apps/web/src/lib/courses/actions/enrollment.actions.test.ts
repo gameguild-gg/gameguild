@@ -81,7 +81,7 @@ describe('enrollInFreeCourse', () => {
         expect(result).toEqual({
             success: true,
             message: 'Enrollment complete. You can continue in the learning app now.',
-            learningUrl: 'http://localhost:3002/courses/intro-to-game-dev/content',
+            learningUrl: '/learn/courses/intro-to-game-dev/content',
         });
         expect(mocks.getCoursesSlug).toHaveBeenCalledWith('intro-to-game-dev');
         expect(mocks.postCoursesSelfEnroll).toHaveBeenCalledWith('course-1');
@@ -236,7 +236,7 @@ describe('completeCourseCheckout', () => {
         expect(result).toEqual({
             success: true,
             message: 'Checkout complete. Your course access is active.',
-            learningUrl: 'http://localhost:3002/courses/intro-to-game-dev/content',
+            learningUrl: '/learn/courses/intro-to-game-dev/content',
             amount: 49,
             currency: 'USD',
             entitlementId: 'entitlement-1',

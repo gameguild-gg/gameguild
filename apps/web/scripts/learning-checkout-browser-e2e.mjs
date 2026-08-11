@@ -18,21 +18,16 @@ const webBaseUrl = (
   process.env.NEXT_PUBLIC_APP_URL ??
   "http://gameguild.localhost:3011"
 ).replace(/\/$/, "");
-const learningBaseUrl = (
-  process.env.LEARNING_E2E_BASE_URL ??
-  process.env.NEXT_PUBLIC_LEARNING_APP_URL ??
-  "http://learning.gameguild.localhost:3011"
-).replace(/\/$/, "");
+const learningBaseUrl = `${webBaseUrl}/learn`;
 const existingTenantId =
   process.env.API_TENANT_ID ?? process.env.TENANT_ID ?? undefined;
 const headless = !["0", "false", "no"].includes(
   (process.env.LEARNING_E2E_HEADLESS ?? "true").toLowerCase(),
 );
-const expectedCookieDomain =
-  process.env.LEARNING_E2E_COOKIE_DOMAIN ??
-  (new URL(learningBaseUrl).hostname.endsWith(".localhost")
-    ? ".gameguild.localhost"
-    : undefined);
+const expectedCookieDomain = process.env.LEARNING_E2E_COOKIE_DOMAIN;
+function getLearningPath(path) {
+  return new URL(`${learningBaseUrl}${path}`).pathname;
+}
 
 function unique() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -359,7 +354,7 @@ async function runBrowserJourney(course) {
     await page.waitForURL(
       (url) =>
         url.origin === new URL(learningBaseUrl).origin &&
-        url.pathname === `/courses/${course.slug}/content`,
+        url.pathname === getLearningPath(`/courses/${course.slug}/content`),
       { timeout: 45_000 },
     );
     await page.waitForLoadState("domcontentloaded");
@@ -383,7 +378,8 @@ async function runBrowserJourney(course) {
     await page.waitForURL(
       (url) =>
         url.origin === new URL(learningBaseUrl).origin &&
-        url.pathname === `/courses/${course.slug}/lessons/${course.lessonId}`,
+        url.pathname ===
+          getLearningPath(`/courses/${course.slug}/lessons/${course.lessonId}`),
     );
 
     const startButton = page.getByRole("button", { name: "Start lesson" });
