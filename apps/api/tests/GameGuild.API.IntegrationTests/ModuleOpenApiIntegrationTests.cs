@@ -199,6 +199,7 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
 
         paths.Should().Contain(path => path.EndsWith("/economy/wallet", StringComparison.Ordinal));
         paths.Should().Contain(path => path.EndsWith("/economy/wallet/transactions", StringComparison.Ordinal));
+        paths.Should().Contain(path => path.EndsWith("/economy/capabilities", StringComparison.Ordinal));
     }
 
 }
