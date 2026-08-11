@@ -101,13 +101,22 @@ type TestingEventSchedule = {
 const Hour = 60 * 60 * 1000;
 const Day = 24 * Hour;
 
-function createTestingEventSchedule(now = new Date()): TestingEventSchedule {
+function createTestingEventSchedule(now = new Date(), eventDate?: Date): TestingEventSchedule {
   const applicationsOpenAt = new Date(now);
   applicationsOpenAt.setMinutes(0, 0, 0);
   applicationsOpenAt.setHours(applicationsOpenAt.getHours() + 1);
 
-  const applicationsCloseAt = new Date(applicationsOpenAt.valueOf() + Day);
-  const startsAt = new Date(applicationsCloseAt.valueOf() + Day);
+  let startsAt = eventDate
+    ? new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate(), 10)
+    : new Date(applicationsOpenAt.valueOf() + 2 * Day);
+  const minimumStart = new Date(applicationsOpenAt.valueOf() + 2 * Hour);
+  if (startsAt <= minimumStart) startsAt = minimumStart;
+
+  let applicationsCloseAt = new Date(startsAt.valueOf() - Hour);
+  if (applicationsCloseAt <= applicationsOpenAt) {
+    applicationsCloseAt = new Date(applicationsOpenAt.valueOf() + Hour);
+    startsAt = new Date(applicationsCloseAt.valueOf() + Hour);
+  }
   const endsAt = new Date(startsAt.valueOf() + 2 * Hour);
 
   return {
@@ -370,20 +379,38 @@ function EventRecurrenceFields({ onDirty }: { onDirty: () => void }) {
   );
 }
 
-export function CreateTestingEventDialog() {
+export interface CreateTestingEventDialogProps {
+  initialDate?: Date;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
+}
+
+export function CreateTestingEventDialog({
+  initialDate,
+  open: controlledOpen,
+  onOpenChange,
+  showTrigger = true,
+}: CreateTestingEventDialogProps = {}) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
   const [dirty, setDirty] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<TestingEventActionResult<unknown> | null>(null);
-  const [schedule, setSchedule] = useState<TestingEventSchedule>(() => createTestingEventSchedule());
+  const [schedule, setSchedule] = useState<TestingEventSchedule>(() => createTestingEventSchedule(new Date(), initialDate));
   const [scheduleVersion, setScheduleVersion] = useState(0);
+
+  function setOpen(next: boolean) {
+    if (controlledOpen === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
+  }
 
   function resetDraft() {
     formRef.current?.reset();
-    setSchedule(createTestingEventSchedule());
+    setSchedule(createTestingEventSchedule(new Date(), initialDate));
     setScheduleVersion((version) => version + 1);
     setDirty(false);
     setResult(null);
@@ -452,7 +479,7 @@ export function CreateTestingEventDialog() {
 
   return (
     <>
-      <Button onClick={() => { resetDraft(); setOpen(true); }}><Plus className="mr-2 size-4" />New event</Button>
+      {showTrigger ? <Button onClick={() => { resetDraft(); setOpen(true); }}><Plus className="mr-2 size-4" />New event</Button> : null}
       <Sheet open={open} onOpenChange={(next) => { if (next) setOpen(true); else requestClose(); }}>
         <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-xl">
           <form ref={formRef} onSubmit={submit} onChange={trackChanges} className="flex min-h-0 flex-1 flex-col">
