@@ -90,7 +90,7 @@ export class LearningCoursesProgramcontentModule {
 
   /**
    */
-  async postCoursesContentReorder1(programId: string, body: Types.LearningCoursesReorderContent): Promise<Result<void, ApiError>> {
+  async postCoursesContentReorder(programId: string, body: Types.LearningCoursesReorderContent): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${programId}/content/reorder`;
 
     // Validate request body

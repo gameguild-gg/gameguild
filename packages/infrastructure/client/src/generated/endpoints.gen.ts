@@ -6228,19 +6228,6 @@ export const getCoursesAnalyticsRevenueEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface PostCoursesContentReorderInput {
-  id: string;
-  body?: Types.LearningCoursesReorderContent;
-}
-export type PostCoursesContentReorderOutput = void;
-export const postCoursesContentReorderEndpoint = {
-  operationId: 'postCoursesContentReorder' as const,
-  method: 'POST' as const,
-  path: '/v1/courses/{id}/content:reorder' as const,
-  tags: ['Learning/courses/program'] as const,
-  requiresAuth: true,
-} as const;
-
 export interface PostCoursesMeContentCompleteInput {
   id: string;
   contentId: string;
@@ -6793,13 +6780,13 @@ export const getCoursesContentByVisibilityEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface PostCoursesContentReorder1Input {
+export interface PostCoursesContentReorderInput {
   programId: string;
   body?: Types.LearningCoursesReorderContent;
 }
-export type PostCoursesContentReorder1Output = void;
-export const postCoursesContentReorder1Endpoint = {
-  operationId: 'postCoursesContentReorder1' as const,
+export type PostCoursesContentReorderOutput = void;
+export const postCoursesContentReorderEndpoint = {
+  operationId: 'postCoursesContentReorder' as const,
   method: 'POST' as const,
   path: '/v1/courses/{programId}/content/reorder' as const,
   tags: ['Learning/courses/programContent'] as const,
@@ -14524,7 +14511,6 @@ export const endpoints = {
   getCoursesAnalyticsCompletionRates: getCoursesAnalyticsCompletionRatesEndpoint,
   getCoursesAnalyticsEngagement: getCoursesAnalyticsEngagementEndpoint,
   getCoursesAnalyticsRevenue: getCoursesAnalyticsRevenueEndpoint,
-  postCoursesContentReorder: postCoursesContentReorderEndpoint,
   postCoursesMeContentComplete: postCoursesMeContentCompleteEndpoint,
   getCoursesMeProgress: getCoursesMeProgressEndpoint,
   putCoursesMeProgress: putCoursesMeProgressEndpoint,
@@ -14568,7 +14554,7 @@ export const endpoints = {
   postCoursesContent: postCoursesContentEndpoint,
   getCoursesContentByType: getCoursesContentByTypeEndpoint,
   getCoursesContentByVisibility: getCoursesContentByVisibilityEndpoint,
-  postCoursesContentReorder1: postCoursesContentReorder1Endpoint,
+  postCoursesContentReorder: postCoursesContentReorderEndpoint,
   getCoursesContentRequired: getCoursesContentRequiredEndpoint,
   postCoursesContentSearch: postCoursesContentSearchEndpoint,
   getCoursesContentStats: getCoursesContentStatsEndpoint,
