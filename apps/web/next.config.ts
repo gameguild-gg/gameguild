@@ -60,7 +60,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     authInterrupts: true,
-    cpus: 1,
+    // cpus: 1,
   },
   turbopack: {
     resolveAlias: {
@@ -282,6 +282,14 @@ const nextConfig: NextConfig = {
 
     config.module.rules.push({
       test: /\.md$/,
+      type: "asset/source",
+    });
+
+    // Handle Vite-style `?raw` imports (used by @gameguild/emception-browser
+    // to import subprocess_shim.py as a string). Webpack needs an explicit
+    // rule for the resourceQuery; without it, the .py file is parsed as JS.
+    config.module.rules.push({
+      resourceQuery: /raw/,
       type: "asset/source",
     });
 

@@ -15,13 +15,11 @@ import type {
 } from '@game-guild/emception-ui';
 import type { TestPlan } from 'emception';
 import { Button } from '@game-guild/ui/components/button';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { Suspense, useRef, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useRef, useState, type FormEvent } from 'react';
 
-const Ide = dynamic(
+const Ide = lazy(
   () => import('@game-guild/emception-ui').then((m) => ({ default: m.Ide })),
-  { ssr: false, loading: () => <IdeSkeleton /> },
 );
 
 function IdeSkeleton() {
