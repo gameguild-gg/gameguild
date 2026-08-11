@@ -10,7 +10,6 @@ public sealed class HardToSoftConversionCommandTests
     [Fact]
     public async Task Handler_ForwardsTheExactSelfServiceRequestToTheWorkflow()
     {
-        var decisionId = Guid.Parse("92000000-0000-0000-0000-000000000001");
         var receipt = new SelfServiceHardToSoftConversionReceipt(
             Guid.Parse("92000000-0000-0000-0000-000000000002"),
             null,
@@ -20,11 +19,11 @@ public sealed class HardToSoftConversionCommandTests
         var workflow = new CapturingWorkflow(receipt);
         var handler = new ConvertMyHardToSoftCommandHandler(workflow);
         var command = new ConvertMyHardToSoftCommand(
-            new ConvertMyHardToSoftRequest(100, 3, decisionId, "conversion-key"));
+            new ConvertMyHardToSoftRequest(100, 3, "conversion-key"));
 
         var result = await handler.Handle(command, CancellationToken.None);
 
-        workflow.Request.Should().Be(new SelfServiceHardToSoftConversionRequest(100, 3, decisionId, "conversion-key"));
+        workflow.Request.Should().Be(new SelfServiceHardToSoftConversionRequest(100, 3, "conversion-key"));
         result.Should().Be(receipt);
     }
 
@@ -35,7 +34,7 @@ public sealed class HardToSoftConversionCommandTests
     public void Validator_RejectsInvalidCoinAmounts(long principalUnits, long feeUnits, bool shouldFail)
     {
         var command = new ConvertMyHardToSoftCommand(
-            new ConvertMyHardToSoftRequest(principalUnits, feeUnits, Guid.NewGuid(), "conversion-key"));
+            new ConvertMyHardToSoftRequest(principalUnits, feeUnits, "conversion-key"));
 
         var result = new ConvertMyHardToSoftCommandValidator().Validate(command);
 
@@ -43,19 +42,15 @@ public sealed class HardToSoftConversionCommandTests
     }
 
     [Fact]
-    public void Validator_RequiresRiskDecisionAndIdempotencyKey()
+    public void Validator_RequiresAnIdempotencyKey()
     {
         var command = new ConvertMyHardToSoftCommand(
-            new ConvertMyHardToSoftRequest(100, 0, Guid.Empty, string.Empty));
+            new ConvertMyHardToSoftRequest(100, 0, string.Empty));
 
         var result = new ConvertMyHardToSoftCommandValidator().Validate(command);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Select(error => error.PropertyName).Should().Contain(new[]
-        {
-            "Request.RiskDecisionId",
-            "Request.IdempotencyKey"
-        });
+        result.Errors.Select(error => error.PropertyName).Should().Contain("Request.IdempotencyKey");
     }
 
     private sealed class CapturingWorkflow(SelfServiceHardToSoftConversionReceipt receipt) : IHardToSoftConversionWorkflow

@@ -530,6 +530,12 @@ internal sealed class RegisteredPostingReceiptRow
     public bool Duplicate { get; set; }
 }
 
+internal sealed class HardToSoftConversionRiskDecisionReceiptRow
+{
+    public Guid RiskDecisionId { get; set; }
+    public string SourceRoots { get; set; } = string.Empty;
+}
+
 internal sealed class ProviderReversalReceiptRow
 {
     public Guid OperationId { get; set; }

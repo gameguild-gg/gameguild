@@ -8,12 +8,96 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using Testcontainers.PostgreSql;
+using System.Text.Json;
 
 namespace GameGuild.Economy.UnitTests.Persistence;
 
 public sealed class PostgreSqlHardToSoftConversionGatewayTests
 {
     internal static readonly DateTimeOffset Now = new(2026, 8, 10, 21, 0, 0, TimeSpan.Zero);
+
+    [DockerFact]
+    public async Task IssueSelfServiceDecision_ReservesConfirmedFifoFragmentsAndAuditsEvidence()
+    {
+        await using var database = await CreateDatabaseAsync();
+        await using var context = CreateContext(database.GetConnectionString());
+        await context.Database.MigrateAsync();
+
+        await using var connection = new NpgsqlConnection(database.GetConnectionString());
+        await connection.OpenAsync();
+        var wallet = Guid.NewGuid();
+        var root = Guid.NewGuid();
+        var hardLot = Guid.NewGuid();
+        var capability = Guid.NewGuid();
+        var existingDecision = Guid.NewGuid();
+        var existingCounter = Guid.NewGuid();
+        var actor = Guid.NewGuid();
+        var tenant = Guid.NewGuid();
+        var operation = Guid.NewGuid();
+        const string idempotencyKey = "issue-self-service-risk-decision";
+
+        await SeedAsync(
+            connection,
+            wallet,
+            root,
+            hardLot,
+            capability,
+            existingDecision,
+            existingCounter,
+            actor,
+            tenant,
+            "seeded-decision-not-used-by-issuer");
+        await InsertCurrentCoveredReserveHeadAsync(connection);
+
+        var evidence = JsonSerializer.Serialize(new[]
+        {
+            new
+            {
+                source = 1,
+                version = "financial-crime-v1",
+                issuedAt = Now.AddMinutes(-1),
+                expiresAt = Now.AddMinutes(5),
+                outcome = 1,
+                evidenceHash = "financial-crime-evidence",
+                isAuditable = true
+            },
+            new
+            {
+                source = 2,
+                version = "trust-safety-v1",
+                issuedAt = Now.AddMinutes(-1),
+                expiresAt = Now.AddMinutes(5),
+                outcome = 1,
+                evidenceHash = "trust-safety-evidence",
+                isAuditable = true
+            }
+        });
+
+        var issued = await IssueSelfServiceDecisionAsync(
+            connection,
+            actor,
+            tenant,
+            wallet,
+            operation,
+            idempotencyKey,
+            evidence);
+
+        issued.SourceRoots.Should().Be($"[\"{root}\"]");
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_fragment_reservations WHERE \"OperationId\" = '{operation}' AND \"RootSourceStampId\" = '{root}' AND \"Purpose\" = 3;")).Should().Be(1);
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_counter_reservations WHERE \"RiskDecisionId\" = '{issued.RiskDecisionId}' AND \"AmountUnits\" = 10;")).Should().Be(1);
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_audit_evidence WHERE \"RiskDecisionId\" = '{issued.RiskDecisionId}';")).Should().Be(2);
+
+        var replay = await IssueSelfServiceDecisionAsync(
+            connection,
+            actor,
+            tenant,
+            wallet,
+            operation,
+            idempotencyKey,
+            evidence);
+        replay.Should().Be(issued);
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_fragment_reservations WHERE \"OperationId\" = '{operation}';")).Should().Be(1);
+    }
 
     [DockerFact]
     public async Task Convert_ConsumesConfirmedHardCoinFifoAndPersistsSoftCoinIdempotently()
@@ -261,6 +345,62 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
         await ExecuteAsync(connection, "SET ROLE gameguild_economy_writer;");
         await ScalarAsync<bool>(connection, $"SELECT economy_private.reserve_risk_counter_v1('{Guid.NewGuid()}', '{riskDecision}', '{counter}', 1, {amount}, '{now:O}');");
         await ExecuteAsync(connection, "RESET ROLE;");
+    }
+
+    private static async Task InsertCurrentCoveredReserveHeadAsync(NpgsqlConnection connection)
+    {
+        await ExecuteAsync(connection, $"""
+            INSERT INTO public.economy_reserve_heads (
+                \"Version\", \"IsActive\", \"PolicyVersion\", \"AuthorizationEpoch\", \"ObservedAt\", \"ExpiresAt\",
+                \"HardFaceValueUsdMinor\", \"RequiredHardReserveUsdMinor\", \"SoftFaceValueUsdNanos\",
+                \"StressedExpectedRedemptionCostUsdNanos\", \"RequiredSoftReserveUsdNanos\", \"HardBackingUsdNanos\",
+                \"SoftBackingUsdNanos\", \"Coverage\", \"EvidenceHash\", \"ActivatedAt\")
+            VALUES (
+                1, true, 1, 1, '{Now.AddMinutes(-1):O}', '{Now.AddMinutes(5):O}',
+                0, 0, 0, 0, 0, 0, 0, 1, 'covered-reserve-evidence', '{Now:O}');
+            """);
+    }
+
+    private static async Task<(Guid RiskDecisionId, string SourceRoots)> IssueSelfServiceDecisionAsync(
+        NpgsqlConnection connection,
+        Guid actor,
+        Guid tenant,
+        Guid wallet,
+        Guid operation,
+        string idempotencyKey,
+        string evidence)
+    {
+        await ExecuteAsync(connection, "SET ROLE gameguild_economy_writer;");
+        try
+        {
+            await using var command = new NpgsqlCommand(
+                """
+                SELECT risk_decision_id, source_roots
+                FROM economy_private.issue_self_service_hard_to_soft_risk_decision_v1(
+                    @actor, @tenant, @wallet, @operation, @idempotencyKey, @feeHardUnits,
+                    @totalHardUnits, @maxDailyHardUnits, @evidence, @requestedAt, @expiresAt);
+                """,
+                connection);
+            command.Parameters.AddWithValue("actor", actor);
+            command.Parameters.AddWithValue("tenant", tenant);
+            command.Parameters.AddWithValue("wallet", wallet);
+            command.Parameters.AddWithValue("operation", operation);
+            command.Parameters.AddWithValue("idempotencyKey", idempotencyKey);
+            command.Parameters.AddWithValue("feeHardUnits", 0L);
+            command.Parameters.AddWithValue("totalHardUnits", 10L);
+            command.Parameters.AddWithValue("maxDailyHardUnits", 100L);
+            command.Parameters.AddWithValue("evidence", evidence);
+            command.Parameters.AddWithValue("requestedAt", Now);
+            command.Parameters.AddWithValue("expiresAt", Now.AddMinutes(5));
+
+            await using var reader = await command.ExecuteReaderAsync();
+            (await reader.ReadAsync()).Should().BeTrue();
+            return (reader.GetGuid(0), reader.GetString(1));
+        }
+        finally
+        {
+            await ExecuteAsync(connection, "RESET ROLE;");
+        }
     }
 
     internal static async Task ExecuteAsync(NpgsqlConnection connection, string sql)

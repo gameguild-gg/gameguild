@@ -6,7 +6,6 @@ namespace GameGuild.Economy.Commands;
 public sealed record ConvertMyHardToSoftRequest(
     long PrincipalHardCoinUnits,
     long FeeHardCoinUnits,
-    Guid RiskDecisionId,
     string IdempotencyKey);
 
 public sealed record ConvertMyHardToSoftCommand(ConvertMyHardToSoftRequest Request)
@@ -26,7 +25,6 @@ public sealed class ConvertMyHardToSoftCommandHandler(IHardToSoftConversionWorkf
             new SelfServiceHardToSoftConversionRequest(
                 request.Request.PrincipalHardCoinUnits,
                 request.Request.FeeHardCoinUnits,
-                request.Request.RiskDecisionId,
                 request.Request.IdempotencyKey),
             cancellationToken);
     }

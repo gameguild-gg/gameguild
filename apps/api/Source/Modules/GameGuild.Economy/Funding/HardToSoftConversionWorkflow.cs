@@ -12,7 +12,6 @@ namespace GameGuild.Economy.Funding;
 public sealed record SelfServiceHardToSoftConversionRequest(
     long PrincipalHardCoinUnits,
     long FeeHardCoinUnits,
-    Guid RiskDecisionId,
     string IdempotencyKey);
 
 public sealed record SelfServiceHardToSoftConversionReceipt(
@@ -38,7 +37,8 @@ public sealed class PostgreSqlHardToSoftConversionWorkflow(
     IApplicationDbContext context,
     IActorContextAccessor actorContextAccessor,
     IEconomyValueMovementDecisionGate decisionGate,
-    IHardToSoftConversionRiskEvidenceVerifier riskEvidenceVerifier) : IHardToSoftConversionWorkflow
+    IHardToSoftConversionRiskEvidenceVerifier riskEvidenceVerifier,
+    IHardToSoftConversionRiskDecisionIssuer riskDecisionIssuer) : IHardToSoftConversionWorkflow
 {
     public async Task<SelfServiceHardToSoftConversionReceipt> ConvertAsync(
         SelfServiceHardToSoftConversionRequest request,
@@ -50,15 +50,15 @@ public sealed class PostgreSqlHardToSoftConversionWorkflow(
 
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.PrincipalHardCoinUnits);
         ArgumentOutOfRangeException.ThrowIfNegative(request.FeeHardCoinUnits);
-        if (request.RiskDecisionId == Guid.Empty)
-            throw new EconomySelfServiceCommandRejectedException("A durable risk decision is required for conversion.");
 
         var key = new IdempotencyKey(request.IdempotencyKey);
         var actor = actorContextAccessor.ActorContext;
         if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } actorId || actor.TenantId is not { } tenantId)
             throw new UnauthorizedAccessException("Economy conversion requires an authenticated user and tenant context.");
 
-        await riskEvidenceVerifier.VerifyAsync(actorId, tenantId, cancellationToken).ConfigureAwait(false);
+        var externalEvidence = await riskEvidenceVerifier
+            .VerifyAsync(actorId, tenantId, cancellationToken)
+            .ConfigureAwait(false);
 
         var walletId = await context.Set<EconomyWalletRow>()
             .AsNoTracking()
@@ -69,49 +69,66 @@ public sealed class PostgreSqlHardToSoftConversionWorkflow(
         if (walletId is null)
             throw new EconomySelfServiceCommandRejectedException("The authenticated user has no active Economy wallet.");
 
-        var decision = await context.Set<EconomyRiskDecisionRow>()
-            .AsNoTracking()
-            .SingleOrDefaultAsync(row => row.Id == request.RiskDecisionId, cancellationToken)
-            .ConfigureAwait(false);
-        if (decision is null || !string.Equals(decision.IdempotencyKey, key.Value, StringComparison.Ordinal))
-            throw new EconomySelfServiceCommandRejectedException(
-                "The supplied risk decision is not bound to this idempotent conversion request.");
-
-        var roots = ParseRootIds(decision.SourceRoots);
         var principalPostingId = DeterministicGuid("hard-to-soft:principal", key.Value);
         var feePostingId = request.FeeHardCoinUnits == 0
             ? (Guid?)null
             : DeterministicGuid("hard-to-soft:fee", key.Value);
         var outputLotId = DeterministicGuid("hard-to-soft:output", key.Value);
+        var requestedAt = DateTimeOffset.UtcNow;
 
-        var receipt = await context.Set<RegisteredPostingReceiptRow>()
-            .FromSqlInterpolated($"""
-                SELECT *
-                FROM economy_private.post_self_service_hard_to_soft_conversion_v1(
-                    {actorId},
-                    {tenantId},
-                    {principalPostingId},
-                    {feePostingId},
-                    {key.Value},
-                    {request.RiskDecisionId},
-                    {walletId.Value},
-                    {outputLotId},
-                    {roots.ToArray()},
-                    {request.PrincipalHardCoinUnits},
-                    {request.FeeHardCoinUnits},
-                    {DateTimeOffset.UtcNow},
-                    {null})
-                """)
-            .AsNoTracking()
-            .SingleAsync(cancellationToken)
-            .ConfigureAwait(false);
+        async Task<SelfServiceHardToSoftConversionReceipt> IssueAndPostAsync()
+        {
+            var decision = await riskDecisionIssuer.IssueAsync(
+                    new HardToSoftConversionRiskDecisionRequest(
+                        actorId,
+                        tenantId,
+                        new WalletId(walletId.Value),
+                        principalPostingId,
+                        key,
+                        request.FeeHardCoinUnits,
+                        checked(request.PrincipalHardCoinUnits + request.FeeHardCoinUnits),
+                        externalEvidence,
+                        requestedAt),
+                    cancellationToken)
+                .ConfigureAwait(false);
 
-        return new SelfServiceHardToSoftConversionReceipt(
-            receipt.PostingId,
-            feePostingId,
-            receipt.JournalSequence,
-            receipt.JournalHash,
-            receipt.Duplicate);
+            var receipt = await context.Set<RegisteredPostingReceiptRow>()
+                .FromSqlInterpolated($"""
+                    SELECT *
+                    FROM economy_private.post_self_service_hard_to_soft_conversion_v1(
+                        {actorId},
+                        {tenantId},
+                        {principalPostingId},
+                        {feePostingId},
+                        {key.Value},
+                        {decision.Id},
+                        {walletId.Value},
+                        {outputLotId},
+                        {decision.SourceRoots.ToArray()},
+                        {request.PrincipalHardCoinUnits},
+                        {request.FeeHardCoinUnits},
+                        {requestedAt},
+                        {null})
+                    """)
+                .AsNoTracking()
+                .SingleAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return new SelfServiceHardToSoftConversionReceipt(
+                receipt.PostingId,
+                feePostingId,
+                receipt.JournalSequence,
+                receipt.JournalHash,
+                receipt.Duplicate);
+        }
+
+        if (context is not DbContext dbContext || !dbContext.Database.IsRelational())
+            return await IssueAndPostAsync().ConfigureAwait(false);
+
+        await using var transaction = await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        var result = await IssueAndPostAsync().ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return result;
     }
 
     internal static IReadOnlyList<Guid> ParseRootIds(string sourceRoots)
