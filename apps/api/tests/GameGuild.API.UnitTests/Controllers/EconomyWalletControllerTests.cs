@@ -181,10 +181,12 @@ public sealed class EconomyWalletControllerTests
         {
             new EconomySelfServiceCapabilityDto(
                 EconomyValueMovementCapability.ConvertHardToSoft,
-                EconomyCapabilityReadinessState.Ready),
+                EconomyCapabilityReadinessState.Ready,
+                []),
             new EconomySelfServiceCapabilityDto(
                 EconomyValueMovementCapability.PayoutExecution,
-                EconomyCapabilityReadinessState.ProviderNotReady)
+                EconomyCapabilityReadinessState.ProviderNotReady,
+                ["Provider configuration is incomplete."])
         });
     }
 
