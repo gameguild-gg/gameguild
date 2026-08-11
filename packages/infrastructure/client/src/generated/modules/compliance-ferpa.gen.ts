@@ -17,13 +17,41 @@ export class ComplianceFerpaModule {
 
   /**
    */
-  async postApiComplianceFerpaConsents(
-    body: Types.ComplianceFERPAGrantFerpaDisclosureConsentCommand,
-  ): Promise<Result<Types.ComplianceFERPAFerpaDisclosureConsent, ApiError>> {
-    const url = '/api/compliance/ferpa/consents';
+  async getApiComplianceFerpaStudentsRecords(studentUserId: string): Promise<Result<Array<Types.ComplianceFERPAFerpaEducationRecord>, ApiError>> {
+    const url = `/api/compliance/ferpa/students/${studentUserId}/records`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.ComplianceFERPAFerpaEducationRecord>, ApiError>;
+  }
+
+  /**
+   */
+  async getApiComplianceFerpaStudentsDirectoryInformation(studentUserId: string): Promise<Result<Array<Types.ComplianceFERPAFerpaEducationRecord>, ApiError>> {
+    const url = `/api/compliance/ferpa/students/${studentUserId}/directory-information`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.ComplianceFERPAFerpaEducationRecord>, ApiError>;
+  }
+
+  /**
+   */
+  async postApiComplianceFerpaRecords(
+    body: Types.ComplianceFERPARegisterEducationRecordCommand,
+  ): Promise<Result<Types.ComplianceFERPAFerpaEducationRecord, ApiError>> {
+    const url = '/api/compliance/ferpa/records';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceFERPAGrantFerpaDisclosureConsentCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceFERPARegisterEducationRecordCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -34,25 +62,11 @@ export class ComplianceFerpaModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.ComplianceFERPAFerpaDisclosureConsentSchema, result.data, 'response');
+      const validatedData = safeParse(Types.ComplianceFERPAFerpaEducationRecordSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
     return result;
-  }
-
-  /**
-   */
-  async postApiComplianceFerpaConsentsRevoke(consentId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/compliance/ferpa/consents/${consentId}/revoke`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 
   /**
@@ -104,6 +118,60 @@ export class ComplianceFerpaModule {
 
   /**
    */
+  async getApiComplianceFerpaStudentsConsents(studentUserId: string): Promise<Result<Array<Types.ComplianceFERPAFerpaDisclosureConsent>, ApiError>> {
+    const url = `/api/compliance/ferpa/students/${studentUserId}/consents`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.ComplianceFERPAFerpaDisclosureConsent>, ApiError>;
+  }
+
+  /**
+   */
+  async postApiComplianceFerpaConsents(
+    body: Types.ComplianceFERPAGrantFerpaDisclosureConsentCommand,
+  ): Promise<Result<Types.ComplianceFERPAFerpaDisclosureConsent, ApiError>> {
+    const url = '/api/compliance/ferpa/consents';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.ComplianceFERPAGrantFerpaDisclosureConsentCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ComplianceFERPAFerpaDisclosureConsentSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postApiComplianceFerpaConsentsRevoke(consentId: string): Promise<Result<void, ApiError>> {
+    const url = `/api/compliance/ferpa/consents/${consentId}/revoke`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async postApiComplianceFerpaDisclosures(
     body: Types.ComplianceFERPARecordFerpaDisclosureCommand,
   ): Promise<Result<Types.ComplianceFERPAFerpaDisclosureLog, ApiError>> {
@@ -130,6 +198,20 @@ export class ComplianceFerpaModule {
 
   /**
    */
+  async getApiComplianceFerpaStudentsDisclosures(studentUserId: string): Promise<Result<Array<Types.ComplianceFERPAFerpaDisclosureLog>, ApiError>> {
+    const url = `/api/compliance/ferpa/students/${studentUserId}/disclosures`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.ComplianceFERPAFerpaDisclosureLog>, ApiError>;
+  }
+
+  /**
+   */
   async postApiComplianceFerpaInspectionRequests(
     body: Types.ComplianceFERPASubmitFerpaInspectionRequestCommand,
   ): Promise<Result<Types.ComplianceFERPAFerpaInspectionInput, ApiError>> {
@@ -152,20 +234,6 @@ export class ComplianceFerpaModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async getApiComplianceFerpaInspectionRequestsPending(): Promise<Result<Array<Types.ComplianceFERPAFerpaInspectionInput>, ApiError>> {
-    const url = '/api/compliance/ferpa/inspection-requests/pending';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.ComplianceFERPAFerpaInspectionInput>, ApiError>;
   }
 
   /**
@@ -197,34 +265,8 @@ export class ComplianceFerpaModule {
 
   /**
    */
-  async postApiComplianceFerpaRecords(
-    body: Types.ComplianceFERPARegisterEducationRecordCommand,
-  ): Promise<Result<Types.ComplianceFERPAFerpaEducationRecord, ApiError>> {
-    const url = '/api/compliance/ferpa/records';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.ComplianceFERPARegisterEducationRecordCommandSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.ComplianceFERPAFerpaEducationRecordSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getApiComplianceFerpaStudentsConsents(studentUserId: string): Promise<Result<Array<Types.ComplianceFERPAFerpaDisclosureConsent>, ApiError>> {
-    const url = `/api/compliance/ferpa/students/${studentUserId}/consents`;
+  async getApiComplianceFerpaInspectionRequestsPending(): Promise<Result<Array<Types.ComplianceFERPAFerpaInspectionInput>, ApiError>> {
+    const url = '/api/compliance/ferpa/inspection-requests/pending';
 
     const result = await this.client.request({
       method: 'GET',
@@ -232,49 +274,7 @@ export class ComplianceFerpaModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceFERPAFerpaDisclosureConsent>, ApiError>;
-  }
-
-  /**
-   */
-  async getApiComplianceFerpaStudentsDirectoryInformation(studentUserId: string): Promise<Result<Array<Types.ComplianceFERPAFerpaEducationRecord>, ApiError>> {
-    const url = `/api/compliance/ferpa/students/${studentUserId}/directory-information`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.ComplianceFERPAFerpaEducationRecord>, ApiError>;
-  }
-
-  /**
-   */
-  async getApiComplianceFerpaStudentsDisclosures(studentUserId: string): Promise<Result<Array<Types.ComplianceFERPAFerpaDisclosureLog>, ApiError>> {
-    const url = `/api/compliance/ferpa/students/${studentUserId}/disclosures`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.ComplianceFERPAFerpaDisclosureLog>, ApiError>;
-  }
-
-  /**
-   */
-  async getApiComplianceFerpaStudentsRecords(studentUserId: string): Promise<Result<Array<Types.ComplianceFERPAFerpaEducationRecord>, ApiError>> {
-    const url = `/api/compliance/ferpa/students/${studentUserId}/records`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.ComplianceFERPAFerpaEducationRecord>, ApiError>;
+    return result as Result<Array<Types.ComplianceFERPAFerpaInspectionInput>, ApiError>;
   }
 }
 

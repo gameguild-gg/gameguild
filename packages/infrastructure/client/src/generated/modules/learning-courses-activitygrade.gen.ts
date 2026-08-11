@@ -44,34 +44,6 @@ export class LearningCoursesActivitygradeModule {
 
   /**
    */
-  async getCoursesActivityGradesContent(programId: string, contentId: string): Promise<Result<Array<Types.LearningCoursesActivityGrade>, ApiError>> {
-    const url = `/v1/courses/${programId}/activity-grades/content/${contentId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesActivityGrade>, ApiError>;
-  }
-
-  /**
-   */
-  async getCoursesActivityGradesGrader(programId: string, graderProgramUserId: string): Promise<Result<Array<Types.LearningCoursesActivityGrade>, ApiError>> {
-    const url = `/v1/courses/${programId}/activity-grades/grader/${graderProgramUserId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningCoursesActivityGrade>, ApiError>;
-  }
-
-  /**
-   */
   async getCoursesActivityGradesInteraction(programId: string, contentInteractionId: string): Promise<Result<Types.LearningCoursesActivityGrade, ApiError>> {
     const url = `/v1/courses/${programId}/activity-grades/interaction/${contentInteractionId}`;
 
@@ -92,8 +64,8 @@ export class LearningCoursesActivitygradeModule {
 
   /**
    */
-  async getCoursesActivityGradesPending(programId: string): Promise<Result<Array<Types.LearningCoursesContentInteraction>, ApiError>> {
-    const url = `/v1/courses/${programId}/activity-grades/pending`;
+  async getCoursesActivityGradesGrader(programId: string, graderProgramUserId: string): Promise<Result<Array<Types.LearningCoursesActivityGrade>, ApiError>> {
+    const url = `/v1/courses/${programId}/activity-grades/grader/${graderProgramUserId}`;
 
     const result = await this.client.request({
       method: 'GET',
@@ -101,27 +73,7 @@ export class LearningCoursesActivitygradeModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningCoursesContentInteraction>, ApiError>;
-  }
-
-  /**
-   */
-  async getCoursesActivityGradesStatistics(programId: string): Promise<Result<Types.LearningCoursesGradeStatistics, ApiError>> {
-    const url = `/v1/courses/${programId}/activity-grades/statistics`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningCoursesGradeStatisticsSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<Array<Types.LearningCoursesActivityGrade>, ApiError>;
   }
 
   /**
@@ -178,6 +130,54 @@ export class LearningCoursesActivitygradeModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getCoursesActivityGradesPending(programId: string): Promise<Result<Array<Types.LearningCoursesContentInteraction>, ApiError>> {
+    const url = `/v1/courses/${programId}/activity-grades/pending`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesContentInteraction>, ApiError>;
+  }
+
+  /**
+   */
+  async getCoursesActivityGradesStatistics(programId: string): Promise<Result<Types.LearningCoursesGradeStatistics, ApiError>> {
+    const url = `/v1/courses/${programId}/activity-grades/statistics`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesGradeStatisticsSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getCoursesActivityGradesContent(programId: string, contentId: string): Promise<Result<Array<Types.LearningCoursesActivityGrade>, ApiError>> {
+    const url = `/v1/courses/${programId}/activity-grades/content/${contentId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.LearningCoursesActivityGrade>, ApiError>;
   }
 }
 
