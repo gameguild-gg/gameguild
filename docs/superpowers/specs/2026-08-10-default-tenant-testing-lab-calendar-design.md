@@ -34,7 +34,7 @@ Default-tenant membership is the baseline access boundary. Revoking a user's abi
 
 Keep the existing Testing Lab page header, access warnings, and summary metrics. Replace the large Operations card grid with:
 
-1. A compact operations menu bar containing icon buttons for Events, Projects, Participants, Analytics, and Settings. Every button retains its current route, accessible name, tooltip, focus state, and selected/hover feedback.
+1. A compact operations navigation inside the Testing Lab page header containing icon buttons for Events, Projects, Participants, Analytics, and Settings. It must not render as a second detached menu. Every button retains its current route, accessible name, tooltip, focus state, and selected/hover feedback.
 2. A calendar toolbar with Today, previous/next period, current range label, Create event, and a view menu.
 3. A responsive calendar surface displaying real Testing Lab events.
 
@@ -55,7 +55,11 @@ The selected view and anchor date are represented in URL search parameters so na
 The server page loads Testing Lab metrics, dashboard data, and up to 100 Testing Lab events in parallel. Calendar entries use the existing event projection fields: `id`, `name`, `status`, `mode`, `startsAt`, `endsAt`, `slotCount`, and `applicationCount`.
 
 - Selecting an event navigates to its existing management workspace.
-- Create event reuses `CreateTestingEventDialog`.
+- Create event reuses CreateTestingEventDialog.
+- Selecting empty calendar space opens the same creation sheet with the selected day prefilled, matching the direct-create behavior of Google Calendar.
+- Every calendar event displays an icon for Online, In person, or Hybrid delivery.
+- Every calendar event displays a capacity chip derived from the server-rendered event analytics: Vacant while tester capacity remains and Full when registered testers reach the configured capacity.
+- Hovering or focusing an event reveals its status, schedule, mode, capacity, and brief without requiring navigation to the detail page.
 - Events without a valid start date appear in Schedule as unscheduled instead of being silently discarded.
 - Multi-day events span the applicable days.
 - Overlapping timed events are ordered consistently by start time and title.
