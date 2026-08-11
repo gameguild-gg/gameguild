@@ -96,7 +96,8 @@ public sealed class EconomyWalletControllerTests
 
         var result = await controller.ListMyPayouts(25, CancellationToken.None);
 
-        result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeEquivalentTo([payout]);
+        result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeEquivalentTo(
+            new EconomyPayoutOperationDto[] { payout });
     }
 
     [Fact]
@@ -137,7 +138,7 @@ public sealed class EconomyWalletControllerTests
         var payout = new EconomyPayoutOperationDto(
             operationId,
             200,
-            PayoutOperationState.Settled,
+            PayoutOperationState.Succeeded,
             DateTimeOffset.UtcNow.AddMinutes(-1),
             DateTimeOffset.UtcNow);
         var sender = new Mock<ISender>();
