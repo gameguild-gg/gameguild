@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildStructuredSubmissionPayload,
   buildQuizGradingItemsFromBlocks,
-  createQuizGradingConfig,
-  gradeDeterministicSubmission,
+  buildQuizStructuredAnswerPayload,
+  createQuizGradingDefinition,
+  extractQuizAnswerKeyFromBlocks,
+  gradeDeterministicQuizSubmission,
   gradeQuizAnswer,
-  syncQuizGradingConfig,
+  redactQuizBlocks,
+  syncQuizGradingDefinition,
 } from './index';
 
-describe('quiz grading helpers', () => {
+describe('quiz grading adapter', () => {
   it('builds grading items from quiz blocks', () => {
     const items = buildQuizGradingItemsFromBlocks([
       {
@@ -42,8 +44,8 @@ describe('quiz grading helpers', () => {
     });
   });
 
-  it('creates a public non-official quiz grading config', () => {
-    const config = createQuizGradingConfig([
+  it('creates feedback-only quiz grading by default', () => {
+    const definition = createQuizGradingDefinition([
       {
         id: '1',
         type: 'quiz',
@@ -51,14 +53,44 @@ describe('quiz grading helpers', () => {
       },
     ]);
 
-    expect(config.enabled).toBe(true);
-    expect(config.validationMode).toBe('public');
-    expect(config.gradebook.official).toBe(false);
-    expect(config.gradebook.maxScore).toBe(1);
+    expect(definition.enabled).toBe(true);
+    expect(definition.outcome).toEqual({
+      uses: ['feedback'],
+      gradebook: null,
+    });
+    expect(definition.score.maxScore).toBe(1);
+  });
+
+  it('creates gradebook-bound quiz grading when requested', () => {
+    const definition = createQuizGradingDefinition(
+      [
+        {
+          id: '1',
+          type: 'quiz',
+          data: { type: 'TRUE_FALSE', points: 3, correctAnswer: true },
+        },
+      ],
+      {
+        uses: ['feedback', 'gradebook'],
+        groupId: 'group-1',
+        weight: 30,
+        includeInFinalGrade: false,
+      },
+    );
+
+    expect(definition.outcome).toMatchObject({
+      uses: ['feedback', 'gradebook'],
+      gradebook: {
+        groupId: 'group-1',
+        weight: 30,
+        includeInFinalGrade: false,
+      },
+    });
+    expect(definition.score.maxScore).toBe(3);
   });
 
   it('syncs items after quiz blocks change', () => {
-    const config = createQuizGradingConfig([
+    const definition = createQuizGradingDefinition([
       {
         id: '1',
         type: 'quiz',
@@ -66,56 +98,24 @@ describe('quiz grading helpers', () => {
       },
     ]);
 
-    const synced = syncQuizGradingConfig([
+    const synced = syncQuizGradingDefinition([
       {
         id: '2',
         type: 'quiz',
         data: { type: 'SHORT_ANSWER', points: 3, acceptedAnswers: ['Tokyo'] },
       },
-    ], config);
+    ], definition);
 
     expect(Object.keys(synced.items)).toEqual(['2']);
     expect(synced.items['2']?.points).toBe(3);
   });
 
-  it('grades deterministic public quiz answers', () => {
-    expect(
-      gradeQuizAnswer(
-        { type: 'SINGLE_CHOICE', points: 2, correctOptionId: 'a' },
-        { selectedOptionIds: ['a'] },
-      ),
-    ).toMatchObject({ status: 'graded', isCorrect: true, score: 2 });
-
-    expect(
-      gradeQuizAnswer(
-        { type: 'MULTIPLE_CHOICE', correctOptionIds: ['a', 'c'] },
-        { selectedOptionIds: ['a', 'b'] },
-      ),
-    ).toMatchObject({ status: 'graded', isCorrect: false, score: 0 });
-
-    expect(
-      gradeQuizAnswer(
-        { type: 'SHORT_ANSWER', acceptedAnswers: ['Tokyo'] },
-        { textAnswers: { main: 'tokyo' } },
-      ),
-    ).toMatchObject({ status: 'graded', isCorrect: true, score: 1 });
-  });
-
-  it('leaves formula grading unsupported for Part 2 execution', () => {
-    expect(
-      gradeQuizAnswer(
-        { type: 'FORMULA', formula: 'x + y' },
-        { textAnswers: { main: 'x+y' } },
-      ),
-    ).toMatchObject({ status: 'unsupported', score: null });
-  });
-
-  it('builds structured submission payloads without retaining mutable answer references', () => {
+  it('builds structured answer payloads without retaining mutable answer references', () => {
     const answer = {
       selectedOptionIds: ['a'],
       textAnswers: { main: 'Tokyo' },
     };
-    const payload = buildStructuredSubmissionPayload({ question_1: answer });
+    const payload = buildQuizStructuredAnswerPayload({ question_1: answer });
 
     answer.selectedOptionIds.push('b');
     answer.textAnswers.main = 'Kyoto';
@@ -130,18 +130,92 @@ describe('quiz grading helpers', () => {
     });
   });
 
-  it('keeps protected deterministic submission execution deferred to Part 2', () => {
-    const grading = createQuizGradingConfig([
-      {
-        id: '1',
-        type: 'quiz',
-        data: { type: 'TRUE_FALSE', correctAnswer: true },
-      },
-    ], { validationMode: 'protected' });
+  it('redacts answer-key fields from learner quiz payloads', () => {
+    const redacted = redactQuizBlocks(
+      [
+        {
+          id: 'q1',
+          type: 'quiz',
+          data: {
+            type: 'SINGLE_CHOICE',
+            stem: 'Pick one',
+            correctOptionId: 'a',
+            options: [{ id: 'a', text: 'A' }],
+          },
+        },
+      ],
+      createQuizGradingDefinition([]),
+    );
 
-    expect(gradeDeterministicSubmission({ grading, payload: { answers: {} } })).toMatchObject({
-      status: 'unsupported',
-      score: null,
+    expect(redacted[0]?.data).toEqual({
+      type: 'SINGLE_CHOICE',
+      stem: 'Pick one',
+      options: [{ id: 'a', text: 'A' }],
     });
+  });
+
+  it('grades deterministic submissions from a server-owned answer key', () => {
+    const blocks = [
+      {
+        id: 'q1',
+        type: 'quiz',
+        data: { type: 'SINGLE_CHOICE', points: 2, correctOptionId: 'a' },
+      },
+      {
+        id: 'q2',
+        type: 'quiz',
+        data: { type: 'TRUE_FALSE', points: 1, correctAnswer: false },
+      },
+    ];
+    const grading = createQuizGradingDefinition(blocks, {
+      maxScore: 3,
+      passingScore: 2,
+    });
+    const answerKey = extractQuizAnswerKeyFromBlocks(blocks, grading);
+
+    expect(
+      gradeDeterministicQuizSubmission({
+        grading,
+        answerKey,
+        payload: buildQuizStructuredAnswerPayload({
+          q1: { selectedOptionIds: ['a'] },
+          q2: { selectedOptionIds: ['false'] },
+        }),
+      }),
+    ).toMatchObject({
+      status: 'graded',
+      score: 3,
+      maxScore: 3,
+      passed: true,
+    });
+
+    expect(
+      gradeDeterministicQuizSubmission({
+        grading,
+        answerKey,
+        payload: {
+          answers: {
+            q1: { selectedOptionIds: ['a'] },
+            q2: { selectedOptionIds: ['true'] },
+          },
+          score: 999,
+          isCorrect: true,
+        } as never,
+      }),
+    ).toMatchObject({
+      status: 'graded',
+      score: 2,
+      maxScore: 3,
+      passed: true,
+    });
+  });
+
+  it('keeps unsupported question types out of deterministic server grading', () => {
+    expect(
+      gradeQuizAnswer(
+        { type: 'FORMULA', formula: 'x + y' },
+        { textAnswers: { main: 'x+y' } },
+      ),
+    ).toMatchObject({ status: 'unsupported', score: null });
   });
 });

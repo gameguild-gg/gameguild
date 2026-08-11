@@ -1,18 +1,22 @@
 import {
-  normalizeGradingConfig,
+  normalizeGradingDefinition,
   sumGradedItemPoints,
-  validateGradingConfig,
-} from './config';
+  validateGradingDefinition,
+} from '../config';
 import type {
-  ContentGradingConfig,
+  AnswerKey,
+  ContentGradingDefinition,
+  FeedbackMode,
   GradeItemResult,
   GradeResult,
   GradeSubmissionArgs,
   GradedItemConfig,
-  GradingValidationMode,
+  GradingResultUse,
+  PresentationMode,
   StructuredAnswer,
   StructuredAnswerPayload,
-} from './types';
+} from '../types';
+import type { GradingAdapter } from './types';
 
 export type QuizQuestionType =
   | 'SINGLE_CHOICE'
@@ -36,6 +40,12 @@ export interface QuizBlockLike {
   data?: unknown;
 }
 
+export interface QuizBlockStorageLike {
+  order?: readonly (readonly [string, string])[];
+  blocks?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 export interface QuizQuestionLike {
   type?: string;
   points?: number;
@@ -43,11 +53,33 @@ export interface QuizQuestionLike {
 }
 
 export interface QuizGradingOptions {
-  validationMode?: GradingValidationMode;
+  uses?: readonly GradingResultUse[];
   maxScore?: number;
   passingScore?: number;
   required?: boolean;
+  groupId?: string | null;
+  weight?: number;
+  includeInFinalGrade?: boolean;
+  feedbackMode?: FeedbackMode;
+  presentationMode?: PresentationMode;
 }
+
+export const quizGradingAdapter: GradingAdapter<readonly QuizBlockLike[] | QuizBlockStorageLike> = {
+  contentType: 'quiz',
+  extractItems(payload) {
+    return buildQuizGradingItemsFromBlocks(toQuizBlocks(payload));
+  },
+  extractAnswerKey(payload, grading) {
+    return extractQuizAnswerKeyFromBlocks(toQuizBlocks(payload), grading);
+  },
+  redactLearnerPayload(payload, grading) {
+    if (Array.isArray(payload)) return redactQuizBlocks(payload, grading);
+    return redactQuizBlockStorage(payload as QuizBlockStorageLike, grading);
+  },
+  buildStructuredAnswerPayload(input) {
+    return buildQuizStructuredAnswerPayload(asAnswerRecord(input));
+  },
+};
 
 export function buildQuizGradingItemsFromBlocks(blocks: readonly QuizBlockLike[]): Record<string, GradedItemConfig> {
   const items: Record<string, GradedItemConfig> = {};
@@ -66,53 +98,116 @@ export function buildQuizGradingItemsFromBlocks(blocks: readonly QuizBlockLike[]
   return items;
 }
 
-export function createQuizGradingConfig(
+export function createQuizGradingDefinition(
   blocks: readonly QuizBlockLike[],
   options: QuizGradingOptions = {},
-): ContentGradingConfig {
+): ContentGradingDefinition {
   const items = buildQuizGradingItemsFromBlocks(blocks);
   const itemTotal = Object.values(items).reduce((sum, item) => sum + item.points, 0);
   const maxScore = options.maxScore ?? itemTotal;
+  const uses = normalizeQuizResultUses(options.uses);
 
-  return validateGradingConfig({
+  return validateGradingDefinition({
     enabled: true,
     schemaVersion: 1,
-    validationMode: options.validationMode ?? 'public',
-    gradebook: {
+    outcome: {
+      uses,
+      gradebook: uses.includes('gradebook')
+        ? {
+          groupId: options.groupId ?? null,
+          weight: options.weight,
+          required: options.required ?? true,
+          includeInFinalGrade: options.includeInFinalGrade ?? true,
+        }
+        : null,
+    },
+    score: {
       maxScore: Math.max(1, maxScore),
       passingScore: options.passingScore,
-      required: options.required ?? true,
-      official: false,
     },
-    policy: {
-      feedbackMode: 'immediate',
-      presentationMode: 'continuous',
+    attempts: {},
+    feedback: {
+      mode: options.feedbackMode ?? 'immediate',
+    },
+    presentation: {
+      mode: options.presentationMode ?? 'continuous',
     },
     items,
   });
 }
 
-export function syncQuizGradingConfig(
+export function syncQuizGradingDefinition(
   blocks: readonly QuizBlockLike[],
-  config: ContentGradingConfig,
-): ContentGradingConfig {
-  if (!config.enabled) return normalizeGradingConfig(config);
+  definition: ContentGradingDefinition,
+): ContentGradingDefinition {
+  if (!definition.enabled) return normalizeGradingDefinition(definition);
   const items = buildQuizGradingItemsFromBlocks(blocks);
-  const next = normalizeGradingConfig({ ...config, items });
-  if (next.gradebook.maxScore <= 0) {
+  const next = normalizeGradingDefinition({ ...definition, items });
+  if (next.score.maxScore <= 0) {
     const itemTotal = sumGradedItemPoints(next);
-    next.gradebook.maxScore = Math.max(1, itemTotal);
+    next.score.maxScore = Math.max(1, itemTotal);
   }
   return next;
+}
+
+export function extractQuizAnswerKeyFromBlocks(
+  blocks: readonly QuizBlockLike[],
+  _grading: ContentGradingDefinition,
+): AnswerKey {
+  const items: Record<string, unknown> = {};
+  for (const block of blocks) {
+    if (block.type === 'quiz') items[block.id] = cloneValue(block.data);
+  }
+  return { items };
+}
+
+export function redactQuizBlockStorage(
+  contentBody: QuizBlockStorageLike,
+  grading: ContentGradingDefinition,
+): QuizBlockStorageLike {
+  const blocks = isBlockStorage(contentBody)
+    ? Object.fromEntries(
+      Object.entries(contentBody.blocks).map(([id, data]) => {
+        const type = contentBody.order?.find(([blockId]) => blockId === id)?.[1];
+        return [id, type === 'quiz' ? redactQuizQuestion(data) : cloneValue(data)];
+      }),
+    )
+    : {};
+
+  return {
+    ...contentBody,
+    blocks,
+    grading: grading.enabled ? validateGradingDefinition(grading) : undefined,
+  };
+}
+
+export function redactQuizBlocks(
+  blocks: readonly QuizBlockLike[],
+  _grading: ContentGradingDefinition,
+): QuizBlockLike[] {
+  return blocks.map((block) => ({
+    ...block,
+    data: block.type === 'quiz' ? redactQuizQuestion(block.data) : cloneValue(block.data),
+  }));
+}
+
+export function buildQuizStructuredAnswerPayload(
+  answers: Record<string, StructuredAnswer>,
+): StructuredAnswerPayload {
+  return {
+    answers: Object.fromEntries(
+      Object.entries(answers).map(([blockId, answer]) => [blockId, cloneStructuredAnswer(answer)]),
+    ),
+  };
 }
 
 export function isDeterministicQuizQuestionType(type: unknown): boolean {
   return type !== 'ESSAY' && type !== undefined;
 }
 
-export function gradeQuizAnswer(entry: unknown, answer: StructuredAnswer): GradeItemResult {
+export function gradeQuizAnswer(entry: unknown, answer: StructuredAnswer, points?: number): GradeItemResult {
   const question = asQuizQuestion(entry);
-  const maxScore = normalizeQuestionPoints(question?.points);
+  const maxScore = points ?? normalizeQuestionPoints(question?.points);
   if (!question?.type) return unsupported(maxScore);
 
   switch (question.type) {
@@ -167,28 +262,149 @@ export function gradeQuizAnswer(entry: unknown, answer: StructuredAnswer): Grade
   }
 }
 
-export function gradeDeterministicSubmission(_args: GradeSubmissionArgs): GradeResult {
+export function gradeDeterministicQuizSubmission(args: GradeSubmissionArgs): GradeResult {
+  const { grading, payload, answerKey } = args;
+  if (!grading.enabled || !answerKey) {
+    return {
+      status: 'unsupported',
+      score: null,
+      maxScore: grading.score.maxScore,
+    };
+  }
+
+  const itemResults = Object.entries(grading.items).map(([itemId, item]) => {
+    if (item.gradingKind !== 'deterministic') {
+      return {
+        contentBlockId: item.contentBlockId,
+        status: item.gradingKind === 'manual' ? 'pending' : 'unsupported',
+        score: null,
+        maxScore: item.points,
+      } satisfies GradeItemResult;
+    }
+
+    const result = gradeQuizAnswer(answerKey.items[itemId], payload.answers[item.contentBlockId] ?? {}, item.points);
+    return {
+      ...result,
+      contentBlockId: item.contentBlockId,
+    };
+  });
+  const gradedItems = itemResults.filter((item) => item.status === 'graded');
+  const pendingItems = itemResults.filter((item) => item.status === 'pending');
+  const unsupportedItems = itemResults.filter((item) => item.status === 'unsupported');
+  const score = gradedItems.reduce((sum, item) => sum + (item.score ?? 0), 0);
+  const maxScore = sumGradedItemPoints(grading);
+
+  if (pendingItems.length > 0) {
+    return {
+      status: 'pending',
+      score: null,
+      maxScore,
+      items: itemResults,
+    };
+  }
+
+  if (unsupportedItems.length > 0) {
+    return {
+      status: 'unsupported',
+      score: null,
+      maxScore,
+      items: itemResults,
+    };
+  }
+
   return {
-    status: 'unsupported',
-    score: null,
-    maxScore: 0,
-    feedback: 'Server-side deterministic grading is implemented in Part 2.',
+    status: 'graded',
+    score,
+    maxScore,
+    passed: grading.score.passingScore === undefined ? undefined : score >= grading.score.passingScore,
+    items: itemResults,
   };
 }
 
-export function redactLearnerPayload(contentBody: unknown, _grading: ContentGradingConfig): unknown {
-  return contentBody;
+function normalizeQuizResultUses(uses: readonly GradingResultUse[] | undefined): GradingResultUse[] {
+  const normalized: GradingResultUse[] = [];
+  for (const use of uses ?? ['feedback']) {
+    if ((use === 'feedback' || use === 'gradebook') && !normalized.includes(use)) normalized.push(use);
+  }
+  return normalized.length > 0 ? normalized : ['feedback'];
 }
 
-export function buildStructuredSubmissionPayload(
-  answers: Record<string, StructuredAnswer>,
-  _grading?: ContentGradingConfig,
-): StructuredAnswerPayload {
+function toQuizBlocks(payload: readonly QuizBlockLike[] | QuizBlockStorageLike): QuizBlockLike[] {
+  if (Array.isArray(payload)) return [...payload];
+  if (!isBlockStorage(payload)) return [];
+  return payload.order
+    .map(([id, type]) => ({ id, type, data: payload.blocks[id] }))
+    .filter((block) => block.data !== undefined);
+}
+
+function isBlockStorage(value: unknown): value is Required<Pick<QuizBlockStorageLike, 'order' | 'blocks'>> & QuizBlockStorageLike {
+  const candidate = asRecord(value);
+  return Boolean(
+    candidate &&
+      Array.isArray(candidate.order) &&
+      candidate.blocks &&
+      typeof candidate.blocks === 'object' &&
+      !Array.isArray(candidate.blocks),
+  );
+}
+
+function redactQuizQuestion(value: unknown): unknown {
+  const question = asRecord(value);
+  if (!question) return cloneValue(value);
+  const next: Record<string, unknown> = {};
+  for (const [key, field] of Object.entries(question)) {
+    if (isAnswerKeyField(key)) continue;
+    if (key === 'blanks' && Array.isArray(field)) {
+      next[key] = field.map(redactBlankField);
+      continue;
+    }
+    if (key === 'items' && Array.isArray(field)) {
+      next[key] = field.map(redactCategorizationOrOrderingItem);
+      continue;
+    }
+    next[key] = cloneValue(field);
+  }
+  return next;
+}
+
+function redactBlankField(value: unknown): unknown {
+  const blank = asRecord(value);
+  const input = asRecord(blank?.input);
+  if (!blank || !input) return cloneValue(value);
+  const redactedInput = Object.fromEntries(
+    Object.entries(input).filter(([key]) => !isAnswerKeyField(key)),
+  );
   return {
-    answers: Object.fromEntries(
-      Object.entries(answers).map(([blockId, answer]) => [blockId, cloneStructuredAnswer(answer)]),
-    ),
+    ...blank,
+    input: redactedInput,
   };
+}
+
+function redactCategorizationOrOrderingItem(value: unknown): unknown {
+  const item = asRecord(value);
+  if (!item) return cloneValue(value);
+  return Object.fromEntries(
+    Object.entries(item).filter(([key]) => !isAnswerKeyField(key)),
+  );
+}
+
+function isAnswerKeyField(key: string): boolean {
+  return [
+    'acceptedAnswers',
+    'caseSensitive',
+    'correctAnswer',
+    'correctAnswerPlain',
+    'correctCategoryIds',
+    'correctOptionId',
+    'correctOptionIds',
+    'correctPosition',
+    'correctRating',
+    'correctValue',
+    'formula',
+    'highlights',
+    'tolerance',
+    'toleranceType',
+  ].includes(key);
 }
 
 function cloneStructuredAnswer(answer: StructuredAnswer): StructuredAnswer {
@@ -376,8 +592,18 @@ function asStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.map((item) => String(item)) : [];
 }
 
+function asAnswerRecord(value: unknown): Record<string, StructuredAnswer> {
+  const record = asRecord(value);
+  return record ? record as Record<string, StructuredAnswer> : {};
+}
+
 function normalizeQuestionPoints(points: unknown): number {
   return Number.isFinite(points) && Number(points) > 0 ? Number(points) : 1;
+}
+
+function cloneValue<T>(value: T): T {
+  if (value == null || typeof value !== 'object') return value;
+  return JSON.parse(JSON.stringify(value)) as T;
 }
 
 function escapeRegExp(value: string): string {

@@ -1,65 +1,31 @@
-# Learning Grading Part 1: Package and Frontend Contract
+# Learning Grading Part 1: Completed Package and Frontend Handoff
 
 ## Summary
 
-Part 1 creates the grading contract and integrates it into the frontend authoring flow without committing to the final backend storage model.
+Part 1 has already been executed. This document is now a historical snapshot and handoff, not a new implementation target.
 
-After Part 0, `Content` is again the authoring source for lesson and quiz body data, while `Assessments` no longer owns a separate quiz definition. Part 1 should keep that boundary: grading metadata belongs to content-owned authoring, and the `Assessments` page can only show a temporary projection until Part 2 decides the backend source of truth.
+Part 1 created the first grading package and connected quiz authoring to content-owned grading metadata. Some of that first-pass logic is now intentionally superseded by the server-only architecture. Those corrections belong to Part 2 and later.
 
-## Goals
+## Completed Scope
 
-- Create a UI-free grading package with typed contracts and schema validation.
-- Define `validationMode: 'public' | 'protected'`.
-- Encode that `public` validation is pedagogical and never official.
-- Let quiz content be the first consumer of the grading contract.
-- Keep quiz body data in `ProgramContent.Body` or `ProgramContent.JsonBody`, depending on the current content storage path.
-- Add frontend serialization tests for grading config.
-- Prepare `Assessments` to consume graded content as a view, without restoring the old `quiz-assessment-editor` path.
+Part 1 delivered:
 
-## Non-Goals
+- the initial `@game-guild/grading` package;
+- content-owned quiz grading metadata;
+- quiz content save/reload through the existing content path;
+- initial grading metadata helpers;
+- initial assessments projection over graded content;
+- preservation of lesson and quiz editor componentization;
+- `React.lazy` plus `Suspense` loading, with no `next/dynamic`.
 
-- Do not implement final protected server-side grading in Part 1.
-- Do not add migrations for the full grading config in Part 1.
-- Do not make `Assessment.DefinitionPayload` the new source of truth.
-- Do not make `Assessments` create or own quiz body data.
-- Do not enable official grading for `public` validation.
-- Do not force lesson-embedded quiz grading until Part 2 resolves backend rules that currently prevent grading `Lesson` content.
+## Completed Contract Shape
 
-## Current Constraints
-
-The current backend already exposes simple grading fields on `ProgramContent`:
-
-- `GradingMethod`
-- `MaxPoints`
-
-The current backend also enforces important rules:
-
-- `Lesson` and `Page` normalize grading to none.
-- `Survey` normalizes grading to none.
-- `Questionnaire`, `Code`, and `Project` are structured-body content types and are better first candidates.
-
-The current web projection maps `gradingMethod` and `maxPoints` only into `ContentItemDetail.settings`, not into the content tree list item. If the `Assessments` page needs a temporary graded-content projection, Part 1 should explicitly type and map these fields instead of hiding them in generic metadata.
-
-## Phase 1A: Grading Package
-
-Create:
-
-```text
-packages/features/grading
-```
-
-Proposed package name:
-
-```text
-@game-guild/grading
-```
-
-The package must be framework-independent. It should not import React, Next.js, dashboard code, or API clients.
-
-Initial exports:
+Part 1 started from a first-pass contract similar to:
 
 ```ts
-export type GradingValidationMode = 'public' | 'protected';
+export type GradingValidationMode =
+  | 'public'
+  | 'protected';
 
 export interface ContentGradingConfig {
   enabled: boolean;
@@ -69,178 +35,78 @@ export interface ContentGradingConfig {
   policy: GradingPolicy;
   items: Record<string, GradedItemConfig>;
 }
-
-export interface GradebookConfig {
-  maxScore: number;
-  passingScore?: number;
-  weight?: number;
-  groupId?: string | null;
-  required?: boolean;
-  official?: boolean;
-}
-
-export interface GradingPolicy {
-  maxAttempts?: number | null;
-  timeLimitMinutes?: number | null;
-  availableFrom?: string | null;
-  availableUntil?: string | null;
-  feedbackMode?: 'immediate' | 'after-submit' | 'after-close' | 'manual';
-  presentationMode?: 'continuous' | 'single-step';
-}
-
-export interface GradedItemConfig {
-  contentBlockId: string;
-  points: number;
-  gradingKind: 'deterministic' | 'manual' | 'external';
-  answerKeyRef?: string;
-  rubricRef?: string;
-}
 ```
 
-Package responsibilities:
+This shape is useful only as the current input to Part 2. It should not be treated as the final contract.
 
-- validate grading config shape;
-- normalize defaults;
-- validate score totals;
-- validate public/protected policy compatibility;
-- expose types for answer keys, structured submissions, and grade results;
-- expose deterministic quiz helper contracts, even if protected execution is deferred;
-- provide redaction function signatures for Part 2.
+## Durable Decisions
 
-Recommended helpers:
+Keep these decisions from Part 1:
 
-```ts
-validateGradingConfig(config: unknown): ContentGradingConfig;
-normalizeGradingConfig(config: Partial<ContentGradingConfig>): ContentGradingConfig;
-isOfficialGrade(config: ContentGradingConfig): boolean;
-assertPublicIsNotOfficial(config: ContentGradingConfig): void;
-sumGradedItemPoints(config: ContentGradingConfig): number;
-```
+- `Content` remains the authoring source for lesson, quiz, assignment, project, code, discussion, reflection, survey, and future activity data.
+- `Assessments` remains a view/projection over graded content, not a separate quiz or assignment authoring owner.
+- `@game-guild/grading` remains a framework-independent package.
+- Quiz is the first content type to use the grading contract.
+- The content editor saves quiz body data through `ProgramContent.JsonBody`.
+- Assessment rows link back to the owning content item.
 
-Protected helpers can exist as contracts/stubs if backend integration is not ready:
+## Superseded Logic
 
-```ts
-redactLearnerPayload(contentBody: unknown, grading: ContentGradingConfig): unknown;
-buildStructuredSubmissionPayload(input: unknown, grading: ContentGradingConfig): StructuredSubmissionPayload;
-gradeDeterministicSubmission(args: GradeSubmissionArgs): GradeResult;
-```
+Part 2 must remove or replace these Part 1 choices:
 
-## Phase 1B: Frontend Authoring Contract
+- `validationMode: 'public' | 'protected'`;
+- public/client validation as a learner runtime;
+- client-produced correctness as any trusted grading evidence;
+- public/client results as any persisted grading source of truth;
+- quiz-specific helpers living on the core package surface instead of behind an adapter;
+- `ContentGradingConfig` as the long-term contract name/shape.
 
-Add frontend support for attaching a grading config to content authoring state.
+All learner-facing grading validation now happens on the server.
 
-Initial target:
+## Current Backend Constraints
 
-- quiz content item (`Questionnaire`) only;
-- `validationMode: 'public'` fully available;
-- `validationMode: 'protected'` represented in the config, but not treated as officially executable until Part 2.
+The backend already exposes simple grading fields on `ProgramContent`:
 
-The content editor should be able to:
+- `GradingMethod`;
+- `MaxPoints`.
 
-- leave grading disabled;
-- enable grading metadata for quiz content;
-- choose `public` or `protected`;
-- configure max score and optional passing score;
-- assign points to quiz questions or quiz blocks when stable block IDs exist;
-- serialize the grading config through a local frontend contract.
+The backend also currently enforces important rules:
 
-Important boundary:
+- `Lesson` and `Page` normalize grading to none.
+- `Survey` normalizes grading to none.
+- `Questionnaire`, `Code`, and `Project` are structured-body content types and are better first candidates under the current backend rules.
 
-- Quiz questions remain in the existing quiz/block content body.
-- Grading metadata references quiz/question/block IDs.
-- The grading package does not become a React UI package.
+These constraints should be reconciled in Part 3 after Part 2 cleans the frontend/package contract.
 
-## Phase 1C: Public Validation Runtime
+## Part 2 Handoff
 
-Implement public validation as a pedagogical learner/client path.
+Part 2 starts from the already-executed Part 1 state:
 
-Public mode rules:
+- package and frontend exist with `validationMode`;
+- quiz adapter boundaries are not clean yet;
+- client-side quiz grading helpers exist and may be used in learner-facing paths;
+- the backend audit indicates `AssessmentSubmission` is the better first trusted server-side submission store;
+- backend persistence for the full content-owned grading definition is still undecided.
 
-- client payload may contain answer keys;
-- correctness can be calculated in the browser;
-- feedback can be immediate;
-- any score shown is practice feedback only;
-- public validation must not write official gradebook data;
-- UI copy should clearly distinguish practice feedback from official grading.
+Part 2 owns the contract correction:
 
-This is the only validation mode that should be considered functional in Part 1.
+- remove `validationMode`;
+- add `GradingResultUse` and `GradingOutcomePolicy`;
+- rename/reshape `ContentGradingConfig` toward `ContentGradingDefinition`;
+- move quiz-specific extraction/redaction/payload logic behind a quiz adapter;
+- remove learner-facing client correctness as a grading path;
+- keep content save/reload behavior stable while the contract changes.
 
-## Phase 1D: Protected Mode Placeholder
+## Handoff Validation
 
-Protected mode should be typed and serializable, but not fully executable in Part 1.
+Part 2 should prove that:
 
-Protected mode rules:
-
-- the frontend may author intent and config;
-- learner-safe redaction is not guaranteed until Part 2;
-- server-side validation is not implemented in Part 1;
-- official grade submission should remain disabled or clearly blocked;
-- any protected flow that would require answer-key secrecy must wait for backend storage and attempt snapshot decisions.
-
-This prevents Part 1 from recreating the mistake from Part 0 by inventing a frontend-only authority for official grading.
-
-## Phase 1E: Temporary Assessments Projection
-
-`Assessments` should continue to behave as a view, not an authoring owner.
-
-For Part 1, use a temporary projection only if needed:
-
-- read graded-looking content from `ProgramContent.GradingMethod` and `ProgramContent.MaxPoints`;
-- map these fields into typed frontend content models instead of burying them in generic metadata;
-- show rows as content-owned activities;
-- route edit actions back to the content editor;
-- do not add direct assessment creation;
-- do not restore assessment-body editing.
-
-This projection is intentionally incomplete. Part 2 decides whether the final source is `ProgramContent`, a related content-grading table, versioned settings, or a bridge to existing assessment/submission infrastructure.
-
-## Implementation Order
-
-1. Add `packages/features/grading` package scaffold.
-2. Add grading config types and schema validation.
-3. Add unit tests for validation and public/protected invariants.
-4. Add quiz grading metadata extraction helpers for current quiz block data.
-5. Add content editor state wiring for quiz grading config.
-6. Add public-mode client validation using the package.
-7. Add a temporary assessments projection only after content-owned grading data is visible in the frontend model.
-8. Update focused dashboard tests.
-
-## Validation Plan
-
-Package:
-
-- invalid configs are rejected;
-- `public` plus `official: true` is rejected or normalized to non-official;
-- item point totals are validated;
-- disabled grading keeps config minimal and inert.
-
-Content editor:
-
-- content without grading saves and loads unchanged;
-- quiz content can enable grading metadata;
-- quiz content can disable grading metadata again;
-- quiz public validation works in the client;
-- quiz protected mode can be authored but does not claim official execution.
-
-Assessments view:
-
+- existing content without grading still saves and loads unchanged;
+- quiz content can keep its authored body data through `ProgramContent`;
+- quiz grading metadata migrates away from `validationMode`;
+- result use replaces public/protected controls;
 - direct assessment body editing remains absent;
 - assessment rows, if shown, link back to the owning content item;
-- group-only management remains allowed;
-- no `quiz-assessment-editor` returns.
-
-Regression:
-
-- lesson and quiz content save paths continue to use `ProgramContent`;
-- `React.lazy` plus `Suspense` remain in the lesson editor path;
+- no `quiz-assessment-editor` returns;
+- `React.lazy` plus `Suspense` remain in place;
 - no `next/dynamic` is introduced for the content editor route.
-
-## Open Decisions Deferred To Part 2
-
-- Where the full grading config is persisted.
-- Where protected answer keys are stored.
-- How protected learner attempts snapshot content body plus grading config.
-- Whether official submissions should use `AssessmentSubmission`, `ContentInteraction` plus `ActivityGrade`, or a bridge.
-- How grade groups attach to content-owned grading config.
-- How public practice results are stored without affecting official course grades.
-- When lesson-embedded quizzes can become gradable, given current backend restrictions on `Lesson` grading.

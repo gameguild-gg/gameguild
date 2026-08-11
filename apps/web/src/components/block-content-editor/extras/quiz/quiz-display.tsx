@@ -23,6 +23,7 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
     checkAnswers,
     resetQuiz,
   } = useQuizAnswers({ entry })
+  const hasTrustedFeedback = showFeedback && isCorrect !== null
 
   return (
     <div className="space-y-4">
@@ -37,7 +38,7 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
         answerState={answerState}
         onAnswerChange={updateAnswerState}
         disabled={false}
-        showFeedback={showFeedback}
+        showFeedback={hasTrustedFeedback}
       />
 
       {/* Submit button - h-12 ensures Submit/Feedback/Submitted all share
@@ -52,9 +53,9 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
       )}
 
       {/* Feedback */}
-      {showFeedback && (entry.settings.showFeedback ?? true) && (
+      {hasTrustedFeedback && (entry.settings.showFeedback ?? true) && (
         <QuizFeedback
-          isCorrect={isCorrect}
+          isCorrect={isCorrect === true}
           correctFeedback={entry.feedback?.correct || ""}
           incorrectFeedback={entry.feedback?.incorrect || ""}
           allowRetry={entry.settings.allowRetry}
@@ -64,7 +65,21 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
       )}
 
       {/* Submitted without feedback - h-12 matches Submit button height */}
-      {showFeedback && !(entry.settings.showFeedback ?? true) && (
+      {showFeedback && !hasTrustedFeedback && (
+        <div className="flex items-center justify-between gap-3 rounded-lg px-4 h-12 py-0 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
+          <span className="font-medium">Answer submitted.</span>
+          {entry.settings.allowRetry && (
+            <button
+              onClick={resetQuiz}
+              className="shrink-0 flex items-center gap-1.5 text-xs font-medium border border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/30 py-1.5 px-3 rounded-md transition-colors"
+            >
+              Try Again
+            </button>
+          )}
+        </div>
+      )}
+
+      {hasTrustedFeedback && !(entry.settings.showFeedback ?? true) && (
         <div className="flex items-center justify-between gap-3 rounded-lg px-4 h-12 py-0 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
           <span className="font-medium">Answer submitted.</span>
           {entry.settings.allowRetry && (

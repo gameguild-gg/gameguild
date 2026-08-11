@@ -10,7 +10,7 @@ import type {
   LearningCoursesLessonContentFormat,
   LearningCoursesProgramContentType,
 } from "@game-guild/client";
-import type { ContentGradingConfig } from "@game-guild/grading";
+import type { ContentGradingDefinition } from "@game-guild/grading";
 
 export type { LearningCoursesProgramContentType } from "@game-guild/client";
 
@@ -115,7 +115,7 @@ export interface CourseContentItemViewModel {
   metadata: Record<string, unknown>;
   gradingMethod: LearningCoursesGradingMethod | null;
   maxPoints: number | null;
-  gradingConfig: ContentGradingConfig | null;
+  gradingConfig: ContentGradingDefinition | null;
   createdAt: string;
   updatedAt: string;
 }
