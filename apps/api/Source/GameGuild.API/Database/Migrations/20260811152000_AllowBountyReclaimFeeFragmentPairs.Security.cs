@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace GameGuild.API.Database.Migrations;
 
-public partial class AllowBountyReclaimFeeFragmentPairs
+internal static class BountyReclaimFeeFragmentValidationSql
 {
-    private static void InstallBountyReclaimFeeFragmentValidation(MigrationBuilder migrationBuilder)
+    internal static void Install(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.Sql(
             """
@@ -134,7 +134,7 @@ public partial class AllowBountyReclaimFeeFragmentPairs
             """);
     }
 
-    private static void RestoreBountyReclaimFeeFragmentValidation(MigrationBuilder migrationBuilder)
+    internal static void Restore(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.Sql(
             """

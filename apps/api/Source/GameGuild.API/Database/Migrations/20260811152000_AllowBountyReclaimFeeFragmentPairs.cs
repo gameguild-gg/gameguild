@@ -11,8 +11,8 @@ namespace GameGuild.API.Database.Migrations;
 public partial class AllowBountyReclaimFeeFragmentPairs : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder) =>
-        InstallBountyReclaimFeeFragmentValidation(migrationBuilder);
+        BountyReclaimFeeFragmentValidationSql.Install(migrationBuilder);
 
     protected override void Down(MigrationBuilder migrationBuilder) =>
-        RestoreBountyReclaimFeeFragmentValidation(migrationBuilder);
+        BountyReclaimFeeFragmentValidationSql.Restore(migrationBuilder);
 }
