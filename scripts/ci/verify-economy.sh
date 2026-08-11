@@ -288,6 +288,9 @@ printf 'database=economy_ci\nport=%s\n' "$postgres_port" > "$artifact_root/postg
 
 run dotnet restore apps/api/GameGuild.sln --nologo
 run dotnet build apps/api/GameGuild.sln -c Release --no-restore --nologo --verbosity minimal
+# The solution omits a few API module projects. Build the API graph once so
+# warning-scope builds can safely keep project references disabled.
+run dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --verbosity minimal
 
 base_sha="${ECONOMY_BASE_SHA:-}"
 if [[ -z "$base_sha" ]]; then
