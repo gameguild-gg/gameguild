@@ -50,6 +50,7 @@ describe("GET /api/nodes", () => {
           },
           status: {
             conditions: [{ type: "Ready", status: "True" }],
+            addresses: [{ type: "InternalIP", address: "10.0.0.1" }],
           },
         },
         {
