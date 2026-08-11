@@ -18,6 +18,13 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
         CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new GetTestingEventsQuery(status, skip, take), cancellationToken).ConfigureAwait(false));
 
+    [HttpGet("archived")]
+    public async Task<ActionResult<IReadOnlyList<TestingEventProjection>>> GetArchivedEvents(
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(new GetArchivedTestingEventsQuery(skip, take), cancellationToken).ConfigureAwait(false));
+
     [HttpGet("public")]
     [AllowAnonymous]
     public async Task<ActionResult<IReadOnlyList<PublicTestingEventProjection>>> GetPublicEvents(
@@ -83,6 +90,20 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
     public async Task<ActionResult<bool>> DeleteEvent(Guid eventId, CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(new DeleteTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? NoContent() : ToActionResult(result);
+    }
+
+    [HttpPost("{eventId:guid}:archive")]
+    public async Task<ActionResult<bool>> ArchiveEvent(Guid eventId, CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(new ArchiveTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? NoContent() : ToActionResult(result);
+    }
+
+    [HttpPost("{eventId:guid}:restore")]
+    public async Task<ActionResult<bool>> RestoreEvent(Guid eventId, CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(new RestoreTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false);
         return result.IsSuccess ? NoContent() : ToActionResult(result);
     }
 

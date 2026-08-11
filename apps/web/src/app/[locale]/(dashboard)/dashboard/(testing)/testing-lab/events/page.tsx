@@ -1,9 +1,9 @@
-import { CreateTestingEventDialog } from '@/components/testing-lab/testing-event-management';
+import { CreateTestingEventDialog, RestoreTestingEventDialog } from '@/components/testing-lab/testing-event-management';
 import { formatTestingEventStatus } from '@/lib/testing-lab/format';
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
 import { TestingLabAccessIssues, TestingLabEmptyState } from '@/components/testing-lab/testing-lab-state';
 import { Link } from '@/i18n/navigation';
-import { getTestingEventsDirectory } from '@/lib/testing-lab/events-queries';
+import { getArchivedTestingEventsDirectory, getTestingEventsDirectory } from '@/lib/testing-lab/events-queries';
 import type { TestingLabTestingEventStatus } from '@game-guild/client';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
@@ -32,11 +32,14 @@ function eventDate(value?: string | null) {
 export default async function TestingEventsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string; archived?: string }>;
 }) {
   const query = await searchParams;
+  const archived = query.archived === 'true';
   const selectedStatus = statuses.find((status) => status.value === query.status)?.value;
-  const directory = await getTestingEventsDirectory({ status: selectedStatus, skip: 0, take: 100 });
+  const directory = archived
+    ? await getArchivedTestingEventsDirectory({ skip: 0, take: 100 })
+    : await getTestingEventsDirectory({ status: selectedStatus, skip: 0, take: 100 });
   const searchTerm = query.q?.trim().toLocaleLowerCase() ?? '';
   const filteredEvents = directory.events.filter((event) =>
     searchTerm
@@ -47,7 +50,7 @@ export default async function TestingEventsPage({
   const page = Math.max(1, Number.parseInt(query.page ?? '1', 10) || 1);
   const pageCount = Math.max(1, Math.ceil(filteredEvents.length / pageSize));
   const visibleEvents = filteredEvents.slice((Math.min(page, pageCount) - 1) * pageSize, Math.min(page, pageCount) * pageSize);
-  const querySuffix = `${selectedStatus ? `&status=${selectedStatus}` : ''}${query.q ? `&q=${encodeURIComponent(query.q)}` : ''}`;
+  const querySuffix = `${archived ? '&archived=true' : ''}${selectedStatus ? `&status=${selectedStatus}` : ''}${query.q ? `&q=${encodeURIComponent(query.q)}` : ''}`;
 
   return (
     <div className="space-y-6 p-4 lg:p-6">
@@ -60,7 +63,7 @@ export default async function TestingEventsPage({
       <TestingLabAccessIssues issues={directory.accessIssues} />
       <nav aria-label="Filter testing events" className="flex flex-wrap gap-2">
         {statuses.map((status) => {
-          const active = status.value === selectedStatus || (!status.value && !selectedStatus);
+          const active = !archived && (status.value === selectedStatus || (!status.value && !selectedStatus));
           return (
             <Button key={status.label} asChild size="sm" variant={active ? 'default' : 'outline'}>
               <Link href={status.value ? `/dashboard/testing-lab/events?status=${status.value}` : '/dashboard/testing-lab/events'}>
@@ -69,9 +72,13 @@ export default async function TestingEventsPage({
             </Button>
           );
         })}
+        <Button asChild size="sm" variant={archived ? 'default' : 'outline'}>
+          <Link href="/dashboard/testing-lab/events?archived=true">Archived</Link>
+        </Button>
       </nav>
       <form method="get" className="flex max-w-2xl flex-col gap-2 sm:flex-row">
         {selectedStatus ? <input type="hidden" name="status" value={selectedStatus} /> : null}
+        {archived ? <input type="hidden" name="archived" value="true" /> : null}
         <Input
           name="q"
           type="search"
@@ -83,9 +90,9 @@ export default async function TestingEventsPage({
       </form>
       {visibleEvents.length === 0 ? (
         <TestingLabEmptyState
-          title={searchTerm ? 'No matching events' : 'No testing events'}
-          description={searchTerm ? 'Adjust the search or status filter.' : 'Create an event to collect project applications and organize independent online or campus test slots.'}
-          action={<CreateTestingEventDialog />}
+          title={searchTerm ? 'No matching events' : archived ? 'No archived events' : 'No testing events'}
+          description={searchTerm ? 'Adjust the search or status filter.' : archived ? 'Completed and cancelled events can be archived from their management workspace.' : 'Create an event to collect project applications and organize independent online or campus test slots.'}
+          action={archived ? undefined : <CreateTestingEventDialog />}
         />
       ) : (
         <section className="divide-y rounded-md border" aria-label="Testing event directory">
@@ -104,13 +111,15 @@ export default async function TestingEventsPage({
                   <span className="flex items-center gap-1.5"><FlaskConical className="size-3.5" />{event.applicationCount ?? 0} applications</span>
                 </div>
               </div>
-              {event.id ? (
-                <Button asChild variant="outline">
-                  <Link href={`/dashboard/testing-lab/events/${event.id}`}>
-                    Manage event<ChevronRight className="ml-2 size-4" />
-                  </Link>
-                </Button>
-              ) : null}
+              {archived ? (
+                <RestoreTestingEventDialog event={event} />
+              ) : event.id ? (
+                  <Button asChild variant="outline">
+                    <Link href={`/dashboard/testing-lab/events/${event.id}`}>
+                      Manage event<ChevronRight className="ml-2 size-4" />
+                    </Link>
+                  </Button>
+                ) : null}
             </article>
           ))}
         </section>

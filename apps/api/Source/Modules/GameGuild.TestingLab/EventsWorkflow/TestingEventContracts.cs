@@ -124,6 +124,10 @@ public sealed record UpdateTestingEventCommand(
 
 public sealed record DeleteTestingEventCommand(Guid EventId) : ICommand<Result<bool>>;
 
+public sealed record ArchiveTestingEventCommand(Guid EventId) : ICommand<Result<bool>>;
+
+public sealed record RestoreTestingEventCommand(Guid EventId) : ICommand<Result<bool>>;
+
 public sealed record OpenTestingEventApplicationsCommand(Guid EventId) : ICommand<Result<TestingEventProjection>>;
 
 public sealed record CloseTestingEventApplicationsCommand(Guid EventId) : ICommand<Result<TestingEventProjection>>;
@@ -180,6 +184,10 @@ public sealed record GetTestingEventQuery(Guid EventId) : IQuery<Result<TestingE
 
 public sealed record GetTestingEventsQuery(
     TestingEventStatus? Status = null,
+    int Skip = 0,
+    int Take = 50) : IQuery<Result<IReadOnlyList<TestingEventProjection>>>;
+
+public sealed record GetArchivedTestingEventsQuery(
     int Skip = 0,
     int Take = 50) : IQuery<Result<IReadOnlyList<TestingEventProjection>>>;
 

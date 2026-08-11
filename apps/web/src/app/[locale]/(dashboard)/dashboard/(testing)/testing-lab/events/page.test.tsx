@@ -3,14 +3,16 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  getArchivedTestingEventsDirectory: vi.fn(),
   getTestingEventsDirectory: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
 vi.mock('@/lib/testing-lab/events-queries', () => ({
+  getArchivedTestingEventsDirectory: mocks.getArchivedTestingEventsDirectory,
   getTestingEventsDirectory: mocks.getTestingEventsDirectory,
 }));
 
@@ -59,5 +61,27 @@ describe('Testing Events page', () => {
       skip: 0,
       take: 100,
     });
+  });
+
+  it('renders archived events with a restore action', async () => {
+    mocks.getArchivedTestingEventsDirectory.mockResolvedValue({
+      accessIssues: [],
+      events: [
+        {
+          id: 'event-archived',
+          name: 'Archived campus playtest',
+          mode: 'InPerson',
+          status: 'Completed',
+          startsAt: '2026-08-12T18:00:00.000Z',
+        },
+      ],
+    });
+
+    render(await TestingEventsPage({ searchParams: Promise.resolve({ archived: 'true' }) }));
+
+    expect(screen.getByText('Archived campus playtest')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /restore event/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /manage event/i })).not.toBeInTheDocument();
+    expect(mocks.getArchivedTestingEventsDirectory).toHaveBeenCalledWith({ skip: 0, take: 100 });
   });
 });
