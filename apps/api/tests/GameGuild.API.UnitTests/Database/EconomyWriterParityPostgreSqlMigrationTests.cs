@@ -175,6 +175,21 @@ public sealed class EconomyWriterParityPostgreSqlMigrationTests
             Line(1, 2, 1, 2, SourceWallet, 1),
             Line(2, 9, 1, 2)
         ],
+        PostingTemplateKind.BountyEscrow =>
+        [
+            Line(1, 2, 1, 2, SourceWallet, 1),
+            Line(2, 9, 1, 2)
+        ],
+        PostingTemplateKind.BountyClaim =>
+        [
+            Line(1, 9, 1, 2),
+            Line(2, 3, 1, 2, DestinationWallet, 2)
+        ],
+        PostingTemplateKind.BountyReclaim =>
+        [
+            Line(1, 9, 1, 2),
+            Line(2, 2, 1, 2, DestinationWallet, 1)
+        ],
         PostingTemplateKind.Reclaim =>
         [
             Line(1, 9, 1, 2),
