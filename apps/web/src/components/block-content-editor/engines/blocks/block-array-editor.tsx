@@ -314,7 +314,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
 
   const handleEditorSave = useCallback((data: unknown) => {
     if (editingIndex === null || !editingBlock) return
-    const updatedBlock: Block = { id: editingBlock.id, type: editingBlock.type, data }
+    const updatedBlock = { id: editingBlock.id, type: editingBlock.type, data } as Block
     const next = [...blocks]
     next[editingIndex] = updatedBlock
     onChange(next)
