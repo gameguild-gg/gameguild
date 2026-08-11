@@ -4,6 +4,8 @@ using GameGuild.CQRS;
 using GameGuild.Economy.Commands;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
+using GameGuild.Economy.Payouts;
+using GameGuild.Economy.Payouts.Commands;
 using GameGuild.Economy.Payouts.Queries;
 using GameGuild.Economy.Queries;
 using GameGuild.Economy.Risk;
@@ -113,6 +115,92 @@ public sealed class EconomyWalletController(
         var payouts = await sender.Send(new ListMyPayoutOperationsQuery(actorId, take), cancellationToken)
             .ConfigureAwait(false);
         return Ok(payouts);
+    }
+
+    [HttpPost("payout-requests")]
+    [EndpointSummary("Submit my payout request")]
+    [EndpointDescription("Records a withdrawal request only. It does not reserve or transfer value until KYC, risk, provider, and FIFO eligibility checks pass.")]
+    [ProducesResponseType(typeof(EconomyPayoutRequestDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> CreateMyPayoutRequest(
+        [FromBody] CreateMyPayoutRequestRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!HasSelfServiceContext())
+            return Forbid();
+
+        ArgumentNullException.ThrowIfNull(request);
+        try
+        {
+            var created = await sender.Send(new CreateMyPayoutRequestCommand(request), cancellationToken)
+                .ConfigureAwait(false);
+            return StatusCode(StatusCodes.Status201Created, created);
+        }
+        catch (PayoutRequestWalletUnavailableException exception)
+        {
+            return Conflict(exception.Message);
+        }
+        catch (PayoutRequestInsufficientWithdrawableFundsException exception)
+        {
+            return Conflict(exception.Message);
+        }
+        catch (PayoutRequestReplayConflictException exception)
+        {
+            return Conflict(exception.Message);
+        }
+    }
+
+    [HttpGet("payout-requests")]
+    [EndpointSummary("List my payout requests")]
+    [ProducesResponseType(typeof(IReadOnlyList<EconomyPayoutRequestDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ListMyPayoutRequests(
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetSelfServiceActorId(out var actorId))
+            return Forbid();
+        if (take is < 1 or > 100)
+            return BadRequest("Take must be between 1 and 100.");
+
+        var requests = await sender.Send(new ListMyPayoutRequestsQuery(actorId, take), cancellationToken)
+            .ConfigureAwait(false);
+        return Ok(requests);
+    }
+
+    [HttpPost("payout-requests/{requestId:guid}/cancel")]
+    [EndpointSummary("Cancel my pending payout request")]
+    [ProducesResponseType(typeof(EconomyPayoutRequestDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CancelMyPayoutRequest(
+        Guid requestId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!HasSelfServiceContext())
+            return Forbid();
+
+        try
+        {
+            var cancelled = await sender.Send(new CancelMyPayoutRequestCommand(requestId), cancellationToken)
+                .ConfigureAwait(false);
+            return Ok(cancelled);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (PayoutRequestStaleCommandException exception)
+        {
+            return Conflict(exception.Message);
+        }
+        catch (PayoutRequestTransitionException exception)
+        {
+            return Conflict(exception.Message);
+        }
     }
 
     [HttpGet("payouts/{operationId:guid}")]
