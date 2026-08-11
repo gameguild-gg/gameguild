@@ -1,32 +1,35 @@
 /**
  * Quiz Answer Validation Hook
- * Manages quiz state and answer validation for all question types
+ * Manages quiz state and answer validation for all question types.
  */
 
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useCallback, useState } from "react"
 import { gradeQuizAnswer } from "@game-guild/grading"
 import {
-  type QuizEntry,
   type QuizAnswerState,
+  type QuizEntry,
   QuizEntryType,
   createEmptyAnswerState,
-  type FillBlankTextInput,
   type FillBlankNumberInput,
   FillBlankInputType,
+  type FillBlankTextInput,
 } from "../types"
-import { evaluateFormula, validateFormula, generateVariableValue } from "../utils/formula-evaluator"
+import { evaluateFormula, generateVariableValue, validateFormula } from "../utils/formula-evaluator"
+
+export type QuizSubmissionMode = "local-practice" | "server-graded"
 
 interface UseQuizAnswersProps {
   entry: QuizEntry
+  submissionMode?: QuizSubmissionMode
 }
 
 /**
  * Extracts a normalized formatting structure from a Lexical editor state.
  * Accepts either the serialized JSON string or a parsed `SerializedEditorState`
  * object. Returns an array of `{ type, format, children }` per node, stripping
- * text content so only structure + formatting flags are compared.
+ * text content so only structure and formatting flags are compared.
  */
 function extractFormattingStructure(input: string | object): unknown[] | null {
   try {
@@ -37,15 +40,14 @@ function extractFormattingStructure(input: string | object): unknown[] | null {
     function normalizeNode(node: Record<string, unknown>): Record<string, unknown> {
       const result: Record<string, unknown> = { type: node.type }
 
-      // Keep formatting flags (bold, italic, etc.) encoded in the format bitmask
       if (node.format !== undefined) result.format = node.format
-      // Keep node-specific structural info
       if (node.tag !== undefined) result.tag = node.tag
       if (node.listType !== undefined) result.listType = node.listType
 
       if (Array.isArray(node.children)) {
         result.children = (node.children as Record<string, unknown>[]).map(normalizeNode)
       }
+
       return result
     }
 
@@ -59,6 +61,7 @@ function compareFormattingStructure(expected: string | object, userSerialized: s
   const expectedStructure = extractFormattingStructure(expected)
   const user = extractFormattingStructure(userSerialized)
   if (!expectedStructure || !user) return false
+
   return JSON.stringify(expectedStructure) === JSON.stringify(user)
 }
 
@@ -66,21 +69,30 @@ interface UseQuizAnswersReturn {
   answerState: QuizAnswerState
   updateAnswerState: (updates: Partial<QuizAnswerState>) => void
   showFeedback: boolean
-  isCorrect: boolean
+  isCorrect: boolean | null
   checkAnswers: () => void
   resetQuiz: () => void
 }
 
-export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersReturn {
+export function useQuizAnswers({
+  entry,
+  submissionMode = "local-practice",
+}: UseQuizAnswersProps): UseQuizAnswersReturn {
   const [answerState, setAnswerState] = useState<QuizAnswerState>(createEmptyAnswerState())
   const [showFeedback, setShowFeedback] = useState(false)
-  const [isCorrect, setIsCorrect] = useState(false)
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
 
   const updateAnswerState = useCallback((updates: Partial<QuizAnswerState>) => {
     setAnswerState((prev) => ({ ...prev, ...updates }))
   }, [])
 
   const checkAnswers = useCallback(() => {
+    if (submissionMode === "server-graded") {
+      setIsCorrect(null)
+      setShowFeedback(true)
+      return
+    }
+
     const packageResult = gradeQuizAnswer(entry, answerState)
     if (packageResult.status === "graded") {
       setIsCorrect(packageResult.isCorrect === true)
@@ -130,39 +142,43 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
               return textInput.acceptedAnswers.some((accepted) =>
                 caseSensitive
                   ? rawAnswer === accepted
-                  : rawAnswer.toLowerCase() === accepted.toLowerCase()
+                  : rawAnswer.toLowerCase() === accepted.toLowerCase(),
               )
             }
+
             case FillBlankInputType.Number: {
               const numberInput = blank.input as FillBlankNumberInput
-              // Strip unit suffix if present
               let numericStr = rawAnswer
+
               if (numberInput.unit) {
-                numericStr = numericStr.replace(new RegExp(`\\s*${numberInput.unit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`), '').trim()
-                // If unit is required, ensure it was present
+                numericStr = numericStr
+                  .replace(new RegExp(`\\s*${numberInput.unit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`), "")
+                  .trim()
+
                 if (numberInput.requireUnit && numericStr === rawAnswer) return false
               }
-              const userNumber = parseFloat(numericStr)
-              if (isNaN(userNumber)) return false
-              // Check negative constraint
+
+              const userNumber = Number.parseFloat(numericStr)
+              if (Number.isNaN(userNumber)) return false
               if (!(numberInput.allowNegative ?? true) && userNumber < 0) return false
-              // Check required precision (decimal places)
+
               if (numberInput.requiredPrecision !== undefined) {
-                const decimalPart = numericStr.includes('.') ? numericStr.split('.')[1] || '' : ''
+                const decimalPart = numericStr.includes(".") ? numericStr.split(".")[1] || "" : ""
                 if (decimalPart.length !== numberInput.requiredPrecision) return false
               }
-              // Check tolerance
+
               const tolerance = numberInput.tolerance ?? 0
               return Math.abs(userNumber - numberInput.correctValue) <= tolerance
             }
+
             case FillBlankInputType.Dropdown:
-              // First option is the correct answer
               return rawAnswer === blank.input.options[0]
-            case FillBlankInputType.WordBank:
-              // Extract just the word part (format is "word|uniqueIndex")
+
+            case FillBlankInputType.WordBank: {
               const userWord = rawAnswer.includes("|") ? rawAnswer.split("|")[0] : rawAnswer
-              // First word is the correct answer
               return userWord === blank.input.words[0]
+            }
+
             default:
               return false
           }
@@ -171,12 +187,12 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
       }
 
       case QuizEntryType.ShortAnswer: {
-        const userAnswer = (answerState.textAnswers["main"] || "").trim()
+        const userAnswer = (answerState.textAnswers.main || "").trim()
         const caseSensitive = entry.caseSensitive ?? false
         correct = entry.acceptedAnswers.some((accepted) =>
           caseSensitive
             ? userAnswer === accepted
-            : userAnswer.toLowerCase() === accepted.toLowerCase()
+            : userAnswer.toLowerCase() === accepted.toLowerCase(),
         )
         break
       }
@@ -184,12 +200,11 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
       case QuizEntryType.Essay: {
         const expectedPlain = (entry.correctAnswerPlain || "").trim()
         if (!expectedPlain) {
-          // No correct answer configured — treat as manually graded
           correct = true
           break
         }
 
-        const userPlain = (answerState.textAnswers["main_plain"] || "").trim()
+        const userPlain = (answerState.textAnswers.main_plain || "").trim()
         const textMatch = userPlain.toLowerCase() === expectedPlain.toLowerCase()
 
         if (!textMatch) {
@@ -198,7 +213,7 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
         }
 
         if (entry.requireFormatting && entry.correctAnswer) {
-          const userSerialized = answerState.textAnswers["main"] || ""
+          const userSerialized = answerState.textAnswers.main || ""
           correct = compareFormattingStructure(entry.correctAnswer, userSerialized)
         } else {
           correct = true
@@ -218,9 +233,7 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
         if (userAssignments.size !== entry.pairs.length) {
           correct = false
         } else {
-          correct = entry.pairs.every(
-            (pair) => userAssignments.get(pair.id) === pair.right
-          )
+          correct = entry.pairs.every((pair) => userAssignments.get(pair.id) === pair.right)
         }
         break
       }
@@ -249,34 +262,35 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
       }
 
       case QuizEntryType.Rating: {
-        if (entry.correctRating !== undefined) {
-          correct = answerState.rating === entry.correctRating
-        } else {
-          // Any rating is accepted
-          correct = answerState.rating !== undefined
-        }
+        correct = entry.correctRating !== undefined
+          ? answerState.rating === entry.correctRating
+          : answerState.rating !== undefined
         break
       }
 
       case QuizEntryType.Numeric: {
-        const userStr = (answerState.textAnswers["main"] || "").trim()
+        const userStr = (answerState.textAnswers.main || "").trim()
         if (!userStr) {
           correct = false
           break
         }
-        const storedValsNumeric = answerState.textAnswers["formula_values"]
+
+        const storedValsNumeric = answerState.textAnswers.formula_values
         if (!storedValsNumeric) {
           correct = false
           break
         }
+
         try {
           const values = JSON.parse(storedValsNumeric) as Record<string, number>
           const expected = evaluateFormula(entry.formula, values)
-          const userNum = parseFloat(userStr)
-          if (isNaN(userNum)) {
+          const userNum = Number.parseFloat(userStr)
+
+          if (Number.isNaN(userNum)) {
             correct = false
             break
           }
+
           const diff = Math.abs(userNum - expected)
           if (entry.toleranceType === "percentage") {
             const threshold = Math.abs(expected) * (entry.tolerance / 100)
@@ -291,29 +305,29 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
       }
 
       case QuizEntryType.Formula: {
-        const userStr = (answerState.textAnswers["main"] || "").trim()
+        const userStr = (answerState.textAnswers.main || "").trim()
         if (!userStr) {
           correct = false
           break
         }
-        const storedVals = answerState.textAnswers["formula_values"]
+
+        const storedVals = answerState.textAnswers.formula_values
         if (!storedVals) {
           correct = false
           break
         }
+
         try {
           const values = JSON.parse(storedVals) as Record<string, number>
-
-          // Formula mode: user submits a formula expression
-          // Run 5 unit tests with random variable values
           const varNames = entry.variables.map((v) => v.name).filter(Boolean)
           const validationError = validateFormula(userStr, varNames)
+
           if (validationError) {
             correct = false
             break
           }
 
-          const NUM_TESTS = 5
+          const numTests = 5
           const testResults: Array<{
             values: Record<string, number>
             userResult: number
@@ -321,13 +335,13 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
             passed: boolean
           }> = []
 
-          // First test uses the displayed values
           const userResult0 = evaluateFormula(userStr, values)
           const expected0 = evaluateFormula(entry.formula, values)
           const diff0 = Math.abs(userResult0 - expected0)
           const threshold0 = entry.toleranceType === "percentage"
             ? Math.abs(expected0) * (entry.tolerance / 100)
             : entry.tolerance
+
           testResults.push({
             values: { ...values },
             userResult: userResult0,
@@ -335,29 +349,29 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
             passed: diff0 <= threshold0,
           })
 
-          // Run 4 more tests with random values
-          for (let i = 1; i < NUM_TESTS; i++) {
+          for (let i = 1; i < numTests; i++) {
             const testVals: Record<string, number> = {}
-            for (const v of entry.variables) {
-              if (v.name) {
-                testVals[v.name] = generateVariableValue(v.min, v.max, v.decimals)
+            for (const variable of entry.variables) {
+              if (variable.name) {
+                testVals[variable.name] = generateVariableValue(variable.min, variable.max, variable.decimals)
               }
             }
-            const userRes = evaluateFormula(userStr, testVals)
-            const expectedRes = evaluateFormula(entry.formula, testVals)
-            const diff = Math.abs(userRes - expectedRes)
+
+            const userResult = evaluateFormula(userStr, testVals)
+            const expected = evaluateFormula(entry.formula, testVals)
+            const diff = Math.abs(userResult - expected)
             const threshold = entry.toleranceType === "percentage"
-              ? Math.abs(expectedRes) * (entry.tolerance / 100)
+              ? Math.abs(expected) * (entry.tolerance / 100)
               : entry.tolerance
+
             testResults.push({
               values: testVals,
-              userResult: userRes,
-              expected: expectedRes,
+              userResult,
+              expected,
               passed: diff <= threshold,
             })
           }
 
-          // Store test results for the renderer to display
           setAnswerState((prev) => ({
             ...prev,
             textAnswers: {
@@ -366,7 +380,7 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
             },
           }))
 
-          correct = testResults.every((t) => t.passed)
+          correct = testResults.every((result) => result.passed)
         } catch {
           correct = false
         }
@@ -374,43 +388,53 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
       }
 
       case QuizEntryType.Hotspot: {
-        const hx = parseFloat(answerState.textAnswers["hotspot_x"] || "")
-        const hy = parseFloat(answerState.textAnswers["hotspot_y"] || "")
-        if (isNaN(hx) || isNaN(hy)) {
+        const hx = Number.parseFloat(answerState.textAnswers.hotspot_x || "")
+        const hy = Number.parseFloat(answerState.textAnswers.hotspot_y || "")
+
+        if (Number.isNaN(hx) || Number.isNaN(hy)) {
           correct = false
           break
         }
+
         let withinAny = false
-        for (const hp of entry.hotspots) {
-          if (hp.zones.length === 0) continue
-          const outermostRadius = Math.max(...hp.zones.map(z => z.radius))
-          const dx = (hx - hp.x) / 100 * entry.imageWidth
-          const dy = (hy - hp.y) / 100 * entry.imageHeight
+        for (const hotspot of entry.hotspots) {
+          if (hotspot.zones.length === 0) continue
+
+          const outermostRadius = Math.max(...hotspot.zones.map((zone) => zone.radius))
+          const dx = (hx - hotspot.x) / 100 * entry.imageWidth
+          const dy = (hy - hotspot.y) / 100 * entry.imageHeight
           const distance = Math.sqrt(dx * dx + dy * dy)
           const threshold = outermostRadius / 100 * entry.imageWidth
+
           if (distance <= threshold) {
             withinAny = true
             break
           }
         }
+
         correct = withinAny
         break
       }
 
       case QuizEntryType.Highlight: {
         try {
-          const studentSpans = JSON.parse(answerState.textAnswers["highlight_spans"] || "[]") as { start: number; end: number }[]
+          const studentSpans = JSON.parse(answerState.textAnswers.highlight_spans || "[]") as Array<{
+            start: number
+            end: number
+          }>
+
           if (studentSpans.length === 0 && entry.highlights.length > 0) {
             correct = false
             break
           }
-          // Every correct span must be covered by at least one student span, and vice-versa
-          const allCorrectCovered = entry.highlights.every((h) =>
-            studentSpans.some((s) => s.start < h.end && s.end > h.start)
+
+          const allCorrectCovered = entry.highlights.every((highlight) =>
+            studentSpans.some((span) => span.start < highlight.end && span.end > highlight.start),
           )
-          const noFalsePositives = studentSpans.every((s) =>
-            entry.highlights.some((h) => s.start < h.end && s.end > h.start)
+          const noFalsePositives = studentSpans.every((span) =>
+            entry.highlights.some((highlight) => span.start < highlight.end && span.end > highlight.start),
           )
+
           correct = allCorrectCovered && noFalsePositives
         } catch {
           correct = false
@@ -421,12 +445,12 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
 
     setIsCorrect(correct)
     setShowFeedback(true)
-  }, [entry, answerState])
+  }, [answerState, entry, submissionMode])
 
   const resetQuiz = useCallback(() => {
     setAnswerState(createEmptyAnswerState())
     setShowFeedback(false)
-    setIsCorrect(false)
+    setIsCorrect(null)
   }, [])
 
   return {

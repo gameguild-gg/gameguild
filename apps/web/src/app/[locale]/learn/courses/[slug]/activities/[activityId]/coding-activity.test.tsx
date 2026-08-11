@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -34,7 +35,10 @@ vi.mock('next/navigation', () => ({
   notFound: () => {
     throw new Error('not-found');
   },
+}));
+vi.mock('@/i18n/navigation', () => ({
   useRouter: () => ({ push: mocks.useRouterPush }),
+  Link: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 
 vi.mock('@game-guild/emception-ui', () => ({
@@ -267,7 +271,7 @@ describe('coding activity page routing', () => {
     const payload = JSON.parse(formData.get('response') as string);
     expect(payload).toEqual({ 'main.cpp': 'int main(){}' });
     expect(mocks.useRouterPush).toHaveBeenCalledWith(
-      '/courses/test-course/activities',
+      '/learn/courses/test-course/activities',
     );
   });
 

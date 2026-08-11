@@ -426,8 +426,8 @@ export function AssessmentsList({
                       {item.title}
                     </span>
                     <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                      <span>{item.gradingConfig?.gradebook.maxScore ?? item.maxPoints ?? 0} pts</span>
-                      <span>{item.gradingConfig?.validationMode === 'protected' ? 'protected draft' : 'public practice'}</span>
+                      <span>{item.gradingConfig?.score.maxScore ?? item.maxPoints ?? 0} pts</span>
+                      <span>{item.gradingConfig?.outcome.uses.includes('gradebook') ? 'gradebook' : 'feedback'}</span>
                     </span>
                   </span>
                   <Badge variant="secondary" className="hidden shrink-0 sm:inline-flex">

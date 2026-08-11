@@ -194,6 +194,7 @@ public sealed class LearnerWorkspaceQueryTests
 
         result.Should().ContainSingle();
         result[0].CourseId.Should().Be(enrolled.Id);
+        result[0].Route.Should().Be("/learn/courses/game-ai");
         result.Should().NotContain(item => item.CourseId == privateCourse.Id);
     }
 

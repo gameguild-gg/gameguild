@@ -1,17 +1,36 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { createLearnerRoutes, getCentralSignInUrl } from './routes';
+vi.mock('@/i18n/navigation', () => ({
+  getPathname: ({ href, locale }: { href: string; locale: string }) =>
+    locale === 'en-US' ? href : `/${locale}${href}`,
+}));
+
+const { createLearnerRoutes, getCentralSignInUrl } = await import('./routes');
 
 describe('learner routes', () => {
-  it('keeps visible learner URLs free from the internal learn prefix', () => {
+  it('uses App Router paths and delegates locale prefixes to next-intl', () => {
     const routes = createLearnerRoutes();
 
-    expect(routes.home).toBe('/');
-    expect(routes.courses).toBe('/courses');
-    expect(routes.course('game-ai')).toBe('/courses/game-ai');
-    expect(routes.content('game-ai')).toBe('/courses/game-ai/content');
-    expect(routes.lesson('game-ai', 'intro')).toBe('/courses/game-ai/lessons/intro');
-    expect(routes.activity('game-ai', 'quiz-1')).toBe('/courses/game-ai/activities/quiz-1');
+    expect(routes.home).toBe('/learn');
+    expect(routes.courses).toBe('/learn/courses');
+    expect(routes.course('game-ai')).toBe('/learn/courses/game-ai');
+    expect(routes.content('game-ai')).toBe('/learn/courses/game-ai/content');
+    expect(routes.lesson('game-ai', 'intro')).toBe('/learn/courses/game-ai/lessons/intro');
+    expect(routes.activities('game-ai')).toBe('/learn/courses/game-ai/activities');
+    expect(routes.activity('game-ai', 'quiz-1')).toBe('/learn/courses/game-ai/activities/quiz-1');
+  });
+
+  it('delegates non-default locale prefixes to next-intl', () => {
+    const routes = createLearnerRoutes('pt-BR');
+
+    expect(routes.course('game-ai')).toBe('/pt-BR/learn/courses/game-ai');
+    expect(routes.activities('game-ai')).toBe('/pt-BR/learn/courses/game-ai/activities');
+  });
+
+  it('falls back to the default locale for an invalid route segment', () => {
+    const routes = createLearnerRoutes('invalid-locale');
+
+    expect(routes.course('game-ai')).toBe('/learn/courses/game-ai');
   });
 
   it('creates an allowlisted central sign-in return URL', () => {

@@ -307,16 +307,19 @@ describe("ContentItemEditor", () => {
     const jsonBody = vi.mocked(updateContent).mock.calls[0]![0].jsonBody as {
       grading?: {
         enabled?: boolean;
-        validationMode?: string;
-        gradebook?: { official?: boolean };
+        outcome?: { uses?: string[]; gradebook?: unknown };
+        score?: { maxScore?: number };
       };
     };
     expect(vi.mocked(updateContent).mock.calls[0]![0].body).toBeUndefined();
     expect(jsonBody.grading).toMatchObject({
       enabled: true,
-      validationMode: "public",
-      gradebook: {
-        official: false,
+      outcome: {
+        uses: ["feedback"],
+        gradebook: null,
+      },
+      score: {
+        maxScore: 1,
       },
     });
   });

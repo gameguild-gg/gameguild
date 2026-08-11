@@ -16,7 +16,7 @@ const copy = {
     notFoundTitle: 'Learning resource not found',
     notFoundDescription:
       'The course, lesson, or activity may have moved or is not available to your enrollment.',
-    returnHref: '/courses',
+    returnHref: '/learn/courses',
     returnLabel: 'Return to my courses',
   },
   course: {
@@ -26,7 +26,7 @@ const copy = {
     notFoundTitle: 'Course resource not found',
     notFoundDescription:
       'This course item may have moved, been removed, or is unavailable to your enrollment.',
-    returnHref: '/courses',
+    returnHref: '/learn/courses',
     returnLabel: 'Return to my courses',
   },
 } satisfies Record<

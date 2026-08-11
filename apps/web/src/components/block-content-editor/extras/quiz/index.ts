@@ -14,7 +14,7 @@ export { QuizTypeSelector } from "./quiz-type-selector"
 export { QuizSettingsDialog } from "./quiz-settings-dialog"
 
 // Hooks
-export { useQuizAnswers } from "./hooks/use-quiz-answers"
+export { useQuizAnswers, type QuizSubmissionMode } from "./hooks/use-quiz-answers"
 
 // Renderers
 export * from "./renderers"

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -10,8 +11,9 @@ vi.mock("@/lib/learner/activity-actions", () => ({
   createCourseDiscussionReply: mocks.createReply,
 }));
 
-vi.mock("next/navigation", () => ({
+vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ refresh: mocks.refresh }),
+  Link: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 
 import { CourseDiscussionThread } from "./course-discussion-thread";

@@ -73,11 +73,11 @@ describe("learner discussion reply action", () => {
     });
     expect(mocks.revalidatePath).toHaveBeenNthCalledWith(
       1,
-      "/courses/visual-storytelling-by-maya/community",
+      "/learn/courses/visual-storytelling-by-maya/community",
     );
     expect(mocks.revalidatePath).toHaveBeenNthCalledWith(
       2,
-      "/courses/visual-storytelling-by-maya/community/discussion-1",
+      "/learn/courses/visual-storytelling-by-maya/community/discussion-1",
     );
   });
 

@@ -119,15 +119,19 @@ const gradedQuizContent = {
   gradingConfig: {
     enabled: true,
     schemaVersion: 1,
-    validationMode: 'public',
-    gradebook: {
-      maxScore: 3,
-      official: false,
-      required: true,
+    outcome: {
+      uses: ['feedback'],
+      gradebook: null,
     },
-    policy: {
-      feedbackMode: 'immediate',
-      presentationMode: 'continuous',
+    score: {
+      maxScore: 3,
+    },
+    attempts: {},
+    feedback: {
+      mode: 'immediate',
+    },
+    presentation: {
+      mode: 'continuous',
     },
     items: {
       question_1: {
@@ -348,7 +352,7 @@ describe('AssessmentsList weighted groups', () => {
 
     expect(link).toHaveAttribute('href', '/dashboard/learning/courses/course-1/content/content-quiz-1');
     expect(within(contentSection).getByText('3 pts')).toBeInTheDocument();
-    expect(within(contentSection).getByText('public practice')).toBeInTheDocument();
+    expect(within(contentSection).getByText('feedback')).toBeInTheDocument();
     expect(within(contentSection).getByText('Quiz')).toBeInTheDocument();
     expect(screen.queryByText('No assessments yet')).not.toBeInTheDocument();
   });

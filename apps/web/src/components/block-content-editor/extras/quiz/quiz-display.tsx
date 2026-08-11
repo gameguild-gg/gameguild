@@ -7,14 +7,15 @@
 
 import { QuizFeedback } from "./quiz-feedback"
 import { QuizRenderer } from "./renderers/quiz-renderer"
-import { useQuizAnswers } from "./hooks/use-quiz-answers"
+import { type QuizSubmissionMode, useQuizAnswers } from "./hooks/use-quiz-answers"
 import { type QuizEntry, QuizEntryType } from "./types"
 
 interface QuizDisplayProps {
   entry: QuizEntry
+  submissionMode?: QuizSubmissionMode
 }
 
-export function QuizDisplay({ entry }: QuizDisplayProps) {
+export function QuizDisplay({ entry, submissionMode }: QuizDisplayProps) {
   const {
     answerState,
     updateAnswerState,
@@ -22,7 +23,8 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
     isCorrect,
     checkAnswers,
     resetQuiz,
-  } = useQuizAnswers({ entry })
+  } = useQuizAnswers({ entry, submissionMode })
+  const hasAnswerFeedback = showFeedback && isCorrect !== null
 
   return (
     <div className="space-y-4">
@@ -37,7 +39,7 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
         answerState={answerState}
         onAnswerChange={updateAnswerState}
         disabled={false}
-        showFeedback={showFeedback}
+        showFeedback={hasAnswerFeedback}
       />
 
       {/* Submit button - h-12 ensures Submit/Feedback/Submitted all share
@@ -52,9 +54,9 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
       )}
 
       {/* Feedback */}
-      {showFeedback && (entry.settings.showFeedback ?? true) && (
+      {hasAnswerFeedback && (entry.settings.showFeedback ?? true) && (
         <QuizFeedback
-          isCorrect={isCorrect}
+          isCorrect={isCorrect === true}
           correctFeedback={entry.feedback?.correct || ""}
           incorrectFeedback={entry.feedback?.incorrect || ""}
           allowRetry={entry.settings.allowRetry}
@@ -64,7 +66,21 @@ export function QuizDisplay({ entry }: QuizDisplayProps) {
       )}
 
       {/* Submitted without feedback - h-12 matches Submit button height */}
-      {showFeedback && !(entry.settings.showFeedback ?? true) && (
+      {showFeedback && !hasAnswerFeedback && (
+        <div className="flex items-center justify-between gap-3 rounded-lg px-4 h-12 py-0 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
+          <span className="font-medium">Answer submitted.</span>
+          {entry.settings.allowRetry && (
+            <button
+              onClick={resetQuiz}
+              className="shrink-0 flex items-center gap-1.5 text-xs font-medium border border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/30 py-1.5 px-3 rounded-md transition-colors"
+            >
+              Try Again
+            </button>
+          )}
+        </div>
+      )}
+
+      {hasAnswerFeedback && !(entry.settings.showFeedback ?? true) && (
         <div className="flex items-center justify-between gap-3 rounded-lg px-4 h-12 py-0 text-sm border-l-4 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-500">
           <span className="font-medium">Answer submitted.</span>
           {entry.settings.allowRetry && (
