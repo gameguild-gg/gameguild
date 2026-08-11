@@ -36,7 +36,7 @@ export default function GaragePage() {
       </Alert>
     );
 
-  const nodes: GarageNode[] = data ?? [];
+  const nodes: GarageNode[] = Array.isArray(data) ? data : [];
 
   return (
     <div className="space-y-6">

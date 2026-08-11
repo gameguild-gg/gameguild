@@ -59,8 +59,8 @@ export default function LonghornPage() {
       </Alert>
     );
 
-  const volumes: LonghornVolume[] = data?.volumes ?? [];
-  const nodes: LonghornNode[] = data?.nodes ?? [];
+  const volumes: LonghornVolume[] = Array.isArray(data?.volumes) ? data.volumes : [];
+  const nodes: LonghornNode[] = Array.isArray(data?.nodes) ? data.nodes : [];
 
   return (
     <div className="space-y-6">

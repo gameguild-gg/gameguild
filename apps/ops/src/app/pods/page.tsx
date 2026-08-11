@@ -64,7 +64,10 @@ export default function PodsPage() {
 
   // Flatten { [node]: PodRow[] } into one list tagged with the host node.
   const flattened = useMemo<Array<PodRow & { node: string }>>(() => {
-    const nodes = pods.data?.nodes as Record<string, PodRow[]> | undefined;
+    const nodes =
+      pods.data && typeof pods.data === "object" && pods.data.nodes && typeof pods.data.nodes === "object"
+        ? (pods.data.nodes as Record<string, PodRow[]>)
+        : undefined;
     if (!nodes) return [];
     return Object.entries(nodes).flatMap(([node, list]) =>
       (list ?? []).map((p) => ({ ...p, node })),
