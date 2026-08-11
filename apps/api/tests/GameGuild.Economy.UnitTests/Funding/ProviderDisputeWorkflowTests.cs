@@ -148,6 +148,93 @@ public sealed class ProviderDisputeWorkflowTests
     }
 
     [Fact]
+    public void OpenDispute_RejectsTerminalFundingAndAmountsBeyondTheConfirmedValue()
+    {
+        var terminalFixture = Setup(5);
+        terminalFixture.Store.Execute(transaction =>
+        {
+            var claim = transaction.CurrentFundingClaim(terminalFixture.SourceId);
+            transaction.UpdateFundingClaim(claim.Transition(
+                SourceConfirmationState.Reversed,
+                "provider-reversal",
+                Time.AddMinutes(2)));
+            return 0;
+        });
+
+        FluentActions.Invoking(() => terminalFixture.Disputes.Handle(Notification(
+                terminalFixture.SourceId, "evt-terminal-funding", 1, 1, ProviderDisputeStatus.Open)))
+            .Should().Throw<InvalidFundingStateTransitionException>();
+
+        var exceededFixture = Setup(5);
+        FluentActions.Invoking(() => exceededFixture.Disputes.Handle(Notification(
+                exceededFixture.SourceId, "evt-exceeds-confirmed", 1, 6, ProviderDisputeStatus.Open)))
+            .Should().Throw<ProviderMonetaryTotalExceededException>();
+    }
+
+    [Fact]
+    public void OpenDispute_SortsPersistedReversalHistoryBeforePlanningTheIncrement()
+    {
+        var fixture = Setup(10);
+        var first = new RootTraceRange(fixture.SourceId, 0, 1_000, 0);
+        var second = new RootTraceRange(fixture.SourceId, 1_000, 1_000, 0);
+        fixture.Store.Execute(transaction =>
+        {
+            transaction.SetProviderReversalState(new ProviderReversalState(
+                fixture.SourceId,
+                10,
+                2,
+                0,
+                0,
+                0,
+                0,
+                [second, first]));
+            return 0;
+        });
+
+        var opened = fixture.Disputes.Handle(Notification(
+            fixture.SourceId, "evt-history", 1, 3, ProviderDisputeStatus.Open));
+
+        opened.CumulativeDisputedHardUnits.Should().Be(3);
+        opened.BaselineReversedHardUnits.Should().Be(2);
+    }
+
+    [Fact]
+    public void WonDispute_RejectsAProviderReversalStateThatDisagreesWithItsBaseline()
+    {
+        var fixture = Setup(5);
+        fixture.Store.Execute(transaction =>
+        {
+            transaction.SetProviderDisputeCase(new ProviderDisputeCase(
+                "dp-primary",
+                fixture.SourceId,
+                fixture.WalletId,
+                ProviderDisputeStatus.Open,
+                1,
+                3,
+                0,
+                0,
+                [],
+                null,
+                Time));
+            transaction.SetProviderReversalState(new ProviderReversalState(
+                fixture.SourceId,
+                5,
+                1,
+                0,
+                0,
+                0,
+                0,
+                []));
+            return 0;
+        });
+
+        FluentActions.Invoking(() => fixture.Disputes.Handle(Notification(
+                fixture.SourceId, "evt-inconsistent-won", 2, 3, ProviderDisputeStatus.Won)))
+            .Should().Throw<InvalidOperationException>()
+            .WithMessage("*committed reversal value cannot be marked won*");
+    }
+
+    [Fact]
     public void OpenDispute_AfterMaturityStillFreezesExactSourceFragments()
     {
         var fixture = Setup(4);
