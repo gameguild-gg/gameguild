@@ -68,7 +68,7 @@ public sealed class HardToSoftConversionWorkflowTests
         await using var context = CreateContext();
         var accessor = new ActorContextAccessor();
         var enabled = new EnabledGate();
-        var workflow = new PostgreSqlHardToSoftConversionWorkflow(context, accessor, enabled);
+        var workflow = CreateWorkflow(context, accessor, enabled);
         var valid = Request();
 
         Func<Task> nullRequest = () => workflow.ConvertAsync(null!, CancellationToken.None);
@@ -91,13 +91,13 @@ public sealed class HardToSoftConversionWorkflowTests
         await using var context = CreateContext();
         var accessor = new ActorContextAccessor();
         var blocked = new EnabledGate(new EconomyValueMovementDisabledException("disabled"));
-        var workflow = new PostgreSqlHardToSoftConversionWorkflow(context, accessor, blocked);
+        var workflow = CreateWorkflow(context, accessor, blocked);
 
         Func<Task> disabled = () => workflow.ConvertAsync(Request(), CancellationToken.None);
         await disabled.Should().ThrowAsync<EconomyValueMovementDisabledException>();
 
         var enabled = new EnabledGate();
-        workflow = new PostgreSqlHardToSoftConversionWorkflow(context, accessor, enabled);
+        workflow = CreateWorkflow(context, accessor, enabled);
         try
         {
             Func<Task> anonymous = () => workflow.ConvertAsync(Request(), CancellationToken.None);
@@ -110,11 +110,33 @@ public sealed class HardToSoftConversionWorkflowTests
     }
 
     [Fact]
+    public async Task ConvertAsync_RequiresFreshExternalRiskEvidenceBeforeLookingUpWalletState()
+    {
+        await using var context = CreateContext();
+        var accessor = SetActorContext(out _, out _);
+        var verifier = new RejectingEvidenceVerifier();
+        var workflow = CreateWorkflow(context, accessor, new EnabledGate(), verifier);
+
+        try
+        {
+            var act = () => workflow.ConvertAsync(Request(), CancellationToken.None);
+
+            await act.Should().ThrowAsync<ExternalRiskEvidenceException>();
+            verifier.Calls.Should().Be(1);
+            context.Set<EconomyWalletRow>().Should().BeEmpty();
+        }
+        finally
+        {
+            accessor.ClearActorContext();
+        }
+    }
+
+    [Fact]
     public async Task ConvertAsync_RequiresAnActiveWalletAndARequestBoundRiskDecision()
     {
         await using var context = CreateContext();
         var accessor = SetActorContext(out var actorId, out var tenantId);
-        var workflow = new PostgreSqlHardToSoftConversionWorkflow(context, accessor, new EnabledGate());
+        var workflow = CreateWorkflow(context, accessor, new EnabledGate());
         var request = Request();
 
         try
@@ -219,7 +241,7 @@ public sealed class HardToSoftConversionWorkflowTests
         var accessor = SetActorContext(actorId, tenantId);
         try
         {
-            var workflow = new PostgreSqlHardToSoftConversionWorkflow(context, accessor, new EnabledGate());
+            var workflow = CreateWorkflow(context, accessor, new EnabledGate());
             return await workflow.ConvertAsync(
                 new SelfServiceHardToSoftConversionRequest(
                     principalHardCoinUnits,
@@ -244,6 +266,13 @@ public sealed class HardToSoftConversionWorkflowTests
         0,
         Guid.NewGuid(),
         $"conversion-{Guid.NewGuid():N}");
+
+    private static PostgreSqlHardToSoftConversionWorkflow CreateWorkflow(
+        ApplicationDbContext context,
+        ActorContextAccessor accessor,
+        IEconomyValueMovementDecisionGate gate,
+        IHardToSoftConversionRiskEvidenceVerifier? evidenceVerifier = null) =>
+        new(context, accessor, gate, evidenceVerifier ?? AllowingEvidenceVerifier.Instance);
 
     private static ActorContextAccessor SetActorContext(out Guid actorId, out Guid tenantId)
     {
@@ -294,6 +323,28 @@ public sealed class HardToSoftConversionWorkflowTests
         {
             EnsuredCapabilities.Add(capability);
             EnsureEnabled();
+        }
+    }
+
+    private sealed class AllowingEvidenceVerifier : IHardToSoftConversionRiskEvidenceVerifier
+    {
+        public static readonly AllowingEvidenceVerifier Instance = new();
+
+        public Task VerifyAsync(Guid actorId, Guid tenantId, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class RejectingEvidenceVerifier : IHardToSoftConversionRiskEvidenceVerifier
+    {
+        public int Calls { get; private set; }
+
+        public Task VerifyAsync(Guid actorId, Guid tenantId, CancellationToken cancellationToken)
+        {
+            Calls++;
+            throw new ExternalRiskEvidenceException("External fraud-control evidence did not allow conversion.");
         }
     }
 }
