@@ -13,6 +13,8 @@ public sealed class BountiesModule : ModuleBase
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
         services.TryAddScoped<IBountyEscrowStore, PostgreSqlBountyEscrowStore>();
+        services.TryAddScoped<IBountyPostableLotReader, PostgreSqlBountyPostableLotReader>();
+        services.TryAddScoped<IDurableBountyEscrowPostWorkflow, PostgreSqlDurableBountyEscrowPostWorkflow>();
         return services;
     }
 }

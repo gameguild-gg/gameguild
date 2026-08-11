@@ -7,7 +7,7 @@ namespace GameGuild.Economy.Bounties.UnitTests;
 public sealed class BountiesModuleTests
 {
     [Fact]
-    public void ModuleRemainsDisabledByDefaultAndRegistersOnlyThePersistentStore()
+    public void ModuleRemainsDisabledByDefaultAndRegistersOnlyPersistentBountyServices()
     {
         var module = new BountiesModule();
         var services = new ServiceCollection();
@@ -17,9 +17,18 @@ public sealed class BountiesModuleTests
         module.EnabledByDefault.Should().BeFalse();
         module.ConfigureServices(services, configuration).Should().BeSameAs(services);
         services.AddBountiesComposition(configuration).Should().BeSameAs(services);
-        services.Should().ContainSingle(descriptor =>
-            descriptor.ServiceType == typeof(IBountyEscrowStore) &&
-            descriptor.ImplementationType == typeof(PostgreSqlBountyEscrowStore) &&
-            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().SatisfyRespectively(
+            descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
+                item.ServiceType == typeof(IBountyEscrowStore) &&
+                item.ImplementationType == typeof(PostgreSqlBountyEscrowStore) &&
+                item.Lifetime == ServiceLifetime.Scoped),
+            descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
+                item.ServiceType == typeof(IBountyPostableLotReader) &&
+                item.ImplementationType == typeof(PostgreSqlBountyPostableLotReader) &&
+                item.Lifetime == ServiceLifetime.Scoped),
+            descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
+                item.ServiceType == typeof(IDurableBountyEscrowPostWorkflow) &&
+                item.ImplementationType == typeof(PostgreSqlDurableBountyEscrowPostWorkflow) &&
+                item.Lifetime == ServiceLifetime.Scoped));
     }
 }
