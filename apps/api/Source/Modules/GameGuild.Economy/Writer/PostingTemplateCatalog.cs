@@ -8,7 +8,12 @@ public sealed record PostingTemplateRegistration(
     PostingAuthority Authority,
     int LineCount,
     SourceConfirmationState? RequiredSourceState,
-    bool RequiresReserveAuthorization);
+    bool RequiresReserveAuthorization,
+    int? MaximumLineCount = null)
+{
+    public bool AllowsLineCount(int count) =>
+        count >= LineCount && (!MaximumLineCount.HasValue || count <= MaximumLineCount.Value);
+}
 
 public static class PostingTemplateCatalog
 {
@@ -27,6 +32,8 @@ public static class PostingTemplateCatalog
         Register(PostingTemplateKind.AdRewardIssuance, PostingAuthority.PlatformSystem, 2),
         Register(PostingTemplateKind.Burn, PostingAuthority.WalletOwner, 2),
         Register(PostingTemplateKind.Escrow, PostingAuthority.WalletOwner, 2),
+        RegisterVariable(PostingTemplateKind.BountyEscrow, PostingAuthority.WalletOwner, 2),
+        Register(PostingTemplateKind.BountyClaim, PostingAuthority.EscrowCoordinator, 2),
         Register(PostingTemplateKind.Reclaim, PostingAuthority.EscrowCoordinator, 2),
         Register(PostingTemplateKind.Refund, PostingAuthority.EscrowCoordinator, 2),
         Register(PostingTemplateKind.PayoutReservation, PostingAuthority.PayoutCoordinator, 2),
@@ -48,4 +55,11 @@ public static class PostingTemplateCatalog
         int lineCount,
         SourceConfirmationState? sourceState = null) =>
         new(kind, PostingTemplate.CurrentVersion, authority, lineCount, sourceState, true);
+
+    private static PostingTemplateRegistration RegisterVariable(
+        PostingTemplateKind kind,
+        PostingAuthority authority,
+        int minimumLineCount,
+        SourceConfirmationState? sourceState = null) =>
+        new(kind, PostingTemplate.CurrentVersion, authority, minimumLineCount, sourceState, true, null);
 }

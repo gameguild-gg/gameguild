@@ -120,12 +120,21 @@ public static class PostingMatrix
 
     private static void ValidateShape(PostingRequest request, ICollection<PostingValidationError> errors)
     {
+        var registeredTemplate = PostingTemplateCatalog.Find(
+            request.Template.Kind,
+            request.Template.Version);
         var expectedCount = request.Template.Kind is PostingTemplateKind.HardToSoftConversion or
             PostingTemplateKind.SystemBackedGrant or
             PostingTemplateKind.ProviderConvertedSoftReversal ? 4 : 2;
-        if (request.Lines.Count != expectedCount)
+        var hasValidLineCount = request.Template.Kind == PostingTemplateKind.BountyEscrow
+            ? registeredTemplate?.AllowsLineCount(request.Lines.Count) == true
+            : request.Lines.Count == expectedCount;
+        if (!hasValidLineCount)
         {
-            Add(errors, PostingErrorCode.InvalidLineCount, $"Template requires exactly {expectedCount} lines.");
+            var requirement = request.Template.Kind == PostingTemplateKind.BountyEscrow
+                ? "at least two lines"
+                : $"exactly {expectedCount} lines";
+            Add(errors, PostingErrorCode.InvalidLineCount, $"Template requires {requirement}.");
             return;
         }
 
@@ -187,6 +196,20 @@ public static class PostingMatrix
             case PostingTemplateKind.Escrow:
                 ValidateLiabilityAndSystemAccount(lines, EntrySide.Debit, EscrowFor(lines[0].Amount.Currency), errors);
                 break;
+            case PostingTemplateKind.BountyEscrow:
+                ValidateBountyEscrow(lines, errors);
+                break;
+            case PostingTemplateKind.BountyClaim:
+                var claimEscrowAccount = EscrowFor(lines[1].Amount.Currency);
+                if (claimEscrowAccount.HasValue)
+                    Match(lines[0], EntrySide.Debit, claimEscrowAccount.Value, lines[1].Amount.Currency, false, null, errors);
+                else
+                    Add(errors, PostingErrorCode.InvalidCurrency, "Bounty claim requires a supported coin currency.");
+                if (lines[1].Amount.Currency == CurrencyCode.HardCoin)
+                    ValidateLiability(lines[1], EntrySide.Credit, ProvenanceKind.EarnedHard, errors);
+                else
+                    ValidateLiability(lines[1], EntrySide.Credit, ProvenanceKind.EscrowReturn, errors);
+                break;
             case PostingTemplateKind.Reclaim:
                 var escrowAccount = EscrowFor(lines[1].Amount.Currency);
                 if (escrowAccount.HasValue)
@@ -233,6 +256,33 @@ public static class PostingMatrix
         ValidateLiability(lines[1], EntrySide.Credit, creditProvenance, errors);
         if (lines[0].Account != lines[1].Account || lines[0].Amount.Currency != lines[1].Amount.Currency)
             Add(errors, PostingErrorCode.InvalidAccountShape, "Transfer legs must use the same currency liability account.");
+    }
+
+    private static void ValidateBountyEscrow(PostingLine[] lines, ICollection<PostingValidationError> errors)
+    {
+        var escrow = lines[^1];
+        var currency = escrow.Amount.Currency;
+        var expectedEscrow = EscrowFor(currency);
+        if (!expectedEscrow.HasValue)
+        {
+            Add(errors, PostingErrorCode.InvalidCurrency, "Bounty escrow requires a supported coin currency.");
+            return;
+        }
+
+        Match(escrow, EntrySide.Credit, expectedEscrow.Value, currency, false, null, errors);
+        foreach (var line in lines[..^1])
+        {
+            ValidateLiability(line, EntrySide.Debit, line.Provenance, errors);
+            if (line.Amount.Currency != currency)
+                Add(errors, PostingErrorCode.InvalidCurrency, "Bounty escrow legs must use one currency.");
+            if (line.Provenance is null)
+                Add(errors, PostingErrorCode.InvalidProvenance, "Bounty escrow debit legs require their immutable provenance.");
+            else if (currency == CurrencyCode.HardCoin &&
+                     ((line.Provenance == ProvenanceKind.EarnedHard && line.Account != EconomyAccountCode.EarnedHardLiability) ||
+                      (line.Provenance != ProvenanceKind.EarnedHard && line.Account != EconomyAccountCode.PurchasedHardLiability)))
+                Add(errors, PostingErrorCode.InvalidAccountShape,
+                    "HardCoin bounty escrow legs must retain the liability account that matches their provenance.");
+        }
     }
 
     private static void ValidateLiabilityAndSystemAccount(PostingLine[] lines, EntrySide liabilitySide, EconomyAccountCode? systemAccount, ICollection<PostingValidationError> errors)
