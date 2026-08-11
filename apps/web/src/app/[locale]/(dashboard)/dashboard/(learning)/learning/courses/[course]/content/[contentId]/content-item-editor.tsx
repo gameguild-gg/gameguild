@@ -30,9 +30,12 @@ import { Switch } from "@game-guild/ui/components/switch";
 import { Separator } from "@game-guild/ui/components/separator";
 import { ArrowLeft, Clock, Eye, Loader2, Pencil, Save } from "lucide-react";
 import type { SerializedEditorState } from "lexical";
+import { ASSIGNMENT_SAMPLES } from "@game-guild/emception-ui";
 import type { LearningCoursesLessonContentFormat } from "@game-guild/client";
 import type { ContentItemDetail } from "@/lib/learning/types";
+import type { CodingDefinition } from "@/lib/learning/queries/assessments";
 import { updateContent } from "@/lib/learning/actions";
+import { putCodingDefinition } from "@/lib/emception/put-coding-definition";
 import { CONTENT_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
 import { getLessonFormatLabel } from "@/lib/learning/lesson-formats";
 import { LearnerLessonRenderer } from "@/components/learning/learner-lesson-renderer";
@@ -52,12 +55,16 @@ interface ContentItemEditorProps {
   courseId: string;
   item: ContentItemDetail;
   courseTitle: string;
+  linkedAssessmentId?: string;
+  initialCodingDefinition?: CodingDefinition | null;
 }
 
 export function ContentItemEditor({
   courseId,
   item,
   courseTitle,
+  linkedAssessmentId,
+  initialCodingDefinition,
 }: ContentItemEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -76,9 +83,12 @@ export function ContentItemEditor({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
+  const [codingBootstrapping, setCodingBootstrapping] = useState(false);
+  const [codingError, setCodingError] = useState<string | null>(null);
 
   const isLesson = item.type === "Lesson";
   const isQuiz = item.type === "Questionnaire";
+  const isAssignment = item.type === "Assignment" || item.type === "Project";
 
   // ── Lexical editor state (Lesson only) ──
   const initialLexicalState = useMemo(
@@ -187,6 +197,53 @@ export function ContentItemEditor({
         encodeURIComponent(courseId) +
         "/content",
     );
+  }
+
+  function codingDefinitionRoute(assessmentId: string) {
+    return (
+      "/dashboard/learning/courses/" +
+      encodeURIComponent(courseId) +
+      "/assessments/" +
+      assessmentId +
+      "/coding-definition"
+    );
+  }
+
+  async function handleConfigureCoding() {
+    setCodingError(null);
+    if (!linkedAssessmentId) {
+      setCodingError(
+        "No assessment is linked to this content item yet. Add an assessment in the Assessments tab first.",
+      );
+      return;
+    }
+    if (initialCodingDefinition) {
+      router.push(codingDefinitionRoute(linkedAssessmentId));
+      return;
+    }
+    setCodingBootstrapping(true);
+    const result = await putCodingDefinition(
+      linkedAssessmentId,
+      {
+        kind: "coding",
+        language: "cpp",
+        testPlan: { cases: [] },
+        maxScore: 100,
+        passingScore: 60,
+        workspaceConfig: ASSIGNMENT_SAMPLES.cpp.workspaceConfig as unknown as Record<
+          string,
+          unknown
+        >,
+        definitionSchemaVersion: 2,
+      },
+      courseId,
+    );
+    setCodingBootstrapping(false);
+    if (!result.success) {
+      setCodingError(result.error);
+      return;
+    }
+    router.push(codingDefinitionRoute(linkedAssessmentId));
   }
 
   // ponytail: IIFE mirrors handleLessonChangeFormat/handleSave body logic.
@@ -354,7 +411,82 @@ export function ContentItemEditor({
                 />
               )}
 
-              {!isLesson && !isQuiz && (
+              {isAssignment && (
+                <div className="space-y-3 rounded-md border p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium">Coding Assignment</p>
+                      <p className="text-muted-foreground text-sm">
+                        Configure test cases, starter files, and the run
+                        environment in the coding-definition editor.
+                      </p>
+                    </div>
+                    {initialCodingDefinition ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          linkedAssessmentId &&
+                          router.push(codingDefinitionRoute(linkedAssessmentId))
+                        }
+                        disabled={!linkedAssessmentId}
+                      >
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit Coding Tests
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleConfigureCoding}
+                        disabled={
+                          !linkedAssessmentId || codingBootstrapping
+                        }
+                      >
+                        {codingBootstrapping ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Pencil className="mr-2 h-4 w-4" />
+                        )}
+                        Configure Coding Assignment
+                      </Button>
+                    )}
+                  </div>
+                  {initialCodingDefinition ? (
+                    <div className="text-muted-foreground space-y-1 text-sm">
+                      <p>Language: {initialCodingDefinition.language}</p>
+                      <p>
+                        Test cases:{" "}
+                        {Array.isArray(
+                          (initialCodingDefinition.testPlan as {
+                            cases?: unknown[] } | null)?.cases,
+                        )
+                          ? (
+                              (initialCodingDefinition.testPlan as {
+                                cases?: unknown[] }).cases!
+                          ).length
+                          : 0}{" "}
+                        test cases
+                      </p>
+                      <p>
+                        Passing score: {initialCodingDefinition.passingScore}/
+                        {initialCodingDefinition.maxScore}
+                      </p>
+                    </div>
+                  ) : !linkedAssessmentId ? (
+                    <p className="text-muted-foreground text-sm">
+                      Link this content item to an assessment to enable coding
+                      tests.
+                    </p>
+                  ) : null}
+                  {codingError && (
+                    <p className="text-destructive text-sm">{codingError}</p>
+                  )}
+                </div>
+              )}
+
+              {!isLesson && !isQuiz && !isAssignment && (
                 <div className="space-y-2">
                   <Label>Body</Label>
                   <p className="text-muted-foreground text-sm py-8 text-center">

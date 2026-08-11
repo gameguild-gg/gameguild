@@ -33,6 +33,14 @@ vi.mock("@/lib/learning/actions", () => ({
   updateContent: vi.fn(),
 }));
 
+const putCodingDefinitionMock = vi.hoisted(() => ({
+  putCodingDefinition: vi.fn(),
+}));
+
+vi.mock("@/lib/emception/put-coding-definition", () => ({
+  putCodingDefinition: putCodingDefinitionMock.putCodingDefinition,
+}));
+
 vi.mock("@/components/block-content-editor/lexical-surface", () => ({
   LexicalSurface: ({ accessibleLabel }: { accessibleLabel?: string }) => (
     <textarea aria-label={accessibleLabel ?? "Body"} readOnly />
@@ -481,5 +489,131 @@ describe("ContentItemEditor", () => {
     expect(
       screen.queryByRole("button", { name: /preview/i }),
     ).not.toBeInTheDocument();
+  });
+
+  // ── Assignment / Project: coding-assignment bridge ──
+
+  const assignmentItem = {
+    id: "content-asn",
+    parentId: "module-1",
+    order: 5,
+    type: "Assignment",
+    title: "Hello world coding task",
+    description: "Echo stdin to stdout.",
+    status: "published",
+    duration: 60,
+    metadata: {},
+    gradingMethod: null,
+    maxPoints: null,
+    gradingConfig: null,
+    content: null,
+    jsonBody: null,
+    settings: { isRequired: true },
+    lessonFormat: null,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-02T00:00:00.000Z",
+  } satisfies ContentItemDetail;
+
+  it("renders the Coding Assignment panel for Assignment content (no linked assessment) and not the 'not yet available' fallback", () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={assignmentItem}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(
+      screen.queryByText(/not yet available/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /hello world coding task/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /configure coding assignment/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("enables Configure Coding Assignment and bridges to the editor route when a linked assessment exists", async () => {
+    const user = userEvent.setup();
+    putCodingDefinitionMock.putCodingDefinition.mockResolvedValue({
+      success: true,
+    });
+
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={assignmentItem}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentId="asmnt-1"
+      />,
+    );
+
+    const configure = screen.getByRole("button", {
+      name: /configure coding assignment/i,
+    });
+    expect(configure).not.toBeDisabled();
+
+    await user.click(configure);
+
+    await waitFor(() => {
+      expect(putCodingDefinitionMock.putCodingDefinition).toHaveBeenCalledWith(
+        "asmnt-1",
+        expect.objectContaining({
+          kind: "coding",
+          language: "cpp",
+          maxScore: 100,
+          passingScore: 60,
+        }),
+        "course-1",
+      );
+    });
+    expect(routerMocks.push).toHaveBeenCalledWith(
+      "/dashboard/learning/courses/course-1/assessments/asmnt-1/coding-definition",
+    );
+  });
+
+  it("shows Edit Coding Tests summary when an existing coding definition is provided", () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={assignmentItem}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentId="asmnt-1"
+        initialCodingDefinition={{
+          kind: "coding",
+          language: "cpp",
+          workspaceConfig: { id: "x" },
+          testPlan: { cases: [{ kind: "stdio" }, { kind: "stdio" }] },
+          maxScore: 100,
+          passingScore: 60,
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: /edit coding tests/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/cpp/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 test cases/i)).toBeInTheDocument();
+  });
+
+  it("still shows the 'not yet available' fallback for other unhandled types (Discussion)", () => {
+    const discussionItem = {
+      ...assignmentItem,
+      id: "content-disc",
+      type: "Discussion",
+      title: "Week 1 chat",
+    } satisfies ContentItemDetail;
+
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={discussionItem}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(screen.getByText(/not yet available/i)).toBeInTheDocument();
   });
 });
