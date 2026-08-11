@@ -21,6 +21,7 @@ vi.mock('@dnd-kit/core', () => ({
     if (onDragEnd) dndHarness.handlers.push(onDragEnd);
     return children;
   },
+  DragOverlay: ({ children }: { children: unknown }) => children ?? null,
   PointerSensor: vi.fn(),
   closestCorners: vi.fn(),
   useDroppable: ({ id }: { id: string }) => ({
