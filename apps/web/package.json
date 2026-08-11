@@ -122,9 +122,9 @@
     "react-hook-form": "^7.63.0",
     "react-markdown": "^10.1.0",
     "react-redux": "^9.2",
-    "react-resizable-panels": "^4.12.2",
+    "react-resizable-panels": "^3.0.6",
     "react-syntax-highlighter": "^15.6.1",
-    "recharts": "^3.10.1",
+    "recharts": "^2.15.4",
     "rehype-katex": "^7.0.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
@@ -161,7 +161,7 @@
     "playwright": "1.62.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vite": "^8.2.1",
+    "vite": "^6.4.3",
     "vitest": "^4.1.10"
   }
 }
