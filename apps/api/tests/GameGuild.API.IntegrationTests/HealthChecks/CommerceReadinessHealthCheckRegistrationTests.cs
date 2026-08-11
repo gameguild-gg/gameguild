@@ -28,5 +28,8 @@ public sealed class CommerceReadinessHealthCheckRegistrationTests
         registrations.Should().ContainSingle(registration =>
             registration.Name == "billing-inbox" &&
             registration.Tags.SetEquals(new[] { "ready", "dependency" }));
+        registrations.Should().ContainSingle(registration =>
+            registration.Name == "economy-capabilities" &&
+            registration.Tags.SetEquals(new[] { "dependency" }));
     }
 }
