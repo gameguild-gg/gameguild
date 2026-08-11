@@ -81,6 +81,7 @@
     <PackageVersion Include="Slugify.Core" Version="5.1.1" />
     <PackageVersion Include="SendGrid" Version="9.29.3" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.13.0" />
+    <PackageVersion Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
     <PackageVersion Include="Twilio" Version="7.6.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="9.0.3" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.4.0.108396" />
