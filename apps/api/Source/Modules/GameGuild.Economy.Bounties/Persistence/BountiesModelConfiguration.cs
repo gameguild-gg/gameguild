@@ -94,6 +94,7 @@ public sealed class BountiesModelConfiguration : IModelConfiguration
             builder.HasIndex(row => new { row.BountyId, row.ParentLotId }).IsUnique();
             builder.HasIndex(row => new { row.BountyId, row.EscrowLotId })
                 .IsUnique()
+                .HasDatabaseName("ux_economy_bounty_escrow_fragments_bounty_escrow_lot")
                 .HasFilter("\"EscrowLotId\" IS NOT NULL");
             builder.HasOne<BountyRow>().WithMany().HasForeignKey(row => row.BountyId).OnDelete(DeleteBehavior.Restrict);
         });
