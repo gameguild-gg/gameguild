@@ -25,8 +25,38 @@ public sealed class PostgreSqlRegisteredPostingGateway : IRegisteredPostingGatew
 
         try
         {
-            var result = _db.Set<RegisteredPostingReceiptRow>()
-                .FromSqlInterpolated($"""
+            FormattableString writer;
+            if (request.Posting.Template.Kind == Contracts.PostingTemplateKind.BountyEscrow)
+            {
+                writer = $"""
+                    SELECT *
+                    FROM economy_private.post_registered_posting_v2(
+                        {request.Authority.CapabilityId},
+                        {request.Authority.ActorId},
+                        {request.Authority.TenantId},
+                        {request.Posting.Id.Value},
+                        {request.Posting.IdempotencyKey.Value},
+                        {(int)request.Posting.Template.Kind},
+                        {request.Posting.Template.Version},
+                        {(int)request.Posting.Authority},
+                        {request.Posting.PolicyVersion.Value},
+                        {request.Posting.ReserveVersion.Value},
+                        {request.Authority.RiskDecisionId},
+                        {request.Authority.RiskOperationFingerprint},
+                        {request.Authority.ExpectedCounterVersion},
+                        {source?.Id.Value},
+                        {source?.EvidenceHash},
+                        {request.Posting.RequestedAt},
+                        CAST({payload.Lines} AS jsonb),
+                        CAST({payload.Allocations} AS jsonb),
+                        CAST({payload.RootRanges} AS jsonb),
+                        CAST({payload.ExpectedReversalEpochs} AS jsonb),
+                        {request.DispatchSnapshotHash})
+                    """;
+            }
+            else
+            {
+                writer = $"""
                     SELECT *
                     FROM economy_private.post_registered_posting_v1(
                         {request.Authority.CapabilityId},
@@ -50,7 +80,11 @@ public sealed class PostgreSqlRegisteredPostingGateway : IRegisteredPostingGatew
                         CAST({payload.RootRanges} AS jsonb),
                         CAST({payload.ExpectedReversalEpochs} AS jsonb),
                         {request.DispatchSnapshotHash})
-                    """)
+                    """;
+            }
+
+            var result = _db.Set<RegisteredPostingReceiptRow>()
+                .FromSqlInterpolated(writer)
                 .AsNoTracking()
                 .Single();
 
