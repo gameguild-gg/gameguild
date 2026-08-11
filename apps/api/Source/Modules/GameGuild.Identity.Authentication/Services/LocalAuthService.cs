@@ -376,46 +376,7 @@ public class LocalAuthService(
     {
         var memberships = await sender.Send(new global::GameGuild.Identity.Tenants.GetUserMembershipsQuery(userId), cancellationToken).ConfigureAwait(false);
 
-        if (memberships.TotalCount == 0)
-        {
-            return new TenantAccessContext(null, null, ["User"]);
-        }
-
-        var activeMemberships = memberships.Memberships
-            .Where(membership => membership.IsActive)
-            .ToList();
-
-        if (activeMemberships.Count == 0)
-        {
-            return new TenantAccessContext(null, null, ["User"]);
-        }
-
-        var availableTenants = activeMemberships
-            .GroupBy(membership => membership.TenantId)
-            .Select(group => group.First())
-            .Select(membership => new global::GameGuild.TenantInfo(
-                membership.TenantId,
-                membership.TenantName,
-                membership.TenantSlug,
-                membership.TenantIsActive))
-            .ToList();
-
-        var selectedTenantId = requestedTenantId.HasValue
-            ? availableTenants.FirstOrDefault(tenant => tenant.Id == requestedTenantId.Value && tenant.IsActive)?.Id
-            : null;
-
-        selectedTenantId ??= availableTenants.FirstOrDefault(tenant => tenant.IsActive)?.Id;
-        selectedTenantId ??= availableTenants[0].Id;
-
-        var roles = activeMemberships
-            .Where(membership => membership.TenantId == selectedTenantId)
-            .Select(membership => membership.Role)
-            .Where(role => !string.IsNullOrWhiteSpace(role))
-            .Append("User")
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        return new TenantAccessContext(selectedTenantId, availableTenants, roles);
+        return TenantAccessContextResolver.Resolve(memberships, requestedTenantId);
     }
 
     public async Task RevokeRefreshTokenAsync(string token, string ipAddress, CancellationToken cancellationToken = default)
@@ -433,9 +394,4 @@ public class LocalAuthService(
 
         await refreshTokenRepository.UpdateAsync(refreshToken).ConfigureAwait(false);
     }
-
-    private sealed record TenantAccessContext(
-        Guid? TenantId,
-        IReadOnlyList<global::GameGuild.TenantInfo>? AvailableTenants,
-        IReadOnlyList<string> Roles);
 }

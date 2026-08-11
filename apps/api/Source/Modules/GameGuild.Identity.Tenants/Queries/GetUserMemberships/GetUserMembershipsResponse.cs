@@ -48,6 +48,11 @@ public sealed record UserMembershipDto
     public bool TenantIsActive { get; init; }
 
     /// <summary>
+    ///     Whether this is the platform's mandatory default tenant.
+    /// </summary>
+    public bool TenantIsDefault { get; init; }
+
+    /// <summary>
     ///     Optional tenant description
     /// </summary>
     public string? TenantDescription { get; init; }

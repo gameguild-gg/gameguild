@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,7 @@ namespace GameGuild.Compliance.Audit;
 [Microsoft.AspNetCore.Http.Tags("compliance/audit")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/admin/audit-logs")]
-[Authorize(Roles = "Admin")] // Restrict to admin users only
+[Authorize(Policy = Policies.SystemAdmin)]
 public class AuditController(IAuditService auditService, IActorContextAccessor actorContextAccessor, ILogger<AuditController> _logger) : BaseApiController
 {
     /// <summary>

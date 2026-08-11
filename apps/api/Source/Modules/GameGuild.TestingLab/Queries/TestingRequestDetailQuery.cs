@@ -55,13 +55,8 @@ public sealed class TestingRequestDetailQueryHandler(
                 Error.Unauthorized("TestingLab.Unauthenticated", "An authenticated tenant actor is required."));
         }
 
-        var activeMembership = await context.Set<TenantMember>().AsNoTracking().AnyAsync(member =>
-            member.UserId == userId.Value &&
-            member.TenantId == actor.TenantId.Value &&
-            member.IsActive &&
-            member.DeletedAt == null,
-            cancellationToken).ConfigureAwait(false);
-        if (!activeMembership)
+        var hasAccess = await TestingLabActorAccess.IsActiveTenantActorAsync(context, actor, cancellationToken).ConfigureAwait(false);
+        if (!hasAccess)
         {
             return Result.Failure<TestingRequestDetailProjection>(
                 Error.Unauthorized("TestingLab.InactiveActor", "An active tenant membership is required."));

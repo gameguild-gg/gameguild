@@ -76,7 +76,9 @@ export interface MembershipInviteFields {
   inviteResendCount?: number | null;
 }
 
-export type MemberAccessMembership = IdentityTenantsUserMembership & MembershipInviteFields;
+export type MemberAccessMembership = IdentityTenantsUserMembership &
+  MembershipInviteFields &
+  { tenantIsDefault?: boolean | null };
 
 export interface SupportTicket {
   id: string;
@@ -309,13 +311,15 @@ function mapSummaryToMemberDetail(summary: MemberSummary): MemberDetail {
 }
 
 function isSuperAdminRole(role?: string | null) {
-  return role === 'SystemAdmin' || role === 'Admin';
+  return role === 'SystemAdmin';
 }
 
 function selectPrimaryMembership(memberships: MemberAccessMembership[]) {
   return (
+    memberships.find((membership) => membership.tenantIsDefault && membership.isActive) ??
+    memberships.find((membership) => membership.tenantIsDefault) ??
     memberships.find((membership) => membership.isActive && isSuperAdminRole(membership.role)) ??
-    memberships.find((membership) => membership.isActive && membership.role === 'TenantAdmin') ??
+    memberships.find((membership) => membership.isActive && ['TenantAdmin', 'Admin', 'Owner'].includes(membership.role ?? '')) ??
     memberships.find((membership) => membership.isActive) ??
     memberships[0] ??
     null

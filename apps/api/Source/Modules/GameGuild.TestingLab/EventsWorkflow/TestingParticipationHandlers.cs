@@ -651,18 +651,8 @@ public sealed class TestingParticipationHandlers(
             return new(Guid.Empty, Guid.Empty, Error.Unauthorized(
                 "TestingLab.Unauthenticated",
                 "An authenticated tenant actor is required."));
-        var activeUser = await context.Set<User>().AnyAsync(candidate =>
-            candidate.Id == userId.Value &&
-            candidate.IsActive &&
-            candidate.DeletedAt == null,
-            cancellationToken).ConfigureAwait(false);
-        var activeMembership = await context.Set<TenantMember>().AnyAsync(candidate =>
-            candidate.UserId == userId.Value &&
-            candidate.TenantId == actor.TenantId.Value &&
-            candidate.IsActive &&
-            candidate.DeletedAt == null,
-            cancellationToken).ConfigureAwait(false);
-        return activeUser && activeMembership
+        var hasAccess = await TestingLabActorAccess.IsActiveTenantActorAsync(context, actor, cancellationToken).ConfigureAwait(false);
+        return hasAccess
             ? new(userId.Value, actor.TenantId.Value, null)
             : new(Guid.Empty, Guid.Empty, Error.Unauthorized(
                 "TestingLab.InactiveActor",

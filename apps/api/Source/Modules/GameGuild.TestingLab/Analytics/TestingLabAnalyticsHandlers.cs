@@ -248,16 +248,8 @@ public sealed class TestingLabAnalyticsHandlers(
                 "TestingLab.Unauthenticated",
                 "An authenticated tenant actor is required."));
 
-        var activeUser = await context.Set<User>().AnyAsync(item =>
-            item.Id == userId.Value && item.IsActive && item.DeletedAt == null,
-            cancellationToken).ConfigureAwait(false);
-        var activeMembership = await context.Set<TenantMember>().AnyAsync(item =>
-            item.UserId == userId.Value &&
-            item.TenantId == actor.TenantId.Value &&
-            item.IsActive &&
-            item.DeletedAt == null,
-            cancellationToken).ConfigureAwait(false);
-        return activeUser && activeMembership
+        var hasAccess = await TestingLabActorAccess.IsActiveTenantActorAsync(context, actor, cancellationToken).ConfigureAwait(false);
+        return hasAccess
             ? new(actor.TenantId.Value, null)
             : new(Guid.Empty, Error.Unauthorized(
                 "TestingLab.InactiveActor",

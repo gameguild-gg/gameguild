@@ -10,7 +10,7 @@ public class GetUserMembershipsQueryHandlerTests
     public async Task Handle_Should_Map_Memberships_To_Dto()
     {
         var userId = Guid.NewGuid();
-        var tenant = new Tenant { Id = Guid.NewGuid(), Name = "Tenant", Slug = "tenant" };
+        var tenant = new Tenant { Id = Guid.NewGuid(), Name = "Tenant", Slug = "tenant", IsDefault = true };
         var members = new List<TenantMember>
         {
             new()
@@ -35,6 +35,7 @@ public class GetUserMembershipsQueryHandlerTests
         result.TotalCount.Should().Be(1);
         result.Memberships[0].TenantName.Should().Be("Tenant");
         result.Memberships[0].Role.Should().Be("Admin");
+        result.Memberships[0].TenantIsDefault.Should().BeTrue();
     }
 
     [Fact]

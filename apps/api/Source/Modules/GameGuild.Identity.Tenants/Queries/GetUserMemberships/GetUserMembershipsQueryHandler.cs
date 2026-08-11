@@ -31,6 +31,7 @@ public sealed class GetUserMembershipsQueryHandler : IQueryHandler<GetUserMember
                 TenantName = m.Tenant?.Name ?? string.Empty,
                 TenantSlug = m.Tenant?.Slug ?? string.Empty,
                 TenantIsActive = m.Tenant?.IsActive ?? false,
+                TenantIsDefault = m.Tenant?.IsDefault ?? false,
                 TenantDescription = m.Tenant?.Description,
                 Role = m.Role,
                 IsActive = m.IsActive,

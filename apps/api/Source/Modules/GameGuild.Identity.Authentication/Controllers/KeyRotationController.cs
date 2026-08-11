@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 [ApiVersion("1.0")]
 [Microsoft.AspNetCore.Http.Tags("auth/signing-keys")]
-[Authorize(Roles = "SystemAdministrator")]
+[Authorize(Policy = Policies.SystemAdmin)]
 public class KeyRotationController : BaseApiController
 {
     private readonly IKeyRotationService _keyRotationService;

@@ -105,6 +105,35 @@ public class UpdateTenantMemberInviteCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenCancellingDefaultTenantInvite_Should_RejectAndKeepMembershipActive()
+    {
+        var member = CreatePendingInvite();
+        member.Tenant = new Tenant
+        {
+            Id = member.TenantId,
+            Name = "GameGuild",
+            Slug = "gameguild",
+            IsDefault = true
+        };
+        member.Activate();
+
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+
+        var result = await _handler.Handle(
+            new UpdateTenantMemberInviteCommand(
+                member.TenantId,
+                member.UserId,
+                TenantMemberInviteAction.Cancel),
+            CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("default tenant");
+        member.IsActive.Should().BeTrue();
+        _memberRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Handle_WhenAcceptingPendingInvite_Should_Activate_Membership()
     {
         var member = CreatePendingInvite();

@@ -149,6 +149,10 @@ public sealed class DbAuthorizationPolicyProvider : IAuthorizationPolicyProvider
                 HasAdminRole(context.User) ||
                 HasPermission(context.User, requiredPermission));
         }
+        else if (string.Equals(policyName, Policies.SystemAdmin, StringComparison.Ordinal))
+        {
+            builder.RequireAssertion(context => HasRole(context.User, "SystemAdmin"));
+        }
         else if (string.Equals(policyName, Policies.Admin, StringComparison.Ordinal))
         {
             builder.RequireAssertion(context => HasAdminRole(context.User));
@@ -203,7 +207,8 @@ public sealed class DbAuthorizationPolicyProvider : IAuthorizationPolicyProvider
     private static bool HasAdminRole(ClaimsPrincipal user) =>
         HasRole(user, "Admin") ||
         HasRole(user, "SystemAdmin") ||
-        HasRole(user, "TenantAdmin");
+        HasRole(user, "TenantAdmin") ||
+        HasRole(user, "Owner");
 
     private static bool HasRole(ClaimsPrincipal user, string role) =>
         ClaimsExtractor.GetRoles(user).Contains(role);
