@@ -16,7 +16,8 @@ namespace GameGuild.API.Controllers;
 
 public sealed record EconomySelfServiceCapabilityDto(
     EconomyValueMovementCapability Capability,
-    EconomyCapabilityReadinessState State);
+    EconomyCapabilityReadinessState State,
+    IReadOnlyList<string> Diagnostics);
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/economy")]
@@ -83,9 +84,14 @@ public sealed class EconomyWalletController(
             EconomyValueMovementCapability.PayoutExecution
         ];
         var result = capabilities
-            .Select(capability => new EconomySelfServiceCapabilityDto(
-                capability,
-                capabilityReadiness.Assess(capability).State))
+            .Select(capability =>
+            {
+                var readiness = capabilityReadiness.Assess(capability);
+                return new EconomySelfServiceCapabilityDto(
+                    capability,
+                    readiness.State,
+                    [.. readiness.Diagnostics]);
+            })
             .ToArray();
         return Ok(result);
     }
