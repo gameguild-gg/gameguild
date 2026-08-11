@@ -34,5 +34,7 @@ public sealed class BountiesModuleTests
                 item.ServiceType == typeof(IDurableBountyEscrowPostWorkflow) &&
                 item.ImplementationType == typeof(PostgreSqlDurableBountyEscrowPostWorkflow) &&
                 item.Lifetime == ServiceLifetime.Scoped));
+        typeof(IBountyTerminalEventStore).GetMethod("Complete").Should().BeNull(
+            "a terminal state transition must be coupled to its immutable ledger posting");
     }
 }
