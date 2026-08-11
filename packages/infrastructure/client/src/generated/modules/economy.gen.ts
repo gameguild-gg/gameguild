@@ -78,6 +78,43 @@ export class EconomyModule {
 
     return result;
   }
+
+  /**
+   * List my payout operations
+   */
+  async getEconomyPayouts(query?: { take?: number }): Promise<Result<Array<Types.EconomyPayoutsQueriesEconomyPayoutOperation>, ApiError>> {
+    const url = '/api/v1/economy/payouts';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.EconomyPayoutsQueriesEconomyPayoutOperation>, ApiError>;
+  }
+
+  /**
+   * Get my payout operation
+   */
+  async getEconomyPayouts1(operationId: string): Promise<Result<Types.EconomyPayoutsQueriesEconomyPayoutOperation, ApiError>> {
+    const url = `/api/v1/economy/payouts/${operationId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyPayoutsQueriesEconomyPayoutOperationSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
 export function createEconomyModule(client: ApiClient): EconomyModule {

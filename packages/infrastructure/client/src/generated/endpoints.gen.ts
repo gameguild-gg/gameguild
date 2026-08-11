@@ -560,6 +560,30 @@ export const deleteAssessmentsInteractiveVideoCuesEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAssessmentsCodingDefinitionPublicInput {
+  id: string;
+}
+export type GetAssessmentsCodingDefinitionPublicOutput = Types.LearningAssessmentsCodingAssignmentDefinition;
+export const getAssessmentsCodingDefinitionPublicEndpoint = {
+  operationId: 'getAssessmentsCodingDefinitionPublic' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/{id}/coding-definition/public' as const,
+  tags: ['Learning/assessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssessmentsCodingDefinitionFullInput {
+  id: string;
+}
+export type GetAssessmentsCodingDefinitionFullOutput = Types.LearningAssessmentsCodingAssignmentDefinition;
+export const getAssessmentsCodingDefinitionFullEndpoint = {
+  operationId: 'getAssessmentsCodingDefinitionFull' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/{id}/coding-definition/full' as const,
+  tags: ['Learning/assessments'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAssessmentsInteractiveVideoCuesContentEnrollmentsInput {
   assessmentId: string;
   contentId: string;
@@ -4979,6 +5003,38 @@ export const postEconomyConversionsHardToSoftEndpoint = {
   operationId: 'postEconomyConversionsHardToSoft' as const,
   method: 'POST' as const,
   path: '/api/v1/economy/conversions/hard-to-soft' as const,
+  tags: ['Economy'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * List my payout operations
+ */
+export interface GetEconomyPayoutsInput {
+  query?: {
+    take?: number;
+  };
+}
+export type GetEconomyPayoutsOutput = Array<Types.EconomyPayoutsQueriesEconomyPayoutOperation>;
+export const getEconomyPayoutsEndpoint = {
+  operationId: 'getEconomyPayouts' as const,
+  method: 'GET' as const,
+  path: '/api/v1/economy/payouts' as const,
+  tags: ['Economy'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get my payout operation
+ */
+export interface GetEconomyPayouts1Input {
+  operationId: string;
+}
+export type GetEconomyPayouts1Output = Types.EconomyPayoutsQueriesEconomyPayoutOperation;
+export const getEconomyPayouts1Endpoint = {
+  operationId: 'getEconomyPayouts1' as const,
+  method: 'GET' as const,
+  path: '/api/v1/economy/payouts/{operationId}' as const,
   tags: ['Economy'] as const,
   requiresAuth: true,
 } as const;
@@ -14069,6 +14125,8 @@ export const endpoints = {
   getAssessmentsInteractiveVideoCues: getAssessmentsInteractiveVideoCuesEndpoint,
   postAssessmentsInteractiveVideoCues: postAssessmentsInteractiveVideoCuesEndpoint,
   deleteAssessmentsInteractiveVideoCues: deleteAssessmentsInteractiveVideoCuesEndpoint,
+  getAssessmentsCodingDefinitionPublic: getAssessmentsCodingDefinitionPublicEndpoint,
+  getAssessmentsCodingDefinitionFull: getAssessmentsCodingDefinitionFullEndpoint,
   getAssessmentsInteractiveVideoCuesContentEnrollments: getAssessmentsInteractiveVideoCuesContentEnrollmentsEndpoint,
   postAssessmentsSubmissionsStart: postAssessmentsSubmissionsStartEndpoint,
   postAssessmentsSubmissionsSubmit: postAssessmentsSubmissionsSubmitEndpoint,
@@ -14366,6 +14424,8 @@ export const endpoints = {
   getEconomyWallet: getEconomyWalletEndpoint,
   getEconomyWalletTransactions: getEconomyWalletTransactionsEndpoint,
   postEconomyConversionsHardToSoft: postEconomyConversionsHardToSoftEndpoint,
+  getEconomyPayouts: getEconomyPayoutsEndpoint,
+  getEconomyPayouts1: getEconomyPayouts1Endpoint,
   getApiLearningEnrollments: getApiLearningEnrollmentsEndpoint,
   getApiLearningEnrollmentsUsers: getApiLearningEnrollmentsUsersEndpoint,
   getApiLearningEnrollmentsCourses: getApiLearningEnrollmentsCoursesEndpoint,

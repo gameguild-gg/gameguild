@@ -9,6 +9,7 @@ using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Subscriptions;
 using GameGuild.Compliance.Audit;
 using GameGuild.Compliance.FERPA;
+using GameGuild.Economy.Payouts;
 using GameGuild.Features;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
@@ -225,6 +226,12 @@ public static class InfrastructureLayerExtensions
         stepStopwatch.Restart();
         services.AddEconomyCapabilityComposition(configuration);
         logger.LogInformation("Economy Risk/FinancialCrime/TrustSafety composition registered in {ElapsedMs}ms",
+            stepStopwatch.ElapsedMilliseconds);
+
+        // Read-only payout status is available with no provider or payout execution enabled.
+        stepStopwatch.Restart();
+        services.AddPayoutsComposition(configuration);
+        logger.LogInformation("Economy Payouts read composition registered in {ElapsedMs}ms",
             stepStopwatch.ElapsedMilliseconds);
 
         // 10a.4. Social Profiles Module (public profiles, skills, portfolio, privacy)

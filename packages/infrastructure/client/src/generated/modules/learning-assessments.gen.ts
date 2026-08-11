@@ -341,6 +341,46 @@ export class LearningAssessmentsModule {
 
   /**
    */
+  async getAssessmentsCodingDefinitionPublic(id: string): Promise<Result<Types.LearningAssessmentsCodingAssignmentDefinition, ApiError>> {
+    const url = `/v1/assessments/${id}/coding-definition/public`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsCodingAssignmentDefinitionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAssessmentsCodingDefinitionFull(id: string): Promise<Result<Types.LearningAssessmentsCodingAssignmentDefinition, ApiError>> {
+    const url = `/v1/assessments/${id}/coding-definition/full`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsCodingAssignmentDefinitionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getAssessmentsInteractiveVideoCuesContentEnrollments(
     assessmentId: string,
     contentId: string,
