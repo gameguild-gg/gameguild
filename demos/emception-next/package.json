@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/emception-demo-next",
-  "version": "2.55.0",
+  "version": "2.55.1",
   "private": true,
   "description": "Demo IDE for the emception browser C/C++ toolchain",
   "type": "module",
