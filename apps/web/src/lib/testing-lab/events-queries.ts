@@ -117,6 +117,23 @@ export async function getTestingEventsDirectory(
   };
 }
 
+export async function getArchivedTestingEventsDirectory(
+  options: Pick<TestingEventsDirectoryOptions, 'skip' | 'take'> = {},
+): Promise<TestingEventsDirectory> {
+  const result = await read(
+    createModules().events.getTestingEventsArchived({
+      skip: Math.max(0, options.skip ?? 0),
+      take: Math.min(100, Math.max(1, options.take ?? 50)),
+    }),
+    'Archived events',
+  );
+
+  return {
+    events: result.data ?? [],
+    accessIssues: result.issue ? [result.issue] : [],
+  };
+}
+
 export async function getTestingParticipantDirectory(
   options: TestingParticipantDirectoryOptions = {},
 ): Promise<TestingParticipantDirectoryData> {

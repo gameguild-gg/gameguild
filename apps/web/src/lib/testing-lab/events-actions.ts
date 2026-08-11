@@ -58,7 +58,8 @@ function optionalNumber(formData: FormData, key: string) {
 function isoDate(formData: FormData, key: string) {
   const raw = text(formData, key);
   if (!raw) return null;
-  const value = new Date(raw);
+  const wallClock = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(raw) ? `${raw}:00.000Z` : raw;
+  const value = new Date(wallClock);
   return Number.isNaN(value.valueOf()) ? null : value.toISOString();
 }
 
@@ -229,6 +230,18 @@ export async function deleteTestingEvent(formData: FormData): Promise<TestingEve
   const eventId = text(formData, 'eventId');
   if (!eventId) return { success: false, error: 'Event is required.' };
   return complete(createModules().events.deleteTestingEvents(eventId), 'Draft event deleted.', eventId);
+}
+
+export async function archiveTestingEvent(formData: FormData): Promise<TestingEventActionResult<boolean>> {
+  const eventId = text(formData, 'eventId');
+  if (!eventId) return { success: false, error: 'Event is required.' };
+  return complete(createModules().events.postTestingEventsArchive(eventId), 'Testing event archived.', eventId);
+}
+
+export async function restoreTestingEvent(formData: FormData): Promise<TestingEventActionResult<boolean>> {
+  const eventId = text(formData, 'eventId');
+  if (!eventId) return { success: false, error: 'Event is required.' };
+  return complete(createModules().events.postTestingEventsRestore(eventId), 'Testing event restored.', eventId);
 }
 
 type EventTransition =

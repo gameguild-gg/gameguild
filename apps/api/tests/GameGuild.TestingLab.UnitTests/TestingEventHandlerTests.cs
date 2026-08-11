@@ -409,6 +409,57 @@ public sealed class TestingEventHandlerTests : IDisposable
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Validation);
     }
+
+    [Fact]
+    public async Task ArchiveEvent_HidesCompletedEventFromActiveDirectoryAndListsItAsArchived()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        await _context.SaveChangesAsync();
+        var handler = CreateEventHandler();
+        await handler.Handle(new CloseTestingEventApplicationsCommand(testingEvent.Id), default);
+        await handler.Handle(new ScheduleTestingEventCommand(testingEvent.Id), default);
+        await handler.Handle(new ActivateTestingEventCommand(testingEvent.Id), default);
+        await handler.Handle(new CompleteTestingEventCommand(testingEvent.Id), default);
+
+        var archived = await handler.Handle(new ArchiveTestingEventCommand(testingEvent.Id), default);
+        var activeDirectory = await handler.Handle(new GetTestingEventsQuery(), default);
+        var archivedDirectory = await handler.Handle(new GetArchivedTestingEventsQuery(), default);
+
+        archived.IsSuccess.Should().BeTrue();
+        testingEvent.DeletedAt.Should().NotBeNull();
+        activeDirectory.Value.Should().BeEmpty();
+        archivedDirectory.Value.Should().ContainSingle().Which.Id.Should().Be(testingEvent.Id);
+    }
+
+    [Fact]
+    public async Task RestoreEvent_ReactivatesArchivedTerminalEvent()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        await _context.SaveChangesAsync();
+        var handler = CreateEventHandler();
+        await handler.Handle(new CancelTestingEventCommand(testingEvent.Id, "QA cleanup"), default);
+        await handler.Handle(new ArchiveTestingEventCommand(testingEvent.Id), default);
+
+        var restored = await handler.Handle(new RestoreTestingEventCommand(testingEvent.Id), default);
+        var activeDirectory = await handler.Handle(new GetTestingEventsQuery(), default);
+
+        restored.IsSuccess.Should().BeTrue();
+        testingEvent.DeletedAt.Should().BeNull();
+        activeDirectory.Value.Should().ContainSingle().Which.Id.Should().Be(testingEvent.Id);
+    }
+
+    [Fact]
+    public async Task ArchiveEvent_RejectsNonTerminalEvent()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateEventHandler().Handle(new ArchiveTestingEventCommand(testingEvent.Id), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Validation);
+        testingEvent.DeletedAt.Should().BeNull();
+    }
     [Fact]
     public async Task EventLifecycle_AdvancesThroughScheduledActiveAndCompleted()
     {
