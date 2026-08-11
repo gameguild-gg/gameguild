@@ -91,6 +91,47 @@ function datetimeLocal(value?: string | null) {
   return local.toISOString().slice(0, 16);
 }
 
+type TestingEventSchedule = {
+  applicationsOpenAt: string;
+  applicationsCloseAt: string;
+  startsAt: string;
+  endsAt: string;
+};
+
+const Hour = 60 * 60 * 1000;
+const Day = 24 * Hour;
+
+function createTestingEventSchedule(now = new Date()): TestingEventSchedule {
+  const applicationsOpenAt = new Date(now);
+  applicationsOpenAt.setMinutes(0, 0, 0);
+  applicationsOpenAt.setHours(applicationsOpenAt.getHours() + 1);
+
+  const applicationsCloseAt = new Date(applicationsOpenAt.valueOf() + Day);
+  const startsAt = new Date(applicationsCloseAt.valueOf() + Day);
+  const endsAt = new Date(startsAt.valueOf() + 2 * Hour);
+
+  return {
+    applicationsOpenAt: datetimeLocal(applicationsOpenAt.toISOString()),
+    applicationsCloseAt: datetimeLocal(applicationsCloseAt.toISOString()),
+    startsAt: datetimeLocal(startsAt.toISOString()),
+    endsAt: datetimeLocal(endsAt.toISOString()),
+  };
+}
+
+function scheduleInput(form: HTMLFormElement | null, name: keyof TestingEventSchedule) {
+  const input = form?.elements.namedItem(name);
+  return input instanceof HTMLInputElement ? input : null;
+}
+
+function inputDate(input: HTMLInputElement | null) {
+  if (!input?.value) return null;
+  const value = new Date(input.value);
+  return Number.isNaN(value.valueOf()) ? null : value;
+}
+
+function setInputDate(input: HTMLInputElement | null, value: Date) {
+  if (input) input.value = datetimeLocal(value.toISOString());
+}
 
 function ActionMessage({ result }: { result: TestingEventActionResult<unknown> | null }) {
   if (!result) return null;
@@ -170,7 +211,7 @@ function EventActionDialog({
   );
 }
 
-function EventFields({ event }: { event?: TestingLabTestingEventProjection }) {
+function EventFields({ event, schedule }: { event?: TestingLabTestingEventProjection; schedule?: TestingEventSchedule }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {event?.id ? <input type="hidden" name="eventId" value={event.id} /> : null}
@@ -215,7 +256,7 @@ function EventFields({ event }: { event?: TestingLabTestingEventProjection }) {
           name="applicationsOpenAt"
           type="datetime-local"
           required
-          defaultValue={datetimeLocal(event?.applicationsOpenAt)}
+          defaultValue={schedule?.applicationsOpenAt ?? datetimeLocal(event?.applicationsOpenAt)}
         />
       </div>
       <div className="space-y-2">
@@ -225,7 +266,7 @@ function EventFields({ event }: { event?: TestingLabTestingEventProjection }) {
           name="applicationsCloseAt"
           type="datetime-local"
           required
-          defaultValue={datetimeLocal(event?.applicationsCloseAt)}
+          defaultValue={schedule?.applicationsCloseAt ?? datetimeLocal(event?.applicationsCloseAt)}
         />
       </div>
       <div className="space-y-2">
@@ -235,7 +276,7 @@ function EventFields({ event }: { event?: TestingLabTestingEventProjection }) {
           name="startsAt"
           type="datetime-local"
           required
-          defaultValue={datetimeLocal(event?.startsAt)}
+          defaultValue={schedule?.startsAt ?? datetimeLocal(event?.startsAt)}
         />
       </div>
       <div className="space-y-2">
@@ -245,7 +286,7 @@ function EventFields({ event }: { event?: TestingLabTestingEventProjection }) {
           name="endsAt"
           type="datetime-local"
           required
-          defaultValue={datetimeLocal(event?.endsAt)}
+          defaultValue={schedule?.endsAt ?? datetimeLocal(event?.endsAt)}
         />
       </div>
       <label className="flex items-start gap-3 rounded-md border p-3 text-sm sm:col-span-2">
@@ -337,9 +378,13 @@ export function CreateTestingEventDialog() {
   const [discardOpen, setDiscardOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<TestingEventActionResult<unknown> | null>(null);
+  const [schedule, setSchedule] = useState<TestingEventSchedule>(() => createTestingEventSchedule());
+  const [scheduleVersion, setScheduleVersion] = useState(0);
 
   function resetDraft() {
     formRef.current?.reset();
+    setSchedule(createTestingEventSchedule());
+    setScheduleVersion((version) => version + 1);
     setDirty(false);
     setResult(null);
   }
@@ -359,10 +404,36 @@ export function CreateTestingEventDialog() {
   function trackChanges(event: FormEvent<HTMLFormElement>) {
     setDirty(true);
     const target = event.target;
-    if (!(target instanceof HTMLInputElement) || target.name !== 'startsAt') return;
-    const end = formRef.current?.elements.namedItem('endsAt');
-    if (!(end instanceof HTMLInputElement) || (end.value && new Date(end.value) >= new Date(target.value))) return;
-    end.value = target.value;
+    if (!(target instanceof HTMLInputElement)) return;
+
+    const form = formRef.current;
+    const applicationsOpenAt = scheduleInput(form, 'applicationsOpenAt');
+    const applicationsCloseAt = scheduleInput(form, 'applicationsCloseAt');
+    const startsAt = scheduleInput(form, 'startsAt');
+    const endsAt = scheduleInput(form, 'endsAt');
+    const openAt = inputDate(applicationsOpenAt);
+    let closeAt = inputDate(applicationsCloseAt);
+    let starts = inputDate(startsAt);
+
+    if (target.name === 'applicationsOpenAt' && openAt && (!closeAt || closeAt <= openAt)) {
+      closeAt = new Date(openAt.valueOf() + Day);
+      setInputDate(applicationsCloseAt, closeAt);
+    }
+
+    if (closeAt && (!starts || starts < closeAt)) {
+      starts = new Date(closeAt.valueOf() + Day);
+      setInputDate(startsAt, starts);
+    }
+
+    if (target.name === 'startsAt' && starts) {
+      setInputDate(endsAt, new Date(starts.valueOf() + 2 * Hour));
+      return;
+    }
+
+    const ends = inputDate(endsAt);
+    if (starts && (!ends || ends <= starts)) {
+      setInputDate(endsAt, new Date(starts.valueOf() + 2 * Hour));
+    }
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -391,8 +462,8 @@ export function CreateTestingEventDialog() {
             </SheetHeader>
             <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5">
               {result ? <ActionMessage result={result} /> : null}
-              <EventFields />
-              <p className="text-xs text-muted-foreground">Event end starts at the selected event start. Set a later end time before saving.</p>
+              <EventFields key={scheduleVersion} schedule={schedule} />
+              <p className="text-xs text-muted-foreground">Dates start in a valid order. Changing the event start updates its end time by two hours.</p>
               <EventRecurrenceFields onDirty={() => setDirty(true)} />
             </div>
             <SheetFooter className="border-t px-6 py-4 sm:flex-row sm:justify-end">
