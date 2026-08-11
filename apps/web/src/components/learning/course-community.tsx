@@ -1,5 +1,6 @@
 'use client';
 
+import { Link, useRouter } from '@/i18n/navigation';
 import { createCourseDiscussion } from '@/lib/learner/activity-actions';
 import type { LearningExperienceSocialServicesCourseDiscussion } from '@game-guild/client';
 import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
@@ -17,8 +18,6 @@ import {
 import { Input } from '@game-guild/ui/components/input';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { ArrowRight, CheckCircle2, MessageCircle, MessagesSquare, Plus } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 
 interface CourseCommunityProps {
@@ -160,7 +159,7 @@ export function CourseCommunity({
                   {discussion.replyCount ?? 0} replies
                 </p>
                 <Button asChild size="sm" variant="ghost">
-                  <Link href={`/courses/${courseSlug}/community/${discussion.id}`}>
+                  <Link href={`/learn/courses/${courseSlug}/community/${discussion.id}`}>
                     Open discussion
                     <ArrowRight className="size-4" />
                   </Link>

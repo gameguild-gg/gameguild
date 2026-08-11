@@ -1,19 +1,21 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 const signOut = vi.fn().mockResolvedValue(undefined);
 const navigation = vi.hoisted(() => ({
-  pathname: "/en-US/learn/courses/game-ai",
+  pathname: "/learn/courses/game-ai",
 }));
 
 vi.mock("@game-guild/client/react", () => ({
   useAuth: () => ({ isLoading: false, signOut }),
 }));
 
-vi.mock("next/navigation", () => ({
+vi.mock("@/i18n/navigation", () => ({
   usePathname: () => navigation.pathname,
   useRouter: () => ({ push: vi.fn() }),
+  Link: ({ children, href, ...props }: ComponentProps<"a"> & { href: string }) => <a href={href} {...props}>{children}</a>,
 }));
 
 vi.mock("@/components/ui/theme-toggle", () => ({
@@ -23,7 +25,7 @@ vi.mock("@/components/ui/theme-toggle", () => ({
 const { LearningShell } = await import("./learning-shell");
 
 describe("LearningShell", () => {
-  it("exposes the learner navigation with clean learning-host URLs", () => {
+  it("exposes the learner navigation with native App Router URLs", () => {
     render(
       <LearningShell
         user={{ id: "user-1", name: "Ada Learner", email: "ada@example.com" }}
@@ -34,11 +36,11 @@ describe("LearningShell", () => {
 
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute(
       "href",
-      "/",
+      "/learn",
     );
     expect(screen.getByRole("link", { name: "My courses" })).toHaveAttribute(
       "href",
-      "/courses",
+      "/learn/courses",
     );
     expect(screen.getByRole("link", { name: "My courses" })).toHaveAttribute(
       "aria-current",
@@ -46,15 +48,15 @@ describe("LearningShell", () => {
     );
     expect(screen.getByRole("link", { name: "Calendar" })).toHaveAttribute(
       "href",
-      "/calendar",
+      "/learn/calendar",
     );
     expect(screen.getByRole("link", { name: "Grades" })).toHaveAttribute(
       "href",
-      "/grades",
+      "/learn/grades",
     );
     expect(screen.getByRole("link", { name: "Certificates" })).toHaveAttribute(
       "href",
-      "/certificates",
+      "/learn/certificates",
     );
     expect(
       screen.getByRole("link", { name: "Browse courses" }),

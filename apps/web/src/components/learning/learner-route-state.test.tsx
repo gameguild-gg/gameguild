@@ -30,7 +30,7 @@ describe('learner route states', () => {
     expect(screen.getByRole('heading', { name: 'Course resource not found' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Return to my courses' })).toHaveAttribute(
       'href',
-      '/courses',
+      '/learn/courses',
     );
   });
 });

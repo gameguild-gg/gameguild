@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from '@/i18n/navigation';
 import { filesToCodePayload } from '@/lib/emception/code-payload';
 import { computeScore } from '@/lib/emception/scoring';
 import type { CodingDefinition } from '@/lib/learning/queries/assessments';
@@ -15,7 +16,6 @@ import type {
 } from '@game-guild/emception-ui';
 import type { TestPlan } from 'emception';
 import { Button } from '@game-guild/ui/components/button';
-import { useRouter } from 'next/navigation';
 import { lazy, Suspense, useRef, useState, type FormEvent } from 'react';
 
 const Ide = lazy(
@@ -87,7 +87,7 @@ export function CodingActivityClient({
       const outcome = await submitAssessment({ success: false }, fd);
       setResult(outcome);
       if (outcome.success) {
-        router.push(`/courses/${slug}/activities`);
+        router.push(`/learn/courses/${slug}/activities`);
       }
     } finally {
       setSubmitting(false);

@@ -1,8 +1,14 @@
 import { auth } from "@/auth";
 import { getMyLearningCourses } from "@/lib/learner/courses";
+import { createLearnerRoutes } from "@/lib/learner/routes";
 import { LearnerDashboard } from "@game-guild/courses/components/learner";
 
-export default async function LearnerHomePage() {
+export default async function LearnerHomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
   const session = await auth();
   const name =
     session?.user?.name?.trim() ||
@@ -13,6 +19,7 @@ export default async function LearnerHomePage() {
     <LearnerDashboard
       learnerName={name.split(" ")[0] || name}
       courses={await getMyLearningCourses()}
+      routes={createLearnerRoutes(locale)}
     />
   );
 }

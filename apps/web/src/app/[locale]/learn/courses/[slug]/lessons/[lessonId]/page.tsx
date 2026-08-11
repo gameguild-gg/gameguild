@@ -1,12 +1,11 @@
+import { Link } from '@/i18n/navigation';
 import { CourseAccessGate } from '@/components/learning/course-access-gate';
 import { LearnerLessonRenderer } from '@/components/learning/learner-lesson-renderer';
 import { LessonProgressControls } from '@/components/learning/lesson-progress-controls';
 import { getCourseAccessData } from '@/lib/learner/courses';
-import { createLearnerRoutes } from '@/lib/learner/routes';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { ArrowLeft, ArrowRight, Lock } from 'lucide-react';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 export default async function LessonPage({
@@ -25,7 +24,7 @@ export default async function LessonPage({
   const item = items[itemIndex];
   if (!item || item.type !== 'lesson') notFound();
 
-  const routes = createLearnerRoutes();
+  const courseHref = `/learn/courses/${slug}`;
   const previous = [...items.slice(0, itemIndex)].reverse().find((candidate) => candidate.type === 'lesson');
   const next = items.slice(itemIndex + 1).find((candidate) => candidate.type === 'lesson');
 
@@ -33,7 +32,7 @@ export default async function LessonPage({
     <article className="mx-auto max-w-4xl space-y-8">
       <header className="border-b pb-6">
         <Button asChild variant="ghost" className="-ml-3 mb-4">
-          <Link href={routes.content(slug)}>
+          <Link href={`${courseHref}/content`}>
             <ArrowLeft className="size-4" />
             Course content
           </Link>
@@ -78,7 +77,7 @@ export default async function LessonPage({
       <nav aria-label="Lesson navigation" className="flex justify-between gap-4 border-t pt-6">
         {previous ? (
           <Button asChild variant="outline">
-            <Link href={routes.lesson(slug, previous.id)}>
+            <Link href={`${courseHref}/lessons/${previous.id}`}>
               <ArrowLeft className="size-4" />
               Previous
             </Link>
@@ -88,7 +87,7 @@ export default async function LessonPage({
         )}
         {next ? (
           <Button asChild>
-            <Link href={routes.lesson(slug, next.id)}>
+            <Link href={`${courseHref}/lessons/${next.id}`}>
               Next
               <ArrowRight className="size-4" />
             </Link>
