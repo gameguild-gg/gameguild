@@ -343,6 +343,96 @@ public sealed class PostingMatrixTests
     }
 
     [Fact]
+    public void BountyTemplates_ReportUnsupportedCurrencyAndInvalidEscrowProvenance()
+    {
+        var wallet = WalletId.New();
+        var hardClaim = PostingFixture.Valid(PostingTemplateKind.BountyClaim);
+        var unsupportedClaim = hardClaim with
+        {
+            Lines =
+            [
+                hardClaim.Lines[0] with { Amount = default },
+                hardClaim.Lines[1] with { Amount = default }
+            ]
+        };
+        var softClaim = hardClaim with
+        {
+            Lines =
+            [
+                PostingFixture.Line(1, EntrySide.Debit, EconomyAccountCode.SoftCoinEscrow,
+                    CurrencyCode.SoftCoin, 10),
+                PostingFixture.Line(2, EntrySide.Credit, EconomyAccountCode.SoftCoinLiability,
+                    CurrencyCode.SoftCoin, 10, wallet, ProvenanceKind.EscrowReturn)
+            ]
+        };
+
+        var hardEscrow = PostingFixture.Valid(PostingTemplateKind.BountyEscrow);
+        var unsupportedEscrow = hardEscrow with
+        {
+            Lines =
+            [
+                hardEscrow.Lines[0] with { Amount = default },
+                hardEscrow.Lines[1] with { Amount = default }
+            ]
+        };
+        var undersizedEscrow = hardEscrow with { Lines = [hardEscrow.Lines[0]] };
+        var unsupportedVersionEscrow = hardEscrow with
+        {
+            Template = new PostingTemplate(
+                PostingTemplateKind.BountyEscrow, PostingTemplate.CurrentVersion + 1)
+        };
+        var mixedCurrencyEscrow = hardEscrow with
+        {
+            Lines =
+            [
+                hardEscrow.Lines[0] with
+                {
+                    Amount = new CoinAmount(CurrencyCode.SoftCoin, hardEscrow.Lines[0].Amount.Units)
+                },
+                hardEscrow.Lines[1]
+            ]
+        };
+        var missingProvenanceEscrow = hardEscrow with
+        {
+            Lines =
+            [
+                hardEscrow.Lines[0] with { Provenance = null },
+                hardEscrow.Lines[1]
+            ]
+        };
+
+        PostingRequest SoftEscrow(ProvenanceKind provenance) => hardEscrow with
+        {
+            Lines =
+            [
+                PostingFixture.Line(1, EntrySide.Debit, EconomyAccountCode.SoftCoinLiability,
+                    CurrencyCode.SoftCoin, 10, wallet, provenance),
+                PostingFixture.Line(2, EntrySide.Credit, EconomyAccountCode.SoftCoinEscrow,
+                    CurrencyCode.SoftCoin, 10)
+            ]
+        };
+
+        PostingMatrix.Validate(softClaim).IsValid.Should().BeTrue();
+        PostingMatrix.Validate(unsupportedClaim).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidCurrency);
+        PostingMatrix.Validate(unsupportedEscrow).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidCurrency);
+        PostingMatrix.Validate(undersizedEscrow).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidLineCount);
+        PostingMatrix.Validate(unsupportedVersionEscrow).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.UnsupportedTemplateVersion);
+        PostingMatrix.Validate(mixedCurrencyEscrow).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidCurrency);
+        PostingMatrix.Validate(missingProvenanceEscrow).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidProvenance);
+        PostingMatrix.Validate(SoftEscrow(ProvenanceKind.PurchasedHard)).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidProvenance);
+        PostingMatrix.Validate(SoftEscrow(ProvenanceKind.EarnedHard)).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidProvenance);
+        PostingMatrix.Validate(SoftEscrow(ProvenanceKind.AdRewardSoft)).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
     public void InvalidCurrencyFromDeserialization_IsReportedWithoutEscapingValidator()
     {
         var burn = PostingFixture.Valid(PostingTemplateKind.Burn);

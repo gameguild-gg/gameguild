@@ -264,6 +264,73 @@ public sealed class PostgreSqlGatewayValidationTests
             .WithMessage("*registered economy writer rejected the posting*");
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RegisteredBountyEscrowUsesV2WriterBeforeTranslatingRelationalFailures(bool includeSource)
+    {
+        using var context = CreateContext();
+        var wallet = WalletId.New();
+        PostingLine[] lines =
+        [
+            new PostingLine(
+                1,
+                EntrySide.Debit,
+                EconomyAccountCode.PurchasedHardLiability,
+                new CoinAmount(CurrencyCode.HardCoin, 10),
+                wallet,
+                null,
+                ProvenanceKind.PurchasedHard),
+            new PostingLine(
+                2,
+                EntrySide.Credit,
+                EconomyAccountCode.HardCoinEscrow,
+                new CoinAmount(CurrencyCode.HardCoin, 10),
+                null,
+                null,
+                null)
+        ];
+        foreach (var line in lines)
+        {
+            context.Set<EconomyAccountRow>().Add(new EconomyAccountRow
+            {
+                Id = Guid.NewGuid(),
+                WalletId = line.WalletId?.Value,
+                Code = line.Account,
+                Currency = line.Amount.Currency,
+                Provenance = line.Provenance,
+                CreatedAt = Now
+            });
+        }
+        context.SaveChanges();
+
+        var source = includeSource
+            ? new SourceStampContract(
+                SourceStampId.New(),
+                "bounty-escrow-source",
+                SourceConfirmationState.Confirmed,
+                Now.AddMinutes(-1),
+                Now,
+                "bounty-escrow")
+            : null;
+        var posting = new PostingRequest(
+            PostingId.New(),
+            new PostingTemplate(PostingTemplateKind.BountyEscrow, PostingTemplate.CurrentVersion),
+            new IdempotencyKey($"bounty-escrow-{includeSource}"),
+            PostingAuthority.WalletOwner,
+            new ReserveVersion(1),
+            new PolicyVersion(1),
+            source,
+            Now,
+            lines);
+
+        Action act = () => new PostgreSqlRegisteredPostingGateway(context)
+            .Post(new RegisteredPostingRequest(Authority(), posting));
+
+        act.Should().Throw<RegisteredPostingRejectedException>()
+            .WithMessage("*registered economy writer rejected the posting*");
+    }
+
     [Fact]
     public void RegisteredPostingClassifiesEveryDatabaseFailureShape()
     {
