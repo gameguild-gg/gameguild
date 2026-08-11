@@ -1,4 +1,5 @@
 import { auth } from '@/auth';
+import { Link } from '@/i18n/navigation';
 import { CourseAccessGate } from '@/components/learning/course-access-gate';
 import {
   LearnerActivityForm,
@@ -6,7 +7,6 @@ import {
 } from '@/components/learning/learner-activity-form';
 import { getCourseAccessData } from '@/lib/learner/courses';
 import { getCourseLearnerContext, getMyProjects } from '@/lib/learner/records';
-import { createLearnerRoutes } from '@/lib/learner/routes';
 import {
   getCodingDefinitionPublic,
   type CodingDefinition,
@@ -16,7 +16,6 @@ import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { ArrowLeft, CalendarClock, ClipboardCheck } from 'lucide-react';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CodingActivityClient } from './coding-activity-client';
 
@@ -108,12 +107,11 @@ export default async function LearnerActivityPage({
   const type = activity.kind === 'assessment'
     ? activity.assessment.type
     : activity.contentType;
-  const routes = createLearnerRoutes();
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <Button asChild variant="ghost" className="-ml-3">
-        <Link href={routes.activities(slug)}>
+        <Link href={`/learn/courses/${slug}/activities`}>
           <ArrowLeft className="size-4" />
           All activities
         </Link>

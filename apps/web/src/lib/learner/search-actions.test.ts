@@ -37,7 +37,7 @@ describe('searchLearnerWorkspace', () => {
           kind: 'Course',
           title: 'Game AI',
           description: 'Advanced agents',
-          route: '/courses/game-ai',
+          route: '/learn/courses/game-ai',
         },
         {
           id: 'unsafe',
@@ -57,7 +57,7 @@ describe('searchLearnerWorkspace', () => {
           kind: 'Course',
           title: 'Game AI',
           description: 'Advanced agents',
-          route: '/courses/game-ai',
+          route: '/learn/courses/game-ai',
         },
       ],
     });

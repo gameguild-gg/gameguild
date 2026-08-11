@@ -80,7 +80,7 @@ public sealed class SearchLearnerWorkspaceQueryHandler(IApplicationDbContext con
                 "Course",
                 course.Title,
                 course.Description ?? string.Empty,
-                $"/courses/{course.Slug ?? course.Id.ToString()}"))
+                $"/learn/courses/{course.Slug ?? course.Id.ToString()}"))
             .Concat(content
                 .Where(item => courseLookup.ContainsKey(item.ProgramId))
                 .Select(item =>
@@ -95,8 +95,8 @@ public sealed class SearchLearnerWorkspaceQueryHandler(IApplicationDbContext con
                         item.Title,
                         item.Description ?? string.Empty,
                         item.Type == ProgramContentType.Lesson
-                            ? $"/courses/{slug}/lessons/{item.Id}"
-                            : $"/courses/{slug}/content");
+                            ? $"/learn/courses/{slug}/lessons/{item.Id}"
+                            : $"/learn/courses/{slug}/content");
                 }))
             .Take(take)
             .ToArray();

@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  createLearnerRoutes,
-  normalizeLearnerPathname,
-} from "@/lib/learner/routes";
+import { Link, usePathname } from "@/i18n/navigation";
 import {
   BookOpen,
   ChartNoAxesColumn,
@@ -11,41 +8,33 @@ import {
   LayoutDashboard,
   MessagesSquare,
 } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
-export function CourseLearnerNav({
-  initialPathname,
-  slug,
-}: {
-  initialPathname?: string;
-  slug: string;
-}) {
-  const routes = createLearnerRoutes();
-  const clientPathname = normalizeLearnerPathname(usePathname());
-  const [pathname, setPathname] = useState(() =>
-    normalizeLearnerPathname(initialPathname ?? routes.course(slug)),
-  );
-
-  useEffect(() => {
-    setPathname(clientPathname);
-  }, [clientPathname]);
+export function CourseLearnerNav({ slug }: { slug: string }) {
+  const pathname = usePathname();
+  const courseHref = `/learn/courses/${slug}`;
   const items = [
     {
-      href: routes.course(slug),
+      href: courseHref,
       label: "Overview",
       icon: LayoutDashboard,
       exact: true,
     },
-    { href: routes.content(slug), label: "Content", icon: BookOpen },
-    { href: routes.activities(slug), label: "Activities", icon: ClipboardList },
+    { href: `${courseHref}/content`, label: "Content", icon: BookOpen },
     {
-      href: `${routes.course(slug)}/grades`,
+      href: `${courseHref}/activities`,
+      label: "Activities",
+      icon: ClipboardList,
+    },
+    {
+      href: `${courseHref}/grades`,
       label: "Grades",
       icon: ChartNoAxesColumn,
     },
-    { href: routes.community(slug), label: "Community", icon: MessagesSquare },
+    {
+      href: `${courseHref}/community`,
+      label: "Community",
+      icon: MessagesSquare,
+    },
   ];
 
   return (

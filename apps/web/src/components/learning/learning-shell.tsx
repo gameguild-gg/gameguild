@@ -1,15 +1,13 @@
 "use client";
 
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   searchLearnerWorkspace,
   type LearnerSearchItem,
 } from "@/lib/learner/search-actions";
 import type { DashboardNotificationSummary } from "@/lib/dashboard-notifications";
-import {
-  createLearnerRoutes,
-  normalizeLearnerPathname,
-} from "@/lib/learner/routes";
+import { normalizeLearnerPathname } from "@/lib/learner/routes";
 import { useAuth } from "@game-guild/client/react";
 import {
   Avatar,
@@ -52,8 +50,6 @@ import {
   Menu,
   Search,
 } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 
 export interface LearningShellUser {
@@ -70,13 +66,12 @@ interface LearningShellProps {
   webOrigin?: string;
 }
 
-const routes = createLearnerRoutes();
 const navigation = [
-  { href: routes.home, label: "Home", icon: Home },
-  { href: routes.courses, label: "My courses", icon: Library },
-  { href: routes.calendar, label: "Calendar", icon: CalendarDays },
-  { href: routes.grades, label: "Grades", icon: BookOpen },
-  { href: routes.certificates, label: "Certificates", icon: Award },
+  { href: "/learn", label: "Home", icon: Home },
+  { href: "/learn/courses", label: "My courses", icon: Library },
+  { href: "/learn/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/learn/grades", label: "Grades", icon: BookOpen },
+  { href: "/learn/certificates", label: "Certificates", icon: Award },
 ];
 
 function initials(name: string): string {

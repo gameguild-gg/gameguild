@@ -1,8 +1,16 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import type { ReactNode } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { CourseAttendanceData } from '@/lib/learner/courses';
-import { CourseContentOutline } from './course-content-outline';
+
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ children, href, ...props }: { children: ReactNode; href: string }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}));
+
+const { CourseContentOutline } = await import('./course-content-outline');
 
 const course: CourseAttendanceData = {
   id: 'course-1',
@@ -53,16 +61,16 @@ const course: CourseAttendanceData = {
 };
 
 describe('CourseContentOutline', () => {
-  it('routes lessons and activities to stable learner URLs', () => {
+  it('uses native App Router paths for lessons and activities', () => {
     render(<CourseContentOutline course={course} />);
 
     expect(screen.getByRole('link', { name: /Introduction/ })).toHaveAttribute(
       'href',
-      '/courses/game-ai/lessons/lesson-1',
+      '/learn/courses/game-ai/lessons/lesson-1',
     );
     expect(screen.getByRole('link', { name: /Discuss game loops/ })).toHaveAttribute(
       'href',
-      '/courses/game-ai/activities/content-discussion-1',
+      '/learn/courses/game-ai/activities/content-discussion-1',
     );
   });
 

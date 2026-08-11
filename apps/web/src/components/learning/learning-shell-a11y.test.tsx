@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -11,9 +12,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@game-guild/client/react", () => ({
   useAuth: () => ({ isLoading: false, signOut: mocks.signOut }),
 }));
-vi.mock("next/navigation", () => ({
-  usePathname: () => "/courses/game-ai",
+vi.mock("@/i18n/navigation", () => ({
+  usePathname: () => "/learn/courses/game-ai",
   useRouter: () => ({ push: mocks.push }),
+  Link: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 vi.mock("@/components/ui/theme-toggle", () => ({
   ThemeToggle: () => <button type="button">Theme</button>,
@@ -95,7 +97,7 @@ describe("LearningShell accessibility and search", () => {
           kind: "Lesson",
           title: "Navigation meshes",
           description: "Build a walkable graph",
-          route: "/courses/game-ai/lessons/lesson-1",
+          route: "/learn/courses/game-ai/lessons/lesson-1",
         },
       ],
     });
@@ -121,7 +123,7 @@ describe("LearningShell accessibility and search", () => {
     );
     await user.click(await screen.findByText("Navigation meshes"));
     expect(mocks.push).toHaveBeenCalledWith(
-      "/courses/game-ai/lessons/lesson-1",
+      "/learn/courses/game-ai/lessons/lesson-1",
     );
   });
 });

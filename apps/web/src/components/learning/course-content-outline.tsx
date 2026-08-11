@@ -1,8 +1,7 @@
+import { Link } from '@/i18n/navigation';
 import type { CourseAttendanceData } from '@/lib/learner/courses';
-import { createLearnerRoutes } from '@/lib/learner/routes';
 import { Badge } from '@game-guild/ui/components/badge';
 import { CheckCircle2, ChevronRight, Circle, Clock3, Lock } from 'lucide-react';
-import Link from 'next/link';
 
 function statusIcon(status: string) {
   if (status === 'completed') return <CheckCircle2 className="size-4 text-emerald-500" />;
@@ -12,7 +11,7 @@ function statusIcon(status: string) {
 }
 
 export function CourseContentOutline({ course }: { course: CourseAttendanceData }) {
-  const routes = createLearnerRoutes();
+  const courseHref = `/learn/courses/${course.slug}`;
 
   return (
     <div className="space-y-8">
@@ -45,10 +44,10 @@ export function CourseContentOutline({ course }: { course: CourseAttendanceData 
                 const isActivity = item.type !== 'lesson';
                 const isParticipatory = ['Discussion', 'Reflection', 'Survey'].includes(item.contentType || '');
                 const href = !isActivity
-                  ? routes.lesson(course.slug, item.id)
+                  ? `${courseHref}/lessons/${item.id}`
                   : isParticipatory
-                    ? routes.activity(course.slug, `content-${item.id}`)
-                    : routes.activities(course.slug);
+                    ? `${courseHref}/activities/content-${item.id}`
+                    : `${courseHref}/activities`;
                 const locked = item.status === 'locked';
 
                 if (locked) {
