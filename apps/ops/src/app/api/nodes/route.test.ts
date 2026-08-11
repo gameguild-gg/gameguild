@@ -24,9 +24,9 @@ function promOk(result: unknown) {
   mocks.fetch.mockResolvedValueOnce({ status: "success", data: { resultType: "vector", result } });
 }
 
-function flannelResult(nodeNames: string[]) {
-  return nodeNames.map((node) => ({
-    metric: { node, device: "flannel.1" },
+function flannelResult(instances: string[]) {
+  return instances.map((instance) => ({
+    metric: { instance, device: "flannel.1" },
     value: [Date.now() / 1000, "1"],
   }));
 }
