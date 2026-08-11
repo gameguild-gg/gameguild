@@ -15,11 +15,12 @@ public sealed class HardToSoftConversionRiskEvidenceVerifierTests
         var trustSafety = new TrustSafetySource(AllowTrustSafety(observed));
         var verifier = new HardToSoftConversionRiskEvidenceVerifier(financialCrime, trustSafety);
 
-        await verifier.VerifyAsync(actorId, tenantId, CancellationToken.None);
+        var evidence = await verifier.VerifyAsync(actorId, tenantId, CancellationToken.None);
 
         financialCrime.SubjectReferences.Should().ContainSingle();
         trustSafety.SubjectReferences.Should().Equal(financialCrime.SubjectReferences);
         financialCrime.SubjectReferences[0].Should().HaveLength(64).And.NotContain(actorId.ToString("N"));
+        evidence.Should().HaveCount(2).And.OnlyContain(item => item.Outcome == ExternalRiskOutcome.Allow);
     }
 
     [Theory]

@@ -20,6 +20,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         ConfigureReserves(modelBuilder);
         ConfigureRisk(modelBuilder);
         ConfigureRegisteredPostingReceipt(modelBuilder);
+        ConfigureHardToSoftConversionRiskDecisionReceipt(modelBuilder);
         ConfigureFifoFragmentReservationReceipt(modelBuilder);
         ConfigureProviderReversalReceipt(modelBuilder);
     }
@@ -979,6 +980,17 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.Property(row => row.JournalSequence).HasColumnName("journal_sequence");
             builder.Property(row => row.JournalHash).HasColumnName("journal_hash");
             builder.Property(row => row.Duplicate).HasColumnName("duplicate");
+        });
+    }
+
+    private static void ConfigureHardToSoftConversionRiskDecisionReceipt(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<HardToSoftConversionRiskDecisionReceiptRow>(builder =>
+        {
+            builder.HasNoKey();
+            builder.ToView(null);
+            builder.Property(row => row.RiskDecisionId).HasColumnName("risk_decision_id");
+            builder.Property(row => row.SourceRoots).HasColumnName("source_roots");
         });
     }
 

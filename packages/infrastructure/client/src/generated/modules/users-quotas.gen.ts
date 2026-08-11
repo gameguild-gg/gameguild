@@ -94,37 +94,6 @@ export class UsersQuotasModule {
   }
 
   /**
-   * Check if a usage amount would exceed quota
-   *
-   * Validates whether a proposed usage amount would exceed the configured quota limits without recording any usage.
-   */
-  async postUsersQuotasCheck(
-    userId: string,
-    type: Types.ResourcesResourceUsageType,
-    body: Types.ResourcesCheckResourceQuotaInput,
-  ): Promise<Result<Types.ResourcesResourceQuotaEnforcementResult, ApiError>> {
-    const url = `/v1/users/${userId}/quotas/${type}:check`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.ResourcesCheckResourceQuotaInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.ResourcesResourceQuotaEnforcementResultSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Reset quota usage to zero
    *
    * Resets the current usage counter for a specific resource quota to zero without changing the quota limits.
@@ -164,6 +133,37 @@ export class UsersQuotasModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Check if a usage amount would exceed quota
+   *
+   * Validates whether a proposed usage amount would exceed the configured quota limits without recording any usage.
+   */
+  async postUsersQuotasCheck(
+    userId: string,
+    type: Types.ResourcesResourceUsageType,
+    body: Types.ResourcesCheckResourceQuotaInput,
+  ): Promise<Result<Types.ResourcesResourceQuotaEnforcementResult, ApiError>> {
+    const url = `/v1/users/${userId}/quotas/${type}:check`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.ResourcesCheckResourceQuotaInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ResourcesResourceQuotaEnforcementResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 }
 
