@@ -45,7 +45,7 @@ public partial class HardenPayoutFifoEligibility
                                OR p_purpose NOT BETWEEN 1 AND 5 OR p_reserved_at IS NULL THEN
                                 RAISE EXCEPTION 'FIFO reservation arguments are invalid' USING ERRCODE = '22023';
                             END IF;
-            
+
                             SELECT COUNT(*) INTO selected_trace
                             FROM public.economy_fragment_reservations reservation
                             WHERE reservation."OperationId" = p_operation_id;
@@ -69,11 +69,11 @@ public partial class HardenPayoutFifoEligibility
                                 ORDER BY lot."ConfirmedAt", lot."JournalSequence", lot."Id", reservation."StartInclusive";
                                 RETURN;
                             END IF;
-            
+
                             trace_scale := CASE WHEN p_currency = 1 THEN 1000 ELSE 1 END;
                             required_trace := p_required_units * trace_scale;
                             remaining_trace := required_trace;
-            
+
                             PERFORM 1
                             FROM public.economy_wallets wallet
                             WHERE wallet."Id" = p_wallet_id
@@ -81,11 +81,11 @@ public partial class HardenPayoutFifoEligibility
                             IF NOT FOUND THEN
                                 RAISE EXCEPTION 'FIFO reservation wallet does not exist' USING ERRCODE = '23503';
                             END IF;
-            
+
                             IF p_purpose = 1 AND (p_currency <> 1 OR p_provenance <> 2) THEN
                                 RAISE EXCEPTION 'payout requires mature earned hard fragments' USING ERRCODE = '22023';
                             END IF;
-            
+
                             IF p_purpose = 1 AND EXISTS (
                                 SELECT 1
                                 FROM public.economy_holds hold
@@ -96,7 +96,7 @@ public partial class HardenPayoutFifoEligibility
                             ) THEN
                                 RAISE EXCEPTION 'payout is blocked by an active hard-coin hold' USING ERRCODE = 'P0001';
                             END IF;
-            
+
                             IF p_purpose = 1 AND EXISTS (
                                 SELECT 1
                                 FROM public.economy_wallet_debts debt
@@ -105,7 +105,7 @@ public partial class HardenPayoutFifoEligibility
                             ) THEN
                                 RAISE EXCEPTION 'payout is blocked by an outstanding hard-coin debt' USING ERRCODE = 'P0001';
                             END IF;
-            
+
                             FOR candidate IN
                                 SELECT lot."Id", lot."RootSourceStampId", lot."ConfirmedAt", lot."JournalSequence"
                                 FROM public.economy_credit_lots lot
@@ -128,7 +128,7 @@ public partial class HardenPayoutFifoEligibility
                                 FOR UPDATE
                             LOOP
                                 EXIT WHEN remaining_trace = 0;
-            
+
                                 FOR source_range IN
                                     SELECT range_row."RootSourceStampId", range_row."ReversalEpoch",
                                            range_row."StartInclusive", range_row."EndExclusive"
@@ -141,7 +141,7 @@ public partial class HardenPayoutFifoEligibility
                                     ORDER BY range_row."RootSourceStampId", range_row."StartInclusive", range_row."EndExclusive"
                                 LOOP
                                     EXIT WHEN remaining_trace = 0;
-            
+
                                     FOR free_range IN
                                         WITH blocked AS (
                                             SELECT int8range(range_row."StartInclusive", range_row."EndExclusive", '[)') AS fragment
@@ -174,7 +174,7 @@ public partial class HardenPayoutFifoEligibility
                                         IF selected_trace <= 0 THEN
                                             CONTINUE;
                                         END IF;
-            
+
                                         INSERT INTO public.economy_fragment_reservations (
                                             "Id", "OperationId", "ParentLotId", "WalletId", "Currency", "Purpose", "Status",
                                             "RootSourceStampId", "ReversalEpoch", "StartInclusive", "EndExclusive", "ReservedAt", "TerminalAt")
@@ -186,11 +186,11 @@ public partial class HardenPayoutFifoEligibility
                                     END LOOP;
                                 END LOOP;
                             END LOOP;
-            
+
                             IF remaining_trace <> 0 THEN
                                 RAISE EXCEPTION 'FIFO reservation has insufficient confirmed fragments' USING ERRCODE = 'P0001';
                             END IF;
-            
+
                             RETURN QUERY
                             SELECT reservation."Id", reservation."ParentLotId", reservation."RootSourceStampId",
                                    reservation."ReversalEpoch", reservation."StartInclusive", reservation."EndExclusive",
