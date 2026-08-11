@@ -289,6 +289,10 @@ public sealed class ProviderDisputeWorkflowTests
         var store = new InMemoryLedgerKernelStore();
         var root = SourceStampId.New();
         var wallet = WalletId.New();
+        FluentActions.Invoking(() => store.GetProviderDisputeCase("missing"))
+            .Should().Throw<KeyNotFoundException>();
+        store.GetDebt(wallet).Should().Be(new WalletDebtPosition(wallet, 0, DateTimeOffset.MinValue));
+
         var disputeEvent = new ProviderDisputeEventRecord(
             "evt", "dp", root, 1, ProviderDisputeStatus.Open, 1, "hash", Time);
         var freeze = new DisputeFragmentFreeze(
@@ -417,6 +421,61 @@ public sealed class ProviderDisputeWorkflowTests
             .Should().Throw<ArgumentNullException>();
     }
 
+    [Fact]
+    public void DisputeRecordsAndFreeze_ExposeImmutableAuditState()
+    {
+        var root = SourceStampId.New();
+        var wallet = WalletId.New();
+        var lot = CreditLotId.New();
+        var range = new RootTraceRange(root, 0, CurrencyTraceScale.HardCoinTraceUnitsPerCoin, 0);
+        var notification = new ProviderDisputeNotification(
+            "evt", "dp", root, 1, 1, ProviderDisputeStatus.Open,
+            ProviderReversalDisposition.ResponsibleDebt, "evidence",
+            new ReserveVersion(2), new PolicyVersion(3), Time);
+        var eventRecord = new ProviderDisputeEventRecord(
+            notification.ProviderEventId, notification.ProviderDisputeReference, root, 1,
+            ProviderDisputeStatus.Open, 1, "hash", Time);
+        var freeze = new DisputeFragmentFreeze(
+            Guid.NewGuid(), "dp", root, lot, wallet,
+            new CoinAmount(CurrencyCode.HardCoin, 1), [range], HoldStatus.Active, Time, null);
+        var debt = new WalletDebtEvent(2, wallet, root, 3, 5, Time);
+        var dispute = new ProviderDisputeCase(
+            "dp", root, wallet, ProviderDisputeStatus.Open, 1, 1, 0, 1,
+            [freeze.Id], null, Time);
+
+        notification.ReserveVersion.Should().Be(new ReserveVersion(2));
+        notification.PolicyVersion.Should().Be(new PolicyVersion(3));
+        eventRecord.ProviderEventId.Should().Be("evt");
+        eventRecord.ProviderDisputeReference.Should().Be("dp");
+        eventRecord.SourceId.Should().Be(root);
+        eventRecord.ProviderSequence.Should().Be(1);
+        eventRecord.Status.Should().Be(ProviderDisputeStatus.Open);
+        eventRecord.CumulativeDisputedHardUnits.Should().Be(1);
+        eventRecord.RequestHash.Should().Be("hash");
+        eventRecord.OccurredAt.Should().Be(Time);
+        freeze.Id.Should().NotBe(Guid.Empty);
+        freeze.ProviderDisputeReference.Should().Be("dp");
+        freeze.RootSourceId.Should().Be(root);
+        freeze.LotId.Should().Be(lot);
+        freeze.WalletId.Should().Be(wallet);
+        freeze.Amount.Units.Should().Be(1);
+        freeze.Ranges.Should().ContainSingle().Which.Should().Be(range);
+        freeze.Status.Should().Be(HoldStatus.Active);
+        freeze.PlacedAt.Should().Be(Time);
+        freeze.TerminalAt.Should().BeNull();
+        freeze.HardEquivalentUnits.Should().Be(1);
+        debt.Sequence.Should().Be(2);
+        debt.WalletId.Should().Be(wallet);
+        debt.SourceId.Should().Be(root);
+        debt.DeltaHardUnits.Should().Be(3);
+        debt.OutstandingHardUnits.Should().Be(5);
+        debt.OccurredAt.Should().Be(Time);
+        dispute.ProviderDisputeReference.Should().Be("dp");
+        dispute.SourceId.Should().Be(root);
+        dispute.ResponsibleWalletId.Should().Be(wallet);
+        dispute.FreezeIds.Should().ContainSingle().Which.Should().Be(freeze.Id);
+        dispute.UpdatedAt.Should().Be(Time);
+    }
     private static Fixture Setup(long hardUnits)
     {
         var store = new InMemoryLedgerKernelStore();

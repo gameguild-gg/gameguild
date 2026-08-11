@@ -2,7 +2,15 @@ using GameGuild.Economy.Contracts;
 
 namespace GameGuild.Economy.Risk;
 
-public sealed class RiskDecisionAuthorizer
+public interface IRiskDecisionAuthorizer
+{
+    RiskAuthorization AuthorizeValueMovement(
+        RiskDecisionSnapshot decision,
+        ProtectedOperationContext context,
+        DateTimeOffset now);
+}
+
+public sealed class RiskDecisionAuthorizer : IRiskDecisionAuthorizer
 {
     private readonly object _gate = new();
     private readonly Dictionary<Guid, RiskAuthorization> _authorizations = [];

@@ -11,20 +11,28 @@ namespace GameGuild.Economy.UnitTests.Persistence;
 public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
 {
     private static readonly DateTimeOffset ObservedAt = DateTimeOffset.Parse("2026-07-18T12:00:00Z");
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
+    private static bool DockerTestsEnabled =>
+        !string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal);
+
+    private readonly PostgreSqlContainer? _container = DockerTestsEnabled
+        ? new PostgreSqlBuilder()
         .WithImage("postgres:17-alpine")
         .WithDatabase("economy_funding_races")
         .WithUsername("test")
         .WithPassword("test")
-        .Build();
+        .Build()
+        : null;
 
     public async Task InitializeAsync()
     {
+        if (_container is null)
+            return;
+
         await _container.StartAsync();
         await ResetSchemaAsync();
     }
 
-    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
+    public Task DisposeAsync() => _container?.DisposeAsync().AsTask() ?? Task.CompletedTask;
 
     [DockerFact]
     public async Task ConfirmationVersusFailure_HasOneTerminalWinnerAndAtMostOneMintRoot()
@@ -208,7 +216,7 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
 
     private FundingRaceDbContext CreateContext() => new(
         new DbContextOptionsBuilder<FundingRaceDbContext>()
-            .UseNpgsql(_container.GetConnectionString())
+            .UseNpgsql(_container!.GetConnectionString())
             .Options);
 
     private static EconomyWalletRow Wallet(Guid id) => new()

@@ -763,6 +763,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.OperationFingerprint).HasMaxLength(128);
+            builder.Property(row => row.IdempotencyKey).HasMaxLength(128);
             builder.Property(row => row.ActorHash).HasMaxLength(128);
             builder.Property(row => row.ProviderReferenceHash).HasMaxLength(128);
             builder.Property(row => row.EntityGraphEvidenceHash).HasMaxLength(128);
