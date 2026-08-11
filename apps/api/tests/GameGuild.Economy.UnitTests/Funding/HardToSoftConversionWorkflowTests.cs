@@ -192,6 +192,7 @@ public sealed class HardToSoftConversionWorkflowTests
         var key = $"workflow-conversion-{Guid.NewGuid():N}";
         var principalHardCoinUnits = 10L;
         var totalHardCoinUnits = principalHardCoinUnits + feeHardCoinUnits;
+        var timestamp = DateTimeOffset.UtcNow;
 
         await PostgreSqlHardToSoftConversionGatewayTests.SeedAsync(
             connection,
@@ -205,12 +206,14 @@ public sealed class HardToSoftConversionWorkflowTests
             tenantId,
             key,
             totalHardCoinUnits,
-            key);
+            key,
+            timestamp);
         await PostgreSqlHardToSoftConversionGatewayTests.ReserveRiskCounterAsync(
             connection,
             decisionId,
             counterId,
-            totalHardCoinUnits);
+            totalHardCoinUnits,
+            timestamp);
 
         var accessor = SetActorContext(actorId, tenantId);
         try
