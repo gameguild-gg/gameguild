@@ -17,6 +17,7 @@ internal sealed class BountyRow
     public bool RequiresInstructorVerification { get; set; }
     public BountyStatus Status { get; set; }
     public string IdempotencyKey { get; set; } = string.Empty;
+    public string? RequestHash { get; set; }
     public DateTimeOffset PostedAt { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
     public long Version { get; set; }
@@ -71,6 +72,7 @@ public sealed class BountiesModelConfiguration : IModelConfiguration
             builder.HasKey(row => row.Id);
             builder.Property(row => row.Id).ValueGeneratedNever();
             builder.Property(row => row.IdempotencyKey).HasMaxLength(256);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
             builder.HasIndex(row => row.IdempotencyKey).IsUnique();
             builder.HasIndex(row => new { row.PosterId, row.Status, row.ExpiresAt });
             builder.HasIndex(row => new { row.Status, row.ExpiresAt });

@@ -4023,6 +4023,10 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<DateTimeOffset>("PostedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("RequestHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<Guid>("PosterId")
                         .HasColumnType("uuid");
 
