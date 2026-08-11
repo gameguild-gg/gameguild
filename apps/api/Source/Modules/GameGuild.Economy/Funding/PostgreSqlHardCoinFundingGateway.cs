@@ -180,7 +180,7 @@ public sealed class PostgreSqlHardCoinFundingGateway : IHardCoinFundingGateway
                         {funding.Version},
                         {command.CreditLotId.Value},
                         {confirmationEventHash},
-                        {registered.DispatchSnapshotHash});
+                        {registered.DispatchSnapshotHash})
                     """)
                 .AsNoTracking()
                 .Single();

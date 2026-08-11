@@ -64,7 +64,7 @@ public sealed class PostgreSqlFifoTransferGateway : IFifoTransferGateway
                         {(int)command.Provenance},
                         {command.Amount.Units},
                         {command.RequestedAt},
-                        {request.DispatchSnapshotHash});
+                        {request.DispatchSnapshotHash})
                     """)
                 .AsNoTracking()
                 .Single();

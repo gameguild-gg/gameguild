@@ -15,20 +15,28 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
 {
     private static readonly DateTimeOffset RecordedAt = DateTimeOffset.Parse("2026-08-09T12:00:00Z");
     private readonly Dictionary<Guid, Guid> _accountIds = [];
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
+    private static bool DockerTestsEnabled =>
+        !string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal);
+
+    private readonly PostgreSqlContainer? _container = DockerTestsEnabled
+        ? new PostgreSqlBuilder()
         .WithImage("postgres:17-alpine")
         .WithDatabase("economy_wallet_queries")
         .WithUsername("test")
         .WithPassword("test")
-        .Build();
+        .Build()
+        : null;
 
     public async Task InitializeAsync()
     {
+        if (_container is null)
+            return;
+
         await _container.StartAsync();
         await ResetSchemaAsync();
     }
 
-    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
+    public Task DisposeAsync() => _container?.DisposeAsync().AsTask() ?? Task.CompletedTask;
 
     [DockerFact]
     public async Task GetMyWallet_ReturnsOnlyTheAuthenticatedTenantWallet()
@@ -163,6 +171,54 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
             ProvenanceKind.PurchasedHard));
     }
 
+    [DockerFact]
+    public async Task GetMyWallet_UsesSafeDefaultsWithoutProjectionOrDebt()
+    {
+        await ResetSchemaAsync();
+        var ownerId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var walletId = Guid.NewGuid();
+
+        await using (var seed = CreateContext())
+        {
+            seed.Add(Wallet(walletId, ownerId, tenantId));
+            await seed.SaveChangesAsync();
+        }
+
+        await using var context = CreateContext();
+        var result = await new GetMyEconomyWalletQueryHandler(context, CreateActor(ownerId, tenantId))
+            .Handle(new GetMyEconomyWalletQuery(), CancellationToken.None);
+
+        result.Should().BeEquivalentTo(new EconomyWalletSummaryDto(
+            walletId,
+            WalletLifecycleState.Active,
+            RecordedAt,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, RecordedAt, 0));
+    }
+
+    [DockerFact]
+    public async Task ListMyWalletTransactions_ClampsNonPositiveTakeToOne()
+    {
+        await ResetSchemaAsync();
+        var ownerId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var walletId = Guid.NewGuid();
+
+        await using (var seed = CreateContext())
+        {
+            seed.Add(Wallet(walletId, ownerId, tenantId));
+            await seed.SaveChangesAsync();
+            await AddJournalLineAsync(seed, walletId, 10, 1, 100);
+            await AddJournalLineAsync(seed, walletId, 20, 2, 200);
+        }
+
+        await using var context = CreateContext();
+        var result = await new ListMyEconomyWalletTransactionsQueryHandler(context, CreateActor(ownerId, tenantId))
+            .Handle(new ListMyEconomyWalletTransactionsQuery(0), CancellationToken.None);
+
+        result.Should().ContainSingle();
+        result[0].JournalSequence.Should().Be(20);
+    }
     private async Task AddJournalLineAsync(
         EconomyWalletQueryDbContext context,
         Guid walletId,
@@ -238,7 +294,7 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
 
     private EconomyWalletQueryDbContext CreateContext() => new(
         new DbContextOptionsBuilder<EconomyWalletQueryDbContext>()
-            .UseNpgsql(_container.GetConnectionString())
+            .UseNpgsql(_container!.GetConnectionString())
             .Options);
 
     private static EconomyWalletRow Wallet(Guid id, Guid ownerId, Guid tenantId) => new()

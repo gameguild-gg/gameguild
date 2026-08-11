@@ -17,9 +17,12 @@ public sealed class EconomyCoreModule : ModuleBase
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.AddEconomyRiskComposition(configuration);
+        services.AddScoped<IRiskDecisionAuthorizer, PostgreSqlRiskDecisionAuthorizer>();
+        services.AddScoped<CoreProtectedPostingGate>();
         services.AddScoped<IRegisteredPostingGateway, PostgreSqlRegisteredPostingGateway>();
         services.AddScoped<IHardCoinFundingGateway, PostgreSqlHardCoinFundingGateway>();
         services.AddScoped<IHardToSoftConversionGateway, PostgreSqlHardToSoftConversionGateway>();
+        services.AddScoped<IHardToSoftConversionWorkflow, PostgreSqlHardToSoftConversionWorkflow>();
         services.AddScoped<IFifoFragmentReservationGateway, PostgreSqlFifoFragmentReservationGateway>();
         services.AddScoped<IProviderReversalGateway, PostgreSqlProviderReversalGateway>();
         services.AddScoped<IFifoTransferGateway, PostgreSqlFifoTransferGateway>();

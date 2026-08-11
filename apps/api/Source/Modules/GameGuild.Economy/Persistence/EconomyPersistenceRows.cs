@@ -384,6 +384,7 @@ internal sealed class EconomyRiskDecisionRow
     public Guid Id { get; set; }
     public RiskOutcome Outcome { get; set; }
     public string OperationFingerprint { get; set; } = string.Empty;
+    public string? IdempotencyKey { get; set; }
     public string ActorHash { get; set; } = string.Empty;
     public PostingTemplateKind TemplateKind { get; set; }
     public Guid SourceWalletId { get; set; }
