@@ -309,7 +309,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 2. Read the course back ─────────────────────────────────────────────
   it('reads the created course by ID', async () => {
-    const result = await programs.getCourses1(courseId);
+    const result = await programs.getCoursesById(courseId);
 
     const course = unwrap(result, 'Get course by ID');
 
@@ -389,7 +389,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(course.skillsRequired).toBe('portfolio fundamentals, peer critique');
     expect(course.skillsProvided).toBe('boss AI systems, Steam launch planning');
 
-    const readResult = await programs.getCourses1(courseId);
+    const readResult = await programs.getCoursesById(courseId);
     const persistedCourse = unwrap(readResult, 'Read storefront metadata');
     const persistedMetadata = JSON.parse(persistedCourse.metadata ?? '{}');
 
@@ -806,7 +806,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 9. Get a single content item ────────────────────────────────────────
   it('gets a single content item by ID', async () => {
-    const result = await content.getCoursesContent1(courseId, lessonContentId);
+    const result = await content.getCoursesByProgramIdContentById(courseId, lessonContentId);
 
     const contentItem = unwrap(result, 'Get single content');
     expect(contentItem.id).toBe(lessonContentId);
@@ -1503,7 +1503,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(result.ok).toBe(true);
 
     // Verify it's gone
-    const getResult = await content.getCoursesContent1(courseId, assignmentContentId);
+    const getResult = await content.getCoursesByProgramIdContentById(courseId, assignmentContentId);
     expect(getResult.ok).toBe(false);
   });
 
@@ -1521,7 +1521,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(result.ok).toBe(true);
 
     // Verify it's gone
-    const getResult = await programs.getCourses1(courseId);
+    const getResult = await programs.getCoursesById(courseId);
     expect(getResult.ok).toBe(false);
   });
 
