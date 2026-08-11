@@ -156,14 +156,20 @@ PY
 }
 
 assert_cobertura_coverage() {
-  local path="$1" assembly="$2" path_prefixes="${3:-}"
-  "$PYTHON_BIN" - "$path" "$assembly" "$path_prefixes" <<'PY'
+  local path="$1" assembly="$2" path_prefixes="${3:-}" minimum_branch_rate="${4:-1}"
+  "$PYTHON_BIN" - "$path" "$assembly" "$path_prefixes" "$minimum_branch_rate" <<'PY'
 import json
 import re
 import sys
 import xml.etree.ElementTree as ET
 
-path, assembly, path_prefixes_csv = sys.argv[1:4]
+path, assembly, path_prefixes_csv, minimum_branch_rate = sys.argv[1:5]
+try:
+    minimum_branch_rate = float(minimum_branch_rate)
+except ValueError as error:
+    raise SystemExit(f"Coverage branch threshold must be numeric: {minimum_branch_rate}") from error
+if not 0 <= minimum_branch_rate <= 1:
+    raise SystemExit(f"Coverage branch threshold must be between 0 and 1: {minimum_branch_rate}")
 prefixes = [value.replace("\\", "/").strip("/") + "/" for value in path_prefixes_csv.split(",") if value]
 root = ET.parse(path).getroot()
 package = next((node for node in root.iter() if node.tag.rsplit("}", 1)[-1] == "package" and node.attrib.get("name") == assembly), None)
@@ -229,8 +235,10 @@ method_rate = covered_methods / len(methods)
 
 if line_rate < 1:
     raise SystemExit(f"Assembly '{assembly}' line coverage is {line_rate * 100:g}% (required: 100%)")
-if branch_rate < 1:
-    raise SystemExit(f"Assembly '{assembly}' branch coverage is {branch_rate * 100:g}% (required: 100%)")
+if branch_rate < minimum_branch_rate:
+    raise SystemExit(
+        f"Assembly '{assembly}' branch coverage is {branch_rate * 100:g}% "
+        f"(required: {minimum_branch_rate * 100:g}%)")
 if method_rate < 1:
     raise SystemExit(f"Assembly '{assembly}' method coverage is {method_rate * 100:g}% (required: 100%)")
 
@@ -239,6 +247,7 @@ print(json.dumps({
     "pathPrefixes": prefixes,
     "lineRate": line_rate,
     "branchRate": branch_rate,
+    "minimumBranchRate": minimum_branch_rate,
     "methodRate": method_rate,
 }, separators=(",", ":")))
 PY

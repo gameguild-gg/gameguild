@@ -260,6 +260,15 @@ XML
   assert_cobertura_coverage "$coverage" 'GameGuild.Economy' >/dev/null
 }
 
+test_cobertura_respects_explicit_branch_threshold() {
+  local coverage="$fixture_root/branch-threshold.cobertura.xml"
+  cat > "$coverage" <<'XML'
+<coverage><packages><package name="GameGuild.Economy" line-rate="1" branch-rate="0.98"><classes><class name="A"><methods><method name="Covered"><lines><line number="1" hits="1" /></lines></method></methods></class></classes></package></packages></coverage>
+XML
+  assert_throws 'branch coverage' assert_cobertura_coverage "$coverage" 'GameGuild.Economy' || return 1
+  assert_cobertura_coverage "$coverage" 'GameGuild.Economy' '' '0.98' >/dev/null
+}
+
 test_cobertura_supports_path_scoped_capabilities() {
   local coverage="$fixture_root/path-coverage.cobertura.xml"
   cat > "$coverage" <<'XML'
@@ -307,6 +316,7 @@ run_test 'TRX evidence rejects skipped and zero-test suites' test_trx_rejects_sk
 run_test 'whole-solution evidence allows only named source-empty scaffolds' test_whole_solution_allows_only_source_empty_scaffolds
 run_test 'whole-solution evidence recovers scaffold identity from TRX metadata' test_whole_solution_recovers_scaffold_identity_from_trx
 run_test 'Cobertura enforces line, branch, and method coverage' test_cobertura_requires_full_method_coverage
+run_test 'Cobertura honors explicit branch thresholds' test_cobertura_respects_explicit_branch_threshold
 run_test 'Cobertura supports path-scoped capability coverage' test_cobertura_supports_path_scoped_capabilities
 run_test 'Vitest and Playwright reject pending or skipped tests' test_json_evidence_rejects_pending_and_skipped
 run_test 'canonical JSON is deterministic and preserves arrays' test_canonical_json_preserves_arrays

@@ -4,7 +4,8 @@
     {
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy/GameGuild.Economy.csproj",
       "testProjects": ["apps/api/tests/GameGuild.Economy.UnitTests/GameGuild.Economy.UnitTests.csproj"],
-      "coverageAssemblies": ["GameGuild.Economy"]
+      "coverageAssemblies": ["GameGuild.Economy"],
+      "minimumBranchRate": 0.98
     },
     {
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy.AdRewards/GameGuild.Economy.AdRewards.csproj",
