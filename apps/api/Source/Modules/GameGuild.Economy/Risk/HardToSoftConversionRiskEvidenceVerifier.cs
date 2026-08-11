@@ -9,14 +9,20 @@ namespace GameGuild.Economy.Risk;
 /// </summary>
 public interface IHardToSoftConversionRiskEvidenceVerifier
 {
-    Task VerifyAsync(Guid actorId, Guid tenantId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ExternalRiskEvidence>> VerifyAsync(
+        Guid actorId,
+        Guid tenantId,
+        CancellationToken cancellationToken);
 }
 
 public sealed class HardToSoftConversionRiskEvidenceVerifier(
     IFinancialCrimeRiskInputSource financialCrime,
     ITrustSafetyRiskInputSource trustSafety) : IHardToSoftConversionRiskEvidenceVerifier
 {
-    public async Task VerifyAsync(Guid actorId, Guid tenantId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<ExternalRiskEvidence>> VerifyAsync(
+        Guid actorId,
+        Guid tenantId,
+        CancellationToken cancellationToken)
     {
         if (actorId == Guid.Empty)
             throw new ArgumentException("An actor is required.", nameof(actorId));
@@ -33,7 +39,7 @@ public sealed class HardToSoftConversionRiskEvidenceVerifier(
             .ReadAsync(subjectReference, observedAt, cancellationToken)
             .ConfigureAwait(false);
 
-        ExternalRiskEvidenceValidator.RequireFreshAllow(
+        return ExternalRiskEvidenceValidator.RequireFreshAllow(
             [financialCrimeEvidence.ToEvidence(), trustSafetyEvidence.ToEvidence()],
             observedAt);
     }

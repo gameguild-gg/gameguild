@@ -22,7 +22,7 @@ public sealed class EconomyWalletControllerTests
         var controller = CreateController(sender.Object, new ActorContextAccessor());
 
         var result = await controller.ConvertMyHardToSoft(
-            new ConvertMyHardToSoftRequest(100, 0, Guid.NewGuid(), "conversion-key"),
+            new ConvertMyHardToSoftRequest(100, 0, "conversion-key"),
             CancellationToken.None);
 
         result.Should().BeOfType<ForbidResult>();
@@ -34,8 +34,7 @@ public sealed class EconomyWalletControllerTests
     {
         var actorId = Guid.Parse("93000000-0000-0000-0000-000000000001");
         var tenantId = Guid.Parse("93000000-0000-0000-0000-000000000002");
-        var riskDecisionId = Guid.Parse("93000000-0000-0000-0000-000000000003");
-        var request = new ConvertMyHardToSoftRequest(100, 3, riskDecisionId, "conversion-key");
+        var request = new ConvertMyHardToSoftRequest(100, 3, "conversion-key");
         var receipt = new SelfServiceHardToSoftConversionReceipt(
             Guid.Parse("93000000-0000-0000-0000-000000000004"), null, 17, "journal-hash", false);
         var sender = new Mock<ISender>();
