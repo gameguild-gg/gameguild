@@ -126,12 +126,12 @@ public static class PostingMatrix
         var expectedCount = request.Template.Kind is PostingTemplateKind.HardToSoftConversion or
             PostingTemplateKind.SystemBackedGrant or
             PostingTemplateKind.ProviderConvertedSoftReversal ? 4 : 2;
-        var hasValidLineCount = request.Template.Kind == PostingTemplateKind.BountyEscrow
+        var hasValidLineCount = request.Template.Kind is PostingTemplateKind.BountyEscrow or PostingTemplateKind.BountyReclaim
             ? registeredTemplate?.AllowsLineCount(request.Lines.Count) == true
             : request.Lines.Count == expectedCount;
         if (!hasValidLineCount)
         {
-            var requirement = request.Template.Kind == PostingTemplateKind.BountyEscrow
+            var requirement = request.Template.Kind is PostingTemplateKind.BountyEscrow or PostingTemplateKind.BountyReclaim
                 ? "at least two lines"
                 : $"exactly {expectedCount} lines";
             Add(errors, PostingErrorCode.InvalidLineCount, $"Template requires {requirement}.");
@@ -210,6 +210,9 @@ public static class PostingMatrix
                 else
                     ValidateLiability(lines[1], EntrySide.Credit, ProvenanceKind.EscrowReturn, errors);
                 break;
+            case PostingTemplateKind.BountyReclaim:
+                ValidateBountyReclaim(lines, errors);
+                break;
             case PostingTemplateKind.Reclaim:
                 var escrowAccount = EscrowFor(lines[1].Amount.Currency);
                 if (escrowAccount.HasValue)
@@ -286,6 +289,60 @@ public static class PostingMatrix
                      line.Provenance is ProvenanceKind.PurchasedHard or ProvenanceKind.EarnedHard)
                 Add(errors, PostingErrorCode.InvalidProvenance,
                     "SoftCoin bounty escrow legs cannot carry HardCoin provenance.");
+        }
+    }
+
+    private static void ValidateBountyReclaim(PostingLine[] lines, ICollection<PostingValidationError> errors)
+    {
+        var currency = lines[0].Amount.Currency;
+        var escrow = EscrowFor(currency);
+        if (!escrow.HasValue)
+        {
+            Add(errors, PostingErrorCode.InvalidCurrency, "Bounty reclaim requires a supported coin currency.");
+            return;
+        }
+
+        for (var index = 0; index < lines.Length; index += 2)
+        {
+            var debit = lines[index];
+            if (index == lines.Length - 1)
+            {
+                Add(errors, PostingErrorCode.InvalidLineCount,
+                    "Bounty reclaim requires a credit line for every debit line.");
+                return;
+            }
+
+            var credit = lines[index + 1];
+            Match(debit, EntrySide.Debit, escrow.Value, currency, false, null, errors);
+            if (credit.Amount.Currency != currency || credit.Amount.Units != debit.Amount.Units)
+                Add(errors, PostingErrorCode.InvalidAmount,
+                    "Bounty reclaim debit and credit pairs must use the same currency and amount.");
+
+            if (credit.WalletId is null)
+            {
+                var expectedFeeAccount = currency == CurrencyCode.HardCoin
+                    ? EconomyAccountCode.FeeRevenueHard
+                    : EconomyAccountCode.SoftCoinReserve;
+                Match(credit, EntrySide.Credit, expectedFeeAccount, currency, false, null, errors);
+                if (index + 2 != lines.Length)
+                    Add(errors, PostingErrorCode.InvalidAccountShape,
+                        "The bounty reclaim fee/burn pair must be the last posting pair.");
+                continue;
+            }
+
+            ValidateLiability(credit, EntrySide.Credit, credit.Provenance, errors);
+            if (credit.Provenance is null)
+                Add(errors, PostingErrorCode.InvalidProvenance,
+                    "Bounty reclaim return credits must preserve immutable provenance.");
+            else if (currency == CurrencyCode.HardCoin &&
+                     ((credit.Provenance == ProvenanceKind.EarnedHard && credit.Account != EconomyAccountCode.EarnedHardLiability) ||
+                      (credit.Provenance != ProvenanceKind.EarnedHard && credit.Account != EconomyAccountCode.PurchasedHardLiability)))
+                Add(errors, PostingErrorCode.InvalidAccountShape,
+                    "HardCoin bounty reclaim credits must retain the liability account matching their provenance.");
+            else if (currency == CurrencyCode.SoftCoin &&
+                     credit.Provenance is ProvenanceKind.PurchasedHard or ProvenanceKind.EarnedHard)
+                Add(errors, PostingErrorCode.InvalidProvenance,
+                    "SoftCoin bounty reclaim credits cannot carry HardCoin provenance.");
         }
     }
 
