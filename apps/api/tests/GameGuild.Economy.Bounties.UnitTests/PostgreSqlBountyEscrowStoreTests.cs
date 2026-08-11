@@ -29,7 +29,8 @@ public sealed class PostgreSqlBountyEscrowStoreTests
         FluentActions.Invoking(() => store.Create(new CreateBountyEscrowPersistenceCommand(
                 null!,
                 new IdempotencyKey("bounty-post"),
-                "request-hash")))
+                "request-hash",
+                PostingId.New())))
             .Should().Throw<ArgumentNullException>();
     }
 
