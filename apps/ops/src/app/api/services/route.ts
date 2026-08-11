@@ -36,7 +36,7 @@ const SERVICES: readonly ServiceProbe[] = [
   },
   {
     name: "API",
-    url: "http://web-production-service.prod.svc.cluster.local:80/health",
+    url: "http://api-production-service.prod.svc.cluster.local:80/",
     pass: (_b, s) => s === 200,
   },
   {
