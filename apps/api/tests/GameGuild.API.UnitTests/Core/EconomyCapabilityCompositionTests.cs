@@ -3,6 +3,9 @@ using GameGuild.API.Setup;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
 using GameGuild.Compliance.FinancialCrime;
+using GameGuild.Economy;
+using GameGuild.Economy.Funding;
+using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Risk;
 using GameGuild.TrustSafety;
 using Microsoft.Extensions.Configuration;
@@ -103,6 +106,29 @@ public sealed class EconomyCapabilityCompositionTests
 
         readiness.Assess(EconomyValueMovementCapability.PayoutExecution)
             .State.Should().Be(EconomyCapabilityReadinessState.Disabled);
+    }
+
+    [Fact]
+    public void EconomyCoreComposition_RegistersTheWalletCommandDependenciesWithoutEnablingValueMovement()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder().Build();
+
+        services.AddEconomyCapabilityComposition(configuration);
+        services.AddEconomyCoreComposition(configuration);
+
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IHardToSoftConversionWorkflow) &&
+            descriptor.ImplementationType == typeof(PostgreSqlHardToSoftConversionWorkflow));
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IHardCoinFundingGateway) &&
+            descriptor.ImplementationType == typeof(PostgreSqlHardCoinFundingGateway));
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IRegisteredPostingGateway) &&
+            descriptor.ImplementationType == typeof(PostgreSqlRegisteredPostingGateway));
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IRiskDecisionAuthorizer) &&
+            descriptor.ImplementationType == typeof(PostgreSqlRiskDecisionAuthorizer));
     }
 
     private sealed class TestHostEnvironment(string environmentName) : IHostEnvironment
