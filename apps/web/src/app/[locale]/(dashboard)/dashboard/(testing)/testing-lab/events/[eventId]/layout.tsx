@@ -64,7 +64,7 @@ export default async function TestingEventWorkspaceLayout({
             </span>
           ) : null}
         </div>
-        {!readOnly ? <TestingEventLifecycleActions event={event} /> : null}
+        <TestingEventLifecycleActions event={event} />
       </section>
 
       <TestingEventWorkspaceNav eventId={eventId} />

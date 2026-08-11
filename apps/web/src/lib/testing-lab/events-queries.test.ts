@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   createServerClient: vi.fn(),
   events: {
+    getTestingEventsArchived: vi.fn(),
     getTestingEvents: vi.fn(),
     getTestingEventsByEventId: vi.fn(),
     getTestingEventsSlots: vi.fn(),
@@ -42,6 +43,7 @@ vi.mock('@game-guild/client', () => ({
 }));
 
 import {
+  getArchivedTestingEventsDirectory,
   getPublicTestingEventExperience,
   getPublicTestingEventsDirectory,
   getTestingEventFeedbackReview,
@@ -68,6 +70,10 @@ describe('Testing Lab event queries', () => {
           applicationCount: 4,
         },
       ],
+    });
+    mocks.events.getTestingEventsArchived.mockResolvedValue({
+      ok: true,
+      data: [{ id: 'event-archived', name: 'Archived playtest', status: 'Completed' }],
     });
     mocks.events.getTestingEventsByEventId.mockResolvedValue({
       ok: true,
@@ -177,6 +183,16 @@ describe('Testing Lab event queries', () => {
       skip: 10,
       take: 25,
     });
+  });
+
+  it('loads archived events through the dedicated generated-client operation', async () => {
+    const result = await getArchivedTestingEventsDirectory({ skip: 5, take: 20 });
+
+    expect(result.events).toEqual([
+      expect.objectContaining({ id: 'event-archived', status: 'Completed' }),
+    ]);
+    expect(result.accessIssues).toEqual([]);
+    expect(mocks.events.getTestingEventsArchived).toHaveBeenCalledWith({ skip: 5, take: 20 });
   });
 
   it('loads the tenant participant directory through one generated-client call', async () => {

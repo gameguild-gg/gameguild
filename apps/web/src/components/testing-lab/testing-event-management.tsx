@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  archiveTestingEvent,
   addTestingEventCommitteeMember,
   assignTestedProjectToRegistration,
   approveTestingEventApplication,
@@ -12,6 +13,7 @@ import {
   deleteTestingEventSlot,
   rejectTestingEventApplication,
   removeTestingEventCommitteeMember,
+  restoreTestingEvent,
   transitionTestingEvent,
   updateTestingEventAttendance,
   updateTestingEvent,
@@ -49,6 +51,7 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { Textarea } from '@game-guild/ui/components/textarea';
 import {
   AlertCircle,
+  Archive,
   CheckCircle2,
   CircleStop,
   ClipboardCheck,
@@ -56,6 +59,7 @@ import {
   Pencil,
   Play,
   Plus,
+  RotateCcw,
   Send,
   ShieldCheck,
   Trash2,
@@ -83,10 +87,16 @@ export interface TestingLabLearningActivityOption {
   label: string;
 }
 
-function datetimeLocal(value?: string | null) {
+function apiDatetimeLocal(value?: string | null) {
   if (!value) return '';
+  const wallClock = value.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
+  if (wallClock) return wallClock[1];
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return '';
+  return date.toISOString().slice(0, 16);
+}
+
+function localDatetime(date: Date) {
   const local = new Date(date.valueOf() - date.getTimezoneOffset() * 60_000);
   return local.toISOString().slice(0, 16);
 }
@@ -120,10 +130,10 @@ function createTestingEventSchedule(now = new Date(), eventDate?: Date): Testing
   const endsAt = new Date(startsAt.valueOf() + 2 * Hour);
 
   return {
-    applicationsOpenAt: datetimeLocal(applicationsOpenAt.toISOString()),
-    applicationsCloseAt: datetimeLocal(applicationsCloseAt.toISOString()),
-    startsAt: datetimeLocal(startsAt.toISOString()),
-    endsAt: datetimeLocal(endsAt.toISOString()),
+    applicationsOpenAt: localDatetime(applicationsOpenAt),
+    applicationsCloseAt: localDatetime(applicationsCloseAt),
+    startsAt: localDatetime(startsAt),
+    endsAt: localDatetime(endsAt),
   };
 }
 
@@ -139,7 +149,7 @@ function inputDate(input: HTMLInputElement | null) {
 }
 
 function setInputDate(input: HTMLInputElement | null, value: Date) {
-  if (input) input.value = datetimeLocal(value.toISOString());
+  if (input) input.value = localDatetime(value);
 }
 
 function ActionMessage({ result }: { result: TestingEventActionResult<unknown> | null }) {
@@ -160,6 +170,7 @@ function EventActionDialog({
   action,
   children,
   destructive = false,
+  successHref,
 }: {
   trigger: ReactNode;
   title: string;
@@ -168,6 +179,7 @@ function EventActionDialog({
   action: Action;
   children: ReactNode;
   destructive?: boolean;
+  successHref?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -183,7 +195,8 @@ function EventActionDialog({
       setResult(next);
       if (next.success) {
         form.reset();
-        router.refresh();
+        if (successHref) router.push(successHref);
+        else router.refresh();
         window.setTimeout(() => setOpen(false), 450);
       }
     });
@@ -265,7 +278,7 @@ function EventFields({ event, schedule }: { event?: TestingLabTestingEventProjec
           name="applicationsOpenAt"
           type="datetime-local"
           required
-          defaultValue={schedule?.applicationsOpenAt ?? datetimeLocal(event?.applicationsOpenAt)}
+          defaultValue={schedule?.applicationsOpenAt ?? apiDatetimeLocal(event?.applicationsOpenAt)}
         />
       </div>
       <div className="space-y-2">
@@ -275,7 +288,7 @@ function EventFields({ event, schedule }: { event?: TestingLabTestingEventProjec
           name="applicationsCloseAt"
           type="datetime-local"
           required
-          defaultValue={schedule?.applicationsCloseAt ?? datetimeLocal(event?.applicationsCloseAt)}
+          defaultValue={schedule?.applicationsCloseAt ?? apiDatetimeLocal(event?.applicationsCloseAt)}
         />
       </div>
       <div className="space-y-2">
@@ -285,7 +298,7 @@ function EventFields({ event, schedule }: { event?: TestingLabTestingEventProjec
           name="startsAt"
           type="datetime-local"
           required
-          defaultValue={schedule?.startsAt ?? datetimeLocal(event?.startsAt)}
+          defaultValue={schedule?.startsAt ?? apiDatetimeLocal(event?.startsAt)}
         />
       </div>
       <div className="space-y-2">
@@ -295,7 +308,7 @@ function EventFields({ event, schedule }: { event?: TestingLabTestingEventProjec
           name="endsAt"
           type="datetime-local"
           required
-          defaultValue={schedule?.endsAt ?? datetimeLocal(event?.endsAt)}
+          defaultValue={schedule?.endsAt ?? apiDatetimeLocal(event?.endsAt)}
         />
       </div>
       <label className="flex items-start gap-3 rounded-md border p-3 text-sm sm:col-span-2">
@@ -625,11 +638,11 @@ export function ManageTestingEventSlotDialog({
         </div>
         <div className="space-y-2">
           <Label htmlFor={`slot-start-${slot.id}`}>Starts</Label>
-          <Input id={`slot-start-${slot.id}`} name="startsAt" type="datetime-local" required defaultValue={datetimeLocal(slot.startsAt)} />
+          <Input id={`slot-start-${slot.id}`} name="startsAt" type="datetime-local" required defaultValue={apiDatetimeLocal(slot.startsAt)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`slot-end-${slot.id}`}>Ends</Label>
-          <Input id={`slot-end-${slot.id}`} name="endsAt" type="datetime-local" required defaultValue={datetimeLocal(slot.endsAt)} />
+          <Input id={`slot-end-${slot.id}`} name="endsAt" type="datetime-local" required defaultValue={apiDatetimeLocal(slot.endsAt)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`slot-campus-${slot.id}`}>Campus</Label>
@@ -723,6 +736,19 @@ export function TestingEventLifecycleActions({ event }: { event: TestingLabTesti
             submitLabel="Delete draft"
             action={deleteTestingEvent}
             destructive
+            successHref="/dashboard/testing-lab/events"
+          >
+            <input type="hidden" name="eventId" value={event.id} />
+          </EventActionDialog>
+        ) : null}
+        {['Completed', 'Cancelled'].includes(event.status ?? '') && event.id ? (
+          <EventActionDialog
+            trigger={<Button size="sm" variant="outline"><Archive className="mr-2 size-4" />Archive event</Button>}
+            title="Archive this testing event?"
+            description="The event leaves the active directory while its audit history remains available for restoration."
+            submitLabel="Archive event"
+            action={archiveTestingEvent}
+            successHref="/dashboard/testing-lab/events"
           >
             <input type="hidden" name="eventId" value={event.id} />
           </EventActionDialog>
@@ -730,6 +756,21 @@ export function TestingEventLifecycleActions({ event }: { event: TestingLabTesti
       </div>
       <ActionMessage result={result} />
     </div>
+  );
+}
+
+export function RestoreTestingEventDialog({ event }: { event: TestingLabTestingEventProjection }) {
+  if (!event.id) return null;
+  return (
+    <EventActionDialog
+      trigger={<Button variant="outline"><RotateCcw className="mr-2 size-4" />Restore event</Button>}
+      title="Restore this testing event?"
+      description="The event returns to the active directory with its terminal status and audit history intact."
+      submitLabel="Restore event"
+      action={restoreTestingEvent}
+    >
+      <input type="hidden" name="eventId" value={event.id} />
+    </EventActionDialog>
   );
 }
 
