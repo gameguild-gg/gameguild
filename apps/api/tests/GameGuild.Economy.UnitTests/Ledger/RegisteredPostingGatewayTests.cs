@@ -111,6 +111,30 @@ public sealed class RegisteredPostingGatewayTests
     }
 
     [Fact]
+    public void PayloadOrdersExpectedReversalEpochsByRoot()
+    {
+        var firstRoot = new SourceStampId(Guid.Parse("21000000-0000-0000-0000-000000000001"));
+        var secondRoot = new SourceStampId(Guid.Parse("21000000-0000-0000-0000-000000000002"));
+        var request = new RegisteredPostingRequest(
+            Authority(),
+            Posting(),
+            [
+                new RegisteredPostingAllocation(1, CreditLotId.New(), 100,
+                    [new RootTraceRange(secondRoot, 0, 100, 2)]),
+                new RegisteredPostingAllocation(2, CreditLotId.New(), 100,
+                    [new RootTraceRange(firstRoot, 0, 100, 1)])
+            ]);
+
+        var payload = RegisteredPostingPayloadFactory.Create(
+            request,
+            new Dictionary<int, Guid> { [1] = Guid.NewGuid(), [2] = Guid.NewGuid() });
+        using var epochs = JsonDocument.Parse(payload.ExpectedReversalEpochs);
+
+        epochs.RootElement[0].GetProperty("root_source_stamp_id").GetGuid().Should().Be(firstRoot.Value);
+        epochs.RootElement[1].GetProperty("root_source_stamp_id").GetGuid().Should().Be(secondRoot.Value);
+    }
+
+    [Fact]
     public void ReceiptRejectsMissingWriterAcknowledgement()
     {
         var create = () => new RegisteredPostingReceipt(
