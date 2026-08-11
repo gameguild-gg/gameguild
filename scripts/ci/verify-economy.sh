@@ -246,12 +246,13 @@ with open(sys.argv[1], encoding="utf-8") as handle:
 for entry in manifest.get("projects", []):
     production = entry["productionProject"].replace("\\", "/")
     print("production", production, sep="\t")
-    assemblies = ",".join(entry.get("coverageAssemblies", []))
-    prefixes = ",".join(value.replace("\\", "/") for value in entry.get("coveragePathPrefixes", []))
-    for test in entry.get("testProjects", []):
-        normalized = test.replace("\\", "/")
-        print("test", normalized, sep="\t")
-        print("coverage", normalized, assemblies, prefixes, sep="\t")
+        assemblies = ",".join(entry.get("coverageAssemblies", []))
+        prefixes = ",".join(value.replace("\\", "/") for value in entry.get("coveragePathPrefixes", []))
+        minimum_branch_rate = str(entry.get("minimumBranchRate", 1))
+        for test in entry.get("testProjects", []):
+            normalized = test.replace("\\", "/")
+            print("test", normalized, sep="\t")
+            print("coverage", normalized, assemblies, prefixes, minimum_branch_rate, sep="\t")
 for contract in manifest.get("providerContractProjects", []):
     print("provider", contract["project"].replace("\\", "/"), contract["filter"], sep="\t")
 PY
@@ -323,7 +324,7 @@ if ((${#warning_projects[@]} > 0)); then
 fi
 
 for record in "${economy_coverage_records[@]}"; do
-  IFS=$'\t' read -r test_project assemblies_csv path_prefixes_csv <<< "$record"
+  IFS=$'\t' read -r test_project assemblies_csv path_prefixes_csv minimum_branch_rate <<< "$record"
   test_name="$(basename "${test_project%.csproj}")"
   results="$artifact_root/trx/economy/$test_name"
   mkdir -p "$results"
@@ -345,7 +346,7 @@ for record in "${economy_coverage_records[@]}"; do
   coverage_destination="$artifact_root/coverage/$test_name.cobertura.xml"
   cp "$coverage_report" "$coverage_destination"
   for assembly in "${coverage_assemblies[@]}"; do
-    assert_cobertura_coverage "$coverage_destination" "$assembly" "$path_prefixes_csv" >> "$artifact_root/coverage/summary.jsonl"
+    assert_cobertura_coverage "$coverage_destination" "$assembly" "$path_prefixes_csv" "$minimum_branch_rate" >> "$artifact_root/coverage/summary.jsonl"
   done
 done
 
