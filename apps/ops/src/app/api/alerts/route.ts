@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 const ALERTMANAGER_URL =
   "http://kube-prometheus-stack-alertmanager.monitoring:9093/api/v2/alerts";
 

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { k8sCore } from "../../../lib/k8s";
 
+export const dynamic = "force-dynamic";
+
 interface EventRow {
   name: string;
   namespace: string;

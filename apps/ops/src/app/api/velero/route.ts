@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { k8sCustom } from "../../../lib/k8s";
 
+export const dynamic = "force-dynamic";
+
 type VeleroSchedule = {
   metadata: { name: string };
   spec: { schedule: string };
