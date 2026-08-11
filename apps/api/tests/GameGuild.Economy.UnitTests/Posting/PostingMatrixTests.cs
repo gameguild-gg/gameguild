@@ -23,6 +23,7 @@ public sealed class PostingMatrixTests
         PostingTemplateKind.Escrow,
         PostingTemplateKind.BountyEscrow,
         PostingTemplateKind.BountyClaim,
+        PostingTemplateKind.BountyReclaim,
         PostingTemplateKind.Reclaim,
         PostingTemplateKind.Refund,
         PostingTemplateKind.PayoutReservation,
@@ -38,7 +39,7 @@ public sealed class PostingMatrixTests
     {
         var registered = Enum.GetValues<PostingTemplateKind>();
 
-        registered.Should().HaveCount(23);
+        registered.Should().HaveCount(24);
         registered.Select(kind => kind.ToString()).Should().NotContain(name =>
             name.Contains("Observed", StringComparison.OrdinalIgnoreCase) ||
             name.Contains("FailedMint", StringComparison.OrdinalIgnoreCase));
@@ -433,6 +434,137 @@ public sealed class PostingMatrixTests
     }
 
     [Fact]
+    public void BountyReclaim_ValidatesReturnAndFeePairs()
+    {
+        var valid = PostingFixture.Valid(PostingTemplateKind.BountyReclaim);
+        var wallet = valid.Lines[1].WalletId!.Value;
+        var unsupportedCurrency = valid with
+        {
+            Lines =
+            [
+                valid.Lines[0] with { Amount = default },
+                valid.Lines[1] with { Amount = default }
+            ]
+        };
+        var oddPairCount = valid with
+        {
+            Lines =
+            [
+                valid.Lines[0],
+                valid.Lines[1],
+                valid.Lines[0] with { Sequence = 3 }
+            ]
+        };
+        var mismatchedAmount = valid with
+        {
+            Lines =
+            [
+                valid.Lines[0],
+                valid.Lines[1] with { Amount = new CoinAmount(CurrencyCode.HardCoin, 9) }
+            ]
+        };
+        var mismatchedCurrency = valid with
+        {
+            Lines =
+            [
+                valid.Lines[0],
+                valid.Lines[1] with { Amount = new CoinAmount(CurrencyCode.SoftCoin, 10) }
+            ]
+        };
+        var hardFee = valid with
+        {
+            Lines =
+            [
+                PostingFixture.Line(1, EntrySide.Debit, EconomyAccountCode.HardCoinEscrow,
+                    CurrencyCode.HardCoin, 10),
+                PostingFixture.Line(2, EntrySide.Credit, EconomyAccountCode.FeeRevenueHard,
+                    CurrencyCode.HardCoin, 10)
+            ]
+        };
+        var softFee = valid with
+        {
+            Lines =
+            [
+                PostingFixture.Line(1, EntrySide.Debit, EconomyAccountCode.SoftCoinEscrow,
+                    CurrencyCode.SoftCoin, 10),
+                PostingFixture.Line(2, EntrySide.Credit, EconomyAccountCode.SoftCoinReserve,
+                    CurrencyCode.SoftCoin, 10)
+            ]
+        };
+        var misplacedFee = valid with
+        {
+            Lines =
+            [
+                PostingFixture.Line(1, EntrySide.Debit, EconomyAccountCode.HardCoinEscrow,
+                    CurrencyCode.HardCoin, 2),
+                PostingFixture.Line(2, EntrySide.Credit, EconomyAccountCode.FeeRevenueHard,
+                    CurrencyCode.HardCoin, 2),
+                PostingFixture.Line(3, EntrySide.Debit, EconomyAccountCode.HardCoinEscrow,
+                    CurrencyCode.HardCoin, 8),
+                PostingFixture.Line(4, EntrySide.Credit, EconomyAccountCode.PurchasedHardLiability,
+                    CurrencyCode.HardCoin, 8, wallet, ProvenanceKind.PurchasedHard)
+            ]
+        };
+        var missingProvenance = valid with
+        {
+            Lines =
+            [
+                valid.Lines[0],
+                valid.Lines[1] with { Provenance = null }
+            ]
+        };
+        var hardAccountMismatch = valid with
+        {
+            Lines =
+            [
+                valid.Lines[0],
+                valid.Lines[1] with { Provenance = ProvenanceKind.EarnedHard }
+            ]
+        };
+        var softHardProvenance = valid with
+        {
+            Lines =
+            [
+                PostingFixture.Line(1, EntrySide.Debit, EconomyAccountCode.SoftCoinEscrow,
+                    CurrencyCode.SoftCoin, 10),
+                PostingFixture.Line(2, EntrySide.Credit, EconomyAccountCode.SoftCoinLiability,
+                    CurrencyCode.SoftCoin, 10, wallet, ProvenanceKind.PurchasedHard)
+            ]
+        };
+        var validSoftReturn = valid with
+        {
+            Lines =
+            [
+                PostingFixture.Line(1, EntrySide.Debit, EconomyAccountCode.SoftCoinEscrow,
+                    CurrencyCode.SoftCoin, 10),
+                PostingFixture.Line(2, EntrySide.Credit, EconomyAccountCode.SoftCoinLiability,
+                    CurrencyCode.SoftCoin, 10, wallet, ProvenanceKind.AdRewardSoft)
+            ]
+        };
+
+        PostingMatrix.Validate(valid).IsValid.Should().BeTrue();
+        PostingMatrix.Validate(hardFee).IsValid.Should().BeTrue();
+        PostingMatrix.Validate(softFee).IsValid.Should().BeTrue();
+        PostingMatrix.Validate(validSoftReturn).IsValid.Should().BeTrue();
+        PostingMatrix.Validate(unsupportedCurrency).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidCurrency);
+        PostingMatrix.Validate(oddPairCount).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidLineCount);
+        PostingMatrix.Validate(mismatchedAmount).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidAmount);
+        PostingMatrix.Validate(mismatchedCurrency).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidAmount);
+        PostingMatrix.Validate(misplacedFee).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidAccountShape);
+        PostingMatrix.Validate(missingProvenance).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidProvenance);
+        PostingMatrix.Validate(hardAccountMismatch).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidAccountShape);
+        PostingMatrix.Validate(softHardProvenance).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidProvenance);
+    }
+
+    [Fact]
     public void InvalidCurrencyFromDeserialization_IsReportedWithoutEscapingValidator()
     {
         var burn = PostingFixture.Valid(PostingTemplateKind.Burn);
@@ -587,6 +719,12 @@ internal static class PostingFixture
                 {
                     Line(1, EntrySide.Debit, EconomyAccountCode.HardCoinEscrow, CurrencyCode.HardCoin, 10),
                     Line(2, EntrySide.Credit, EconomyAccountCode.EarnedHardLiability, CurrencyCode.HardCoin, 10, WalletId.New(), ProvenanceKind.EarnedHard)
+                }, null),
+            PostingTemplateKind.BountyReclaim => (PostingAuthority.EscrowCoordinator,
+                new[]
+                {
+                    Line(1, EntrySide.Debit, EconomyAccountCode.HardCoinEscrow, CurrencyCode.HardCoin, 10),
+                    Line(2, EntrySide.Credit, EconomyAccountCode.PurchasedHardLiability, CurrencyCode.HardCoin, 10, WalletId.New(), ProvenanceKind.PurchasedHard)
                 }, null),
             PostingTemplateKind.Reclaim => (PostingAuthority.EscrowCoordinator,
                 new[]
