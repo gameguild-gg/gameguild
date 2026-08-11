@@ -654,16 +654,8 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
         var userId = actor.SubjectIdAsGuid;
         if (!actor.IsAuthenticated || userId == null || actor.TenantId == null)
             return new(Guid.Empty, Guid.Empty, Error.Unauthorized("TestingLab.Unauthenticated", "An authenticated tenant actor is required."));
-        var activeUser = await context.Set<User>().AsNoTracking().AnyAsync(user =>
-            user.Id == userId.Value && user.IsActive && !user.IsSuspended && user.DeletedAt == null,
-            cancellationToken).ConfigureAwait(false);
-        var activeMembership = activeUser && await context.Set<TenantMember>().AsNoTracking().AnyAsync(member =>
-            member.UserId == userId.Value &&
-            member.TenantId == actor.TenantId.Value &&
-            member.IsActive &&
-            member.DeletedAt == null,
-            cancellationToken).ConfigureAwait(false);
-        return activeMembership
+        var hasAccess = await TestingLabActorAccess.IsActiveTenantActorAsync(context, actor, cancellationToken).ConfigureAwait(false);
+        return hasAccess
             ? new(userId.Value, actor.TenantId.Value, null)
             : new(Guid.Empty, Guid.Empty, Error.Unauthorized("TestingLab.InactiveActor", "An active user and tenant membership are required."));
     }

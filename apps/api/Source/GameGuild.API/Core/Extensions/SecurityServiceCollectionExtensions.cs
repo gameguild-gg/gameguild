@@ -190,8 +190,12 @@ public static class SecurityServiceCollectionExtensions
         services.AddAuthorization(authzOptions =>
         {
             // Core role-based policies (fallback for common use cases)
-            authzOptions.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
-            authzOptions.AddPolicy("RequireUserRole", policy => policy.RequireRole("User", "Admin"));
+            authzOptions.AddPolicy("RequireAdminRole", policy => policy.RequireAssertion(context =>
+            {
+                var roles = ClaimsExtractor.GetRoles(context.User);
+                return roles.Contains("Admin") || roles.Contains("SystemAdmin");
+            }));
+            authzOptions.AddPolicy("RequireUserRole", policy => policy.RequireRole("User", "Admin", "SystemAdmin"));
             authzOptions.AddPolicy("RequireTenantAccess", policy => policy.RequireClaim("TenantId"));
             
             // Authentication policies
@@ -205,7 +209,7 @@ public static class SecurityServiceCollectionExtensions
                 .RequireAssertion(context =>
                 {
                     var roles = ClaimsExtractor.GetRoles(context.User);
-                    return roles.Contains("SystemAdmin") || roles.Contains("Admin");
+                    return roles.Contains("SystemAdmin");
                 }));
             authzOptions.AddPolicy("TenantAdmin", policy => policy
                 .RequireAuthenticatedUser()
@@ -221,8 +225,18 @@ public static class SecurityServiceCollectionExtensions
                 }));
             
             // Admin policies
-            authzOptions.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-            authzOptions.AddPolicy("SecureAdmin", policy => policy.RequireRole("Admin").RequireClaim("mfa_verified", "true"));
+            authzOptions.AddPolicy("Admin", policy => policy.RequireAssertion(context =>
+            {
+                var roles = ClaimsExtractor.GetRoles(context.User);
+                return roles.Contains("Admin") || roles.Contains("SystemAdmin");
+            }));
+            authzOptions.AddPolicy("SecureAdmin", policy => policy
+                .RequireAssertion(context =>
+                {
+                    var roles = ClaimsExtractor.GetRoles(context.User);
+                    return roles.Contains("Admin") || roles.Contains("SystemAdmin");
+                })
+                .RequireClaim("mfa_verified", "true"));
             
             // User management policies (require authenticated user)
             authzOptions.AddPolicy("Users.Read", policy => policy.RequireAuthenticatedUser());
@@ -262,6 +276,7 @@ public static class SecurityServiceCollectionExtensions
 
         return roles.Contains("Admin") ||
                roles.Contains("SystemAdmin") ||
-               roles.Contains("TenantAdmin");
+               roles.Contains("TenantAdmin") ||
+               roles.Contains("Owner");
     }
 }

@@ -16,45 +16,61 @@ public sealed class AddTenantMemberCommandHandler(
 {
     public async Task<AddTenantMemberResponse> Handle(AddTenantMemberCommand request, CancellationToken cancellationToken)
     {
-        // Verify tenant exists
         var tenant = await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
 
         if (tenant == null) { return new AddTenantMemberResponse { Success = false, Message = $"Tenant with ID {request.TenantId} not found" }; }
 
-        // Check if member already exists
         var existingMember = await memberRepository.GetByUserAndTenantAsync(request.UserId, request.TenantId, cancellationToken).ConfigureAwait(false);
+        if (tenant.IsDefault && existingMember == null)
+        {
+            existingMember = await memberRepository
+                .GetByUserAndTenantIncludingDeletedAsync(request.UserId, request.TenantId, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
         var now = SystemClock.UtcNow;
+        var requiresAcceptance = request.RequiresAcceptance && !tenant.IsDefault;
         if (existingMember != null)
         {
-            if (existingMember.IsActive)
+            if (existingMember.IsActive && existingMember.DeletedAt is null && !tenant.IsDefault)
             {
                 return new AddTenantMemberResponse { Success = false, Message = "User is already a member of this tenant" };
             }
 
-            existingMember.UpdateRole(request.Role);
-            existingMember.JoinedAt = now;
+            if (existingMember.DeletedAt is not null)
+            {
+                existingMember.Restore();
+            }
 
-            if (request.RequiresAcceptance)
+            if (!existingMember.IsActive)
+            {
+                if (!tenant.IsDefault || string.IsNullOrWhiteSpace(existingMember.Role))
+                {
+                    existingMember.UpdateRole(request.Role);
+                }
+                existingMember.JoinedAt = now;
+            }
+
+            if (requiresAcceptance)
             {
                 existingMember.IsActive = false;
                 existingMember.LeftAt = null;
                 existingMember.LeaveReason = null;
                 existingMember.Metadata = TenantMemberInviteMetadata.CreatePending(
-                        request.InvitedByEmail,
-                        now,
-                        request.InviteeEmail,
-                        request.InviteeName)
-                    .ToJson();
+                    request.InvitedByEmail,
+                    now,
+                    request.InviteeEmail,
+                    request.InviteeName).ToJson();
             }
             else
             {
                 existingMember.Activate();
-                if (!string.IsNullOrWhiteSpace(existingMember.Metadata))
+                var invite = string.IsNullOrWhiteSpace(existingMember.Metadata) && request.RequiresAcceptance
+                    ? TenantMemberInviteMetadata.CreatePending(request.InvitedByEmail, now, request.InviteeEmail, request.InviteeName)
+                    : TenantMemberInviteMetadata.FromJson(existingMember.Metadata);
+                if (!string.IsNullOrWhiteSpace(invite.InviteStatus))
                 {
-                    existingMember.Metadata = TenantMemberInviteMetadata.FromJson(existingMember.Metadata)
-                        .MarkAccepted(now)
-                        .ToJson();
+                    existingMember.Metadata = invite.MarkAccepted(now).ToJson();
                 }
             }
 
@@ -70,17 +86,24 @@ public sealed class AddTenantMemberCommandHandler(
             return new AddTenantMemberResponse
             {
                 Success = true,
-                Message = request.RequiresAcceptance ? "Membership invite recreated" : "Member reactivated successfully",
+                Message = requiresAcceptance ? "Membership invite recreated" : "Member reactivated successfully",
                 MemberId = existingMember.Id
             };
         }
 
         var member = new TenantMember { TenantId = request.TenantId, UserId = request.UserId, Role = request.Role, JoinedAt = now, IsActive = true };
 
-        if (request.RequiresAcceptance)
+        if (requiresAcceptance)
         {
             member.IsActive = false;
             member.Metadata = TenantMemberInviteMetadata.CreatePending(request.InvitedByEmail, now, request.InviteeEmail, request.InviteeName).ToJson();
+        }
+        else if (request.RequiresAcceptance)
+        {
+            member.Metadata = TenantMemberInviteMetadata
+                .CreatePending(request.InvitedByEmail, now, request.InviteeEmail, request.InviteeName)
+                .MarkAccepted(now)
+                .ToJson();
         }
 
         var createdMember = await memberRepository.CreateAsync(member, cancellationToken).ConfigureAwait(false);
@@ -90,7 +113,6 @@ public sealed class AddTenantMemberCommandHandler(
             await SendInviteEmailAsync(tenant, request, cancellationToken).ConfigureAwait(false);
         }
 
-        // Raise domain event
         tenant.AddDomainEvent(new TenantMemberAddedEvent(request.TenantId, request.UserId, request.InvitedByEmail ?? "unknown@email.com", request.Role));
 
         return new AddTenantMemberResponse { Success = true, Message = "Member added successfully", MemberId = createdMember.Id };

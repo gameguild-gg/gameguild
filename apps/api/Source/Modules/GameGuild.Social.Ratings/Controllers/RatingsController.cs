@@ -1,3 +1,4 @@
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -288,7 +289,7 @@ public class RatingsController : BaseApiController
     /// Get ratings pending moderation (Admin)
     /// </summary>
     [HttpGet("admin/moderation")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Policies.TenantAdmin)]
     [ProducesResponseType(typeof(IEnumerable<RatingDto>), 200)]
     public async Task<IActionResult> GetPendingModeration(
         [FromQuery] int skip = 0,
@@ -308,7 +309,7 @@ public class RatingsController : BaseApiController
     /// Approve a rating (Admin)
     /// </summary>
     [HttpPost("admin/{ratingId:guid}/approve")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Policies.TenantAdmin)]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> Approve(Guid ratingId, CancellationToken ct)
@@ -321,7 +322,7 @@ public class RatingsController : BaseApiController
     /// Reject a rating (Admin)
     /// </summary>
     [HttpPost("admin/{ratingId:guid}/reject")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Policies.TenantAdmin)]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> Reject(Guid ratingId, CancellationToken ct)
@@ -334,7 +335,7 @@ public class RatingsController : BaseApiController
     /// Admin delete a rating
     /// </summary>
     [HttpDelete("admin/{ratingId:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Policies.TenantAdmin)]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> AdminDelete(Guid ratingId, CancellationToken ct)
@@ -347,7 +348,7 @@ public class RatingsController : BaseApiController
     /// Force recalculate rating summary (Admin)
     /// </summary>
     [HttpPost("admin/recalculate/{entityType}/{entityId:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Policies.TenantAdmin)]
     [ProducesResponseType(204)]
     public async Task<IActionResult> RecalculateSummary(string entityType, Guid entityId, CancellationToken ct)
     {

@@ -597,7 +597,123 @@ public class OAuthAuthServiceTests
         oauthRoles.Should().Contain("Admin").And.Contain("User");
     }
 
-    private async Task<(Guid? TenantId, string[] Roles)> CaptureOAuthTenantResolution(GetUserMembershipsResponse memberships)
+    [Fact]
+    public async Task TenantResolution_WithoutRequestedTenant_Should_SelectDefaultTenant()
+    {
+        var defaultTenantId = Guid.NewGuid();
+        var studioTenantId = Guid.NewGuid();
+        var memberships = new GetUserMembershipsResponse
+        {
+            TotalCount = 2,
+            Memberships =
+            [
+                new UserMembershipDto
+                {
+                    TenantId = studioTenantId,
+                    TenantName = "Studio",
+                    TenantSlug = "studio",
+                    TenantIsActive = true,
+                    TenantIsDefault = false,
+                    Role = "TenantAdmin",
+                    IsActive = true
+                },
+                new UserMembershipDto
+                {
+                    TenantId = defaultTenantId,
+                    TenantName = "GameGuild",
+                    TenantSlug = "gameguild",
+                    TenantIsActive = true,
+                    TenantIsDefault = true,
+                    Role = "Member",
+                    IsActive = true
+                }
+            ]
+        };
+
+        var (oauthTenantId, oauthRoles) = await CaptureOAuthTenantResolution(memberships);
+        var (localTenantId, localRoles) = await CaptureLocalSignUpTenantResolution(memberships);
+
+        oauthTenantId.Should().Be(defaultTenantId);
+        localTenantId.Should().Be(defaultTenantId);
+        oauthRoles.Should().BeEquivalentTo(localRoles);
+        oauthRoles.Should().Contain("Member").And.Contain("User");
+        oauthRoles.Should().NotContain("TenantAdmin");
+    }
+
+    [Fact]
+    public async Task TenantResolution_DefaultSystemAdmin_RemainsGlobalWhenAnotherTenantIsSelected()
+    {
+        var defaultTenantId = Guid.NewGuid();
+        var studioTenantId = Guid.NewGuid();
+        var memberships = new GetUserMembershipsResponse
+        {
+            TotalCount = 2,
+            Memberships =
+            [
+                new UserMembershipDto
+                {
+                    TenantId = defaultTenantId,
+                    TenantName = "GameGuild",
+                    TenantSlug = "gameguild",
+                    TenantIsActive = true,
+                    TenantIsDefault = true,
+                    Role = "SystemAdmin",
+                    IsActive = true
+                },
+                new UserMembershipDto
+                {
+                    TenantId = studioTenantId,
+                    TenantName = "Studio",
+                    TenantSlug = "studio",
+                    TenantIsActive = true,
+                    Role = "Member",
+                    IsActive = true
+                }
+            ]
+        };
+
+        var (oauthTenantId, oauthRoles) = await CaptureOAuthTenantResolution(memberships, studioTenantId);
+        var (localTenantId, localRoles) = await CaptureLocalSignUpTenantResolution(memberships, studioTenantId);
+
+        oauthTenantId.Should().Be(studioTenantId);
+        localTenantId.Should().Be(studioTenantId);
+        oauthRoles.Should().BeEquivalentTo(localRoles);
+        oauthRoles.Should().Contain("Member").And.Contain("SystemAdmin").And.Contain("User");
+    }
+
+    [Fact]
+    public async Task TenantResolution_NonDefaultSystemAdminRole_DoesNotGrantGlobalSystemAdmin()
+    {
+        var studioTenantId = Guid.NewGuid();
+        var memberships = new GetUserMembershipsResponse
+        {
+            TotalCount = 1,
+            Memberships =
+            [
+                new UserMembershipDto
+                {
+                    TenantId = studioTenantId,
+                    TenantName = "Studio",
+                    TenantSlug = "studio",
+                    TenantIsActive = true,
+                    TenantIsDefault = false,
+                    Role = "SystemAdmin",
+                    IsActive = true
+                }
+            ]
+        };
+
+        var (_, oauthRoles) = await CaptureOAuthTenantResolution(memberships, studioTenantId);
+        var (_, localRoles) = await CaptureLocalSignUpTenantResolution(memberships, studioTenantId);
+
+        oauthRoles.Should().BeEquivalentTo(localRoles);
+        oauthRoles.Should().NotContain("SystemAdmin");
+        oauthRoles.Should().ContainSingle().Which.Should().Be("User");
+    }
+
+    private async Task<(Guid? TenantId, string[] Roles)> CaptureOAuthTenantResolution(
+        GetUserMembershipsResponse memberships,
+        Guid? requestedTenantId = null)
     {
         _externalLoginRepoMock.Reset();
         _userRepoMock.Reset();
@@ -629,7 +745,7 @@ public class OAuthAuthServiceTests
             .Callback<Guid, string, string[], Guid?, int, CancellationToken>((_, _, roles, tenantId, _, _) => { capturedRoles = roles; capturedTenantId = tenantId; })
             .ReturnsAsync("access");
 
-        await CreateSut().GoogleIdTokenSignInAsync(Request());
+        await CreateSut().GoogleIdTokenSignInAsync(Request(tenantId: requestedTenantId));
 
         return (capturedTenantId, capturedRoles!);
     }
@@ -737,7 +853,9 @@ public class OAuthAuthServiceTests
         result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(15), TimeSpan.FromSeconds(5));
     }
 
-    private static async Task<(Guid? TenantId, string[] Roles)> CaptureLocalSignUpTenantResolution(GetUserMembershipsResponse memberships)
+    private static async Task<(Guid? TenantId, string[] Roles)> CaptureLocalSignUpTenantResolution(
+        GetUserMembershipsResponse memberships,
+        Guid? requestedTenantId = null)
     {
         var userRepo = new Mock<IUserRepository>();
         userRepo.Setup(x => x.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
@@ -789,7 +907,8 @@ public class OAuthAuthServiceTests
         {
             Email = "local@example.com",
             Password = "Password1!",
-            Username = "localuser"
+            Username = "localuser",
+            TenantId = requestedTenantId
         });
 
         return (capturedTenantId, capturedRoles!);

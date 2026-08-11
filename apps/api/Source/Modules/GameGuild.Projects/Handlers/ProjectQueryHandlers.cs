@@ -168,15 +168,22 @@ public sealed class ProjectQueryHandlers
   }
 
   public async Task<Result<IEnumerable<Project>>> Handle(GetDeletedProjectsQuery request, CancellationToken cancellationToken) {
-    if (!Actor.IsAuthenticated || !Actor.IsInRole("Admin")) {
+    if (!Actor.IsAuthenticated || !Actor.IsTenantAdmin) {
       return Result.Success<IEnumerable<Project>>(Array.Empty<Project>());
     }
 
-    var projects = await _context.Set<Project>()
+    IQueryable<Project> query = _context.Set<Project>()
       .AsNoTracking()
       .Where(p => p.DeletedAt != null)
       .Include(p => p.CreatedBy)
-      .Include(p => p.Category)
+      .Include(p => p.Category);
+
+    if (!Actor.IsSystemAdmin)
+    {
+      query = query.Where(project => project.TenantId == Actor.TenantId);
+    }
+
+    var projects = await query
       .OrderByDescending(p => p.DeletedAt)
       .ThenByDescending(p => p.UpdatedAt)
       .Skip(request.Skip)
@@ -280,7 +287,14 @@ public sealed class ProjectQueryHandlers
       accessibleQuery = query.Where(p => p.Visibility == ContentVisibility.Public || (p.Visibility == ContentVisibility.Private && p.Collaborators.Any(c => c.UserId == Actor.SubjectIdAsGuid)));
 
       // Admins can see everything
-      if (Actor.IsInRole("Admin")) { accessibleQuery = query; }
+      if (Actor.IsSystemAdmin)
+      {
+        accessibleQuery = query;
+      }
+      else if (Actor.IsTenantAdmin && Actor.TenantId.HasValue)
+      {
+        accessibleQuery = query.Where(project => project.TenantId == Actor.TenantId.Value);
+      }
     }
 
     return accessibleQuery;

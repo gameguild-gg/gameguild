@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +18,7 @@ namespace GameGuild.Compliance.Audit;
 [Microsoft.AspNetCore.Http.Tags("compliance/audit/security")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/admin/security-audit")]
-[Authorize(Roles = "Admin,SystemAdmin")]
+[Authorize(Policy = Policies.SystemAdmin)]
 public class SecurityAuditController(
     ISecurityAuditAggregator auditAggregator,
     IAuditService auditService,

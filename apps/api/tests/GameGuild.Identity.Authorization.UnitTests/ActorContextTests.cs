@@ -148,7 +148,7 @@ public class ActorContextTests
     }
 
     [Fact]
-    public void ActorContext_IsSystemAdmin_TrueForAdminRole()
+    public void ActorContext_AdminRole_IsTenantScoped_NotSystemAdmin()
     {
         // Arrange
         var context = ActorContextBuilder.ForUser(Guid.NewGuid())
@@ -156,7 +156,8 @@ public class ActorContextTests
             .Build();
 
         // Act & Assert
-        Assert.True(context.IsSystemAdmin);
+        Assert.False(context.IsSystemAdmin);
+        Assert.True(context.IsTenantAdmin);
     }
 
     [Fact]

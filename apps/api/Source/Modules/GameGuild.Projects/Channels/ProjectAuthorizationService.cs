@@ -34,6 +34,8 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
             .ConfigureAwait(false);
         if (project == null)
             return false;
+        if (actor.IsSystemAdmin || actor.IsTenantAdmin)
+            return true;
         if (project.CreatedById == actorId)
             return true;
 
@@ -76,6 +78,9 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
             .ConfigureAwait(false);
         if (!activeUser)
             return false;
+
+        if (actor.IsSystemAdmin)
+            return true;
 
         return await context.Set<TenantMember>()
             .AsNoTracking()

@@ -12,4 +12,6 @@ public sealed record UpdateTenantMemberRoleResponse
     public Guid MemberId { get; init; }
 
     public string NewRole { get; init; } = string.Empty;
+
+    public Guid TenantId { get; init; }
 }

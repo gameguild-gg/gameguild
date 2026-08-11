@@ -149,6 +149,75 @@ public class TenantMemberRepositoryTests
         reloaded!.DeletedAt.Should().NotBeNull();
     }
 
+    [Fact]
+    public async Task CreateAsync_Should_Reject_Inactive_DefaultTenantMembership()
+    {
+        await using var context = CreateContext();
+        var repo = new TenantMemberRepository(context);
+        var tenant = new Tenant { Name = "GameGuild", Slug = "gameguild", IsDefault = true };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
+        var member = new TenantMember
+        {
+            TenantId = tenant.Id,
+            UserId = Guid.NewGuid(),
+            Role = "Member",
+            IsActive = false
+        };
+
+        var action = () => repo.CreateAsync(member);
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*default tenant membership*");
+    }
+
+    [Fact]
+    public async Task UpdateAsync_Should_Reject_Deactivating_DefaultTenantMembership()
+    {
+        await using var context = CreateContext();
+        var repo = new TenantMemberRepository(context);
+        var tenant = new Tenant { Name = "GameGuild", Slug = "gameguild", IsDefault = true };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
+        var member = new TenantMember
+        {
+            TenantId = tenant.Id,
+            UserId = Guid.NewGuid(),
+            Role = "Member",
+            IsActive = true
+        };
+        await repo.CreateAsync(member);
+        member.Deactivate("attempted leave");
+
+        var action = () => repo.UpdateAsync(member);
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*default tenant membership*");
+    }
+
+    [Fact]
+    public async Task DeleteAsync_Should_Reject_DefaultTenantMembership()
+    {
+        await using var context = CreateContext();
+        var repo = new TenantMemberRepository(context);
+        var tenant = new Tenant { Name = "GameGuild", Slug = "gameguild", IsDefault = true };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
+        var member = new TenantMember
+        {
+            TenantId = tenant.Id,
+            UserId = Guid.NewGuid(),
+            Role = "Member",
+            IsActive = true
+        };
+        await repo.CreateAsync(member);
+
+        var action = () => repo.DeleteAsync(member.Id);
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*default tenant membership*");
+    }
+
     private static TestTenantDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<TestTenantDbContext>()

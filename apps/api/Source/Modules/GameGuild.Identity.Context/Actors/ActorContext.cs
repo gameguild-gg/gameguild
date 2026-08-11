@@ -120,7 +120,7 @@ public sealed record ActorContext
     /// <summary>
     ///     Gets whether the actor is a system administrator with full access.
     /// </summary>
-    public bool IsSystemAdmin => Roles.Contains("SystemAdmin") || Roles.Contains("Admin");
+    public bool IsSystemAdmin => Roles.Contains("SystemAdmin");
 
     /// <summary>
     ///     Gets whether the actor is a tenant administrator for the current tenant.
@@ -128,6 +128,7 @@ public sealed record ActorContext
     public bool IsTenantAdmin =>
         Roles.Contains("Owner") ||
         Roles.Contains("TenantAdmin") ||
+        Roles.Contains("Admin") ||
         IsSystemAdmin;
 
     /// <summary>
