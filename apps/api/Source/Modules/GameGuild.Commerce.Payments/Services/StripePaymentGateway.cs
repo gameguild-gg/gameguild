@@ -98,13 +98,13 @@ public class StripeGatewayOptions
     /// <summary>
     ///     Whether Stripe is enabled.
     /// </summary>
-    public bool IsEnabled { get; set; } = true;
+    public bool IsEnabled { get; set; } = false;
 
     /// <summary>
     ///     Whether to use simulated responses instead of real Stripe API.
     ///     Should be true for development/testing, false for production.
     /// </summary>
-    public bool UseSimulation { get; set; } = true;
+    public bool UseSimulation { get; set; } = false;
 
     /// <summary>
     ///     Stripe API key (secret key).
