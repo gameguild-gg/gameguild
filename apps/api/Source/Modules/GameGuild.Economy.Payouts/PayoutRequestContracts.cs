@@ -30,9 +30,13 @@ public sealed record PayoutRequest(
     public PayoutRequest Cancel(DateTimeOffset occurredAt)
     {
         if (State != PayoutRequestState.Submitted)
+        {
             throw new PayoutRequestTransitionException("Only a submitted payout request can be cancelled.");
+        }
         if (occurredAt < UpdatedAt)
+        {
             throw new ArgumentOutOfRangeException(nameof(occurredAt), "Payout request timestamps cannot move backwards.");
+        }
 
         return this with
         {

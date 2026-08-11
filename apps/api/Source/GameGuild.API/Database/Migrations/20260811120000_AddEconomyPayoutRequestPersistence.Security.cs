@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace GameGuild.API.Database.Migrations;
 
-public partial class AddEconomyPayoutRequestPersistence
+internal static class PayoutRequestPersistenceSql
 {
-    private static void InstallPayoutRequestSecurity(MigrationBuilder migrationBuilder)
+    internal static void Install(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.Sql(
             """
@@ -150,7 +150,7 @@ public partial class AddEconomyPayoutRequestPersistence
             """);
     }
 
-    private static void RemovePayoutRequestSecurity(MigrationBuilder migrationBuilder)
+    internal static void Remove(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.Sql(
             """
