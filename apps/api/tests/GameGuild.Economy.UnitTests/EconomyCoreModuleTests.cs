@@ -32,6 +32,9 @@ public sealed class EconomyCoreModuleTests
         services.Should().Contain(descriptor =>
             descriptor.ServiceType == typeof(IHardToSoftConversionWorkflow) &&
             descriptor.ImplementationType == typeof(PostgreSqlHardToSoftConversionWorkflow));
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IHardToSoftConversionRiskEvidenceVerifier) &&
+            descriptor.ImplementationType == typeof(HardToSoftConversionRiskEvidenceVerifier));
         services.Should().NotContain(descriptor =>
             descriptor.ServiceType == typeof(InMemoryLedgerKernelStore) ||
             descriptor.ImplementationType == typeof(RiskDecisionAuthorizer));

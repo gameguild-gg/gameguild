@@ -37,7 +37,8 @@ public interface IHardToSoftConversionWorkflow
 public sealed class PostgreSqlHardToSoftConversionWorkflow(
     IApplicationDbContext context,
     IActorContextAccessor actorContextAccessor,
-    IEconomyValueMovementDecisionGate decisionGate) : IHardToSoftConversionWorkflow
+    IEconomyValueMovementDecisionGate decisionGate,
+    IHardToSoftConversionRiskEvidenceVerifier riskEvidenceVerifier) : IHardToSoftConversionWorkflow
 {
     public async Task<SelfServiceHardToSoftConversionReceipt> ConvertAsync(
         SelfServiceHardToSoftConversionRequest request,
@@ -56,6 +57,8 @@ public sealed class PostgreSqlHardToSoftConversionWorkflow(
         var actor = actorContextAccessor.ActorContext;
         if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } actorId || actor.TenantId is not { } tenantId)
             throw new UnauthorizedAccessException("Economy conversion requires an authenticated user and tenant context.");
+
+        await riskEvidenceVerifier.VerifyAsync(actorId, tenantId, cancellationToken).ConfigureAwait(false);
 
         var walletId = await context.Set<EconomyWalletRow>()
             .AsNoTracking()

@@ -18,6 +18,7 @@ public sealed class EconomyCoreModule : ModuleBase
 
         services.AddEconomyRiskComposition(configuration);
         services.AddScoped<IRiskDecisionAuthorizer, PostgreSqlRiskDecisionAuthorizer>();
+        services.AddScoped<IHardToSoftConversionRiskEvidenceVerifier, HardToSoftConversionRiskEvidenceVerifier>();
         services.AddScoped<CoreProtectedPostingGate>();
         services.AddScoped<IRegisteredPostingGateway, PostgreSqlRegisteredPostingGateway>();
         services.AddScoped<IHardCoinFundingGateway, PostgreSqlHardCoinFundingGateway>();
