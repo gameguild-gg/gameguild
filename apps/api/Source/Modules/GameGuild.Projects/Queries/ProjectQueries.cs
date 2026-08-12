@@ -45,6 +45,12 @@ public sealed record GetAllProjectsQuery : IQuery<Result<IEnumerable<Project>>> 
   public string? SortDirection { get; init; } = "DESC";
 
   public bool IncludeDeleted { get; init; } = false;
+
+  /// <summary>
+  /// Restricts results to the actor's active tenant even when the actor is a system administrator.
+  /// Intended for tenant-owned workflows such as Testing Lab project selection.
+  /// </summary>
+  public bool CurrentTenantOnly { get; init; } = false;
 }
 
 /// <summary> Query to get project by ID </summary>

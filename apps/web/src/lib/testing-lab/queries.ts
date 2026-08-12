@@ -330,10 +330,16 @@ export const getPublicTestingLabDirectory = cache(async (): Promise<PublicTestin
   };
 });
 export const getTestingProjectOptions = cache(async (): Promise<TestingProjectOption[]> => {
-  const api = createTestingLabModules();
-  const projects = await readResult(api.projects.getProjects({ skip: 0, take: 50, sortBy: 'UpdatedAt', sortDirection: 'DESC' }), 'Projects');
+  const tenantId = (await auth().catch(() => null))?.tenantId;
+  if (!tenantId) return [];
 
-  return compact((projects.data ?? []).map(mapProject));
+  const api = createTestingLabModules();
+  const projects = await readResult(
+    api.projects.getProjects({ currentTenantOnly: true, skip: 0, take: 50, sortBy: 'UpdatedAt', sortDirection: 'DESC' }),
+    'Projects',
+  );
+
+  return compact((projects.data ?? []).filter((project) => project.tenantId === tenantId).map(mapProject));
 });
 
 export interface TestingRequestDetailData {
