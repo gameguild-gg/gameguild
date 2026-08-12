@@ -1,5 +1,7 @@
 export const CURRENT_GRADING_SCHEMA_VERSION = 1;
 
+// Result use answers "where should a trusted server result be applied?"
+// It is separate from runtime trust: grading-enabled work is always server-graded.
 export type GradingResultUse = 'feedback' | 'gradebook';
 
 export type FeedbackMode = 'immediate' | 'after-submit' | 'after-close' | 'manual';
@@ -8,6 +10,8 @@ export type PresentationMode = 'continuous' | 'single-step';
 
 export type GradingKind = 'deterministic' | 'manual' | 'external' | 'unsupported';
 
+// Content owns this definition. Assessments and submissions consume it, but do
+// not become the authoring source for the activity.
 export interface ContentGradingDefinition {
   enabled: boolean;
   schemaVersion: number;
@@ -57,11 +61,14 @@ export interface PresentationPolicy {
 export interface GradedItemConfig {
   contentBlockId: string;
   points: number;
+  // Describes how this item can be resolved on the server.
   gradingKind: GradingKind;
   answerKeyRef?: string;
   rubricRef?: string;
 }
 
+// Learner submissions are normalized into this small answer vocabulary before
+// server grading. Answer keys, score fields, and feedback do not belong here.
 export interface StructuredAnswer {
   selectedOptionIds?: string[];
   textAnswers?: Record<string, string>;
@@ -75,6 +82,7 @@ export interface StructuredAnswerPayload {
 }
 
 export interface AnswerKey {
+  // Server-owned material keyed by graded item id. Do not send this to learners.
   items: Record<string, unknown>;
 }
 
@@ -99,6 +107,8 @@ export interface GradeResult {
 export interface GradeSubmissionArgs {
   grading: ContentGradingDefinition;
   payload: StructuredAnswerPayload;
+  // Required for deterministic server grading; absent keys produce pending or
+  // unsupported results instead of trusting client-provided correctness.
   answerKey?: AnswerKey;
   contentBody?: unknown;
 }
