@@ -14,7 +14,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ToolchainPreset } from 'emception';
-import { createEmception } from '../createEmception';
+import { createEmception } from '../createEmception.js';
 
 const SMOKE = !!process.env.EMCEPTION_SMOKE;
 

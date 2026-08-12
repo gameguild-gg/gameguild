@@ -38,8 +38,8 @@ import type {
     WorkspaceBuildConfig,
     WorkspaceAPI,
 } from 'emception';
-import type { RunOptions as BrowserRunOptions } from './tool-runner';
-import { WorkerClient } from './worker-client';
+import type { RunOptions as BrowserRunOptions } from './tool-runner.js';
+import { WorkerClient } from './worker-client.js';
 
 /**
  * Default manifest URL used when `manifestUrl` is omitted. Points at the
@@ -102,7 +102,7 @@ export async function createEmception(opts: CreateEmceptionOptions = {}): Promis
         // references a `*.py?raw` asset via the emscripten subprocess shim)
         // into hosts that only need headless mode, and to keep this module
         // loadable from pure-Node test runners.
-        const { bootInWorker } = await import('./index');
+        const { bootInWorker } = await import('./index.js');
         const { client } = await bootInWorker(manifestUrl, opts.container);
         return wrap(client);
     }
@@ -210,7 +210,7 @@ function wrap(client: WorkerClient): EmceptionAPI {
         workspace,
         run,
         compileAndRun: async (sourceOrFiles?, opts?) => {
-            const { compileAndRun: pipeline } = await import('./presets');
+            const { compileAndRun: pipeline } = await import('./presets.js');
             const stdinStr = typeof opts?.stdin === 'string' && opts.stdin !== 'none' ? opts.stdin : undefined;
             let stdoutBuf = '';
             let stderrBuf = '';
