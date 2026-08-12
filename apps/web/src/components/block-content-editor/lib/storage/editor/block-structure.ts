@@ -13,6 +13,12 @@
  * by `nextBlockId(blocks)` and never recycled. Project IDs remain UUIDs.
  */
 
+import {
+  type BlockOrderEntry as BlockListOrderEntry,
+  type TypedBlock,
+  type TypedBlockList,
+  type TypedBlockStorage,
+} from "@game-guild/block-list"
 import type { AudioData } from "../../../nodes/audio-node"
 import type { GalleryData } from "../../../nodes/gallery-node"
 import type { HeaderData } from "../../../nodes/header-node"
@@ -78,13 +84,12 @@ export interface BlockDataMap {
 // Block — runtime unit. Generic in T allows narrowing via discriminant `type`.
 // ============================================================================
 
-type BlockMap = {
-  [K in BlockCellType]: { id: string; type: K; data: BlockDataMap[K] }
-}
+export type Block<T extends BlockCellType = BlockCellType> = Extract<
+  TypedBlock<BlockDataMap>,
+  { type: T }
+>
 
-export type Block<T extends BlockCellType = BlockCellType> = BlockMap[T]
-
-export type BlockArray = Block[]
+export type BlockArray = TypedBlockList<BlockDataMap>
 
 // ============================================================================
 // BlockStorage — persistence format
@@ -94,30 +99,11 @@ export type BlockArray = Block[]
 // ============================================================================
 
 /** `[id, type]` pair — one per block, in render order. */
-export type BlockOrderEntry<T extends BlockCellType = BlockCellType> = readonly [id: string, type: T]
+export type BlockOrderEntry<T extends BlockCellType = BlockCellType> = BlockListOrderEntry<T>
 
 /** Union of every possible block data payload (one per known block type). */
 export type AnyBlockData = BlockDataMap[BlockCellType]
 
-export interface BlockStorage {
-  order: BlockOrderEntry[]
-  blocks: Record<string, AnyBlockData>
-}
+export type BlockStorage = TypedBlockStorage<BlockDataMap>
 
-// ============================================================================
-// ID helpers — block ids are sequential numeric strings: "1", "2", "3", …
-// ============================================================================
-
-/**
- * Compute the next sequential block id for the given array. Walks every
- * block to find the highest numeric id and returns `String(max + 1)`. Ids
- * are never recycled, so this stays stable across deletions.
- */
-export function nextBlockId(blocks: BlockArray): string {
-  let max = 0
-  for (const b of blocks) {
-    const n = Number(b.id)
-    if (Number.isFinite(n) && n > max) max = n
-  }
-  return String(max + 1)
-}
+export { nextBlockId } from "@game-guild/block-list"

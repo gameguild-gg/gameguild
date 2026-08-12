@@ -1,0 +1,20 @@
+{
+  "name": "@game-guild/block-list",
+  "version": "4.0.0",
+  "type": "module",
+  "description": "Framework-independent ordered block-list contracts and helpers",
+  "license": "UNLICENSED",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "devDependencies": {
+    "@game-guild/typescript-config": "workspace:*",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.10"
+  }
+}

@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
     "@game-guild/ui",
     "@game-guild/auth-components",
     "@game-guild/block-content-editor",
+    "@game-guild/block-list",
     "@game-guild/community-members",
     "@game-guild/content-rendering",
     "@game-guild/courses",

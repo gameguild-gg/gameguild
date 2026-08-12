@@ -34,6 +34,7 @@
     "@floating-ui/react": "^0.27.19",
     "@game-guild/auth-components": "workspace:*",
     "@game-guild/block-content-editor": "workspace:*",
+    "@game-guild/block-list": "workspace:*",
     "@game-guild/client": "workspace:*",
     "@game-guild/community-members": "workspace:*",
     "@game-guild/content-rendering": "workspace:*",
