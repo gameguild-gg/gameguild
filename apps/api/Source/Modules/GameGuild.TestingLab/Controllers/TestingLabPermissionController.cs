@@ -27,7 +27,10 @@ public class TestingLabPermissionController : BaseApiController {
   }
 
   private Guid? GetEffectiveTenantId(Guid? requestedTenantId) {
-    var currentTenantId = _actorContextAccessor.ActorContext.TenantId;
+    var actor = _actorContextAccessor.ActorContext;
+    var currentTenantId = actor.TenantId;
+    if (actor.IsSystemAdmin) return requestedTenantId ?? currentTenantId;
+
     if (currentTenantId.HasValue && requestedTenantId.HasValue && currentTenantId != requestedTenantId)
       throw new UnauthorizedAccessException("Testing Lab access can only be managed inside the current tenant.");
 

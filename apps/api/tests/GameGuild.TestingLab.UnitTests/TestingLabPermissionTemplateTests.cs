@@ -122,6 +122,65 @@ public sealed class TestingLabPermissionTemplateTests
             .Should().ContainSingle(attribute => attribute.Policy == Policies.SystemAdmin);
     }
 
+    [Fact]
+    public async Task SystemAdmin_Should_Assign_Role_In_Explicit_Tenant_When_Context_Tenant_Differs()
+    {
+        var contextTenantId = Guid.NewGuid();
+        var requestedTenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var permissionService = new Mock<ITestingLabPermissionService>();
+        var actorContextAccessor = new Mock<IActorContextAccessor>();
+        actorContextAccessor
+            .SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.ForUser(Guid.NewGuid())
+                .WithTenantId(contextTenantId)
+                .WithRole("SystemAdmin")
+                .Build());
+        var controller = new TestingLabPermissionController(
+            permissionService.Object,
+            actorContextAccessor.Object,
+            NullLogger<TestingLabPermissionController>.Instance);
+
+        var result = await controller.AssignTestingLabRole(userId, new AssignTestingLabRoleRequest
+        {
+            TenantId = requestedTenantId,
+            RoleName = "TestingLab Reviewer"
+        });
+
+        result.Should().BeOfType<OkResult>();
+        permissionService.Verify(service => service.AssignRoleToUserAsync(
+            userId,
+            requestedTenantId,
+            "TestingLab Reviewer",
+            null), Times.Once);
+    }
+
+    [Fact]
+    public async Task TenantAdmin_Should_Not_Assign_Role_Outside_Current_Tenant()
+    {
+        var permissionService = new Mock<ITestingLabPermissionService>();
+        var actorContextAccessor = new Mock<IActorContextAccessor>();
+        actorContextAccessor
+            .SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.ForUser(Guid.NewGuid())
+                .WithTenantId(Guid.NewGuid())
+                .WithRole("Admin")
+                .Build());
+        var controller = new TestingLabPermissionController(
+            permissionService.Object,
+            actorContextAccessor.Object,
+            NullLogger<TestingLabPermissionController>.Instance);
+
+        var action = () => controller.AssignTestingLabRole(Guid.NewGuid(), new AssignTestingLabRoleRequest
+        {
+            TenantId = Guid.NewGuid(),
+            RoleName = "TestingLab Reviewer"
+        });
+
+        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        permissionService.VerifyNoOtherCalls();
+    }
+
     [Theory]
     [InlineData("")]
     public async Task Service_Should_Reject_Invalid_TestingLab_Template_Names(string name)
