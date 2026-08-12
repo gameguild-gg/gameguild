@@ -1,42 +1,42 @@
 {
-    "name": "@game-guild/courses",
-    "version": "0.1.0",
-    "type": "module",
-    "description": "UI components for the courses (learning) feature",
-    "license": "UNLICENSED",
-    "private": true,
-    "scripts": {
-        "test": "vitest run",
-        "typecheck": "tsc --noEmit --pretty false"
-    },
-    "exports": {
-        ".": "./src/index.ts",
-        "./components/*": "./src/components/*.tsx",
-        "./components/learning": "./src/components/learning/index.ts",
-        "./components/learning/*": "./src/components/learning/*.tsx",
-        "./components/learner": "./src/components/learner/index.ts",
-        "./components/learner/*": "./src/components/learner/*.tsx",
-        "./types": "./src/types.ts"
-    },
-    "dependencies": {
-        "@game-guild/content-rendering": "workspace:*",
-        "@game-guild/ui": "workspace:*",
-        "lucide-react": "^0.525.0",
-        "next": "16.3.0",
-        "react": "^19.2.8",
-        "react-dom": "^19.2.8"
-    },
-    "devDependencies": {
-        "@game-guild/eslint-config": "workspace:*",
-        "@game-guild/prettier-config": "workspace:*",
-        "@game-guild/typescript-config": "workspace:*",
-        "@testing-library/react": "^16.3.0",
-        "@testing-library/jest-dom": "^7.0.0",
-        "@types/node": "^20.0.0",
-        "@types/react": "^19.0.0",
-        "@types/react-dom": "^19.0.0",
-        "eslint": "^10.8.1",
-        "typescript": "^5.5.0",
-        "vitest": "^4.1.10"
-    }
+  "name": "@game-guild/courses",
+  "version": "4.0.0",
+  "type": "module",
+  "description": "UI components for the courses (learning) feature",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./components/*": "./src/components/*.tsx",
+    "./components/learning": "./src/components/learning/index.ts",
+    "./components/learning/*": "./src/components/learning/*.tsx",
+    "./components/learner": "./src/components/learner/index.ts",
+    "./components/learner/*": "./src/components/learner/*.tsx",
+    "./types": "./src/types.ts"
+  },
+  "dependencies": {
+    "@game-guild/content-rendering": "workspace:*",
+    "@game-guild/ui": "workspace:*",
+    "lucide-react": "^0.525.0",
+    "next": "16.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@game-guild/eslint-config": "workspace:*",
+    "@game-guild/prettier-config": "workspace:*",
+    "@game-guild/typescript-config": "workspace:*",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.10"
+  }
 }

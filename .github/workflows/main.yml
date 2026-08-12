@@ -86,37 +86,4 @@ jobs:
           publish_dir: ${{ runner.temp }}/gameguild-gource
           force_orphan: true
 
-  release:
-    name: Changesets Release
-    runs-on: ubuntu-latest
-    needs: [economy-gate]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-        with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
-        with:
-          version: 10.0.0
-
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: pnpm ci:dependencies
-
-      - name: Create Release Pull Request or Publish
-        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1
-        with:
-          publish: pnpm run release
-          version: pnpm run version
-          title: 'chore: version packages'
-          commit: 'chore: version packages'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+# Release moved to .github/workflows/release.yml (gated on Main + Emception CI/CD).

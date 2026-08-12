@@ -3,11 +3,48 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "game-guild/game-guild"
+      "repo": "gameguild-gg/gameguild"
     }
   ],
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "@game-guild/learning",
+      "@game-guild/ops",
+      "@game-guild/web",
+      "@game-guild/emception-demo-next",
+      "@game-guild/emception-demo-react",
+      "@game-guild/analytics",
+      "@game-guild/auth-components",
+      "@game-guild/block-content-editor",
+      "@game-guild/community-members",
+      "@game-guild/content-rendering",
+      "@game-guild/cookies",
+      "@game-guild/courses",
+      "@game-guild/errors",
+      "@game-guild/grading",
+      "@game-guild/client",
+      "@game-guild/emception-ui",
+      "@game-guild/ui",
+      "@game-guild/dotnet-wasm",
+      "@game-guild/eslint-config",
+      "@game-guild/jest-config",
+      "@game-guild/prettier-config",
+      "@game-guild/tailwind-config",
+      "@game-guild/typescript-config",
+      "@gameguild/emception-demo-next",
+      "@gameguild/emception-demo-react",
+      "@gameguild/emception-demo-run-react",
+      "@gameguild/emception-demo-run-webcomponent",
+      "emception-workspace",
+      "@gameguild/emception-browser",
+      "emception",
+      "@gameguild/emception-ide",
+      "@gameguild/emception-react",
+      "@gameguild/emception-webcomponent",
+      "@gameguild/emception-xterm"
+    ]
+  ],
   "linked": [
     [
       "@game-guild/eslint-config",
