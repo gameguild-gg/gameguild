@@ -12,8 +12,8 @@
 // separate, higher-level layer that lands later in the roadmap.
 
 import { ToolchainPreset, type EmceptionAPI } from 'emception';
-import type { ToolResult } from './tool-runner';
-import type { WorkerClient } from './worker-client';
+import type { ToolResult } from './tool-runner.js';
+import type { WorkerClient } from './worker-client.js';
 
 export interface CompilePaths {
     /** Source file path inside the VFS (also appears in error messages). */

@@ -27,11 +27,11 @@ export {
     type ToolResult,
     type VFSManager,
     type WorkerBootResult
-} from './boot';
+} from './boot.js';
 
 // Lower-level VFS surface (LazyFS, IDBFS, mountVFSFS) for advanced consumers
 // that want to compose their own VFSManager.
-export { IDBFS, LazyFS, mountVFSFS, type FileEntry, type FSManifest, type IDBFSOptions, type MountVFSFSOptions, type VFSFSRuntime } from './vfs/index';
+export { IDBFS, LazyFS, mountVFSFS, type FileEntry, type FSManifest, type IDBFSOptions, type MountVFSFSOptions, type VFSFSRuntime } from './vfs/index.js';
 
 export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/emception/cdn/manifest.json';
 
@@ -47,8 +47,8 @@ export {
     type NativePreset,
     type Preset,
     type PythonPreset
-} from './presets';
+} from './presets.js';
 
 // Façade wrapper for hosts that boot the worker themselves (e.g. the IDE).
-export { wrapWorkerClient } from './createEmception';
+export { wrapWorkerClient } from './createEmception.js';
 

@@ -7,7 +7,7 @@
 // guaranteed and the index-mapping below is sound even though case `name` is
 // optional.
 
-import type { TestPlan, TestReport } from '../types';
+import type { TestPlan, TestReport } from '../types.js';
 
 /** Result of {@link computeScore}. */
 export interface ScoreResult {

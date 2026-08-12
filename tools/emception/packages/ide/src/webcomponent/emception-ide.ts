@@ -27,8 +27,8 @@
 
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import Ide from '../components/Ide';
-import type { IdeProps, WorkspaceConfig } from '../components/ide-types';
+import Ide from '../components/Ide.js';
+import type { IdeProps, WorkspaceConfig } from '../components/ide-types.js';
 
 export const ELEMENT_NAME = 'emception-ide' as const;
 

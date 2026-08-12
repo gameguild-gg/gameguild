@@ -1,5 +1,5 @@
-import { SDL_DEMO_CODE } from './ide-types';
-import { buildFileTree, buildSDL3ArgsPort, detectsSDL, fileName, inferLanguage, isSourceFile, isTextFile } from './ide-utils';
+import { SDL_DEMO_CODE } from './ide-types.js';
+import { buildFileTree, buildSDL3ArgsPort, detectsSDL, fileName, inferLanguage, isSourceFile, isTextFile } from './ide-utils.js';
 
 // ─── isSourceFile ────────────────────────────────────────────────────────────
 

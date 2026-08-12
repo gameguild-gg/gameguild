@@ -1,4 +1,4 @@
-import { deriveStorageKey, WORKSPACE_STORAGE_KEY } from './ide-types';
+import { deriveStorageKey, WORKSPACE_STORAGE_KEY } from './ide-types.js';
 
 // ─── WORKSPACE_STORAGE_KEY ───────────────────────────────────────────────────
 
