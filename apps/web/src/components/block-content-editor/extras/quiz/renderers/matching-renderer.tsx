@@ -5,11 +5,12 @@
 
 "use client"
 
-import { useState, useRef, useEffect, useMemo } from "react"
+import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import type { MatchingEntry, QuizAnswerState } from "../types"
+import type { MatchingLearnerEntry } from "../contracts"
 
 interface MatchingRendererProps {
-  entry: MatchingEntry
+  entry: MatchingEntry | MatchingLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
@@ -32,6 +33,21 @@ const CONNECTION_COLORS = [
   { card: "border-rose-500 bg-rose-50 dark:bg-rose-950/30 dark:border-rose-500", line: "text-rose-500 dark:text-rose-400" },
 ]
 
+function stableShuffle<T>(items: readonly T[], getKey: (item: T, index: number) => string): T[] {
+  return items
+    .map((item, index) => ({ item, index, rank: hashString(`${getKey(item, index)}:${index}`) }))
+    .sort((left, right) => left.rank - right.rank || left.index - right.index)
+    .map(({ item }) => item)
+}
+
+function hashString(value: string): number {
+  let hash = 0
+  for (let index = 0; index < value.length; index++) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0
+  }
+  return hash
+}
+
 export function MatchingRenderer({
   entry,
   answerState,
@@ -47,39 +63,34 @@ export function MatchingRenderer({
 
   // Build a map of left -> right assignments from selectedOptionIds
   // Format: "leftId:rightValue"
-  const assignments = new Map<string, string>()
-  answerState.selectedOptionIds.forEach((sel) => {
-    const idx = sel.indexOf(":")
-    if (idx > 0) {
-      assignments.set(sel.substring(0, idx), sel.substring(idx + 1))
-    }
-  })
+  const assignments = useMemo(() => {
+    const next = new Map<string, string>()
+    answerState.selectedOptionIds.forEach((sel) => {
+      const idx = sel.indexOf(":")
+      if (idx > 0) {
+        next.set(sel.substring(0, idx), sel.substring(idx + 1))
+      }
+    })
+    return next
+  }, [answerState.selectedOptionIds])
 
-  const rightItems = entry.pairs.map((p) => p.right)
-  const distractors = entry.distractors || []
-  const allRightItems = [...rightItems, ...distractors]
-  const usedRightItems = new Set(assignments.values())
+  const allRightItems = useMemo(() => {
+    const rightItems = entry.rightOptions ?? entry.pairs.flatMap((pair) => ("right" in pair && pair.right ? [pair.right] : []))
+    const distractors = "distractors" in entry ? entry.distractors ?? [] : []
+    return [...rightItems, ...distractors]
+  }, [entry])
+  const usedRightItems = useMemo(() => new Set(assignments.values()), [assignments])
 
   // Shuffle both columns once on mount
   const shuffledPairs = useMemo(() => {
-    const arr = [...entry.pairs]
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j]!, arr[i]!]
-    }
-    return arr
+    return stableShuffle(entry.pairs, (pair) => `${pair.id}:${pair.left}`)
   }, [entry.pairs])
 
   const shuffledRightItems = useMemo(() => {
-    const arr = [...allRightItems]
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j]!, arr[i]!]
-    }
-    return arr
-  }, [entry.pairs, entry.distractors])
+    return stableShuffle(allRightItems, (right) => right)
+  }, [allRightItems])
 
-  const updateLines = () => {
+  const updateLines = useCallback(() => {
     if (!containerRef.current) return
 
     const containerRect = containerRef.current.getBoundingClientRect()
@@ -115,14 +126,14 @@ export function MatchingRenderer({
     })
 
     setLines(newLines)
-  }
+  }, [assignments, entry.pairs])
 
   // Update lines when assignments or window size changes
   useEffect(() => {
     updateLines()
     window.addEventListener("resize", updateLines)
     return () => window.removeEventListener("resize", updateLines)
-  }, [answerState.selectedOptionIds, assignments.size])
+  }, [updateLines])
 
 
   const handleLeftClick = (leftId: string) => {

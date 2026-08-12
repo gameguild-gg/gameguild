@@ -2,9 +2,9 @@
 
 ## Summary
 
-Part 4 adds an author-facing preview flow for graded content, starting with quiz content.
+Part 4 adds author-facing preview flows for quiz content.
 
-The goal is to let course authors test the learner experience and server-side grading behavior before publishing or relying on the item. This preview must use the same learner-safe redaction and server grading path as real submissions, but it must not create official attempts, learner progress, gradebook entries, or final-grade effects.
+The goal is to let course authors test both ungraded practice behavior and grading-enabled server behavior before publishing or relying on the item. Ungraded preview can use local-practice feedback. Grading-enabled dry-run must use the same learner-safe redaction and server grading path as real submissions, but it must not create official attempts, learner progress, gradebook entries, or final-grade effects.
 
 ## Dependencies
 
@@ -17,22 +17,25 @@ Part 4 depends on the Part 3 backend path:
 - deterministic quiz grading can run server-side;
 - client-sent score, correctness, answer key, and `isCorrect` are ignored.
 
-The frontend can add a disabled or local shell for the `Preview` button before Part 3 is complete, but the real grading dry-run should wait for the server endpoint.
+The frontend can add local-practice preview for grading-disabled content before Part 3 is complete. The grading-enabled dry-run should wait for the server endpoint.
 
 ## Goals
 
 - Add a `Preview` action to `quiz-content-editor`.
-- Render the quiz in a learner-like mode using a learner-safe payload.
+- Render grading-disabled quizzes in local-practice mode.
+- Render grading-enabled quizzes in a learner-like mode using a learner-safe payload.
 - Let the author answer the quiz as a learner would.
-- Submit answers to a server dry-run endpoint.
-- Return score, pass/fail status, item feedback, and grading diagnostics to the author.
-- Use the same grading adapter and deterministic grading engine as real learner submissions.
-- Verify that learner preview payloads do not expose answer keys.
-- Keep preview/dry-run isolated from official gradebook and learner progress writes.
+- For grading-disabled preview, show local correct/incorrect feedback only.
+- For grading-enabled preview, submit answers to a server dry-run endpoint.
+- For grading-enabled dry-run, return score, pass/fail status, item feedback, and grading diagnostics to the author.
+- For grading-enabled dry-run, use the same grading adapter and deterministic grading engine as real learner submissions.
+- Verify that grading-enabled learner preview payloads do not expose answer keys.
+- Keep preview and dry-run isolated from official gradebook and learner progress writes.
 
 ## Non-Goals
 
-- Do not recreate client-side grading.
+- Do not recreate client-side grading for grading-enabled preview or dry-run.
+- Do not make local-practice preview produce trusted scores or official results.
 - Do not persist preview results as learner attempts.
 - Do not update `AssessmentSubmission.Score` for dry-run requests.
 - Do not update gradebook/final-grade aggregates.
@@ -45,13 +48,16 @@ Authoring surface:
 
 - Show `Preview` in the quiz content editor header or primary actions area.
 - Keep the existing save flow separate from preview.
-- If there are unsaved changes, require save before server dry-run or send an explicit draft preview payload only if the backend supports it.
+- If grading is disabled, preview may run against the current local authoring state.
+- If grading is enabled and there are unsaved changes, require save before server dry-run or send an explicit draft preview payload only if the backend supports it.
 - Open preview in a modal, side panel, or dedicated preview route.
-- Render the quiz from the learner payload, not from the full authoring payload.
+- For grading-disabled preview, render from the normal content payload and use `local-practice`.
+- For grading-enabled preview, render the quiz from the learner payload, not from the full authoring payload.
 
 Preview states:
 
 - loading learner-safe payload;
+- local-practice ready;
 - ready to answer;
 - submitting dry-run;
 - graded result;
@@ -59,6 +65,7 @@ Preview states:
 
 Result display:
 
+- local-practice correct/incorrect feedback for grading-disabled quizzes;
 - total score;
 - max score;
 - pass/fail when a passing score exists;
@@ -84,6 +91,8 @@ Suggested endpoints or service operations:
 
 The exact route names can follow existing API conventions once Part 3 chooses the final content-grading service boundary.
 
+No backend endpoint is required for grading-disabled local-practice preview unless the product later wants server-rendered draft preview for consistency.
+
 ## Security Rules
 
 - The dry-run endpoint must require author/editor permission for the course content.
@@ -92,6 +101,7 @@ The exact route names can follow existing API conventions once Part 3 chooses th
 - Dry-run must ignore client-supplied score, correctness, answer key, and `isCorrect`.
 - Dry-run responses can include author-facing diagnostics, but only for authenticated authors/editors.
 - The learner runtime must not call author dry-run endpoints.
+- Local-practice preview must be disabled automatically when grading is enabled.
 
 ## Package Contract
 
@@ -124,9 +134,10 @@ The names can change during implementation, but the boundary should stay the sam
 Frontend:
 
 - quiz editor shows `Preview`;
-- preview renders from learner-safe payload;
-- preview submit sends structured answers;
-- preview result shows score and feedback;
+- grading-disabled preview renders in local-practice mode and shows correct/incorrect feedback;
+- grading-enabled preview renders from learner-safe payload;
+- grading-enabled preview submit sends structured answers;
+- grading-enabled preview result shows score and feedback from the server;
 - unsaved quiz changes are handled explicitly;
 - `React.lazy` plus `Suspense` remain in place, with no `next/dynamic`.
 
@@ -143,6 +154,7 @@ Regression:
 
 - existing content save/reload remains unchanged;
 - official learner submissions still use the Part 3 server grading path;
+- grading-disabled preview does not create official submissions or trusted results;
 - official feedback-only submissions still store server-produced feedback/results through the submission/result path;
 - feedback-only content remains outside gradebook;
 - gradebook content only updates gradebook through official submission flow, not dry-run.
