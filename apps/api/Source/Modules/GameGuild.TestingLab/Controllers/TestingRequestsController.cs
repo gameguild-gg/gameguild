@@ -70,7 +70,10 @@ public class TestingRequestsController(
     // PUT: testing/requests/{id}
     [HttpPut("requests/{id}")]
     [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Edit)]
-    public async Task<ActionResult<TestingRequest>> UpdateTestingRequest(Guid id, UpdateTestingRequestDto requestDto)
+    public async Task<ActionResult<TestingRequestDetailProjection>> UpdateTestingRequest(
+        Guid id,
+        UpdateTestingRequestDto requestDto,
+        CancellationToken cancellationToken = default)
     {
         var existingRequest = await requestService.GetTestingRequestByIdAsync(id).ConfigureAwait(false);
         if (existingRequest == null) return NotFound("The requested testing request was not found.");
@@ -78,8 +81,10 @@ public class TestingRequestsController(
         try
         {
             requestDto.UpdateTestingRequest(existingRequest);
-            var updatedRequest = await requestService.UpdateTestingRequestAsync(existingRequest).ConfigureAwait(false);
-            return Ok(updatedRequest);
+            await requestService.UpdateTestingRequestAsync(existingRequest).ConfigureAwait(false);
+            return ToActionResult(await mediator.Send(
+                new GetTestingRequestDetailQuery(id),
+                cancellationToken).ConfigureAwait(false));
         }
         catch (InvalidOperationException ex)
         {

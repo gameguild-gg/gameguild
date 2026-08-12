@@ -161,7 +161,7 @@ export class TestinglabTestingrequestsModule {
 
   /**
    */
-  async putTestingRequests(id: string, body: Types.TestingLabUpdateTestingInput): Promise<Result<Types.TestingLabTestingInput, ApiError>> {
+  async putTestingRequests(id: string, body: Types.TestingLabUpdateTestingInput): Promise<Result<Types.TestingLabTestingRequestDetailProjection, ApiError>> {
     const url = `/v1/testing/requests/${id}`;
 
     // Validate request body
@@ -176,7 +176,7 @@ export class TestinglabTestingrequestsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.TestingLabTestingInputSchema, result.data, 'response');
+      const validatedData = safeParse(Types.TestingLabTestingRequestDetailProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
