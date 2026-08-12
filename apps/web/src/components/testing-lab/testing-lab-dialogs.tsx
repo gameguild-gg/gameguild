@@ -19,6 +19,7 @@ import type { TestingLabTestingLabRoleTemplate } from '@game-guild/client';
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Button } from '@game-guild/ui/components/button';
 import { Checkbox } from '@game-guild/ui/components/checkbox';
+import { DateTimePicker } from '@game-guild/ui/components/date-time-picker';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
@@ -144,11 +145,11 @@ export function SubmitTestingBuildDialog({ projects }: { projects: TestingProjec
         <input type="hidden" name="instructionsType" value="Text" />
         <div className="space-y-2">
           <Label htmlFor="request-start">Testing starts</Label>
-          <Input id="request-start" name="startDate" type="datetime-local" />
+          <DateTimePicker id="request-start" name="startDate" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="request-end">Testing ends</Label>
-          <Input id="request-end" name="endDate" type="datetime-local" />
+          <DateTimePicker id="request-end" name="endDate" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="request-capacity">Tester capacity</Label>
@@ -330,11 +331,11 @@ export function CreateTestingSessionDialog({ requests, locations }: { requests: 
         </div>
         <div className="space-y-2">
           <Label htmlFor="session-start">Starts</Label>
-          <Input id="session-start" name="startTime" type="datetime-local" required />
+          <DateTimePicker id="session-start" name="startTime" required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="session-end">Ends</Label>
-          <Input id="session-end" name="endTime" type="datetime-local" required />
+          <DateTimePicker id="session-end" name="endTime" required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="session-testers">Max testers</Label>
@@ -431,6 +432,8 @@ export function CreateTestingLabRoleDialog() {
 
 function dateInputValue(value?: string | null, dateOnly = false) {
   if (!value) return '';
+  const wallClock = value.match(dateOnly ? /^(\d{4}-\d{2}-\d{2})/ : /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
+  if (wallClock) return wallClock[1];
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return value;
   return dateOnly ? date.toISOString().slice(0, 10) : date.toISOString().slice(0, 16);
@@ -481,11 +484,11 @@ export function EditTestingRequestDialog({ request }: { request: TestingRequestS
         </div>
         <div className="space-y-2">
           <Label htmlFor={`request-start-${request.id}`}>Starts</Label>
-          <Input id={`request-start-${request.id}`} name="startDate" type="datetime-local" defaultValue={dateInputValue(request.startDate)} />
+          <DateTimePicker id={`request-start-${request.id}`} name="startDate" defaultValue={dateInputValue(request.startDate)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`request-end-${request.id}`}>Ends</Label>
-          <Input id={`request-end-${request.id}`} name="endDate" type="datetime-local" defaultValue={dateInputValue(request.endDate)} />
+          <DateTimePicker id={`request-end-${request.id}`} name="endDate" defaultValue={dateInputValue(request.endDate)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`request-capacity-${request.id}`}>Tester capacity</Label>
@@ -551,12 +554,12 @@ export function EditTestingSessionDialog({ session, locations }: { session: Test
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Starts</Label>
-          <Input name="startTime" type="datetime-local" required defaultValue={dateInputValue(session.startTime)} />
+          <Label htmlFor={`session-start-${session.id}`}>Starts</Label>
+          <DateTimePicker id={`session-start-${session.id}`} name="startTime" required defaultValue={dateInputValue(session.startTime)} />
         </div>
         <div className="space-y-2">
-          <Label>Ends</Label>
-          <Input name="endTime" type="datetime-local" required defaultValue={dateInputValue(session.endTime)} />
+          <Label htmlFor={`session-end-${session.id}`}>Ends</Label>
+          <DateTimePicker id={`session-end-${session.id}`} name="endTime" required defaultValue={dateInputValue(session.endTime)} />
         </div>
         <div className="space-y-2">
           <Label>Location</Label>

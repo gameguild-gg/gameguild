@@ -297,8 +297,9 @@ public class LocalAuthService(
         // Hash the incoming token to match against stored hash
         var hashedToken = refreshTokenHasher.HashToken(request.RefreshToken);
         var storedToken = await refreshTokenRepository.GetByTokenAsync(hashedToken).ConfigureAwait(false);
+        var now = SystemClock.UtcNow;
 
-        if (storedToken == null || !storedToken.IsActive || storedToken.ExpiresAt <= SystemClock.UtcNow)
+        if (storedToken == null || storedToken.ExpiresAt <= now)
         {
             logger.LogWarning(
                 "Invalid refresh token attempt from {IpAddress}. TokenFound: {TokenFound}, IsActive: {IsActive}, ExpiresAt: {ExpiresAt}",
@@ -311,7 +312,27 @@ public class LocalAuthService(
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
-        var userId = storedToken.UserId;
+        var activeToken = storedToken;
+        string? reusedReplacementToken = null;
+        if (!storedToken.IsActive)
+        {
+            activeToken = await ResolveRecentRotationRetryAsync(storedToken, ipAddress, now, cancellationToken).ConfigureAwait(false);
+            if (activeToken == null)
+            {
+                logger.LogWarning(
+                    "Rejected refresh token replay from {IpAddress}. RevokedAt: {RevokedAt}, RevokedByIp: {RevokedByIp}",
+                    ipAddress,
+                    storedToken.RevokedAt,
+                    storedToken.RevokedByIp
+                );
+
+                throw new UnauthorizedAccessException("Invalid refresh token");
+            }
+
+            reusedReplacementToken = storedToken.ReplacedByToken;
+        }
+
+        var userId = activeToken.UserId;
         var user = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         var tokenVersion = user?.TokenVersion ?? 1;
         await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId, cancellationToken).ConfigureAwait(false);
@@ -330,19 +351,29 @@ public class LocalAuthService(
             tenantAccessContext.TenantId,
             tokenVersion,
             cancellationToken).ConfigureAwait(false);
-        var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
-
         var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-        var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
+        string newRefreshToken;
+        DateTime refreshTokenExpiresAt;
+        if (reusedReplacementToken != null)
+        {
+            newRefreshToken = reusedReplacementToken;
+            refreshTokenExpiresAt = activeToken.ExpiresAt;
+            logger.LogInformation("Recent refresh rotation retry recovered for user {UserId}", userId);
+        }
+        else
+        {
+            newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
+            refreshTokenExpiresAt = now.AddDays(refreshTokenExpiryDays);
 
-        // Revoke old token (token rotation for security)
-        storedToken.IsRevoked = true;
-        storedToken.RevokedAt = SystemClock.UtcNow;
-        storedToken.RevokedByIp = ipAddress;
-        storedToken.ReplacedByToken = newRefreshToken;
-        await refreshTokenRepository.UpdateAsync(storedToken).ConfigureAwait(false);
+            // Revoke old token (token rotation for security)
+            storedToken.IsRevoked = true;
+            storedToken.RevokedAt = now;
+            storedToken.RevokedByIp = ipAddress;
+            storedToken.ReplacedByToken = newRefreshToken;
+            await refreshTokenRepository.UpdateAsync(storedToken).ConfigureAwait(false);
 
-        logger.LogInformation("Refresh token rotated for user {UserId}", userId);
+            logger.LogInformation("Refresh token rotated for user {UserId}", userId);
+        }
 
         var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
 
@@ -362,6 +393,36 @@ public class LocalAuthService(
             TenantId = tenantAccessContext.TenantId,
             AvailableTenants = tenantAccessContext.AvailableTenants
         };
+    }
+
+    private async Task<RefreshToken?> ResolveRecentRotationRetryAsync(
+        RefreshToken rotatedToken,
+        string ipAddress,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var graceSeconds = int.TryParse(configuration["Jwt:RefreshTokenRotationGraceSeconds"], out var configuredGrace)
+            ? Math.Max(0, configuredGrace)
+            : 30;
+        var elapsed = rotatedToken.RevokedAt.HasValue ? now - rotatedToken.RevokedAt.Value : TimeSpan.MaxValue;
+        if (
+            !rotatedToken.IsRevoked ||
+            elapsed < TimeSpan.Zero ||
+            elapsed > TimeSpan.FromSeconds(graceSeconds) ||
+            !string.Equals(rotatedToken.RevokedByIp, ipAddress, StringComparison.Ordinal) ||
+            string.IsNullOrWhiteSpace(rotatedToken.ReplacedByToken))
+        {
+            return null;
+        }
+
+        var replacementHash = refreshTokenHasher.HashToken(rotatedToken.ReplacedByToken);
+        var replacement = await refreshTokenRepository.GetByTokenAsync(replacementHash, cancellationToken).ConfigureAwait(false);
+        if (replacement == null || replacement.UserId != rotatedToken.UserId || !replacement.IsActive)
+        {
+            return null;
+        }
+
+        return replacement;
     }
 
     private static TenantAccessContext RequireActiveTenantAccess(TenantAccessContext tenantAccessContext)

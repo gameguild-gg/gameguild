@@ -70,7 +70,7 @@ function createResponseCookies(): ResponseCookies {
 /**
  * Serialize a cookie to a Set-Cookie header string
  */
-function serializeCookie(
+export function serializeCookie(
   name: string,
   value: string,
   options: CookieSerializeOptions
