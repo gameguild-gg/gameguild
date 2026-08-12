@@ -108,6 +108,21 @@ public sealed class TestingLabPermissionTemplateTests
     }
 
     [Theory]
+    [InlineData(nameof(TestingLabPermissionController.CreateTestingLabRoleTemplate))]
+    [InlineData(nameof(TestingLabPermissionController.UpdateTestingLabRoleTemplate))]
+    [InlineData(nameof(TestingLabPermissionController.DeleteTestingLabRoleTemplate))]
+    [InlineData(nameof(TestingLabPermissionController.DeleteTestingLabRoleTemplateByName))]
+    public void Global_Role_Template_Mutations_Should_Require_SystemAdmin(string methodName)
+    {
+        var method = typeof(TestingLabPermissionController).GetMethod(methodName);
+
+        method.Should().NotBeNull();
+        method!.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), inherit: true)
+            .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()
+            .Should().ContainSingle(attribute => attribute.Policy == Policies.SystemAdmin);
+    }
+
+    [Theory]
     [InlineData("")]
     public async Task Service_Should_Reject_Invalid_TestingLab_Template_Names(string name)
     {
