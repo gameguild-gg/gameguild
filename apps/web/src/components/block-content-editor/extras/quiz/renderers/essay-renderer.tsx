@@ -8,10 +8,11 @@
 import { useMemo, useCallback, useRef, useState, useEffect } from "react"
 import type { SerializedEditorState } from "lexical"
 import type { EssayEntry, QuizAnswerState } from "../types"
+import type { EssayLearnerEntry } from "../contracts"
 import { EssayLexicalEditor } from "./essay-lexical-editor"
 
 interface EssayRendererProps {
-  entry: EssayEntry
+  entry: EssayEntry | EssayLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
@@ -58,7 +59,9 @@ export function EssayRenderer({
   }, [plainText])
 
   const answerStateRef = useRef(answerState)
-  answerStateRef.current = answerState
+  useEffect(() => {
+    answerStateRef.current = answerState
+  }, [answerState])
 
   const handleChange = useCallback(
     (newState: SerializedEditorState, newPlainText: string) => {

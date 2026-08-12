@@ -7,9 +7,10 @@
 
 import { useState, useEffect } from "react"
 import type { OrderingEntry, QuizAnswerState } from "../types"
+import type { OrderingLearnerEntry } from "../contracts"
 
 interface OrderingRendererProps {
-  entry: OrderingEntry
+  entry: OrderingEntry | OrderingLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean

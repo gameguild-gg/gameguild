@@ -18,7 +18,7 @@ import {
 const RESULT_USES = new Set<GradingResultUse>(['feedback', 'gradebook']);
 const FEEDBACK_MODES = new Set<FeedbackMode>(['immediate', 'after-submit', 'after-close', 'manual']);
 const PRESENTATION_MODES = new Set<PresentationMode>(['continuous', 'single-step']);
-const GRADING_KINDS = new Set<GradingKind>(['deterministic', 'manual', 'external']);
+const GRADING_KINDS = new Set<GradingKind>(['deterministic', 'manual', 'external', 'unsupported']);
 
 export function createDisabledGradingDefinition(): ContentGradingDefinition {
   return {

@@ -5,10 +5,11 @@
 
 "use client"
 
-import type { RatingEntry, QuizAnswerState } from "../types"
+import type { QuizAnswerState, RatingEntry } from "../types"
+import type { RatingLearnerEntry } from "../contracts"
 
 interface RatingRendererProps {
-  entry: RatingEntry
+  entry: RatingEntry | RatingLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean

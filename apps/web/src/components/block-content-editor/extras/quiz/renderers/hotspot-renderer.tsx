@@ -7,8 +7,9 @@
 "use client"
 
 import { useRef, useCallback } from "react"
-import { CheckCircle, XCircle, MousePointerClick } from "lucide-react"
+import { MousePointerClick } from "lucide-react"
 import type { HotspotEntry, QuizAnswerState } from "../types"
+import type { HotspotLearnerEntry } from "../contracts"
 
 const ZONE_COLORS = [
   { bg: "rgba(34, 197, 94, 0.18)", border: "rgb(34, 197, 94)" },
@@ -18,7 +19,7 @@ const ZONE_COLORS = [
 ]
 
 interface HotspotRendererProps {
-  entry: HotspotEntry
+  entry: HotspotEntry | HotspotLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
@@ -33,6 +34,7 @@ export function HotspotRenderer({
   showFeedback = false,
 }: HotspotRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const hotspots = "hotspots" in entry ? entry.hotspots : []
 
   const clickX = parseFloat(answerState.textAnswers["hotspot_x"] || "")
   const clickY = parseFloat(answerState.textAnswers["hotspot_y"] || "")
@@ -41,7 +43,7 @@ export function HotspotRenderer({
   // Determine which zone the click fell into (for feedback display)
   const getClickResult = () => {
     if (!hasClicked) return null
-    for (const hp of entry.hotspots) {
+    for (const hp of hotspots) {
       const dx = (clickX - hp.x) / 100 * entry.imageWidth
       const dy = (clickY - hp.y) / 100 * entry.imageHeight
       const distance = Math.sqrt(dx * dx + dy * dy)
@@ -98,7 +100,7 @@ export function HotspotRenderer({
         <img src={entry.imageUrl} alt="Hotspot question" className="w-full block" draggable={false} />
 
         {/* Feedback: reveal hotspot zones */}
-        {showFeedback && (entry.settings?.showCorrectAnswer ?? true) && entry.hotspots.map((hp) => {
+        {showFeedback && (entry.settings?.showCorrectAnswer ?? true) && hotspots.map((hp) => {
           const sortedZones = [...hp.zones].sort((a, b) => b.radius - a.radius)
           return sortedZones.map((zone, zi) => {
             const colorIdx = hp.zones.indexOf(zone)
@@ -122,7 +124,7 @@ export function HotspotRenderer({
         })}
 
         {/* Feedback: hotspot center markers */}
-        {showFeedback && (entry.settings?.showCorrectAnswer ?? true) && entry.hotspots.map((hp) => (
+        {showFeedback && (entry.settings?.showCorrectAnswer ?? true) && hotspots.map((hp) => (
           <div
             key={`center-${hp.id}`}
             className="absolute w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow-md pointer-events-none z-10"

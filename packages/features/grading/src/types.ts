@@ -6,7 +6,7 @@ export type FeedbackMode = 'immediate' | 'after-submit' | 'after-close' | 'manua
 
 export type PresentationMode = 'continuous' | 'single-step';
 
-export type GradingKind = 'deterministic' | 'manual' | 'external';
+export type GradingKind = 'deterministic' | 'manual' | 'external' | 'unsupported';
 
 export interface ContentGradingDefinition {
   enabled: boolean;

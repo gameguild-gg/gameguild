@@ -7,9 +7,10 @@
 
 import { useState } from "react"
 import type { CategorizationEntry, QuizAnswerState } from "../types"
+import type { CategorizationLearnerEntry } from "../contracts"
 
 interface CategorizationRendererProps {
-  entry: CategorizationEntry
+  entry: CategorizationEntry | CategorizationLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean

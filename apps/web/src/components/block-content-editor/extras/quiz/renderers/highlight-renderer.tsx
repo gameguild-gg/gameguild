@@ -8,9 +8,10 @@
 
 import { useCallback, useMemo } from "react"
 import type { HighlightEntry, HighlightSpan, QuizAnswerState } from "../types"
+import type { HighlightLearnerEntry } from "../contracts"
 
 interface HighlightRendererProps {
-  entry: HighlightEntry
+  entry: HighlightEntry | HighlightLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
@@ -46,6 +47,7 @@ export function HighlightRenderer({
   showFeedback = false,
 }: HighlightRendererProps) {
   const tokens = useMemo(() => tokenize(entry.plainText), [entry.plainText])
+  const highlights = "highlights" in entry ? entry.highlights : []
 
   // Student selections stored as JSON array of HighlightSpan in textAnswers["highlight_spans"]
   const studentSpans: HighlightSpan[] = useMemo(() => {
@@ -87,7 +89,7 @@ export function HighlightRenderer({
     if (!token.isWord) return undefined
 
     const isSelected = tokenOverlaps(token, studentSpans)
-    const isCorrect = tokenOverlaps(token, entry.highlights)
+    const isCorrect = tokenOverlaps(token, highlights)
 
     if (revealFeedback) {
       if (isSelected && isCorrect) {

@@ -90,6 +90,7 @@ export interface MultipleChoiceEntry extends QuizEntryBase {
   type: QuizEntryType.MultipleChoice
   options: MultipleChoiceOption[]
   correctOptionIds: string[]
+  selectionLimit?: number
 }
 
 // ============================================================================
@@ -186,6 +187,7 @@ export interface MatchingPair {
 export interface MatchingEntry extends QuizEntryBase {
   type: QuizEntryType.Matching
   pairs: MatchingPair[]
+  rightOptions?: string[]
   distractors?: string[] // Extra items on the right side
   allowPartialCredit?: boolean
 }

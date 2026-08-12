@@ -5,10 +5,11 @@
 
 "use client"
 
-import type { TrueFalseEntry, QuizAnswerState } from "../types"
+import type { QuizAnswerState, TrueFalseEntry } from "../types"
+import type { TrueFalseLearnerEntry } from "../contracts"
 
 interface TrueFalseRendererProps {
-  entry: TrueFalseEntry
+  entry: TrueFalseEntry | TrueFalseLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
@@ -16,7 +17,6 @@ interface TrueFalseRendererProps {
 }
 
 export function TrueFalseRenderer({
-  entry,
   answerState,
   onAnswerChange,
   disabled = false,

@@ -2,7 +2,7 @@
 
 ## Summary
 
-Part 2 is a contract adjustment phase. It removes the old `validationMode` split, makes the grading package content-type agnostic, and prepares the frontend/package boundary for server-only grading.
+Part 2 is a contract adjustment phase. It makes the grading package content-type agnostic and prepares the frontend/package boundary for server-only grading on grading-enabled content.
 
 Part 3 connects that cleaned contract to the Learning backend. The backend will own learner-safe redaction, answer-key storage, submission validation, score production, and gradebook propagation.
 
@@ -10,7 +10,7 @@ Part 3 connects that cleaned contract to the Learning backend. The backend will 
 
 - All learner-facing grading validation happens on the server.
 - The client can submit learner answers, but cannot produce trusted score or correctness.
-- `validationMode` is removed.
+- Content with grading disabled may still show client-side practice correctness, but that result is pedagogical only.
 - A separate result-use policy decides where a server-produced result is used.
 - `Content` remains the authoring source of truth.
 - `Assessments` remains an operational view/projection over graded content.
@@ -19,11 +19,11 @@ Part 3 connects that cleaned contract to the Learning backend. The backend will 
 
 ## Part 2 Goals
 
-- Remove `validationMode` from package types, tests, content editor code, and docs.
 - Add result-use typing so an evaluated activity can be feedback-only or gradebook-bound.
 - Refactor `@game-guild/grading` into core contracts plus content-type adapters.
 - Move quiz-specific extraction/redaction/payload logic into a quiz adapter.
-- Remove learner-facing client correctness as a grading runtime.
+- Remove learner-facing client correctness as a grading runtime for grading-enabled content.
+- Preserve explicit local-practice behavior for quizzes when grading is disabled.
 - Preserve content save/reload behavior.
 - Produce contracts and test vectors that backend Part 3 can mirror.
 
@@ -70,6 +70,7 @@ Rules:
 
 - `uses: ['feedback']` means evaluated but not global-grade affecting.
 - `uses` including `gradebook` means the result can contribute to gradebook/final grade according to `gradebook`.
+- `uses: ['feedback']` is still grading enabled and server-side; it is not the same as disabling grading.
 - Other product concerns such as completion, certificate eligibility, placement, or analytics should consume the server-produced result from their own context instead of expanding this type before the platform has a concrete grading-package rule for them.
 
 ## Part 2 Package Refactor
@@ -115,7 +116,8 @@ Content editor:
 
 Learner/runtime:
 
-- Remove any learner-facing client correctness as grading behavior.
+- Remove learner-facing client correctness as grading behavior for grading-enabled content.
+- Keep local-practice correctness only for content where grading is disabled.
 - Keep answer collection/submission payload shaping.
 - Do not show trusted correctness without a server result.
 
@@ -130,7 +132,7 @@ Assessments page:
 
 Package tests:
 
-- `validationMode` no longer exists in normalized definitions.
+- normalized definitions use the current `ContentGradingDefinition` shape.
 - feedback-only definitions are valid without gradebook placement.
 - gradebook-targeting definitions validate gradebook placement.
 - invalid result uses are rejected.
@@ -140,10 +142,11 @@ Package tests:
 
 Frontend tests:
 
-- quiz grading metadata saves/reloads without `validationMode`.
+- quiz grading metadata saves/reloads through the current grading definition.
 - result-use controls save expected metadata.
 - assessments projection shows result use.
-- learner-facing quiz path does not compute trusted correctness in the client.
+- grading-enabled learner-facing quiz path does not compute trusted correctness in the client.
+- grading-disabled quiz path can show local practice correctness without creating a trusted result.
 
 Regression:
 
@@ -161,6 +164,7 @@ Regression:
 - Grade deterministic quiz submissions on the server.
 - Ignore client-sent correctness, score, answer key, and `isCorrect`.
 - Project all gradable content into existing assessment/submission infrastructure.
+- Keep content with grading disabled outside assessment/submission infrastructure.
 - Keep `Assessments` as a view/projection over graded content.
 
 ## Backend Fit From Audit
@@ -176,12 +180,14 @@ Recommended Part 3 direction:
 - `ProgramContent` or a related content-grading table stores `ContentGradingDefinition`.
 - A server-owned answer-key store links to content grading definition versions.
 - Every content item with `grading.enabled === true` gets a server-side submission/result path.
+- Content with grading disabled keeps normal content delivery and may use local-practice feedback without `AssessmentSubmission`.
 - The first implementation should prefer one active `Assessment` projection per gradable content item, linked by `Assessment.ContentId`, so feedback-only and gradebook-bound content can both reuse `AssessmentSubmission`.
 - The `Assessment.ContentId` link must be validated against `ProgramContent.ProgramId == Assessment.CourseId`.
 - Add an index or uniqueness rule for active `Assessment.ContentId` projections if the backend keeps one active projection per gradable content item.
 - `AssessmentSubmission.StructuredAnswerPayload` stores submitted answers.
 - `AssessmentSubmission.Score`, `Passed`, `GradedAt`, and `Feedback` store trusted server results.
 - `AssessmentGroup` maps to `outcome.gradebook.groupId`.
+- Feedback-only graded content still creates trusted server results; it only avoids gradebook/final-grade propagation.
 - Learner dashboard/workspace continues consuming `AssessmentSubmission.Score` where possible.
 
 ## Part 3 Backend Phases
@@ -192,6 +198,7 @@ Recommended Part 3 direction:
 - Choose answer-key storage shape.
 - Define definition versioning and attempt snapshot rules.
 - Create/update/delete an `Assessment` projection for every content item where grading is enabled.
+- Remove/deactivate the `Assessment` projection when grading is disabled.
 - Define one-active-projection semantics for `Assessment.ContentId`.
 
 ### Phase 3.2: Authoring APIs
@@ -206,6 +213,7 @@ Recommended Part 3 direction:
 
 - Add backend redaction through the content-type adapter contract.
 - Return redacted learner payloads for graded content.
+- Return normal content payloads for ungraded practice content.
 - Never expose answer keys in learner payloads.
 - Include only runtime policy metadata needed by the learner.
 

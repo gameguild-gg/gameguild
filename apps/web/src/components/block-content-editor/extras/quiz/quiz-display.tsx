@@ -8,14 +8,21 @@
 import { QuizFeedback } from "./quiz-feedback"
 import { QuizRenderer } from "./renderers/quiz-renderer"
 import { type QuizSubmissionMode, useQuizAnswers } from "./hooks/use-quiz-answers"
-import { type QuizEntry, QuizEntryType } from "./types"
+import type { QuizPracticeEntry, QuizRuntimeEntry } from "./contracts"
+import { QuizEntryType } from "./types"
 
-interface QuizDisplayProps {
-  entry: QuizEntry
-  submissionMode?: QuizSubmissionMode
-}
+export type QuizDisplayProps =
+  | {
+    entry: QuizPracticeEntry
+    submissionMode?: Extract<QuizSubmissionMode, "local-practice">
+  }
+  | {
+    entry: QuizRuntimeEntry
+    submissionMode: Extract<QuizSubmissionMode, "server-graded">
+  }
 
-export function QuizDisplay({ entry, submissionMode }: QuizDisplayProps) {
+export function QuizDisplay(props: QuizDisplayProps) {
+  const { entry } = props
   const {
     answerState,
     updateAnswerState,
@@ -23,8 +30,9 @@ export function QuizDisplay({ entry, submissionMode }: QuizDisplayProps) {
     isCorrect,
     checkAnswers,
     resetQuiz,
-  } = useQuizAnswers({ entry, submissionMode })
+  } = useQuizAnswers(props)
   const hasAnswerFeedback = showFeedback && isCorrect !== null
+  const feedback = getPracticeFeedback(entry)
 
   return (
     <div className="space-y-4">
@@ -57,8 +65,8 @@ export function QuizDisplay({ entry, submissionMode }: QuizDisplayProps) {
       {hasAnswerFeedback && (entry.settings.showFeedback ?? true) && (
         <QuizFeedback
           isCorrect={isCorrect === true}
-          correctFeedback={entry.feedback?.correct || ""}
-          incorrectFeedback={entry.feedback?.incorrect || ""}
+          correctFeedback={feedback.correct}
+          incorrectFeedback={feedback.incorrect}
           allowRetry={entry.settings.allowRetry}
           onRetry={resetQuiz}
           showRetryButton={entry.settings.allowRetry}
@@ -95,4 +103,12 @@ export function QuizDisplay({ entry, submissionMode }: QuizDisplayProps) {
       )}
     </div>
   )
+}
+
+function getPracticeFeedback(entry: QuizRuntimeEntry): { correct: string; incorrect: string } {
+  const feedback = entry.feedback
+  return {
+    correct: feedback && "correct" in feedback ? feedback.correct ?? "" : "",
+    incorrect: feedback && "incorrect" in feedback ? feedback.incorrect ?? "" : "",
+  }
 }

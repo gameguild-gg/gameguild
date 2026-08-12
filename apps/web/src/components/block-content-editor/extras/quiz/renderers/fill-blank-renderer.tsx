@@ -14,11 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { FillInTheBlankEntry, QuizAnswerState, FillBlankField } from "../types"
+import type { FillBlankField, FillInTheBlankEntry, QuizAnswerState } from "../types"
 import { FillBlankInputType } from "../types"
+import type { FillBlankLearnerField, FillInTheBlankLearnerEntry } from "../contracts"
 
 interface FillBlankRendererProps {
-  entry: FillInTheBlankEntry
+  entry: FillInTheBlankEntry | FillInTheBlankLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
@@ -136,7 +137,7 @@ export function FillBlankRenderer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blanksKey])
 
-  const renderBlankInput = (blank: FillBlankField) => {
+  const renderBlankInput = (blank: FillBlankField | FillBlankLearnerField) => {
     const { input } = blank
     const currentValue = answerState.textAnswers[blank.id] || ""
 
