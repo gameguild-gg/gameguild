@@ -120,6 +120,7 @@ describe('Testing Lab server actions', () => {
         instructionsType: 'Text',
       }),
     );
+    expect(mocks.postTestingSubmitSimple.mock.calls[0]?.[0]).not.toHaveProperty('teamIdentifier');
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/testing-lab');
   });
 
@@ -128,6 +129,33 @@ describe('Testing Lab server actions', () => {
 
     expect(result).toEqual({ success: false, error: 'Title, project, and version are required.' });
     expect(mocks.postTestingSubmitSimple).not.toHaveBeenCalled();
+  });
+
+  it('surfaces field-level API validation details instead of the generic validation title', async () => {
+    mocks.postTestingSubmitSimple.mockResolvedValue({
+      ok: false,
+      error: {
+        message: 'One or more validation errors occurred.',
+        fieldErrors: {
+          TeamIdentifier: ['The TeamIdentifier field is required.'],
+          StartDate: ['Start date must be in the future.'],
+        },
+      },
+    });
+
+    const result = await submitTestingBuild(
+      form({
+        title: 'Vertical slice',
+        projectId: 'project-1',
+        versionNumber: '0.3.0',
+        instructionsType: 'Text',
+      }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: 'TeamIdentifier: The TeamIdentifier field is required. StartDate: Start date must be in the future.',
+    });
   });
 
   it('deletes and restores requests through generated client operations', async () => {

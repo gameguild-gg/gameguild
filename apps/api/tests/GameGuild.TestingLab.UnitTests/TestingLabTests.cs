@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using System.Reflection;
 using Xunit;
 
 namespace GameGuild.TestingLab.UnitTests;
@@ -164,6 +165,17 @@ public class TestingLocationTests
 
 public sealed class TestingRequestsControllerAuthorizationTests
 {
+    [Fact]
+    public void SubmitSimpleTestingRequest_Dto_Should_Not_Require_Legacy_TeamIdentifier_For_ProjectBacked_Submissions()
+    {
+        var property = typeof(CreateSimpleTestingRequestDto)
+            .GetProperty(nameof(CreateSimpleTestingRequestDto.TeamIdentifier));
+
+        property.Should().NotBeNull();
+        new NullabilityInfoContext().Create(property!).ReadState
+            .Should().Be(NullabilityState.Nullable);
+    }
+
     [Fact]
     public void SubmitSimpleTestingRequest_Should_Rely_On_Project_Edit_Authorization()
     {

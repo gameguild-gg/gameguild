@@ -35,5 +35,5 @@ public class CreateSimpleTestingRequestDto {
 
   /// <summary> Legacy team identifier fallback for older clients. Prefer ProjectId for new submissions. </summary>
   [MaxLength(100)]
-  public string TeamIdentifier { get; set; } = string.Empty;
+  public string? TeamIdentifier { get; set; }
 }
