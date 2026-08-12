@@ -104,6 +104,7 @@ export default async function TestingProjectDetailPage({ params }: { params: Pro
               }
               confirmLabel={request.isDeleted ? 'Restore request' : 'Archive request'}
               intent={request.isDeleted ? 'restore' : 'archive'}
+              successHref="/dashboard/testing-lab/projects"
             />
           </>
         }

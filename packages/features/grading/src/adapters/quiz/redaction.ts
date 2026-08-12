@@ -18,6 +18,8 @@ export function redactQuizBlockStorage(
   contentBody: QuizBlockStorageLike,
   grading: ContentGradingDefinition,
 ): QuizBlockStorageLike {
+  // Preserve the block storage shape while redacting only quiz blocks. Other
+  // block types remain intact so learner delivery can reuse the content body.
   const blocks = isBlockStorage(contentBody)
     ? Object.fromEntries(
       Object.entries(contentBody.blocks).map(([id, data]) => {
@@ -49,6 +51,8 @@ function redactQuizQuestion(value: unknown): unknown {
   const type = getQuizQuestionType(question);
   if (!question || !type) return redactUnknownQuestion(value);
 
+  // Each known quiz type keeps only the fields needed to render and collect a
+  // learner answer. Correct answers stay in authoring/server-owned storage.
   const base = redactedQuestionBase(question);
 
   switch (type) {
@@ -87,6 +91,8 @@ function redactQuizQuestion(value: unknown): unknown {
 
     case 'MATCHING': {
       const pairs = asRecordArray(question.pairs);
+      // Learners need selectable right-side options, but the original pair
+      // mapping is the answer key and must not be preserved in `pairs`.
       const rightOptions = rotateAnswerKeyFirstValues([
         ...pairs.map((pair) => String(pair.right ?? '')).filter(Boolean),
         ...asStringArray(question.distractors),
@@ -119,6 +125,8 @@ function redactQuizQuestion(value: unknown): unknown {
       };
 
     case 'NUMERIC':
+      // Numeric currently exposes the formula as part of the prompt model, but
+      // tolerance stays server-owned because it defines correctness.
       return withDefinedFields(base, {
         variables: cloneValue(question.variables ?? []),
         formula: cloneValue(question.formula),
@@ -126,6 +134,8 @@ function redactQuizQuestion(value: unknown): unknown {
       });
 
     case 'FORMULA':
+      // Formula questions need server-generated prompts for grading-enabled
+      // runtime; the hidden formula itself is never learner-safe.
       return withDefinedFields(base, {
         variables: cloneValue(question.variables ?? []),
         decimalPlaces: cloneValue(question.decimalPlaces),
@@ -192,6 +202,8 @@ function redactFillBlankField(value: unknown): unknown {
       };
 
     case 'DROPDOWN':
+      // Option lists are render data, not proof that this payload can be graded
+      // locally. The first option convention is handled only by authoring/server.
       return {
         ...base,
         input: {
@@ -201,6 +213,7 @@ function redactFillBlankField(value: unknown): unknown {
       };
 
     case 'WORDBANK':
+      // Word-bank words are render data, not answer-key authority.
       return {
         ...base,
         input: {
@@ -221,6 +234,8 @@ function redactUnknownQuestion(value: unknown): unknown {
   const question = asRecord(value);
   if (!question) return cloneValue(value);
   const next: Record<string, unknown> = {};
+  // Unknown shapes are handled defensively so adding a new quiz type does not
+  // accidentally leak common answer-key fields before its adapter is updated.
   for (const [key, field] of Object.entries(question)) {
     if (isAnswerKeyField(key)) continue;
     if (key === 'blanks' && Array.isArray(field)) {

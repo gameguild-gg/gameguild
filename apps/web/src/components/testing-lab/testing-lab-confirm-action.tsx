@@ -15,6 +15,7 @@ import {
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Button } from '@game-guild/ui/components/button';
 import { AlertCircle, Archive, CheckCircle2, Loader2, RotateCcw, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
@@ -28,6 +29,7 @@ export function TestingLabConfirmAction({
   description,
   confirmLabel,
   intent = 'archive',
+  successHref,
 }: {
   action: Action;
   fields: Record<string, string>;
@@ -36,7 +38,9 @@ export function TestingLabConfirmAction({
   description: string;
   confirmLabel: string;
   intent?: 'archive' | 'delete' | 'restore';
+  successHref?: string;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<TestingLabActionResult<unknown> | null>(null);
@@ -50,6 +54,7 @@ export function TestingLabConfirmAction({
       setResult(next);
       if (next.success) {
         toast.success(next.message);
+        if (successHref) router.push(successHref);
         window.setTimeout(() => setOpen(false), 650);
       } else {
         toast.error(next.error);

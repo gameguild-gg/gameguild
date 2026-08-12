@@ -10,13 +10,12 @@
  *   - The static viewer and its section components.
  *   - The editor preview dialog.
  *
- * Each block is wrapped with `blockToPreviewNode(block)` first, which
- * shapes the payload to the `{ type, data | entry, version }` form expected
- * by the preview components.
+ * Each block is projected through `blockToView(block)` to the canonical
+ * `{ id, type, data, version }` payload expected by preview components.
  */
 
+import { blockToView } from "@game-guild/block-list"
 import type { Block, BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
-import { blockToPreviewNode } from "@/components/block-content-editor/lib/storage/editor/block-storage"
 
 // Import all preview components
 import { PreviewQuiz } from "@/components/block-content-editor/plugins/preview-components/preview-quiz"
@@ -47,33 +46,33 @@ interface BlockContentRendererProps {
 export function BlockContentRenderer({ block, quizSubmissionMode }: BlockContentRendererProps) {
   switch (block.type) {
     case "quiz":
-      return <PreviewQuiz node={blockToPreviewNode(block)} submissionMode={quizSubmissionMode} />
+      return <PreviewQuiz node={blockToView(block)} submissionMode={quizSubmissionMode} />
     case "code-studio":
       return <PreviewCodeStudio data={block.data} />
     case "image":
-      return <PreviewImage node={blockToPreviewNode(block)} />
+      return <PreviewImage node={blockToView(block)} />
     case "video":
-      return <PreviewVideo node={blockToPreviewNode(block)} />
+      return <PreviewVideo node={blockToView(block)} />
     case "audio":
-      return <PreviewAudio node={blockToPreviewNode(block)} />
+      return <PreviewAudio node={blockToView(block)} />
     case "gallery":
-      return <PreviewGallery node={blockToPreviewNode(block)} />
+      return <PreviewGallery node={blockToView(block)} />
     case "mermaid":
       return <PreviewMermaid data={block.data} />
     case "vega-lite":
-      return <PreviewVegaLite node={blockToPreviewNode(block)} />
+      return <PreviewVegaLite node={blockToView(block)} />
     case "source":
-      return <PreviewSource node={blockToPreviewNode(block)} />
+      return <PreviewSource node={blockToView(block)} />
     case "markdown":
-      return <PreviewMarkdown node={blockToPreviewNode(block)} />
+      return <PreviewMarkdown node={blockToView(block)} />
     case "html":
-      return <PreviewHTML node={blockToPreviewNode(block)} />
+      return <PreviewHTML node={blockToView(block)} />
     case "rich-text":
-      return <PreviewRichText node={blockToPreviewNode(block)} />
+      return <PreviewRichText node={blockToView(block)} />
     case "header":
-      return <PreviewHeader node={blockToPreviewNode(block)} />
+      return <PreviewHeader node={blockToView(block)} />
     case "project":
-      return <PreviewProject node={blockToPreviewNode(block)} />
+      return <PreviewProject node={blockToView(block)} />
     default:
       return (
         <div className="p-3 border border-gray-200 dark:border-gray-700 rounded text-sm text-gray-500 dark:text-gray-400">
