@@ -10,11 +10,12 @@ import { useMemo, useState, useEffect, useCallback } from "react"
 import { Search, PenLine, CheckCircle, XCircle, FlaskConical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { FormulaEntry, QuizAnswerState } from "../types"
+import type { FormulaLearnerEntry } from "../contracts"
 import { generateVariableValue, evaluateFormula, validateFormula } from "../utils/formula-evaluator"
 import { MathInput } from "@/components/block-content-editor/extras/math/math-input"
 
 interface FormulaRendererProps {
-  entry: FormulaEntry
+  entry: FormulaEntry | FormulaLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
@@ -28,14 +29,10 @@ export function FormulaRenderer({
   disabled = false,
   showFeedback = false,
 }: FormulaRendererProps) {
-  const [seed, setSeed] = useState(0)
+  const localFormulaEntry = hasFormulaAnswerKey(entry) ? entry : null
+  const hasLocalFormula = localFormulaEntry !== null
+  const prompt = getFormulaLearnerPrompt(entry)
   const storedValues = answerState.textAnswers["formula_values"]
-
-  useEffect(() => {
-    if (!storedValues) {
-      setSeed((s) => s + 1)
-    }
-  }, [storedValues])
 
   const generatedValues = useMemo(() => {
     const values: Record<string, number> = {}
@@ -45,11 +42,10 @@ export function FormulaRenderer({
       }
     }
     return values
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entry.variables, seed])
+  }, [entry.variables])
 
   useEffect(() => {
-    if (!storedValues) {
+    if (hasLocalFormula && !storedValues) {
       onAnswerChange({
         textAnswers: {
           ...answerState.textAnswers,
@@ -58,9 +54,11 @@ export function FormulaRenderer({
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [generatedValues])
+  }, [generatedValues, hasLocalFormula])
 
   const activeValues: Record<string, number> = useMemo(() => {
+    if (prompt) return prompt.variables
+    if (!hasLocalFormula) return {}
     if (storedValues) {
       try {
         return JSON.parse(storedValues)
@@ -69,17 +67,24 @@ export function FormulaRenderer({
       }
     }
     return generatedValues
-  }, [storedValues, generatedValues])
+  }, [generatedValues, hasLocalFormula, prompt, storedValues])
 
-  const correctAnswer = useMemo(() => {
+  const expectedResult = useMemo(() => {
+    if (prompt) return prompt.expectedResult
+    if (!localFormulaEntry) return null
     try {
-      return evaluateFormula(entry.formula, activeValues)
+      return evaluateFormula(localFormulaEntry.formula, activeValues)
     } catch {
       return null
     }
-  }, [entry.formula, activeValues])
+  }, [activeValues, localFormulaEntry, prompt])
 
   const userAnswer = answerState.textAnswers["main"] || ""
+  const decimalPlaces = prompt?.decimalPlaces ?? entry.decimalPlaces ?? 2
+  const displayedVariables = useMemo(() => {
+    if (Object.keys(activeValues).length > 0) return Object.entries(activeValues)
+    return entry.variables.map((variable) => [variable.name, null] as const).filter(([name]) => Boolean(name))
+  }, [activeValues, entry.variables])
 
   type TestResult = {
     values: Record<string, number>
@@ -108,7 +113,11 @@ export function FormulaRenderer({
 
   const runTests = useCallback(() => {
     if (!userAnswer.trim()) return
-    const varNames = entry.variables.map((v) => v.name).filter(Boolean)
+    if (!hasLocalFormula) {
+      setLocalTestResults([])
+      return
+    }
+    const varNames = localFormulaEntry.variables.map((v) => v.name).filter(Boolean)
     const validationError = validateFormula(userAnswer, varNames)
     if (validationError) {
       setLocalTestResults([])
@@ -118,11 +127,11 @@ export function FormulaRenderer({
     const results: TestResult[] = []
     try {
       const userRes0 = evaluateFormula(userAnswer, activeValues)
-      const expected0 = evaluateFormula(entry.formula, activeValues)
+      const expected0 = evaluateFormula(localFormulaEntry.formula, activeValues)
       const diff0 = Math.abs(userRes0 - expected0)
-      const threshold0 = entry.toleranceType === "percentage"
-        ? Math.abs(expected0) * (entry.tolerance / 100)
-        : entry.tolerance
+      const threshold0 = localFormulaEntry.toleranceType === "percentage"
+        ? Math.abs(expected0) * (localFormulaEntry.tolerance / 100)
+        : localFormulaEntry.tolerance
       results.push({ values: { ...activeValues }, userResult: userRes0, expected: expected0, passed: diff0 <= threshold0 })
     } catch {
       setLocalTestResults([])
@@ -130,29 +139,26 @@ export function FormulaRenderer({
     }
     for (let i = 1; i < NUM_TESTS; i++) {
       const testVals: Record<string, number> = {}
-      for (const v of entry.variables) {
+      for (const v of localFormulaEntry.variables) {
         if (v.name) testVals[v.name] = generateVariableValue(v.min, v.max, v.decimals)
       }
       try {
         const userRes = evaluateFormula(userAnswer, testVals)
-        const expectedRes = evaluateFormula(entry.formula, testVals)
+        const expectedRes = evaluateFormula(localFormulaEntry.formula, testVals)
         const diff = Math.abs(userRes - expectedRes)
-        const threshold = entry.toleranceType === "percentage"
-          ? Math.abs(expectedRes) * (entry.tolerance / 100)
-          : entry.tolerance
+        const threshold = localFormulaEntry.toleranceType === "percentage"
+          ? Math.abs(expectedRes) * (localFormulaEntry.tolerance / 100)
+          : localFormulaEntry.tolerance
         results.push({ values: testVals, userResult: userRes, expected: expectedRes, passed: diff <= threshold })
       } catch {
         results.push({ values: testVals, userResult: NaN, expected: 0, passed: false })
       }
     }
     setLocalTestResults(results)
-  }, [userAnswer, entry, activeValues])
-
-  useEffect(() => {
-    setLocalTestResults(null)
-  }, [userAnswer])
+  }, [userAnswer, activeValues, hasLocalFormula, localFormulaEntry])
 
   const handleChange = (value: string) => {
+    setLocalTestResults(null)
     onAnswerChange({
       textAnswers: {
         ...answerState.textAnswers,
@@ -175,88 +181,26 @@ export function FormulaRenderer({
         <div className="bg-white dark:bg-gray-900 rounded-lg px-5 py-4 border border-amber-100 dark:border-amber-900 text-center shadow-sm">
           <div>
             <div className="flex flex-wrap justify-center gap-2 mb-3">
-              {entry.variables.map((v) => (
-                <span key={v.id} className="font-mono text-sm bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                  {v.name}={activeValues[v.name] ?? "?"}
+              {displayedVariables.map(([name, value]) => (
+                <span key={name} className="font-mono text-sm bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                  {name}={value ?? "?"}
                 </span>
               ))}
             </div>
             <span className="font-mono text-2xl font-bold text-amber-600 dark:text-amber-400">
-              ? = {correctAnswer !== null ? parseFloat(correctAnswer.toFixed(entry.decimalPlaces)) : "?"}
+              ? = {expectedResult !== null ? parseFloat(expectedResult.toFixed(decimalPlaces)) : "?"}
             </span>
           </div>
         </div>
 
-        {/* Always reserve space for 5 test rows */}
-        <div className="mt-3 space-y-1">
-          <div className="flex items-center justify-between h-4">
-            {testResults && testResults.length > 0 ? (
-              <>
-                <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
-                  Tests: {passedCount}/{totalTests} passed
-                </span>
-                {passedCount === totalTests ? (
-                  <span className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3" /> All passed
-                  </span>
-                ) : (
-                  <span className="text-xs font-medium text-red-500 dark:text-red-400 flex items-center gap-1">
-                    <XCircle className="h-3 w-3" /> {totalTests - passedCount} failed
-                  </span>
-                )}
-              </>
-            ) : (
-              <span className="text-xs text-amber-400 dark:text-amber-600 flex items-center gap-1">
-                <FlaskConical className="h-3 w-3" /> Test your formula
-              </span>
-            )}
-          </div>
-          <div className="space-y-0.5">
-            {Array.from({ length: 5 }).map((_, i) => {
-              const test = testResults?.[i]
-              if (test) {
-                return (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-xs font-mono ${
-                      test.passed
-                        ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
-                        : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
-                    }`}
-                  >
-                    {test.passed ? (
-                      <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />
-                    ) : (
-                      <XCircle className="h-3 w-3 text-red-500 shrink-0" />
-                    )}
-                    <span className="text-gray-500 dark:text-gray-400 shrink-0">#{i + 1}</span>
-                    <span className="text-gray-600 dark:text-gray-300 truncate">
-                      {Object.entries(test.values).map(([k, v]) => `${k}=${v}`).join(", ")}
-                    </span>
-                    <span className="text-gray-400 ml-auto shrink-0">→</span>
-                    <span className={test.passed ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}>
-                      {parseFloat(test.userResult.toFixed(entry.decimalPlaces))}
-                    </span>
-                    <span className="text-gray-400">
-                      {test.passed ? "=" : "≠"}
-                    </span>
-                    <span className="text-amber-600 dark:text-amber-400">
-                      {parseFloat(test.expected.toFixed(entry.decimalPlaces))}
-                    </span>
-                  </div>
-                )
-              }
-              return (
-                <div
-                  key={i}
-                  className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-dashed border-amber-200/50 dark:border-amber-800/50 text-xs font-mono h-[22px]"
-                >
-                  <span className="text-amber-300 dark:text-amber-700 shrink-0">#{i + 1}</span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
+        {hasLocalFormula && (
+          <LocalFormulaTestResults
+            decimalPlaces={decimalPlaces}
+            passedCount={passedCount}
+            testResults={testResults}
+            totalTests={totalTests}
+          />
+        )}
         <p className="text-sm text-amber-600 dark:text-amber-400 mt-3 text-center">
           Find a formula using these variables that produces this result.
         </p>
@@ -285,16 +229,113 @@ export function FormulaRenderer({
             variant="outline"
             size="default"
             onClick={runTests}
-            disabled={disabled || showFeedback || !userAnswer.trim()}
+            disabled={!hasLocalFormula || disabled || showFeedback || !userAnswer.trim()}
             className="h-12 px-4 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30"
           >
             <FlaskConical className="h-4 w-4 mr-1.5" />
-            Test
+            {hasLocalFormula ? "Test" : "Server Check"}
           </Button>
         </div>
         <p className="text-xs text-green-600 dark:text-green-400 mt-2">
           Use variables: {entry.variables.map((v) => v.name).join(", ")} · Operators: +, -, *, /, ^ · Functions: sqrt, abs, sin, cos, etc.
         </p>
+      </div>
+    </div>
+  )
+}
+
+function hasFormulaAnswerKey(entry: FormulaEntry | FormulaLearnerEntry): entry is FormulaEntry {
+  return "formula" in entry && typeof entry.formula === "string"
+}
+
+function getFormulaLearnerPrompt(entry: FormulaEntry | FormulaLearnerEntry): FormulaLearnerEntry["prompt"] {
+  return hasFormulaAnswerKey(entry) ? undefined : entry.prompt
+}
+
+function LocalFormulaTestResults({
+  decimalPlaces,
+  passedCount,
+  testResults,
+  totalTests,
+}: {
+  decimalPlaces: number
+  passedCount: number
+  testResults: Array<{
+    values: Record<string, number>
+    userResult: number
+    expected: number
+    passed: boolean
+  }> | null
+  totalTests: number
+}) {
+  return (
+    <div className="mt-3 space-y-1">
+      <div className="flex items-center justify-between h-4">
+        {testResults && testResults.length > 0 ? (
+          <>
+            <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
+              Tests: {passedCount}/{totalTests} passed
+            </span>
+            {passedCount === totalTests ? (
+              <span className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
+                <CheckCircle className="h-3 w-3" /> All passed
+              </span>
+            ) : (
+              <span className="text-xs font-medium text-red-500 dark:text-red-400 flex items-center gap-1">
+                <XCircle className="h-3 w-3" /> {totalTests - passedCount} failed
+              </span>
+            )}
+          </>
+        ) : (
+          <span className="text-xs text-amber-400 dark:text-amber-600 flex items-center gap-1">
+            <FlaskConical className="h-3 w-3" /> Test your formula
+          </span>
+        )}
+      </div>
+      <div className="space-y-0.5">
+        {Array.from({ length: 5 }).map((_, i) => {
+          const test = testResults?.[i]
+          if (test) {
+            return (
+              <div
+                key={i}
+                className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-xs font-mono ${
+                  test.passed
+                    ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
+                    : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
+                }`}
+              >
+                {test.passed ? (
+                  <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />
+                ) : (
+                  <XCircle className="h-3 w-3 text-red-500 shrink-0" />
+                )}
+                <span className="text-gray-500 dark:text-gray-400 shrink-0">#{i + 1}</span>
+                <span className="text-gray-600 dark:text-gray-300 truncate">
+                  {Object.entries(test.values).map(([k, v]) => `${k}=${v}`).join(", ")}
+                </span>
+                <span className="text-gray-400 ml-auto shrink-0">-&gt;</span>
+                <span className={test.passed ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}>
+                  {parseFloat(test.userResult.toFixed(decimalPlaces))}
+                </span>
+                <span className="text-gray-400">
+                  {test.passed ? "=" : "!="}
+                </span>
+                <span className="text-amber-600 dark:text-amber-400">
+                  {parseFloat(test.expected.toFixed(decimalPlaces))}
+                </span>
+              </div>
+            )
+          }
+          return (
+            <div
+              key={i}
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-dashed border-amber-200/50 dark:border-amber-800/50 text-xs font-mono h-[22px]"
+            >
+              <span className="text-amber-300 dark:text-amber-700 shrink-0">#{i + 1}</span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

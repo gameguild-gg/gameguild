@@ -8,26 +8,29 @@
 
 The grading system lives in its own feature package and provides typed contracts for scores, weights, answer keys, feedback, attempt policy, learner-safe redaction, structured submissions, and server-side validation. `block-content-editor` remains responsible for authoring and rendering content blocks, while the grading package describes how those blocks become graded.
 
-All official evaluation is server-side. There is no `validationMode` split. The client can author grading definitions and submit learner answers, but it never validates correctness or produces trusted scores.
+All official evaluation for grading-enabled content is server-side. The client can author grading definitions, collect learner answers, and show local practice feedback when grading is disabled, but it never validates trusted correctness or produces trusted scores.
 
 ## Core Vocabulary
 
 - **Content**: any course item in the content tree.
 - **Gradable content**: a content item with grading enabled.
+- **Ungraded practice**: a content item with grading disabled. It may use client-side correctness for pedagogy, but it does not create trusted submissions, gradebook entries, or official analytics.
 - **Assessment view**: dashboard surface that lists, groups, routes, and analyzes gradable content.
 - **Grading definition**: versioned contract that describes score policy, attempt policy, feedback policy, graded items, answer-key references, and result usage.
 - **Grading adapter**: content-type-specific implementation that knows how to extract graded items, answer keys, redacted learner payloads, and structured answer payloads for a content type.
 - **Result use**: the configured purpose for a server-produced grading result: learner feedback only, or a gradebook entry.
+- **Trusted grading result**: a score, correctness result, pass/fail result, or feedback result produced by the server for grading-enabled content.
 - **Authoring payload**: full instructor-owned content data, including correct answers when the content type needs them.
 - **Learner payload**: redacted content data safe to send to students.
 - **Structured answer payload**: learner submission payload sent to the server for grading.
 
 ## Server-Side Validation
 
-Server-side validation is the only supported grading authority.
+Server-side validation is the only supported authority for grading-enabled or official results.
 
 Rules:
 
+- these rules apply whenever `grading.enabled === true`;
 - answer keys must not be required by learner clients;
 - learner payloads must be redacted by the backend before delivery;
 - submissions contain learner answers only;
@@ -36,11 +39,11 @@ Rules:
 - manual, external, or asynchronous grading returns pending/manual status until resolved;
 - gradebook and pass/fail decisions consume only server-produced grading results.
 
-Instructor preview can display correctness only when the value comes from a server dry-run response. The client must not compute trusted correctness for learner runtime or author preview.
+Grading-enabled instructor preview can display correctness only when the value comes from a server dry-run response. Ungraded practice preview may display local correctness, but that result is pedagogical only and must not be stored or submitted as grading evidence.
 
 ## Result Use
 
-The old `validationMode: 'public' | 'protected'` split is removed. A grading result is always server-validated, and a separate policy decides where that result is used.
+A grading result is always server-validated, and a separate policy decides where that result is used.
 
 Target type direction:
 
@@ -68,6 +71,8 @@ Examples:
 - quiz that contributes to the course grade: `uses: ['feedback', 'gradebook']`.
 
 `gradebook` details are only meaningful when `uses` includes `gradebook`.
+
+`uses: ['feedback']` still means grading is enabled and server-side. It is not the same as grading disabled. Grading disabled content may show local practice feedback, but it does not create a trusted grading result.
 
 Future workflows such as completion, certificate eligibility, placement, or analytics should consume the server-produced result from their own feature context. They should not become first-class `GradingResultUse` values until the platform has a concrete rule that belongs inside the grading package itself.
 
@@ -230,10 +235,12 @@ For quiz content:
 - quiz block data remains in content body;
 - grading config references quiz/question block IDs;
 - answer keys are extracted by the quiz adapter for server-side storage/execution;
-- learner payload is redacted by the quiz adapter;
-- learner submissions use structured answer payloads;
-- deterministic question types can be graded server-side;
-- manual or unsupported question types return pending/manual state.
+- when grading is disabled, quiz blocks may use the full authoring payload for local practice feedback in the client;
+- local practice feedback is never stored or submitted as grading evidence;
+- when grading is enabled, learner payload is redacted by the quiz adapter;
+- grading-enabled learner submissions use structured answer payloads;
+- grading-enabled deterministic question types are graded server-side;
+- grading-enabled manual or unsupported question types return pending/manual state.
 
 This keeps the model ready for assignments, projects, code exercises, file submissions, video checkpoints, and other future content types.
 
@@ -256,12 +263,12 @@ When a learner opens gradable content:
 
 1. Load the content item.
 2. Load its grading definition.
-3. If no grading is enabled, return normal content payload.
+3. If no grading is enabled, return normal content payload; quiz blocks may run local-practice feedback in the client.
 4. If grading is enabled, return the adapter-redacted learner payload.
 5. Include only policy metadata needed by the learner runtime, such as attempt limits, time limit, availability, and presentation mode.
 6. Ensure feedback-only and gradebook-bound content both use server-side submission/result handling.
 
-### Submission
+### Grading-Enabled Submission
 
 When a learner submits:
 
@@ -271,6 +278,8 @@ When a learner submits:
 4. Grade on the server using server-owned answer keys and the relevant adapter.
 5. Publish the result according to `outcome.uses`.
 6. Store feedback-only results for learner feedback and operational review without writing gradebook or final-grade aggregates.
+
+Content with grading disabled does not create an official grading submission. Any local correctness shown by the client is transient practice feedback.
 
 ## Frontend Flow
 
@@ -337,7 +346,7 @@ Completed cleanup target:
 
 ### Part 1: Initial Package and Frontend Contract
 
-Part 1 has already been executed. It introduced the initial grading package and quiz authoring integration. Its `validationMode` split is now superseded by the server-only decision, but that correction belongs to Part 2 and later.
+Part 1 introduced the grading package and quiz authoring integration that remain the baseline for this work.
 
 Keep:
 
@@ -347,11 +356,7 @@ Keep:
 - assessments as a view over graded content;
 - focused tests around content save/reload behavior.
 
-Part 2 must replace:
-
-- `validationMode`;
-- public/client validation as a learner runtime;
-- quiz-only package shape at the core level.
+Part 2 keeps official grading server-side, preserves local practice only when grading is disabled, and moves quiz-specific behavior behind an adapter.
 
 ### Part 2: Contract Adjustment for Server-Only Grading
 
@@ -359,12 +364,12 @@ Part 2 cleans up the package and frontend contract before backend integration.
 
 Main work:
 
-- remove `validationMode`;
 - add `GradingResultUse` and `GradingOutcomePolicy`;
-- rename/reshape `ContentGradingConfig` toward `ContentGradingDefinition`;
+- keep `ContentGradingDefinition` as the content-owned grading contract;
 - move quiz-specific logic behind a quiz adapter;
 - keep core grading APIs content-type agnostic;
-- remove learner-facing client correctness as a grading path;
+- remove learner-facing client correctness as a grading path for grading-enabled content;
+- keep explicitly local practice feedback for content with grading disabled;
 - update docs and tests to match server-only behavior;
 - prepare backend-facing schemas/test vectors for Part 3.
 
@@ -379,7 +384,21 @@ Main work:
 - align `gradingKind` with the adapter's real deterministic/manual/external/unsupported capabilities;
 - normalize structured answer payloads by whitelisting allowed learner answer fields;
 - add backend-facing test vectors for deterministic, manual, and unsupported quiz cases;
-- keep frontend quiz runtime as answer collection/submission state only, not client correctness.
+- keep grading-enabled quiz runtime as answer collection/submission state only, not client correctness;
+- keep ungraded quiz runtime explicitly marked as local practice when it shows client-side correctness.
+
+### Part 2.5B: Quiz Source Type Safety
+
+Part 2.5B follows the adapter hardening by improving the quiz contracts at the `block-content-editor` source.
+
+Main work:
+
+- split quiz authoring, learner-safe, practice, and answer/submission payload types;
+- make learner-safe renderers valid by type instead of relying on casts or missing answer-key fields;
+- keep answer-key fields restricted to authoring and local-practice paths;
+- prefer fixing quiz source contracts/invariants before adding more defensive compensation in the grading quiz adapter;
+- add source validation so incomplete quiz definitions do not become deterministic grading items;
+- align frontend learner-safe conversion with the grading adapter's redaction behavior.
 
 ### Part 3: Backend Integration
 
@@ -391,23 +410,26 @@ Target direction:
 - A content-owned grading definition is persisted with or beside `ProgramContent`.
 - `Assessment` remains projection/submission infrastructure, not authored content source.
 - Every content item with `grading.enabled === true` gets a server-side submission/result path.
+- Content with grading disabled does not create an `Assessment` projection or `AssessmentSubmission` path.
 - The first backend implementation should prefer one active `Assessment` projection per gradable content item so feedback-only and gradebook-bound content can both reuse `AssessmentSubmission`.
 - `AssessmentSubmission.StructuredAnswerPayload` stores learner answers for server-side grading.
 - `AssessmentSubmission.Score`, `Passed`, `GradedAt`, and `Feedback` store trusted grading results for feedback-only and gradebook-bound content.
 - `outcome.uses` controls whether those trusted results propagate into gradebook/final-grade flows.
+- `outcome.uses: ['feedback']` is still grading enabled and server-side; it only skips gradebook/final-grade propagation.
 - `AssessmentGroup` remains the gradebook grouping surface when `outcome.uses` includes `gradebook`.
 - Existing learner dashboard/workspace score queries should continue consuming the trusted backend result path.
 
 ### Part 4: Authoring Preview and Grading Dry Run
 
-Part 4 adds a preview path for authors to test quiz content and server-side grading without creating an official learner attempt.
+Part 4 adds preview paths for authors to test quiz content. Ungraded preview can use local-practice feedback immediately. Grading-enabled preview uses server-side dry-run without creating an official learner attempt.
 
 Target direction:
 
 - `quiz-content-editor` gets a `Preview` action.
-- Preview renders the quiz with the learner-facing payload shape.
-- Preview submits answers to a server dry-run endpoint.
-- Dry-run uses the same adapter and grading engine as real learner submissions.
+- If grading is disabled, preview may render from the normal authoring payload and show local practice correctness.
+- If grading is enabled, preview renders the quiz with the learner-facing payload shape.
+- Grading-enabled preview submits answers to a server dry-run endpoint.
+- Grading-enabled dry-run uses the same adapter and grading engine as real learner submissions.
 - Dry-run does not create an official attempt, gradebook entry, or learner progress event.
 - Dry-run ignores client-provided correctness, score, answer key, and `isCorrect`, just like official grading.
 - Preview result can show score, item feedback, and redaction/debug warnings to the author.
@@ -416,14 +438,16 @@ Target direction:
 ## Test Plan
 
 - Content without grading saves and loads unchanged.
+- Content without grading can show local quiz practice correctness without appearing in Assessments.
 - Content with grading enabled appears in Assessments.
 - Content with grading disabled does not appear in Assessments.
-- Quiz grading definition saves and reloads without `validationMode`.
+- Quiz grading definition saves and reloads through the current grading definition.
 - Quiz adapter extracts graded items and answer keys from authoring payloads.
 - Learner payload does not expose correct answers.
 - Tampered submissions with score, correctness, answer key, or `isCorrect` are ignored.
 - Server-side deterministic quiz grading produces trusted results.
 - Result use controls whether a result appears only as feedback or also enters the gradebook.
+- Feedback-only graded content still uses server-side grading and `AssessmentSubmission`; it only skips gradebook propagation.
 - Author preview can test quiz rendering and server-side dry-run grading without writing gradebook data.
 - Assessments page lists quiz, assignment, project, code, survey, reflection, and other future graded content types through the same content-grading contract.
 - Existing `React.lazy` + `Suspense` loading remains in place; no `next/dynamic` in the editor route.

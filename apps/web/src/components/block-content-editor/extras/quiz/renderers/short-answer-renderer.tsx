@@ -5,10 +5,11 @@
 
 "use client"
 
-import type { ShortAnswerEntry, QuizAnswerState } from "../types"
+import type { QuizAnswerState, ShortAnswerEntry } from "../types"
+import type { ShortAnswerLearnerEntry } from "../contracts"
 
 interface ShortAnswerRendererProps {
-  entry: ShortAnswerEntry
+  entry: ShortAnswerEntry | ShortAnswerLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
@@ -16,7 +17,6 @@ interface ShortAnswerRendererProps {
 }
 
 export function ShortAnswerRenderer({
-  entry,
   answerState,
   onAnswerChange,
   disabled = false,

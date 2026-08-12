@@ -5,10 +5,11 @@
 
 "use client"
 
-import type { SingleChoiceEntry, QuizAnswerState } from "../types"
+import type { QuizAnswerState, SingleChoiceEntry } from "../types"
+import type { SingleChoiceLearnerEntry } from "../contracts"
 
 interface SingleChoiceRendererProps {
-  entry: SingleChoiceEntry
+  entry: SingleChoiceEntry | SingleChoiceLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean

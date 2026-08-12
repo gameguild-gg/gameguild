@@ -6,9 +6,10 @@
 "use client"
 
 import type { MultipleChoiceEntry, QuizAnswerState } from "../types"
+import type { MultipleChoiceLearnerEntry } from "../contracts"
 
 interface MultipleChoiceRendererProps {
-  entry: MultipleChoiceEntry
+  entry: MultipleChoiceEntry | MultipleChoiceLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
@@ -23,7 +24,15 @@ export function MultipleChoiceRenderer({
   showFeedback = false,
 }: MultipleChoiceRendererProps) {
   const selectedIds = answerState.selectedOptionIds
-  const maxSelections = entry.correctOptionIds.length
+  const answerKeyCount = "correctOptionIds" in entry ? entry.correctOptionIds.length : undefined
+  const configuredLimit =
+    typeof entry.selectionLimit === "number" && Number.isFinite(entry.selectionLimit) && entry.selectionLimit > 0
+      ? entry.selectionLimit
+      : undefined
+  const maxSelections = Math.min(
+    entry.options.length,
+    Math.max(1, configuredLimit ?? answerKeyCount ?? entry.options.length),
+  )
   const canSelectMore = selectedIds.length < maxSelections
 
   const handleToggle = (optionId: string) => {

@@ -11,7 +11,7 @@ Part 2 successfully moved grading toward a content-owned, server-only, content-t
 - `Content` remains the authoring source of truth.
 - `Assessments` remains an operational projection over graded content.
 - All trusted correctness and score calculation happens on the server.
-- There is no `validationMode`.
+- Quiz blocks with grading disabled may show local-practice correctness in the client.
 - `outcome.uses` remains the result-use policy, currently `feedback` and `gradebook`.
 - Quiz is only the first adapter. The core grading package must stay content-type agnostic.
 - The frontend may collect answers, but it cannot produce trusted correctness, trusted score, or official gradebook updates.
@@ -30,7 +30,8 @@ Part 2 successfully moved grading toward a content-owned, server-only, content-t
 - Do not add backend persistence yet.
 - Do not add migrations.
 - Do not implement `AssessmentSubmission` wiring.
-- Do not restore client-side correctness.
+- Do not restore client-side correctness for grading-enabled learner runtime.
+- Do not remove local-practice correctness from quizzes where grading is disabled.
 - Do not introduce a separate assessment-owned quiz editor.
 - Do not solve every future content type. This pass hardens the quiz adapter as the first adapter.
 - Do not implement authoring preview or dry-run UI; that remains Part 4 after backend support exists.
@@ -171,13 +172,15 @@ Each vector should include:
 
 ## Workstream 6: Frontend Contract Cleanup
 
-Keep the frontend consistent with server-only grading.
+Keep the frontend consistent with server-only grading for grading-enabled content, while preserving local practice feedback for ungraded content.
 
 Required cleanup:
 
-- keep the learner quiz hook as answer collection and submission state only;
+- keep grading-enabled quiz runtime as answer collection and submission state only;
+- keep `local-practice` behavior explicit for quiz blocks where grading is disabled;
 - keep `showFeedback` separate from trusted server feedback;
-- avoid passing `showFeedback=true` into renderers unless there is trusted server feedback or an authoring-only local preview explicitly marked as such;
+- avoid passing `showFeedback=true` into renderers for grading-enabled content unless there is trusted server feedback;
+- allow `showFeedback=true` for explicitly local-practice content that cannot create official submissions or gradebook effects;
 - review quiz renderer text that implies local correctness is available immediately;
 - avoid importing assessment concepts into quiz content editor;
 - keep `quiz-content-editor` using `BlockArrayEditor` as the content authoring surface.
@@ -208,21 +211,24 @@ Package tests:
 - unsupported/manual classifications do not produce trusted scores;
 - structured answer payload normalization drops tampered fields;
 - deterministic submissions ignore client-sent score and correctness;
-- no `validationMode` or old `ContentGradingConfig` contract remains.
+- normalized definitions use the current content-owned grading contract.
 
 Frontend tests:
 
 - quiz content still saves and reloads grading definitions;
 - assessments projection still lists content-owned graded items;
-- learner-facing quiz path does not compute trusted correctness;
-- renderer feedback only appears when a trusted result exists;
+- grading-enabled learner-facing quiz path does not compute trusted correctness;
+- grading-disabled quiz path shows local practice correctness after submit;
+- renderer feedback for grading-enabled content only appears when a trusted result exists;
 - no `next/dynamic` is introduced.
 
 Manual checks:
 
 - create a quiz content item;
 - add representative quiz question types;
+- confirm grading-disabled quiz submissions show local practice feedback only;
 - enable grading as feedback;
+- confirm feedback-only grading submits through the server path instead of local correctness;
 - switch result use to gradebook;
 - save and reload;
 - confirm the stored authoring JSON still contains answer-key material only in authoring storage;
