@@ -12,14 +12,14 @@
 
 import type { IOProvider, MainToWorkerMessage, WorkerToMainMessage } from 'emception';
 import { OverlayFS } from 'emception';
-import { detectAsyncStrategy } from './async-bridge';
-import { FetchBridge } from './net/fetch-bridge';
-import { MiniShell } from './shell';
-import { ToolRunner } from './tool-runner';
-import { IDBFS } from './vfs/idb';
-import { createVFSManager } from './vfs/index';
-import type { FSManifest } from './vfs/lazy';
-import { LazyFS } from './vfs/lazy';
+import { detectAsyncStrategy } from './async-bridge.js';
+import { FetchBridge } from './net/fetch-bridge.js';
+import { MiniShell } from './shell.js';
+import { ToolRunner } from './tool-runner.js';
+import { IDBFS } from './vfs/idb.js';
+import { createVFSManager } from './vfs/index.js';
+import type { FSManifest } from './vfs/lazy.js';
+import { LazyFS } from './vfs/lazy.js';
 
 const P = '[Emception:Worker]';
 
