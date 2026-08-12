@@ -12,14 +12,14 @@ export function PreviewQuiz({
   node: SerializedQuizNode
   submissionMode?: QuizSubmissionMode
 }) {
-  if (!node?.entry) {
+  if (!node?.data) {
     console.error("Invalid quiz node structure:", node)
     return null
   }
 
   return (
     <QuizWrapper>
-      <QuizDisplay entry={node.entry} submissionMode={submissionMode} />
+      <QuizDisplay entry={node.data} submissionMode={submissionMode} />
     </QuizWrapper>
   )
 }

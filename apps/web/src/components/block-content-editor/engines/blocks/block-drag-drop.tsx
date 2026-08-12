@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react"
 import { ArrowDown } from "lucide-react"
+import { moveBlock } from "@game-guild/block-list"
 import type { BlockArray } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 
 // ============================================================================
@@ -77,11 +78,8 @@ export function useBlockDragDrop({
       const fromIndex = dragIndex
       let toIndex = dropTargetIndex
       if (toIndex !== fromIndex && toIndex !== fromIndex + 1) {
-        const next = [...blocks]
-        const [moved] = next.splice(fromIndex, 1)
         if (toIndex > fromIndex) toIndex -= 1
-        next.splice(toIndex, 0, moved!)
-        onChange(next)
+        onChange(moveBlock(blocks, fromIndex, toIndex))
         scrollToIndexRef.current = toIndex
       }
     }
