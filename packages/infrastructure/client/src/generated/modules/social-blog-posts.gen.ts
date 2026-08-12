@@ -76,6 +76,21 @@ export class SocialBlogPostsModule {
 
   /**
    */
+  async postApiSocialBlogFeature(id: string, query?: { featured?: boolean }): Promise<Result<void, ApiError>> {
+    const url = `/api/social/blog/${id}/feature`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async postApiSocialBlogPublish(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/${id}/publish`;
 
@@ -96,21 +111,6 @@ export class SocialBlogPostsModule {
     const result = await this.client.request({
       method: 'POST',
       path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postApiSocialBlogFeature(id: string, query?: { featured?: boolean }): Promise<Result<void, ApiError>> {
-    const url = `/api/social/blog/${id}/feature`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      params: query,
       requiresAuth: true,
     });
 
