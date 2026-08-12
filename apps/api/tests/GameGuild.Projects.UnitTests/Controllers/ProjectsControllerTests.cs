@@ -34,7 +34,13 @@ public class ProjectsControllerTests
 
         var controller = CreateController();
 
-        var result = await controller.GetProjects(ProjectType.Game, ContentStatus.Published, ContentVisibility.Public, searchTerm: "game", take: 1000);
+        var result = await controller.GetProjects(
+            ProjectType.Game,
+            ContentStatus.Published,
+            ContentVisibility.Public,
+            searchTerm: "game",
+            currentTenantOnly: true,
+            take: 1000);
 
         result.Result.Should().BeOfType<OkObjectResult>();
         _mediator.Verify(x => x.Send(
@@ -43,6 +49,7 @@ public class ProjectsControllerTests
                 q.Status == ContentStatus.Published &&
                 q.Visibility == ContentVisibility.Public &&
                 q.SearchTerm == "game" &&
+                q.CurrentTenantOnly &&
                 q.Take == 100),
             It.IsAny<CancellationToken>()), Times.Once);
     }

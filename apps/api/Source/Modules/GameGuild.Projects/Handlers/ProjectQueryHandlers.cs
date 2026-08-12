@@ -59,7 +59,9 @@ public sealed class ProjectQueryHandlers
     }
 
     // Apply access control
-    query = ApplyAccessControl(query);
+    query = request.CurrentTenantOnly
+      ? ApplyCurrentTenantScope(query)
+      : ApplyAccessControl(query);
 
     // Apply sorting
     query = ApplySorting(query, request.SortBy, request.SortDirection);
@@ -298,6 +300,11 @@ public sealed class ProjectQueryHandlers
     }
 
     return accessibleQuery;
+  }
+
+  private IQueryable<Project> ApplyCurrentTenantScope(IQueryable<Project> query) {
+    if (!Actor.IsAuthenticated || !Actor.TenantId.HasValue) return query.Where(_ => false);
+    return query.Where(project => project.TenantId == Actor.TenantId.Value);
   }
 
   /// <summary>

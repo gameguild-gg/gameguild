@@ -70,6 +70,37 @@ public class ProjectHandlersIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAllProjects_CurrentTenantOnly_ShouldScopeSystemAdminToActiveTenant()
+    {
+        var actorTenantId = Guid.NewGuid();
+        var actorProject = _testDataBuilder.CreateProject(createdById: _testUserId, title: "Current tenant project");
+        actorProject.TenantId = actorTenantId;
+        actorProject.Visibility = ContentVisibility.Public;
+        var otherProject = _testDataBuilder.CreateProject(createdById: _testUserId, title: "Other tenant project");
+        otherProject.TenantId = Guid.NewGuid();
+        otherProject.Visibility = ContentVisibility.Public;
+        _context.Set<Project>().AddRange(actorProject, otherProject);
+        await _context.SaveChangesAsync();
+        var actorAccessor = new Mock<IActorContextAccessor>();
+        actorAccessor.SetupGet(accessor => accessor.ActorContext).Returns(
+            ActorContextBuilder.ForUser(_testUserId)
+                .WithTenantId(actorTenantId)
+                .WithRole("SystemAdmin")
+                .Build());
+        var handler = new ProjectQueryHandlers(
+            _context,
+            actorAccessor.Object,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<ProjectQueryHandlers>.Instance);
+
+        var result = await handler.Handle(
+            new GetAllProjectsQuery { CurrentTenantOnly = true },
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle().Which.Id.Should().Be(actorProject.Id);
+    }
+
+    [Fact]
     public async Task Database_Should_Support_Project_Collaborators()
     {
         // Arrange

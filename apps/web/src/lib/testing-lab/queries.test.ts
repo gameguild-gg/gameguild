@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  auth: vi.fn(),
   getToken: vi.fn(),
   createServerClient: vi.fn(),
   requests: { getTestingRequests: vi.fn(), getTestingRequestsById: vi.fn() },
@@ -14,6 +15,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/auth', () => ({
+  auth: mocks.auth,
   getToken: mocks.getToken,
 }));
 
@@ -67,6 +69,7 @@ describe('testing lab queries', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    mocks.auth.mockResolvedValue({ tenantId: 'tenant-1' });
     mocks.getToken.mockResolvedValue('testing-token');
     mocks.createServerClient.mockReturnValue({ kind: 'testing-lab-client' });
     mocks.requests.getTestingRequests.mockResolvedValue({
@@ -87,7 +90,7 @@ describe('testing lab queries', () => {
     });
     mocks.projects.getProjects.mockResolvedValue({
       ok: true,
-      data: [{ id: 'project-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' }],
+      data: [{ id: 'project-1', tenantId: 'tenant-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' }],
     });
     mocks.projects.getProjectsById.mockResolvedValue({
       ok: true,
@@ -197,10 +200,20 @@ describe('testing lab queries', () => {
   });
 
   it('loads Testing Lab project options through the generated Projects module', async () => {
+    mocks.projects.getProjects.mockResolvedValue({
+      ok: true,
+      data: [
+        { id: 'project-1', tenantId: 'tenant-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' },
+        { id: 'project-2', tenantId: 'tenant-2', title: 'Other tenant project', slug: 'other-tenant-project', status: 'Published' },
+        { id: 'global-project', tenantId: null, title: 'Global showcase', slug: 'global-showcase', status: 'Published' },
+      ],
+    });
+
     const projects = await getTestingProjectOptions();
 
     expect(projects).toEqual([{ id: 'project-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' }]);
     expect(mocks.projects.getProjects).toHaveBeenCalledWith({
+      currentTenantOnly: true,
       skip: 0,
       take: 50,
       sortBy: 'UpdatedAt',
