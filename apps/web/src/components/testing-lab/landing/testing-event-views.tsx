@@ -21,6 +21,7 @@ function formatDate(value?: string) {
     month: "short",
     day: "2-digit",
     year: "numeric",
+    timeZone: "UTC",
   }).format(date);
 }
 
@@ -28,10 +29,12 @@ function formatTime(value?: string) {
   if (!value) return "Time pending";
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return "Time pending";
-  return new Intl.DateTimeFormat("en-US", {
+  const formatted = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "UTC",
   }).format(date);
+  return `${formatted} UTC`;
 }
 
 function formatDuration(startsAt?: string, endsAt?: string) {

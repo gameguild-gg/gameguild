@@ -22,6 +22,7 @@ import {
   waitlistTestingEventApplication,
   type TestingEventActionResult,
 } from '@/lib/testing-lab/events-actions';
+import { formatEventDateTime } from '@/lib/testing-lab/event-workspace';
 import { formatTestingEventStatus } from '@/lib/testing-lab/format';
 import type {
   TestingLabTestingEventCommitteeMemberProjection,
@@ -961,7 +962,7 @@ export function TestingEventApplications({
                         <SelectContent>
                           {slots.filter((slot) => slot.id).map((slot) => (
                             <SelectItem key={slot.id} value={slot.id!}>
-                              {new Date(slot.startsAt ?? '').toLocaleString()} · {slot.campusName ?? slot.meetingUrl ?? slot.mode}
+                              {formatEventDateTime(slot.startsAt)} · {slot.campusName ?? slot.meetingUrl ?? slot.mode}
                             </SelectItem>
                           ))}
                         </SelectContent>

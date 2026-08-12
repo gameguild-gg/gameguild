@@ -24,9 +24,13 @@ const statuses: Array<{ value?: TestingLabTestingEventStatus; label: string }> =
 function eventDate(value?: string | null) {
   if (!value) return 'Date not set';
   const date = new Date(value);
-  return Number.isNaN(date.valueOf())
-    ? 'Date not set'
-    : new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  if (Number.isNaN(date.valueOf())) return 'Date not set';
+  const formatted = new Intl.DateTimeFormat('en', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'UTC',
+  }).format(date);
+  return `${formatted} UTC`;
 }
 
 export default async function TestingEventsPage({

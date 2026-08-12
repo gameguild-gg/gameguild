@@ -36,6 +36,7 @@ describe('TestingSlotRegistration', () => {
 
     expect(screen.getByRole('button', { name: /join waitlist/i })).toBeInTheDocument();
     expect(screen.getByText(/approved projects use 2 of 3 slots/i)).toBeInTheDocument();
+    expect(screen.getByText(/Aug 12, 2026, 1:00 PM UTC/i)).toBeInTheDocument();
   });
 
   it('shows the tester current registration instead of a duplicate form', () => {
