@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/client",
-  "version": "0.0.1",
+  "version": "4.0.0",
   "description": "Type-safe API client for GameGuild platform with automatic code generation from OpenAPI",
   "type": "module",
   "main": "./dist/index.cjs",
