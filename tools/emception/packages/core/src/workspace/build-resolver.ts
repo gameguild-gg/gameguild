@@ -17,10 +17,10 @@
  * impossible combos (e.g. cmake + sources both set).
  */
 
-import { BUILD_PRESETS } from '../build-presets';
-import { BuildConfigError } from '../errors';
-import type { CMakeBuildConfig, NativeBuildConfig, PythonBuildConfig, WorkspaceBuildConfig } from '../types';
-import { ToolchainPreset } from '../types';
+import { BUILD_PRESETS } from '../build-presets.js';
+import { BuildConfigError } from '../errors.js';
+import type { CMakeBuildConfig, NativeBuildConfig, PythonBuildConfig, WorkspaceBuildConfig } from '../types.js';
+import { ToolchainPreset } from '../types.js';
 
 export interface ResolveBuildInput {
   preset?: ToolchainPreset;

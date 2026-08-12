@@ -2,14 +2,20 @@
 // Auto-generate a changeset from conventional commits since the last release tag.
 //
 // Usage:
-//   node scripts/devops/auto-changeset.mjs           # write .changeset/auto-<ts>.md
-//   node scripts/devops/auto-changeset.mjs --dry-run # print what would be written
+//   node scripts/devops/auto-changeset.mjs            # write .changeset/auto-<ts>.md
+//   node scripts/devops/auto-changeset.mjs --dry-run  # print what would be written
+//   node scripts/devops/auto-changeset.mjs --apply    # bump package.json versions directly
 //
 // Conventional-commit mapping (https://www.conventionalcommits.org/en/v1.0.0/):
 //   `BREAKING CHANGE:` footer OR `feat(scope)!:` / `fix!:` etc.  → major
 //   `feat:` / `feat(scope):`                                      → minor
 //   `fix:` / `perf:` / `refactor:` / `revert:`                    → patch
 //   anything else (chore, docs, style, test, ci, build)           → skipped
+//
+// `--apply` mode skips the .changeset machinery entirely and rewrites the
+// `version` field of every fixed-group package.json in lockstep. Used by
+// the Emception publish-packages CI job so it can ship a new version
+// without running `changeset version` (no @changesets/cli install needed).
 //
 // ponytail: fixed group in .changeset/config.json handles cross-package
 // propagation, so we only need to declare the bump for one canonical
@@ -18,11 +24,12 @@
 // ever loosened.
 
 import { execSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..');
 const DRY_RUN = process.argv.includes('--dry-run');
+const APPLY_MODE = process.argv.includes('--apply');
 
 // Fixed group: declaring a bump for any one of these propagates to all.
 const PACKAGES = [
@@ -33,6 +40,45 @@ const PACKAGES = [
     '@gameguild/emception-webcomponent',
     '@gameguild/emception-ide',
 ];
+
+// Lockstep monorepo: all emception packages share one version.
+// Mapping from package name (above) to its package.json path.
+const PKG_PATHS = {
+    'emception': 'tools/emception/packages/core/package.json',
+    '@gameguild/emception-browser': 'tools/emception/packages/browser/package.json',
+    '@gameguild/emception-xterm': 'tools/emception/packages/xterm/package.json',
+    '@gameguild/emception-react': 'tools/emception/packages/react/package.json',
+    '@gameguild/emception-webcomponent': 'tools/emception/packages/webcomponent/package.json',
+    '@gameguild/emception-ide': 'tools/emception/packages/ide/package.json',
+};
+
+function bumpSemver(version, bump) {
+    const [major, minor, patch] = version.split('.').map((n) => parseInt(n, 10));
+    if (bump === 'major') return `${major + 1}.0.0`;
+    if (bump === 'minor') return `${major}.${minor + 1}.0`;
+    return `${major}.${minor}.${patch + 1}`;
+}
+
+function applyBump(bump) {
+    // Read canonical version from core, bump once, write to all packages.
+    const corePath = path.join(ROOT, PKG_PATHS['emception']);
+    const corePkg = JSON.parse(readFileSync(corePath, 'utf8'));
+    const current = corePkg.version;
+    const next = bumpSemver(current, bump);
+
+    let written = 0;
+    for (const [name, relPath] of Object.entries(PKG_PATHS)) {
+        const fullPath = path.join(ROOT, relPath);
+        const pkg = JSON.parse(readFileSync(fullPath, 'utf8'));
+        if (pkg.version !== next) {
+            pkg.version = next;
+            writeFileSync(fullPath, JSON.stringify(pkg, null, 2) + '\n');
+            written++;
+            console.log(`  ${name}: ${relPath}  ${current} → ${next}`);
+        }
+    }
+    console.log(`[auto-changeset] Applied ${bump} bump: ${current} → ${next} (${written} files updated).`);
+}
 
 function git(args) {
     return execSync(`git ${args}`, { cwd: ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
@@ -112,6 +158,12 @@ function main() {
 
     if (!bump) {
         console.log(`[auto-changeset] No release-relevant commits ${tag ? `since ${tag}` : 'in history'}. Skipping.`);
+        return;
+    }
+
+    if (APPLY_MODE) {
+        console.log(`[auto-changeset] Applying ${bump} bump from ${featured.length} release-relevant commit(s) ${tag ? `since ${tag}` : 'in history'}.`);
+        applyBump(bump);
         return;
     }
 

@@ -11,8 +11,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { ToolchainPreset, type EmceptionAPI, type TestPlan } from 'emception';
-import { wrapWorkerClient } from '../createEmception';
-import type { WorkerClient } from '../worker-client';
+import { wrapWorkerClient } from '../createEmception.js';
+import type { WorkerClient } from '../worker-client.js';
 
 interface StubClient {
     run: (tool: string, argv: string[], opts?: unknown) => Promise<{ exitCode: number; stdout: string; stderr: string; durationMs: number; timedOut: boolean }>;

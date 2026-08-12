@@ -20,7 +20,7 @@
  * Validated with real `node:worker_threads` `MessageChannel`s — no mocks.
  */
 
-import { EmceptionError } from '../errors';
+import { EmceptionError } from '../errors.js';
 
 /**
  * Default error raised when `dispose()` is called with outstanding requests

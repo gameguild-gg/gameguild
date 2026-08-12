@@ -4,8 +4,8 @@
  */
 
 import type { IOProvider } from 'emception';
-import type { ToolRunner } from './tool-runner';
-import type { VFSManager } from './vfs/index';
+import type { ToolRunner } from './tool-runner.js';
+import type { VFSManager } from './vfs/index.js';
 
 export class MiniShell {
   private runner: ToolRunner;
