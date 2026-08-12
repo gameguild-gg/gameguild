@@ -8394,6 +8394,7 @@ export interface GetProjectsInput {
     featured?: boolean;
     popular?: boolean;
     recent?: boolean;
+    currentTenantOnly?: boolean;
     skip?: number;
     take?: number;
     sortBy?: string;
