@@ -608,6 +608,72 @@ public class LocalAuthServiceTests
     }
 
     [Fact]
+    public async Task RefreshTokenAsync_RecentlyRotatedTokenFromSameIp_ReturnsActiveReplacement()
+    {
+        var userId = Guid.NewGuid();
+        var rotatedToken = new RefreshToken
+        {
+            UserId = userId,
+            Token = "old-hash",
+            ExpiresAt = SystemClock.UtcNow.AddDays(5),
+            IsRevoked = true,
+            RevokedAt = SystemClock.UtcNow.AddSeconds(-5),
+            RevokedByIp = "127.0.0.1",
+            ReplacedByToken = "replacement-token"
+        };
+        var replacementToken = new RefreshToken
+        {
+            UserId = userId,
+            Token = "replacement-hash",
+            ExpiresAt = SystemClock.UtcNow.AddDays(5),
+            IsRevoked = false,
+            CreatedByIp = "127.0.0.1"
+        };
+
+        _refreshTokenHasherMock.Setup(x => x.HashToken("rotated-token")).Returns("old-hash");
+        _refreshTokenHasherMock.Setup(x => x.HashToken("replacement-token")).Returns("replacement-hash");
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("old-hash", default)).ReturnsAsync(rotatedToken);
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("replacement-hash", default)).ReturnsAsync(replacementToken);
+        _jwtTokenServiceMock
+            .Setup(x => x.GenerateAccessTokenAsync(userId, It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("replacement-access-token");
+
+        var result = await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "rotated-token" });
+
+        result.AccessToken.Should().Be("replacement-access-token");
+        result.RefreshToken.Should().Be("replacement-token");
+        _jwtTokenServiceMock.Verify(
+            x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _refreshTokenRepoMock.Verify(x => x.UpdateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(-31, "127.0.0.1")]
+    [InlineData(-5, "10.0.0.2")]
+    public async Task RefreshTokenAsync_RotatedTokenOutsideGuardedRetry_ThrowsUnauthorizedAccessException(
+        int revokedSecondsAgo,
+        string revokedByIp)
+    {
+        var rotatedToken = new RefreshToken
+        {
+            UserId = Guid.NewGuid(),
+            Token = "old-hash",
+            ExpiresAt = SystemClock.UtcNow.AddDays(5),
+            IsRevoked = true,
+            RevokedAt = SystemClock.UtcNow.AddSeconds(revokedSecondsAgo),
+            RevokedByIp = revokedByIp,
+            ReplacedByToken = "replacement-token"
+        };
+
+        _refreshTokenHasherMock.Setup(x => x.HashToken("rotated-token")).Returns("old-hash");
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("old-hash", default)).ReturnsAsync(rotatedToken);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "rotated-token" }));
+    }
+
+    [Fact]
     public async Task RefreshTokenAsync_ExpiredToken_ThrowsUnauthorizedAccessException()
     {
         var storedToken = new RefreshToken

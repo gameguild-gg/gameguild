@@ -101,6 +101,9 @@ vi.mock('../../src/integrations/next/handlers.js', () => ({
     tokens: { accessToken: data.accessToken || 'at', refreshToken: data.refreshToken || 'rt', tokenType: 'Bearer' },
     user: { id: data.userId || '1', email: email || '', name: name || null, image: null },
   })),
+  serializeCookie: vi.fn((name: string, value: string, options: Record<string, unknown>) =>
+    `${name}=${value}; Path=${options.path ?? '/'}; Max-Age=${options.maxAge ?? ''}`,
+  ),
 }));
 
 function createMockAdapter(cookies: Record<string, string> = {}): CookieAdapter {
@@ -215,6 +218,35 @@ describe('createAuthFunction — extended', () => {
     expect(handler).toHaveBeenCalled();
     const call = handler.mock.calls[0][0];
     expect(call.auth).toBeNull();
+  });
+
+  it('proxy wrapper should persist a rotated session cookie on the response', async () => {
+    const auth = createAuthFunction(makeConfig());
+    const wrapper = auth(async () => new Response('ok'));
+    const response = await wrapper(
+      new Request('http://localhost:3000/dashboard', {
+        headers: { cookie: '__gg.session-token=updated-session' },
+      }),
+    );
+
+    const setCookie = response.headers.get('set-cookie');
+    expect(setCookie).toContain('__gg.session-token=new-encrypted-token');
+    expect(setCookie).toContain('Max-Age=2592000');
+  });
+
+  it('proxy wrapper should expire a session cookie that can no longer be authenticated', async () => {
+    const auth = createAuthFunction(makeConfig());
+    const wrapper = auth(async (request) =>
+      new Response(JSON.stringify({ authenticated: request.auth !== null })),
+    );
+    const response = await wrapper(
+      new Request('http://localhost:3000/dashboard', {
+        headers: { cookie: '__gg.session-token=invalid-session' },
+      }),
+    );
+
+    expect(await response.json()).toEqual({ authenticated: false });
+    expect(response.headers.get('set-cookie')).toContain('__gg.session-token=; Path=/; Max-Age=0');
   });
 });
 
