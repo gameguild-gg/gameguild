@@ -58,6 +58,72 @@ export class EconomyModule {
   }
 
   /**
+   * List my payout requests
+   */
+  async getEconomyPayoutRequests(query?: { take?: number }): Promise<Result<Array<Types.EconomyPayoutsQueriesEconomyPayoutInput>, ApiError>> {
+    const url = '/api/v1/economy/payout-requests';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.EconomyPayoutsQueriesEconomyPayoutInput>, ApiError>;
+  }
+
+  /**
+   * Submit my payout request
+   *
+   * Records a withdrawal request only. It does not reserve or transfer value until KYC, risk, provider, and FIFO eligibility checks pass.
+   */
+  async postEconomyPayoutRequests(
+    body: Types.EconomyPayoutsCommandsCreateMyPayoutRequestInput,
+  ): Promise<Result<Types.EconomyPayoutsQueriesEconomyPayoutInput, ApiError>> {
+    const url = '/api/v1/economy/payout-requests';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.EconomyPayoutsCommandsCreateMyPayoutRequestInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyPayoutsQueriesEconomyPayoutInputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Cancel my pending payout request
+   */
+  async postEconomyPayoutRequestsCancel(requestId: string): Promise<Result<Types.EconomyPayoutsQueriesEconomyPayoutInput, ApiError>> {
+    const url = `/api/v1/economy/payout-requests/${requestId}/cancel`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyPayoutsQueriesEconomyPayoutInputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * List my payout operations
    */
   async getEconomyPayouts(query?: { take?: number }): Promise<Result<Array<Types.EconomyPayoutsQueriesEconomyPayoutOperation>, ApiError>> {
