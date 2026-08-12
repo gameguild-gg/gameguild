@@ -46,20 +46,20 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@v7 # v4
         with:
           fetch-depth: 0
           fetch-tags: true
           lfs: false
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        uses: pnpm/action-setup@v6 # v6.0.10
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@v7 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -68,14 +68,14 @@ jobs:
 
       - name: Cache Emscripten SDK
         id: cache-emsdk
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@v6 # v4
         with:
           path: tools/emception/tools/emsdk
           key: emsdk-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/setup-emsdk.ts', 'tools/emception/scripts/lib/pinned-versions.ts') }}
 
       - name: Cache userland sources and builds
         id: cache-userland
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@v6 # v4
         with:
           path: tools/emception/userland
           key: userland-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/build-*.ts', 'tools/emception/scripts/lib/**', 'tools/emception/userland/**/BUILD.md', 'tools/emception/userland/**/patches/**', 'tools/emception/userland/**/*.c', 'tools/emception/userland/**/*.h') }}
@@ -84,7 +84,7 @@ jobs:
 
       - name: Cache sysroot and CDN bundles
         id: cache-cdn
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@v6 # v4
         with:
           path: |
             tools/emception/sysroot
@@ -168,7 +168,7 @@ jobs:
           test -d tools/emception/packages/ide/dist
 
       - name: Upload Emception release artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@v7 # v4
         with:
           name: emception-${{ github.sha }}
           path: |
@@ -186,7 +186,7 @@ jobs:
 
       - name: Upload browser diagnostics on failure
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@v7 # v4
         with:
           name: emception-browser-diagnostics-${{ github.sha }}
           path: |
@@ -210,7 +210,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Download Emception release artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@v8 # v8.0.1
         with:
           name: emception-${{ github.sha }}
           path: _artifacts/emception
@@ -237,16 +237,16 @@ jobs:
           echo "CDN payload: $(du -sh .pages/cdn | cut -f1)"
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+        uses: actions/configure-pages@v6 # v6.0.0
 
       - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        uses: actions/upload-pages-artifact@v5 # v5.0.0
         with:
           path: .pages
 
       - name: Deploy GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+        uses: actions/deploy-pages@v5 # v4
 
   publish-packages:
     name: Publish Emception packages to npm
@@ -259,16 +259,16 @@ jobs:
       id-token: write
     steps:
       - name: Check out repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@v7 # v4
 
       - name: Configure npm registry
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@v7 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: https://registry.npmjs.org
 
       - name: Download validated package artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@v8 # v8.0.1
         with:
           name: emception-${{ github.sha }}
           path: _artifacts/emception
