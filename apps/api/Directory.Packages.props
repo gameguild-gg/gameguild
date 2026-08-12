@@ -28,6 +28,7 @@
     <PackageVersion Include="Microsoft.OpenApi" Version="1.6.23" />
     <PackageVersion Include="Microsoft.AspNetCore.Routing" Version="2.3.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Routing.Abstractions" Version="2.3.0" />
+    <PackageVersion Include="SSH.NET" Version="2026.0.0" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="6.0.0-preview.4.21253.7" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9" />
