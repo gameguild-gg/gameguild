@@ -15,10 +15,10 @@
 // Pure logic — no DOM, no Node imports — so both browsers and Node graders
 // can use the same code path.
 
-import { EmceptionError } from '../errors';
-import type { WorkspaceBuildConfig } from '../types';
-import type { MetaSidecar, WorkspaceHandle } from './manager';
-import { createZip, readZip, type CreateZipOptions, type ZipEntry } from './zip';
+import { EmceptionError } from '../errors.js';
+import type { WorkspaceBuildConfig } from '../types.js';
+import type { MetaSidecar, WorkspaceHandle } from './manager.js';
+import { createZip, readZip, type CreateZipOptions, type ZipEntry } from './zip.js';
 
 const TEXT_ENC = new TextEncoder();
 const TEXT_DEC = new TextDecoder('utf-8', { fatal: false });

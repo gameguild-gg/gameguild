@@ -9,7 +9,7 @@
  * zero platform dependencies.
  */
 
-import type { IOProvider } from './io-provider';
+import type { IOProvider } from './io-provider.js';
 
 export interface HeadlessIOProviderOptions {
   /** Called for every `write()` / `writeLine()` chunk. Default: no-op. */

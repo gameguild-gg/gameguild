@@ -1,4 +1,4 @@
 // UI subsystem barrel.
-export * from './adapters';
-export * from './config';
+export * from './adapters.js';
+export * from './config.js';
 
