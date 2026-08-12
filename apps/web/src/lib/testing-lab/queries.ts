@@ -278,7 +278,7 @@ function compact<T>(values: Array<T | null>): T[] {
 export const getTestingLabDashboard = cache(async (): Promise<TestingLabDashboardData> => {
   const api = createTestingLabModules();
   const [requests, sessions, locations, publicSessions] = await Promise.all([
-    readResult(api.requests.getTestingRequests({ skip: 0, take: 200 }), 'Testing requests'),
+    readResult(api.requests.getTestingRequests({ skip: 0, take: 200, includeArchived: true }), 'Testing requests'),
     readResult(api.sessions.getTestingSessions({ skip: 0, take: 200 }), 'Testing sessions'),
     readResult(api.locations.getTestingLocations({ skip: 0, take: 200 }), 'Testing locations'),
     readResult(api.sessions.getTestingPublicSessions({ take: 200 }), 'Public testing sessions'),

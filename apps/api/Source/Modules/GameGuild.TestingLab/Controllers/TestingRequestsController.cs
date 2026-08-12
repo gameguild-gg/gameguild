@@ -23,9 +23,12 @@ public class TestingRequestsController(
     // GET: testing/requests
     [HttpGet("requests")]
     [RequireResourcePermission<PermissionType, TestingRequest>(PermissionType.Read)]
-    public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequests([FromQuery] int skip = 0, [FromQuery] int take = 50)
+    public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequests(
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        [FromQuery] bool includeArchived = false)
     {
-        var requests = await requestService.GetTestingRequestsAsync(skip, take).ConfigureAwait(false);
+        var requests = await requestService.GetTestingRequestsAsync(skip, take, includeArchived).ConfigureAwait(false);
         return Ok(requests);
     }
 

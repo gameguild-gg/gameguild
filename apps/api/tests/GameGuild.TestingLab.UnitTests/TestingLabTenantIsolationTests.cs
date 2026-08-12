@@ -50,6 +50,32 @@ public sealed class TestingLabTenantIsolationTests
     }
 
     [Fact]
+    public async Task RequestDirectory_Should_Include_Archived_Rows_Only_When_Requested()
+    {
+        await using var context = CreateContext();
+        var actorTenantId = Guid.NewGuid();
+        var activeRequest = NewRequest(actorTenantId);
+        var archivedRequest = NewRequest(actorTenantId);
+        archivedRequest.Version = 1;
+        archivedRequest.SoftDelete();
+        var otherTenantArchivedRequest = NewRequest(Guid.NewGuid());
+        otherTenantArchivedRequest.Version = 1;
+        otherTenantArchivedRequest.SoftDelete();
+        context.Set<User>().AddRange(
+            NewUser(activeRequest.CreatedById, "active"),
+            NewUser(archivedRequest.CreatedById, "archived"),
+            NewUser(otherTenantArchivedRequest.CreatedById, "other-archived"));
+        context.Set<TestingRequest>().AddRange(activeRequest, archivedRequest, otherTenantArchivedRequest);
+        await context.SaveChangesAsync();
+        var service = CreateRequestService(context, CreateActor(actorTenantId));
+
+        AssertOnlyRequest(await service.GetTestingRequestsAsync(), activeRequest.Id);
+        (await service.GetTestingRequestsAsync(includeArchived: true))
+            .Select(request => request.Id)
+            .Should().BeEquivalentTo([activeRequest.Id, archivedRequest.Id]);
+    }
+
+    [Fact]
     public async Task RequestMutations_ShouldNotChangeAnotherTenantRow()
     {
         await using var context = CreateContext();
@@ -360,6 +386,15 @@ public sealed class TestingLabTenantIsolationTests
             MaxTesters = 10,
             TenantId = tenantId,
             CreatedById = Guid.NewGuid()
+        };
+
+    private static User NewUser(Guid userId, string emailPrefix)
+        => new()
+        {
+            Id = userId,
+            Email = $"{emailPrefix}@example.com",
+            Name = emailPrefix,
+            IsActive = true
         };
 
     private static TenantIsolationDbContext CreateContext()

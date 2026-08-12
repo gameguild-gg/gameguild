@@ -33,4 +33,21 @@ describe('Testing Lab projects page', () => {
     expect(screen.getByRole('textbox', { name: 'Search community projects' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Filter projects by status' })).toBeInTheDocument();
   });
+
+  it('lists archived requests so operators can restore them', async () => {
+    mocks.getTestingLabDashboard.mockResolvedValue({
+      requests: [{ id: 'archived-request', title: 'Archived build', status: 'Draft', isDeleted: true }],
+      accessIssues: [],
+    });
+    mocks.getTestingProjectOptions.mockResolvedValue([]);
+
+    render(await TestingLabProjectsPage({ searchParams: Promise.resolve({ status: 'Archived' }) }));
+
+    expect(screen.getByRole('option', { name: 'Archived' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Archived build' })).toHaveAttribute(
+      'href',
+      '/dashboard/testing-lab/projects/archived-request',
+    );
+    expect(screen.getAllByText('Archived')).toHaveLength(2);
+  });
 });

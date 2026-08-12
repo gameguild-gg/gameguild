@@ -28,7 +28,8 @@ export default async function TestingLabProjectsPage({ searchParams }: { searchP
   const [directory, projects] = await Promise.all([getTestingLabDashboard(), getTestingProjectOptions()]);
   const filtered = directory.requests.filter((request) => {
     const matchesSearch = !q || `${request.title} ${request.description ?? ''}`.toLowerCase().includes(q);
-    const matchesStatus = !status || normalizeTestingRequestStatus(request.status) === status;
+    const lifecycle = request.isDeleted ? 'Archived' : normalizeTestingRequestStatus(request.status);
+    const matchesStatus = !status || lifecycle === status;
     return matchesSearch && matchesStatus;
   });
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -54,7 +55,7 @@ export default async function TestingLabProjectsPage({ searchParams }: { searchP
           <Filter className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <select aria-label="Filter projects by status" name="status" defaultValue={status} className="h-9 w-full rounded-md border bg-background pl-9 pr-3 text-sm">
             <option value="">All statuses</option>
-            {['Draft', 'Open', 'Active', 'In Progress', 'Paused', 'Completed', 'Cancelled'].map((value) => (
+            {['Draft', 'Open', 'Active', 'In Progress', 'Paused', 'Completed', 'Cancelled', 'Archived'].map((value) => (
               <option key={value}>{value}</option>
             ))}
           </select>
@@ -113,7 +114,7 @@ export default async function TestingLabProjectsPage({ searchParams }: { searchP
                         {request.currentTesterCount ?? 0}/{request.maxTesters ?? 'Unlimited'}
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant="outline">{normalizeTestingRequestStatus(request.status)}</Badge>
+                        <Badge variant="outline">{request.isDeleted ? 'Archived' : normalizeTestingRequestStatus(request.status)}</Badge>
                       </td>
                     </tr>
                   );
