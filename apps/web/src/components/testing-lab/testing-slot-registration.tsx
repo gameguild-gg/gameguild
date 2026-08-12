@@ -113,7 +113,7 @@ export function TestingSlotRegistration({
         <Button asChild className="w-full">
           <Link href="/sign-in">Sign in to register</Link>
         </Button>
-      ) : registration ? (
+      ) : registration && registration.status !== 'Cancelled' ? (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <div>
             <p className="font-medium">{registration.status ?? 'Registered'}</p>
