@@ -83,7 +83,17 @@ function revalidateTestingLab(...paths: string[]) {
 async function complete<T>(operation: Promise<Result<T, ApiError>>, message: string, ...paths: string[]): Promise<TestingLabActionResult<T>> {
   try {
     const result = await operation;
-    if (!result.ok) return { success: false, error: result.error.message };
+    if (!result.ok) {
+      const fieldErrors = 'fieldErrors' in result.error
+        ? (result.error.fieldErrors as Record<string, string[]>)
+        : undefined;
+      const validationDetails = fieldErrors
+        ? Object.entries(fieldErrors)
+            .flatMap(([field, messages]) => messages.map((fieldMessage) => `${field}: ${fieldMessage}`))
+            .join(' ')
+        : '';
+      return { success: false, error: validationDetails || result.error.message };
+    }
     revalidateTestingLab(...paths);
     return { success: true, data: (result.data ?? null) as TestingLabActionData<T>, message };
   } catch (error) {
@@ -107,7 +117,6 @@ export async function submitTestingBuild(formData: FormData): Promise<TestingLab
     api.requests.postTestingSubmitSimple({
       title: text(formData, 'title'),
       projectId: text(formData, 'projectId'),
-      teamIdentifier: optionalText(formData, 'teamIdentifier'),
       versionNumber: text(formData, 'versionNumber'),
       description: optionalText(formData, 'description'),
       downloadUrl: optionalText(formData, 'downloadUrl'),
