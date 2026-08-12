@@ -247,6 +247,36 @@ public sealed class TestingEventParticipationTests : IDisposable
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().ContainSingle().Which.UserId.Should().Be(_testerOneId);
     }
+
+    [Fact]
+    public async Task ReRegister_AfterCancellation_ShouldNotAttachPendingFeedbackToCancelledHistory()
+    {
+        var (testingEvent, slot) = AddScheduledEventAndSlot(
+            TestingEventMode.InPerson,
+            maxTesters: 2,
+            requiresFeedback: true);
+        var application = AddApprovedApplication(testingEvent, slot);
+        await _context.SaveChangesAsync();
+        var handler = CreateHandler();
+
+        SetActor(_testerOneId);
+        var original = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        await handler.Handle(new CancelTestingEventSlotRegistrationCommand(original.Value.Id), default);
+        var replacement = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+
+        SetActor(_managerId);
+        await handler.Handle(new CheckInTestingEventRegistrationCommand(replacement.Value.Id), default);
+        await handler.Handle(new AssignTestingProjectToTesterCommand(replacement.Value.Id, application.Id), default);
+        var registrations = await handler.Handle(
+            new GetTestingEventSlotRegistrationsQuery(slot.Id),
+            default);
+
+        registrations.IsSuccess.Should().BeTrue();
+        registrations.Value.Single(item => item.Id == original.Value.Id)
+            .PendingFeedbackCount.Should().Be(0);
+        registrations.Value.Single(item => item.Id == replacement.Value.Id)
+            .PendingFeedbackCount.Should().Be(1);
+    }
     private TestingParticipationHandlers CreateHandler() => new(
         _context,
         _actorAccessor,
