@@ -105,15 +105,17 @@ describe('TestingEventApplications', () => {
     expect(await screen.findByRole('combobox', { name: 'Testing slot' })).toBeInTheDocument();
   });
 
-  it('uses a guarded drawer and opens with a valid event schedule', () => {
+  it('uses a guarded drawer and keeps the shadcn date-time schedule chronological', () => {
     render(<CreateTestingEventDialog />);
 
     fireEvent.click(screen.getByRole('button', { name: 'New event' }));
-    const applicationsOpenAt = screen.getByLabelText('Applications open') as HTMLInputElement;
-    const applicationsCloseAt = screen.getByLabelText('Applications close') as HTMLInputElement;
-    const startsAt = screen.getByLabelText('Event starts') as HTMLInputElement;
-    const endsAt = screen.getByLabelText('Event ends') as HTMLInputElement;
+    const field = (name: string) => document.querySelector<HTMLInputElement>(`input[name="${name}"]`)!;
+    const applicationsOpenAt = field('applicationsOpenAt');
+    const applicationsCloseAt = field('applicationsCloseAt');
+    const startsAt = field('startsAt');
+    const endsAt = field('endsAt');
 
+    expect(document.querySelector('input[type="datetime-local"]')).not.toBeInTheDocument();
     expect(applicationsOpenAt.value).not.toBe('');
     expect(applicationsCloseAt.value).not.toBe('');
     expect(startsAt.value).not.toBe('');
@@ -122,11 +124,10 @@ describe('TestingEventApplications', () => {
     expect(new Date(startsAt.value).valueOf()).toBeGreaterThanOrEqual(new Date(applicationsCloseAt.value).valueOf());
     expect(new Date(endsAt.value).valueOf()).toBeGreaterThan(new Date(startsAt.value).valueOf());
 
-    const laterStart = new Date(new Date(startsAt.value).valueOf() + 3 * 60 * 60 * 1000);
-    const laterStartValue = new Date(laterStart.valueOf() - laterStart.getTimezoneOffset() * 60_000)
-      .toISOString()
-      .slice(0, 16);
-    fireEvent.change(startsAt, { target: { value: laterStartValue } });
+    fireEvent.click(screen.getByRole('button', { name: 'Event starts' }));
+    const nextMinute = String(new Date(startsAt.value).getMinutes() + 1).padStart(2, '0');
+    fireEvent.change(screen.getByLabelText('Minute'), { target: { value: nextMinute } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply date and time' }));
 
     expect(new Date(endsAt.value).valueOf() - new Date(startsAt.value).valueOf()).toBe(2 * 60 * 60 * 1000);
 
@@ -147,7 +148,7 @@ describe('TestingEventApplications', () => {
     );
 
     expect(screen.queryByRole('button', { name: 'New event' })).not.toBeInTheDocument();
-    expect((screen.getByLabelText('Event starts') as HTMLInputElement).value).toMatch(/^2030-08-19T/);
+    expect(document.querySelector<HTMLInputElement>('input[name="startsAt"]')?.value).toMatch(/^2030-08-19T/);
   });
 
   it('preserves API wall-clock values when editing an event', () => {
@@ -171,10 +172,10 @@ describe('TestingEventApplications', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
 
-    expect((screen.getByLabelText('Applications open') as HTMLInputElement).value).toBe('2026-08-11T17:00');
-    expect((screen.getByLabelText('Applications close') as HTMLInputElement).value).toBe('2026-08-13T16:00');
-    expect((screen.getByLabelText('Event starts') as HTMLInputElement).value).toBe('2026-08-13T17:00');
-    expect((screen.getByLabelText('Event ends') as HTMLInputElement).value).toBe('2026-08-13T19:00');
+    expect(document.querySelector<HTMLInputElement>('input[name="applicationsOpenAt"]')?.value).toBe('2026-08-11T17:00');
+    expect(document.querySelector<HTMLInputElement>('input[name="applicationsCloseAt"]')?.value).toBe('2026-08-13T16:00');
+    expect(document.querySelector<HTMLInputElement>('input[name="startsAt"]')?.value).toBe('2026-08-13T17:00');
+    expect(document.querySelector<HTMLInputElement>('input[name="endsAt"]')?.value).toBe('2026-08-13T19:00');
     timezoneOffset.mockRestore();
   });
 
@@ -197,8 +198,8 @@ describe('TestingEventApplications', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit slot' }));
 
-    expect((screen.getByLabelText('Starts') as HTMLInputElement).value).toBe('2026-08-13T17:30');
-    expect((screen.getByLabelText('Ends') as HTMLInputElement).value).toBe('2026-08-13T18:30');
+    expect(document.querySelector<HTMLInputElement>('input[name="startsAt"]')?.value).toBe('2026-08-13T17:30');
+    expect(document.querySelector<HTMLInputElement>('input[name="endsAt"]')?.value).toBe('2026-08-13T18:30');
     timezoneOffset.mockRestore();
   });
 });

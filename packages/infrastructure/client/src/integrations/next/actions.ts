@@ -31,7 +31,7 @@ import {
   ProviderNotFoundError,
   SignUpError,
 } from '../../runtime/auth/errors.js';
-import { parseBackendAuthResponse } from './handlers.js';
+import { parseBackendAuthResponse, serializeCookie } from './handlers.js';
 import {
   type OAuthProviderWithMethods,
   getOAuthExchangeToken,
@@ -106,6 +106,16 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
       }
     }
 
+    if (!session) {
+      try {
+        sessionStore.delete((name, value, opts) => {
+          adapter.set(name, value, opts);
+        });
+      } catch {
+        // Server Components can read cookies but cannot mutate them.
+      }
+    }
+
     return session;
   }
 
@@ -136,19 +146,26 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
       const cookieHeader = request.headers.get('cookie') || '';
       const cookieMap = parseCookieHeader(cookieHeader);
 
+      const responseCookies: Array<{
+        name: string;
+        value: string;
+        options: CookieSerializeOptions;
+      }> = [];
       const adapter: CookieAdapter = {
         get(name) {
           const value = cookieMap.get(name);
           return value !== undefined ? { value } : undefined;
         },
-        /* v8 ignore start */
-        set() {
-          // Can't set cookies in proxy via this adapter
+        set(name, value, options = {}) {
+          responseCookies.push({ name, value, options });
         },
-        delete() {
-          // Can't delete cookies in proxy via this adapter
+        delete(name) {
+          responseCookies.push({
+            name,
+            value: '',
+            options: { ...cookieOptions, maxAge: 0 },
+          });
         },
-        /* v8 ignore stop */
       };
 
       const session = await getSession(adapter);
@@ -157,7 +174,15 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
       const augmentedRequest = request as Request & { auth: Session | null };
       augmentedRequest.auth = session;
 
-      return handler(augmentedRequest);
+      const response = await handler(augmentedRequest);
+      for (const cookie of responseCookies) {
+        response.headers.append(
+          'Set-Cookie',
+          serializeCookie(cookie.name, cookie.value, cookie.options)
+        );
+      }
+
+      return response;
     };
   }
 
