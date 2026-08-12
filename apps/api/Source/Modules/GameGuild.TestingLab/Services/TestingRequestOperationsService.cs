@@ -21,8 +21,9 @@ public class TestingRequestOperationsService(
 
     public async Task<IEnumerable<TestingRequest>> GetAllTestingRequestsAsync()
     {
+        var tenantId = RequireTenantActor().TenantId!.Value;
         return await context.Set<TestingRequest>()
-            .Where(tr => tr.DeletedAt == null)
+            .Where(tr => tr.TenantId == tenantId && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
@@ -32,8 +33,9 @@ public class TestingRequestOperationsService(
 
     public async Task<IEnumerable<TestingRequest>> GetTestingRequestsAsync(int skip = 0, int take = 50)
     {
+        var tenantId = RequireTenantActor().TenantId!.Value;
         return await context.Set<TestingRequest>()
-            .Where(tr => tr.DeletedAt == null)
+            .Where(tr => tr.TenantId == tenantId && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
@@ -45,8 +47,9 @@ public class TestingRequestOperationsService(
 
     public async Task<TestingRequest?> GetTestingRequestByIdAsync(Guid id)
     {
+        var tenantId = RequireTenantActor().TenantId!.Value;
         return await context.Set<TestingRequest>()
-            .Where(tr => tr.Id == id && tr.DeletedAt == null)
+            .Where(tr => tr.Id == id && tr.TenantId == tenantId && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
@@ -55,8 +58,9 @@ public class TestingRequestOperationsService(
 
     public async Task<TestingRequest?> GetTestingRequestByIdWithDetailsAsync(Guid id)
     {
+        var tenantId = RequireTenantActor().TenantId!.Value;
         return await context.Set<TestingRequest>()
-            .Where(tr => tr.Id == id && tr.DeletedAt == null)
+            .Where(tr => tr.Id == id && tr.TenantId == tenantId && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
@@ -88,7 +92,10 @@ public class TestingRequestOperationsService(
 
     public async Task<TestingRequest> UpdateTestingRequestAsync(TestingRequest testingRequest)
     {
-        var existingRequest = await context.Set<TestingRequest>().FindAsync(testingRequest.Id).ConfigureAwait(false);
+        var tenantId = RequireTenantActor().TenantId!.Value;
+        var existingRequest = await context.Set<TestingRequest>()
+            .FirstOrDefaultAsync(request => request.Id == testingRequest.Id && request.TenantId == tenantId)
+            .ConfigureAwait(false);
 
         if (existingRequest == null)
             throw new InvalidOperationException($"Testing request with ID {testingRequest.Id} not found.");
@@ -112,7 +119,10 @@ public class TestingRequestOperationsService(
 
     public async Task<bool> DeleteTestingRequestAsync(Guid id)
     {
-        var testingRequest = await context.Set<TestingRequest>().FindAsync(id).ConfigureAwait(false);
+        var tenantId = RequireTenantActor().TenantId!.Value;
+        var testingRequest = await context.Set<TestingRequest>()
+            .FirstOrDefaultAsync(request => request.Id == id && request.TenantId == tenantId)
+            .ConfigureAwait(false);
 
         if (testingRequest == null) return false;
 
@@ -124,13 +134,12 @@ public class TestingRequestOperationsService(
 
     public async Task<bool> RestoreTestingRequestAsync(Guid id)
     {
-        var testingRequest = await context.Set<TestingRequest>().IgnoreQueryFilters().FirstOrDefaultAsync(tr => tr.Id == id);
+        var actor = RequireTenantActor();
+        var testingRequest = await context.Set<TestingRequest>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(tr => tr.Id == id && tr.TenantId == actor.TenantId);
 
         if (testingRequest == null) return false;
-
-        var actor = RequireTenantActor();
-        if (testingRequest.TenantId != actor.TenantId)
-            throw new UnauthorizedAccessException("Testing request is outside the current tenant.");
 
         IProjectLifecycleLockHandle? lockHandle = null;
         if (testingRequest.ProjectVersionId.HasValue)
@@ -150,8 +159,9 @@ public class TestingRequestOperationsService(
 
     public async Task<IEnumerable<TestingRequest>> GetTestingRequestsByProjectVersionAsync(Guid projectVersionId)
     {
+        var tenantId = RequireTenantActor().TenantId!.Value;
         return await context.Set<TestingRequest>()
-            .Where(tr => tr.ProjectVersionId == projectVersionId && tr.DeletedAt == null)
+            .Where(tr => tr.ProjectVersionId == projectVersionId && tr.TenantId == tenantId && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
@@ -161,8 +171,9 @@ public class TestingRequestOperationsService(
 
     public async Task<IEnumerable<TestingRequest>> GetTestingRequestsByCreatorAsync(Guid creatorId)
     {
+        var tenantId = RequireTenantActor().TenantId!.Value;
         return await context.Set<TestingRequest>()
-            .Where(tr => tr.CreatedById == creatorId && tr.DeletedAt == null)
+            .Where(tr => tr.CreatedById == creatorId && tr.TenantId == tenantId && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
@@ -172,8 +183,9 @@ public class TestingRequestOperationsService(
 
     public async Task<IEnumerable<TestingRequest>> GetTestingRequestsByStatusAsync(TestingRequestStatus status)
     {
+        var tenantId = RequireTenantActor().TenantId!.Value;
         return await context.Set<TestingRequest>()
-            .Where(tr => tr.Status == status && tr.DeletedAt == null)
+            .Where(tr => tr.Status == status && tr.TenantId == tenantId && tr.DeletedAt == null)
             .Include(tr => tr.ProjectVersion)
             .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
@@ -183,10 +195,11 @@ public class TestingRequestOperationsService(
 
     public async Task<IEnumerable<TestingRequest>> SearchTestingRequestsAsync(string searchTerm)
     {
+        var tenantId = RequireTenantActor().TenantId!.Value;
         var lowerSearchTerm = searchTerm.ToLower();
 
         return await context.Set<TestingRequest>()
-            .Where(tr => tr.DeletedAt == null &&
+            .Where(tr => tr.TenantId == tenantId && tr.DeletedAt == null &&
                 (tr.Title.ToLower().Contains(lowerSearchTerm) ||
                  tr.Description != null && tr.Description.ToLower().Contains(lowerSearchTerm)))
             .Include(tr => tr.ProjectVersion)
@@ -198,8 +211,9 @@ public class TestingRequestOperationsService(
 
     public async Task<IEnumerable<TestingRequest>> GetActiveTestingRequestsAsync()
     {
+        var tenantId = RequireTenantActor().TenantId!.Value;
         return await context.Set<TestingRequest>()
-            .Where(tr => tr.DeletedAt == null && tr.Status == TestingRequestStatus.Open)
+            .Where(tr => tr.TenantId == tenantId && tr.DeletedAt == null && tr.Status == TestingRequestStatus.Open)
             .Include(tr => tr.ProjectVersion)
             .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)
