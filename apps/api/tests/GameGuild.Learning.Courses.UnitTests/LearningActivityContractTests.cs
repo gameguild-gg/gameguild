@@ -155,49 +155,6 @@ public sealed class LearningActivityContractTests
     }
 
     [Fact]
-    public void Survey_ShouldNeverAcceptGrading()
-    {
-        var survey = new ProgramContent { Type = ProgramContentType.Survey };
-
-        var action = () => survey.SetGrading(GradingMethod.Instructor, 100);
-
-        action.Should().Throw<InvalidOperationException>()
-            .WithMessage("Surveys cannot be graded*");
-    }
-
-    [Fact]
-    public void NormalizeLearningContract_WhenSurveyContainsLegacyGrading_ShouldClearIt()
-    {
-        var survey = new ProgramContent
-        {
-            Type = ProgramContentType.Survey,
-            GradingMethod = GradingMethod.Instructor,
-            MaxPoints = 100,
-        };
-
-        survey.NormalizeLearningContract();
-
-        survey.GradingMethod.Should().Be(GradingMethod.None);
-        survey.MaxPoints.Should().BeNull();
-    }
-
-    [Fact]
-    public void ToDto_WhenLegacySurveyContainsGrading_ShouldNotExposeIt()
-    {
-        var survey = new ProgramContent
-        {
-            Type = ProgramContentType.Survey,
-            GradingMethod = GradingMethod.Instructor,
-            MaxPoints = 100,
-        };
-
-        var dto = survey.ToDto();
-
-        dto.GradingMethod.Should().Be(GradingMethod.None);
-        dto.MaxPoints.Should().BeNull();
-    }
-
-    [Fact]
     public void AnonymousSurveyResult_ShouldRetainAuditIdentityWithoutExposingIt()
     {
         var interaction = new ContentInteraction

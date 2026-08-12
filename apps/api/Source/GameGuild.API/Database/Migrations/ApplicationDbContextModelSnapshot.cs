@@ -2641,7 +2641,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.ToTable((string)null);
 
-                    b.ToSqlQuery(" SELECT \\\"Id\\\",\r\n     \\\"SubscriptionId\\\",\r\n     \\\"InvoiceNumber\\\",\r\n     \\\"Total\\\",\r\n     \\\"Currency\\\",\r\n     \\\"CreatedAt\\\",\r\n     \\\"IssuedAt\\\",\r\n     \\\"DueDate\\\",\r\n     \\\"PaidAt\\\",\r\n     \\\"Status\\\",\r\n     \\\"PaymentId\\\",\r\n     \\\"ExternalId\\\"\r\nFROM invoices");
+                    b.ToSqlQuery(" SELECT \\\"Id\\\",\n     \\\"SubscriptionId\\\",\n     \\\"InvoiceNumber\\\",\n     \\\"Total\\\",\n     \\\"Currency\\\",\n     \\\"CreatedAt\\\",\n     \\\"IssuedAt\\\",\n     \\\"DueDate\\\",\n     \\\"PaidAt\\\",\n     \\\"Status\\\",\n     \\\"PaymentId\\\",\n     \\\"ExternalId\\\"\nFROM invoices");
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Subscriptions.SubscriptionPlan", b =>
@@ -6509,6 +6509,22 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<long>("StartInclusive")
                         .HasColumnType("bigint")
                         .HasColumnName("start_inclusive");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("GameGuild.Economy.Persistence.HardToSoftConversionRiskDecisionReceiptRow", b =>
+                {
+                    b.Property<Guid>("RiskDecisionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("risk_decision_id");
+
+                    b.Property<string>("SourceRoots")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source_roots");
 
                     b.ToTable((string)null);
 
@@ -11165,6 +11181,9 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<DateTime?>("DueAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("GradingMethods")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsRequired")
                         .HasColumnType("boolean");
 
@@ -11219,6 +11238,8 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("Assessments", null, t =>
                         {
                             t.HasCheckConstraint("CK_Assessments_DeliverySchedule", "(\"AvailableFrom\" IS NULL OR \"AvailableUntil\" IS NULL OR \"AvailableFrom\" <= \"AvailableUntil\") AND (\"DueAt\" IS NULL OR \"AvailableFrom\" IS NULL OR \"DueAt\" >= \"AvailableFrom\") AND (\"DueAt\" IS NULL OR \"AvailableUntil\" IS NULL OR \"DueAt\" <= \"AvailableUntil\") AND (NOT \"AllowLateSubmissions\" OR (\"DueAt\" IS NOT NULL AND \"LateSubmissionDeadline\" IS NOT NULL AND \"LateSubmissionDeadline\" > \"DueAt\" AND (\"AvailableUntil\" IS NULL OR \"LateSubmissionDeadline\" <= \"AvailableUntil\"))) AND (\"AllowLateSubmissions\" OR \"LateSubmissionDeadline\" IS NULL)");
+
+                            t.HasCheckConstraint("CK_Assessments_GradingMethods", "\"GradingMethods\" >= 0 AND (\"GradingMethods\" & ~15) = 0");
 
                             t.HasCheckConstraint("CK_Assessments_PresentationMode", "\"PresentationMode\" IN (0, 1)");
 
@@ -12391,9 +12412,6 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<int?>("EstimatedMinutes")
                         .HasColumnType("integer");
 
-                    b.Property<int>("GradingMethod")
-                        .HasColumnType("integer");
-
                     b.Property<bool>("IsRequired")
                         .HasColumnType("boolean");
 
@@ -12401,9 +12419,6 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("jsonb");
 
                     b.Property<int?>("LessonFormat")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("MaxPoints")
                         .HasColumnType("integer");
 
                     b.Property<Guid?>("ParentId")
@@ -12453,10 +12468,6 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("program_contents", t =>
                         {
                             t.HasCheckConstraint("CK_program_contents_LessonFormat", "((\"Type\" IN (0, 1)) AND \"LessonFormat\" IN (0, 1, 2, 3, 4, 5)) OR ((\"Type\" NOT IN (0, 1)) AND \"LessonFormat\" IS NULL)");
-
-                            t.HasCheckConstraint("CK_program_contents_Lesson_NotGraded", "\"Type\" NOT IN (0, 1) OR (\"GradingMethod\" = 0 AND \"MaxPoints\" IS NULL)");
-
-                            t.HasCheckConstraint("CK_program_contents_Survey_NotGraded", "\"Type\" <> 8 OR (\"GradingMethod\" = 0 AND \"MaxPoints\" IS NULL)");
                         });
                 });
 

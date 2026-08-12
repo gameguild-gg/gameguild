@@ -193,8 +193,6 @@ export const databasesSyllabusContent: ProgramContent = {
     body: databasesSyllabus,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: databasesProgram,
@@ -217,8 +215,6 @@ export const week01IntroContent: ProgramContent = {
     body: week01Intro,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -241,8 +237,6 @@ export const week01ReadingsContent: ProgramContent = {
     body: week01Readings,
     sortOrder: 1,
     isRequired: false,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 35,
     visibility: 1, // Published
     program: databasesProgram,
@@ -264,8 +258,6 @@ export const week01DbZooContent: ProgramContent = {
     body: week01DbZoo,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 25,
     visibility: 1, // Published
     program: databasesProgram,
@@ -287,8 +279,6 @@ export const week01DecisionMatrixContent: ProgramContent = {
     body: week01DecisionMatrix,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -310,8 +300,6 @@ export const week01QuizContent: ProgramContent = {
     body: week01Quiz,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: databasesProgram,
@@ -333,8 +321,6 @@ export const week01DataTypesContent: ProgramContent = {
     body: week01DataTypes,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 25,
     visibility: 1, // Published
     program: databasesProgram,
@@ -356,8 +342,6 @@ export const week01AssignmentContent: ProgramContent = {
     body: week01Assignment,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 75,
     visibility: 1, // Published
     program: databasesProgram,
@@ -380,8 +364,6 @@ export const week02LectureContent: ProgramContent = {
     body: week02Lecture,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -404,8 +386,6 @@ export const week02ReadingsContent: ProgramContent = {
     body: week02Readings,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: databasesProgram,
@@ -428,8 +408,6 @@ export const week02DDLContent: ProgramContent = {
     body: week02DDL,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -451,8 +429,6 @@ export const week02DMLContent: ProgramContent = {
     body: week02DML,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 35,
     visibility: 1, // Published
     program: databasesProgram,
@@ -474,8 +450,6 @@ export const week02DQLContent: ProgramContent = {
     body: week02DQL,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 35,
     visibility: 1, // Published
     program: databasesProgram,
@@ -497,8 +471,6 @@ export const week02ConstraintsContent: ProgramContent = {
     body: week02Constraints,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: databasesProgram,
@@ -520,8 +492,6 @@ export const week02IdempotencyContent: ProgramContent = {
     body: week02Idempotency,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -543,8 +513,6 @@ export const week02DBMLContent: ProgramContent = {
     body: week02DBML,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -567,8 +535,6 @@ export const week02QuizzesContent: ProgramContent = {
     body: '# Week 02 Quizzes\n\nComplete the quizzes below to test your understanding of SQL fundamentals.',
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: databasesProgram,
@@ -591,8 +557,6 @@ export const week02QuizIdempotencyContent: ProgramContent = {
     body: week02QuizIdempotency,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: databasesProgram,
@@ -614,8 +578,6 @@ export const week02QuizIdempotencyFixContent: ProgramContent = {
     body: week02QuizIdempotencyFix,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: databasesProgram,
@@ -637,8 +599,6 @@ export const week02QuizDDLDMLDQLContent: ProgramContent = {
     body: week02QuizDDLDMLDQL,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 25,
     visibility: 1, // Published
     program: databasesProgram,
@@ -660,8 +620,6 @@ export const week02QuizConstraintsContent: ProgramContent = {
     body: week02QuizConstraints,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: databasesProgram,
@@ -684,8 +642,6 @@ export const week03RevealContent: ProgramContent = {
     body: week03Reveal,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 50,
     visibility: 1, // Published
     program: databasesProgram,
@@ -707,8 +663,6 @@ export const week03FilteringPatternMatchingContent: ProgramContent = {
     body: week03FilteringPatternMatching,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: databasesProgram,
@@ -730,8 +684,6 @@ export const week03AggregationGroupingContent: ProgramContent = {
     body: week03AggregationGrouping,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: databasesProgram,
@@ -753,8 +705,6 @@ export const week03QuizContent: ProgramContent = {
     body: week03Quiz,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -777,8 +727,6 @@ export const week04RevealContent: ProgramContent = {
     body: week04Reveal,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: databasesProgram,
@@ -801,8 +749,6 @@ export const week04NormalizationTheoryContent: ProgramContent = {
     body: week04NormalizationTheory,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -824,8 +770,6 @@ export const week04PracticalNormalizationContent: ProgramContent = {
     body: week04PracticalNormalization,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: databasesProgram,
@@ -847,8 +791,6 @@ export const week04EntityRelationshipsContent: ProgramContent = {
     body: week04EntityRelationships,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -870,8 +812,6 @@ export const week04IndexingFundamentalsContent: ProgramContent = {
     body: week04IndexingFundamentals,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: databasesProgram,
@@ -893,8 +833,6 @@ export const week04ReadingsContent: ProgramContent = {
     body: week04Readings,
     sortOrder: 5,
     isRequired: false,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: databasesProgram,
@@ -917,8 +855,6 @@ export const week04QuizNormalizationContent: ProgramContent = {
     body: week04QuizNormalization,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 75,
     visibility: 1, // Published
     program: databasesProgram,
@@ -941,8 +877,6 @@ export const week05RevealContent: ProgramContent = {
     body: week05Reveal,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -964,8 +898,6 @@ export const week05ReadingsContent: ProgramContent = {
     body: week05Readings,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 25,
     visibility: 1, // Published
     program: databasesProgram,
@@ -987,8 +919,6 @@ export const week05JoinFundamentalsContent: ProgramContent = {
     body: week05JoinFundamentals,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 35,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1010,8 +940,6 @@ export const week05OuterJoinsContent: ProgramContent = {
     body: week05OuterJoins,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1033,8 +961,6 @@ export const week05JoinsQuizContent: ProgramContent = {
     body: week05JoinsQuiz,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 35,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1057,8 +983,6 @@ export const week06RevealContent: ProgramContent = {
     body: week06Reveal,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 50,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1080,8 +1004,6 @@ export const week06ReadingsContent: ProgramContent = {
     body: week06Readings,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 25,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1103,8 +1025,6 @@ export const week06SubqueriesAndSetOperationsContent: ProgramContent = {
     body: week06SubqueriesAndSetOperations,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1126,8 +1046,6 @@ export const week06CTEsAndViewsContent: ProgramContent = {
     body: week06CTEsAndViews,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1149,8 +1067,6 @@ export const week06SubqueriesCTEsViewsQuizContent: ProgramContent = {
     body: week06SubqueriesCTEsViewsQuiz,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1173,8 +1089,6 @@ export const week07RevealContent: ProgramContent = {
     body: week07Reveal,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1196,8 +1110,6 @@ export const week07ReadingsContent: ProgramContent = {
     body: week07Readings,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 180,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1219,8 +1131,6 @@ export const week07SchemaPatternsContent: ProgramContent = {
     body: week07SchemaPatterns,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 25,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1242,8 +1152,6 @@ export const week07ReferentialActionsContent: ProgramContent = {
     body: week07ReferentialActions,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1265,8 +1173,6 @@ export const week07FunctionsProceduresTriggersContent: ProgramContent = {
     body: week07FunctionsProceduresTriggers,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1288,8 +1194,6 @@ export const week07TransactionsContent: ProgramContent = {
     body: week07Transactions,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1311,8 +1215,6 @@ export const week07AccessControlContent: ProgramContent = {
     body: week07AccessControl,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 25,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1334,8 +1236,6 @@ export const week07ScalabilityBasicsContent: ProgramContent = {
     body: week07ScalabilityBasics,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 25,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1357,8 +1257,6 @@ export const week07ORMQueryBuildersContent: ProgramContent = {
     body: week07ORMQueryBuilders,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1380,8 +1278,6 @@ export const week07QuizContent: ProgramContent = {
     body: week07Quiz,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1404,8 +1300,6 @@ export const week10RevealContent: ProgramContent = {
     body: week10Reveal,
     sortOrder: 10,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1427,8 +1321,6 @@ export const week10ReadingsContent: ProgramContent = {
     body: week10Readings,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1450,8 +1342,6 @@ export const week10MongoDBFundamentalsContent: ProgramContent = {
     body: week10MongoDBFundamentals,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1473,8 +1363,6 @@ export const week10SchemaDesignPatternsContent: ProgramContent = {
     body: week10SchemaDesignPatterns,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 75,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1496,8 +1384,6 @@ export const week10MongoDBCRUDContent: ProgramContent = {
     body: week10MongoDBCRUD,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1519,8 +1405,6 @@ export const week10AggregationPipelineContent: ProgramContent = {
     body: week10AggregationPipeline,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1542,8 +1426,6 @@ export const week10DrizzleMongoDBContent: ProgramContent = {
     body: week10DrizzleMongoDB,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1565,8 +1447,6 @@ export const week10QuizContent: ProgramContent = {
     body: week10Quiz,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1589,8 +1469,6 @@ export const week11RevealContent: ProgramContent = {
     body: week11Reveal,
     sortOrder: 11,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1612,8 +1490,6 @@ export const week11ReadingsContent: ProgramContent = {
     body: week11Readings,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1635,8 +1511,6 @@ export const week11RedisFundamentalsContent: ProgramContent = {
     body: week11RedisFundamentals,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1658,8 +1532,6 @@ export const week11CassandraFundamentalsContent: ProgramContent = {
     body: week11CassandraFundamentals,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1681,8 +1553,6 @@ export const week11QuizContent: ProgramContent = {
     body: week11Quiz,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1705,8 +1575,6 @@ export const finalProjectContent: ProgramContent = {
     body: finalProjectIndex,
     sortOrder: 10,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1729,8 +1597,6 @@ export const week10AssignmentContent: ProgramContent = {
     body: week10Assignment,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 1, // Graded
-    maxPoints: 100,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1753,8 +1619,6 @@ export const week11AssignmentContent: ProgramContent = {
     body: week11Assignment,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 1, // Graded
-    maxPoints: 100,
     estimatedMinutes: 180,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1776,8 +1640,6 @@ export const week12RevealContent: ProgramContent = {
     body: week12Reveal,
     sortOrder: 12,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1799,8 +1661,6 @@ export const week12ReadingsContent: ProgramContent = {
     body: week12Readings,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1822,8 +1682,6 @@ export const week12Neo4jFundamentalsContent: ProgramContent = {
     body: week12Neo4jFundamentals,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1845,8 +1703,6 @@ export const week12QuizContent: ProgramContent = {
     body: week12Quiz,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1869,8 +1725,6 @@ export const week12AssignmentContent: ProgramContent = {
     body: week12Assignment,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 1, // Graded
-    maxPoints: 100,
     estimatedMinutes: 240,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1892,8 +1746,6 @@ export const week13RevealContent: ProgramContent = {
     body: week13Reveal,
     sortOrder: 13,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1915,8 +1767,6 @@ export const week13ReadingsContent: ProgramContent = {
     body: week13Readings,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1938,8 +1788,6 @@ export const week13TimescaledbFundamentalsContent: ProgramContent = {
     body: week13TimescaledbFundamentals,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1961,8 +1809,6 @@ export const week13ElasticsearchFundamentalsContent: ProgramContent = {
     body: week13ElasticsearchFundamentals,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: databasesProgram,
@@ -1984,8 +1830,6 @@ export const week13QuizContent: ProgramContent = {
     body: week13Quiz,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -2008,8 +1852,6 @@ export const week13AssignmentContent: ProgramContent = {
     body: week13Assignment,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 1, // Graded
-    maxPoints: 100,
     estimatedMinutes: 240,
     visibility: 1, // Published
     program: databasesProgram,
@@ -2032,8 +1874,6 @@ export const week14RevealContent: ProgramContent = {
     body: week14Reveal,
     sortOrder: 14,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: databasesProgram,
@@ -2055,8 +1895,6 @@ export const week14ReadingsContent: ProgramContent = {
     body: week14Readings,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: databasesProgram,
@@ -2078,8 +1916,6 @@ export const week14PgvectorFundamentalsContent: ProgramContent = {
     body: week14PgvectorFundamentals,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: databasesProgram,
@@ -2101,8 +1937,6 @@ export const week14KafkaFundamentalsContent: ProgramContent = {
     body: week14KafkaFundamentals,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: databasesProgram,
@@ -2124,8 +1958,6 @@ export const week14QuizContent: ProgramContent = {
     body: week14Quiz,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: databasesProgram,
@@ -2148,8 +1980,6 @@ export const week14AssignmentContent: ProgramContent = {
     body: week14Assignment,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 1, // Graded
-    maxPoints: 100,
     estimatedMinutes: 240,
     visibility: 1, // Published
     program: databasesProgram,
@@ -2172,8 +2002,6 @@ export const week15AssignmentContent: ProgramContent = {
     body: week15Assignment,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 1, // Graded
-    maxPoints: 100,
     estimatedMinutes: 240,
     visibility: 1, // Published
     program: databasesProgram,
@@ -2196,8 +2024,6 @@ export const week16AssignmentContent: ProgramContent = {
     body: week16Assignment,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 1, // Graded
-    maxPoints: 100,
     estimatedMinutes: 240,
     visibility: 1, // Published
     program: databasesProgram,

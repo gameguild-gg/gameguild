@@ -144,7 +144,6 @@ public class ProgramContentTests
         content.Title.Should().BeEmpty();
         content.Type.Should().Be(ProgramContentType.Lesson);
         content.IsRequired.Should().BeTrue();
-        content.GradingMethod.Should().Be(GradingMethod.None);
         content.Visibility.Should().Be(Visibility.Public);
         content.SortOrder.Should().Be(0);
     }
@@ -189,17 +188,6 @@ public class ProgramContentTests
         content.MakeOptional();
 
         content.IsRequired.Should().BeFalse();
-    }
-
-    [Fact]
-    public void SetGrading_ShouldUpdateFields()
-    {
-        var content = new ProgramContent { Type = ProgramContentType.Assignment };
-
-        content.SetGrading(GradingMethod.AutomatedTests, 100);
-
-        content.GradingMethod.Should().Be(GradingMethod.AutomatedTests);
-        content.MaxPoints.Should().Be(100);
     }
 
     [Fact]

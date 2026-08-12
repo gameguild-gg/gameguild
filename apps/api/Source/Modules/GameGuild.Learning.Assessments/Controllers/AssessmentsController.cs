@@ -396,6 +396,27 @@ public class AssessmentsController : BaseApiController
         return NoContent();
     }
 
+    /// <summary>
+    /// Restore a soft-deleted assessment
+    /// </summary>
+    [HttpPost("{id:guid}/restore")]
+    public async Task<ActionResult> RestoreAssessment(Guid id)
+    {
+        var assessment = await _assessmentService.GetAssessmentByIdIncludingDeletedAsync(id).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
+        var result = await _assessmentService.RestoreAssessmentAsync(id).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
+                : BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
     // ===== SUBMISSION MANAGEMENT =====
 
     /// <summary>
@@ -734,7 +755,8 @@ public sealed record AssessmentDto(
     AssessmentPresentationMode PresentationMode = AssessmentPresentationMode.SingleStep,
     DateTime? DueAt = null,
     bool AllowLateSubmissions = false,
-    DateTime? LateSubmissionDeadline = null)
+    DateTime? LateSubmissionDeadline = null,
+    AssessmentGradingMethod GradingMethods = AssessmentGradingMethod.InstructorGraded)
 {
     public static AssessmentDto FromEntity(Assessment entity) => new(
         entity.Id,
@@ -760,7 +782,8 @@ public sealed record AssessmentDto(
         entity.PresentationMode,
         entity.DueAt,
         entity.AllowLateSubmissions,
-        entity.LateSubmissionDeadline);
+        entity.LateSubmissionDeadline,
+        entity.GradingMethods);
 }
 
 public sealed record AssessmentDefinitionDto(

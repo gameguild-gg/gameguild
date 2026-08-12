@@ -83,8 +83,6 @@ export const dataanalysisSyllabusContent: ProgramContent = {
     body: dataanalysisSyllabus,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: dataanalysisProgram,
@@ -105,8 +103,6 @@ export const dataanalysisNumpyContent: ProgramContent = {
     body: dataanalysisNumpyReveal,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: dataanalysisProgram,
@@ -127,8 +123,6 @@ export const dataanalysisPandasContent: ProgramContent = {
     body: dataanalysisPandasReveal,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: dataanalysisProgram,
@@ -149,8 +143,6 @@ export const dataanalysisPandasDataFrameContent: ProgramContent = {
     body: dataanalysisPandasDataFrameReveal,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: dataanalysisProgram,
@@ -171,8 +163,6 @@ export const dataanalysisCustomerServicePerformanceContent: ProgramContent = {
     body: dataanalysisCustomerServicePerformanceReveal,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: dataanalysisProgram,
@@ -193,8 +183,6 @@ export const dataanalysisDataVisualizationContent: ProgramContent = {
     body: dataanalysisDataVisualizationReveal,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: dataanalysisProgram,

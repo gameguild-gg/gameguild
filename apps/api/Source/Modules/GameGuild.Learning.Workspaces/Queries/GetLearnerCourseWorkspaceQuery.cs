@@ -161,8 +161,6 @@ public sealed class GetLearnerCourseWorkspaceQueryHandler(IApplicationDbContext 
             item.ActivitySettingsData,
             item.SortOrder,
             item.IsRequired,
-            item.GradingMethod.ToString(),
-            item.MaxPoints,
             item.EstimatedMinutes,
             item.Visibility.ToString());
     }

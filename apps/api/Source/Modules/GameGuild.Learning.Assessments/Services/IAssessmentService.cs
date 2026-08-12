@@ -20,6 +20,11 @@ public interface IAssessmentService
     Task<Assessment?> GetAssessmentByIdAsync(Guid id);
 
     /// <summary>
+    /// Gets an assessment by ID, ignoring the soft-delete filter. Used by the restore flow.
+    /// </summary>
+    Task<Assessment?> GetAssessmentByIdIncludingDeletedAsync(Guid id);
+
+    /// <summary>
     /// Gets all assessments for a course
     /// </summary>
     Task<IEnumerable<Assessment>> GetCourseAssessmentsAsync(Guid courseId);
@@ -43,6 +48,11 @@ public interface IAssessmentService
     /// Deletes an assessment
     /// </summary>
     Task<Result> DeleteAssessmentAsync(Guid id);
+
+    /// <summary>
+    /// Restores a soft-deleted assessment. Idempotent if the assessment is already active.
+    /// </summary>
+    Task<Result> RestoreAssessmentAsync(Guid id, CancellationToken ct = default);
 
     /// <summary>
     /// Gets all weighted assessment groups for a course.
@@ -181,7 +191,9 @@ public sealed record CreateAssessmentRequest(
     AssessmentPresentationMode PresentationMode = AssessmentPresentationMode.SingleStep,
     DateTime? DueAt = null,
     bool AllowLateSubmissions = false,
-    DateTime? LateSubmissionDeadline = null
+    DateTime? LateSubmissionDeadline = null,
+    Guid? ContentId = null,
+    AssessmentGradingMethod GradingMethods = AssessmentGradingMethod.InstructorGraded
 );
 
 /// <summary>
@@ -207,7 +219,8 @@ public sealed record UpdateAssessmentRequest(
     bool ClearDueAt = false,
     bool? AllowLateSubmissions = null,
     DateTime? LateSubmissionDeadline = null,
-    bool ClearLateSubmissionDeadline = false
+    bool ClearLateSubmissionDeadline = false,
+    AssessmentGradingMethod? GradingMethods = null
 );
 
 /// <summary>

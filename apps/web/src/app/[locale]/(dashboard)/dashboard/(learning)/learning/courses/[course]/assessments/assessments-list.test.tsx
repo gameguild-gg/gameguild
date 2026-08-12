@@ -4,9 +4,8 @@ import userEvent from '@testing-library/user-event';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssessmentsList } from './assessments-list';
-import { createAssessmentGroup, deleteAssessmentGroup, updateAssessmentGroup } from '@/lib/learning/actions';
+import { createAssessment, createAssessmentGroup, deleteAssessmentGroup, updateAssessmentGroup } from '@/lib/learning/actions';
 import type { Assessment, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
-import type { ContentItem } from '@/lib/learning/types';
 
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
@@ -32,6 +31,7 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 
 vi.mock('@/lib/learning/actions', () => ({
+  createAssessment: vi.fn(),
   createAssessmentGroup: vi.fn(),
   deleteAssessmentGroup: vi.fn(),
   updateAssessmentGroup: vi.fn(),
@@ -103,47 +103,6 @@ const assignmentAssessment = {
   assessmentGroupWeightPercent: null,
   assessmentGroupOrder: null,
 } as unknown as Assessment;
-
-const gradedQuizContent = {
-  id: 'content-quiz-1',
-  parentId: null,
-  order: 0,
-  type: 'Questionnaire',
-  title: 'Practice quiz',
-  description: null,
-  status: 'published',
-  duration: null,
-  metadata: {},
-  gradingMethod: null,
-  maxPoints: null,
-  gradingConfig: {
-    enabled: true,
-    schemaVersion: 1,
-    outcome: {
-      uses: ['feedback'],
-      gradebook: null,
-    },
-    score: {
-      maxScore: 3,
-    },
-    attempts: {},
-    feedback: {
-      mode: 'immediate',
-    },
-    presentation: {
-      mode: 'continuous',
-    },
-    items: {
-      question_1: {
-        contentBlockId: 'question_1',
-        points: 3,
-        gradingKind: 'deterministic',
-      },
-    },
-  },
-  createdAt: '2024-01-01T00:00:00.000Z',
-  updatedAt: '2024-01-01T00:00:00.000Z',
-} satisfies ContentItem;
 
 const assessmentGroups = [
   {
@@ -236,6 +195,7 @@ const emptyAnalytics = {
 describe('AssessmentsList weighted groups', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(createAssessment).mockResolvedValue({ success: true, data: { id: 'assessment-new' } });
     vi.mocked(createAssessmentGroup).mockResolvedValue({ success: true, data: { id: 'group-new' } });
     vi.mocked(updateAssessmentGroup).mockResolvedValue({ success: true, data: { id: 'group-quizzes' } });
     vi.mocked(deleteAssessmentGroup).mockResolvedValue({ success: true, data: null });
@@ -337,24 +297,19 @@ describe('AssessmentsList weighted groups', () => {
     expect(screen.queryByRole('button', { name: /add assessment/i })).not.toBeInTheDocument();
   });
 
-  it('projects content-owned graded activities without direct assessment records', () => {
+  it('does not render the removed content-owned activities section', () => {
     render(
       <AssessmentsList
         courseId="course-1"
-        assessments={[]}
-        total={0}
-        gradedContentItems={[gradedQuizContent]}
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
       />,
     );
 
-    const contentSection = screen.getByTestId('content-owned-graded-activities');
-    const link = within(contentSection).getByRole('link', { name: /practice quiz/i });
-
-    expect(link).toHaveAttribute('href', '/dashboard/learning/courses/course-1/content/content-quiz-1');
-    expect(within(contentSection).getByText('3 pts')).toBeInTheDocument();
-    expect(within(contentSection).getByText('feedback')).toBeInTheDocument();
-    expect(within(contentSection).getByText('Quiz')).toBeInTheDocument();
-    expect(screen.queryByText('No assessments yet')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('content-owned-graded-activities')).not.toBeInTheDocument();
+    expect(screen.queryByText(/content-owned activities configured from the content editor/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Content grading')).not.toBeInTheDocument();
   });
 
   it('creates a weighted group and validates group weights before calling the API', async () => {
@@ -509,5 +464,90 @@ describe('AssessmentsList weighted groups', () => {
     await user.click(screen.getByRole('button', { name: /delete group/i }));
 
     expect(await screen.findByText('Cannot delete a locked grade group.')).toBeInTheDocument();
+  });
+
+  describe('Create Assessment dialog', () => {
+    it('renders the Create Assessment button in the header', () => {
+      render(
+        <AssessmentsList
+          courseId="course-1"
+          assessments={groupedAssessments}
+          total={groupedAssessments.length}
+          assessmentGroups={assessmentGroups}
+        />,
+      );
+
+      expect(screen.getByRole('button', { name: /create assessment/i })).toBeInTheDocument();
+    });
+
+    it('opens the Create Assessment dialog on click', async () => {
+      const user = userEvent.setup();
+      render(
+        <AssessmentsList
+          courseId="course-1"
+          assessments={groupedAssessments}
+          total={groupedAssessments.length}
+          assessmentGroups={assessmentGroups}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /create assessment/i }));
+
+      expect(await screen.findByRole('dialog', { name: /create assessment/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
+      expect(screen.getByText(/grading methods/i)).toBeInTheDocument();
+    });
+
+    it('creates a standalone assessment with default fields when title is filled', async () => {
+      const user = userEvent.setup();
+      render(
+        <AssessmentsList
+          courseId="course-1"
+          assessments={groupedAssessments}
+          total={groupedAssessments.length}
+          assessmentGroups={assessmentGroups}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /create assessment/i }));
+      const dialog = await screen.findByRole('dialog', { name: /create assessment/i });
+      await user.type(within(dialog).getByLabelText(/title/i), 'Final Exam');
+      await user.click(within(dialog).getByRole('button', { name: /create assessment/i }));
+
+      await waitFor(() => {
+        expect(createAssessment).toHaveBeenCalledWith({
+          courseId: 'course-1',
+          title: 'Final Exam',
+          type: 'Assignment',
+          assessmentGroupId: null,
+          gradingMethods: 'InstructorGraded',
+        });
+      });
+    });
+
+    it('keeps the create button disabled while the title is empty', async () => {
+      const user = userEvent.setup();
+      render(
+        <AssessmentsList
+          courseId="course-1"
+          assessments={groupedAssessments}
+          total={groupedAssessments.length}
+          assessmentGroups={assessmentGroups}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /create assessment/i }));
+      const dialog = await screen.findByRole('dialog', { name: /create assessment/i });
+
+      const saveButton = within(dialog).getByRole('button', { name: /create assessment/i });
+      expect(saveButton).toBeDisabled();
+
+      await user.type(within(dialog).getByLabelText(/title/i), 'Quiz 1');
+      expect(saveButton).not.toBeDisabled();
+
+      await user.clear(within(dialog).getByLabelText(/title/i));
+      expect(saveButton).toBeDisabled();
+      expect(createAssessment).not.toHaveBeenCalled();
+    });
   });
 });

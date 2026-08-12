@@ -87,8 +87,6 @@ public class ProgramWriteService(
         LessonFormat = content.LessonFormat,
         SortOrder = content.SortOrder,
         IsRequired = content.IsRequired,
-        GradingMethod = content.GradingMethod,
-        MaxPoints = content.MaxPoints,
         EstimatedMinutes = content.EstimatedMinutes,
         Visibility = content.Visibility,
       };

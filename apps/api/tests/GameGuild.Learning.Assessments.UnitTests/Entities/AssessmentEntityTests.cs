@@ -41,6 +41,95 @@ public class AssessmentEntityTests
     }
 
     [Fact]
+    public void Create_WithContentId_ShouldLinkAssessmentToContent()
+    {
+        var contentId = Guid.NewGuid();
+
+        var assessment = Assessment.Create(
+            Guid.NewGuid(),
+            "Linked quiz",
+            AssessmentType.Quiz,
+            100,
+            70,
+            contentId: contentId);
+
+        assessment.ContentId.Should().Be(contentId);
+    }
+
+    [Fact]
+    public void Create_WithoutContentId_ShouldDefaultToNull()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 70);
+
+        assessment.ContentId.Should().BeNull();
+    }
+
+    [Fact]
+    public void Create_WithGradingMethods_ShouldPersistBitwiseCombination()
+    {
+        var assessment = Assessment.Create(
+            Guid.NewGuid(),
+            "Multi-graded quiz",
+            AssessmentType.Quiz,
+            100,
+            70,
+            gradingMethods: AssessmentGradingMethod.AutoGraded | AssessmentGradingMethod.InstructorGraded);
+
+        assessment.GradingMethods.Should().Be(AssessmentGradingMethod.AutoGraded | AssessmentGradingMethod.InstructorGraded);
+        ((int)assessment.GradingMethods).Should().Be(12);
+    }
+
+    [Fact]
+    public void Create_WithoutGradingMethods_ShouldDefaultToInstructorGraded()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 70);
+
+        assessment.GradingMethods.Should().Be(AssessmentGradingMethod.InstructorGraded);
+    }
+
+    [Fact]
+    public void Create_WithNoneGradingMethods_ShouldBeAccepted()
+    {
+        var assessment = Assessment.Create(
+            Guid.NewGuid(),
+            "Survey",
+            AssessmentType.Quiz,
+            100,
+            70,
+            gradingMethods: AssessmentGradingMethod.None);
+
+        assessment.GradingMethods.Should().Be(AssessmentGradingMethod.None);
+    }
+
+    [Fact]
+    public void Update_WithGradingMethods_ShouldPersistNewFlags()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 70);
+
+        assessment.Update(
+            null, null, null, null, null, null, null, null, null,
+            gradingMethods: AssessmentGradingMethod.PeerReview | AssessmentGradingMethod.AIGraded);
+
+        assessment.GradingMethods.Should().Be(AssessmentGradingMethod.PeerReview | AssessmentGradingMethod.AIGraded);
+    }
+
+    [Fact]
+    public void Update_WithoutGradingMethods_ShouldLeaveExistingFlagsUnchanged()
+    {
+        var assessment = Assessment.Create(
+            Guid.NewGuid(),
+            "Quiz",
+            AssessmentType.Quiz,
+            100,
+            70,
+            gradingMethods: AssessmentGradingMethod.PeerReview);
+
+        assessment.Update(null, null, null, null, null, null, null, null, null);
+
+        assessment.GradingMethods.Should().Be(AssessmentGradingMethod.PeerReview);
+    }
+
+    [Fact]
     public void SetDefinition_ShouldPersistStructuredPayloadAndSchemaVersion()
     {
         var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 70);
@@ -204,6 +293,87 @@ public class AssessmentEntityTests
         assessment.Update(null, null, null, null, null, null, null, null, null, null, clearContentId: true);
 
         assessment.ContentId.Should().BeNull();
+    }
+}
+
+/// <summary>
+/// Service-level tests for AssessmentService.RestoreAssessmentAsync.
+/// </summary>
+public class AssessmentServiceRestoreTests
+{
+    [Fact]
+    public async Task RestoreAssessmentAsync_OnSoftDeletedAssessment_MakesItFetchable()
+    {
+        await using var db = CreateContext();
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 60);
+        assessment.SetMaxAttempts(1);
+        assessment.Version = 1;
+        assessment.SoftDelete();
+        db.Set<Assessment>().Add(assessment);
+        await db.SaveChangesAsync();
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+
+        var before = await service.GetAssessmentByIdAsync(assessment.Id);
+        before.Should().BeNull();
+
+        var result = await service.RestoreAssessmentAsync(assessment.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        var after = await service.GetAssessmentByIdAsync(assessment.Id);
+        after.Should().NotBeNull();
+        after!.DeletedAt.Should().BeNull();
+        after.Title.Should().Be("Quiz");
+    }
+
+    [Fact]
+    public async Task RestoreAssessmentAsync_OnUnknownId_ReturnsNotFound()
+    {
+        await using var db = CreateContext();
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+
+        var result = await service.RestoreAssessmentAsync(Guid.NewGuid());
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Type.Should().Be(ErrorType.NotFound);
+    }
+
+    [Fact]
+    public async Task RestoreAssessmentAsync_OnActiveAssessment_IsIdempotent()
+    {
+        await using var db = CreateContext();
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 60);
+        db.Set<Assessment>().Add(assessment);
+        await db.SaveChangesAsync();
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+
+        var result = await service.RestoreAssessmentAsync(assessment.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        var fetched = await service.GetAssessmentByIdAsync(assessment.Id);
+        fetched.Should().NotBeNull();
+        fetched!.DeletedAt.Should().BeNull();
+    }
+
+    private static TestAssessmentDbContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<TestAssessmentDbContext>()
+            .UseInMemoryDatabase($"AssessmentRestore_{Guid.NewGuid()}")
+            .Options;
+        return new TestAssessmentDbContext(options);
+    }
+
+    private sealed class TestAssessmentDbContext(DbContextOptions<TestAssessmentDbContext> options)
+        : DbContext(options), IApplicationDbContext
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            new AssessmentsModelConfiguration().Configure(modelBuilder);
+        }
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException("Transactions are not required for assessment restore tests.");
+        }
     }
 }
 

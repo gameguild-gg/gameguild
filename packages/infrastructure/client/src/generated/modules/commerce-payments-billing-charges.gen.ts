@@ -91,27 +91,20 @@ export class CommercePaymentsBillingChargesModule {
   }
 
   /**
-   * Cancel billing charge
+   * Retry billing charge
    */
-  async postBillingChargesCancel(
-    chargeId: string,
-    body: Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInput,
-  ): Promise<Result<Types.CommercePaymentsPaymentCancellationResult, ApiError>> {
-    const url = `/api/v1/billing/charges/${chargeId}:cancel`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema, body, 'request');
+  async postBillingChargesRetry(chargeId: string): Promise<Result<Types.CommercePaymentsPaymentRetryResult, ApiError>> {
+    const url = `/api/v1/billing/charges/${chargeId}:retry`;
 
     const result = await this.client.request({
       method: 'POST',
       path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsPaymentCancellationResultSchema, result.data, 'response');
+      const validatedData = safeParse(Types.CommercePaymentsPaymentRetryResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -147,20 +140,27 @@ export class CommercePaymentsBillingChargesModule {
   }
 
   /**
-   * Retry billing charge
+   * Cancel billing charge
    */
-  async postBillingChargesRetry(chargeId: string): Promise<Result<Types.CommercePaymentsPaymentRetryResult, ApiError>> {
-    const url = `/api/v1/billing/charges/${chargeId}:retry`;
+  async postBillingChargesCancel(
+    chargeId: string,
+    body: Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInput,
+  ): Promise<Result<Types.CommercePaymentsPaymentCancellationResult, ApiError>> {
+    const url = `/api/v1/billing/charges/${chargeId}:cancel`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
       path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsPaymentRetryResultSchema, result.data, 'response');
+      const validatedData = safeParse(Types.CommercePaymentsPaymentCancellationResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

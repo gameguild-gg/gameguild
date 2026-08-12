@@ -1,9 +1,14 @@
 import "@testing-library/jest-dom/vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ContentItemEditor } from "./content-item-editor";
-import { updateContent } from "@/lib/learning/actions";
+import {
+  createAssessment,
+  deleteAssessment,
+  restoreAssessment,
+  updateContent,
+} from "@/lib/learning/actions";
 import type { ContentItemDetail } from "@/lib/learning/types";
 
 const routerMocks = vi.hoisted(() => ({
@@ -31,6 +36,9 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/learning/actions", () => ({
   updateContent: vi.fn(),
+  createAssessment: vi.fn(),
+  deleteAssessment: vi.fn(),
+  restoreAssessment: vi.fn(),
 }));
 
 const putCodingDefinitionMock = vi.hoisted(() => ({
@@ -85,8 +93,6 @@ const item = {
   status: "published",
   duration: 20,
   metadata: {},
-  gradingMethod: null,
-  maxPoints: null,
   gradingConfig: null,
   content: null,
   jsonBody: { order: [], blocks: {} },
@@ -121,8 +127,6 @@ const lessonItemMarkdownEmpty = {
   status: "published",
   duration: 15,
   metadata: {},
-  gradingMethod: null,
-  maxPoints: null,
   gradingConfig: null,
   content: "",
   jsonBody: null,
@@ -142,8 +146,6 @@ const lessonItemMarkdownBody = {
   status: "published",
   duration: 15,
   metadata: {},
-  gradingMethod: null,
-  maxPoints: null,
   gradingConfig: null,
   content: "# existing markdown",
   jsonBody: null,
@@ -165,8 +167,6 @@ const lessonItemLexical = {
   status: "published",
   duration: 15,
   metadata: {},
-  gradingMethod: null,
-  maxPoints: null,
   gradingConfig: null,
   content: "",
   jsonBody: {
@@ -185,10 +185,37 @@ const lessonItemLexical = {
   updatedAt: "2026-01-02T00:00:00.000Z",
 } satisfies ContentItemDetail;
 
+// ── Assignment / Project: coding-assignment bridge ──
+
+const assignmentItem = {
+  id: "content-asn",
+  parentId: "module-1",
+  order: 5,
+  type: "Assignment",
+  title: "Hello world coding task",
+  description: "Echo stdin to stdout.",
+  status: "published",
+  duration: 60,
+  metadata: {},
+  gradingConfig: null,
+  content: null,
+  jsonBody: null,
+  settings: { isRequired: true },
+  lessonFormat: null,
+  createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-02T00:00:00.000Z",
+} satisfies ContentItemDetail;
+
 describe("ContentItemEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(updateContent).mockResolvedValue({ success: true, data: null });
+    vi.mocked(createAssessment).mockResolvedValue({
+      success: true,
+      data: { id: "new-asmnt" },
+    });
+    vi.mocked(deleteAssessment).mockResolvedValue({ success: true, data: null });
+    vi.mocked(restoreAssessment).mockResolvedValue({ success: true, data: null });
   });
 
   it("renders quiz-publication copy and normalizes questionnaire to quiz", () => {
@@ -494,95 +521,44 @@ describe("ContentItemEditor", () => {
     ).not.toBeInTheDocument();
   });
 
-  // ── Assignment / Project: coding-assignment bridge ──
+  // ── Code content: coding-tests bridge ──
 
-  const assignmentItem = {
-    id: "content-asn",
-    parentId: "module-1",
-    order: 5,
-    type: "Assignment",
-    title: "Hello world coding task",
-    description: "Echo stdin to stdout.",
-    status: "published",
-    duration: 60,
-    metadata: {},
-    gradingMethod: null,
-    maxPoints: null,
-    gradingConfig: null,
-    content: null,
-    jsonBody: null,
-    settings: { isRequired: true },
-    lessonFormat: null,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-02T00:00:00.000Z",
-  } satisfies ContentItemDetail;
-
-  it("renders the Coding Assignment panel for Assignment content (no linked assessment) and not the 'not yet available' fallback", () => {
-    render(
-      <ContentItemEditor
-        courseId="course-1"
-        item={assignmentItem}
-        courseTitle="Advanced Game AI"
-      />,
-    );
-
-    expect(
-      screen.queryByText(/not yet available/i),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: /hello world coding task/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /configure coding assignment/i }),
-    ).toBeInTheDocument();
-  });
-
-  it("enables Configure Coding Assignment and bridges to the editor route when a linked assessment exists", async () => {
+  it("enables Configure Coding Tests and bridges to the editor route when a linked AutoGraded assessment exists", async () => {
     const user = userEvent.setup();
-    putCodingDefinitionMock.putCodingDefinition.mockResolvedValue({
-      success: true,
-    });
 
     render(
       <ContentItemEditor
         courseId="course-1"
-        item={assignmentItem}
+        item={codeItem}
         courseTitle="Advanced Game AI"
         linkedAssessmentId="asmnt-1"
+        linkedAssessmentGradingMethods="AutoGraded"
       />,
     );
 
     const configure = screen.getByRole("button", {
-      name: /configure coding assignment/i,
+      name: /configure coding tests/i,
     });
     expect(configure).not.toBeDisabled();
 
     await user.click(configure);
 
     await waitFor(() => {
-      expect(putCodingDefinitionMock.putCodingDefinition).toHaveBeenCalledWith(
-        "asmnt-1",
-        expect.objectContaining({
-          kind: "coding",
-          language: "cpp",
-          maxScore: 100,
-          passingScore: 60,
-        }),
-        "course-1",
+      expect(routerMocks.push).toHaveBeenCalledWith(
+        "/dashboard/learning/courses/course-1/assessments/asmnt-1/coding-definition",
       );
     });
-    expect(routerMocks.push).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/assessments/asmnt-1/coding-definition",
-    );
+    expect(putCodingDefinitionMock.putCodingDefinition).not.toHaveBeenCalled();
   });
 
   it("shows Edit Coding Tests summary when an existing coding definition is provided", () => {
     render(
       <ContentItemEditor
         courseId="course-1"
-        item={assignmentItem}
+        item={codeItem}
         courseTitle="Advanced Game AI"
         linkedAssessmentId="asmnt-1"
+        linkedAssessmentGradingMethods="AutoGraded"
         initialCodingDefinition={{
           kind: "coding",
           language: "cpp",
@@ -597,8 +573,8 @@ describe("ContentItemEditor", () => {
     expect(
       screen.getByRole("button", { name: /edit coding tests/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/cpp/i)).toBeInTheDocument();
-    expect(screen.getByText(/2 test cases/i)).toBeInTheDocument();
+    expect(screen.getByText(/language: cpp/i)).toBeInTheDocument();
+    expect(screen.getByText(/test cases: 2/i)).toBeInTheDocument();
   });
 
   it("still shows the 'not yet available' fallback for other unhandled types (Discussion)", () => {
@@ -618,5 +594,227 @@ describe("ContentItemEditor", () => {
     );
 
     expect(screen.getByText(/not yet available/i)).toBeInTheDocument();
+  });
+});
+
+// ── Task 7: Graded toggle (create / soft-delete / restore) ──
+
+const codeItem = {
+  ...assignmentItem,
+  id: "content-code",
+  type: "Code",
+  title: "Sum two numbers",
+} satisfies ContentItemDetail;
+
+const projectItem = {
+  ...assignmentItem,
+  id: "content-proj",
+  type: "Project",
+  title: "Capstone project",
+} satisfies ContentItemDetail;
+
+describe("ContentItemEditor — Graded toggle (Task 7)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(updateContent).mockResolvedValue({ success: true, data: null });
+    vi.mocked(createAssessment).mockResolvedValue({
+      success: true,
+      data: { id: "new-asmnt" },
+    });
+    vi.mocked(deleteAssessment).mockResolvedValue({ success: true, data: null });
+    vi.mocked(restoreAssessment).mockResolvedValue({ success: true, data: null });
+  });
+
+  it("renders the Graded toggle for Code content; coding-tests panel only appears when an AutoGraded assessment is linked", () => {
+    // No linked assessment → switch visible, coding-tests panel absent.
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={codeItem}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(
+      screen.getByRole("switch", { name: /^graded$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("coding-tests-section"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/not yet available/i)).not.toBeInTheDocument();
+  });
+
+  it("renders the Graded switch and coding-tests panel together for Code content with a linked AutoGraded assessment", () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={codeItem}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentId="asmnt-1"
+        linkedAssessmentGradingMethods="AutoGraded"
+      />,
+    );
+
+    expect(
+      screen.getByRole("switch", { name: /^graded$/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("coding-tests-section")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /configure coding tests/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not render the Graded toggle for Lesson content", () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownBody}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(
+      screen.queryByRole("switch", { name: /^graded$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("graded-section")).not.toBeInTheDocument();
+  });
+
+  it("renders the Graded toggle for Assignment, Questionnaire, and Project", () => {
+    const { rerender } = render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={assignmentItem}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+    expect(
+      screen.getByRole("switch", { name: /^graded$/i }),
+    ).toBeInTheDocument();
+
+    rerender(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item /* Questionnaire */}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+    expect(
+      screen.getByRole("switch", { name: /^graded$/i }),
+    ).toBeInTheDocument();
+
+    rerender(
+      <ContentItemEditor
+        courseId="course-1"
+        item={projectItem}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+    expect(
+      screen.getByRole("switch", { name: /^graded$/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("creates an assessment when toggled ON with no existing link", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={codeItem}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("switch", { name: /^graded$/i }));
+
+    await waitFor(() => {
+      expect(createAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          courseId: "course-1",
+          contentId: "content-code",
+          type: "Assignment",
+          submissionModalities: "Code",
+          gradingMethods: "AutoGraded,InstructorGraded",
+        }),
+      );
+    });
+    expect(routerMocks.refresh).toHaveBeenCalled();
+  });
+
+  it("restores a recently soft-deleted assessment when toggled back ON", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={codeItem}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentId="asmnt-existing"
+      />,
+    );
+
+    // Toggle OFF (opens confirm) → confirm → deleteAssessment.
+    await user.click(screen.getByRole("switch", { name: /^graded$/i }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /remove grading/i }),
+    );
+
+    await waitFor(() => {
+      expect(deleteAssessment).toHaveBeenCalledWith("course-1", "asmnt-existing");
+    });
+
+    // Toggle ON again → restore (NOT create).
+    await user.click(screen.getByRole("switch", { name: /^graded$/i }));
+
+    await waitFor(() => {
+      expect(restoreAssessment).toHaveBeenCalledWith("course-1", "asmnt-existing");
+    });
+    expect(createAssessment).not.toHaveBeenCalled();
+  });
+
+  it("soft-deletes the linked assessment on confirm after toggling OFF", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={assignmentItem}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentId="asmnt-2"
+      />,
+    );
+
+    await user.click(screen.getByRole("switch", { name: /^graded$/i }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /remove grading/i }),
+    );
+
+    await waitFor(() => {
+      expect(deleteAssessment).toHaveBeenCalledWith("course-1", "asmnt-2");
+    });
+    expect(routerMocks.refresh).toHaveBeenCalled();
+  });
+
+  it("does not soft-delete when the OFF confirm is cancelled", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={assignmentItem}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentId="asmnt-3"
+      />,
+    );
+
+    await user.click(screen.getByRole("switch", { name: /^graded$/i }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: /^cancel$/i }));
+
+    expect(deleteAssessment).not.toHaveBeenCalled();
+    expect(restoreAssessment).not.toHaveBeenCalled();
+    expect(createAssessment).not.toHaveBeenCalled();
+    // Switch state unchanged — still ON because no mutation ran.
+    expect(
+      screen.getByRole("switch", { name: /^graded$/i }),
+    ).toBeChecked();
   });
 });

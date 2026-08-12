@@ -207,8 +207,6 @@ public static partial class SnapshotCourseSeeder
         content.LessonFormat = definition.LessonFormat;
         content.SortOrder = definition.SortOrder;
         content.IsRequired = definition.IsRequired;
-        content.GradingMethod = GradingMethod.None;
-        content.MaxPoints = null;
         content.EstimatedMinutes = definition.EstimatedMinutes;
         content.Visibility = Visibility.Public;
         content.Body = BuildImportedBody(sourceKey, definition.Body);

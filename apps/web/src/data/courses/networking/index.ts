@@ -193,8 +193,6 @@ export const networkingSyllabusContent: ProgramContent & { slug: string } = {
     body: networkingSyllabus,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: networkingProgram,
@@ -216,8 +214,6 @@ export const networkingWeek01Intro: ProgramContent & { slug: string } = {
     body: networkingWeek01Lecture,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -239,8 +235,6 @@ export const networkingWeek01Readings: ProgramContent & { slug: string } = {
     body: networkingWeek01ReadingsMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 70,
     visibility: 1, // Published
     program: networkingProgram,
@@ -262,8 +256,6 @@ export const networkingWeek01Quiz: ProgramContent & { slug: string } = {
     body: networkingWeek01QuizMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -285,8 +277,6 @@ export const networkingWeek01Setup: ProgramContent & { slug: string } = {
     body: networkingWeek01SetupMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -308,8 +298,6 @@ export const networkingWeek01Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek01AssignmentMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: networkingProgram,
@@ -331,8 +319,6 @@ export const networkingWeek02Intro: ProgramContent & { slug: string } = {
     body: networkingWeek02Lecture,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -354,8 +340,6 @@ export const networkingWeek02LectureSlides: ProgramContent & { slug: string } = 
     body: networkingWeek02LectureReveal,
     sortOrder: 0,
     isRequired: false,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: networkingProgram,
@@ -377,8 +361,6 @@ export const networkingWeek02Readings: ProgramContent & { slug: string } = {
     body: networkingWeek02ReadingsMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 155,
     visibility: 1, // Published
     program: networkingProgram,
@@ -400,8 +382,6 @@ export const networkingWeek02Quiz: ProgramContent & { slug: string } = {
     body: networkingWeek02QuizMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -423,8 +403,6 @@ export const networkingWeek02Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek02AssignmentMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -446,8 +424,6 @@ export const networkingWeek03Intro: ProgramContent & { slug: string } = {
     body: networkingWeek03Lecture,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -469,8 +445,6 @@ export const networkingWeek03LectureSlides: ProgramContent & { slug: string } = 
     body: networkingWeek03LectureReveal,
     sortOrder: 0,
     isRequired: false,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: networkingProgram,
@@ -492,8 +466,6 @@ export const networkingWeek03Readings: ProgramContent & { slug: string } = {
     body: networkingWeek03ReadingsMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 110,
     visibility: 1, // Published
     program: networkingProgram,
@@ -515,8 +487,6 @@ export const networkingWeek03Quiz: ProgramContent & { slug: string } = {
     body: networkingWeek03QuizMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -538,8 +508,6 @@ export const networkingWeek03Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek03AssignmentMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: networkingProgram,
@@ -561,8 +529,6 @@ export const networkingWeek04Intro: ProgramContent & { slug: string } = {
     body: networkingWeek04LectureReveal,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -584,8 +550,6 @@ export const networkingWeek04LectureContent: ProgramContent & { slug: string } =
     body: networkingWeek04LectureMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: networkingProgram,
@@ -607,8 +571,6 @@ export const networkingWeek04Readings: ProgramContent & { slug: string } = {
     body: networkingWeek04ReadingsMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 150,
     visibility: 1, // Published
     program: networkingProgram,
@@ -630,8 +592,6 @@ export const networkingWeek04Quiz: ProgramContent & { slug: string } = {
     body: networkingWeek04QuizMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -653,8 +613,6 @@ export const networkingWeek04Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek04AssignmentMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: networkingProgram,
@@ -678,8 +636,6 @@ export const networkingWeek04Introduction: ProgramContent & { slug: string } = {
     body: networkingWeek04IntroductionMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 10,
     visibility: 1, // Published
     program: networkingProgram,
@@ -701,8 +657,6 @@ export const networkingWeek04ConnectionEstablishment: ProgramContent & { slug: s
     body: networkingWeek04ConnectionEstablishmentMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -724,8 +678,6 @@ export const networkingWeek04Reliability: ProgramContent & { slug: string } = {
     body: networkingWeek04ReliabilityMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -747,8 +699,6 @@ export const networkingWeek04FlowControl: ProgramContent & { slug: string } = {
     body: networkingWeek04FlowControlMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 10,
     visibility: 1, // Published
     program: networkingProgram,
@@ -770,8 +720,6 @@ export const networkingWeek04CongestionControl: ProgramContent & { slug: string 
     body: networkingWeek04CongestionControlMd,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -793,8 +741,6 @@ export const networkingWeek04TerminationComparison: ProgramContent & { slug: str
     body: networkingWeek04TerminationComparisonMd,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -816,8 +762,6 @@ export const networkingWeek04BoostAsio: ProgramContent & { slug: string } = {
     body: networkingWeek04BoostAsioMd,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: networkingProgram,
@@ -839,8 +783,6 @@ export const networkingWeek04MultiClient: ProgramContent & { slug: string } = {
     body: networkingWeek04MultiClientMd,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: networkingProgram,
@@ -862,8 +804,6 @@ export const networkingWeek04ConcurrencyModels: ProgramContent & { slug: string 
     body: networkingWeek04ConcurrencyModelsMd,
     sortOrder: 9,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: networkingProgram,
@@ -885,8 +825,6 @@ export const networkingWeek04Debugging: ProgramContent & { slug: string } = {
     body: networkingWeek04DebuggingMd,
     sortOrder: 10,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -910,8 +848,6 @@ export const networkingWeek05Intro: ProgramContent & { slug: string } = {
     body: networkingWeek05LectureReveal,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -933,8 +869,6 @@ export const networkingWeek05LectureContent: ProgramContent & { slug: string } =
     body: networkingWeek05LectureMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: networkingProgram,
@@ -956,8 +890,6 @@ export const networkingWeek05Readings: ProgramContent & { slug: string } = {
     body: networkingWeek05ReadingsMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: networkingProgram,
@@ -981,8 +913,6 @@ export const networkingWeek05FramingProblem: ProgramContent & { slug: string } =
     body: networkingWeek05FramingProblemMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 10,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1004,8 +934,6 @@ export const networkingWeek05FramingStrategies: ProgramContent & { slug: string 
     body: networkingWeek05FramingStrategiesMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1027,8 +955,6 @@ export const networkingWeek05BufferManagement: ProgramContent & { slug: string }
     body: networkingWeek05BufferManagementMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 10,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1050,8 +976,6 @@ export const networkingWeek05PartialIO: ProgramContent & { slug: string } = {
     body: networkingWeek05PartialIOMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1073,8 +997,6 @@ export const networkingWeek05DeadlockPrevention: ProgramContent & { slug: string
     body: networkingWeek05DeadlockPreventionMd,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1096,8 +1018,6 @@ export const networkingWeek05ConcurrencyModels: ProgramContent & { slug: string 
     body: networkingWeek05ConcurrencyModelsMd,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 25,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1119,8 +1039,6 @@ export const networkingWeek05CppConcurrency: ProgramContent & { slug: string } =
     body: networkingWeek05CppConcurrencyMd,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1142,8 +1060,6 @@ export const networkingWeek05EdgeCases: ProgramContent & { slug: string } = {
     body: networkingWeek05EdgeCasesMd,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1191,8 +1107,6 @@ export const networkingWeek05Quiz: ProgramContent & { slug: string } = {
     body: networkingWeek05QuizMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1218,8 +1132,6 @@ export const networkingWeek06Intro: ProgramContent & { slug: string } = {
     body: networkingWeek06LectureReveal,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1241,8 +1153,6 @@ export const networkingWeek06LectureContent: ProgramContent & { slug: string } =
     body: networkingWeek06LectureMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1264,8 +1174,6 @@ export const networkingWeek06Readings: ProgramContent & { slug: string } = {
     body: networkingWeek06ReadingsMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 100,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1287,8 +1195,6 @@ export const networkingWeek06Quiz: ProgramContent & { slug: string } = {
     body: networkingWeek06QuizMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1312,8 +1218,6 @@ export const networkingWeek06WhySerialization: ProgramContent & { slug: string }
     body: networkingWeek06WhySerializationMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1335,8 +1239,6 @@ export const networkingWeek06Endianness: ProgramContent & { slug: string } = {
     body: networkingWeek06EndiannessMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1358,8 +1260,6 @@ export const networkingWeek06StructPacking: ProgramContent & { slug: string } = 
     body: networkingWeek06StructPackingMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1381,8 +1281,6 @@ export const networkingWeek06TextFormats: ProgramContent & { slug: string } = {
     body: networkingWeek06TextFormatsMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1404,8 +1302,6 @@ export const networkingWeek06BinaryFormats: ProgramContent & { slug: string } = 
     body: networkingWeek06BinaryFormatsMd,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1427,8 +1323,6 @@ export const networkingWeek06CustomBitpacking: ProgramContent & { slug: string }
     body: networkingWeek06CustomBitpackingMd,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1450,8 +1344,6 @@ export const networkingWeek06Compression: ProgramContent & { slug: string } = {
     body: networkingWeek06CompressionMd,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1473,8 +1365,6 @@ export const networkingWeek06PerformanceComparison: ProgramContent & { slug: str
     body: networkingWeek06PerformanceComparisonMd,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 10,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1496,8 +1386,6 @@ export const networkingWeek06Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek06AssignmentMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1533,8 +1421,6 @@ export const networkingWeek07Intro: ProgramContent & { slug: string } = {
     body: networkingWeek07LectureReveal,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1556,8 +1442,6 @@ export const networkingWeek07LectureContent: ProgramContent & { slug: string } =
     body: networkingWeek07LectureMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1579,8 +1463,6 @@ export const networkingWeek07StateSyncModels: ProgramContent & { slug: string } 
     body: networkingWeek07StateSyncModelsMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 25,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1602,8 +1484,6 @@ export const networkingWeek07AuthoritativeServer: ProgramContent & { slug: strin
     body: networkingWeek07AuthoritativeServerMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1625,8 +1505,6 @@ export const networkingWeek07ServerReconciliation: ProgramContent & { slug: stri
     body: networkingWeek07ServerReconciliationMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 25,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1648,8 +1526,6 @@ export const networkingWeek07DeltaCompression: ProgramContent & { slug: string }
     body: networkingWeek07DeltaCompressionMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1671,8 +1547,6 @@ export const networkingWeek07Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek07AssignmentMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 180,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1694,8 +1568,6 @@ export const networkingWeek07Readings: ProgramContent & { slug: string } = {
     body: networkingWeek07ReadingsMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 105,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1717,8 +1589,6 @@ export const networkingWeek07Quiz: ProgramContent & { slug: string } = {
     body: networkingWeek07QuizMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1749,8 +1619,6 @@ export const networkingWeek09FinalProjectContent: ProgramContent & { slug: strin
     body: networkingWeek09FinalProject,
     sortOrder: 9,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1773,8 +1641,6 @@ export const networkingWeek10Intro: ProgramContent & { slug: string } = {
     body: networkingWeek10RevealMd,
     sortOrder: 10,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1796,8 +1662,6 @@ export const networkingWeek10Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek10AssignmentMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 1, // Points
-    maxPoints: 100,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1819,8 +1683,6 @@ export const networkingWeek10LectureContent: ProgramContent & { slug: string } =
     body: networkingWeek10LectureMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1842,8 +1704,6 @@ export const networkingWeek10HttpFundamentals: ProgramContent & { slug: string }
     body: networkingWeek10HttpFundamentalsMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1865,8 +1725,6 @@ export const networkingWeek10HttpMessages: ProgramContent & { slug: string } = {
     body: networkingWeek10HttpMessagesMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1888,8 +1746,6 @@ export const networkingWeek10MethodsStatusCodes: ProgramContent & { slug: string
     body: networkingWeek10MethodsStatusCodesMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1911,8 +1767,6 @@ export const networkingWeek10UrlsHeaders: ProgramContent & { slug: string } = {
     body: networkingWeek10UrlsHeadersMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1934,8 +1788,6 @@ export const networkingWeek10RestConstraints: ProgramContent & { slug: string } 
     body: networkingWeek10RestConstraintsMd,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1957,8 +1809,6 @@ export const networkingWeek10HttpCaching: ProgramContent & { slug: string } = {
     body: networkingWeek10HttpCachingMd,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -1980,8 +1830,6 @@ export const networkingWeek10HttpEvolution: ProgramContent & { slug: string } = 
     body: networkingWeek10HttpEvolutionMd,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2003,8 +1851,6 @@ export const networkingWeek10HttpCppBoostBeast: ProgramContent & { slug: string 
     body: networkingWeek10HttpCppBoostBeastMd,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 20,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2026,8 +1872,6 @@ export const networkingWeek10Readings: ProgramContent & { slug: string } = {
     body: networkingWeek10ReadingsMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2049,8 +1893,6 @@ export const networkingWeek10Quiz: ProgramContent & { slug: string } = {
     body: networkingWeek10QuizMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2085,8 +1927,6 @@ export const networkingWeek11Intro: ProgramContent & { slug: string } = {
     body: '# Week 11 — Non-Blocking I/O and Concurrency\n\nThis week covers blocking vs non-blocking sockets, select/poll/epoll, multithreading basics, and async patterns. See the lecture and readings for details.\n\n**Project Milestone 02:** Architecture document.',
     sortOrder: 11,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2108,8 +1948,6 @@ export const networkingWeek11LectureSlides: ProgramContent & { slug: string } = 
     body: networkingWeek11RevealMd,
     sortOrder: 0,
     isRequired: false,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2132,8 +1970,6 @@ export const networkingWeek11LectureContent: ProgramContent & { slug: string } =
     body: networkingWeek11LectureMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2155,8 +1991,6 @@ export const networkingWeek11ParallelismVsConcurrency: ProgramContent & { slug: 
     body: networkingWeek11ParallelismVsConcurrencyMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2178,8 +2012,6 @@ export const networkingWeek11BlockingVsNonblocking: ProgramContent & { slug: str
     body: networkingWeek11BlockingVsNonblockingMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2201,8 +2033,6 @@ export const networkingWeek11IOMultiplexing: ProgramContent & { slug: string } =
     body: networkingWeek11IOMultiplexingMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2224,8 +2054,6 @@ export const networkingWeek11EventLoopReactor: ProgramContent & { slug: string }
     body: networkingWeek11EventLoopReactorMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2247,8 +2075,6 @@ export const networkingWeek11WorkerThreadManagers: ProgramContent & { slug: stri
     body: networkingWeek11WorkerThreadManagersMd,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2270,8 +2096,6 @@ export const networkingWeek11ThreadSafety: ProgramContent & { slug: string } = {
     body: networkingWeek11ThreadSafetyMd,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2293,8 +2117,6 @@ export const networkingWeek11ModernCppConcurrency: ProgramContent & { slug: stri
     body: networkingWeek11ModernCppConcurrencyMd,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2316,8 +2138,6 @@ export const networkingWeek11CsiVsGprPatterns: ProgramContent & { slug: string }
     body: networkingWeek11CsiVsGprPatternsMd,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2339,8 +2159,6 @@ export const networkingWeek11Readings: ProgramContent & { slug: string } = {
     body: networkingWeek11ReadingsMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2362,8 +2180,6 @@ export const networkingWeek11Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek11AssignmentMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 1, // Points
-    maxPoints: 100,
     estimatedMinutes: 180,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2403,8 +2219,6 @@ export const networkingWeek12Intro: ProgramContent & { slug: string } = {
     body: '# Week 12 — Performance, Simulation Frequency, and Reliability\n\nThis week covers latency/jitter/packet loss measurement, tick rates and simulation frequency, reliable UDP implementation, and bandwidth management. See the lecture and readings for details.\n\n**Project Milestone 03:** Networking prototype.',
     sortOrder: 12,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2426,8 +2240,6 @@ export const networkingWeek12LectureSlides: ProgramContent & { slug: string } = 
     body: networkingWeek12RevealMd,
     sortOrder: 0,
     isRequired: false,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2450,8 +2262,6 @@ export const networkingWeek12LectureContent: ProgramContent & { slug: string } =
     body: networkingWeek12LectureMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2473,8 +2283,6 @@ export const networkingWeek12MeasuringLatencyJitterLoss: ProgramContent & { slug
     body: networkingWeek12MeasuringLatencyJitterLossMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2496,8 +2304,6 @@ export const networkingWeek12TickRateAndSimulationFrequency: ProgramContent & { 
     body: networkingWeek12TickRateAndSimulationFrequencyMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2519,8 +2325,6 @@ export const networkingWeek12InterpolationAndJitterBuffers: ProgramContent & { s
     body: networkingWeek12InterpolationAndJitterBuffersMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2542,8 +2346,6 @@ export const networkingWeek12ReliableUdpSequenceAcks: ProgramContent & { slug: s
     body: networkingWeek12ReliableUdpSequenceAcksMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2565,8 +2367,6 @@ export const networkingWeek12RetransmissionAndLossDetection: ProgramContent & { 
     body: networkingWeek12RetransmissionAndLossDetectionMd,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2588,8 +2388,6 @@ export const networkingWeek12CongestionPacingAndFairness: ProgramContent & { slu
     body: networkingWeek12CongestionPacingAndFairnessMd,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2611,8 +2409,6 @@ export const networkingWeek12PacketBudgetsPrioritizationDegradation: ProgramCont
     body: networkingWeek12PacketBudgetsPrioritizationDegradationMd,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2634,8 +2430,6 @@ export const networkingWeek12CsiVsGprPerformancePatterns: ProgramContent & { slu
     body: networkingWeek12CsiVsGprPerformancePatternsMd,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2657,8 +2451,6 @@ export const networkingWeek12Readings: ProgramContent & { slug: string } = {
     body: networkingWeek12ReadingsMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2680,8 +2472,6 @@ export const networkingWeek12Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek12AssignmentMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 1, // Points
-    maxPoints: 100,
     estimatedMinutes: 300,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2703,8 +2493,6 @@ export const networkingWeek12Quiz: ProgramContent & { slug: string } = {
     body: networkingWeek12QuizMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2745,8 +2533,6 @@ export const networkingWeek13Intro: ProgramContent & { slug: string } = {
     body: '# Week 13 — Client Prediction and Interpolation\n\nThis week covers client-side prediction, entity interpolation/smoothing, dead reckoning, and input handling. Guest lecturer: Photon Quantum.\n\n**Project Milestone 04:** Alpha build (in-class testing session).',
     sortOrder: 13,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2768,8 +2554,6 @@ export const networkingWeek13Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek13AssignmentMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 1, // Points
-    maxPoints: 100,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2794,8 +2578,6 @@ export const networkingWeek14Intro: ProgramContent & { slug: string } = {
     body: '# Week 14 — Server Architecture and Session Management\n\nThis week covers authoritative servers, dedicated vs listen servers, rollback networking, session management, matchmaking, and scaling considerations. See the lecture and readings for details.\n\n**Project Milestone 05:** Beta build & feature freeze (in-class testing session).',
     sortOrder: 14,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2817,8 +2599,6 @@ export const networkingWeek14Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek14AssignmentMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 1, // Points
-    maxPoints: 100,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2840,8 +2620,6 @@ export const networkingWeek14LectureSlides: ProgramContent & { slug: string } = 
     body: networkingWeek14RevealMd,
     sortOrder: 0,
     isRequired: false,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2864,8 +2642,6 @@ export const networkingWeek14LectureContent: ProgramContent & { slug: string } =
     body: networkingWeek14LectureMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2887,8 +2663,6 @@ export const networkingWeek14AuthorityModels: ProgramContent & { slug: string } 
     body: networkingWeek14AuthorityModelsMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2910,8 +2684,6 @@ export const networkingWeek14DedicatedVsListenServers: ProgramContent & { slug: 
     body: networkingWeek14DedicatedVsListenServersMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2933,8 +2705,6 @@ export const networkingWeek14RollbackNetworking: ProgramContent & { slug: string
     body: networkingWeek14RollbackNetworkingMd,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2956,8 +2726,6 @@ export const networkingWeek14SessionManagement: ProgramContent & { slug: string 
     body: networkingWeek14SessionManagementMd,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -2979,8 +2747,6 @@ export const networkingWeek14Matchmaking: ProgramContent & { slug: string } = {
     body: networkingWeek14MatchmakingMd,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -3002,8 +2768,6 @@ export const networkingWeek14ScalingGameServers: ProgramContent & { slug: string
     body: networkingWeek14ScalingGameServersMd,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -3025,8 +2789,6 @@ export const networkingWeek14DistributedSystemsFoundations: ProgramContent & { s
     body: networkingWeek14DistributedSystemsFoundationsMd,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -3048,8 +2810,6 @@ export const networkingWeek14ArchitectureDecisionPatterns: ProgramContent & { sl
     body: networkingWeek14ArchitectureDecisionPatternsMd,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: networkingProgram,
@@ -3071,8 +2831,6 @@ export const networkingWeek14Readings: ProgramContent & { slug: string } = {
     body: networkingWeek14ReadingsMd,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 124,
     visibility: 1, // Published
     program: networkingProgram,
@@ -3112,8 +2870,6 @@ export const networkingWeek15Intro: ProgramContent & { slug: string } = {
     body: '# Week 15 — NAT Traversal and Security\n\nThis week covers NAT types, hole punching, STUN/TURN/ICE concepts, network security, encryption basics, authentication, and anti-cheat principles. See the lecture and readings for details.\n\n**Project Milestone 06:** Peer evaluation & code freeze.',
     sortOrder: 15,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: networkingProgram,
@@ -3135,8 +2891,6 @@ export const networkingWeek15Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek15AssignmentMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 1, // Points
-    maxPoints: 100,
     estimatedMinutes: 180,
     visibility: 1, // Published
     program: networkingProgram,
@@ -3161,8 +2915,6 @@ export const networkingWeek16Intro: ProgramContent & { slug: string } = {
     body: '# Week 16 — Final Project Delivery\n\nThis is the final week. Each team delivers a 10-minute presentation with live demo, followed by 5-minute Q&A. All final deliverables are due by Thursday 2026/04/30.',
     sortOrder: 16,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: networkingProgram,
@@ -3184,8 +2936,6 @@ export const networkingWeek16Assignment: ProgramContent & { slug: string } = {
     body: networkingWeek16AssignmentMd,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 1, // Points
-    maxPoints: 100,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: networkingProgram,

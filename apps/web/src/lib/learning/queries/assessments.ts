@@ -63,7 +63,19 @@ export interface Assessment {
   allowLateSubmissions: boolean;
   lateSubmissionDeadline: string | null;
   isAvailable: boolean;
+  // ponytail: [Flags] enum serializes as comma-separated string ("PeerReview,AutoGraded")
+  gradingMethods: string;
 }
+
+// Re-export so server-only callers can import everything from queries/assessments.
+// Client components MUST import from @/lib/learning/assessment-grading-methods
+// (this file pulls in next/headers via auth.ts → client/server boundary).
+export {
+  ASSESSMENT_GRADING_METHOD_FLAGS,
+  parseGradingMethods,
+  serializeGradingMethods,
+  type AssessmentGradingMethodFlag,
+} from "@/lib/learning/assessment-grading-methods";
 
 export interface CourseAssessments {
   assessments: Assessment[];
@@ -153,6 +165,7 @@ function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
     allowLateSubmissions: dto.allowLateSubmissions ?? false,
     lateSubmissionDeadline: dto.lateSubmissionDeadline ?? null,
     isAvailable: dto.isAvailable ?? true,
+    gradingMethods: dto.gradingMethods ?? "",
   };
 }
 

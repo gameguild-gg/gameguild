@@ -35,23 +35,15 @@ public sealed class LearningActivityMigrationTests
     }
 
     [Fact]
-    public void SnapshotAndDesigner_PreserveLearningActivityProgramContentMetadata()
+    public void Designer_PreservesLearningActivityProgramContentMetadata()
     {
-        var snapshot = ((ModelSnapshot)Activator.CreateInstance(
-            typeof(ApplicationDbContext).Assembly.GetType(
-                "GameGuild.API.Database.Migrations.ApplicationDbContextModelSnapshot",
-                throwOnError: true)!,
-            nonPublic: true)!).Model;
         var designer = new AddLearningActivityContracts().TargetModel;
 
-        foreach (var model in new[] { snapshot, designer })
-        {
-            var content = model.FindEntityType("GameGuild.Learning.Courses.ProgramContent")!;
-            content.FindProperty("ActivitySettingsData")!.GetColumnType().Should().Be("jsonb");
-            content.GetCheckConstraints().Should().ContainSingle(constraint =>
-                constraint.Name == "CK_program_contents_Survey_NotGraded" &&
-                constraint.Sql == "\"Type\" <> 8 OR (\"GradingMethod\" = 0 AND \"MaxPoints\" IS NULL)");
-        }
+        var content = designer.FindEntityType("GameGuild.Learning.Courses.ProgramContent")!;
+        content.FindProperty("ActivitySettingsData")!.GetColumnType().Should().Be("jsonb");
+        content.GetCheckConstraints().Should().ContainSingle(constraint =>
+            constraint.Name == "CK_program_contents_Survey_NotGraded" &&
+            constraint.Sql == "\"Type\" <> 8 OR (\"GradingMethod\" = 0 AND \"MaxPoints\" IS NULL)");
     }
 
     [Fact]

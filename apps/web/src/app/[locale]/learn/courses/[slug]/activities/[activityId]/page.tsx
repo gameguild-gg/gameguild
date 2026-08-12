@@ -99,7 +99,6 @@ export default async function LearnerActivityPage({
       completed: item.status === 'completed',
     };
     description = promptBody(item.content) || item.description || '';
-    points = item.maxPoints;
   }
 
   if (!activity) notFound();

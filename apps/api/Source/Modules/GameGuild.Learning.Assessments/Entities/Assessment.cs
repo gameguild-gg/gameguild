@@ -28,6 +28,7 @@ public class Assessment : EntityBase
     public DateTime? LateSubmissionDeadline { get; private set; }
     public SubmissionModality SubmissionModalities { get; private set; } = SubmissionModality.Text;
     public AssessmentPresentationMode PresentationMode { get; private set; } = AssessmentPresentationMode.SingleStep;
+    public AssessmentGradingMethod GradingMethods { get; private set; } = AssessmentGradingMethod.InstructorGraded;
     public string? DefinitionPayload { get; private set; }
     public int DefinitionSchemaVersion { get; private set; } = 1;
     public ICollection<InteractiveVideoAssessmentCue> InteractiveVideoCues { get; private set; } = new List<InteractiveVideoAssessmentCue>();
@@ -41,7 +42,9 @@ public class Assessment : EntityBase
         int maxScore,
         int passingScore,
         bool isRequired = true,
-        Guid? assessmentGroupId = null)
+        Guid? assessmentGroupId = null,
+        Guid? contentId = null,
+        AssessmentGradingMethod gradingMethods = AssessmentGradingMethod.InstructorGraded)
     {
         ValidateScoreRange(maxScore, passingScore);
 
@@ -49,13 +52,15 @@ public class Assessment : EntityBase
         {
             Id = Guid.NewGuid(),
             CourseId = courseId,
+            ContentId = contentId,
             AssessmentGroupId = assessmentGroupId,
             Title = title,
             Type = NormalizeType(type),
             MaxScore = maxScore,
             PassingScore = passingScore,
             IsRequired = isRequired,
-            Order = 0
+            Order = 0,
+            GradingMethods = gradingMethods
         };
     }
 
@@ -197,7 +202,8 @@ public class Assessment : EntityBase
         bool clearDueAt = false,
         bool? allowLateSubmissions = null,
         DateTime? lateSubmissionDeadline = null,
-        bool clearLateSubmissionDeadline = false)
+        bool clearLateSubmissionDeadline = false,
+        AssessmentGradingMethod? gradingMethods = null)
     {
         if (title != null) Title = title;
         Description = description;
@@ -228,6 +234,10 @@ public class Assessment : EntityBase
             SetDeliveryContract(
                 submissionModalities ?? SubmissionModalities,
                 presentationMode ?? PresentationMode);
+        }
+        if (gradingMethods.HasValue)
+        {
+            GradingMethods = gradingMethods.Value;
         }
 
         UpdatedAt = SystemClock.UtcNow;

@@ -125,7 +125,6 @@ const lessonTypes: Array<{
   label: string;
 }> = [
   { value: "Lesson", label: "Lesson" },
-  { value: "Assignment", label: "Assignment" },
   { value: "Questionnaire", label: "Quiz" },
   { value: "Project", label: "Project" },
   { value: "Discussion", label: "Discussion" },

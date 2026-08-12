@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   getAssessment,
   getCourseAssessmentGroups,
+  getCourseContent,
 } from "@/lib/learning";
 import { AssessmentEditor } from "./assessment-editor";
 
@@ -16,9 +17,10 @@ export default async function AssessmentDetailPage({
 }: PageProps<"/[locale]/dashboard/learning/courses/[course]/assessments/[assessmentId]">): Promise<React.JSX.Element> {
   const { course: courseId, assessmentId } = await params;
 
-  const [assessment, assessmentGroups] = await Promise.all([
+  const [assessment, assessmentGroups, courseContent] = await Promise.all([
     getAssessment(assessmentId),
     getCourseAssessmentGroups(courseId),
+    getCourseContent(courseId),
   ]);
 
   if (!assessment) {
@@ -30,6 +32,7 @@ export default async function AssessmentDetailPage({
       courseId={courseId}
       assessment={assessment}
       assessmentGroups={assessmentGroups}
+      courseContent={courseContent.items}
     />
   );
 }

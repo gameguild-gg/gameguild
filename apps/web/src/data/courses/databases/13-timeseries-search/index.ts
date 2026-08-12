@@ -13,8 +13,6 @@ export const week13TimeseriesSearchContent: ProgramContent = {
   body: '# Week 13 - Time Series & Search Engines\n\nTimescaleDB and Elasticsearch fundamentals.',
   sortOrder: 13,
   isRequired: true,
-  gradingMethod: 0, // None
-  maxPoints: null,
   estimatedMinutes: 360,
   visibility: 1, // Published
   program: undefined as any,
@@ -36,8 +34,6 @@ export const week13TimescaleDBContent: ProgramContent = {
   body: '',
   sortOrder: 1,
   isRequired: true,
-  gradingMethod: 0, // None
-  maxPoints: null,
   estimatedMinutes: 120,
   visibility: 1, // Published
   program: undefined as any,
@@ -59,8 +55,6 @@ export const week13ElasticsearchContent: ProgramContent = {
   body: '',
   sortOrder: 2,
   isRequired: true,
-  gradingMethod: 0, // None
-  maxPoints: null,
   estimatedMinutes: 120,
   visibility: 1, // Published
   program: undefined as any,
@@ -82,8 +76,6 @@ export const week13QuizContent: ProgramContent = {
   body: '',
   sortOrder: 3,
   isRequired: true,
-  gradingMethod: 1, // Points
-  maxPoints: 100,
   estimatedMinutes: 30,
   visibility: 1, // Published
   program: undefined as any,
@@ -105,8 +97,6 @@ export const week13ReadingsContent: ProgramContent = {
   body: '',
   sortOrder: 4,
   isRequired: false,
-  gradingMethod: 0, // None
-  maxPoints: null,
   estimatedMinutes: 180,
   visibility: 1, // Published
   program: undefined as any,

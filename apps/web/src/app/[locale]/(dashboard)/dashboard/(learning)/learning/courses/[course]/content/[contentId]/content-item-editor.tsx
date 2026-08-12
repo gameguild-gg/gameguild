@@ -28,14 +28,28 @@ import {
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
 import { Separator } from "@game-guild/ui/components/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@game-guild/ui/components/alert-dialog";
+import { buttonVariants } from "@game-guild/ui/components/button";
 import { ArrowLeft, Clock, Eye, Loader2, Pencil, Save } from "lucide-react";
 import type { SerializedEditorState } from "lexical";
-import { ASSIGNMENT_SAMPLES } from "@game-guild/emception-ui";
 import type { LearningCoursesLessonContentFormat } from "@game-guild/client";
 import type { ContentItemDetail } from "@/lib/learning/types";
 import type { CodingDefinition } from "@/lib/learning/queries/assessments";
-import { updateContent } from "@/lib/learning/actions";
-import { putCodingDefinition } from "@/lib/emception/put-coding-definition";
+import {
+  createAssessment,
+  deleteAssessment,
+  restoreAssessment,
+  updateContent,
+} from "@/lib/learning/actions";
 import { CONTENT_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
 import { getLessonFormatLabel } from "@/lib/learning/lesson-formats";
 import { LearnerLessonRenderer } from "@/components/learning/learner-lesson-renderer";
@@ -56,6 +70,9 @@ interface ContentItemEditorProps {
   item: ContentItemDetail;
   courseTitle: string;
   linkedAssessmentId?: string;
+  // ponytail: raw [Flags] string from linked Assessment — editor does substring check
+  // for "AutoGraded" rather than re-fetching the assessment.
+  linkedAssessmentGradingMethods?: string;
   initialCodingDefinition?: CodingDefinition | null;
 }
 
@@ -64,6 +81,7 @@ export function ContentItemEditor({
   item,
   courseTitle,
   linkedAssessmentId,
+  linkedAssessmentGradingMethods,
   initialCodingDefinition,
 }: ContentItemEditorProps) {
   const router = useRouter();
@@ -83,12 +101,34 @@ export function ContentItemEditor({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
-  const [codingBootstrapping, setCodingBootstrapping] = useState(false);
   const [codingError, setCodingError] = useState<string | null>(null);
+
+  // ── Graded toggle (Task 7) ──
+  // checked mirrors linkedAssessmentId (server-side non-deleted link).
+  // recentlyDeletedAssessmentId remembers what the OFF transition just soft-deleted so
+  // a re-toggle ON restores instead of creating a duplicate — the GET assessments
+  // endpoint filters deleted rows server-side, so this is the only client-side signal.
+  const [gradedChecked, setGradedChecked] = useState<boolean>(!!linkedAssessmentId);
+  const [recentlyDeletedAssessmentId, setRecentlyDeletedAssessmentId] = useState<string | null>(null);
+  const [showGradedOffConfirm, setShowGradedOffConfirm] = useState(false);
+  const [gradedError, setGradedError] = useState<string | null>(null);
+  const [isGradedPending, startGradedTransition] = useTransition();
 
   const isLesson = item.type === "Lesson";
   const isQuiz = item.type === "Questionnaire";
-  const isAssignment = item.type === "Assignment" || item.type === "Project";
+  const isCode = item.type === "Code";
+  // ponytail: substring check is enough — full parseGradingMethods is overkill for one flag.
+  const isAutoGraded = (linkedAssessmentGradingMethods ?? "").includes("AutoGraded");
+  // ponytail: isGradedType drives the Graded toggle (wider set); the Coding Assignment card
+  // below gates on `isCode && gradedChecked && isAutoGraded` per Task 11 — only Code content
+  // with AutoGraded-flagged linked assessment exposes the coding-tests bridge.
+  const GRADED_CONTENT_TYPES: ReadonlySet<string> = new Set([
+    "Assignment",
+    "Questionnaire",
+    "Project",
+    "Code",
+  ]);
+  const isGradedType = GRADED_CONTENT_TYPES.has(item.type);
 
   // ── Lexical editor state (Lesson only) ──
   const initialLexicalState = useMemo(
@@ -217,34 +257,95 @@ export function ContentItemEditor({
       );
       return;
     }
-    if (initialCodingDefinition) {
-      router.push(codingDefinitionRoute(linkedAssessmentId));
-      return;
-    }
-    setCodingBootstrapping(true);
-    const result = await putCodingDefinition(
-      linkedAssessmentId,
-      {
-        kind: "coding",
-        language: "cpp",
-        testPlan: { cases: [] },
-        maxScore: 100,
-        passingScore: 60,
-        workspaceConfig: ASSIGNMENT_SAMPLES.cpp.workspaceConfig as unknown as Record<
-          string,
-          unknown
-        >,
-        definitionSchemaVersion: 2,
-      },
-      courseId,
-    );
-    setCodingBootstrapping(false);
-    if (!result.success) {
-      setCodingError(result.error);
-      return;
-    }
     router.push(codingDefinitionRoute(linkedAssessmentId));
   }
+
+  // ── Graded toggle handlers (Task 7) ──
+  // ponytail: content-to-assessment type map mirrors addContent (actions.ts). Inlined here
+  // rather than imported because the action's map keys LearningCoursesProgramContentType and
+  // we only need the four graded branches — re-using the action's const would pull server-only
+  // code into the client bundle.
+  const CONTENT_TO_ASSESSMENT_TYPE: Record<string, "Assignment" | "Quiz" | "Project"> = {
+    Assignment: "Assignment",
+    Questionnaire: "Quiz",
+    Project: "Project",
+    Code: "Assignment",
+  };
+
+  function handleGradedToggle(next: boolean) {
+    if (next === gradedChecked || isGradedPending) return;
+    if (!next) {
+      setShowGradedOffConfirm(true);
+      return;
+    }
+    const restoreTargetId = recentlyDeletedAssessmentId ?? linkedAssessmentId;
+    startGradedTransition(async () => {
+      setGradedChecked(true);
+      setGradedError(null);
+      if (restoreTargetId) {
+        const result = await restoreAssessment(courseId, restoreTargetId);
+        if (!result.success) {
+          setGradedChecked(false);
+          setGradedError(result.error);
+          return;
+        }
+        setRecentlyDeletedAssessmentId(null);
+        router.refresh();
+        return;
+      }
+      const assessmentType = CONTENT_TO_ASSESSMENT_TYPE[item.type] ?? "Assignment";
+      const result = await createAssessment({
+        courseId,
+        title: item.title,
+        type: assessmentType,
+        contentId: item.id,
+        submissionModalities: item.type === "Code" ? "Code" : undefined,
+        gradingMethods:
+          item.type === "Code"
+            ? "AutoGraded,InstructorGraded"
+            : "InstructorGraded",
+      });
+      if (!result.success) {
+        setGradedChecked(false);
+        setGradedError(result.error);
+        return;
+      }
+      router.refresh();
+    });
+  }
+
+  function confirmGradedOff() {
+    const targetId = linkedAssessmentId;
+    setShowGradedOffConfirm(false);
+    if (!targetId) return;
+    startGradedTransition(async () => {
+      setGradedChecked(false);
+      setGradedError(null);
+      const result = await deleteAssessment(courseId, targetId);
+      if (!result.success) {
+        setGradedChecked(true);
+        setGradedError(result.error);
+        return;
+      }
+      setRecentlyDeletedAssessmentId(targetId);
+      router.refresh();
+    });
+  }
+
+  // ── Coding test-plan stats (Code + AutoGraded only) ──
+  // ponytail: narrow cast on the testPlan shape; the public endpoint strips hidden cases
+  // server-side so cases[].length is the public count and the hidden count is unknown here.
+  const codingCases =
+    (initialCodingDefinition?.testPlan as
+      | { cases?: Array<{ kind?: string }> }
+      | null
+      | undefined)?.cases ?? [];
+  const stdioCaseCount = codingCases.filter(
+    (c) => c.kind === "stdio" || c.kind === "stdio-file",
+  ).length;
+  const functionalCaseCount = codingCases.filter(
+    (c) => c.kind === "doctest" || c.kind === "clang-query",
+  ).length;
 
   // ponytail: IIFE mirrors handleLessonChangeFormat/handleSave body logic.
   // Refs mutate live; preview re-reads on every render — no state needed.
@@ -330,6 +431,63 @@ export function ContentItemEditor({
 
               <Separator />
 
+              {isGradedType && (
+                <div
+                  className="space-y-3 rounded-md border p-4"
+                  data-testid="graded-section"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium">Graded</p>
+                      <p className="text-muted-foreground text-sm">
+                        Link this content to a gradebook assessment.
+                      </p>
+                    </div>
+                    <Switch
+                      aria-label="Graded"
+                      checked={gradedChecked}
+                      disabled={isGradedPending}
+                      onCheckedChange={handleGradedToggle}
+                    />
+                  </div>
+                  {isGradedPending && (
+                    <p className="text-muted-foreground text-sm">
+                      <Loader2 className="mr-2 inline h-3 w-3 animate-spin" />
+                      Updating gradebook link…
+                    </p>
+                  )}
+                  {gradedError && (
+                    <p className="text-destructive text-sm">{gradedError}</p>
+                  )}
+                  <AlertDialog
+                    open={showGradedOffConfirm}
+                    onOpenChange={setShowGradedOffConfirm}
+                  >
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remove grading?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This soft-deletes the linked assessment. Existing
+                          submissions are preserved. Toggle Graded back on to
+                          restore it.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className={buttonVariants({ variant: "destructive" })}
+                          onClick={confirmGradedOff}
+                        >
+                          Remove grading
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
+
+              <Separator />
+
               {/* ── Lesson format display + body editor ── */}
               {isLesson && (
                 <div className="space-y-2">
@@ -411,11 +569,14 @@ export function ContentItemEditor({
                 />
               )}
 
-              {isAssignment && (
-                <div className="space-y-3 rounded-md border p-4">
+              {isCode && gradedChecked && isAutoGraded && (
+                <div
+                  className="space-y-3 rounded-md border p-4"
+                  data-testid="coding-tests-section"
+                >
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <p className="font-medium">Coding Assignment</p>
+                      <p className="font-medium">Coding Tests</p>
                       <p className="text-muted-foreground text-sm">
                         Configure test cases, starter files, and the run
                         environment in the coding-definition editor.
@@ -440,16 +601,10 @@ export function ContentItemEditor({
                         type="button"
                         size="sm"
                         onClick={handleConfigureCoding}
-                        disabled={
-                          !linkedAssessmentId || codingBootstrapping
-                        }
+                        disabled={!linkedAssessmentId}
                       >
-                        {codingBootstrapping ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Pencil className="mr-2 h-4 w-4" />
-                        )}
-                        Configure Coding Assignment
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Configure Coding Tests
                       </Button>
                     )}
                   </div>
@@ -457,17 +612,11 @@ export function ContentItemEditor({
                     <div className="text-muted-foreground space-y-1 text-sm">
                       <p>Language: {initialCodingDefinition.language}</p>
                       <p>
-                        Test cases:{" "}
-                        {Array.isArray(
-                          (initialCodingDefinition.testPlan as {
-                            cases?: unknown[] } | null)?.cases,
-                        )
-                          ? (
-                              (initialCodingDefinition.testPlan as {
-                                cases?: unknown[] }).cases!
-                          ).length
-                          : 0}{" "}
-                        test cases
+                        Test cases: {codingCases.length} (public)
+                      </p>
+                      <p>
+                        Types: {stdioCaseCount} stdin/stdout ·{" "}
+                        {functionalCaseCount} functional
                       </p>
                       <p>
                         Passing score: {initialCodingDefinition.passingScore}/
@@ -486,7 +635,7 @@ export function ContentItemEditor({
                 </div>
               )}
 
-              {!isLesson && !isQuiz && !isAssignment && (
+              {!isLesson && !isQuiz && !isGradedType && (
                 <div className="space-y-2">
                   <Label>Body</Label>
                   <p className="text-muted-foreground text-sm py-8 text-center">

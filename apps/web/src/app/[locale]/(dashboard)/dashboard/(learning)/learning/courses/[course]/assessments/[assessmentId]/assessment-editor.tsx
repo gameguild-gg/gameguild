@@ -10,6 +10,7 @@ import {
 } from "@game-guild/ui/components/card";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
+import { Checkbox } from "@game-guild/ui/components/checkbox";
 import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import { Textarea } from "@game-guild/ui/components/textarea";
@@ -29,6 +30,13 @@ import type {
   AssessmentPresentationMode,
   AssessmentType,
 } from "@/lib/learning/queries/assessments";
+import {
+  ASSESSMENT_GRADING_METHOD_FLAGS,
+  parseGradingMethods,
+  serializeGradingMethods,
+  type AssessmentGradingMethodFlag,
+} from "@/lib/learning/assessment-grading-methods";
+import type { CourseContentItemViewModel } from "@/lib/learning/queries/course";
 import { updateAssessment, deleteAssessment } from "@/lib/learning/actions";
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
@@ -39,10 +47,13 @@ const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: "SelfAssessment", label: "Self Assessment" },
 ];
 
+const LINKED_CONTENT_NONE = "none";
+
 interface AssessmentEditorProps {
   courseId: string;
   assessment: Assessment;
   assessmentGroups?: AssessmentGroup[];
+  courseContent?: CourseContentItemViewModel[];
 }
 
 function formatWeight(weightPercent: number) {
@@ -53,10 +64,13 @@ export function AssessmentEditor({
   courseId,
   assessment,
   assessmentGroups = [],
+  courseContent = [],
 }: AssessmentEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
+  const [isLinkPending, startLinkTransition] = useTransition();
+  const [isGradingPending, startGradingTransition] = useTransition();
   const isQuiz = assessment.type === "Quiz";
 
   const [title, setTitle] = useState(assessment.title);
@@ -84,6 +98,12 @@ export function AssessmentEditor({
   );
   const [availableUntil, setAvailableUntil] = useState(
     assessment.availableUntil ? assessment.availableUntil.slice(0, 16) : "",
+  );
+  const [linkedContentId, setLinkedContentId] = useState(
+    assessment.contentId ?? LINKED_CONTENT_NONE,
+  );
+  const [gradingMethods, setGradingMethods] = useState<Set<AssessmentGradingMethodFlag>>(
+    () => parseGradingMethods(assessment.gradingMethods),
   );
 
   const [error, setError] = useState<string | null>(null);
@@ -145,6 +165,59 @@ export function AssessmentEditor({
     router.push(
       `/dashboard/learning/courses/${encodeURIComponent(courseId)}/assessments`,
     );
+  }
+
+  function handleLinkedContentChange(value: string) {
+    const previous = linkedContentId;
+    const next = value === LINKED_CONTENT_NONE ? LINKED_CONTENT_NONE : value;
+    setLinkedContentId(next);
+    setError(null);
+
+    startLinkTransition(async () => {
+      const result = await updateAssessment({
+        courseId,
+        assessmentId: assessment.id,
+        contentId: next === LINKED_CONTENT_NONE ? null : next,
+        clearContentId: next === LINKED_CONTENT_NONE,
+      });
+
+      if (!result.success) {
+        setLinkedContentId(previous);
+        setError(result.error);
+        return;
+      }
+
+      router.refresh();
+    });
+  }
+
+  function handleGradingMethodToggle(
+    flag: AssessmentGradingMethodFlag,
+    checked: boolean,
+  ) {
+    const next = new Set(gradingMethods);
+    if (checked) next.add(flag);
+    else next.delete(flag);
+
+    const previous = gradingMethods;
+    setGradingMethods(next);
+    setError(null);
+
+    startGradingTransition(async () => {
+      const result = await updateAssessment({
+        courseId,
+        assessmentId: assessment.id,
+        gradingMethods: serializeGradingMethods(next),
+      });
+
+      if (!result.success) {
+        setGradingMethods(previous);
+        setError(result.error);
+        return;
+      }
+
+      router.refresh();
+    });
   }
 
   const typeLabel =
@@ -317,6 +390,63 @@ export function AssessmentEditor({
                 </Select>
                 <p className="text-muted-foreground text-xs">
                   Choose the weighted block this activity contributes to.
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <Label htmlFor="linked-content">Linked content</Label>
+                <Select
+                  value={linkedContentId}
+                  onValueChange={handleLinkedContentChange}
+                  disabled={isLinkPending}
+                >
+                  <SelectTrigger id="linked-content">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={LINKED_CONTENT_NONE}>
+                      None (standalone assessment)
+                    </SelectItem>
+                    {courseContent.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-muted-foreground text-xs">
+                  Link this assessment to a content item, or leave it
+                  standalone.
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <Label>Grading methods</Label>
+                <div className="space-y-2">
+                  {ASSESSMENT_GRADING_METHOD_FLAGS.map((flag) => (
+                    <label
+                      key={flag}
+                      htmlFor={`grading-method-${flag}`}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <Checkbox
+                        id={`grading-method-${flag}`}
+                        checked={gradingMethods.has(flag)}
+                        onCheckedChange={(checked: boolean) =>
+                          handleGradingMethodToggle(flag, checked === true)
+                        }
+                        disabled={isGradingPending}
+                      />
+                      {flag}
+                    </label>
+                  ))}
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  How this assessment can be graded. Multiple allowed.
                 </p>
               </div>
 

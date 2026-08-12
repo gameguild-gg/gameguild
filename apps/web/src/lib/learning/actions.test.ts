@@ -1200,4 +1200,63 @@ describe("learning server actions", () => {
       "/dashboard/learning/courses/course-1/assessments",
     );
   });
+
+  it("auto-creates a linked assessment after creating graded Assignment content", async () => {
+    mocks.postCoursesContent.mockResolvedValueOnce({
+      ok: true,
+      data: { id: "new-content-id" },
+    });
+
+    const result = await addContent({
+      courseId: "course-1",
+      title: "Milestone brief",
+      type: "Assignment",
+    });
+
+    expect(result).toEqual({ success: true, data: { id: "new-content-id" } });
+    expect(mocks.postCoursesContent).toHaveBeenCalledWith(
+      "course-1",
+      expect.objectContaining({ type: "Assignment" }),
+    );
+    expect(mocks.postAssessments).toHaveBeenCalledWith(
+      expect.objectContaining({
+        courseId: "course-1",
+        title: "Milestone brief",
+        type: "Assignment",
+        contentId: "new-content-id",
+        gradingMethods: "InstructorGraded",
+      }),
+    );
+  });
+
+  it("does not fail content creation when the chained assessment creation fails", async () => {
+    mocks.postCoursesContent.mockResolvedValueOnce({
+      ok: true,
+      data: { id: "new-content-id" },
+    });
+    mocks.postAssessments.mockResolvedValueOnce({
+      ok: false,
+      error: { detail: "assessment service unavailable" },
+    });
+
+    const result = await addContent({
+      courseId: "course-1",
+      title: "Resilient brief",
+      type: "Project",
+    });
+
+    expect(result).toEqual({ success: true, data: { id: "new-content-id" } });
+    expect(mocks.postAssessments).toHaveBeenCalled();
+  });
+
+  it("does not chain assessment creation for non-graded content types", async () => {
+    const result = await addContent({
+      courseId: "course-1",
+      title: "Lesson one",
+      type: "Lesson",
+    });
+
+    expect(result).toEqual({ success: true, data: { id: "content-1" } });
+    expect(mocks.postAssessments).not.toHaveBeenCalled();
+  });
 });
