@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/eslint-config",
-  "version": "0.1.0",
+  "version": "4.0.0",
   "description": "ESLint configuration for GameGuild monorepo projects",
   "license": "UNLICENSED",
   "author": "Matheus Martins <contact@matheusmartins.com>",

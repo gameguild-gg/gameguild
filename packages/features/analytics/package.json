@@ -1,16 +1,16 @@
 {
-    "name": "@game-guild/analytics",
-    "version": "0.1.0",
-    "private": true,
-    "type": "module",
-    "exports": {
-        ".": "./src/index.ts"
-    },
-    "scripts": {
-        "typecheck": "tsc --noEmit"
-    },
-    "devDependencies": {
-        "@game-guild/typescript-config": "workspace:*",
-        "typescript": "^5.5.0"
-    }
+  "name": "@game-guild/analytics",
+  "version": "4.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@game-guild/typescript-config": "workspace:*",
+    "typescript": "^5.5.0"
+  }
 }
