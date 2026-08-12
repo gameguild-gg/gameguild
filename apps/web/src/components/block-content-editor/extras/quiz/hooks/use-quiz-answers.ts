@@ -7,9 +7,9 @@
 
 import { useCallback, useState } from "react"
 import { gradeQuizAnswer } from "@game-guild/grading"
+import type { QuizPracticeEntry, QuizRuntimeEntry } from "../contracts"
 import {
   type QuizAnswerState,
-  type QuizEntry,
   QuizEntryType,
   createEmptyAnswerState,
   type FillBlankNumberInput,
@@ -20,10 +20,15 @@ import { evaluateFormula, generateVariableValue, validateFormula } from "../util
 
 export type QuizSubmissionMode = "local-practice" | "server-graded"
 
-interface UseQuizAnswersProps {
-  entry: QuizEntry
-  submissionMode?: QuizSubmissionMode
-}
+export type UseQuizAnswersProps =
+  | {
+    entry: QuizPracticeEntry
+    submissionMode?: "local-practice"
+  }
+  | {
+    entry: QuizRuntimeEntry
+    submissionMode: "server-graded"
+  }
 
 /**
  * Extracts a normalized formatting structure from a Lexical editor state.
@@ -74,10 +79,8 @@ interface UseQuizAnswersReturn {
   resetQuiz: () => void
 }
 
-export function useQuizAnswers({
-  entry,
-  submissionMode = "local-practice",
-}: UseQuizAnswersProps): UseQuizAnswersReturn {
+export function useQuizAnswers(props: UseQuizAnswersProps): UseQuizAnswersReturn {
+  const practiceEntry = getPracticeEntry(props)
   const [answerState, setAnswerState] = useState<QuizAnswerState>(createEmptyAnswerState())
   const [showFeedback, setShowFeedback] = useState(false)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
@@ -87,13 +90,13 @@ export function useQuizAnswers({
   }, [])
 
   const checkAnswers = useCallback(() => {
-    if (submissionMode === "server-graded") {
+    if (!practiceEntry) {
       setIsCorrect(null)
       setShowFeedback(true)
       return
     }
 
-    const packageResult = gradeQuizAnswer(entry, answerState)
+    const packageResult = gradeQuizAnswer(practiceEntry, answerState)
     if (packageResult.status === "graded") {
       setIsCorrect(packageResult.isCorrect === true)
       setShowFeedback(true)
@@ -108,17 +111,18 @@ export function useQuizAnswers({
 
     let correct = false
 
-    switch (entry.type) {
+    switch (practiceEntry.type) {
       case QuizEntryType.SingleChoice: {
         const selectedId = answerState.selectedOptionIds[0]
-        correct = selectedId === entry.correctOptionId
+        correct = selectedId === practiceEntry.correctOptionId
         break
       }
 
       case QuizEntryType.MultipleChoice: {
         const selected = new Set(answerState.selectedOptionIds)
-        const correctIds = new Set(entry.correctOptionIds)
+        const correctIds = new Set(practiceEntry.correctOptionIds)
         correct =
+          correctIds.size > 0 &&
           selected.size === correctIds.size &&
           [...selected].every((id) => correctIds.has(id))
         break
@@ -126,12 +130,12 @@ export function useQuizAnswers({
 
       case QuizEntryType.TrueFalse: {
         const selectedId = answerState.selectedOptionIds[0]
-        correct = selectedId === (entry.correctAnswer ? "true" : "false")
+        correct = selectedId === (practiceEntry.correctAnswer ? "true" : "false")
         break
       }
 
       case QuizEntryType.FillInTheBlank: {
-        correct = entry.blanks.every((blank) => {
+        correct = practiceEntry.blanks.every((blank) => {
           const rawAnswer = (answerState.textAnswers[blank.id] || "").trim()
           if (!rawAnswer) return false
 
@@ -139,7 +143,8 @@ export function useQuizAnswers({
             case FillBlankInputType.Text: {
               const textInput = blank.input as FillBlankTextInput
               const caseSensitive = textInput.caseSensitive ?? false
-              return textInput.acceptedAnswers.some((accepted) =>
+              const acceptedAnswers = textInput.acceptedAnswers ?? []
+              return acceptedAnswers.length > 0 && acceptedAnswers.some((accepted) =>
                 caseSensitive
                   ? rawAnswer === accepted
                   : rawAnswer.toLowerCase() === accepted.toLowerCase(),
@@ -159,7 +164,9 @@ export function useQuizAnswers({
               }
 
               const userNumber = Number.parseFloat(numericStr)
+              const correctValue = numberInput.correctValue
               if (Number.isNaN(userNumber)) return false
+              if (typeof correctValue !== "number") return false
               if (!(numberInput.allowNegative ?? true) && userNumber < 0) return false
 
               if (numberInput.requiredPrecision !== undefined) {
@@ -168,7 +175,7 @@ export function useQuizAnswers({
               }
 
               const tolerance = numberInput.tolerance ?? 0
-              return Math.abs(userNumber - numberInput.correctValue) <= tolerance
+              return Math.abs(userNumber - correctValue) <= tolerance
             }
 
             case FillBlankInputType.Dropdown:
@@ -188,8 +195,9 @@ export function useQuizAnswers({
 
       case QuizEntryType.ShortAnswer: {
         const userAnswer = (answerState.textAnswers.main || "").trim()
-        const caseSensitive = entry.caseSensitive ?? false
-        correct = entry.acceptedAnswers.some((accepted) =>
+        const caseSensitive = practiceEntry.caseSensitive ?? false
+        const acceptedAnswers = practiceEntry.acceptedAnswers
+        correct = acceptedAnswers.length > 0 && acceptedAnswers.some((accepted) =>
           caseSensitive
             ? userAnswer === accepted
             : userAnswer.toLowerCase() === accepted.toLowerCase(),
@@ -198,7 +206,7 @@ export function useQuizAnswers({
       }
 
       case QuizEntryType.Essay: {
-        const expectedPlain = (entry.correctAnswerPlain || "").trim()
+        const expectedPlain = (practiceEntry.correctAnswerPlain || "").trim()
         if (!expectedPlain) {
           correct = true
           break
@@ -212,9 +220,9 @@ export function useQuizAnswers({
           break
         }
 
-        if (entry.requireFormatting && entry.correctAnswer) {
+        if (practiceEntry.requireFormatting && practiceEntry.correctAnswer) {
           const userSerialized = answerState.textAnswers.main || ""
-          correct = compareFormattingStructure(entry.correctAnswer, userSerialized)
+          correct = compareFormattingStructure(practiceEntry.correctAnswer, userSerialized)
         } else {
           correct = true
         }
@@ -230,17 +238,17 @@ export function useQuizAnswers({
           }
         })
 
-        if (userAssignments.size !== entry.pairs.length) {
+        if (userAssignments.size !== practiceEntry.pairs.length) {
           correct = false
         } else {
-          correct = entry.pairs.every((pair) => userAssignments.get(pair.id) === pair.right)
+          correct = practiceEntry.pairs.every((pair) => userAssignments.get(pair.id) === pair.right)
         }
         break
       }
 
       case QuizEntryType.Ordering: {
         const userOrder = answerState.ordering
-        const correctOrder = [...entry.items]
+        const correctOrder = [...practiceEntry.items]
           .sort((a, b) => a.correctPosition - b.correctPosition)
           .map((item) => item.id)
         correct =
@@ -250,9 +258,11 @@ export function useQuizAnswers({
       }
 
       case QuizEntryType.Categorization: {
-        correct = entry.items.every((item) => {
+        correct = practiceEntry.items.every((item) => {
+          const correctCategoryIds = item.correctCategoryIds
+          if (correctCategoryIds.length === 0) return false
           const assignedCategories = new Set(answerState.categorizations[item.id] || [])
-          const correctCategories = new Set(item.correctCategoryIds)
+          const correctCategories = new Set(correctCategoryIds)
           return (
             assignedCategories.size === correctCategories.size &&
             [...assignedCategories].every((id) => correctCategories.has(id))
@@ -262,8 +272,8 @@ export function useQuizAnswers({
       }
 
       case QuizEntryType.Rating: {
-        correct = entry.correctRating !== undefined
-          ? answerState.rating === entry.correctRating
+        correct = practiceEntry.correctRating !== undefined
+          ? answerState.rating === practiceEntry.correctRating
           : answerState.rating !== undefined
         break
       }
@@ -283,7 +293,7 @@ export function useQuizAnswers({
 
         try {
           const values = JSON.parse(storedValsNumeric) as Record<string, number>
-          const expected = evaluateFormula(entry.formula, values)
+          const expected = evaluateFormula(practiceEntry.formula, values)
           const userNum = Number.parseFloat(userStr)
 
           if (Number.isNaN(userNum)) {
@@ -292,11 +302,11 @@ export function useQuizAnswers({
           }
 
           const diff = Math.abs(userNum - expected)
-          if (entry.toleranceType === "percentage") {
-            const threshold = Math.abs(expected) * (entry.tolerance / 100)
+          if (practiceEntry.toleranceType === "percentage") {
+            const threshold = Math.abs(expected) * (practiceEntry.tolerance / 100)
             correct = diff <= threshold
           } else {
-            correct = diff <= entry.tolerance
+            correct = diff <= practiceEntry.tolerance
           }
         } catch {
           correct = false
@@ -319,7 +329,7 @@ export function useQuizAnswers({
 
         try {
           const values = JSON.parse(storedVals) as Record<string, number>
-          const varNames = entry.variables.map((v) => v.name).filter(Boolean)
+          const varNames = practiceEntry.variables.map((v) => v.name).filter(Boolean)
           const validationError = validateFormula(userStr, varNames)
 
           if (validationError) {
@@ -336,11 +346,11 @@ export function useQuizAnswers({
           }> = []
 
           const userResult0 = evaluateFormula(userStr, values)
-          const expected0 = evaluateFormula(entry.formula, values)
+          const expected0 = evaluateFormula(practiceEntry.formula, values)
           const diff0 = Math.abs(userResult0 - expected0)
-          const threshold0 = entry.toleranceType === "percentage"
-            ? Math.abs(expected0) * (entry.tolerance / 100)
-            : entry.tolerance
+          const threshold0 = practiceEntry.toleranceType === "percentage"
+            ? Math.abs(expected0) * (practiceEntry.tolerance / 100)
+            : practiceEntry.tolerance
 
           testResults.push({
             values: { ...values },
@@ -351,18 +361,18 @@ export function useQuizAnswers({
 
           for (let i = 1; i < numTests; i++) {
             const testVals: Record<string, number> = {}
-            for (const variable of entry.variables) {
+            for (const variable of practiceEntry.variables) {
               if (variable.name) {
                 testVals[variable.name] = generateVariableValue(variable.min, variable.max, variable.decimals)
               }
             }
 
             const userResult = evaluateFormula(userStr, testVals)
-            const expected = evaluateFormula(entry.formula, testVals)
+            const expected = evaluateFormula(practiceEntry.formula, testVals)
             const diff = Math.abs(userResult - expected)
-            const threshold = entry.toleranceType === "percentage"
-              ? Math.abs(expected) * (entry.tolerance / 100)
-              : entry.tolerance
+            const threshold = practiceEntry.toleranceType === "percentage"
+              ? Math.abs(expected) * (practiceEntry.tolerance / 100)
+              : practiceEntry.tolerance
 
             testResults.push({
               values: testVals,
@@ -397,14 +407,14 @@ export function useQuizAnswers({
         }
 
         let withinAny = false
-        for (const hotspot of entry.hotspots) {
+        for (const hotspot of practiceEntry.hotspots) {
           if (hotspot.zones.length === 0) continue
 
           const outermostRadius = Math.max(...hotspot.zones.map((zone) => zone.radius))
-          const dx = (hx - hotspot.x) / 100 * entry.imageWidth
-          const dy = (hy - hotspot.y) / 100 * entry.imageHeight
+          const dx = (hx - hotspot.x) / 100 * practiceEntry.imageWidth
+          const dy = (hy - hotspot.y) / 100 * practiceEntry.imageHeight
           const distance = Math.sqrt(dx * dx + dy * dy)
-          const threshold = outermostRadius / 100 * entry.imageWidth
+          const threshold = outermostRadius / 100 * practiceEntry.imageWidth
 
           if (distance <= threshold) {
             withinAny = true
@@ -423,16 +433,17 @@ export function useQuizAnswers({
             end: number
           }>
 
-          if (studentSpans.length === 0 && entry.highlights.length > 0) {
+          const highlights = practiceEntry.highlights
+          if (studentSpans.length === 0 && highlights.length > 0) {
             correct = false
             break
           }
 
-          const allCorrectCovered = entry.highlights.every((highlight) =>
+          const allCorrectCovered = highlights.length > 0 && highlights.every((highlight) =>
             studentSpans.some((span) => span.start < highlight.end && span.end > highlight.start),
           )
           const noFalsePositives = studentSpans.every((span) =>
-            entry.highlights.some((highlight) => span.start < highlight.end && span.end > highlight.start),
+            highlights.some((highlight) => span.start < highlight.end && span.end > highlight.start),
           )
 
           correct = allCorrectCovered && noFalsePositives
@@ -445,7 +456,7 @@ export function useQuizAnswers({
 
     setIsCorrect(correct)
     setShowFeedback(true)
-  }, [answerState, entry, submissionMode])
+  }, [answerState, practiceEntry])
 
   const resetQuiz = useCallback(() => {
     setAnswerState(createEmptyAnswerState())
@@ -461,4 +472,9 @@ export function useQuizAnswers({
     checkAnswers,
     resetQuiz,
   }
+}
+
+function getPracticeEntry(props: UseQuizAnswersProps): QuizPracticeEntry | null {
+  if (props.submissionMode === "server-graded") return null
+  return props.entry
 }

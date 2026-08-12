@@ -5,6 +5,7 @@
 
 // Types
 export * from "./types"
+export * from "./contracts"
 
 // Main Components
 export { QuizDisplay } from "./quiz-display"

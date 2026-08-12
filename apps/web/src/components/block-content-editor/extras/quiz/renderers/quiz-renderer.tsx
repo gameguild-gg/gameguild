@@ -6,10 +6,10 @@
 "use client"
 
 import {
-  type QuizEntry,
   type QuizAnswerState,
   QuizEntryType,
 } from "../types"
+import type { QuizRuntimeEntry } from "../contracts"
 import { SingleChoiceRenderer } from "./single-choice-renderer"
 import { MultipleChoiceRenderer } from "./multiple-choice-renderer"
 import { TrueFalseRenderer } from "./true-false-renderer"
@@ -26,7 +26,7 @@ import { HotspotRenderer } from "./hotspot-renderer"
 import { HighlightRenderer } from "./highlight-renderer"
 
 interface QuizRendererProps {
-  entry: QuizEntry
+  entry: QuizRuntimeEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean

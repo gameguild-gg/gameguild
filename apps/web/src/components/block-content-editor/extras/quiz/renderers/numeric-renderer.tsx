@@ -6,14 +6,15 @@
 
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useEffect } from "react"
 import { Calculator, Braces, PenLine } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import type { NumericEntry, QuizAnswerState } from "../types"
+import type { NumericLearnerEntry } from "../contracts"
 import { generateVariableValue, evaluateFormula } from "../utils/formula-evaluator"
 
 interface NumericRendererProps {
-  entry: NumericEntry
+  entry: NumericEntry | NumericLearnerEntry
   answerState: QuizAnswerState
   onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
@@ -27,14 +28,7 @@ export function NumericRenderer({
   disabled = false,
   showFeedback = false,
 }: NumericRendererProps) {
-  const [seed, setSeed] = useState(0)
   const storedValues = answerState.textAnswers["formula_values"]
-
-  useEffect(() => {
-    if (!storedValues) {
-      setSeed((s) => s + 1)
-    }
-  }, [storedValues])
 
   const generatedValues = useMemo(() => {
     const values: Record<string, number> = {}
@@ -44,8 +38,7 @@ export function NumericRenderer({
       }
     }
     return values
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entry.variables, seed])
+  }, [entry.variables])
 
   useEffect(() => {
     if (!storedValues) {
@@ -79,6 +72,8 @@ export function NumericRenderer({
   }, [entry.formula, activeValues])
 
   const userAnswer = answerState.textAnswers["main"] || ""
+  const tolerance = "tolerance" in entry && Number.isFinite(entry.tolerance) ? entry.tolerance : 0
+  const toleranceType = "toleranceType" in entry ? entry.toleranceType : "absolute"
 
   const handleChange = (value: string) => {
     onAnswerChange({
@@ -168,9 +163,9 @@ export function NumericRenderer({
           placeholder="Type your computed result here..."
           className="bg-white dark:bg-gray-900 border-green-300 dark:border-green-700 font-mono text-lg h-12"
         />
-        {entry.tolerance > 0 && (
+        {tolerance > 0 && (
           <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-            Tolerance: ± {entry.tolerance}{entry.toleranceType === "percentage" ? "%" : ""}
+            Tolerance: +/- {tolerance}{toleranceType === "percentage" ? "%" : ""}
             {entry.decimalPlaces > 0 && ` · Round to ${entry.decimalPlaces} decimal place${entry.decimalPlaces > 1 ? "s" : ""}`}
           </p>
         )}
