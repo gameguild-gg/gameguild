@@ -15,6 +15,7 @@ import type {
 import { Alert, AlertDescription } from "@game-guild/ui/components/alert";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
+import { DateTimePicker } from "@game-guild/ui/components/date-time-picker";
 import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import {
@@ -528,13 +529,11 @@ export function TestingLabAccessManagement({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="permission-expiry">Optional expiry</Label>
-                  <Input
+                  <DateTimePicker
                     id="permission-expiry"
-                    type="datetime-local"
+                    name="permissionExpiry"
                     value={expiresAt}
-                    onChange={(event) =>
-                      setExpiresAt(event.currentTarget.value)
-                    }
+                    onValueChange={setExpiresAt}
                   />
                 </div>
                 <div className="flex items-end">

@@ -35,6 +35,7 @@ import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@game-guild/ui/components/alert-dialog';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
+import { DateTimePicker } from '@game-guild/ui/components/date-time-picker';
 import {
   Dialog,
   DialogContent,
@@ -137,19 +138,43 @@ function createTestingEventSchedule(now = new Date(), eventDate?: Date): Testing
   };
 }
 
-function scheduleInput(form: HTMLFormElement | null, name: keyof TestingEventSchedule) {
-  const input = form?.elements.namedItem(name);
-  return input instanceof HTMLInputElement ? input : null;
+function scheduleDate(value: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf()) ? null : date;
 }
 
-function inputDate(input: HTMLInputElement | null) {
-  if (!input?.value) return null;
-  const value = new Date(input.value);
-  return Number.isNaN(value.valueOf()) ? null : value;
-}
+function updateTestingEventSchedule(
+  current: TestingEventSchedule,
+  field: keyof TestingEventSchedule,
+  value: string,
+): TestingEventSchedule {
+  const next = { ...current, [field]: value };
+  const openAt = scheduleDate(next.applicationsOpenAt);
+  let closeAt = scheduleDate(next.applicationsCloseAt);
+  let startsAt = scheduleDate(next.startsAt);
 
-function setInputDate(input: HTMLInputElement | null, value: Date) {
-  if (input) input.value = localDatetime(value);
+  if (field === 'applicationsOpenAt' && openAt && (!closeAt || closeAt <= openAt)) {
+    closeAt = new Date(openAt.valueOf() + Day);
+    next.applicationsCloseAt = localDatetime(closeAt);
+  }
+
+  if (closeAt && (!startsAt || startsAt < closeAt)) {
+    startsAt = new Date(closeAt.valueOf() + Day);
+    next.startsAt = localDatetime(startsAt);
+  }
+
+  if (field === 'startsAt' && startsAt) {
+    next.endsAt = localDatetime(new Date(startsAt.valueOf() + 2 * Hour));
+    return next;
+  }
+
+  const endsAt = scheduleDate(next.endsAt);
+  if (startsAt && (!endsAt || endsAt <= startsAt)) {
+    next.endsAt = localDatetime(new Date(startsAt.valueOf() + 2 * Hour));
+  }
+
+  return next;
 }
 
 function ActionMessage({ result }: { result: TestingEventActionResult<unknown> | null }) {
@@ -233,7 +258,20 @@ function EventActionDialog({
   );
 }
 
-function EventFields({ event, schedule }: { event?: TestingLabTestingEventProjection; schedule?: TestingEventSchedule }) {
+function EventFields({
+  event,
+  schedule,
+  onScheduleChange,
+}: {
+  event?: TestingLabTestingEventProjection;
+  schedule?: TestingEventSchedule;
+  onScheduleChange?: (field: keyof TestingEventSchedule, value: string) => void;
+}) {
+  const applicationsOpenAt = schedule?.applicationsOpenAt ?? apiDatetimeLocal(event?.applicationsOpenAt);
+  const applicationsCloseAt = schedule?.applicationsCloseAt ?? apiDatetimeLocal(event?.applicationsCloseAt);
+  const startsAt = schedule?.startsAt ?? apiDatetimeLocal(event?.startsAt);
+  const endsAt = schedule?.endsAt ?? apiDatetimeLocal(event?.endsAt);
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {event?.id ? <input type="hidden" name="eventId" value={event.id} /> : null}
@@ -273,42 +311,46 @@ function EventFields({ event, schedule }: { event?: TestingLabTestingEventProjec
       </div>
       <div className="space-y-2">
         <Label htmlFor={`applications-open-${event?.id ?? 'new'}`}>Applications open</Label>
-        <Input
+        <DateTimePicker
           id={`applications-open-${event?.id ?? 'new'}`}
           name="applicationsOpenAt"
-          type="datetime-local"
           required
-          defaultValue={schedule?.applicationsOpenAt ?? apiDatetimeLocal(event?.applicationsOpenAt)}
+          value={schedule ? applicationsOpenAt : undefined}
+          defaultValue={applicationsOpenAt}
+          onValueChange={(value) => onScheduleChange?.('applicationsOpenAt', value)}
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor={`applications-close-${event?.id ?? 'new'}`}>Applications close</Label>
-        <Input
+        <DateTimePicker
           id={`applications-close-${event?.id ?? 'new'}`}
           name="applicationsCloseAt"
-          type="datetime-local"
           required
-          defaultValue={schedule?.applicationsCloseAt ?? apiDatetimeLocal(event?.applicationsCloseAt)}
+          value={schedule ? applicationsCloseAt : undefined}
+          defaultValue={applicationsCloseAt}
+          onValueChange={(value) => onScheduleChange?.('applicationsCloseAt', value)}
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor={`event-start-${event?.id ?? 'new'}`}>Event starts</Label>
-        <Input
+        <DateTimePicker
           id={`event-start-${event?.id ?? 'new'}`}
           name="startsAt"
-          type="datetime-local"
           required
-          defaultValue={schedule?.startsAt ?? apiDatetimeLocal(event?.startsAt)}
+          value={schedule ? startsAt : undefined}
+          defaultValue={startsAt}
+          onValueChange={(value) => onScheduleChange?.('startsAt', value)}
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor={`event-end-${event?.id ?? 'new'}`}>Event ends</Label>
-        <Input
+        <DateTimePicker
           id={`event-end-${event?.id ?? 'new'}`}
           name="endsAt"
-          type="datetime-local"
           required
-          defaultValue={schedule?.endsAt ?? apiDatetimeLocal(event?.endsAt)}
+          value={schedule ? endsAt : undefined}
+          defaultValue={endsAt}
+          onValueChange={(value) => onScheduleChange?.('endsAt', value)}
         />
       </div>
       <label className="flex items-start gap-3 rounded-md border p-3 text-sm sm:col-span-2">
@@ -378,7 +420,7 @@ function EventRecurrenceFields({ onDirty }: { onDirty: () => void }) {
           {endMode === 'date' ? (
             <div className="space-y-2">
               <Label htmlFor="recurrence-ends-at">Repeat until</Label>
-              <Input id="recurrence-ends-at" name="recurrenceEndsAt" type="datetime-local" required />
+              <DateTimePicker id="recurrence-ends-at" name="recurrenceEndsAt" required />
             </div>
           ) : (
             <div className="space-y-2">
@@ -414,7 +456,6 @@ export function CreateTestingEventDialog({
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<TestingEventActionResult<unknown> | null>(null);
   const [schedule, setSchedule] = useState<TestingEventSchedule>(() => createTestingEventSchedule(new Date(), initialDate));
-  const [scheduleVersion, setScheduleVersion] = useState(0);
 
   function setOpen(next: boolean) {
     if (controlledOpen === undefined) setInternalOpen(next);
@@ -424,7 +465,6 @@ export function CreateTestingEventDialog({
   function resetDraft() {
     formRef.current?.reset();
     setSchedule(createTestingEventSchedule(new Date(), initialDate));
-    setScheduleVersion((version) => version + 1);
     setDirty(false);
     setResult(null);
   }
@@ -441,39 +481,13 @@ export function CreateTestingEventDialog({
     else closeDrawer();
   }
 
-  function trackChanges(event: FormEvent<HTMLFormElement>) {
+  function trackChanges() {
     setDirty(true);
-    const target = event.target;
-    if (!(target instanceof HTMLInputElement)) return;
+  }
 
-    const form = formRef.current;
-    const applicationsOpenAt = scheduleInput(form, 'applicationsOpenAt');
-    const applicationsCloseAt = scheduleInput(form, 'applicationsCloseAt');
-    const startsAt = scheduleInput(form, 'startsAt');
-    const endsAt = scheduleInput(form, 'endsAt');
-    const openAt = inputDate(applicationsOpenAt);
-    let closeAt = inputDate(applicationsCloseAt);
-    let starts = inputDate(startsAt);
-
-    if (target.name === 'applicationsOpenAt' && openAt && (!closeAt || closeAt <= openAt)) {
-      closeAt = new Date(openAt.valueOf() + Day);
-      setInputDate(applicationsCloseAt, closeAt);
-    }
-
-    if (closeAt && (!starts || starts < closeAt)) {
-      starts = new Date(closeAt.valueOf() + Day);
-      setInputDate(startsAt, starts);
-    }
-
-    if (target.name === 'startsAt' && starts) {
-      setInputDate(endsAt, new Date(starts.valueOf() + 2 * Hour));
-      return;
-    }
-
-    const ends = inputDate(endsAt);
-    if (starts && (!ends || ends <= starts)) {
-      setInputDate(endsAt, new Date(starts.valueOf() + 2 * Hour));
-    }
+  function changeSchedule(field: keyof TestingEventSchedule, value: string) {
+    setDirty(true);
+    setSchedule((current) => updateTestingEventSchedule(current, field, value));
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -502,7 +516,7 @@ export function CreateTestingEventDialog({
             </SheetHeader>
             <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5">
               {result ? <ActionMessage result={result} /> : null}
-              <EventFields key={scheduleVersion} schedule={schedule} />
+              <EventFields schedule={schedule} onScheduleChange={changeSchedule} />
               <p className="text-xs text-muted-foreground">Dates start in a valid order. Changing the event start updates its end time by two hours.</p>
               <EventRecurrenceFields onDirty={() => setDirty(true)} />
             </div>
@@ -571,11 +585,11 @@ export function CreateTestingEventSlotDialog({ eventId }: { eventId: string }) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="slot-start">Starts</Label>
-          <Input id="slot-start" name="startsAt" type="datetime-local" required />
+          <DateTimePicker id="slot-start" name="startsAt" required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="slot-end">Ends</Label>
-          <Input id="slot-end" name="endsAt" type="datetime-local" required />
+          <DateTimePicker id="slot-end" name="endsAt" required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="slot-campus">Campus</Label>
@@ -638,11 +652,11 @@ export function ManageTestingEventSlotDialog({
         </div>
         <div className="space-y-2">
           <Label htmlFor={`slot-start-${slot.id}`}>Starts</Label>
-          <Input id={`slot-start-${slot.id}`} name="startsAt" type="datetime-local" required defaultValue={apiDatetimeLocal(slot.startsAt)} />
+          <DateTimePicker id={`slot-start-${slot.id}`} name="startsAt" required defaultValue={apiDatetimeLocal(slot.startsAt)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`slot-end-${slot.id}`}>Ends</Label>
-          <Input id={`slot-end-${slot.id}`} name="endsAt" type="datetime-local" required defaultValue={apiDatetimeLocal(slot.endsAt)} />
+          <DateTimePicker id={`slot-end-${slot.id}`} name="endsAt" required defaultValue={apiDatetimeLocal(slot.endsAt)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`slot-campus-${slot.id}`}>Campus</Label>
