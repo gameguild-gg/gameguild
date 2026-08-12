@@ -44,6 +44,7 @@ public class TestingLabPermissionController : BaseApiController {
   }
 
   /// <summary> Create a new TestingLab role template </summary>
+  [Authorize(Policy = Policies.SystemAdmin)]
   [HttpPost("role-templates")]
   public async Task<ActionResult<TestingLabRoleTemplate>> CreateTestingLabRoleTemplate([FromBody] CreateTestingLabRoleRequest request) {
     try {
@@ -63,6 +64,7 @@ public class TestingLabPermissionController : BaseApiController {
   }
 
   /// <summary> Update an existing TestingLab role template </summary>
+  [Authorize(Policy = Policies.SystemAdmin)]
   [HttpPut("role-templates/{idOrName}")]
   public async Task<ActionResult<TestingLabRoleTemplate>> UpdateTestingLabRoleTemplate(string idOrName, [FromBody] UpdateTestingLabRoleRequest request) {
     try {
@@ -83,6 +85,7 @@ public class TestingLabPermissionController : BaseApiController {
   }
 
   /// <summary> Delete a TestingLab role template </summary>
+  [Authorize(Policy = Policies.SystemAdmin)]
   [HttpDelete("role-templates/{idOrName}")]
   public async Task<ActionResult> DeleteTestingLabRoleTemplate(string idOrName) {
     try {
@@ -102,6 +105,7 @@ public class TestingLabPermissionController : BaseApiController {
   }
 
   /// <summary> Delete a TestingLab role template by name (legacy compatibility for clients that don't yet have Ids) </summary>
+  [Authorize(Policy = Policies.SystemAdmin)]
   [HttpDelete("role-templates/by-name/{name}")]
   public async Task<ActionResult> DeleteTestingLabRoleTemplateByName(string name) {
     try {
