@@ -36,21 +36,6 @@ export class TestinglabTestingeventsModule {
 
   /**
    */
-  async getTestingEventsArchived(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.TestingLabTestingEventProjection>, ApiError>> {
-    const url = '/v1/testing/events/archived';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.TestingLabTestingEventProjection>, ApiError>;
-  }
-
-  /**
-   */
   async postTestingEvents(body: Types.TestingLabCreateTestingEventInput): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = '/v1/testing/events';
 
@@ -285,6 +270,21 @@ export class TestinglabTestingeventsModule {
 
   /**
    */
+  async getTestingEventsArchived(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.TestingLabTestingEventProjection>, ApiError>> {
+    const url = '/v1/testing/events/archived';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.TestingLabTestingEventProjection>, ApiError>;
+  }
+
+  /**
+   */
   async getTestingEventsPublic(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.TestingLabPublicTestingEventProjection>, ApiError>> {
     const url = '/v1/testing/events/public';
 
@@ -369,34 +369,6 @@ export class TestinglabTestingeventsModule {
 
     const result = await this.client.request({
       method: 'DELETE',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<boolean, ApiError>;
-  }
-
-  /**
-   */
-  async postTestingEventsArchive(eventId: string): Promise<Result<boolean, ApiError>> {
-    const url = `/v1/testing/events/${eventId}:archive`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<boolean, ApiError>;
-  }
-
-  /**
-   */
-  async postTestingEventsRestore(eventId: string): Promise<Result<boolean, ApiError>> {
-    const url = `/v1/testing/events/${eventId}:restore`;
-
-    const result = await this.client.request({
-      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -636,6 +608,20 @@ export class TestinglabTestingeventsModule {
 
   /**
    */
+  async postTestingEventsArchive(eventId: string): Promise<Result<boolean, ApiError>> {
+    const url = `/v1/testing/events/${eventId}:archive`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<boolean, ApiError>;
+  }
+
+  /**
+   */
   async postTestingEventsCancel(
     eventId: string,
     body: Types.TestingLabCancelTestingEventInput,
@@ -719,6 +705,20 @@ export class TestinglabTestingeventsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async postTestingEventsRestore(eventId: string): Promise<Result<boolean, ApiError>> {
+    const url = `/v1/testing/events/${eventId}:restore`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<boolean, ApiError>;
   }
 
   /**
