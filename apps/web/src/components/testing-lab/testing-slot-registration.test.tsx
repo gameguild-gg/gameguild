@@ -56,4 +56,21 @@ describe('TestingSlotRegistration', () => {
     expect(screen.getByRole('button', { name: /cancel registration/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /join waitlist/i })).not.toBeInTheDocument();
   });
+
+  it('allows a tester to register again after cancelling', () => {
+    render(
+      <TestingSlotRegistration
+        eventId="event-1"
+        isAuthenticated
+        slot={{ ...slot, registeredTesterCount: 9, availableTesterCount: 1 }}
+        registration={{
+          id: 'registration-1',
+          status: 'Cancelled',
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /reserve tester seat/i })).toBeInTheDocument();
+    expect(screen.queryByText(/^cancelled$/i)).not.toBeInTheDocument();
+  });
 });
