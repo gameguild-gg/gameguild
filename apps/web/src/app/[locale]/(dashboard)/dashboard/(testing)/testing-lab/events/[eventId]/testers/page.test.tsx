@@ -50,10 +50,18 @@ describe('Testing Event testers', () => {
       registrationsBySlot: {
         'slot-1': [
           {
+            id: 'registration-cancelled',
+            slotId: 'slot-1',
+            userId: 'tester-1',
+            status: 'Cancelled',
+            pendingFeedbackCount: 1,
+          },
+          {
             id: 'registration-1',
             slotId: 'slot-1',
             userId: 'tester-1',
             status: 'CheckedIn',
+            pendingFeedbackCount: 1,
           },
         ],
         'slot-2': [
@@ -87,9 +95,13 @@ describe('Testing Event testers', () => {
       }),
     );
 
-    expect(screen.getByText('Ana Tester')).toBeInTheDocument();
+    expect(screen.getAllByText('Ana Tester')).toHaveLength(2);
     expect(screen.getByText('Bruno Tester')).toBeInTheDocument();
     expect(screen.queryByText('tester-1')).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Assign tested project' })).toHaveLength(1);
+    expect(screen.getByText('2 testers registered across this event.')).toBeInTheDocument();
+    expect(screen.getAllByText('1 registered')).toHaveLength(2);
+    expect(screen.getByText('0 pending feedback / Cancelled')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Update' })).toHaveLength(2);
   });
 });

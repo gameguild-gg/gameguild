@@ -14,7 +14,11 @@ export default async function TestingEventTestersPage({ params }: { params: Prom
   if (!detail.event) notFound();
 
   const readOnly = isTestingEventReadOnly(detail.event);
-  const total = Object.values(detail.registrationsBySlot).flat().length;
+  const terminalStatuses = new Set(['Cancelled', 'Completed', 'NoShow']);
+  const isActiveRegistration = (status?: string | null) => !terminalStatuses.has(status ?? '');
+  const total = Object.values(detail.registrationsBySlot)
+    .flat()
+    .filter((registration) => isActiveRegistration(registration.status)).length;
   const memberLabels = Object.fromEntries(memberDirectory.members.map((member) => [member.id, member.displayName || member.email || 'Unknown tester']));
   const projectLabels = new Map(projects.map((project) => [project.id, project.title]));
   const approvedApplications: TestingLabApprovedApplicationOption[] = detail.applications
@@ -47,6 +51,9 @@ export default async function TestingEventTestersPage({ params }: { params: Prom
         <div className="space-y-3">
           {detail.slots.map((slot) => {
             const registrations = slot.id ? (detail.registrationsBySlot[slot.id] ?? []) : [];
+            const activeRegistrationCount = registrations.filter((registration) =>
+              isActiveRegistration(registration.status),
+            ).length;
             return (
               <section key={slot.id} className="rounded-md border p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -54,7 +61,7 @@ export default async function TestingEventTestersPage({ params }: { params: Prom
                     <h2 className="font-semibold">{formatEventDateTime(slot.startsAt)}</h2>
                     <p className="text-sm text-muted-foreground">{slot.campusName ?? slot.meetingUrl ?? slot.mode}</p>
                   </div>
-                  <Badge variant="outline">{registrations.length} registered</Badge>
+                  <Badge variant="outline">{activeRegistrationCount} registered</Badge>
                 </div>
                 <TestingSlotRegistrations eventId={eventId} registrations={registrations} memberLabels={memberLabels} approvedApplications={approvedApplications} readOnly={readOnly} />
               </section>
