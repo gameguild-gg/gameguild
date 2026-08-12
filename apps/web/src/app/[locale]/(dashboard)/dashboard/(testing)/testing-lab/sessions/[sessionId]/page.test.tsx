@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   getTestingProjectOptions: vi.fn(),
   getTestingLabDashboard: vi.fn(),
   getMembers: vi.fn(),
+  push: vi.fn(),
 }));
 
 vi.mock('@/lib/testing-lab', () => ({
@@ -17,6 +18,10 @@ vi.mock('@/lib/testing-lab', () => ({
 }));
 vi.mock('@/lib/community/queries/members', () => ({
   getMembers: mocks.getMembers,
+}));
+vi.mock('next/navigation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/navigation')>()),
+  useRouter: () => ({ push: mocks.push }),
 }));
 vi.mock('@/lib/testing-lab/actions', () => ({
   deleteTestingSession: vi.fn(),
