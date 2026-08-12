@@ -1,15 +1,94 @@
 using FluentAssertions;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Users;
+using GameGuild.Projects;
 using GameGuild.TestingLab;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Xunit;
 
 namespace GameGuild.TestingLab.UnitTests;
 
 public sealed class TestingLabTenantIsolationTests
 {
+    [Fact]
+    public async Task RequestQueries_ShouldReturnOnlyCurrentTenantRows()
+    {
+        await using var context = CreateContext();
+        var actorTenantId = Guid.NewGuid();
+        var otherTenantId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var actorRequest = NewRequest(actorTenantId);
+        actorRequest.Title = "Shared searchable request";
+        actorRequest.Status = TestingRequestStatus.Open;
+        actorRequest.CreatedById = creatorId;
+        var otherRequest = NewRequest(otherTenantId);
+        otherRequest.Title = "Shared searchable request";
+        otherRequest.Status = TestingRequestStatus.Open;
+        otherRequest.CreatedById = creatorId;
+        context.Set<User>().Add(new User
+        {
+            Id = creatorId,
+            Email = "tenant-isolation@example.com",
+            Name = "Tenant isolation actor",
+            IsActive = true
+        });
+        context.Set<TestingRequest>().AddRange(actorRequest, otherRequest);
+        await context.SaveChangesAsync();
+        var service = CreateRequestService(context, CreateActor(actorTenantId));
+
+        AssertOnlyRequest(await service.GetAllTestingRequestsAsync(), actorRequest.Id);
+        AssertOnlyRequest(await service.GetTestingRequestsAsync(), actorRequest.Id);
+        (await service.GetTestingRequestByIdAsync(otherRequest.Id)).Should().BeNull();
+        (await service.GetTestingRequestByIdWithDetailsAsync(otherRequest.Id)).Should().BeNull();
+        AssertOnlyRequest(await service.GetTestingRequestsByCreatorAsync(creatorId), actorRequest.Id);
+        AssertOnlyRequest(await service.GetTestingRequestsByStatusAsync(TestingRequestStatus.Open), actorRequest.Id);
+        AssertOnlyRequest(await service.SearchTestingRequestsAsync("searchable"), actorRequest.Id);
+        AssertOnlyRequest(await service.GetActiveTestingRequestsAsync(), actorRequest.Id);
+    }
+
+    [Fact]
+    public async Task RequestMutations_ShouldNotChangeAnotherTenantRow()
+    {
+        await using var context = CreateContext();
+        var actorTenantId = Guid.NewGuid();
+        var otherTenantId = Guid.NewGuid();
+        var otherRequest = NewRequest(otherTenantId);
+        otherRequest.Title = "Other tenant request";
+        context.Set<TestingRequest>().Add(otherRequest);
+        await context.SaveChangesAsync();
+        var service = CreateRequestService(context, CreateActor(actorTenantId));
+        var attemptedUpdate = NewRequest(otherTenantId);
+        attemptedUpdate.Id = otherRequest.Id;
+        attemptedUpdate.Title = "Cross-tenant update";
+
+        var update = () => service.UpdateTestingRequestAsync(attemptedUpdate);
+
+        await update.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage($"*{otherRequest.Id}*not found*");
+        (await service.DeleteTestingRequestAsync(otherRequest.Id)).Should().BeFalse();
+        otherRequest.Title.Should().Be("Other tenant request");
+        otherRequest.DeletedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RestoreRequest_ShouldNotRestoreAnotherTenantRow()
+    {
+        await using var context = CreateContext();
+        var actorTenantId = Guid.NewGuid();
+        var otherRequest = NewRequest(Guid.NewGuid());
+        otherRequest.Version = 1;
+        otherRequest.SoftDelete();
+        context.Set<TestingRequest>().Add(otherRequest);
+        await context.SaveChangesAsync();
+        var service = CreateRequestService(context, CreateActor(actorTenantId));
+
+        (await service.RestoreTestingRequestAsync(otherRequest.Id)).Should().BeFalse();
+        otherRequest.DeletedAt.Should().NotBeNull();
+    }
+
     [Fact]
     public async Task SessionsQuery_ShouldReturnOnlyCurrentTenantRows()
     {
@@ -223,6 +302,18 @@ public sealed class TestingLabTenantIsolationTests
         using var provider = services.BuildServiceProvider();
         return ActivatorUtilities.CreateInstance<TService>(provider);
     }
+
+    private static TestingRequestOperationsService CreateRequestService(
+        IApplicationDbContext context,
+        IActorContextAccessor actor)
+        => new(
+            context,
+            Mock.Of<IProjectChannelAvailabilityService>(),
+            Mock.Of<IProjectAuthorizationService>(),
+            actor);
+
+    private static void AssertOnlyRequest(IEnumerable<TestingRequest> requests, Guid expectedRequestId)
+        => requests.Should().ContainSingle().Which.Id.Should().Be(expectedRequestId);
 
     private static IActorContextAccessor CreateActor(Guid tenantId)
     {
