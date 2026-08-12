@@ -1964,13 +1964,28 @@ export interface EconomyFundingSelfServiceHardToSoftConversionReceipt {
   principalPostingId?: string;
 }
 
+export interface EconomyPayoutsCommandsCreateMyPayoutRequestInput {
+  hardCoinUnits?: number;
+  idempotencyKey?: string | null;
+}
+
 export type EconomyPayoutsPayoutOperationState = 'Reserved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
+
+export type EconomyPayoutsPayoutRequestState = 'Submitted' | 'Cancelled' | 'Approved' | 'Rejected';
 
 export interface EconomyPayoutsQueriesEconomyPayoutOperation {
   createdAt?: string;
   hardCoinUnits?: number;
   id?: string;
   state?: EconomyPayoutsPayoutOperationState;
+  updatedAt?: string;
+}
+
+export interface EconomyPayoutsQueriesEconomyPayoutInput {
+  createdAt?: string;
+  hardCoinUnits?: number;
+  id?: string;
+  state?: EconomyPayoutsPayoutRequestState;
   updatedAt?: string;
 }
 
@@ -8468,8 +8483,11 @@ export let EconomyContractsPostingTemplateKindSchema: z.ZodType<EconomyContracts
 export let EconomyContractsProvenanceKindSchema: z.ZodType<EconomyContractsProvenanceKind>;
 export let EconomyContractsWalletLifecycleStateSchema: z.ZodType<EconomyContractsWalletLifecycleState>;
 export let EconomyFundingSelfServiceHardToSoftConversionReceiptSchema: z.ZodType<EconomyFundingSelfServiceHardToSoftConversionReceipt>;
+export let EconomyPayoutsCommandsCreateMyPayoutRequestInputSchema: z.ZodType<EconomyPayoutsCommandsCreateMyPayoutRequestInput>;
 export let EconomyPayoutsPayoutOperationStateSchema: z.ZodType<EconomyPayoutsPayoutOperationState>;
+export let EconomyPayoutsPayoutRequestStateSchema: z.ZodType<EconomyPayoutsPayoutRequestState>;
 export let EconomyPayoutsQueriesEconomyPayoutOperationSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutOperation>;
+export let EconomyPayoutsQueriesEconomyPayoutInputSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutInput>;
 export let EconomyRiskEconomyValueMovementCapabilitySchema: z.ZodType<EconomyRiskEconomyValueMovementCapability>;
 export let FeaturesBulkEvaluationInputSchema: z.ZodType<FeaturesBulkEvaluationInput>;
 export let FeaturesCapabilityAuditLogSchema: z.ZodType<FeaturesCapabilityAuditLog>;
@@ -11421,8 +11439,17 @@ EconomyFundingSelfServiceHardToSoftConversionReceiptSchema = z.object({
   principalPostingId: z.string().uuid().optional(),
 });
 
+/** Zod schema for EconomyPayoutsCommandsCreateMyPayoutRequestInput */
+EconomyPayoutsCommandsCreateMyPayoutRequestInputSchema = z.object({
+  hardCoinUnits: z.number().int().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+});
+
 /** Zod schema for EconomyPayoutsPayoutOperationState */
 EconomyPayoutsPayoutOperationStateSchema = z.enum(['Reserved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
+
+/** Zod schema for EconomyPayoutsPayoutRequestState */
+EconomyPayoutsPayoutRequestStateSchema = z.enum(['Submitted', 'Cancelled', 'Approved', 'Rejected']);
 
 /** Zod schema for EconomyPayoutsQueriesEconomyPayoutOperation */
 EconomyPayoutsQueriesEconomyPayoutOperationSchema = z.object({
@@ -11430,6 +11457,15 @@ EconomyPayoutsQueriesEconomyPayoutOperationSchema = z.object({
   hardCoinUnits: z.number().int().optional(),
   id: z.string().uuid().optional(),
   state: z.lazy(() => EconomyPayoutsPayoutOperationStateSchema).optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for EconomyPayoutsQueriesEconomyPayoutInput */
+EconomyPayoutsQueriesEconomyPayoutInputSchema = z.object({
+  createdAt: z.string().datetime().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  id: z.string().uuid().optional(),
+  state: z.lazy(() => EconomyPayoutsPayoutRequestStateSchema).optional(),
   updatedAt: z.string().datetime().optional(),
 });
 

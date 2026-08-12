@@ -2311,6 +2311,55 @@ export const postEconomyConversionsHardToSoftEndpoint = {
 } as const;
 
 /**
+ * List my payout requests
+ */
+export interface GetEconomyPayoutRequestsInput {
+  query?: {
+    take?: number;
+  };
+}
+export type GetEconomyPayoutRequestsOutput = Array<Types.EconomyPayoutsQueriesEconomyPayoutInput>;
+export const getEconomyPayoutRequestsEndpoint = {
+  operationId: 'getEconomyPayoutRequests' as const,
+  method: 'GET' as const,
+  path: '/api/v1/economy/payout-requests' as const,
+  tags: ['Economy'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Submit my payout request
+ *
+ * Records a withdrawal request only. It does not reserve or transfer value until KYC, risk, provider, and FIFO eligibility checks pass.
+ */
+export interface PostEconomyPayoutRequestsInput {
+  body?: Types.EconomyPayoutsCommandsCreateMyPayoutRequestInput;
+}
+export type PostEconomyPayoutRequestsOutput = Types.EconomyPayoutsQueriesEconomyPayoutInput;
+export const postEconomyPayoutRequestsEndpoint = {
+  operationId: 'postEconomyPayoutRequests' as const,
+  method: 'POST' as const,
+  path: '/api/v1/economy/payout-requests' as const,
+  tags: ['Economy'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Cancel my pending payout request
+ */
+export interface PostEconomyPayoutRequestsCancelInput {
+  requestId: string;
+}
+export type PostEconomyPayoutRequestsCancelOutput = Types.EconomyPayoutsQueriesEconomyPayoutInput;
+export const postEconomyPayoutRequestsCancelEndpoint = {
+  operationId: 'postEconomyPayoutRequestsCancel' as const,
+  method: 'POST' as const,
+  path: '/api/v1/economy/payout-requests/{requestId}/cancel' as const,
+  tags: ['Economy'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * List my payout operations
  */
 export interface GetEconomyPayoutsInput {
@@ -11148,6 +11197,21 @@ export const postTestingEventsApplicationsWithdrawEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetTestingEventsArchivedInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetTestingEventsArchivedOutput = Array<Types.TestingLabTestingEventProjection>;
+export const getTestingEventsArchivedEndpoint = {
+  operationId: 'getTestingEventsArchived' as const,
+  method: 'GET' as const,
+  path: '/v1/testing/events/archived' as const,
+  tags: ['TestingLab/testingEvents'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetTestingEventsFeedbackObligationsMeInput {
   query?: {
     eventId?: string;
@@ -11528,6 +11592,18 @@ export const postTestingEventsActivateEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostTestingEventsArchiveInput {
+  eventId: string;
+}
+export type PostTestingEventsArchiveOutput = boolean;
+export const postTestingEventsArchiveEndpoint = {
+  operationId: 'postTestingEventsArchive' as const,
+  method: 'POST' as const,
+  path: '/v1/testing/events/{eventId}:archive' as const,
+  tags: ['TestingLab/testingEvents'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostTestingEventsCancelInput {
   eventId: string;
   body?: Types.TestingLabCancelTestingEventInput;
@@ -11573,6 +11649,18 @@ export const postTestingEventsOpenApplicationsEndpoint = {
   operationId: 'postTestingEventsOpenApplications' as const,
   method: 'POST' as const,
   path: '/v1/testing/events/{eventId}:open-applications' as const,
+  tags: ['TestingLab/testingEvents'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostTestingEventsRestoreInput {
+  eventId: string;
+}
+export type PostTestingEventsRestoreOutput = boolean;
+export const postTestingEventsRestoreEndpoint = {
+  operationId: 'postTestingEventsRestore' as const,
+  method: 'POST' as const,
+  path: '/v1/testing/events/{eventId}:restore' as const,
   tags: ['TestingLab/testingEvents'] as const,
   requiresAuth: true,
 } as const;
@@ -14115,6 +14203,9 @@ export const endpoints = {
   postBillingWebhooksWebhookEventsRetry: postBillingWebhooksWebhookEventsRetryEndpoint,
   getEconomyCapabilities: getEconomyCapabilitiesEndpoint,
   postEconomyConversionsHardToSoft: postEconomyConversionsHardToSoftEndpoint,
+  getEconomyPayoutRequests: getEconomyPayoutRequestsEndpoint,
+  postEconomyPayoutRequests: postEconomyPayoutRequestsEndpoint,
+  postEconomyPayoutRequestsCancel: postEconomyPayoutRequestsCancelEndpoint,
   getEconomyPayouts: getEconomyPayoutsEndpoint,
   getEconomyPayoutsByOperationId: getEconomyPayoutsByOperationIdEndpoint,
   getEconomyWallet: getEconomyWalletEndpoint,
@@ -14707,6 +14798,7 @@ export const endpoints = {
   postTestingEventsApplicationsReview: postTestingEventsApplicationsReviewEndpoint,
   postTestingEventsApplicationsWaitlist: postTestingEventsApplicationsWaitlistEndpoint,
   postTestingEventsApplicationsWithdraw: postTestingEventsApplicationsWithdrawEndpoint,
+  getTestingEventsArchived: getTestingEventsArchivedEndpoint,
   getTestingEventsFeedbackObligationsMe: getTestingEventsFeedbackObligationsMeEndpoint,
   postTestingEventsFeedbackObligationsFeedback: postTestingEventsFeedbackObligationsFeedbackEndpoint,
   getTestingEventsParticipants: getTestingEventsParticipantsEndpoint,
@@ -14736,10 +14828,12 @@ export const endpoints = {
   putTestingEventsSlots: putTestingEventsSlotsEndpoint,
   deleteTestingEventsSlots: deleteTestingEventsSlotsEndpoint,
   postTestingEventsActivate: postTestingEventsActivateEndpoint,
+  postTestingEventsArchive: postTestingEventsArchiveEndpoint,
   postTestingEventsCancel: postTestingEventsCancelEndpoint,
   postTestingEventsCloseApplications: postTestingEventsCloseApplicationsEndpoint,
   postTestingEventsComplete: postTestingEventsCompleteEndpoint,
   postTestingEventsOpenApplications: postTestingEventsOpenApplicationsEndpoint,
+  postTestingEventsRestore: postTestingEventsRestoreEndpoint,
   postTestingEventsSchedule: postTestingEventsScheduleEndpoint,
   postTestingFeedback: postTestingFeedbackEndpoint,
   getTestingFeedbackByUser: getTestingFeedbackByUserEndpoint,
