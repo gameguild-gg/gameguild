@@ -41,14 +41,6 @@ vi.mock("@/lib/learning/actions", () => ({
   restoreAssessment: vi.fn(),
 }));
 
-const putCodingDefinitionMock = vi.hoisted(() => ({
-  putCodingDefinition: vi.fn(),
-}));
-
-vi.mock("@/lib/emception/put-coding-definition", () => ({
-  putCodingDefinition: putCodingDefinitionMock.putCodingDefinition,
-}));
-
 vi.mock("@/components/block-content-editor/lexical-surface", () => ({
   LexicalSurface: ({ accessibleLabel }: { accessibleLabel?: string }) => (
     <textarea aria-label={accessibleLabel ?? "Body"} readOnly />
@@ -548,7 +540,6 @@ describe("ContentItemEditor", () => {
         "/dashboard/learning/courses/course-1/assessments/asmnt-1/coding-definition",
       );
     });
-    expect(putCodingDefinitionMock.putCodingDefinition).not.toHaveBeenCalled();
   });
 
   it("shows Edit Coding Tests summary when an existing coding definition is provided", () => {

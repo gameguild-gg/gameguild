@@ -6,6 +6,8 @@ export { parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './com
 export type {
   BundleFile,
   CompileConfig,
+  FileMeta,
+  FileMetaInput,
   LayoutConfig,
   LayoutTabConfig,
   RunConfig,

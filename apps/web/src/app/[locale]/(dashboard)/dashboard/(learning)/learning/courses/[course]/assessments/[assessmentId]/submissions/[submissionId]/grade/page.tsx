@@ -1,59 +1,90 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { getToken } from '@/auth';
-import { createServerClient, type LearningAssessmentsAssessmentSubmission } from '@game-guild/client';
-import { getCodingDefinitionFull } from '@/lib/emception/get-coding-definition-full';
-import { codePayloadToFiles, type CodeFile } from '@/lib/emception/code-payload';
+import {
+  createServerClient,
+  type LearningAssessmentsAssessmentSubmission,
+} from '@game-guild/client';
+import { getAssessment } from '@/lib/learning';
+import { getCodingAssignmentFull } from '@/lib/coding-assignment/client';
+import {
+  codePayloadToFiles,
+  type CodeFile,
+} from '@/lib/coding-assignment/code-payload';
 import { GradeClient } from './grade-client';
 
 /**
- * Instructor grading view for a coding assessment submission.
+ * Instructor grading IDE for a coding-assessment submission.
  *
- * Route: /dashboard/learning/courses/[course]/assessments/[assessmentId]/submissions/[submissionId]/grade
+ * Route: `/dashboard/learning/courses/[course]/assessments/[assessmentId]/submissions/[submissionId]/grade`
  *
- * The route group (dashboard)/(learning) already enforces auth + tenant
- * middleware; the API additionally enforces CanReviewCourseAsync on both the
- * /coding-definition/full fetch and the eventual POST .../grade.
+ * Server Component — fetches:
+ *  1. The v1 `CodingAssignmentContent` via the Task 4 wrapper
+ *     `getCodingAssignmentFull(programId, contentId)` (instructor view → has
+ *     both Public + Private tests + all files).
+ *  2. The submission's raw `CodePayload` JSON via the existing
+ *     `GET /v1.0/assessments/submissions/{id}` endpoint, parsed by Task 9
+ *     `codePayloadToFiles`.
+ *
+ * Both are passed to {@link GradeClient} which merges them with the
+ * Private-collision guard (Metis #30) before seeding the IDE.
  */
 export default async function GradeSubmissionPage({
   params,
 }: {
-  params: Promise<{ locale: string; course: string; assessmentId: string; submissionId: string }>;
+  params: Promise<{
+    locale: string;
+    course: string;
+    assessmentId: string;
+    submissionId: string;
+  }>;
 }): Promise<React.JSX.Element> {
   const { course, assessmentId, submissionId } = await params;
 
-  const [definition, submission] = await Promise.all([
-    getCodingDefinitionFull(assessmentId),
-    fetchSubmission(submissionId),
-  ]);
-
-  if (!definition || !submission) {
+  // Translate the Next.js route param into the v1 ProgramContent address.
+  // `courseId` IS `programId` in this stack (per Task 8 learnings).
+  const assessment = await getAssessment(assessmentId);
+  if (!assessment || !assessment.contentId) {
     notFound();
   }
 
-  const codePayload = submission.codePayload ?? '';
-  let initialFiles: CodeFile[] = [];
-  if (codePayload) {
-    try {
-      initialFiles = codePayloadToFiles(codePayload);
-    } catch (err) {
-      console.error('Failed to parse submission codePayload:', err);
-    }
+  const [assignment, submission] = await Promise.all([
+    getCodingAssignmentFull(assessment.courseId, assessment.contentId),
+    fetchSubmission(submissionId),
+  ]);
+
+  if (!assignment || !submission) {
+    notFound();
   }
+
+  const submittedFiles = parseSubmittedFiles(submission);
 
   return (
     <GradeClient
       courseSlug={course}
       assessmentId={assessmentId}
       submissionId={submissionId}
-      initialFiles={initialFiles}
-      workspaceConfig={definition.workspaceConfig}
-      testPlan={definition.testPlan}
-      maxScore={definition.maxScore}
-      passingScore={definition.passingScore}
+      assignment={assignment}
+      submittedFiles={submittedFiles}
+      maxScore={assignment.Grading.MaxScore}
+      passingScore={assignment.Grading.PassingScore}
       manifestUrl="/cdn/manifest.json"
     />
   );
+}
+
+/** Parse `AssessmentSubmission.codePayload` into `{path, content}[]`. Tolerant of legacy v0 shape. */
+function parseSubmittedFiles(
+  submission: LearningAssessmentsAssessmentSubmission,
+): CodeFile[] {
+  const codePayload = submission.codePayload ?? '';
+  if (!codePayload) return [];
+  try {
+    return codePayloadToFiles(codePayload);
+  } catch (err) {
+    console.error('Failed to parse submission codePayload:', err);
+    return [];
+  }
 }
 
 /** Fetch a single submission including its codePayload. */
@@ -67,9 +98,13 @@ async function fetchSubmission(
     auth: { getAccessToken: () => getToken() },
   });
   try {
+    // `getAssessmentsSubmissionsBySubmissionId` is typed `Result<void>` in the
+    // generated client (response schema not described in OpenAPI). Use the raw
+    // `request<unknown>` channel and cast to the submission shape.
     const result = await client.request<LearningAssessmentsAssessmentSubmission>({
       method: 'GET',
       path: `/v1.0/assessments/submissions/${submissionId}`,
+      requiresAuth: true,
     });
     if (!result.ok) return null;
     return result.data;

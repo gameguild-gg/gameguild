@@ -15,4 +15,29 @@ export {
 } from './doctest/parse.js';
 export { runTests, type TestKindHandler } from './engine.js';
 export { computeScore, type ScoreResult } from './score.js';
+export {
+    escapeCppString,
+    generateDoctestHarness,
+    mapCppType,
+    serializeCppLiteral,
+    type FunctionParameter,
+    type FunctionParameterType,
+    type FunctionParameterWithName,
+    type FunctionalTestDescriptor,
+} from './functional/harness.js';
+export {
+    buildTestPlan,
+    type BuildTestPlanMode,
+    type BuildTestPlanOptions,
+    type BuildTestPlanResult,
+    type BundleFileMeta,
+    type CodingAssignmentContent,
+    type FileEncoding,
+    type FileVisibility,
+    type GeneratedFile,
+    type Test,
+    type TestFunctionData,
+    type TestSuite,
+    type WireFunctionParameterType,
+} from './assignment-plan.js';
 

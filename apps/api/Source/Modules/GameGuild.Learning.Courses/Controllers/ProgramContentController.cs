@@ -15,6 +15,7 @@ namespace GameGuild.Learning.Courses;
 public class ProgramContentController(
   IProgramContentService contentService,
   IProgramCrudService programService,
+  ICodingAssignmentContentService codingAssignmentService,
   IActorContextAccessor actorContextAccessor,
   IPermissionQueryService permissionQueryService) : BaseApiController
 {
@@ -251,6 +252,59 @@ public class ProgramContentController(
     var stats = new ContentStatsDto { ProgramId = programId, TotalContent = totalContent, RequiredContent = requiredContent, OptionalContent = totalContent - requiredContent };
 
     return Ok(stats);
+  }
+
+  /// <summary> Student view of a coding assignment: Private tests stripped, Private files filtered out. </summary>
+  [HttpGet("{id}/coding-assignment")]
+  [Authorize]
+  public async Task<ActionResult<CodingAssignmentContent>> GetCodingAssignmentPublic(Guid programId, Guid id)
+  {
+    var currentUserId = GetCurrentUserId();
+    if (currentUserId == null) return Unauthorized();
+    if (!await HasStudentAccessAsync(programId, currentUserId.Value).ConfigureAwait(false)) return Forbid();
+
+    var content = await codingAssignmentService.GetPublicAsync(programId, id, currentUserId.Value).ConfigureAwait(false);
+    if (content == null) return NotFound();
+    return Ok(content);
+  }
+
+  /// <summary> Instructor view of a coding assignment: full content including Private tests and files. </summary>
+  [HttpGet("{id}/coding-assignment/full")]
+  [Authorize]
+  public async Task<ActionResult<CodingAssignmentContent>> GetCodingAssignmentFull(Guid programId, Guid id)
+  {
+    var currentUserId = GetCurrentUserId();
+    if (currentUserId == null) return Unauthorized();
+    if (!await HasProgramManagementAccessAsync(programId, currentUserId.Value).ConfigureAwait(false)) return Forbid();
+
+    var content = await codingAssignmentService.GetFullAsync(programId, id).ConfigureAwait(false);
+    if (content == null) return NotFound();
+    return Ok(content);
+  }
+
+  /// <summary> Author a coding assignment: UPSERT onto ProgramContent.JsonBody + sync grading to linked Assessment. </summary>
+  [HttpPut("{id}/coding-assignment")]
+  [Authorize]
+  public async Task<ActionResult<CodingAssignmentContent>> PutCodingAssignment(
+    Guid programId,
+    Guid id,
+    [FromBody] CodingAssignmentContent body)
+  {
+    if (!ModelState.IsValid) return BadRequest(ModelState);
+
+    var currentUserId = GetCurrentUserId();
+    if (currentUserId == null) return Unauthorized();
+    if (!await HasProgramManagementAccessAsync(programId, currentUserId.Value).ConfigureAwait(false)) return Forbid();
+
+    var result = await codingAssignmentService.UpsertAsync(programId, id, body, currentUserId.Value).ConfigureAwait(false);
+    if (!result.IsSuccess)
+    {
+      return result.Error.Type == ErrorType.NotFound
+        ? NotFound(result.Error)
+        : BadRequest(result.Error);
+    }
+
+    return Ok(result.Value);
   }
 
   private async Task<ContentAccessResolution> ResolveContentAccessAsync(Guid programId)

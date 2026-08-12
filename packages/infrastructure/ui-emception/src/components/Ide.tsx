@@ -5,7 +5,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffec
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
-import type { DockGroup, GradingPlan, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
+import type { DockGroup, FileMeta, FileMetaInput, GradingPlan, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
 import { DEFAULT_IMAGE, SDL_CANVAS_PATH, WORKSPACE_STORAGE_KEY, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
 import TestResultsPanel from './TestResultsPanel';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
@@ -90,6 +90,14 @@ export interface IdeHandle {
   getFiles(): Promise<Array<{ path: string; content: string }>>;
   setFiles(files: Array<{ path: string; content: string }>): Promise<void>;
   reset(): Promise<void>;
+  /** Write a single file to reactive state + worker VFS via `client.writeFile`. */
+  addFile(path: string, content: string): Promise<void>;
+  /** Remove a single file from reactive state + worker VFS. */
+  removeFile(path: string): Promise<void>;
+  /** Apply v1 2-tier metadata; translates internally to emception's 3-tier FileEntry. */
+  setFileMeta(path: string, meta: FileMetaInput): Promise<void>;
+  /** Content-diff against the seeded workspace — returns edited + student-created files. */
+  getModifiedFiles(): Promise<Array<{ path: string; content: string; encoding: 'text' }>>;
 }
 
 type WorkerBoot = Awaited<ReturnType<typeof bootInWorker>>;
@@ -151,6 +159,12 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
   /** Tracks latest files for use in callbacks that can't close over state */
   const filesRef = useRef(files);
   filesRef.current = files;
+  /** Parallel FileMeta map (v1 2-tier shape) keyed by workspace path. */
+  const fileMetaRef = useRef<Map<string, FileMeta>>(new Map());
+  /** Snapshot of seeded content (path → content) used by getModifiedFiles. */
+  const seededContentRef = useRef<Map<string, string>>(new Map());
+  /** Bumped on every setFileMeta call to re-run the per-file readOnly effect. */
+  const [metaVersion, bumpMetaVersion] = useState(0);
   // Expose filesRef for e2e tests so Playwright can verify file content was updated
   (window as unknown as Record<string, unknown>).__emception_filesRef__ = filesRef;
 
@@ -479,16 +493,67 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
         .map(({ path, content }) => ({ path, content }));
     },
     setFiles: async (newFiles) => {
-      const updated: Record<string, WorkspaceFile> = {};
+      // Replace semantics: discard prior state, seed fresh workspace + snapshot.
+      const replaced: Record<string, WorkspaceFile> = {};
+      const snapshot = new Map<string, string>();
+      const newTabs: OpenTab[] = [];
       for (const { path, content } of newFiles) {
-        updated[path] = { path, type: 'text', content };
+        replaced[path] = { path, type: 'text', content };
+        snapshot.set(path, content);
+        newTabs.push({ id: `tab:${path}`, path, type: 'text', group: 'main' });
       }
-      setFiles((prev) => ({ ...prev, ...updated }));
-      filesRef.current = { ...filesRef.current, ...updated };
-      await syncFilesToVfs({ ...filesRef.current, ...updated });
+      const newActiveTabId = newTabs[0]?.id ?? '';
+      setFiles(replaced);
+      filesRef.current = replaced;
+      setOpenTabs(newTabs);
+      setActiveTabId(newActiveTabId);
+      setSelectedPath(newTabs[0]?.path ?? '');
+      seededContentRef.current = snapshot;
+      fileMetaRef.current = new Map();
+      bumpMetaVersion((v) => v + 1);
+      await syncFilesToVfs(replaced);
     },
     reset: async () => {
       await orchestratorRef.current?.client.resetVfs();
+    },
+    addFile: async (path, content) => {
+      setFiles((prev) => ({ ...prev, [path]: { path, type: 'text', content } }));
+      filesRef.current = { ...filesRef.current, [path]: { path, type: 'text', content } };
+      const orch = orchestratorRef.current;
+      if (orch) {
+        const enc = new TextEncoder();
+        await orch.client.writeFile(toWorkspaceFsPath(path), enc.encode(content));
+      }
+    },
+    removeFile: async (path) => {
+      setFiles((prev) => {
+        const next = { ...prev };
+        delete next[path];
+        return next;
+      });
+      const nextRef = { ...filesRef.current };
+      delete nextRef[path];
+      filesRef.current = nextRef;
+      fileMetaRef.current.delete(path);
+      // WorkerClient exposes no per-file delete; resetVfs+reseed in setFiles/addFile
+      // is the authoritative path. ponytail: per-file VFS delete if WorkerClient grows one.
+    },
+    setFileMeta: async (path, meta) => {
+      const prev = fileMetaRef.current.get(path) ?? { visibility: 'Public' as const, modifiable: true };
+      const merged: FileMeta = {
+        visibility: meta.visibility ?? prev.visibility,
+        modifiable: meta.modifiable ?? prev.modifiable,
+      };
+      fileMetaRef.current.set(path, merged);
+      // v1 2-tier → emception 3-tier translation: 'Private' → 'hidden', modifiable:false → readonly:true.
+      // 'solution' tier is never set from v1 per Must-NOT-Have.
+      bumpMetaVersion((v) => v + 1);
+    },
+    getModifiedFiles: async () => {
+      const seeded = seededContentRef.current;
+      return Object.values(filesRef.current)
+        .filter((f) => f.type === 'text' && f.content !== seeded.get(f.path))
+        .map(({ path, content }) => ({ path, content, encoding: 'text' as const }));
     },
   }), [syncFilesToVfs]);
 
@@ -738,6 +803,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
 
     const desiredPaths = new Set<string>();
 
+    const applyReadOnly = (model: { updateOptions: (opts: { readOnly: boolean }) => void }, path: string) => {
+      const meta = fileMetaRef.current.get(path);
+      model.updateOptions({ readOnly: meta?.modifiable === false });
+    };
+
     const ensureModel = (path: string) => {
       const file = filesRef.current[path];
       if (!file || file.type !== 'text') return;
@@ -747,13 +817,15 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       const existing = monaco.editor.getModel(uri);
 
       if (!existing) {
-        monaco.editor.createModel(file.content, inferLanguage(path), uri);
+        const created = monaco.editor.createModel(file.content, inferLanguage(path), uri);
+        applyReadOnly(created, path);
         return;
       }
 
       if (existing.getValue() !== file.content && activeTabId !== `tab:${path}`) {
         existing.setValue(file.content);
       }
+      applyReadOnly(existing, path);
     };
 
     for (const tab of openTabs) ensureModel(tab.path);
@@ -767,7 +839,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
         model.dispose();
       }
     }
-  }, [activeTabId, openTabs, selectedPath]);
+  }, [activeTabId, openTabs, selectedPath, metaVersion]);
 
   useEffect(() => {
     syncMonacoModels();

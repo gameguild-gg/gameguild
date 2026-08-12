@@ -1,3 +1,4 @@
+using FluentValidation;
 using GameGuild.Learning.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -42,6 +43,10 @@ public static class CoursesModule
 
         // Product integration
         services.AddScoped<IProductProgramProvider, ProductProgramProvider>();
+
+        // Coding-assignment content (ProgramContent.JsonBody v1)
+        services.AddSingleton<IValidator<CodingAssignmentContent>, CodingAssignmentContentValidator>();
+        services.AddScoped<ICodingAssignmentContentService, CodingAssignmentContentService>();
 
         return services;
     }
