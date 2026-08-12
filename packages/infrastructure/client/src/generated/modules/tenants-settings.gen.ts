@@ -116,50 +116,6 @@ export class TenantsSettingsModule {
   }
 
   /**
-   * Get tenant system limits
-   *
-   * Retrieves system limits and resource constraints configured for the tenant.
-   */
-  async getTenantsSettingsSystemLimits(tenantId: string): Promise<Result<Types.IdentityTenantsTenantSystemLimits, ApiError>> {
-    const url = `/v1/tenants/${tenantId}/settings/system-limits`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityTenantsTenantSystemLimitsSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Update tenant system limits
-   *
-   * Updates system limits and resource constraints for the tenant.
-   */
-  async patchTenantsSettingsSystemLimits(tenantId: string, body: Types.IdentityTenantsUpdateTenantSystemLimitsInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/tenants/${tenantId}/settings/system-limits`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantSystemLimitsInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PATCH',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Get tenant integration settings
    *
    * Retrieves third-party integration configurations for the tenant.
@@ -195,6 +151,50 @@ export class TenantsSettingsModule {
 
     // Validate request body
     const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantIntegrationSettingsInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PATCH',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get tenant system limits
+   *
+   * Retrieves system limits and resource constraints configured for the tenant.
+   */
+  async getTenantsSettingsSystemLimits(tenantId: string): Promise<Result<Types.IdentityTenantsTenantSystemLimits, ApiError>> {
+    const url = `/v1/tenants/${tenantId}/settings/system-limits`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityTenantsTenantSystemLimitsSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Update tenant system limits
+   *
+   * Updates system limits and resource constraints for the tenant.
+   */
+  async patchTenantsSettingsSystemLimits(tenantId: string, body: Types.IdentityTenantsUpdateTenantSystemLimitsInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/tenants/${tenantId}/settings/system-limits`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantSystemLimitsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

@@ -16,29 +16,6 @@ export class HealthModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Application information endpoint
-   *
-   * Provides application version, build details, and runtime information for debugging and deployment monitoring.
-   */
-  async getInfo(): Promise<Result<Types.APIControllersApplicationInfoOutput, ApiError>> {
-    const url = '/info';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIControllersApplicationInfoOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Comprehensive application health check
    *
    * Performs a comprehensive health check of all registered services and dependencies. Returns detailed status information for monitoring systems, load balancers, and orchestration platforms.
@@ -55,52 +32,6 @@ export class HealthModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.APIControllersHealthinessOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Readiness probe for traffic routing decisions
-   *
-   * Kubernetes-style readiness probe that determines whether the application is ready to serve traffic. Checks all dependencies and services required for proper request handling.
-   */
-  async getReady(): Promise<Result<Types.APIControllersReadinessOutput, ApiError>> {
-    const url = '/ready';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIControllersReadinessOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Liveness probe for container restart decisions
-   *
-   * Kubernetes-style liveness probe that indicates whether the application process is running correctly. Used by orchestration platforms to determine if containers should be restarted.
-   */
-  async getLive(): Promise<Result<Types.APIControllersLivenessOutput, ApiError>> {
-    const url = '/live';
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: false,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIControllersLivenessOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -131,6 +62,52 @@ export class HealthModule {
   }
 
   /**
+   * Application information endpoint
+   *
+   * Provides application version, build details, and runtime information for debugging and deployment monitoring.
+   */
+  async getInfo(): Promise<Result<Types.APIControllersApplicationInfoOutput, ApiError>> {
+    const url = '/info';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.APIControllersApplicationInfoOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Liveness probe for container restart decisions
+   *
+   * Kubernetes-style liveness probe that indicates whether the application process is running correctly. Used by orchestration platforms to determine if containers should be restarted.
+   */
+  async getLive(): Promise<Result<Types.APIControllersLivenessOutput, ApiError>> {
+    const url = '/live';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.APIControllersLivenessOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Prometheus metrics endpoint
    *
    * Exposes application metrics in Prometheus text format for monitoring, alerting, and observability dashboards.
@@ -145,6 +122,29 @@ export class HealthModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Readiness probe for traffic routing decisions
+   *
+   * Kubernetes-style readiness probe that determines whether the application is ready to serve traffic. Checks all dependencies and services required for proper request handling.
+   */
+  async getReady(): Promise<Result<Types.APIControllersReadinessOutput, ApiError>> {
+    const url = '/ready';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.APIControllersReadinessOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 }
 
