@@ -33,6 +33,21 @@ export interface WorkspaceFile {
   content: string;
 }
 
+/**
+ * v1 2-tier file metadata exposed by {@link IdeHandle.setFileMeta}.
+ * Translates internally to emception's 3-tier `FileEntry`:
+ * - `visibility: 'Private'` → `FileEntry.visibility = 'hidden'`
+ * - `modifiable: false`     → `FileEntry.readonly = true`
+ * The third emception tier `'solution'` is intentionally not exposed.
+ */
+export interface FileMeta {
+  visibility: 'Public' | 'Private';
+  modifiable: boolean;
+}
+
+/** Input shape for `IdeHandle.setFileMeta` — every field optional. */
+export type FileMetaInput = Partial<FileMeta>;
+
 export interface OpenTab {
   id: string;
   path: string;

@@ -1455,61 +1455,6 @@ export async function updateAssessment(
   }
 }
 
-export interface UpdateAssessmentDefinitionInput {
-  courseId: string;
-  assessmentId: string;
-  definition: unknown;
-  definitionSchemaVersion?: number;
-}
-
-function normalizeAssessmentDefinitionPayload(definition: unknown): Record<string, unknown> {
-  const value = typeof definition === "string"
-    ? (definition.trim() ? JSON.parse(definition.trim()) : { order: [], blocks: {} })
-    : definition ?? { order: [], blocks: {} };
-
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new Error("Assessment definition must be a JSON object.");
-  }
-
-  return value as Record<string, unknown>;
-}
-
-export async function updateAssessmentDefinition(
-  input: UpdateAssessmentDefinitionInput,
-): Promise<ActionResult<null>> {
-  try {
-    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
-    const definition = normalizeAssessmentDefinitionPayload(input.definition);
-    const { assessments } = createCourseModules();
-    const result = await assessments.putAssessmentsDefinition(
-      input.assessmentId,
-      {
-        definitionSchemaVersion: input.definitionSchemaVersion ?? 1,
-        definition,
-      },
-    );
-
-    if (!result.ok)
-      return { success: false, error: extractError(result.error) };
-
-    revalidateCourseAssessmentPaths(input.courseId, resolvedCourseId);
-    revalidatePath(
-      `/dashboard/learning/courses/${input.courseId}/assessments/${input.assessmentId}`,
-    );
-    if (resolvedCourseId !== input.courseId) {
-      revalidatePath(
-        `/dashboard/learning/courses/${resolvedCourseId}/assessments/${input.assessmentId}`,
-      );
-    }
-    return { success: true, data: null };
-  } catch (e) {
-    return {
-      success: false,
-      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
-    };
-  }
-}
-
 export async function deleteAssessment(
   courseId: string,
   assessmentId: string,
