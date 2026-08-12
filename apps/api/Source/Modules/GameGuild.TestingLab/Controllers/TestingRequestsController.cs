@@ -145,7 +145,9 @@ public class TestingRequestsController(
 
     // POST: testing/submit-simple
     [HttpPost("submit-simple")]
-    public async Task<ActionResult<TestingRequest>> SubmitSimpleTestingRequest(CreateSimpleTestingRequestDto requestDto)
+    public async Task<ActionResult<TestingRequestDetailProjection>> SubmitSimpleTestingRequest(
+        CreateSimpleTestingRequestDto requestDto,
+        CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -169,7 +171,13 @@ public class TestingRequestsController(
             return BadRequest(ex.Message);
         }
 
-        return CreatedAtAction(nameof(GetTestingRequest), new { id = request.Id }, request);
+        var detail = await mediator.Send(
+            new GetTestingRequestDetailQuery(request.Id),
+            cancellationToken).ConfigureAwait(false);
+
+        return detail.IsSuccess
+            ? CreatedAtAction(nameof(GetTestingRequest), new { id = request.Id }, detail.Value)
+            : ToActionResult(detail);
     }
 
     // GET: testing/my-requests

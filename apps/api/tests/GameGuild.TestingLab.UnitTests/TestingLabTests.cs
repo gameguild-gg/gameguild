@@ -185,6 +185,59 @@ public sealed class TestingRequestsControllerAuthorizationTests
         method!.GetCustomAttributes(inherit: true)
             .Should().NotContain(attribute => attribute.GetType().Name.StartsWith("RequireResourcePermission", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public async Task SubmitSimpleTestingRequest_Should_Return_Stable_Detail_Projection()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var requestId = Guid.NewGuid();
+        var createdRequest = new TestingRequest { Id = requestId, Title = "Created request" };
+        var projection = new TestingRequestDetailProjection(
+            requestId,
+            "Created request",
+            "Stable response without EF navigation graphs.",
+            null,
+            null,
+            null,
+            4,
+            0,
+            DateTime.UtcNow,
+            DateTime.UtcNow.AddDays(1),
+            TestingRequestStatus.Draft,
+            null,
+            null,
+            false);
+        var requestService = new Mock<ITestingRequestOperations>();
+        requestService
+            .Setup(service => service.CreateSimpleTestingRequestAsync(It.IsAny<CreateSimpleTestingRequestDto>(), userId))
+            .ReturnsAsync(createdRequest);
+        var mediator = new Mock<IMediator>();
+        mediator
+            .Setup(candidate => candidate.Send(
+                It.Is<GetTestingRequestDetailQuery>(query => query.RequestId == requestId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(projection));
+        var actorAccessor = new ActorContextAccessor();
+        actorAccessor.SetActorContext(ActorContextBuilder.ForUser(userId).WithTenantId(tenantId).Build());
+        var controller = new TestingRequestsController(
+            requestService.Object,
+            actorAccessor,
+            NullLogger<TestingRequestsController>.Instance,
+            mediator.Object);
+
+        var result = await controller.SubmitSimpleTestingRequest(new CreateSimpleTestingRequestDto
+        {
+            ProjectId = Guid.NewGuid(),
+            Title = "Created request",
+            VersionNumber = "1.0.0",
+            InstructionsType = InstructionType.Text
+        });
+
+        result.Result.Should().BeOfType<CreatedAtActionResult>()
+            .Which.Value.Should().BeSameAs(projection);
+    }
+
     [Fact]
     public async Task SubmitSimpleTestingRequest_Should_Return_Forbidden_When_Project_Authorization_Is_Denied()
     {

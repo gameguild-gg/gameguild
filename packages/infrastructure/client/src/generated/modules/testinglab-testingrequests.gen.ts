@@ -247,7 +247,7 @@ export class TestinglabTestingrequestsModule {
 
   /**
    */
-  async postTestingSubmitSimple(body: Types.TestingLabCreateSimpleTestingInput): Promise<Result<Types.TestingLabTestingInput, ApiError>> {
+  async postTestingSubmitSimple(body: Types.TestingLabCreateSimpleTestingInput): Promise<Result<Types.TestingLabTestingRequestDetailProjection, ApiError>> {
     const url = '/v1/testing/submit-simple';
 
     // Validate request body
@@ -262,7 +262,7 @@ export class TestinglabTestingrequestsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.TestingLabTestingInputSchema, result.data, 'response');
+      const validatedData = safeParse(Types.TestingLabTestingRequestDetailProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
