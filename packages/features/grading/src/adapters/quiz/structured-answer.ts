@@ -14,6 +14,8 @@ export function buildQuizStructuredAnswerPayload(
   grading?: ContentGradingDefinition,
 ): StructuredAnswerPayload {
   const source = extractAnswerRecord(input);
+  // When grading is enabled, only configured content block ids are accepted.
+  // Extra client keys are ignored before the server grades the submission.
   const blockIds = grading?.enabled
     ? uniqueStrings(Object.values(grading.items).map((item) => item.contentBlockId))
     : Object.keys(source);
@@ -53,6 +55,8 @@ function normalizeTextAnswerRecord(value: unknown): Record<string, string> {
 
   const normalized: Record<string, string> = {};
   for (const [key, raw] of Object.entries(record)) {
+    // Text answers are intentionally permissive about values, but not about
+    // field names that could smuggle grading claims or answer-key material.
     if (isUnsafeAnswerPayloadField(key)) continue;
     if (raw == null) continue;
     normalized[key] = String(raw);
@@ -66,6 +70,8 @@ function normalizeCategorizationAnswerRecord(value: unknown): Record<string, str
 
   const normalized: Record<string, string[]> = {};
   for (const [key, raw] of Object.entries(record)) {
+    // Categorization answers use nested item ids, so the same unsafe-key filter
+    // is applied at this level as well.
     if (isUnsafeAnswerPayloadField(key)) continue;
     const values = uniqueStrings(asStringArray(raw));
     if (values.length > 0) normalized[key] = values;

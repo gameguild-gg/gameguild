@@ -71,7 +71,7 @@ test_web_vitest_uses_direct_exec_for_json_evidence() {
 }
 
 test_web_server_uses_direct_node_process_for_cleanup() {
-  grep -Fq 'node "$repository_root/apps/web/node_modules/next/dist/bin/next" start "$repository_root/apps/web"' "$ci_dir/verify-economy.sh" || return 1
+  grep -Fq 'node "$standalone_web_root/server.js"' "$ci_dir/verify-economy.sh" || return 1
   ! grep -q 'pnpm --filter @game-guild/web exec next start' "$ci_dir/verify-economy.sh"
 }
 
@@ -79,7 +79,7 @@ test_browser_server_uses_published_api() {
   local gate="$ci_dir/verify-economy.sh"
   local api_url_line web_launch_line
   api_url_line="$(grep -n 'export API_URL="http://127.0.0.1:$api_port"' "$gate" | cut -d: -f1)"
-  web_launch_line="$(grep -n 'node "$repository_root/apps/web/node_modules/next/dist/bin/next" start' "$gate" | cut -d: -f1)"
+  web_launch_line="$(grep -n 'node "$standalone_web_root/server.js"' "$gate" | cut -d: -f1)"
 
   [[ -n "$api_url_line" && -n "$web_launch_line" ]] || return 1
   [[ "$api_url_line" -lt "$web_launch_line" ]]

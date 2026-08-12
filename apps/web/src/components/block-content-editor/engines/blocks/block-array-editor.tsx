@@ -23,6 +23,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react"
 import { Plus, GripVertical, Trash2, ChevronUp, ChevronDown, Pencil } from "lucide-react"
+import { insertBlock, moveBlock, removeBlock, updateBlock } from "@game-guild/block-list"
 import { BlockTypePicker } from "./block-type-picker"
 import { BlockEditorModal } from "./block-editor-modal"
 import { BLOCK_REGISTRY, type BlockCellType } from "./block-component-registry"
@@ -282,9 +283,7 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
   const handleAddBlock = useCallback((factory: (id: string) => Block) => {
     const idx = insertIndex ?? blocks.length
     const block = factory(nextBlockId(blocks))
-    const next = [...blocks]
-    next.splice(idx, 0, block)
-    onChange(next)
+    onChange(insertBlock(blocks, idx, block))
 
     // Immediately open editor for the newly added block
     setEditingIndex(idx)
@@ -307,17 +306,12 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
   const handleInlineBlockUpdate = useCallback((index: number, data: unknown) => {
     const current = blocks[index]
     if (!current) return
-    const next = [...blocks]
-    next[index] = { id: current.id, type: current.type, data } as Block
-    onChange(next)
+    onChange(updateBlock<Block>(blocks, current.id, data as Block["data"]))
   }, [blocks, onChange])
 
   const handleEditorSave = useCallback((data: unknown) => {
     if (editingIndex === null || !editingBlock) return
-    const updatedBlock = { id: editingBlock.id, type: editingBlock.type, data } as Block
-    const next = [...blocks]
-    next[editingIndex] = updatedBlock
-    onChange(next)
+    onChange(updateBlock<Block>(blocks, editingBlock.id, data as Block["data"]))
     setEditorOpen(false)
     setEditingIndex(null)
     setEditingBlock(null)
@@ -331,24 +325,21 @@ export function BlockArrayEditor({ blocks, onChange, readOnly = false, allowedBl
 
   const handleConfirmDelete = useCallback(() => {
     if (deleteIndex === null) return
-    onChange(blocks.filter((_, i) => i !== deleteIndex))
+    const block = blocks[deleteIndex]
+    if (block) onChange(removeBlock(blocks, block.id))
     setDeleteIndex(null)
     setDeleteDialogOpen(false)
   }, [deleteIndex, blocks, onChange])
 
   const handleMoveUp = useCallback((index: number) => {
     if (index <= 0) return
-    const next = [...blocks]
-    ;[next[index - 1], next[index]] = [next[index]!, next[index - 1]!]
-    onChange(next)
+    onChange(moveBlock(blocks, index, index - 1))
     scrollToIndexRef.current = index - 1
   }, [blocks, onChange])
 
   const handleMoveDown = useCallback((index: number) => {
     if (index >= blocks.length - 1) return
-    const next = [...blocks]
-    ;[next[index], next[index + 1]] = [next[index + 1]!, next[index]!]
-    onChange(next)
+    onChange(moveBlock(blocks, index, index + 1))
     scrollToIndexRef.current = index + 1
   }, [blocks, onChange])
 

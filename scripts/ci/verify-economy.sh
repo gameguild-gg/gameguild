@@ -423,13 +423,16 @@ fi
 if [[ "$skip_browser" == false ]]; then
   web_port="$(get_ephemeral_port)"
   playwright_evidence="$artifact_root/playwright/public-smoke.json"
+  standalone_web_root="$repository_root/apps/web/.next/standalone/apps/web"
+  mkdir -p "$standalone_web_root/.next"
+  cp -R "$repository_root/apps/web/public" "$standalone_web_root/public"
+  cp -R "$repository_root/apps/web/.next/static" "$standalone_web_root/.next/static"
   export PORT="$web_port"
   export HOSTNAME=127.0.0.1
   export PUBLIC_E2E_BASE_URL="http://127.0.0.1:$web_port"
   export PLAYWRIGHT_JSON_OUTPUT_NAME="$(native_path "$playwright_evidence")"
   export AUTH_SECRET='economy-ci-browser-secret-not-for-production-use-2026'
-  node "$repository_root/apps/web/node_modules/next/dist/bin/next" start "$repository_root/apps/web" \
-    --hostname 127.0.0.1 --port "$web_port" \
+  node "$standalone_web_root/server.js" \
     >"$artifact_root/playwright/web.stdout.log" 2>"$artifact_root/playwright/web.stderr.log" &
   web_pid=$!
   wait_http_ready "http://127.0.0.1:$web_port/" "$web_pid" 90

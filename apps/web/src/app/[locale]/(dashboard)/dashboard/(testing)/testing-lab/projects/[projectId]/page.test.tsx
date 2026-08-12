@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getTestingLabProjectDetail: vi.fn(),
   getMembers: vi.fn(),
+  push: vi.fn(),
 }));
 
 vi.mock('@/lib/testing-lab', () => ({
@@ -17,6 +18,10 @@ vi.mock('@/lib/community/queries/members', () => ({
 }));
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ children }: { children: ReactNode }) => children,
+}));
+vi.mock('next/navigation', () => ({
+  notFound: vi.fn(),
+  useRouter: () => ({ push: mocks.push }),
 }));
 vi.mock('@/lib/testing-lab/actions', () => ({
   addTestingParticipant: vi.fn(),

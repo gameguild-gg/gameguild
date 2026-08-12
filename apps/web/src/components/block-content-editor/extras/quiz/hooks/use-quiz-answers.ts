@@ -80,6 +80,9 @@ interface UseQuizAnswersReturn {
 }
 
 export function useQuizAnswers(props: UseQuizAnswersProps): UseQuizAnswersReturn {
+  // Only grading-disabled practice receives an answer-key-bearing entry here.
+  // Server-graded runtime records the submission state but waits for the server
+  // to produce any trusted correctness or score.
   const practiceEntry = getPracticeEntry(props)
   const [answerState, setAnswerState] = useState<QuizAnswerState>(createEmptyAnswerState())
   const [showFeedback, setShowFeedback] = useState(false)
@@ -91,6 +94,8 @@ export function useQuizAnswers(props: UseQuizAnswersProps): UseQuizAnswersReturn
 
   const checkAnswers = useCallback(() => {
     if (!practiceEntry) {
+      // This is the grading-enabled path: show that the answer was submitted,
+      // without computing correctness in the browser.
       setIsCorrect(null)
       setShowFeedback(true)
       return
@@ -475,6 +480,8 @@ export function useQuizAnswers(props: UseQuizAnswersProps): UseQuizAnswersReturn
 }
 
 function getPracticeEntry(props: UseQuizAnswersProps): QuizPracticeEntry | null {
+  // Do not infer practice eligibility from JSON shape. The caller must choose
+  // the runtime mode explicitly.
   if (props.submissionMode === "server-graded") return null
   return props.entry
 }

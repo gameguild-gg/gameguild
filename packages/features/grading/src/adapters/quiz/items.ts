@@ -96,6 +96,8 @@ export function getQuizQuestionGradingKind(value: unknown): GradingKind {
   const question = asQuizQuestion(value);
   const type = getQuizQuestionType(value);
 
+  // Classification is intentionally conservative: a question is deterministic
+  // only when its server-owned answer key is complete enough to grade.
   switch (type) {
     case 'SINGLE_CHOICE':
       return hasSingleChoiceAnswerKey(question) ? 'deterministic' : 'unsupported';
@@ -128,6 +130,7 @@ export function getQuizQuestionGradingKind(value: unknown): GradingKind {
       return hasFillBlankAnswerKey(question) ? 'deterministic' : 'unsupported';
 
     case 'ESSAY':
+      // Essay submissions enter the trusted path, but wait for manual grading.
       return 'manual';
 
     case 'RATING':
@@ -135,6 +138,8 @@ export function getQuizQuestionGradingKind(value: unknown): GradingKind {
 
     case 'NUMERIC':
     case 'FORMULA':
+      // Numeric/formula need dedicated server evaluators before they can produce
+      // official deterministic scores.
     default:
       return 'unsupported';
   }

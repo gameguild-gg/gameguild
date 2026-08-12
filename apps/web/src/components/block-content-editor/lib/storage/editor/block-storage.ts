@@ -23,72 +23,54 @@ import type {
   BlockDataMap,
   BlockStorage,
 } from "./block-structure"
+import {
+  EMPTY_BLOCK_STORAGE,
+  blockToView,
+  blocksToStorage as blocksToBlockListStorage,
+  deserializeBlockList,
+  serializeBlockList,
+  storageToBlocks as storageToBlockList,
+  type BlockView,
+} from "@game-guild/block-list"
 
 // ============================================================================
 // Conversion: BlockArray ↔ BlockStorage
 // ============================================================================
 
 export function blocksToStorage(blocks: BlockArray): BlockStorage {
-  const order: BlockStorage["order"] = []
-  const map: Record<string, AnyBlockData> = {}
-  for (const block of blocks) {
-    order.push([block.id, block.type])
-    map[block.id] = block.data
-  }
-  return { order, blocks: map }
+  return blocksToBlockListStorage(blocks) as BlockStorage
 }
 
 export function storageToBlocks(storage: BlockStorage | null | undefined): BlockArray {
-  if (!storage || !Array.isArray(storage.order) || !storage.blocks) return []
-  const out: BlockArray = []
-  for (const entry of storage.order) {
-    if (!Array.isArray(entry) || entry.length < 2) continue
-    const [id, type] = entry
-    const data = storage.blocks[id]
-    if (data === undefined) continue
-    out.push({ id, type, data } as Block)
-  }
-  return out
+  return storageToBlockList<BlockCellType, AnyBlockData, Block>(storage)
 }
 
 // ============================================================================
 // Project-level serialization
 // ============================================================================
 
-export const EMPTY_PROJECT_DATA: string = JSON.stringify({ order: [], blocks: {} } satisfies BlockStorage)
+export const EMPTY_PROJECT_DATA: string = JSON.stringify(EMPTY_BLOCK_STORAGE)
 
 export function serializeProject(blocks: BlockArray): string {
-  return JSON.stringify(blocksToStorage(blocks))
+  return serializeBlockList(blocks)
 }
 
 export function deserializeProject(data: string | null | undefined): BlockArray {
-  if (!data) return []
-  try {
-    const parsed = JSON.parse(data) as BlockStorage
-    return storageToBlocks(parsed)
-  } catch (error) {
-    console.error("Failed to deserialize project data:", error)
-    return []
-  }
+  return deserializeBlockList<Block>(data)
 }
 
 // ============================================================================
 // Preview adapter — Block → serialized node shape
 //
-// Preview components in plugins/preview-components/* expect either
-//   { type, data, version }    (most blocks)
-//   { type, entry, version }   (quiz — historical shape)
-// This wrapper keeps that shape so preview components do not need to change.
+// Preview components in plugins/preview-components/* consume the generic
+// `{ id, type, data, version }` read model from @game-guild/block-list.
 // ============================================================================
 
-export type PreviewNode<T extends BlockCellType = BlockCellType> =
-  T extends "quiz"
-    ? { type: "quiz"; entry: BlockDataMap["quiz"]; version: 1 }
-    : { type: T; data: BlockDataMap[T]; version: 1 }
+export type PreviewNode<T extends BlockCellType = BlockCellType> = BlockView<
+  T,
+  BlockDataMap[T]
+>
 
 export function blockToPreviewNode<B extends Block>(block: B): PreviewNode<B["type"]> {
-  if (block.type === "quiz") {
-    return { type: "quiz", entry: block.data, version: 1 } as PreviewNode<B["type"]>
-  }
-  return { type: block.type, data: block.data, version: 1 } as PreviewNode<B["type"]>
+  return blockToView(block) as PreviewNode<B["type"]>
 }

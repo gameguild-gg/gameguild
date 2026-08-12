@@ -19,6 +19,35 @@ const ideMock = vi.hoisted(() => ({
 
 const putMock = vi.hoisted(() => vi.fn());
 
+const assignmentSamplesMock = vi.hoisted(() => ({
+  cpp: {
+    workspaceConfig: {
+      id: "assignment-cpp",
+      label: "C++ Assignment",
+      version: 1,
+      files: {
+        "/user/main.cpp": {
+          encoding: "text",
+          content: "// C++ assignment starter",
+        },
+      },
+    },
+    plan: {
+      cases: [
+        {
+          kind: "stdio",
+          name: "echo stdin",
+          stdin: "hello world",
+          expectedStdout: "hello world",
+          weight: 2,
+          hidden: false,
+        },
+      ],
+      build: { sources: ["/user/main.cpp"] },
+    },
+  },
+}));
+
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
   setPointerCapture: { value: vi.fn() },
@@ -38,9 +67,6 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@game-guild/emception-ui", async () => {
   const React = await import("react");
-  const actual = await vi.importActual<
-    typeof import("@game-guild/emception-ui")
-  >("@game-guild/emception-ui");
 
   const Ide = React.forwardRef<IdeHandle>((_props, ref) => {
     React.useImperativeHandle(ref, () => ({
@@ -59,7 +85,7 @@ vi.mock("@game-guild/emception-ui", async () => {
   Ide.displayName = "Ide";
 
   return {
-    ...actual,
+    ASSIGNMENT_SAMPLES: assignmentSamplesMock,
     Ide,
   };
 });

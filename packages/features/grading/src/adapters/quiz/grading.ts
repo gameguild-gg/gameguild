@@ -82,6 +82,8 @@ export function gradeDeterministicQuizSubmission(args: GradeSubmissionArgs): Gra
     };
   }
 
+  // Re-normalize inside the grading function so callers cannot bypass the
+  // whitelist by constructing `StructuredAnswerPayload` by hand.
   const normalizedPayload = buildQuizStructuredAnswerPayload(payload, grading);
   const itemResults = Object.entries(grading.items).map(([itemId, item]) => {
     if (item.gradingKind !== 'deterministic') {
@@ -93,6 +95,8 @@ export function gradeDeterministicQuizSubmission(args: GradeSubmissionArgs): Gra
       } satisfies GradeItemResult;
     }
 
+    // The answer key is server-owned and addressed by graded item id. Learner
+    // answers are addressed by content block id.
     const result = gradeQuizAnswer(answerKey.items[itemId], normalizedPayload.answers[item.contentBlockId] ?? {}, item.points);
     return {
       ...result,
