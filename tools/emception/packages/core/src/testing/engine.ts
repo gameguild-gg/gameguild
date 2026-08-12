@@ -12,9 +12,9 @@
 // vendoring) land. Stubs throw a descriptive "not yet implemented" error
 // rather than silently passing so partial wiring can't ship false greens.
 
-import type { EmceptionAPI, TestCase, TestCaseResult, TestPlan, TestReport } from '../types';
-import { compileMatcher, runMatcher, type ClangAstNode, type MatchResult } from './clang-query/matcher';
-import { parseDoctestConsole } from './doctest/parse';
+import type { EmceptionAPI, TestCase, TestCaseResult, TestPlan, TestReport } from '../types.js';
+import { compileMatcher, runMatcher, type ClangAstNode, type MatchResult } from './clang-query/matcher.js';
+import { parseDoctestConsole } from './doctest/parse.js';
 
 /**
  * Signature every per-kind handler implements. Receives the live API plus

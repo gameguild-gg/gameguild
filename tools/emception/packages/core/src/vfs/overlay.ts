@@ -2,7 +2,7 @@
  * Overlay filesystem: routes reads/writes to mounted backends with write-through.
  */
 
-import { FSStats, IFileSystem } from './interface';
+import { FSStats, IFileSystem } from './interface.js';
 
 export class OverlayFS implements IFileSystem {
   private mounts = new Map<string, IFileSystem>();

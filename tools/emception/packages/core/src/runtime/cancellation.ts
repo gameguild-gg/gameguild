@@ -20,7 +20,7 @@
  * engine all dispatch on the same outcome shape; no DOM, no Node APIs.
  */
 
-import { TimeoutError } from '../errors';
+import { TimeoutError } from '../errors.js';
 
 /** Discriminated outcome of `withCancellation`. */
 export type CancellationOutcome<T> =
