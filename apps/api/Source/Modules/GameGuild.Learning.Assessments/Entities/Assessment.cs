@@ -75,6 +75,14 @@ public class Assessment : EntityBase
         UpdatedAt = SystemClock.UtcNow;
     }
 
+    public void SetGrading(int maxScore, int passingScore)
+    {
+        ValidateScoreRange(maxScore, passingScore);
+        MaxScore = maxScore;
+        PassingScore = passingScore;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
     public void SetDefinition(JsonElement definition, int definitionSchemaVersion)
     {
         if (definition.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)

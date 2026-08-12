@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace GameGuild.Learning.Assessments;
 
 /// <summary>
@@ -38,11 +36,6 @@ public interface IAssessmentService
     /// Updates an existing assessment
     /// </summary>
     Task<Result<Assessment>> UpdateAssessmentAsync(Guid id, UpdateAssessmentRequest request);
-
-    /// <summary>
-    /// Replaces the structured authoring definition for an assessment.
-    /// </summary>
-    Task<Result<Assessment>> UpdateAssessmentDefinitionAsync(Guid id, UpdateAssessmentDefinitionRequest request);
 
     /// <summary>
     /// Deletes an assessment
@@ -103,28 +96,6 @@ public interface IAssessmentService
     /// Gets active cue links for one delivery content item.
     /// </summary>
     Task<IEnumerable<InteractiveVideoAssessmentCue>> GetInteractiveVideoCuesForContentAsync(Guid assessmentId, Guid contentId);
-
-    // ===== CODING DEFINITION (v2) =====
-
-    /// <summary>
-    /// Returns the v2 coding definition for an assessment, or null when the payload is absent, v1, or not kind "coding".
-    /// </summary>
-    Task<CodingAssignmentDefinition?> GetCodingDefinitionAsync(Guid assessmentId, CancellationToken ct = default);
-
-    /// <summary>
-    /// Returns the v2 coding definition with hidden test cases stripped. Null when payload is absent, v1, or not kind "coding".
-    /// </summary>
-    Task<CodingAssignmentDefinition?> GetPublicCodingDefinitionAsync(Guid assessmentId, CancellationToken ct = default);
-
-    /// <summary>
-    /// Returns the unredacted v2 coding definition (all test cases including hidden). Null when payload is absent, v1, or not kind "coding".
-    /// </summary>
-    Task<CodingAssignmentDefinition?> GetFullCodingDefinitionAsync(Guid assessmentId, CancellationToken ct = default);
-
-    /// <summary>
-    /// Validates and persists a v2 coding definition into Assessment.DefinitionPayload (jsonb).
-    /// </summary>
-    Task<Result> UpdateCodingDefinitionAsync(Guid assessmentId, CodingAssignmentDefinition def, CancellationToken ct = default);
 
     // ===== SUBMISSION MANAGEMENT =====
 
@@ -226,14 +197,6 @@ public sealed record UpdateAssessmentRequest(
 /// <summary>
 /// Request to create a weighted assessment group.
 /// </summary>
-/// <summary>
-/// Request to replace an assessment authoring definition.
-/// </summary>
-public sealed record UpdateAssessmentDefinitionRequest(
-    int DefinitionSchemaVersion,
-    JsonElement Definition
-);
-
 public sealed record CreateAssessmentGroupRequest(
     Guid CourseId,
     string Name,

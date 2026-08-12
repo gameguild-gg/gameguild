@@ -1,15 +1,19 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import { getAssessment } from "@/lib/learning";
-import { getCodingDefinitionFull } from "@/lib/emception/get-coding-definition-full";
+import { getCodingAssignmentFull } from "@/lib/coding-assignment/client";
 import { CodingDefinitionEditor } from "./coding-definition-editor";
 
 /**
  * Instructor-only coding-definition authoring route.
  *
- * The fetcher uses the `/v1.0/assessments/{id}/coding-definition/full`
- * endpoint which is gated by `CanReviewCourseAsync` server-side — students
- * and unenrolled users receive 403, which the fetcher surfaces as `null`.
+ * Translates the Next.js route param `assessmentId` into the linked
+ * ProgramContent's `(programId, contentId)` server-side, then calls the
+ * Task 4 wrapper `getCodingAssignmentFull(programId, contentId)` — the v1
+ * endpoint lives on `ProgramContentController`, not `AssessmentsController`.
+ *
+ * The lookup goes through the existing `getAssessment` fetcher (which returns
+ * `courseId` + `contentId`); `courseId` IS `programId` in this stack.
  */
 export default async function CodingDefinitionPage({
   params,
@@ -22,21 +26,26 @@ export default async function CodingDefinitionPage({
 }): Promise<React.JSX.Element> {
   const { course: courseId, assessmentId } = await params;
 
-  const [assessment, initialDefinition] = await Promise.all([
-    getAssessment(assessmentId),
-    getCodingDefinitionFull(assessmentId),
-  ]);
-
+  const assessment = await getAssessment(assessmentId);
   if (!assessment) {
     notFound();
   }
+  // The linked ProgramContent is the v1 storage home. The Task 3 PUT is
+  // upsert (Metis #26), so the editor handles "no content yet" client-side
+  // by seeding from the assignment's sample workspace.
+  const contentId = assessment.contentId;
+  const initialContent = contentId
+    ? await getCodingAssignmentFull(courseId, contentId)
+    : null;
 
   return (
     <CodingDefinitionEditor
       courseId={courseId}
       assessmentId={assessmentId}
+      programId={courseId}
+      contentId={contentId}
       assessmentTitle={assessment.title}
-      initialDefinition={initialDefinition}
+      initialContent={initialContent}
     />
   );
 }

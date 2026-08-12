@@ -1,23 +1,18 @@
 'use client';
 
 import { useRouter } from '@/i18n/navigation';
-import { filesToCodePayload } from '@/lib/emception/code-payload';
+import { filesToCodePayload } from '@/lib/coding-assignment/code-payload';
+import type { CodingAssignmentContent } from '@/lib/coding-assignment/types';
 import { computeScore } from '@/lib/emception/scoring';
-import type { CodingDefinition } from '@/lib/learning/queries/assessments';
 import {
   submitAssessment,
   type LearnerMutationResult,
 } from '@/lib/learner/activity-actions';
-import type {
-  GradingPlan,
-  IdeHandle,
-  TestReport,
-  WorkspaceConfig,
-} from '@game-guild/emception-ui';
+import type { GradingCase, GradingPlan, IdeHandle, TestReport } from '@game-guild/emception-ui';
 import type { TestPlan } from 'emception';
 import { Button } from '@game-guild/ui/components/button';
 import Script from 'next/script';
-import { lazy, Suspense, useRef, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type FormEvent } from 'react';
 
 const Ide = lazy(
   () => import('@game-guild/emception-ui').then((m) => ({ default: m.Ide })),
@@ -39,28 +34,92 @@ export interface CodingActivityClientProps {
   enrollmentId: string;
   courseId: string;
   slug: string;
-  workspaceConfig: CodingDefinition['workspaceConfig'];
-  testPlan: CodingDefinition['testPlan'];
+  /** v1 CodingAssignmentContent (Public-only — server strips Private). */
+  assignment: CodingAssignmentContent;
   manifestUrl?: string;
-  maxScore: number;
-  passingScore: number;
+}
+
+/** Build the IDE-seedable file list from v1 Data.Files, defensively filtering Public. */
+function publicSeedFiles(assignment: CodingAssignmentContent): Array<{
+  path: string;
+  content: string;
+  modifiable: boolean;
+}> {
+  return Object.entries(assignment.Data.Files)
+    .filter(([, meta]) => meta.Visibility === 'Public')
+    .map(([path, meta]) => ({
+      path,
+      content: meta.Content,
+      modifiable: meta.Modifiable,
+    }));
+}
+
+/**
+ * Map v1 Tests.Public (StandardTest | FunctionalTest) → emception GradingCase[].
+ * FunctionalTest requires harness generation (Task 6/7) which is not yet wired
+ * into the student runtime — skipped from the public-test banner for v1.
+ * ponytail: include FunctionalTest in the banner once Task 7's buildTestPlan
+ * is reachable from web (probably via Task 11 grader shared util).
+ */
+function publicTestsToGradingPlan(assignment: CodingAssignmentContent): GradingPlan {
+  const cases: GradingCase[] = [];
+  for (const test of assignment.Tests.Public) {
+    if (test.kind !== 'standard') continue;
+    cases.push({
+      kind: 'stdio',
+      name: test.Name ?? undefined,
+      weight: test.Weight ?? 1,
+      stdin: test.Stdin ?? undefined,
+      expectedStdout: test.Stdout,
+      expectedStderr: test.Stderr ?? undefined,
+      expectedExit: test.ExitCode ?? undefined,
+    });
+  }
+  return { cases };
 }
 
 export function CodingActivityClient({
   assessmentId,
   enrollmentId,
   slug,
-  workspaceConfig,
-  testPlan,
+  assignment,
   manifestUrl,
-  maxScore,
-  passingScore,
 }: CodingActivityClientProps) {
   const ref = useRef<IdeHandle>(null);
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [report, setReport] = useState<TestReport | null>(null);
   const [result, setResult] = useState<LearnerMutationResult | null>(null);
+
+  const seedFiles = useRef(publicSeedFiles(assignment));
+  const gradingPlan = useRef<GradingPlan>(publicTestsToGradingPlan(assignment));
+  const allowCreateFiles = assignment.Environment.AllowStudentCreateFiles !== false;
+  const maxScore = assignment.Grading.MaxScore;
+  const passingScore = assignment.Grading.PassingScore;
+
+  // Seed IDE with Public files + apply readOnly meta for non-modifiable files.
+  // setFiles/setFileMeta mutate reactive state first; VFS sync happens later
+  // when doBootstrap runs syncFilesToVfs(filesRef.current). Safe to call pre-boot.
+  useEffect(() => {
+    const handle = ref.current;
+    if (!handle) return;
+    const files = seedFiles.current;
+    if (files.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      await handle.setFiles(files.map(({ path, content }) => ({ path, content })));
+      if (cancelled) return;
+      for (const { path, modifiable } of files) {
+        if (!modifiable) {
+          // per-file Monaco readOnly via Task 5 setFileMeta
+          await handle.setFileMeta(path, { modifiable: false });
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (result?.success) {
     return (
@@ -79,12 +138,14 @@ export function CodingActivityClient({
     if (submitting) return;
     setSubmitting(true);
     try {
-      const files = (await ref.current?.getFiles()) ?? [];
+      // Content-diff semantics: only edits + student-created files; deletions absent.
+      const modified = (await ref.current?.getModifiedFiles()) ?? [];
       const fd = new FormData();
       fd.set('assessmentId', assessmentId);
       fd.set('enrollmentId', enrollmentId);
       fd.set('modality', 'Code');
-      fd.set('response', filesToCodePayload(files));
+      // Wire shape (Metis #29): Record<path, {content, encoding: 'text'}>
+      fd.set('response', filesToCodePayload(modified));
       const outcome = await submitAssessment({ success: false }, fd);
       setResult(outcome);
       if (outcome.success) {
@@ -95,26 +156,34 @@ export function CodingActivityClient({
     }
   }
 
+  // ponytail: <Ide> has no "hide new file button" prop. Gate via a wrapper
+  // data-attribute + CSS rule. Upgrade path: Task 5 IdeHandle could expose
+  // an allowCreateFiles prop, or FileExplorer could read it via context.
+  const wrapperDataAttrs = {
+    'data-allow-create-files': allowCreateFiles ? 'true' : 'false',
+  };
+
   return (
     <>
       <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Suspense fallback={<IdeSkeleton />}>
-          <Ide
-            ref={ref}
-            workspaceConfig={workspaceConfig as unknown as WorkspaceConfig | undefined}
-            testPlan={testPlan as unknown as GradingPlan | undefined}
-            testMode="public"
-            manifestUrl={manifestUrl}
-            maxScore={maxScore}
-            passingScore={passingScore}
-            onTestReport={setReport}
-          />
-        </Suspense>
+        <div {...wrapperDataAttrs}>
+          <Suspense fallback={<IdeSkeleton />}>
+            <Ide
+              ref={ref}
+              testPlan={gradingPlan.current}
+              testMode="public"
+              manifestUrl={manifestUrl}
+              maxScore={maxScore}
+              passingScore={passingScore}
+              onTestReport={setReport}
+            />
+          </Suspense>
+        </div>
       {report ? (
         <PublicTestEstimateBanner
           report={report}
-          plan={testPlan as unknown as GradingPlan | undefined}
+          plan={gradingPlan.current}
           maxScore={maxScore}
           passingScore={passingScore}
         />
@@ -130,6 +199,10 @@ export function CodingActivityClient({
         </Button>
       </div>
     </form>
+    {/* Hide the IDE's internal "New File" buttons when students may not create files. */}
+    {!allowCreateFiles ? (
+      <style>{`[data-allow-create-files="false"] button[title^="New "] { display: none !important; }`}</style>
+    ) : null}
   </>
 );
 }
@@ -141,14 +214,14 @@ function PublicTestEstimateBanner({
   passingScore,
 }: {
   report: TestReport;
-  plan: GradingPlan | undefined;
+  plan: GradingPlan;
   maxScore: number;
   passingScore: number;
 }) {
   let scoreText: string | null = null;
   let unavailable = false;
   try {
-    if (plan) {
+    if (plan.cases.length > 0) {
       const { score } = computeScore(
         report,
         plan as unknown as TestPlan,

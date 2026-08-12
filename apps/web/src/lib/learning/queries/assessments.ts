@@ -7,6 +7,7 @@ import {
   type LearningAssessmentsAssessmentGroup,
   type LearningAssessmentsAssessmentPresentationMode,
   type LearningAssessmentsAssessmentScoreBucket,
+  type LearningAssessmentsAssessmentSubmission,
   type LearningAssessmentsAssessmentType,
   type LearningAssessmentsCourseAssessmentAnalytics,
   type LearningCertificatesCertificate,
@@ -311,6 +312,29 @@ export const getAssessmentDefinition = cache(async (assessmentId: string): Promi
     return null;
   }
 });
+
+/**
+ * Fetch all submissions for an assessment (instructor view).
+ *
+ * Backend (`AssessmentService.GetAssessmentSubmissionsAsync`) returns the
+ * list ordered by `StartedAt` descending. Returned raw (typed via the
+ * generated DTO) — caller renders.
+ */
+export const getAssessmentSubmissions = cache(
+  async (assessmentId: string): Promise<LearningAssessmentsAssessmentSubmission[]> => {
+    try {
+      const result = await createAssessmentsModule().getAssessmentsByAssessmentIdSubmissions(assessmentId);
+      if (!result.ok) {
+        console.error('Failed to fetch assessment submissions:', result.error);
+        return [];
+      }
+      return result.data ?? [];
+    } catch (err) {
+      console.error('Error fetching assessment submissions:', err);
+      return [];
+    }
+  },
+);
 
 export interface CertificateTemplate {
   id: string;

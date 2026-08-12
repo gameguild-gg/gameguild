@@ -86,7 +86,7 @@ import type { IdeHandle } from './Ide';
 // ── Tests ──────────────────────────────────────────────────────────────────
 
 describe('Ide ref / imperative handle', () => {
-  it('ref.current exposes all 5 handle methods', async () => {
+  it('ref.current exposes all 10 handle methods (5 base + 5 extension)', async () => {
     const ref = createRef<IdeHandle>();
 
     await act(async () => {
@@ -100,6 +100,10 @@ describe('Ide ref / imperative handle', () => {
     expect(typeof ref.current!.getFiles).toBe('function');
     expect(typeof ref.current!.setFiles).toBe('function');
     expect(typeof ref.current!.reset).toBe('function');
+    expect(typeof ref.current!.addFile).toBe('function');
+    expect(typeof ref.current!.removeFile).toBe('function');
+    expect(typeof ref.current!.setFileMeta).toBe('function');
+    expect(typeof ref.current!.getModifiedFiles).toBe('function');
   });
 
   it('setFiles + getFiles round-trips file content', async () => {
