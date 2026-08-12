@@ -51,6 +51,7 @@ public class ProjectsController : BaseApiController {
     [FromQuery] bool? featured = null,
     [FromQuery] bool? popular = null,
     [FromQuery] bool? recent = null,
+    [FromQuery] bool currentTenantOnly = false,
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50,
     [FromQuery] string? sortBy = "CreatedAt",
@@ -66,6 +67,7 @@ public class ProjectsController : BaseApiController {
       Featured = featured,
       Popular = popular,
       Recent = recent,
+      CurrentTenantOnly = currentTenantOnly,
       Skip = skip,
       Take = Math.Min(take, 100), // Limit max items
       SortBy = sortBy,
