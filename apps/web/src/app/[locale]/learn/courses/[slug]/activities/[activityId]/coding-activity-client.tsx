@@ -16,6 +16,7 @@ import type {
 } from '@game-guild/emception-ui';
 import type { TestPlan } from 'emception';
 import { Button } from '@game-guild/ui/components/button';
+import Script from 'next/script';
 import { lazy, Suspense, useRef, useState, type FormEvent } from 'react';
 
 const Ide = lazy(
@@ -58,8 +59,8 @@ export function CodingActivityClient({
   const ref = useRef<IdeHandle>(null);
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<LearnerMutationResult | null>(null);
   const [report, setReport] = useState<TestReport | null>(null);
+  const [result, setResult] = useState<LearnerMutationResult | null>(null);
 
   if (result?.success) {
     return (
@@ -95,19 +96,21 @@ export function CodingActivityClient({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Suspense fallback={<IdeSkeleton />}>
-        <Ide
-          ref={ref}
-          workspaceConfig={workspaceConfig as unknown as WorkspaceConfig | undefined}
-          testPlan={testPlan as unknown as GradingPlan | undefined}
-          testMode="public"
-          manifestUrl={manifestUrl}
-          maxScore={maxScore}
-          passingScore={passingScore}
-          onTestReport={setReport}
-        />
-      </Suspense>
+    <>
+      <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Suspense fallback={<IdeSkeleton />}>
+          <Ide
+            ref={ref}
+            workspaceConfig={workspaceConfig as unknown as WorkspaceConfig | undefined}
+            testPlan={testPlan as unknown as GradingPlan | undefined}
+            testMode="public"
+            manifestUrl={manifestUrl}
+            maxScore={maxScore}
+            passingScore={passingScore}
+            onTestReport={setReport}
+          />
+        </Suspense>
       {report ? (
         <PublicTestEstimateBanner
           report={report}
@@ -127,7 +130,8 @@ export function CodingActivityClient({
         </Button>
       </div>
     </form>
-  );
+  </>
+);
 }
 
 function PublicTestEstimateBanner({

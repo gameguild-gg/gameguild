@@ -3,7 +3,6 @@ import { LearningAuthRedirect } from "@/components/learning/learning-auth-redire
 import { LearningShell } from "@/components/learning/learning-shell";
 import { getDashboardNotificationSummary } from "@/lib/dashboard-notifications";
 import type { Metadata } from "next";
-import Script from "next/script";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
@@ -21,12 +20,7 @@ export default async function LearningLayout({
   const session = await auth();
 
   if (!session?.user) {
-    return (
-      <>
-        <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
-        <LearningAuthRedirect />
-      </>
-    );
+    return <LearningAuthRedirect />;
   }
 
   const webOrigin =
@@ -40,20 +34,17 @@ export default async function LearningLayout({
   const notifications = await getDashboardNotificationSummary(session.user.id);
 
   return (
-    <>
-      <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
-      <LearningShell
-        notifications={notifications}
-        user={{
-          id: session.user.id,
-          name,
-          email: session.user.email || "",
-          image: session.user.image,
-        }}
-        webOrigin={webOrigin}
-      >
-        {children}
-      </LearningShell>
-    </>
+    <LearningShell
+      notifications={notifications}
+      user={{
+        id: session.user.id,
+        name,
+        email: session.user.email || "",
+        image: session.user.image,
+      }}
+      webOrigin={webOrigin}
+    >
+      {children}
+    </LearningShell>
   );
 }

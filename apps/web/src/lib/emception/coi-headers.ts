@@ -1,7 +1,8 @@
 // COI (Cross-Origin Isolation) header rules for the learn routes, shared between
 // next.config.ts headers() and the vitest unit test. emception's WASM workers need
 // SharedArrayBuffer, which requires COEP: credentialless + COOP: same-origin on
-// every learn page. `credentialless` (not `require-corp`) keeps CDN imports working.
+// activity pages (not lesson pages, which embed YouTube video iframes). `credentialless`
+// (not `require-corp`) keeps CDN imports working.
 export interface Header {
   key: string;
   value: string;
@@ -18,8 +19,22 @@ export const COI_LEARN_HEADERS: Header[] = [
 ];
 
 export const COI_LEARN_RULES: HeaderRule[] = [
-  { source: '/:locale/learn/:path*', headers: COI_LEARN_HEADERS },
-  { source: '/learn/:path*', headers: COI_LEARN_HEADERS },
+  {
+    source: '/:locale/learn/courses/:slug/activities/:path*',
+    headers: COI_LEARN_HEADERS,
+  },
+  {
+    source: '/learn/courses/:slug/activities/:path*',
+    headers: COI_LEARN_HEADERS,
+  },
+  {
+    source: '/:locale/learn/activities/:path*',
+    headers: COI_LEARN_HEADERS,
+  },
+  {
+    source: '/learn/activities/:path*',
+    headers: COI_LEARN_HEADERS,
+  },
 ];
 
 // Matches a pathname against a Next.js header source pattern. Supports the subset
