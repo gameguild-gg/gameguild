@@ -1,5 +1,6 @@
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Projects.UnitTests.Infrastructure;
+using System.Text.Json;
 
 namespace GameGuild.Projects.UnitTests.Handlers;
 
@@ -98,6 +99,25 @@ public class ProjectHandlersIntegrationTests : IDisposable
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().ContainSingle().Which.Id.Should().Be(actorProject.Id);
+    }
+
+    [Fact]
+    public void ProjectSerialization_ShouldNotExposeCreatorAuthenticationData()
+    {
+        var project = _testDataBuilder.CreateProject(createdById: _testUserId);
+        project.CreatedBy = new User
+        {
+            Id = _testUserId,
+            Email = "private@example.com",
+            Name = "Private creator",
+            PasswordHash = "never-serialize-this-value"
+        };
+
+        var json = JsonSerializer.Serialize(project);
+
+        json.Should().NotContain("\"CreatedBy\":");
+        json.Should().NotContain("PasswordHash");
+        json.Should().NotContain("never-serialize-this-value");
     }
 
     [Fact]
