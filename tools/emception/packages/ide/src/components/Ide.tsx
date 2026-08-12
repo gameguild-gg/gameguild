@@ -4,7 +4,7 @@ import type { OnMount } from '@monaco-editor/react';
 import { Terminal } from '@xterm/xterm';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { Group, Panel, Separator } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
 import type { DockGroup, IdeProps, OpenTab, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
@@ -1802,7 +1802,7 @@ export default function Ide({
     editorRef.current?.focus();
   };
 
-  /** Shared resize-handle style for all PanelResizeHandle instances */
+  /** Shared resize-handle style for all Separator instances */
   const resizerStyle: React.CSSProperties = {
     width: 4,
     background: '#313244',
@@ -1954,11 +1954,11 @@ export default function Ide({
       </header>
 
       {/* ── Main body: sidebar | editor + terminal ── */}
-      <PanelGroup direction="horizontal" style={{ flex: 1, overflow: 'hidden' }}>
+      <Group orientation="horizontal" style={{ flex: 1, overflow: 'hidden' }}>
         {enableFileExplorer && (
           <>
             {/* Sidebar */}
-            <Panel defaultSize={18} minSize={10} maxSize={40} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <Panel defaultSize="18" minSize="10" maxSize="40" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <FileExplorer
                 files={files}
                 selectedPath={selectedPath}
@@ -1979,17 +1979,17 @@ export default function Ide({
                 onDelete={deleteSelectedFile}
               />
             </Panel>
-            <PanelResizeHandle style={resizerStyle} />
+            <Separator style={resizerStyle} />
           </>
         )}
 
         {/* Editor + terminal column */}
         <Panel style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <PanelGroup direction="vertical" style={{ flex: 1, overflow: 'hidden' }}>
+          <Group orientation="vertical" style={{ flex: 1, overflow: 'hidden' }}>
             {/* Editor row: main (+ optional right panel) */}
             <Panel style={{ display: 'flex', overflow: 'hidden' }}>
-              <PanelGroup direction="horizontal" style={{ flex: 1, overflow: 'hidden' }}>
-                <Panel minSize={20} style={{ overflow: 'hidden' }}>
+              <Group orientation="horizontal" style={{ flex: 1, overflow: 'hidden' }}>
+                <Panel minSize="20" style={{ overflow: 'hidden' }}>
                   <DockGroupPanel
                     key={activePresetId}
                     group="main"
@@ -2008,8 +2008,8 @@ export default function Ide({
                 </Panel>
                 {hasRightGroup && (
                   <>
-                    <PanelResizeHandle style={resizerStyle} />
-                    <Panel defaultSize={35} minSize={15} style={{ overflow: 'hidden' }}>
+                    <Separator style={resizerStyle} />
+                    <Panel defaultSize="35" minSize="15" style={{ overflow: 'hidden' }}>
                       <DockGroupPanel
                         key={`${activePresetId}-right`}
                         group="right"
@@ -2028,13 +2028,13 @@ export default function Ide({
                     </Panel>
                   </>
                 )}
-              </PanelGroup>
+              </Group>
             </Panel>
 
             {hasBottomGroup && (
               <>
-                <PanelResizeHandle style={resizerVStyle} />
-                <Panel defaultSize={25} minSize={10} style={{ overflow: 'hidden' }}>
+                <Separator style={resizerVStyle} />
+                <Panel defaultSize="25" minSize="10" style={{ overflow: 'hidden' }}>
                   <DockGroupPanel
                     key={`${activePresetId}-bottom`}
                     group="bottom"
@@ -2057,8 +2057,8 @@ export default function Ide({
             {enableTerminal && (
               <>
                 {/* Terminal */}
-                <PanelResizeHandle style={resizerVStyle} />
-                <Panel defaultSize={28} minSize={8} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <Separator style={resizerVStyle} />
+                <Panel defaultSize="28" minSize="8" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                   <TerminalPanel
                     terminalTabs={terminalTabs}
                     activeTerminalId={activeTerminalId}
@@ -2070,9 +2070,9 @@ export default function Ide({
                 </Panel>
               </>
             )}
-          </PanelGroup>
+          </Group>
         </Panel>
-      </PanelGroup>
+      </Group>
 
       {/* ── Status bar ── */}
       <div
