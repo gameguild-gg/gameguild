@@ -11934,7 +11934,7 @@ export interface PutTestingRequestsInput {
   id: string;
   body?: Types.TestingLabUpdateTestingInput;
 }
-export type PutTestingRequestsOutput = Types.TestingLabTestingInput;
+export type PutTestingRequestsOutput = Types.TestingLabTestingRequestDetailProjection;
 export const putTestingRequestsEndpoint = {
   operationId: 'putTestingRequests' as const,
   method: 'PUT' as const,

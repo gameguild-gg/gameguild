@@ -239,6 +239,66 @@ public sealed class TestingRequestsControllerAuthorizationTests
     }
 
     [Fact]
+    public async Task UpdateTestingRequest_Should_Return_Stable_Detail_Projection()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var requestId = Guid.NewGuid();
+        var existingRequest = new TestingRequest
+        {
+            Id = requestId,
+            Title = "Original request",
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(1)
+        };
+        var projection = new TestingRequestDetailProjection(
+            requestId,
+            "Updated request",
+            "Stable update response without EF navigation graphs.",
+            null,
+            null,
+            null,
+            3,
+            0,
+            existingRequest.StartDate,
+            existingRequest.EndDate,
+            TestingRequestStatus.Open,
+            null,
+            null,
+            false);
+        var requestService = new Mock<ITestingRequestOperations>();
+        requestService
+            .Setup(service => service.GetTestingRequestByIdAsync(requestId))
+            .ReturnsAsync(existingRequest);
+        requestService
+            .Setup(service => service.UpdateTestingRequestAsync(existingRequest))
+            .ReturnsAsync(existingRequest);
+        var mediator = new Mock<IMediator>();
+        mediator
+            .Setup(candidate => candidate.Send(
+                It.Is<GetTestingRequestDetailQuery>(query => query.RequestId == requestId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(projection));
+        var actorAccessor = new ActorContextAccessor();
+        actorAccessor.SetActorContext(ActorContextBuilder.ForUser(userId).WithTenantId(tenantId).Build());
+        var controller = new TestingRequestsController(
+            requestService.Object,
+            actorAccessor,
+            NullLogger<TestingRequestsController>.Instance,
+            mediator.Object);
+
+        var result = await controller.UpdateTestingRequest(requestId, new UpdateTestingRequestDto
+        {
+            Title = "Updated request",
+            MaxTesters = 3,
+            Status = TestingRequestStatus.Open
+        });
+
+        result.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeSameAs(projection);
+    }
+
+    [Fact]
     public async Task SubmitSimpleTestingRequest_Should_Return_Forbidden_When_Project_Authorization_Is_Denied()
     {
         var userId = Guid.NewGuid();
