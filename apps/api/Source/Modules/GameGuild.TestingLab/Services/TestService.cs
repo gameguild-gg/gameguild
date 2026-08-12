@@ -19,7 +19,8 @@ public class TestService(
 {
     // Testing Request Operations
     public Task<IEnumerable<TestingRequest>> GetAllTestingRequestsAsync() => requestOps.GetAllTestingRequestsAsync();
-    public Task<IEnumerable<TestingRequest>> GetTestingRequestsAsync(int skip = 0, int take = 50) => requestOps.GetTestingRequestsAsync(skip, take);
+    public Task<IEnumerable<TestingRequest>> GetTestingRequestsAsync(int skip = 0, int take = 50, bool includeArchived = false)
+        => requestOps.GetTestingRequestsAsync(skip, take, includeArchived);
     public Task<TestingRequest?> GetTestingRequestByIdAsync(Guid id) => requestOps.GetTestingRequestByIdAsync(id);
     public Task<TestingRequest?> GetTestingRequestByIdWithDetailsAsync(Guid id) => requestOps.GetTestingRequestByIdWithDetailsAsync(id);
     public Task<TestingRequest> CreateTestingRequestAsync(TestingRequest testingRequest) => requestOps.CreateTestingRequestAsync(testingRequest);

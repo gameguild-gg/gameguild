@@ -45,7 +45,7 @@ export class TestinglabTestingrequestsModule {
 
   /**
    */
-  async getTestingRequests(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.TestingLabTestingInput>, ApiError>> {
+  async getTestingRequests(query?: { skip?: number; take?: number; includeArchived?: boolean }): Promise<Result<Array<Types.TestingLabTestingInput>, ApiError>> {
     const url = '/v1/testing/requests';
 
     const result = await this.client.request({

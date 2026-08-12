@@ -31,11 +31,17 @@ public class TestingRequestOperationsService(
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<TestingRequest>> GetTestingRequestsAsync(int skip = 0, int take = 50)
+    public async Task<IEnumerable<TestingRequest>> GetTestingRequestsAsync(
+        int skip = 0,
+        int take = 50,
+        bool includeArchived = false)
     {
         var tenantId = RequireTenantActor().TenantId!.Value;
         return await context.Set<TestingRequest>()
-            .Where(tr => tr.TenantId == tenantId && tr.DeletedAt == null)
+            .IgnoreQueryFilters()
+            .Where(tr =>
+                tr.TenantId == tenantId &&
+                (includeArchived || tr.DeletedAt == null))
             .Include(tr => tr.ProjectVersion)
             .ThenInclude(pv => pv!.Project)
             .Include(tr => tr.CreatedBy)

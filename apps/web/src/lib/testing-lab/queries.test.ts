@@ -147,7 +147,7 @@ describe('testing lab queries', () => {
       auth: { getAccessToken: expect.any(Function) },
       tenant: { getTenantId: expect.any(Function) },
     });
-    expect(mocks.requests.getTestingRequests).toHaveBeenCalledWith({ skip: 0, take: 200 });
+    expect(mocks.requests.getTestingRequests).toHaveBeenCalledWith({ skip: 0, take: 200, includeArchived: true });
     expect(mocks.sessions.getTestingSessions).toHaveBeenCalledWith({ skip: 0, take: 200 });
     expect(mocks.sessions.getTestingPublicSessions).toHaveBeenCalledWith({ take: 200 });
     expect(mocks.locations.getTestingLocations).toHaveBeenCalledWith({ skip: 0, take: 200 });

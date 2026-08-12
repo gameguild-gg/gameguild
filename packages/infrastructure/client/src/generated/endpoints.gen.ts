@@ -11844,6 +11844,7 @@ export interface GetTestingRequestsInput {
   query?: {
     skip?: number;
     take?: number;
+    includeArchived?: boolean;
   };
 }
 export type GetTestingRequestsOutput = Array<Types.TestingLabTestingInput>;

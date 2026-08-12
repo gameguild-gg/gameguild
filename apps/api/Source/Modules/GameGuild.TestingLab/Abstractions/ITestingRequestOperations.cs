@@ -8,7 +8,7 @@ public interface ITestingRequestOperations
 {
     // CRUD
     Task<IEnumerable<TestingRequest>> GetAllTestingRequestsAsync();
-    Task<IEnumerable<TestingRequest>> GetTestingRequestsAsync(int skip = 0, int take = 50);
+    Task<IEnumerable<TestingRequest>> GetTestingRequestsAsync(int skip = 0, int take = 50, bool includeArchived = false);
     Task<TestingRequest?> GetTestingRequestByIdAsync(Guid id);
     Task<TestingRequest?> GetTestingRequestByIdWithDetailsAsync(Guid id);
     Task<TestingRequest> CreateTestingRequestAsync(TestingRequest testingRequest);
