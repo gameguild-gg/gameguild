@@ -45,7 +45,7 @@ export class TestinglabTestingparticipantsModule {
 
   /**
    */
-  async postTestingRequestsParticipants(requestId: string, userId: string): Promise<Result<Types.TestingLabTestingParticipant, ApiError>> {
+  async postTestingRequestsParticipants(requestId: string, userId: string): Promise<Result<Types.TestingLabTestingParticipantMutationProjection, ApiError>> {
     const url = `/v1/testing/requests/${requestId}/participants/${userId}`;
 
     const result = await this.client.request({
@@ -56,7 +56,7 @@ export class TestinglabTestingparticipantsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.TestingLabTestingParticipantSchema, result.data, 'response');
+      const validatedData = safeParse(Types.TestingLabTestingParticipantMutationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

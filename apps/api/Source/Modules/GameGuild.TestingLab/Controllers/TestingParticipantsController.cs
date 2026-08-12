@@ -6,6 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.TestingLab;
 
+public sealed record TestingParticipantMutationProjection(
+    Guid Id,
+    Guid TestingRequestId,
+    Guid UserId,
+    ParticipationStatus Status,
+    DateTime StartedAt);
+
 /// <summary>
 /// Controller for participant management, session registration, and waitlist operations.
 /// </summary>
@@ -21,10 +28,15 @@ public class TestingParticipantsController(
     // POST: testing/requests/{requestId}/participants/{userId}
     [HttpPost("requests/{requestId}/participants/{userId}")]
     [RequireResourcePermission<PermissionType, TestingParticipant>(PermissionType.Create)]
-    public async Task<ActionResult<TestingParticipant>> AddParticipant(Guid requestId, Guid userId)
+    public async Task<ActionResult<TestingParticipantMutationProjection>> AddParticipant(Guid requestId, Guid userId)
     {
         var participant = await participantService.AddParticipantAsync(requestId, userId).ConfigureAwait(false);
-        return Ok(participant);
+        return Ok(new TestingParticipantMutationProjection(
+            participant.Id,
+            participant.TestingRequestId,
+            participant.UserId,
+            participant.Status,
+            participant.StartedAt));
     }
 
     // DELETE: testing/requests/{requestId}/participants/{userId}
