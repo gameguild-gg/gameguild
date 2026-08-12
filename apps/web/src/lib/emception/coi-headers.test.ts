@@ -8,16 +8,26 @@ describe('coiHeadersForPath', () => {
     );
   });
 
-  it('applies to learn paths without a locale prefix', () => {
-    expect(coiHeadersForPath('/learn/courses/x')).toEqual(COI_LEARN_HEADERS);
+  it('applies to learn activity paths without a locale prefix', () => {
+    expect(coiHeadersForPath('/learn/courses/x/activities/y')).toEqual(
+      COI_LEARN_HEADERS,
+    );
   });
 
-  it('applies to the bare locale-less /learn root', () => {
-    expect(coiHeadersForPath('/learn')).toEqual(COI_LEARN_HEADERS);
+  it('does not apply to lesson paths (allowing YouTube embeds without COOP/COEP restrictions)', () => {
+    expect(
+      coiHeadersForPath('/learn/courses/intro2gpro/lessons/lesson-1'),
+    ).toBeUndefined();
+    expect(
+      coiHeadersForPath('/en/learn/courses/intro2gpro/lessons/lesson-1'),
+    ).toBeUndefined();
   });
 
-  it('applies to the locale root /en/learn', () => {
-    expect(coiHeadersForPath('/en/learn')).toEqual(COI_LEARN_HEADERS);
+  it('does not apply to general learn overview pages', () => {
+    expect(coiHeadersForPath('/learn')).toBeUndefined();
+    expect(coiHeadersForPath('/en/learn')).toBeUndefined();
+    expect(coiHeadersForPath('/learn/courses')).toBeUndefined();
+    expect(coiHeadersForPath('/en/learn/courses/intro2gpro')).toBeUndefined();
   });
 
   it('does not apply to /sign-in', () => {
