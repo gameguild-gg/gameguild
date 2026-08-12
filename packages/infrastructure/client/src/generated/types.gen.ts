@@ -3787,7 +3787,6 @@ export interface IdentityUsersUser {
   metadata?: IdentityUsersUserMetadata;
   name: string;
   notifications?: Array<IdentityUsersUserNotification> | null;
-  passwordHash?: string | null;
   phoneNumber?: string | null;
   preferences?: IdentityUsersUserPreferences;
   profile?: IdentityUsersUserProfile;
@@ -6267,7 +6266,6 @@ export interface ProjectsProject {
   collaborators?: Array<ProjectsProjectCollaborator> | null;
   copyright?: string | null;
   createdAt: string;
-  createdBy?: IdentityUsersUser;
   createdById?: string | null;
   deletedAt?: string | null;
   description?: string | null;
@@ -7969,14 +7967,6 @@ export interface TestingLabTestingParticipant {
   version?: number;
 }
 
-export interface TestingLabTestingParticipantMutationProjection {
-  id: string;
-  startedAt: string;
-  status?: TestingLabParticipationStatus;
-  testingRequestId: string;
-  userId: string;
-}
-
 export interface TestingLabTestingParticipantDirectoryItemProjection {
   avatarUrl?: string | null;
   campusName?: string | null;
@@ -8010,6 +8000,14 @@ export interface TestingLabTestingParticipantDirectoryProjection {
   registeredCount?: number;
   totalCount?: number;
   waitlistedCount?: number;
+}
+
+export interface TestingLabTestingParticipantMutationProjection {
+  id?: string;
+  startedAt?: string;
+  status?: TestingLabParticipationStatus;
+  testingRequestId?: string;
+  userId?: string;
 }
 
 export type TestingLabTestingPriority = 'Low' | 'Medium' | 'High' | 'Critical';
@@ -9141,9 +9139,9 @@ export let TestingLabTestingLearningCompletionRequirementSchema: z.ZodType<Testi
 export let TestingLabTestingLocationSchema: z.ZodType<TestingLabTestingLocation>;
 export let TestingLabTestingModeSchema: z.ZodType<TestingLabTestingMode>;
 export let TestingLabTestingParticipantSchema: z.ZodType<TestingLabTestingParticipant>;
-export let TestingLabTestingParticipantMutationProjectionSchema: z.ZodType<TestingLabTestingParticipantMutationProjection>;
 export let TestingLabTestingParticipantDirectoryItemProjectionSchema: z.ZodType<TestingLabTestingParticipantDirectoryItemProjection>;
 export let TestingLabTestingParticipantDirectoryProjectionSchema: z.ZodType<TestingLabTestingParticipantDirectoryProjection>;
+export let TestingLabTestingParticipantMutationProjectionSchema: z.ZodType<TestingLabTestingParticipantMutationProjection>;
 export let TestingLabTestingPrioritySchema: z.ZodType<TestingLabTestingPriority>;
 export let TestingLabTestingProjectApplicationSchema: z.ZodType<TestingLabTestingProjectApplication>;
 export let TestingLabTestingProjectApplicationProjectionSchema: z.ZodType<TestingLabTestingProjectApplicationProjection>;
@@ -13597,7 +13595,6 @@ IdentityUsersUserSchema = z.object({
     .array(z.lazy(() => IdentityUsersUserNotificationSchema))
     .nullable()
     .optional(),
-  passwordHash: z.string().max(512).nullable().optional(),
   phoneNumber: z.string().max(20).nullable().optional(),
   preferences: z.lazy(() => IdentityUsersUserPreferencesSchema).optional(),
   profile: z.lazy(() => IdentityUsersUserProfileSchema).optional(),
@@ -16565,7 +16562,6 @@ ProjectsProjectSchema = z.object({
     .optional(),
   copyright: z.string().max(500).nullable().optional(),
   createdAt: z.string().datetime(),
-  createdBy: z.lazy(() => IdentityUsersUserSchema).optional(),
   createdById: z.string().uuid().nullable().optional(),
   deletedAt: z.string().datetime().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -18598,15 +18594,6 @@ TestingLabTestingParticipantSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingParticipantMutationProjection */
-TestingLabTestingParticipantMutationProjectionSchema = z.object({
-  id: z.string().uuid(),
-  startedAt: z.string().datetime(),
-  status: z.lazy(() => TestingLabParticipationStatusSchema).optional(),
-  testingRequestId: z.string().uuid(),
-  userId: z.string().uuid(),
-});
-
 /** Zod schema for TestingLabTestingParticipantDirectoryItemProjection */
 TestingLabTestingParticipantDirectoryItemProjectionSchema = z.object({
   avatarUrl: z.string().nullable().optional(),
@@ -18645,6 +18632,15 @@ TestingLabTestingParticipantDirectoryProjectionSchema = z.object({
   registeredCount: z.number().int().optional(),
   totalCount: z.number().int().optional(),
   waitlistedCount: z.number().int().optional(),
+});
+
+/** Zod schema for TestingLabTestingParticipantMutationProjection */
+TestingLabTestingParticipantMutationProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  startedAt: z.string().datetime().optional(),
+  status: z.lazy(() => TestingLabParticipationStatusSchema).optional(),
+  testingRequestId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for TestingLabTestingPriority */
