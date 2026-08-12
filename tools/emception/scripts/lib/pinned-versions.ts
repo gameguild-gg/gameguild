@@ -19,7 +19,7 @@ export const PINNED = {
     IMGUI_VERSION: 'v1.92.7',
     /** resolveAvailableLLVMRelease() is called with this value; if 23.0.0 tarball
      *  is not yet published it walks to the closest available 23.x release. */
-    LLVM_VERSION: '23.0.0',
+    LLVM_VERSION: '23.1.0-rc3',
     // Raylib family
     RAYLIB_VERSION: '6.0',
     RAYGUI_VERSION: '4.0',

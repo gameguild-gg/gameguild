@@ -215,29 +215,6 @@ public class AssessmentsController : BaseApiController
     }
 
     /// <summary>
-    /// Replaces the structured authoring definition for an assessment.
-    /// </summary>
-    [HttpPut("{id:guid}/definition")]
-    public async Task<ActionResult<AssessmentDefinitionDto>> UpdateAssessmentDefinition(
-        Guid id,
-        [FromBody] UpdateAssessmentDefinitionRequest request)
-    {
-        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
-        if (assessment == null) return NotFound();
-        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
-
-        var result = await _assessmentService.UpdateAssessmentDefinitionAsync(id, request).ConfigureAwait(false);
-        if (!result.IsSuccess)
-        {
-            return result.Error.Type == ErrorType.NotFound
-                ? NotFound(result.Error)
-                : BadRequest(result.Error);
-        }
-
-        return Ok(AssessmentDefinitionDto.FromEntity(result.Value));
-    }
-
-    /// <summary>
     /// Assign an assessment to a weighted group or clear the assignment.
     /// </summary>
     [HttpPut("{id:guid}/group")]
@@ -312,44 +289,6 @@ public class AssessmentsController : BaseApiController
         }
 
         return NoContent();
-    }
-
-    /// <summary>
-    /// Returns the v2 coding definition with hidden test cases stripped. Requires enrollment.
-    /// </summary>
-    [HttpGet("{id:guid}/coding-definition/public")]
-    public async Task<ActionResult<CodingAssignmentDefinition>> GetPublicCodingDefinition(Guid id)
-    {
-        var actorUserId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
-        if (!actorUserId.HasValue) return Unauthorized();
-
-        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
-        if (assessment == null) return NotFound();
-        if (!await IsActorInProgramTenantAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
-
-        var enrollments = await _enrollmentService
-            .GetUserEnrollmentsAsync(actorUserId.Value, Enrollments.EnrollmentStatus.Active)
-            .ConfigureAwait(false);
-        if (!enrollments.Any(e => e.CourseId == assessment.CourseId)) return Forbid();
-
-        var def = await _assessmentService.GetPublicCodingDefinitionAsync(id).ConfigureAwait(false);
-        if (def == null) return NotFound();
-        return Ok(def);
-    }
-
-    /// <summary>
-    /// Returns the unredacted v2 coding definition. Requires course review (instructor) permission.
-    /// </summary>
-    [HttpGet("{id:guid}/coding-definition/full")]
-    public async Task<ActionResult<CodingAssignmentDefinition>> GetFullCodingDefinition(Guid id)
-    {
-        var assessment = await _assessmentService.GetAssessmentByIdAsync(id).ConfigureAwait(false);
-        if (assessment == null) return NotFound();
-        if (!await CanReviewCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
-
-        var def = await _assessmentService.GetFullCodingDefinitionAsync(id).ConfigureAwait(false);
-        if (def == null) return NotFound();
-        return Ok(def);
     }
 
     /// <summary>

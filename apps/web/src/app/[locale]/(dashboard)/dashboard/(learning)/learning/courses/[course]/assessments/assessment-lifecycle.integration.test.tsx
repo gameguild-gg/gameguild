@@ -45,10 +45,6 @@ const wireMocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
 }));
 
-const codingLibMocks = vi.hoisted(() => ({
-  putCodingDefinition: vi.fn(),
-}));
-
 // ── Module mocks ──
 
 // Real addContent retained via importActual; the action wrappers components
@@ -146,9 +142,6 @@ vi.mock("@dnd-kit/utilities", () => ({
   CSS: { Translate: { toString: () => undefined } },
 }));
 
-vi.mock("@/lib/emception/put-coding-definition", () => ({
-  putCodingDefinition: codingLibMocks.putCodingDefinition,
-}));
 vi.mock("@/components/block-content-editor/lexical-surface", () => ({
   LexicalSurface: ({ accessibleLabel }: { accessibleLabel?: string }) => (
     <textarea aria-label={accessibleLabel ?? "Body"} readOnly />

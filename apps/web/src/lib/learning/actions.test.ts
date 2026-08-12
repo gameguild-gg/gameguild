@@ -30,7 +30,6 @@ const mocks = vi.hoisted(() => ({
   postAssessmentsGroups: vi.fn(),
   putAssessmentsGroups: vi.fn(),
   deleteAssessmentsGroups: vi.fn(),
-  putAssessmentsDefinition: vi.fn(),
   patchApiSocialReviewsModeration: vi.fn(),
   postApiSocialDiscussions: vi.fn(),
   deleteApiSocialDiscussions: vi.fn(),
@@ -64,7 +63,6 @@ vi.mock("@game-guild/client", () => ({
       postAssessmentsGroups = mocks.postAssessmentsGroups;
       putAssessmentsGroups = mocks.putAssessmentsGroups;
       deleteAssessmentsGroups = mocks.deleteAssessmentsGroups;
-      putAssessmentsDefinition = mocks.putAssessmentsDefinition;
     },
     LearningCoursesProgramModule: class {
       getCoursesById = mocks.getCoursesById;
@@ -133,7 +131,6 @@ const {
   createCertificateTemplate,
   addContent,
   createAssessment,
-  updateAssessmentDefinition,
   updateCertificateTemplate,
   deleteCertificateTemplate,
   deleteContent,
@@ -280,7 +277,6 @@ describe("learning server actions", () => {
       ok: true,
       data: undefined,
     });
-    mocks.putAssessmentsDefinition.mockResolvedValue({ ok: true, data: {} });
     mocks.patchApiSocialReviewsModeration.mockResolvedValue({
       ok: true,
       data: { id: "review-1" },
@@ -916,46 +912,6 @@ describe("learning server actions", () => {
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
       "/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/assessments",
-    );
-  });
-
-  it("saves authored assessment definitions through the assessments API", async () => {
-    mocks.resolveCourseId.mockResolvedValueOnce(
-      "1caa16bb-6810-4e53-bb0d-91f0d5702333",
-    );
-    mocks.fetch.mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          assessmentId: "assessment-1",
-          definitionSchemaVersion: 1,
-          definition: { order: [], blocks: {} },
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        },
-      ),
-    );
-
-    const result = await updateAssessmentDefinition({
-      courseId: "creature-design-by-admin",
-      assessmentId: "assessment-1",
-      definition: { order: [], blocks: {} },
-    });
-
-    expect(result).toEqual({ success: true, data: null });
-    expect(mocks.putAssessmentsDefinition).toHaveBeenCalledWith(
-      "assessment-1",
-      {
-        definitionSchemaVersion: 1,
-        definition: { order: [], blocks: {} },
-      },
-    );
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/creature-design-by-admin/assessments",
-    );
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/assessments/assessment-1",
     );
   });
 
