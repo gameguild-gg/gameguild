@@ -7969,6 +7969,14 @@ export interface TestingLabTestingParticipant {
   version?: number;
 }
 
+export interface TestingLabTestingParticipantMutationProjection {
+  id: string;
+  startedAt: string;
+  status?: TestingLabParticipationStatus;
+  testingRequestId: string;
+  userId: string;
+}
+
 export interface TestingLabTestingParticipantDirectoryItemProjection {
   avatarUrl?: string | null;
   campusName?: string | null;
@@ -9133,6 +9141,7 @@ export let TestingLabTestingLearningCompletionRequirementSchema: z.ZodType<Testi
 export let TestingLabTestingLocationSchema: z.ZodType<TestingLabTestingLocation>;
 export let TestingLabTestingModeSchema: z.ZodType<TestingLabTestingMode>;
 export let TestingLabTestingParticipantSchema: z.ZodType<TestingLabTestingParticipant>;
+export let TestingLabTestingParticipantMutationProjectionSchema: z.ZodType<TestingLabTestingParticipantMutationProjection>;
 export let TestingLabTestingParticipantDirectoryItemProjectionSchema: z.ZodType<TestingLabTestingParticipantDirectoryItemProjection>;
 export let TestingLabTestingParticipantDirectoryProjectionSchema: z.ZodType<TestingLabTestingParticipantDirectoryProjection>;
 export let TestingLabTestingPrioritySchema: z.ZodType<TestingLabTestingPriority>;
@@ -18587,6 +18596,15 @@ TestingLabTestingParticipantSchema = z.object({
   user: z.lazy(() => IdentityUsersUserSchema).optional(),
   userId: z.string().uuid(),
   version: z.number().int().optional(),
+});
+
+/** Zod schema for TestingLabTestingParticipantMutationProjection */
+TestingLabTestingParticipantMutationProjectionSchema = z.object({
+  id: z.string().uuid(),
+  startedAt: z.string().datetime(),
+  status: z.lazy(() => TestingLabParticipationStatusSchema).optional(),
+  testingRequestId: z.string().uuid(),
+  userId: z.string().uuid(),
 });
 
 /** Zod schema for TestingLabTestingParticipantDirectoryItemProjection */

@@ -327,6 +327,39 @@ public sealed class TestingRequestsControllerAuthorizationTests
     }
 }
 
+public sealed class TestingParticipantsControllerResponseTests
+{
+    [Fact]
+    public async Task AddParticipant_Should_Return_Stable_Projection()
+    {
+        var requestId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var participantId = Guid.NewGuid();
+        var participant = new TestingParticipant
+        {
+            Id = participantId,
+            TestingRequestId = requestId,
+            UserId = userId,
+            Status = ParticipationStatus.Registered
+        };
+        var service = new Mock<ITestingParticipantOperations>();
+        service.Setup(candidate => candidate.AddParticipantAsync(requestId, userId))
+            .ReturnsAsync(participant);
+        var controller = new TestingParticipantsController(
+            service.Object,
+            new Mock<IActorContextAccessor>().Object);
+
+        var result = await controller.AddParticipant(requestId, userId);
+
+        var projection = result.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeOfType<TestingParticipantMutationProjection>().Subject;
+        projection.Id.Should().Be(participantId);
+        projection.TestingRequestId.Should().Be(requestId);
+        projection.UserId.Should().Be(userId);
+        projection.Status.Should().Be(ParticipationStatus.Registered);
+    }
+}
+
 #region TestingParticipant Tests
 
 public class TestingParticipantTests

@@ -12020,7 +12020,7 @@ export interface PostTestingRequestsParticipantsInput {
   requestId: string;
   userId: string;
 }
-export type PostTestingRequestsParticipantsOutput = Types.TestingLabTestingParticipant;
+export type PostTestingRequestsParticipantsOutput = Types.TestingLabTestingParticipantMutationProjection;
 export const postTestingRequestsParticipantsEndpoint = {
   operationId: 'postTestingRequestsParticipants' as const,
   method: 'POST' as const,
