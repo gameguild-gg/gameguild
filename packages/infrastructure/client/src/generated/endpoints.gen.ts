@@ -12359,7 +12359,7 @@ export const deleteTestingSessionsWaitlistEndpoint = {
 export interface PostTestingSubmitSimpleInput {
   body?: Types.TestingLabCreateSimpleTestingInput;
 }
-export type PostTestingSubmitSimpleOutput = Types.TestingLabTestingInput;
+export type PostTestingSubmitSimpleOutput = Types.TestingLabTestingRequestDetailProjection;
 export const postTestingSubmitSimpleEndpoint = {
   operationId: 'postTestingSubmitSimple' as const,
   method: 'POST' as const,
