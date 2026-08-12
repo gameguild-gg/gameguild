@@ -13,10 +13,12 @@ export function formatEventDateTime(value?: string | null) {
   if (!value) return 'Not scheduled';
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return 'Not scheduled';
-  return new Intl.DateTimeFormat('en', {
+  const formatted = new Intl.DateTimeFormat('en', {
     dateStyle: 'medium',
     timeStyle: 'short',
+    timeZone: 'UTC',
   }).format(date);
+  return `${formatted} UTC`;
 }
 
 export function formatCapacity(current?: number, maximum?: number | null) {
