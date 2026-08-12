@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using GameGuild.Identity.Users;
 
 namespace GameGuild.Projects;
@@ -113,6 +114,7 @@ public sealed class Project : EntityBase {
     public ICollection<ProjectJamSubmission> JamSubmissions { get; set; } = new List<ProjectJamSubmission>();
 
     /// <summary> User who created the project </summary>
+    [JsonIgnore]
     public User? CreatedBy { get; set; }
 
     public Guid? CreatedById { get; set; }
