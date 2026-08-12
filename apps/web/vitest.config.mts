@@ -28,6 +28,11 @@ export default defineConfig({
         '../../packages/infrastructure/client/src/integrations/react/index.ts',
       ),
       '@game-guild/client': path.resolve(rootDir, '../../packages/infrastructure/client/src/index.ts'),
+      'emception/testing': path.resolve(
+        rootDir,
+        '../../tools/emception/packages/core/src/testing/index.ts',
+      ),
+      emception: path.resolve(rootDir, '../../tools/emception/packages/core/src/index.ts'),
     },
   },
 });
