@@ -21,7 +21,7 @@
  * Validated with real `node:worker_threads` `MessageChannel`s — no mocks.
  */
 
-import { CorrelatorDisposedError, RequestCorrelator } from './request-correlator';
+import { CorrelatorDisposedError, RequestCorrelator } from './request-correlator.js';
 
 /**
  * Minimal channel surface RpcChannel needs. Both `globalThis.Worker` and
