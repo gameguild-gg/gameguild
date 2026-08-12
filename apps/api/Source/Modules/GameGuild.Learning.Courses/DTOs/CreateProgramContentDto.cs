@@ -26,10 +26,6 @@ public class CreateProgramContentDto {
 
   public bool IsRequired { get; set; } = true;
 
-  public GradingMethod? GradingMethod { get; set; }
-
-  public decimal? MaxPoints { get; set; }
-
   public int? EstimatedMinutes { get; set; }
 
   public Visibility Visibility { get; set; } = Visibility.Public;

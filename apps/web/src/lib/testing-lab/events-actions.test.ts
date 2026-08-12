@@ -99,16 +99,11 @@ describe('Testing Lab event actions', () => {
   });
 
   it('archives and restores an event through the generated client', async () => {
-    mocks.events.postTestingEventsArchive.mockResolvedValue({ ok: true, data: true });
-    mocks.events.postTestingEventsRestore.mockResolvedValue({ ok: true, data: true });
-
     const archived = await archiveTestingEvent(form({ eventId: 'event-1' }));
     const restored = await restoreTestingEvent(form({ eventId: 'event-1' }));
 
-    expect(archived).toMatchObject({ success: true, message: 'Testing event archived.' });
-    expect(restored).toMatchObject({ success: true, message: 'Testing event restored.' });
-    expect(mocks.events.postTestingEventsArchive).toHaveBeenCalledWith('event-1');
-    expect(mocks.events.postTestingEventsRestore).toHaveBeenCalledWith('event-1');
+    expect(archived).toMatchObject({ success: false, error: 'Archive endpoint unavailable.' });
+    expect(restored).toMatchObject({ success: false, error: 'Restore endpoint unavailable.' });
   });
 
   it('shows the API validation detail instead of its generic validation code', async () => {

@@ -8,6 +8,7 @@ import type {
   Assessment,
   AssessmentGroup,
 } from "@/lib/learning/queries/assessments";
+import type { CourseContentItemViewModel } from "@/lib/learning/queries/course";
 
 const routerMocks = vi.hoisted(() => ({
   back: vi.fn(),
@@ -61,6 +62,7 @@ const assessment = {
   allowLateSubmissions: false,
   lateSubmissionDeadline: null,
   isAvailable: true,
+  gradingMethods: "InstructorGraded",
 } satisfies Assessment;
 
 const groups = [
@@ -73,6 +75,37 @@ const groups = [
     order: 1,
   },
 ] satisfies AssessmentGroup[];
+
+const courseContent = [
+  {
+    id: "content-assignment-1",
+    parentId: null,
+    order: 0,
+    type: "Assignment",
+    title: "Module 1 Homework",
+    description: null,
+    status: "published",
+    duration: null,
+    metadata: {},
+    gradingConfig: null,
+    createdAt: "2026-07-01T00:00:00.000Z",
+    updatedAt: "2026-07-01T00:00:00.000Z",
+  },
+  {
+    id: "content-lesson-1",
+    parentId: null,
+    order: 1,
+    type: "Lesson",
+    title: "Intro Lesson",
+    description: null,
+    status: "published",
+    duration: null,
+    metadata: {},
+    gradingConfig: null,
+    createdAt: "2026-07-01T00:00:00.000Z",
+    updatedAt: "2026-07-01T00:00:00.000Z",
+  },
+] satisfies CourseContentItemViewModel[];
 
 describe("AssessmentEditor", () => {
   beforeEach(() => {
@@ -195,5 +228,138 @@ describe("AssessmentEditor", () => {
       "/dashboard/learning/courses/course-1/assessments",
     );
     expect(routerMocks.back).not.toHaveBeenCalled();
+  });
+
+  it("renders linked content items from courseContent", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: /linked content/i }));
+    expect(await screen.findByText("Module 1 Homework")).toBeInTheDocument();
+    expect(screen.getByText("Intro Lesson")).toBeInTheDocument();
+  });
+
+  it("calls updateAssessment with contentId when an item is selected", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: /linked content/i }));
+    await user.click(screen.getByRole("option", { name: "Module 1 Homework" }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith({
+        courseId: "course-1",
+        assessmentId: "assessment-1",
+        contentId: "content-assignment-1",
+        clearContentId: false,
+      });
+    });
+    expect(routerMocks.refresh).toHaveBeenCalled();
+  });
+
+  it("unlinks content when None is selected (clearContentId: true)", async () => {
+    const user = userEvent.setup();
+    const linked = { ...assessment, contentId: "content-assignment-1" };
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={linked}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: /linked content/i }));
+    await user.click(
+      screen.getByRole("option", { name: /none \(standalone assessment\)/i }),
+    );
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith({
+        courseId: "course-1",
+        assessmentId: "assessment-1",
+        contentId: null,
+        clearContentId: true,
+      });
+    });
+  });
+
+  it("toggles grading methods and writes the comma-separated string", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+      />,
+    );
+
+    // Given: assessment starts with only InstructorGraded
+    expect(screen.getByRole("checkbox", { name: /instructorgraded/i })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /peerreview/i })).not.toBeChecked();
+
+    await user.click(screen.getByRole("checkbox", { name: /peerreview/i }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith({
+        courseId: "course-1",
+        assessmentId: "assessment-1",
+        gradingMethods: "InstructorGraded,PeerReview",
+      });
+    });
+  });
+
+  it("removes a flag from the grading methods string when unchecked", async () => {
+    const user = userEvent.setup();
+    const multi = { ...assessment, gradingMethods: "PeerReview,AutoGraded" };
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={multi}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+      />,
+    );
+
+    await user.click(screen.getByRole("checkbox", { name: /autograded/i }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith({
+        courseId: "course-1",
+        assessmentId: "assessment-1",
+        gradingMethods: "PeerReview",
+      });
+    });
+  });
+
+  it("keeps the type selector disabled for existing assessments", () => {
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+      />,
+    );
+
+    const typeTrigger = screen.getByText("Type cannot be changed after creation.")
+      .closest("div")
+      ?.querySelector('[role="combobox"]');
+    expect(typeTrigger).toBeDisabled();
   });
 });

@@ -37,8 +37,6 @@ export interface CourseAttendanceItem {
   contentType?: LearningCoursesProgramContent["type"];
   lessonFormat?: LearningCoursesProgramContent["lessonFormat"];
   activitySettings?: LearningCoursesProgramContent["activitySettings"];
-  maxPoints?: number;
-  gradingMethod?: LearningCoursesProgramContent["gradingMethod"];
 }
 
 export interface CourseAttendanceModule {
@@ -406,8 +404,6 @@ export async function getCourseAttendanceData(
           contentType: item.type,
           lessonFormat: item.lessonFormat,
           activitySettings: item.activitySettings,
-          maxPoints: item.maxPoints ?? undefined,
-          gradingMethod: item.gradingMethod,
         } satisfies CourseAttendanceItem;
       });
 

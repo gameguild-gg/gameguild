@@ -20,7 +20,6 @@ public static class ProgramContentMappingExtensions
   {
     var normalizedType = NormalizeProfessorFacingType(content.Type);
     var isLesson = normalizedType == ProgramContentType.Lesson;
-    var isNonGraded = isLesson || normalizedType == ProgramContentType.Survey;
 
     return new ProgramContentDto
     {
@@ -36,8 +35,6 @@ public static class ProgramContentMappingExtensions
       ActivitySettings = content.GetActivitySettings(),
       SortOrder = content.SortOrder,
       IsRequired = content.IsRequired,
-      GradingMethod = isNonGraded ? GradingMethod.None : content.GradingMethod,
-      MaxPoints = isNonGraded ? null : content.MaxPoints,
       EstimatedMinutes = content.EstimatedMinutes,
       Visibility = content.Visibility,
       CreatedAt = content.CreatedAt,
@@ -104,8 +101,6 @@ public static class ProgramContentMappingExtensions
       LessonFormat = dto.LessonFormat ?? LessonContentFormatInference.FromBody(dto.Body),
       SortOrder = dto.SortOrder,
       IsRequired = dto.IsRequired,
-      GradingMethod = dto.GradingMethod ?? GradingMethod.None,
-      MaxPoints = (int?)dto.MaxPoints,
       EstimatedMinutes = dto.EstimatedMinutes,
       Visibility = dto.Visibility,
     };
@@ -147,8 +142,6 @@ public static class ProgramContentMappingExtensions
     }
     if (dto.SortOrder != null) content.SortOrder = dto.SortOrder.Value;
     if (dto.IsRequired != null) content.IsRequired = dto.IsRequired.Value;
-    if (dto.GradingMethod != null) content.GradingMethod = dto.GradingMethod.Value;
-    if (dto.MaxPoints.HasValue) content.MaxPoints = (int?)dto.MaxPoints.Value;
     if (dto.EstimatedMinutes != null) content.EstimatedMinutes = dto.EstimatedMinutes;
     if (dto.Visibility != null) content.Visibility = dto.Visibility.Value;
     content.NormalizeLearningContract();

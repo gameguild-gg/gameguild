@@ -143,8 +143,6 @@ public sealed record LearnerContentDto(
     string? ActivitySettings,
     int SortOrder,
     bool IsRequired,
-    string GradingMethod,
-    int? MaxPoints,
     int? EstimatedMinutes,
     string Visibility);
 

@@ -18,25 +18,12 @@ public sealed class LessonContractTests
     }
 
     [Fact]
-    public void NewLesson_ShouldDefaultToMarkdownAndRemainNonGraded()
+    public void NewLesson_ShouldDefaultToMarkdown()
     {
         var lesson = new ProgramContent();
 
         lesson.Type.Should().Be(ProgramContentType.Lesson);
         lesson.LessonFormat.Should().Be(LessonContentFormat.Markdown);
-        lesson.GradingMethod.Should().Be(GradingMethod.None);
-        lesson.MaxPoints.Should().BeNull();
-    }
-
-    [Fact]
-    public void SetGrading_WhenContentIsLesson_ShouldRejectGrading()
-    {
-        var lesson = new ProgramContent { Type = ProgramContentType.Lesson };
-
-        var action = () => lesson.SetGrading(GradingMethod.Instructor, 100);
-
-        action.Should().Throw<InvalidOperationException>()
-            .WithMessage("Lessons cannot be graded*");
     }
 
     [Fact]
@@ -47,8 +34,6 @@ public sealed class LessonContractTests
         var lesson = dto.ToEntity();
 
         lesson.LessonFormat.Should().Be(LessonContentFormat.Lexical);
-        lesson.GradingMethod.Should().Be(GradingMethod.None);
-        lesson.MaxPoints.Should().BeNull();
     }
 
     [Theory]
@@ -66,26 +51,11 @@ public sealed class LessonContractTests
     }
 
     [Fact]
-    public void ToEntity_WhenLessonReceivesGradingFields_ShouldNormalizeThemAway()
-    {
-        var dto = CreateLessonDto("lesson body");
-        dto.GradingMethod = GradingMethod.Instructor;
-        dto.MaxPoints = 50;
-
-        var lesson = dto.ToEntity();
-
-        lesson.GradingMethod.Should().Be(GradingMethod.None);
-        lesson.MaxPoints.Should().BeNull();
-    }
-
-    [Fact]
-    public void ApplyUpdates_WhenAssignmentBecomesLesson_ShouldClearGradingAndInferFormat()
+    public void ApplyUpdates_WhenAssignmentBecomesLesson_ShouldInferFormat()
     {
         var content = new ProgramContent
         {
             Type = ProgramContentType.Assignment,
-            GradingMethod = GradingMethod.Instructor,
-            MaxPoints = 100,
             LessonFormat = null,
         };
         var dto = new UpdateProgramContentDto
@@ -99,8 +69,6 @@ public sealed class LessonContractTests
 
         content.Type.Should().Be(ProgramContentType.Lesson);
         content.LessonFormat.Should().Be(LessonContentFormat.Lexical);
-        content.GradingMethod.Should().Be(GradingMethod.None);
-        content.MaxPoints.Should().BeNull();
     }
 
     [Theory]
@@ -127,7 +95,7 @@ public sealed class LessonContractTests
     }
 
     [Fact]
-    public void ToEntity_WhenContentIsAssignment_ShouldKeepGradingAndIgnoreLessonFormat()
+    public void ToEntity_WhenContentIsAssignment_ShouldIgnoreLessonFormat()
     {
         var dto = new CreateProgramContentDto
         {
@@ -136,15 +104,11 @@ public sealed class LessonContractTests
             Type = ProgramContentType.Assignment,
             Body = "{}",
             LessonFormat = LessonContentFormat.Video,
-            GradingMethod = GradingMethod.AutomatedTests,
-            MaxPoints = 100,
         };
 
         var assignment = dto.ToEntity();
 
         assignment.LessonFormat.Should().BeNull();
-        assignment.GradingMethod.Should().Be(GradingMethod.AutomatedTests);
-        assignment.MaxPoints.Should().Be(100);
     }
 
     [Fact]

@@ -94,8 +94,6 @@ export const ai4gamesSyllabusContent: ProgramContent = {
     body: ai4gamesSyllabus,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -116,8 +114,6 @@ export const ai4gamesSetupContent: ProgramContent = {
     body: ai4gamesSetup,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -138,8 +134,6 @@ export const ai4gamesExpectationsContent: ProgramContent = {
     body: ai4gamesExpectations,
     sortOrder: 5,
     isRequired: false,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -160,8 +154,6 @@ export const ai4gamesFlockingContent: ProgramContent = {
     body: ai4gamesFlocking,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -182,8 +174,6 @@ export const ai4gamesStateMachinesContent: ProgramContent = {
     body: ai4gamesStateMachines,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -204,8 +194,6 @@ export const ai4gamesLifeContent: ProgramContent = {
     body: ai4gamesLife,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 75,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -226,8 +214,6 @@ export const ai4gamesRngContent: ProgramContent = {
     body: ai4gamesRng,
     sortOrder: 13,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -247,8 +233,6 @@ export const ai4gamesMazeContent: ProgramContent = {
     body: ai4gamesMaze,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -269,8 +253,6 @@ export const ai4gamesMazeDatastructureContent: ProgramContent = {
     body: ai4gamesMazeDatastructure,
     sortOrder: 9,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -291,8 +273,6 @@ export const ai4gamesPathfindingContent: ProgramContent = {
     body: ai4gamesPathfinding,
     sortOrder: 10,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -313,8 +293,6 @@ export const ai4gamesCatchTheCatContent: ProgramContent = {
     body: ai4gamesCatchTheCat,
     sortOrder: 11,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 105,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -335,8 +313,6 @@ export const ai4gamesWeek08AssignmentContent: ProgramContent = {
     body: ai4gamesPathfindingAssignment,
     sortOrder: 12,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 180,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -357,8 +333,6 @@ export const ai4gamesSpatialQuantizationContent: ProgramContent = {
     body: ai4gamesSpatialQuantization,
     sortOrder: 12,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -379,8 +353,6 @@ export const ai4gamesPathSmoothingContent: ProgramContent = {
     body: ai4gamesPathSmoothing,
     sortOrder: 13,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -401,8 +373,6 @@ export const ai4gamesNoiseContent: ProgramContent = {
     body: ai4gamesNoise,
     sortOrder: 14,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: ai4gamesProgram,
@@ -423,8 +393,6 @@ export const ai4gamesFinalProjectContent: ProgramContent = {
     body: ai4gamesFinalProject,
     sortOrder: 15,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 300,
     visibility: 1, // Published
     program: ai4gamesProgram,

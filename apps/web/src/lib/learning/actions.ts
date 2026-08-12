@@ -120,6 +120,15 @@ function formatUnexpectedError(err: unknown): string {
 
 // ── Content actions ──
 
+// Maps graded content types to their auto-created assessment type.
+// SubmissionModality.Code is sent as the string "Code" — the wire format is comma-separated flag names, not a bitmask.
+const CONTENT_TO_ASSESSMENT_TYPE: Record<string, AssessmentType> = {
+  Assignment: "Assignment",
+  Questionnaire: "Quiz",
+  Project: "Project",
+  Code: "Assignment",
+};
+
 export interface AddContentInput {
   courseId: string;
   parentId?: string;
@@ -163,8 +172,34 @@ export async function addContent(
     );
 
     if (result.ok && result.data.id) {
+      const contentId = result.data.id;
       revalidateCourseContentPaths(courseId, resolvedCourseId);
-      return { success: true, data: { id: result.data.id! } };
+
+      // ponytail: chain createAssessment for graded content types. Failure is logged but does not
+      // break content creation — instructor retries the assessment link from the content editor (Task 7).
+      const assessmentType = CONTENT_TO_ASSESSMENT_TYPE[type];
+      if (assessmentType) {
+        const assessment = await createAssessment({
+          courseId,
+          title: title.trim(),
+          type: assessmentType,
+          contentId,
+          submissionModalities: type === "Code" ? "Code" : undefined,
+          gradingMethods:
+            type === "Code"
+              ? "AutoGraded,InstructorGraded"
+              : "InstructorGraded",
+        });
+        if (!assessment.success) {
+          console.error("addContent: assessment auto-create failed", {
+            contentId,
+            type,
+            error: assessment.error,
+          });
+        }
+      }
+
+      return { success: true, data: { id: contentId } };
     }
 
     return {
@@ -1163,6 +1198,11 @@ export interface CreateAssessmentInput {
   availableFrom?: string;
   availableUntil?: string;
   presentationMode?: AssessmentPresentationMode;
+  contentId?: string;
+  // ponytail: both fields are comma-separated C# [Flags] names — wire format is string, NOT numeric bitmask
+  // (see queries/assessments.ts and learner activity page). submissionModalities e.g. "Code"; gradingMethods e.g. "AutoGraded,InstructorGraded".
+  submissionModalities?: string;
+  gradingMethods?: string;
 }
 
 export async function createAssessment(
@@ -1194,6 +1234,9 @@ export async function createAssessment(
       presentationMode:
         rest.presentationMode ??
         (rest.type === "Quiz" ? "Continuous" : "SingleStep"),
+      contentId: rest.contentId ?? null,
+      submissionModalities: rest.submissionModalities,
+      gradingMethods: rest.gradingMethods,
     };
 
     const { assessments } = createCourseModules();
@@ -1364,6 +1407,7 @@ export interface UpdateAssessmentInput {
   assessmentGroupId?: string | null;
   clearAssessmentGroupId?: boolean;
   presentationMode?: AssessmentPresentationMode;
+  gradingMethods?: string;
 }
 
 export async function updateAssessment(
@@ -1391,6 +1435,7 @@ export async function updateAssessment(
       assessmentGroupId: fields.assessmentGroupId ?? null,
       clearAssessmentGroupId: fields.clearAssessmentGroupId ?? false,
       presentationMode: fields.presentationMode,
+      gradingMethods: fields.gradingMethods ?? undefined,
     };
 
     const { assessments } = createCourseModules();
@@ -1473,6 +1518,33 @@ export async function deleteAssessment(
     const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { assessments } = createCourseModules();
     const result = await assessments.deleteAssessments(assessmentId);
+
+    if (result.ok) {
+      revalidateCourseAssessmentPaths(courseId, resolvedCourseId);
+      return { success: true, data: null };
+    }
+
+    return { success: false, error: extractError(result.error) };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+// ponytail: soft-delete is reversible. POST /v1/assessments/{id}/restore was added by Task 3
+// (backend) + Task 5 (codegen). The FE keeps the recently-deleted id in component state because
+// the GET assessments endpoint filters deleted rows server-side — restore relies on the editor
+// remembering what it just deleted, not on a "list including deleted" query.
+export async function restoreAssessment(
+  courseId: string,
+  assessmentId: string,
+): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const { assessments } = createCourseModules();
+    const result = await assessments.postAssessmentsRestore(assessmentId);
 
     if (result.ok) {
       revalidateCourseAssessmentPaths(courseId, resolvedCourseId);

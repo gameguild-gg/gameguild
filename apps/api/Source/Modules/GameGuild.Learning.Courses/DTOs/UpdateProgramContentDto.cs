@@ -27,10 +27,6 @@ public class UpdateProgramContentDto {
 
   public bool? IsRequired { get; set; }
 
-  public GradingMethod? GradingMethod { get; set; }
-
-  public decimal? MaxPoints { get; set; }
-
   public int? EstimatedMinutes { get; set; }
 
   public Visibility? Visibility { get; set; }

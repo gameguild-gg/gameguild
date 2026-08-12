@@ -82,16 +82,6 @@ public class ProgramContent : EntityBase
     public bool IsRequired { get; set; } = true;
 
     /// <summary>
-    /// Grading method for this content
-    /// </summary>
-    public GradingMethod GradingMethod { get; set; } = GradingMethod.None;
-
-    /// <summary>
-    /// Maximum points available for this content
-    /// </summary>
-    public int? MaxPoints { get; set; }
-
-    /// <summary>
     /// Estimated time to complete in minutes
     /// </summary>
     public int? EstimatedMinutes { get; set; }
@@ -195,26 +185,6 @@ public class ProgramContent : EntityBase
     }
 
     /// <summary>
-    /// Sets grading configuration
-    /// </summary>
-    public void SetGrading(GradingMethod method, int? maxPoints = null)
-    {
-        if (Type == ProgramContentType.Survey && (method != GradingMethod.None || maxPoints.HasValue))
-        {
-            throw new InvalidOperationException("Surveys cannot be graded.");
-        }
-
-        if (IsLessonType(Type) && (method != GradingMethod.None || maxPoints.HasValue))
-        {
-            throw new InvalidOperationException("Lessons cannot be graded. Create or attach an assignment instead.");
-        }
-
-        GradingMethod = method;
-        MaxPoints = maxPoints;
-        UpdatedAt = SystemClock.UtcNow;
-    }
-
-    /// <summary>
     /// Enforces the persisted learning-content contract after mapping or direct construction.
     /// </summary>
     public void NormalizeLearningContract()
@@ -242,19 +212,11 @@ public class ProgramContent : EntityBase
             }
 
             RouteBodyByContentType();
-            GradingMethod = GradingMethod.None;
-            MaxPoints = null;
             return;
         }
 
         LessonFormat = null;
         RouteBodyByContentType();
-
-        if (Type == ProgramContentType.Survey)
-        {
-            GradingMethod = GradingMethod.None;
-            MaxPoints = null;
-        }
 
         if (LearningActivityContract.IsActivityType(Type))
         {

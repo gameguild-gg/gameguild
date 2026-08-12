@@ -96,8 +96,6 @@ export const pythonSyllabusContent: ProgramContent = {
     body: pythonSyllabus,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: pythonProgram,
@@ -118,8 +116,6 @@ export const pythonWeek01Content: ProgramContent = {
     body: week01Lecture,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: pythonProgram,
@@ -140,8 +136,6 @@ export const pythonWeek02Content: ProgramContent = {
     body: week02Lecture,
     sortOrder: 3,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: pythonProgram,
@@ -162,8 +156,6 @@ export const pythonWeek03Content: ProgramContent = {
     body: week03Lecture,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: pythonProgram,
@@ -184,8 +176,6 @@ export const pythonWeek04Content: ProgramContent = {
     body: week04Lecture,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 105,
     visibility: 1, // Published
     program: pythonProgram,
@@ -206,8 +196,6 @@ export const pythonWeek05ListsContent: ProgramContent = {
     body: week05Lists,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: pythonProgram,
@@ -228,8 +216,6 @@ export const pythonWeek05Exercise01Content: ProgramContent = {
     body: week05Exercise01,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: pythonProgram,
@@ -250,8 +236,6 @@ export const pythonWeek05Exercise02Content: ProgramContent = {
     body: week05Exercise02,
     sortOrder: 15,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: pythonProgram,
@@ -272,8 +256,6 @@ export const pythonWeek06Content: ProgramContent = {
     body: week06Lecture,
     sortOrder: 9,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: pythonProgram,
@@ -294,8 +276,6 @@ export const pythonWeek07Content: ProgramContent = {
     body: week07Lecture,
     sortOrder: 10,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: pythonProgram,
@@ -316,8 +296,6 @@ export const pythonWeek10DictionariesContent: ProgramContent = {
     body: week10Dictionaries,
     sortOrder: 11,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: pythonProgram,
@@ -338,8 +316,6 @@ export const pythonWeek10SetsContent: ProgramContent = {
     body: week10Sets,
     sortOrder: 12,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 105,
     visibility: 1, // Published
     program: pythonProgram,
@@ -360,8 +336,6 @@ export const pythonWeek11Content: ProgramContent = {
     body: week11Lecture,
     sortOrder: 13,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: pythonProgram,
@@ -382,8 +356,6 @@ export const pythonWeek12Content: ProgramContent = {
     body: week12Lecture,
     sortOrder: 14,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: pythonProgram,
@@ -404,8 +376,6 @@ export const pythonWeek12LocalLlmContent: ProgramContent = {
     body: week12LocalLlm,
     sortOrder: 15,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: pythonProgram,
@@ -426,8 +396,6 @@ export const pythonWeek04BooleanOperationsContent: ProgramContent = {
     body: week04BooleanOperations,
     sortOrder: 16,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: pythonProgram,
@@ -448,8 +416,6 @@ export const pythonWeek04SwitchContent: ProgramContent = {
     body: week04Switch,
     sortOrder: 17,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: pythonProgram,
@@ -470,8 +436,6 @@ export const pythonWeek05SetsContent: ProgramContent = {
     body: week05Sets,
     sortOrder: 18,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
     program: pythonProgram,
@@ -492,8 +456,6 @@ export const pythonWeek05TuplesContent: ProgramContent = {
     body: week05Tuples,
     sortOrder: 19,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: pythonProgram,

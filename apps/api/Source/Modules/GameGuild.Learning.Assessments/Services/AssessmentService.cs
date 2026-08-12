@@ -39,7 +39,9 @@ public class AssessmentService : IAssessmentService
                 request.MaxScore,
                 request.PassingScore,
                 request.IsRequired,
-                request.AssessmentGroupId);
+                request.AssessmentGroupId,
+                request.ContentId,
+                request.GradingMethods);
 
             // Set optional properties using internal setters
             assessment.SetDescription(request.Description);
@@ -82,6 +84,13 @@ public class AssessmentService : IAssessmentService
         return await _context.Set<Assessment>()
             .Include(a => a.AssessmentGroup)
             .FirstOrDefaultAsync(a => a.Id == id && a.DeletedAt == null).ConfigureAwait(false);
+    }
+
+    public async Task<Assessment?> GetAssessmentByIdIncludingDeletedAsync(Guid id)
+    {
+        return await _context.Set<Assessment>()
+            .Include(a => a.AssessmentGroup)
+            .FirstOrDefaultAsync(a => a.Id == id).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Assessment>> GetCourseAssessmentsAsync(Guid courseId)
@@ -189,7 +198,8 @@ public class AssessmentService : IAssessmentService
                 request.ClearDueAt,
                 request.AllowLateSubmissions,
                 request.LateSubmissionDeadline,
-                request.ClearLateSubmissionDeadline);
+                request.ClearLateSubmissionDeadline,
+                request.GradingMethods);
 
             var groupValidation = await EnsureGroupMatchesCourseAsync(assessment.AssessmentGroupId, assessment.CourseId).ConfigureAwait(false);
             if (!groupValidation.IsSuccess)
@@ -403,6 +413,52 @@ public class AssessmentService : IAssessmentService
         {
             _logger.LogError(ex, "Error deleting assessment {AssessmentId}", id);
             return Result.Failure(Error.Failure("DeleteAssessment", "Failed to delete assessment"));
+        }
+    }
+
+    public async Task<Result> RestoreAssessmentAsync(Guid id, CancellationToken ct = default)
+    {
+        try
+        {
+            async Task<Result> RestoreCoreAsync()
+            {
+                await using var lifecycleTransaction = await AssessmentLifecycleDatabaseLock
+                    .AcquireAsync(_context, id, ct)
+                    .ConfigureAwait(false);
+                var assessment = await GetAssessmentByIdIncludingDeletedAsync(id).ConfigureAwait(false);
+                if (assessment == null)
+                {
+                    return Result.Failure(Error.NotFound("Assessment", "Assessment not found"));
+                }
+
+                // ponytail: delete cascades SoftDelete to InteractiveVideoAssessmentCues, but restore does not
+                // cascade-restore them. Acceptable for now: managers re-link cues via the cue endpoint.
+                assessment.Restore();
+
+                _context.Set<Assessment>().Update(assessment);
+                await _context.SaveChangesAsync(ct).ConfigureAwait(false);
+                await AssessmentLifecycleDatabaseLock.CommitAsync(lifecycleTransaction, ct).ConfigureAwait(false);
+
+                return Result.Success();
+            }
+
+            var result = _context is DbContext dbContext
+                ? await dbContext.Database.CreateExecutionStrategy()
+                    .ExecuteAsync(RestoreCoreAsync)
+                    .ConfigureAwait(false)
+                : await RestoreCoreAsync().ConfigureAwait(false);
+
+            if (result.IsSuccess)
+            {
+                _logger.LogInformation("Assessment restored: {AssessmentId}", id);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error restoring assessment {AssessmentId}", id);
+            return Result.Failure(Error.Failure("RestoreAssessment", "Failed to restore assessment"));
         }
     }
 

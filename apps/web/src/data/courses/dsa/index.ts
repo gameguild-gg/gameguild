@@ -95,8 +95,6 @@ export const dsaSyllabusContent: ProgramContent = {
     body: dsaSyllabus,
     sortOrder: 1,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: dsaProgram,
@@ -117,8 +115,6 @@ export const dsaIntroductionContent: ProgramContent = {
     body: dsaIntroduction,
     sortOrder: 2,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
     program: dsaProgram,
@@ -139,8 +135,6 @@ export const dsaExpectationsContent: ProgramContent = {
     body: dsaExpectations,
     sortOrder: 3,
     isRequired: false,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 15,
     visibility: 1, // Published
     program: dsaProgram,
@@ -161,8 +155,6 @@ export const dsaAnalysisContent: ProgramContent = {
     body: dsaAnalysis,
     sortOrder: 4,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: dsaProgram,
@@ -183,8 +175,6 @@ export const dsaDynamicDataContent: ProgramContent = {
     body: dsaDynamicData,
     sortOrder: 5,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 150,
     visibility: 1, // Published
     program: dsaProgram,
@@ -205,8 +195,6 @@ export const dsaSortingContent: ProgramContent = {
     body: dsaSorting,
     sortOrder: 6,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 180,
     visibility: 1, // Published
     program: dsaProgram,
@@ -227,8 +215,6 @@ export const dsaDivideAndConquerContent: ProgramContent = {
     body: dsaDivideAndConquer,
     sortOrder: 7,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: dsaProgram,
@@ -249,8 +235,6 @@ export const dsaHashtablesContent: ProgramContent = {
     body: dsaHashtables,
     sortOrder: 8,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 150,
     visibility: 1, // Published
     program: dsaProgram,
@@ -271,8 +255,6 @@ export const dsaMidtermContent: ProgramContent = {
     body: dsaMidterm,
     sortOrder: 9,
     isRequired: true,
-    gradingMethod: 1, // Points
-    maxPoints: 100,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: dsaProgram,
@@ -293,8 +275,6 @@ export const dsaStackAndQueueContent: ProgramContent = {
     body: dsaStackAndQueue,
     sortOrder: 10,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
     program: dsaProgram,
@@ -315,8 +295,6 @@ export const dsaBreakContent: ProgramContent = {
     body: dsaBreak,
     sortOrder: 11,
     isRequired: false,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 0,
     visibility: 1, // Published
     program: dsaProgram,
@@ -337,8 +315,6 @@ export const dsaGraphsContent: ProgramContent = {
     body: dsaGraphs,
     sortOrder: 12,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 180,
     visibility: 1, // Published
     program: dsaProgram,
@@ -359,8 +335,6 @@ export const dsaDijkstraContent: ProgramContent = {
     body: dsaDijkstra,
     sortOrder: 13,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 150,
     visibility: 1, // Published
     program: dsaProgram,
@@ -381,8 +355,6 @@ export const dsaMstContent: ProgramContent = {
     body: dsaMst,
     sortOrder: 14,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 150,
     visibility: 1, // Published
     program: dsaProgram,
@@ -403,8 +375,6 @@ export const dsaBstContent: ProgramContent = {
     body: dsaBst,
     sortOrder: 15,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 180,
     visibility: 1, // Published
     program: dsaProgram,
@@ -425,8 +395,6 @@ export const dsaHeapContent: ProgramContent = {
     body: dsaHeap,
     sortOrder: 16,
     isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
     estimatedMinutes: 150,
     visibility: 1, // Published
     program: dsaProgram,
@@ -447,8 +415,6 @@ export const dsaProjectContent: ProgramContent = {
     body: dsaProject,
     sortOrder: 17,
     isRequired: true,
-    gradingMethod: 1, // Points
-    maxPoints: 200,
     estimatedMinutes: 480,
     visibility: 1, // Published
     program: dsaProgram,
@@ -469,8 +435,6 @@ export const dsaFinalsContent: ProgramContent = {
     body: dsaFinals,
     sortOrder: 18,
     isRequired: true,
-    gradingMethod: 1, // Points
-    maxPoints: 150,
     estimatedMinutes: 180,
     visibility: 1, // Published
     program: dsaProgram,

@@ -312,8 +312,6 @@ function mapContentDto(
     status: dto.visibility === "Public" ? "published" : "draft",
     duration: dto.estimatedMinutes ?? null,
     metadata: {},
-    gradingMethod: dto.gradingMethod ?? null,
-    maxPoints: dto.maxPoints ?? null,
     gradingConfig,
     createdAt: dto.createdAt ?? new Date().toISOString(),
     updatedAt: dto.updatedAt ?? dto.createdAt ?? new Date().toISOString(),
@@ -331,8 +329,6 @@ function mapContentDetailDto(
     jsonBody: dto.jsonBody ?? null,
     settings: {
       isRequired: dto.isRequired,
-      gradingMethod: dto.gradingMethod ?? null,
-      maxPoints: dto.maxPoints ?? null,
       gradingConfig,
     },
     lessonFormat: normalizeLessonContentFormat(dto.lessonFormat),

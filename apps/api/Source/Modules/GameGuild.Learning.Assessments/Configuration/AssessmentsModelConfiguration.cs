@@ -20,6 +20,7 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             entity.Property(e => e.DefinitionSchemaVersion).HasDefaultValue(1);
             entity.Property(e => e.SubmissionModalities).HasConversion<int>();
             entity.Property(e => e.PresentationMode).HasConversion<int>();
+            entity.Property(e => e.GradingMethods).HasConversion<int>();
             entity.ToTable(table =>
             {
                 table.HasCheckConstraint(
@@ -28,6 +29,9 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
                 table.HasCheckConstraint(
                     "CK_Assessments_PresentationMode",
                     "\"PresentationMode\" IN (0, 1)");
+                table.HasCheckConstraint(
+                    "CK_Assessments_GradingMethods",
+                    "\"GradingMethods\" >= 0 AND (\"GradingMethods\" & ~15) = 0");
                 table.HasCheckConstraint(
                     "CK_Assessments_ScoreRange",
                     "\"MaxScore\" > 0 AND \"PassingScore\" >= 0 AND \"PassingScore\" <= \"MaxScore\"");

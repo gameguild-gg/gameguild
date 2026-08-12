@@ -63,8 +63,6 @@ const moduleItem = {
   status: "published",
   duration: null,
   metadata: {},
-  gradingMethod: null,
-  maxPoints: null,
   gradingConfig: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
@@ -89,8 +87,6 @@ const lessonItem = {
   status: "published",
   duration: 20,
   metadata: {},
-  gradingMethod: null,
-  maxPoints: null,
   gradingConfig: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
@@ -157,9 +153,6 @@ describe("ContentTree course management", () => {
     await user.click(screen.getByRole("combobox", { name: /type/i }));
 
     expect(screen.getByRole("option", { name: "Lesson" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("option", { name: "Assignment" }),
-    ).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Quiz" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Project" })).toBeInTheDocument();
     expect(

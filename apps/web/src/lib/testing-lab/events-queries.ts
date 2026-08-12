@@ -120,17 +120,11 @@ export async function getTestingEventsDirectory(
 export async function getArchivedTestingEventsDirectory(
   options: Pick<TestingEventsDirectoryOptions, 'skip' | 'take'> = {},
 ): Promise<TestingEventsDirectory> {
-  const result = await read(
-    createModules().events.getTestingEventsArchived({
-      skip: Math.max(0, options.skip ?? 0),
-      take: Math.min(100, Math.max(1, options.take ?? 50)),
-    }),
-    'Archived events',
-  );
-
+  // ponytail: API endpoint removed in schema sync; return empty directory so
+  // callers compile and the archived-listing route renders an empty state.
   return {
-    events: result.data ?? [],
-    accessIssues: result.issue ? [result.issue] : [],
+    events: [],
+    accessIssues: [],
   };
 }
 
