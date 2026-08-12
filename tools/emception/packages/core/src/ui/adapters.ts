@@ -19,8 +19,8 @@
 // Pure core: no DOM, no React, no Node. Inputs are plain string maps;
 // outputs are plain JS objects.
 
-import type { EmceptionEventName } from '../events';
-import type { ViewConfigInput } from './config';
+import type { EmceptionEventName } from '../events.js';
+import type { ViewConfigInput } from './config.js';
 
 // ─────────────── kebab ⇄ camel ───────────────
 
