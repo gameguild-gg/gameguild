@@ -88,6 +88,7 @@ function makeResolvedConfig(
 
 describe(
   'CredentialsProvider E2E',
+  { timeout: 60_000 },
   () => {
     const creds = uniqueCredentials();
 
@@ -161,7 +162,6 @@ describe(
       ).rejects.toThrow(CredentialsSignInError);
     });
   },
-  { timeout: 60_000 }
 );
 
 // ─── 2. JWT Encode / Decode ──────────────────────────────────────
@@ -256,6 +256,7 @@ describe('JWT encode/decode E2E', () => {
 
 describe(
   'Session pipeline E2E',
+  { timeout: 60_000 },
   () => {
     let providerResult: ProviderResult;
     const creds = uniqueCredentials();
@@ -369,13 +370,13 @@ describe(
       expect(token).toBeNull();
     });
   },
-  { timeout: 60_000 }
 );
 
 // ─── 4. Token Refresh E2E ────────────────────────────────────────
 
 describe(
   'Token refresh E2E',
+  { timeout: 60_000 },
   () => {
     const creds = uniqueCredentials();
 
@@ -471,7 +472,6 @@ describe(
       ).rejects.toThrow(TokenRefreshError);
     });
   },
-  { timeout: 60_000 }
 );
 
 // ─── 5. CSRF Token E2E ──────────────────────────────────────────
@@ -558,9 +558,11 @@ describe('SessionStore', () => {
 
 describe(
   'Full auth flow: sign-up → provider → JWT → cookie → session',
+  { timeout: 60_000 },
   () => {
     it(
       'completes the entire pipeline end-to-end',
+      { timeout: 60_000 },
       async () => {
         const creds = uniqueCredentials();
         const config = makeResolvedConfig();
@@ -651,7 +653,6 @@ describe(
         expect(refreshed.accessToken).toBeTruthy();
         expect(refreshed.accessToken).not.toBe(payload.accessToken);
       },
-      { timeout: 60_000 }
     );
   }
 );
@@ -660,9 +661,11 @@ describe(
 
 describe(
   'Generated AuthenticationModule E2E',
+  { timeout: 60_000 },
   () => {
     it(
       'signs up and signs in via the generated module',
+      { timeout: 60_000 },
       async () => {
         const creds = uniqueCredentials();
 
@@ -729,7 +732,6 @@ describe(
           expect(session.expires).toBeTruthy();
         }
       },
-      { timeout: 60_000 }
     );
   }
 );
