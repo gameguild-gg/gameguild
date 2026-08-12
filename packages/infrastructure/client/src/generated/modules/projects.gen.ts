@@ -27,6 +27,7 @@ export class ProjectsModule {
     featured?: boolean;
     popular?: boolean;
     recent?: boolean;
+    currentTenantOnly?: boolean;
     skip?: number;
     take?: number;
     sortBy?: string;
