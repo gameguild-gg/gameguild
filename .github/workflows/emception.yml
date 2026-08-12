@@ -260,6 +260,10 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7 # v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          lfs: false
 
       - name: Configure npm registry
         uses: actions/setup-node@v7 # v7.0.0
@@ -282,6 +286,18 @@ jobs:
           fi
 
           rsync -a "${SOURCE}/packages/" tools/emception/packages/
+
+      - name: Bump package versions from conventional commits
+        shell: bash
+        run: |
+          # Computes the next version from commits since the last release tag
+          # and rewrites every fixed-group package.json in lockstep.
+          # Bump rules: BREAKING CHANGE / `!:` → major, feat: → minor,
+          # fix:/perf:/refactor:/revert: → patch, everything else ignored.
+          # If no release-relevant commits are found, falls back to the
+          # version already in package.json (the publish loop then skips
+          # already-published versions).
+          node scripts/devops/auto-changeset.mjs --apply
 
       - name: Publish unpublished package versions
         working-directory: tools/emception
