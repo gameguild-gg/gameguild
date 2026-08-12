@@ -1056,16 +1056,18 @@ export function TestingSlotRegistrations({
         const testerLabel = registration.userId ? memberLabels[registration.userId] : undefined;
         const assignableProjects = approvedApplications.filter((application) => !application.slotId || application.slotId === registration.slotId);
         const canAssignProject = ['CheckedIn', 'Attended'].includes(registration.status ?? '');
+        const isTerminalRegistration = ['Cancelled', 'Completed', 'NoShow'].includes(registration.status ?? '');
+        const pendingFeedbackCount = isTerminalRegistration ? 0 : (registration.pendingFeedbackCount ?? 0);
 
         return (
           <div key={registration.id} className="flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{testerLabel ?? 'Unknown tester'}</p>
               <p className="text-xs text-muted-foreground">
-                {registration.pendingFeedbackCount ?? 0} pending feedback / {formatTestingEventStatus(registration.status)}
+                {pendingFeedbackCount} pending feedback / {formatTestingEventStatus(registration.status)}
               </p>
             </div>
-            {registration.id && !readOnly ? (
+            {registration.id && !readOnly && !isTerminalRegistration ? (
               <div className="flex flex-wrap items-center gap-2">
                 {canAssignProject && assignableProjects.length > 0 ? (
                   <EventActionDialog

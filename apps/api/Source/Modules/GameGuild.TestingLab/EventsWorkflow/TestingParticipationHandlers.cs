@@ -419,12 +419,15 @@ public sealed class TestingParticipationHandlers(
                 registration.CheckedInAt,
                 registration.CheckedOutAt,
                 registration.CompletedAt,
-                context.Set<TestingFeedbackObligation>().Count(obligation =>
-                    obligation.EventId == registration.EventId &&
-                    obligation.SlotId == registration.SlotId &&
-                    obligation.TesterUserId == registration.UserId &&
-                    obligation.Status == TestingFeedbackObligationStatus.Pending &&
-                    obligation.DeletedAt == null)))
+                registration.Status == TestingSlotRegistrationStatus.Cancelled ||
+                registration.Status == TestingSlotRegistrationStatus.NoShow
+                    ? 0
+                    : context.Set<TestingFeedbackObligation>().Count(obligation =>
+                        obligation.EventId == registration.EventId &&
+                        obligation.SlotId == registration.SlotId &&
+                        obligation.TesterUserId == registration.UserId &&
+                        obligation.Status == TestingFeedbackObligationStatus.Pending &&
+                        obligation.DeletedAt == null)))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -663,12 +666,14 @@ public sealed class TestingParticipationHandlers(
         TestingSlotRegistration registration,
         CancellationToken cancellationToken)
     {
-        var pendingFeedback = await context.Set<TestingFeedbackObligation>().CountAsync(candidate =>
-            candidate.SlotId == registration.SlotId &&
-            candidate.TesterUserId == registration.UserId &&
-            candidate.Status == TestingFeedbackObligationStatus.Pending &&
-            candidate.DeletedAt == null,
-            cancellationToken).ConfigureAwait(false);
+        var pendingFeedback = registration.Status is TestingSlotRegistrationStatus.Cancelled or TestingSlotRegistrationStatus.NoShow
+            ? 0
+            : await context.Set<TestingFeedbackObligation>().CountAsync(candidate =>
+                candidate.SlotId == registration.SlotId &&
+                candidate.TesterUserId == registration.UserId &&
+                candidate.Status == TestingFeedbackObligationStatus.Pending &&
+                candidate.DeletedAt == null,
+                cancellationToken).ConfigureAwait(false);
         return new TestingSlotRegistrationProjection(
             registration.Id,
             registration.EventId,
