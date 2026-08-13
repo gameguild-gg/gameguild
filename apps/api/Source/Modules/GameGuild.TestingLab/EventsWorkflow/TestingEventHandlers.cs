@@ -7,7 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.TestingLab;
 
-public sealed class TestingEventHandlers(IApplicationDbContext context, IActorContextAccessor actorContextAccessor) :
+public sealed class TestingEventHandlers(
+    IApplicationDbContext context,
+    IActorContextAccessor actorContextAccessor,
+    ITestingLabPermissionService? testingLabPermissionService = null) :
     ICommandHandler<CreateTestingEventCommand, Result<TestingEventProjection>>,
     ICommandHandler<UpdateTestingEventCommand, Result<TestingEventProjection>>,
     ICommandHandler<DeleteTestingEventCommand, Result<bool>>,
@@ -33,7 +36,7 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
     IQueryHandler<GetTestingEventSlotsQuery, Result<IReadOnlyList<TestingEventSlotProjection>>>,
     IQueryHandler<GetTestingEventCommitteeQuery, Result<IReadOnlyList<TestingEventCommitteeMemberProjection>>>
 {
-    private bool IsSystemAdmin => actorContextAccessor.ActorContext.IsSystemAdmin;
+    private bool IsTenantAdmin => actorContextAccessor.ActorContext.IsTenantAdmin;
 
     public async Task<Result<TestingEventProjection>> Handle(CreateTestingEventCommand request, CancellationToken cancellationToken)
     {
@@ -323,12 +326,17 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
     {
         var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
         if (actor.Error != null) return Result.Failure<TestingEventProjection>(actor.Error);
+        var canReadAllEvents = IsTenantAdmin || await HasTestingLabPermissionAsync(
+            actor,
+            TestingLabActions.Read,
+            TestingLabResourceTypes.Event).ConfigureAwait(false);
         var projection = await context.Set<TestingEvent>()
             .AsNoTracking()
             .Where(testingEvent =>
                 testingEvent.Id == request.EventId &&
                 testingEvent.TenantId == actor.TenantId &&
-                testingEvent.DeletedAt == null)
+                testingEvent.DeletedAt == null &&
+                (canReadAllEvents || testingEvent.ManagerUserId == actor.UserId))
             .Select(EventProjection)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -344,6 +352,15 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
         var query = context.Set<TestingEvent>()
             .AsNoTracking()
             .Where(testingEvent => testingEvent.TenantId == actor.TenantId && testingEvent.DeletedAt == null);
+        var canReadAllEvents = IsTenantAdmin || await HasTestingLabPermissionAsync(
+            actor,
+            TestingLabActions.Read,
+            TestingLabResourceTypes.Event).ConfigureAwait(false);
+        if (!canReadAllEvents)
+        {
+            var actorId = actor.UserId;
+            query = query.Where(testingEvent => testingEvent.ManagerUserId == actorId);
+        }
         if (request.Status.HasValue) query = query.Where(testingEvent => testingEvent.Status == request.Status.Value);
         var events = await query
             .OrderByDescending(testingEvent => testingEvent.StartsAt)
@@ -361,13 +378,23 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
     {
         var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
         if (actor.Error != null) return Result.Failure<IReadOnlyList<TestingEventProjection>>(actor.Error);
-        var events = await context.Set<TestingEvent>()
+        var query = context.Set<TestingEvent>()
             .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(testingEvent =>
                 testingEvent.TenantId == actor.TenantId &&
                 testingEvent.DeletedAt != null &&
-                testingEvent.Status != TestingEventStatus.Draft)
+                testingEvent.Status != TestingEventStatus.Draft);
+        var canReadAllEvents = IsTenantAdmin || await HasTestingLabPermissionAsync(
+            actor,
+            TestingLabActions.Read,
+            TestingLabResourceTypes.Event).ConfigureAwait(false);
+        if (!canReadAllEvents)
+        {
+            var actorId = actor.UserId;
+            query = query.Where(testingEvent => testingEvent.ManagerUserId == actorId);
+        }
+        var events = await query
             .OrderByDescending(testingEvent => testingEvent.DeletedAt)
             .Skip(Math.Max(0, request.Skip))
             .Take(Math.Clamp(request.Take, 1, 100))
@@ -693,7 +720,13 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
             .ConfigureAwait(false);
         if (testingEvent == null)
             return new(null, Error.NotFound("TestingLab.EventNotFound", "Testing event not found."));
-        if (testingEvent.ManagerUserId != actor.UserId && !IsSystemAdmin)
+        var hasPermission = testingLabPermissionService != null && await testingLabPermissionService.HasPermissionAsync(
+            actor.UserId,
+            actor.TenantId,
+            TestingLabActions.Edit,
+            TestingLabResourceTypes.Event,
+            testingEvent.Id).ConfigureAwait(false);
+        if (testingEvent.ManagerUserId != actor.UserId && !IsTenantAdmin && !hasPermission)
             return new(null, Error.Forbidden("TestingLab.EventManagerRequired", "Only the event manager can perform this operation."));
         return new(testingEvent, null);
     }
@@ -713,7 +746,13 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
             .ConfigureAwait(false);
         if (testingEvent == null)
             return new(null, Error.NotFound("TestingLab.ArchivedEventNotFound", "Archived testing event not found."));
-        if (testingEvent.ManagerUserId != actor.UserId && !IsSystemAdmin)
+        var hasPermission = testingLabPermissionService != null && await testingLabPermissionService.HasPermissionAsync(
+            actor.UserId,
+            actor.TenantId,
+            TestingLabActions.Edit,
+            TestingLabResourceTypes.Event,
+            testingEvent.Id).ConfigureAwait(false);
+        if (testingEvent.ManagerUserId != actor.UserId && !IsTenantAdmin && !hasPermission)
             return new(null, Error.Forbidden("TestingLab.EventManagerRequired", "Only the event manager can perform this operation."));
         return new(testingEvent, null);
     }
@@ -727,8 +766,20 @@ public sealed class TestingEventHandlers(IApplicationDbContext context, IActorCo
         var hasAccess = await TestingLabActorAccess.IsActiveTenantActorAsync(context, actor, cancellationToken).ConfigureAwait(false);
         return hasAccess
             ? new(userId.Value, actor.TenantId.Value, null)
-            : new(Guid.Empty, Guid.Empty, Error.Unauthorized("TestingLab.InactiveActor", "An active user and tenant membership are required."));
+             : new(Guid.Empty, Guid.Empty, Error.Unauthorized("TestingLab.InactiveActor", "An active user and tenant membership are required."));
     }
+
+    private Task<bool> HasTestingLabPermissionAsync(
+        ActorScope actor,
+        string action,
+        string resourceType,
+        Guid? resourceId = null)
+        => testingLabPermissionService?.HasPermissionAsync(
+               actor.UserId,
+               actor.TenantId,
+               action,
+               resourceType,
+               resourceId) ?? Task.FromResult(false);
 
     private static bool IsWithinEvent(TestingEvent testingEvent, DateTime startsAt, DateTime endsAt) =>
         startsAt >= testingEvent.StartsAt && endsAt <= testingEvent.EndsAt;

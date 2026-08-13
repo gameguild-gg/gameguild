@@ -2,7 +2,7 @@ import { getMembers } from '@/lib/community/queries/members';
 import { TestingSlotRegistrations, type TestingLabApprovedApplicationOption } from '@/components/testing-lab/testing-event-management';
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
 import { formatEventDateTime, isTestingEventReadOnly } from '@/lib/testing-lab/event-workspace';
-import { getTestingEventWorkspaceData } from '@/lib/testing-lab/events-queries';
+import { getTestingApplicationTesterEligibility, getTestingEventWorkspaceData } from '@/lib/testing-lab/events-queries';
 import { getTestingProjectOptions } from '@/lib/testing-lab/queries';
 import { Badge } from '@game-guild/ui/components/badge';
 import { UsersRound } from 'lucide-react';
@@ -12,6 +12,23 @@ export default async function TestingEventTestersPage({ params }: { params: Prom
   const { eventId } = await params;
   const [detail, memberDirectory, projects] = await Promise.all([getTestingEventWorkspaceData(eventId), getMembers({ page: 1, limit: 100 }), getTestingProjectOptions()]);
   if (!detail.event) notFound();
+
+  const testerUserIds = [...new Set(
+    Object.values(detail.registrationsBySlot)
+      .flat()
+      .map((registration) => registration.userId)
+      .filter((userId): userId is string => Boolean(userId)),
+  )];
+  const testerEligibility = await getTestingApplicationTesterEligibility(eventId, testerUserIds);
+  const eligibleTesterIdsByApplication = new Map<string, string[]>();
+  testerEligibility.eligibility.forEach(({ testerUserId, eligibleApplicationIds }) => {
+    if (!testerUserId) return;
+    (eligibleApplicationIds ?? []).forEach((applicationId) => {
+      const testerIds = eligibleTesterIdsByApplication.get(applicationId) ?? [];
+      testerIds.push(testerUserId);
+      eligibleTesterIdsByApplication.set(applicationId, testerIds);
+    });
+  });
 
   const readOnly = isTestingEventReadOnly(detail.event);
   const terminalStatuses = new Set(['Cancelled', 'Completed', 'NoShow']);
@@ -34,6 +51,7 @@ export default async function TestingEventTestersPage({ params }: { params: Prom
       id: application.id,
       slotId: application.assignedSlotId,
       label: projectLabels.get(application.projectId) ?? 'Approved project',
+      eligibleTesterUserIds: eligibleTesterIdsByApplication.get(application.id) ?? [],
     }));
 
   return (
@@ -41,6 +59,11 @@ export default async function TestingEventTestersPage({ params }: { params: Prom
       <TestingLabPageHeader headingLevel={2} icon={UsersRound} title="Testers and attendance" description="Manage tester participation per slot and preserve check-in, check-out, no-show, and completion evidence." />
 
       <p className="text-sm text-muted-foreground">{total === 1 ? '1 tester registered across this event.' : `${total} testers registered across this event.`}</p>
+      {testerEligibility.accessIssues.length > 0 ? (
+        <p role="alert" className="text-sm text-destructive">
+          Project eligibility could not be loaded. Assignment is disabled to prevent conflicts of interest.
+        </p>
+      ) : null}
 
       {detail.slots.length === 0 ? (
         <div className="rounded-md border border-dashed p-8 text-center">

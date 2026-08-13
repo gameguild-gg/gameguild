@@ -220,7 +220,11 @@ async function executeRequest<T>(
 /**
  * Build full URL with base URL, path, and query parameters
  */
-function buildUrl(baseUrl: string, path: string, query?: Record<string, string | number | boolean | undefined>): string {
+function buildUrl(
+  baseUrl: string,
+  path: string,
+  query?: Record<string, string | number | boolean | undefined | Array<string | number | boolean | undefined>>,
+): string {
   // Remove trailing slash from base and leading slash from path
   const base = baseUrl.replace(/\/$/, '');
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -232,7 +236,11 @@ function buildUrl(baseUrl: string, path: string, query?: Record<string, string |
     const params = new URLSearchParams();
 
     for (const [key, value] of Object.entries(query)) {
-      if (value !== undefined && value !== null) {
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          if (item !== undefined) params.append(key, String(item));
+        });
+      } else if (value !== undefined && value !== null) {
         params.append(key, String(value));
       }
     }

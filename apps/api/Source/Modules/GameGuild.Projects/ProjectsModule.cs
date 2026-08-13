@@ -17,6 +17,8 @@ public static class ProjectsModule {
         services.AddScoped<IProjectEngagementService, ProjectEngagementService>();
         services.AddScoped<IProjectChannelAvailabilityService, ProjectChannelAvailabilityService>();
         services.AddScoped<IProjectAuthorizationService, ProjectAuthorizationService>();
+        services.AddScoped<IPermissionResolver, ProjectPermissionResolver>();
+        services.AddScoped<IResourcePermissionService, ProjectResourcePermissionService>();
         services.AddScoped<IProjectLifecycleLock, ProjectLifecycleLock>();
         services.AddScoped<IProjectLifecycleParticipant, ProjectStoreProductLifecycleParticipant>();
         services.AddScoped<IProjectLifecycleCoordinator, ProjectLifecycleCoordinator>();

@@ -28,6 +28,15 @@ type LearnerCertificateRecord = LearningCertificatesCertificate & {
   verificationUrl?: string | null;
 };
 
+type AssessmentWithLegacyPassingScore = LearningAssessmentsAssessment & {
+  passingScore?: number;
+};
+
+type LearnerAssessmentWithLegacyPassingScore =
+  LearningWorkspacesLearnerAssessment & {
+    passingScore?: number;
+  };
+
 export interface LearnerCourseRecord {
   course: CourseAttendanceData;
   context: LearnerCourseContext;
@@ -103,8 +112,9 @@ function mapAssessment(
   assessment: LearningWorkspacesLearnerAssessment,
   courseId: string,
   groupNames: ReadonlyMap<string, string>,
-): LearningAssessmentsAssessment {
+): AssessmentWithLegacyPassingScore {
   const groupId = assessment.groupId ?? null;
+  const legacyAssessment = assessment as LearnerAssessmentWithLegacyPassingScore;
 
   return {
     id: assessment.assessmentId,
@@ -116,7 +126,7 @@ function mapAssessment(
       ? "Quiz"
       : assessment.type) as LearningAssessmentsAssessment["type"],
     maxScore: assessment.maxScore,
-    passingScore: assessment.passingScore,
+    passingScore: legacyAssessment.passingScore,
     timeLimitMinutes: assessment.timeLimitMinutes,
     maxAttempts: assessment.maxAttempts,
     isRequired: assessment.isRequired,
@@ -336,7 +346,9 @@ export async function getMyLearnerRecords(): Promise<LearnerCourseRecord[]> {
                 ? "Quiz"
                 : item.type) as LearningAssessmentsAssessment["type"],
               maxScore: item.maxScore,
-              passingScore: item.passingScore,
+              passingScore: (
+                item as typeof item & { passingScore?: number }
+              ).passingScore,
               availableFrom: item.availableFrom,
               availableUntil: item.availableUntil,
               assessmentGroupId: groupId,

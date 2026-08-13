@@ -29,15 +29,14 @@ public sealed class ProjectStoreProductHandlers(
             return Result.Failure<ProjectStoreProductProjection>(Error.Unauthorized("ProjectStoreProduct.Unauthenticated", "An authenticated tenant actor is required."));
 
         await using var lockHandle = await _lifecycleLock.AcquireAsync(request.ProjectId, cancellationToken).ConfigureAwait(false);
+        if (!await authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false))
+            return Result.Failure<ProjectStoreProductProjection>(Error.NotFound("ProjectStoreProduct.ProjectNotFound", "Project not found."));
 
         var availability = await availabilityService
             .GetAsync(request.ProjectId, ProjectChannel.Store, actor.TenantId, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
         if (!availability.IsAvailable)
             return Result.Failure<ProjectStoreProductProjection>(Error.Validation("ProjectStoreProduct.ProjectUnavailable", availability.Reason));
-
-        if (!await authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false))
-            return Result.Failure<ProjectStoreProductProjection>(Error.Forbidden("ProjectStoreProduct.ProjectForbidden", "Project Edit permission is required."));
 
         var product = await context.Set<Product>()
             .FirstOrDefaultAsync(candidate => candidate.Id == request.ProductId && candidate.DeletedAt == null, cancellationToken)
@@ -84,7 +83,7 @@ public sealed class ProjectStoreProductHandlers(
         if (!actor.IsAuthenticated || actorId == null || actor.TenantId == null)
             return Result.Failure<bool>(Error.Unauthorized("ProjectStoreProduct.Unauthenticated", "An authenticated tenant actor is required."));
         if (!await authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false))
-            return Result.Failure<bool>(Error.Forbidden("ProjectStoreProduct.ProjectForbidden", "Project Edit permission is required."));
+            return Result.Failure<bool>(Error.NotFound("ProjectStoreProduct.ProjectNotFound", "Project not found."));
 
         var product = await context.Set<Product>()
             .IgnoreQueryFilters()
@@ -125,6 +124,9 @@ public sealed class ProjectStoreProductHandlers(
             return Result.Failure<IReadOnlyList<ProjectStoreProductProjection>>(
                 Error.Unauthorized("ProjectStoreProduct.Unauthenticated", "An active authenticated tenant actor is required."));
         }
+        if (!await authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false))
+            return Result.Failure<IReadOnlyList<ProjectStoreProductProjection>>(
+                Error.NotFound("ProjectStoreProduct.ProjectNotFound", "Project not found."));
 
         var availability = await availabilityService
             .GetAsync(request.ProjectId, ProjectChannel.Store, actor.TenantId, cancellationToken: cancellationToken)
@@ -132,9 +134,6 @@ public sealed class ProjectStoreProductHandlers(
         if (!availability.IsAvailable)
             return Result.Failure<IReadOnlyList<ProjectStoreProductProjection>>(
                 Error.Validation("ProjectStoreProduct.ProjectUnavailable", availability.Reason));
-        if (!await authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false))
-            return Result.Failure<IReadOnlyList<ProjectStoreProductProjection>>(Error.Forbidden("ProjectStoreProduct.ProjectForbidden", "Project Edit permission is required."));
-
         var tenantId = actor.TenantId.Value;
         var validLinks = context.Set<ProjectStoreProduct>()
             .AsNoTracking()

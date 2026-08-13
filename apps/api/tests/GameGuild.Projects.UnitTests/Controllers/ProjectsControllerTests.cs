@@ -11,6 +11,7 @@ public class ProjectsControllerTests
     private readonly Guid _actorId = Guid.NewGuid();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IActorContextAccessor> _actorContextAccessor = new();
+    private readonly Mock<IProjectAuthorizationService> _authorizationService = new();
     private readonly TestProjectsDbContext _context;
 
     public ProjectsControllerTests()
@@ -23,6 +24,12 @@ public class ProjectsControllerTests
         _actorContextAccessor
             .SetupGet(x => x.ActorContext)
             .Returns(ActorContextBuilder.ForUser(_actorId).WithRole("Admin").Build());
+        _authorizationService
+            .Setup(service => service.HasPermissionAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<GameGuild.Identity.Authorization.PermissionType>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
     }
 
     [Fact]
@@ -246,5 +253,5 @@ public class ProjectsControllerTests
     }
 
     private ProjectsController CreateController()
-        => new(_mediator.Object, _actorContextAccessor.Object, _context, NullLogger<ProjectsController>.Instance);
+        => new(_mediator.Object, _actorContextAccessor.Object, _context, _authorizationService.Object, NullLogger<ProjectsController>.Instance);
 }

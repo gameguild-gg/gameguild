@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
     getTestingEventsApplicationsByApplicationId: vi.fn(),
     getTestingEventsByEventIdApplications: vi.fn(),
     getTestingEventsCommittee: vi.fn(),
+    getTestingEventsApplicationsTesterEligibility: vi.fn(),
     getTestingEventsPublic: vi.fn(),
     getTestingEventsPublicByEventId: vi.fn(),
     getTestingEventsApplicationsMe: vi.fn(),
@@ -50,6 +51,7 @@ import {
   getTestingEventManagerData,
   getTestingEventsDirectory,
   getTestingParticipantDirectory,
+  getTestingApplicationTesterEligibility,
 } from './events-queries';
 
 describe('Testing Lab event queries', () => {
@@ -58,6 +60,13 @@ describe('Testing Lab event queries', () => {
     mocks.getToken.mockResolvedValue('access-token');
     mocks.auth.mockResolvedValue({ tenantId: 'tenant-1', user: { id: 'user-1' } });
     mocks.createServerClient.mockReturnValue({ kind: 'server-client' });
+    mocks.events.getTestingEventsApplicationsTesterEligibility.mockResolvedValue({
+      ok: true,
+      data: [
+        { testerUserId: 'tester-1', eligibleApplicationIds: [] },
+        { testerUserId: 'tester-2', eligibleApplicationIds: ['application-1'] },
+      ],
+    });
     mocks.events.getTestingEvents.mockResolvedValue({
       ok: true,
       data: [
@@ -188,8 +197,9 @@ describe('Testing Lab event queries', () => {
   it('loads archived events through the dedicated generated-client operation', async () => {
     const result = await getArchivedTestingEventsDirectory({ skip: 5, take: 20 });
 
-    expect(result.events).toEqual([]);
+    expect(result.events).toEqual([{ id: 'event-archived', name: 'Archived playtest', status: 'Completed' }]);
     expect(result.accessIssues).toEqual([]);
+    expect(mocks.events.getTestingEventsArchived).toHaveBeenCalledWith({ skip: 5, take: 20 });
   });
 
   it('loads the tenant participant directory through one generated-client call', async () => {
@@ -237,6 +247,16 @@ describe('Testing Lab event queries', () => {
     expect(result.feedback[0]?.feedback?.overallRating).toBe(9);
     expect(result.accessIssues).toEqual([]);
     expect(mocks.participation.getTestingEventsFeedback).toHaveBeenCalledWith('event-1');
+  });
+
+  it('loads tester eligibility in one tenant-scoped request', async () => {
+    const result = await getTestingApplicationTesterEligibility('event-1', ['tester-1', 'tester-2']);
+
+    expect(result.eligibility).toHaveLength(2);
+    expect(result.accessIssues).toEqual([]);
+    expect(mocks.events.getTestingEventsApplicationsTesterEligibility).toHaveBeenCalledWith('event-1', {
+      testerUserIds: ['tester-1', 'tester-2'],
+    });
   });
   it('keeps partial manager data and reports generated-client failures', async () => {
     mocks.events.getTestingEventsByEventIdApplications.mockResolvedValue({

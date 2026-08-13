@@ -11,6 +11,7 @@ namespace GameGuild.TestingLab;
 public sealed class TestingEventsController(IMediator mediator) : BaseApiController
 {
     [HttpGet]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Event)]
     public async Task<ActionResult<IReadOnlyList<TestingEventProjection>>> GetEvents(
         [FromQuery] TestingEventStatus? status = null,
         [FromQuery] int skip = 0,
@@ -19,6 +20,7 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
         => ToActionResult(await mediator.Send(new GetTestingEventsQuery(status, skip, take), cancellationToken).ConfigureAwait(false));
 
     [HttpGet("archived")]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Event)]
     public async Task<ActionResult<IReadOnlyList<TestingEventProjection>>> GetArchivedEvents(
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50,
@@ -45,10 +47,12 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             cancellationToken).ConfigureAwait(false));
 
     [HttpGet("{eventId:guid}")]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventProjection>> GetEvent(Guid eventId, CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new GetTestingEventQuery(eventId), cancellationToken).ConfigureAwait(false));
 
     [HttpPost]
+    [RequireTestingLabPermission(TestingLabActions.Create, TestingLabResourceTypes.Event)]
     public async Task<ActionResult<TestingEventProjection>> CreateEvent(
         CreateTestingEventRequest request,
         CancellationToken cancellationToken = default)
@@ -70,6 +74,7 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
     }
 
     [HttpPut("{eventId:guid}")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventProjection>> UpdateEvent(
         Guid eventId,
         UpdateTestingEventRequest request,
@@ -87,6 +92,7 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             request.RequiresFeedback), cancellationToken).ConfigureAwait(false));
 
     [HttpDelete("{eventId:guid}")]
+    [RequireTestingLabPermission(TestingLabActions.Delete, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<bool>> DeleteEvent(Guid eventId, CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(new DeleteTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false);
@@ -94,6 +100,7 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
     }
 
     [HttpPost("{eventId:guid}:archive")]
+    [RequireTestingLabPermission(TestingLabActions.Delete, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<bool>> ArchiveEvent(Guid eventId, CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(new ArchiveTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false);
@@ -101,6 +108,7 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
     }
 
     [HttpPost("{eventId:guid}:restore")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<bool>> RestoreEvent(Guid eventId, CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(new RestoreTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false);
@@ -108,26 +116,32 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
     }
 
     [HttpPost("{eventId:guid}:open-applications")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventProjection>> OpenApplications(Guid eventId, CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new OpenTestingEventApplicationsCommand(eventId), cancellationToken).ConfigureAwait(false));
 
     [HttpPost("{eventId:guid}:close-applications")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventProjection>> CloseApplications(Guid eventId, CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new CloseTestingEventApplicationsCommand(eventId), cancellationToken).ConfigureAwait(false));
 
     [HttpPost("{eventId:guid}:schedule")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventProjection>> Schedule(Guid eventId, CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new ScheduleTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false));
 
     [HttpPost("{eventId:guid}:activate")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventProjection>> Activate(Guid eventId, CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new ActivateTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false));
 
     [HttpPost("{eventId:guid}:complete")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventProjection>> Complete(Guid eventId, CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new CompleteTestingEventCommand(eventId), cancellationToken).ConfigureAwait(false));
 
     [HttpPost("{eventId:guid}:cancel")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventProjection>> Cancel(
         Guid eventId,
         CancelTestingEventRequest request,
@@ -137,6 +151,7 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             cancellationToken).ConfigureAwait(false));
 
     [HttpPut("{eventId:guid}/learning")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventProjection>> ConfigureLearning(
         Guid eventId,
         ConfigureTestingEventLearningRequest request,
@@ -150,12 +165,14 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             cancellationToken).ConfigureAwait(false));
 
     [HttpGet("{eventId:guid}/slots")]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<IReadOnlyList<TestingEventSlotProjection>>> GetSlots(
         Guid eventId,
         CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new GetTestingEventSlotsQuery(eventId), cancellationToken).ConfigureAwait(false));
 
     [HttpPost("{eventId:guid}/slots")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventSlotProjection>> CreateSlot(
         Guid eventId,
         UpsertTestingEventSlotRequest request,
@@ -178,6 +195,7 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
     }
 
     [HttpPut("{eventId:guid}/slots/{slotId:guid}")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventSlotProjection>> UpdateSlot(
         Guid eventId,
         Guid slotId,
@@ -197,6 +215,7 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             request.LocationId), cancellationToken).ConfigureAwait(false));
 
     [HttpDelete("{eventId:guid}/slots/{slotId:guid}")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<bool>> DeleteSlot(Guid eventId, Guid slotId, CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(new DeleteTestingEventSlotCommand(eventId, slotId), cancellationToken).ConfigureAwait(false);
@@ -204,6 +223,7 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
     }
 
     [HttpGet("{eventId:guid}/committee")]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<IReadOnlyList<TestingEventCommitteeMemberProjection>>> GetCommittee(
         Guid eventId,
         CancellationToken cancellationToken = default)
@@ -212,6 +232,7 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             cancellationToken).ConfigureAwait(false));
 
     [HttpPost("{eventId:guid}/committee")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventCommitteeMemberProjection>> AddCommitteeMember(
         Guid eventId,
         AddTestingEventCommitteeMemberRequest request,
@@ -221,6 +242,7 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             cancellationToken).ConfigureAwait(false));
 
     [HttpDelete("{eventId:guid}/committee/{userId:guid}")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<bool>> RemoveCommitteeMember(
         Guid eventId,
         Guid userId,
@@ -256,6 +278,16 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new GetTestingEventApplicationsQuery(eventId, status, skip, take), cancellationToken).ConfigureAwait(false));
+
+    [HttpGet("{eventId:guid}/applications/tester-eligibility")]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Event, "eventId")]
+    public async Task<ActionResult<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>> GetTesterEligibility(
+        Guid eventId,
+        [FromQuery] Guid[] testerUserIds,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new GetTestingApplicationTesterEligibilityQuery(eventId, testerUserIds),
+            cancellationToken).ConfigureAwait(false));
 
     [HttpGet("applications/me")]
     public async Task<ActionResult<IReadOnlyList<TestingProjectApplicationProjection>>> GetMyApplications(

@@ -170,6 +170,48 @@ describe('Testing Lab event workflow E2E', () => {
     if (!testerId) throw new Error('Tester sign-in did not expose a user id.');
     const tester = actorClient(testerAuth.accessToken, tenant.id);
 
+    const reviewerEmail = `testing_event_reviewer_${tag}@example.com`;
+    const reviewerSignUp = unwrap(
+      await anonymous.request<AuthOutput>({
+        method: 'POST',
+        path: '/v1/auth/sign-up',
+        body: {
+          username: `testing_event_reviewer_${tag}`,
+          email: reviewerEmail,
+          password,
+        },
+        requiresAuth: false,
+      }),
+      'Reviewer sign-up',
+    );
+    const reviewerSignUpId = reviewerSignUp.userId || reviewerSignUp.user?.id;
+    if (!reviewerSignUpId) throw new Error('Reviewer sign-up did not expose a user id.');
+    unwrap(
+      await manager.request<unknown>({
+        method: 'POST',
+        path: `/v1/users/${reviewerSignUpId}/memberships`,
+        body: {
+          tenantId: tenant.id,
+          role: 'Member',
+          invitedByEmail: managerEmail,
+        },
+        requiresAuth: true,
+      }),
+      'Add reviewer tenant membership',
+    );
+    const reviewerAuth = unwrap(
+      await anonymous.request<AuthOutput>({
+        method: 'POST',
+        path: '/v1/auth/sign-in',
+        body: { email: reviewerEmail, password, tenantId: tenant.id },
+        requiresAuth: false,
+      }),
+      'Reviewer tenant sign-in',
+    );
+    const reviewerId = reviewerAuth.userId || reviewerAuth.user?.id;
+    if (!reviewerId) throw new Error('Reviewer sign-in did not expose a user id.');
+    const reviewer = actorClient(reviewerAuth.accessToken, tenant.id);
+
     const project = unwrap(
       await manager.request<Identified>({
         method: 'POST',
@@ -236,7 +278,7 @@ describe('Testing Lab event workflow E2E', () => {
       await manager.request<Identified>({
         method: 'POST',
         path: `/v1/testing/events/${event.id}/committee`,
-        body: { userId: testerId, isChair: true },
+        body: { userId: reviewerId, isChair: true },
         requiresAuth: true,
       }),
       'Add committee reviewer',
@@ -294,7 +336,7 @@ describe('Testing Lab event workflow E2E', () => {
       'Begin application review',
     );
     unwrap(
-      await tester.request<Identified>({
+      await reviewer.request<Identified>({
         method: 'POST',
         path: `/v1/testing/events/applications/${application.id}/votes`,
         body: { decision: 'Approve', comments: 'Playable and suitable for this audience.' },
