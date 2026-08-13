@@ -27,12 +27,9 @@ function startEchoServer(port, opts = {}) {
     });
 }
 
-/** Build a MessageChannel pair where both ports are unref'd so a leaked
- *  port can't keep node:test alive. */
+/** Build a MessageChannel pair. */
 function pair() {
     const ch = new MessageChannel();
-    ch.port1.unref();
-    ch.port2.unref();
     return ch;
 }
 
