@@ -1,8 +1,10 @@
 using GameGuild.Identity.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace GameGuild.Projects;
 
-/// <summary> Stub: Effective permission for a resource </summary>
+/// <summary>Effective permissions returned by the project compatibility API.</summary>
 public class EffectivePermission {
     public Guid ResourceId { get; set; }
     public string ResourceType { get; set; } = string.Empty;
@@ -11,20 +13,20 @@ public class EffectivePermission {
     public DateTime? ExpiresAt { get; set; }
 }
 
-/// <summary> Stub: Result of an invitation operation </summary>
+/// <summary>Result of an invitation operation.</summary>
 public class InvitationResult {
     public bool Success { get; set; }
     public string? ErrorMessage { get; set; }
     public Guid? InvitationId { get; set; }
 }
 
-/// <summary> Stub: Result of a permission update operation </summary>
+/// <summary>Result of a permission update operation.</summary>
 public class PermissionUpdateResult {
     public bool Success { get; set; }
     public string? ErrorMessage { get; set; }
 }
 
-/// <summary> Stub: Result of a share operation </summary>
+/// <summary>Result of a bulk share operation.</summary>
 public class ShareResult {
     public bool Success { get; set; }
     public string? ErrorMessage { get; set; }
@@ -32,7 +34,7 @@ public class ShareResult {
     public int FailureCount { get; set; }
 }
 
-/// <summary> Stub: Request to invite a user to a resource </summary>
+/// <summary>Request to invite a user to a project.</summary>
 public class InviteUserRequest {
     public string Email { get; set; } = string.Empty;
     public PermissionType[] Permissions { get; set; } = [];
@@ -41,7 +43,7 @@ public class InviteUserRequest {
     public bool RequireAcceptance { get; set; } = true;
 }
 
-/// <summary> Stub: Request to share a resource with multiple users </summary>
+/// <summary>Request to share a project with multiple users.</summary>
 public class ShareResourceRequest {
     public string[] UserEmails { get; set; } = [];
     public Guid[] UserIds { get; set; } = [];
@@ -52,13 +54,13 @@ public class ShareResourceRequest {
     public bool NotifyUsers { get; set; } = true;
 }
 
-/// <summary> Stub: Permission resolver interface </summary>
+/// <summary>Compatibility contract backed by the central project authorization service.</summary>
 public interface IPermissionResolver {
     Task<IEnumerable<EffectivePermission>> GetEffectivePermissionsAsync<T>(Guid userId, Guid? tenantId, Guid resourceId, string resourceType);
     Task<bool> CanGrantPermissionsAsync(Guid userId, Guid? tenantId, PermissionType[] permissions, Guid? resourceId = null);
 }
 
-/// <summary> Stub: Resource user info for permission listing </summary>
+/// <summary>Project access entry returned by the compatibility API.</summary>
 public class ResourceUserInfo {
     public Guid UserId { get; set; }
     public string UserName { get; set; } = string.Empty;
@@ -71,7 +73,7 @@ public class ResourceUserInfo {
     public DateTime? ExpiresAt { get; set; }
 }
 
-/// <summary> Stub: Resource permission service interface </summary>
+/// <summary>Compatibility contract backed by the canonical collaborator and typed grant stores.</summary>
 public interface IResourcePermissionService {
     Task<IEnumerable<ResourceUserInfo>> GetResourceUsersAsync(string resourceType, Guid resourceId, Guid requestingUserId);
     Task<InvitationResult> InviteUserToResourceAsync(string resourceType, Guid resourceId, InviteUserRequest request, Guid invitingUserId);
@@ -80,12 +82,33 @@ public interface IResourcePermissionService {
     Task<ShareResult> ShareResourceAsync(string resourceType, Guid resourceId, ShareResourceRequest request, Guid sharingUserId);
 }
 
-/// <summary> Stub: Attribute to require project-level permission </summary>
+/// <summary>Requires an exact project permission and hides unauthorized private projects.</summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
-public class RequireProjectPermissionAttribute : Attribute {
-    public PermissionType Permission { get; }
-    
-    public RequireProjectPermissionAttribute(PermissionType permission) {
-        Permission = permission;
+public sealed class RequireProjectPermissionAttribute : TypeFilterAttribute {
+  public PermissionType Permission { get; }
+
+  public RequireProjectPermissionAttribute(PermissionType permission)
+      : base(typeof(RequireProjectPermissionFilter)) {
+    Permission = permission;
+    Arguments = [permission];
+  }
+}
+
+public sealed class RequireProjectPermissionFilter(
+    PermissionType permission,
+    IProjectAuthorizationService authorizationService) : IAsyncAuthorizationFilter
+{
+    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
+    {
+        if (!context.RouteData.Values.TryGetValue("projectId", out var rawProjectId) ||
+            !Guid.TryParse(Convert.ToString(rawProjectId), out var projectId))
+        {
+            context.Result = new NotFoundResult();
+            return;
+        }
+
+        if (!await authorizationService.HasPermissionAsync(projectId, permission, context.HttpContext.RequestAborted)
+                .ConfigureAwait(false))
+            context.Result = new NotFoundResult();
     }
 }

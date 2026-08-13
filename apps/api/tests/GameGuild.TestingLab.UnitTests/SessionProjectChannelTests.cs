@@ -155,7 +155,7 @@ public sealed class SessionProjectChannelTests : IDisposable
 
         crossTenant.IsFailure.Should().BeTrue();
         forbidden.IsFailure.Should().BeTrue();
-        forbidden.Error.Type.Should().Be(ErrorType.Forbidden);
+        forbidden.Error.Type.Should().Be(ErrorType.NotFound);
     }
 
     [Fact]
@@ -476,6 +476,7 @@ public sealed class SessionProjectChannelTests : IDisposable
         public DbSet<ProjectVersion> ProjectVersions => Set<ProjectVersion>();
         public DbSet<User> Users => Set<User>();
         public DbSet<TenantMember> TenantMembers => Set<TenantMember>();
+        public DbSet<ResourceUserPermission> ResourceUserPermissions => Set<ResourceUserPermission>();
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException();

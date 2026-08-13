@@ -1,6 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
 using GameGuild.Projects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,8 @@ public sealed class TestingApplicationHandlers(
     IActorContextAccessor actorContextAccessor,
     IProjectAuthorizationService projectAuthorizationService,
     ILogger<TestingApplicationHandlers> logger,
-    IProjectLifecycleLock? capacityLock = null) :
+    IProjectLifecycleLock? capacityLock = null,
+    ITestingLabPermissionService? testingLabPermissionService = null) :
     ICommandHandler<SubmitTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
     ICommandHandler<WithdrawTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
     ICommandHandler<BeginReviewTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
@@ -22,10 +24,12 @@ public sealed class TestingApplicationHandlers(
     ICommandHandler<WaitlistTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
     ICommandHandler<AssignTestingProjectApplicationSlotCommand, Result<TestingProjectApplicationProjection>>,
     IQueryHandler<GetTestingProjectApplicationQuery, Result<TestingProjectApplicationProjection>>,
-    IQueryHandler<GetMyTestingProjectApplicationsQuery, Result<IReadOnlyList<TestingProjectApplicationProjection>>>,    IQueryHandler<GetTestingEventApplicationsQuery, Result<IReadOnlyList<TestingProjectApplicationProjection>>>
+    IQueryHandler<GetMyTestingProjectApplicationsQuery, Result<IReadOnlyList<TestingProjectApplicationProjection>>>,
+    IQueryHandler<GetTestingEventApplicationsQuery, Result<IReadOnlyList<TestingProjectApplicationProjection>>>,
+    IQueryHandler<GetTestingApplicationTesterEligibilityQuery, Result<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>>
 {
     private readonly IProjectLifecycleLock _capacityLock = capacityLock ?? new ProjectLifecycleLock(context);
-    private bool IsSystemAdmin => actorContextAccessor.ActorContext.IsSystemAdmin;
+    private bool IsTenantAdmin => actorContextAccessor.ActorContext.IsTenantAdmin;
 
     public async Task<Result<TestingProjectApplicationProjection>> Handle(
         SubmitTestingProjectApplicationCommand request,
@@ -48,7 +52,7 @@ public sealed class TestingApplicationHandlers(
             now > testingEvent.ApplicationsCloseAt)
             return Result.Failure<TestingProjectApplicationProjection>(Validation("This event is not accepting project applications."));
         if (!await projectAuthorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false))
-            return Result.Failure<TestingProjectApplicationProjection>(Error.Forbidden("TestingLab.ProjectForbidden", "Project Edit permission is required."));
+            return Result.Failure<TestingProjectApplicationProjection>(Error.NotFound("TestingLab.ProjectNotFound", "Project not found."));
 
         var projectExists = await context.Set<Project>().AnyAsync(project =>
             project.Id == request.ProjectId &&
@@ -153,7 +157,7 @@ public sealed class TestingApplicationHandlers(
             member.IsActive &&
             member.DeletedAt == null,
             cancellationToken).ConfigureAwait(false);
-        if (!isReviewer && !IsSystemAdmin)
+        if (!isReviewer && !IsTenantAdmin)
             return Result.Failure<TestingApplicationVoteProjection>(Error.Forbidden("TestingLab.CommitteeMemberRequired", "Only active committee members can vote."));
         var duplicate = await context.Set<TestingApplicationVote>().AnyAsync(vote =>
             vote.ApplicationId == application.Id &&
@@ -283,7 +287,10 @@ public sealed class TestingApplicationHandlers(
         if (loaded.Error != null) return Result.Failure<TestingProjectApplicationProjection>(loaded.Error);
         var application = loaded.Application!;
         var actor = loaded.Actor!;
-        var canReview = IsSystemAdmin || application.Event.ManagerUserId == actor.UserId || await context.Set<TestingCommitteeMember>().AnyAsync(member =>
+        var canReview = IsTenantAdmin ||
+            application.Event.ManagerUserId == actor.UserId ||
+            await HasApplicationPermissionAsync(actor, TestingLabActions.Read, application.Id, cancellationToken).ConfigureAwait(false) ||
+            await context.Set<TestingCommitteeMember>().AnyAsync(member =>
             member.EventId == application.EventId &&
             member.UserId == actor.UserId &&
             member.IsActive &&
@@ -313,7 +320,12 @@ public sealed class TestingApplicationHandlers(
             member.IsActive &&
             member.DeletedAt == null,
             cancellationToken).ConfigureAwait(false);
-        if (testingEvent.ManagerUserId != actor.UserId && !isCommitteeMember && !IsSystemAdmin)
+        var hasApplicationRead = await HasApplicationPermissionAsync(
+            actor,
+            TestingLabActions.Read,
+            null,
+            cancellationToken).ConfigureAwait(false);
+        if (testingEvent.ManagerUserId != actor.UserId && !isCommitteeMember && !IsTenantAdmin && !hasApplicationRead)
             return Result.Failure<IReadOnlyList<TestingProjectApplicationProjection>>(Error.Forbidden("TestingLab.EventReviewerRequired", "Event manager or committee access is required."));
 
         var query = context.Set<TestingProjectApplication>()
@@ -356,6 +368,124 @@ public sealed class TestingApplicationHandlers(
         return Result.Success<IReadOnlyList<TestingProjectApplicationProjection>>(
             applications.Select(ToProjection).ToList());
     }
+
+    public async Task<Result<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>> Handle(
+        GetTestingApplicationTesterEligibilityQuery request,
+        CancellationToken cancellationToken)
+    {
+        var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
+        if (actor.Error != null)
+            return Result.Failure<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>(actor.Error);
+
+        var testingEvent = await context.Set<TestingEvent>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(candidate =>
+                candidate.Id == request.EventId &&
+                candidate.TenantId == actor.TenantId &&
+                candidate.DeletedAt == null,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (testingEvent == null)
+            return Result.Failure<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>(
+                Error.NotFound("TestingLab.EventNotFound", "Testing event not found."));
+
+        var isCommitteeMember = await context.Set<TestingCommitteeMember>().AnyAsync(member =>
+            member.EventId == request.EventId &&
+            member.UserId == actor.UserId &&
+            member.IsActive &&
+            member.DeletedAt == null,
+            cancellationToken).ConfigureAwait(false);
+        var hasApplicationRead = await HasApplicationPermissionAsync(
+            actor,
+            TestingLabActions.Read,
+            null,
+            cancellationToken).ConfigureAwait(false);
+        if (testingEvent.ManagerUserId != actor.UserId && !isCommitteeMember && !IsTenantAdmin && !hasApplicationRead)
+            return Result.Failure<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>(
+                Error.Forbidden("TestingLab.EventReviewerRequired", "Event manager or committee access is required."));
+
+        var requestedTesterIds = request.TesterUserIds
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .Take(100)
+            .ToArray();
+        if (requestedTesterIds.Length == 0)
+            return Result.Success<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>([]);
+
+        var activeTesterIds = await context.Set<TenantMember>()
+            .AsNoTracking()
+            .Where(member =>
+                member.TenantId == actor.TenantId &&
+                requestedTesterIds.Contains(member.UserId) &&
+                member.IsActive &&
+                member.DeletedAt == null)
+            .Select(member => member.UserId)
+            .Distinct()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var applications = await (
+                from application in context.Set<TestingProjectApplication>().AsNoTracking()
+                join project in context.Set<Project>().AsNoTracking() on application.ProjectId equals project.Id
+                where application.EventId == request.EventId &&
+                      application.TenantId == actor.TenantId &&
+                      application.Status == TestingApplicationStatus.Approved &&
+                      application.DeletedAt == null &&
+                      project.TenantId == actor.TenantId &&
+                      project.DeletedAt == null
+                select new { ApplicationId = application.Id, application.ProjectId, project.CreatedById })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var projectIds = applications.Select(application => application.ProjectId).Distinct().ToArray();
+
+        var collaboratorConflicts = await context.Set<ProjectCollaborator>()
+            .AsNoTracking()
+            .Where(collaborator =>
+                projectIds.Contains(collaborator.ProjectId) &&
+                activeTesterIds.Contains(collaborator.UserId) &&
+                collaborator.IsActive &&
+                collaborator.DeletedAt == null &&
+                collaborator.LeftAt == null)
+            .Select(collaborator => new { collaborator.ProjectId, collaborator.UserId })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var teamConflicts = await (
+                from projectTeam in context.Set<ProjectTeam>().AsNoTracking()
+                join team in context.Set<Team>().AsNoTracking() on projectTeam.TeamId equals team.Id
+                join member in context.Set<TeamMember>().AsNoTracking() on team.Id equals member.TeamId
+                where projectIds.Contains(projectTeam.ProjectId) &&
+                      activeTesterIds.Contains(member.UserId) &&
+                      projectTeam.IsActive &&
+                      projectTeam.DeletedAt == null &&
+                      projectTeam.EndedAt == null &&
+                      team.IsActive &&
+                      team.DeletedAt == null &&
+                      member.IsActive &&
+                      member.DeletedAt == null
+                select new { projectTeam.ProjectId, member.UserId })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var conflicts = collaboratorConflicts
+            .Select(item => (item.ProjectId, item.UserId))
+            .Concat(teamConflicts.Select(item => (item.ProjectId, item.UserId)))
+            .ToHashSet();
+
+        var result = requestedTesterIds.Select(testerId =>
+            new TestingApplicationTesterEligibilityProjection(
+                testerId,
+                activeTesterIds.Contains(testerId)
+                    ? applications
+                        .Where(application =>
+                            application.CreatedById != testerId &&
+                            !conflicts.Contains((application.ProjectId, testerId)))
+                        .Select(application => application.ApplicationId)
+                        .ToArray()
+                    : [])).ToList();
+        return Result.Success<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>(result);
+    }
+
     private async Task<LoadedApplication> LoadApplicationAsync(Guid applicationId, CancellationToken cancellationToken)
     {
         var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
@@ -378,10 +508,34 @@ public sealed class TestingApplicationHandlers(
     {
         var loaded = await LoadApplicationAsync(applicationId, cancellationToken).ConfigureAwait(false);
         if (loaded.Error != null) return loaded;
-        return loaded.Application!.Event.ManagerUserId == loaded.Actor!.UserId || IsSystemAdmin
+        var actor = loaded.Actor!;
+        var hasManagementPermission = await HasApplicationPermissionAsync(
+            actor,
+            TestingLabActions.Approve,
+            applicationId,
+            cancellationToken).ConfigureAwait(false) || await HasApplicationPermissionAsync(
+            actor,
+            TestingLabActions.Manage,
+            applicationId,
+            cancellationToken).ConfigureAwait(false);
+        return loaded.Application!.Event.ManagerUserId == actor.UserId || IsTenantAdmin || hasManagementPermission
             ? loaded
             : new(null, null, Error.Forbidden("TestingLab.EventManagerRequired", "Only the event manager can decide applications."));
     }
+
+    private Task<bool> HasApplicationPermissionAsync(
+        ActorScope actor,
+        string action,
+        Guid? applicationId,
+        CancellationToken cancellationToken)
+        => testingLabPermissionService == null
+            ? Task.FromResult(false)
+            : testingLabPermissionService.HasPermissionAsync(
+                actor.UserId,
+                actor.TenantId,
+                action,
+                TestingLabResourceTypes.Application,
+                applicationId);
 
     private async Task<ActorScope> RequireActorAsync(CancellationToken cancellationToken)
     {

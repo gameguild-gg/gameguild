@@ -104,4 +104,36 @@ describe('Testing Project detail', () => {
     expect(screen.getByText('A shared platform project.')).toBeInTheDocument();
     expect(screen.queryByText(/Testing request returned 404/i)).not.toBeInTheDocument();
   });
+
+  it('opens an archived request as read-only and keeps restore available', async () => {
+    mocks.getTestingLabProjectDetail.mockResolvedValue({
+      project: { id: 'project-1', title: 'Asterion' },
+      request: {
+        id: 'request-1',
+        title: 'Archived usability pass',
+        status: 'Completed',
+        isDeleted: true,
+      },
+      participants: [{ id: 'participant-1', userId: 'user-1', status: 'Completed' }],
+      sessions: [],
+      feedback: [],
+      accessIssues: [],
+    });
+    mocks.getMembers.mockResolvedValue({
+      members: [{ id: 'user-1', displayName: 'Ana Member', email: 'ana@example.com' }],
+      total: 1,
+    });
+
+    render(
+      await TestingProjectDetailPage({
+        params: Promise.resolve({ projectId: 'request-1' }),
+      }),
+    );
+
+    expect(screen.getByText('Archived request')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Restore' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add participant' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit request' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument();
+  });
 });

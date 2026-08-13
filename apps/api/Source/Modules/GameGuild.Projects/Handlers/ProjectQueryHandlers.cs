@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -25,14 +26,21 @@ public sealed class ProjectQueryHandlers
 
   private readonly IActorContextAccessor _actorContextAccessor;
 
+  private readonly IProjectAuthorizationService _authorizationService;
+
   /// <summary> Gets the current actor context </summary>
   private ActorContext Actor => _actorContextAccessor.ActorContext;
 
   private readonly ILogger<ProjectQueryHandlers> _logger;
 
-  public ProjectQueryHandlers(IApplicationDbContext context, IActorContextAccessor actorContextAccessor, ILogger<ProjectQueryHandlers> logger) {
+  public ProjectQueryHandlers(
+    IApplicationDbContext context,
+    IActorContextAccessor actorContextAccessor,
+    IProjectAuthorizationService authorizationService,
+    ILogger<ProjectQueryHandlers> logger) {
     _context = context;
     _actorContextAccessor = actorContextAccessor;
+    _authorizationService = authorizationService;
     _logger = logger;
   }
 
@@ -60,8 +68,8 @@ public sealed class ProjectQueryHandlers
 
     // Apply access control
     query = request.CurrentTenantOnly
-      ? ApplyCurrentTenantScope(query)
-      : ApplyAccessControl(query);
+      ? ApplyCurrentTenantScope(_authorizationService.ApplyReadAccess(query))
+      : _authorizationService.ApplyReadAccess(query);
 
     // Apply sorting
     query = ApplySorting(query, request.SortBy, request.SortDirection);
@@ -94,7 +102,7 @@ public sealed class ProjectQueryHandlers
     query = query.Include(p => p.CreatedBy).Include(p => p.Category);
 
     // Apply access control
-    query = ApplyAccessControl(query);
+    query = _authorizationService.ApplyReadAccess(query);
 
     var project = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
@@ -121,7 +129,7 @@ public sealed class ProjectQueryHandlers
     query = query.Include(p => p.CreatedBy).Include(p => p.Category);
 
     // Apply access control
-    query = ApplyAccessControl(query);
+    query = _authorizationService.ApplyReadAccess(query);
 
     var project = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     return Result.Success(project);
@@ -134,7 +142,7 @@ public sealed class ProjectQueryHandlers
 
     if (request.Status.HasValue) { query = query.Where(p => p.Status == request.Status.Value); }
 
-    query = ApplyAccessControl(query);
+    query = _authorizationService.ApplyReadAccess(query);
     query = query.Include(p => p.Collaborators).Include(p => p.Category).OrderByDescending(p => p.CreatedAt).Skip(request.Skip).Take(request.Take);
 
     var projects = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -148,7 +156,7 @@ public sealed class ProjectQueryHandlers
 
     if (request.Status.HasValue) { query = query.Where(p => p.Status == request.Status.Value); }
 
-    query = ApplyAccessControl(query);
+    query = _authorizationService.ApplyReadAccess(query);
     query = query.Include(p => p.CreatedBy).Include(p => p.Category).OrderByDescending(p => p.CreatedAt).Skip(request.Skip).Take(request.Take);
 
     var projects = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -162,7 +170,7 @@ public sealed class ProjectQueryHandlers
 
     if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
-    query = ApplyAccessControl(query);
+    query = _authorizationService.ApplyReadAccess(query);
     query = query.Include(p => p.CreatedBy).Include(p => p.Category).OrderByDescending(p => p.CreatedAt).Skip(request.Skip).Take(request.Take);
 
     var projects = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -213,7 +221,7 @@ public sealed class ProjectQueryHandlers
 
     if (request.Visibility.HasValue) query = query.Where(p => p.Visibility == request.Visibility.Value);
 
-    query = ApplyAccessControl(query);
+    query = _authorizationService.ApplyReadAccess(query);
     query = ApplySorting(query, request.SortBy, request.SortDirection);
 
     query = query.Include(p => p.CreatedBy).Include(p => p.Category).Skip(request.Skip).Take(request.Take);
@@ -223,6 +231,9 @@ public sealed class ProjectQueryHandlers
   }
 
   public async Task<Result<ProjectStatistics>> Handle(GetProjectStatisticsQuery request, CancellationToken cancellationToken) {
+    if (!await _authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Read, cancellationToken).ConfigureAwait(false))
+      return Result.Failure<ProjectStatistics>(Error.NotFound("Project.NotFound", "Project not found"));
+
     var stats = await GetProjectStatistics(request.ProjectId, cancellationToken, request.FromDate, request.ToDate).ConfigureAwait(false);
     return Result.Success(stats);
   }
@@ -233,7 +244,7 @@ public sealed class ProjectQueryHandlers
     if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
     // Popularity scoring: order by follower count, then feedback count, then recency
-    query = ApplyAccessControl(query);
+    query = _authorizationService.ApplyReadAccess(query);
 
     query = query.Include(p => p.CreatedBy)
                  .Include(p => p.Category)
@@ -251,7 +262,7 @@ public sealed class ProjectQueryHandlers
 
     if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
-    query = ApplyAccessControl(query);
+    query = _authorizationService.ApplyReadAccess(query);
     query = query.Include(p => p.CreatedBy).Include(p => p.Category).OrderByDescending(p => p.CreatedAt).Take(request.Take);
 
     var projects = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -264,7 +275,7 @@ public sealed class ProjectQueryHandlers
     if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
     // Featured = projects with the most collaborators and followers (community-driven featuring)
-    query = ApplyAccessControl(query);
+    query = _authorizationService.ApplyReadAccess(query);
 
     query = query.Include(p => p.CreatedBy)
                  .Include(p => p.Category)
@@ -275,31 +286,6 @@ public sealed class ProjectQueryHandlers
 
     var projects = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     return Result.Success<IEnumerable<Project>>(projects);
-  }
-
-  /// <summary>
-  /// Apply access control based on user context
-  /// </summary>
-  private IQueryable<Project> ApplyAccessControl(IQueryable<Project> query) {
-    // Public projects are always visible
-    var accessibleQuery = query.Where(p => p.Visibility == ContentVisibility.Public);
-
-    if (Actor.IsAuthenticated) {
-      // Authenticated users can see their own private projects
-      accessibleQuery = query.Where(p => p.Visibility == ContentVisibility.Public || (p.Visibility == ContentVisibility.Private && p.Collaborators.Any(c => c.UserId == Actor.SubjectIdAsGuid)));
-
-      // Admins can see everything
-      if (Actor.IsSystemAdmin)
-      {
-        accessibleQuery = query;
-      }
-      else if (Actor.IsTenantAdmin && Actor.TenantId.HasValue)
-      {
-        accessibleQuery = query.Where(project => project.TenantId == Actor.TenantId.Value);
-      }
-    }
-
-    return accessibleQuery;
   }
 
   private IQueryable<Project> ApplyCurrentTenantScope(IQueryable<Project> query) {

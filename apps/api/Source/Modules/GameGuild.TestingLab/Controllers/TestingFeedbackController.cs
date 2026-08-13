@@ -16,9 +16,20 @@ public class TestingFeedbackController(
     ITestingFeedbackOperations feedbackService,
     IActorContextAccessor actorContextAccessor) : BaseApiController
 {
+    [HttpGet("feedback")]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Feedback)]
+    public async Task<ActionResult<TestingFeedbackDirectoryPage>> GetFeedbackDirectory(
+        [FromQuery] TestingFeedbackDirectoryQuery query,
+        CancellationToken cancellationToken)
+    {
+        var feedback = await feedbackService
+            .GetFeedbackDirectoryAsync(query, cancellationToken)
+            .ConfigureAwait(false);
+        return Ok(feedback);
+    }
+
     // POST: testing/requests/{requestId}/feedback
     [HttpPost("requests/{requestId}/feedback")]
-    [RequireResourcePermission<PermissionType, TestingFeedback>(PermissionType.Create)]
     public async Task<ActionResult<TestingFeedback>> AddFeedback(Guid requestId, [FromBody] FeedbackRequest request)
     {
         var userId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
@@ -31,7 +42,7 @@ public class TestingFeedbackController(
 
     // GET: testing/requests/{requestId}/feedback
     [HttpGet("requests/{requestId}/feedback")]
-    [RequireResourcePermission<PermissionType, TestingFeedback>(PermissionType.Read)]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Feedback)]
     public async Task<ActionResult<IEnumerable<TestingFeedback>>> GetTestingRequestFeedback(Guid requestId)
     {
         var feedback = await feedbackService.GetTestingRequestFeedbackAsync(requestId).ConfigureAwait(false);
@@ -40,7 +51,7 @@ public class TestingFeedbackController(
 
     // GET: testing/feedback/by-user/{userId}
     [HttpGet("feedback/by-user/{userId}")]
-    [RequireResourcePermission<PermissionType, TestingFeedback>(PermissionType.Read)]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Feedback)]
     public async Task<ActionResult<IEnumerable<TestingFeedback>>> GetFeedbackByUser(Guid userId)
     {
         var feedback = await feedbackService.GetFeedbackByUserAsync(userId).ConfigureAwait(false);
@@ -49,7 +60,6 @@ public class TestingFeedbackController(
 
     // POST: testing/feedback
     [HttpPost("feedback")]
-    [RequireResourcePermission<PermissionType, TestingFeedback>(PermissionType.Create)]
     public async Task<ActionResult> SubmitFeedback(SubmitFeedbackDto feedbackDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -65,7 +75,6 @@ public class TestingFeedbackController(
 
     // POST: testing/feedback/{id}/report
     [HttpPost("feedback/{feedbackId}/report")]
-    [RequireResourcePermission<PermissionType, TestingFeedback>(PermissionType.Report, "feedbackId")]
     public async Task<ActionResult> ReportFeedback(Guid feedbackId, ReportFeedbackDto reportDto)
     {
         var currentUserId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
@@ -79,7 +88,7 @@ public class TestingFeedbackController(
 
     // POST: testing/feedback/{id}/quality
     [HttpPost("feedback/{feedbackId}/quality")]
-    [RequireResourcePermission<PermissionType, TestingFeedback>(PermissionType.Edit, "feedbackId")]
+    [RequireTestingLabPermission(TestingLabActions.Moderate, TestingLabResourceTypes.Feedback, "feedbackId")]
     public async Task<ActionResult> RateFeedbackQuality(Guid feedbackId, RateFeedbackQualityDto qualityDto)
     {
         var currentUserId = actorContextAccessor.ActorContext.SubjectIdAsGuid;

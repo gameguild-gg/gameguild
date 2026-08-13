@@ -191,22 +191,6 @@ export class CommercePaymentsWalletsModule {
   }
 
   /**
-   * Get wallet audit log
-   */
-  async getWalletsAuditLog(walletId: string, query?: { page?: number; pageSize?: number }): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/wallets/${walletId}/audit-log`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Freeze wallet
    */
   async postWalletsFreeze(walletId: string, body: Types.CommercePaymentsModelsFreezeWalletInput): Promise<Result<void, ApiError>> {
@@ -234,6 +218,22 @@ export class CommercePaymentsWalletsModule {
     const result = await this.client.request({
       method: 'POST',
       path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get wallet audit log
+   */
+  async getWalletsAuditLog(walletId: string, query?: { page?: number; pageSize?: number }): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/wallets/${walletId}/audit-log`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
       requiresAuth: true,
     });
 

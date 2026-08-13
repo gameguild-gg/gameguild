@@ -81,6 +81,7 @@ export interface TestingLabApprovedApplicationOption {
   id: string;
   label: string;
   slotId?: string | null;
+  eligibleTesterUserIds: string[];
 }
 
 export interface TestingLabLearningActivityOption {
@@ -1054,7 +1055,13 @@ export function TestingSlotRegistrations({
     <div className="mt-3 divide-y border-t">
       {registrations.map((registration) => {
         const testerLabel = registration.userId ? memberLabels[registration.userId] : undefined;
-        const assignableProjects = approvedApplications.filter((application) => !application.slotId || application.slotId === registration.slotId);
+        const assignableProjects = approvedApplications.filter((application) => {
+          if (!registration.userId) return false;
+          return (
+            application.eligibleTesterUserIds.includes(registration.userId) &&
+            (!application.slotId || application.slotId === registration.slotId)
+          );
+        });
         const canAssignProject = ['CheckedIn', 'Attended'].includes(registration.status ?? '');
         const isTerminalRegistration = ['Cancelled', 'Completed', 'NoShow'].includes(registration.status ?? '');
         const pendingFeedbackCount = isTerminalRegistration ? 0 : (registration.pendingFeedbackCount ?? 0);
