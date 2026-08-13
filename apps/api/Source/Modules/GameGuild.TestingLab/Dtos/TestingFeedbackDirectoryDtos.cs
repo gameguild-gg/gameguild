@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace GameGuild.TestingLab;
 
 public enum TestingFeedbackSource
@@ -41,6 +43,7 @@ public sealed record TestingFeedbackDirectoryItem(
     string? ReportReason,
     Guid? ReportedByUserId,
     DateTime? ReportedAt,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     FeedbackQuality? QualityRating,
     DateTime CreatedAt,
     DateTime UpdatedAt);
