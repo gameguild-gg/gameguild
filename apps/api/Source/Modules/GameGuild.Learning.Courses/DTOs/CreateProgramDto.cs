@@ -6,7 +6,8 @@ public sealed record CreateProgramDto(
   string? Description,
   string Slug,
   string? Thumbnail = null,
-  Guid? CreatorId = null)
+  Guid? CreatorId = null,
+  decimal PassingScore = 60m)
 {
   public string Title { get; init; } = Title;
 
@@ -17,6 +18,8 @@ public sealed record CreateProgramDto(
   public string? Thumbnail { get; init; } = Thumbnail;
 
   public Guid? CreatorId { get; init; } = CreatorId;
+
+  public decimal PassingScore { get; init; } = PassingScore;
 }
 
 // Content Management DTOs

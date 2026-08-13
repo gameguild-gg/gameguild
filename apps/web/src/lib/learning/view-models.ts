@@ -53,6 +53,7 @@ export interface CourseViewModel {
   thumbnail: string | null;
   videoShowcaseUrl: string | null;
   estimatedHours: number | null;
+  passingScore?: number | null;
   category: string;
   difficulty: string;
   skillsRequired: string | null;

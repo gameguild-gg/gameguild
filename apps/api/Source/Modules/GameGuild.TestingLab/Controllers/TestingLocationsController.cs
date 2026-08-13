@@ -16,7 +16,7 @@ public class TestingLocationsController(
 {
     // GET: testing/locations
     [HttpGet("locations")]
-    [RequireResourcePermission<PermissionType, TestingLocation>(PermissionType.Read)]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Location)]
     public async Task<ActionResult<IEnumerable<TestingLocation>>> GetTestingLocations([FromQuery] int skip = 0, [FromQuery] int take = 50, [FromQuery] bool includeArchived = false)
     {
         var locations = await locationService.GetTestingLocationsAsync(skip, take, includeArchived).ConfigureAwait(false);
@@ -25,7 +25,7 @@ public class TestingLocationsController(
 
     // GET: testing/locations/{id}
     [HttpGet("locations/{id}")]
-    [RequireResourcePermission<PermissionType, TestingLocation>(PermissionType.Read)]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Location, "id")]
     public async Task<ActionResult<TestingLocation>> GetTestingLocation(Guid id)
     {
         var location = await locationService.GetTestingLocationByIdAsync(id).ConfigureAwait(false);
@@ -35,7 +35,7 @@ public class TestingLocationsController(
 
     // POST: testing/locations
     [HttpPost("locations")]
-    [RequireResourcePermission<PermissionType, TestingLocation>(PermissionType.Create)]
+    [RequireTestingLabPermission(TestingLabActions.Create, TestingLabResourceTypes.Location)]
     public async Task<ActionResult<TestingLocation>> CreateTestingLocation(CreateTestingLocationDto locationDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -48,7 +48,7 @@ public class TestingLocationsController(
 
     // PUT: testing/locations/{id}
     [HttpPut("locations/{id}")]
-    [RequireResourcePermission<PermissionType, TestingLocation>(PermissionType.Edit)]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Location, "id")]
     public async Task<ActionResult<TestingLocation>> UpdateTestingLocation(Guid id, UpdateTestingLocationDto locationDto)
     {
         var existingLocation = await locationService.GetTestingLocationByIdAsync(id).ConfigureAwait(false);
@@ -62,7 +62,7 @@ public class TestingLocationsController(
 
     // DELETE: testing/locations/{id}
     [HttpDelete("locations/{id}")]
-    [RequireResourcePermission<PermissionType, TestingLocation>(PermissionType.Delete)]
+    [RequireTestingLabPermission(TestingLabActions.Delete, TestingLabResourceTypes.Location, "id")]
     public async Task<ActionResult> DeleteTestingLocation(Guid id)
     {
         try
@@ -79,7 +79,7 @@ public class TestingLocationsController(
 
     // POST: testing/locations/{id}/restore
     [HttpPost("locations/{id}/restore")]
-    [RequireResourcePermission<PermissionType, TestingLocation>(PermissionType.Edit)]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Location, "id")]
     public async Task<ActionResult> RestoreTestingLocation(Guid id)
     {
         var result = await locationService.RestoreTestingLocationAsync(id).ConfigureAwait(false);

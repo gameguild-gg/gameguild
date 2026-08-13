@@ -63,11 +63,11 @@ public sealed class TestingRequestDetailQueryHandler(
         }
 
         var projection = await context.Set<TestingRequest>()
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(testingRequest =>
                 testingRequest.Id == request.RequestId &&
-                testingRequest.TenantId == actor.TenantId.Value &&
-                testingRequest.DeletedAt == null)
+                testingRequest.TenantId == actor.TenantId.Value)
             .Select(Projection)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);

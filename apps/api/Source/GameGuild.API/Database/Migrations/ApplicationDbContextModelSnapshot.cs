@@ -12325,6 +12325,11 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<int?>("EstimatedHours")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("PassingScore")
+                        .HasPrecision(5, 2)
+                        .HasDefaultValue(60m)
+                        .HasColumnType("numeric(5,2)");
+
                     b.Property<int?>("MaxEnrollments")
                         .HasColumnType("integer");
 

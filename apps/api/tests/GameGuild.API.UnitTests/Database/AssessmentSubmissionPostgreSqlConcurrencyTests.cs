@@ -34,7 +34,7 @@ public sealed class AssessmentSubmissionPostgreSqlConcurrencyTests
             await using (var setup = new ApplicationDbContext(options))
             {
                 await setup.Database.EnsureCreatedAsync();
-                var assessment = Assessment.Create(Guid.NewGuid(), "Concurrent quiz", AssessmentType.Quiz, 100, 60);
+                var assessment = Assessment.Create(Guid.NewGuid(), "Concurrent quiz", AssessmentType.Quiz, 100);
                 assessment.SetMaxAttempts(1);
                 assessmentId = assessment.Id;
                 setup.Add(assessment);

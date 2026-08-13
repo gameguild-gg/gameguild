@@ -82,8 +82,12 @@ export default async function TestingProjectDetailPage({ params }: { params: Pro
         description={request.description ?? 'Project testing brief and operational follow-up.'}
         actions={
           <>
-            <AddTestingParticipantDialog requestId={request.id} members={memberDirectory.members} />
-            <EditTestingRequestDialog request={request} />
+            {!request.isDeleted ? (
+              <>
+                <AddTestingParticipantDialog requestId={request.id} members={memberDirectory.members} />
+                <EditTestingRequestDialog request={request} />
+              </>
+            ) : null}
             {request.downloadUrl ? (
               <Button asChild variant="outline">
                 <a href={request.downloadUrl}>
@@ -110,6 +114,14 @@ export default async function TestingProjectDetailPage({ params }: { params: Pro
         }
       />
       <TestingLabAccessIssues issues={detail.accessIssues} />
+      {request.isDeleted ? (
+        <div className="rounded-md border border-dashed p-4">
+          <p className="font-medium">Archived request</p>
+          <p className="text-sm text-muted-foreground">
+            This record is read-only. Restore it before changing participants, sessions, or request details.
+          </p>
+        </div>
+      ) : null}
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
@@ -174,15 +186,17 @@ export default async function TestingProjectDetailPage({ params }: { params: Pro
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{participant.status ?? 'Registered'}</Badge>
-                      <TestingLabConfirmAction
-                        action={removeTestingParticipant}
-                        fields={{ requestId: request.id, userId: participant.userId }}
-                        label="Remove"
-                        title="Remove this participant?"
-                        description="The member will lose access to this testing request. Their previous feedback remains auditable."
-                        confirmLabel="Remove participant"
-                        intent="delete"
-                      />
+                      {!request.isDeleted ? (
+                        <TestingLabConfirmAction
+                          action={removeTestingParticipant}
+                          fields={{ requestId: request.id, userId: participant.userId }}
+                          label="Remove"
+                          title="Remove this participant?"
+                          description="The member will lose access to this testing request. Their previous feedback remains auditable."
+                          confirmLabel="Remove participant"
+                          intent="delete"
+                        />
+                      ) : null}
                     </div>
                   </div>
                 ))}

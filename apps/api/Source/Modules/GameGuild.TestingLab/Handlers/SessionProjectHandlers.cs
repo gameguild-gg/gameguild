@@ -29,13 +29,13 @@ public sealed class SessionProjectHandlers(
             return Result.Failure<SessionProjectProjection>(authorization.Error);
 
         var actor = actorContextAccessor.ActorContext;
+        if (!await authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false))
+            return Result.Failure<SessionProjectProjection>(Error.NotFound("TestingLab.ProjectNotFound", "Project not found."));
         var availability = await availabilityService
             .GetAsync(request.ProjectId, ProjectChannel.TestingLab, actor.TenantId, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
         if (!availability.IsAvailable)
             return Result.Failure<SessionProjectProjection>(Error.Validation("TestingLab.ProjectUnavailable", availability.Reason));
-        if (!await authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false))
-            return Result.Failure<SessionProjectProjection>(Error.Forbidden("TestingLab.ProjectForbidden", "Project Edit permission is required."));
 
         if (request.ProjectVersionId.HasValue)
         {
@@ -89,7 +89,7 @@ public sealed class SessionProjectHandlers(
         if (authorization.Error != null)
             return Result.Failure<bool>(authorization.Error);
         if (!await authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false))
-            return Result.Failure<bool>(Error.Forbidden("TestingLab.ProjectForbidden", "Project Edit permission is required."));
+            return Result.Failure<bool>(Error.NotFound("TestingLab.ProjectNotFound", "Project not found."));
 
         var link = await context.Set<SessionProject>()
             .FirstOrDefaultAsync(candidate =>

@@ -21,6 +21,7 @@ public static class ProgramMappingExtensions
             Thumbnail = program.Thumbnail,
             VideoShowcaseUrl = program.VideoShowcaseUrl,
             EstimatedHours = program.EstimatedHours,
+            PassingScore = program.PassingScore,
             EnrollmentStatus = program.EnrollmentStatus,
             MaxEnrollments = program.MaxEnrollments,
             EnrollmentDeadline = program.EnrollmentDeadline,

@@ -2,28 +2,41 @@ import { TestingLabActionForm } from '@/components/testing-lab/testing-lab-actio
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
 import { TestingLabAccessIssues, TestingLabEmptyState } from '@/components/testing-lab/testing-lab-state';
 import { rateTestingFeedback, reportTestingFeedback } from '@/lib/testing-lab/actions';
-import { getTestingLabDashboard, getTestingRequestDetail } from '@/lib/testing-lab';
+import { getTestingFeedbackDirectory } from '@/lib/testing-lab';
 import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { MessageSquareText, Search, Star } from 'lucide-react';
+import Link from 'next/link';
 
-export default async function TestingLabFeedbackPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+interface FeedbackSearchParams {
+  q?: string;
+  source?: 'all' | 'event' | 'request';
+  reported?: 'all' | 'reported' | 'unreported';
+  quality?: 'all' | 'Low' | 'Medium' | 'High';
+  page?: string;
+}
+
+function pageHref(params: FeedbackSearchParams, page: number) {
+  const query = Object.fromEntries(
+    Object.entries({ ...params, page: String(page) }).filter(([, value]) => value && value !== 'all'),
+  );
+  return { pathname: '/dashboard/testing-lab/feedback', query };
+}
+
+export default async function TestingLabFeedbackPage({ searchParams }: { searchParams: Promise<FeedbackSearchParams> }) {
   const params = await searchParams;
-  const q = params.q?.trim().toLowerCase() ?? '';
-  const directory = await getTestingLabDashboard();
-  const requestDetails = await Promise.all(directory.requests.slice(0, 50).map((request) => getTestingRequestDetail(request.id)));
-  const issues = [...directory.accessIssues, ...requestDetails.flatMap((detail) => detail.accessIssues)];
-  const feedback = requestDetails
-    .flatMap((detail) =>
-      detail.feedback.map((entry) => ({
-        entry,
-        requestTitle: detail.request?.title ?? 'Testing request',
-      })),
-    )
-    .filter(({ entry, requestTitle }) => {
-      if (!q) return true;
-      return `${requestTitle} ${entry.user?.name ?? ''} ${entry.user?.email ?? ''} ${entry.additionalNotes ?? ''}`.toLowerCase().includes(q);
-    });
+  const page = Math.max(1, Number.parseInt(params.page ?? '1', 10) || 1);
+  const take = 20;
+  const directory = await getTestingFeedbackDirectory({
+    q: params.q,
+    source: params.source ?? 'all',
+    reported: params.reported === 'reported' ? true : params.reported === 'unreported' ? false : undefined,
+    quality: params.quality && params.quality !== 'all' ? params.quality : undefined,
+    skip: (page - 1) * take,
+    take,
+  });
+  const totalPages = Math.max(1, Math.ceil(directory.totalCount / directory.take));
 
   return (
     <div className="space-y-6 p-4 lg:p-6">
@@ -32,28 +45,53 @@ export default async function TestingLabFeedbackPage({ searchParams }: { searchP
         title="Testing feedback"
         description="Review every feedback submission used by active Testing Lab requests, assign quality ratings, and report unsafe or low-integrity content."
       />
-      <TestingLabAccessIssues issues={[...new Set(issues)]} />
-      <form method="get" className="relative max-w-xl">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input name="q" defaultValue={params.q} className="pl-9" placeholder="Search request, member, or feedback" />
+      <TestingLabAccessIssues issues={directory.accessIssues} />
+      <form method="get" className="grid gap-3 md:grid-cols-[minmax(16rem,1fr)_auto_auto_auto]">
+        <label className="relative">
+          <span className="sr-only">Search feedback</span>
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input name="q" defaultValue={params.q} className="pl-9" placeholder="Search context, member, or feedback" />
+        </label>
+        <select name="source" defaultValue={params.source ?? 'all'} className="h-9 rounded-md border bg-background px-3 text-sm">
+          <option value="all">All sources</option>
+          <option value="event">Events</option>
+          <option value="request">Requests</option>
+        </select>
+        <select name="reported" defaultValue={params.reported ?? 'all'} className="h-9 rounded-md border bg-background px-3 text-sm">
+          <option value="all">All reports</option>
+          <option value="reported">Reported</option>
+          <option value="unreported">Not reported</option>
+        </select>
+        <select name="quality" defaultValue={params.quality ?? 'all'} className="h-9 rounded-md border bg-background px-3 text-sm">
+          <option value="all">All qualities</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+        <Button type="submit" className="md:col-start-4">Apply filters</Button>
       </form>
-      {feedback.length === 0 ? (
+      {directory.items.length === 0 ? (
         <TestingLabEmptyState
-          title={q ? 'No feedback matches this search' : 'No feedback submitted'}
+          title={params.q ? 'No feedback matches this search' : 'No feedback submitted'}
           description="Participant feedback appears after a member completes a testing report."
         />
       ) : (
         <div className="space-y-3">
-          {feedback.map(({ entry, requestTitle }) => (
+          {directory.items.map((entry) => {
+            const source = entry.source === 'Event' || entry.source === 1 ? 'Event' : 'Request';
+            const contextTitle = entry.eventName ?? entry.requestTitle ?? `${source} feedback`;
+            return (
             <article key={entry.id} className="rounded-md border p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-semibold">{requestTitle}</h2>
+                    <h2 className="font-semibold">{contextTitle}</h2>
+                    <Badge variant="secondary">{source}</Badge>
+                    {entry.projectTitle ? <Badge variant="outline">{entry.projectTitle}{entry.projectVersion ? ` · ${entry.projectVersion}` : ''}</Badge> : null}
                     {entry.isReported ? <Badge variant="destructive">Reported</Badge> : null}
                     <Badge variant="outline">{entry.testingContext}</Badge>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{entry.user?.name ?? entry.user?.email ?? entry.userId}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{entry.userName ?? entry.userEmail ?? entry.userId}</p>
                 </div>
                 <div className="flex items-center gap-1 text-sm">
                   <Star className="size-4" />
@@ -86,7 +124,19 @@ export default async function TestingLabFeedbackPage({ searchParams }: { searchP
                 </TestingLabActionForm>
               </div>
             </article>
-          ))}
+            );
+          })}
+          {totalPages > 1 ? (
+            <nav aria-label="Feedback pagination" className="flex items-center justify-between pt-2">
+              <Button asChild variant="outline" size="sm" disabled={page <= 1}>
+                <Link aria-disabled={page <= 1} href={pageHref(params, Math.max(1, page - 1))}>Previous</Link>
+              </Button>
+              <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+              <Button asChild variant="outline" size="sm" disabled={page >= totalPages}>
+                <Link aria-disabled={page >= totalPages} href={pageHref(params, Math.min(totalPages, page + 1))}>Next</Link>
+              </Button>
+            </nav>
+          ) : null}
         </div>
       )}
     </div>

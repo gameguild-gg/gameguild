@@ -88,6 +88,21 @@ export class CommerceSubscriptionsBillingSubscriptionsModule {
   }
 
   /**
+   * Renew billing subscription
+   */
+  async postBillingSubscriptionsRenew(subscriptionId: string): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/billing/subscriptions/${subscriptionId}:renew`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Cancel billing subscription
    */
   async postBillingSubscriptionsCancel(
@@ -103,21 +118,6 @@ export class CommerceSubscriptionsBillingSubscriptionsModule {
       method: 'POST',
       path: url,
       body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Renew billing subscription
-   */
-  async postBillingSubscriptionsRenew(subscriptionId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/billing/subscriptions/${subscriptionId}:renew`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
       requiresAuth: true,
     });
 

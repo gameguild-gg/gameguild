@@ -56,8 +56,8 @@ export class LaunchpadModule {
 
   /**
    */
-  async getLaunchPadProjects(projectId: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
-    const url = `/v1/launch-pad/projects/${projectId}`;
+  async getLaunchPadById(id: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
+    const url = `/v1/launch-pad/${id}`;
 
     const result = await this.client.request({
       method: 'GET',
@@ -76,8 +76,8 @@ export class LaunchpadModule {
 
   /**
    */
-  async getLaunchPadById(id: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
-    const url = `/v1/launch-pad/${id}`;
+  async getLaunchPadProjects(projectId: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
+    const url = `/v1/launch-pad/projects/${projectId}`;
 
     const result = await this.client.request({
       method: 'GET',

@@ -1,4 +1,4 @@
-import { SDL_DEMO_CODE } from './ide-types';
+import { SDL_DEMO_CODE, workspaceStorageKey } from './ide-types';
 import { buildFileTree, buildSDL3ArgsPort, detectsSDL, fileName, inferLanguage, isSourceFile, isTextFile, toWorkspaceFsPath } from './ide-utils';
 
 // ─── isSourceFile ────────────────────────────────────────────────────────────
@@ -39,6 +39,17 @@ describe('toWorkspaceFsPath', () => {
   it('maps /user/* to /home/user/*', () => expect(toWorkspaceFsPath('/user/main.cpp')).toBe('/home/user/main.cpp'));
   it('maps a nested /user path correctly', () => expect(toWorkspaceFsPath('/user/lib/utils.cpp')).toBe('/home/user/lib/utils.cpp'));
   it('falls back to /home/user/<basename> for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas')).toBe('/home/user/canvas'));
+  it('namespaces by assignmentToken when supplied', () => expect(toWorkspaceFsPath('/user/main.cpp', 'abc-123')).toBe('/home/user/abc-123/main.cpp'));
+  it('namespaces nested paths by assignmentToken', () => expect(toWorkspaceFsPath('/user/lib/utils.cpp', 'abc-123')).toBe('/home/user/abc-123/lib/utils.cpp'));
+  it('ignores assignmentToken for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas', 'abc-123')).toBe('/home/user/canvas'));
+});
+
+// ─── workspaceStorageKey ─────────────────────────────────────────────────────
+
+describe('workspaceStorageKey', () => {
+  it('returns v2 namespaced key when token supplied', () => expect(workspaceStorageKey('abc-123')).toBe('gameguild.emception.workspace.abc-123.v2'));
+  it('returns v1 legacy key when called with no args', () => expect(workspaceStorageKey()).toBe('gameguild.emception.workspace.v1'));
+  it('returns v1 legacy key when token is undefined', () => expect(workspaceStorageKey(undefined)).toBe('gameguild.emception.workspace.v1'));
 });
 
 // ─── inferLanguage ───────────────────────────────────────────────────────────

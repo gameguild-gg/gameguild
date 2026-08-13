@@ -24,5 +24,6 @@ public sealed record CreateProgramCommand(
   EnrollmentStatus EnrollmentStatus = EnrollmentStatus.Open,
   int? MaxEnrollments = null,
   DateTime? EnrollmentDeadline = null,
+  decimal PassingScore = 60m,
   string? CreatorId = null
 ) : ICommand<Program>;

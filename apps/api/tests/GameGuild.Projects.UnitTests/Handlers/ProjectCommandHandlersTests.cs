@@ -27,6 +27,37 @@ public class ProjectHandlersIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task GetProjectById_Should_Hide_A_Public_Draft_From_Anonymous_Users()
+    {
+        var project = _testDataBuilder.CreateProject(createdById: _testUserId, title: "Unpublished public project");
+        project.Visibility = ContentVisibility.Public;
+        project.Status = ContentStatus.Draft;
+        _context.Set<Project>().Add(project);
+        await _context.SaveChangesAsync();
+        var actorAccessor = new Mock<IActorContextAccessor>();
+        actorAccessor.SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.Create().Build());
+        var handler = new ProjectQueryHandlers(
+            _context,
+            actorAccessor.Object,
+            new ProjectAuthorizationService(_context, actorAccessor.Object),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<ProjectQueryHandlers>.Instance);
+
+        var result = await handler.Handle(
+            new GetProjectByIdQuery
+            {
+                ProjectId = project.Id,
+                IncludeTeam = false,
+                IncludeReleases = false,
+                IncludeCollaborators = false
+            },
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Database_Should_Store_And_Retrieve_Projects()
     {
         // Arrange
@@ -91,6 +122,7 @@ public class ProjectHandlersIntegrationTests : IDisposable
         var handler = new ProjectQueryHandlers(
             _context,
             actorAccessor.Object,
+            new ProjectAuthorizationService(_context, actorAccessor.Object),
             Microsoft.Extensions.Logging.Abstractions.NullLogger<ProjectQueryHandlers>.Instance);
 
         var result = await handler.Handle(
@@ -190,6 +222,7 @@ public class ProjectHandlersIntegrationTests : IDisposable
         var handler = new ProjectQueryHandlers(
             _context,
             actorAccessor.Object,
+            new ProjectAuthorizationService(_context, actorAccessor.Object),
             Microsoft.Extensions.Logging.Abstractions.NullLogger<ProjectQueryHandlers>.Instance);
         var project = _testDataBuilder.CreateProject(createdById: _testUserId);
         _context.Set<Project>().Add(project);
@@ -207,6 +240,55 @@ public class ProjectHandlersIntegrationTests : IDisposable
 
         result.IsSuccess.Should().BeTrue();
         result.Value.TotalDownloads.Should().Be(23);
+    }
+
+    [Fact]
+    public async Task GetProjectStatistics_Should_Hide_An_Unauthorized_Private_Project()
+    {
+        var actorAccessor = new Mock<IActorContextAccessor>();
+        actorAccessor
+            .SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.Create().Build());
+        var handler = new ProjectQueryHandlers(
+            _context,
+            actorAccessor.Object,
+            new ProjectAuthorizationService(_context, actorAccessor.Object),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<ProjectQueryHandlers>.Instance);
+        var project = _testDataBuilder.CreateProject(createdById: _testUserId);
+        project.Visibility = ContentVisibility.Private;
+        _context.Set<Project>().Add(project);
+        await _context.SaveChangesAsync();
+
+        var result = await handler.Handle(
+            new GetProjectStatisticsQuery { ProjectId = project.Id },
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Project.NotFound");
+    }
+
+    [Fact]
+    public async Task UpdateProject_Should_Hide_An_Unauthorized_Private_Project()
+    {
+        var actorAccessor = new Mock<IActorContextAccessor>();
+        actorAccessor
+            .SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.Create().Build());
+        var project = _testDataBuilder.CreateProject(createdById: _testUserId);
+        project.Visibility = ContentVisibility.Private;
+        _context.Set<Project>().Add(project);
+        await _context.SaveChangesAsync();
+        var handler = new ProjectCommandHandlers(
+            _context,
+            actorAccessor.Object,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<ProjectCommandHandlers>.Instance);
+
+        var result = await handler.Handle(
+            new UpdateProjectCommand { ProjectId = project.Id, Title = "Should not leak" },
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Project.NotFound");
     }
 
     [Fact]

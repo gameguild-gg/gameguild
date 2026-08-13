@@ -95,7 +95,10 @@ export function CodingActivityClient({
   const gradingPlan = useRef<GradingPlan>(publicTestsToGradingPlan(assignment));
   const allowCreateFiles = assignment.Environment.AllowStudentCreateFiles !== false;
   const maxScore = assignment.Grading.MaxScore;
-  const passingScore = assignment.Grading.PassingScore;
+  // ponytail: PassingScore moved from GradingConfig to Program (T1/T3). Learner context
+  // doesn't surface Program.PassingScore yet — default to 60 (the C# default + historical
+  // constant) until T13 wires the course-level field through getCourseLearnerContext.
+  const passingScore = 60;
 
   // Seed IDE with Public files + apply readOnly meta for non-modifiable files.
   // setFiles/setFileMeta mutate reactive state first; VFS sync happens later

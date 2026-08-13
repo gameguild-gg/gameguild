@@ -243,7 +243,7 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
         var childId = orderedIds[0];
         var rootId = orderedIds[1];
         var updateContentId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "Cue delivery", AssessmentType.Assignment, 100, 60);
+        var assessment = Assessment.Create(courseId, "Cue delivery", AssessmentType.Assignment, 100);
         var program = new GameGuild.Learning.Courses.Program { Id = courseId, Title = "Course", Slug = $"course-{courseId:N}" };
         var updateContent = VideoContent(courseId, updateContentId, "Update target");
         var root = VideoContent(courseId, rootId, "Root video");

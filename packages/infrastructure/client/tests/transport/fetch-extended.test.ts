@@ -140,6 +140,26 @@ describe('createFetchTransport — extended', () => {
     expect(capturedUrl).toContain('search=test');
   });
 
+  it('should serialize array query parameters as repeated keys', async () => {
+    let capturedUrl = '';
+    globalThis.fetch = vi.fn(async (url: any) => {
+      capturedUrl = url.toString();
+      return new Response(JSON.stringify({ data: 'ok' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:5000' });
+
+    await transport.request({
+      path: '/api/eligibility',
+      method: 'GET',
+      params: { testerUserIds: ['tester-1', 'tester-2'] },
+    });
+
+    expect(capturedUrl).toContain('testerUserIds=tester-1&testerUserIds=tester-2');
+  });
+
   it('should send request body as JSON for POST', async () => {
     let capturedBody = '';
     globalThis.fetch = vi.fn(async (_url: any, opts: any) => {

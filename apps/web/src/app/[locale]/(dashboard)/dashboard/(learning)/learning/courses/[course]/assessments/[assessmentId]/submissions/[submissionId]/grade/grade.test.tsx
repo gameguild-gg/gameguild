@@ -90,7 +90,7 @@ const sampleAssignment: CodingAssignmentContent = {
     ],
     Private: [{ kind: 'standard', Name: 'case3', Stdout: 'c', Weight: 1 }],
   },
-  Grading: { MaxScore: 100, PassingScore: 50 },
+  Grading: { MaxScore: 100 },
 };
 
 const samplePlan = {
@@ -127,7 +127,6 @@ const baseProps = {
     { path: '/home/user/student.cpp', content: '// student-created file' },
   ],
   maxScore: 100,
-  passingScore: 50,
   manifestUrl: '/cdn/manifest.json',
 };
 

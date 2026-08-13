@@ -115,6 +115,7 @@ public class ProgramWriteService(
       Description = createDto.Description,
       Slug = createDto.Slug,
       Thumbnail = createDto.Thumbnail,
+      PassingScore = createDto.PassingScore,
       Status = ContentStatus.Draft,
       Visibility = ContentVisibility.Private,
     };
@@ -149,6 +150,7 @@ public class ProgramWriteService(
     else if (updateDto.MaxEnrollments.HasValue) program.MaxEnrollments = updateDto.MaxEnrollments.Value;
     if (updateDto.ClearEnrollmentDeadline) program.EnrollmentDeadline = null;
     else if (updateDto.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = updateDto.EnrollmentDeadline.Value;
+    if (updateDto.PassingScore.HasValue) program.PassingScore = updateDto.PassingScore.Value;
 
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);

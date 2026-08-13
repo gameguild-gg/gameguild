@@ -10,6 +10,9 @@ public interface ITestingFeedbackOperations
     Task<TestingFeedback> AddFeedbackAsync(Guid testingRequestId, Guid userId, Guid feedbackFormId, string feedbackData, TestingContext context, Guid? sessionId = null, string? additionalNotes = null);
     Task<IEnumerable<TestingFeedback>> GetTestingRequestFeedbackAsync(Guid testingRequestId);
     Task<IEnumerable<TestingFeedback>> GetFeedbackByUserAsync(Guid userId);
+    Task<TestingFeedbackDirectoryPage> GetFeedbackDirectoryAsync(
+        TestingFeedbackDirectoryQuery query,
+        CancellationToken cancellationToken = default);
 
     // Simplified feedback
     Task SubmitFeedbackAsync(SubmitFeedbackDto feedbackDto, Guid userId);

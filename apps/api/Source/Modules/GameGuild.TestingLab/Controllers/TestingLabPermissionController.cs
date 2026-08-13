@@ -173,6 +173,14 @@ public class TestingLabPermissionController : BaseApiController {
         CanApproveRequests = HasPermission(testingLabPermissions, TestingLabActions.Approve, TestingLabResourceTypes.Request),
         CanManageParticipants = HasPermission(testingLabPermissions, TestingLabActions.Manage, TestingLabResourceTypes.Participant),
         CanViewParticipants = HasPermission(testingLabPermissions, TestingLabActions.Read, TestingLabResourceTypes.Participant),
+        CanCreateEvents = HasPermission(testingLabPermissions, TestingLabActions.Create, TestingLabResourceTypes.Event),
+        CanEditEvents = HasPermission(testingLabPermissions, TestingLabActions.Edit, TestingLabResourceTypes.Event),
+        CanDeleteEvents = HasPermission(testingLabPermissions, TestingLabActions.Delete, TestingLabResourceTypes.Event),
+        CanViewEvents = HasPermission(testingLabPermissions, TestingLabActions.Read, TestingLabResourceTypes.Event),
+        CanViewApplications = HasPermission(testingLabPermissions, TestingLabActions.Read, TestingLabResourceTypes.Application),
+        CanApproveApplications = HasPermission(testingLabPermissions, TestingLabActions.Approve, TestingLabResourceTypes.Application),
+        CanManageApplications = HasPermission(testingLabPermissions, TestingLabActions.Manage, TestingLabResourceTypes.Application),
+        CanViewAnalytics = HasPermission(testingLabPermissions, TestingLabActions.Read, TestingLabResourceTypes.Analytics),
       },
     };
 
@@ -289,6 +297,15 @@ public class TestingLabPermissionController : BaseApiController {
     if (permissions.CanManageParticipants) templates.Add(new PermissionTemplate { Action = TestingLabActions.Manage, ResourceType = TestingLabResourceTypes.Participant });
     if (permissions.CanViewParticipants) templates.Add(new PermissionTemplate { Action = TestingLabActions.Read, ResourceType = TestingLabResourceTypes.Participant });
 
+    if (permissions.CanCreateEvents) templates.Add(new PermissionTemplate { Action = TestingLabActions.Create, ResourceType = TestingLabResourceTypes.Event });
+    if (permissions.CanEditEvents) templates.Add(new PermissionTemplate { Action = TestingLabActions.Edit, ResourceType = TestingLabResourceTypes.Event });
+    if (permissions.CanDeleteEvents) templates.Add(new PermissionTemplate { Action = TestingLabActions.Delete, ResourceType = TestingLabResourceTypes.Event });
+    if (permissions.CanViewEvents) templates.Add(new PermissionTemplate { Action = TestingLabActions.Read, ResourceType = TestingLabResourceTypes.Event });
+    if (permissions.CanViewApplications) templates.Add(new PermissionTemplate { Action = TestingLabActions.Read, ResourceType = TestingLabResourceTypes.Application });
+    if (permissions.CanApproveApplications) templates.Add(new PermissionTemplate { Action = TestingLabActions.Approve, ResourceType = TestingLabResourceTypes.Application });
+    if (permissions.CanManageApplications) templates.Add(new PermissionTemplate { Action = TestingLabActions.Manage, ResourceType = TestingLabResourceTypes.Application });
+    if (permissions.CanViewAnalytics) templates.Add(new PermissionTemplate { Action = TestingLabActions.Read, ResourceType = TestingLabResourceTypes.Analytics });
+
     return templates;
   }
 
@@ -328,6 +345,14 @@ public class TestingLabPermissionController : BaseApiController {
         // Participants
         CanManageParticipants = template.PermissionTemplates?.Any(p => p.Action == TestingLabActions.Manage && p.ResourceType == TestingLabResourceTypes.Participant) == true,
         CanViewParticipants = template.PermissionTemplates?.Any(p => p.Action == TestingLabActions.Read && p.ResourceType == TestingLabResourceTypes.Participant) == true,
+        CanCreateEvents = template.PermissionTemplates?.Any(p => p.Action == TestingLabActions.Create && p.ResourceType == TestingLabResourceTypes.Event) == true,
+        CanEditEvents = template.PermissionTemplates?.Any(p => p.Action == TestingLabActions.Edit && p.ResourceType == TestingLabResourceTypes.Event) == true,
+        CanDeleteEvents = template.PermissionTemplates?.Any(p => p.Action == TestingLabActions.Delete && p.ResourceType == TestingLabResourceTypes.Event) == true,
+        CanViewEvents = template.PermissionTemplates?.Any(p => p.Action == TestingLabActions.Read && p.ResourceType == TestingLabResourceTypes.Event) == true,
+        CanViewApplications = template.PermissionTemplates?.Any(p => p.Action == TestingLabActions.Read && p.ResourceType == TestingLabResourceTypes.Application) == true,
+        CanApproveApplications = template.PermissionTemplates?.Any(p => p.Action == TestingLabActions.Approve && p.ResourceType == TestingLabResourceTypes.Application) == true,
+        CanManageApplications = template.PermissionTemplates?.Any(p => p.Action == TestingLabActions.Manage && p.ResourceType == TestingLabResourceTypes.Application) == true,
+        CanViewAnalytics = template.PermissionTemplates?.Any(p => p.Action == TestingLabActions.Read && p.ResourceType == TestingLabResourceTypes.Analytics) == true,
       },
     };
   }
@@ -380,6 +405,22 @@ public class TestingLabPermissionsDto {
   public bool CanManageParticipants { get; set; }
 
   public bool CanViewParticipants { get; set; }
+
+  public bool CanCreateEvents { get; set; }
+
+  public bool CanEditEvents { get; set; }
+
+  public bool CanDeleteEvents { get; set; }
+
+  public bool CanViewEvents { get; set; }
+
+  public bool CanViewApplications { get; set; }
+
+  public bool CanApproveApplications { get; set; }
+
+  public bool CanManageApplications { get; set; }
+
+  public bool CanViewAnalytics { get; set; }
 }
 
 public class TestingLabRoleTemplate {
