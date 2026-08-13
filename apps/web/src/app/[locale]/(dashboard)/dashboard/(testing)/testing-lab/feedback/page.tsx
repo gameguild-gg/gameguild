@@ -52,17 +52,17 @@ export default async function TestingLabFeedbackPage({ searchParams }: { searchP
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input name="q" defaultValue={params.q} className="pl-9" placeholder="Search context, member, or feedback" />
         </label>
-        <select name="source" defaultValue={params.source ?? 'all'} className="h-9 rounded-md border bg-background px-3 text-sm">
+        <select aria-label="Filter by source" name="source" defaultValue={params.source ?? 'all'} className="h-9 rounded-md border bg-background px-3 text-sm">
           <option value="all">All sources</option>
           <option value="event">Events</option>
           <option value="request">Requests</option>
         </select>
-        <select name="reported" defaultValue={params.reported ?? 'all'} className="h-9 rounded-md border bg-background px-3 text-sm">
+        <select aria-label="Filter by report status" name="reported" defaultValue={params.reported ?? 'all'} className="h-9 rounded-md border bg-background px-3 text-sm">
           <option value="all">All reports</option>
           <option value="reported">Reported</option>
           <option value="unreported">Not reported</option>
         </select>
-        <select name="quality" defaultValue={params.quality ?? 'all'} className="h-9 rounded-md border bg-background px-3 text-sm">
+        <select aria-label="Filter by quality" name="quality" defaultValue={params.quality ?? 'all'} className="h-9 rounded-md border bg-background px-3 text-sm">
           <option value="all">All qualities</option>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
