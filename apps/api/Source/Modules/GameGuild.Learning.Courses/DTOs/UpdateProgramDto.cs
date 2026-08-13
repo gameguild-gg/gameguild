@@ -17,6 +17,7 @@ public sealed record UpdateProgramDto {
   public EnrollmentStatus? EnrollmentStatus { get; init; }
   public int? MaxEnrollments { get; init; }
   public DateTime? EnrollmentDeadline { get; init; }
+  public decimal? PassingScore { get; init; }
   public bool ClearMaxEnrollments { get; init; }
   public bool ClearEnrollmentDeadline { get; init; }
 }

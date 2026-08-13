@@ -2,6 +2,8 @@ using GameGuild.API.Database;
 using GameGuild.Commerce.Products;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -23,12 +25,14 @@ public sealed class ProjectLifecycleTests : IAsyncDisposable
     [Fact]
     public async Task DeleteCommand_ShouldSoftDeleteProjectAndActiveStoreAssociations()
     {
+        var tenantId = Guid.NewGuid();
         var project = new Project
         {
             Title = "Lifecycle project",
             Slug = $"lifecycle-{Guid.NewGuid():N}",
             Status = ContentStatus.Published,
-            Visibility = ContentVisibility.Public
+            Visibility = ContentVisibility.Public,
+            TenantId = tenantId
         };
         var link = new ProjectStoreProduct
         {
@@ -45,9 +49,23 @@ public sealed class ProjectLifecycleTests : IAsyncDisposable
             IsActive = true
         });
         _context.Set<ProjectStoreProduct>().Add(link);
+        _context.Set<User>().Add(new User
+        {
+            Id = _actorId,
+            Email = $"{_actorId:N}@example.com",
+            Name = "Lifecycle owner",
+            IsActive = true
+        });
+        _context.Set<TenantMember>().Add(new TenantMember
+        {
+            UserId = _actorId,
+            TenantId = tenantId,
+            Role = "Member",
+            IsActive = true
+        });
         await _context.SaveChangesAsync();
         var actorAccessor = new ActorContextAccessor();
-        actorAccessor.SetActorContext(ActorContextBuilder.ForUser(_actorId).Build());
+        actorAccessor.SetActorContext(ActorContextBuilder.ForUser(_actorId).WithTenantId(tenantId).Build());
         var handler = new ProjectCommandHandlers(
             _context,
             actorAccessor,

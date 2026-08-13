@@ -215,7 +215,6 @@ public sealed class GetLearnerCourseWorkspaceQueryHandler(IApplicationDbContext 
             assessment.Description,
             assessment.Type.ToString(),
             assessment.MaxScore,
-            assessment.PassingScore,
             assessment.TimeLimitMinutes,
             assessment.MaxAttempts,
             assessment.IsRequired,

@@ -5,7 +5,7 @@ namespace GameGuild.Learning.Assessments;
 
 public sealed class AssessmentGradingSync(IApplicationDbContext context) : IAssessmentGradingSync
 {
-    public async Task SyncAsync(Guid contentId, int maxScore, int passingScore, CancellationToken ct = default)
+    public async Task SyncAsync(Guid contentId, int maxScore, CancellationToken ct = default)
     {
         var assessment = await context.Set<Assessment>()
             .FirstOrDefaultAsync(a => a.ContentId == contentId && a.DeletedAt == null, ct)
@@ -13,7 +13,7 @@ public sealed class AssessmentGradingSync(IApplicationDbContext context) : IAsse
 
         if (assessment == null) return;
 
-        assessment.SetGrading(maxScore, passingScore);
+        assessment.SetMaxScore(maxScore);
         context.Set<Assessment>().Update(assessment);
         await context.SaveChangesAsync(ct).ConfigureAwait(false);
     }

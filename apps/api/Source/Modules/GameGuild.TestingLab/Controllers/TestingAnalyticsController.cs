@@ -12,6 +12,7 @@ namespace GameGuild.TestingLab;
 public sealed class TestingAnalyticsController(IMediator mediator) : BaseApiController
 {
     [HttpGet]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Analytics)]
     public async Task<ActionResult<TestingLabAnalyticsReportProjection>> GetReport(
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null,
@@ -22,6 +23,7 @@ public sealed class TestingAnalyticsController(IMediator mediator) : BaseApiCont
             cancellationToken).ConfigureAwait(false));
 
     [HttpGet("export")]
+    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Analytics)]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     public async Task<ActionResult<TestingLabAnalyticsExportProjection>> Export(
         [FromQuery] DateTime? fromDate = null,

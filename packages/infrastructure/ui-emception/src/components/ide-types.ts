@@ -27,6 +27,16 @@ export type DockGroup = 'main' | 'right' | 'bottom';
 export const WORKSPACE_STORAGE_KEY = 'gameguild.emception.workspace.v1';
 export const SDL_CANVAS_PATH = '/user/sdl-canvas';
 
+/**
+ * Per-assignment localStorage key. Returns the legacy v1 global key when no
+ * token is supplied (backward compat for non-assignment consumers).
+ */
+export function workspaceStorageKey(assignmentToken?: string): string {
+  return assignmentToken
+    ? `gameguild.emception.workspace.${assignmentToken}.v2`
+    : WORKSPACE_STORAGE_KEY;
+}
+
 export interface WorkspaceFile {
   path: string;
   type: TabType;

@@ -39,7 +39,6 @@ export interface GradeClientProps {
   /** Submitted student files (Task 9 code-payload parsed server-side). */
   submittedFiles: CodeFile[];
   maxScore: number;
-  passingScore: number;
   manifestUrl: string;
 }
 
@@ -99,7 +98,6 @@ export function GradeClient({
   assignment,
   submittedFiles,
   maxScore,
-  passingScore,
   manifestUrl,
 }: GradeClientProps): React.JSX.Element {
   const router = useRouter();
@@ -162,10 +160,13 @@ export function GradeClient({
       const r = (await ideRef.current!.runTests(plan as never)) as TestReport;
 
       // (f) Compute weighted score via the shared scoring utility.
+      // ponytail: passingScore=0 — grader doesn't compute pass/fail; server's
+      // GradeSubmissionAsync loads Program.PassingScore for the snapshot.
+      // ScoreResult.passed is unused here; only .score is displayed.
       const definition: ScoringDefinition = {
         testPlan: { cases: plan.cases as unknown as BackendTestCaseDto[] },
         maxScore,
-        passingScore,
+        passingScore: 0,
       };
       const result = scoreSubmission(definition, r);
       setReport(r);
@@ -260,7 +261,6 @@ export function GradeClient({
           <TestResultsPanel
             report={report}
             maxScore={maxScore}
-            passingScore={passingScore}
           />
         </div>
       )}
@@ -270,7 +270,6 @@ export function GradeClient({
           ref={ideRef}
           manifestUrl={manifestUrl}
           maxScore={maxScore}
-          passingScore={passingScore}
         />
       </div>
 

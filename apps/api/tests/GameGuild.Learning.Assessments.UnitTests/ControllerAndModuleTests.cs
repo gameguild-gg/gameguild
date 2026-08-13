@@ -52,7 +52,7 @@ public class ControllerAndModuleTests
     {
         var id = Guid.NewGuid();
         _svc.Setup(s => s.GetAssessmentByIdAsync(id))
-            .ReturnsAsync(Assessment.Create(Guid.NewGuid(), "T", AssessmentType.Quiz, 100, 60));
+            .ReturnsAsync(Assessment.Create(Guid.NewGuid(), "T", AssessmentType.Quiz, 100));
         var r = await CreateController().GetAssessment(id);
         r.Result.Should().BeOfType<OkObjectResult>();
     }
@@ -115,7 +115,7 @@ public class ControllerAndModuleTests
     {
         var assessmentId = Guid.NewGuid();
         _svc.Setup(s => s.GetAssessmentByIdAsync(assessmentId))
-            .ReturnsAsync(Assessment.Create(Guid.NewGuid(), "T", AssessmentType.Assignment, 100, 60));
+            .ReturnsAsync(Assessment.Create(Guid.NewGuid(), "T", AssessmentType.Assignment, 100));
         _svc.Setup(s => s.DeleteAssessmentAsync(assessmentId)).ReturnsAsync(Result.Success());
         var r = await CreateController(isSystemAdmin: true).DeleteAssessment(assessmentId);
         r.Should().BeOfType<NoContentResult>();
@@ -127,7 +127,7 @@ public class ControllerAndModuleTests
         var aId = Guid.NewGuid(); var eId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        _svc.Setup(s => s.GetAssessmentByIdAsync(aId)).ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+        _svc.Setup(s => s.GetAssessmentByIdAsync(aId)).ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100));
         _enrollments.Setup(s => s.GetAsync(eId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EnrollmentDto(eId, courseId, userId, null, GameGuild.Learning.Enrollments.EnrollmentStatus.Active, DateTime.UtcNow, null, null, 0, null));
         _svc.Setup(s => s.CanAttemptAsync(aId, eId)).ReturnsAsync(Result.Success(true));
@@ -141,7 +141,7 @@ public class ControllerAndModuleTests
     {
         var userId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60);
+        var assessment = Assessment.Create(courseId, "T", AssessmentType.Quiz, 100);
         _svc.Setup(s => s.GetSubmissionByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), userId, 1));
         _svc.Setup(s => s.GetAssessmentByIdAsync(assessment.Id)).ReturnsAsync(assessment);
@@ -158,7 +158,7 @@ public class ControllerAndModuleTests
         var actorId = Guid.NewGuid();
         var actorTenantId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60);
+        var assessment = Assessment.Create(courseId, "T", AssessmentType.Quiz, 100);
         var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), actorId, 1);
         _svc.Setup(service => service.GetSubmissionByIdAsync(submission.Id)).ReturnsAsync(submission);
         _svc.Setup(service => service.GetAssessmentByIdAsync(assessment.Id)).ReturnsAsync(assessment);
@@ -199,7 +199,7 @@ public class ControllerAndModuleTests
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
         _svc.Setup(s => s.GetSubmissionByIdAsync(submission.Id)).ReturnsAsync(submission);
         _svc.Setup(s => s.GetAssessmentByIdAsync(submission.AssessmentId))
-            .ReturnsAsync(Assessment.Create(Guid.NewGuid(), "T", AssessmentType.Assignment, 100, 60));
+            .ReturnsAsync(Assessment.Create(Guid.NewGuid(), "T", AssessmentType.Assignment, 100));
 
         var result = await CreateController(actorId).GetSubmission(submission.Id);
 
@@ -211,12 +211,12 @@ public class ControllerAndModuleTests
     {
         var actorId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60);
+        var assessment = Assessment.Create(courseId, "T", AssessmentType.Assignment, 100);
         var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         submission.SetPayload(new SubmitAssessmentRequest(TextPayload: "Persisted learner response"), SubmissionModality.Text);
         submission.Submit();
         var graderId = Guid.NewGuid();
-        submission.Grade(80, assessment.PassingScore, assessment.MaxScore, graderId, "Reviewed");
+        submission.Grade(80, 60, assessment.MaxScore, graderId, "Reviewed");
         _svc.Setup(s => s.GetSubmissionByIdAsync(submission.Id)).ReturnsAsync(submission);
         _svc.Setup(s => s.GetAssessmentByIdAsync(assessment.Id)).ReturnsAsync(assessment);
         _programs.Setup(service => service.GetProgramByIdAsync(courseId))
@@ -239,7 +239,7 @@ public class ControllerAndModuleTests
     {
         var actorId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60);
+        var assessment = Assessment.Create(courseId, "T", AssessmentType.Assignment, 100);
         var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         _svc.Setup(s => s.GetSubmissionByIdAsync(submission.Id)).ReturnsAsync(submission);
         _svc.Setup(s => s.GetAssessmentByIdAsync(assessment.Id)).ReturnsAsync(assessment);
@@ -264,7 +264,7 @@ public class ControllerAndModuleTests
     {
         var actorId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60);
+        var assessment = Assessment.Create(courseId, "T", AssessmentType.Assignment, 100);
         var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         _svc.Setup(service => service.GetSubmissionByIdAsync(submission.Id)).ReturnsAsync(submission);
         _svc.Setup(service => service.GetAssessmentByIdAsync(assessment.Id)).ReturnsAsync(assessment);
@@ -286,7 +286,7 @@ public class ControllerAndModuleTests
     {
         var actorId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60);
+        var assessment = Assessment.Create(courseId, "T", AssessmentType.Assignment, 100);
         var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         _svc.Setup(service => service.GetSubmissionByIdAsync(submission.Id)).ReturnsAsync(submission);
         _svc.Setup(service => service.GetAssessmentByIdAsync(assessment.Id)).ReturnsAsync(assessment);
@@ -304,7 +304,7 @@ public class ControllerAndModuleTests
         var actorId = Guid.NewGuid();
         var assessmentId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        _svc.Setup(s => s.GetAssessmentByIdAsync(assessmentId)).ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+        _svc.Setup(s => s.GetAssessmentByIdAsync(assessmentId)).ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100));
         _programs.Setup(service => service.GetProgramByIdAsync(courseId))
             .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
         _permissions.Setup(service => service.HasTenantPermissionAsync(
@@ -322,7 +322,7 @@ public class ControllerAndModuleTests
     {
         var assessmentId = Guid.NewGuid();
         _svc.Setup(s => s.GetAssessmentByIdAsync(assessmentId))
-            .ReturnsAsync(Assessment.Create(Guid.NewGuid(), "T", AssessmentType.Quiz, 100, 60));
+            .ReturnsAsync(Assessment.Create(Guid.NewGuid(), "T", AssessmentType.Quiz, 100));
 
         var result = await CreateController().GetAssessmentSubmissions(assessmentId);
 
@@ -340,7 +340,7 @@ public class ControllerAndModuleTests
         var assessmentId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
         _svc.Setup(s => s.GetAssessmentByIdAsync(assessmentId))
-            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100));
         _programs.Setup(service => service.GetProgramByIdAsync(courseId))
             .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
         _svc.Setup(s => s.GetAssessmentSubmissionsAsync(assessmentId)).ReturnsAsync(new List<AssessmentSubmission>());
@@ -363,7 +363,7 @@ public class ControllerAndModuleTests
         var assessmentId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
         _svc.Setup(service => service.GetAssessmentByIdAsync(assessmentId))
-            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100));
         _programs.Setup(service => service.GetProgramByIdAsync(courseId))
             .ReturnsAsync(new Program { Id = courseId, CreatorId = actorId });
 
@@ -389,7 +389,7 @@ public class ControllerAndModuleTests
         var actorTenantId = Guid.NewGuid();
         var enrollmentId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "Other tenant", AssessmentType.Quiz, 100, 60);
+        var assessment = Assessment.Create(courseId, "Other tenant", AssessmentType.Quiz, 100);
         var submission = AssessmentSubmission.Start(assessment.Id, enrollmentId, userId, 1);
         _svc.Setup(service => service.GetUserSubmissionsAsync(enrollmentId, userId))
             .ReturnsAsync([submission]);
@@ -430,7 +430,7 @@ public class ControllerAndModuleTests
         var enrollmentId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
         _svc.Setup(s => s.GetAssessmentByIdAsync(assessmentId))
-            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100));
         _enrollments.Setup(s => s.GetAsync(enrollmentId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EnrollmentDto(enrollmentId, courseId, Guid.NewGuid(), null, GameGuild.Learning.Enrollments.EnrollmentStatus.Active, DateTime.UtcNow, null, null, 0, null));
 
@@ -448,7 +448,7 @@ public class ControllerAndModuleTests
         var enrollmentId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
         _svc.Setup(s => s.GetAssessmentByIdAsync(assessmentId))
-            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100));
         _enrollments.Setup(s => s.GetAsync(enrollmentId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EnrollmentDto(enrollmentId, courseId, Guid.NewGuid(), null, GameGuild.Learning.Enrollments.EnrollmentStatus.Active, DateTime.UtcNow, null, null, 0, null));
 
@@ -465,7 +465,7 @@ public class ControllerAndModuleTests
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
         _svc.Setup(s => s.GetSubmissionByIdAsync(submissionId)).ReturnsAsync(submission);
         _svc.Setup(s => s.GetAssessmentByIdAsync(submission.AssessmentId))
-            .ReturnsAsync(Assessment.Create(Guid.NewGuid(), "T", AssessmentType.Quiz, 100, 60));
+            .ReturnsAsync(Assessment.Create(Guid.NewGuid(), "T", AssessmentType.Quiz, 100));
 
         var result = await CreateController().GradeSubmission(submissionId, new GradeSubmissionRequest(80));
 
@@ -486,7 +486,7 @@ public class ControllerAndModuleTests
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
         _svc.Setup(service => service.GetSubmissionByIdAsync(submissionId)).ReturnsAsync(submission);
         _svc.Setup(service => service.GetAssessmentByIdAsync(submission.AssessmentId))
-            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100));
         _programs.Setup(service => service.GetProgramByIdAsync(courseId))
             .ReturnsAsync(new Program { Id = courseId, TenantId = tenantId, CreatorId = Guid.NewGuid() });
         _permissions.Setup(service => service.HasTenantPermissionAsync(
@@ -514,7 +514,7 @@ public class ControllerAndModuleTests
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
         _svc.Setup(service => service.GetSubmissionByIdAsync(submissionId)).ReturnsAsync(submission);
         _svc.Setup(service => service.GetAssessmentByIdAsync(submission.AssessmentId))
-            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100));
         _programs.Setup(service => service.GetProgramByIdAsync(courseId))
             .ReturnsAsync(new Program { Id = courseId, TenantId = tenantId, CreatorId = actorId });
         _svc.Setup(service => service.GradeSubmissionAsync(submissionId, It.IsAny<GradeSubmissionRequest>()))
@@ -576,9 +576,9 @@ public class ControllerAndModuleTests
     [Fact]
     public async Task CreateAssessment_Success_Returns201()
     {
-        var req = new CreateAssessmentRequest(Guid.NewGuid(), "T", "D", AssessmentType.Quiz, 100, 60, 30, 3, true, null, null);
+        var req = new CreateAssessmentRequest(Guid.NewGuid(), "T", "D", AssessmentType.Quiz, 100, 30, 3, true, null, null);
         _svc.Setup(s => s.CreateAssessmentAsync(req))
-            .ReturnsAsync(Result.Success(Assessment.Create(req.CourseId, "T", AssessmentType.Quiz, 100, 60)));
+            .ReturnsAsync(Result.Success(Assessment.Create(req.CourseId, "T", AssessmentType.Quiz, 100)));
         _programs.Setup(service => service.GetProgramByIdAsync(req.CourseId))
             .ReturnsAsync(new Program { Id = req.CourseId, CreatorId = Guid.NewGuid() });
         var r = await CreateController(isSystemAdmin: true).CreateAssessment(req);
@@ -609,7 +609,7 @@ public class ControllerAndModuleTests
         _programs.Setup(service => service.GetProgramByIdAsync(courseId))
             .ReturnsAsync(new Program { Id = courseId, CreatorId = actorId });
         _svc.Setup(service => service.CreateAssessmentAsync(request))
-            .ReturnsAsync(Result.Success(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60)));
+            .ReturnsAsync(Result.Success(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100)));
 
         var result = await CreateController(actorId).CreateAssessment(request);
 
@@ -628,7 +628,7 @@ public class ControllerAndModuleTests
                 actorId, It.IsAny<Guid?>(), $"{nameof(Program)}.{courseId}.{PermissionType.Create}"))
             .ReturnsAsync(true);
         _svc.Setup(service => service.CreateAssessmentAsync(request))
-            .ReturnsAsync(Result.Success(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60)));
+            .ReturnsAsync(Result.Success(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100)));
 
         var result = await CreateController(actorId).CreateAssessment(request);
 
@@ -657,7 +657,7 @@ public class ControllerAndModuleTests
         var assessmentId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
         _svc.Setup(service => service.GetAssessmentByIdAsync(assessmentId))
-            .ReturnsAsync(Assessment.Create(courseId, "Video", AssessmentType.Assignment, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "Video", AssessmentType.Assignment, 100));
         _programs.Setup(service => service.GetProgramByIdAsync(courseId))
             .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
 
@@ -675,7 +675,7 @@ public class ControllerAndModuleTests
         var courseId = Guid.NewGuid();
         var enrollmentId = Guid.NewGuid();
         _svc.Setup(service => service.GetAssessmentByIdAsync(assessmentId))
-            .ReturnsAsync(Assessment.Create(courseId, "Video", AssessmentType.Assignment, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "Video", AssessmentType.Assignment, 100));
         _enrollments.Setup(service => service.GetAsync(enrollmentId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EnrollmentDto(enrollmentId, courseId, Guid.NewGuid(), null, GameGuild.Learning.Enrollments.EnrollmentStatus.Active, DateTime.UtcNow, null, null, 0, null));
 
@@ -705,7 +705,7 @@ public class ControllerAndModuleTests
         var assessmentId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
         _svc.Setup(service => service.GetAssessmentByIdAsync(assessmentId))
-            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100));
         _programs.Setup(service => service.GetProgramByIdAsync(courseId))
             .ReturnsAsync(new Program { Id = courseId, CreatorId = Guid.NewGuid() });
 
@@ -735,9 +735,9 @@ public class ControllerAndModuleTests
         var courseId = Guid.NewGuid();
         var req = new UpdateAssessmentRequest("U", null, null, null, null, null, null, null, null);
         _svc.Setup(s => s.GetAssessmentByIdAsync(id))
-            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Assignment, 100));
         _svc.Setup(s => s.UpdateAssessmentAsync(id, req))
-            .ReturnsAsync(Result.Success(Assessment.Create(courseId, "U", AssessmentType.Quiz, 100, 60)));
+            .ReturnsAsync(Result.Success(Assessment.Create(courseId, "U", AssessmentType.Quiz, 100)));
         var r = await CreateController(isSystemAdmin: true).UpdateAssessment(id, req);
         r.Result.Should().BeOfType<OkObjectResult>();
     }
@@ -776,7 +776,7 @@ public class ControllerAndModuleTests
         var programUserId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         _svc.Setup(service => service.GetAssessmentByIdAsync(assessmentId))
-            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100));
         _enrollments.Setup(service => service.GetAsync(programUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((EnrollmentDto?)null);
         _programs.Setup(service => service.GetUserProgressDtoAsync(courseId, userId))
@@ -796,7 +796,7 @@ public class ControllerAndModuleTests
         var courseId = Guid.NewGuid();
         var enrollmentId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60);
+        var assessment = Assessment.Create(courseId, "T", AssessmentType.Quiz, 100);
         _svc.Setup(s => s.GetAssessmentByIdAsync(aId)).ReturnsAsync(assessment);
         _enrollments.Setup(s => s.GetAsync(enrollmentId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EnrollmentDto(enrollmentId, courseId, userId, null, GameGuild.Learning.Enrollments.EnrollmentStatus.Active, DateTime.UtcNow, null, null, 0, null));
@@ -819,7 +819,7 @@ public class ControllerAndModuleTests
         var reviewerGradeRequest = req with { GradedBy = reviewerId };
         _svc.Setup(s => s.GetSubmissionByIdAsync(sId)).ReturnsAsync(submission);
         _svc.Setup(s => s.GetAssessmentByIdAsync(submission.AssessmentId))
-            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100, 60));
+            .ReturnsAsync(Assessment.Create(courseId, "T", AssessmentType.Quiz, 100));
         _programs.Setup(service => service.GetProgramByIdAsync(courseId))
             .ReturnsAsync(new Program { Id = courseId, TenantId = tenantId, CreatorId = Guid.NewGuid() });
         _permissions.Setup(service => service.HasTenantPermissionAsync(

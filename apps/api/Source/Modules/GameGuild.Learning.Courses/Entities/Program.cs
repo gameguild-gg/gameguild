@@ -83,6 +83,11 @@ public class Program : EntityBase {
     public int? EstimatedHours { get; set; }
 
     /// <summary>
+    /// Passing score percentage (0-100) used to determine successful program completion. Default 60.
+    /// </summary>
+    public decimal PassingScore { get; set; } = 60m;
+
+    /// <summary>
     /// Current enrollment status
     /// </summary>
     public EnrollmentStatus EnrollmentStatus { get; set; } = EnrollmentStatus.Open;

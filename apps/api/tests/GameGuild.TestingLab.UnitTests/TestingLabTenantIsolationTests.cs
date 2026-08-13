@@ -100,6 +100,120 @@ public sealed class TestingLabTenantIsolationTests
     }
 
     [Fact]
+    public async Task FeedbackQueriesAndModeration_ShouldStayInsideCurrentTenant()
+    {
+        await using var context = CreateContext();
+        var actorTenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var currentFeedback = NewFeedback(actorTenantId, userId);
+        var foreignFeedback = NewFeedback(Guid.NewGuid(), userId);
+        context.Set<User>().Add(NewUser(userId, "feedback-user"));
+        context.Set<TestingFeedback>().AddRange(currentFeedback, foreignFeedback);
+        await context.SaveChangesAsync();
+        var service = new TestingFeedbackOperationsService(context, CreateActor(actorTenantId));
+
+        var results = await service.GetFeedbackByUserAsync(userId);
+        var reportForeign = () => service.ReportFeedbackAsync(
+            foreignFeedback.Id,
+            "Cross-tenant report",
+            userId);
+
+        results.Should().ContainSingle().Which.Id.Should().Be(currentFeedback.Id);
+        await reportForeign.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*not found*");
+        foreignFeedback.IsReported.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RequestFeedback_ShouldRemainReadableAfterRequestIsArchived_WithinCurrentTenant()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var archivedRequest = NewRequest(tenantId);
+        archivedRequest.Version = 1;
+        archivedRequest.SoftDelete();
+        var foreignArchivedRequest = NewRequest(Guid.NewGuid());
+        foreignArchivedRequest.Version = 1;
+        foreignArchivedRequest.SoftDelete();
+        var requestFeedback = NewFeedback(tenantId, userId);
+        requestFeedback.TestingRequestId = archivedRequest.Id;
+        context.Set<User>().Add(NewUser(userId, "archived-feedback-user"));
+        context.Set<TestingRequest>().AddRange(archivedRequest, foreignArchivedRequest);
+        context.Set<TestingFeedback>().Add(requestFeedback);
+        await context.SaveChangesAsync();
+        var service = new TestingFeedbackOperationsService(context, CreateActor(tenantId));
+
+        var feedback = await service.GetTestingRequestFeedbackAsync(archivedRequest.Id);
+        var statistics = await service.GetTestingRequestStatisticsAsync(archivedRequest.Id);
+        var readForeign = () => service.GetTestingRequestFeedbackAsync(foreignArchivedRequest.Id);
+        var submitToArchived = () => service.AddFeedbackAsync(
+            archivedRequest.Id,
+            userId,
+            Guid.NewGuid(),
+            "Archived request feedback",
+            TestingContext.Online);
+
+        feedback.Should().ContainSingle().Which.Id.Should().Be(requestFeedback.Id);
+        statistics.Should().NotBeNull();
+        await readForeign.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*not found*");
+        await submitToArchived.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*not found*");
+    }
+
+    [Fact]
+    public async Task FeedbackDirectory_ShouldUnifyRequestAndEventFeedback_WithTenantScopedFilters()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var user = NewUser(userId, "directory-user");
+        var request = NewRequest(tenantId);
+        request.Title = "Request source";
+        var testingEvent = TestingEvent.Create(
+            "Event source",
+            TestingEventMode.Online,
+            userId,
+            SystemClock.UtcNow.AddDays(1),
+            SystemClock.UtcNow.AddDays(2),
+            SystemClock.UtcNow.AddDays(3),
+            SystemClock.UtcNow.AddDays(4),
+            true,
+            TestingEventApprovalMode.ManagerOnly,
+            tenantId);
+        var requestFeedback = NewFeedback(tenantId, userId);
+        requestFeedback.TestingRequestId = request.Id;
+        requestFeedback.OverallRating = 8;
+        var eventFeedback = NewFeedback(tenantId, userId);
+        eventFeedback.EventId = testingEvent.Id;
+        eventFeedback.IsReported = true;
+        var foreignFeedback = NewFeedback(Guid.NewGuid(), userId);
+        foreignFeedback.EventId = testingEvent.Id;
+        context.Set<User>().Add(user);
+        context.Set<TestingRequest>().Add(request);
+        context.Set<TestingEvent>().Add(testingEvent);
+        context.Set<TestingFeedback>().AddRange(requestFeedback, eventFeedback, foreignFeedback);
+        await context.SaveChangesAsync();
+        var service = new TestingFeedbackOperationsService(context, CreateActor(tenantId));
+
+        var all = await service.GetFeedbackDirectoryAsync(new TestingFeedbackDirectoryQuery(Take: 20));
+        var events = await service.GetFeedbackDirectoryAsync(new TestingFeedbackDirectoryQuery(
+            Source: TestingFeedbackSource.Event,
+            Reported: true,
+            Take: 20));
+
+        all.TotalCount.Should().Be(2);
+        all.Items.Select(item => item.Source).Should().BeEquivalentTo([
+            TestingFeedbackSource.Request,
+            TestingFeedbackSource.Event]);
+        events.Items.Should().ContainSingle(item =>
+            item.Id == eventFeedback.Id &&
+            item.EventName == "Event source" &&
+            item.IsReported);
+    }
+
+    [Fact]
     public async Task RestoreRequest_ShouldNotRestoreAnotherTenantRow()
     {
         await using var context = CreateContext();
@@ -397,6 +511,16 @@ public sealed class TestingLabTenantIsolationTests
             IsActive = true
         };
 
+    private static TestingFeedback NewFeedback(Guid tenantId, Guid userId)
+        => new()
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            TenantId = tenantId,
+            FeedbackData = "Tenant-scoped feedback",
+            TestingContext = TestingContext.Online
+        };
+
     private static TenantIsolationDbContext CreateContext()
         => new(new DbContextOptionsBuilder<TenantIsolationDbContext>()
             .UseInMemoryDatabase($"testing-lab-tenant-isolation-{Guid.NewGuid():N}")
@@ -410,6 +534,8 @@ public sealed class TestingLabTenantIsolationTests
         public DbSet<TestingRequest> TestingRequests => Set<TestingRequest>();
 
         public DbSet<TestingLocation> TestingLocations => Set<TestingLocation>();
+
+        public DbSet<TestingFeedback> TestingFeedback => Set<TestingFeedback>();
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException("Transactions are not required for tenant-isolation tests.");

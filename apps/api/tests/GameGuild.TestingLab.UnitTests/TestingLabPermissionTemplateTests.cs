@@ -338,6 +338,37 @@ public sealed class TestingLabPermissionTemplateTests
     }
 
     [Fact]
+    public async Task ResourceSpecificPermission_ShouldNotAuthorizeACollectionOperation()
+    {
+        await using var context = CreateContext();
+        var service = new TestingLabPermissionService(context);
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var requestId = Guid.NewGuid();
+        await service.GrantPermissionAsync(
+            userId,
+            tenantId,
+            TestingLabActions.Read,
+            TestingLabResourceTypes.Request,
+            requestId);
+
+        var collectionAllowed = await service.HasPermissionAsync(
+            userId,
+            tenantId,
+            TestingLabActions.Read,
+            TestingLabResourceTypes.Request);
+        var resourceAllowed = await service.HasPermissionAsync(
+            userId,
+            tenantId,
+            TestingLabActions.Read,
+            TestingLabResourceTypes.Request,
+            requestId);
+
+        collectionAllowed.Should().BeFalse();
+        resourceAllowed.Should().BeTrue();
+    }
+
+    [Fact]
     public void TestingLab_Model_Configuration_Should_Register_Runtime_Entities()
     {
         var modelBuilder = new ModelBuilder();

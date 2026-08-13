@@ -5,6 +5,13 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { register } from 'node:module';
+
+// The real `@gameguild/emception-browser` is browser-only: it transitively
+// imports a `.py` file and `@xterm/xterm`, neither of which Node can load.
+// None of the tests below call `compileAndRun`, so the loader redirects the
+// bare specifier to a stub. See ./_browser-stub.mjs.
+register('./_browser-stub.mjs', import.meta.url);
 
 // --- Minimal DOM shim ----------------------------------------------------
 
@@ -50,6 +57,7 @@ class FakeHTMLElement {
     }
     setAttribute(n, v) { this._attrs.set(n, String(v)); }
     getAttribute(n) { return this._attrs.has(n) ? this._attrs.get(n) : null; }
+    hasAttribute(n) { return this._attrs.has(n); }
     attachShadow() {
         this.shadowRoot = new FakeShadowRoot();
         return this.shadowRoot;
@@ -107,11 +115,11 @@ test('readConfig returns parsed ViewConfigInput from attributes', () => {
     const el = new wc.EmceptionRunElement();
     el.setAttribute('preset', 'cpp');
     el.setAttribute('autorun', '');
-    el.setAttribute('cflags', '-O2 -Wall');
+    el.setAttribute('flags', '-O2 -Wall');
     const cfg = el.readConfig();
     assert.equal(cfg.preset, 'cpp');
     assert.equal(cfg.autorun, true);
-    assert.deepEqual(cfg.workspace?.build?.cflags, ['-O2', '-Wall']);
+    assert.deepEqual(cfg.workspace?.flags, ['-O2', '-Wall']);
 });
 
 test('attaching api wires every event and detaching unwires them', () => {

@@ -72,40 +72,61 @@ async function bootstrap() {
   }
 
   const tag = unique();
-  const reviewerEmail = `testing-lab-browser-reviewer-${tag}@example.test`;
-  const reviewerPassword = 'Str0ng!Passw0rd123!';
-  const reviewerAuth = await apiRequest('/v1/auth/sign-up', {
-    method: 'POST',
-    body: JSON.stringify({
-      username: `testing_lab_browser_reviewer_${tag.replace(/[^a-z0-9]/gi, '_')}`,
-      email: reviewerEmail,
-      password: reviewerPassword,
-      tenantId: auth.tenantId,
-    }),
-  });
-  const reviewerId = reviewerAuth.userId ?? reviewerAuth.user?.id;
-  if (!reviewerId) throw new Error('The committee reviewer sign-up did not expose a user id.');
-  const reviewerMemberships = await apiRequest(`/v1/users/${reviewerId}/memberships?includeInactive=true`, {}, auth.accessToken, auth.tenantId);
-  const hasMembership = reviewerMemberships.memberships?.some(
-    (membership) => String(membership.tenantId).toLowerCase() === String(auth.tenantId).toLowerCase() && membership.isActive,
-  );
-  if (!hasMembership) {
-    await apiRequest(
-      `/v1/users/${reviewerId}/memberships`,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          tenantId: auth.tenantId,
-          role: 'Member',
-          requiresAcceptance: false,
-          invitedByEmail: adminEmail,
-          inviteeEmail: reviewerEmail,
-        }),
-      },
+  async function createFixtureIdentity(kind) {
+    const email = `testing-lab-browser-${kind}-${tag}@example.test`;
+    const password = 'Str0ng!Passw0rd123!';
+    const signUp = await apiRequest('/v1/auth/sign-up', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: `testing_lab_browser_${kind}_${tag.replace(/[^a-z0-9]/gi, '_')}`,
+        email,
+        password,
+        tenantId: auth.tenantId,
+      }),
+    });
+    const userId = signUp.userId ?? signUp.user?.id;
+    if (!userId) throw new Error(`The ${kind} sign-up did not expose a user id.`);
+    const memberships = await apiRequest(
+      `/v1/users/${userId}/memberships?includeInactive=true`,
+      {},
       auth.accessToken,
       auth.tenantId,
     );
+    const hasMembership = memberships.memberships?.some(
+      (membership) =>
+        String(membership.tenantId).toLowerCase() === String(auth.tenantId).toLowerCase() &&
+        membership.isActive,
+    );
+    if (!hasMembership) {
+      await apiRequest(
+        `/v1/users/${userId}/memberships`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            tenantId: auth.tenantId,
+            role: 'Member',
+            requiresAcceptance: false,
+            invitedByEmail: adminEmail,
+            inviteeEmail: email,
+          }),
+        },
+        auth.accessToken,
+        auth.tenantId,
+      );
+    }
+    const tenantAuth = await apiRequest('/v1/auth/sign-in', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, tenantId: auth.tenantId }),
+    });
+    if (!tenantAuth.accessToken) throw new Error(`The ${kind} tenant sign-in did not expose an access token.`);
+    return { accessToken: tenantAuth.accessToken, email, password, userId };
   }
+
+  const [owner, reviewer, tester] = await Promise.all([
+    createFixtureIdentity('owner'),
+    createFixtureIdentity('reviewer'),
+    createFixtureIdentity('tester'),
+  ]);
   const project = await apiRequest(
     '/v1/projects',
     {
@@ -120,7 +141,7 @@ async function bootstrap() {
         tags: ['testing-lab', 'browser-e2e'],
       }),
     },
-    auth.accessToken,
+    owner.accessToken,
     auth.tenantId,
   );
 
@@ -169,7 +190,7 @@ async function bootstrap() {
     `/v1/testing/events/${event.id}/committee`,
     {
       method: 'POST',
-      body: JSON.stringify({ userId: reviewerId, isChair: true }),
+      body: JSON.stringify({ userId: reviewer.userId, isChair: true }),
     },
     auth.accessToken,
     auth.tenantId,
@@ -197,13 +218,13 @@ async function bootstrap() {
   return {
     accessToken: auth.accessToken,
     event,
+    owner,
     project,
-    reviewerEmail,
-    reviewerId,
-    reviewerPassword,
+    reviewer,
     slot,
     tag,
     tenantId: auth.tenantId,
+    tester,
   };
 }
 
@@ -275,7 +296,10 @@ async function run() {
   const browser = await chromium.launch({ headless });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage();
+  let ownerContext;
   let reviewerContext;
+  let testerContext;
+  let testerPage;
   let eventCancelled = false;
 
   page.setDefaultNavigationTimeout(120_000);
@@ -299,15 +323,23 @@ async function run() {
     await assertNoViewportOverflow(page, 'public Testing Lab event');
 
     console.log('[testing-lab-browser-e2e] authenticated project candidacy');
-    await signIn(page);
-    await visit(page, `/testing-lab/events/${fixture.event.id}`, 'authenticated public Testing Lab event');
-    await waitForClientHydration(page);
-    await page.getByLabel('Existing project').selectOption(fixture.project.id);
-    await page.getByLabel('Preferred availability').fill('The published campus schedule works for this project.');
-    await page.getByRole('button', { name: 'Submit project application', exact: true }).click();
-    await waitForText(page, 'Project application submitted.');
+    ownerContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const ownerPage = await ownerContext.newPage();
+    ownerPage.setDefaultNavigationTimeout(120_000);
+    ownerPage.setDefaultTimeout(60_000);
+    monitorPage(ownerPage);
+    await signIn(ownerPage, fixture.owner.email, fixture.owner.password);
+    await visit(ownerPage, `/testing-lab/events/${fixture.event.id}`, 'project-owner public Testing Lab event');
+    await waitForClientHydration(ownerPage);
+    await ownerPage.getByLabel('Existing project').selectOption(fixture.project.id);
+    await ownerPage.getByLabel('Preferred availability').fill('The published campus schedule works for this project.');
+    await ownerPage.getByRole('button', { name: 'Submit project application', exact: true }).click();
+    await waitForText(ownerPage, 'Project application submitted.');
+    await ownerContext.close();
+    ownerContext = undefined;
 
     console.log('[testing-lab-browser-e2e] manager review');
+    await signIn(page);
     await visit(page, `/dashboard/testing-lab/events/${fixture.event.id}/applications`, 'Testing Lab manager applications');
     await waitForClientHydration(page);
     await waitForText(page, 'Project applications');
@@ -320,7 +352,7 @@ async function run() {
     reviewerPage.setDefaultNavigationTimeout(120_000);
     reviewerPage.setDefaultTimeout(60_000);
     monitorPage(reviewerPage);
-    await signIn(reviewerPage, fixture.reviewerEmail, fixture.reviewerPassword);
+    await signIn(reviewerPage, fixture.reviewer.email, fixture.reviewer.password);
     await visit(reviewerPage, `/dashboard/testing-lab/events/${fixture.event.id}/applications`, 'committee review applications');
     await waitForClientHydration(reviewerPage);
     await reviewerPage.getByRole('button', { name: 'Vote', exact: true }).click();
@@ -351,12 +383,18 @@ async function run() {
     await page.getByRole('button', { name: 'Schedule event', exact: true }).click();
     await waitForText(page, 'Scheduled');
     console.log('[testing-lab-browser-e2e] tester seat through the public experience');
-    await visit(page, `/testing-lab/events/${fixture.event.id}`, 'scheduled public Testing Lab event');
-    await waitForClientHydration(page);
-    await page.getByRole('button', { name: 'Reserve tester seat', exact: true }).click();
-    await waitForText(page, 'Testing slot registration submitted.');
-    await waitForText(page, 'Registered');
-    await page.screenshot({ path: path.join(artifactsDirectory, 'event-participation-desktop.png'), fullPage: true });
+    testerContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    testerPage = await testerContext.newPage();
+    testerPage.setDefaultNavigationTimeout(120_000);
+    testerPage.setDefaultTimeout(60_000);
+    monitorPage(testerPage);
+    await signIn(testerPage, fixture.tester.email, fixture.tester.password);
+    await visit(testerPage, `/testing-lab/events/${fixture.event.id}`, 'scheduled public Testing Lab event');
+    await waitForClientHydration(testerPage);
+    await testerPage.getByRole('button', { name: 'Reserve tester seat', exact: true }).click();
+    await waitForText(testerPage, 'Testing slot registration submitted.');
+    await waitForText(testerPage, 'Registered');
+    await testerPage.screenshot({ path: path.join(artifactsDirectory, 'event-participation-desktop.png'), fullPage: true });
 
     console.log('[testing-lab-browser-e2e] manager operations surfaces');
     for (const [pathname, title] of [
@@ -472,7 +510,7 @@ async function run() {
     await waitForClientHydration(page);
 
     await page.getByLabel('Member').click();
-    await page.getByRole('option', { name: new RegExp(fixture.reviewerEmail, 'i') }).click();
+    await page.getByRole('option', { name: new RegExp(fixture.reviewer.email, 'i') }).click();
     await page.getByRole('button', { name: 'Manage access', exact: true }).click();
     const accessSheet = page.getByRole('dialog');
     await waitForText(accessSheet, 'Role assignment');
@@ -515,14 +553,14 @@ async function run() {
     await waitForText(page, 'Tested project assigned.');
     await actionDialog.waitFor({ state: 'hidden' });
 
-    await visit(page, `/testing-lab/events/${fixture.event.id}`, 'Testing Lab required feedback');
-    await waitForClientHydration(page);
-    await page.getByLabel('Structured feedback').fill('The controls are clear and the core interaction is understandable.');
-    await page.getByLabel('Overall rating (1-10)').fill('9');
-    await page.getByLabel('I would recommend this project').check();
-    await page.getByLabel('Additional notes').fill('Browser-verified required feedback.');
-    await page.getByRole('button', { name: 'Submit required feedback', exact: true }).click();
-    await waitForText(page, 'Required project feedback submitted.');
+    await visit(testerPage, `/testing-lab/events/${fixture.event.id}`, 'Testing Lab required feedback');
+    await waitForClientHydration(testerPage);
+    await testerPage.getByLabel('Structured feedback').fill('The controls are clear and the core interaction is understandable.');
+    await testerPage.getByLabel('Overall rating (1-10)').fill('9');
+    await testerPage.getByLabel('I would recommend this project').check();
+    await testerPage.getByLabel('Additional notes').fill('Browser-verified required feedback.');
+    await testerPage.getByRole('button', { name: 'Submit required feedback', exact: true }).click();
+    await waitForText(testerPage, 'Required project feedback submitted.');
 
     await visit(page, `/dashboard/testing-lab/events/${fixture.event.id}/testers`, 'Testing Lab attendance completion');
     await waitForClientHydration(page);
@@ -605,7 +643,9 @@ async function run() {
     console.error(`[testing-lab-browser-e2e] page excerpt:\n${pageText.slice(0, 2600)}`);
     throw error;
   } finally {
+    if (ownerContext) await ownerContext.close();
     if (reviewerContext) await reviewerContext.close();
+    if (testerContext) await testerContext.close();
     const cleanupFailures = eventCancelled
       ? []
       : await cleanupTestingLabFixture(

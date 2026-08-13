@@ -83,7 +83,7 @@ public sealed class ProjectStoreProductHandlersTests : IDisposable
         var result = await CreateHandler().Handle(new LinkProjectStoreProductCommand(project.Id, product.Id), default);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Type.Should().Be(ErrorType.Forbidden);
+        result.Error.Type.Should().Be(ErrorType.NotFound);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public sealed class ProjectStoreProductHandlersTests : IDisposable
         var result = await CreateHandler().Handle(new LinkProjectStoreProductCommand(project.Id, product.Id), default);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Type.Should().Be(ErrorType.Forbidden);
+        result.Error.Type.Should().Be(ErrorType.NotFound);
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public sealed class ProjectStoreProductHandlersTests : IDisposable
         await _context.SaveChangesAsync();
         var nonOwner = await CreateHandler().Handle(new GetProjectStoreProductsQuery(project.Id), default);
 
-        readOnly.Error.Type.Should().Be(ErrorType.Forbidden);
+        readOnly.Error.Type.Should().Be(ErrorType.NotFound);
         nonOwner.Error.Type.Should().Be(ErrorType.Forbidden);
     }
 
@@ -310,7 +310,7 @@ public sealed class ProjectStoreProductHandlersTests : IDisposable
             new UnlinkProjectStoreProductCommand(project.Id, product.Id),
             default);
 
-        projectDenied.Error.Type.Should().Be(ErrorType.Forbidden);
+        projectDenied.Error.Type.Should().Be(ErrorType.NotFound);
         productDenied.Error.Type.Should().Be(ErrorType.Forbidden);
         tenantDenied.IsFailure.Should().BeTrue();
     }
@@ -332,7 +332,7 @@ public sealed class ProjectStoreProductHandlersTests : IDisposable
             default);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Type.Should().Be(ErrorType.Forbidden);
+        result.Error.Type.Should().Be(ErrorType.NotFound);
     }
 
     [Fact]

@@ -47,12 +47,14 @@ const funcPublic = {
     Function: {
         FunctionName: 'add',
         Parameters: [
-            { Name: 'a', Type: 'integer', Content: 2 },
-            { Name: 'b', Type: 'integer', Content: 3 },
+            { Name: 'a', Type: 'integer', Content: 0 },
+            { Name: 'b', Type: 'integer', Content: 0 },
         ],
         ReturnType: { Type: 'integer', Content: 0 },
     },
-    Result: { Type: 'integer', Content: 5 },
+    Cases: [
+        { Inputs: [{ Type: 'integer', Content: 2 }, { Type: 'integer', Content: 3 }], Expected: { Type: 'integer', Content: 5 } },
+    ],
 } as const satisfies Test;
 
 /** Assignment with 2 text files, 1 base64 file, 1 std + 1 func in Public, 1 std in Private. */
@@ -160,9 +162,10 @@ test('buildTestPlan: FunctionalTest → doctest case + 1 generated harness .cpp'
     assert.equal(generatedFiles.length, 1);
     const gf = generatedFiles[0];
     assert.match(gf.path, /^\/home\/user\/functional_0_test\.cpp$/, 'workspace mount path + index filename');
-    assert.match(gf.content, /TEST_CASE\("0:add"\)/, 'harness includes index:functionName');
+    // TEST_CASE label falls back to options.name (group Name), not functionName.
+    assert.match(gf.content, /TEST_CASE\("0:add-ints"\)/, 'TEST_CASE label uses the group Name');
     assert.match(gf.content, /extern "C" int add\(int, int\);/, 'lowercase wire Type → PascalCase C++ type');
-    assert.match(gf.content, /CHECK\(add\(2, 3\) == 5\)/, 'argument + result literals');
+    assert.match(gf.content, /CHECK\(add\(2, 3\) == 5\)/, 'argument + expected literals');
 });
 
 test('buildTestPlan: FunctionalTest in doctest case references generated harness path', () => {
@@ -219,10 +222,12 @@ test('buildTestPlan: indices are unique per functional test within one call', ()
         Weight: 1,
         Function: {
             FunctionName: 'square',
-            Parameters: [{ Name: 'x', Type: 'integer', Content: 4 }],
+            Parameters: [{ Name: 'x', Type: 'integer', Content: 0 }],
             ReturnType: { Type: 'integer', Content: 0 },
         },
-        Result: { Type: 'integer', Content: 16 },
+        Cases: [
+            { Inputs: [{ Type: 'integer', Content: 4 }], Expected: { Type: 'integer', Content: 16 } },
+        ],
     };
     const { plan, generatedFiles } = buildTestPlan(
         {
@@ -267,5 +272,135 @@ test('buildTestPlan: throws on unknown kind (does not silently drop)', () => {
         () => buildTestPlan(assignment, { mode: 'public-only' }),
         /Unsupported test kind: mutant/,
         'hand-built input smuggling a non-v1 kind is rejected',
+    );
+});
+
+test('buildTestPlan: FunctionalTestGroup with N cases → ONE harness file with N CHECK blocks', () => {
+    const group: Test = {
+        kind: 'functional',
+        Weight: 4,
+        Name: 'add-multi',
+        Function: {
+            FunctionName: 'add',
+            Parameters: [
+                { Name: 'a', Type: 'integer', Content: 0 },
+                { Name: 'b', Type: 'integer', Content: 0 },
+            ],
+            ReturnType: { Type: 'integer', Content: 0 },
+        },
+        Cases: [
+            { Inputs: [{ Type: 'integer', Content: 2 }, { Type: 'integer', Content: 3 }], Expected: { Type: 'integer', Content: 5 } },
+            { Inputs: [{ Type: 'integer', Content: 10 }, { Type: 'integer', Content: 20 }], Expected: { Type: 'integer', Content: 30 } },
+        ],
+    };
+    const { plan, generatedFiles } = buildTestPlan(
+        {
+            ...sampleAssignment(),
+            Tests: { Public: [group], Private: [] },
+        },
+        { mode: 'public-only' },
+    );
+
+    // ONE plan case + ONE generated file for the whole group (not per case).
+    assert.equal(plan.cases.length, 1);
+    assert.equal(generatedFiles.length, 1);
+
+    const gf = generatedFiles[0];
+    assert.match(gf.path, /^\/home\/user\/functional_0_test\.cpp$/);
+
+    // ONE extern "C" decl, ONE TEST_CASE block, N CHECK lines.
+    const declCount = (gf.content.match(/^extern "C" int add\(int, int\);$/gm) ?? []).length;
+    assert.equal(declCount, 1, 'extern "C" decl emitted exactly once for the group');
+
+    const testCaseCount = (gf.content.match(/^TEST_CASE\("0:add-multi"\) \{$/gm) ?? []).length;
+    assert.equal(testCaseCount, 1, 'TEST_CASE block emitted exactly once');
+
+    assert.match(gf.content, /^    CHECK\(add\(2, 3\) == 5\);$/m);
+    assert.match(gf.content, /^    CHECK\(add\(10, 20\) == 30\);$/m);
+    const checkCount = (gf.content.match(/^    CHECK\(add\(/gm) ?? []).length;
+    assert.equal(checkCount, 2, 'one CHECK per case');
+});
+
+test('buildTestPlan: FunctionalTestGroup case weight = Weight / Cases.length (lazy equal-split)', () => {
+    const group: Test = {
+        kind: 'functional',
+        Weight: 6,
+        Name: 'add-split',
+        Function: {
+            FunctionName: 'add',
+            Parameters: [
+                { Name: 'a', Type: 'integer', Content: 0 },
+                { Name: 'b', Type: 'integer', Content: 0 },
+            ],
+            ReturnType: { Type: 'integer', Content: 0 },
+        },
+        Cases: [
+            { Inputs: [{ Type: 'integer', Content: 1 }, { Type: 'integer', Content: 1 }], Expected: { Type: 'integer', Content: 2 } },
+            { Inputs: [{ Type: 'integer', Content: 2 }, { Type: 'integer', Content: 2 }], Expected: { Type: 'integer', Content: 4 } },
+            { Inputs: [{ Type: 'integer', Content: 3 }, { Type: 'integer', Content: 3 }], Expected: { Type: 'integer', Content: 6 } },
+        ],
+    };
+    const { plan } = buildTestPlan(
+        {
+            ...sampleAssignment(),
+            Tests: { Public: [group], Private: [] },
+        },
+        { mode: 'public-only' },
+    );
+
+    // 6 / 3 cases = 2 per case-weight (one plan TestCase carries 2).
+    assert.equal(plan.cases.length, 1);
+    const c = plan.cases[0];
+    if (c.kind !== 'doctest') throw new Error('expected doctest');
+    assert.equal(c.weight, 2, 'Weight 6 split equally across 3 cases → 2');
+});
+
+test('buildTestPlan: Weight 0 is valid for FunctionalTestGroup (compiles, contributes 0)', () => {
+    const group: Test = {
+        kind: 'functional',
+        Weight: 0,
+        Function: {
+            FunctionName: 'add',
+            Parameters: [{ Name: 'a', Type: 'integer', Content: 0 }],
+            ReturnType: { Type: 'integer', Content: 0 },
+        },
+        Cases: [
+            { Inputs: [{ Type: 'integer', Content: 1 }], Expected: { Type: 'integer', Content: 1 } },
+        ],
+    };
+    const { plan } = buildTestPlan(
+        {
+            ...sampleAssignment(),
+            Tests: { Public: [group], Private: [] },
+        },
+        { mode: 'public-only' },
+    );
+
+    assert.equal(plan.cases.length, 1, 'Weight 0 group still emits a case');
+    const c = plan.cases[0];
+    if (c.kind !== 'doctest') throw new Error('expected doctest');
+    assert.equal(c.weight, 0, 'Weight 0 → 0/N = 0 (valid, runs but does not contribute)');
+});
+
+test('buildTestPlan: FunctionalTestGroup with 0 Cases throws (Metis M5)', () => {
+    const emptyGroup = {
+        kind: 'functional',
+        Weight: 5,
+        Function: {
+            FunctionName: 'add',
+            Parameters: [],
+            ReturnType: { Type: 'integer', Content: 0 },
+        },
+        Cases: [],
+    } as unknown as Test;
+    const assignment: CodingAssignmentContent = {
+        ...sampleAssignment(),
+        Tests: { Public: [emptyGroup], Private: [] },
+    };
+
+    assert.throws(
+        () => buildTestPlan(assignment, { mode: 'public-only' }),
+        { message: 'FunctionalTestGroup requires \u22651 case' },
+        'explicit throw beats JS divide-by-zero returning Infinity',
     );
 });

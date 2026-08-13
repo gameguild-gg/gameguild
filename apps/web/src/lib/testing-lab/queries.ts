@@ -131,7 +131,6 @@ function createTestingLabModules() {
   });
 
   return {
-    client,
     requests: new GeneratedApi.TestinglabTestingrequestsModule(client),
     sessions: new GeneratedApi.TestinglabTestingsessionsModule(client),
     locations: new GeneratedApi.TestinglabTestinglocationsModule(client),
@@ -349,6 +348,87 @@ export interface TestingRequestDetailData {
   feedback: TestingLabTestingFeedback[];
   accessIssues: string[];
 }
+
+export type TestingFeedbackSource = 'Request' | 'Event' | 0 | 1;
+
+export interface TestingFeedbackDirectoryItem {
+  id: string;
+  source: TestingFeedbackSource;
+  testingRequestId?: string | null;
+  requestTitle?: string | null;
+  eventId?: string | null;
+  eventName?: string | null;
+  applicationId?: string | null;
+  projectId?: string | null;
+  projectTitle?: string | null;
+  projectVersionId?: string | null;
+  projectVersion?: string | null;
+  userId: string;
+  userName?: string | null;
+  userEmail?: string | null;
+  testingContext: string | number;
+  overallRating?: number | null;
+  wouldRecommend?: boolean | null;
+  feedbackData: string;
+  additionalNotes?: string | null;
+  isReported: boolean;
+  reportReason?: string | null;
+  reportedByUserId?: string | null;
+  reportedAt?: string | null;
+  qualityRating?: string | number | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface TestingFeedbackDirectoryData {
+  items: TestingFeedbackDirectoryItem[];
+  totalCount: number;
+  skip: number;
+  take: number;
+  accessIssues: string[];
+}
+
+export interface TestingFeedbackDirectoryOptions {
+  q?: string;
+  source?: 'all' | 'event' | 'request';
+  eventId?: string;
+  requestId?: string;
+  userId?: string;
+  reported?: boolean;
+  quality?: 'Low' | 'Medium' | 'High';
+  skip?: number;
+  take?: number;
+}
+
+export const getTestingFeedbackDirectory = cache(
+  async (options: TestingFeedbackDirectoryOptions = {}): Promise<TestingFeedbackDirectoryData> => {
+    const api = createTestingLabModules();
+    const result = await readResult(
+      api.feedback.getTestingFeedback({
+        Search: options.q?.trim() || undefined,
+        Source: options.source && options.source !== 'all'
+          ? options.source === 'event' ? 'Event' : 'Request'
+          : undefined,
+        EventId: options.eventId,
+        RequestId: options.requestId,
+        UserId: options.userId,
+        Reported: options.reported,
+        Quality: options.quality,
+        Skip: Math.max(0, options.skip ?? 0),
+        Take: Math.min(100, Math.max(1, options.take ?? 20)),
+      }),
+      'Testing feedback',
+    );
+
+    return {
+      items: (result.data?.items ?? []) as TestingFeedbackDirectoryItem[],
+      totalCount: result.data?.totalCount ?? 0,
+      skip: result.data?.skip ?? options.skip ?? 0,
+      take: result.data?.take ?? options.take ?? 20,
+      accessIssues: result.issue ? [result.issue] : [],
+    };
+  },
+);
 
 export const getTestingRequestDetail = cache(async (requestId: string): Promise<TestingRequestDetailData> => {
   const api = createTestingLabModules();

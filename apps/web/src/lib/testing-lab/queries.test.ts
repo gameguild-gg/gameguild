@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  feedback: { getTestingFeedback: vi.fn() },
   auth: vi.fn(),
   getToken: vi.fn(),
   createServerClient: vi.fn(),
@@ -35,7 +36,7 @@ vi.mock('@game-guild/client', () => ({
       return {};
     }),
     TestinglabTestingfeedbackModule: vi.fn(function TestinglabTestingfeedbackModule() {
-      return {};
+      return mocks.feedback;
     }),
     TestinglabTestinganalyticsModule: vi.fn(function TestinglabTestinganalyticsModule() {
       return mocks.analytics;
@@ -71,7 +72,16 @@ describe('testing lab queries', () => {
     vi.unstubAllGlobals();
     mocks.auth.mockResolvedValue({ tenantId: 'tenant-1' });
     mocks.getToken.mockResolvedValue('testing-token');
-    mocks.createServerClient.mockReturnValue({ kind: 'testing-lab-client' });
+    mocks.createServerClient.mockReturnValue({ kind: 'server-client' });
+    mocks.feedback.getTestingFeedback.mockResolvedValue({
+      ok: true,
+      data: {
+        items: [{ id: 'feedback-1', source: 'Event', eventName: 'Showcase', userId: 'user-1', feedbackData: '{}', testingContext: 'Online', isReported: false }],
+        totalCount: 1,
+        skip: 0,
+        take: 20,
+      },
+    });
     mocks.requests.getTestingRequests.mockResolvedValue({
       ok: true,
       data: [{ id: 'request-1', title: 'Build test', status: 'Open' }],
@@ -151,6 +161,32 @@ describe('testing lab queries', () => {
     expect(mocks.sessions.getTestingSessions).toHaveBeenCalledWith({ skip: 0, take: 200 });
     expect(mocks.sessions.getTestingPublicSessions).toHaveBeenCalledWith({ take: 200 });
     expect(mocks.locations.getTestingLocations).toHaveBeenCalledWith({ skip: 0, take: 200 });
+  });
+
+  it('loads unified feedback in one tenant-scoped API request', async () => {
+    const { getTestingFeedbackDirectory } = await import('./queries');
+
+    const directory = await getTestingFeedbackDirectory({
+      q: 'showcase',
+      source: 'event',
+      reported: false,
+      skip: 0,
+      take: 20,
+    });
+
+    expect(directory.items).toHaveLength(1);
+    expect(directory.totalCount).toBe(1);
+    expect(mocks.feedback.getTestingFeedback).toHaveBeenCalledWith({
+      Search: 'showcase',
+      Source: 'Event',
+      EventId: undefined,
+      RequestId: undefined,
+      UserId: undefined,
+      Reported: false,
+      Quality: undefined,
+      Skip: 0,
+      Take: 20,
+    });
   });
 
   it('loads the administration location directory including archived locations', async () => {

@@ -5,6 +5,7 @@ import {
   type ApiError,
   type Result,
   type TestingLabTestingApplicationStatus,
+  type TestingLabTestingApplicationTesterEligibilityProjection,
   type TestingLabTestingEventCommitteeMemberProjection,
   type TestingLabTestingEventFeedbackReviewProjection,
   type TestingLabTestingEventProjection,
@@ -33,6 +34,11 @@ export interface TestingEventManagerData {
 
 export interface TestingEventFeedbackReviewData {
   feedback: TestingLabTestingEventFeedbackReviewProjection[];
+  accessIssues: string[];
+}
+
+export interface TestingApplicationTesterEligibilityData {
+  eligibility: TestingLabTestingApplicationTesterEligibilityProjection[];
   accessIssues: string[];
 }
 
@@ -120,11 +126,16 @@ export async function getTestingEventsDirectory(
 export async function getArchivedTestingEventsDirectory(
   options: Pick<TestingEventsDirectoryOptions, 'skip' | 'take'> = {},
 ): Promise<TestingEventsDirectory> {
-  // ponytail: API endpoint removed in schema sync; return empty directory so
-  // callers compile and the archived-listing route renders an empty state.
+  const result = await read(
+    createModules().events.getTestingEventsArchived({
+      skip: Math.max(0, options.skip ?? 0),
+      take: Math.min(100, Math.max(1, options.take ?? 50)),
+    }),
+    'Archived events',
+  );
   return {
-    events: [],
-    accessIssues: [],
+    events: result.data ?? [],
+    accessIssues: result.issue ? [result.issue] : [],
   };
 }
 
@@ -207,6 +218,28 @@ export const getTestingEventFeedbackReview = cache(async (eventId: string): Prom
     accessIssues: result.issue ? [result.issue] : [],
   };
 });
+
+export async function getTestingApplicationTesterEligibility(
+  eventId: string,
+  testerUserIds: string[],
+): Promise<TestingApplicationTesterEligibilityData> {
+  const api = createModules();
+  const normalizedTesterIds = [...new Set(testerUserIds.filter(Boolean))].slice(0, 100);
+  if (normalizedTesterIds.length === 0) return { eligibility: [], accessIssues: [] };
+
+  const result = await read(
+    api.events.getTestingEventsApplicationsTesterEligibility(eventId, {
+      testerUserIds: normalizedTesterIds,
+    }),
+    'Tester eligibility',
+  );
+
+  return {
+    eligibility: result.data ?? [],
+    accessIssues: result.issue ? [result.issue] : [],
+  };
+}
+
 export const getTestingEventWorkspaceData = cache((eventId: string) => getTestingEventManagerData(eventId));
 
 export {
