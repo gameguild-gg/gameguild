@@ -26,6 +26,7 @@ packages/features/* -> apps/web or apps/learning
 - `packages/features/cookies`
 - `packages/features/courses`
 - `packages/features/errors`
+- `packages/features/lexical-surface`
 - `packages/features/web3`
 
 ## Reusable Context Package Candidates
@@ -41,7 +42,6 @@ Move:
 - `apps/web/src/components/block-content-editor/engines`
 - `apps/web/src/components/block-content-editor/extras`
 - `apps/web/src/components/block-content-editor/hooks`
-- `apps/web/src/components/block-content-editor/lexical-surface`
 - `apps/web/src/components/block-content-editor/lib`
 - `apps/web/src/components/block-content-editor/nodes`
 - `apps/web/src/components/block-content-editor/plugins`
@@ -56,6 +56,10 @@ Keep app-local unless refactored into configurable shell components:
 - `apps/web/src/components/block-content-editor/top-menu.tsx`
 
 Reason: `top-menu.tsx` is route/navigation branded and imports app routing concerns.
+
+Already extracted:
+
+- `packages/features/lexical-surface`
 
 ### `@game-guild/courses`
 
