@@ -761,8 +761,14 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
       expect(deleteAssessment).toHaveBeenCalledWith("course-1", "asmnt-existing");
     });
 
+    const gradedSwitch = screen.getByRole("switch", { name: /^graded$/i });
+    await waitFor(() => {
+      expect(gradedSwitch).not.toBeDisabled();
+      expect(gradedSwitch).not.toBeChecked();
+    });
+
     // Toggle ON again → restore (NOT create).
-    await user.click(screen.getByRole("switch", { name: /^graded$/i }));
+    await user.click(gradedSwitch);
 
     await waitFor(() => {
       expect(restoreAssessment).toHaveBeenCalledWith("course-1", "asmnt-existing");
