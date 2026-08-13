@@ -120,7 +120,8 @@ async function generate(): Promise<void> {
   try {
     // Step 1: Fetch OpenAPI specification
     const rawSpec = await fetchOpenApiSpec(CONFIG.openApiSource);
-    const currentHash = calculateHash(rawSpec);
+    const spec = normalizeSpec(rawSpec);
+    const currentHash = calculateHash(spec);
 
     // Step 2: Check if regeneration is needed
     const metadata = loadMetadata();
@@ -135,9 +136,9 @@ async function generate(): Promise<void> {
     // Step 3: Remove outputs from endpoints that no longer exist in the specification.
     cleanGeneratedOutput(CONFIG.outputDir);
 
-    // Step 4: Normalize the specification
-    console.log('🔧 Normalizing OpenAPI spec...');
-    const spec = normalizeSpec(rawSpec);
+    // Step 4: The specification was normalized before hashing so both the generated output and
+    // incremental metadata are independent of JSON object key order.
+    console.log('🔧 OpenAPI spec normalized...');
 
     // Step 5: Ensure output directory exists
     ensureOutputDir();
