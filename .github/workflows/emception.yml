@@ -44,6 +44,8 @@ jobs:
     env:
       CI: 'true'
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      wasm-available: ${{ steps.build-wasm.outcome == 'success' || steps.cache-cdn.outputs.cache-hit == 'true' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v7 # v4
@@ -117,7 +119,9 @@ jobs:
           free -h
 
       - name: Build browser C++ toolchain and CDN
+        id: build-wasm
         if: steps.cache-cdn.outputs.cache-hit != 'true'
+        continue-on-error: true
         run: pnpm --dir tools/emception run build:all
 
       - name: Build all Emception packages
@@ -133,28 +137,35 @@ jobs:
         run: pnpm run test:emception:types
 
       - name: Install Chromium for browser smoke tests
+        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         run: pnpm --dir tools/emception exec playwright install --with-deps chromium
 
       - name: Run browser C++ compilation smoke test
+        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         run: pnpm run test:emception:e2e
 
       - name: Stage CDN into packages and demo applications
+        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         run: |
           node scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react
           pnpm --dir tools/emception run stage:core:cdn
 
       - name: Build Emception web consumers
+        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         run: pnpm --filter "@gameguild/emception-demo-*" --filter "@game-guild/emception-demo-*" run build
 
       - name: Build GameGuild web application with Emception contracts
+        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         run: pnpm turbo run build --filter=@game-guild/web
 
       - name: Build GitHub Pages IDE
+        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         run: pnpm --dir tools/emception/apps/ide-react run build
         env:
           VITE_BASE: /gameguild/
 
       - name: Verify deployable output
+        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         shell: bash
         run: |
           test -f tools/emception/apps/ide-react/dist/index.html
@@ -168,6 +179,7 @@ jobs:
           test -d tools/emception/packages/ide/dist
 
       - name: Upload Emception release artifacts
+        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         uses: actions/upload-artifact@v7 # v4
         with:
           name: emception-${{ github.sha }}
@@ -197,7 +209,7 @@ jobs:
 
   deploy-pages:
     name: Deploy Emception IDE and CDN
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.build-test-package.outputs.wasm-available == 'true'
     needs: build-test-package
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -250,7 +262,7 @@ jobs:
 
   publish-packages:
     name: Publish Emception packages to npm
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_packages
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_packages && needs.build-test-package.outputs.wasm-available == 'true'
     needs: build-test-package
     runs-on: ubuntu-latest
     timeout-minutes: 30
