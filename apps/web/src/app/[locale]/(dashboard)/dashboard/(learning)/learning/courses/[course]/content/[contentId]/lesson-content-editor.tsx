@@ -3,11 +3,12 @@
 import { lazy, Suspense, useCallback } from "react";
 import { Label } from "@game-guild/ui/components/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { type LexicalSurfaceFeatures } from "@game-guild/lexical-surface";
+import { lexicalSurfaceAdapters } from "@/components/block-content-editor/lexical-surface-adapters";
 import type { SerializedEditorState } from "lexical";
-import type { LexicalSurfaceFeatures } from "@/components/block-content-editor/lexical-surface";
 
 const LexicalSurface = lazy(async () => {
-  const mod = await import("@/components/block-content-editor/lexical-surface");
+  const mod = await import("@game-guild/lexical-surface");
   return { default: mod.LexicalSurface };
 });
 
@@ -17,8 +18,6 @@ const LESSON_EDITOR_FEATURES = {
   floatingLinkEditor: true,
   draggable: true,
   picker: true,
-  blockEmbed: false,
-  blockInsertMenu: true,
   pageLayout: false,
   shortcuts: true,
   equation: true,
@@ -88,6 +87,7 @@ export function LessonContentEditor({
             placeholder="Start writing your lesson content..."
             contentStyle={{ minHeight: "400px" }}
             contentClassName="max-w-none"
+            adapters={lexicalSurfaceAdapters}
             features={LESSON_EDITOR_FEATURES}
           />
         </Suspense>

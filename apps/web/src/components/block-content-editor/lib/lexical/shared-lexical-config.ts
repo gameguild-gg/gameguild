@@ -13,7 +13,6 @@ import { ListNode, ListItemNode } from "@lexical/list"
 import { LinkNode, AutoLinkNode } from "@lexical/link"
 import { CodeNode, CodeHighlightNode } from "@lexical/code"
 import { CustomListNode } from "../../nodes/custom-list-node"
-import { BlockEmbedNode } from "../../nodes/block-embed-node"
 import { EquationNode } from "../../lexical-surface/equation"
 import { ExcalidrawNode } from "../../lexical-surface/excalidraw"
 import { YouTubeNode, TweetNode, FigmaNode } from "../../lexical-surface/embeds"
@@ -57,7 +56,6 @@ export const SHARED_LEXICAL_NODES = [
   CodeHighlightNode,
   LinkNode,
   AutoLinkNode,
-  BlockEmbedNode,
   EquationNode,
   ExcalidrawNode,
   YouTubeNode,

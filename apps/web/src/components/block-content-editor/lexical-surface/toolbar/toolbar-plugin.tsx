@@ -133,7 +133,6 @@ import {
   isKeyboardInput,
 } from "./utils"
 import { SHORTCUTS } from "../shortcuts/shortcuts"
-import { BlockInsertButtonPlugin } from "../../plugins/block-insert-button-plugin"
 import { $isEquationNode } from "../equation/equation-node"
 import { InsertEquationDialog } from "../equation"
 import { InsertTableDialog } from "../table"
@@ -914,8 +913,6 @@ export default function ToolbarPlugin({
   setActiveEditor: Dispatch<LexicalEditor>
   setIsLinkEditMode: Dispatch<boolean>
   features?: {
-    blockEmbed?: boolean
-    blockInsertMenu?: boolean
     pageLayout?: boolean
   }
 }) {
@@ -1376,15 +1373,12 @@ export default function ToolbarPlugin({
 
       {features?.pageLayout !== false && <PageSettingsDropDown disabled={!isEditable} />}
 
-      {features?.blockEmbed !== false && <BlockInsertButtonPlugin disabled={!isEditable} />}
-
-      {features?.blockInsertMenu !== false && (
-        <DropDown
-          disabled={!isEditable}
-          buttonLabel="Insert"
-          buttonIcon={<InsertIcon className="w-4 h-4" />}
-          buttonAriaLabel="Insert specialized editor node"
-        >
+      <DropDown
+        disabled={!isEditable}
+        buttonLabel="Insert"
+        buttonIcon={<InsertIcon className="w-4 h-4" />}
+        buttonAriaLabel="Insert document feature"
+      >
           <DropDownItem onClick={() => dispatchToolbarCommand(INSERT_DIVIDER_LEXICAL_COMMAND)}>
             <HorizontalRuleIcon className="w-4 h-4" /> Horizontal Rule
           </DropDownItem>
@@ -1437,8 +1431,7 @@ export default function ToolbarPlugin({
           >
             <MediaToolbarIcon className="w-4 h-4" /> Media Block
           </DropDownItem>
-        </DropDown>
-      )}
+      </DropDown>
 
       <EmojiPickerPopover editor={activeEditor} disabled={!isEditable} />
 

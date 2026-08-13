@@ -11,8 +11,8 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { LexicalEditor, SerializedEditorState } from "lexical"
 
-import { BlockInsertButtonPlugin } from "../../plugins/block-insert-button-plugin"
-import { LexicalSurface } from "../../lexical-surface"
+import { LexicalSurface } from "@game-guild/lexical-surface"
+import { lexicalSurfaceAdapters } from "@/components/block-content-editor/lexical-surface-adapters"
 import type { RichTextData } from "../../nodes/rich-text-node"
 
 interface InlineRichTextEditorProps {
@@ -55,21 +55,10 @@ export function InlineRichTextEditor({ data, onChange, readOnly = false }: Inlin
       readOnly={readOnly}
       initialState={seededContentRef.current ?? null}
       onChange={handleChange}
-      placeholder="Start writing… press / to insert a block"
+      placeholder="Start writing…"
       contentClassName="min-h-[80px]"
       features={{ toolbar: false, pageLayout: false }}
-      headerSlot={
-        !readOnly ? (
-          <div className="px-3 py-1.5 border-b border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40 flex items-center justify-between shrink-0">
-            <p className="text-[11px] text-gray-500 dark:text-gray-500">
-              Tip: type{" "}
-              <kbd className="px-1 py-0.5 rounded border bg-white dark:bg-gray-800 font-mono text-[10px]">/</kbd>{" "}
-              to insert a block
-            </p>
-            <BlockInsertButtonPlugin />
-          </div>
-        ) : null
-      }
+      adapters={lexicalSurfaceAdapters}
     />
   )
 }
