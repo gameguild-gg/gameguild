@@ -1,6 +1,4 @@
 import { type JSX, useCallback, useRef, useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { Switch } from '@game-guild/ui/components/switch';
 import type { DockGroup, FileMeta, TabType, TreeNode, WorkspaceFile } from './ide-types';
 import { fileName } from './ide-utils';
 
@@ -143,29 +141,45 @@ export default function FileExplorer({
                 <span style={{ color, fontSize: '0.78rem', flexShrink: 0 }}>{icon}</span>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{fileName(node.path)}</span>
                 {fileMeta && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }} onPointerDown={stopRow} onClick={stopRow}>
-                        <span data-testid={`file-visibility-${node.path}`} style={{ display: 'inline-flex' }}>
-                            <Select
-                                value={meta?.visibility ?? 'Public'}
-                                onValueChange={(v) => onFileMetaChange?.(node.path, { visibility: v as 'Public' | 'Private' })}
-                            >
-                                <SelectTrigger
-                                    size="sm"
-                                    style={{ height: 20, fontSize: '0.65rem', padding: '0 0.25rem', width: 70, background: '#1e1e2e', borderColor: '#45475a', color: '#cdd6f4' }}
-                                >
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Public">Public</SelectItem>
-                                    <SelectItem value="Private">Private</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </span>
-                        <Switch
-                            checked={meta?.modifiable ?? true}
-                            onCheckedChange={(checked) => onFileMetaChange?.(node.path, { modifiable: checked })}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', flexShrink: 0 }} onPointerDown={stopRow} onClick={stopRow}>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onFileMetaChange?.(node.path, { visibility: (meta?.visibility ?? 'Public') === 'Public' ? 'Private' : 'Public' });
+                            }}
+                            data-testid={`file-visibility-${node.path}`}
+                            title={(meta?.visibility ?? 'Public') === 'Public' ? 'Public — visible to students. Click to hide.' : 'Private — hidden from students. Click to show.'}
+                            style={{
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                padding: '0.1rem',
+                                fontSize: '0.75rem',
+                                color: (meta?.visibility ?? 'Public') === 'Public' ? '#a6e3a1' : '#6c7086',
+                                lineHeight: 1,
+                            }}
+                        >
+                            {(meta?.visibility ?? 'Public') === 'Public' ? '👁' : '🙈'}
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onFileMetaChange?.(node.path, { modifiable: !(meta?.modifiable ?? true) });
+                            }}
                             data-testid={`file-modifiable-${node.path}`}
-                        />
+                            title={(meta?.modifiable ?? true) ? 'Modifiable — students can edit. Click to lock.' : 'Read-only — students cannot edit. Click to unlock.'}
+                            style={{
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                padding: '0.1rem',
+                                fontSize: '0.75rem',
+                                color: (meta?.modifiable ?? true) ? '#89b4fa' : '#6c7086',
+                                lineHeight: 1,
+                            }}
+                        >
+                            {(meta?.modifiable ?? true) ? '✏️' : '🔒'}
+                        </button>
                     </span>
                 )}
             </div>

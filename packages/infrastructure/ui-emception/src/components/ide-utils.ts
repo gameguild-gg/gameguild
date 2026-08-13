@@ -11,11 +11,8 @@ export function isTextFile(path: string): boolean {
 }
 
 export function toWorkspaceFsPath(path: string, assignmentToken?: string): string {
-    if (path.startsWith('/user/')) {
-        const rest = path.slice('/user/'.length);
-        return assignmentToken ? `/home/user/${assignmentToken}/${rest}` : `/home/user/${rest}`;
-    }
-    return `/home/user/${fileName(path)}`;
+    const rest = path.startsWith('/user/') ? path.slice('/user/'.length) : fileName(path);
+    return assignmentToken ? `/home/user/${assignmentToken}/${rest}` : `/home/user/${rest}`;
 }
 
 export function fileName(path: string): string {
