@@ -166,6 +166,56 @@ public class TestingLocationTests
 public sealed class TestingRequestsControllerAuthorizationTests
 {
     [Fact]
+    public async Task GetTestingRequests_Should_Return_Stable_Projections_With_Project_Context()
+    {
+        var projectId = Guid.NewGuid();
+        var versionId = Guid.NewGuid();
+        var requestId = Guid.NewGuid();
+        var project = new Project
+        {
+            Id = projectId,
+            Title = "Arena Tactics",
+            Slug = "arena-tactics"
+        };
+        var version = new ProjectVersion
+        {
+            Id = versionId,
+            ProjectId = projectId,
+            Project = project,
+            VersionNumber = "1.0.0",
+            Status = "Published"
+        };
+        var testingRequest = new TestingRequest
+        {
+            Id = requestId,
+            Title = "Arena playtest",
+            ProjectVersionId = versionId,
+            ProjectVersion = version,
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(1)
+        };
+        var requestService = new Mock<ITestingRequestOperations>();
+        requestService
+            .Setup(service => service.GetTestingRequestsAsync(0, 50, true))
+            .ReturnsAsync([testingRequest]);
+        var controller = new TestingRequestsController(
+            requestService.Object,
+            new ActorContextAccessor(),
+            NullLogger<TestingRequestsController>.Instance,
+            new Mock<IMediator>().Object);
+
+        var result = await controller.GetTestingRequests(0, 50, true);
+
+        var projection = result.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeAssignableTo<IEnumerable<TestingRequestDetailProjection>>()
+            .Which.Should().ContainSingle().Subject;
+        projection.Id.Should().Be(requestId);
+        projection.ProjectVersion.Should().NotBeNull();
+        projection.ProjectVersion!.Project.Should().BeEquivalentTo(
+            new TestingRequestProjectProjection(projectId, "Arena Tactics", "arena-tactics"));
+    }
+
+    [Fact]
     public void SubmitSimpleTestingRequest_Dto_Should_Not_Require_Legacy_TeamIdentifier_For_ProjectBacked_Submissions()
     {
         var property = typeof(CreateSimpleTestingRequestDto)

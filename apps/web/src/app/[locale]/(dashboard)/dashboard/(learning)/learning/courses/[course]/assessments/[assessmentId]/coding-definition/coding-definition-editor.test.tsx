@@ -48,6 +48,14 @@ const assignmentSamplesMock = vi.hoisted(() => ({
   },
 }));
 
+// ponytail: capture the latest props handed to the IDE mock so tests can assert
+// on workspaceConfig / tests without a rendered JSON preview card (removed in
+// the editor refinements plan).
+let lastIdeProps: {
+  workspaceConfig?: { files?: Record<string, unknown> };
+  tests?: { Public?: unknown[]; Private?: unknown[] };
+} = {};
+
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
   setPointerCapture: { value: vi.fn() },
@@ -92,6 +100,7 @@ vi.mock("@game-guild/emception-ui", async () => {
       setFileMeta: ideMock.setFileMeta,
       getModifiedFiles: vi.fn(),
     }));
+    lastIdeProps = props as typeof lastIdeProps;
     return React.createElement(
       "div",
       { "data-testid": "mock-ide" },
@@ -133,6 +142,7 @@ const baseProps = {
 describe("CodingDefinitionEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    lastIdeProps = {};
     ideMock.getFiles.mockReset();
     ideMock.getFiles.mockResolvedValue([
       { path: "/user/main.cpp", content: "// edited starter" },
@@ -148,19 +158,16 @@ describe("CodingDefinitionEditor", () => {
     render(<CodingDefinitionEditor {...baseProps} initialContent={null} />);
 
     const sample = ASSIGNMENT_SAMPLES.cpp;
-    const preview = await screen.findByTestId("json-preview");
-    const previewText = preview.textContent ?? "";
 
-    // v1 root shape
-    expect(previewText).toContain('"Type": "coding-assignment"');
-    expect(previewText).toContain('"Version": 1');
-    expect(previewText).toContain('"Language": "cpp"');
-    // Sample's main.cpp is seeded as a Public file
-    expect(previewText).toContain("/user/main.cpp");
+    // The IDE only renders once the seed useEffect populates fileRows.
+    await screen.findByTestId("mock-ide");
+    expect(
+      Object.keys(lastIdeProps.workspaceConfig?.files ?? {}),
+    ).toContain("/user/main.cpp");
     expect(sample.workspaceConfig.id).toBeDefined();
   });
 
-  it("adds two standard tests (one Private) and renders the v1 TestSuite JSON", async () => {
+  it("adds two standard tests (one Private) and PUTs the v1 TestSuite buckets", async () => {
     const user = userEvent.setup();
     render(<CodingDefinitionEditor {...baseProps} />);
 
@@ -185,17 +192,22 @@ describe("CodingDefinitionEditor", () => {
     await user.click(screen.getByTestId("standard-visibility-1"));
     await user.click(screen.getByRole("option", { name: "Private" }));
 
-    const previewText =
-      (await screen.findByTestId("json-preview")).textContent ?? "";
+    await user.click(screen.getByTestId("save-button"));
+
+    await waitFor(() => {
+      expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
+    });
+    const payloadArg = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+    const payloadText = JSON.stringify(payloadArg, null, 2);
 
     // v1 wire format — PascalCase
-    expect(previewText).toContain('"Stdin": "abc"');
-    expect(previewText).toContain('"Stdout": "ABC"');
-    expect(previewText).toContain('"Stdin": "xyz"');
-    expect(previewText).toContain('"Stdout": "XYZ"');
+    expect(payloadText).toContain('"Stdin": "abc"');
+    expect(payloadText).toContain('"Stdout": "ABC"');
+    expect(payloadText).toContain('"Stdin": "xyz"');
+    expect(payloadText).toContain('"Stdout": "XYZ"');
     // Tests bucket split by Visibility: Public has 1, Private has 1.
-    expect(previewText).toMatch(/"Public":[\s\S]*"kind": "standard"/);
-    expect(previewText).toMatch(/"Private":[\s\S]*"kind": "standard"/);
+    expect(payloadText).toMatch(/"Public":[\s\S]*"kind": "standard"/);
+    expect(payloadText).toMatch(/"Private":[\s\S]*"kind": "standard"/);
   });
 
   it("rejects negative weight client-side — Save disabled + error shown", async () => {
@@ -256,7 +268,8 @@ describe("CodingDefinitionEditor", () => {
     });
   });
 
-  it("round-trips an existing v1 CodingAssignmentContent — preserves buckets", () => {
+  it("round-trips an existing v1 CodingAssignmentContent — preserves buckets", async () => {
+    const user = userEvent.setup();
     const initialContent: CodingAssignmentContent = {
       Type: "coding-assignment",
       Version: 1,
@@ -306,13 +319,20 @@ describe("CodingDefinitionEditor", () => {
       />,
     );
 
-    const previewText = screen.getByTestId("json-preview").textContent ?? "";
+    // No edits — save echoes the round-tripped test buckets.
+    await user.click(screen.getByTestId("save-button"));
+
+    await waitFor(() => {
+      expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
+    });
+    const payloadArg = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+    const payloadText = JSON.stringify(payloadArg, null, 2);
+
     // Both standard cases preserved across buckets.
-    expect(previewText.match(/"kind": "standard"/g)).toHaveLength(2);
-    expect(previewText).toContain('"Name": "case-b-secret"');
-    // Buckets present
-    expect(previewText).toContain('"Public":');
-    expect(previewText).toContain('"Private":');
+    expect(payloadText.match(/"kind": "standard"/g)).toHaveLength(2);
+    expect(payloadText).toContain('"Name": "case-b-secret"');
+    expect(payloadText).toContain('"Public":');
+    expect(payloadText).toContain('"Private":');
   });
 
   it("rejects a FunctionalTest with bad function name — Save disabled", async () => {
@@ -354,10 +374,16 @@ describe("CodingDefinitionEditor", () => {
       target: { value: "2" },
     });
 
-    const previewText = screen.getByTestId("json-preview").textContent ?? "";
-    expect(previewText).toContain('"FunctionName": "add"');
-    expect(previewText).toContain('"Type": "integer"');
-    expect(previewText).toContain('"Name": "a"');
-    expect(previewText).toContain('"Content": 2');
+    await user.click(screen.getByTestId("save-button"));
+
+    await waitFor(() => {
+      expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
+    });
+    const payloadArg = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+    const payloadText = JSON.stringify(payloadArg, null, 2);
+    expect(payloadText).toContain('"FunctionName": "add"');
+    expect(payloadText).toContain('"Type": "integer"');
+    expect(payloadText).toContain('"Name": "a"');
+    expect(payloadText).toContain('"Content": 2');
   });
 });

@@ -163,6 +163,47 @@ describe('testing lab queries', () => {
     expect(mocks.locations.getTestingLocations).toHaveBeenCalledWith({ skip: 0, take: 200 });
   });
 
+  it('keeps project context from the stable Testing Lab request projection', async () => {
+    mocks.requests.getTestingRequests.mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: 'request-1',
+          title: 'Arena playtest',
+          status: 'Open',
+          projectVersionId: 'version-1',
+          projectVersion: {
+            id: 'version-1',
+            projectId: 'project-1',
+            versionNumber: '1.0.0',
+            status: 'Published',
+            project: {
+              id: 'project-1',
+              title: 'Arena Tactics',
+              slug: 'arena-tactics',
+            },
+          },
+        },
+      ],
+    });
+
+    const dashboard = await getTestingLabDashboard();
+
+    expect(dashboard.requests[0]?.projectVersion).toEqual({
+      id: 'version-1',
+      projectId: 'project-1',
+      versionNumber: '1.0.0',
+      status: 'Published',
+      project: {
+        id: 'project-1',
+        title: 'Arena Tactics',
+        name: undefined,
+        slug: 'arena-tactics',
+        status: undefined,
+      },
+    });
+  });
+
   it('loads unified feedback in one tenant-scoped API request', async () => {
     const { getTestingFeedbackDirectory } = await import('./queries');
 

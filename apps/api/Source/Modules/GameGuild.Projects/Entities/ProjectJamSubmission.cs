@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using JamEntity = GameGuild.GameJams.Jam;
 using JamScoreEntity = GameGuild.GameJams.JamScore;
@@ -18,12 +19,14 @@ public sealed class ProjectJamSubmission : EntityBase<Guid>
     public Guid ProjectId { get; set; }
 
     /// <summary> Navigation property to project </summary>
+    [JsonIgnore]
     public Project Project { get; set; } = null!;
 
     /// <summary> Jam the project is submitted to </summary>
     public Guid? JamId { get; set; }
 
     /// <summary> Navigation property to jam </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public JamEntity? Jam { get; set; }
 
     /// <summary> Date when the project was submitted to the jam </summary>

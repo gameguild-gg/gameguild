@@ -124,15 +124,14 @@ test('dispose is idempotent', () => {
 
 test('end-to-end with real MessageChannel: 5 concurrent echoes complete in order of resolution', async () => {
     const channel = new MessageChannel();
+    channel.port1.unref();
+    channel.port2.unref();
     const c = new RequestCorrelator();
 
     startEchoServer(channel.port2);
     channel.port1.on('message', (msg) => {
         c.complete(msg.id, msg.payload);
     });
-    channel.port1.unref();
-    channel.port2.unref();
-
     const sends = ['a', 'b', 'c', 'd', 'e'].map((payload) => {
         const { id, promise } = c.allocate();
         channel.port1.postMessage({ id, payload });
@@ -147,6 +146,8 @@ test('end-to-end with real MessageChannel: 5 concurrent echoes complete in order
 
 test('end-to-end with real MessageChannel: stale response after complete is dropped silently', async () => {
     const channel = new MessageChannel();
+    channel.port1.unref();
+    channel.port2.unref();
     const c = new RequestCorrelator();
     let staleHandled = null;
 
@@ -159,8 +160,6 @@ test('end-to-end with real MessageChannel: stale response after complete is drop
         const ok = c.complete(msg.id, msg.payload);
         if (!ok) staleHandled = msg.payload;
     });
-    channel.port1.unref();
-    channel.port2.unref();
 
     const { id, promise } = c.allocate();
     channel.port1.postMessage({ id, ping: true });
@@ -168,7 +167,7 @@ test('end-to-end with real MessageChannel: stale response after complete is drop
     assert.equal(result, 'first');
 
     // Wait one macrotask so the stale message lands.
-    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setTimeout(r, 20));
     assert.equal(staleHandled, 'second');
 
     channel.port1.close();
@@ -177,18 +176,18 @@ test('end-to-end with real MessageChannel: stale response after complete is drop
 
 test('end-to-end with real MessageChannel: dispose mid-flight rejects in-flight request', async () => {
     const channel = new MessageChannel();
+    channel.port1.unref();
+    channel.port2.unref();
     const c = new RequestCorrelator();
     // Server NEVER responds, simulating a hung worker.
     channel.port2.on('message', () => { });
     channel.port1.on('message', (msg) => c.complete(msg.id, msg.payload));
-    channel.port1.unref();
-    channel.port2.unref();
 
     const { id, promise } = c.allocate();
     channel.port1.postMessage({ id, payload: 'hang' });
 
     // Dispose after letting the message fly.
-    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setTimeout(r, 20));
     c.dispose();
 
     await assert.rejects(promise, CorrelatorDisposedError);

@@ -53,82 +53,6 @@ export class UsersNotificationsModule {
   }
 
   /**
-   * Mark multiple notifications as read for a user
-   */
-  async postUsersByUserIdNotificationsMarkAsRead(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/notifications:mark-as-read`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Mark multiple notifications as unread for a user
-   */
-  async postUsersByUserIdNotificationsMarkAsUnread(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/notifications:mark-as-unread`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Archive multiple notifications for a user
-   */
-  async postUsersByUserIdNotificationsArchive(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/notifications:archive`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Unarchive multiple notifications for a user
-   */
-  async postUsersByUserIdNotificationsUnarchive(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/notifications:unarchive`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Get detailed notification by ID
    */
   async getUsersByUserIdNotificationsByNotificationId(
@@ -168,6 +92,21 @@ export class UsersNotificationsModule {
   }
 
   /**
+   * Archive notification
+   */
+  async postUsersByUserIdNotificationsByNotificationIdArchive(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/notifications/${notificationId}:archive`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Mark notification as read
    */
   async postUsersByUserIdNotificationsByNotificationIdMarkAsRead(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
@@ -198,10 +137,10 @@ export class UsersNotificationsModule {
   }
 
   /**
-   * Archive notification
+   * Unarchive notification
    */
-  async postUsersByUserIdNotificationsByNotificationIdArchive(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/notifications/${notificationId}:archive`;
+  async postUsersByUserIdNotificationsByNotificationIdUnarchive(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/notifications/${notificationId}:unarchive`;
 
     const result = await this.client.request({
       method: 'POST',
@@ -213,14 +152,75 @@ export class UsersNotificationsModule {
   }
 
   /**
-   * Unarchive notification
+   * Archive multiple notifications for a user
    */
-  async postUsersByUserIdNotificationsByNotificationIdUnarchive(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}/notifications/${notificationId}:unarchive`;
+  async postUsersByUserIdNotificationsArchive(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/notifications:archive`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
       path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Mark multiple notifications as read for a user
+   */
+  async postUsersByUserIdNotificationsMarkAsRead(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/notifications:mark-as-read`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Mark multiple notifications as unread for a user
+   */
+  async postUsersByUserIdNotificationsMarkAsUnread(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/notifications:mark-as-unread`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Unarchive multiple notifications for a user
+   */
+  async postUsersByUserIdNotificationsUnarchive(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}/notifications:unarchive`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 

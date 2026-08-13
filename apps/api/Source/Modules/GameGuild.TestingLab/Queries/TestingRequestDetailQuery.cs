@@ -33,7 +33,37 @@ public sealed record TestingRequestDetailProjection(
     TestingRequestStatus Status,
     Guid? ProjectVersionId,
     TestingRequestProjectVersionProjection? ProjectVersion,
-    bool IsDeleted);
+    bool IsDeleted)
+{
+    public static TestingRequestDetailProjection FromEntity(TestingRequest testingRequest)
+        => new(
+            testingRequest.Id,
+            testingRequest.Title,
+            testingRequest.Description,
+            testingRequest.DownloadUrl,
+            testingRequest.InstructionsContent,
+            testingRequest.FeedbackFormContent,
+            testingRequest.MaxTesters,
+            testingRequest.CurrentTesterCount,
+            testingRequest.StartDate,
+            testingRequest.EndDate,
+            testingRequest.Status,
+            testingRequest.ProjectVersionId,
+            testingRequest.ProjectVersion == null
+                ? null
+                : new TestingRequestProjectVersionProjection(
+                    testingRequest.ProjectVersion.Id,
+                    testingRequest.ProjectVersion.ProjectId,
+                    testingRequest.ProjectVersion.VersionNumber,
+                    testingRequest.ProjectVersion.Status,
+                    testingRequest.ProjectVersion.Project == null
+                        ? null
+                        : new TestingRequestProjectProjection(
+                            testingRequest.ProjectVersion.Project.Id,
+                            testingRequest.ProjectVersion.Project.Title,
+                            testingRequest.ProjectVersion.Project.Slug)),
+            testingRequest.DeletedAt != null);
+}
 
 public sealed record GetTestingRequestDetailQuery(Guid RequestId)
     : IQuery<Result<TestingRequestDetailProjection>>;
