@@ -8,6 +8,43 @@ import type { OpenApiSpec } from '../../scripts/fetch-spec.js';
 import simpleSpec from './fixtures/simple-spec.json';
 
 describe('OpenAPI Spec Normalizer', () => {
+  it('should produce the same canonical output regardless of object key order', () => {
+    const createSpec = (reverse: boolean): OpenApiSpec => {
+      const properties = reverse
+        ? { zebra: { type: 'string' as const }, alpha: { type: 'string' as const } }
+        : { alpha: { type: 'string' as const }, zebra: { type: 'string' as const } };
+      const paths = reverse
+        ? {
+            '/v1/zebra': { get: { responses: { '200': { description: 'Success' } } } },
+            '/v1/alpha': { get: { responses: { '200': { description: 'Success' } } } },
+          }
+        : {
+            '/v1/alpha': { get: { responses: { '200': { description: 'Success' } } } },
+            '/v1/zebra': { get: { responses: { '200': { description: 'Success' } } } },
+          };
+
+      return {
+        openapi: '3.0.1',
+        info: { title: 'Canonical', version: '1.0' },
+        paths,
+        components: {
+          schemas: {
+            OrderedModel: { type: 'object', properties },
+          },
+        },
+      } as OpenApiSpec;
+    };
+
+    const forward = normalizeSpec(createSpec(false));
+    const reversed = normalizeSpec(createSpec(true));
+
+    expect(JSON.stringify(reversed)).toBe(JSON.stringify(forward));
+    expect(Object.keys(forward.paths)).toEqual(['/v1/alpha', '/v1/zebra']);
+    expect(
+      Object.keys((forward.components?.schemas?.OrderedModel as { properties: object }).properties),
+    ).toEqual(['alpha', 'zebra']);
+  });
+
   it('should normalize operation IDs when missing', () => {
     const spec: OpenApiSpec = {
       ...simpleSpec,
