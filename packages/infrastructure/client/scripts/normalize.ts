@@ -14,7 +14,7 @@ import { HTTP_METHODS, ASP_NET_PATTERNS } from './codegen/constants.js';
  * Normalize the OpenAPI specification
  */
 export function normalizeSpec(spec: OpenApiSpec): OpenApiSpec {
-  const normalized = structuredClone(spec);
+  const normalized = sortObjectKeys(structuredClone(spec));
 
   // Keep compatibility aliases in the API, but expose only the canonical route in the SDK.
   removeRedundantApiVersionAliases(normalized);
@@ -31,7 +31,27 @@ export function normalizeSpec(spec: OpenApiSpec): OpenApiSpec {
   // Clean up Microsoft/ASP.NET specific patterns
   cleanAspNetPatterns(normalized);
 
-  return normalized;
+  return sortObjectKeys(normalized);
+}
+
+/**
+ * OpenAPI object key order has no semantic meaning. Sorting recursively keeps generated output
+ * identical whether the specification comes directly from Swagger or from a canonical CI artifact.
+ */
+function sortObjectKeys<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => sortObjectKeys(item)) as T;
+  }
+
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>)
+    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+    .map(([key, entryValue]) => [key, sortObjectKeys(entryValue)]);
+
+  return Object.fromEntries(entries) as T;
 }
 
 /**
