@@ -118,12 +118,6 @@ jobs:
           sudo swapon /mnt/emception-swapfile
           free -h
 
-      - name: Build browser C++ toolchain and CDN
-        id: build-wasm
-        if: steps.cache-cdn.outputs.cache-hit != 'true'
-        continue-on-error: true
-        run: pnpm --dir tools/emception run build:all
-
       - name: Build all Emception packages
         run: pnpm run build:emception
 
@@ -135,6 +129,12 @@ jobs:
 
       - name: Run Emception public type tests
         run: pnpm run test:emception:types
+
+      - name: Build browser C++ toolchain and CDN
+        id: build-wasm
+        if: steps.cache-cdn.outputs.cache-hit != 'true'
+        continue-on-error: true
+        run: pnpm --dir tools/emception run build:all
 
       - name: Install Chromium for browser smoke tests
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
