@@ -75,6 +75,16 @@ test_web_server_uses_direct_node_process_for_cleanup() {
   ! grep -q 'pnpm --filter @game-guild/web exec next start' "$ci_dir/verify-economy.sh"
 }
 
+test_standalone_web_server_uses_origin_safe_bind_address() {
+  local gate="$ci_dir/verify-economy.sh"
+  local hostname_line launch_line
+  hostname_line="$(grep -n 'export HOSTNAME=0.0.0.0' "$gate" | cut -d: -f1)"
+  launch_line="$(grep -n 'node "$standalone_web_root/server.js"' "$gate" | cut -d: -f1)"
+
+  [[ -n "$hostname_line" && -n "$launch_line" ]] || return 1
+  [[ "$hostname_line" -lt "$launch_line" ]]
+}
+
 test_browser_server_uses_published_api() {
   local gate="$ci_dir/verify-economy.sh"
   local api_url_line web_launch_line
@@ -317,6 +327,7 @@ test_canonical_json_preserves_arrays() {
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
+run_test 'standalone web server uses an origin-safe bind address' test_standalone_web_server_uses_origin_safe_bind_address
 run_test 'browser server uses the published API instance' test_browser_server_uses_published_api
 run_test 'web Vitest is isolated from the published API instance' test_web_vitest_isolated_from_published_api
 run_test 'local API readiness enables payment simulation explicitly' test_local_api_readiness_enables_simulation_explicitly
