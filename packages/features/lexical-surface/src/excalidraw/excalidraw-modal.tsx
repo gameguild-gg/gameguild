@@ -27,7 +27,7 @@ import {
   DialogTitle,
 } from "@game-guild/ui/components/dialog"
 import { cn } from "@game-guild/ui/lib/utils"
-import { ClientOnlyLazy } from "@game-guild/lexical-surface/lib/client-only-lazy"
+import { ClientOnlyLazy } from "../lib/client-only-lazy"
 
 /**
  * Selector that covers internal overlays/popovers of Excalidraw
@@ -204,7 +204,11 @@ export default function ExcalidrawModal({
                 elements: initialElements,
                 files: initialFiles,
               },
-              onChange: (els, _ap, fls) => {
+              onChange: (
+                els: ExcalidrawInitialElements,
+                _appState: AppState,
+                fls: BinaryFiles,
+              ) => {
                 setElements(els)
                 setFiles(fls)
               },
