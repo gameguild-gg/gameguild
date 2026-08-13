@@ -49,7 +49,7 @@ export class TestinglabTestingrequestsModule {
     skip?: number;
     take?: number;
     includeArchived?: boolean;
-  }): Promise<Result<Array<Types.TestingLabTestingInput>, ApiError>> {
+  }): Promise<Result<Array<Types.TestingLabTestingRequestDetailProjection>, ApiError>> {
     const url = '/v1/testing/requests';
 
     const result = await this.client.request({
@@ -59,7 +59,7 @@ export class TestinglabTestingrequestsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.TestingLabTestingInput>, ApiError>;
+    return result as Result<Array<Types.TestingLabTestingRequestDetailProjection>, ApiError>;
   }
 
   /**
