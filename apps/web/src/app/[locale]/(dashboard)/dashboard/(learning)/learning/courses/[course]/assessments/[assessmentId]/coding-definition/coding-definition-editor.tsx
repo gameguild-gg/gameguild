@@ -25,7 +25,6 @@ import {
 } from "@game-guild/ui/components/card";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
-import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import { Switch } from "@game-guild/ui/components/switch";
 import {
@@ -119,7 +118,7 @@ export function CodingDefinitionEditor({
         ]
       : [],
   );
-  const [maxScore, setMaxScore] = useState<number>(initialContent?.Grading.MaxScore ?? 100);
+  const maxScore = initialContent?.Grading.MaxScore ?? 100;
 
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -172,23 +171,10 @@ export function CodingDefinitionEditor({
 
   // ── Validation ──
   const validationErrors = useMemo(
-    () => validateAll({ maxScore, testRows, fileRows }),
-    [maxScore, testRows, fileRows],
+    () => validateAll({ testRows, fileRows }),
+    [testRows, fileRows],
   );
   const isValid = validationErrors.length === 0;
-
-  // ── Preview ──
-  const preview = useMemo<CodingAssignmentContent>(
-    () =>
-      buildContent({
-        language,
-        allowStudentCreateFiles,
-        fileRows,
-        testRows,
-        maxScore,
-      }),
-    [language, allowStudentCreateFiles, fileRows, testRows, maxScore],
-  );
 
   // ── Handlers ──
   function handleLanguageChange(next: CodingLanguage) {
@@ -236,7 +222,7 @@ export function CodingDefinitionEditor({
           Function: {
             FunctionName: "",
             Parameters: [],
-            ReturnType: { Type: "integer", Content: 0 },
+            ReturnType: { Type: "integer" },
           },
           Cases: [],
         },
@@ -373,184 +359,123 @@ export function CodingDefinitionEditor({
           </p>
           <h1 className="text-2xl font-bold">{assessmentTitle}</h1>
         </div>
+        {saved && <p className="text-sm text-green-600">Saved.</p>}
+        {error && <p className="text-destructive text-sm">{error}</p>}
         <Badge variant="secondary">{language}</Badge>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          {workspaceConfig && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Workspace</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div data-testid="ide-mount">
-                  <Ide
-                    ref={ideRef}
-                    workspaceConfig={workspaceConfig}
-                    assignmentToken={assessmentId}
-                    presetOptions={LANGUAGE_OPTIONS}
-                    onPresetChange={(v) => handleLanguageChange(v as CodingLanguage)}
-                    fileMeta={fileMeta}
-                    onFileMetaChange={handleFileMetaChange}
-                    tests={testSuite}
-                    onTestsChange={handleTestsChange}
-                    testsPanelSlot={
-                      <div className="space-y-4">
-                        {testRows.length === 0 && (
-                          <p
-                            className="text-muted-foreground text-sm"
-                            data-testid="empty-tests"
-                          >
-                            No tests yet. Add a Standard or Functional test below.
-                          </p>
-                        )}
-                        {testRows.map((row, i) =>
-                          row.test.kind === "standard" ? (
-                            <StandardTestEditor
-                              key={i}
-                              index={i}
-                              test={row.test as StandardTest}
-                              visibility={row.visibility}
-                              errors={validationErrors.filter((e) =>
-                                e.field.startsWith(`tests[${i}]`),
-                              )}
-                              onChange={handleTestChange}
-                              onVisibilityChange={handleTestVisibilityChange}
-                              onRemove={handleRemoveTest}
-                            />
-                          ) : (
-                            <FunctionalTestEditor
-                              key={i}
-                              index={i}
-                              test={row.test as FunctionalTestGroup}
-                              visibility={row.visibility}
-                              errors={validationErrors.filter((e) =>
-                                e.field.startsWith(`tests[${i}]`),
-                              )}
-                              onChange={handleTestChange}
-                              onVisibilityChange={handleTestVisibilityChange}
-                              onRemove={handleRemoveTest}
-                            />
-                          ),
-                        )}
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleAddStandard}
-                            data-testid="add-standard"
-                          >
-                            <Plus className="mr-1 h-3 w-3" /> Standard test
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleAddFunctional}
-                            data-testid="add-functional"
-                          >
-                            <Plus className="mr-1 h-3 w-3" /> Functional test
-                          </Button>
-                        </div>
-                      </div>
-                    }
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="allow-student-create"
-                    checked={allowStudentCreateFiles}
-                    onCheckedChange={setAllowStudentCreateFiles}
-                    data-testid="allow-student-create"
-                  />
-                  <Label htmlFor="allow-student-create" className="text-sm">
-                    Allow students to create new files
-                  </Label>
-                </div>
-              </CardContent>
-            </Card>
+        <Button
+          onClick={handleSave}
+          disabled={!isValid || isPending}
+          data-testid="save-button"
+        >
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
           )}
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Scoring</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="max-score">Max score</Label>
-                <Input
-                  id="max-score"
-                  type="number"
-                  min={1}
-                  value={maxScore}
-                  onChange={(e) => setMaxScore(Number(e.target.value))}
-                  data-testid="max-score"
-                />
-                {validationErrors.find((e) => e.field === "Grading.MaxScore") && (
-                  <p className="text-destructive text-xs">
-                    {validationErrors.find((e) => e.field === "Grading.MaxScore")!.message}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>v1 CodingAssignment preview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre
-                data-testid="json-preview"
-                className="text-xs bg-muted rounded p-3 overflow-auto max-h-96"
-              >
-                {JSON.stringify(preview, null, 2)}
-              </pre>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Save</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {error && <p className="text-destructive text-sm">{error}</p>}
-              {saved && (
-                <p className="text-sm text-green-600">Saved successfully.</p>
-              )}
-              {stdioErrorCount > 0 && (
-                <ul className="text-destructive text-xs list-disc pl-4 space-y-1">
-                  {validationErrors.slice(0, 5).map((e, i) => (
-                    <li key={i}>{e.message}</li>
-                  ))}
-                </ul>
-              )}
-              <Button
-                className="w-full"
-                onClick={handleSave}
-                disabled={!isValid || isPending}
-                data-testid="save-button"
-              >
-                {isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-2 h-4 w-4" />
-                )}
-                Save Definition
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleBack}
-              >
-                Cancel
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+          Save Definition
+        </Button>
       </div>
+
+      {stdioErrorCount > 0 && (
+        <div className="text-destructive text-sm space-y-1">
+          {validationErrors.slice(0, 5).map((e, i) => (
+            <p key={i}>{e.message}</p>
+          ))}
+        </div>
+      )}
+
+      {workspaceConfig && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Workspace</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div data-testid="ide-mount">
+              <Ide
+                ref={ideRef}
+                workspaceConfig={workspaceConfig}
+                assignmentToken={assessmentId}
+                presetOptions={LANGUAGE_OPTIONS}
+                onPresetChange={(v) => handleLanguageChange(v as CodingLanguage)}
+                fileMeta={fileMeta}
+                onFileMetaChange={handleFileMetaChange}
+                tests={testSuite}
+                onTestsChange={handleTestsChange}
+                testsPanelSlot={
+                  <div className="space-y-4">
+                    {testRows.length === 0 && (
+                      <p
+                        className="text-muted-foreground text-sm"
+                        data-testid="empty-tests"
+                      >
+                        No tests yet. Add a Standard or Functional test below.
+                      </p>
+                    )}
+                    {testRows.map((row, i) =>
+                      row.test.kind === "standard" ? (
+                        <StandardTestEditor
+                          key={i}
+                          index={i}
+                          test={row.test as StandardTest}
+                          visibility={row.visibility}
+                          errors={validationErrors.filter((e) =>
+                            e.field.startsWith(`tests[${i}]`),
+                          )}
+                          onChange={handleTestChange}
+                          onVisibilityChange={handleTestVisibilityChange}
+                          onRemove={handleRemoveTest}
+                        />
+                      ) : (
+                        <FunctionalTestEditor
+                          key={i}
+                          index={i}
+                          test={row.test as FunctionalTestGroup}
+                          visibility={row.visibility}
+                          errors={validationErrors.filter((e) =>
+                            e.field.startsWith(`tests[${i}]`),
+                          )}
+                          onChange={handleTestChange}
+                          onVisibilityChange={handleTestVisibilityChange}
+                          onRemove={handleRemoveTest}
+                        />
+                      ),
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAddStandard}
+                        data-testid="add-standard"
+                      >
+                        <Plus className="mr-1 h-3 w-3" /> Standard test
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAddFunctional}
+                        data-testid="add-functional"
+                      >
+                        <Plus className="mr-1 h-3 w-3" /> Functional test
+                      </Button>
+                    </div>
+                  </div>
+                }
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="allow-student-create"
+                checked={allowStudentCreateFiles}
+                onCheckedChange={setAllowStudentCreateFiles}
+                data-testid="allow-student-create"
+              />
+              <Label htmlFor="allow-student-create" className="text-sm">
+                Allow students to create new files
+              </Label>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
@@ -558,7 +483,6 @@ export function CodingDefinitionEditor({
 // ── Validation helpers ────────────────────────────────────────────────────
 
 interface ValidationState {
-  maxScore: number;
   testRows: TestRow[];
   fileRows: AssignmentFileRow[];
 }
@@ -576,14 +500,6 @@ interface ValidationErr {
  */
 function validateAll(state: ValidationState): ValidationErr[] {
   const errors: ValidationErr[] = [];
-
-  if (!(state.maxScore > 0)) {
-    errors.push({
-      field: "Grading.MaxScore",
-      code: "max_score_positive",
-      message: "Max score must be greater than 0.",
-    });
-  }
 
   if (state.testRows.length === 0) {
     errors.push({
