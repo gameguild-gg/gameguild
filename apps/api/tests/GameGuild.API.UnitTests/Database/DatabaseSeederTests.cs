@@ -87,6 +87,8 @@ public sealed class DatabaseSeederTests
         projects.Should().OnlyContain(project => project.Status == ContentStatus.Published);
         projects.Should().OnlyContain(project => project.Visibility == ContentVisibility.Public);
         projects.Should().OnlyContain(project => project.Versions.Count > 0);
+        projects.Should().OnlyContain(project => project.ImageUrl == null && project.FeaturedImageUrl == null,
+            "seed data must not publish placeholder CDN URLs that return 404");
 
         var launchPlans = await dbContext.Set<LaunchPlan>()
             .Include(plan => plan.Project)
