@@ -1,7 +1,7 @@
+import { ProjectCoverImage } from '@/components/projects/project-cover-image';
 import { Link } from '@/i18n/navigation';
 import { getVisibleProject } from '@/lib/projects/public-projects';
 import { ArrowRight, CheckCircle2, ClipboardList, FlaskConical, UserRound } from 'lucide-react';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import React from 'react';
 
@@ -25,7 +25,7 @@ export default async function Page({ params }: { readonly params: Promise<{ proj
     <main className="bg-slate-950 text-white">
       <section className="relative border-b border-white/10">
         <div className="absolute inset-0">
-          <Image src={project.previewImage} alt={`${project.title} project preview`} fill priority className="object-cover" sizes="100vw" />
+          <ProjectCoverImage src={project.previewImage} alt={`${project.title} project preview`} fill priority className="object-cover" sizes="100vw" />
           <div className={`absolute inset-0 bg-gradient-to-br ${project.accent}`} />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/88 to-slate-950/30" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/20" />
