@@ -418,8 +418,11 @@ public static class DatabaseSeeder
         project.Title = seed.Title;
         project.ShortDescription = seed.ShortDescription;
         project.Description = $"{seed.ShortDescription} This seeded project backs real Testing Lab and Launch Pad workflows.";
-        project.ImageUrl = $"https://cdn.gameguild.gg/projects/{seed.Slug}/cover.jpg";
-        project.FeaturedImageUrl = $"https://cdn.gameguild.gg/projects/{seed.Slug}/featured.jpg";
+        // These demo records do not ship image assets. Keep the media fields empty so
+        // clients use their valid design-system fallback instead of requesting fabricated
+        // CDN paths (which surface as 404s in browsers and deployment smoke tests).
+        project.ImageUrl = null;
+        project.FeaturedImageUrl = null;
         project.DownloadUrl = $"https://downloads.gameguild.gg/{seed.Slug}/{seed.VersionNumber}.zip";
         project.WebsiteUrl = $"https://gameguild.gg/projects/{seed.Slug}";
         project.RepositoryUrl = $"https://github.com/gameguild/{seed.Slug}";
