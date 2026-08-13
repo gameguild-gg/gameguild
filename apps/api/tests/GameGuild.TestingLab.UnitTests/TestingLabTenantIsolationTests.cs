@@ -125,6 +125,44 @@ public sealed class TestingLabTenantIsolationTests
     }
 
     [Fact]
+    public async Task RequestFeedback_ShouldRemainReadableAfterRequestIsArchived_WithinCurrentTenant()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var archivedRequest = NewRequest(tenantId);
+        archivedRequest.Version = 1;
+        archivedRequest.SoftDelete();
+        var foreignArchivedRequest = NewRequest(Guid.NewGuid());
+        foreignArchivedRequest.Version = 1;
+        foreignArchivedRequest.SoftDelete();
+        var requestFeedback = NewFeedback(tenantId, userId);
+        requestFeedback.TestingRequestId = archivedRequest.Id;
+        context.Set<User>().Add(NewUser(userId, "archived-feedback-user"));
+        context.Set<TestingRequest>().AddRange(archivedRequest, foreignArchivedRequest);
+        context.Set<TestingFeedback>().Add(requestFeedback);
+        await context.SaveChangesAsync();
+        var service = new TestingFeedbackOperationsService(context, CreateActor(tenantId));
+
+        var feedback = await service.GetTestingRequestFeedbackAsync(archivedRequest.Id);
+        var statistics = await service.GetTestingRequestStatisticsAsync(archivedRequest.Id);
+        var readForeign = () => service.GetTestingRequestFeedbackAsync(foreignArchivedRequest.Id);
+        var submitToArchived = () => service.AddFeedbackAsync(
+            archivedRequest.Id,
+            userId,
+            Guid.NewGuid(),
+            "Archived request feedback",
+            TestingContext.Online);
+
+        feedback.Should().ContainSingle().Which.Id.Should().Be(requestFeedback.Id);
+        statistics.Should().NotBeNull();
+        await readForeign.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*not found*");
+        await submitToArchived.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*not found*");
+    }
+
+    [Fact]
     public async Task FeedbackDirectory_ShouldUnifyRequestAndEventFeedback_WithTenantScopedFilters()
     {
         await using var context = CreateContext();
