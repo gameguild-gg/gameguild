@@ -428,7 +428,7 @@ if [[ "$skip_browser" == false ]]; then
   cp -R "$repository_root/apps/web/public" "$standalone_web_root/public"
   cp -R "$repository_root/apps/web/.next/static" "$standalone_web_root/.next/static"
   export PORT="$web_port"
-  export HOSTNAME=127.0.0.1
+  export HOSTNAME=0.0.0.0
   export PUBLIC_E2E_BASE_URL="http://127.0.0.1:$web_port"
   export PLAYWRIGHT_JSON_OUTPUT_NAME="$(native_path "$playwright_evidence")"
   export AUTH_SECRET='economy-ci-browser-secret-not-for-production-use-2026'
