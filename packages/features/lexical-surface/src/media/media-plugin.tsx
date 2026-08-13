@@ -12,7 +12,7 @@ import {
   type LexicalCommand,
 } from "lexical"
 import { $createMediaLexicalNode, MediaLexicalNode } from "./media-node"
-import type { MediaType } from "@game-guild/lexical-surface/nodes/base/media-node-base"
+import type { MediaType } from "./media-data"
 
 export const INSERT_MEDIA_LEXICAL_COMMAND: LexicalCommand<{
   mediaType: MediaType

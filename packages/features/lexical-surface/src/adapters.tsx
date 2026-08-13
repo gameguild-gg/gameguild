@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import type { MermaidData } from "./nodes/mermaid-node";
-import type { VegaLiteData } from "./nodes/vega-lite-node";
+import type { MermaidData } from "./mermaid/mermaid-data";
+import type { VegaLiteData } from "./vega-lite/vega-lite-data";
 
 export interface MermaidEditorAdapterProps {
   initialData?: MermaidData;

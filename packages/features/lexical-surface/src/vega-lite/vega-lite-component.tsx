@@ -19,7 +19,7 @@ import { useLexicalSurfaceAdapters } from "../adapters"
 import { DeleteConfirmDialog } from "@game-guild/lexical-surface/dialogs/delete-confirm-dialog"
 import { useNodeDeleteProtection } from "../shared/use-node-delete-protection"
 import { $isVegaLiteLexicalNode } from "./vega-lite-node"
-import type { VegaLiteData } from "@game-guild/lexical-surface/nodes/vega-lite-node"
+import type { VegaLiteData } from "./vega-lite-data"
 
 interface VegaLiteLexicalComponentProps {
   spec: string

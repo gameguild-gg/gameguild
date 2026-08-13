@@ -19,7 +19,7 @@ import { useLexicalSurfaceAdapters } from "../adapters"
 import { DeleteConfirmDialog } from "@game-guild/lexical-surface/dialogs/delete-confirm-dialog"
 import { useNodeDeleteProtection } from "../shared/use-node-delete-protection"
 import { $isMermaidLexicalNode } from "./mermaid-node"
-import type { MermaidData } from "@game-guild/lexical-surface/nodes/mermaid-node"
+import type { MermaidData } from "./mermaid-data"
 import type { MermaidDiagramType, MermaidThemeName, MermaidThemeMode } from "./mermaid-node"
 
 interface MermaidLexicalComponentProps {

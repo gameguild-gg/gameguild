@@ -22,7 +22,6 @@
     "./table": "./src/table/index.ts",
     "./vega-lite": "./src/vega-lite/index.ts",
     "./dialogs/*": "./src/dialogs/*.tsx",
-    "./nodes/base/*": "./src/nodes/base/*.ts",
     "./nodes/*": "./src/nodes/*.tsx",
     "./support/math/*": "./src/support/math/*.tsx",
     "./*": "./src/*"

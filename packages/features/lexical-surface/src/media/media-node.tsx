@@ -16,7 +16,7 @@ import {
   type Spread,
 } from "lexical"
 import { MediaLexicalComponent } from "./media-component"
-import type { BaseMediaData, MediaType } from "@game-guild/lexical-surface/nodes/base/media-node-base"
+import type { BaseMediaData, MediaType } from "./media-data"
 
 export type SerializedMediaLexicalNode = Spread<
   {
