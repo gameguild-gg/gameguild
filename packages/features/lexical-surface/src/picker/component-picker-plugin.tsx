@@ -2,15 +2,8 @@
  * ComponentPickerPlugin — slash (`/`) typeahead menu adapted from
  * facebook/lexical playground `ComponentPickerPlugin/index.tsx`.
  *
- * Wave A surfaces these options only:
- *   Paragraph, Heading 1–3, Bulleted/Numbered/Check List, Quote, Code,
- *   Horizontal Rule.
- * Image/Table/Equation/Excalidraw/Poll/Layout/Sticky/Date/Embeds are
- * intentionally excluded — they belong to Wave B and will plug in as
- * additional `ComponentPickerOption`s alongside the Wave A set.
- *
- * Our embed block menu (the legacy "/"-menu) is moved to `//` in
- * `block-insert-menu-plugin.tsx`, so the two pickers no longer collide.
+ * Core text options are always available. Feature-backed options are
+ * filtered using the same flags that mount their command plugins.
  */
 "use client"
 
@@ -39,7 +32,6 @@ import {
   LexicalEditor,
   TextNode,
 } from "lexical"
-import { cn } from "@game-guild/ui/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -68,17 +60,61 @@ import { Table as TableIcon } from "lucide-react"
 import { InsertEquationDialog } from "../equation"
 import { INSERT_EXCALIDRAW_COMMAND } from "../excalidraw"
 import { InsertTableDialog } from "../table"
+import { InsertLayoutDialog } from "../layout"
+import { INSERT_COLLAPSIBLE_COMMAND } from "../collapsible"
 import { INSERT_STICKY_COMMAND } from "../sticky"
 import { INSERT_ADMONITION_LEXICAL_COMMAND } from "../admonition"
 import { INSERT_BUTTON_LEXICAL_COMMAND } from "../button"
 import { INSERT_MERMAID_LEXICAL_COMMAND } from "../mermaid"
 import { INSERT_VEGA_LITE_LEXICAL_COMMAND } from "../vega-lite"
 import { INSERT_MEDIA_LEXICAL_COMMAND } from "../media"
-import { AlertCircle as AdmonitionIcon, MousePointerClick as ButtonIcon, GitBranch as MermaidIcon, BarChart3 as VegaIcon, Film as MediaIcon } from "lucide-react"
+import { AlertCircle as AdmonitionIcon, MousePointerClick as ButtonIcon, GitBranch as MermaidIcon, BarChart3 as VegaIcon, Film as MediaIcon, Columns as ColumnsIcon, PanelTopOpen as CollapsibleIcon } from "lucide-react"
+import type { LexicalSurfaceFeatures } from "../features"
 
 type DialogRender = (opts: { activeEditor: LexicalEditor; onClose: () => void }) => React.ReactNode
 
-type IconCmp = React.ComponentType<{ className?: string }>
+type IconCmp = React.ComponentType<{
+  className?: string
+  style?: React.CSSProperties
+}>
+
+const menuStyle: React.CSSProperties = {
+  backgroundColor: "var(--popover, #ffffff)",
+  border: "1px solid var(--border, #d1d5db)",
+  borderRadius: "0.375rem",
+  boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.2), 0 8px 10px -6px rgb(0 0 0 / 0.2)",
+  boxSizing: "border-box",
+  color: "var(--popover-foreground, #111827)",
+  maxHeight: "min(22.5rem, calc(100vh - 1rem))",
+  minWidth: "15rem",
+  overflowY: "auto",
+  padding: "0.25rem",
+  position: "relative",
+  zIndex: 1000,
+}
+
+const optionStyle: React.CSSProperties = {
+  alignItems: "center",
+  background: "transparent",
+  border: 0,
+  borderRadius: "0.25rem",
+  color: "inherit",
+  cursor: "pointer",
+  display: "flex",
+  fontSize: "0.875rem",
+  gap: "0.5rem",
+  lineHeight: "1.25rem",
+  minWidth: 0,
+  padding: "0.375rem 0.5rem",
+  textAlign: "left",
+  width: "100%",
+}
+
+const selectedOptionStyle: React.CSSProperties = {
+  ...optionStyle,
+  backgroundColor: "var(--primary, #2563eb)",
+  color: "var(--primary-foreground, #ffffff)",
+}
 
 class ComponentPickerOption extends MenuOption {
   readonly title: string
@@ -86,6 +122,7 @@ class ComponentPickerOption extends MenuOption {
   readonly keywords: string[]
   readonly onSelect: () => void
   readonly dialog?: { title: string; render: DialogRender }
+  readonly enabled: boolean
 
   constructor(
     title: string,
@@ -94,6 +131,7 @@ class ComponentPickerOption extends MenuOption {
       keywords?: string[]
       onSelect?: () => void
       dialog?: { title: string; render: DialogRender }
+      enabled?: boolean
     },
   ) {
     super(title)
@@ -102,10 +140,14 @@ class ComponentPickerOption extends MenuOption {
     this.keywords = options.keywords ?? []
     this.onSelect = (options.onSelect ?? (() => {})).bind(this)
     this.dialog = options.dialog
+    this.enabled = options.enabled ?? true
   }
 }
 
-function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
+function getBaseOptions(
+  editor: LexicalEditor,
+  features: Required<LexicalSurfaceFeatures>,
+): ComponentPickerOption[] {
   return [
     new ComponentPickerOption("Paragraph", {
       Icon: ParagraphIcon,
@@ -188,16 +230,19 @@ function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
       Icon: NumberedListIcon,
       keywords: ["numbered list", "ordered list", "ol"],
       onSelect: () => editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined),
+      enabled: features.list,
     }),
     new ComponentPickerOption("Bulleted List", {
       Icon: BulletedListIcon,
       keywords: ["bulleted list", "unordered list", "ul"],
       onSelect: () => editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined),
+      enabled: features.list,
     }),
     new ComponentPickerOption("Check List", {
       Icon: CheckListIcon,
       keywords: ["check list", "todo list"],
       onSelect: () => editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined),
+      enabled: features.list && features.checkList,
     }),
     new ComponentPickerOption("Quote", {
       Icon: QuoteIcon,
@@ -232,6 +277,7 @@ function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
       Icon: HorizontalRuleIcon,
       keywords: ["horizontal rule", "divider", "hr"],
       onSelect: () => editor.dispatchCommand(INSERT_DIVIDER_LEXICAL_COMMAND, undefined),
+      enabled: features.divider,
     }),
     new ComponentPickerOption("Equation", {
       Icon: EquationIcon,
@@ -242,11 +288,13 @@ function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
           <InsertEquationDialog activeEditor={activeEditor} onClose={onClose} />
         ),
       },
+      enabled: features.equation,
     }),
     new ComponentPickerOption("Excalidraw", {
       Icon: ExcalidrawIcon,
       keywords: ["excalidraw", "diagram", "drawing", "sketch"],
       onSelect: () => editor.dispatchCommand(INSERT_EXCALIDRAW_COMMAND, undefined),
+      enabled: features.excalidraw,
     }),
     new ComponentPickerOption("Table", {
       Icon: TableIcon,
@@ -257,41 +305,69 @@ function getBaseOptions(editor: LexicalEditor): ComponentPickerOption[] {
           <InsertTableDialog activeEditor={activeEditor} onClose={onClose} />
         ),
       },
+      enabled: features.table,
+    }),
+    new ComponentPickerOption("Columns Layout", {
+      Icon: ColumnsIcon,
+      keywords: ["columns", "layout", "grid"],
+      dialog: {
+        title: "Insert Columns Layout",
+        render: ({ activeEditor, onClose }) => (
+          <InsertLayoutDialog activeEditor={activeEditor} onClose={onClose} />
+        ),
+      },
+      enabled: features.layout,
+    }),
+    new ComponentPickerOption("Collapsible container", {
+      Icon: CollapsibleIcon,
+      keywords: ["collapsible", "accordion", "details", "toggle"],
+      onSelect: () => editor.dispatchCommand(INSERT_COLLAPSIBLE_COMMAND, undefined),
+      enabled: features.collapsible,
     }),
     new ComponentPickerOption("Sticky Note", {
       Icon: StickyIcon,
       keywords: ["sticky", "note", "postit", "memo"],
       onSelect: () => editor.dispatchCommand(INSERT_STICKY_COMMAND, undefined),
+      enabled: features.sticky,
     }),
     new ComponentPickerOption("Admonition", {
       Icon: AdmonitionIcon,
       keywords: ["admonition", "callout", "note", "warning", "info", "tip", "alert"],
       onSelect: () => editor.dispatchCommand(INSERT_ADMONITION_LEXICAL_COMMAND, undefined),
+      enabled: features.admonition,
     }),
     new ComponentPickerOption("Button", {
       Icon: ButtonIcon,
       keywords: ["button", "link", "action", "cta", "download"],
       onSelect: () => editor.dispatchCommand(INSERT_BUTTON_LEXICAL_COMMAND, undefined),
+      enabled: features.button,
     }),
     new ComponentPickerOption("Mermaid Diagram", {
       Icon: MermaidIcon,
       keywords: ["mermaid", "diagram", "flowchart", "chart", "graph", "sequence", "gantt", "class"],
       onSelect: () => editor.dispatchCommand(INSERT_MERMAID_LEXICAL_COMMAND, undefined),
+      enabled: features.mermaid,
     }),
     new ComponentPickerOption("Vega-Lite Chart", {
       Icon: VegaIcon,
       keywords: ["vega", "vega-lite", "chart", "graph", "plot", "visualization", "bar", "line", "scatter"],
       onSelect: () => editor.dispatchCommand(INSERT_VEGA_LITE_LEXICAL_COMMAND, undefined),
+      enabled: features.vegaLite,
     }),
     new ComponentPickerOption("Media Block", {
       Icon: MediaIcon,
       keywords: ["media", "image", "video", "audio", "gallery", "photo", "music", "mp4", "mp3"],
       onSelect: () => editor.dispatchCommand(INSERT_MEDIA_LEXICAL_COMMAND, { mediaType: "image" }),
+      enabled: features.media,
     }),
-  ]
+  ].filter((option) => option.enabled)
 }
 
-export default function ComponentPickerPlugin() {
+export default function ComponentPickerPlugin({
+  features,
+}: {
+  features: Required<LexicalSurfaceFeatures>
+}) {
   const [editor] = useLexicalComposerContext()
   const [queryString, setQueryString] = useState<string | null>(null)
   const [pendingDialog, setPendingDialog] = useState<
@@ -305,7 +381,7 @@ export default function ComponentPickerPlugin() {
   })
 
   const options = useMemo(() => {
-    const baseOptions = getBaseOptions(editor)
+    const baseOptions = getBaseOptions(editor, features)
     if (!queryString) {
       return baseOptions
     }
@@ -314,7 +390,7 @@ export default function ComponentPickerPlugin() {
       (option) =>
         regex.test(option.title) || option.keywords.some((keyword) => regex.test(keyword)),
     )
-  }, [editor, queryString])
+  }, [editor, features, queryString])
 
   const onSelectOption = useCallback(
     (
@@ -343,18 +419,17 @@ export default function ComponentPickerPlugin() {
       onSelectOption={onSelectOption}
       triggerFn={checkForTriggerMatch}
       options={options}
-      anchorClassName="z-[60]"
       menuRenderFn={(anchorElementRef, { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex }) => {
         if (!anchorElementRef.current || options.length === 0) {
           return null
         }
+
+        anchorElementRef.current.style.zIndex = "1000"
+
         return createPortal(
           <div
             role="listbox"
-            className={cn(
-              "z-50 min-w-[220px] max-h-[360px] overflow-y-auto rounded-md p-1 shadow-2xl",
-              "border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900",
-            )}
+            style={menuStyle}
           >
             {options.map((option, i) => {
               const Icon = option.Icon
@@ -369,15 +444,12 @@ export default function ComponentPickerPlugin() {
                   tabIndex={-1}
                   onMouseEnter={() => setHighlightedIndex(i)}
                   onClick={() => selectOptionAndCleanUp(option)}
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm",
-                    isSelected
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800",
-                  )}
+                  style={isSelected ? selectedOptionStyle : optionStyle}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{option.title}</span>
+                  <Icon style={{ flexShrink: 0, height: "1rem", width: "1rem" }} />
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {option.title}
+                  </span>
                 </button>
               )
             })}

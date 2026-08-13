@@ -31,6 +31,28 @@ import {
 `onChange`. Read-only surfaces strip persisted selection state before mounting to
 avoid page scroll on hydration.
 
+Feature controls are independent: `toolbar` controls the complete top toolbar,
+`insertMenu` controls its Insert dropdown, and `picker` controls the `/` menu.
+Document feature flags such as `table`, `mermaid`, and `media` control both the
+command plugin and whether that option appears in either insertion menu.
+As long as either insertion menu is enabled, its available feature plugins stay
+mounted. When both `insertMenu` and `picker` are disabled, the document-feature
+plugins exclusive to those catalogs are disabled as well.
+
+```tsx
+<LexicalSurface
+  features={{
+    toolbar: true,
+    insertMenu: false,
+    picker: true,
+    mermaid: true,
+  }}
+/>
+```
+
+This configuration hides the toolbar Insert dropdown while keeping `/Mermaid`
+available.
+
 Document-feature payload types such as `MermaidData`, `VegaLiteData`, and
 `BaseMediaData` are exported as rich-document data contracts. They are not block
 array storage nodes.
