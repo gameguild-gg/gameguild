@@ -20,11 +20,9 @@ import { messagePortTransport, WorkerOrchestrator } from '../dist/index.js';
 /*  Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
-/** Create a MessageChannel pair, both ports unref'd. */
+/** Create a MessageChannel pair. */
 function pair() {
     const ch = new MessageChannel();
-    ch.port1.unref();
-    ch.port2.unref();
     return ch;
 }
 
