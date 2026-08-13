@@ -1,5 +1,5 @@
 /**
- * FunctionalTest C/C++ doctest harness generator.
+ * FunctionalTestGroup C/C++ doctest harness generator.
  *
  * v1 supports four primitive parameter types (String, Boolean, Integer,
  * Float). Array/Dictionary are rejected at serialization time — the upstream
@@ -7,24 +7,28 @@
  * but we re-throw here so a hand-built descriptor cannot slip a non-v1 type
  * past the boundary.
  *
- * The generated harness is a self-contained .cpp file:
+ * A FunctionalTestGroup carries ONE function signature + N cases. The
+ * generated harness is a single self-contained .cpp file:
  *
  *   - `#include "doctest.h"` — single-include ship from the sysroot.
  *   - `#include <string>` — needed whenever `std::string` is in the signature.
- *   - `extern "C"` forward declaration — bounds C++ name mangling so a
- *     student-defined global-scope function with the identical signature
- *     links against the harness. The FunctionName regex
+ *   - `extern "C"` forward declaration (emitted ONCE) — bounds C++ name
+ *     mangling so a student-defined global-scope function with the identical
+ *     signature links against the harness. The FunctionName regex
  *     `^[A-Za-z_][A-Za-z0-9_]*$` enforced upstream guarantees the student
  *     definition lives at global scope (no namespaces, no class members).
- *   - `TEST_CASE("<index>:<functionName>")` — `<index>` guarantees test-case
- *     name uniqueness across multiple FunctionalTests in the same binary.
- *   - `CHECK(<functionName>(<arg literals>) == <result literal>);` — the
- *     single assertion that defines pass/fail.
+ *   - `TEST_CASE("<index>:<label>")` — `<index>` guarantees test-case name
+ *     uniqueness across multiple FunctionalTestGroups in the same binary.
+ *   - N `CHECK(<functionName>(<arg literals>) == <expected literal>);` lines
+ *     inside the single TEST_CASE block — one per case. Doctest reports
+ *     the group as one pass/fail result; the grader splits the group's
+ *     weight equally across cases (lazy default).
  *
  * Student solution files are NOT referenced here — they are linked at grade
- * time via `plan.build.sources` (set by the Task 7 mapper). The engine's
- * `doctest` handler at `engine.ts:185-226` compiles `plan.build.sources` +
- * `test.sourceFiles` together and runs the resulting binary.
+ * time via `plan.build.sources` (set by the assignment-plan mapper). The
+ * engine's `doctest` handler at `engine.ts:186-227` compiles
+ * `plan.build.sources` + `test.sourceFiles` together and runs the resulting
+ * binary.
  */
 
 /** v1 primitive types + the deferred v2 aggregate types. */
@@ -52,17 +56,30 @@ export interface FunctionParameterWithName extends FunctionParameter {
 }
 
 /**
- * Shape consumed by the harness generator: the `FunctionalTest` wire shape
- * minus `weight` and `name` (those flow into the TestPlan, not the harness).
+ * Function signature consumed by the harness generator: the
+ * `FunctionalTestGroup.Function` wire shape minus `Weight`/`Name` (those
+ * flow into the TestPlan, not the harness).
  *
- * `returnType` matches the draft's `TestFunctionData.ReturnType` (PascalCase
- * on the wire; we keep PascalCase here to mirror the source of truth).
+ * `parameters[i].content` is unused by the harness (only `name` + `type`
+ * drive the `extern "C"` decl) but kept to satisfy the existing
+ * `FunctionParameter` shape that carries values elsewhere.
  */
-export interface FunctionalTestDescriptor {
+export interface FunctionalTestSignature {
     functionName: string;
     parameters: FunctionParameterWithName[];
     returnType: FunctionParameter;
-    result: FunctionParameter;
+}
+
+/**
+ * One case within a FunctionalTestGroup. Mirrors the v2 backend DTO
+ * (`FunctionalTestCase` in `Models/CodingAssignmentContent/Test.cs`):
+ * PascalCase field names per the v1 wire convention.
+ *
+ * `Inputs[i]` aligns positionally with `FunctionalTestSignature.parameters[i]`.
+ */
+export interface FunctionalTestCase {
+    Inputs: FunctionParameter[];
+    Expected: FunctionParameter;
 }
 
 /** Map a v1 FunctionParameterType to its C++ type spelling. */
@@ -124,31 +141,50 @@ export function serializeCppLiteral(param: FunctionParameter): string {
 }
 
 /**
- * Generate a doctest harness `.cpp` source for a single FunctionalTest.
+ * Generate a doctest harness `.cpp` source for one FunctionalTestGroup:
+ * ONE `extern "C"` forward decl + ONE TEST_CASE block containing N CHECK
+ * lines (one per case).
  *
- * `index` is assigned by the caller (the Task 7 mapper) and is used only to
- * guarantee test-case name uniqueness when multiple FunctionalTests compile
- * into the same binary — it carries no semantic meaning.
+ * `options.index` is assigned by the caller (the assignment-plan mapper) and
+ * seeds the harness filename + doctest TEST_CASE name uniqueness across
+ * multiple groups compiled into the same binary. Defaults to 0.
+ * `options.name` overrides the TEST_CASE label (defaults to
+ * `signature.functionName`).
+ *
+ * Throws if `cases.length === 0` — the upstream DTO marks `Cases` required,
+ * but a hand-built descriptor could smuggle an empty array past the type
+ * system. The mapper also enforces this; the harness re-checks at its own
+ * public boundary.
  *
  * Returns `{ filename, source }`. The caller writes `source` to `filename`
  * inside the emception workspace and lists the path in `test.sourceFiles`.
  */
 export function generateDoctestHarness(
-    test: FunctionalTestDescriptor,
-    index: number,
+    signature: FunctionalTestSignature,
+    cases: FunctionalTestCase[],
+    options?: { index?: number; name?: string },
 ): { filename: string; source: string } {
-    const paramTypes = test.parameters.map((p) => mapCppType(p.type)).join(', ');
-    const argLiterals = test.parameters.map((p) => serializeCppLiteral(p)).join(', ');
-    const retType = mapCppType(test.returnType.type);
-    const resultLiteral = serializeCppLiteral(test.result);
+    if (cases.length === 0) {
+        throw new Error('FunctionalTestGroup requires \u22651 case');
+    }
+    const paramTypes = signature.parameters.map((p) => mapCppType(p.type)).join(', ');
+    const retType = mapCppType(signature.returnType.type);
+    const index = options?.index ?? 0;
+    const label = options?.name ?? signature.functionName;
+
+    const checks = cases.map((c) => {
+        const argLiterals = c.Inputs.map((p) => serializeCppLiteral(p)).join(', ');
+        const expectedLiteral = serializeCppLiteral(c.Expected);
+        return `    CHECK(${signature.functionName}(${argLiterals}) == ${expectedLiteral});`;
+    });
 
     const lines: string[] = [
         '#include "doctest.h"',
         '#include <string>',
         '',
-        `extern "C" ${retType} ${test.functionName}(${paramTypes});`,
-        `TEST_CASE("${index}:${test.functionName}") {`,
-        `    CHECK(${test.functionName}(${argLiterals}) == ${resultLiteral});`,
+        `extern "C" ${retType} ${signature.functionName}(${paramTypes});`,
+        `TEST_CASE("${index}:${label}") {`,
+        ...checks,
         '}',
         '',
     ];

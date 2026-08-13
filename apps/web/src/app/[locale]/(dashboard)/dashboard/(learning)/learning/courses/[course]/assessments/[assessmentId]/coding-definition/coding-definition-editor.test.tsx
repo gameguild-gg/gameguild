@@ -68,9 +68,21 @@ vi.mock("next/navigation", () => ({
 vi.mock("@game-guild/emception-ui", async () => {
   const React = await import("react");
 
-  const Ide = React.forwardRef<IdeHandle>((_props, ref) => {
+  // ponytail: the page now composes StandardTest/FunctionalTestGroup editors
+  // inside `testsPanelSlot`. The mock surfaces them by rendering props.testsPanelSlot
+  // as children, and echoes `props.tests` back via getAuthoredState — mirroring the
+  // real IDE's contract (T6/T7) where authored.tests === what the page passed in.
+  // useImperativeHandle has no deps array → handle recreated every render →
+  // closure always captures the latest props.tests.
+  const Ide = React.forwardRef<IdeHandle, Record<string, unknown>>((props, ref) => {
     React.useImperativeHandle(ref, () => ({
       getFiles: ideMock.getFiles,
+      getAuthoredState: async () => ({
+        files: [{ path: "/user/main.cpp", content: "// edited starter" }],
+        fileMeta: {},
+        tests: props.tests,
+        presetId: "cpp",
+      }),
       runTests: vi.fn(),
       compileAndRun: vi.fn(),
       setFiles: vi.fn(),
@@ -80,7 +92,11 @@ vi.mock("@game-guild/emception-ui", async () => {
       setFileMeta: ideMock.setFileMeta,
       getModifiedFiles: vi.fn(),
     }));
-    return React.createElement("div", { "data-testid": "mock-ide" });
+    return React.createElement(
+      "div",
+      { "data-testid": "mock-ide" },
+      (props.testsPanelSlot as React.ReactNode) ?? null,
+    );
   });
   Ide.displayName = "Ide";
 
@@ -128,21 +144,8 @@ describe("CodingDefinitionEditor", () => {
     putMock.mockResolvedValue({ success: true });
   });
 
-  it("loads the C++ sample when language changes to cpp", async () => {
-    const user = userEvent.setup();
-    render(
-      <CodingDefinitionEditor
-        {...baseProps}
-        initialContent={null}
-      />,
-    );
-
-    // The editor auto-seeds from the default C++ preset on mount when
-    // initialContent is null. Switch to C then back to C++ to force the seed.
-    await user.click(screen.getByTestId("language-select"));
-    await user.click(screen.getByText("C (clang + WASI)"));
-    await user.click(screen.getByTestId("language-select"));
-    await user.click(screen.getByText("C++ (clang + WASI)"));
+  it("auto-seeds the C++ sample on mount when initialContent is null", async () => {
+    render(<CodingDefinitionEditor {...baseProps} initialContent={null} />);
 
     const sample = ASSIGNMENT_SAMPLES.cpp;
     const preview = await screen.findByTestId("json-preview");
@@ -242,6 +245,8 @@ describe("CodingDefinitionEditor", () => {
       Stdout: "HI",
       Weight: 1,
     });
+    // PassingScore was removed from GradingConfig by T4.
+    expect(payloadArg.Grading).toEqual({ MaxScore: 100 });
 
     // Editor redirects back to the assessment page after a successful PUT.
     await waitFor(() => {
@@ -291,7 +296,7 @@ describe("CodingDefinitionEditor", () => {
           },
         ],
       },
-      Grading: { MaxScore: 100, PassingScore: 50 },
+      Grading: { MaxScore: 100 },
     };
 
     render(
@@ -325,30 +330,7 @@ describe("CodingDefinitionEditor", () => {
     expect(screen.getByTestId("save-button")).toBeDisabled();
   });
 
-  it("rejects Private + Modifiable file combination client-side", async () => {
-    const user = userEvent.setup();
-    render(<CodingDefinitionEditor {...baseProps} />);
-
-    // Seed the C++ sample so /user/main.cpp exists in the file tree. The
-    // default language is already cpp; switch to C and back to force the seed
-    // (handleLanguageChange only fires on user-initiated changes).
-    await user.click(screen.getByTestId("language-select"));
-    await user.click(screen.getByText("C (clang + WASI)"));
-    await user.click(screen.getByTestId("language-select"));
-    await user.click(screen.getByText("C++ (clang + WASI)"));
-
-    // Toggle that file's visibility to Private — its Modifiable defaults to true.
-    await user.click(screen.getByTestId("file-visibility-select-/user/main.cpp"));
-    await user.click(screen.getByRole("option", { name: "Private" }));
-
-    expect(
-      (await screen.findAllByText(/cannot be both Private and Modifiable/i))
-        .length,
-    ).toBeGreaterThan(0);
-    expect(screen.getByTestId("save-button")).toBeDisabled();
-  });
-
-  it("functional editor: add parameter + return type + result — defaults to v1 types only", async () => {
+  it("functional editor: signature parameter + case input — defaults to v1 types only", async () => {
     const user = userEvent.setup();
     render(<CodingDefinitionEditor {...baseProps} />);
 
@@ -357,15 +339,18 @@ describe("CodingDefinitionEditor", () => {
       target: { value: "add" },
     });
 
+    // Add a signature parameter named "a", type Integer.
     await user.click(screen.getByTestId("functional-add-param-0"));
     fireEvent.change(screen.getByTestId("functional-param-name-0-0"), {
       target: { value: "a" },
     });
-    // Default type is "string"; flip to "integer" (target the param type Select).
     await user.click(screen.getByTestId("functional-param-type-0-0"));
-    // Click the option by role (the SelectItem carries role="option").
     await user.click(screen.getByRole("option", { name: "Integer" }));
-    fireEvent.change(screen.getByTestId("functional-param-value-0-0"), {
+
+    // Add a case and supply its input value — values live in cases now (T11),
+    // not on signature parameters.
+    await user.click(screen.getByTestId("functional-add-case-0"));
+    fireEvent.change(screen.getByTestId("functional-case-input-value-0-0-0"), {
       target: { value: "2" },
     });
 

@@ -33,6 +33,7 @@ interface EditorCourse extends Partial<Course> {
   instructors?: unknown[];
   isPublic?: boolean;
   isFeatured?: boolean;
+  passingScore?: number;
   content?: unknown;
   createdAt?: string;
   updatedAt?: string;
@@ -169,6 +170,7 @@ function mapCourse(program: LearningCoursesProgram): EditorCourse {
     enrollmentStatus: typeof program.enrollmentStatus === 'string' ? program.enrollmentStatus : undefined,
     isPublic: visibility === 'public',
     isFeatured: false,
+    passingScore: typeof program.passingScore === 'number' ? program.passingScore : undefined,
     tools: typeof program.skillsRequired === 'string'
       ? program.skillsRequired.split(',').map((tool) => tool.trim()).filter(Boolean)
       : [],
@@ -205,6 +207,7 @@ function toUpdateCourse(course: EditorCourse): LearningCoursesUpdateProgram {
     maxEnrollments: course.maxEnrollments,
     enrollmentDeadline: toIsoDate(course.enrollmentDeadline),
     enrollmentStatus: toEnrollmentStatus(course.enrollmentStatus),
+    passingScore: course.passingScore,
   };
 }
 

@@ -57,6 +57,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
   const [category, setCategory] = useState('General');
   const [difficulty, setDifficulty] = useState('Beginner');
   const [estimatedHours, setEstimatedHours] = useState('');
+  const [passingScore, setPassingScore] = useState('60');
   const [thumbnail, setThumbnail] = useState('');
   const [videoShowcaseUrl, setVideoShowcaseUrl] = useState('');
 
@@ -115,6 +116,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
         visibility,
         enrollmentStatus,
         estimatedHours: estimatedHours ? parseInt(estimatedHours, 10) : undefined,
+        passingScore: passingScore ? parseInt(passingScore, 10) : undefined,
         thumbnail: thumbnail || undefined,
         videoShowcaseUrl: videoShowcaseUrl || undefined,
         maxEnrollments: parseEnrollmentCap(maxEnrollments),
@@ -276,6 +278,22 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/dashbo
                   value={estimatedHours}
                   onChange={(e) => setEstimatedHours(e.target.value)}
                 />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="passingScore">Passing score (%)</Label>
+                <Input
+                  id="passingScore"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={passingScore}
+                  onChange={(e) => setPassingScore(e.target.value)}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Minimum percentage (0-100) required to pass this course. Applied to all assessments.
+                </p>
               </div>
 
               <div className="flex flex-col gap-2">

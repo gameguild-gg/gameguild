@@ -28,7 +28,8 @@ export type {
   TestSuite,
   Test,
   StandardTest,
-  FunctionalTest,
+  FunctionalTestGroup,
+  FunctionalTestCase,
   TestFunctionData,
   FunctionParameter,
   FunctionParameterWithName,
@@ -43,7 +44,8 @@ export type {
 
 export {
   isStandardTest,
-  isFunctionalTest,
+  isFunctionalTestGroup,
+  isFunctionalTestCase,
   isTest,
   isTestFunctionData,
   isFunctionParameter,

@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace GameGuild.Learning.Courses;
 
 /// <summary>
-/// C/C++ function signature invoked by a <see cref="FunctionalTest"/>.
+/// C/C++ function signature invoked by a <see cref="FunctionalTestGroup"/>.
 /// Field names are PascalCase on the wire (deliberate divergence from the draft).
 /// </summary>
 public sealed record TestFunctionData

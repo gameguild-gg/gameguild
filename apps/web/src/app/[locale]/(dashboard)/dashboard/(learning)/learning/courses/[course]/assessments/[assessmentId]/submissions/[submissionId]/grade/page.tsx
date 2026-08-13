@@ -67,7 +67,6 @@ export default async function GradeSubmissionPage({
       assignment={assignment}
       submittedFiles={submittedFiles}
       maxScore={assignment.Grading.MaxScore}
-      passingScore={assignment.Grading.PassingScore}
       manifestUrl="/cdn/manifest.json"
     />
   );

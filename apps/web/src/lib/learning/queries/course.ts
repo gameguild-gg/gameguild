@@ -164,6 +164,7 @@ function mapProgramDtoToCourseViewModel(
     thumbnail: dto.thumbnail ?? null,
     videoShowcaseUrl: dto.videoShowcaseUrl ?? null,
     estimatedHours: dto.estimatedHours ?? null,
+    passingScore: typeof dto.passingScore === "number" ? dto.passingScore : null,
     category: dto.category ?? "GeneralEducation",
     difficulty: dto.difficulty ?? "Beginner",
     skillsRequired: dto.skillsRequired ?? null,

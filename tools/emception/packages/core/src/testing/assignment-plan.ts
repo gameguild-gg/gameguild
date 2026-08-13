@@ -19,7 +19,8 @@
 import {
     generateDoctestHarness,
     type FunctionParameter as HarnessFunctionParameter,
-    type FunctionalTestDescriptor,
+    type FunctionalTestCase as HarnessFunctionalTestCase,
+    type FunctionalTestSignature,
 } from './functional/harness.js';
 import type { TestCase, TestPlan } from '../types.js';
 
@@ -60,6 +61,17 @@ export interface TestFunctionData {
     ReturnType: FunctionParameter;
 }
 
+/**
+ * v1 `FunctionalTestCase` wire shape — one case within a FunctionalTestGroup.
+ * `Inputs[i]` aligns positionally with `TestFunctionData.Parameters[i]`.
+ * PascalCase field names per the v1 wire convention; lowercase `Type` enum
+ * values per CamelCaseEnumConverter.
+ */
+export interface FunctionalTestCase {
+    Inputs: FunctionParameter[];
+    Expected: FunctionParameter;
+}
+
 /** v1 polymorphic `Test` union, keyed by lowercase `kind`. */
 export type Test =
     | {
@@ -76,7 +88,7 @@ export type Test =
         Weight?: number;
         Name?: string;
         Function: TestFunctionData;
-        Result: FunctionParameter;
+        Cases: FunctionalTestCase[];
     };
 
 /** v1 `TestSuite` wire shape. */
@@ -156,20 +168,32 @@ function mapTest(test: Test, index: number, generatedFiles: GeneratedFile[]): Te
                 name: test.Name,
             };
         case 'functional': {
+            // Metis M5: 0-case group is invalid (avoids divide-by-zero below
+            // AND matches the upstream DTO's `required` Cases). The harness
+            // also enforces this at its own boundary.
+            if (test.Cases.length === 0) {
+                throw new Error('FunctionalTestGroup requires \u22651 case');
+            }
             const fn = test.Function;
-            const descriptor: FunctionalTestDescriptor = {
+            const signature: FunctionalTestSignature = {
                 functionName: fn.FunctionName,
                 parameters: (fn.Parameters ?? []).map((p) => ({ ...toHarnessParam(p), name: p.Name })),
                 returnType: toHarnessParam(fn.ReturnType),
-                result: toHarnessParam(test.Result),
             };
-            const harness = generateDoctestHarness(descriptor, index);
+            const cases: HarnessFunctionalTestCase[] = test.Cases.map((c) => ({
+                Inputs: c.Inputs.map(toHarnessParam),
+                Expected: toHarnessParam(c.Expected),
+            }));
+            const harness = generateDoctestHarness(signature, cases, { index, name: test.Name });
             const path = `${WORKSPACE_MOUNT}/${harness.filename}`;
             generatedFiles.push({ path, content: harness.source });
+            // ponytail: equal-split per case; per-case weight deferred.
+            // Weight 0 is valid (compiles + runs, contributes 0 to score).
+            const caseWeight = test.Weight === undefined ? undefined : test.Weight / test.Cases.length;
             return {
                 kind: 'doctest',
                 sourceFiles: [path],
-                weight: test.Weight,
+                weight: caseWeight,
                 name: test.Name,
             };
         }
@@ -190,9 +214,10 @@ function mapTest(test: Test, index: number, generatedFiles: GeneratedFile[]): Te
  * - `'public-only'` mode uses only `Tests.Public[]` (student-visible grading).
  * - `'full'` mode concatenates `Tests.Public[] + Tests.Private[]` (full grading).
  *
- * For each `StandardTest` → one `'stdio'` case. For each `FunctionalTest` →
- * one generated `.cpp` harness (collected in `generatedFiles`) + one
- * `'doctest'` case referencing it.
+ * For each `StandardTest` → one `'stdio'` case. For each `FunctionalTestGroup`
+ * → one generated `.cpp` harness (collected in `generatedFiles`) with N CHECK
+ * blocks + one `'doctest'` case referencing it. The group's `Weight` is split
+ * equally across cases (lazy default; per-case weight deferred).
  *
  * `plan.build.sources` is set to ALL text-encoded `Data.Files` paths so the
  * engine's `doctest` handler compiles+links student code with each harness

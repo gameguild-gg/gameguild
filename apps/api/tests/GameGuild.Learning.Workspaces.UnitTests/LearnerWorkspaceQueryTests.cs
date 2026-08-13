@@ -53,7 +53,7 @@ public sealed class LearnerWorkspaceQueryTests
             endsAt: DateTime.UtcNow.AddDays(1).AddHours(2),
             status: CohortScheduleItemStatus.Published);
         var group = AssessmentGroup.Create(course.Id, "Quizzes", 20m);
-        var assessment = Assessment.Create(course.Id, "Pathfinding quiz", AssessmentType.Quiz, 10, 7, assessmentGroupId: group.Id);
+        var assessment = Assessment.Create(course.Id, "Pathfinding quiz", AssessmentType.Quiz, 10, assessmentGroupId: group.Id);
         assessment.SetDeliverySchedule(
             DateTime.UtcNow.AddDays(-1),
             DateTime.UtcNow.AddDays(3),
@@ -147,8 +147,8 @@ public sealed class LearnerWorkspaceQueryTests
             CompletedAt = DateTime.UtcNow,
         };
         var group = AssessmentGroup.Create(course.Id, "Assignments", 100m);
-        var assessment = Assessment.Create(course.Id, "Practice", AssessmentType.Assignment, 20, 12, assessmentGroupId: group.Id);
-        assessment.Update(null, null, null, null, null, null, null, null, null, contentId: lesson.Id);
+        var assessment = Assessment.Create(course.Id, "Practice", AssessmentType.Assignment, 20, assessmentGroupId: group.Id);
+        assessment.Update(null, null, null, null, null, null, null, null, contentId: lesson.Id);
         var discussion = CourseDiscussion.Create(course.Id, userId, "Question", "How does this work?", lesson.Id);
         var certificate = Certificate.Issue(
             Guid.NewGuid(),

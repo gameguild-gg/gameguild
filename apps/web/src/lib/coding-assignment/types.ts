@@ -61,13 +61,18 @@ export interface StandardTest extends TestBase {
   readonly ExitCode?: number | null;
 }
 
-export interface FunctionalTest extends TestBase {
-  readonly kind: typeof TEST_KIND.Functional;
-  readonly Function: TestFunctionData;
-  readonly Result: FunctionParameter;
+export interface FunctionalTestCase {
+  readonly Inputs: readonly FunctionParameter[];
+  readonly Expected: FunctionParameter;
 }
 
-export type Test = StandardTest | FunctionalTest;
+export interface FunctionalTestGroup extends TestBase {
+  readonly kind: typeof TEST_KIND.Functional;
+  readonly Function: TestFunctionData;
+  readonly Cases: readonly FunctionalTestCase[];
+}
+
+export type Test = StandardTest | FunctionalTestGroup;
 
 export interface BundleFileMeta {
   readonly Content: string;
@@ -94,7 +99,6 @@ export interface TestSuite {
 
 export interface GradingConfig {
   readonly MaxScore: number;
-  readonly PassingScore: number;
 }
 
 export interface CodingAssignmentContent {
@@ -152,27 +156,37 @@ export function isTestFunctionData(v: unknown): v is TestFunctionData {
   );
 }
 
+export function isFunctionalTestCase(v: unknown): v is FunctionalTestCase {
+  if (!isRecord(v)) return false;
+  return (
+    Array.isArray(v.Inputs) &&
+    v.Inputs.every(isFunctionParameter) &&
+    isFunctionParameter(v.Expected)
+  );
+}
+
 export function isStandardTest(v: unknown): v is StandardTest {
   if (!isRecord(v)) return false;
   return v.kind === TEST_KIND.Standard && typeof v.Stdout === 'string';
 }
 
-export function isFunctionalTest(v: unknown): v is FunctionalTest {
+export function isFunctionalTestGroup(v: unknown): v is FunctionalTestGroup {
   if (!isRecord(v)) return false;
   return (
     v.kind === TEST_KIND.Functional &&
     isTestFunctionData(v.Function) &&
-    isFunctionParameter(v.Result)
+    Array.isArray(v.Cases) &&
+    v.Cases.every(isFunctionalTestCase)
   );
 }
 
 export function isTest(v: unknown): v is Test {
-  return isStandardTest(v) || isFunctionalTest(v);
+  return isStandardTest(v) || isFunctionalTestGroup(v);
 }
 
 function narrowTest(v: unknown): Test | null {
   if (isStandardTest(v)) return v;
-  if (isFunctionalTest(v)) return v;
+  if (isFunctionalTestGroup(v)) return v;
   return null;
 }
 
