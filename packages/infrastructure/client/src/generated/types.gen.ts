@@ -6292,7 +6292,6 @@ export interface ProjectsProjectCollaborator {
   deletedAt?: string | null;
   tenantId?: string | null;
   projectId?: string;
-  project?: ProjectsProject;
   userId?: string;
   user?: IdentityUsersUser;
   role: string;
@@ -6327,7 +6326,6 @@ export interface ProjectsProjectFeedback {
   deletedAt?: string | null;
   tenantId?: string | null;
   projectId?: string;
-  project?: ProjectsProject;
   userId?: string;
   user?: IdentityUsersUser;
   rating?: number;
@@ -6355,7 +6353,6 @@ export interface ProjectsProjectFollower {
   deletedAt?: string | null;
   tenantId?: string | null;
   projectId?: string;
-  project?: ProjectsProject;
   userId?: string;
   user?: IdentityUsersUser;
   followedAt?: string;
@@ -6394,7 +6391,6 @@ export interface ProjectsProjectJamSubmission {
   deletedAt?: string | null;
   tenantId?: string | null;
   projectId?: string;
-  project?: ProjectsProject;
   jamId?: string | null;
   jam?: GameJamsJam;
   submittedAt?: string;
@@ -6419,7 +6415,6 @@ export interface ProjectsProjectMetadata {
   updatedAt: string;
   deletedAt?: string | null;
   tenantId?: string | null;
-  project: ProjectsProject;
   projectId?: string;
   viewCount?: number;
   downloadCount?: number;
@@ -6438,7 +6433,6 @@ export interface ProjectsProjectRelease {
   deletedAt?: string | null;
   tenantId?: string | null;
   projectId?: string;
-  project?: ProjectsProject;
   title: string;
   description?: string | null;
   releaseVersion: string;
@@ -6501,7 +6495,6 @@ export interface ProjectsProjectTeam {
   deletedAt?: string | null;
   tenantId?: string | null;
   projectId?: string;
-  project?: ProjectsProject;
   teamId?: string;
   team?: ProjectsTeam;
   role: string;
@@ -6526,13 +6519,11 @@ export interface ProjectsProjectVersion {
   updatedAt: string;
   deletedAt?: string | null;
   tenantId?: string | null;
-  project: ProjectsProject;
   projectId?: string;
   versionNumber: string;
   releaseNotes?: string | null;
   status: string;
   downloadCount?: number;
-  createdBy: IdentityUsersUser;
   createdById?: string;
 }
 
@@ -16627,7 +16618,6 @@ ProjectsProjectCollaboratorSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
   userId: z.string().uuid().optional(),
   user: z.lazy(() => IdentityUsersUserSchema).optional(),
   role: z.string().min(1).max(100),
@@ -16670,7 +16660,6 @@ ProjectsProjectFeedbackSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
   userId: z.string().uuid().optional(),
   user: z.lazy(() => IdentityUsersUserSchema).optional(),
   rating: z.number().int().min(1).max(5).optional(),
@@ -16702,7 +16691,6 @@ ProjectsProjectFollowerSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
   userId: z.string().uuid().optional(),
   user: z.lazy(() => IdentityUsersUserSchema).optional(),
   followedAt: z.string().datetime().optional(),
@@ -16747,7 +16735,6 @@ ProjectsProjectJamSubmissionSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
   jamId: z.string().uuid().nullable().optional(),
   jam: z.lazy(() => GameJamsJamSchema).optional(),
   submittedAt: z.string().datetime().optional(),
@@ -16779,7 +16766,6 @@ ProjectsProjectMetadataSchema = z.object({
   updatedAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
-  project: z.lazy(() => ProjectsProjectSchema),
   projectId: z.string().uuid().optional(),
   viewCount: z.number().int().optional(),
   downloadCount: z.number().int().optional(),
@@ -16802,7 +16788,6 @@ ProjectsProjectReleaseSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
   title: z.string().min(1).max(200),
   description: z.string().nullable().optional(),
   releaseVersion: z.string().min(1).max(50),
@@ -16875,7 +16860,6 @@ ProjectsProjectTeamSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   projectId: z.string().uuid().optional(),
-  project: z.lazy(() => ProjectsProjectSchema).optional(),
   teamId: z.string().uuid().optional(),
   team: z.lazy(() => ProjectsTeamSchema).optional(),
   role: z.string().min(1).max(100),
@@ -16905,13 +16889,11 @@ ProjectsProjectVersionSchema = z.object({
   updatedAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
-  project: z.lazy(() => ProjectsProjectSchema),
   projectId: z.string().uuid().optional(),
   versionNumber: z.string().min(1).max(50),
   releaseNotes: z.string().nullable().optional(),
   status: z.string().min(1).max(50),
   downloadCount: z.number().int().optional(),
-  createdBy: z.lazy(() => IdentityUsersUserSchema),
   createdById: z.string().uuid().optional(),
 });
 
