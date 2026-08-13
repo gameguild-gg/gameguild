@@ -1,17 +1,13 @@
 import { Link } from '@/i18n/navigation';
-import { getPublicProject, publicProjects } from '@/lib/community/public-community';
+import { getVisibleProject } from '@/lib/projects/public-projects';
 import { ArrowRight, CheckCircle2, ClipboardList, FlaskConical, UserRound } from 'lucide-react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import React from 'react';
 
-export async function generateStaticParams() {
-  return publicProjects.map((project) => ({ project: project.slug }));
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ project: string }> }) {
   const { project: slug } = await params;
-  const project = getPublicProject(slug);
+  const project = await getVisibleProject(slug);
 
   return {
     title: project ? `${project.title} | GameGuild Projects` : 'Project Not Found | GameGuild',
@@ -21,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ project: 
 
 export default async function Page({ params }: { readonly params: Promise<{ project: string }> }): Promise<React.JSX.Element> {
   const { project: slug } = await params;
-  const project = getPublicProject(slug);
+  const project = await getVisibleProject(slug);
 
   if (!project) notFound();
 

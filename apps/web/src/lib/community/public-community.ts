@@ -5,13 +5,14 @@ export interface PublicProject {
   creatorRole: string;
   summary: string;
   description: string;
-  status: 'Open playtest' | 'In review' | 'Showcase ready';
+  status: string;
   tags: string[];
   coursePath: string;
   accent: string;
   previewImage: string;
   buildType: string;
   feedbackGoal: string;
+  feedbackCount?: number;
   metrics: Array<{ label: string; value: string }>;
   media: Array<{ label: string; detail: string }>;
 }
