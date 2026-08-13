@@ -18,6 +18,7 @@ export function DropdownColorPicker({
   buttonIcon,
   title,
   disabled,
+  preserveSelection = false,
 }: {
   color: string
   onChange: (next: string, skipHistoryStack: boolean, skipRefocus: boolean) => void
@@ -25,6 +26,8 @@ export function DropdownColorPicker({
   buttonIcon?: React.ReactNode
   title?: string
   disabled?: boolean
+  /** Keeps the editor selection while a floating-toolbar picker is opened. */
+  preserveSelection?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
 
@@ -36,6 +39,7 @@ export function DropdownColorPicker({
           disabled={disabled}
           title={title}
           aria-label={buttonAriaLabel}
+          onMouseDown={preserveSelection ? (event) => event.preventDefault() : undefined}
           className={cn(
             "inline-flex items-center gap-1 h-8 px-2 rounded text-sm",
             "hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:pointer-events-none",
@@ -52,7 +56,18 @@ export function DropdownColorPicker({
           <ChevronDownIcon className="w-3 h-3 opacity-60" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={4} className="w-auto p-3" onFocusOutside={(e) => { const t = (e as any).detail?.originalEvent?.target; if (t instanceof Element && t.closest("[contenteditable=\"true\"]")) e.preventDefault(); }}>
+      <PopoverContent
+        align="start"
+        sideOffset={4}
+        data-lexical-floating-toolbar-popover={preserveSelection ? "true" : undefined}
+        className="w-auto p-3"
+        onFocusOutside={(e) => {
+          const target = (e as any).detail?.originalEvent?.target
+          if (target instanceof Element && target.closest("[contenteditable=\"true\"]")) {
+            e.preventDefault()
+          }
+        }}
+      >
         <ColorPicker color={color} onChange={onChange} />
       </PopoverContent>
     </Popover>

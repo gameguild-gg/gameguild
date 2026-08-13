@@ -1,10 +1,7 @@
 /**
  * FloatingTextFormatToolbarPlugin — ported from facebook/lexical
- * playground. Wave A: limited to bold/italic/underline/strikethrough/
- * inline-code/link buttons. (Sub/sup, lowercase/uppercase/capitalize,
- * and comment-strip are dropped from the bubble; they can still be
- * applied via the top toolbar's "additional styles" when we ship it
- * in a later wave.)
+ * playground. It exposes the same text and block formatting vocabulary as
+ * the top toolbar, arranged for use near a selected range.
  */
 "use client"
 
@@ -14,38 +11,57 @@ import { createPortal } from "react-dom"
 import { useMergeRefs } from "@floating-ui/react"
 import { $isCodeHighlightNode } from "@lexical/code"
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link"
+import { ListNode } from "@lexical/list"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { mergeRegister } from "@lexical/utils"
-import { $getSelectionStyleValueForProperty, $patchStyleText } from "@lexical/selection"
+import { $isHeadingNode } from "@lexical/rich-text"
+import { $getNearestNodeOfType, mergeRegister } from "@lexical/utils"
+import {
+  $getSelectionStyleValueForProperty,
+  $isParentElementRTL,
+  $patchStyleText,
+} from "@lexical/selection"
 import {
   $getSelection,
+  $addUpdateTag,
+  $isElementNode,
   $isParagraphNode,
   $isRangeSelection,
   $isTextNode,
   COMMAND_PRIORITY_LOW,
+  ElementFormatType,
   FORMAT_TEXT_COMMAND,
   getDOMSelection,
+  HISTORIC_TAG,
   LexicalEditor,
+  SKIP_DOM_SELECTION_TAG,
   SELECTION_CHANGE_COMMAND,
 } from "lexical"
 import { cn } from "@game-guild/ui/lib/utils"
-import { DEFAULT_FONT_SIZE } from "../toolbar/toolbar-context"
+import { blockTypeToBlockName, DEFAULT_FONT_SIZE } from "../toolbar/toolbar-context"
+import {
+  BlockFormatDropDown,
+  CaseFormatDropDown,
+  ElementFormatDropdown,
+  FontDropDown,
+  FontSizeStepper,
+} from "../toolbar/toolbar-plugin"
+import { DropdownColorPicker } from "../toolbar/dropdown-color-picker"
 import {
   BoldIcon,
   CodeInlineIcon,
   ItalicIcon,
   LinkIcon,
-  StrikethroughIcon,
   UnderlineIcon,
-  HighlightIcon,
-  SubscriptIcon,
-  SuperscriptIcon,
+  TextColorIcon,
+  BgColorIcon,
 } from "../icons"
 import { getSelectedNode } from "../toolbar/get-selected-node"
 import { getDOMRangeRect, setFloatingElemPosition } from "./use-floating-position"
 
-const MIN_FONT_SIZE = 8
-const MAX_FONT_SIZE = 400
+function isFloatingToolbarPopoverNode(node: Node | null): boolean {
+  const element = node instanceof Element ? node : node?.parentElement
+  return element?.closest('[data-lexical-floating-toolbar-popover="true"]') !== null
+}
 
 function BubbleButton({
   active,
@@ -82,86 +98,6 @@ function BubbleButton({
   )
 }
 
-function BubbleFontSizeStepper({
-  editor,
-  fontSize,
-}: {
-  editor: LexicalEditor
-  fontSize: string
-}) {
-  const currentNumber = React.useMemo(() => {
-    const parsed = parseInt(String(fontSize).replace(/px$/, ""), 10)
-    return Number.isFinite(parsed) ? parsed : DEFAULT_FONT_SIZE
-  }, [fontSize])
-  const [inputValue, setInputValue] = useState<string>(String(currentNumber))
-
-  useEffect(() => {
-    setInputValue(String(currentNumber))
-  }, [currentNumber])
-
-  const applySize = useCallback(
-    (px: number) => {
-      const clamped = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, Math.round(px)))
-      editor.update(() => {
-        const selection = $getSelection()
-        if (!$isRangeSelection(selection)) return
-        $patchStyleText(selection, { "font-size": `${clamped}px` })
-      })
-    },
-    [editor],
-  )
-
-  const commitInput = useCallback(() => {
-    const parsed = parseInt(inputValue, 10)
-    if (Number.isFinite(parsed)) {
-      applySize(parsed)
-    } else {
-      setInputValue(String(currentNumber))
-    }
-  }, [applySize, currentNumber, inputValue])
-
-  return (
-    <div className="inline-flex items-center gap-0.5 px-0.5">
-      <button
-        type="button"
-        disabled={currentNumber <= MIN_FONT_SIZE}
-        onClick={() => applySize(currentNumber - 1)}
-        title="Decrease font size"
-        aria-label="Decrease font size"
-        className="inline-flex items-center justify-center w-6 h-7 rounded text-sm text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-40 disabled:pointer-events-none"
-      >
-        −
-      </button>
-      <input
-        type="text"
-        inputMode="numeric"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value.replace(/[^0-9]/g, ""))}
-        onBlur={commitInput}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault()
-            commitInput()
-            ;(e.target as HTMLInputElement).blur()
-          }
-        }}
-        aria-label="Font size"
-        className="w-8 h-7 bg-transparent text-sm text-center outline-none tabular-nums text-gray-800 dark:text-white rounded border border-gray-200 dark:border-white/20"
-      />
-      <button
-        type="button"
-        disabled={currentNumber >= MAX_FONT_SIZE}
-        onClick={() => applySize(currentNumber + 1)}
-        title="Increase font size"
-        aria-label="Increase font size"
-        className="inline-flex items-center justify-center w-6 h-7 rounded text-sm text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-40 disabled:pointer-events-none"
-      >
-        +
-      </button>
-    </div>
-  )
-}
-
 function BubbleDivider() {
   return <div className="w-px h-5 mx-0.5 bg-gray-200 dark:bg-white/20" />
 }
@@ -178,7 +114,16 @@ function TextFormatFloatingToolbar({
   isSubscript,
   isSuperscript,
   isHighlight,
+  isLowercase,
+  isUppercase,
+  isCapitalize,
   fontSize,
+  fontFamily,
+  fontColor,
+  bgColor,
+  blockType,
+  elementFormat,
+  isRTL,
   setIsLinkEditMode,
   ref,
 }: {
@@ -193,7 +138,16 @@ function TextFormatFloatingToolbar({
   isSubscript: boolean
   isSuperscript: boolean
   isHighlight: boolean
+  isLowercase: boolean
+  isUppercase: boolean
+  isCapitalize: boolean
   fontSize: string
+  fontFamily: string
+  fontColor: string
+  bgColor: string
+  blockType: keyof typeof blockTypeToBlockName
+  elementFormat: ElementFormatType
+  isRTL: boolean
   setIsLinkEditMode: Dispatch<boolean>
   ref?: React.Ref<HTMLDivElement | null>
 }) {
@@ -209,6 +163,28 @@ function TextFormatFloatingToolbar({
       editor.dispatchCommand(TOGGLE_LINK_COMMAND, null)
     }
   }, [editor, isLink, setIsLinkEditMode])
+
+  const applyStyleText = useCallback(
+    (
+      styles: Record<string, string>,
+      skipHistoryStack = false,
+      skipRefocus = false,
+    ) => {
+      editor.update(
+        () => {
+          if (skipRefocus) {
+            $addUpdateTag(SKIP_DOM_SELECTION_TAG)
+          }
+          const selection = $getSelection()
+          if ($isRangeSelection(selection)) {
+            $patchStyleText(selection, styles)
+          }
+        },
+        skipHistoryStack ? { tag: HISTORIC_TAG } : {},
+      )
+    },
+    [editor],
+  )
 
   // Hide while a drag is in progress (upstream parity).
   useEffect(() => {
@@ -262,7 +238,7 @@ function TextFormatFloatingToolbar({
     const update = () => {
       editor.getEditorState().read(() => {
         $updateTextFormatFloatingToolbar()
-      })
+      }, { editor })
     }
     window.addEventListener("resize", update)
     scrollerElem?.addEventListener("scroll", update)
@@ -275,12 +251,12 @@ function TextFormatFloatingToolbar({
   useEffect(() => {
     editor.getEditorState().read(() => {
       $updateTextFormatFloatingToolbar()
-    })
+    }, { editor })
     return mergeRegister(
       editor.registerUpdateListener(({ editorState }) => {
         editorState.read(() => {
           $updateTextFormatFloatingToolbar()
-        })
+        }, { editor })
       }),
       editor.registerCommand(
         SELECTION_CHANGE_COMMAND,
@@ -301,14 +277,22 @@ function TextFormatFloatingToolbar({
     <div
       ref={mergedRef}
       className={cn(
-        "absolute top-0 left-0 flex items-center gap-0.5 p-1 rounded-md shadow-lg",
+        "absolute top-0 left-0 flex max-w-[calc(100%-1rem)] flex-wrap items-center gap-0.5 p-1 rounded-md shadow-lg",
         "bg-white text-gray-900 border border-gray-200",
         "dark:bg-gray-900 dark:text-white dark:border-gray-700",
         "opacity-0 will-change-transform pointer-events-auto z-50",
       )}
       style={{ transform: "translate(-10000px, -10000px)" }}
     >
-      <BubbleFontSizeStepper editor={editor} fontSize={fontSize} />
+      <BlockFormatDropDown editor={editor} blockType={blockType} compact preserveSelection />
+      <FontDropDown
+        editor={editor}
+        value={fontFamily}
+        style="font-family"
+        compact
+        preserveSelection
+      />
+      <FontSizeStepper editor={editor} value={fontSize} preserveSelection />
       <BubbleDivider />
       <BubbleButton
         active={isBold}
@@ -335,38 +319,6 @@ function TextFormatFloatingToolbar({
         <UnderlineIcon className="w-4 h-4" />
       </BubbleButton>
       <BubbleButton
-        active={isStrikethrough}
-        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")}
-        title="Strikethrough"
-        ariaLabel="Format text with a strikethrough"
-      >
-        <StrikethroughIcon className="w-4 h-4" />
-      </BubbleButton>
-      <BubbleButton
-        active={isSubscript}
-        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "subscript")}
-        title="Subscript"
-        ariaLabel="Format text as subscript"
-      >
-        <SubscriptIcon className="w-4 h-4" />
-      </BubbleButton>
-      <BubbleButton
-        active={isSuperscript}
-        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "superscript")}
-        title="Superscript"
-        ariaLabel="Format text as superscript"
-      >
-        <SuperscriptIcon className="w-4 h-4" />
-      </BubbleButton>
-      <BubbleButton
-        active={isHighlight}
-        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "highlight")}
-        title="Highlight"
-        ariaLabel="Format text as highlighted"
-      >
-        <HighlightIcon className="w-4 h-4" />
-      </BubbleButton>
-      <BubbleButton
         active={isCode}
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code")}
         title="Inline code"
@@ -374,6 +326,49 @@ function TextFormatFloatingToolbar({
       >
         <CodeInlineIcon className="w-4 h-4" />
       </BubbleButton>
+      <CaseFormatDropDown
+        editor={editor}
+        isLowercase={isLowercase}
+        isUppercase={isUppercase}
+        isCapitalize={isCapitalize}
+        isStrikethrough={isStrikethrough}
+        isSubscript={isSubscript}
+        isSuperscript={isSuperscript}
+        isHighlight={isHighlight}
+        preserveSelection
+      />
+      <BubbleDivider />
+      <DropdownColorPicker
+        color={fontColor}
+        onChange={(value, skipHistoryStack, skipRefocus) =>
+          applyStyleText({ color: value }, skipHistoryStack, skipRefocus)
+        }
+        buttonAriaLabel="Formatting text color"
+        buttonIcon={<TextColorIcon className="w-4 h-4" />}
+        title="Text color"
+        preserveSelection
+      />
+      <DropdownColorPicker
+        color={bgColor}
+        onChange={(value, skipHistoryStack, skipRefocus) =>
+          applyStyleText(
+            { "background-color": value },
+            skipHistoryStack,
+            skipRefocus,
+          )
+        }
+        buttonAriaLabel="Formatting background color"
+        buttonIcon={<BgColorIcon className="w-4 h-4" />}
+        title="Background color"
+        preserveSelection
+      />
+      <ElementFormatDropdown
+        editor={editor}
+        value={elementFormat}
+        isRTL={isRTL}
+        compact
+        preserveSelection
+      />
       <BubbleButton
         active={isLink}
         onClick={insertLink}
@@ -401,7 +396,16 @@ function useFloatingTextFormatToolbar(
   const [isSuperscript, setIsSuperscript] = useState(false)
   const [isHighlight, setIsHighlight] = useState(false)
   const [isCode, setIsCode] = useState(false)
+  const [isLowercase, setIsLowercase] = useState(false)
+  const [isUppercase, setIsUppercase] = useState(false)
+  const [isCapitalize, setIsCapitalize] = useState(false)
   const [fontSize, setFontSize] = useState<string>(`${DEFAULT_FONT_SIZE}px`)
+  const [fontFamily, setFontFamily] = useState("Arial")
+  const [fontColor, setFontColor] = useState("#000")
+  const [bgColor, setBgColor] = useState("#fff")
+  const [blockType, setBlockType] = useState<keyof typeof blockTypeToBlockName>("paragraph")
+  const [elementFormat, setElementFormat] = useState<ElementFormatType>("left")
+  const [isRTL, setIsRTL] = useState(false)
 
   const ref = useRef<HTMLDivElement | null>(null)
 
@@ -409,7 +413,11 @@ function useFloatingTextFormatToolbar(
     // If the focus/selection is inside the bubble itself (e.g., font-size input),
     // we don't recalculate visibility — otherwise the bubble disappears as soon as the user clicks the input.
     const active = document.activeElement
-    if (ref.current && active && ref.current.contains(active)) {
+    if (
+      ref.current &&
+      active &&
+      (ref.current.contains(active) || isFloatingToolbarPopoverNode(active))
+    ) {
       return
     }
     editor.getEditorState().read(() => {
@@ -425,7 +433,8 @@ function useFloatingTextFormatToolbar(
       if (
         nativeSelection !== null &&
         ref.current &&
-        ref.current.contains(nativeSelection.anchorNode as Node | null)
+        (ref.current.contains(nativeSelection.anchorNode as Node | null) ||
+          isFloatingToolbarPopoverNode(nativeSelection.anchorNode))
       ) {
         return
       }
@@ -452,12 +461,35 @@ function useFloatingTextFormatToolbar(
       setIsSuperscript(selection.hasFormat("superscript"))
       setIsHighlight(selection.hasFormat("highlight"))
       setIsCode(selection.hasFormat("code"))
+      setIsLowercase(selection.hasFormat("lowercase"))
+      setIsUppercase(selection.hasFormat("uppercase"))
+      setIsCapitalize(selection.hasFormat("capitalize"))
       setFontSize(
         $getSelectionStyleValueForProperty(selection, "font-size", `${DEFAULT_FONT_SIZE}px`),
       )
+      setFontFamily($getSelectionStyleValueForProperty(selection, "font-family", "Arial"))
+      setFontColor($getSelectionStyleValueForProperty(selection, "color", "#000"))
+      setBgColor($getSelectionStyleValueForProperty(selection, "background-color", "#fff"))
+      setIsRTL($isParentElementRTL(selection))
 
       const parent = node.getParent()
       setIsLink($isLinkNode(parent) || $isLinkNode(node))
+
+      const parentList = $getNearestNodeOfType(node, ListNode)
+      if (parentList) {
+        setBlockType(parentList.getListType())
+      } else {
+        const topLevelElement = node.getTopLevelElementOrThrow()
+        const type = $isHeadingNode(topLevelElement)
+          ? topLevelElement.getTag()
+          : topLevelElement.getType()
+        if (type in blockTypeToBlockName) {
+          setBlockType(type as keyof typeof blockTypeToBlockName)
+        }
+        if ($isElementNode(topLevelElement)) {
+          setElementFormat(topLevelElement.getFormatType())
+        }
+      }
 
       if (
         !$isCodeHighlightNode(selection.anchor.getNode()) &&
@@ -472,7 +504,7 @@ function useFloatingTextFormatToolbar(
       if (!selection.isCollapsed() && rawTextContent === "") {
         setIsText(false)
       }
-    })
+    }, { editor })
   }, [editor])
 
   useEffect(() => {
@@ -534,7 +566,16 @@ function useFloatingTextFormatToolbar(
       isSubscript={isSubscript}
       isSuperscript={isSuperscript}
       isHighlight={isHighlight}
+      isLowercase={isLowercase}
+      isUppercase={isUppercase}
+      isCapitalize={isCapitalize}
       fontSize={fontSize}
+      fontFamily={fontFamily}
+      fontColor={fontColor}
+      bgColor={bgColor}
+      blockType={blockType}
+      elementFormat={elementFormat}
+      isRTL={isRTL}
       setIsLinkEditMode={setIsLinkEditMode}
     />,
     anchorElem,
