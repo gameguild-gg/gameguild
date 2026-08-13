@@ -1,17 +1,15 @@
 /**
  * Top toolbar for our LexicalSurface. Ported from facebook/lexical
- * playground `ToolbarPlugin/index.tsx` with these Wave A adjustments:
+ * playground `ToolbarPlugin/index.tsx` with package-specific adjustments:
  *
  * - Tailwind classes throughout (no playground CSS imports).
  * - Icons via `lucide-react` (mapped in `../icons`).
  * - Removed code-prism / code-shiki language & theme dropdowns.
- * - Removed Wave B items from the Insert dropdown (image, table, poll,
- *   layout, sticky, equation, excalidraw, page-break, embeds, GIF).
+ * - The Insert dropdown is filtered by the surface feature flags.
  * - Removed font-size +/- input pair in favour of a fixed size
  *   dropdown (matches our reduced toolbar density).
  * - Removed lower/upper/capitalize/highlight/sub/sup from "additional
- *   styles" submenu (kept on the bus by `ToolbarContext` for Wave B
- *   restoration).
+ *   styles" submenu.
  */
 "use client"
 
@@ -154,6 +152,7 @@ import {
   DialogTitle,
 } from "@game-guild/ui/components/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@game-guild/ui/components/popover"
+import type { LexicalSurfaceFeatures } from "../features"
 // ─── constants ──────────────────────────────────────────────────────────────
 
 const CODE_FONT_FAMILY_VALUE =
@@ -912,9 +911,7 @@ export default function ToolbarPlugin({
   activeEditor: LexicalEditor
   setActiveEditor: Dispatch<LexicalEditor>
   setIsLinkEditMode: Dispatch<boolean>
-  features?: {
-    pageLayout?: boolean
-  }
+  features: Required<LexicalSurfaceFeatures>
 }) {
   const [selectedElementKey, setSelectedElementKey] = useState<string | null>(null)
   const [isEditable, setIsEditable] = useState(() => editor.isEditable())
@@ -1371,71 +1368,99 @@ export default function ToolbarPlugin({
 
       <Divider />
 
-      {features?.pageLayout !== false && <PageSettingsDropDown disabled={!isEditable} />}
+      {features.pageLayout && <PageSettingsDropDown disabled={!isEditable} />}
 
-      <DropDown
-        disabled={!isEditable}
-        buttonLabel="Insert"
-        buttonIcon={<InsertIcon className="w-4 h-4" />}
-        buttonAriaLabel="Insert document feature"
-      >
-          <DropDownItem onClick={() => dispatchToolbarCommand(INSERT_DIVIDER_LEXICAL_COMMAND)}>
-            <HorizontalRuleIcon className="w-4 h-4" /> Horizontal Rule
-          </DropDownItem>
-          <DropDownItem onClick={() => setInsertDialog("equation")}>
-            <EquationIcon className="w-4 h-4" /> Equation
-          </DropDownItem>
-          <DropDownItem onClick={() => setInsertDialog("table")}>
-            <TableIcon className="w-4 h-4" /> Table
-          </DropDownItem>
-          <DropDownItem
-            onClick={() => dispatchToolbarCommand(INSERT_EXCALIDRAW_COMMAND)}
-          >
-            <ExcalidrawIcon className="w-4 h-4" /> Excalidraw
-          </DropDownItem>
-          <DropDownItem onClick={() => setInsertDialog("layout")}>
-            <ColumnsIcon className="w-4 h-4" /> Columns Layout
-          </DropDownItem>
-          <DropDownItem
-            onClick={() => dispatchToolbarCommand(INSERT_COLLAPSIBLE_COMMAND)}
-          >
-            <CollapsibleIcon className="w-4 h-4" /> Collapsible container
-          </DropDownItem>
-          <DropDownItem
-            onClick={() => dispatchToolbarCommand(INSERT_STICKY_COMMAND)}
-          >
-            <StickyIcon className="w-4 h-4" /> Sticky Note
-          </DropDownItem>
-          <DropDownItem
-            onClick={() => dispatchToolbarCommand(INSERT_ADMONITION_LEXICAL_COMMAND)}
-          >
-            <AdmonitionToolbarIcon className="w-4 h-4" /> Admonition
-          </DropDownItem>
-          <DropDownItem
-            onClick={() => dispatchToolbarCommand(INSERT_BUTTON_LEXICAL_COMMAND)}
-          >
-            <ButtonToolbarIcon className="w-4 h-4" /> Button
-          </DropDownItem>
-          <DropDownItem
-            onClick={() => dispatchToolbarCommand(INSERT_MERMAID_LEXICAL_COMMAND)}
-          >
-            <MermaidToolbarIcon className="w-4 h-4" /> Mermaid Diagram
-          </DropDownItem>
-          <DropDownItem
-            onClick={() => dispatchToolbarCommand(INSERT_VEGA_LITE_LEXICAL_COMMAND)}
-          >
-            <VegaToolbarIcon className="w-4 h-4" /> Vega-Lite Chart
-          </DropDownItem>
-          <DropDownItem
-            onClick={() => dispatchToolbarCommand(INSERT_MEDIA_LEXICAL_COMMAND, { mediaType: "image" })}
-          >
-            <MediaToolbarIcon className="w-4 h-4" /> Media Block
-          </DropDownItem>
-      </DropDown>
+      {features.insertMenu && (
+        <DropDown
+          disabled={!isEditable}
+          buttonLabel="Insert"
+          buttonIcon={<InsertIcon className="w-4 h-4" />}
+          buttonAriaLabel="Insert document feature"
+        >
+          {features.divider && (
+            <DropDownItem onClick={() => dispatchToolbarCommand(INSERT_DIVIDER_LEXICAL_COMMAND)}>
+              <HorizontalRuleIcon className="w-4 h-4" /> Horizontal Rule
+            </DropDownItem>
+          )}
+          {features.equation && (
+            <DropDownItem onClick={() => setInsertDialog("equation")}>
+              <EquationIcon className="w-4 h-4" /> Equation
+            </DropDownItem>
+          )}
+          {features.table && (
+            <DropDownItem onClick={() => setInsertDialog("table")}>
+              <TableIcon className="w-4 h-4" /> Table
+            </DropDownItem>
+          )}
+          {features.excalidraw && (
+            <DropDownItem
+              onClick={() => dispatchToolbarCommand(INSERT_EXCALIDRAW_COMMAND)}
+            >
+              <ExcalidrawIcon className="w-4 h-4" /> Excalidraw
+            </DropDownItem>
+          )}
+          {features.layout && (
+            <DropDownItem onClick={() => setInsertDialog("layout")}>
+              <ColumnsIcon className="w-4 h-4" /> Columns Layout
+            </DropDownItem>
+          )}
+          {features.collapsible && (
+            <DropDownItem
+              onClick={() => dispatchToolbarCommand(INSERT_COLLAPSIBLE_COMMAND)}
+            >
+              <CollapsibleIcon className="w-4 h-4" /> Collapsible container
+            </DropDownItem>
+          )}
+          {features.sticky && (
+            <DropDownItem
+              onClick={() => dispatchToolbarCommand(INSERT_STICKY_COMMAND)}
+            >
+              <StickyIcon className="w-4 h-4" /> Sticky Note
+            </DropDownItem>
+          )}
+          {features.admonition && (
+            <DropDownItem
+              onClick={() => dispatchToolbarCommand(INSERT_ADMONITION_LEXICAL_COMMAND)}
+            >
+              <AdmonitionToolbarIcon className="w-4 h-4" /> Admonition
+            </DropDownItem>
+          )}
+          {features.button && (
+            <DropDownItem
+              onClick={() => dispatchToolbarCommand(INSERT_BUTTON_LEXICAL_COMMAND)}
+            >
+              <ButtonToolbarIcon className="w-4 h-4" /> Button
+            </DropDownItem>
+          )}
+          {features.mermaid && (
+            <DropDownItem
+              onClick={() => dispatchToolbarCommand(INSERT_MERMAID_LEXICAL_COMMAND)}
+            >
+              <MermaidToolbarIcon className="w-4 h-4" /> Mermaid Diagram
+            </DropDownItem>
+          )}
+          {features.vegaLite && (
+            <DropDownItem
+              onClick={() => dispatchToolbarCommand(INSERT_VEGA_LITE_LEXICAL_COMMAND)}
+            >
+              <VegaToolbarIcon className="w-4 h-4" /> Vega-Lite Chart
+            </DropDownItem>
+          )}
+          {features.media && (
+            <DropDownItem
+              onClick={() => dispatchToolbarCommand(INSERT_MEDIA_LEXICAL_COMMAND, { mediaType: "image" })}
+            >
+              <MediaToolbarIcon className="w-4 h-4" /> Media Block
+            </DropDownItem>
+          )}
+        </DropDown>
+      )}
 
-      <EmojiPickerPopover editor={activeEditor} disabled={!isEditable} />
+      {features.emoji && (
+        <EmojiPickerPopover editor={activeEditor} disabled={!isEditable} />
+      )}
 
-      <Divider />
+      {(features.insertMenu || features.emoji) && <Divider />}
 
       <ElementFormatDropdown
         disabled={!isEditable}
@@ -1461,7 +1486,7 @@ export default function ToolbarPlugin({
 
       {/* Diálogos disparados pelo menu Insert. */}
       <Dialog
-        open={insertDialog !== null}
+        open={features.insertMenu && insertDialog !== null}
         onOpenChange={(open) => {
           if (!open) setInsertDialog(null)
         }}
@@ -1496,19 +1521,19 @@ export default function ToolbarPlugin({
                   : "Insert Columns Layout"}
             </DialogTitle>
           </DialogHeader>
-          {insertDialog === "equation" && (
+          {features.equation && insertDialog === "equation" && (
             <InsertEquationDialog
               activeEditor={activeEditor}
               onClose={() => setInsertDialog(null)}
             />
           )}
-          {insertDialog === "table" && (
+          {features.table && insertDialog === "table" && (
             <InsertTableDialog
               activeEditor={activeEditor}
               onClose={() => setInsertDialog(null)}
             />
           )}
-          {insertDialog === "layout" && (
+          {features.layout && insertDialog === "layout" && (
             <InsertLayoutDialog
               activeEditor={activeEditor}
               onClose={() => setInsertDialog(null)}
