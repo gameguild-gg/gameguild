@@ -41,7 +41,7 @@ describe('toWorkspaceFsPath', () => {
   it('falls back to /home/user/<basename> for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas')).toBe('/home/user/canvas'));
   it('namespaces by assignmentToken when supplied', () => expect(toWorkspaceFsPath('/user/main.cpp', 'abc-123')).toBe('/home/user/abc-123/main.cpp'));
   it('namespaces nested paths by assignmentToken', () => expect(toWorkspaceFsPath('/user/lib/utils.cpp', 'abc-123')).toBe('/home/user/abc-123/lib/utils.cpp'));
-  it('ignores assignmentToken for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas', 'abc-123')).toBe('/home/user/canvas'));
+  it('namespaces basename by assignmentToken for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas', 'abc-123')).toBe('/home/user/abc-123/canvas'));
 });
 
 // ─── workspaceStorageKey ─────────────────────────────────────────────────────
