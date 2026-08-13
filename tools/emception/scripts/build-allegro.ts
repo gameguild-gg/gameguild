@@ -49,6 +49,9 @@ setupEmsdk(EMSDK_VERSION);
 
 const EMSDK_DIR = getEmsdkDir();
 const EMCC = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'emcc');
+const GITHUB_AUTH = process.env.GITHUB_TOKEN
+    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
+    : '';
 
 const USERLAND_DIR = path.join(ROOT, 'userland', 'allegro');
 const BUILD_DIR = path.join(ROOT, 'build', 'allegro');
@@ -66,9 +69,9 @@ shell.mkdir('-p', ALLEGRO_INC);
 
 function curlJson(url: string): any {
     const exec = (extra = '') =>
-        shell.exec(`curl -fsSL ${extra} "${url}"`, { silent: true, fatal: false });
+        shell.exec(`curl -fsSL --http1.1 --retry 8 --retry-all-errors --retry-delay 2 ${extra} "${url}"`, { silent: true, fatal: false });
     let res = process.env.GITHUB_TOKEN
-        ? exec(`-H "Authorization: Bearer ${process.env.GITHUB_TOKEN}"`)
+        ? exec(GITHUB_AUTH)
         : exec();
     if (res.code !== 0 && process.env.GITHUB_TOKEN) {
         console.warn(`  Authenticated GitHub call failed for ${url}, retrying without token...`);
@@ -114,11 +117,16 @@ function downloadTarball(repo: string, tag: string, destName: string, keyFile = 
     console.log(`Downloading ${repo} @ ${tag}...`);
     const tryUrls = [
         `https://github.com/${repo}/archive/refs/tags/${tag}.tar.gz`,
+        `https://codeload.github.com/${repo}/tar.gz/refs/tags/${tag}`,
         `https://github.com/${repo}/archive/refs/heads/${tag}.tar.gz`,
+        `https://codeload.github.com/${repo}/tar.gz/refs/heads/${tag}`,
     ];
     let ok = false;
     for (const url of tryUrls) {
-        const res = shell.exec(`curl -fSL -o "${tarball}" "${url}"`, { silent: true, fatal: false });
+        const res = shell.exec(
+            `curl -fSL --http1.1 --retry 8 --retry-all-errors --retry-delay 2 ${GITHUB_AUTH} -o "${tarball}" "${url}"`,
+            { silent: true, fatal: false },
+        );
         if (res.code === 0) {
             ok = true;
             break;
