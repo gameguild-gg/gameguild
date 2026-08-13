@@ -77,7 +77,6 @@ export function FunctionalTestEditor({
     const next: FunctionParameterWithName = {
       Name: "",
       Type: "string",
-      Content: "",
     };
     patchFunction({ Parameters: [...fn.Parameters, next] });
   }
@@ -90,10 +89,7 @@ export function FunctionalTestEditor({
 
   function patchReturnType(nextType: FunctionParameterType) {
     patchFunction({
-      ReturnType: {
-        Type: nextType,
-        Content: defaultContentForType(nextType, fn.ReturnType.Content),
-      },
+      ReturnType: { Type: nextType },
     });
   }
 

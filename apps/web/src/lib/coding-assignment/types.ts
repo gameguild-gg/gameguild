@@ -38,14 +38,15 @@ export interface FunctionParameter {
   readonly Content: FunctionParameterValue;
 }
 
-export interface FunctionParameterWithName extends FunctionParameter {
+export interface FunctionParameterWithName {
+  readonly Type: FunctionParameterType;
   readonly Name: string;
 }
 
 export interface TestFunctionData {
   readonly FunctionName: string;
   readonly Parameters: readonly FunctionParameterWithName[];
-  readonly ReturnType: FunctionParameter;
+  readonly ReturnType: { readonly Type: FunctionParameterType };
 }
 
 interface TestBase {
@@ -142,8 +143,11 @@ export function isFunctionParameter(v: unknown): v is FunctionParameter {
 export function isFunctionParameterWithName(
   v: unknown,
 ): v is FunctionParameterWithName {
-  if (!isFunctionParameter(v)) return false;
-  return typeof (v as unknown as Record<string, unknown>).Name === 'string';
+  if (!isRecord(v)) return false;
+  return (
+    isFunctionParameterType(v.Type) &&
+    typeof (v as unknown as Record<string, unknown>).Name === 'string'
+  );
 }
 
 export function isTestFunctionData(v: unknown): v is TestFunctionData {
@@ -152,7 +156,8 @@ export function isTestFunctionData(v: unknown): v is TestFunctionData {
     typeof v.FunctionName === 'string' &&
     Array.isArray(v.Parameters) &&
     v.Parameters.every(isFunctionParameterWithName) &&
-    isFunctionParameter(v.ReturnType)
+    isRecord(v.ReturnType) &&
+    isFunctionParameterType(v.ReturnType.Type)
   );
 }
 

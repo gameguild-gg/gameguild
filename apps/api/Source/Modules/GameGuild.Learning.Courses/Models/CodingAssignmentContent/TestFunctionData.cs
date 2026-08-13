@@ -13,11 +13,20 @@ public sealed record TestFunctionData
 
     public List<FunctionParameterWithName> Parameters { get; init; } = new();
 
-    public required FunctionParameter ReturnType { get; init; }
+    public required FunctionReturnType ReturnType { get; init; }
 }
 
 /// <summary>
-/// Typed value binding for a function parameter or return slot.
+/// Return type slot on a function signature — type only, no content.
+/// Content lives in each <see cref="FunctionalTestCase.Expected"/>.
+/// </summary>
+public sealed record FunctionReturnType
+{
+    public required FunctionParameterType Type { get; init; }
+}
+
+/// <summary>
+/// Typed value binding for a function parameter or expected slot.
 /// <see cref="Content"/> is left as <see cref="JsonElement"/> so string / number / bool payloads round-trip verbatim.
 /// </summary>
 public record FunctionParameter
@@ -28,10 +37,12 @@ public record FunctionParameter
 }
 
 /// <summary>
-/// A <see cref="FunctionParameter"/> with an additional <see cref="Name"/> (used for function arguments).
+/// A named slot on a function signature — type only, no content (content lives per-case).
 /// </summary>
-public sealed record FunctionParameterWithName : FunctionParameter
+public sealed record FunctionParameterWithName
 {
+    public required FunctionParameterType Type { get; init; }
+
     public required string Name { get; init; }
 }
 

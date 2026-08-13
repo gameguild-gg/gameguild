@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Projects;
@@ -15,12 +16,14 @@ public class ProjectTeam : EntityBase<Guid>
     public Guid ProjectId { get; set; }
 
     /// <summary> Navigation property to project </summary>
+    [JsonIgnore]
     public virtual Project Project { get; set; } = null!;
 
     /// <summary> Team working on the project </summary>
     public Guid TeamId { get; set; }
 
     /// <summary> Navigation property to the project collaboration team. </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public virtual Team? Team { get; set; }
 
     /// <summary> Role of the team in the project </summary>

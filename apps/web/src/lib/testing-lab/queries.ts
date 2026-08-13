@@ -10,7 +10,6 @@ import {
   type TestingLabSessionRegistration,
   type TestingLabSessionWaitlist,
   type TestingLabTestingFeedback,
-  type TestingLabTestingInput,
   type TestingLabTestingLabRoleTemplate,
   type TestingLabTestingLabSettings,
   type TestingLabTestingLocation,
@@ -186,41 +185,8 @@ function mapProject(project: ProjectsProject): TestingProjectOption | null {
   };
 }
 
-function mapRequest(request: TestingLabTestingInput): TestingRequestSummary | null {
-  if (!request.id) return null;
-  const version = request.projectVersion;
-  return {
-    id: request.id,
-    title: request.title,
-    description: request.description,
-    downloadUrl: request.downloadUrl,
-    instructionsContent: request.instructionsContent,
-    feedbackFormContent: request.feedbackFormContent,
-    maxTesters: request.maxTesters,
-    currentTesterCount: request.currentTesterCount,
-    startDate: request.startDate,
-    endDate: request.endDate,
-    status: request.status,
-    projectVersionId: request.projectVersionId,
-    projectVersion:
-      version?.id && version.projectId
-        ? {
-            id: version.id,
-            projectId: version.projectId,
-            versionNumber: version.versionNumber,
-            status: version.status,
-            project: version.project?.id
-              ? {
-                  id: version.project.id,
-                  title: version.project.title,
-                  slug: version.project.slug,
-                  status: version.project.status,
-                }
-              : null,
-          }
-        : null,
-    isDeleted: request.isDeleted,
-  };
+function mapRequest(request: unknown): TestingRequestSummary | null {
+  return mapTestingRequestDetail(request);
 }
 
 function mapLocation(location: TestingLabTestingLocation): TestingLocationSummary | null {
