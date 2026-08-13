@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Identity.Users;
 
@@ -14,6 +15,7 @@ public class ProjectVersion : EntityBase<Guid>
 {
     /// <summary> The project this version belongs to </summary>
     [Required]
+    [JsonIgnore]
     public virtual Project Project { get; set; } = null!;
 
     public Guid ProjectId { get; set; }
@@ -36,6 +38,7 @@ public class ProjectVersion : EntityBase<Guid>
 
     /// <summary> User who created this version </summary>
     [Required]
+    [JsonIgnore]
     public virtual User CreatedBy { get; set; } = null!;
 
     public Guid CreatedById { get; set; }

@@ -52,6 +52,7 @@ public sealed class Project : EntityBase {
     public ContentVisibility Visibility { get; set; } = ContentVisibility.Private;
 
     /// <summary> Project category (entity) </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ProjectCategory? Category { get; set; }
 
     public Guid? CategoryId { get; set; }
@@ -90,6 +91,7 @@ public sealed class Project : EntityBase {
     public DateTime? PublishedAt { get; set; }
 
     /// <summary> Project metadata and statistics </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ProjectMetadata? ProjectMetadata { get; set; }
 
     /// <summary> Navigation property to project versions </summary>
@@ -125,6 +127,7 @@ public sealed class Project : EntityBase {
 
     /// <summary> Computed property: Latest version </summary>
     [NotMapped]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ProjectVersion? LatestVersion => Versions.OrderByDescending(v => v.CreatedAt).FirstOrDefault();
 
     /// <summary> Computed property: Number of followers </summary>

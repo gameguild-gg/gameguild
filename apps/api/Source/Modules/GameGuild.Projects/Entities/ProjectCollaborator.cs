@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Identity.Users;
 
@@ -21,6 +22,7 @@ public class ProjectCollaborator : EntityBase<Guid>
     /// <summary>
     /// Navigation property to project
     /// </summary>
+    [JsonIgnore]
     public virtual Project Project { get; set; } = null!;
 
     /// <summary>
@@ -31,6 +33,7 @@ public class ProjectCollaborator : EntityBase<Guid>
     /// <summary>
     /// Navigation property to user
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public virtual User? User { get; set; }
 
     /// <summary>
