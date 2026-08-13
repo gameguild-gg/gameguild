@@ -71,6 +71,8 @@ public class TestService(
     public Task<TestingFeedback> AddFeedbackAsync(Guid testingRequestId, Guid userId, Guid feedbackFormId, string feedbackData, TestingContext context, Guid? sessionId = null, string? additionalNotes = null) => feedbackOps.AddFeedbackAsync(testingRequestId, userId, feedbackFormId, feedbackData, context, sessionId, additionalNotes);
     public Task<IEnumerable<TestingFeedback>> GetTestingRequestFeedbackAsync(Guid testingRequestId) => feedbackOps.GetTestingRequestFeedbackAsync(testingRequestId);
     public Task<IEnumerable<TestingFeedback>> GetFeedbackByUserAsync(Guid userId) => feedbackOps.GetFeedbackByUserAsync(userId);
+    public Task<TestingFeedbackDirectoryPage> GetFeedbackDirectoryAsync(TestingFeedbackDirectoryQuery query, CancellationToken cancellationToken = default)
+        => feedbackOps.GetFeedbackDirectoryAsync(query, cancellationToken);
     public Task SubmitFeedbackAsync(SubmitFeedbackDto feedbackDto, Guid userId) => feedbackOps.SubmitFeedbackAsync(feedbackDto, userId);
     public Task<object> GetTestingRequestStatisticsAsync(Guid testingRequestId) => feedbackOps.GetTestingRequestStatisticsAsync(testingRequestId);
     public Task ReportFeedbackAsync(Guid feedbackId, string reason, Guid reportedByUserId) => feedbackOps.ReportFeedbackAsync(feedbackId, reason, reportedByUserId);

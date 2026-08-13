@@ -144,6 +144,135 @@ public sealed class TestingEventParticipationTests : IDisposable
     }
 
     [Fact]
+    public async Task AssignProject_ShouldRejectTheProjectCreatorAsTester()
+    {
+        var (testingEvent, slot) = AddScheduledEventAndSlot(
+            TestingEventMode.InPerson,
+            maxTesters: 2,
+            requiresFeedback: true);
+        var application = AddApprovedApplication(testingEvent, slot, _testerOneId);
+        await AssignAndAssertProjectTesterConflict(application, slot);
+    }
+
+    [Fact]
+    public async Task AssignProject_ShouldRejectAnActiveProjectCollaboratorAsTester()
+    {
+        var (testingEvent, slot) = AddScheduledEventAndSlot(TestingEventMode.InPerson, 2, true);
+        var application = AddApprovedApplication(testingEvent, slot);
+        _context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = application.ProjectId,
+            UserId = _testerOneId,
+            Role = ProjectRoles.Viewer,
+            Permissions = "Read",
+            IsActive = true
+        });
+
+        await AssignAndAssertProjectTesterConflict(application, slot);
+    }
+
+    [Fact]
+    public async Task AssignProject_ShouldRejectAnActiveProjectTeamMemberAsTester()
+    {
+        var (testingEvent, slot) = AddScheduledEventAndSlot(TestingEventMode.InPerson, 2, true);
+        var application = AddApprovedApplication(testingEvent, slot);
+        var team = new Team { Name = "Project team", IsActive = true };
+        _context.Set<Team>().Add(team);
+        _context.Set<TeamMember>().Add(new TeamMember
+        {
+            TeamId = team.Id,
+            UserId = _testerOneId,
+            IsActive = true
+        });
+        _context.Set<ProjectTeam>().Add(new ProjectTeam
+        {
+            ProjectId = application.ProjectId,
+            TeamId = team.Id,
+            IsActive = true,
+            Permissions = "Read"
+        });
+
+        await AssignAndAssertProjectTesterConflict(application, slot);
+    }
+
+    [Fact]
+    public async Task AssignProject_ShouldAllowAReadOnlyGrantThatDoesNotCreateTeamMembership()
+    {
+        var (testingEvent, slot) = AddScheduledEventAndSlot(TestingEventMode.InPerson, 2, true);
+        var application = AddApprovedApplication(testingEvent, slot);
+        _context.Set<GameGuild.Identity.Authorization.ResourceUserPermission>().Add(new()
+        {
+            TenantId = new GameGuild.CQRS.Models.TenantId(_tenantId),
+            UserId = _testerOneId,
+            ResourceType = nameof(Project),
+            ResourceId = application.ProjectId.ToString(),
+            Permissions = ["Read"],
+            GrantedByUserId = _managerId
+        });
+        await _context.SaveChangesAsync();
+        var handler = CreateHandler();
+        SetActor(_testerOneId);
+        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        SetActor(_managerId);
+        await handler.Handle(new CheckInTestingEventRegistrationCommand(registered.Value.Id), default);
+
+        var result = await handler.Handle(new AssignTestingProjectToTesterCommand(registered.Value.Id, application.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetTesterEligibility_ShouldExcludeCollaboratorsAndTeamMembersButKeepReadOnlyGrants()
+    {
+        var (testingEvent, slot) = AddScheduledEventAndSlot(TestingEventMode.InPerson, 3, true);
+        var application = AddApprovedApplication(testingEvent, slot);
+        _context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = application.ProjectId,
+            UserId = _testerOneId,
+            Role = ProjectRoles.Viewer,
+            Permissions = "Read",
+            IsActive = true
+        });
+        var team = new Team { Name = "Project team", IsActive = true };
+        _context.Set<Team>().Add(team);
+        _context.Set<TeamMember>().Add(new TeamMember
+        {
+            TeamId = team.Id,
+            UserId = _testerTwoId,
+            IsActive = true
+        });
+        _context.Set<ProjectTeam>().Add(new ProjectTeam
+        {
+            ProjectId = application.ProjectId,
+            TeamId = team.Id,
+            IsActive = true,
+            Permissions = "Read"
+        });
+        _context.Set<GameGuild.Identity.Authorization.ResourceUserPermission>().Add(new()
+        {
+            TenantId = new GameGuild.CQRS.Models.TenantId(_tenantId),
+            UserId = _testerThreeId,
+            ResourceType = nameof(Project),
+            ResourceId = application.ProjectId.ToString(),
+            Permissions = ["Read"],
+            GrantedByUserId = _managerId
+        });
+        await _context.SaveChangesAsync();
+
+        var result = await CreateApplicationHandler().Handle(
+            new GetTestingApplicationTesterEligibilityQuery(
+                testingEvent.Id,
+                [_testerOneId, _testerTwoId, _testerThreeId]),
+            default);
+
+        result.IsSuccess.Should().BeTrue(result.IsFailure ? result.Error.Description : string.Empty);
+        result.Value.Single(item => item.TesterUserId == _testerOneId).EligibleApplicationIds.Should().BeEmpty();
+        result.Value.Single(item => item.TesterUserId == _testerTwoId).EligibleApplicationIds.Should().BeEmpty();
+        result.Value.Single(item => item.TesterUserId == _testerThreeId).EligibleApplicationIds.Should().Equal(application.Id);
+    }
+
+    [Fact]
     public async Task SubmitFeedback_ShouldFulfillObligation_AndAllowParticipationCompletion()
     {
         var (testingEvent, slot) = AddScheduledEventAndSlot(
@@ -282,6 +411,32 @@ public sealed class TestingEventParticipationTests : IDisposable
         _actorAccessor,
         NullLogger<TestingParticipationHandlers>.Instance);
 
+    private TestingApplicationHandlers CreateApplicationHandler() => new(
+        _context,
+        _actorAccessor,
+        new ProjectAuthorizationService(_context, _actorAccessor),
+        NullLogger<TestingApplicationHandlers>.Instance);
+
+    private async Task AssignAndAssertProjectTesterConflict(
+        TestingProjectApplication application,
+        TestingEventSlot slot)
+    {
+        await _context.SaveChangesAsync();
+        var handler = CreateHandler();
+        SetActor(_testerOneId);
+        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        SetActor(_managerId);
+        await handler.Handle(new CheckInTestingEventRegistrationCommand(registered.Value.Id), default);
+
+        var result = await handler.Handle(
+            new AssignTestingProjectToTesterCommand(registered.Value.Id, application.Id),
+            default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("TestingLab.ProjectTesterConflict");
+        (await _context.TestingFeedbackObligations.CountAsync()).Should().Be(0);
+    }
+
     private (TestingEvent Event, TestingEventSlot Slot) AddScheduledEventAndSlot(
         TestingEventMode mode,
         int? maxTesters,
@@ -317,7 +472,8 @@ public sealed class TestingEventParticipationTests : IDisposable
 
     private TestingProjectApplication AddApprovedApplication(
         TestingEvent testingEvent,
-        TestingEventSlot slot)
+        TestingEventSlot slot,
+        Guid? projectCreatorId = null)
     {
         var project = new Project
         {
@@ -326,7 +482,7 @@ public sealed class TestingEventParticipationTests : IDisposable
             Slug = $"project-{Guid.NewGuid():N}",
             Status = ContentStatus.Draft,
             Visibility = ContentVisibility.Private,
-            CreatedById = _managerId
+            CreatedById = projectCreatorId ?? _managerId
         };
         var application = TestingProjectApplication.Submit(
             testingEvent.Id,
@@ -372,6 +528,11 @@ public sealed class TestingEventParticipationTests : IDisposable
         public DbSet<TestingFeedbackObligation> TestingFeedbackObligations => Set<TestingFeedbackObligation>();
         public DbSet<TestingFeedback> TestingFeedback => Set<TestingFeedback>();
         public DbSet<Project> Projects => Set<Project>();
+        public DbSet<ProjectCollaborator> ProjectCollaborators => Set<ProjectCollaborator>();
+        public DbSet<ProjectTeam> ProjectTeams => Set<ProjectTeam>();
+        public DbSet<Team> Teams => Set<Team>();
+        public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
+        public DbSet<GameGuild.Identity.Authorization.ResourceUserPermission> ResourceUserPermissions => Set<GameGuild.Identity.Authorization.ResourceUserPermission>();
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException();

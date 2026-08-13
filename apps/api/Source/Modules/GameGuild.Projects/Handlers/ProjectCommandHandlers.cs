@@ -32,17 +32,21 @@ public sealed class ProjectCommandHandlers
 
   private readonly IProjectLifecycleCoordinator _lifecycleCoordinator;
 
+  private readonly IProjectAuthorizationService _authorizationService;
+
   public ProjectCommandHandlers(
     IApplicationDbContext context,
     IActorContextAccessor actorContextAccessor,
     ILogger<ProjectCommandHandlers> logger,
-    IProjectLifecycleCoordinator? lifecycleCoordinator = null) {
+    IProjectLifecycleCoordinator? lifecycleCoordinator = null,
+    IProjectAuthorizationService? authorizationService = null) {
     _context = context;
     _actorContextAccessor = actorContextAccessor;
     _logger = logger;
     _lifecycleCoordinator = lifecycleCoordinator ?? new ProjectLifecycleCoordinator(
       context,
       [new ProjectStoreProductLifecycleParticipant(context)]);
+    _authorizationService = authorizationService ?? new ProjectAuthorizationService(context, actorContextAccessor);
   }
 
   private ActorContext Actor => _actorContextAccessor.ActorContext;
@@ -124,12 +128,8 @@ public sealed class ProjectCommandHandlers
       return Result.Failure<Project>(Error.NotFound("Project.NotFound", $"Project with ID {request.ProjectId} was not found"));
     }
 
-    // Check authorization - user must have edit permissions
-    var hasEditPermission = project.Collaborators.Any(c =>
-      c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Edit.ToString()));
-
-    if (!hasEditPermission) {
-      return Result.Failure<Project>(Error.Forbidden("Project.Forbidden", "Unauthorized to update this project"));
+    if (!await _authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false)) {
+      return Result.Failure<Project>(Error.NotFound("Project.NotFound", "Project not found"));
     }
 
     // Update fields
@@ -166,12 +166,8 @@ public sealed class ProjectCommandHandlers
       return Result.Failure<bool>(Error.NotFound("Project.NotFound", $"Project with ID {request.ProjectId} was not found"));
     }
 
-    // Check authorization - user must have delete permissions
-    var hasDeletePermission = project.Collaborators.Any(c =>
-      c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Delete.ToString()));
-
-    if (!hasDeletePermission) {
-      return Result.Failure<bool>(Error.Forbidden("Project.Forbidden", "Unauthorized to delete this project"));
+    if (!await _authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Delete, cancellationToken).ConfigureAwait(false)) {
+      return Result.Failure<bool>(Error.NotFound("Project.NotFound", "Project not found"));
     }
 
     if (!await _lifecycleCoordinator.DeleteAsync(request.ProjectId, request.SoftDelete, cancellationToken).ConfigureAwait(false))
@@ -192,12 +188,8 @@ public sealed class ProjectCommandHandlers
       return Result.Failure<Project>(Error.NotFound("Project.NotFound", $"Project with ID {request.ProjectId} was not found"));
     }
 
-    // Check authorization - user must have publish permissions
-    var hasPublishPermission = project.Collaborators.Any(c =>
-      c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Publish.ToString()));
-
-    if (!hasPublishPermission) {
-      return Result.Failure<Project>(Error.Forbidden("Project.Forbidden", "Unauthorized to publish this project"));
+    if (!await _authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Publish, cancellationToken).ConfigureAwait(false)) {
+      return Result.Failure<Project>(Error.NotFound("Project.NotFound", "Project not found"));
     }
 
     project.Status = ContentStatus.Published;
@@ -218,12 +210,8 @@ public sealed class ProjectCommandHandlers
       return Result.Failure<Project>(Error.NotFound("Project.NotFound", $"Project with ID {request.ProjectId} was not found"));
     }
 
-    // Check authorization - user must have unpublish permissions
-    var hasUnpublishPermission = project.Collaborators.Any(c =>
-      c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Unpublish.ToString()));
-
-    if (!hasUnpublishPermission) {
-      return Result.Failure<Project>(Error.Forbidden("Project.Forbidden", "Unauthorized to unpublish this project"));
+    if (!await _authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Unpublish, cancellationToken).ConfigureAwait(false)) {
+      return Result.Failure<Project>(Error.NotFound("Project.NotFound", "Project not found"));
     }
 
     project.Status = ContentStatus.Draft;
@@ -244,12 +232,8 @@ public sealed class ProjectCommandHandlers
       return Result.Failure<Project>(Error.NotFound("Project.NotFound", $"Project with ID {request.ProjectId} was not found"));
     }
 
-    // Check authorization - user must have archive permissions
-    var hasArchivePermission = project.Collaborators.Any(c =>
-      c.UserId == UserId && c.IsActive && c.Permissions.Contains(PermissionType.Archive.ToString()));
-
-    if (!hasArchivePermission) {
-      return Result.Failure<Project>(Error.Forbidden("Project.Forbidden", "Unauthorized to archive this project"));
+    if (!await _authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Archive, cancellationToken).ConfigureAwait(false)) {
+      return Result.Failure<Project>(Error.NotFound("Project.NotFound", "Project not found"));
     }
 
     project.Status = ContentStatus.Archived;

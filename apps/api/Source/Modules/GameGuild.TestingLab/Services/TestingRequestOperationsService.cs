@@ -263,15 +263,14 @@ public class TestingRequestOperationsService(
             throw new InvalidOperationException("Testing Lab submissions must be linked to an existing project.");
 
         var projectId = existingProject.Id;
+        if (!await authorizationService.HasPermissionAsync(projectId, PermissionType.Edit).ConfigureAwait(false))
+            throw new KeyNotFoundException("Project not found.");
         await using var lockHandle = await _lifecycleLock.AcquireAsync(projectId).ConfigureAwait(false);
         var availability = await availabilityService
             .GetAsync(projectId, ProjectChannel.TestingLab, actor.TenantId)
             .ConfigureAwait(false);
         if (!availability.IsAvailable)
             throw new InvalidOperationException(availability.Reason);
-        if (!await authorizationService.HasPermissionAsync(projectId, PermissionType.Edit).ConfigureAwait(false))
-            throw new UnauthorizedAccessException("Project Edit permission is required for Testing Lab submissions.");
-
         var projectVersion = await context.Set<GameGuild.Projects.ProjectVersion>()
             .FirstOrDefaultAsync(version =>
                 version.ProjectId == projectId &&
@@ -388,14 +387,14 @@ public class TestingRequestOperationsService(
             if (!versionIsActive)
                 throw new InvalidOperationException("Testing requests must reference an active project version in the current tenant.");
 
+            if (!await authorizationService.HasPermissionAsync(projectId, PermissionType.Edit).ConfigureAwait(false))
+                throw new KeyNotFoundException("Project not found.");
+
             var availability = await availabilityService
                 .GetAsync(projectId, ProjectChannel.TestingLab, tenantId)
                 .ConfigureAwait(false);
             if (!availability.IsAvailable)
                 throw new InvalidOperationException(availability.Reason);
-            if (!await authorizationService.HasPermissionAsync(projectId, PermissionType.Edit).ConfigureAwait(false))
-                throw new UnauthorizedAccessException("Project Edit permission is required for Testing Lab submissions.");
-
             return lockHandle;
         }
         catch

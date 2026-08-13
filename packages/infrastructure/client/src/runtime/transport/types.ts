@@ -12,6 +12,8 @@ import type { ApiError } from '../errors/types.js';
  */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
 
+export type QueryParameter = string | number | boolean | undefined;
+
 /**
  * Request configuration
  */
@@ -21,7 +23,7 @@ export interface RequestConfig {
   /** URL path (may include path parameters) */
   path: string;
   /** Query parameters */
-  params?: Record<string, string | number | boolean | undefined>;
+  params?: Record<string, QueryParameter | QueryParameter[]>;
   /** Request body (will be JSON serialized) */
   body?: unknown;
   /** Additional headers */

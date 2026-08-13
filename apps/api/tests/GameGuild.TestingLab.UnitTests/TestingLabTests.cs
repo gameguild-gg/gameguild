@@ -299,13 +299,13 @@ public sealed class TestingRequestsControllerAuthorizationTests
     }
 
     [Fact]
-    public async Task SubmitSimpleTestingRequest_Should_Return_Forbidden_When_Project_Authorization_Is_Denied()
+    public async Task SubmitSimpleTestingRequest_Should_Return_NotFound_When_Project_Authorization_Is_Denied()
     {
         var userId = Guid.NewGuid();
         var requestService = new Mock<ITestingRequestOperations>();
         requestService
             .Setup(service => service.CreateSimpleTestingRequestAsync(It.IsAny<CreateSimpleTestingRequestDto>(), userId))
-            .ThrowsAsync(new UnauthorizedAccessException("Project Edit permission is required."));
+            .ThrowsAsync(new KeyNotFoundException("Project not found."));
         var actorAccessor = new ActorContextAccessor();
         actorAccessor.SetActorContext(ActorContextBuilder.ForUser(userId).WithTenantId(Guid.NewGuid()).Build());
         var controller = new TestingRequestsController(
@@ -323,7 +323,7 @@ public sealed class TestingRequestsControllerAuthorizationTests
             InstructionsType = InstructionType.Text
         });
 
-        result.Result.Should().BeOfType<ForbidResult>();
+        result.Result.Should().BeOfType<NotFoundResult>();
     }
 }
 
@@ -768,7 +768,7 @@ public class TestingRequestOperationsServiceTests
 
         var act = () => service.RestoreTestingRequestAsync(request.Id);
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await act.Should().ThrowAsync<KeyNotFoundException>();
         request.DeletedAt.Should().NotBeNull();
     }
 
@@ -1102,7 +1102,7 @@ public class TestingRequestOperationsServiceTests
 
         await crossTenantAct.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Testing Lab submissions must be linked to an existing project.");
-        await unauthorizedAct.Should().ThrowAsync<UnauthorizedAccessException>();
+        await unauthorizedAct.Should().ThrowAsync<KeyNotFoundException>();
     }
 
     [Fact]
@@ -1126,7 +1126,7 @@ public class TestingRequestOperationsServiceTests
 
         var act = () => service.CreateSimpleTestingRequestAsync(CreateRequestDto(project.Id), userId);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<KeyNotFoundException>();
     }
 
     private static (IActorContextAccessor ActorAccessor, TestingRequestOperationsService Service) CreateRequestService(
@@ -1271,6 +1271,8 @@ public class TestingRequestOperationsServiceTests
         public DbSet<User> Users => Set<User>();
 
         public DbSet<TenantMember> TenantMembers => Set<TenantMember>();
+
+        public DbSet<GameGuild.Identity.Authorization.ResourceUserPermission> ResourceUserPermissions => Set<GameGuild.Identity.Authorization.ResourceUserPermission>();
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException("Transactions are not required for this service regression.");

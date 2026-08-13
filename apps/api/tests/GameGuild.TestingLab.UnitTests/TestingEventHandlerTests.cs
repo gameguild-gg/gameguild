@@ -135,7 +135,7 @@ public sealed class TestingEventHandlerTests : IDisposable
             default);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Type.Should().Be(ErrorType.Forbidden);
+        result.Error.Type.Should().Be(ErrorType.NotFound);
     }
 
     [Fact]
@@ -318,6 +318,32 @@ public sealed class TestingEventHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task RequestDetailQuery_ReturnsArchivedRequestAsReadOnlyProjection()
+    {
+        var testingRequest = new TestingRequest
+        {
+            TenantId = _tenantId,
+            CreatedById = _managerId,
+            Title = "Archived request",
+            StartDate = SystemClock.UtcNow,
+            EndDate = SystemClock.UtcNow.AddDays(1),
+            Status = TestingRequestStatus.Completed,
+            InstructionsType = InstructionType.Text,
+            Version = 1,
+        };
+        testingRequest.SoftDelete();
+        _context.Add(testingRequest);
+        await _context.SaveChangesAsync();
+
+        var result = await new TestingRequestDetailQueryHandler(_context, _actorAccessor)
+            .Handle(new GetTestingRequestDetailQuery(testingRequest.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Id.Should().Be(testingRequest.Id);
+        result.Value.IsDeleted.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task CreateAndListSlots_UsesEventScheduleAndTenant()
     {
         var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
@@ -366,14 +392,16 @@ public sealed class TestingEventHandlerTests : IDisposable
         result.Error.Type.Should().Be(ErrorType.Forbidden);
     }
 
-    [Fact]
-    public async Task SystemAdmin_CanReviewAndManageAnEventOwnedByAnotherMember()
+    [Theory]
+    [InlineData("SystemAdmin")]
+    [InlineData("TenantAdmin")]
+    public async Task Administrators_CanReviewAndManageAnEventOwnedByAnotherMember(string role)
     {
         var systemAdminId = Guid.NewGuid();
         AddActor(systemAdminId, TenantRole.Member);
         var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
         await _context.SaveChangesAsync();
-        SetActor(systemAdminId, "SystemAdmin");
+        SetActor(systemAdminId, role);
 
         var applications = await CreateApplicationHandler().Handle(
             new GetTestingEventApplicationsQuery(testingEvent.Id),
@@ -649,6 +677,7 @@ public sealed class TestingEventHandlerTests : IDisposable
         public DbSet<Project> Projects => Set<Project>();
         public DbSet<ProjectVersion> ProjectVersions => Set<ProjectVersion>();
         public DbSet<ProjectCollaborator> ProjectCollaborators => Set<ProjectCollaborator>();
+        public DbSet<GameGuild.Identity.Authorization.ResourceUserPermission> ResourceUserPermissions => Set<GameGuild.Identity.Authorization.ResourceUserPermission>();
         public DbSet<TestingEvent> TestingEvents => Set<TestingEvent>();
         public DbSet<TestingEventSlot> TestingEventSlots => Set<TestingEventSlot>();
         public DbSet<TestingProjectApplication> TestingProjectApplications => Set<TestingProjectApplication>();

@@ -1221,6 +1221,7 @@ export async function createAssessment(
     const resolvedCourseId = await resolveCourseMutationId(courseId);
     const body: LearningAssessmentsCreateAssessmentInput & {
       assessmentGroupId?: string | null;
+      passingScore?: number | null;
     } = {
       courseId: resolvedCourseId,
       title: title.trim(),
@@ -1423,6 +1424,7 @@ export async function updateAssessment(
     const body: LearningAssessmentsUpdateAssessmentInput & {
       assessmentGroupId?: string | null;
       clearAssessmentGroupId?: boolean;
+      passingScore?: number | null;
     } = {
       title: fields.title?.trim() ?? null,
       description: fields.description?.trim() ?? null,

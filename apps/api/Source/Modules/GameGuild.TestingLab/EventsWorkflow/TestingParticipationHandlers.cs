@@ -12,7 +12,8 @@ public sealed class TestingParticipationHandlers(
     IActorContextAccessor actorContextAccessor,
     ILogger<TestingParticipationHandlers> logger,
     IProjectLifecycleLock? capacityLock = null,
-    IPublisher? publisher = null) :
+    IPublisher? publisher = null,
+    ITestingLabPermissionService? testingLabPermissionService = null) :
     ICommandHandler<RegisterTestingEventSlotCommand, Result<TestingSlotRegistrationProjection>>,
     ICommandHandler<CancelTestingEventSlotRegistrationCommand, Result<TestingSlotRegistrationProjection>>,
     ICommandHandler<CheckInTestingEventRegistrationCommand, Result<TestingSlotRegistrationProjection>>,
@@ -27,7 +28,7 @@ public sealed class TestingParticipationHandlers(
     IQueryHandler<GetMyTestingFeedbackObligationsQuery, Result<IReadOnlyList<TestingFeedbackObligationProjection>>>,
     IQueryHandler<GetTestingEventFeedbackQuery, Result<IReadOnlyList<TestingEventFeedbackReviewProjection>>>
 {
-    private bool IsSystemAdmin => actorContextAccessor.ActorContext.IsSystemAdmin;
+    private bool IsTenantAdmin => actorContextAccessor.ActorContext.IsTenantAdmin;
 
     private static readonly TestingSlotRegistrationStatus[] CapacityStatuses =
     [
@@ -122,7 +123,12 @@ public sealed class TestingParticipationHandlers(
     {
         var loaded = await LoadRegistrationAsync(request.RegistrationId, cancellationToken).ConfigureAwait(false);
         if (loaded.Error != null) return Result.Failure<TestingSlotRegistrationProjection>(loaded.Error);
-        var managerOverride = loaded.Registration!.Event.ManagerUserId == loaded.Actor!.UserId || IsSystemAdmin;
+        var managerOverride = loaded.Registration!.Event.ManagerUserId == loaded.Actor!.UserId ||
+                              IsTenantAdmin ||
+                              await HasTestingLabPermissionAsync(
+                                  loaded.Actor,
+                                  TestingLabActions.Manage,
+                                  TestingLabResourceTypes.Participant).ConfigureAwait(false);
         if (!managerOverride && loaded.Registration.UserId != loaded.Actor.UserId)
             return Result.Failure<TestingSlotRegistrationProjection>(
                 Error.Forbidden("TestingLab.RegistrationOwnerRequired", "Only the tester or event manager can cancel this registration."));
@@ -185,6 +191,43 @@ public sealed class TestingParticipationHandlers(
         if (application == null)
             return Result.Failure<TestingFeedbackObligationProjection>(
                 Error.NotFound("TestingLab.ApprovedApplicationNotFound", "An approved project application was not found in this slot."));
+
+        var testerUserId = loaded.Registration.UserId;
+        var actorTenantId = loaded.Actor!.TenantId;
+        var ownsOrCollaborates = await context.Set<Project>()
+            .AsNoTracking()
+            .AnyAsync(project =>
+                project.Id == application.ProjectId &&
+                project.TenantId == actorTenantId &&
+                project.DeletedAt == null &&
+                (project.CreatedById == testerUserId ||
+                 context.Set<ProjectCollaborator>().Any(collaborator =>
+                     collaborator.ProjectId == project.Id &&
+                     collaborator.UserId == testerUserId &&
+                     collaborator.IsActive &&
+                     collaborator.DeletedAt == null &&
+                     collaborator.LeftAt == null) ||
+                 context.Set<ProjectTeam>().Any(projectTeam =>
+                     projectTeam.ProjectId == project.Id &&
+                     projectTeam.IsActive &&
+                     projectTeam.DeletedAt == null &&
+                     projectTeam.EndedAt == null &&
+                     context.Set<Team>().Any(team =>
+                         team.Id == projectTeam.TeamId &&
+                         team.IsActive &&
+                         team.DeletedAt == null) &&
+                     context.Set<TeamMember>().Any(member =>
+                         member.TeamId == projectTeam.TeamId &&
+                         member.UserId == testerUserId &&
+                         member.IsActive &&
+                         member.DeletedAt == null))),
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (ownsOrCollaborates)
+            return Result.Failure<TestingFeedbackObligationProjection>(
+                Error.Conflict(
+                    "TestingLab.ProjectTesterConflict",
+                    "A project owner or active team member cannot test their own project."));
 
         var existing = await context.Set<TestingFeedbackObligation>()
             .FirstOrDefaultAsync(candidate =>
@@ -279,7 +322,7 @@ public sealed class TestingParticipationHandlers(
         if (loaded.Error != null) return Result.Failure<TestingSlotRegistrationProjection>(loaded.Error);
         if (loaded.Registration!.UserId != loaded.Actor!.UserId &&
             loaded.Registration.Event.ManagerUserId != loaded.Actor.UserId &&
-            !IsSystemAdmin)
+            !IsTenantAdmin)
             return Result.Failure<TestingSlotRegistrationProjection>(
                 Error.Forbidden("TestingLab.RegistrationOwnerRequired", "Only the tester or event manager can complete participation."));
         var pending = await context.Set<TestingFeedbackObligation>().AnyAsync(candidate =>
@@ -331,7 +374,11 @@ public sealed class TestingParticipationHandlers(
         if (slot == null)
             return Result.Failure<IReadOnlyList<TestingSlotRegistrationProjection>>(
                 Error.NotFound("TestingLab.EventSlotNotFound", "Testing event slot not found."));
-        if (slot.Event.ManagerUserId != actor.UserId && !IsSystemAdmin)
+        var canManageParticipants = await HasTestingLabPermissionAsync(
+            actor,
+            TestingLabActions.Manage,
+            TestingLabResourceTypes.Participant).ConfigureAwait(false);
+        if (slot.Event.ManagerUserId != actor.UserId && !IsTenantAdmin && !canManageParticipants)
             return Result.Failure<IReadOnlyList<TestingSlotRegistrationProjection>>(
                 Error.Forbidden("TestingLab.EventManagerRequired", "Only the event manager can list slot registrations."));
 
@@ -372,6 +419,16 @@ public sealed class TestingParticipationHandlers(
                 registration.Event.DeletedAt == null &&
                 registration.Slot.DeletedAt == null &&
                 registration.User.DeletedAt == null);
+
+        var canReadAllParticipants = IsTenantAdmin || await HasTestingLabPermissionAsync(
+            actor,
+            TestingLabActions.Read,
+            TestingLabResourceTypes.Participant).ConfigureAwait(false);
+        if (!canReadAllParticipants)
+        {
+            var actorId = actor.UserId;
+            query = query.Where(registration => registration.Event.ManagerUserId == actorId);
+        }
 
         var search = request.Search?.Trim().ToLowerInvariant();
         if (!string.IsNullOrWhiteSpace(search))
@@ -506,7 +563,11 @@ public sealed class TestingParticipationHandlers(
         if (testingEvent == null)
             return Result.Failure<IReadOnlyList<TestingEventFeedbackReviewProjection>>(
                 Error.NotFound("TestingLab.EventNotFound", "Testing event not found."));
-        if (testingEvent.ManagerUserId != actor.UserId && !IsSystemAdmin)
+        var canReadFeedback = await HasTestingLabPermissionAsync(
+            actor,
+            TestingLabActions.Read,
+            TestingLabResourceTypes.Feedback).ConfigureAwait(false);
+        if (testingEvent.ManagerUserId != actor.UserId && !IsTenantAdmin && !canReadFeedback)
             return Result.Failure<IReadOnlyList<TestingEventFeedbackReviewProjection>>(
                 Error.Forbidden(
                     "TestingLab.EventManagerRequired",
@@ -641,10 +702,26 @@ public sealed class TestingParticipationHandlers(
     {
         var loaded = await LoadRegistrationAsync(registrationId, cancellationToken).ConfigureAwait(false);
         if (loaded.Error != null) return loaded;
-        return loaded.Registration!.Event.ManagerUserId == loaded.Actor!.UserId || IsSystemAdmin
+        var canManageParticipants = await HasTestingLabPermissionAsync(
+            loaded.Actor!,
+            TestingLabActions.Manage,
+            TestingLabResourceTypes.Participant).ConfigureAwait(false);
+        return loaded.Registration!.Event.ManagerUserId == loaded.Actor!.UserId || IsTenantAdmin || canManageParticipants
             ? loaded
             : new(null, null, Error.Forbidden("TestingLab.EventManagerRequired", "Only the event manager can manage attendance."));
     }
+
+    private Task<bool> HasTestingLabPermissionAsync(
+        ActorScope actor,
+        string action,
+        string resourceType,
+        Guid? resourceId = null)
+        => testingLabPermissionService?.HasPermissionAsync(
+               actor.UserId,
+               actor.TenantId,
+               action,
+               resourceType,
+               resourceId) ?? Task.FromResult(false);
 
     private async Task<ActorScope> RequireActorAsync(CancellationToken cancellationToken)
     {

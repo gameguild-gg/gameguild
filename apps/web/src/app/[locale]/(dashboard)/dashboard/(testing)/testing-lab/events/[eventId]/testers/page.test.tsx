@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getTestingEventWorkspaceData: vi.fn(),
+  getTestingApplicationTesterEligibility: vi.fn(),
   getMembers: vi.fn(),
   getTestingProjectOptions: vi.fn(),
 }));
@@ -14,6 +15,7 @@ vi.mock('next/navigation', async (importOriginal) => ({
 
 vi.mock('@/lib/testing-lab/events-queries', () => ({
   getTestingEventWorkspaceData: mocks.getTestingEventWorkspaceData,
+  getTestingApplicationTesterEligibility: mocks.getTestingApplicationTesterEligibility,
 }));
 
 vi.mock('@/lib/community/queries/members', () => ({
@@ -88,6 +90,13 @@ describe('Testing Event testers', () => {
       total: 2,
     });
     mocks.getTestingProjectOptions.mockResolvedValue([{ id: 'project-1', title: 'Asterion' }]);
+    mocks.getTestingApplicationTesterEligibility.mockResolvedValue({
+      eligibility: [
+        { testerUserId: 'tester-1', eligibleApplicationIds: ['application-1'] },
+        { testerUserId: 'tester-2', eligibleApplicationIds: [] },
+      ],
+      accessIssues: [],
+    });
 
     render(
       await TestingEventTestersPage({
@@ -103,5 +112,9 @@ describe('Testing Event testers', () => {
     expect(screen.getAllByText('1 registered')).toHaveLength(2);
     expect(screen.getByText('0 pending feedback / Cancelled')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Update' })).toHaveLength(2);
+    expect(mocks.getTestingApplicationTesterEligibility).toHaveBeenCalledWith(
+      'event-1',
+      ['tester-1', 'tester-2'],
+    );
   });
 });

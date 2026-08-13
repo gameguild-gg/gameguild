@@ -39,6 +39,10 @@ import {
   LexicalSurfaceAdaptersProvider,
   type LexicalSurfaceAdapters,
 } from "./adapters";
+import {
+  resolveLexicalSurfaceFeatures,
+  type LexicalSurfaceFeatures,
+} from "./features";
 
 import { SHARED_LEXICAL_NODES } from "./lexical/shared-lexical-config";
 import {
@@ -86,60 +90,7 @@ import {
   type PageSettings,
 } from "./page";
 
-export type LexicalSurfaceFeatures = {
-  /** Top toolbar (block format, font, color, alignment, …). Default: true */
-  toolbar?: boolean;
-  /** Bubble toolbar over selected text. Default: true */
-  floatingTextFormat?: boolean;
-  /** Bubble link editor when cursor is on a `LinkNode`. Default: true */
-  floatingLinkEditor?: boolean;
-  /** Drag handle on the left margin of every block. Default: true */
-  draggable?: boolean;
-  /** Native playground `/` slash menu (paragraph, headings, lists, …). Default: true */
-  picker?: boolean;
-  /** Apply page-size/margin/orientation from the toolbar to the editable area. Default: true */
-  pageLayout?: boolean;
-  /** Keyboard shortcuts (Ctrl+\\, Ctrl+Shift+1/2/3, Alt+Shift+1..3, etc.). Default: true */
-  shortcuts?: boolean;
-  /** KaTeX equations via `INSERT_EQUATION_COMMAND` + `/Equation` picker item. Default: true */
-  equation?: boolean;
-  /** Excalidraw drawings via `INSERT_EXCALIDRAW_COMMAND` + `/Excalidraw` picker item. Default: true */
-  excalidraw?: boolean;
-  /** Emoji picker via `:` typeahead trigger. Default: true */
-  emoji?: boolean;
-  /** Auto-embed YouTube/X/Figma URLs. Default: true */
-  autoEmbed?: boolean;
-  /** Right-click context menu (cut/copy/paste/delete). Default: true */
-  contextMenu?: boolean;
-  /** Floating menu on hovered code blocks (lang + copy). Default: true */
-  codeAction?: boolean;
-  /** Tables (`@lexical/table`) + `/Table` picker item. Default: true */
-  table?: boolean;
-  /** Columns Layout via `INSERT_LAYOUT_COMMAND` + +Insert dialog. Default: true */
-  layout?: boolean;
-  /** Collapsible container via `INSERT_COLLAPSIBLE_COMMAND` + +Insert item. Default: true */
-  collapsible?: boolean;
-  /** Sticky notes. Default: true */
-  sticky?: boolean;
-  /** Admonition callouts. Default: true */
-  admonition?: boolean;
-  /** Styled action buttons. Default: true */
-  button?: boolean;
-  /** Configurable section divider. Default: true */
-  divider?: boolean;
-  /** Mermaid diagrams. Default: true */
-  mermaid?: boolean;
-  /** Vega-Lite charts. Default: true */
-  vegaLite?: boolean;
-  /** Media block (Image, Video, Audio, Gallery). Default: true */
-  media?: boolean;
-  /** Lexical built-ins. Defaults: true */
-  history?: boolean;
-  list?: boolean;
-  link?: boolean;
-  checkList?: boolean;
-  tabIndentation?: boolean;
-};
+export type { LexicalSurfaceFeatures } from "./features";
 
 export interface LexicalSurfaceProps {
   initialState?: SerializedEditorState | null;
@@ -173,54 +124,6 @@ export interface LexicalSurfaceProps {
   initialPageSettings?: PageSettings;
   /** Host integrations for asset-backed media and advanced diagram authoring. */
   adapters?: LexicalSurfaceAdapters;
-}
-
-const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
-  toolbar: true,
-  floatingTextFormat: true,
-  floatingLinkEditor: true,
-  draggable: true,
-  picker: true,
-  pageLayout: true,
-  shortcuts: true,
-  equation: true,
-  excalidraw: true,
-  emoji: true,
-  autoEmbed: true,
-  contextMenu: true,
-  codeAction: true,
-  table: true,
-  layout: true,
-  collapsible: true,
-  sticky: true,
-  admonition: true,
-  button: true,
-  divider: true,
-  mermaid: true,
-  vegaLite: true,
-  media: true,
-  history: true,
-  list: true,
-  link: true,
-  checkList: true,
-  tabIndentation: true,
-};
-
-function resolveFeatures(
-  features: LexicalSurfaceFeatures | undefined,
-  readOnly: boolean,
-): Required<LexicalSurfaceFeatures> {
-  const merged = { ...DEFAULT_FEATURES, ...features };
-  if (readOnly) {
-    // In read-only mode, hard-disable every interactive plugin.
-    merged.toolbar = false;
-    merged.floatingTextFormat = false;
-    merged.floatingLinkEditor = false;
-    merged.draggable = false;
-    merged.picker = false;
-    merged.history = false;
-  }
-  return merged;
 }
 
 // ─── Inner editor body ──────────────────────────────────────────────────────
@@ -296,9 +199,7 @@ function EditorBody({
               activeEditor={activeEditor}
               setActiveEditor={setActiveEditor}
               setIsLinkEditMode={setIsLinkEditMode}
-              features={{
-                pageLayout: features.pageLayout,
-              }}
+              features={features}
             />
           );
           return toolbarWrapper ? toolbarWrapper(toolbarNode) : toolbarNode;
@@ -369,7 +270,7 @@ function EditorBody({
         {features.checkList && <CheckListPlugin />}
         {features.link && <LinkPlugin />}
         {features.tabIndentation && <TabIndentationPlugin />}
-        {features.picker && <ComponentPickerPlugin />}
+        {features.picker && <ComponentPickerPlugin features={features} />}
         {features.shortcuts && (
           <ShortcutsPlugin setIsLinkEditMode={setIsLinkEditMode} />
         )}
@@ -453,7 +354,7 @@ export function LexicalSurface({
   adapters,
 }: LexicalSurfaceProps) {
   const resolvedFeatures = useMemo(
-    () => resolveFeatures(features, readOnly),
+    () => resolveLexicalSurfaceFeatures(features, readOnly),
     [features, readOnly],
   );
   // Re-mount when caller passes a new `mountKey` (e.g. external state reset).
