@@ -56,6 +56,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "cdn.gameguild.gg",
+      },
+      {
+        protocol: "https",
         hostname: "www.python.org",
       },
     ],

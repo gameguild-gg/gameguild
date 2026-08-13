@@ -1,9 +1,11 @@
 import { render, screen, within } from '@testing-library/react';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { authMock } = vi.hoisted(() => ({
+const { authMock, getPublishedProjectsMock, getVisibleProjectMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
+  getPublishedProjectsMock: vi.fn(),
+  getVisibleProjectMock: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
@@ -27,6 +29,11 @@ vi.mock('@/i18n', () => ({
   ),
 }));
 
+vi.mock('@/lib/projects/public-projects', () => ({
+  getPublishedProjects: getPublishedProjectsMock,
+  getVisibleProject: getVisibleProjectMock,
+}));
+
 import { PublicWebsiteHeader } from '@/components/site/public-website-shell';
 import CommunityPage from './[locale]/(community)/community/page';
 import JobsPage from './[locale]/(contents)/(jobs)/jobs/page';
@@ -36,7 +43,35 @@ import ProjectDetailPage from './[locale]/(contents)/(projects)/projects/[projec
 import TestingLabPage from './[locale]/(contents)/(testing-lab)/testing-lab/page';
 import HomePage from './[locale]/(site)/page';
 
+const publishedProject = {
+  slug: 'real-api-project',
+  title: 'Real API Project',
+  creator: 'Ada Builder',
+  creatorRole: 'Game creator',
+  summary: 'A real published project returned by the Projects API.',
+  description: 'This project is rendered from the tenant-scoped Projects API instead of static showcase data.',
+  status: 'Published',
+  tags: ['API', 'Testing Lab'],
+  coursePath: 'Independent project',
+  accent: 'from-sky-400/30 via-cyan-300/10 to-slate-950',
+  previewImage: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1400&h=900&fit=crop',
+  buildType: 'Game',
+  feedbackGoal: 'Validate the public project route.',
+  metrics: [
+    { label: 'Releases', value: '1' },
+    { label: 'Followers', value: '2' },
+    { label: 'Feedback', value: '3' },
+  ],
+  media: [{ label: 'Latest release', detail: '1.0.0' }],
+};
+
 describe('public community website UX', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getPublishedProjectsMock.mockResolvedValue([publishedProject]);
+    getVisibleProjectMock.mockResolvedValue(publishedProject);
+  });
+
   it('exposes the learning-to-community information architecture in the header', async () => {
     authMock.mockResolvedValueOnce(null);
 
@@ -88,19 +123,29 @@ describe('public community website UX', () => {
     render(await ProjectsPage());
 
     expect(screen.getByRole('heading', { name: /project showcase/i })).toBeInTheDocument();
-    expect(screen.getByAltText(/skybound courier project preview/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/real api project project preview/i)).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /view project/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /submit to testing lab/i })).toBeInTheDocument();
+    expect(getPublishedProjectsMock).toHaveBeenCalledOnce();
   });
 
   it('renders project detail with creator, media, playtest status, and community CTAs', async () => {
-    render(await ProjectDetailPage({ params: Promise.resolve({ project: 'skybound-courier' }) }));
+    render(await ProjectDetailPage({ params: Promise.resolve({ project: 'real-api-project' }) }));
 
-    expect(screen.getByRole('heading', { name: /skybound courier/i })).toBeInTheDocument();
-    expect(screen.getByAltText(/skybound courier project preview/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /real api project/i })).toBeInTheDocument();
+    expect(screen.getByAltText(/real api project project preview/i)).toBeInTheDocument();
     expect(screen.getAllByText(/creator/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/playtest/i).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /join this playtest/i })).toBeInTheDocument();
+    expect(getVisibleProjectMock).toHaveBeenCalledWith('real-api-project');
+  });
+
+  it('returns not found when the Projects API hides an inaccessible slug', async () => {
+    getVisibleProjectMock.mockResolvedValueOnce(null);
+
+    await expect(
+      ProjectDetailPage({ params: Promise.resolve({ project: 'private-project' }) }),
+    ).rejects.toThrow('NEXT_HTTP_ERROR_FALLBACK;404');
   });
 
   it('renders the community hub and public testing lab entry', async () => {

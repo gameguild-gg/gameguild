@@ -1,10 +1,14 @@
 import { Link } from '@/i18n/navigation';
-import { publicProjects } from '@/lib/community/public-community';
+import { getPublishedProjects } from '@/lib/projects/public-projects';
 import { ArrowRight, FlaskConical, Search, Tags } from 'lucide-react';
 import Image from 'next/image';
 import React from 'react';
 
 export default async function Page(): Promise<React.JSX.Element> {
+  const publicProjects = await getPublishedProjects();
+  const reviewStates = new Set(publicProjects.map((project) => project.status)).size;
+  const feedbackSignals = publicProjects.reduce((total, project) => total + (project.feedbackCount ?? 0), 0);
+
   return (
     <main className="bg-slate-950 text-white">
       <section className="border-b border-white/10 bg-[radial-gradient(circle_at_20%_0%,rgba(56,189,248,0.16),transparent_34%),linear-gradient(180deg,#0f172a,#020617)]">
@@ -39,11 +43,11 @@ export default async function Page(): Promise<React.JSX.Element> {
               <p className="mt-1 text-sm text-slate-400">Showcase projects</p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-              <p className="text-3xl font-semibold">3</p>
+              <p className="text-3xl font-semibold">{reviewStates}</p>
               <p className="mt-1 text-sm text-slate-400">Review states</p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-              <p className="text-3xl font-semibold">25+</p>
+              <p className="text-3xl font-semibold">{feedbackSignals}</p>
               <p className="mt-1 text-sm text-slate-400">Feedback signals</p>
             </div>
           </div>
@@ -71,49 +75,56 @@ export default async function Page(): Promise<React.JSX.Element> {
           </div>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-3">
-          {publicProjects.map((project) => (
-            <article key={project.slug} className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70">
-              <Link href={`/projects/${project.slug}`} className="group block">
-                <div className="relative h-48 overflow-hidden">
-                  <Image
-                    src={project.previewImage}
-                    alt={`${project.title} project preview`}
-                    fill
-                    className="object-cover opacity-90 transition duration-500 group-hover:scale-105"
-                    sizes="(min-width: 1024px) 33vw, 100vw"
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${project.accent}`} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent" />
-                </div>
-              </Link>
-              <div className="space-y-5 p-6">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">{project.status}</p>
-                  <h3 className="mt-2 text-2xl font-semibold text-white">{project.title}</h3>
-                  <p className="mt-1 text-sm text-slate-400">
-                    {project.creator} - {project.creatorRole}
-                  </p>
-                </div>
-                <p className="text-sm leading-6 text-slate-300">{project.summary}</p>
-                <div className="flex flex-wrap gap-2">
-                  {project.tags.map((tag) => (
-                    <span key={tag} className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-slate-200">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <Link
-                  href={`/projects/${project.slug}`}
-                  className="inline-flex items-center text-sm font-semibold text-sky-200"
-                >
-                  View project
-                  <ArrowRight className="ml-2 size-4" aria-hidden="true" />
+        {publicProjects.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-white/15 px-6 py-14 text-center">
+            <h3 className="text-xl font-semibold">No published projects yet</h3>
+            <p className="mt-2 text-sm text-slate-400">Published public projects will appear here automatically.</p>
+          </div>
+        ) : (
+          <div className="grid gap-5 lg:grid-cols-3">
+            {publicProjects.map((project) => (
+              <article key={project.slug} className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70">
+                <Link href={`/projects/${project.slug}`} className="group block">
+                  <div className="relative h-48 overflow-hidden">
+                    <Image
+                      src={project.previewImage}
+                      alt={`${project.title} project preview`}
+                      fill
+                      className="object-cover opacity-90 transition duration-500 group-hover:scale-105"
+                      sizes="(min-width: 1024px) 33vw, 100vw"
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${project.accent}`} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent" />
+                  </div>
                 </Link>
-              </div>
-            </article>
-          ))}
-        </div>
+                <div className="space-y-5 p-6">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">{project.status}</p>
+                    <h3 className="mt-2 text-2xl font-semibold text-white">{project.title}</h3>
+                    <p className="mt-1 text-sm text-slate-400">
+                      {project.creator} - {project.creatorRole}
+                    </p>
+                  </div>
+                  <p className="text-sm leading-6 text-slate-300">{project.summary}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {project.tags.map((tag) => (
+                      <span key={tag} className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-slate-200">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <Link
+                    href={`/projects/${project.slug}`}
+                    className="inline-flex items-center text-sm font-semibold text-sky-200"
+                  >
+                    View project
+                    <ArrowRight className="ml-2 size-4" aria-hidden="true" />
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );
