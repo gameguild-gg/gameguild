@@ -1,18 +1,22 @@
-export { LexicalSurface } from "./lexical-surface"
-export type { LexicalSurfaceFeatures, LexicalSurfaceProps } from "./lexical-surface"
-export { LEXICAL_SURFACE_THEME } from "./theme"
-export type { PageSettings } from "./page"
-export { stripSelection } from "./lexical/initial-editor-state"
-export type { BaseMediaData, MediaType } from "./media/media-data"
-export type { MermaidData } from "./mermaid/mermaid-data"
-export type { VegaLiteData } from "./vega-lite/vega-lite-data"
+export { LexicalSurface } from "./surface/lexical-surface";
 export type {
-	AssetResolverAdapter,
-	LexicalSurfaceAdapters,
-	MediaUploadDialogAdapterProps,
-	MediaUploadResult,
-	MermaidEditorAdapterProps,
-	MermaidViewerAdapterProps,
-	VegaLiteEditorAdapterProps,
-	VegaLiteViewerAdapterProps,
-} from "./adapters"
+  LexicalSurfaceFeatures,
+  LexicalSurfaceProps,
+} from "./surface/lexical-surface";
+export { LEXICAL_SURFACE_THEME } from "./schema/theme";
+export type { PageSettings } from "./features/page";
+export { stripSelection } from "./schema/initial-editor-state";
+export type { BaseMediaData, MediaType } from "./features/media/media-data";
+export type { MermaidData } from "./features/mermaid/mermaid-data";
+export type { VegaLiteData } from "./features/vega-lite/vega-lite-data";
+export { MermaidEditor } from "./features/mermaid/mermaid-editor";
+export { MermaidViewer } from "./features/mermaid/mermaid-viewer";
+export { VegaLiteEditor } from "./features/vega-lite/vega-lite-editor";
+export { VegaLiteViewer } from "./features/vega-lite/vega-lite-viewer";
+export { getThemePair as getVegaLiteThemePair } from "./features/vega-lite/vega-theme-helper";
+export type {
+  AssetResolverAdapter,
+  LexicalSurfaceAdapters,
+  MediaUploadDialogAdapterProps,
+  MediaUploadResult,
+} from "./integrations/adapters";

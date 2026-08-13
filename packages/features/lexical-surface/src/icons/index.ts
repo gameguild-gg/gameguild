@@ -60,4 +60,4 @@ export {
   Pencil as EditIcon,
   Trash2 as DeleteIcon,
   StickyNote as StickyIcon,
-} from "lucide-react"
+} from "lucide-react";
