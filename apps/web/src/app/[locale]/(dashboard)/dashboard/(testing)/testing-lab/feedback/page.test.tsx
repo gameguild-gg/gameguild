@@ -41,4 +41,31 @@ describe("Testing Lab feedback directory", () => {
       screen.getByRole("combobox", { name: "Filter by quality" }),
     ).toBeInTheDocument();
   });
+
+  it("renders the overall rating on the Testing Lab ten-point scale", async () => {
+    mocks.getTestingFeedbackDirectory.mockResolvedValue({
+      items: [
+        {
+          id: "feedback-1",
+          source: "Event",
+          eventName: "Friday playtest",
+          testingContext: "Online",
+          userName: "Ana Tester",
+          userId: "tester-1",
+          overallRating: 9,
+          feedbackData: "Clear controls",
+          isReported: false,
+          qualityRating: null,
+        },
+      ],
+      totalCount: 1,
+      skip: 0,
+      take: 20,
+      accessIssues: [],
+    });
+
+    render(await TestingLabFeedbackPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByText("9 / 10")).toBeInTheDocument();
+  });
 });
