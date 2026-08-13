@@ -1927,7 +1927,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   const showCompileButton = executionPhase !== 'running' || canRecompileWhileRunning;
 
   return (
-    <div className="emception-ide" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="emception-ide" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', minHeight: 400, fontFamily: 'system-ui, sans-serif' }}>
       {/* Hidden log for Playwright E2E assertions — not visible to users */}
       <pre data-testid="terminal" ref={terminalLogRef} hidden aria-hidden="true" style={{ display: 'none' }} />
       {/* Hidden holder keeps the SDL <canvas> alive when no dock group hosts it.

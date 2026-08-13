@@ -170,7 +170,7 @@ export function CodingActivityClient({
     <>
       <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div {...wrapperDataAttrs}>
+        <div {...wrapperDataAttrs} className="h-[70vh] min-h-[500px]">
           <Suspense fallback={<IdeSkeleton />}>
             <Ide
               ref={ref}
