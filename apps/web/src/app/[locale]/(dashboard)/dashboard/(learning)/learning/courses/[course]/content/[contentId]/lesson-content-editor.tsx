@@ -14,6 +14,7 @@ const LexicalSurface = lazy(async () => {
 
 const LESSON_EDITOR_FEATURES = {
   toolbar: true,
+  insertMenu: true,
   floatingTextFormat: true,
   floatingLinkEditor: true,
   draggable: true,
