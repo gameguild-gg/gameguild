@@ -24,6 +24,7 @@ const nextConfig: NextConfig = {
     "@game-guild/block-list",
     "@game-guild/community-members",
     "@game-guild/content-rendering",
+    "@game-guild/lexical-surface",
     "@game-guild/courses",
     "@game-guild/dotnet-wasm",
     "@game-guild/emception-ui",
