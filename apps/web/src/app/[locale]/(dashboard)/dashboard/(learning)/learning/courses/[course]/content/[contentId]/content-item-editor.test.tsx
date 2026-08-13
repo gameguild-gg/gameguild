@@ -41,7 +41,15 @@ vi.mock("@/lib/learning/actions", () => ({
   restoreAssessment: vi.fn(),
 }));
 
-vi.mock("@/components/block-content-editor/lexical-surface", () => ({
+const putCodingDefinitionMock = vi.hoisted(() => ({
+  putCodingDefinition: vi.fn(),
+}));
+
+vi.mock("@/lib/emception/put-coding-definition", () => ({
+  putCodingDefinition: putCodingDefinitionMock.putCodingDefinition,
+}));
+
+vi.mock("@game-guild/lexical-surface", () => ({
   LexicalSurface: ({ accessibleLabel }: { accessibleLabel?: string }) => (
     <textarea aria-label={accessibleLabel ?? "Body"} readOnly />
   ),
@@ -753,8 +761,14 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
       expect(deleteAssessment).toHaveBeenCalledWith("course-1", "asmnt-existing");
     });
 
+    const gradedSwitch = screen.getByRole("switch", { name: /^graded$/i });
+    await waitFor(() => {
+      expect(gradedSwitch).not.toBeDisabled();
+      expect(gradedSwitch).not.toBeChecked();
+    });
+
     // Toggle ON again → restore (NOT create).
-    await user.click(screen.getByRole("switch", { name: /^graded$/i }));
+    await user.click(gradedSwitch);
 
     await waitFor(() => {
       expect(restoreAssessment).toHaveBeenCalledWith("course-1", "asmnt-existing");
