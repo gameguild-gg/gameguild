@@ -199,9 +199,7 @@ function EditorBody({
               activeEditor={activeEditor}
               setActiveEditor={setActiveEditor}
               setIsLinkEditMode={setIsLinkEditMode}
-              features={{
-                pageLayout: features.pageLayout,
-              }}
+              features={features}
             />
           );
           return toolbarWrapper ? toolbarWrapper(toolbarNode) : toolbarNode;
@@ -272,7 +270,7 @@ function EditorBody({
         {features.checkList && <CheckListPlugin />}
         {features.link && <LinkPlugin />}
         {features.tabIndentation && <TabIndentationPlugin />}
-        {features.picker && <ComponentPickerPlugin />}
+        {features.picker && <ComponentPickerPlugin features={features} />}
         {features.shortcuts && (
           <ShortcutsPlugin setIsLinkEditMode={setIsLinkEditMode} />
         )}

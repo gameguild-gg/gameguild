@@ -1,6 +1,8 @@
 export type LexicalSurfaceFeatures = {
   /** Top toolbar (block format, font, color, alignment, ...). Default: true */
   toolbar?: boolean;
+  /** Insert dropdown inside the top toolbar. Default: true */
+  insertMenu?: boolean;
   /** Bubble toolbar over selected text. Default: true */
   floatingTextFormat?: boolean;
   /** Bubble link editor when cursor is on a LinkNode. Default: true */
@@ -37,6 +39,7 @@ export type LexicalSurfaceFeatures = {
 
 const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
   toolbar: true,
+  insertMenu: true,
   floatingTextFormat: true,
   floatingLinkEditor: true,
   draggable: true,
@@ -70,6 +73,7 @@ const READ_ONLY_INTERACTIVE_FEATURES: ReadonlyArray<
   keyof LexicalSurfaceFeatures
 > = [
   "toolbar",
+  "insertMenu",
   "floatingTextFormat",
   "floatingLinkEditor",
   "draggable",
@@ -98,11 +102,34 @@ const READ_ONLY_INTERACTIVE_FEATURES: ReadonlyArray<
   "tabIndentation",
 ];
 
+const INSERTION_CATALOG_FEATURES: ReadonlyArray<
+  keyof LexicalSurfaceFeatures
+> = [
+  "equation",
+  "excalidraw",
+  "table",
+  "layout",
+  "collapsible",
+  "sticky",
+  "admonition",
+  "button",
+  "divider",
+  "mermaid",
+  "vegaLite",
+  "media",
+];
+
 export function resolveLexicalSurfaceFeatures(
   features: LexicalSurfaceFeatures | undefined,
   readOnly: boolean,
 ): Required<LexicalSurfaceFeatures> {
   const resolved = { ...DEFAULT_FEATURES, ...features };
+
+  if (!resolved.insertMenu && !resolved.picker) {
+    for (const feature of INSERTION_CATALOG_FEATURES) {
+      resolved[feature] = false;
+    }
+  }
 
   if (readOnly) {
     for (const feature of READ_ONLY_INTERACTIVE_FEATURES) {

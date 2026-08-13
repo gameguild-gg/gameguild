@@ -21,6 +21,7 @@
     "src/index.ts",
     "src/adapters.tsx",
     "src/features.ts",
+    "src/features.test.ts",
     "src/lexical-surface.tsx",
     "src/theme.ts",
     "src/dialogs/base-confirm-dialog.tsx",
