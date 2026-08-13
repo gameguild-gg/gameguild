@@ -124,6 +124,8 @@ test('dispose is idempotent', () => {
 
 test('end-to-end with real MessageChannel: 5 concurrent echoes complete in order of resolution', async () => {
     const channel = new MessageChannel();
+    channel.port1.unref();
+    channel.port2.unref();
     const c = new RequestCorrelator();
 
     startEchoServer(channel.port2);
@@ -144,6 +146,8 @@ test('end-to-end with real MessageChannel: 5 concurrent echoes complete in order
 
 test('end-to-end with real MessageChannel: stale response after complete is dropped silently', async () => {
     const channel = new MessageChannel();
+    channel.port1.unref();
+    channel.port2.unref();
     const c = new RequestCorrelator();
     let staleHandled = null;
 
@@ -163,7 +167,7 @@ test('end-to-end with real MessageChannel: stale response after complete is drop
     assert.equal(result, 'first');
 
     // Wait one macrotask so the stale message lands.
-    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setTimeout(r, 20));
     assert.equal(staleHandled, 'second');
 
     channel.port1.close();
@@ -172,6 +176,8 @@ test('end-to-end with real MessageChannel: stale response after complete is drop
 
 test('end-to-end with real MessageChannel: dispose mid-flight rejects in-flight request', async () => {
     const channel = new MessageChannel();
+    channel.port1.unref();
+    channel.port2.unref();
     const c = new RequestCorrelator();
     // Server NEVER responds, simulating a hung worker.
     channel.port2.on('message', () => { });
@@ -181,7 +187,7 @@ test('end-to-end with real MessageChannel: dispose mid-flight rejects in-flight 
     channel.port1.postMessage({ id, payload: 'hang' });
 
     // Dispose after letting the message fly.
-    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setTimeout(r, 20));
     c.dispose();
 
     await assert.rejects(promise, CorrelatorDisposedError);
