@@ -159,13 +159,11 @@ public class CodingAssignmentContentTests
                                 {
                                     Name = "a",
                                     Type = (FunctionParameterType)4, // out-of-v1-set
-                                    Content = JsonSerializer.SerializeToElement(0)
                                 }
                             },
-                            ReturnType = new FunctionParameter
+                            ReturnType = new FunctionReturnType
                             {
                                 Type = FunctionParameterType.Integer,
-                                Content = JsonSerializer.SerializeToElement(0)
                             }
                         },
                         Cases = new[]
@@ -279,10 +277,9 @@ public class CodingAssignmentContentTests
                     {
                         FunctionName = functionName,
                         Parameters = new(),
-                        ReturnType = new FunctionParameter
+                        ReturnType = new FunctionReturnType
                         {
                             Type = FunctionParameterType.Integer,
-                            Content = JsonSerializer.SerializeToElement(0)
                         }
                     },
                     Cases = new[]
@@ -330,13 +327,11 @@ public class CodingAssignmentContentTests
                             {
                                 Name = "a",
                                 Type = FunctionParameterType.Integer,
-                                Content = JsonSerializer.SerializeToElement(0)
                             }
                         },
-                        ReturnType = new FunctionParameter
+                        ReturnType = new FunctionReturnType
                         {
                             Type = FunctionParameterType.Integer,
-                            Content = JsonSerializer.SerializeToElement(0)
                         }
                     },
                     Cases = new[]
