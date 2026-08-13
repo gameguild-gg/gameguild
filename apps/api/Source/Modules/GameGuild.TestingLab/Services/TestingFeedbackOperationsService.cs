@@ -47,7 +47,7 @@ public class TestingFeedbackOperationsService(
 
     public async Task<IEnumerable<TestingFeedback>> GetTestingRequestFeedbackAsync(Guid testingRequestId)
     {
-        await EnsureRequestExistsAsync(testingRequestId).ConfigureAwait(false);
+        await EnsureRequestExistsAsync(testingRequestId, includeArchived: true).ConfigureAwait(false);
         return await TenantFeedback
             .Where(tf => tf.TestingRequestId == testingRequestId)
             .Include(tf => tf.User)
@@ -221,7 +221,7 @@ public class TestingFeedbackOperationsService(
 
     public async Task<object> GetTestingRequestStatisticsAsync(Guid testingRequestId)
     {
-        await EnsureRequestExistsAsync(testingRequestId).ConfigureAwait(false);
+        await EnsureRequestExistsAsync(testingRequestId, includeArchived: true).ConfigureAwait(false);
         var participantCount = await context.Set<TestingParticipant>().CountAsync(tp => tp.TestingRequestId == testingRequestId && tp.TenantId == TenantId);
         var sessionCount = await context.Set<TestingSession>().CountAsync(ts => ts.TestingRequestId == testingRequestId && ts.TenantId == TenantId && ts.DeletedAt == null);
         var feedbackCount = await TenantFeedback.CountAsync(tf => tf.TestingRequestId == testingRequestId);
@@ -265,12 +265,16 @@ public class TestingFeedbackOperationsService(
         await context.SaveChangesAsync().ConfigureAwait(false);
     }
 
-    private async Task EnsureRequestExistsAsync(Guid testingRequestId)
+    private async Task EnsureRequestExistsAsync(Guid testingRequestId, bool includeArchived = false)
     {
-        var exists = await context.Set<TestingRequest>().AnyAsync(request =>
+        var requests = context.Set<TestingRequest>().AsQueryable();
+        if (includeArchived)
+            requests = requests.IgnoreQueryFilters();
+
+        var exists = await requests.AnyAsync(request =>
             request.Id == testingRequestId &&
             request.TenantId == TenantId &&
-            request.DeletedAt == null).ConfigureAwait(false);
+            (includeArchived || request.DeletedAt == null)).ConfigureAwait(false);
         if (!exists)
             throw new ArgumentException("Testing request not found.", nameof(testingRequestId));
     }
