@@ -1,5 +1,5 @@
 import { createClient, type ApiError, type Result } from '@game-guild/client';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 interface AuthOutput {
   accessToken: string;
@@ -74,7 +74,52 @@ function actorClient(accessToken: string, tenantId: string) {
   });
 }
 
+interface TestingEventCleanupState {
+  accessToken: string;
+  projectIds: string[];
+  tenantId: string;
+}
+
+let cleanupState: TestingEventCleanupState | null = null;
+
+function trackCleanupProject(projectId: string) {
+  if (!cleanupState) throw new Error('Testing Lab E2E cleanup was not initialized.');
+  cleanupState.projectIds.push(projectId);
+}
+
 describe('Testing Lab event workflow E2E', () => {
+  afterEach(async () => {
+    const state = cleanupState;
+    cleanupState = null;
+    if (!state) return;
+
+    const client = actorClient(state.accessToken, state.tenantId);
+    const failures: string[] = [];
+
+    for (const projectId of [...state.projectIds].reverse()) {
+      const result = await client.request<unknown>({
+        method: 'DELETE',
+        path: `/v1/projects/${projectId}?softDelete=true&reason=Testing%20Lab%20E2E%20fixture%20cleanup`,
+        requiresAuth: true,
+      });
+      if (!result.ok && result.error?.status !== 404) {
+        failures.push(`project ${projectId}: ${result.error?.status} ${result.error?.message}`);
+      }
+    }
+
+    const tenantResult = await client.request<unknown>({
+      method: 'DELETE',
+      path: `/v1/tenants/${state.tenantId}`,
+      body: { reason: 'Testing Lab E2E fixture cleanup.' },
+      requiresAuth: true,
+    });
+    if (!tenantResult.ok && tenantResult.error?.status !== 404) {
+      failures.push(`tenant ${state.tenantId}: ${tenantResult.error?.status} ${tenantResult.error?.message}`);
+    }
+
+    if (failures.length > 0) throw new Error(`Testing Lab E2E cleanup failed:\n${failures.join('\n')}`);
+  });
+
   it('completes manager, reviewer, applicant, tester, settings, role, and report journeys', async () => {
     const tag = unique();
     const password = 'Str0ng!Passw0rd123!';
@@ -127,6 +172,7 @@ describe('Testing Lab event workflow E2E', () => {
     const managerId = managerAuth.userId || managerAuth.user?.id;
     if (!managerId) throw new Error('Manager sign-in did not expose a user id.');
     const manager = actorClient(managerAuth.accessToken, tenant.id);
+    cleanupState = { accessToken: managerAuth.accessToken, projectIds: [], tenantId: tenant.id };
 
     const testerEmail = `testing_event_tester_${tag}@example.com`;
     const testerSignUp = unwrap(
@@ -232,6 +278,7 @@ describe('Testing Lab event workflow E2E', () => {
       }),
       'Create event project',
     );
+    trackCleanupProject(project.id);
 
     const now = Date.now();
     const event = unwrap(
@@ -383,6 +430,7 @@ describe('Testing Lab event workflow E2E', () => {
       }),
       'Create rejection project',
     );
+    trackCleanupProject(rejectedProject.id);
     const rejectedApplication = unwrap(
       await manager.request<ApplicationProjection>({
         method: 'POST',
