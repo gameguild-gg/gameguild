@@ -182,9 +182,9 @@ describe('T7 in-IDE authoring regions', () => {
     expect(onFileMetaChange).toHaveBeenCalledWith(SEED_FILE, { modifiable: false });
   });
 
-  it('(b) testsPanelSlot renders in sidebar when supplied; hidden when not', async () => {
-    const { rerender } = await act(async () => {
-      const r = render(
+  it('(b) testsPanelSlot renders in bottom-panel Tests tab when supplied; hidden otherwise', async () => {
+    await act(async () => {
+      render(
         <Ide
           testsPanelSlot={
             <div data-testid="slot-content">
@@ -193,15 +193,26 @@ describe('T7 in-IDE authoring regions', () => {
           }
         />,
       );
-      return r;
     });
 
-    // Sidebar region wrapper exists + the slot content reaches the DOM.
+    // Default tab is Terminal — neither the slot wrapper nor its content should be in the DOM.
+    expect(screen.queryByTestId('tests-panel-slot')).toBeNull();
+    expect(screen.queryByTestId('slot-content')).toBeNull();
+
+    // The Tests tab button is only rendered when the slot is supplied.
+    const testsTab = screen.getByRole('button', { name: 'Tests' });
+    await act(async () => {
+      fireEvent.click(testsTab);
+    });
+
+    // After switching to the Tests tab, the slot content lives in the bottom panel.
     expect(screen.queryByTestId('tests-panel-slot')).not.toBeNull();
     expect(screen.queryByTestId('slot-content')).not.toBeNull();
 
+    // Switching back to Terminal hides the slot again without unmounting the terminal.
+    const terminalTab = screen.getByRole('button', { name: 'Terminal' });
     await act(async () => {
-      rerender(<Ide />);
+      fireEvent.click(terminalTab);
     });
     expect(screen.queryByTestId('tests-panel-slot')).toBeNull();
     expect(screen.queryByTestId('slot-content')).toBeNull();
