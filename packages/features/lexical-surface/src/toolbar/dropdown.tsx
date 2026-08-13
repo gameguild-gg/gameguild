@@ -29,6 +29,8 @@ export function DropDown({
   align = "start",
   children,
   title,
+  preserveSelection = false,
+  contentMaxHeight,
 }: {
   buttonLabel?: React.ReactNode
   buttonIcon?: React.ReactNode
@@ -40,6 +42,10 @@ export function DropDown({
   align?: "start" | "center" | "end"
   children: React.ReactNode
   title?: string
+  /** Keeps the editor selection while a floating-toolbar menu is opened. */
+  preserveSelection?: boolean
+  /** Overrides the menu's default viewport-relative maximum height. */
+  contentMaxHeight?: React.CSSProperties["maxHeight"]
 }) {
   const [open, setOpen] = React.useState(false)
   const close = React.useCallback(() => setOpen(false), [])
@@ -68,6 +74,7 @@ export function DropDown({
           disabled={disabled}
           title={title}
           aria-label={buttonAriaLabel}
+          onMouseDown={preserveSelection ? (event) => event.preventDefault() : undefined}
           className={cn(
             "inline-flex items-center gap-1 h-8 px-2 rounded text-sm",
             "hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:pointer-events-none",
@@ -87,7 +94,9 @@ export function DropDown({
         ref={contentRef}
         align={align}
         sideOffset={4}
+        data-lexical-floating-toolbar-popover={preserveSelection ? "true" : undefined}
         className="p-1 w-auto min-w-[180px] max-h-[60vh] overflow-y-auto"
+        style={contentMaxHeight ? { maxHeight: contentMaxHeight } : undefined}
       >
         <DropDownContext.Provider value={{ close }}>{children}</DropDownContext.Provider>
       </PopoverContent>
