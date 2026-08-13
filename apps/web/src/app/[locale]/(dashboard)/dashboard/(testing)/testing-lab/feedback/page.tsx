@@ -95,7 +95,7 @@ export default async function TestingLabFeedbackPage({ searchParams }: { searchP
                 </div>
                 <div className="flex items-center gap-1 text-sm">
                   <Star className="size-4" />
-                  {entry.overallRating ?? '-'} / 5
+                  {entry.overallRating ?? '-'} / 10
                 </div>
               </div>
               <p className="mt-4 whitespace-pre-wrap text-sm">{entry.additionalNotes ?? entry.feedbackData}</p>
