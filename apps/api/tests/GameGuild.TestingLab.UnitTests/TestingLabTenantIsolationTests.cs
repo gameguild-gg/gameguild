@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Xunit;
 
 namespace GameGuild.TestingLab.UnitTests;
@@ -211,6 +213,15 @@ public sealed class TestingLabTenantIsolationTests
             item.Id == eventFeedback.Id &&
             item.EventName == "Event source" &&
             item.IsReported);
+
+        var serializedItem = JsonSerializer.Serialize(
+            events.Items.Single(),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            {
+                Converters = { new JsonStringEnumConverter() }
+            });
+        using var document = JsonDocument.Parse(serializedItem);
+        document.RootElement.TryGetProperty("qualityRating", out _).Should().BeFalse();
     }
 
     [Fact]
