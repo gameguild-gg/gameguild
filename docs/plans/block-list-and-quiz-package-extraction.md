@@ -62,8 +62,13 @@ May import:
 - React;
 - UI primitives;
 - icon libraries;
-- Lexical only inside React/editor integration files.
+- the shared Lexical surface package, only inside React/editor integration files;
 - npm libraries required by quiz UI or quiz helpers.
+
+The Lexical dependency is intentional. Lexical is being extracted as the shared
+package `@game-guild/lexical-surface`, so quiz React code should import its
+public surface directly from that package once available. It must not import
+Lexical components through the web block-content-editor folder.
 
 The quiz package should depend on other workspace packages when they are real
 shared packages, such as `@game-guild/ui`. When current quiz code imports local
@@ -304,6 +309,7 @@ packages/features/quiz/
       evaluation.ts
       formula.ts
       highlight.ts
+      rich-text.ts
       test-vectors.ts
       validation.test.ts
       learner.test.ts
@@ -322,6 +328,7 @@ packages/features/quiz/
       hooks/
       renderers/
       question-types/
+      lexical/
       react.test.tsx
 ```
 
@@ -351,12 +358,21 @@ packages/features/quiz/
 Expected dependency direction:
 
 - `dependencies`: `@game-guild/ui`, React peer/runtime dependencies used by
-  exported UI, icon packages, Lexical packages used by quiz React integration,
-  and npm libraries required by quiz components.
+  exported UI, icon packages, the Lexical surface package used by essay React
+  integration, and npm libraries required by quiz components (including
+  `mathlive` if the package keeps the current math input).
 - `devDependencies`: test tooling, TypeScript config, React test utilities, and
   package-local test dependencies.
 
 Do not rely on dependencies leaking from `apps/web`.
+
+The package needs two separate dependency surfaces:
+
+- `@game-guild/quiz/domain` has no runtime UI dependency and must remain usable
+  from grading/server code.
+- `@game-guild/quiz/react` may depend on React, `@game-guild/ui`, the Lexical
+  surface package, icons, and authoring/rendering libraries. It must declare
+  all of them in `@game-guild/quiz`, rather than relying on web dependencies.
 
 After the package is created:
 
@@ -394,6 +410,11 @@ export type SerializedRichTextPayload = Record<string, unknown> | null;
 
 The web Lexical UI can adapt Lexical serialized state to this payload, but the
 domain layer does not import `lexical`.
+
+`SerializedRichTextPayload` is the persisted quiz contract for essay model
+answers. The React Lexical adapter converts between this payload and the
+Lexical surface package's editor state at the UI boundary; neither the domain
+nor grading depends on Lexical types.
 
 ### Target Domain Helpers
 
@@ -438,6 +459,21 @@ domain layer does not import `lexical`.
 These helpers return quiz-specific correctness/status data. They do not return
 gradebook results and do not import `@game-guild/grading`.
 
+The evaluator is the single source of truth for local-practice correctness.
+It must cover the deterministic rules currently split between
+`use-quiz-answers.ts` and the grading quiz adapter: choice, fill blank, short
+answer, essay policy, matching, ordering, categorization, rating, numeric,
+formula, hotspot, and highlight. It should return a quiz-owned result such as
+`correct`, `incorrect`, `pending`, or `unsupported`, plus any quiz-specific
+diagnostics required by the UI. It must not fabricate trusted feedback when
+given a learner-safe/server-graded entry with no answer key.
+
+`@game-guild/grading/adapters/quiz` calls this evaluator for authored,
+server-owned answer keys and translates its result into `GradeItemResult` and
+`GradeResult`. Grading continues to own scoring, gradebook semantics, and trust
+boundaries; quiz continues to own question semantics. No second implementation
+of quiz correctness remains in grading or in a React hook.
+
 `domain/formula.ts`:
 
 - pure formula parsing/evaluation helpers used by authoring and local-practice
@@ -470,28 +506,70 @@ React-layer rules:
 - treats `submissionMode="server-graded"` as answer collection/submission state;
 - does not compute trusted correctness or score for grading-enabled runtime;
 - may import UI primitives and icons;
-- may isolate Lexical essay integration in React files only.
+- may import the Lexical surface package for essay authoring and rendering in
+  `react/lexical/` or another React-only integration file;
 - does not import from the web block-content-editor folder.
 - owns any quiz-specific support component that is not already a shared package.
 - uses props or small local adapters when it needs host/editor integration.
 
+The current web-only `LexicalSurface` use moves behind a quiz-owned React
+adapter that imports the Lexical surface package. The adapter accepts and emits
+`SerializedRichTextPayload`; `EssayEditor` and `EssayRenderer` must not import
+the web lexical-surface path themselves.
+
+The adapter should use the Lexical surface package's public serialized-state and
+plain-text callback. It must not import `LexicalEditor`, `$getRoot`, or other
+Lexical internals merely to calculate the essay plain-text answer.
+
+The current web-only math input, editor shell, and editor settings integrations
+need an explicit owner before moving React files:
+
+- move the math input into quiz React (or a separately extracted shared math
+  package) because numeric/formula quiz UI owns its workflow;
+- replace `BlockEditorShell` and `useEditorSettings` imports with quiz-owned UI
+  or explicit host props/adapters;
+- import common primitives from `@game-guild/ui`, never `@/components/ui`.
+
 ### Migration Steps
 
-1. Create the package with `domain` and `react` entrypoints.
-2. Move pure quiz types and helpers into `src/domain`.
-3. Remove the direct `lexical` type dependency from quiz domain contracts.
-4. Copy current quiz React components, hooks, editors, renderers, templates, and
-   tests into `src/react`.
-5. Replace app-alias imports in quiz UI with package-owned modules,
-   `@game-guild/ui`, or explicit props.
-6. Move quiz-owned support UI into the package:
-   - math input used by numeric/formula quiz UI;
-   - quiz editor shell, if needed;
-   - quiz settings helpers, if needed.
-7. Declare all package dependencies in `packages/features/quiz/package.json`.
-8. Add `@game-guild/quiz` to `apps/web/package.json`.
-9. Add `@game-guild/quiz` to `apps/web/next.config.ts` `transpilePackages`.
-10. Move or duplicate tests into the package for:
+1. Implement and validate `@game-guild/lexical-surface` first. It must export a
+  public React/editor entrypoint with serialized-state props and no generic
+  block insert/embed capability. Add it as a quiz React dependency before
+  moving essay UI.
+2. Create `@game-guild/quiz` with isolated `domain` and `react` entrypoints.
+  Add an import-boundary test or static check proving the domain cannot import
+  React, Lexical, web paths, block-list, or grading.
+3. Move the authoring types from the current `types.ts` into `domain/types.ts`.
+  Replace `SerializedEditorState` with `SerializedRichTextPayload` without
+  changing persisted quiz JSON.
+4. Split the current `contracts.ts` by responsibility: learner redaction into
+  `domain/learner.ts`, authoring completeness into `domain/validation.ts`, and
+  runtime/answer contracts into `domain/runtime.ts` and `domain/answers.ts`.
+5. Move factories from the current `types.ts`, formula helpers, and highlight
+  parsing into `domain/factories.ts`, `domain/formula.ts`, and
+  `domain/highlight.ts`. Add test vectors for every question type.
+6. Extract the full local-practice evaluator from `use-quiz-answers.ts` into
+  `domain/evaluation.ts`. The hook becomes React state and submission UI only;
+  it imports no `@game-guild/grading` symbol.
+7. Update the grading quiz adapter to import `@game-guild/quiz/domain` and call
+  the evaluator for deterministic question semantics. Keep unknown JSON
+  normalization, gradebook scoring, and server trust logic in grading.
+8. Add `@game-guild/quiz` to `packages/features/grading/package.json`, then run
+  grading tests before moving React files.
+9. Move React components, hooks, editors, renderers, templates, and tests into
+  `src/react`. Replace app-alias imports with package modules,
+  `@game-guild/ui`, the Lexical surface package, or explicit host props.
+10. Create a quiz-owned Lexical adapter for essay UI. It is the only quiz file
+   that imports the Lexical surface package and it adapts to/from
+   `SerializedRichTextPayload`.
+11. Move quiz-owned support UI into the package:
+  - math input used by numeric/formula quiz UI;
+  - quiz editor shell/settings behavior or explicit host adapters;
+  - any quiz-specific labels, templates, and type-selector support.
+12. Declare all package dependencies in `packages/features/quiz/package.json`.
+13. Add `@game-guild/quiz` to `apps/web/package.json`.
+14. Add `@game-guild/quiz` to `apps/web/next.config.ts` `transpilePackages`.
+15. Move or duplicate tests into the package for:
    - learner redaction;
    - authoring validation;
    - factories;
@@ -501,25 +579,26 @@ React-layer rules:
    - runtime display;
    - local-practice answer feedback;
    - server-graded answer collection without local correctness.
-11. Replace the web quiz folder with compatibility exports or direct imports from
+16. Replace the web quiz folder with compatibility exports or direct imports from
    `@game-guild/quiz/react`.
-12. Update block picker/template imports so quiz templates come from
+17. Update block picker/template imports so quiz templates come from
    `@game-guild/quiz/react`.
-13. Update `@game-guild/grading` quiz adapter to consume
-   `@game-guild/quiz/domain` contracts and quiz evaluation where useful.
-14. Add `@game-guild/quiz` to `packages/features/grading/package.json`.
-15. Keep grading core content-type agnostic. Only the quiz adapter may depend on
-   `@game-guild/quiz/domain`.
-16. Search for remaining web quiz folder imports.
-17. Remove old web quiz files only when every remaining import is intentionally
+18. Keep grading core content-type agnostic. Only the quiz adapter may depend on
+  `@game-guild/quiz/domain`.
+19. Search for remaining web quiz folder imports and app-alias imports from the
+  new package.
+20. Remove old web quiz files only when every remaining import is intentionally
    routed through `@game-guild/quiz`.
-18. Run focused package, web, and grading tests.
+21. Run focused package, web, grading, and standalone/Docker build checks.
 
 ### Acceptance Criteria
 
 - `@game-guild/quiz` contains the complete quiz feature.
 - `@game-guild/quiz/domain` has no UI, block-list, grading, React, Next.js, or
   Lexical imports.
+- Essay domain contracts use `SerializedRichTextPayload`, not Lexical types.
+- Quiz React imports the Lexical surface package only through its quiz-owned
+  adapter and never through the web block-content-editor folder.
 - Web quiz UI is moved into `@game-guild/quiz/react` or re-exported from there.
 - Quiz React code has no imports from the web block-content-editor folder.
 - Quiz React code does not import `@game-guild/grading`.
@@ -532,6 +611,10 @@ React-layer rules:
 - `@game-guild/grading` quiz adapter may import `@game-guild/quiz/domain`.
 - Quiz-specific answer evaluation lives in `@game-guild/quiz/domain`; grading
   maps that result into trusted grading results on the server path.
+- `useQuizAnswers` does not import `@game-guild/grading` and does not duplicate
+  evaluator logic.
+- The grading quiz adapter does not duplicate question correctness rules already
+  owned by `@game-guild/quiz/domain`.
 - Learner-safe quiz contracts remain separate from authoring/practice contracts.
 - Grading-disabled quiz practice still shows local correct/incorrect feedback.
 - Grading-enabled quiz runtime still collects answers without computing trusted
@@ -545,7 +628,8 @@ React-layer rules:
 - Do not make quiz depend on grading.
 - Do not implement backend grading endpoints.
 - Do not change course content persistence.
-- Do not extract Lexical surface.
+- Do not implement the Lexical surface extraction in this work; consume its
+  public package entrypoint once that extraction is available.
 
 ## Dependency Direction
 
@@ -559,6 +643,7 @@ apps/web block-content-editor UI -> @game-guild/grading
 
 @game-guild/quiz/react -> @game-guild/quiz/domain
 @game-guild/quiz/react -> @game-guild/ui
+@game-guild/quiz/react -> @game-guild/lexical-surface
 @game-guild/grading/adapters/quiz -> @game-guild/quiz/domain
 ```
 
@@ -572,7 +657,9 @@ Not allowed:
 @game-guild/quiz -> @game-guild/grading
 @game-guild/quiz -> apps/web
 @game-guild/quiz/domain -> @game-guild/quiz/react
+@game-guild/quiz/domain -> @game-guild/lexical-surface
 @game-guild/quiz/react -> @game-guild/grading
+@game-guild/quiz/react -> apps/web block-content-editor paths
 @game-guild/grading core -> @game-guild/quiz
 ```
 

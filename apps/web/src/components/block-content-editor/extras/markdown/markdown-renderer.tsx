@@ -13,7 +13,7 @@
  *   <block-embed id="..." />
  *
  * which is resolved against the `embeds` map and rendered via the
- * embed registry — the same path Lexical uses for `BlockEmbedNode`.
+ * embed registry used by markdown rendering.
  */
 
 import { useMemo, useRef } from "react"

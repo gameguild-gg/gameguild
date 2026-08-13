@@ -142,7 +142,10 @@ vi.mock("@dnd-kit/utilities", () => ({
   CSS: { Translate: { toString: () => undefined } },
 }));
 
-vi.mock("@/components/block-content-editor/lexical-surface", () => ({
+vi.mock("@/lib/emception/put-coding-definition", () => ({
+  putCodingDefinition: codingLibMocks.putCodingDefinition,
+}));
+vi.mock("@game-guild/lexical-surface", () => ({
   LexicalSurface: ({ accessibleLabel }: { accessibleLabel?: string }) => (
     <textarea aria-label={accessibleLabel ?? "Body"} readOnly />
   ),
@@ -411,9 +414,15 @@ describe("assessment lifecycle integration (Tasks 6, 7, 9, 11)", () => {
       );
     });
 
+    const gradedSwitch = screen.getByRole("switch", { name: /^graded$/i });
+    await waitFor(() => {
+      expect(gradedSwitch).not.toBeDisabled();
+      expect(gradedSwitch).not.toBeChecked();
+    });
+
     // ON again — component state still holds the recently-deleted id, so
     // restoreAssessment fires (not createAssessment).
-    await user.click(screen.getByRole("switch", { name: /^graded$/i }));
+    await user.click(gradedSwitch);
     await waitFor(() => {
       expect(restoreAssessment).toHaveBeenCalledWith(
         "course-1",

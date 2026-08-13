@@ -26,6 +26,12 @@ storage, block registry, content item orchestration, and non-Lexical block
 editors. It should consume `@game-guild/lexical-surface` instead of importing or
 owning Lexical implementation details.
 
+Before extraction, remove generic block insertion and block embed integration
+from `LexicalSurface`. The Lexical editor must not expose a `+Block` control,
+block-insert menu, or generic block embed plugin. Code-studio, markdown, HTML,
+quiz, and every other block-array experience remain owned by
+`block-content-editor` or their future feature packages.
+
 ## Motivation
 
 The current layout allows `lexical-surface` to import block-content internals
@@ -50,9 +56,6 @@ Current `lexical-surface` imports from these block-content areas:
 - `../lib/lexical/shared-lexical-config`
 - `../lib/lexical/initial-editor-state`
 - `../lib/client-only-lazy`
-- `../plugins/block-embed-plugin`
-- `../plugins/block-insert-menu-plugin`
-- `../../plugins/block-insert-button-plugin`
 - `../../extras/dialogs/*`
 - `../../extras/admonition`
 - `../../extras/button/button-styles`
@@ -65,10 +68,10 @@ Current `lexical-surface` imports from these block-content areas:
 - `../../lib/storage/assets`
 - `../../nodes/*`
 
-These imports should become package-local modules or explicit package
-dependencies.
+The block insert/embed imports must be removed, not copied. The remaining
+imports should become package-local modules or explicit package dependencies.
 
-The integrated Lexical insert features are in scope for the first package:
+The integrated Lexical document features are in scope for the first package:
 
 - admonition;
 - button;
@@ -82,22 +85,25 @@ The integrated Lexical insert features are in scope for the first package:
 - layout;
 - sticky;
 - collapsible;
-- embeds;
+- normal URL auto-embeds;
 - emoji;
 - page controls;
 - floating toolbars;
 - slash picker;
 - shortcuts.
 
-Large block-editor features are not in scope for this package:
+Block-array features are not in scope for this package:
 
 - quiz;
 - code-studio;
+- markdown blocks;
+- HTML blocks;
 - project/content activity editors;
 - block-array storage and registry logic.
 
-Those larger features should remain with `block-content-editor` for now and can
-be extracted into their own feature packages later.
+Those features remain with `block-content-editor` for now and can be extracted
+into their own feature packages later. `LexicalSurface` must not offer a UI path
+to insert them.
 
 ## Target Ownership
 
@@ -124,6 +130,7 @@ Does not own:
 - content grading
 - quiz authoring/grading
 - code-studio authoring/runtime
+- markdown or HTML block authoring/runtime
 - course content save/load
 - assessment projection
 - project/content registry orchestration
@@ -179,15 +186,10 @@ packages/features/lexical-surface/
       vega-lite/
       math/
     nodes/
-      block-embed-node.tsx
       custom-list-node.tsx
       media-node-base.tsx
       mermaid-data.ts
       vega-lite-data.ts
-    plugins/
-      block-embed-plugin.tsx
-      block-insert-button-plugin.tsx
-      block-insert-menu-plugin.tsx
     admonition/
     button/
     code-action/
@@ -239,6 +241,7 @@ Avoid:
 - imports from course/dashboard routes
 - imports from app-only aliases when a workspace package should own the
   dependency
+- generic block embed, block insert, block registry, or block picker concepts
 
 The package can import truly shared primitives such as `@game-guild/ui`, but
 Lexical-specific components copied for this package should stay package-local.
@@ -254,14 +257,21 @@ Lexical-specific components copied for this package should stay package-local.
    - block-content integration dependency;
    - candidate for copy into the package;
    - candidate for explicit adapter prop.
-3. Confirm no quiz/grading/code-studio dependency is pulled into the package.
-4. Define package exports before copying code.
+3. Remove `BlockEmbedPlugin`, `BlockInsertMenuPlugin`, any block-insert button,
+  their feature flags, toolbar entries, and their callers. Confirm that
+  `LexicalSurface` has no `+Block` or block insertion UI afterwards.
+4. Confirm no quiz/grading/code-studio/markdown/HTML block dependency is pulled
+  into the package.
+5. Define package exports before copying code.
 
 Acceptance criteria:
 
 - every dependency leaving `lexical-surface` has a target owner;
 - no `block-content-editor` import is left unexplained;
-- no quiz/grading/code-studio module is part of the package boundary.
+- no quiz/grading/code-studio/markdown/HTML block module is part of the package
+  boundary;
+- no `BlockEmbedPlugin`, `BlockInsertMenuPlugin`, block-insert button, or
+  `+Block` UI remains in the Lexical surface.
 
 ## Phase 2: Package Skeleton
 
@@ -275,6 +285,15 @@ Acceptance criteria:
    - `LexicalSurfaceFeatures`
    - `LEXICAL_SURFACE_THEME`
    - Lexical node/plugin exports that callers need.
+
+Define a public change callback that supplies serialized editor state and plain
+text without requiring feature packages to import `LexicalEditor`, `$getRoot`,
+or other Lexical internals just to read text. Low-level editor access, if it is
+still needed by a generic document consumer, must be a separate explicit API.
+
+Do not export a block embed or block insertion API. The public surface is for
+rich-document editing only, so future feature packages can compose it without
+depending on block-array concepts.
 
 Acceptance criteria:
 
@@ -300,7 +319,7 @@ Acceptance criteria:
 - shared Lexical config references package-local nodes;
 - package entry exports the copied surface.
 
-## Phase 4: Internalize Block-Content Dependencies
+## Phase 4: Internalize Document-Feature Dependencies
 
 Copy or localize the dependencies that are currently owned by
 `block-content-editor` but used directly by integrated Lexical features:
@@ -314,17 +333,15 @@ Copy or localize the dependencies that are currently owned by
 - vega-lite editor/viewer/theme helper and related data type;
 - media asset image, upload dialog, URL detection, asset URL resolver;
 - `BaseMediaData` and `MediaType`;
-- generic block embed node/plugin and block insert menu/button plugins;
 - custom list node.
 
 Where a dependency is broader than Lexical, expose it as an adapter prop instead
 of copying it blindly. The first candidates for adapter props are asset
 resolution and media upload behavior.
 
-Concrete block experiences such as quiz and code-studio must not be copied into
-this package. If the Lexical surface needs to show or insert those later, it
-should use an adapter contract supplied by `block-content-editor` or by a future
-feature package.
+Concrete block experiences such as quiz, code-studio, markdown blocks, and HTML
+blocks must not be copied into this package. Do not add an adapter for inserting
+them: block insertion belongs to `BlockArrayEditor`, not `LexicalSurface`.
 
 Acceptance criteria:
 
@@ -335,6 +352,8 @@ Acceptance criteria:
   - `../nodes`
   - `../plugins`
   - `../lib`
+- package source has no `BlockEmbedPlugin`, `BlockInsertMenuPlugin`, block
+  registry, block picker, or `+Block` UI;
 - package-local components preserve the current UI behavior.
 
 ## Phase 5: Replace App Imports
@@ -344,15 +363,18 @@ Acceptance criteria:
 2. Replace imports from
    `@/components/block-content-editor/lexical-surface` and relative
    `lexical-surface` paths with `@game-guild/lexical-surface`.
-3. Keep `BlockArrayEditor` and quiz/rendering imports unchanged.
-4. Keep code-studio imports unchanged.
+3. Keep `BlockArrayEditor`, quiz, code-studio, markdown-block, and HTML-block
+  imports unchanged. They remain outside the Lexical package.
+4. Remove callers that pass `blockEmbed` or `blockInsertMenu` feature flags;
+  those flags no longer exist in the surface API.
 5. Run focused typecheck/lint for web and the new package.
 
 Acceptance criteria:
 
 - app consumers render the same Lexical editor using the package export;
 - no consumer imports from the app `lexical-surface` folder;
-- no quiz/grading/code-studio code changes are required.
+- no quiz/grading/code-studio/markdown/HTML block code changes are required;
+- the editor has no `+Block` or other generic block insertion control.
 
 ## Phase 6: Remove App-Owned Lexical Surface
 
@@ -371,6 +393,7 @@ Acceptance criteria:
 - `rg "../lib/lexical|../../lib/lexical"` returns no active consumer imports;
 - deleted app files are not needed by block-array content editing.
 - quiz and code-studio remain outside the Lexical package.
+- markdown and HTML blocks remain outside the Lexical package.
 
 ## Phase 7: Stabilize Public API
 
@@ -379,13 +402,18 @@ Acceptance criteria:
    - props/types;
    - theme;
    - explicit node/plugin exports needed by consumers.
-2. Add a README explaining ownership, allowed imports, and integration points.
-3. Add package-level tests or type fixtures for:
+2. Keep the essay-compatible state boundary public: serialized editor state in,
+  serialized state plus plain text out. This lets `@game-guild/quiz/react`
+  implement essay editing through the package without importing Lexical
+  internals.
+3. Add a README explaining ownership, allowed imports, and integration points.
+4. Add package-level tests or type fixtures for:
    - importing `LexicalSurface`;
    - initial editor state helpers;
    - shared node registry export;
    - read-only feature disabling.
-4. Add comments to internal adapter boundaries where useful.
+  - serialized-state and plain-text change callback behavior.
+5. Add comments to internal adapter boundaries where useful.
 
 Acceptance criteria:
 
@@ -393,6 +421,7 @@ Acceptance criteria:
   `block-content-editor` internals;
 - `@game-guild/lexical-surface` can typecheck independently;
 - the package API does not expose block-array editor concepts.
+- the package API has no generic block insertion or embed capability.
 
 ## Validation Commands
 
@@ -414,8 +443,9 @@ focused package checks and the first unrelated web errors.
   friendly form.
 - Media upload and asset resolution may need adapter props to avoid pulling
   project storage into Lexical.
-- Generic block embed plugins may need an adapter boundary so concrete block
-  experiences such as quiz and code-studio stay outside the Lexical package.
+- Removing generic block embed/insertion may reveal callers that used the
+  Lexical toolbar as a second block picker. Those callers must move to
+  `BlockArrayEditor`, not to a new Lexical adapter.
 - Mermaid, Vega-Lite, Excalidraw, KaTeX, and asset flows may add package
   dependencies that need workspace manifest updates.
 - Moving shared node config too early can break every Lexical consumer at once;
@@ -433,10 +463,10 @@ separate packages later:
 - project/content activity editors: own activity-specific authoring and runtime
   behavior.
 
-Future packages should integrate with `@game-guild/lexical-surface` through
-explicit adapter props or block embed contracts. They should not import Lexical
-internals directly, and `@game-guild/lexical-surface` should not import their
-implementation.
+Future packages should integrate with `@game-guild/lexical-surface` through its
+public document editor props and serialized-state contracts. They should not
+import Lexical internals directly, and `@game-guild/lexical-surface` should not
+import their implementation or offer generic block embeds.
 
 ## Non-Goals
 
@@ -444,6 +474,8 @@ implementation.
 - Do not move quiz into `@game-guild/lexical-surface`.
 - Do not move code-studio into `@game-guild/lexical-surface`.
 - Do not move `BlockArrayEditor`.
+- Do not copy or replace block insertion, block embeds, code-studio, markdown
+  blocks, or HTML blocks.
 - Do not change course content persistence.
 - Do not introduce assessment concepts into Lexical.
 - Do not redesign the editor UI during extraction.
@@ -453,7 +485,9 @@ implementation.
 
 - `@game-guild/lexical-surface` owns Lexical.
 - `@game-guild/block-content-editor` owns block content orchestration.
+- `BlockArrayEditor` is the only owner of generic block insertion; Lexical has
+  no `+Block` UI and does not render generic block-array embeds.
 - Web app pages import editor surfaces through packages instead of app-local
   implementation folders.
-- Quiz/grading remains independent from Lexical and continues to integrate
-  through `BlockArrayEditor` and content-owned contracts.
+- Quiz's React package may consume the public lexical-surface editor for essay
+  authoring and rendering, while quiz domain and grading remain Lexical-free.
