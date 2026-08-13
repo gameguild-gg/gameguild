@@ -141,6 +141,9 @@ type AssessmentGroupFields = {
 
 function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
   const groupFields = dto as LearningAssessmentsAssessment & AssessmentGroupFields;
+  const legacyFields = dto as LearningAssessmentsAssessment & {
+    passingScore?: number;
+  };
 
   return {
     id: dto.id ?? '',
@@ -154,7 +157,7 @@ function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
     description: dto.description ?? null,
     type: normalizeAssessmentType(dto.type),
     maxScore: dto.maxScore ?? 100,
-    passingScore: dto.passingScore ?? 70,
+    passingScore: legacyFields.passingScore ?? 70,
     timeLimitMinutes: dto.timeLimitMinutes ?? null,
     maxAttempts: dto.maxAttempts ?? null,
     isRequired: dto.isRequired ?? true,

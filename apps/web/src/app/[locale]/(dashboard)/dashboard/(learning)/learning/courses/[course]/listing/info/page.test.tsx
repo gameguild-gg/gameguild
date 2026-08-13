@@ -35,6 +35,7 @@ const courseFixture: CourseDetails = {
   thumbnail: 'https://cdn.gameguild.gg/courses/boss-ai.jpg',
   videoShowcaseUrl: null,
   estimatedHours: 32,
+  passingScore: 60,
   category: 'GameDevelopment',
   difficulty: 'Advanced',
   skillsRequired: 'Unity basics',
@@ -82,6 +83,7 @@ describe('ListingInfoPage', () => {
       target: { value: 'Design readable enemy behavior loops for shipped game prototypes.' },
     });
     fireEvent.change(screen.getByLabelText(/estimated hours/i), { target: { value: '48' } });
+    fireEvent.change(screen.getByLabelText(/passing score/i), { target: { value: '70' } });
     fireEvent.change(screen.getByLabelText(/skills students will learn/i), {
       target: { value: 'Boss AI, Telemetry tuning' },
     });
@@ -100,6 +102,7 @@ describe('ListingInfoPage', () => {
         category: 'GameDevelopment',
         difficulty: 'Advanced',
         estimatedHours: 48,
+        passingScore: 70,
         skillsRequired: 'Unity basics, C# fundamentals',
         skillsProvided: 'Boss AI, Telemetry tuning',
       });

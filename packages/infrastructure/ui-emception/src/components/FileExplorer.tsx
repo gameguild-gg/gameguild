@@ -1,5 +1,7 @@
 import { type JSX, useCallback, useRef, useState } from 'react';
-import type { DockGroup, TabType, TreeNode, WorkspaceFile } from './ide-types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
+import { Switch } from '@game-guild/ui/components/switch';
+import type { DockGroup, FileMeta, TabType, TreeNode, WorkspaceFile } from './ide-types';
 import { fileName } from './ide-utils';
 
 /** Simple VS Code–style file/folder icons using Unicode symbols + color */
@@ -44,6 +46,10 @@ interface FileExplorerProps {
     onRename: () => void;
     onDelete: () => void;
     fileTree: TreeNode[];
+    /** When supplied, each file row renders visibility + modifiable controls. */
+    fileMeta?: Record<string, FileMeta>;
+    /** Fired on visibility/modifiable change with the merged patch. */
+    onFileMetaChange?: (path: string, patch: Partial<FileMeta>) => void;
 }
 
 export default function FileExplorer({
@@ -57,6 +63,8 @@ export default function FileExplorer({
     onRename,
     onDelete,
     fileTree,
+    fileMeta,
+    onFileMetaChange,
 }: FileExplorerProps) {
     const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; path: string } | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -96,11 +104,22 @@ export default function FileExplorer({
 
         const isSelected = node.path === selectedPath;
         const { icon, color } = fileIcon(node.name);
+        const meta = fileMeta?.[node.path];
+        const stopRow = (e: React.SyntheticEvent) => e.stopPropagation();
         return (
-            <button
+            <div
                 key={node.path}
+                role="button"
+                tabIndex={0}
+                data-testid={`file-row-${node.path}`}
                 onClick={() => onSelectPath(node.path)}
                 onDoubleClick={() => onOpenTab(node.path)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onOpenTab(node.path);
+                    }
+                }}
                 onContextMenu={(e) => {
                     e.preventDefault();
                     onSelectPath(node.path);
@@ -122,8 +141,34 @@ export default function FileExplorer({
                 title="Single-click to select · Double-click to open · Right-click for menu"
             >
                 <span style={{ color, fontSize: '0.78rem', flexShrink: 0 }}>{icon}</span>
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName(node.path)}</span>
-            </button>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{fileName(node.path)}</span>
+                {fileMeta && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }} onPointerDown={stopRow} onClick={stopRow}>
+                        <span data-testid={`file-visibility-${node.path}`} style={{ display: 'inline-flex' }}>
+                            <Select
+                                value={meta?.visibility ?? 'Public'}
+                                onValueChange={(v) => onFileMetaChange?.(node.path, { visibility: v as 'Public' | 'Private' })}
+                            >
+                                <SelectTrigger
+                                    size="sm"
+                                    style={{ height: 20, fontSize: '0.65rem', padding: '0 0.25rem', width: 70, background: '#1e1e2e', borderColor: '#45475a', color: '#cdd6f4' }}
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Public">Public</SelectItem>
+                                    <SelectItem value="Private">Private</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </span>
+                        <Switch
+                            checked={meta?.modifiable ?? true}
+                            onCheckedChange={(checked) => onFileMetaChange?.(node.path, { modifiable: checked })}
+                            data-testid={`file-modifiable-${node.path}`}
+                        />
+                    </span>
+                )}
+            </div>
         );
     };
 

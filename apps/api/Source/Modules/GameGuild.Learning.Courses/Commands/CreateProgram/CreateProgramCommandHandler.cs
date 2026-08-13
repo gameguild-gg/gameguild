@@ -37,6 +37,7 @@ public sealed class CreateProgramCommandHandler(IApplicationDbContext context, I
       EnrollmentStatus = request.EnrollmentStatus,
       MaxEnrollments = request.MaxEnrollments,
       EnrollmentDeadline = request.EnrollmentDeadline,
+      PassingScore = request.PassingScore,
       Status = ContentStatus.Draft,
       Visibility = ContentVisibility.Private,
     };

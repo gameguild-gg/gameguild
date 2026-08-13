@@ -68,7 +68,7 @@ public sealed class CodingAssignmentEndpointsTests
         fixture.Context.Set<ProgramContent>().Add(content);
         await fixture.Context.SaveChangesAsync();
 
-        var body = BuildFullContent() with { Grading = new GradingConfig { MaxScore = 80, PassingScore = 50 } };
+        var body = BuildFullContent() with { Grading = new GradingConfig { MaxScore = 80 } };
         var result = await fixture.Service.UpsertAsync(programId, content.Id, body, Guid.NewGuid());
 
         result.IsSuccess.Should().BeTrue();
@@ -89,7 +89,7 @@ public sealed class CodingAssignmentEndpointsTests
 
         var replacement = BuildFullContent() with
         {
-            Grading = new GradingConfig { MaxScore = 50, PassingScore = 25 }
+            Grading = new GradingConfig { MaxScore = 50 }
         };
         var result = await fixture.Service.UpsertAsync(programId, content.Id, replacement, Guid.NewGuid());
 
@@ -97,7 +97,6 @@ public sealed class CodingAssignmentEndpointsTests
         await fixture.Context.Entry(content).ReloadAsync();
         var persisted = System.Text.Json.JsonSerializer.Deserialize<CodingAssignmentContent>(content.JsonBody!);
         persisted!.Grading.MaxScore.Should().Be(50);
-        persisted.Grading.PassingScore.Should().Be(25);
     }
 
     // ── (g) PUT invalid payload (empty tests) → 400 with at_least_one_test ───────
@@ -120,7 +119,7 @@ public sealed class CodingAssignmentEndpointsTests
         result.Error.Code.Should().Be("at_least_one_test");
     }
 
-    // ── (h) PUT syncs Assessment.MaxScore/PassingScore via IAssessmentGradingSync ─
+    // ── (h) PUT syncs Assessment.MaxScore via IAssessmentGradingSync ─
 
     [Fact]
     public async Task UpsertAsync_InvokesAssessmentGradingSync()
@@ -131,13 +130,13 @@ public sealed class CodingAssignmentEndpointsTests
 
         var body = BuildFullContent() with
         {
-            Grading = new GradingConfig { MaxScore = 90, PassingScore = 45 }
+            Grading = new GradingConfig { MaxScore = 90 }
         };
 
         await fixture.Service.UpsertAsync(programId, content.Id, body, Guid.NewGuid());
 
         fixture.GradingSyncMock.Verify(
-            s => s.SyncAsync(content.Id, 90, 45, It.IsAny<CancellationToken>()),
+            s => s.SyncAsync(content.Id, 90, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -193,7 +192,7 @@ public sealed class CodingAssignmentEndpointsTests
             Public = new() { new StandardTest { Stdout = "ok" }, new StandardTest { Stdout = "ok2" } },
             Private = new() { new StandardTest { Stdout = "hidden" } }
         },
-        Grading = new GradingConfig { MaxScore = 100, PassingScore = 70 }
+        Grading = new GradingConfig { MaxScore = 100 }
     };
 
     private static ProgramContent PersistCodingContent(ServiceFixture fixture, Guid programId, CodingAssignmentContent body)

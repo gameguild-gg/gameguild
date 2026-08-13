@@ -37,7 +37,7 @@ public sealed class AssignmentDeliveryContractTests
     [Fact]
     public void SetDeliverySchedule_WhenAvailabilityEndsBeforeItStarts_ShouldRejectIt()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100, 60);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100);
 
         var action = () => assessment.SetAvailability(DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(1));
 
@@ -71,7 +71,7 @@ public sealed class AssignmentDeliveryContractTests
     [Fact]
     public void SetDeliverySchedule_WhenLateDeadlineIsOutsideAvailability_ShouldRejectIt()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100, 60);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100);
         var dueAt = DateTime.UtcNow.AddDays(1);
 
         var action = () => assessment.SetDeliverySchedule(
@@ -88,7 +88,7 @@ public sealed class AssignmentDeliveryContractTests
     [Fact]
     public void SetDeliverySchedule_WhenLateSubmissionsHaveNoDeadline_ShouldRejectIt()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100, 60);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100);
         var dueAt = DateTime.UtcNow.AddDays(1);
 
         var action = () => assessment.SetDeliverySchedule(
@@ -108,7 +108,7 @@ public sealed class AssignmentDeliveryContractTests
         var now = DateTime.UtcNow;
         var dueAt = now.AddDays(1);
         var deadline = dueAt.AddDays(1);
-        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100, 60);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100);
         assessment.SetDeliverySchedule(now, deadline.AddDays(1), dueAt, true, deadline);
 
         assessment.TryGetSubmissionTiming(dueAt, out var atDueLate).Should().BeTrue();
@@ -126,10 +126,9 @@ public sealed class AssignmentDeliveryContractTests
     [Fact]
     public void Update_WhenAvailabilityEndsBeforeItStarts_ShouldRejectIt()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100, 60);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100);
 
         var action = () => assessment.Update(
-            null,
             null,
             null,
             null,
@@ -146,7 +145,7 @@ public sealed class AssignmentDeliveryContractTests
     [Fact]
     public void TryGetSubmissionTiming_WhenInsideLateWindow_ShouldAcceptAndMarkLate()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100, 60);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Assignment", AssessmentType.Assignment, 100);
         var dueAt = DateTime.UtcNow.AddDays(1);
         assessment.SetDeliverySchedule(
             DateTime.UtcNow,

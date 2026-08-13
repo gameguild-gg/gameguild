@@ -78,7 +78,7 @@ public sealed class LearnerWorkspaceEdgeCaseTests
             CohortScheduleItemType.ContentRelease,
             "Undated",
             status: CohortScheduleItemStatus.Published);
-        var ungraded = Assessment.Create(course.Id, "Ungraded yet", AssessmentType.Quiz, 10, 7);
+        var ungraded = Assessment.Create(course.Id, "Ungraded yet", AssessmentType.Quiz, 10);
 
         context.AddRange(
             course,
@@ -175,9 +175,8 @@ public sealed class LearnerWorkspaceEdgeCaseTests
             "Practice",
             AssessmentType.Assignment,
             20,
-            12,
             assessmentGroupId: group.Id);
-        assessment.Update(null, null, null, null, null, null, null, null, null, contentId: lesson.Id);
+        assessment.Update(null, null, null, null, null, null, null, null, contentId: lesson.Id);
         var submission = AssessmentSubmission.Start(assessment.Id, enrollment.Id, userId, 1);
         submission.Submit();
         var cohort = Cohort.Create(

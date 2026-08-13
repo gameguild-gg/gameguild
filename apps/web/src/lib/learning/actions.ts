@@ -353,12 +353,13 @@ export interface CreateCourseInput {
   title: string;
   description: string;
   slug: string;
+  passingScore?: number;
 }
 
 export async function createCourse(
   input: CreateCourseInput,
 ): Promise<ActionResult<{ id: string; slug: string; routeParam: string }>> {
-  const { title, description, slug } = input;
+  const { title, description, slug, passingScore } = input;
 
   if (!title || title.trim().length < 3) {
     return { success: false, error: "Title must be at least 3 characters." };
@@ -379,6 +380,7 @@ export async function createCourse(
       title: title.trim(),
       description: description.trim(),
       slug: slug.trim(),
+      passingScore,
     } satisfies LearningCoursesCreateProgram);
 
     if (result.ok) {
@@ -426,6 +428,7 @@ export interface UpdateCourseInput {
   enrollmentStatus?: string;
   maxEnrollments?: number | null;
   enrollmentDeadline?: string | null;
+  passingScore?: number;
 }
 
 export async function updateCourse(
@@ -1218,6 +1221,7 @@ export async function createAssessment(
     const resolvedCourseId = await resolveCourseMutationId(courseId);
     const body: LearningAssessmentsCreateAssessmentInput & {
       assessmentGroupId?: string | null;
+      passingScore?: number | null;
     } = {
       courseId: resolvedCourseId,
       title: title.trim(),
@@ -1420,6 +1424,7 @@ export async function updateAssessment(
     const body: LearningAssessmentsUpdateAssessmentInput & {
       assessmentGroupId?: string | null;
       clearAssessmentGroupId?: boolean;
+      passingScore?: number | null;
     } = {
       title: fields.title?.trim() ?? null,
       description: fields.description?.trim() ?? null,

@@ -19,7 +19,8 @@ import {
   getCodingAssignmentFull,
   putCodingAssignment,
   isStandardTest,
-  isFunctionalTest,
+  isFunctionalTestGroup,
+  isFunctionalTestCase,
   isTest,
   isTestFunctionData,
   isFunctionParameter,
@@ -27,7 +28,7 @@ import {
   narrowCodingAssignmentContent,
   type CodingAssignmentContent,
   type StandardTest,
-  type FunctionalTest,
+  type FunctionalTestGroup,
   type Test,
 } from './client';
 
@@ -44,7 +45,7 @@ const standardTest: StandardTest = {
   ExitCode: 0,
 };
 
-const functionalTest: FunctionalTest = {
+const functionalTestGroup: FunctionalTestGroup = {
   kind: 'functional',
   Weight: 2.0,
   Function: {
@@ -55,7 +56,10 @@ const functionalTest: FunctionalTest = {
     ],
     ReturnType: { Type: 'integer', Content: 0 },
   },
-  Result: { Type: 'integer', Content: 5 },
+  Cases: [
+    { Inputs: [{ Type: 'integer', Content: 2 }, { Type: 'integer', Content: 3 }], Expected: { Type: 'integer', Content: 5 } },
+    { Inputs: [{ Type: 'integer', Content: 10 }, { Type: 'integer', Content: 20 }], Expected: { Type: 'integer', Content: 30 } },
+  ],
 };
 
 const fullContent: CodingAssignmentContent = {
@@ -78,9 +82,9 @@ const fullContent: CodingAssignmentContent = {
   },
   Tests: {
     Public: [standardTest],
-    Private: [functionalTest],
+    Private: [functionalTestGroup],
   },
-  Grading: { MaxScore: 100, PassingScore: 60 },
+  Grading: { MaxScore: 100 },
 };
 
 // ---------------------------------------------------------------------------
@@ -181,23 +185,34 @@ describe('coding-assignment client wrappers', () => {
 describe('coding-assignment type guards', () => {
   it('isStandardTest accepts a well-formed StandardTest and rejects Foreign shapes', () => {
     expect(isStandardTest(standardTest)).toBe(true);
-    expect(isStandardTest(functionalTest)).toBe(false);
+    expect(isStandardTest(functionalTestGroup)).toBe(false);
     expect(isStandardTest({ kind: 'standard' })).toBe(false); // missing Stdout
     expect(isStandardTest({ kind: 'standard', Stdout: 42 })).toBe(false); // wrong type
     expect(isStandardTest(null)).toBe(false);
     expect(isStandardTest(undefined)).toBe(false);
   });
 
-  it('isFunctionalTest accepts a well-formed FunctionalTest', () => {
-    expect(isFunctionalTest(functionalTest)).toBe(true);
-    expect(isFunctionalTest(standardTest)).toBe(false);
-    expect(isFunctionalTest({ kind: 'functional' })).toBe(false);
+  it('isFunctionalTestGroup accepts a well-formed FunctionalTestGroup', () => {
+    expect(isFunctionalTestGroup(functionalTestGroup)).toBe(true);
+    expect(isFunctionalTestGroup(standardTest)).toBe(false);
+    expect(isFunctionalTestGroup({ kind: 'functional' })).toBe(false);
+    // ponytail: 0-case groups pass the guard — Array.every is vacuous on []. The
+    // server's at_least_one_case validator rejects empty Cases; the FE guard only
+    // narrows the wire shape and does not duplicate server-side rules.
+    expect(isFunctionalTestGroup({ kind: 'functional', Function: functionalTestGroup.Function, Cases: [] })).toBe(true);
+  });
+
+  it('isFunctionalTestCase narrows each case shape', () => {
+    expect(isFunctionalTestCase(functionalTestGroup.Cases[0])).toBe(true);
+    expect(isFunctionalTestCase({ Inputs: [], Expected: { Type: 'integer', Content: 0 } })).toBe(true);
+    expect(isFunctionalTestCase({ Inputs: [{ Type: 'integer', Content: 1 }] })).toBe(false); // missing Expected
+    expect(isFunctionalTestCase({ Inputs: [{ Type: 'array', Content: [] }], Expected: { Type: 'integer', Content: 0 } })).toBe(false); // bad param type
   });
 
   it('isTest accepts any Test variant', () => {
     const t: Test = standardTest;
     expect(isTest(t)).toBe(true);
-    expect(isTest(functionalTest)).toBe(true);
+    expect(isTest(functionalTestGroup)).toBe(true);
     expect(isTest({ Weight: 1 })).toBe(false);
   });
 
@@ -212,7 +227,7 @@ describe('coding-assignment type guards', () => {
   });
 
   it('isTestFunctionData validates function metadata', () => {
-    expect(isTestFunctionData(functionalTest.Function)).toBe(true);
+    expect(isTestFunctionData(functionalTestGroup.Function)).toBe(true);
     expect(isTestFunctionData({ FunctionName: 'add' })).toBe(false); // missing Parameters + ReturnType
     expect(
       isTestFunctionData({
