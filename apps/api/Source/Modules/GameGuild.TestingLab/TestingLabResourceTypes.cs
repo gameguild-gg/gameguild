@@ -27,12 +27,18 @@ public static class TestingLabResourceTypes
     /// <summary>Testing participant resource type</summary>
     public const string Participant = "TestingParticipant";
 
+    public const string Event = "TestingEvent";
+
+    public const string Application = "TestingProjectApplication";
+
+    public const string Analytics = "TestingLabAnalytics";
+
     /// <summary>
     ///     All TestingLab resource types for validation.
     /// </summary>
     public static readonly IReadOnlyList<string> All = new[]
     {
-        Session, Location, Feedback, Request, Participant
+        Session, Location, Feedback, Request, Participant, Event, Application, Analytics
     };
 
     /// <summary>

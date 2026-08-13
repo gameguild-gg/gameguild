@@ -75,5 +75,11 @@ public sealed class ProjectStoreProductModelTests
         services.Should().ContainSingle(descriptor =>
             descriptor.ServiceType == typeof(IProjectAuthorizationService) &&
             descriptor.ImplementationType == typeof(ProjectAuthorizationService));
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(IPermissionResolver) &&
+            descriptor.ImplementationType == typeof(ProjectPermissionResolver));
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(IResourcePermissionService) &&
+            descriptor.ImplementationType == typeof(ProjectResourcePermissionService));
     }
 }

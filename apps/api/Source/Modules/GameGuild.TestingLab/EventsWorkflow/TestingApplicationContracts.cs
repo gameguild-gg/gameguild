@@ -65,6 +65,16 @@ public sealed record GetTestingEventApplicationsQuery(
 
 public sealed record GetMyTestingProjectApplicationsQuery(Guid? EventId = null)
     : IQuery<Result<IReadOnlyList<TestingProjectApplicationProjection>>>;
+
+public sealed record TestingApplicationTesterEligibilityProjection(
+    Guid TesterUserId,
+    IReadOnlyList<Guid> EligibleApplicationIds);
+
+public sealed record GetTestingApplicationTesterEligibilityQuery(
+    Guid EventId,
+    IReadOnlyList<Guid> TesterUserIds)
+    : IQuery<Result<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>>;
+
 public sealed record SubmitTestingProjectApplicationRequest(
     Guid ProjectId,
     Guid? ProjectVersionId,

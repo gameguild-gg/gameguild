@@ -24,10 +24,13 @@ public class ProjectsController : BaseApiController {
 
   private readonly IApplicationDbContext _context;
 
-  public ProjectsController(IMediator mediator, IActorContextAccessor actorContextAccessor, IApplicationDbContext context, ILogger<ProjectsController> logger) {
+  private readonly IProjectAuthorizationService _authorizationService;
+
+  public ProjectsController(IMediator mediator, IActorContextAccessor actorContextAccessor, IApplicationDbContext context, IProjectAuthorizationService authorizationService, ILogger<ProjectsController> logger) {
     _mediator = mediator;
     _actorContextAccessor = actorContextAccessor;
     _context = context;
+    _authorizationService = authorizationService;
     _logger = logger;
   }
 
@@ -403,6 +406,7 @@ public class ProjectsController : BaseApiController {
   /// <summary> Get project collaborators </summary>
   [HttpGet("{id:guid}/collaborators")]
   public async Task<ActionResult<IEnumerable<CollaboratorDto>>> GetProjectCollaborators(Guid id) {
+    if (!await _authorizationService.HasPermissionAsync(id, PermissionType.Read).ConfigureAwait(false)) return NotFound();
     var collaborators = await _context.Set<ProjectCollaborator>()
       .Where(c => c.ProjectId == id && c.IsActive)
       .Include(c => c.User)
@@ -424,16 +428,12 @@ public class ProjectsController : BaseApiController {
   /// <summary> Add project collaborator </summary>
   [HttpPost("{id:guid}/collaborators")]
   public async Task<ActionResult<CollaboratorDto>> AddProjectCollaborator(Guid id, [FromBody] AddProjectCollaboratorRequest request) {
+    if (!await _authorizationService.HasPermissionAsync(id, PermissionType.Edit).ConfigureAwait(false)) return NotFound();
     var project = await _context.Set<Project>().FindAsync(id).ConfigureAwait(false);
     if (project == null) return NotFound();
 
     var actor = _actorContextAccessor.ActorContext;
     var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
-
-    // Only project owner or admin can add collaborators
-    var isOwner = project.CreatedById == userId;
-    var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
-    if (!isOwner && !isAdmin) return Forbid();
 
     // Check if user is already a collaborator
     var exists = await _context.Set<ProjectCollaborator>()
@@ -467,16 +467,12 @@ public class ProjectsController : BaseApiController {
   /// <summary> Update project collaborator </summary>
   [HttpPut("{id:guid}/collaborators/{collaboratorId:guid}")]
   public async Task<ActionResult<CollaboratorDto>> UpdateProjectCollaborator(Guid id, Guid collaboratorId, [FromBody] UpdateProjectCollaboratorRequest request) {
+    if (!await _authorizationService.HasPermissionAsync(id, PermissionType.Edit).ConfigureAwait(false)) return NotFound();
     var collaborator = await _context.Set<ProjectCollaborator>()
       .FirstOrDefaultAsync(c => c.Id == collaboratorId && c.ProjectId == id).ConfigureAwait(false);
     if (collaborator == null) return NotFound();
 
-    var actor = _actorContextAccessor.ActorContext;
-    var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
-    var project = await _context.Set<Project>().FindAsync(id).ConfigureAwait(false);
-    var isOwner = project?.CreatedById == userId;
-    var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
-    if (!isOwner && !isAdmin) return Forbid();
+    var userId = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
 
     if (request.Role != null) collaborator.Role = request.Role;
     if (request.Permissions != null) collaborator.Permissions = request.Permissions;
@@ -498,16 +494,12 @@ public class ProjectsController : BaseApiController {
   /// <summary> Remove project collaborator </summary>
   [HttpDelete("{id:guid}/collaborators/{collaboratorId:guid}")]
   public async Task<ActionResult> RemoveProjectCollaborator(Guid id, Guid collaboratorId) {
+    if (!await _authorizationService.HasPermissionAsync(id, PermissionType.Edit).ConfigureAwait(false)) return NotFound();
     var collaborator = await _context.Set<ProjectCollaborator>()
       .FirstOrDefaultAsync(c => c.Id == collaboratorId && c.ProjectId == id).ConfigureAwait(false);
     if (collaborator == null) return NotFound();
 
-    var actor = _actorContextAccessor.ActorContext;
-    var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
-    var project = await _context.Set<Project>().FindAsync(id).ConfigureAwait(false);
-    var isOwner = project?.CreatedById == userId;
-    var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
-    if (!isOwner && !isAdmin) return Forbid();
+    var userId = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
 
     // Soft-delete: mark as inactive
     collaborator.IsActive = false;
@@ -522,15 +514,12 @@ public class ProjectsController : BaseApiController {
   /// <summary> Share project with a user by assigning a role </summary>
   [HttpPost("{id:guid}:share")]
   public async Task<ActionResult<CollaboratorDto>> ShareProject(Guid id, [FromBody] ShareProjectRequest request) {
+    if (!await _authorizationService.HasPermissionAsync(id, PermissionType.Share).ConfigureAwait(false)) return NotFound();
     var project = await _context.Set<Project>().FindAsync(id).ConfigureAwait(false);
     if (project == null) return NotFound();
 
     var actor = _actorContextAccessor.ActorContext;
     var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
-    var isOwner = project.CreatedById == userId;
-    var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
-    if (!isOwner && !isAdmin) return Forbid();
-
     // Check if already shared
     var existing = await _context.Set<ProjectCollaborator>()
       .FirstOrDefaultAsync(c => c.ProjectId == id && c.UserId == request.UserId).ConfigureAwait(false);
@@ -563,15 +552,12 @@ public class ProjectsController : BaseApiController {
   /// <summary> Invite a user to collaborate on a project without granting access until acceptance </summary>
   [HttpPost("{id:guid}/invitations")]
   public async Task<ActionResult<ProjectInvitationDto>> InviteProjectCollaborator(Guid id, [FromBody] InviteProjectCollaboratorRequest request) {
+    if (!await _authorizationService.HasPermissionAsync(id, PermissionType.Share).ConfigureAwait(false)) return NotFound();
     var project = await _context.Set<Project>().FindAsync(id).ConfigureAwait(false);
     if (project == null) return NotFound();
 
     var actor = _actorContextAccessor.ActorContext;
     var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
-    var isOwner = project.CreatedById == userId;
-    var isAdmin = actor.IsSystemAdmin || actor.IsTenantAdmin;
-    if (!isOwner && !isAdmin) return Forbid();
-
     if (!request.UserId.HasValue && string.IsNullOrWhiteSpace(request.Email)) {
       return BadRequest(new { Message = "Provide either a user id or an email address." });
     }

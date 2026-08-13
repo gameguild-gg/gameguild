@@ -158,7 +158,10 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
            permission.ResourceType == TestingLabResourceTypes.Location ||
            permission.ResourceType == TestingLabResourceTypes.Feedback ||
            permission.ResourceType == TestingLabResourceTypes.Request ||
-           permission.ResourceType == TestingLabResourceTypes.Participant))
+           permission.ResourceType == TestingLabResourceTypes.Participant ||
+           permission.ResourceType == TestingLabResourceTypes.Event ||
+           permission.ResourceType == TestingLabResourceTypes.Application ||
+           permission.ResourceType == TestingLabResourceTypes.Analytics))
         .ToListAsync()
         .ConfigureAwait(false);
 
@@ -279,7 +282,9 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
     return permissions.Any(permission =>
       string.Equals(permission.Action, action, StringComparison.OrdinalIgnoreCase) &&
       string.Equals(permission.ResourceType, resourceType, StringComparison.Ordinal) &&
-      (!permission.ResourceId.HasValue || !resourceId.HasValue || permission.ResourceId == resourceId));
+      (resourceId.HasValue
+        ? !permission.ResourceId.HasValue || permission.ResourceId == resourceId
+        : !permission.ResourceId.HasValue));
   }
 
   private async Task<TenantPermission> GetOrCreateTenantPermissionsAsync(Guid userId, Guid? tenantId) {
