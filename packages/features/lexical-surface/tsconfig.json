@@ -20,6 +20,7 @@
   "include": [
     "src/index.ts",
     "src/adapters.tsx",
+    "src/features.ts",
     "src/lexical-surface.tsx",
     "src/theme.ts",
     "src/dialogs/base-confirm-dialog.tsx",
