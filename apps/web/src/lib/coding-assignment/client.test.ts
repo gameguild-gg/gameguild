@@ -51,10 +51,10 @@ const functionalTestGroup: FunctionalTestGroup = {
   Function: {
     FunctionName: 'add',
     Parameters: [
-      { Name: 'a', Type: 'integer', Content: 2 },
-      { Name: 'b', Type: 'integer', Content: 3 },
+      { Name: 'a', Type: 'integer' },
+      { Name: 'b', Type: 'integer' },
     ],
-    ReturnType: { Type: 'integer', Content: 0 },
+    ReturnType: { Type: 'integer' },
   },
   Cases: [
     { Inputs: [{ Type: 'integer', Content: 2 }, { Type: 'integer', Content: 3 }], Expected: { Type: 'integer', Content: 5 } },
@@ -222,8 +222,8 @@ describe('coding-assignment type guards', () => {
     expect(isFunctionParameter({ Type: 'integer', Content: 'no' })).toBe(true); // guard trusts wire, not semantic
     expect(isFunctionParameter({ Type: 'array', Content: [] })).toBe(false); // array not in v1 set
     expect(isFunctionParameter({ Type: 'integer' })).toBe(false); // missing Content
-    expect(isFunctionParameterWithName({ Name: 'x', Type: 'string', Content: 'hi' })).toBe(true);
-    expect(isFunctionParameterWithName({ Type: 'string', Content: 'hi' })).toBe(false); // missing Name
+    expect(isFunctionParameterWithName({ Name: 'x', Type: 'string' })).toBe(true);
+    expect(isFunctionParameterWithName({ Type: 'string' })).toBe(false); // missing Name
   });
 
   it('isTestFunctionData validates function metadata', () => {
@@ -232,8 +232,8 @@ describe('coding-assignment type guards', () => {
     expect(
       isTestFunctionData({
         FunctionName: 'add',
-        Parameters: [{ Name: 'a', Type: 'integer', Content: 1 }],
-        ReturnType: { Type: 'integer', Content: 0 },
+        Parameters: [{ Name: 'a', Type: 'integer' }],
+        ReturnType: { Type: 'integer' },
       }),
     ).toBe(true);
   });

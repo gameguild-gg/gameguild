@@ -209,6 +209,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   const [isReady, setIsReady] = useState(false);
   const [terminalReady, setTerminalReady] = useState(false);
   const [executionPhase, setExecutionPhase] = useState<'idle' | 'compiling' | 'running'>('idle');
+  const [bottomTab, setBottomTab] = useState<'terminal' | 'tests'>('terminal');
   /** Set to true by handleStop so the catch block in handleCompile knows it was intentional */
   const stoppedRef = useRef(false);
   /** Tracks latest files for use in callbacks that can't close over state */
@@ -2105,20 +2106,6 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             fileMeta={fileMeta}
             onFileMetaChange={onFileMetaChange}
           />
-          {testsPanelSlot != null && (
-            <section
-              data-testid="tests-panel-slot"
-              style={{
-                flexShrink: 0,
-                maxHeight: '40%',
-                overflow: 'auto',
-                borderTop: '1px solid #313244',
-                background: '#11111b',
-              }}
-            >
-              {testsPanelSlot}
-            </section>
-          )}
         </Panel>
 
         <PanelResizeHandle style={resizerStyle} />
@@ -2195,17 +2182,61 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
               </>
             )}
 
-            {/* Terminal */}
+            {/* Bottom panel: Terminal + Tests tabs */}
             <PanelResizeHandle style={resizerVStyle} />
             <Panel defaultSize={28} minSize={8} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <TerminalPanel
-                terminalTabs={terminalTabs}
-                activeTerminalId={activeTerminalId}
-                onSetActiveTerminal={setActiveTerminalId}
-                onNewTerminal={createTerminalTab}
-                onCloseTerminal={closeTerminalTab}
-                onBootTerminalReady={handleBootTerminalReady}
-              />
+              <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid #313244', background: '#181825' }}>
+                <button
+                  type="button"
+                  onClick={() => setBottomTab('terminal')}
+                  style={{
+                    padding: '4px 12px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    background: bottomTab === 'terminal' ? '#1e1e2e' : 'transparent',
+                    color: bottomTab === 'terminal' ? '#cdd6f4' : '#6c7086',
+                    border: 'none',
+                    borderBottom: bottomTab === 'terminal' ? '2px solid #89b4fa' : '2px solid transparent',
+                  }}
+                >
+                  Terminal
+                </button>
+                {testsPanelSlot != null && (
+                  <button
+                    type="button"
+                    onClick={() => setBottomTab('tests')}
+                    style={{
+                      padding: '4px 12px',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      background: bottomTab === 'tests' ? '#1e1e2e' : 'transparent',
+                      color: bottomTab === 'tests' ? '#cdd6f4' : '#6c7086',
+                      border: 'none',
+                      borderBottom: bottomTab === 'tests' ? '2px solid #89b4fa' : '2px solid transparent',
+                    }}
+                  >
+                    Tests
+                  </button>
+                )}
+              </div>
+              <div style={{ flex: 1, display: bottomTab === 'terminal' ? 'flex' : 'none', flexDirection: 'column', overflow: 'hidden' }}>
+                <TerminalPanel
+                  terminalTabs={terminalTabs}
+                  activeTerminalId={activeTerminalId}
+                  onSetActiveTerminal={setActiveTerminalId}
+                  onNewTerminal={createTerminalTab}
+                  onCloseTerminal={closeTerminalTab}
+                  onBootTerminalReady={handleBootTerminalReady}
+                />
+              </div>
+              {bottomTab === 'tests' && testsPanelSlot != null && (
+                <div
+                  data-testid="tests-panel-slot"
+                  style={{ flex: 1, overflow: 'auto', background: '#11111b', padding: '8px' }}
+                >
+                  {testsPanelSlot}
+                </div>
+              )}
             </Panel>
           </PanelGroup>
         </Panel>

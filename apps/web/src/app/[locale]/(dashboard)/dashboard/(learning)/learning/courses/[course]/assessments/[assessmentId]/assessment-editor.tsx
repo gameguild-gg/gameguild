@@ -23,7 +23,7 @@ import {
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
 import { Separator } from "@game-guild/ui/components/separator";
-import { ArrowLeft, Clock, Loader2, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Clock, Code, Loader2, Save, Trash2 } from "lucide-react";
 import type {
   Assessment,
   AssessmentGroup,
@@ -515,6 +515,25 @@ export function AssessmentEditor({
                   onCheckedChange={setIsRequired}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Coding Assignment</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button
+                className="w-full"
+                onClick={() =>
+                  router.push(
+                    `/dashboard/learning/courses/${encodeURIComponent(courseId)}/assessments/${assessment.id}/coding-definition`,
+                  )
+                }
+              >
+                <Code className="mr-2 h-4 w-4" />
+                Edit Coding Definition
+              </Button>
             </CardContent>
           </Card>
 
