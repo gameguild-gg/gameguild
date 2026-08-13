@@ -30,7 +30,7 @@ permissions:
 
 concurrency:
   group: emception-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   NODE_VERSION: '22'
@@ -84,6 +84,15 @@ jobs:
           restore-keys: |
             userland-${{ runner.os }}-
 
+      - name: Cache LLVM build artifacts
+        id: cache-llvm
+        uses: actions/cache@v6 # v4
+        with:
+          path: tools/emception/userland/llvm
+          key: llvm-build-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/lib/pinned-versions.ts', 'tools/emception/scripts/build-llvm.ts') }}
+          restore-keys: |
+            llvm-build-${{ runner.os }}-
+
       - name: Cache sysroot and CDN bundles
         id: cache-cdn
         uses: actions/cache@v6 # v4
@@ -112,7 +121,7 @@ jobs:
 
           sudo swapoff -a || true
           sudo rm -f /mnt/emception-swapfile
-          sudo fallocate -l 8G /mnt/emception-swapfile
+          sudo fallocate -l 32G /mnt/emception-swapfile
           sudo chmod 600 /mnt/emception-swapfile
           sudo mkswap /mnt/emception-swapfile
           sudo swapon /mnt/emception-swapfile
