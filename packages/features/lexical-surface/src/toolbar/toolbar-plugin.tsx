@@ -381,21 +381,26 @@ function ToolbarButton({
   )
 }
 
-function BlockFormatDropDown({
+export function BlockFormatDropDown({
   editor,
   blockType,
   disabled,
+  compact = false,
+  preserveSelection = false,
 }: {
   editor: LexicalEditor
   blockType: keyof typeof blockTypeToBlockName
   disabled?: boolean
+  compact?: boolean
+  preserveSelection?: boolean
 }) {
   return (
     <DropDown
       disabled={disabled}
       buttonLabel={blockTypeToBlockName[blockType]}
-      buttonClassName="w-[140px] truncate justify-start"
+      buttonClassName={compact ? "w-[128px] truncate justify-start" : "w-[140px] truncate justify-start"}
       buttonAriaLabel="Formatting options for text style"
+      preserveSelection={preserveSelection}
     >
       <DropDownItem active={blockType === "paragraph"} onClick={() => formatParagraph(editor)} shortcut={SHORTCUTS.NORMAL}>
         <ParagraphIcon className="w-4 h-4" /> Normal
@@ -480,16 +485,20 @@ function CodeLanguageDropDown({
   )
 }
 
-function FontDropDown({
+export function FontDropDown({
   editor,
   value,
   style,
   disabled,
+  compact = false,
+  preserveSelection = false,
 }: {
   editor: LexicalEditor
   value: string
   style: "font-family" | "font-size"
   disabled?: boolean
+  compact?: boolean
+  preserveSelection?: boolean
 }) {
   const isFontFamily = style === "font-family"
   // Garante que as web fonts (Google Fonts + OpenDyslexic) estejam
@@ -532,8 +541,9 @@ function FontDropDown({
       <DropDown
         disabled={disabled}
         buttonLabel={display}
-        buttonClassName="min-w-[60px]"
+        buttonClassName={compact ? "min-w-[52px]" : "min-w-[60px]"}
         buttonAriaLabel="Formatting options for font size"
+        preserveSelection={preserveSelection}
       >
         {FONT_SIZE_OPTIONS.map(([option, label]) => (
           <DropDownItem
@@ -559,8 +569,10 @@ function FontDropDown({
       disabled={disabled}
       buttonLabel={display}
       buttonLabelStyle={buttonLabelStyle}
-      buttonClassName="w-[140px] truncate justify-start"
+      buttonClassName={compact ? "w-[120px] truncate justify-start" : "w-[140px] truncate justify-start"}
       buttonAriaLabel="Formatting options for font family"
+      preserveSelection={preserveSelection}
+      contentMaxHeight="min(320px, 60vh)"
     >
       {groups.flatMap((group, gi) => {
         const items = FONT_FAMILY_OPTIONS.filter((o) => o.group === group)
@@ -597,14 +609,16 @@ function FontDropDown({
   )
 }
 
-function FontSizeStepper({
+export function FontSizeStepper({
   editor,
   value,
   disabled,
+  preserveSelection = false,
 }: {
   editor: LexicalEditor
   value: string
   disabled?: boolean
+  preserveSelection?: boolean
 }) {
   const currentNumber = React.useMemo(() => {
     const parsed = parseInt(String(value).replace(/px$/, ""), 10)
@@ -695,6 +709,7 @@ function FontSizeStepper({
           buttonAriaLabel="Choose font size"
           buttonClassName="!h-7 !px-1 !rounded-none"
           showChevron={true}
+          preserveSelection={preserveSelection}
         >
           {FONT_SIZE_OPTIONS.map(([option, label]) => (
             <DropDownItem
@@ -721,16 +736,20 @@ function FontSizeStepper({
   )
 }
 
-function ElementFormatDropdown({
+export function ElementFormatDropdown({
   editor,
   value,
   isRTL,
   disabled,
+  compact = false,
+  preserveSelection = false,
 }: {
   editor: LexicalEditor
   value: ElementFormatType
   isRTL: boolean
   disabled?: boolean
+  compact?: boolean
+  preserveSelection?: boolean
 }) {
   const formatOption = ELEMENT_FORMAT_OPTIONS[value || "left"]
   const Icon = isRTL ? formatOption.IconRTL : formatOption.Icon
@@ -738,10 +757,11 @@ function ElementFormatDropdown({
   return (
     <DropDown
       disabled={disabled}
-      buttonLabel={formatOption.name}
+      buttonLabel={compact ? undefined : formatOption.name}
       buttonIcon={<Icon className="w-4 h-4" />}
-      buttonClassName="w-[140px] truncate justify-start"
+      buttonClassName={compact ? "w-8 !px-2" : "w-[140px] truncate justify-start"}
       buttonAriaLabel="Formatting options for text alignment"
+      preserveSelection={preserveSelection}
     >
       <DropDownItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")} shortcut={SHORTCUTS.LEFT_ALIGN}>
         <AlignLeftIcon className="w-4 h-4" /> Left Align
@@ -766,7 +786,7 @@ function ElementFormatDropdown({
   )
 }
 
-function CaseFormatDropDown({
+export function CaseFormatDropDown({
   editor,
   disabled,
   isLowercase,
@@ -776,6 +796,7 @@ function CaseFormatDropDown({
   isSubscript,
   isSuperscript,
   isHighlight,
+  preserveSelection = false,
 }: {
   editor: LexicalEditor
   disabled?: boolean
@@ -786,6 +807,7 @@ function CaseFormatDropDown({
   isSubscript: boolean
   isSuperscript: boolean
   isHighlight: boolean
+  preserveSelection?: boolean
 }) {
   const dispatch = (payload: TextFormatType) =>
     editor.dispatchCommand(FORMAT_TEXT_COMMAND, payload)
@@ -802,6 +824,7 @@ function CaseFormatDropDown({
       disabled={disabled}
       buttonIcon={<CaseIcon className="w-4 h-4" />}
       buttonAriaLabel="Formatting options for additional text styles"
+      preserveSelection={preserveSelection}
     >
       <DropDownItem active={isLowercase} onClick={() => dispatch("lowercase")} shortcut={SHORTCUTS.LOWERCASE}>
         <LowercaseIcon className="w-4 h-4" /> Lowercase
