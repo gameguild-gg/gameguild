@@ -45,7 +45,7 @@ import {
 import { DeleteConfirmDialog } from "@game-guild/lexical-surface/dialogs/delete-confirm-dialog"
 import { useNodeDeleteProtection } from "../shared/use-node-delete-protection"
 import { $isMediaLexicalNode } from "./media-node"
-import type { BaseMediaData, MediaType } from "@game-guild/lexical-surface/nodes/base/media-node-base"
+import type { BaseMediaData, MediaType } from "./media-data"
 import { Slider } from "@game-guild/ui/components/slider"
 import { Button } from "@game-guild/ui/components/button"
 import { Input } from "@game-guild/ui/components/input"

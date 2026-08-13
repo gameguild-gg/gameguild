@@ -13,7 +13,7 @@ import {
 } from "lexical"
 import { useLexicalSurfaceAdapters } from "../adapters"
 import { $createVegaLiteLexicalNode, VegaLiteLexicalNode } from "./vega-lite-node"
-import type { VegaLiteData } from "@game-guild/lexical-surface/nodes/vega-lite-node"
+import type { VegaLiteData } from "./vega-lite-data"
 
 export const INSERT_VEGA_LITE_LEXICAL_COMMAND: LexicalCommand<void> = createCommand(
   "INSERT_VEGA_LITE_LEXICAL_COMMAND",

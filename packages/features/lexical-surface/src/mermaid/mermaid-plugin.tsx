@@ -13,7 +13,7 @@ import {
 } from "lexical"
 import { useLexicalSurfaceAdapters } from "../adapters"
 import { $createMermaidLexicalNode, MermaidLexicalNode } from "./mermaid-node"
-import type { MermaidData } from "@game-guild/lexical-surface/nodes/mermaid-node"
+import type { MermaidData } from "./mermaid-data"
 import type { MermaidDiagramType, MermaidThemeName, MermaidThemeMode } from "./mermaid-node"
 
 export const INSERT_MERMAID_LEXICAL_COMMAND: LexicalCommand<void> = createCommand(
@@ -76,4 +76,3 @@ export function MermaidPlugin() {
     />
   ) : null
 }
-

@@ -16,7 +16,7 @@ import {
   type Spread,
 } from "lexical"
 import { VegaLiteLexicalComponent } from "./vega-lite-component"
-import type { VegaLiteData } from "@game-guild/lexical-surface/nodes/vega-lite-node"
+import type { VegaLiteData } from "./vega-lite-data"
 
 export type SerializedVegaLiteLexicalNode = Spread<
   VegaLiteData,

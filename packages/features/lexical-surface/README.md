@@ -19,14 +19,21 @@ editor remains the only owner of inserting concrete content blocks.
 ```ts
 import {
   LexicalSurface,
+  type BaseMediaData,
   type LexicalSurfaceAdapters,
   type LexicalSurfaceFeatures,
+  type MermaidData,
+  type VegaLiteData,
 } from '@game-guild/lexical-surface';
 ```
 
 `LexicalSurface` accepts serialized Lexical state and emits serialized state in
 `onChange`. Read-only surfaces strip persisted selection state before mounting to
 avoid page scroll on hydration.
+
+Document-feature payload types such as `MermaidData`, `VegaLiteData`, and
+`BaseMediaData` are exported as rich-document data contracts. They are not block
+array storage nodes.
 
 ## Host Adapters
 

@@ -1,5 +1,3 @@
-import type { SerializedBlockNode } from "./base/serialized-block-node"
-
 export interface MermaidData {
   code: string
   type:
@@ -46,5 +44,3 @@ export interface MermaidData {
   caption?: string
   size?: number
 }
-
-export type SerializedMermaidNode = SerializedBlockNode<"mermaid", MermaidData>
