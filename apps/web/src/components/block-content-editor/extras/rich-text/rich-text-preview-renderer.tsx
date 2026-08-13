@@ -8,8 +8,8 @@
 import { useMemo } from "react"
 import type { SerializedEditorState } from "lexical"
 
-import { LexicalSurface } from "../../lexical-surface"
-import { stripSelection } from "../../lib/lexical/initial-editor-state"
+import { LexicalSurface, stripSelection } from "@game-guild/lexical-surface"
+import { lexicalSurfaceAdapters } from "@/components/block-content-editor/lexical-surface-adapters"
 
 interface RichTextPreviewRendererProps {
   content: SerializedEditorState | null | undefined
@@ -32,6 +32,7 @@ export function RichTextPreviewRenderer({ content, className }: RichTextPreviewR
       readOnly
       initialState={sanitizedContent}
       contentClassName={className || "text-sm text-foreground"}
+      adapters={lexicalSurfaceAdapters}
     />
   )
 }

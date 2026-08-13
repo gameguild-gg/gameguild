@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { LessonContentEditor } from './lesson-content-editor';
 
-vi.mock('@/components/block-content-editor/lexical-surface', () => ({
+vi.mock('@game-guild/lexical-surface', () => ({
   LexicalSurface: ({ accessibleLabel }: { accessibleLabel?: string }) => (
     <div role="textbox" aria-label={accessibleLabel} contentEditable />
   ),
