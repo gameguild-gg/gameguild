@@ -65,6 +65,14 @@ test_shell_only_ci_policy() {
   [[ ! -e "$repository_root/pnpm-lock.yaml" ]]
 }
 
+test_contributors_visualization_uses_native_xvfb() {
+  local workflow="$repository_root/.github/workflows/main.yml"
+
+  grep -Fq 'sudo apt-get install -y --fix-missing ffmpeg gource xvfb' "$workflow" || return 1
+  grep -Fq 'xvfb-run --auto-servernum env OUTPUT_DIR="${RUNNER_TEMP}/gameguild-gource" ./contributors/gource.sh' "$workflow" || return 1
+  ! grep -Fq 'coactions/setup-xvfb' "$workflow"
+}
+
 test_web_vitest_uses_direct_exec_for_json_evidence() {
   grep -q 'pnpm --filter @game-guild/web exec vitest run --reporter=json' "$ci_dir/verify-economy.sh" || return 1
   ! grep -q 'pnpm --filter @game-guild/web run test --' "$ci_dir/verify-economy.sh"
@@ -325,6 +333,7 @@ test_canonical_json_preserves_arrays() {
 }
 
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
+run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
 run_test 'standalone web server uses an origin-safe bind address' test_standalone_web_server_uses_origin_safe_bind_address

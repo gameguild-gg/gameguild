@@ -69,15 +69,13 @@ jobs:
       - name: Install ffmpeg and gource
         run: |
           sudo apt-get update
-          sudo apt-get install -y --fix-missing ffmpeg gource
+          sudo apt-get install -y --fix-missing ffmpeg gource xvfb
 
       - name: Make gource script executable
         run: chmod +x ./contributors/gource.sh
 
       - name: Run headless gource
-        uses: coactions/setup-xvfb@v1 # v1
-        with:
-          run: OUTPUT_DIR="${RUNNER_TEMP}/gameguild-gource" ./contributors/gource.sh
+        run: xvfb-run --auto-servernum env OUTPUT_DIR="${RUNNER_TEMP}/gameguild-gource" ./contributors/gource.sh
 
       - name: Publish to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4 # v4
