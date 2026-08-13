@@ -91,7 +91,7 @@ function ResolvedImage({ src, ...props }: React.ImgHTMLAttributes<HTMLImageEleme
   const [resolvedSrc, setResolvedSrc] = useState(src ?? "")
 
   useEffect(() => {
-    if (!src || !assets?.isAssetUrl(src)) {
+    if (typeof src !== "string" || !src || !assets?.isAssetUrl(src)) {
       setResolvedSrc(src ?? "")
       return
     }
