@@ -23,13 +23,13 @@ public class TestingRequestsController(
     // GET: testing/requests
     [HttpGet("requests")]
     [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Request)]
-    public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequests(
+    public async Task<ActionResult<IEnumerable<TestingRequestDetailProjection>>> GetTestingRequests(
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50,
         [FromQuery] bool includeArchived = false)
     {
         var requests = await requestService.GetTestingRequestsAsync(skip, take, includeArchived).ConfigureAwait(false);
-        return Ok(requests);
+        return Ok(requests.Select(TestingRequestDetailProjection.FromEntity));
     }
 
     // GET: testing/requests/{id}
