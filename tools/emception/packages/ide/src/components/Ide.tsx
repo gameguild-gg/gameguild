@@ -1127,6 +1127,30 @@ export default function Ide({
           tty.writeError('sdl3-runtime patch: callUserCallback not found — WASM traps may crash the tab');
         }
 
+        // Patch: emsdk 6.x dropped `wasmBinary=Module["wasmBinary"]` from the runtime
+        // glue, so raylib/allegro (which use the runtime's native instantiate path)
+        // can't see the wasmBinary we pass via createModule() and fall through to
+        // readAsync() → "both async and sync fetching of the wasm failed".
+        // Restore the assignment. Verified needle present in sdl3/raylib/allegro runtimes.
+        const ORIG_WASMBINARY_DECL = 'var wasmBinary;var ABORT=false';
+        const PATCHED_WASMBINARY_DECL = 'var wasmBinary=Module["wasmBinary"];var ABORT=false';
+        if (runtimeText.includes(ORIG_WASMBINARY_DECL)) {
+          runtimeText = runtimeText.replace(ORIG_WASMBINARY_DECL, PATCHED_WASMBINARY_DECL);
+        } else {
+          tty.writeError('runtime patch: wasmBinary declaration needle not found — raylib/allegro load may fail');
+        }
+
+        // emsdk 6.x instantiateAsync() always falls through to instantiateArrayBuffer
+        // (which fetches the .wasm) even when binary is supplied, breaking in-browser
+        // wasmBinary usage. Short-circuit when binary is provided.
+        const ORIG_INSTANTIATE_ASYNC = 'instantiateAsync(binary,binaryFile,imports){if(!binary){try{var response=fetch(';
+        const PATCHED_INSTANTIATE_ASYNC = 'instantiateAsync(binary,binaryFile,imports){if(binary){return WebAssembly.instantiate(binary,imports)}if(!binary){try{var response=fetch(';
+        if (runtimeText.includes(ORIG_INSTANTIATE_ASYNC)) {
+          runtimeText = runtimeText.replace(ORIG_INSTANTIATE_ASYNC, PATCHED_INSTANTIATE_ASYNC);
+        } else {
+          tty.writeError('runtime patch: instantiateAsync needle not found — raylib/allegro load may fail');
+        }
+
         // Patch: Also intercept RuntimeError in handleException itself, which is called by
         // callMain and other paths, so any WASM trap outside the main loop is also contained.
         const ORIG_HANDLE_EX = 'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}quit_(1,e)}';
@@ -1279,9 +1303,14 @@ export default function Ide({
                         }
                         return () => 0;
                       }
-                      // Fail fast for unknown imports to avoid masking linker
-                      // mismatches and causing unstable runtime behavior.
-                      throw new Error(`Missing WASM env import: ${prop}`);
+                      // Permissive like raylib/allegro: emsdk/clang/binaryen bumps
+                      // shift the import set, so an unknown import isn't necessarily
+                      // a linker mismatch — surface it but don't block instantiation.
+                      if (!missingRaylibImports.has(prop)) {
+                        missingRaylibImports.add(prop);
+                        tty.writeLine(`\x1b[33mSDL3 missing env import shimmed: ${prop}\x1b[0m`);
+                      }
+                      return () => 0;
                     }
                     throw new Error(`Missing WASM env import: ${String(prop)}`);
                   },
@@ -1640,7 +1669,7 @@ export default function Ide({
               '--table-base=1',
               '--global-base=1024',
               '-z',
-              'stack-size=65536',
+              'stack-size=1048576',
               '-lGL-getprocaddr',
               '-lal',
               '-lhtml5',

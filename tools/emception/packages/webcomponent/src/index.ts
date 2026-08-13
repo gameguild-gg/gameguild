@@ -21,7 +21,7 @@
 // the compile+run pipeline uses `compileAndRun` from `@emception/browser`.
 
 import { compileAndRun, type EmceptionAPI as BrowserEmceptionAPI } from '@gameguild/emception-browser';
-import { parseAttributesToInput, ToolchainPreset, type ViewConfigInput } from 'emception';
+import { parseAttributesToInput, EVENT_DOM_NAMES, ToolchainPreset, type ViewConfigInput } from 'emception';
 
 export const ELEMENT_NAME = 'emception-run';
 
@@ -75,6 +75,7 @@ export class EmceptionRunElement extends HTMLElement {
     private canvasSlotEl: HTMLDivElement | null = null;
     private stdinSlotEl: HTMLDivElement | null = null;
     private currentApi: BrowserEmceptionAPI | null = null;
+    private apiUnsubs: Array<() => void> = [];
 
     connectedCallback(): void {
         if (!this.shadowRoot) {
@@ -100,6 +101,10 @@ export class EmceptionRunElement extends HTMLElement {
      * Read the currently-attached browser `EmceptionAPI` (if any).
      * Setting this to a non-null value stores it; if `autorun` is set
      * a compile+run cycle starts immediately. Setting to null detaches.
+     *
+     * Subscribes to every event in `EVENT_DOM_NAMES` and re-broadcasts
+     * each as a bubbling + composed `CustomEvent` named
+     * `emception-<name>` with the original payload as `detail`.
      */
     get api(): BrowserEmceptionAPI | null {
         return this.currentApi;
@@ -107,8 +112,21 @@ export class EmceptionRunElement extends HTMLElement {
 
     set api(next: BrowserEmceptionAPI | null) {
         if (this.currentApi === next) return;
+        for (const unsub of this.apiUnsubs) {
+            try { unsub(); } catch { /* subscriber may already be gone */ }
+        }
+        this.apiUnsubs = [];
         this.currentApi = next;
-        if (next && this.hasAttribute('autorun')) {
+        if (!next) return;
+        for (const [name, domName] of Object.entries(EVENT_DOM_NAMES)) {
+            const unsub = next.on(name as keyof typeof EVENT_DOM_NAMES, (detail: unknown) => {
+                this.dispatchEvent(
+                    new CustomEvent(domName, { detail, bubbles: true, composed: true }),
+                );
+            });
+            if (typeof unsub === 'function') this.apiUnsubs.push(unsub);
+        }
+        if (this.hasAttribute('autorun')) {
             void this.run();
         }
     }
