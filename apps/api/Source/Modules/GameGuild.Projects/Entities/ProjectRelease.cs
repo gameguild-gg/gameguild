@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Projects;
@@ -15,6 +16,7 @@ public class ProjectRelease : EntityBase<Guid>
     public Guid ProjectId { get; set; }
 
     /// <summary> Navigation property to project </summary>
+    [JsonIgnore]
     public virtual Project Project { get; set; } = null!;
 
     /// <summary> Release title </summary>

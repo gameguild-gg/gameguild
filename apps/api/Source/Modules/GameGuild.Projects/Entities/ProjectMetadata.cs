@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace GameGuild.Projects;
 
@@ -7,6 +8,7 @@ public class ProjectMetadata : EntityBase<Guid>
 {
     /// <summary> Navigation property to the project </summary>
     [Required]
+    [JsonIgnore]
     public virtual Project Project { get; set; } = null!;
 
     public Guid ProjectId { get; set; }
