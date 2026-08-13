@@ -390,7 +390,7 @@ export function CodingDefinitionEditor({
             <CardTitle>Workspace</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div data-testid="ide-mount">
+            <div data-testid="ide-mount" className="h-[70vh] min-h-[500px]">
               <Ide
                 ref={ideRef}
                 workspaceConfig={workspaceConfig}
